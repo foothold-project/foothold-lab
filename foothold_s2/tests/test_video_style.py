@@ -235,3 +235,26 @@ def test_set_video_name_has_no_result_tail_and_no_env():
     for bad in ({"segment": "seq_success"}, {"segment": "Fwd Back"}):
         with pytest.raises(ValueError):
             vs.set_video_name("EX36A-basic", "pyramid_stairs", 1, 3000, **{"segment": "x", **bad})
+
+
+def test_recorder_header_map_label_matches_composer():
+    import importlib.util
+    from pathlib import Path
+    base = Path(__file__).resolve().parents[1] / "eval/video25"
+    mods = []
+    for fn in ("record_25e_x31.py", "compose_25e_v2style10.py"):
+        spec = importlib.util.spec_from_file_location("m_" + fn[:6], base / fn)
+        mods.append((spec, importlib.util.module_from_spec(spec)))
+    rec_src = (base / "record_25e_x31.py").read_text(encoding="utf-8")
+    ns = {}
+    start = rec_src.index("POLICY_MAP_KO")
+    end = rec_src.index("def apply_map_mode(")
+    exec(rec_src[start:end], ns)
+    spec, comp = mods[1]
+    spec.loader.exec_module(comp)
+    for mode in ("eval_gt", "eval_pred", "none", "probe_prop_only", "saved"):
+        assert ns["policy_map_label"](mode) == comp.policy_map_header({"map_modes": {"map_mode": {"requested": mode}}})
+    assert ns["policy_map_label"]("eval_pred") == "복원 지도 (eval_pred)"
+    import pytest
+    with pytest.raises(ValueError):
+        ns["policy_map_label"]("reconstructed")

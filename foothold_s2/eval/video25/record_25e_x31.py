@@ -916,6 +916,16 @@ def measurement_arrays(data: dict[str, list[Any]], foot_names: Any,
     return arrays
 
 
+POLICY_MAP_KO = {"eval_gt": "정답 지도", "eval_pred": "복원 지도", "none": "지도 없음", "probe_prop_only": "지도 가림", "saved": "저장 설정"}
+
+
+def policy_map_label(mode):
+    """머리줄 지도 표기: 합성본과 같은 「한글 이름 (모드)」 한 형식 (10/29 lead). 모르는 모드는 오류."""
+    if mode not in POLICY_MAP_KO:
+        raise ValueError("unknown map mode for the header line: %r" % (mode,))
+    return "%s (%s)" % (POLICY_MAP_KO[mode], mode)
+
+
 def apply_map_mode(policy: Any, mode: str, map_input: str, saved_force_gt: bool,
                    tensor_ops: Any | None = None) -> dict[str, Any]:
     """Set inference and reset masks together; tensor_ops keeps this CPU-testable."""
@@ -1487,7 +1497,7 @@ def _capture(spec: dict[str, Any]) -> None:
                 draw.rectangle((0, 0, full_args.width, 26), fill=(0, 0, 0, 150))
                 actual = robot.data.root_lin_vel_b[capture_env_id].detach().cpu().numpy()
                 wz_now = float(robot.data.root_ang_vel_b[capture_env_id, 2])
-                used = "GT" if oi.get("used_gt", True) else "reconstructed"
+                used = policy_map_label(map_record["requested"])
                 draw.text((8, 4), f"{full_args.label} | {name} | t={k * step_dt:.2f}s | cmd vx {command[0]:+.2f} wz {command[2]:+.2f} | actual vx {actual[0]:+.2f} wz {wz_now:+.2f} | policy map: {used}", font=font, fill=(255, 255, 255, 255))
                 pixels = np.asarray(rgba.convert("RGB"))
                 for packet in stream.encode(av.VideoFrame.from_ndarray(pixels, format="rgb24")):
