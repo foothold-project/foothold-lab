@@ -3,7 +3,7 @@
 v10 (W30 + 팀장 10/29 15:3x 고침): 칸 폭 · 크기 · 위치는 v8/v9 그대로(상태판 · 미니맵을 넓히지 않는다).
   - 깃발 캡처 미니맵: 원래 크기 안에서 로봇 중심으로 흐른다(로봇이 가면 깃발이 다가옴). 닿은 깃발은 지움 · 지나온 길은 작은 점 · 위치 화살표 작게.
   - 상태 칩은 실제 속도로: 이동 중 · 제자리 회전 · 서 있음 · 넘어짐(걷는 중에 서 있음이 뜨지 않는다).
-  - 「이 영상이 답할 물음」 은 3D 장면 안 하단 반투명 한 줄(render(question=...), 10/29 D51), 아래 타임라인 쪽에는 영상 안 결과 줄만(render(extra_line=...)).
+  - 「이 영상이 답할 물음」 은 3D 장면 안 하단 반투명 한 줄(render(question=...), 10/29 D51), 발 접촉 띠 아래(화면 맨 아래)에는 글줄을 두지 않는다. 영상 안 결과는 같은 한 줄 띠 안에 물음 뒤에 짧게(render(extra_line=...), 팀장 10/29 19:2x).
   - 글자는 칸 오른쪽 끝을 넘으면 줄여 맞춘다(넘침 기록 OVERFLOW).
 깃발 없는 캡처는 v8/v9 와 같은 그림(위 변경 중 칩 · 아래 띠만 다름).
 
@@ -289,7 +289,8 @@ def question_strip(scene: np.ndarray) -> np.ndarray:
     y0, y1 = 703, 719
     roi = scene[y0:y1, 0:1080].astype(np.float32)
     scene[y0:y1, 0:1080] = (roi * 0.45 + np.array((30, 35, 43), np.float32) * 0.55).astype(np.uint8)
-    return text(scene, [((8, y0 + 1), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (225, 225, 190))], 10, limit=1072)
+    line = "이 영상이 답할 물음  " + EXTRA_LINE["question"] + (("   |   " + EXTRA_LINE["text"]) if EXTRA_LINE["text"] else "")   # 물음 | 결과 순 (팀장 10/29 19:2x)
+    return text(scene, [((8, y0 + 1), line, (225, 225, 190))], 10, limit=1072)
 
 
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
@@ -363,8 +364,6 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
     label_items += [((BOTTOM_LABEL_RIGHT, top + f * 18 - 2), FOOT[f], (220, 220, 220)) for f in range(4)]
     band = text(band, items, 15)
     band = text(band, [((L, 318), LEGEND, (175, 175, 175))], 11, limit=R)
-    if EXTRA_LINE["text"]:    # 영상 안 결과 줄(합성 호출자가 넣는다)
-        band = text(band, [((L, 331), EXTRA_LINE["text"], EXTRA_LINE["color"])], 12, limit=R)
     return text_right(band, label_items, 15)
 
 
@@ -748,9 +747,8 @@ def speed_tag(scene: np.ndarray, speed: str, segment: str) -> np.ndarray:
 def policy_map_header(meta: dict) -> str:
     """Return the requested policy map mode from the capture receipt verbatim."""
     mode = meta.get("map_modes", {}).get("map_mode", {}).get("requested")
-    ko = {"eval_gt": "정답 지도", "gt": "정답 지도", "eval_pred": "복원 지도", "pred": "복원 지도", "none": "지도 없음",
-          "probe_prop_only": "지도 가림", "saved": "저장 설정"}   # 10/29 17:5x: 머리줄은 「한글 이름 (모드)」 한 형식
-    return "%s (%s)" % (ko[mode], mode) if mode in ko else "unknown"
+    # 10/29 19:2x 팀장: 머리줄은 한글 없이 모드 이름만(policy map: eval_pred / eval_gt). 촬영기 원본 머리줄과 같은 형식
+    return mode if mode in ("eval_gt", "gt", "eval_pred", "pred", "none", "probe_prop_only", "saved") else "unknown"
 
 
 def capture_frame_contract(meta: dict) -> tuple[int, float, int, list[int]]:
@@ -814,7 +812,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
 
 
 def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None) -> dict:
-    """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 아래 타임라인 쪽 영상 안 결과 줄, label = 머리줄에 쓸 이름(없으면 영수증 label)."""
+    """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 물음 띠 안 물음 뒤에 붙는 짧은 영상 안 결과(아래 타임라인 쪽에는 그리지 않는다), label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
     video_style.require_approved(meta, "review.json")   # W49: style_id 가 승인 값이 아니면 합성 실패
     if label:

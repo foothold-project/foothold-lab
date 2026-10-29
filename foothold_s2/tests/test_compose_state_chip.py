@@ -56,7 +56,7 @@ def test_first_clip_back10_segment_no_longer_blinks():
     assert _flips(new[int(np.argmax(m)):]) <= 2
 
 
-@pytest.mark.parametrize("mode,want", [("eval_pred", "복원 지도 (eval_pred)"), ("eval_gt", "정답 지도 (eval_gt)"), ("none", "지도 없음 (none)")])
+@pytest.mark.parametrize("mode,want", [("eval_pred", "eval_pred"), ("eval_gt", "eval_gt"), ("none", "none")])
 def test_header_map_label_is_one_format(mode, want):
     assert _c().policy_map_header({"map_modes": {"map_mode": {"requested": mode}}}) == want
 

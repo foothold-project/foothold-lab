@@ -916,14 +916,14 @@ def measurement_arrays(data: dict[str, list[Any]], foot_names: Any,
     return arrays
 
 
-POLICY_MAP_KO = {"eval_gt": "정답 지도", "eval_pred": "복원 지도", "none": "지도 없음", "probe_prop_only": "지도 가림", "saved": "저장 설정"}
+POLICY_MAP_MODES = ("eval_gt", "eval_pred", "none", "probe_prop_only", "saved")
 
 
 def policy_map_label(mode):
-    """머리줄 지도 표기: 합성본과 같은 「한글 이름 (모드)」 한 형식 (10/29 lead). 모르는 모드는 오류."""
-    if mode not in POLICY_MAP_KO:
+    """머리줄 지도 표기: 합성본과 같은 한 형식, 한글 없이 모드 이름만 (팀장 10/29 19:2x). 모르는 모드는 오류."""
+    if mode not in POLICY_MAP_MODES:
         raise ValueError("unknown map mode for the header line: %r" % (mode,))
-    return "%s (%s)" % (POLICY_MAP_KO[mode], mode)
+    return mode
 
 
 def apply_map_mode(policy: Any, mode: str, map_input: str, saved_force_gt: bool,
