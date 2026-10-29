@@ -294,6 +294,12 @@ def _json_atomic(path: Path, value: dict[str, Any]) -> None:
     os.replace(temp, path)
 
 
+import importlib.util as _vs_u
+_vs_s = _vs_u.spec_from_file_location("video_style", __import__("pathlib").Path(__file__).resolve().parent / "video_style.py")
+video_style = _vs_u.module_from_spec(_vs_s)
+_vs_s.loader.exec_module(video_style)
+
+
 def _argv_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy", required=True, help="JSON experiment/task/map-mode spec")
@@ -306,6 +312,7 @@ def _argv_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--physics-mode", choices=("fixed", "training"))
     parser.add_argument("--plan-only", action="store_true", help="print CPU plan without importing Kit")
+    video_style.add_style_args(parser)   # W49: 조명 · 채도 기본값 = 승인 화풍
     return parser
 
 
@@ -360,6 +367,7 @@ def _capture(spec: dict[str, Any]) -> None:
     AppLauncher.add_app_launcher_args(parser)
     # Reparse the original argv with launcher options, but only after plan-only was ruled out.
     full_args = parser.parse_args()
+    style_record = video_style.resolve_style(full_args, parser)
     full_args.enable_cameras = True
     app = AppLauncher(full_args).app
     repo = Path(__file__).resolve().parents[2]
@@ -412,6 +420,11 @@ def _capture(spec: dict[str, Any]) -> None:
 
         gym_env = gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
         raw = gym_env.unwrapped
+        lighting_record = video_style.apply_lighting_profile(video_style.lighting_profile_settings(
+        full_args.lighting_profile, intensity=full_args.directional_light_intensity, angle_deg=full_args.directional_light_angle_deg,
+        azimuth_deg=full_args.directional_light_azimuth_deg, elevation_deg=full_args.directional_light_elevation_deg, shadows=full_args.directional_light_shadows,
+        three_point_intensity=full_args.three_point_intensity, three_point_angle_deg=full_args.three_point_angle_deg,
+        three_point_elevation_deg=full_args.three_point_elevation_deg, three_point_shadows=full_args.three_point_shadows, dome_intensity=full_args.dome_intensity))
         if spec["experiment"] == "TD":
             task_selection = _configure_topdown(raw, spec["terrain_type"], spec["level"], seed)
         env = RslRlVecEnvWrapper(gym_env, clip_actions=agent_cfg.clip_actions)
@@ -647,6 +660,7 @@ def _capture(spec: dict[str, Any]) -> None:
                          "gt_use_expected_zero": spec["map_mode"] == "pred"}
         metadata = {
             "format": "foothold-sol23f-capture/1", "label": full_args.label,
+            "style": style_record, "lighting": lighting_record,
             "scene": full_args.scene, "experiment": spec["experiment"],
             "checkpoint": str(Path(full_args.checkpoint).resolve()),
             "checkpoint_sha256": _sha(Path(full_args.checkpoint)),
@@ -678,6 +692,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _argv_parser()
     # Parse known arguments first so the plan-only path does not import Kit.
     args, _remaining = parser.parse_known_args(argv)
+    style_plan = video_style.resolve_style(args, parser)   # 승인 화풍이 아니면 --allow-unapproved-style 없이는 여기서 거절
     spec = parse_spec(args.policy)
     if args.physics_mode is not None:
         spec["physics_mode"] = args.physics_mode
@@ -687,7 +702,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"format": "foothold-sol23f-plan/1", "label": args.label,
                           "scene": args.scene, "spec": spec, "commands": COMMANDS,
                           "target_frames": 300, "duration_s": 12.0,
-                          "map_modes": ["saved", "pred", "gt"],
+                          "map_modes": ["saved", "pred", "gt"], "style": style_plan,
                           "receipt_consumer": "foothold_s2.eval.seq_video"}, indent=2))
         return 0
     try:

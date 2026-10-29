@@ -18,6 +18,10 @@ import torch
 import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
+import importlib.util as _vs_u
+_vs_s = _vs_u.spec_from_file_location("video_style", __import__("pathlib").Path(__file__).resolve().parent / "video_style.py")
+video_style = _vs_u.module_from_spec(_vs_s)
+_vs_s.loader.exec_module(video_style)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--policy", required=True)
@@ -32,8 +36,10 @@ parser.add_argument("--height", type=int, default=540)
 parser.add_argument("--fps", type=int, default=25)
 parser.add_argument("--out", default=None)                       # run_kit.sh 가 폴더를 넣어 준다 (쓰지 않음)
 parser.add_argument("--mp4", required=True)
+video_style.add_style_args(parser)   # W49: 조명 · 채도 기본값 = 승인 화풍
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+STYLE = video_style.resolve_style(args, parser)
 args.enable_cameras = True
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -61,6 +67,11 @@ if args.noise:
 built = adapter.make_env(generator=generator, num_envs=1, duration_s=args.seconds + 2.0, seed=42, difficulty=0.5, base_cmd=[cmd],
                          spawn_xy_range=0.0, yaw_range_deg=0.0, joint_pos_scale=0.0, device=args.device)
 raw = built["raw"]
+LIGHTING = video_style.apply_lighting_profile(video_style.lighting_profile_settings(
+    args.lighting_profile, intensity=args.directional_light_intensity, angle_deg=args.directional_light_angle_deg,
+    azimuth_deg=args.directional_light_azimuth_deg, elevation_deg=args.directional_light_elevation_deg, shadows=args.directional_light_shadows,
+    three_point_intensity=args.three_point_intensity, three_point_angle_deg=args.three_point_angle_deg,
+    three_point_elevation_deg=args.three_point_elevation_deg, three_point_shadows=args.three_point_shadows, dome_intensity=args.dome_intensity))   # 승인 화풍 조명(기본), inherit 는 --allow-unapproved-style
 pin = runtime.CommandPin(1, raw.device, [cmd])
 term = adapter.pin_command(raw, pin)
 env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
@@ -185,6 +196,8 @@ for packet in stream.encode():
 
 container.close()
 summary = {k: v for k, v in log.items() if k not in ("means", "vx", "t", "contact", "retries")}
+summary["style"] = STYLE
+summary["lighting"] = LIGHTING
 summary["min_mean_brightness"] = float(min(log["means"]))
 summary["max_identical_consecutive_frames"] = int(max_same)
 summary["fps"] = fps

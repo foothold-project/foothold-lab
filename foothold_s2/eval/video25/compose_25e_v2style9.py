@@ -50,6 +50,11 @@ LEGEND = ("Right: top-down maps, up = forward, one colour scale, \"정책에는 
           "Bars: foot contact (coloured = stance)   |   Curves: green = command, blue = actual")
 
 
+import importlib.util as _vs_u
+_vs_s = _vs_u.spec_from_file_location("video_style", __import__("pathlib").Path(__file__).resolve().parent.parent / "video_style.py")
+video_style = _vs_u.module_from_spec(_vs_s)
+_vs_s.loader.exec_module(video_style)
+
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -659,6 +664,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
 
 def render(capture: Path, segment: str, speed: str, out: Path) -> dict:
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
+    video_style.require_approved(meta, "review.json")   # W49: style_id 가 승인 값이 아니면 합성 실패
     z = np.load(capture / "review_feet.npz", allow_pickle=False)
     contract = meta.get("step_contract", {})
     expected_capture_frames, duration_s, fps, steps = capture_frame_contract(meta)

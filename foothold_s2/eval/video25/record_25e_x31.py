@@ -243,200 +243,13 @@ def configure_capture_start(env_cfg: Any, x_m: float = ROUGH_SAFE_START_X_M) -> 
     return {"offset_x_m": float(x_m), "source": "reset_base.pose_range.x"}
 
 
-def lighting_profile_settings(profile: str = "inherit", *, intensity: float | None = None,
-                              angle_deg: float = 1.0, azimuth_deg: float = 45.0,
-                              elevation_deg: float = 45.0, shadows: bool = True,
-                              three_point_intensity: float | None = None,
-                              three_point_angle_deg: float = 12.0,
-                              three_point_elevation_deg: float = 45.0,
-                              three_point_shadows: bool = True,
-                              dome_intensity: float | None = None) -> dict[str, Any]:
-    """Validate inherited, three-point, dome, or mixed scene lighting candidates."""
-    supported = ("inherit", "current_plus_directional", "three_point", "dome",
-                 "dome_plus_three_point")
-    if profile not in supported:
-        raise ValueError("lighting profile must be one of " + ", ".join(supported))
-    reference = {"inherit_probe_mean_rgb8": 76.1, "v2_flat_probe_mean_rgb8": 183.0,
-                 "sun_5000_shadows_on_probe_mean_rgb8": 224.9,
-                 "sun_5000_shadows_off_probe_mean_rgb8": 222.3,
-                 "target_probe_mean_rgb8": 150.0,
-                 "target_scope": "between inherit and v2_flat; do not infer from intensity alone"}
-    if profile == "inherit":
-        if intensity is not None or three_point_intensity is not None or dome_intensity is not None:
-            raise ValueError("light intensities require a non-inherit profile")
-        return {"profile": "inherit", "explicit_directional_light": False,
-                "brightness_calibration": "not_requested", "brightness_reference": reference}
-    if profile == "current_plus_directional":
-        if intensity is None or not math.isfinite(float(intensity)) or float(intensity) <= 0:
-            raise ValueError("current_plus_directional requires a positive explicit intensity")
-        if not math.isfinite(float(angle_deg)) or not 0.0 <= float(angle_deg) <= 180.0:
-            raise ValueError("directional angle must be from 0 through 180 degrees")
-        if not math.isfinite(float(azimuth_deg)) or not math.isfinite(float(elevation_deg)):
-            raise ValueError("direction angles must be finite")
-        if not 0.0 < float(elevation_deg) < 90.0:
-            raise ValueError("directional source elevation must be between 0 and 90 degrees")
-        return {"profile": profile, "explicit_directional_light": True,
-                "intensity": float(intensity), "angle_deg": float(angle_deg),
-                "azimuth_deg": float(azimuth_deg), "elevation_deg": float(elevation_deg),
-                "shadows": bool(shadows), "brightness_calibration": "pending_still_review",
-                "brightness_reference": reference}
-
-    needs_three_point = profile in ("three_point", "dome_plus_three_point")
-    needs_dome = profile in ("dome", "dome_plus_three_point")
-    tp_intensity = (50.0 if three_point_intensity is None else float(three_point_intensity))
-    dom_intensity = (0.05 if dome_intensity is None else float(dome_intensity))
-    if needs_three_point and (not math.isfinite(tp_intensity) or tp_intensity <= 0):
-        raise ValueError("three-point intensity must be positive and finite")
-    if needs_dome and (not math.isfinite(dom_intensity) or dom_intensity <= 0):
-        raise ValueError("dome intensity must be positive and finite")
-    if not math.isfinite(float(three_point_angle_deg)) or not 0.0 <= float(three_point_angle_deg) <= 180.0:
-        raise ValueError("three-point angle must be from 0 through 180 degrees")
-    if not math.isfinite(float(three_point_elevation_deg)) or not 0.0 < float(three_point_elevation_deg) < 90.0:
-        raise ValueError("three-point elevation must be between 0 and 90 degrees")
-    return {"profile": profile, "explicit_directional_light": needs_three_point,
-            "three_point": ({"count": 3, "intensity": tp_intensity, "angle_deg": float(three_point_angle_deg),
-                             "azimuths_deg": [45.0, 165.0, 285.0],
-                             "elevation_deg": float(three_point_elevation_deg),
-                             "shadows": bool(three_point_shadows)} if needs_three_point else None),
-            "dome": ({"intensity": dom_intensity} if needs_dome else None),
-            "brightness_calibration": "pending_still_review",
-            "brightness_reference": reference}
-
-
-def apply_lighting_to_stage(stage: Any, profile: dict[str, Any]) -> dict[str, Any]:
-    """Apply the selected lights to a USD stage without requiring Kit for CPU tests."""
-    if profile.get("profile") == "inherit":
-        return dict(profile)
-    from pxr import Gf, Sdf, UsdGeom, UsdLux
-
-    profile_name = profile.get("profile")
-    if profile_name == "current_plus_directional":
-        profile = dict(profile)
-        profile["three_point"] = {"count": 1, "intensity": float(profile["intensity"]),
-                                  "angle_deg": float(profile["angle_deg"]),
-                                  "azimuths_deg": [float(profile["azimuth_deg"])],
-                                  "elevation_deg": float(profile["elevation_deg"]),
-                                  "shadows": bool(profile["shadows"])}
-        profile["dome"] = None
-
-    created = []
-    dome_cfg = profile.get("dome")
-    if dome_cfg:
-        path = Sdf.Path("/World/RunnerDomeLight")
-        dome = UsdLux.DomeLight.Define(stage, path)
-        dome.CreateIntensityAttr(float(dome_cfg["intensity"]))
-        created.append({"prim_path": str(path), "type": "DomeLight",
-                        "intensity": float(dome_cfg["intensity"])})
-    three = profile.get("three_point")
-    if three:
-        directions = []
-        for index, azimuth in enumerate(three["azimuths_deg"], start=1):
-            if profile_name == "current_plus_directional":
-                path = Sdf.Path("/World/RunnerDirectionalLight")
-            else:
-                path = Sdf.Path(f"/World/RunnerThreePointLight_{index}")
-            light = UsdLux.DistantLight.Define(stage, path)
-            light.CreateIntensityAttr(float(three["intensity"]))
-            light.CreateAngleAttr(float(three["angle_deg"]))
-            shadow_api = UsdLux.ShadowAPI.Apply(light.GetPrim())
-            shadow_api.CreateShadowEnableAttr(bool(three["shadows"]))
-            az = math.radians(float(azimuth))
-            el = math.radians(float(three["elevation_deg"]))
-            source = Gf.Vec3d(math.cos(el) * math.cos(az),
-                              math.cos(el) * math.sin(az), math.sin(el))
-            rays = -source
-            rotation = Gf.Rotation(Gf.Vec3d(0.0, 0.0, -1.0), rays)
-            xform = UsdGeom.Xformable(light.GetPrim())
-            xform.ClearXformOpOrder()
-            xform.AddOrientOp().Set(Gf.Quatf(rotation.GetQuat()))
-            directions.append({"prim_path": str(path), "azimuth_deg": float(azimuth),
-                               "source_xyz": list(source), "rays_xyz": list(rays)})
-            created.append({"prim_path": str(path), "type": "DistantLight",
-                            "intensity": float(three["intensity"]),
-                            "angle_deg": float(three["angle_deg"]), "shadows": bool(three["shadows"])})
-    return dict(profile, prims=created, brightness_calibration="pending_still_review")
-
-
-def hide_nonselected_robot_roots(stage: Any, robot_prim_template: str,
-                                selected_env_id: int, expected_env_count: int, keep_env_ids=()) -> dict[str, Any]:
-    """Hide non-selected cloned robot visuals using USD visibility only.
-
-    The articulated robots, sensors, terrain and policy environment remain in
-    the stage. Only the root Imageable visibility attribute is authored.
-    """
-    from pxr import UsdGeom
-
-    template = str(robot_prim_template).replace("{ENV_REGEX_NS}", "/World/envs/env_.*")
-    if "env_.*" not in template:
-        raise ValueError(f"robot prim template has no env namespace wildcard: {template}")
-    prefix, suffix = template.split("env_.*", 1)
-    pattern = re.compile(r"^" + re.escape(prefix) + r"env_(\d+)" + re.escape(suffix) + r"$")
-    roots: dict[int, Any] = {}
-    for prim in stage.Traverse():
-        match = pattern.match(str(prim.GetPath()))
-        if match:
-            env_id = int(match.group(1))
-            if env_id in roots:
-                raise ValueError(f"duplicate robot root for env {env_id}")
-            roots[env_id] = prim
-    expected_ids = set(range(int(expected_env_count)))
-    if set(roots) != expected_ids:
-        missing = sorted(expected_ids - set(roots))
-        extra = sorted(set(roots) - expected_ids)
-        raise ValueError(f"robot root inventory mismatch; missing={missing}, extra={extra}")
-    if not 0 <= int(selected_env_id) < int(expected_env_count):
-        raise ValueError("selected env id is outside the robot inventory")
-
-    hidden_paths = []
-    for env_id, prim in sorted(roots.items()):
-        if env_id == int(selected_env_id) or env_id in tuple(keep_env_ids):
-            continue
-        imageable = UsdGeom.Imageable(prim)
-        if not imageable:
-            raise ValueError(f"robot root is not imageable: {prim.GetPath()}")
-        imageable.MakeInvisible()
-        hidden_paths.append(str(prim.GetPath()))
-    return {"enabled": True, "method": "usd_imageable_visibility",
-            "physics_or_policy_config_changed": False,
-            "selected_env_id": int(selected_env_id),
-            "environment_count": int(expected_env_count),
-            "visible_robot_root": str(roots[int(selected_env_id)].GetPath()),
-            "hidden_robot_roots": hidden_paths}
-
-
-def define_target_marker(stage: Any, *, path: str = "/World/RunnerSelectedEnvMarker",
-                         radius_m: float = 0.06, height_above_root_m: float = 0.08) -> tuple[Any, dict[str, Any]]:
-    """Create a render-only, non-colliding marker which follows one captured robot."""
-    from pxr import Gf, Sdf, UsdGeom
-
-    sphere = UsdGeom.Sphere.Define(stage, Sdf.Path(path))
-    sphere.CreateRadiusAttr(float(radius_m))
-    sphere.CreateDisplayColorAttr([Gf.Vec3f(1.0, 0.82, 0.02)])
-    xform = UsdGeom.Xformable(sphere.GetPrim())
-    translate = xform.AddTranslateOp()
-    return translate, {"enabled": True, "method": "render_only_usd_sphere",
-                       "prim_path": path, "radius_m": float(radius_m),
-                       "height_above_root_m": float(height_above_root_m),
-                       "collision_or_rigid_body_api_added": False}
-
-
-def update_target_marker(translate_op: Any, root_pos_w: Any,
-                         height_above_root_m: float = 0.08) -> tuple[float, float, float]:
-    """Move the marker above the selected robot without changing its state."""
-    from pxr import Gf
-
-    x, y, z = (float(value) for value in root_pos_w[:3])
-    position = (x, y, z + float(height_above_root_m))
-    translate_op.Set(Gf.Vec3d(*position))
-    return position
-
-
-def apply_lighting_profile(profile: dict[str, Any]) -> dict[str, Any]:
-    """Apply optional USD lighting; inherited scene lighting stays untouched."""
-    if profile.get("profile") == "inherit":
-        return dict(profile)
-    import omni.usd
-    return apply_lighting_to_stage(omni.usd.get_context().get_stage(), profile)
+import importlib.util as _vs_u
+_vs_s = _vs_u.spec_from_file_location("video_style", Path(__file__).resolve().parent.parent / "video_style.py")
+video_style = _vs_u.module_from_spec(_vs_s)
+_vs_s.loader.exec_module(video_style)
+lighting_profile_settings = video_style.lighting_profile_settings   # 승인 화풍 한 곳(video_style.py)에서 옮김
+apply_lighting_to_stage = video_style.apply_lighting_to_stage
+apply_lighting_profile = video_style.apply_lighting_profile
 
 
 def _plain_config(value: Any) -> Any:
@@ -1147,20 +960,7 @@ def _argv_parser() -> argparse.ArgumentParser:
     parser.add_argument("--height", type=int, default=720)
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--physics-mode", choices=("fixed", "training"))
-    parser.add_argument("--lighting-profile", choices=("inherit", "current_plus_directional", "three_point",
-                                                        "dome", "dome_plus_three_point"), default="inherit")
-    parser.add_argument("--directional-light-intensity", type=float)
-    parser.add_argument("--directional-light-angle-deg", type=float, default=1.0)
-    parser.add_argument("--directional-light-azimuth-deg", type=float, default=45.0)
-    parser.add_argument("--directional-light-elevation-deg", type=float, default=45.0)
-    parser.add_argument("--directional-light-shadows", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--three-point-intensity", type=float)
-    parser.add_argument("--three-point-angle-deg", type=float, default=12.0)
-    parser.add_argument("--three-point-elevation-deg", type=float, default=45.0)
-    parser.add_argument("--three-point-shadows", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--dome-intensity", type=float)
-    parser.add_argument("--overlay-saturation", type=float, choices=(1.0, 1.25, 1.5), default=1.0,
-                        help="HSV saturation multiplier for recorder overlay markers only")
+    video_style.add_style_args(parser)   # 조명 · 채도 기본값 = 승인 화풍, 다른 값은 --allow-unapproved-style
     parser.add_argument("--still-probe-at-s", type=float,
                         help="capture only a few frames around this simulated time; not a seq_video receipt")
     parser.add_argument("--still-probe-frames", type=int, default=3)
@@ -1225,6 +1025,7 @@ def _capture(spec: dict[str, Any]) -> None:
     AppLauncher.add_app_launcher_args(parser)
     # Reparse the original argv with launcher options, but only after plan-only was ruled out.
     full_args = parser.parse_args()
+    style_record = video_style.resolve_style(full_args, parser)
     full_args.enable_cameras = True
     _app = AppLauncher(full_args).app
     repo = Path(spec["source_root"]).resolve()
@@ -1754,6 +1555,7 @@ def _capture(spec: dict[str, Any]) -> None:
             "segment_observations": segment_observations,
             "policy_modes": {"latent": spec["z_mode"], "action": spec["act_mode"]},
             "lighting": lighting_record,
+            "style": style_record,
             "perception_timing": delay_record,
             "map_modes": mode_observed, "step_contract": contract,
             "physics": {**physics_record, "actual_readback": physics_actual_readback(raw)},
@@ -1815,6 +1617,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _argv_parser()
     # Parse known arguments first so the plan-only path does not import Kit.
     args, _remaining = parser.parse_known_args(argv)
+    style_plan = video_style.resolve_style(args, parser)
     spec = parse_spec(args.policy)
     source_gate = validate_source_root(Path(spec["source_root"]), spec["experiment"], spec.get("source_profile"))
     checkpoint_profile = validate_checkpoint_profile(spec, Path(args.checkpoint))
@@ -1879,6 +1682,7 @@ def main(argv: list[str] | None = None) -> int:
                           "still_probe": (probe_contract["probe"] if probe_contract else None),
                           "map_modes": MAP_MODES_BY_EXPERIMENT[spec["experiment"]],
                            "lighting": lighting_plan,
+                           "style": style_plan,
                           "source_validation": source_gate,
                           "checkpoint_profile": checkpoint_profile,
                           "sparse_reference": sparse_reference,
