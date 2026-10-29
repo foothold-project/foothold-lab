@@ -10,9 +10,13 @@
 
 | 묶음 | 정본 | 무엇 |
 |---|---|---|
+| **실패 로그 (먼저)** | [FAILURE-LOG.md](FAILURE-LOG.md) | 반복 실수 R · 교훈 M, 지시 이해 · 운영 · 기술 세 갈래. 일 시작 · 다음 단계 걸기 전에 읽고 의뢰문 첫 줄에 번호 |
+| **지금 할 일 · 결정** | [WORKLIST.md](../20261028-plan/WORKLIST.md) | W 작업 · R 요구 · D 확정 결정(묻기 전 decision_check) |
+| **실험 한 판 흐름 (10/29~)** | [FLOW-experiment-cycle-1029.md](../20261028-plan/FLOW-experiment-cycle-1029.md) | 흐름 · 판단 세 단계 · 영상 세 층 · 평가 사다리 · 기준 축 · GPU 순위 · W50 |
+| 영상 화풍 | 코드 `foothold_s2/eval/video_style.py` (브랜치 feature/w49-video-style-jay, main 합치기 전) | L4 · 채도 ×1.25 · 이름 규칙. 문서가 아니라 코드가 정본 |
 | 실험 규칙 | [EXPERIMENT-RULES.md](EXPERIMENT-RULES.md) | 설계 · 실행 전 확인 · 판정 · 분석 · 기록 · 구현과 리뷰 손 나누기 (3.1 절) |
 | 작업 방식 | [LEAD-STYLE-AGENTS.md](LEAD-STYLE-AGENTS.md) | 팀장 기준 · 돌았는지 세 줄 · 검증 · 보고 말투 |
-| 실험 흐름 | [EXPERIMENT-FLOW-20261023.md](EXPERIMENT-FLOW-20261023.md) · [EXP-MAP](../20261021-experiments/EXP-MAP.md) | 무엇을 묻고 무엇을 알았나 |
+| 실험 흐름 (옛 판, 10/23) | [EXPERIMENT-FLOW-20261023.md](EXPERIMENT-FLOW-20261023.md) · [EXP-MAP](../20261021-experiments/EXP-MAP.md) | 무엇을 묻고 무엇을 알았나 |
 | 지금 설계 | [DESIGN-EX30-31.md](../20261025-experiments/DESIGN-EX30-31.md) 맨 위 한 장 요약 | EX-30 · 31 |
 | 착안 · 출처 | [PROVENANCE-START-vs-OURS.md](../20261025-experiments/PROVENANCE-START-vs-OURS.md) | START 와 같은 것 · 다른 것 · 참고 논문 |
 | 10/25 문답 | [QA-LEAD-20261025.md](../20261025-experiments/QA-LEAD-20261025.md) | 팀장이 묻고 이해를 확인한 내용 (실험 번호 · 창 1 · 문턱 · AdaSmpl · 노이즈 · 계단) |
