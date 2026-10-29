@@ -12,7 +12,8 @@ from foothold_s2.sol23f_contract import resume_parent
 
 
 ORIGIN = 1501
-LAST = 3001
+LAST = 4501
+PARENT_UPDATE = 3001
 
 
 def check_parent(path: str, expected_sha256: str) -> dict:
@@ -24,7 +25,7 @@ def check_parent(path: str, expected_sha256: str) -> dict:
         raise ValueError("EX-38 continuation checkpoint SHA256 mismatch")
     parent = resume_parent(str(checkpoint), "SB")
     iteration = parent["completed_update"]
-    if checkpoint.name != f"model_{iteration}.pt" or not ORIGIN <= iteration < LAST:
+    if checkpoint.name != f"model_{iteration}.pt" or iteration != PARENT_UPDATE:
         raise ValueError("EX-38 continuation iteration or model_N name mismatch")
     directory = checkpoint.parent
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
@@ -66,6 +67,8 @@ def prepare(device: str, parent_path: str, parent_sha256: str, end_by: str,
     return args, {"run_name": "EX-38-basic-e1rew", "parent": parent,
                   "first_update": parent["completed_update"] + 1, "last_update": LAST,
                   "max_iterations": LAST + 1, "reward_schedule_start_iteration": ORIGIN,
+                  "additional_updates": LAST - PARENT_UPDATE,
+                  "schedule_at_parent": 0.0, "deadline_role": "upper_bound_only",
                   "reward_schedule_at_first_update": max(-2.0, min(0.0,
                       -2.0 + 2.0 * (parent["completed_update"] + 1 - ORIGIN) / 1500)),
                   "env_seed": 42, "command_seed": 42, "terrain": "fixed L0..2",

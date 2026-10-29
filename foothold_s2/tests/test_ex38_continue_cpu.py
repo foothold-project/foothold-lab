@@ -18,7 +18,7 @@ from foothold_s2.rewards.basic_gait_bundle import E1_CANDIDATE, scheduled_lin_ve
 from foothold_s2.runners.start_runner import CKPT_FORMAT
 
 
-def parent_fixture(tmp_path: Path, iteration=2250) -> tuple[Path, str]:
+def parent_fixture(tmp_path: Path, iteration=3001) -> tuple[Path, str]:
     run = tmp_path / "main" / "EX-38-basic-e1rew_20261029_030422_76136"
     run.mkdir(parents=True)
     checkpoint = run / f"model_{iteration}.pt"
@@ -47,32 +47,36 @@ def test_ex38_completed_parent_and_relative_schedule(tmp_path):
     checkpoint, sha = parent_fixture(tmp_path)
     args, row = ex38.prepare("cuda:1", str(checkpoint), sha, "2026-10-30T12:30:00+09:00",
                             str(tmp_path / "new_runs"))
-    assert row["first_update"] == 2251 and row["last_update"] == 3001
+    assert row["first_update"] == 3002 and row["last_update"] == 4501
+    assert row["additional_updates"] == 1500 and row["schedule_at_parent"] == 0.0
     assert row["parent"]["sha256"] == sha and row["reward_schedule_start_iteration"] == 1501
-    assert row["reward_schedule_at_first_update"] == scheduled_lin_vel_z_weight(2251, start_iteration=1501)
+    assert row["reward_schedule_at_first_update"] == scheduled_lin_vel_z_weight(3002, start_iteration=1501) == 0.0
     assert "--basic-ex38-continue-parent-sha" in args
-    assert prestart_check.inspect_args(args)["max_iterations"] == 3002
+    assert prestart_check.inspect_args(args)["max_iterations"] == 4502
     assert prestart_check.inspect_args(args)["basic_ex38_continue_parent_sha"] == sha
-    assert ex38.check_parent(str(checkpoint), sha)["completed_update"] == 2250
+    assert ex38.check_parent(str(checkpoint), sha)["completed_update"] == 3001
     assert check_resume_parent(SimpleNamespace(resume_from=str(checkpoint), basic_ex38=True,
                                                basic_ex38_continue_parent_sha=sha,
-                                               max_iterations=3002, smoke_updates=None,
-                                               basic_extend_arm=None)) == 2250
+                                               max_iterations=4502, smoke_updates=None,
+                                               basic_extend_arm=None)) == 3001
 
 
 def test_ex38_parent_mutations_caught(tmp_path):
     checkpoint, sha = parent_fixture(tmp_path)
+    earlier, earlier_sha = parent_fixture(tmp_path / "other", iteration=3000)
+    with pytest.raises(ValueError, match="iteration"):
+        ex38.check_parent(str(earlier), earlier_sha)
     with pytest.raises(ValueError, match="SHA256"):
         ex38.check_parent(str(checkpoint), "0" * 64)
     manifest_path = checkpoint.parent / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["modes"]["basic_reward_schedule_start_iteration"] = 2251
+    manifest["modes"]["basic_reward_schedule_start_iteration"] = 3002
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="settings differ"):
         ex38.check_parent(str(checkpoint), sha)
     manifest["modes"]["basic_reward_schedule_start_iteration"] = 1501
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-    (checkpoint.parent / "train_start_status.json").write_text(json.dumps({"state": "running", "iter": 2250,
+    (checkpoint.parent / "train_start_status.json").write_text(json.dumps({"state": "running", "iter": 3001,
                                                                 "checkpoint": str(checkpoint), "sha256": sha}), encoding="utf-8")
     with pytest.raises(ValueError, match="completed receipt"):
         ex38.check_parent(str(checkpoint), sha)
