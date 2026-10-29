@@ -129,6 +129,17 @@ def test_three_thousand_level_four_and_arm_b():
         validate_launch(a, verify_parent=False)
 
 
+def test_a_b_training_argv_differs_only_in_heading_selector_and_run_name():
+    a = _args("A")
+    b = _args("B")
+    assert len(a) == len(b)
+    differences = [(a[i - 1], a[i], b[i]) for i in range(1, len(a)) if a[i] != b[i]]
+    assert differences == [
+        ("--run_name", "EX-39A-basic-heading", "EX-39B-basic-heading"),
+        ("--basic-ex39-arm", "A", "B"),
+    ]
+
+
 def test_parent_hash_and_arm_rejected():
     with pytest.raises(ValueError, match="SHA"):
         prepare("A", "cuda:0", str(PARENT), "0" * 64, END_BY, ROOT)
