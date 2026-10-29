@@ -9,6 +9,7 @@ END_BY="${END_BY:?explicit timezone-aware upper deadline required}"
 BASIC_LOG_ROOT="${BASIC_LOG_ROOT:?explicit absolute output root required}"
 UPDATES="${EX39_UPDATES:-1500}"
 LEVELS="${EX39_LEVELS:-3}"
+KIT_SMOKE_UPDATES="${EX39_KIT_SMOKE_UPDATES:-}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311
 PY="$ENV/python.exe"
@@ -17,6 +18,7 @@ export CONDA_PREFIX="$ENV" OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID
 export PYTHONPATH="$ROOT"
 cd "$ROOT"
 OPTS=(--arm "$ARM" --device "$DEV" --parent "$PARENT" --parent-sha256 "$PARENT_SHA" --end-by "$END_BY" --log-root "$BASIC_LOG_ROOT" --updates "$UPDATES" --levels "$LEVELS")
+if [ -n "$KIT_SMOKE_UPDATES" ]; then OPTS+=(--kit-smoke-updates "$KIT_SMOKE_UPDATES"); fi
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="$BASIC_LOG_ROOT/receipts/ex39/${ARM}_${STAMP}_$$"
 mkdir -p "$OUT"

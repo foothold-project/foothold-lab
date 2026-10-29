@@ -18,7 +18,7 @@ from foothold_s2.prestart_check import actual_parser, inspect_args
 from foothold_s2.rewards.basic_gait_bundle import (
     four_foot_contact_at_stop, scheduled_lin_vel_z_weight, thigh_calf_pos_penalty_l1,
 )
-from foothold_s2.sol23f_contract import EX39_PARENT_SHA256, validate_launch
+from foothold_s2.sol23f_contract import EX39_PARENT_SHA256, budget_iterations, validate_launch
 
 
 PARENT = Path("C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt")
@@ -42,20 +42,37 @@ def _parsed(args):
     return parsed
 
 
-def test_shares_and_eval_support():
+def _slot_can_emit(cmd):
+    vx, vy, wz = cmd
+    return any((
+        .3 <= vx <= 1.5 and vy == 0 and wz == 0,
+        .3 <= vx <= .8 and vy == 0 and .2 <= wz <= .5,
+        .3 <= vx <= .8 and vy == 0 and -.5 <= wz <= -.2,
+        vx == vy == 0 and .5 <= wz <= 1.5,
+        vx == vy == 0 and -1.5 <= wz <= -.5,
+        vx == vy == wz == 0,
+        -1.0 <= vx <= -.2 and vy == wz == 0,
+        vx == wz == 0 and .2 <= vy <= .6,
+        vx == wz == 0 and -.6 <= vy <= -.2,
+        .3 <= vx <= .6 and .2 <= vy <= .5 and wz == 0,
+        .3 <= vx <= .6 and -.5 <= vy <= -.2 and wz == 0,
+        -.6 <= vx <= -.3 and .2 <= vy <= .5 and wz == 0,
+        -.6 <= vx <= -.3 and -.5 <= vy <= -.2 and wz == 0,
+    ))
+
+
+def test_shares_and_eval_support_by_whole_slot():
     shares = mc.ex39_shares()
     assert sum(shares.values()) == pytest.approx(1.0)
     assert len(shares) == 13
     assert shares["forward"] == .30 and shares["reverse"] == .12
     assert sum(v for k, v in shares.items() if k.startswith("diag_")) == pytest.approx(.06)
     for cmd in list(commands("extended").values()) + [x for phases in SEQUENCES.values() for x in phases]:
-        vx, vy, wz = cmd
-        assert (vx == 0 or .3 <= vx <= 1.5 or -1.0 <= vx <= -.2)
-        assert (vy == 0 or .2 <= abs(vy) <= .6)
-        assert (wz == 0 or .5 <= abs(wz) <= 1.5)
+        assert _slot_can_emit(cmd), cmd
+    assert not _slot_can_emit((1.0, 0.5, 0.0))
 
 
-def test_100k_realized_slots_and_heading_only_difference():
+def test_first_and_repeated_resamples_keep_shared_rng_and_nonheading_commands():
     n = 100_000
     yaw = torch.linspace(-3.0, 3.0, n)
     a = mc.resample_ex39(mc.make_generator(42), n, "A", yaw)
@@ -73,6 +90,16 @@ def test_100k_realized_slots_and_heading_only_difference():
     assert torch.equal(b["psi_star"][b["heading"] & fwd], yaw[b["heading"] & fwd])
     assert torch.all(b["cmd"][b["heading"] & spin, :2] == 0)
     assert torch.all(b["cmd"][b["heading"] & spin, 2] == 0)
+    ga, gb = mc.make_generator(42), mc.make_generator(42)
+    for count in (3072, 19, 1, 3072):
+        yaw_next = torch.linspace(-2., 2., count)
+        aa = mc.resample_ex39(ga, count, "A", yaw_next)
+        bb = mc.resample_ex39(gb, count, "B", yaw_next)
+        assert torch.equal(aa["slot"], bb["slot"])
+        assert torch.equal(aa["cmd"][~bb["heading"]], bb["cmd"][~bb["heading"]])
+        assert torch.equal(ga.get_state(), gb.get_state())
+        assert torch.equal(mc.scatter_clock(ga, count), mc.scatter_clock(gb, count))
+        assert torch.equal(ga.get_state(), gb.get_state())
 
 
 def test_rewards_known_input():
@@ -127,6 +154,21 @@ def test_three_thousand_level_four_and_arm_b():
     a.basic_ex39_level_count = 3
     with pytest.raises(ValueError):
         validate_launch(a, verify_parent=False)
+
+
+def test_isolated_two_update_kit_smoke_uses_real_parent_and_parser():
+    args, receipt = prepare("B", "cuda:0", str(PARENT), EX39_PARENT_SHA256,
+                            END_BY, "C:/Users/AI-WS01/s2_lab/basic_gait_runs/ex39b_kit_smoke/try01",
+                            kit_smoke_updates=2)
+    parsed = _parsed(args)
+    assert inspect_args(args)["max_iterations"] == 3004
+    assert parsed.basic_stage == "smoke" and parsed.smoke_updates == 2
+    assert budget_iterations(parsed) == 3004
+    validate_launch(parsed, verify_parent=True)
+    assert receipt["planned_main_max_iterations"] == 4502
+    parsed.max_iterations = 3005
+    with pytest.raises(ValueError):
+        validate_launch(parsed, verify_parent=False)
 
 
 def test_a_b_training_argv_differs_only_in_heading_selector_and_run_name():

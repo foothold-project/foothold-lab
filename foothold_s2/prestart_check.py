@@ -17,6 +17,8 @@ MODULES = (
     "foothold_s2.basic_gait_extend_launch",
     "foothold_s2.basic_gait_ex38_continue",
     "foothold_s2.basic_gait_ex39",
+    "foothold_s2.ex39_kit_probe",
+    "foothold_s2.ex39_kit_smoke",
     "foothold_s2.basic_gait_run",
     "foothold_s2.commands.mixed_core",
     "foothold_s2.commands.basic_levels",

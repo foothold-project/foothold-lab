@@ -73,6 +73,9 @@ class MixedVelocityCommand(CommandTerm):
         self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None else
                            mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS)
         self.slot_counts = torch.zeros(len(self.slot_names), dtype=torch.long, device=dev)
+        # Read-only Kit smoke evidence for the latest sampled slot of each env.
+        self.slot_current = torch.full((n,), -1, dtype=torch.long, device=dev)
+        self.ex39_first_forward_heading_wz_max = None
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
@@ -208,6 +211,7 @@ class MixedVelocityCommand(CommandTerm):
             self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
             if "slot" in out:
                 self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
+                self.slot_current[free] = out["slot"].to(self.device)
 
             if self.cfg.fixed_cmd is not None:
                 self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
@@ -233,6 +237,11 @@ class MixedVelocityCommand(CommandTerm):
         free = ~self.is_flag_env
         self.vel_command_b[free] = mc.apply_heading(self.vel_command_b, self.heading, self.stand,
                                                     self.psi_star, yaw, self.params)[free]
+        if self.params.ex39_arm == "B" and self.ex39_first_forward_heading_wz_max is None:
+            first_forward = (self.slot_current == 0) & self.heading & free
+            if first_forward.any():
+                self.ex39_first_forward_heading_wz_max = float(
+                    self.vel_command_b[first_forward, 2].abs().max().item())
 
         if len(self.flag_ids) > 0:
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params)

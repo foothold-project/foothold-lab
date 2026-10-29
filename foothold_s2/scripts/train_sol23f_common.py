@@ -355,6 +355,10 @@ def main(env_cfg, agent_cfg):
         return
     if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"]:
         runner.scatter_episode_progress(agent_cfg.seed * 1000 + 35)        # reset_segment_physics 뒤 · learn 앞(Isaac 의 _reset_idx 가 term reset 뒤에 진행도를 0 으로 덮으므로)
+    if args_cli.basic_ex39_arm and args_cli.smoke_updates == 2:
+        from foothold_s2.ex39_kit_probe import capture_start
+
+        capture_start(env.unwrapped, env_cfg, args_cli.basic_ex39_arm, log_dir)
     try:
         runner.learn(num_learning_iterations=remaining, init_at_random_ep_len=not bool(resume_path))
     except DeadlineReached as stop:
@@ -367,6 +371,10 @@ def main(env_cfg, agent_cfg):
         if runner.training_trace is not None:
             runner.training_trace.close()
     final = os.path.join(log_dir, f"model_{runner.current_learning_iteration}.pt")
+    if args_cli.basic_ex39_arm and args_cli.smoke_updates == 2:
+        from foothold_s2.ex39_kit_probe import capture_finish
+
+        capture_finish(env.unwrapped, log_dir)
     write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "log_dir": log_dir,
                            "variant": args_cli.variant, "checkpoint": final, "sha256": sha256(final),
                            "physical_resume_identical": False})

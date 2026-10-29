@@ -13,11 +13,14 @@ from foothold_s2.sol23f_contract import EX39_PARENT_SHA256
 
 
 def prepare(arm: str, device: str, parent: str, parent_sha256: str, end_by: str,
-            log_root: str, updates: int = 1500, levels: int = 3) -> tuple[list[str], dict]:
+            log_root: str, updates: int = 1500, levels: int = 3,
+            kit_smoke_updates: int | None = None) -> tuple[list[str], dict]:
     if arm not in ("A", "B") or (updates, levels) not in ((1500, 3), (3000, 4)):
         raise ValueError("EX-39 accepts A/B and (1500,L0..2) or (3000,L0..3)")
     if parent_sha256 != EX39_PARENT_SHA256:
         raise ValueError("EX-39 parent SHA256 is not pinned model_3001.pt")
+    if kit_smoke_updates not in (None, 2):
+        raise ValueError("EX-39 Kit smoke is exactly two updates")
     parent_row = check_parent(parent, parent_sha256)
     if parent_row["completed_update"] != 3001:
         raise ValueError("EX-39 parent must finish update 3001")
@@ -27,19 +30,27 @@ def prepare(arm: str, device: str, parent: str, parent_sha256: str, end_by: str,
         args[args.index(flag) + 1] = value
     replace("--run_name", f"EX-39{arm}-basic-heading")
     replace("--basic-new-share", "0.4")
-    replace("--max_iterations", str(3002 + updates))
+    replace("--max_iterations", str(3002 + (kit_smoke_updates or updates)))
+    if kit_smoke_updates:
+        replace("--basic-stage", "smoke")
+        args.extend(["--smoke-updates", str(kit_smoke_updates)])
     args.remove("--basic-ex38")
     args.extend(["--basic-ex39-arm", arm, "--basic-ex39-parent-sha", parent_sha256,
                  "--basic-ex39-updates", str(updates), "--basic-ex39-level-count", str(levels)])
     # The real train parser and parent/limit validation run again in prestart_check.
     return args, {"arm": arm, "run_name": f"EX-39{arm}-basic-heading", "parent": parent_row,
                   "parent_sha256": parent_sha256, "first_update": 3002,
-                  "last_update": 3001 + updates, "max_iterations": 3002 + updates,
-                  "additional_updates": updates, "terrain_levels": list(range(levels)),
+                  "last_update": 3001 + (kit_smoke_updates or updates),
+                  "max_iterations": 3002 + (kit_smoke_updates or updates),
+                  "additional_updates": kit_smoke_updates or updates,
+                  "planned_main_updates": updates,
+                  "planned_main_max_iterations": 3002 + updates,
+                  "terrain_levels": list(range(levels)),
+                  "kit_smoke_updates": kit_smoke_updates,
                   "command_shares": ex39_shares(), "heading": "off" if arm == "A" else
                   "forward 15 percentage points; spin 3+3 percentage points",
                   "reward_change_common": {"thigh_calf_pos_l1": -0.01,
-                                           "stand_four_foot_contact_proposed": 0.1},
+                                           "stand_four_foot_contact": 0.1},
                   "unchanged": "EX-38 PPO, perception, existing reward weights and lin_vel_z=0",
                   "judge_exclusion": {"post_treatment_updates": [3002, 3301],
                                       "subsequent_resume_first_updates": 30},
@@ -58,10 +69,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--log-root", type=Path, required=True)
     parser.add_argument("--updates", type=int, choices=(1500, 3000), default=1500)
     parser.add_argument("--levels", type=int, choices=(3, 4), default=3)
+    parser.add_argument("--kit-smoke-updates", type=int, choices=(2,))
     parser.add_argument("--print-args", action="store_true")
     a = parser.parse_args(argv)
     args, row = prepare(a.arm, a.device, str(a.parent), a.parent_sha256, a.end_by,
-                        str(a.log_root), a.updates, a.levels)
+                        str(a.log_root), a.updates, a.levels, a.kit_smoke_updates)
     if a.print_args:
         print("\n".join(args))
     else:

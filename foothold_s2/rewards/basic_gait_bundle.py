@@ -83,7 +83,16 @@ def four_foot_contact_at_stop(env, command_name, sensor_cfg, threshold=1.0):
     if forces.shape[1] != 4:
         raise ValueError("EX-39 stand contact requires four foot bodies")
     in_contact = torch.linalg.vector_norm(forces, dim=-1) > threshold
-    return ((torch.linalg.vector_norm(command, dim=1) < 0.1) & in_contact.all(dim=1)).float()
+    reward = ((torch.linalg.vector_norm(command, dim=1) < 0.1) & in_contact.all(dim=1)).float()
+    samples = getattr(env, "_ex39_kit_foot_smoke", None)
+    if samples is not None and len(samples) < 8:
+        from foothold_s2.commands.mixed_core import EX39_SLOTS
+
+        term = env.command_manager.get_term(command_name)
+        stand = term.slot_current == EX39_SLOTS.index("stand")
+        samples.append({"stand_envs": int(stand.sum().item()),
+                        "four_foot_mean": float(reward[stand].mean().item()) if stand.any() else 0.0})
+    return reward
 
 
 def apply_ex39_settings(env_cfg, contact_weight: float = 0.1) -> dict:

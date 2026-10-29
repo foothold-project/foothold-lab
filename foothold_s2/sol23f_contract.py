@@ -40,6 +40,8 @@ def budget_iterations(args) -> int:
     """BUDGET 판(B · SB)이 쓸 총 회차: smoke 10, 이어 가기 확장 판은 준 값, 그 밖에는 1501(기존 계약 그대로)."""
     if getattr(args, "smoke_updates", None) == 10:
         return 10
+    if getattr(args, "basic_ex39_arm", None) and getattr(args, "smoke_updates", None) == 2:
+        return int(args.max_iterations)
 
     return int(args.max_iterations) if is_extended_resume(args) else 1501
 
@@ -96,9 +98,11 @@ def check_resume_parent(args) -> int:
             raise ValueError("EX-39 parent SHA256 differs from completed EX-38 model_3001.pt")
         parent = check_parent(path, sha)
         expected = int(getattr(args, "basic_ex39_updates", 0))
-        if expected not in (1500, 3000) or int(args.max_iterations) != 3002 + expected:
-            raise ValueError("EX-39 max_iterations must match 1500 or 3000 updates after model_3001")
-        resume_budget(int(args.max_iterations), parent["completed_update"], limit=expected)
+        smoke = getattr(args, "smoke_updates", None)
+        limit = 2 if smoke == 2 else expected
+        if expected not in (1500, 3000) or int(args.max_iterations) != 3002 + limit:
+            raise ValueError("EX-39 max_iterations must match the main budget or two-update smoke")
+        resume_budget(int(args.max_iterations), parent["completed_update"], limit=limit)
         return parent["completed_update"]
     ex38_cont_sha = getattr(args, "basic_ex38_continue_parent_sha", None)
     if ex38_cont_sha:
@@ -167,10 +171,12 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 or ex39_sha != EX39_PARENT_SHA256 or ex38 or ex38_cont
                 or basic_arm is not None or basic_sha is not None
                 or args.variant != "SB" or cm != "basic_gait" or cs != "on"
-                or getattr(args, "basic_stage", None) != "main" or not is_extended_resume(args)
-                or getattr(args, "smoke_updates", None) is not None
+                or not ((getattr(args, "basic_stage", None) == "main" and is_extended_resume(args)
+                         and getattr(args, "smoke_updates", None) is None)
+                        or (getattr(args, "basic_stage", None) == "smoke"
+                            and getattr(args, "smoke_updates", None) == 2))
                 or float(basic_share or 0) != 0.40 or p_off != 0.1
-                or int(args.max_iterations) != 3002 + ex39_updates
+                or int(args.max_iterations) != 3002 + (2 if getattr(args, "smoke_updates", None) == 2 else ex39_updates)
                 or getattr(args, "fast_gt_only", False)
                 or not getattr(args, "basic_lin_vel_z_schedule", False)
                 or getattr(args, "basic_feet_regulation_weight", None) is not None):
@@ -276,9 +282,9 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("p_map_off must be inside (0, 1)")
         if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
             raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
-        max_total = (3002 + ex39_updates if ex39_arm else EX38_CONTINUE_MAX_ITERATIONS if ex38_cont else 20001 if ex38
+        max_total = (3002 + (2 if getattr(args, "smoke_updates", None) == 2 else ex39_updates) if ex39_arm else EX38_CONTINUE_MAX_ITERATIONS if ex38_cont else 20001 if ex38
                      else 3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
-        if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= max_total):
+        if args.max_iterations not in (None, 1501) and not ((is_extended_resume(args) or (ex39_arm and getattr(args, "smoke_updates", None) == 2)) and args.max_iterations <= max_total):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (this resume kind allows at most {max_total})")
     elif getattr(args, "smoke_updates", None) is not None:
         raise ValueError("smoke-updates is reserved for B")

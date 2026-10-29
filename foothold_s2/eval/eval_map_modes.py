@@ -32,6 +32,7 @@ parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terr
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
+parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -75,6 +76,10 @@ agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
 env_cfg.scene.num_envs = args.envs
 env_cfg.sim.device = args.device
 agent_cfg.device = args.device
+if args.ex39_heading_smoke_guard:
+    cmd_cfg = env_cfg.commands.base_velocity
+    cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
+    cmd_cfg.seed = 42
 dr_off = []
 
 for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"):
@@ -115,6 +120,10 @@ raw = env.unwrapped
 dev = raw.device
 robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")
+if args.ex39_heading_smoke_guard:
+    if term.params.ex39_arm != "B":
+        raise RuntimeError("EX-39 smoke evaluation did not construct a B command term")
+    term.heading.fill_(True)
 map_mode_cells.disable_heading_for_fixed_eval(term)
 dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
@@ -187,6 +196,10 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.ex39_heading_smoke_guard:
+    res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
+                                        "forced_heading_before_disable": True,
+                                        "fixed_command_step_checks": 0}
 terrain_gen = raw.scene.terrain.cfg.terrain_generator
 terrain_props = {name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}
 terrain_names = columns.column_types(terrain_props, int(terrain_gen.num_cols))
@@ -225,6 +238,8 @@ for mode in args.modes.split(","):
 
     for cname, cmd in ((c, v) for c, v in CMDS.items() if c in WANT_CMDS):
         torch.manual_seed(args.eval_seed)
+        if args.ex39_heading_smoke_guard:
+            term.params.ex39_arm = "B"
         env.reset()
         terrain = raw.scene.terrain
 
@@ -281,6 +296,10 @@ for mode in args.modes.split(","):
             raise RuntimeError("terrain kind/level assignment changed between commands")
 
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
+        if args.ex39_heading_smoke_guard:
+            if term.params.ex39_arm != "B":
+                raise RuntimeError("EX-39 B term disappeared before fixed-command test")
+            term.heading.fill_(True)
         map_mode_cells.disable_heading_for_fixed_eval(term)
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
@@ -310,6 +329,13 @@ for mode in args.modes.split(","):
 
             obs, _r, dones, _x = env.step(a)
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
+            if args.ex39_heading_smoke_guard:
+                expected_command = torch.tensor(cmd, device=dev).expand(env.num_envs, 3)
+                active = ~dones.bool()
+                if active.any() and not torch.allclose(term.vel_command_b[active, :3],
+                                                       expected_command[active], atol=1e-6, rtol=0):
+                    raise RuntimeError("EX-39 fixed evaluation command changed after step")
+                res["ex39_heading_smoke_guard"]["fixed_command_step_checks"] += 1
             policy.reset(dones)
             AL[k] = alive & ~dones.bool()  # env.step may already have reset done envs
             VX[k] = robot.data.root_lin_vel_b[:, 0]

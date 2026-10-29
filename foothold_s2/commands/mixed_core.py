@@ -252,10 +252,14 @@ def resample_ex39(gen, n, arm, yaw):
                      torch.where(spin, torch.where(slot == 3, spin_wz, -spin_wz), zeros))
     heading = torch.zeros(n, dtype=torch.bool, device=gen.device)
     psi_star = zeros.clone()
+    # Keep the shared command RNG stream aligned across arms when the same envs
+    # resample on the same schedule. Heading changes may later change reset times.
+    forward_heading_draw = _u(gen, (n,))
+    spin_heading_draw = _u(gen, (n,))
+    target_spin = _u(gen, (n,), -math.pi, math.pi)
     if arm == "B":
         # 15 percentage points of forward, 3 points from each spin direction.
-        heading = (forward & (_u(gen, (n,)) < 0.5)) | (spin & (_u(gen, (n,)) < 0.3))
-        target_spin = _u(gen, (n,), -math.pi, math.pi)
+        heading = (forward & (forward_heading_draw < 0.5)) | (spin & (spin_heading_draw < 0.3))
         psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
         wz = torch.where(heading, zeros, wz)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
