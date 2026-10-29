@@ -1,0 +1,338 @@
+{
+  "captured_at": "2026-10-29T20:32:16.645522+09:00",
+  "inputs": [
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\events.out.tfevents.1793205073.AI-WS01.21044.0",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\events.out.tfevents.1793205073.AI-WS01.21044.0",
+      "sha256": "327dc4769f0c9dfc38f4ce299ba34bdfb11ff2f765cf22f8986bc0cfa0a3dd9d",
+      "bytes": 6982726
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\manifest.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\manifest.json",
+      "sha256": "034f05be20d682f5a9defa75afc2ae47e64fab42becb4c0b5970305e216a6808",
+      "bytes": 110146
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\resume_parent.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\resume_parent.json",
+      "sha256": "2d7c84b853243f59dd4a641d67696f95c9e3a32b7179b889a7c888c7ebd86892",
+      "bytes": 1077
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\basic_start_receipt.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\basic_start_receipt.json",
+      "sha256": "1be3c364da1c3e61160c09581596a5656a8cda7371b7ca7d6a454fc6ac5a7a35",
+      "bytes": 413
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\train_start_status.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\train_start_status.json",
+      "sha256": "c03b5e18f135c31244b48782f3c3b30f493836506ed7c2492b296644deb7b2d8",
+      "bytes": 462
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\params\\env.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\env.yaml",
+      "sha256": "757d743ba81f4f22c6c2ffad619fa47d2fb29f6859d1341fd9598b07b52e2a95",
+      "bytes": 46538
+    },
+    {
+      "run": "EX36A",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044\\params\\agent.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX36A\\agent.yaml",
+      "sha256": "85f8bbd31ad44ff9cb0b02f7ac8095ece2a73d3815ee2b0a4ce3365a9ba9ccd6",
+      "bytes": 1417
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\events.out.tfevents.1793214340.AI-WS01.60072.0",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\events.out.tfevents.1793214340.AI-WS01.60072.0",
+      "sha256": "70b7a281b0bfcf5ce0c7810857fb2c09b81318f507b3be569d30ee51e139f73a",
+      "bytes": 5810289
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\manifest.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\manifest.json",
+      "sha256": "15ae2b4e30fadc14091c25216faeca626f0ac5a2ae7372e2cd7941ae3345d0e8",
+      "bytes": 112838
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\resume_parent.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\resume_parent.json",
+      "sha256": "744ed89c910bea1994cfdde3c6bfec691d979027a500ada2b77b77c5f39f31f6",
+      "bytes": 1079
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\basic_start_receipt.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\basic_start_receipt.json",
+      "sha256": "199ad0f41837302a4203c51148919d0cddf5809c975c615e6ba056607715ce71",
+      "bytes": 410
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\train_start_status.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\train_start_status.json",
+      "sha256": "ba02f9d9d045a698855138e99e04ad374e660568ddcbacd420847dc9e983c7d4",
+      "bytes": 382
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\params\\env.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\env.yaml",
+      "sha256": "1f88ef8e4010fd333affca100ba1d215999ffa11fa378eb138fbf3b16fb3232f",
+      "bytes": 47401
+    },
+    {
+      "run": "EX38a",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072\\params\\agent.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38a\\agent.yaml",
+      "sha256": "6e27194cae146bf17ecfa6e8f810eb8e79679bee9bd15d2659dc77e7b32d3e12",
+      "bytes": 1415
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\events.out.tfevents.1793245139.AI-WS01.163180.0",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\events.out.tfevents.1793245139.AI-WS01.163180.0",
+      "sha256": "6ccd270fca5b7466edafd3d2fe310069ef32fa7bee3e8ee80db4c92055b21150",
+      "bytes": 1403140
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\manifest.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\manifest.json",
+      "sha256": "790c2c2dbe3d2558e350bc43b18c22e8c737d0f667514b3697b5539f77dee181",
+      "bytes": 113183
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\resume_parent.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\resume_parent.json",
+      "sha256": "e010e90fae4cc3811ed96bd3c0e1e266d3d744bc077ca8c2a3f04f27a194a0b9",
+      "bytes": 1070
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\basic_start_receipt.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\basic_start_receipt.json",
+      "sha256": "199ad0f41837302a4203c51148919d0cddf5809c975c615e6ba056607715ce71",
+      "bytes": 410
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\train_start_status.json",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\train_start_status.json",
+      "sha256": "e6b98b160a8c2ea89bc25a33064a62d07bae38bb58381515a86f06d59217b7f8",
+      "bytes": 459
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\params\\env.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\env.yaml",
+      "sha256": "f79cd6493b4ca21cd02897173894cbfe077dca604342e128731e918e334bae1e",
+      "bytes": 47402
+    },
+    {
+      "run": "EX38b",
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180\\params\\agent.yaml",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\inputs\\EX38b\\agent.yaml",
+      "sha256": "3219b9d5392ab4eb13698cdbbb22ec89490cb8c621e05c6b209f28dccb758012",
+      "bytes": 1414
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\rsl_rl\\runners\\on_policy_runner.py",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\installed\\on_policy_runner.py",
+      "sha256": "6ffaee7e154a49ae55eebf53a7b1549f0461a1742d92dd34af5bb4b785d19cf2",
+      "note": "installed read-only source; historical library bytes not sealed by run manifest"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\rsl_rl\\algorithms\\ppo.py",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\installed\\ppo.py",
+      "sha256": "4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478",
+      "note": "installed read-only source; historical library bytes not sealed by run manifest"
+    },
+    {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\managers\\reward_manager.py",
+      "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\installed\\reward_manager.py",
+      "sha256": "2ff82f8e385593e4c2206446ab4ef8de7c72dc0ef444f3e02f60df321d71919e",
+      "note": "installed read-only source; historical library bytes not sealed by run manifest"
+    }
+  ],
+  "runs": {
+    "EX36A": {
+      "rows": 1500,
+      "first": 1501,
+      "last": 3000,
+      "scalar_tags": 68,
+      "missing_by_tag": {},
+      "git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "cc9840a80a961c83a4aa562801f9550615705699"
+      }
+    },
+    "EX38a": {
+      "rows": 1209,
+      "first": 1501,
+      "last": 2709,
+      "scalar_tags": 70,
+      "missing_by_tag": {
+        "Loss/map_switch/off_ep_reward_mean": 1,
+        "Loss/map_switch/off_ep_length_mean": 1
+      },
+      "git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "5578c368010c8aaa2fa564ca1d9d6a18feea1c4c"
+      }
+    },
+    "EX38b": {
+      "rows": 292,
+      "first": 2710,
+      "last": 3001,
+      "scalar_tags": 70,
+      "missing_by_tag": {},
+      "git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "16f37ceb4c3ae562b82108aa092353809cbcc64c"
+      }
+    }
+  },
+  "known_answer_checks": [
+    "ratio_of_means=1.8",
+    "weighted_merge=1.5",
+    "zero_length_rejected"
+  ],
+  "env_diffs": {
+    "EX36A -> EX38a": {
+      "/log_dir": [
+        "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-36A-basic-share30_20261029_013052_21044",
+        "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/func": [
+        null,
+        "foothold_s2.rewards.basic_gait_bundle:hip_pos_penalty_l1"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/body_ids/0": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/body_ids/1": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/body_ids/2": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/body_names": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/fixed_tendon_ids/0": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/fixed_tendon_ids/1": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/fixed_tendon_ids/2": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/fixed_tendon_names": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/joint_ids/0": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/joint_ids/1": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/joint_ids/2": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/joint_names": [
+        null,
+        ".*_hip_joint"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/name": [
+        null,
+        "robot"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/object_collection_ids/0": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/object_collection_ids/1": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/object_collection_ids/2": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/object_collection_names": [
+        null,
+        "null"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/asset_cfg/preserve_order": [
+        null,
+        "false"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/command_name": [
+        null,
+        "base_velocity"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/command_threshold": [
+        null,
+        "0.1"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/params/stand_still_scale": [
+        null,
+        "1.0"
+      ],
+      "/rewards/basic_hip_pos_penalty_l1/weight": [
+        null,
+        "-0.05"
+      ],
+      "/rewards/joint_acc/weight": [
+        "-2.5e-07",
+        "-1.0e-07"
+      ],
+      "/rewards/track_ang_vel/weight": [
+        "0.5",
+        "1.0"
+      ],
+      "/rewards/track_lin_vel/weight": [
+        "1.5",
+        "2.0"
+      ],
+      "/sim/device": [
+        "cuda:0",
+        "cuda:1"
+      ]
+    },
+    "EX38a -> EX38b": {
+      "/log_dir": [
+        "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_040521_60072",
+        "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\main\\EX-38-basic-e1rew_20261029_123840_163180"
+      ]
+    }
+  }
+}

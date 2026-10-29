@@ -1,0 +1,212 @@
+[
+  {
+    "run": "EX36A",
+    "tag": "reward_per_step",
+    "window": "early",
+    "n": 100,
+    "mean": 0.024147193202488957
+  },
+  {
+    "run": "EX36A",
+    "tag": "reward_per_step",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.028233825061525494
+  },
+  {
+    "run": "EX36A",
+    "tag": "reward_per_step",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.028322407529504264
+  },
+  {
+    "run": "EX36A",
+    "tag": "Train/mean_episode_length",
+    "window": "early",
+    "n": 100,
+    "mean": 985.2477996826171
+  },
+  {
+    "run": "EX36A",
+    "tag": "Train/mean_episode_length",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 987.1980017089844
+  },
+  {
+    "run": "EX36A",
+    "tag": "Train/mean_episode_length",
+    "window": "tail",
+    "n": 100,
+    "mean": 989.1584985351562
+  },
+  {
+    "run": "EX36A",
+    "tag": "Loss/value_function",
+    "window": "early",
+    "n": 100,
+    "mean": 0.010780509933829263
+  },
+  {
+    "run": "EX36A",
+    "tag": "Loss/value_function",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.008041673921979913
+  },
+  {
+    "run": "EX36A",
+    "tag": "Loss/value_function",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.007720071375369975
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_lin_unit_weight",
+    "window": "early",
+    "n": 100,
+    "mean": 0.8851409563284228
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_lin_unit_weight",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.9227283045923319
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_lin_unit_weight",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.9242378040286066
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_ang_unit_weight",
+    "window": "early",
+    "n": 100,
+    "mean": 0.829665801161399
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_ang_unit_weight",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.8807999090590439
+  },
+  {
+    "run": "EX36A",
+    "tag": "track_ang_unit_weight",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.8805645194308939
+  },
+  {
+    "run": "EX38",
+    "tag": "reward_per_step",
+    "window": "early",
+    "n": 100,
+    "mean": 0.04099942631443304
+  },
+  {
+    "run": "EX38",
+    "tag": "reward_per_step",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.04718811918290424
+  },
+  {
+    "run": "EX38",
+    "tag": "reward_per_step",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.04709595881707836
+  },
+  {
+    "run": "EX38",
+    "tag": "Train/mean_episode_length",
+    "window": "early",
+    "n": 100,
+    "mean": 983.0373022460938
+  },
+  {
+    "run": "EX38",
+    "tag": "Train/mean_episode_length",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 991.4382000732422
+  },
+  {
+    "run": "EX38",
+    "tag": "Train/mean_episode_length",
+    "window": "tail",
+    "n": 100,
+    "mean": 986.4119995117187
+  },
+  {
+    "run": "EX38",
+    "tag": "Loss/value_function",
+    "window": "early",
+    "n": 100,
+    "mean": 0.014529513437300877
+  },
+  {
+    "run": "EX38",
+    "tag": "Loss/value_function",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.008069330756552468
+  },
+  {
+    "run": "EX38",
+    "tag": "Loss/value_function",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.009929261952638576
+  },
+  {
+    "run": "EX38",
+    "tag": "track_lin_unit_weight",
+    "window": "early",
+    "n": 100,
+    "mean": 0.8950897589079088
+  },
+  {
+    "run": "EX38",
+    "tag": "track_lin_unit_weight",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.9324058206033644
+  },
+  {
+    "run": "EX38",
+    "tag": "track_lin_unit_weight",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.931215147447567
+  },
+  {
+    "run": "EX38",
+    "tag": "track_ang_unit_weight",
+    "window": "early",
+    "n": 100,
+    "mean": 0.8406600290646342
+  },
+  {
+    "run": "EX38",
+    "tag": "track_ang_unit_weight",
+    "window": "tail_prev",
+    "n": 100,
+    "mean": 0.8856616637361406
+  },
+  {
+    "run": "EX38",
+    "tag": "track_ang_unit_weight",
+    "window": "tail",
+    "n": 100,
+    "mean": 0.8838558104075895
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "run": "EX-36A-basic-share30_20261029_013052_21044",
+    "commit": "cc9840a80a961c83a4aa562801f9550615705699",
+    "module": "foothold_s2/runners/start_runner.py",
+    "sha256": "967ea03dcd5cf261a6576c5bef045849bad5b38edd82f638faccf2201f57a655",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\cc9840a8\\start_runner.py"
+  },
+  {
+    "run": "EX-36A-basic-share30_20261029_013052_21044",
+    "commit": "cc9840a80a961c83a4aa562801f9550615705699",
+    "module": "foothold_s2/runners/map_switch.py",
+    "sha256": "37e584fe616439f77f5b11e71b93525f7504eb734873b490d19992c7743f791c",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\cc9840a8\\map_switch.py"
+  },
+  {
+    "run": "EX-36A-basic-share30_20261029_013052_21044",
+    "commit": "cc9840a80a961c83a4aa562801f9550615705699",
+    "module": "foothold_s2/runners/kl_probe.py",
+    "sha256": "43afc5106848667c9eded6bdfd579053bbef22a9d4653a0e514890f5c97e91a4",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\cc9840a8\\kl_probe.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_040521_60072",
+    "commit": "5578c368010c8aaa2fa564ca1d9d6a18feea1c4c",
+    "module": "foothold_s2/runners/start_runner.py",
+    "sha256": "f685c76ef2404d57a04aa144f2fabb6c7f38f631ccca4bb03f254e9d0298273b",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\5578c368\\start_runner.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_040521_60072",
+    "commit": "5578c368010c8aaa2fa564ca1d9d6a18feea1c4c",
+    "module": "foothold_s2/runners/map_switch.py",
+    "sha256": "37e584fe616439f77f5b11e71b93525f7504eb734873b490d19992c7743f791c",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\5578c368\\map_switch.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_040521_60072",
+    "commit": "5578c368010c8aaa2fa564ca1d9d6a18feea1c4c",
+    "module": "foothold_s2/runners/kl_probe.py",
+    "sha256": "43afc5106848667c9eded6bdfd579053bbef22a9d4653a0e514890f5c97e91a4",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\5578c368\\kl_probe.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_040521_60072",
+    "commit": "5578c368010c8aaa2fa564ca1d9d6a18feea1c4c",
+    "module": "foothold_s2/rewards/basic_gait_bundle.py",
+    "sha256": "88df56357b636e688d0c284d8d5aad853df1b79c5c4efceb3aaa5c5a4c9767b5",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\5578c368\\basic_gait_bundle.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_123840_163180",
+    "commit": "16f37ceb4c3ae562b82108aa092353809cbcc64c",
+    "module": "foothold_s2/runners/start_runner.py",
+    "sha256": "f685c76ef2404d57a04aa144f2fabb6c7f38f631ccca4bb03f254e9d0298273b",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\16f37ceb\\start_runner.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_123840_163180",
+    "commit": "16f37ceb4c3ae562b82108aa092353809cbcc64c",
+    "module": "foothold_s2/runners/map_switch.py",
+    "sha256": "37e584fe616439f77f5b11e71b93525f7504eb734873b490d19992c7743f791c",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\16f37ceb\\map_switch.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_123840_163180",
+    "commit": "16f37ceb4c3ae562b82108aa092353809cbcc64c",
+    "module": "foothold_s2/runners/kl_probe.py",
+    "sha256": "43afc5106848667c9eded6bdfd579053bbef22a9d4653a0e514890f5c97e91a4",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\16f37ceb\\kl_probe.py"
+  },
+  {
+    "run": "EX-38-basic-e1rew_20261029_123840_163180",
+    "commit": "16f37ceb4c3ae562b82108aa092353809cbcc64c",
+    "module": "foothold_s2/rewards/basic_gait_bundle.py",
+    "sha256": "88df56357b636e688d0c284d8d5aad853df1b79c5c4efceb3aaa5c5a4c9767b5",
+    "snapshot": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\curves-ex36a-ex38-1029\\sources\\16f37ceb\\basic_gait_bundle.py"
+  }
+]
