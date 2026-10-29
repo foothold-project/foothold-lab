@@ -40,10 +40,32 @@ def test_style_args_match_the_runner_source():
 
 
 def test_naming_function_follows_the_rule_and_rejects_result_words():
-    assert vs.video_name("EX28-B", "hard_boxes", 3, 57, 1500) == "EX28-B-hard_boxes_L3_env57-m1500-seq-1x"
-    for bad in ("hard_boxes_fail", "map_success", "x_fell"):
+    assert vs.capture_name("EX28-B", "hard_boxes", 3, 57, 1500) == "EX28-B-hard_boxes_L3_env57-m1500-seq-1x"
+    for bad in ("hard_boxes_fail", "map_success", "x_fell"):       # 촬영 작업 이름에는 결과 낱말이 없다
         with pytest.raises(ValueError):
-            vs.video_name("EX35-SB10", bad, 3, 5, 3000)
+            vs.capture_name("EX35-SB10", bad, 3, 5, 3000)
+
+
+def test_final_name_d48_has_video_result_and_only_a_differing_eval_tail(tmp_path):
+    """D48(팀장 10/29): env 번호 없음 · 영상 안 결과 필수 · 평가 결과와 다를 때만 -eval 꼬리 · 같은 이름이 있으면 -2."""
+    f = vs.video_name
+    assert f("EX28-B", "hard_boxes", 3, 1500, "success", "fail") == "EX28-B-hard_boxes_L3-m1500-seq-1x-success-evalfail"
+    assert f("EX28-B", "hard_boxes", 3, 1500, "fail_terminated", "success") == "EX28-B-hard_boxes_L3-m1500-seq-1x-fail-evalsuccess"
+    assert f("EX28-B", "hard_boxes", 3, 1500, "success", "success") == "EX28-B-hard_boxes_L3-m1500-seq-1x-success"
+    assert f("EX35-SB10", "turn16_spin", 0, 2700, "fail_short", "fell") == "EX35-SB10-turn16_spin_L0-m2700-seq-1x-fail"
+    assert f("ex36a", "stairs", 3, 2000, "success") == "ex36a-stairs_L3-m2000-seq-1x-success"      # 단어 하나 종류
+    assert "env" not in f("EX28-B", "hard_boxes", 3, 1500, "success")
+    assert f("EX28-B", "hard_boxes", 3, 1500, "success", dup=2).endswith("-success-2")
+    base = dict(canon_label="EX28-B", set_kind="hard_boxes", level=3, iteration=1500, video_result="success", eval_result="fail")
+    assert vs.unique_video_name(tmp_path, **base) == "EX28-B-hard_boxes_L3-m1500-seq-1x-success-evalfail"
+    (tmp_path / "EX28-B-hard_boxes_L3-m1500-seq-1x-success-evalfail.mp4").write_bytes(b"x")
+    assert vs.unique_video_name(tmp_path, **base).endswith("-evalfail-2")
+    for bad in ("EX28-B-hard_boxes_L3_env57-m1500-seq-1x", "EX28-B-hard_boxes_L3-m1500-seq-1x", "EX28-B-hard_boxes_L3-m1500-seq-2x-success",
+                "EX28-B-hard_boxes_L3-m1500-seq-1x-success-evalsuccess-1", "comparison_1x"):
+        with pytest.raises(ValueError):
+            vs.check_video_name(bad)
+    with pytest.raises(ValueError):
+        f("EX28-B", "hard_boxes", 3, 1500, "unknown")
 
 
 def _argparse_style():
@@ -133,9 +155,9 @@ def test_record_clip_real_parser_defaults_are_the_approved_style():
 
 
 def test_name_rule_accepts_single_word_terrain_and_label_is_enforced():
-    assert vs.video_name("ex36a", "stairs", 3, 12, 2000) == "ex36a-stairs_L3_env12-m2000-seq-1x"
+    assert vs.capture_name("ex36a", "stairs", 3, 12, 2000) == "ex36a-stairs_L3_env12-m2000-seq-1x"
     for kind in ("boxes", "gaps", "flat", "rough", "pyramid_stairs_inv", "sparse_beam"):
-        assert vs.NAME_RE.match(vs.video_name("EX28-B", kind, 1, 2, 1500))
+        assert vs.CAPTURE_NAME_RE.match(vs.capture_name("EX28-B", kind, 1, 2, 1500))
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("--label")

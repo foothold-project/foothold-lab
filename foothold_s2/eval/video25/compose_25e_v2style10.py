@@ -1,7 +1,11 @@
 """Compose a 1920x1080 review video from one record_25e capture (lead, 10/25).
 
-v10 (W30, 팀장 10/28 14:4x 깃발 칸 피드백): 글자는 칸을 넘으면 줄여 맞춘다(넘침 기록 OVERFLOW) · 깃발 캡처는 상태판을 왼쪽으로 넓혀 미니맵을 키움 ·
-닿은 깃발은 지움 · 지나온 길은 작은 점(파랑 = 실제, 초록 = 지나온 목표 깃발) · 위치 화살표는 작게. 깃발 없는 캡처는 v9 와 같은 그림.
+v10 (W30 + 팀장 10/29 15:3x 고침): 칸 폭 · 크기 · 위치는 v8/v9 그대로(상태판 · 미니맵을 넓히지 않는다).
+  - 깃발 캡처 미니맵: 원래 크기 안에서 로봇 중심으로 흐른다(로봇이 가면 깃발이 다가옴). 닿은 깃발은 지움 · 지나온 길은 작은 점 · 위치 화살표 작게.
+  - 상태 칩은 실제 속도로: 이동 중 · 제자리 회전 · 서 있음 · 넘어짐(걷는 중에 서 있음이 뜨지 않는다).
+  - 맨 아래에 「이 영상이 답할 물음」 아주 얇은 띠(render(question=...)), 그 위에 영상 안 결과 줄(render(extra_line=...)).
+  - 글자는 칸 오른쪽 끝을 넘으면 줄여 맞춘다(넘침 기록 OVERFLOW).
+깃발 없는 캡처는 v8/v9 와 같은 그림(위 변경 중 칩 · 아래 띠만 다름).
 
 Layout
   left 1280x720 : Isaac scene (green/blue velocity arrows and yaw arcs, contact footprints)
@@ -71,7 +75,7 @@ def yaw_of(q) -> float:
     return math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
 
 
-OVERFLOW: list = []   # v10: 칸 밖으로 나간 글자(줄여도 안 맞은 것)를 모은다. 시험이 비었는지 본다
+OVERFLOW: list = []   # 칸 밖으로 나간 글자(줄여도 안 맞은 것). 시험이 비었는지 본다
 
 
 def text(img: np.ndarray, items, size: int, limit: int | None = None) -> np.ndarray:
@@ -266,6 +270,9 @@ def command_segment_label(command: dict) -> str:
     return str(command.get("name", "명령"))
 
 
+EXTRA_LINE = {"text": "", "color": (200, 235, 200), "question": ""}   # render() 가 채운다
+
+
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
                 commands: list[dict] | None = None, lit_from: int | None = None) -> np.ndarray:
     band = np.full((360, 1920, 3), (18, 22, 27), np.uint8)
@@ -335,8 +342,13 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
     label_items = [((BOTTOM_LABEL_RIGHT, 80), "vx", (220, 220, 220)),
                    ((BOTTOM_LABEL_RIGHT, 180), "wz", (220, 220, 220))]
     label_items += [((BOTTOM_LABEL_RIGHT, top + f * 18 - 2), FOOT[f], (220, 220, 220)) for f in range(4)]
-    items += [((L, 330), LEGEND, (175, 175, 175))]
     band = text(band, items, 15)
+    band = text(band, [((L, 318), LEGEND, (175, 175, 175))], 11, limit=R)
+    if EXTRA_LINE["text"]:    # 영상 안 결과 줄(합성 호출자가 넣는다)
+        band = text(band, [((L, 331), EXTRA_LINE["text"], EXTRA_LINE["color"])], 12, limit=R)
+    if EXTRA_LINE["question"]:  # 맨 아래 아주 얇은 띠: 이 영상이 답할 물음
+        cv2.rectangle(band, (0, 347), (1919, 359), (30, 35, 43), -1)
+        band = text(band, [((L, 346), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (205, 205, 170))], 10, limit=R)
     return text_right(band, label_items, 15)
 
 
@@ -393,6 +405,67 @@ def flag_state(z, d: int):
     return {"world": world, "target": min(max(target, 0), k), "reached": min(max(target, 0), k), "k": k}
 
 
+STATE_MOVE_MPS, STATE_SPIN_RADPS = 0.15, 0.30   # 이동 중: 실제 수평 속력 > 0.15 m/s · 제자리 회전: 아니면서 |wz| > 0.3 rad/s
+MINI_AHEAD_M, MINI_BEHIND_M, MINI_TRAIL_S = 3.0, 1.2, 3.0   # 깃발 미니맵: 앞 3 m · 뒤 1.2 m 창, 지나온 길 점은 최근 3 s
+
+
+def _flag_minimap(scene, z, d, j, xy, yaw0, fl, lx, rx, py0, py1):
+    """깃발 캡처 미니맵(원래 칸 안): 시작 방향 고정 좌표(오른쪽 = 처음 앞)를 로봇 중심으로 흘린다. 닿은 깃발은 지우고 작은 초록 점만,
+    지나온 길은 작은 파랑 점(최근 3 s, 0.2 s 마다, 오래될수록 어둡게). 목표 깃발이 창 밖이면 가장자리에 화살표로 붙는다."""
+    c, s_ = math.cos(-yaw0), math.sin(-yaw0)
+
+    def to_fl(p):
+        r = np.asarray(p, np.float64) - xy[0]
+        return r[..., 0] * c - r[..., 1] * s_, r[..., 0] * s_ + r[..., 1] * c
+
+    rf, rl = to_fl(xy[j])
+    w, h = rx - lx, py1 - py0
+    kpx = w / (MINI_AHEAD_M + MINI_BEHIND_M)
+    ox, oy = lx + MINI_BEHIND_M * kpx, py0 + h / 2.0
+
+    def px(f_, l_):
+        return ox + (f_ - rf) * kpx, oy - (l_ - rl) * kpx
+
+    cv2.rectangle(scene, (lx, py0), (rx, py1), (30, 33, 38), -1)
+    for gv in range(math.floor(rf - MINI_BEHIND_M), math.ceil(rf + MINI_AHEAD_M) + 1):   # 1 m 눈금은 세계에 붙어 흐른다
+        gx = int(round(px(gv, rl)[0]))
+        if lx <= gx <= rx:
+            cv2.line(scene, (gx, py0), (gx, py1), (44, 48, 54), 1)
+    cv2.line(scene, (lx, int(oy)), (rx, int(oy)), (44, 48, 54), 1)
+    n_tr = int(round(MINI_TRAIL_S / 0.02))
+    for q in range(j, max(-1, j - n_tr), -10):
+        qf, ql = to_fl(xy[q])
+        x_, y_ = px(qf, ql)
+        if lx <= x_ <= rx and py0 <= y_ <= py1:
+            a_ = 1.0 - (j - q) / float(n_tr)
+            cv2.circle(scene, (int(round(x_)), int(round(y_))), 1, tuple(int(v * (0.35 + 0.65 * a_)) for v in ACT_BGR), -1, cv2.LINE_AA)
+    ff, fll = to_fl(fl["world"])
+    for i in range(fl["k"]):
+        x_, y_ = px(ff[i], fll[i])
+        xi, yi = int(round(x_)), int(round(y_))
+        inside = lx + 4 <= x_ <= rx - 4 and py0 + 4 <= y_ <= py1 - 4
+        if i < fl["reached"]:   # 닿은 깃발은 지운다(작은 초록 점만)
+            if inside:
+                cv2.circle(scene, (xi, yi), 1, (90, 200, 90), -1, cv2.LINE_AA)
+            continue
+        if i == fl["target"]:
+            if inside:
+                cv2.circle(scene, (xi, yi), 6, (0, 215, 255), 2, cv2.LINE_AA)
+                cv2.circle(scene, (xi, yi), 2, (0, 215, 255), -1, cv2.LINE_AA)
+                cv2.putText(scene, str(i + 1), (xi + 8, yi - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (235, 235, 235), 1, cv2.LINE_AA)
+            else:   # 창 밖: 가장자리에 방향 화살표
+                ex_, ey_ = min(max(x_, lx + 8), rx - 8), min(max(y_, py0 + 8), py1 - 8)
+                vx_, vy_ = x_ - ex_, y_ - ey_
+                n_ = max(math.hypot(vx_, vy_), 1e-6)
+                cv2.arrowedLine(scene, (int(ex_ - vx_ / n_ * 8), int(ey_ - vy_ / n_ * 8)), (int(ex_), int(ey_)), (0, 215, 255), 2, cv2.LINE_AA, tipLength=0.6)
+        elif inside:
+            cv2.circle(scene, (xi, yi), 5, (150, 154, 160), 1, cv2.LINE_AA)
+            cv2.putText(scene, str(i + 1), (xi + 8, yi - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (150, 154, 160), 1, cv2.LINE_AA)
+    yaw = yaw_of(np.asarray(z["root_quat_w"][d], np.float64)) - yaw0
+    cv2.arrowedLine(scene, (int(ox), int(oy)), (int(ox + math.cos(yaw) * 7), int(oy - math.sin(yaw) * 7)), (240, 240, 240), 1, cv2.LINE_AA, tipLength=0.5)
+    cv2.circle(scene, (int(ox), int(oy)), 1, (240, 240, 240), -1, cv2.LINE_AA)
+
+
 def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np.ndarray:
     """Instrument panel under the legend box, same left / right column lines (v8).
 
@@ -401,7 +474,7 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
     Path: the current episode only, grey = whole episode, blue = walked so far, white arrow = body heading.
     Episodes: a fall freezes the panel for 1 s, then the panel follows the reset episode and counts the falls.
     """
-    X0_, X1_, Y0_, Y1_ = (1280 - 340 if fl_present(z) else 1280 - 196), 1280 - 8, GAUGE_Y0, 682   # v10: 깃발 캡처는 상태판을 왼쪽으로 넓혀 미니맵을 키운다
+    X0_, X1_, Y0_, Y1_ = 1280 - 196, 1280 - 8, GAUGE_Y0, 682
     roi = scene[Y0_:Y1_, X0_:X1_].astype(np.float32)
     scene[Y0_:Y1_, X0_:X1_] = (roi * 0.35 + 10).astype(np.uint8)
     PAD = 10
@@ -454,26 +527,15 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
 
     # speed block: three rows of 38 px on the command ranges (record_isaac.py:84)
     y += 8
-    y_top, lx0, rx0 = y, lx, rx
-    if compact:  # v10: 깃발 캡처는 속도(왼쪽 절반)와 자세(오른쪽 절반)를 나란히 둬서 미니맵 높이를 번다
-        half = (rx0 - lx0) // 2
-        rx = lx0 + half - 8
-        bw = rx - lx
     for label, c, a, lo, hi in (("전진 m/s", cmd[0], vx, -1.5, 1.5), ("좌우 m/s", cmd[1], vy, -1.0, 1.0),
                                 ("회전 rad/s", cmd[2], wz, -2.0, 2.0)):
         head(y, label, f"{c:+.2f} / {a:+.2f}" if np.isfinite(a) else f"{c:+.2f} / -")
         bar(y + 22, a, float(c), lo, hi)
         y += 34 if compact else 38
-    y_speed_end = y
-    if compact:
-        lx, rx = lx0 + half + 8, rx0
-        bw = rx - lx
-        y = y_top
-    else:
-        cv2.line(scene, (lx, y), (rx, y), RULE, 1)
-        y += 8
+    cv2.line(scene, (lx, y), (rx, y), RULE, 1)
 
     # posture block: attitude disc (left) and body height column (right)
+    y += 8
     left_items.append(((lx, y), "자세", LAB))
     right_items.append(((rx, y), "몸통 높이", LAB))
     r = 32 if compact else 40  # flag captures: smaller attitude disc so the minimap keeps its height for the flag lines
@@ -510,10 +572,6 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
     right_items.append(((rx, cy + r + 6), f"{h:.3f} m", VAL))
     right_items.append(((gx0 + 4, gbot - 8), "0", DIM))
     y = cy + r + 28
-    if compact:
-        y = max(y, y_speed_end)
-        lx, rx = lx0, rx0
-        bw = rx - lx
     cv2.line(scene, (lx, y), (rx, y), RULE, 1)
 
     # path block: the current episode, start heading = up
@@ -527,81 +585,83 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
     fwd = rel[:, 0] * c - rel[:, 1] * s_
     lat = rel[:, 0] * s_ + rel[:, 1] * c
     fl = flag_state(z, d)
-    if fl is not None:  # flags relative to this episode's start pose, same rotation as the path
-        frel = fl["world"] - xy[0]
-        ffwd = frel[:, 0] * c - frel[:, 1] * s_
-        flat = frel[:, 0] * s_ + frel[:, 1] * c
-        all_f, all_l = np.r_[fwd, ffwd], np.r_[lat, flat]
+    if fl is not None:   # v10: 원래 미니맵 크기 안에서 로봇 중심으로 흐른다
+        _flag_minimap(scene, z, d, j, xy, yaw0, fl, lx, rx, py0, py1)
     else:
-        all_f, all_l = fwd, lat
-    span = max(float(np.ptp(all_f)), float(np.ptp(all_l)), 1.0) * 1.08
-    INSET = 16  # keeps the start dot and the heading arrow inside the minimap
-    pw, ph = bw - 2 * INSET, py1 - py0 - 2 * INSET
-    # flag captures draw the minimap sideways (start heading = right, left = up): 7 flags 1 m apart need the 150 px width, not the 60 px height
-    kk = min(pw / (max(float(np.ptp(all_f)), 1.0) * 1.08), ph / (max(float(np.ptp(all_l)), 1.0) * 1.08)) if compact else min(pw, ph) / span
-    mx, my = lx + bw / 2.0, py0 + (py1 - py0) / 2.0
-    fc, lc = (all_f.max() + all_f.min()) / 2.0, (all_l.max() + all_l.min()) / 2.0
-    def to_px(f_, l_):
-        if compact:
-            return np.stack([mx + (f_ - fc) * kk, my - (l_ - lc) * kk], 1)
-        return np.stack([mx - (l_ - lc) * kk, my - (f_ - fc) * kk], 1)
+        if fl is not None:  # flags relative to this episode's start pose, same rotation as the path
+            frel = fl["world"] - xy[0]
+            ffwd = frel[:, 0] * c - frel[:, 1] * s_
+            flat = frel[:, 0] * s_ + frel[:, 1] * c
+            all_f, all_l = np.r_[fwd, ffwd], np.r_[lat, flat]
+        else:
+            all_f, all_l = fwd, lat
+        span = max(float(np.ptp(all_f)), float(np.ptp(all_l)), 1.0) * 1.08
+        INSET = 16  # keeps the start dot and the heading arrow inside the minimap
+        pw, ph = bw - 2 * INSET, py1 - py0 - 2 * INSET
+        # flag captures draw the minimap sideways (start heading = right, left = up): 7 flags 1 m apart need the 150 px width, not the 60 px height
+        kk = min(pw / (max(float(np.ptp(all_f)), 1.0) * 1.08), ph / (max(float(np.ptp(all_l)), 1.0) * 1.08)) if compact else min(pw, ph) / span
+        mx, my = lx + bw / 2.0, py0 + (py1 - py0) / 2.0
+        fc, lc = (all_f.max() + all_f.min()) / 2.0, (all_l.max() + all_l.min()) / 2.0
+        def to_px(f_, l_):
+            if compact:
+                return np.stack([mx + (f_ - fc) * kk, my - (l_ - lc) * kk], 1)
+            return np.stack([mx - (l_ - lc) * kk, my - (f_ - fc) * kk], 1)
 
-    pts = to_px(fwd, lat).astype(np.int32)
-    cv2.rectangle(scene, (lx, py0), (rx, py1), (30, 33, 38), -1)
-    for gv in np.arange(math.floor(all_f.min()), math.ceil(all_f.max()) + 1):  # 1 m grid
-        if compact:
-            gx = int(round(mx + (gv - fc) * kk))
-            if lx <= gx <= rx:
-                cv2.line(scene, (gx, py0), (gx, py1), (44, 48, 54), 1)
-            continue
-        gy = int(round(my - (gv - fc) * kk))
-        if py0 <= gy <= py1:
-            cv2.line(scene, (lx, gy), (rx, gy), (44, 48, 54), 1)
-    for gv in np.arange(math.floor(all_l.min()), math.ceil(all_l.max()) + 1):
-        if compact:
-            gy = int(round(my - (gv - lc) * kk))
+        pts = to_px(fwd, lat).astype(np.int32)
+        cv2.rectangle(scene, (lx, py0), (rx, py1), (30, 33, 38), -1)
+        for gv in np.arange(math.floor(all_f.min()), math.ceil(all_f.max()) + 1):  # 1 m grid
+            if compact:
+                gx = int(round(mx + (gv - fc) * kk))
+                if lx <= gx <= rx:
+                    cv2.line(scene, (gx, py0), (gx, py1), (44, 48, 54), 1)
+                continue
+            gy = int(round(my - (gv - fc) * kk))
             if py0 <= gy <= py1:
                 cv2.line(scene, (lx, gy), (rx, gy), (44, 48, 54), 1)
-            continue
-        gx = int(round(mx - (gv - lc) * kk))
-        if lx <= gx <= rx:
-            cv2.line(scene, (gx, py0), (gx, py1), (44, 48, 54), 1)
-    if fl is None:
+        for gv in np.arange(math.floor(all_l.min()), math.ceil(all_l.max()) + 1):
+            if compact:
+                gy = int(round(my - (gv - lc) * kk))
+                if py0 <= gy <= py1:
+                    cv2.line(scene, (lx, gy), (rx, gy), (44, 48, 54), 1)
+                continue
+            gx = int(round(mx - (gv - lc) * kk))
+            if lx <= gx <= rx:
+                cv2.line(scene, (gx, py0), (gx, py1), (44, 48, 54), 1)
         cv2.polylines(scene, [pts.reshape(-1, 1, 2)], False, (90, 94, 100), 1, cv2.LINE_AA)
         cv2.polylines(scene, [pts[: j + 1].reshape(-1, 1, 2)], False, ACT_BGR, 2, cv2.LINE_AA)
         cv2.circle(scene, tuple(int(v) for v in pts[0]), 3, (200, 200, 200), -1, cv2.LINE_AA)
-    else:  # v10: 지나온 길은 작은 점만(앞으로 갈 길은 그리지 않는다). 파랑 = 실제 위치(0.2 s 마다), 초록 = 이미 닿은 목표 깃발(작은 점)
-        for q in pts[: j + 1 : 10]:
-            cv2.circle(scene, (int(q[0]), int(q[1])), 1, ACT_BGR, -1, cv2.LINE_AA)
-        cv2.circle(scene, tuple(int(v) for v in pts[0]), 2, (200, 200, 200), -1, cv2.LINE_AA)
-        fpts = to_px(ffwd, flat)
-        for i, (fx, fy) in enumerate(fpts):
-            cx_, cy_ = int(round(fx)), int(round(fy))
-            if i < fl["reached"]:   # 닿은 깃발은 지우고 작은 초록 점만 남긴다
-                cv2.circle(scene, (cx_, cy_), 1, (90, 200, 90), -1, cv2.LINE_AA)
-                continue
-            if i == fl["target"]:
-                cv2.circle(scene, (cx_, cy_), 7, (0, 215, 255), 2, cv2.LINE_AA)
-                cv2.circle(scene, (cx_, cy_), 2, (0, 215, 255), -1, cv2.LINE_AA)
-            else:
-                cv2.circle(scene, (cx_, cy_), 5, (150, 154, 160), 1, cv2.LINE_AA)
-            cv2.putText(scene, str(i + 1), (cx_ + 8, cy_ - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (235, 235, 235) if i == fl["target"] else (150, 154, 160), 1, cv2.LINE_AA)
-    yaw = yaw_of(np.asarray(z["root_quat_w"][d], np.float64)) - yaw0
-    hx, hy2 = (math.cos(yaw), -math.sin(yaw)) if compact else (-math.sin(yaw), -math.cos(yaw))
-    p = pts[j]
-    alen = 7 if compact else 12   # v10: 깃발 캡처의 위치 화살표를 작게(깃발과 한 점에 겹치지 않게)
-    cv2.arrowedLine(scene, (int(p[0]), int(p[1])), (int(p[0] + hx * alen), int(p[1] + hy2 * alen)),
-                    (240, 240, 240), 1 if compact else 2, cv2.LINE_AA, tipLength=0.5)
+        if fl is not None:  # numbered flags: touched = filled green, current goal = yellow ring + bigger, rest = grey outline
+            fpts = to_px(ffwd, flat)
+            for i, (fx, fy) in enumerate(fpts):
+                cx_, cy_ = int(round(fx)), int(round(fy))
+                if i < fl["reached"]:
+                    cv2.circle(scene, (cx_, cy_), 5, (90, 200, 90), -1, cv2.LINE_AA)
+                elif i == fl["target"]:
+                    cv2.circle(scene, (cx_, cy_), 7, (0, 215, 255), 2, cv2.LINE_AA)
+                    cv2.circle(scene, (cx_, cy_), 2, (0, 215, 255), -1, cv2.LINE_AA)
+                else:
+                    cv2.circle(scene, (cx_, cy_), 5, (150, 154, 160), 1, cv2.LINE_AA)
+                cv2.putText(scene, str(i + 1), (cx_ + 8, cy_ - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (235, 235, 235) if i <= fl["target"] else (150, 154, 160), 1, cv2.LINE_AA)
+        yaw = yaw_of(np.asarray(z["root_quat_w"][d], np.float64)) - yaw0
+        hx, hy2 = (math.cos(yaw), -math.sin(yaw)) if compact else (-math.sin(yaw), -math.cos(yaw))
+        p = pts[j]
+        cv2.arrowedLine(scene, (int(p[0]), int(p[1])), (int(p[0] + hx * 12), int(p[1] + hy2 * 12)),
+                        (240, 240, 240), 2, cv2.LINE_AA, tipLength=0.45)
     small_items.append(((lx, py1 + 5), "초록 명령 · 파랑 실제 · 1m 칸" if not compact else "→ 앞 · 노랑 목표 · 파랑 실제 · 초록 닿음", DIM))
 
     # status strip: this episode's state, the episode number and the falls so far
     sy = Y1_ - 34
+    speed_xy = math.hypot(vx, vy if np.isfinite(vy) else 0.0)
     if fallen_now:
         pill, word = (60, 60, 200), f"넘어짐 {float(z['t'][d]):.2f} s"
     elif compact and d == e1:  # flag captures: the last row of an episode (time-out or end of the clip) without a fall = survival component
         pill, word = (60, 130, 60), "끝까지 생존"
+    elif speed_xy > STATE_MOVE_MPS:        # v10: 상태는 실제 속도로 정한다(명령이 아니라)
+        pill, word = (70, 150, 70), "이동 중"
+    elif abs(wz) > STATE_SPIN_RADPS:
+        pill, word = (160, 120, 50), "제자리 회전"
     else:
-        pill, word = (70, 150, 70), "서 있음"
+        pill, word = (96, 100, 106), "서 있음"
     cv2.rectangle(scene, (lx, sy), (lx + 92, sy + 22), pill, -1)
     left_items.append(((lx + 8, sy + 2), word, (255, 255, 255)))
     cv2.rectangle(scene, (lx + 100, sy), (rx, sy + 22), (60, 64, 70), 1)
@@ -698,9 +758,13 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
     return text(scene, items, LEGEND_FONT)
 
 
-def render(capture: Path, segment: str, speed: str, out: Path) -> dict:
+def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None) -> dict:
+    """question = 맨 아래 얇은 띠 「이 영상이 답할 물음」, extra_line = 그 위 영상 안 결과 줄, label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
     video_style.require_approved(meta, "review.json")   # W49: style_id 가 승인 값이 아니면 합성 실패
+    if label:
+        meta["label"] = label
+    EXTRA_LINE.update({"text": extra_line, "color": extra_color, "question": question})
     z = np.load(capture / "review_feet.npz", allow_pickle=False)
     contract = meta.get("step_contract", {})
     expected_capture_frames, duration_s, fps, steps = capture_frame_contract(meta)
@@ -759,7 +823,7 @@ def render(capture: Path, segment: str, speed: str, out: Path) -> dict:
            "speed": speed, "duration_s": duration_s, "fps": fps,
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),
-           "label": meta.get("label"), "checkpoint_sha256": meta.get("checkpoint_sha256")}
+           "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256")}
     out.with_suffix(".json").write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return rec
 
@@ -770,5 +834,7 @@ if __name__ == "__main__":
     ap.add_argument("--segment", choices=tuple(SEGMENTS), required=True)
     ap.add_argument("--speed", choices=tuple(SPEEDS), required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--question", default="")
+    ap.add_argument("--label", default=None)
     a = ap.parse_args()
-    print(json.dumps(render(a.capture, a.segment, a.speed, a.out), ensure_ascii=False))
+    print(json.dumps(render(a.capture, a.segment, a.speed, a.out, question=a.question, label=a.label), ensure_ascii=False))

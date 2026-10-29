@@ -31,7 +31,13 @@ STYLE_ARGS = ("--lighting-profile", "dome_plus_three_point", "--dome-intensity",
 #   import importlib.util as _u, pathlib as _p
 #   _s = _u.spec_from_file_location("video_style", _p.Path(__file__).resolve().parent / "video_style.py")
 #   video_style = _u.module_from_spec(_s); _s.loader.exec_module(video_style)
-NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*-[A-Za-z0-9][A-Za-z0-9+]*(?:_[A-Za-z0-9+]+)*_L[0-9]+_env[0-9]+-m[0-9]+-[a-z0-9_]+-1x$")
+_CANON = r"[A-Za-z0-9][A-Za-z0-9.-]*"
+_KIND = r"[A-Za-z0-9][A-Za-z0-9+]*(?:_[A-Za-z0-9+]+)*"
+# 촬영 작업 이름(폴더 · --label): env 번호가 들어가고 결과 낱말은 없다. 같은 칸의 성공 env 와 실패 env 를 가르는 용도라 최종 이름이 아니다.
+CAPTURE_NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+_env[0-9]+-m[0-9]+-[a-z0-9_]+-1x$")
+# 최종 영상 이름(D48, 팀장 10/29): <정본>-<지형>_L<레벨>-m<회차>-<구간>-<배속>-<영상 안 결과>[-eval<평가 결과>][-<2 이상 번호>]. env 번호 없음.
+# 평가 결과가 영상 안 결과와 같으면 -eval 꼬리 없음. 한 칸에 같은 이름이 둘이면 -2, -3.
+NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+-m[0-9]+-[a-z0-9_]+-1x-(?:success|fail)(?:-eval(?:success|fail))?(?:-[2-9][0-9]*)?$")
 
 
 def add_style_args(parser: argparse.ArgumentParser) -> None:
@@ -88,10 +94,18 @@ def require_approved(meta: dict, where: str = "") -> dict:
 
 
 def check_video_name(name: str) -> str:
-    """이미 붙은 이름(확장자 없음 또는 .mp4)이 규칙 이름인지 검사. 아니면 ValueError."""
+    """최종 영상 이름(확장자 없음 또는 .mp4)이 D48 규칙 이름인지 검사. 아니면 ValueError."""
     stem = name[:-4] if name.endswith(".mp4") else name
-    if not NAME_RE.match(stem) or re.search(r"success|fail|fell", stem, re.I):
+    if not NAME_RE.match(stem):
         raise ValueError("규칙 이름이 아니다: %r" % stem)
+    return stem
+
+
+def check_capture_name(name: str) -> str:
+    """촬영 작업 이름(폴더 · --label)이 규칙(env 번호 포함, 성공 · 실패 낱말 없음)인지 검사."""
+    stem = name[:-4] if name.endswith(".mp4") else name
+    if not CAPTURE_NAME_RE.match(stem) or re.search(r"success|fail|fell", stem, re.I):
+        raise ValueError("촬영 이름 규칙이 아니다: %r" % stem)
     return stem
 
 
@@ -101,7 +115,7 @@ def check_label(args: Any, parser: argparse.ArgumentParser | None = None) -> Non
     if getattr(args, "allow_unapproved_style", False):
         return
     try:
-        check_video_name(args.label)
+        check_capture_name(args.label)
         mp4 = Path(args.mp4)
         if not (mp4.stem == args.label or (mp4.stem in ("review", "plan") and mp4.resolve().parent.name == args.label)):
             raise ValueError("mp4 이름이 label 과 다르다: %s != %s" % (mp4.name, args.label))
@@ -111,10 +125,41 @@ def check_label(args: Any, parser: argparse.ArgumentParser | None = None) -> Non
         raise
 
 
-def video_name(canon_label: str, set_kind: str, level: int, env: int, iteration: int, segment: str = "seq", speed: str = "1x") -> str:
-    """RULES-HUB 4 절 이름 `<실험들>-<지형>-m<회차>-<구간>-<배속>` 의 <지형> 칸을 `<종류>_L<레벨>_env<번호>` 로 채운다(근거: lead 카드 CARD-W03R-1029 1 절 이름 형식).
-    <종류> 는 단어 하나(stairs, boxes)도 되고 밑줄 이어붙임(pyramid_stairs_inv)도 된다. 확장자 없음. 성공 · 실패 낱말을 넣지 않는다."""
-    return check_video_name("%s-%s_L%d_env%d-m%d-%s-%s" % (canon_label, set_kind, int(level), int(env), int(iteration), segment, speed))
+def capture_name(canon_label: str, set_kind: str, level: int, env: int, iteration: int, segment: str = "seq", speed: str = "1x") -> str:
+    """촬영 작업 이름 `<정본>-<종류>_L<레벨>_env<번호>-m<회차>-<구간>-<배속>` (확장자 없음, 결과 낱말 없음). 종류는 단어 하나(stairs)도 밑줄 이어붙임도 된다."""
+    return check_capture_name("%s-%s_L%d_env%d-m%d-%s-%s" % (canon_label, set_kind, int(level), int(env), int(iteration), segment, speed))
+
+
+def result_word(verdict_or_role: str) -> str:
+    """영상 안 판정(success · fail_terminated · fail_short) 또는 평가 역할(success · fail · fell)을 이름 낱말 success | fail 로."""
+    if verdict_or_role == "success":
+        return "success"
+    if verdict_or_role in ("fail", "fell", "fail_terminated", "fail_short"):
+        return "fail"
+    raise ValueError("알 수 없는 결과: %r" % verdict_or_role)
+
+
+def video_name(canon_label: str, set_kind: str, level: int, iteration: int, video_result: str, eval_result: str | None = None,
+               segment: str = "seq", speed: str = "1x", dup: int = 1) -> str:
+    """최종 영상 이름(D48): `<정본>-<종류>_L<레벨>-m<회차>-<구간>-<배속>-<영상 안 결과>[-eval<평가 결과>][-<dup>]` (확장자 없음).
+    env 번호는 넣지 않는다. eval_result 가 영상 안 결과와 같거나 없으면 -eval 꼬리를 붙이지 않는다. dup >= 2 면 끝에 -dup."""
+    v = result_word(video_result)
+    e = result_word(eval_result) if eval_result is not None else v
+    name = "%s-%s_L%d-m%d-%s-%s-%s" % (canon_label, set_kind, int(level), int(iteration), segment, speed, v)
+    if e != v:
+        name += "-eval" + e
+    if dup >= 2:
+        name += "-%d" % dup
+    return check_video_name(name)
+
+
+def unique_video_name(folder, **kw) -> str:
+    """folder 에 같은 이름의 .mp4 가 이미 있으면 -2, -3 ... 을 붙인 이름을 낸다(video_name 의 인자 그대로)."""
+    from pathlib import Path as _P
+    d = 1
+    while (_P(folder) / (video_name(dup=d, **kw) + ".mp4")).exists():
+        d += 1
+    return video_name(dup=d, **kw)
 
 
 # ---- 아래는 record_25e_x31.py 에서 옮긴 조명 적용 코드(그대로, 이름 유지) ----
