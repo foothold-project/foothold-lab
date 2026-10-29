@@ -226,3 +226,12 @@ def test_v8_composer_copy_and_frame_check_refuse_non_approved(tmp_path):
     ok = vs.resolve_style(_argparse_style().parse_args([]))
     (tmp_path / "a.json").write_text(json.dumps({"style": ok}), encoding="utf-8")
     assert chk.style_gate(str(mp4)) == {"style_gate": "approved"}
+
+
+def test_set_video_name_has_no_result_tail_and_no_env():
+    n = vs.set_video_name("EX36A-basic", "pyramid_stairs", 1, 3000, "fwd_back_eval_pred")
+    assert n == "EX36A-basic-pyramid_stairs_L1-m3000-fwd_back_eval_pred-1x"
+    assert vs.set_video_name("EX36A-basic", "pyramid_stairs", 1, 3000, "fwd_back_eval_pred", dup=2).endswith("-1x-2")
+    for bad in ({"segment": "seq_success"}, {"segment": "Fwd Back"}):
+        with pytest.raises(ValueError):
+            vs.set_video_name("EX36A-basic", "pyramid_stairs", 1, 3000, **{"segment": "x", **bad})

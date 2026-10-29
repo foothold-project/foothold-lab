@@ -71,8 +71,8 @@ def w15_commands(spec) -> tuple:
     cells = _w15_cells(spec["source_root"])
     table = cells.commands("extended")
     names = W15_SETS[spec["w15_set"]]
-    steps = cells.phase_steps(W15_STEPS, len(names))
-    return tuple((n, tuple(float(x) for x in table[n]), round(k * W15_STEP_DT_S, 6)) for n, k in zip(names, steps))
+    span = W15_SINGLE_S if len(names) == 1 else W15_VIDEO_SEG_S
+    return tuple((n, tuple(float(x) for x in table[n]), span) for n in names)
 
 
 def capture_commands(spec) -> tuple:
@@ -115,8 +115,10 @@ W15_PROFILE = "W15"                                        # D51 대표 영상: 
 W15_SOURCE_ROOT = "C:/mai/wt/foothold-lab/eval-ex36-w15fix"
 W15_SOURCE_HEAD = "c57f2b4b6a731e22957e37d4df897afd97ff36de"
 W15_RECORDER_SHA256 = "ce86aec23ffa6e863cab746ac4da5e4504ebbe2919be1f85f2ad7af6aa7979e2"
-W15_STEPS = 300                                            # W15 평가의 --steps 기본값(run_sb_eval.sh 도 300). 구간 길이는 map_mode_cells.phase_steps 가 정한다
 W15_STEP_DT_S = 0.02
+W15_VIDEO_SEG_S = 3.0                                      # lead 10/29 17:2x: 영상용 구간 길이. 명령 순서 · 값은 W15 그대로(map_mode_cells), 길이만 명령마다 3.0 s
+W15_SINGLE_S = 6.0                                         # 명령 하나뿐인 셋(경사 전진)은 W15 평가 길이 6 s 그대로(가정, lead 에 알림)
+W15_DURATION_NOTE = "W15 순서 · 값 그대로, 구간 길이만 영상용 3.0 s (명령 하나뿐인 셋은 6.0 s)"
 # 연속 명령 셋(lead 10/29 D51): 명령 이름은 W15 평가 코드(map_mode_cells.commands("extended"))에서 읽는다. 셋의 순서만 여기서 정한다.
 W15_SETS = {
     "fwd_back": ("fwd0.5", "fwd1.0", "stop", "back0.5", "back1.0"),
@@ -1649,7 +1651,7 @@ def _capture(spec: dict[str, Any]) -> None:
                                      "actuator_definition": "nonterminal last simulated substep only; terminal rows NaN"},
             "task_id": task_id, "task_selection": task_selection, "seed": spec["seed"],
             "selected_environment": ({"env_id": capture_env_id, "kind": spec["kind"],
-                                      "level": spec["fixed_level"], "col": spec["col"],
+                                      "level": ((task_selection.get("selected_tile") or {}).get("level") if sparse_capture else None), "col": spec["col"],
                                       "selection_role": spec["selection_role"]} if sparse_capture else None),
             "render_visibility": render_visibility_record
             if sparse_capture else {"enabled": False, "reason": "single-environment capture"},

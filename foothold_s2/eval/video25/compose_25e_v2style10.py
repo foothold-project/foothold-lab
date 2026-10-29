@@ -267,6 +267,15 @@ def command_segment_label(command: dict) -> str:
         return "좌회전"
     if abs(wz + 1.2) < 1e-6 and abs(vx) < 1e-6:
         return "우회전"
+    vy = float(target[1]) if len(target) > 1 else 0.0
+    if abs(vx) < 1e-6 and abs(vy) < 1e-6 and abs(wz) < 1e-6:   # W15 연속 명령 셋(D51)
+        return "정지"
+    if abs(vy) < 1e-6 and abs(wz) < 1e-6 and vx < 0:
+        return "후진 %.1f" % abs(vx)
+    if abs(vx) < 1e-6 and abs(wz) < 1e-6:
+        return "옆 %s %.1f" % ("좌" if vy > 0 else "우", abs(vy))
+    if abs(wz) < 1e-6:
+        return "대각 %s %s" % ("전진" if vx > 0 else "후진", "좌" if vy > 0 else "우")
     return str(command.get("name", "명령"))
 
 
@@ -387,8 +396,9 @@ def terrain_text(meta: dict | None) -> tuple[str, str]:
     """Return (terrain kind, level or difficulty) from the capture receipt."""
     meta = meta or {}
     sel = meta.get("selected_environment") or {}
+    tile = (meta.get("task_selection") or {}).get("selected_tile") or {}   # map64 배치는 selected_environment.level 이 자리표시(0)라 실제 칸 레벨은 selected_tile 에서
     if sel.get("kind") is not None:
-        return str(sel["kind"]), f"L{sel.get('level', '?')}"
+        return str(sel["kind"]), f"L{tile.get('level', sel.get('level', '?'))}"
     task = meta.get("task_selection") or {}
     kind = task.get("terrain_type") or task.get("terrain_generator") or meta.get("scene", "?")
     diff = task.get("difficulty")

@@ -162,6 +162,19 @@ def unique_video_name(folder, **kw) -> str:
     return video_name(dup=d, **kw)
 
 
+SET_NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+-m[0-9]+-[a-z0-9_]+-1x(?:-[2-9][0-9]*)?$")
+
+
+def set_video_name(canon_label: str, set_kind: str, level: int, iteration: int, segment: str, speed: str = "1x", dup: int = 1) -> str:
+    """연속 명령 셋 영상 이름(D51): `<정본>-<지형>_L<레벨>-m<회차>-<셋>_<지도 모드>-<배속>[-<dup>]`. 「3 m 도달」 영상 안 결과가 없는 영상이라 success/fail 꼬리가 없다. env 번호 없음."""
+    name = "%s-%s_L%d-m%d-%s-%s" % (canon_label, set_kind, int(level), int(iteration), segment, speed)
+    if dup >= 2:
+        name += "-%d" % dup
+    if not SET_NAME_RE.match(name) or re.search(r"success|fail|fell", name, re.I):
+        raise ValueError("연속 명령 셋 이름 규칙이 아니다: %r" % name)
+    return name
+
+
 # ---- 아래는 record_25e_x31.py 에서 옮긴 조명 적용 코드(그대로, 이름 유지) ----
 def lighting_profile_settings(profile: str = "inherit", *, intensity: float | None = None,
                               angle_deg: float = 1.0, azimuth_deg: float = 45.0,

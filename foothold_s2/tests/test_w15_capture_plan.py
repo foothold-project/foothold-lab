@@ -38,15 +38,15 @@ def plan(s):
     return p
 
 
-@pytest.mark.parametrize("w15_set,n", [("fwd_back", 5), ("side_diag", 6), ("spin_restart", 4), ("slope_fwd", 1)])
+@pytest.mark.parametrize("w15_set,n,total", [("fwd_back", 5, 15.0), ("side_diag", 6, 18.0), ("spin_restart", 4, 12.0), ("slope_fwd", 1, 6.0)])
 @pytest.mark.parametrize("mode", ["eval_gt", "eval_pred"])
-def test_sets_and_modes_pass_the_real_parser(w15_set, n, mode):
+def test_sets_and_modes_pass_the_real_parser(w15_set, n, total, mode):
     rule = dict(rule="slope_L1", env=41, kind="hf_pyramid_slope", col=18) if w15_set == "slope_fwd" else {}
     p = plan(spec(w15_set, mode, **rule))
     assert p.returncode == 0, p.stderr[-400:]
     out = json.loads(p.stdout[p.stdout.index("{"):])
     assert len(out["commands"]) == n and out["spec"]["map_mode"] == mode
-    assert abs(sum(c[2] for c in out["commands"]) - 6.0) < 1e-6 and out["target_frames"] == 150
+    assert abs(sum(c[2] for c in out["commands"]) - total) < 1e-6 and out["target_frames"] == int(total * 25)
 
 
 def test_command_vectors_come_from_the_w15_eval_code():
