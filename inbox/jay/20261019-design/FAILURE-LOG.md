@@ -148,6 +148,7 @@
 | M41 | 이 기기의 Bash 도구에서 heredoc 안의 \\ 가 \ 로 줄어 정규식 · 문자열 이스케이프가 깨진다 · 역슬래시가 든 코드는 Write/Edit 로 | lead 메모리 `bash-heredoc-eats-backslashes` |
 | M64 | Windows PowerShell 5.1 은 BOM 없는 UTF-8 .ps1 을 ANSI 로 읽는다. 한글·«» 가 깨져 파싱이 죽고, 증상은 「UAC 거부」처럼 보인다. | lead 메모리 `ps51-scripts-must-be-ascii` |
 | M75 | Windows 에서 Write 도구는 CRLF 로 쓰고 foothold-lab 은 core.autocrlf=true 라 커밋은 LF 가 된다. 「LF 확인」 은 작업 사본이 아니라 git ls-files --eol 의 i/lf 로 한다 | lead 메모리 `write-tool-crlf-autocrlf` |
+| M76 | 학습 설정 · DR · 액추에이터를 말할 때 cfg 코드 한 파일(상속의 중간)이나 주석을 읽고 단정했다. 10/29 밤 하루에 셋: 「지연 코드 없음」(구현 있음 · 꺼짐) · 「마찰 0.8/0.6 고정」(하위 cfg 가 0.2~1.2 로 엶) · 「단계 설계에 없음」 처럼 들리게 말함(CURRICULUM-GATES C7a~C7c 에 있음). 설정은 그 판의 params/env.yaml · realized_*.json 을 코드로 뽑아서 말하고, 설계 유무는 단계표를 열고 말한다. 정본 기록부의 물리 칸도 env.yaml 에서 뽑는다(dr_extract) | 10/29 23:0x 팀장 지적 · CANON-REGISTRY 39dd5390 |
 | M37 | Artifact 에 바이너리는 data.js 로 (octet-stream 서빙 안 됨) · files 는 작업 디렉터리 또는 세션 scratchpad · mp4 서빙됨 · 64 MB 넘으면 나눠 올림 · **한 판 256 MiB 넘으면 assets 저장소(/_blob/) 로 (10/18)** | lead 메모리 `artifact-binary-data-as-js` |
 | M58 | 내가 아는 모델 목록은 지식 기준일에 멈춰 있다. 팀장이 새 모델을 말하면 설치본에서 확인하고, 없다고 단정하지 않는다. | lead 메모리 `model-list-in-my-head-goes-stale` |
 | M50 | Bash(Git Bash) 에서 orca terminal send --text \"/rename sol\" 처럼 슬래시로 시작하는 문장을 보내면 C:/Program Files/Git/rename sol 로 바뀌어 Codex 창에 들어간다 | lead 메모리 `git-bash-turns-slash-into-a-windows-path` |
