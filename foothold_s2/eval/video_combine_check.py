@@ -19,6 +19,26 @@ SUFFIXES = os.environ.get("CLIP_SUFFIXES", "s1a_scan5999,v2,d2_1500").split(",")
 TILE_WIDTH = int(os.environ.get("TILE_WIDTH", "640"))
 
 
+def style_gate(mp4_path):
+    """W49: 영상 옆 `<이름>.json` 영수증의 style_id 가 승인 화풍이 아니면 검사를 실패로 끝낸다(video_style.require_approved).
+    영수증이 없어도 실패(없는 것을 통과시키지 않는다). 옛 영상을 일부러 볼 때만 ALLOW_NO_STYLE_RECEIPT=1."""
+    if os.environ.get("ALLOW_NO_STYLE_RECEIPT") == "1":
+        return {"style_gate": "skipped"}
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("video_style", os.path.join(os.path.dirname(os.path.abspath(__file__)), "video_style.py"))
+    video_style = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(video_style)
+    receipt = os.path.splitext(mp4_path)[0] + ".json"
+
+    if not os.path.isfile(receipt):
+        raise SystemExit("style_gate: 영수증 json 이 없다: %s" % receipt)
+
+    with open(receipt, encoding="utf-8-sig") as handle:
+        video_style.require_approved(json.load(handle), os.path.basename(receipt))
+
+    return {"style_gate": "approved"}
+
+
 def read_frames(path):
     container = av.open(path)
     frames = [f.to_ndarray(format="rgb24") for f in container.decode(video=0)]
@@ -128,7 +148,7 @@ def main_files():
 
     for p in paths:
         frames, fps = read_frames(p)
-        report[os.path.basename(p)] = dict(check(frames), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
+        report[os.path.basename(p)] = dict(check(frames), **style_gate(p), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
 
     out = os.path.join(folder, os.environ["CLIP_OUT"])
 
@@ -158,7 +178,7 @@ def main():
 
         for p in paths:
             frames, fps = read_frames(p)
-            report[os.path.basename(p)] = dict(check(frames), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
+            report[os.path.basename(p)] = dict(check(frames), **style_gate(p), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
 
         tag = "%dup" % len(paths)
         report["%s_%s.mp4" % (scene, tag)] = {"frames": combine(paths, os.path.join(folder, "%s_%s.mp4" % (scene, tag)))}

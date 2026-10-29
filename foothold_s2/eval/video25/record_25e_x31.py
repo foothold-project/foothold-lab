@@ -250,6 +250,9 @@ _vs_s.loader.exec_module(video_style)
 lighting_profile_settings = video_style.lighting_profile_settings   # 승인 화풍 한 곳(video_style.py)에서 옮김
 apply_lighting_to_stage = video_style.apply_lighting_to_stage
 apply_lighting_profile = video_style.apply_lighting_profile
+hide_nonselected_robot_roots = video_style.hide_nonselected_robot_roots
+define_target_marker = video_style.define_target_marker
+update_target_marker = video_style.update_target_marker
 
 
 def _plain_config(value: Any) -> Any:
@@ -1026,6 +1029,7 @@ def _capture(spec: dict[str, Any]) -> None:
     # Reparse the original argv with launcher options, but only after plan-only was ruled out.
     full_args = parser.parse_args()
     style_record = video_style.resolve_style(full_args, parser)
+    video_style.check_label(full_args, parser)
     full_args.enable_cameras = True
     _app = AppLauncher(full_args).app
     repo = Path(spec["source_root"]).resolve()
@@ -1618,6 +1622,7 @@ def main(argv: list[str] | None = None) -> int:
     # Parse known arguments first so the plan-only path does not import Kit.
     args, _remaining = parser.parse_known_args(argv)
     style_plan = video_style.resolve_style(args, parser)
+    video_style.check_label(args, parser)
     spec = parse_spec(args.policy)
     source_gate = validate_source_root(Path(spec["source_root"]), spec["experiment"], spec.get("source_profile"))
     checkpoint_profile = validate_checkpoint_profile(spec, Path(args.checkpoint))

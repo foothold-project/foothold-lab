@@ -23,20 +23,26 @@ _vs_s = _vs_u.spec_from_file_location("video_style", __import__("pathlib").Path(
 video_style = _vs_u.module_from_spec(_vs_s)
 _vs_s.loader.exec_module(video_style)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--policy", required=True)
-parser.add_argument("--checkpoint", required=True)
-parser.add_argument("--label", required=True)
-parser.add_argument("--terrain", default="random_rough")
-parser.add_argument("--noise", default=None)
-parser.add_argument("--cmd", default="0.5,0,0")
-parser.add_argument("--seconds", type=float, default=8.0)
-parser.add_argument("--width", type=int, default=960)
-parser.add_argument("--height", type=int, default=540)
-parser.add_argument("--fps", type=int, default=25)
-parser.add_argument("--out", default=None)                       # run_kit.sh 가 폴더를 넣어 준다 (쓰지 않음)
-parser.add_argument("--mp4", required=True)
-video_style.add_style_args(parser)   # W49: 조명 · 채도 기본값 = 승인 화풍
+def _argv_parser():
+    """Kit 없이 parser 만 만든다(시험이 이 함수 하나만 떼어 실행해 실제 기본값을 읽는다)."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--policy", required=True)
+    parser.add_argument("--checkpoint", required=True)
+    parser.add_argument("--label", required=True)
+    parser.add_argument("--terrain", default="random_rough")
+    parser.add_argument("--noise", default=None)
+    parser.add_argument("--cmd", default="0.5,0,0")
+    parser.add_argument("--seconds", type=float, default=8.0)
+    parser.add_argument("--width", type=int, default=960)
+    parser.add_argument("--height", type=int, default=540)
+    parser.add_argument("--fps", type=int, default=25)
+    parser.add_argument("--out", default=None)                       # run_kit.sh 가 폴더를 넣어 준다 (쓰지 않음)
+    parser.add_argument("--mp4", required=True)
+    video_style.add_style_args(parser)   # W49: 조명 · 채도 기본값 = 승인 화풍
+    return parser
+
+
+parser = _argv_parser()
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 STYLE = video_style.resolve_style(args, parser)

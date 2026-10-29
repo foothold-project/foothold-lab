@@ -1,6 +1,6 @@
 """촬영 화풍(조명 · 채도 · 이름) 한 곳. 팀장 확정(RULES-HUB 4 절, 10/27 01:1x 「1.25로 확정」 「L4 좋다」)을 값 하나로 두고 모든 기록기가 이 파일에서 기본값을 가져온다.
 값의 출처: runner-26a/inbox/jay/20261023-experiments/runner-26a/record_25e_l4sat125_26m.py STYLE_ARGS.
-다른 화풍(inherit 등)은 --allow-unapproved-style 을 줄 때만 허용하고, 영수증 style 에 UNAPPROVED 로 남는다. 합성기 · 프레임 검사 · seq_video 검증은 require_approved 로 그런 영수증을 실패로 끝낸다.
+다른 화풍(inherit 등)은 --allow-unapproved-style 을 줄 때만 허용하고, 영수증 style 에 UNAPPROVED 로 남는다. require_approved 를 부르는 곳: seq_video.validate_attempt · compose_25e_v2style9 · video_combine_check(옆 json 영수증이 있으면) · 그리고 합성기 v8 사본(video25/compose_25e_v2style8.py) · W03R 합성 · 프레임 검사.
 이 파일은 import 시 표준 라이브러리만 쓴다(Kit 은 조명을 실제로 적용하는 함수 안에서만 불러온다). 기록기는 파일 경로로 불러온다(load_video_style 예시는 아래 LOADER_SNIPPET)."""
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ STYLE_ARGS = ("--lighting-profile", "dome_plus_three_point", "--dome-intensity",
 #   import importlib.util as _u, pathlib as _p
 #   _s = _u.spec_from_file_location("video_style", _p.Path(__file__).resolve().parent / "video_style.py")
 #   video_style = _u.module_from_spec(_s); _s.loader.exec_module(video_style)
-NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*-[a-z0-9]+_[A-Za-z0-9_+-]+_L[0-9]+_env[0-9]+-m[0-9]+-[a-z0-9_]+-1x$")
+NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]*-[A-Za-z0-9][A-Za-z0-9+]*(?:_[A-Za-z0-9+]+)*_L[0-9]+_env[0-9]+-m[0-9]+-[a-z0-9_]+-1x$")
 
 
 def add_style_args(parser: argparse.ArgumentParser) -> None:
@@ -74,20 +74,40 @@ def resolve_style(args: Any, parser: argparse.ArgumentParser | None = None) -> d
 
 
 def require_approved(meta: dict, where: str = "") -> dict:
-    """영수증 · review.json 의 style.style_id 가 승인 값이 아니면(없으면 포함) ValueError. 합성기 · 프레임 검사 · seq_video 검증이 부른다."""
+    """영수증 · review.json 의 style.style_id 가 승인 값이 아니거나(없으면 포함) style.values 가 있는데 승인 값과 다르면 ValueError."""
     style = (meta or {}).get("style") if isinstance(meta, dict) else None
     sid = style.get("style_id") if isinstance(style, dict) else (meta or {}).get("style_id") if isinstance(meta, dict) else None
     if sid not in APPROVED_STYLE_IDS:
         raise ValueError("%s style_id %r 가 승인 화풍 %s 가 아니다" % (where or "receipt", sid, APPROVED_STYLE_IDS))
+    if isinstance(style, dict) and "values" in style and style["values"] != APPROVED_STYLE:
+        raise ValueError("%s style_id 는 승인인데 style.values 가 승인 값과 다르다(손 편집?)" % (where or "receipt"))
     return style if isinstance(style, dict) else {"style_id": sid}
 
 
+def check_video_name(name: str) -> str:
+    """이미 붙은 이름(확장자 없음 또는 .mp4)이 규칙 이름인지 검사. 아니면 ValueError."""
+    stem = name[:-4] if name.endswith(".mp4") else name
+    if not NAME_RE.match(stem) or re.search(r"success|fail|fell", stem, re.I):
+        raise ValueError("규칙 이름이 아니다: %r" % stem)
+    return stem
+
+
+def check_label(args: Any, parser: argparse.ArgumentParser | None = None) -> None:
+    """--label 이 규칙 이름이 아니면 거절(--allow-unapproved-style 이면 통과). 촬영 이름이 이 함수로 강제된다."""
+    if getattr(args, "allow_unapproved_style", False):
+        return
+    try:
+        check_video_name(args.label)
+    except ValueError as e:
+        if parser is not None:
+            parser.error("--label: %s" % e)
+        raise
+
+
 def video_name(canon_label: str, set_kind: str, level: int, env: int, iteration: int, segment: str = "seq", speed: str = "1x") -> str:
-    """<정본>-<지형종류>_L<레벨>_env<번호>-m<회차>-<구간>-<배속> (확장자 없음). 성공 · 실패 낱말을 넣지 않는다."""
-    name = "%s-%s_L%d_env%d-m%d-%s-%s" % (canon_label, set_kind, int(level), int(env), int(iteration), segment, speed)
-    if not NAME_RE.match(name) or re.search(r"success|fail|fell", name, re.I):
-        raise ValueError("규칙 이름이 아니다: %r" % name)
-    return name
+    """RULES-HUB 4 절 이름 `<실험들>-<지형>-m<회차>-<구간>-<배속>` 의 <지형> 칸을 `<종류>_L<레벨>_env<번호>` 로 채운다(근거: lead 카드 CARD-W03R-1029 1 절 이름 형식).
+    <종류> 는 단어 하나(stairs, boxes)도 되고 밑줄 이어붙임(pyramid_stairs_inv)도 된다. 확장자 없음. 성공 · 실패 낱말을 넣지 않는다."""
+    return check_video_name("%s-%s_L%d_env%d-m%d-%s-%s" % (canon_label, set_kind, int(level), int(env), int(iteration), segment, speed))
 
 
 # ---- 아래는 record_25e_x31.py 에서 옮긴 조명 적용 코드(그대로, 이름 유지) ----
