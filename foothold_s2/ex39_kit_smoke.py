@@ -14,6 +14,8 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
+from contextlib import ExitStack
 from datetime import datetime
 
 from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
@@ -155,36 +157,82 @@ def _save(path: Path, state: dict) -> None:
     os.replace(tmp, path)
 
 
+def device_plan(devices: list[str]) -> dict[str, str]:
+    if devices == ["cuda:0"]:
+        return {"A": "cuda:0", "B": "cuda:0"}
+    if devices == ["cuda:0", "cuda:1"]:
+        return {"A": "cuda:0", "B": "cuda:1"}
+    raise ValueError("--device must be cuda:0 (serial) or cuda:0 then cuda:1 (parallel)")
+
+
+def arm_environment(base: dict[str, str], root: Path, end_by: str) -> dict[str, str]:
+    env = training_env(base, root, end_by)
+    scratch = root / "kit_tmp"
+    scratch.mkdir(parents=True, exist_ok=False)
+    env.update({"TEMP": str(scratch), "TMP": str(scratch), "TMPDIR": str(scratch)})
+    return env
+
+
+def launch_parallel(specs: list[tuple[str, list[str], Path, dict[str, str]]],
+                    popen=subprocess.Popen, sleep=time.sleep) -> dict[str, tuple[str, int]]:
+    """Start B at least 30 seconds after A; keep each child output on disk."""
+    children = {}
+    outputs = {}
+    with ExitStack() as stack:
+        for index, (arm, cmd, wt, env) in enumerate(specs):
+            if index:
+                sleep(30)
+            out = stack.enter_context((Path(env["BASIC_LOG_ROOT"]) / "operator.stdout.log").open("w", encoding="utf-8"))
+            err = stack.enter_context((Path(env["BASIC_LOG_ROOT"]) / "operator.stderr.log").open("w", encoding="utf-8"))
+            children[arm] = popen(cmd, cwd=wt, env=env, text=True, stdout=out, stderr=err)
+            outputs[arm] = out.name
+        codes = {arm: child.wait() for arm, child in children.items()}
+    return {arm: (Path(outputs[arm]).read_text(encoding="utf-8"), codes[arm])
+            for arm in children}
+
+
 def run(args, execute: bool = False, runner=subprocess.run) -> dict:
     a, b = args.worktree_a.resolve(), args.worktree_b.resolve()
     source = check_sources(a, b, args.parent)
     if datetime.fromisoformat(args.end_by).tzinfo is None:
         raise ValueError("end-by needs a time zone")
-    if args.device != "cuda:0":
-        raise ValueError("EX-39 Kit smoke uses GPU 0 serially to leave display GPU 1 free")
+    devices = device_plan(args.device)
+    if os.environ.get("CUDA_VISIBLE_DEVICES"):
+        raise ValueError("CUDA_VISIBLE_DEVICES remaps explicit cuda ordinals; unset it")
     if args.out.exists():
         raise FileExistsError(args.out)
     roots = {arm: BASE / f"ex39{arm.lower()}_kit_smoke" / args.out.name for arm in ("A", "B")}
     if any(root.exists() for root in roots.values()):
         raise FileExistsError("EX-39 smoke output root already exists; use a new isolated root")
     state = {"state": "DRY" if not execute else "RUNNING", "source": source,
-             "end_by": args.end_by, "device": args.device, "stages": {},
+             "end_by": args.end_by, "devices": devices, "start_stagger_s": 30 if devices["A"] != devices["B"] else None,
+             "stages": {},
              "output_roots": {k: str(v) for k, v in roots.items()}}
     if not execute:
         return state
     args.out.mkdir(parents=True)
     _save(args.out / "ex39_kit_smoke.json", state)
+    specs = []
     for arm, wt in (("A", a), ("B", b)):
-        env = training_env(os.environ, roots[arm], args.end_by)
+        env = arm_environment(os.environ, roots[arm], args.end_by)
         cmd = [str(args.bash), str(wt / "foothold_s2/run_ex39.sh"), arm,
-               args.device, str(args.parent), EX39_PARENT_SHA256]
-        proc = runner(cmd, cwd=wt, env=env, text=True, capture_output=True, check=False)
-        (args.out / f"arm_{arm}.stdout.log").write_text(proc.stdout, encoding="utf-8")
-        (args.out / f"arm_{arm}.stderr.log").write_text(proc.stderr, encoding="utf-8")
+               devices[arm], str(args.parent), EX39_PARENT_SHA256]
+        specs.append((arm, cmd, wt, env))
+    if devices["A"] != devices["B"]:
+        results = launch_parallel(specs)
+    else:
+        results = {}
+        for arm, cmd, wt, env in specs:
+            proc = runner(cmd, cwd=wt, env=env, text=True, capture_output=True, check=False)
+            results[arm] = (proc.stdout, proc.returncode)
+            (args.out / f"arm_{arm}.stderr.log").write_text(proc.stderr, encoding="utf-8")
+    for arm, _, _, _ in specs:
+        stdout, rc = results[arm]
+        (args.out / f"arm_{arm}.stdout.log").write_text(stdout, encoding="utf-8")
         try:
-            state["stages"][arm] = check_training(roots[arm], arm, proc.stdout, proc.returncode)
+            state["stages"][arm] = check_training(roots[arm], arm, stdout, rc)
         except Exception as exc:
-            state["stages"][arm] = {"state": "FAIL", "reason": repr(exc), "returncode": proc.returncode}
+            state["stages"][arm] = {"state": "FAIL", "reason": repr(exc), "returncode": rc}
         _save(args.out / "ex39_kit_smoke.json", state)
     if state["stages"]["A"]["state"] == state["stages"]["B"]["state"] == "PASS":
         try:
@@ -203,12 +251,13 @@ def run(args, execute: bool = False, runner=subprocess.run) -> dict:
                                        str(conda / "Scripts"), env.get("PATH", "")))
         env.update({"CONDA_PREFIX": str(conda), "PYTHONPATH": str(b),
                     "OMNI_KIT_ACCEPT_EULA": "YES", "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
-                    "PYTHONUNBUFFERED": "1", "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1"})
+                    "PYTHONUNBUFFERED": "1", "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1",
+                    "TEMP": str(roots["B"] / "kit_tmp"), "TMP": str(roots["B"] / "kit_tmp")})
         cmd = [str(PYTHON), "-m", "foothold_s2.eval.eval_map_modes",
                "--task", "FootholdS2-Go2-S2-SB-v0", "--checkpoint", str(checkpoint),
                "--out", str(eval_out), "--envs", "8", "--steps", "50", "--modes", "eval_pred",
                "--commands", "fwd0.5", "--ex39-heading-smoke-guard",
-               "--headless", "--device", args.device, KIT_CACHE_ARG]
+               "--headless", "--device", devices["B"], KIT_CACHE_ARG]
         with (eval_out / "run.log").open("w", encoding="utf-8") as log:
             proc = runner(cmd, cwd=b, env=env, stdout=log, stderr=subprocess.STDOUT, check=False)
         try:
@@ -230,7 +279,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--parent", type=Path, default=PARENT)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--end-by", default=DEFAULT_END_BY)
-    ap.add_argument("--device", default="cuda:0")
+    ap.add_argument("--device", action="append", choices=("cuda:0", "cuda:1"), required=True,
+                    help="repeat as --device cuda:0 --device cuda:1 for staggered A/B")
     ap.add_argument("--bash", type=Path, default=Path("C:/Program Files/Git/bin/bash.exe"))
     ap.add_argument("--execute", action="store_true")
     args = ap.parse_args(argv)

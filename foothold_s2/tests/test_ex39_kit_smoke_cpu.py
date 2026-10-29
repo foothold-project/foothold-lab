@@ -14,7 +14,9 @@ import pytest
 import torch
 
 from foothold_s2.ex39_kit_probe import slot_snapshot
-from foothold_s2.ex39_kit_smoke import check_evaluation, check_paired_command_resamples, check_training, sha256, training_env
+from foothold_s2.ex39_kit_smoke import (arm_environment, check_evaluation,
+                                         check_paired_command_resamples, check_training,
+                                         device_plan, launch_parallel, sha256, training_env)
 from foothold_s2.ex39_smoke_args import check_args, check_file
 from foothold_s2.sol23f_contract import EX39_PARENT_SHA256
 
@@ -80,6 +82,51 @@ def test_operator_passes_the_same_smoke_variable_as_the_shell(tmp_path):
     assert env["EX39_KIT_SMOKE_UPDATES"] == "2"
     assert env["EX39_REQUIRE_KIT_SMOKE"] == "1"
     assert "EX39_SMOKE_UPDATES" not in env
+
+
+def test_gpu_device_plan_and_isolated_kit_temp_dirs(tmp_path):
+    assert device_plan(["cuda:0", "cuda:1"]) == {"A": "cuda:0", "B": "cuda:1"}
+    assert device_plan(["cuda:0"]) == {"A": "cuda:0", "B": "cuda:0"}
+    for bad in (["cuda:1"], ["cuda:1", "cuda:0"], ["cuda:0", "cuda:0"]):
+        with pytest.raises(ValueError, match="device"):
+            device_plan(bad)
+    a = arm_environment({}, tmp_path / "a", "2026-10-30T15:00:00+09:00")
+    b = arm_environment({}, tmp_path / "b", "2026-10-30T15:00:00+09:00")
+    assert a["TEMP"] == a["TMP"] == a["TMPDIR"]
+    assert b["TEMP"] == b["TMP"] == b["TMPDIR"]
+    assert a["TEMP"] != b["TEMP"]
+    assert Path(a["TEMP"]).is_dir() and Path(b["TEMP"]).is_dir()
+
+
+def test_parallel_launch_staggers_30_seconds_without_killing_children(tmp_path):
+    events = []
+
+    class Child:
+        def __init__(self, arm):
+            self.arm = arm
+
+        def wait(self):
+            events.append(("wait", self.arm))
+            return 0
+
+    def fake_popen(cmd, **kwargs):
+        arm = cmd[2]
+        events.append(("start", arm, cmd[3], kwargs["env"]["TEMP"]))
+        kwargs["stdout"].write(f"receipt={arm}\n")
+        kwargs["stdout"].flush()
+        return Child(arm)
+
+    specs = []
+    for arm, device in (("A", "cuda:0"), ("B", "cuda:1")):
+        root = tmp_path / arm
+        env = arm_environment({}, root, "2026-10-30T15:00:00+09:00")
+        specs.append((arm, ["bash", "run_ex39.sh", arm, device], tmp_path, env))
+    results = launch_parallel(specs, popen=fake_popen, sleep=lambda s: events.append(("sleep", s)))
+    assert events[:3][0][:3] == ("start", "A", "cuda:0")
+    assert events[1] == ("sleep", 30)
+    assert events[2][:3] == ("start", "B", "cuda:1")
+    assert events[0][3] != events[2][3]
+    assert results == {"A": ("receipt=A\n", 0), "B": ("receipt=B\n", 0)}
 
 
 @pytest.mark.parametrize("bad", [
