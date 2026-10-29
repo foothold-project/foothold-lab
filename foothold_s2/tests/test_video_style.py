@@ -138,12 +138,24 @@ def test_name_rule_accepts_single_word_terrain_and_label_is_enforced():
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("--label")
+    p.add_argument("--mp4")
     vs.add_style_args(p)
-    vs.check_label(p.parse_args(["--label", "EX28-B-hard_boxes_L3_env57-m1500-seq-1x"]), p)
+    good = "EX28-B-hard_boxes_L3_env57-m1500-seq-1x"
+    vs.check_label(p.parse_args(["--label", good, "--mp4", "o/" + good + ".mp4"]), p)
+    vs.check_label(p.parse_args(["--label", good, "--mp4", "o/" + good + "/review.mp4"]), p)
+    with pytest.raises(SystemExit):                        # label 은 규칙 이름인데 실제 파일은 일반 이름
+        vs.check_label(p.parse_args(["--label", good, "--mp4", "o/comparison_1x.mp4"]), p)
+    with pytest.raises(SystemExit):
+        vs.check_label(p.parse_args(["--label", good, "--mp4", "other/review.mp4"]), p)
     for bad in ("my clip", "EX28-B-boxes_L3_env57-m1500-seq-1x-success", "comparison_1x"):
         with pytest.raises(SystemExit):
-            vs.check_label(p.parse_args(["--label", bad]), p)
-    vs.check_label(p.parse_args(["--label", "free text", "--allow-unapproved-style"]), p)
+            vs.check_label(p.parse_args(["--label", bad, "--mp4", bad + ".mp4"]), p)
+    a = p.parse_args(["--label", "free text success", "--mp4", "x.mp4", "--allow-unapproved-style"])
+    vs.check_label(a, p)
+    rec = vs.resolve_style(a, p)                            # 값은 승인이어도 예외 표시가 남고 require_approved 가 거절
+    assert rec["approved"] and rec["allow_unapproved"] is True
+    with pytest.raises(ValueError, match="allow_unapproved"):
+        vs.require_approved({"style": rec})
 
 
 def test_forged_receipt_with_approved_id_but_other_values_is_refused():

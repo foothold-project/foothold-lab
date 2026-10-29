@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import re
+from pathlib import Path
 from typing import Any
 
 APPROVED_STYLE = {
@@ -70,7 +71,7 @@ def resolve_style(args: Any, parser: argparse.ArgumentParser | None = None) -> d
             parser.error(msg)
         raise ValueError(msg)
     sid = STYLE_ID if approved else "UNAPPROVED_" + hashlib.sha256(json.dumps(vals, sort_keys=True).encode()).hexdigest()[:8]
-    return {"style_id": sid, "approved": approved, "values": vals, "approved_values": APPROVED_STYLE}
+    return {"style_id": sid, "approved": approved, "allow_unapproved": allow, "values": vals, "approved_values": APPROVED_STYLE}   # allow_unapproved: 예외 인자를 썼다는 표시(값이 승인이어도 남는다)
 
 
 def require_approved(meta: dict, where: str = "") -> dict:
@@ -79,6 +80,8 @@ def require_approved(meta: dict, where: str = "") -> dict:
     sid = style.get("style_id") if isinstance(style, dict) else (meta or {}).get("style_id") if isinstance(meta, dict) else None
     if sid not in APPROVED_STYLE_IDS:
         raise ValueError("%s style_id %r 가 승인 화풍 %s 가 아니다" % (where or "receipt", sid, APPROVED_STYLE_IDS))
+    if isinstance(style, dict) and style.get("allow_unapproved") is True:
+        raise ValueError("%s --allow-unapproved-style 예외 표시(allow_unapproved=true)가 있다" % (where or "receipt"))
     if isinstance(style, dict) and "values" in style and style["values"] != APPROVED_STYLE:
         raise ValueError("%s style_id 는 승인인데 style.values 가 승인 값과 다르다(손 편집?)" % (where or "receipt"))
     return style if isinstance(style, dict) else {"style_id": sid}
@@ -93,14 +96,18 @@ def check_video_name(name: str) -> str:
 
 
 def check_label(args: Any, parser: argparse.ArgumentParser | None = None) -> None:
-    """--label 이 규칙 이름이 아니면 거절(--allow-unapproved-style 이면 통과). 촬영 이름이 이 함수로 강제된다."""
+    """--label 이 규칙 이름이고 실제 산출 파일 이름과 같아야 한다(--allow-unapproved-style 이면 통과, 영수증에 allow_unapproved=true 가 남아 합성기 · 프레임 검사가 거절).
+    파일 이름 = mp4 stem 이 label 과 같거나, seq_video 촬영 폴더 배치(<label>/review.mp4)면 폴더 이름이 label 과 같다."""
     if getattr(args, "allow_unapproved_style", False):
         return
     try:
         check_video_name(args.label)
+        mp4 = Path(args.mp4)
+        if not (mp4.stem == args.label or (mp4.stem == "review" and mp4.resolve().parent.name == args.label)):
+            raise ValueError("mp4 이름이 label 과 다르다: %s != %s" % (mp4.name, args.label))
     except ValueError as e:
         if parser is not None:
-            parser.error("--label: %s" % e)
+            parser.error("--label/--mp4: %s" % e)
         raise
 
 
