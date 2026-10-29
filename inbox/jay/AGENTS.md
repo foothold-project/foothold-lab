@@ -8,6 +8,8 @@
 
 이 파일은 오흥재가 지시한 작업에만 적용됩니다. 다른 팀원의 작업에는 적용하지 않습니다.
 
+**먼저 읽을 것: 실패 로그 → RULES-HUB** · 실패 로그 `inbox/jay/20261019-design/FAILURE-LOG.md` (R · M, 일 시작 · 다음 단계 걸기 전, 의뢰문 첫 줄에 번호)
+
 **먼저 읽을 것: RULES-HUB** (세션 역할 · 운영 · 실험 규칙 · 영상 렌더 규칙 · 승인 원장 · 반복 지시)
 
 - 웹: https://github.com/foothold-project/foothold-lab/blob/feature/verify-v2-mvp-jay/inbox/jay/20261019-design/RULES-HUB.md
