@@ -13,7 +13,7 @@ VX_MIN, VX_MAX, WZ_SPIN = 0.3, 1.5, 1.2
 
 
 VX_WALK_MAX, WZ_WALK = 0.8, 0.5
-CONTRACTS = ("start", "walkturn_v1", "basic_gait_v1")
+CONTRACTS = ("start", "walkturn_v1", "basic_gait_v1", "basic_gait_ex39")
 
 
 def start_contract_bad(c: torch.Tensor, tol: float = TOL) -> torch.Tensor:
@@ -56,6 +56,27 @@ def basic_gait_contract_bad(c: torch.Tensor, tol: float = TOL) -> torch.Tensor:
     return ~(finite & (forward | walk | spin | stand | reverse | side))
 
 
+def ex39_contract_bad(c: torch.Tensor, heading: torch.Tensor, tol: float = TOL) -> torch.Tensor:
+    """D55 thirteen slots, with B heading's per-step wz rewrite on forward/spin only."""
+    if heading is None or heading.shape != c.shape[:-1] or heading.dtype != torch.bool:
+        raise ValueError("EX-39 heading mask must match the consumed command rows")
+    finite = torch.isfinite(c).all(dim=-1)
+    z = torch.nan_to_num(c, nan=0.0, posinf=1e9, neginf=-1e9)
+    vx, vy, wz = z[..., 0], z[..., 1], z[..., 2]
+    zero_x, zero_y, zero_z = vx.abs() <= tol, vy.abs() <= tol, wz.abs() <= tol
+    forward = (vx >= 0.3 - tol) & (vx <= 1.5 + tol) & zero_y
+    walk = (vx >= 0.3 - tol) & (vx <= 0.8 + tol) & zero_y & (wz.abs() >= 0.2 - tol) & (wz.abs() <= 0.5 + tol)
+    spin = zero_x & zero_y & (wz.abs() >= 0.5 - tol) & (wz.abs() <= 1.5 + tol)
+    reverse = (vx >= -1.0 - tol) & (vx <= -0.2 + tol) & zero_y & zero_z
+    side = zero_x & (vy.abs() >= 0.2 - tol) & (vy.abs() <= 0.6 + tol) & zero_z
+    diagonal = (vx.abs() >= 0.3 - tol) & (vx.abs() <= 0.6 + tol) & (vy.abs() >= 0.2 - tol) & (vy.abs() <= 0.5 + tol) & zero_z
+    ordinary = (forward & zero_z) | walk | spin | (zero_x & zero_y & zero_z) | reverse | side | diagonal
+    # Heading is allowed on the forward or spin slots only. apply_heading clips
+    # wz at 2.0; near a target the spin heading may legitimately become zero.
+    heading_command = (forward | (zero_x & zero_y)) & (wz.abs() <= 2.0 + tol)
+    return ~(finite & torch.where(heading, heading_command, ordinary))
+
+
 def contract_bad_fn(name):
     """계약 이름 -> 검사 함수. 이름이 None 이면 None(검사 없음), 모르는 이름이면 거절."""
     if name is None:
@@ -66,4 +87,16 @@ def contract_bad_fn(name):
         return walkturn_contract_bad
     if name == "basic_gait_v1":
         return basic_gait_contract_bad
+    if name == "basic_gait_ex39":
+        return ex39_contract_bad
     raise ValueError(f"모르는 명령 계약 {name!r} (허용 {CONTRACTS})")
+
+
+def command_sample_bad(name: str, command: torch.Tensor, heading: torch.Tensor | None = None) -> torch.Tensor:
+    """Runner's pre-step validation, including the live EX-39 heading mask."""
+    fn = contract_bad_fn(name)
+    if fn is None:
+        raise ValueError("command_sample_bad requires a configured contract")
+    if name == "basic_gait_ex39":
+        return fn(command, heading)
+    return fn(command)

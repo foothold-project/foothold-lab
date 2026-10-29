@@ -57,7 +57,7 @@ def slot_snapshot(term, arm, include_pair_arrays=False):
     return out
 
 
-def capture_start(raw, cfg, arm, log_dir):
+def capture_start(raw, cfg, arm, log_dir, contract_name):
     term = raw.command_manager.get_term("base_velocity")
     manager = raw.reward_manager
     robot = raw.scene["robot"]
@@ -67,6 +67,9 @@ def capture_start(raw, cfg, arm, log_dir):
         assert cfg.commands.base_velocity.params["ex39_arm"] == term.params.ex39_arm == arm
         assert tuple(term.slot_names) == tuple(EX39_SLOTS)
         assert cfg.curriculum.terrain_levels is None and cfg.curriculum.command_range is None
+        if contract_name != "basic_gait_ex39":
+            raise AssertionError(f"EX-39 live runner command contract is {contract_name!r}")
+        row["contract_name"] = contract_name
         row["checks"]["command_contract"] = True
         assert set(WEIGHTS).issubset(set(manager.active_terms))
         actual = {name: float(manager.get_term_cfg(name).weight) for name in WEIGHTS}

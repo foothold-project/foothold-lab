@@ -41,7 +41,7 @@ from foothold_s2.commands import mixed_core as mc
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
-from foothold_s2.runners.contracts import contract_bad_fn
+from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
@@ -307,7 +307,7 @@ class StartRunner(OnPolicyRunner):
         src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
         learn_iters = 0
         act_stats = None
-        rs_rec = RewardSplit(basic_mode=self.pcfg["contract"] == "basic_gait_v1") if self.pcfg["log_reward_split"] else None
+        rs_rec = RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39")) if self.pcfg["log_reward_split"] else None
         if rs_rec is not None:
             rs_rec.attach(getattr(self.env, "unwrapped", self.env))
         if self.pcfg["log_action_stats"]:
@@ -337,7 +337,7 @@ class StartRunner(OnPolicyRunner):
                 self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
-            contract_fn = contract_bad_fn(self.pcfg["contract"])                  # None | start | walkturn_v1 (모르는 이름은 거절)
+            contract_fn = contract_bad_fn(self.pcfg["contract"])                  # Unknown names fail before rollout.
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
             contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
@@ -356,7 +356,11 @@ class StartRunner(OnPolicyRunner):
                     actions = self.alg.act(ppo_obs)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
-                        bad_now = contract_fn(consumed)
+                        if self.pcfg["contract"] == "basic_gait_ex39":
+                            heading = self._command_term().heading.detach().clone().to(self.device)
+                            bad_now = command_sample_bad(self.pcfg["contract"], consumed, heading)
+                        else:
+                            bad_now = contract_fn(consumed)
                         contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
                         contract_bad |= bad_now
                     if trace is not None:

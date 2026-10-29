@@ -68,6 +68,8 @@ def command_settings(args) -> dict:
         share = 0.30 if share is None else share
         out["basic_new_share"] = share
         ex39_arm = getattr(args, "basic_ex39_arm", None)
+        if ex39_arm:
+            out["command_contract"] = "basic_gait_ex39"
         out["basic_shares"] = ex39_shares() if ex39_arm else dict(zip(BASIC_SLOTS, basic_shares(share)))
         out["ex39_arm"] = ex39_arm
     return out

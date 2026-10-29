@@ -19,6 +19,8 @@ from foothold_s2.rewards.basic_gait_bundle import (
     four_foot_contact_at_stop, scheduled_lin_vel_z_weight, thigh_calf_pos_penalty_l1,
 )
 from foothold_s2.sol23f_contract import EX39_PARENT_SHA256, budget_iterations, validate_launch
+from foothold_s2.sol23f_contract import command_settings
+from foothold_s2.runners.contracts import command_sample_bad, basic_gait_contract_bad
 
 
 PARENT = Path("C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt")
@@ -100,6 +102,35 @@ def test_first_and_repeated_resamples_keep_shared_rng_and_nonheading_commands():
         assert torch.equal(ga.get_state(), gb.get_state())
         assert torch.equal(mc.scatter_clock(ga, count), mc.scatter_clock(gb, count))
         assert torch.equal(ga.get_state(), gb.get_state())
+
+
+@pytest.mark.parametrize("arm", ["A", "B"])
+def test_actual_ex39_rollout_commands_use_ex39_contract(arm):
+    """The runner checks commands after heading has rewritten wz, before env.step."""
+    assert command_settings(_parsed(_args(arm)))["command_contract"] == "basic_gait_ex39"
+    n = 100_000
+    yaw = torch.linspace(-3.0, 3.0, n)
+    sample = mc.resample_ex39(mc.make_generator(42), n, arm, yaw)
+    command = mc.apply_heading(sample["cmd"], sample["heading"], sample["stand"],
+                               sample["psi_star"], -yaw, mc.CommandParams(basic_mode=True, ex39_arm=arm))
+    assert not command_sample_bad("basic_gait_ex39", command, sample["heading"]).any()
+    # The first Kit failure was a legitimate EX-39 spin outside the old contract.
+    assert basic_gait_contract_bad(command).any()
+    assert (command[:, 2].abs() > 1.2).any()
+    if arm == "B":
+        assert (sample["heading"] & (sample["slot"] == 0)).any()
+        assert (sample["heading"] & (sample["slot"] == 3)).any()
+
+
+def test_ex39_contract_rejects_out_of_slot_values_and_spoofed_heading():
+    commands = torch.tensor([[0., 0., -1.484276], [-1., 0., 0.], [0., .6, 0.],
+                             [.7, .3, 0.], [.4, 0., 1.9], [.4, 0., 1.9], [0., 0., 2.01],
+                             [float("nan"), 0., 0.]])
+    headings = torch.tensor([False, False, False, False, False, True, True, False])
+    assert command_sample_bad("basic_gait_ex39", commands, headings).tolist() == [
+        False, False, False, True, True, False, True, True]
+    with pytest.raises(ValueError, match="heading"):
+        command_sample_bad("basic_gait_ex39", commands)
 
 
 def test_rewards_known_input():

@@ -358,7 +358,7 @@ def main(env_cfg, agent_cfg):
     if args_cli.basic_ex39_arm and args_cli.smoke_updates == 2:
         from foothold_s2.ex39_kit_probe import capture_start
 
-        capture_start(env.unwrapped, env_cfg, args_cli.basic_ex39_arm, log_dir)
+        capture_start(env.unwrapped, env_cfg, args_cli.basic_ex39_arm, log_dir, runner.pcfg["contract"])
     try:
         runner.learn(num_learning_iterations=remaining, init_at_random_ep_len=not bool(resume_path))
     except DeadlineReached as stop:
