@@ -97,13 +97,13 @@ def check_video_name(name: str) -> str:
 
 def check_label(args: Any, parser: argparse.ArgumentParser | None = None) -> None:
     """--label 이 규칙 이름이고 실제 산출 파일 이름과 같아야 한다(--allow-unapproved-style 이면 통과, 영수증에 allow_unapproved=true 가 남아 합성기 · 프레임 검사가 거절).
-    파일 이름 = mp4 stem 이 label 과 같거나, seq_video 촬영 폴더 배치(<label>/review.mp4)면 폴더 이름이 label 과 같다."""
+    파일 이름 = mp4 stem 이 label 과 같거나, seq_video 촬영 폴더 배치(<label>/review.mp4 · plan.mp4)면 폴더 이름이 label 과 같다."""
     if getattr(args, "allow_unapproved_style", False):
         return
     try:
         check_video_name(args.label)
         mp4 = Path(args.mp4)
-        if not (mp4.stem == args.label or (mp4.stem == "review" and mp4.resolve().parent.name == args.label)):
+        if not (mp4.stem == args.label or (mp4.stem in ("review", "plan") and mp4.resolve().parent.name == args.label)):
             raise ValueError("mp4 이름이 label 과 다르다: %s != %s" % (mp4.name, args.label))
     except ValueError as e:
         if parser is not None:
