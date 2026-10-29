@@ -1,6 +1,6 @@
 {
   "schema": "foothold-canon-registry/v1",
-  "note": "W27. 정본 · 단계 · 부모 sha 의 한 곳. 기동기 · 평가 · 촬영은 여기서 읽는다(W50 연결 전까지는 사람이 대조). 값은 각 run 의 resume_parent.json 과 checkpoint sha 실측(10/29 22:4x).",
+  "note": "W27. 정본 · 단계 · 부모 sha 의 한 곳. 기동기 · 평가 · 촬영은 여기서 읽는다(W50 연결 전까지는 사람이 대조). 값은 각 run 의 resume_parent.json 과 checkpoint sha 실측(10/29 22:2x).",
   "current": {
     "stage": "basic_gait_L0-2",
     "canon": "EX-38_m3001",
