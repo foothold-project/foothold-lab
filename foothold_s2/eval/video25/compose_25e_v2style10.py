@@ -423,7 +423,42 @@ def flag_state(z, d: int):
 
 
 MINI_ARROW_PX = 9   # 위치 화살표 길이(10/29 D51: 7 에서 아주 조금 키움)
-STATE_MOVE_MPS, STATE_SPIN_RADPS = 0.15, 0.30   # 이동 중: 실제 수평 속력 > 0.15 m/s · 제자리 회전: 아니면서 |wz| > 0.3 rad/s
+STATE_SPIN_RADPS = 0.30   # 제자리 회전: 움직임이 아니면서 0.3 s 창 평균 |wz| > 0.3 rad/s
+STATE_WINDOW_S, STATE_MOVE_ON_MPS, STATE_MOVE_OFF_MPS = 0.3, 0.20, 0.10   # 10/29 17:5x: 0.3 s 창 평균 수평 속력, 이동 시작 0.20 · 멈춤 0.10 (히스테리시스, 한 문턱에서 깜빡이던 것 방지)
+STATE_CMD_MOVE_MPS, STATE_CMD_SPIN_RADPS = 0.05, 0.10   # 명령이 이만큼이면 「움직이라는 명령」
+_STATE_CACHE: dict = {"key": None, "arr": None}
+
+
+def motion_states(vx, vy, wz, cmd, dt: float) -> list:
+    """프레임(물리 step)마다 상태 코드: move · spin · stalled(명령은 움직이라는데 실제는 멈춤) · stand. 순서대로 계산한다(히스테리시스)."""
+    n = len(vx)
+    sp = np.hypot(np.asarray(vx, np.float64), np.nan_to_num(np.asarray(vy, np.float64)))
+    aw = np.abs(np.asarray(wz, np.float64))
+    w = max(1, int(round(STATE_WINDOW_S / dt)))
+    c = np.cumsum(np.insert(sp, 0, 0.0))
+    ca = np.cumsum(np.insert(aw, 0, 0.0))
+    out, moving = [], False
+    for i in range(n):
+        lo = max(0, i - w + 1)
+        m_sp, m_wz = (c[i + 1] - c[lo]) / (i + 1 - lo), (ca[i + 1] - ca[lo]) / (i + 1 - lo)
+        moving = (m_sp >= STATE_MOVE_ON_MPS) if not moving else (m_sp >= STATE_MOVE_OFF_MPS)
+        if moving:
+            out.append("move")
+        elif m_wz > STATE_SPIN_RADPS:
+            out.append("spin")
+        else:
+            cm = np.asarray(cmd[i], np.float64)
+            asked = math.hypot(cm[0], cm[1]) > STATE_CMD_MOVE_MPS or abs(cm[2]) > STATE_CMD_SPIN_RADPS
+            out.append("stalled" if asked else "stand")
+    return out
+
+
+def _states_for(z) -> list:
+    key = (id(z), len(z["t"]), float(z["t"][-1]))
+    if _STATE_CACHE["key"] != key:
+        vy = z["vy"] if "vy" in z.files else np.full(len(z["t"]), np.nan)
+        _STATE_CACHE.update(key=key, arr=motion_states(z["vx"], vy, z["wz"], z["command"], float(z["dt"])))
+    return _STATE_CACHE["arr"]
 MINI_AHEAD_M, MINI_BEHIND_M, MINI_TRAIL_S = 3.0, 1.2, 3.0   # 깃발 미니맵: 앞 3 m · 뒤 1.2 m 창, 지나온 길 점은 최근 3 s
 
 
@@ -669,19 +704,19 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
 
     # status strip: this episode's state, the episode number and the falls so far
     sy = Y1_ - 34
-    speed_xy = math.hypot(vx, vy if np.isfinite(vy) else 0.0)
     if fallen_now:
         pill, word = (60, 60, 200), f"넘어짐 {float(z['t'][d]):.2f} s"
     elif compact and d == e1:  # flag captures: the last row of an episode (time-out or end of the clip) without a fall = survival component
         pill, word = (60, 130, 60), "끝까지 생존"
-    elif speed_xy > STATE_MOVE_MPS:        # v10: 상태는 실제 속도로 정한다(명령이 아니라)
-        pill, word = (70, 150, 70), "이동 중"
-    elif abs(wz) > STATE_SPIN_RADPS:
-        pill, word = (160, 120, 50), "제자리 회전"
-    else:
-        pill, word = (96, 100, 106), "서 있음"
+    else:   # v10: 상태는 실제 속도의 0.3 s 창 평균 + 문턱 둘로 정한다(명령이 아니라). 명령은 움직이라는데 실제가 멈춰 있으면 「멈춤(명령 불이행)」
+        st = _states_for(z)[d]
+        pill, word = {"move": ((70, 150, 70), "이동 중"), "spin": ((160, 120, 50), "제자리 회전"),
+                      "stalled": ((50, 110, 190), "멈춤(명령 불이행)"), "stand": ((96, 100, 106), "서 있음")}[st]
     cv2.rectangle(scene, (lx, sy), (lx + 92, sy + 22), pill, -1)
-    left_items.append(((lx + 8, sy + 2), word, (255, 255, 255)))
+    if len(word) > 6:   # 긴 낱말은 칸(92 px)에 들게 글자 크기 9
+        scene = text(scene, [((lx + 8, sy + 6), word, (255, 255, 255))], 9)
+    else:
+        left_items.append(((lx + 8, sy + 2), word, (255, 255, 255)))
     cv2.rectangle(scene, (lx + 100, sy), (rx, sy + 22), (60, 64, 70), 1)
     left_items.append(((lx + 108, sy + 2), (f"깃발 {fl['reached']} / {fl['k']}" if fl is not None else "깃발 - / -"), VAL if fl is not None else DIM))
     if len(starts) > 1:
@@ -713,7 +748,9 @@ def speed_tag(scene: np.ndarray, speed: str, segment: str) -> np.ndarray:
 def policy_map_header(meta: dict) -> str:
     """Return the requested policy map mode from the capture receipt verbatim."""
     mode = meta.get("map_modes", {}).get("map_mode", {}).get("requested")
-    return str(mode) if mode in ("none", "eval_gt", "eval_pred", "probe_prop_only", "saved", "gt", "pred") else "unknown"
+    ko = {"eval_gt": "정답 지도", "gt": "정답 지도", "eval_pred": "복원 지도", "pred": "복원 지도", "none": "지도 없음",
+          "probe_prop_only": "지도 가림", "saved": "저장 설정"}   # 10/29 17:5x: 머리줄은 「한글 이름 (모드)」 한 형식
+    return "%s (%s)" % (ko[mode], mode) if mode in ko else "unknown"
 
 
 def capture_frame_contract(meta: dict) -> tuple[int, float, int, list[int]]:
