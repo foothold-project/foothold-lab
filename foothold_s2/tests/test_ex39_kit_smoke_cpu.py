@@ -139,8 +139,8 @@ def test_smoke_argv_contract_rejects_missing_main_and_duplicate(bad):
         check_args(bad)
 
 
-@pytest.mark.parametrize("arm", ["A", "B"])
-def test_actual_run_ex39_bash_dry_has_child_smoke_args(tmp_path, arm):
+@pytest.mark.parametrize("arm,device", [("A", "cuda:0"), ("B", "cuda:1")])
+def test_actual_run_ex39_bash_dry_has_child_smoke_args(tmp_path, arm, device):
     root = Path(__file__).resolve().parents[2]
     dirty = subprocess.run(["git", "status", "--porcelain", "--", "foothold_s2"],
                            cwd=root, capture_output=True, text=True, check=True).stdout
@@ -155,7 +155,7 @@ def test_actual_run_ex39_bash_dry_has_child_smoke_args(tmp_path, arm):
                 "BASIC_LOG_ROOT": str(tmp_path), "EX39_KIT_SMOKE_UPDATES": "2",
                 "EX39_REQUIRE_KIT_SMOKE": "1", "EX39_UPDATES": "1500", "EX39_LEVELS": "3"})
     cmd = ["C:/Program Files/Git/bin/bash.exe", str(root / "foothold_s2/run_ex39.sh"), arm,
-           "cuda:0", str(parent), EX39_PARENT_SHA256]
+           device, str(parent), EX39_PARENT_SHA256]
     proc = subprocess.run(cmd, cwd=root, env=env, text=True, capture_output=True, timeout=120)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     match = re.search(r"^receipt=(.+)$", proc.stdout, re.MULTILINE)
@@ -163,6 +163,8 @@ def test_actual_run_ex39_bash_dry_has_child_smoke_args(tmp_path, arm):
     receipt = Path(match.group(1).strip())
     row = check_file(receipt.parent / "launch_args.txt")
     assert row["observed"] == {"--smoke-updates": "2", "--basic-stage": "smoke", "--max_iterations": "3004"}
+    args_text = (receipt.parent / "launch_args.txt").read_text(encoding="utf-8")
+    assert f"--device\n{device}\n" in args_text
     assert json.loads((receipt.parent / "smoke_args_checked.json").read_text())["state"] == "PASS"
 
 
