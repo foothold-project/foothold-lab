@@ -46,6 +46,10 @@ parser.add_argument("--basic-extend-arm", choices=("A", "B"), default=None)
 parser.add_argument("--basic-ex38", action="store_true", help="pinned EX-38 ordinary-perception reward segment")
 parser.add_argument("--basic-ex38-continue-parent-sha", default=None,
                     help="full SHA256 of a completed EX-38 segment checkpoint")
+parser.add_argument("--basic-ex39-arm", choices=("A", "B"), default=None)
+parser.add_argument("--basic-ex39-parent-sha", default=None)
+parser.add_argument("--basic-ex39-updates", type=int, default=None)
+parser.add_argument("--basic-ex39-level-count", type=int, default=None)
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
 parser.add_argument("--basic-feet-regulation-weight", type=float)
@@ -160,11 +164,13 @@ def main(env_cfg, agent_cfg):
             cmd_cfg.params = {**dict(cmd_cfg.params or {}), "walkturn_mode": True}
         elif cmd_set["command_mode"] == "basic_gait":
             cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True,
-                              "basic_new_share": cmd_set["basic_new_share"]}
+                              "basic_new_share": cmd_set["basic_new_share"],
+                              "ex39_arm": cmd_set.get("ex39_arm")}
             cmd_cfg.seed = agent_cfg.seed
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
     budget = (resume_budget(agent_cfg.max_iterations, parent["completed_update"],
-                            limit=18500 if args_cli.basic_ex38 else 1500)
+                            limit=args_cli.basic_ex39_updates if args_cli.basic_ex39_arm else
+                            18500 if args_cli.basic_ex38 else 1500)
               if is_extended_resume(args_cli) else None)
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
     basic_l02 = args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
@@ -186,6 +192,10 @@ def main(env_cfg, agent_cfg):
         "joint_acc": args_cli.basic_joint_acc_weight,
         "hip_pos_penalty": args_cli.basic_hip_pos_weight,
     }, args_cli.basic_lin_vel_z_schedule, args_cli.basic_feet_regulation_weight))
+    if args_cli.basic_ex39_arm:
+        from foothold_s2.rewards.basic_gait_bundle import apply_ex39_settings
+
+        basic_reward_bundle["ex39_common"] = apply_ex39_settings(env_cfg)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -197,9 +207,9 @@ def main(env_cfg, agent_cfg):
     env = gym.make(args_cli.task, cfg=env_cfg)
     basic_terrain = None
     if basic_l02:
-        from foothold_s2.commands.basic_levels import place_l02
+        from foothold_s2.commands.basic_levels import place_l0n
 
-        basic_terrain = place_l02(env.unwrapped)
+        basic_terrain = place_l0n(env.unwrapped, args_cli.basic_ex39_level_count or 3)
     realized_material = save_material_array(env.unwrapped.scene["robot"].root_physx_view.get_material_properties(), log_dir)
     floor = env_cfg.scene.terrain.physics_material
     realized_material["floor_material_cfg"] = {
@@ -261,7 +271,7 @@ def main(env_cfg, agent_cfg):
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
     runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
     # EX-38 schedule is tied to its original m1501 start, including later segments.
-    runner.basic_lin_vel_z_start_iteration = 1501 if args_cli.basic_ex38 else 0
+    runner.basic_lin_vel_z_start_iteration = 1501 if (args_cli.basic_ex38 or args_cli.basic_ex39_arm) else 0
     if resume_path is None:
         initial = os.path.join(log_dir, "model_initial.pt")
         runner.save_initial(initial)
@@ -273,7 +283,7 @@ def main(env_cfg, agent_cfg):
             raise RuntimeError("resume checkpoint changed after validation")
         runner.load(resume_path)
         if basic_l02:
-            basic_terrain = place_l02(env.unwrapped)
+            basic_terrain = place_l0n(env.unwrapped, args_cli.basic_ex39_level_count or 3)
         physical_reset = runner.reset_segment_physics()
         with open(os.path.join(log_dir, "resume_parent.json"), "w", encoding="utf-8") as stream:
             json.dump({**parent, "resume_budget": budget, "physical_resume_identical": False,
@@ -283,7 +293,7 @@ def main(env_cfg, agent_cfg):
     if basic_l02:
         from foothold_s2.basic_gait_run import write_start_receipt
 
-        current_terrain = place_l02(env.unwrapped)
+        current_terrain = place_l0n(env.unwrapped, args_cli.basic_ex39_level_count or 3)
         start_receipt = write_start_receipt(log_dir, stage=args_cli.basic_stage, name=agent_cfg.run_name,
                                             env_seed=agent_cfg.seed, command_seed=env_cfg.commands.base_velocity.seed,
                                             terrain=current_terrain, num_envs=env_cfg.scene.num_envs)
@@ -307,11 +317,17 @@ def main(env_cfg, agent_cfg):
              "basic_reward_schedule_start_iteration": runner.basic_lin_vel_z_start_iteration,
              "basic_ex38": bool(args_cli.basic_ex38),
              "basic_ex38_continue_parent_sha": args_cli.basic_ex38_continue_parent_sha,
+             "basic_ex39_arm": args_cli.basic_ex39_arm,
+             "basic_ex39_parent_sha": args_cli.basic_ex39_parent_sha,
+             "basic_ex39_updates": args_cli.basic_ex39_updates,
+             "basic_ex39_level_count": args_cli.basic_ex39_level_count,
+             "basic_ex39_judge_exclusion": {"after_treatment_first_300_updates": [3002, 3301],
+                                            "future_resume_first_30_updates": True} if args_cli.basic_ex39_arm else None,
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,
              "basic_start_receipt": start_receipt if basic_l02 else None,
-             "basic_terrain_cfg_difference": "L0..2 active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None,
+             "basic_terrain_cfg_difference": (f"L0..{(args_cli.basic_ex39_level_count or 3)-1} active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,

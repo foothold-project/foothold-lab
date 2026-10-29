@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,7 +17,7 @@ from foothold_s2.rewards.basic_gait_bundle import (
 )
 
 
-END = "2026-10-29T12:30:00+09:00"
+END = (datetime.now(timezone.utc) + timedelta(days=2)).isoformat()
 
 
 def ex38_args(tmp_path: Path) -> list[str]:

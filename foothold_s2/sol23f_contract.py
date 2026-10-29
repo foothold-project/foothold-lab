@@ -19,6 +19,7 @@ CKPT_VARIANT = {"B": "B_friction_only", "TopDown": "START_TopDown", "SB": "SB_ma
 REVERT_SEEDS = (42,)                                            # D21: 되돌림도 원래 시드 42. 다른 시드는 전체 과정 끝의 별도 평가에서만 쓴다.
 EXTEND_MAX_ITERATIONS = 3001                                    # 이어 가기 판 총 회차 상한(부모 회차 + N 의 N 은 resume_budget 이 따로 1..1500 으로 잰다)
 EX38_CONTINUE_MAX_ITERATIONS = 4502                            # m3001 완료 뒤 m3002..4501, 추가 1500 회
+EX39_PARENT_SHA256 = "7ff575f356c27ab6280fa2e01dce40f806bbfdd89d4306ae63c827b3ff16706c"
 # EX-35 계열(이어 가기 총 회차 > 1501, 또는 s2a 의 smoke 2)이 부모로 받는 저장본: sha256 -> 그 저장본의 회차. 손 명령(train_sb.py 직접)도 이 표를 통과해야 한다(W19).
 RESUME_PARENTS = {
     "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d": 1500,      # S-B10 model_1500.pt (EX-35 main · smoke2)
@@ -59,12 +60,14 @@ def command_settings(args) -> dict:
 
     out = {"command_mode": mode, "command_contract": COMMAND_CONTRACT[mode], "clock_scatter": getattr(args, "clock_scatter", None) == "on"}
     if mode == "basic_gait":
-        from foothold_s2.commands.mixed_core import basic_shares, BASIC_SLOTS
+        from foothold_s2.commands.mixed_core import basic_shares, BASIC_SLOTS, ex39_shares
 
         share = getattr(args, "basic_new_share", None)
         share = 0.30 if share is None else share
         out["basic_new_share"] = share
-        out["basic_shares"] = dict(zip(BASIC_SLOTS, basic_shares(share)))
+        ex39_arm = getattr(args, "basic_ex39_arm", None)
+        out["basic_shares"] = ex39_shares() if ex39_arm else dict(zip(BASIC_SLOTS, basic_shares(share)))
+        out["ex39_arm"] = ex39_arm
     return out
 
 
@@ -86,6 +89,17 @@ def check_resume_parent(args) -> int:
     if not path or not Path(path).is_file():
         raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
     sha = file_sha256(path)
+    if getattr(args, "basic_ex39_arm", None):
+        from foothold_s2.basic_gait_ex38_continue import check_parent
+
+        if sha != EX39_PARENT_SHA256 or getattr(args, "basic_ex39_parent_sha", None) != sha:
+            raise ValueError("EX-39 parent SHA256 differs from completed EX-38 model_3001.pt")
+        parent = check_parent(path, sha)
+        expected = int(getattr(args, "basic_ex39_updates", 0))
+        if expected not in (1500, 3000) or int(args.max_iterations) != 3002 + expected:
+            raise ValueError("EX-39 max_iterations must match 1500 or 3000 updates after model_3001")
+        resume_budget(int(args.max_iterations), parent["completed_update"], limit=expected)
+        return parent["completed_update"]
     ex38_cont_sha = getattr(args, "basic_ex38_continue_parent_sha", None)
     if ex38_cont_sha:
         from foothold_s2.basic_gait_ex38_continue import check_parent
@@ -143,7 +157,34 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     basic_arm = getattr(args, "basic_extend_arm", None)
     basic_sha = getattr(args, "basic_extend_parent_sha", None)
     ex38 = bool(getattr(args, "basic_ex38", False))
+    ex39_arm = getattr(args, "basic_ex39_arm", None)
+    ex39_updates = getattr(args, "basic_ex39_updates", None)
+    ex39_levels = getattr(args, "basic_ex39_level_count", None)
+    ex39_sha = getattr(args, "basic_ex39_parent_sha", None)
     ex38_cont = getattr(args, "basic_ex38_continue_parent_sha", None)
+    if ex39_arm is not None:
+        if (ex39_arm not in ("A", "B") or (ex39_updates, ex39_levels) not in ((1500, 3), (3000, 4))
+                or ex39_sha != EX39_PARENT_SHA256 or ex38 or ex38_cont
+                or basic_arm is not None or basic_sha is not None
+                or args.variant != "SB" or cm != "basic_gait" or cs != "on"
+                or getattr(args, "basic_stage", None) != "main" or not is_extended_resume(args)
+                or getattr(args, "smoke_updates", None) is not None
+                or float(basic_share or 0) != 0.40 or p_off != 0.1
+                or int(args.max_iterations) != 3002 + ex39_updates
+                or getattr(args, "fast_gt_only", False)
+                or not getattr(args, "basic_lin_vel_z_schedule", False)
+                or getattr(args, "basic_feet_regulation_weight", None) is not None):
+            raise ValueError("EX-39 requires the pinned EX-38 parent, command distribution and ordinary perception")
+        from foothold_s2.rewards.basic_gait_bundle import E1_CANDIDATE
+
+        if any(getattr(args, flag, None) != value for flag, value in (
+                ("basic_track_ang_weight", E1_CANDIDATE["track_ang_vel"]),
+                ("basic_track_lin_weight", E1_CANDIDATE["track_lin_vel"]),
+                ("basic_joint_acc_weight", E1_CANDIDATE["joint_acc"]),
+                ("basic_hip_pos_weight", E1_CANDIDATE["hip_pos_penalty"]))):
+            raise ValueError("EX-39 must retain EX-38 reward weights")
+    elif ex39_updates is not None or ex39_levels is not None or ex39_sha is not None:
+        raise ValueError("EX-39 options require an EX-39 arm")
     if ex38_cont and not ex38:
         raise ValueError("EX-38 continuation SHA requires --basic-ex38")
     if ex38_cont and args.max_iterations is not None and args.max_iterations > EX38_CONTINUE_MAX_ITERATIONS:
@@ -152,9 +193,9 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     reward_slots = ("basic_feet_regulation_weight", "basic_track_ang_weight",
                     "basic_track_lin_weight", "basic_joint_acc_weight", "basic_hip_pos_weight")
     if (any(getattr(args, name, None) is not None for name in reward_slots)
-            or bool(getattr(args, "basic_lin_vel_z_schedule", False))) and basic_arm is None and not ex38:
+            or bool(getattr(args, "basic_lin_vel_z_schedule", False))) and basic_arm is None and not ex38 and not ex39_arm:
         raise ValueError("basic reward bundle is reserved for an EX-36 extension parent")
-    if basic_arm is not None or ex38:
+    if basic_arm is not None or ex38 or ex39_arm:
         from foothold_s2.rewards.basic_gait_bundle import validate_settings
 
         validate_settings({"track_ang_vel": getattr(args, "basic_track_ang_weight", None),
@@ -235,7 +276,7 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("p_map_off must be inside (0, 1)")
         if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
             raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
-        max_total = (EX38_CONTINUE_MAX_ITERATIONS if ex38_cont else 20001 if ex38
+        max_total = (3002 + ex39_updates if ex39_arm else EX38_CONTINUE_MAX_ITERATIONS if ex38_cont else 20001 if ex38
                      else 3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
         if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= max_total):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (this resume kind allows at most {max_total})")

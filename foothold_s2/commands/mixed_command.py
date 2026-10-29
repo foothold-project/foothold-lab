@@ -70,7 +70,8 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.exposure = mc.ExposureLog()
-        self.slot_names = mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS
+        self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None else
+                           mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS)
         self.slot_counts = torch.zeros(len(self.slot_names), dtype=torch.long, device=dev)
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
@@ -197,7 +198,8 @@ class MixedVelocityCommand(CommandTerm):
 
         if len(free) > 0:
             out = mc.resample_free_modes(self.gen, len(free), self.params, self.iteration,
-                                         self.range_curriculum.vmax_x, self.range_curriculum.vmax_y)
+                                         self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
+                                         yaw=self._yaw(free))
             self.vel_command_b[free] = out["cmd"].to(self.device)
             self.stand[free] = out["stand"].to(self.device)
             self.spin[free] = out["spin"].to(self.device)

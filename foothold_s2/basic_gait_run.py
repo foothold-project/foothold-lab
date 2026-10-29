@@ -26,16 +26,18 @@ def isolated_run_dir(root: str, stage: str, name: str, stamp: str, pid: int,
 def write_start_receipt(log_dir: str, *, stage: str, name: str, env_seed: int,
                         command_seed: int, terrain: dict, num_envs: int) -> dict:
     counts = terrain["new_counts"]
-    if len(counts) != 3 or sum(counts) != num_envs or any(n < 0 for n in counts):
+    if len(counts) not in (3, 4) or sum(counts) != num_envs or any(n < 0 for n in counts):
         raise ValueError("basic terrain start counts do not match env count")
     if env_seed != command_seed:
         raise ValueError("basic environment and command seeds differ")
     row = {"stage": stage, "run_name": name, "env_seed": env_seed,
            "command_seed": command_seed, "num_envs": num_envs,
-           "terrain_levels_l0_l1_l2": counts,
+           "terrain_levels_by_level": counts,
            "terrain_labels_sha256": terrain["labels_sha256"],
            "terrain_policy": terrain["policy"],
            "measurement": "actual labels after placement and parent restore, before learning"}
+    if len(counts) == 3:
+        row["terrain_levels_l0_l1_l2"] = counts
     path = Path(log_dir) / "basic_start_receipt.json"
     with path.open("x", encoding="utf-8") as stream:
         stream.write(json.dumps(row, ensure_ascii=False, indent=2) + "\n")

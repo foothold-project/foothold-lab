@@ -70,7 +70,7 @@ def test_runtime_freezes_curriculum_and_receipts_rebase():
     assert 'env_cfg.curriculum.terrain_levels = None' in source
     assert 'env_cfg.curriculum.command_range = None' in source
     assert 'agent_cfg.save_interval = 250' in source
-    assert 'basic_terrain = place_l02(env.unwrapped)' in source
+    assert 'basic_terrain = place_l0n(env.unwrapped, args_cli.basic_ex39_level_count or 3)' in source
     assert '"basic_terrain_cfg_difference"' in source
     assert 'cmd_cfg.seed = agent_cfg.seed' in source
     assert 'write_start_receipt(log_dir' in source

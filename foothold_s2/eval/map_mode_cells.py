@@ -36,6 +36,18 @@ SEQUENCES = {
 }
 
 
+def disable_heading_for_fixed_eval(term) -> None:
+    """Fixed W15 commands must not be rewritten by EX-39 heading on the next step."""
+    term.params.ex39_arm = None
+    term.heading.fill_(False)
+    term.psi_star.zero_()
+
+
+def assert_heading_off_for_fixed_eval(term) -> None:
+    if bool(term.heading.any()):
+        raise RuntimeError("fixed evaluation command was overwritten by heading")
+
+
 def commands(suite: str) -> dict[str, tuple[float, float, float]]:
     if suite == "core":
         return dict(CORE_COMMANDS)

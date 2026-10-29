@@ -16,6 +16,7 @@ MODULES = (
     "foothold_s2.basic_gait_launch",
     "foothold_s2.basic_gait_extend_launch",
     "foothold_s2.basic_gait_ex38_continue",
+    "foothold_s2.basic_gait_ex39",
     "foothold_s2.basic_gait_run",
     "foothold_s2.commands.mixed_core",
     "foothold_s2.commands.basic_levels",
@@ -51,8 +52,17 @@ def inspect_args(args: list[str]) -> dict:
     if unknown[:5] != expected or len(unknown) not in (5, 6) or (
             len(unknown) == 6 and not unknown[5].startswith("--kit_args=")):
         raise ValueError(f"unexpected AppLauncher arguments: {unknown}")
+    if parsed.basic_ex39_arm:
+        from foothold_s2.sol23f_contract import validate_launch
+
+        parsed.agent = "rsl_rl_cfg_entry_point"
+        parsed.distributed = False
+        parsed.map_input = None
+        parsed.resume = False
+        validate_launch(parsed, verify_parent=True)
     return {"run_name": args[args.index("--run_name") + 1], "max_iterations": parsed.max_iterations,
             "basic_ex38": parsed.basic_ex38, "basic_ex38_continue_parent_sha": parsed.basic_ex38_continue_parent_sha,
+            "basic_ex39_arm": parsed.basic_ex39_arm,
             "unknown_applauncher_args": unknown}
 
 

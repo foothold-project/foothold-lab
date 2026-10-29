@@ -68,6 +68,7 @@ class CommandParams:
     # 기본 보행 준비판. 기존 START 와 S2a 선택값에는 영향이 없다.
     basic_mode: bool = False
     basic_new_share: float = 0.30  # 정지 · 후진 · 옆걸음 합. 대안 0.15 는 인자로 받는다.
+    ex39_arm: str | None = None
 
 
 def make_generator(seed, device="cpu"):
@@ -128,13 +129,15 @@ def heading_wz(psi_star, yaw, stiffness=0.5, wz_max=2.0):
     return torch.clip(stiffness * wrap_to_pi(psi_star - yaw), -wz_max, wz_max)
 
 
-def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None):
+def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None, yaw=None):
     """자유 속도 env n 개의 재추출. 반환 dict: cmd(n,3) stand spin heading (bool) psi_star(n).
 
     순서(14 §3.2): 정지(p_stand) > 제자리 회전(1,000 회 이후 p_spin) > heading(플래그 확률) > 자유 wz.
     wz 는 heading env 에서 «매 스텝» `apply_heading` 이 덮어쓰므로 여기서는 자유 wz 를 담아 둔다.
     """
     if params.basic_mode:
+        if params.ex39_arm is not None:
+            return resample_ex39(gen, n, params.ex39_arm, yaw)
         return resample_basic(gen, n, params)
     if params.walkturn_mode:
         return resample_walkturn(gen, n, params)
@@ -205,6 +208,58 @@ def resample_walkturn(gen, n, params):
 
 BASIC_SLOTS = ("forward", "walk_left", "walk_right", "spin_left", "spin_right",
                "stand", "reverse", "side_left", "side_right")
+
+EX39_SLOTS = (*BASIC_SLOTS, "diag_fwd_left", "diag_fwd_right", "diag_back_left", "diag_back_right")
+EX39_SHARES = (0.30, 0.05, 0.05, 0.10, 0.10, 0.10, 0.12, 0.06, 0.06,
+               0.015, 0.015, 0.015, 0.015)
+
+
+def ex39_shares():
+    if len(EX39_SLOTS) != len(EX39_SHARES) or abs(sum(EX39_SHARES) - 1.0) > 1e-12:
+        raise ValueError("EX-39 slot proportions must sum to one")
+    return dict(zip(EX39_SLOTS, EX39_SHARES))
+
+
+def resample_ex39(gen, n, arm, yaw):
+    """D55 basic-gait slots. Arm B changes only heading flags and targets."""
+    if arm not in ("A", "B") or yaw is None or yaw.shape != (n,):
+        raise ValueError("EX-39 needs arm A/B and current yaw for each env")
+    shares = ex39_shares()
+    edges = torch.tensor(tuple(shares.values()), device=gen.device, dtype=torch.float64).cumsum(0)
+    slot = torch.clamp(torch.searchsorted(edges, _u(gen, (n,)).double(), right=True), max=len(EX39_SLOTS) - 1)
+    zeros = torch.zeros(n, device=gen.device)
+    forward = slot == 0
+    walk = (slot == 1) | (slot == 2)
+    spin = (slot == 3) | (slot == 4)
+    stand = slot == 5
+    reverse = slot == 6
+    side = (slot == 7) | (slot == 8)
+    diagonal = slot >= 9
+    fwd_vx = _u(gen, (n,), 0.3, 1.5)
+    walk_vx = _u(gen, (n,), 0.3, 0.8)
+    back_vx = _u(gen, (n,), -1.0, -0.2)
+    diag_vx = _u(gen, (n,), 0.3, 0.6)
+    side_vy = _u(gen, (n,), 0.2, 0.6)
+    diag_vy = _u(gen, (n,), 0.2, 0.5)
+    walk_wz = _u(gen, (n,), 0.2, 0.5)
+    spin_wz = _u(gen, (n,), 0.5, 1.5)
+    vx = torch.where(forward, fwd_vx, torch.where(walk, walk_vx,
+                     torch.where(reverse, back_vx, torch.where(diagonal,
+                     torch.where(slot < 11, diag_vx, -diag_vx), zeros))))
+    vy = torch.where(side, torch.where(slot == 7, side_vy, -side_vy),
+                     torch.where(diagonal, torch.where((slot == 9) | (slot == 11), diag_vy, -diag_vy), zeros))
+    wz = torch.where(walk, torch.where(slot == 1, walk_wz, -walk_wz),
+                     torch.where(spin, torch.where(slot == 3, spin_wz, -spin_wz), zeros))
+    heading = torch.zeros(n, dtype=torch.bool, device=gen.device)
+    psi_star = zeros.clone()
+    if arm == "B":
+        # 15 percentage points of forward, 3 points from each spin direction.
+        heading = (forward & (_u(gen, (n,)) < 0.5)) | (spin & (_u(gen, (n,)) < 0.3))
+        target_spin = _u(gen, (n,), -math.pi, math.pi)
+        psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
+        wz = torch.where(heading, zeros, wz)
+    return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
+            "heading": heading, "psi_star": psi_star, "slot": slot}
 
 
 def basic_shares(new_share):

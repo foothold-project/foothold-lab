@@ -69,6 +69,40 @@ def hip_pos_penalty_l1(env, command_name, asset_cfg, stand_still_scale, command_
     return torch.where(cmd_large, running_reward, stand_still_scale * running_reward)
 
 
+def thigh_calf_pos_penalty_l1(env, asset_cfg):
+    """E1 joint_pos_penalty_l1 with stand_still_scale=1; RobotLab rewards.py:112-130."""
+    asset = env.scene[asset_cfg.name]
+    return torch.linalg.norm(asset.data.joint_pos[:, asset_cfg.joint_ids]
+                             - asset.data.default_joint_pos[:, asset_cfg.joint_ids], dim=1, ord=1)
+
+
+def four_foot_contact_at_stop(env, command_name, sensor_cfg, threshold=1.0):
+    """D55 proposed +0.1 term: all four feet currently contact while command is zero."""
+    command = env.command_manager.get_command(command_name)
+    forces = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
+    if forces.shape[1] != 4:
+        raise ValueError("EX-39 stand contact requires four foot bodies")
+    in_contact = torch.linalg.vector_norm(forces, dim=-1) > threshold
+    return ((torch.linalg.vector_norm(command, dim=1) < 0.1) & in_contact.all(dim=1)).float()
+
+
+def apply_ex39_settings(env_cfg, contact_weight: float = 0.1) -> dict:
+    """Add the two D55 terms to both arms after the unchanged EX-38 reward bundle."""
+    from isaaclab.managers import RewardTermCfg as RewTerm, SceneEntityCfg
+
+    if contact_weight != 0.1:
+        raise ValueError("EX-39 contact weight needs a new decision")
+    env_cfg.rewards.ex39_thigh_calf_pos_l1 = RewTerm(
+        func=thigh_calf_pos_penalty_l1, weight=-0.01,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_(thigh|calf)_joint")})
+    env_cfg.rewards.ex39_four_foot_stop = RewTerm(
+        func=four_foot_contact_at_stop, weight=contact_weight,
+        params={"command_name": "base_velocity", "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"),
+                "threshold": 1.0})
+    return {"thigh_calf_pos_l1": -0.01, "stand_four_foot_contact": contact_weight,
+            "feet_regulation": "candidate_only_not_enabled"}
+
+
 def set_lin_vel_z_weight(env, iteration: int, start_iteration: int = 0) -> float:
     """Call at each update boundary after RewardManager registered its nonzero base term."""
     weight = scheduled_lin_vel_z_weight(iteration, start_iteration=start_iteration)

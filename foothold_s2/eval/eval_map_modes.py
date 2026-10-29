@@ -115,6 +115,7 @@ raw = env.unwrapped
 dev = raw.device
 robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")
+map_mode_cells.disable_heading_for_fixed_eval(term)
 dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = map_mode_cells.commands(args.command_suite)
@@ -280,6 +281,7 @@ for mode in args.modes.split(","):
             raise RuntimeError("terrain kind/level assignment changed between commands")
 
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
+        map_mode_cells.disable_heading_for_fixed_eval(term)
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
@@ -299,6 +301,7 @@ for mode in args.modes.split(","):
 
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+            map_mode_cells.assert_heading_off_for_fixed_eval(term)
             last_err["e"] = None
             a = policy(obs)
 
@@ -306,6 +309,7 @@ for mode in args.modes.split(","):
                 ERR[:, k] = torch.stack(last_err["e"])
 
             obs, _r, dones, _x = env.step(a)
+            map_mode_cells.assert_heading_off_for_fixed_eval(term)
             policy.reset(dones)
             AL[k] = alive & ~dones.bool()  # env.step may already have reset done envs
             VX[k] = robot.data.root_lin_vel_b[:, 0]
@@ -400,6 +404,7 @@ for mode in args.modes.split(","):
                        "phases": [], "independent_reset": True}
             for phase_index, (phase_cmd, nsteps) in enumerate(zip(seq_commands, seq_row["phase_steps"])):
                 term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                map_mode_cells.disable_heading_for_fixed_eval(term)
                 obs = env.get_observations()
                 xy_start = robot.data.root_pos_w[:, :2].clone()
                 vx_t, vy_t, wz_t = (torch.zeros(nsteps, env.num_envs, device=dev) for _ in range(3))
@@ -407,8 +412,10 @@ for mode in args.modes.split(","):
                 alive_t = torch.zeros(nsteps, env.num_envs, dtype=torch.bool, device=dev)
                 for step in range(nsteps):
                     term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                    map_mode_cells.assert_heading_off_for_fixed_eval(term)
                     action = policy(obs)
                     obs, _reward, dones, _extra = env.step(action)
+                    map_mode_cells.assert_heading_off_for_fixed_eval(term)
                     policy.reset(dones)
                     alive_t[step] = alive & ~dones.bool()  # exclude possible post-reset sample
                     vx_t[step] = robot.data.root_lin_vel_b[:, 0]
