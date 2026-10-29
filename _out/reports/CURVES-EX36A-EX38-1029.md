@@ -1,5 +1,5 @@
 > 분류: A/평가 · 일반화 벤치마크 · 지표
-> 작성: 오흥재 (analyst 분석) · 2026-10-29 20:42 대한민국 표준시
+> 작성: 오흥재 (analyst 분석) · 2026-10-29 20:44 대한민국 표준시
 > 근거: 지정 실행 3개의 tfevents · 실행 params/manifest · 해당 커밋의 로그 코드 SHA 대조
 > 요지: 두 판 모두 초반 상승 뒤 말기에 평평해졌고, EX-38 마지막 100회는 약한 내림세이나 지속 퇴보로 단정할 증거는 부족하다.
 > 상태: CPU 곡선 분석 완료 · 보행 성능 판정은 영상·위상·독립 평가와 합쳐야 함 · 원자료 변경 없음
@@ -105,7 +105,7 @@ EX-36A는 **m1501~m3000, 1500개 기록**이다. m3001은 없으므로 채워 �
 - 생성 코드: [analyze.py](curves-ex36a-ex38-1029/analyze.py), [render_report.py](curves-ex36a-ex38-1029/render_report.py)
 - 회차별 원값: [EX36A_raw.csv](curves-ex36a-ex38-1029/EX36A_raw.csv), [EX38_raw.csv](curves-ex36a-ex38-1029/EX38_raw.csv). 100회 창 CSV·summary.json도 같은 폴더.
 - 입력·설정 차이: [provenance.json](curves-ex36a-ex38-1029/provenance.json). 코드 출처: [source_provenance.json](curves-ex36a-ex38-1029/source_provenance.json). 재계산: [checks.json](curves-ex36a-ex38-1029/checks.json).
-- 파일 해시: [SHA256SUMS.txt](curves-ex36a-ex38-1029/SHA256SUMS.txt). 원본 PNG를 열어 24개 패널·축·범례·재개 경계 표시를 확인했다.
+- 산출 파일 해시: [SHA256SUMS.txt](curves-ex36a-ex38-1029/SHA256SUMS.txt). 텍스트는 LF로 정규화한 바이트, PNG는 원바이트 기준이다. 원자료 tfevents의 원바이트 SHA는 provenance.json에 따로 있다. 원본 PNG를 열어 24개 패널·축·범례·재개 경계 표시를 확인했다.
 - 실행: `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -X utf8 analyze.py`, 이어서 같은 Python의 `render_report.py`. CPU로만 읽고 그리는 스크립트이며 학습·평가 코드를 import하지 않는다.
 
 자기 분석 worktree에서 작성했다. 원격 main과 기존 분석 브랜치가 갈라져 `git pull --ff-only origin main`은 중단됐고, 강제 병합·rebase·공유 체크아웃 변경을 하지 않았다. 이번 산출만 별도로 보존한다.
