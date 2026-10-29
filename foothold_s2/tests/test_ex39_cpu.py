@@ -9,6 +9,64 @@ from types import SimpleNamespace
 import pytest
 import torch
 
+from foothold_s2.runners.reward_split import RewardSplit, split_stats
+
+
+def test_ex39_reward_split_all_slots_and_flag():
+    from foothold_s2.commands.mixed_core import EX39_SLOTS
+
+    slot = torch.tensor([*range(13), -1])
+    flag = slot == -1
+    cmd = torch.tensor([
+        [0.5, 0, 0], [0.5, 0, 0.3], [0.5, 0, -0.3], [0, 0, 1.5],
+        [0, 0, -1.5], [0, 0, 0], [-1.0, 0, 0], [0, 0.6, 0],
+        [0, -0.6, 0], [0.5, 0.4, 0], [0.5, -0.4, 0],
+        [-0.5, 0.4, 0], [-0.5, -0.4, 0], [0.5, 0, 0],
+    ])
+    out = split_stats(torch.ones(1, 14, 1), ["track_lin_vel"], cmd[None, :, 0],
+                      cmd[None, :, 2], cmd[None], torch.zeros(1, 14),
+                      vy=cmd[None, :, 1], basic_mode=True, ex39_mode=True,
+                      slots=slot[None], flag_env=flag[None], heading=torch.zeros(1, 14, dtype=torch.bool))
+    assert tuple(out["by_command_slot"]) == EX39_SLOTS
+    assert all(v["env_steps"] == 1 for v in out["by_command_slot"].values())
+    assert out["flag_env_steps"] == 1
+    assert out["env_steps"] == 14
+
+
+def test_ex39_reward_split_attached_pre_reset_slot_and_heading():
+    cmd = torch.tensor([[0.5, 0.4, 0.0], [0.0, 0.0, 0.0], [0.5, 0.0, 0.0]])
+    term = SimpleNamespace(vel_command_b=cmd.clone(), slot_current=torch.tensor([9, 3, 0]),
+                           is_flag_env=torch.tensor([False, False, True]),
+                           heading=torch.tensor([False, True, False]))
+    data = SimpleNamespace(root_lin_vel_b=torch.tensor([[0.4, 0.3, 0], [0, 0, 0], [0.4, 0, 0]]),
+                           root_ang_vel_b=torch.zeros(3, 3))
+    rm = SimpleNamespace(active_terms=["track_lin_vel"], _step_reward=torch.ones(3, 1))
+    rm.compute = lambda: rm._step_reward.sum(-1)
+    env = SimpleNamespace(reward_manager=rm, scene={"robot": SimpleNamespace(data=data)},
+                          command_manager=SimpleNamespace(get_term=lambda _: term),
+                          reset_buf=torch.tensor([True, False, False]))
+    record = RewardSplit(basic_mode=True, ex39_mode=True)
+    record.attach(env)
+    rm.compute()
+    record.add()
+    term.slot_current[:] = 5
+    term.vel_command_b.zero_()
+    out = record.summary()
+    assert out["by_command_slot"]["diag_fwd_left"]["env_steps"] == 1
+    assert out["by_command_slot"]["spin_left"]["following_env_steps"] == 1
+    assert out["flag_env_steps"] == 1
+    assert out["reset_env_steps"] == 1
+
+
+@pytest.mark.parametrize("bad_slot", [-1, 13])
+def test_ex39_reward_split_rejects_invalid_free_slot(bad_slot):
+    cmd = torch.tensor([[[0.5, 0.4, 0.0]]])
+    with pytest.raises(ValueError, match="invalid command slot"):
+        split_stats(torch.ones(1, 1, 1), ["track_lin_vel"], cmd[:, :, 0], cmd[:, :, 2], cmd,
+                    vy=cmd[:, :, 1], basic_mode=True, ex39_mode=True,
+                    slots=torch.tensor([[bad_slot]]), flag_env=torch.tensor([[False]]),
+                    heading=torch.tensor([[False]]))
+
 from foothold_s2.basic_gait_ex39 import prepare
 from foothold_s2.commands import mixed_core as mc
 from foothold_s2.eval.map_mode_cells import (

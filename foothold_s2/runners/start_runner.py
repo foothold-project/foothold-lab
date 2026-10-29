@@ -307,7 +307,9 @@ class StartRunner(OnPolicyRunner):
         src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
         learn_iters = 0
         act_stats = None
-        rs_rec = RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39")) if self.pcfg["log_reward_split"] else None
+        rs_rec = (RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39"),
+                              ex39_mode=self.pcfg["contract"] == "basic_gait_ex39")
+                  if self.pcfg["log_reward_split"] else None)
         if rs_rec is not None:
             rs_rec.attach(getattr(self.env, "unwrapped", self.env))
         if self.pcfg["log_action_stats"]:

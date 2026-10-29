@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import torch
 
+from foothold_s2.commands.mixed_core import EX39_SLOTS
+
 NAMED = ("track_lin_vel", "track_ang_vel", "action_rate", "action_smoothness")
 MOVE_VX = 0.05
 MOVE_YAW_FOLLOW = 0.1
@@ -49,7 +51,8 @@ class StepClassifier:
         self.prev_reset = None
 
     def classify(self, vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset_prev: torch.Tensor | None = None,
-                 vy: torch.Tensor | None = None, basic_mode: bool = False):
+                 vy: torch.Tensor | None = None, basic_mode: bool = False,
+                 ex39_slots: torch.Tensor | None = None, flag_env: torch.Tensor | None = None):
         fresh = torch.zeros_like(vx, dtype=torch.bool) if reset_prev is None else reset_prev.bool()
 
         if basic_mode and vy is None:
@@ -67,6 +70,22 @@ class StepClassifier:
                 self.ema_vy = torch.where(fresh, vy, (1 - EMA_ALPHA) * self.ema_vy + EMA_ALPHA * vy)
 
         self.prev_cmd = cmd.clone()
+        if ex39_slots is not None:
+            slot = ex39_slots.long()
+            yaw_follow = self.ema_wz * torch.sign(cmd[:, 2]) / cmd[:, 2].abs().clamp_min(EPS)
+            stand = slot == 5
+            moving = ((slot == 0) & (self.ema_vx >= MOVE_VX))
+            moving |= ((slot == 1) | (slot == 2)) & (self.ema_vx >= MOVE_VX) & (yaw_follow >= MOVE_YAW_FOLLOW)
+            moving |= ((slot == 3) | (slot == 4)) & (yaw_follow >= MOVE_YAW_FOLLOW)
+            moving |= (slot == 6) & (-self.ema_vx >= MOVE_VX)
+            moving |= ((slot == 7) | (slot == 8)) & (self.ema_vy * torch.sign(cmd[:, 1]) >= MOVE_VX)
+            moving |= (slot >= 9) & (slot <= 12) & (self.ema_vx * torch.sign(cmd[:, 0]) >= MOVE_VX) & (self.ema_vy * torch.sign(cmd[:, 1]) >= MOVE_VX)
+            # Flag envs have no free-command slot. Preserve their legacy motion aggregate.
+            flag = torch.zeros_like(stand) if flag_env is None else flag_env.bool()
+            moving |= flag & (((cmd[:, 0].abs() > EPS) & (self.ema_vx * torch.sign(cmd[:, 0]) >= MOVE_VX)) |
+                              ((cmd[:, 0].abs() <= EPS) & (cmd[:, 2].abs() > EPS) & (yaw_follow >= MOVE_YAW_FOLLOW)))
+            active = ~stand & ((slot >= 0) | flag)
+            return moving, active & ~moving, stand
         if basic_mode:
             group = basic_group_ids(cmd)
             yaw_follow = self.ema_wz * torch.sign(cmd[:, 2]) / cmd[:, 2].abs().clamp_min(EPS)
@@ -89,31 +108,48 @@ class StepClassifier:
 
 def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset: torch.Tensor | None = None,
                 clf: StepClassifier | None = None, reset_before: torch.Tensor | None = None, clipped: torch.Tensor | None = None,
-                vy: torch.Tensor | None = None, basic_mode: bool = False) -> dict:
+                vy: torch.Tensor | None = None, basic_mode: bool = False, ex39_mode: bool = False,
+                slots: torch.Tensor | None = None, flag_env: torch.Tensor | None = None,
+                heading: torch.Tensor | None = None) -> dict:
     """rew (T, N, K) 가중치 곱한 항별 값 · vx (T, N) · wz (T, N) · cmd (T, N, 3) · reset (T, N) 그 step 에 종료된 env. 전부 보상과 같은 시점(reset 전)."""
     T, N, _ = rew.shape
     clf = clf or StepClassifier()
     sums = {"moving": torch.zeros(rew.shape[2]), "stalled": torch.zeros(rew.shape[2])}
     counts = {"moving": 0, "stalled": 0, "nomove": 0}
     clip_counts = {"moving": 0, "stalled": 0}                 # only_positive_rewards 로 합이 0 으로 잘린 env-step (EX-13 만 의미가 있다)
-    group_counts = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
-    group_rewards = torch.zeros(len(BASIC_GROUPS), rew.shape[2], device=rew.device) if basic_mode else None
-    group_following = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
+    if ex39_mode and (not basic_mode or slots is None or flag_env is None or heading is None or
+                      slots.shape != (T, N) or flag_env.shape != (T, N) or heading.shape != (T, N)):
+        raise ValueError("EX-39 reward split requires aligned slots and flag mask")
+    group_names = EX39_SLOTS if ex39_mode else BASIC_GROUPS
+    group_counts = torch.zeros(len(group_names), dtype=torch.long, device=rew.device) if basic_mode else None
+    group_rewards = torch.zeros(len(group_names), rew.shape[2], device=rew.device) if basic_mode else None
+    group_following = torch.zeros(len(group_names), dtype=torch.long, device=rew.device) if basic_mode else None
     group_invalid = torch.zeros((), dtype=torch.long, device=rew.device) if basic_mode else None
+    flag_count = 0
 
     for t in range(T):
         prev = (reset_before if t == 0 else reset[t - 1]) if reset is not None else None
         moving, stalled, nomove = clf.classify(vx[t], wz[t], cmd[t], prev,
-                                                vy=vy[t] if vy is not None else None, basic_mode=basic_mode)
+                                                vy=vy[t] if vy is not None else None, basic_mode=basic_mode,
+                                                ex39_slots=slots[t] if ex39_mode else None,
+                                                flag_env=flag_env[t] if ex39_mode else None)
         if basic_mode:
-            groups = basic_group_ids(cmd[t])
+            groups = slots[t] if ex39_mode else basic_group_ids(cmd[t])
             # Stand is successful when both planar and yaw motion are small.
             # It remains a no-move command in the legacy aggregate counts.
             stand_following = (clf.ema_vx.square() + clf.ema_vy.square() < BASIC_STAND_LINEAR_MPS ** 2)
             stand_following &= clf.ema_wz.abs() < BASIC_STAND_YAW_RADPS
-            following = moving | ((groups == 3) & stand_following)
-            group_invalid += (groups < 0).sum()
-            for i in range(len(BASIC_GROUPS)):
+            following = moving | ((groups == (5 if ex39_mode else 3)) & stand_following)
+            if ex39_mode:
+                # A heading-spin slot that has reached its target commands wz=0.
+                # Count it as followed only when the robot has also stopped.
+                heading_spin_at_goal = heading[t] & ((groups == 3) | (groups == 4)) & (cmd[t, :, 2].abs() <= EPS)
+                following |= heading_spin_at_goal & stand_following
+                flag_count += int(flag_env[t].sum())
+                group_invalid += ((groups < 0) & ~flag_env[t]).sum() + (groups >= len(group_names)).sum() + ((groups >= 0) & flag_env[t]).sum()
+            else:
+                group_invalid += (groups < 0).sum()
+            for i in range(len(group_names)):
                 mask = groups == i
                 group_counts[i] += mask.sum()
                 group_rewards[i] += rew[t][mask].sum(0).float()
@@ -149,17 +185,21 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
 
     if basic_mode:
         if int(group_invalid):
-            raise ValueError("basic reward split saw a command outside the six groups")
+            raise ValueError("EX-39 reward split saw an invalid command slot" if ex39_mode else "basic reward split saw a command outside the six groups")
         group_counts = group_counts.cpu()
         group_rewards = group_rewards.cpu()
         group_following = group_following.cpu()
-        out["by_basic_group"] = {
+        out["by_command_slot" if ex39_mode else "by_basic_group"] = {
             name: {"env_steps": int(group_counts[i]), "fraction": int(group_counts[i]) / total,
                    "following_env_steps": int(group_following[i]),
                    "reward_terms_mean": {key: float(group_rewards[i, j] / group_counts[i])
                                          for j, key in enumerate(names)} if group_counts[i] else None}
-            for i, name in enumerate(BASIC_GROUPS)
+            for i, name in enumerate(group_names)
         }
+        if ex39_mode:
+            out["flag_env_steps"] = flag_count
+            if sum(int(x) for x in group_counts) + flag_count != total:
+                raise ValueError("EX-39 reward split slot counts do not cover all env steps")
 
     return out
 
@@ -167,9 +207,10 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
 class RewardSplit:
     """reward_manager.compute 를 감싸 보상 직후(reset 전)의 보상 · 명령 · 속도 · reset 표시를 step 마다 모은다."""
 
-    def __init__(self, basic_mode: bool = False):
+    def __init__(self, basic_mode: bool = False, ex39_mode: bool = False):
         self.basic_mode = basic_mode
-        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], [], []
+        self.ex39_mode = ex39_mode
+        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped, self.slots, self.flag_env, self.heading = [], [], [], [], [], [], [], [], [], []
         self.names = None
         self.error = None
         self.attached = False
@@ -195,7 +236,10 @@ class RewardSplit:
                           robot.data.root_lin_vel_b[:, 1].detach().clone() if self.basic_mode else None,
                           robot.data.root_ang_vel_b[:, 2].detach().clone(),
                           term.vel_command_b[:, :3].detach().clone(), env.reset_buf.detach().clone(),
-                          (env.reward_neg_clipped.detach().clone() if hasattr(env, "reward_neg_clipped") else None))
+                          (env.reward_neg_clipped.detach().clone() if hasattr(env, "reward_neg_clipped") else None),
+                          torch.where(term.is_flag_env, -1, term.slot_current).detach().clone() if self.ex39_mode else None,
+                          term.is_flag_env.detach().clone() if self.ex39_mode else None,
+                          term.heading.detach().clone() if self.ex39_mode else None)
 
             return out
 
@@ -212,7 +256,7 @@ class RewardSplit:
 
             return
 
-        r, vx, vy, wz, cmd, rst, clipped = self._snap
+        r, vx, vy, wz, cmd, rst, clipped, slots, flag_env, heading = self._snap
         self._snap = None
         self.rew.append(r)
         self.vx.append(vx)
@@ -222,6 +266,10 @@ class RewardSplit:
         self.cmd.append(cmd)
         self.reset.append(rst)
         self.clipped.append(clipped)
+        if self.ex39_mode:
+            self.slots.append(slots)
+            self.flag_env.append(flag_env)
+            self.heading.append(heading)
 
     def summary(self):
         if self.error is not None:
@@ -236,11 +284,15 @@ class RewardSplit:
         out = split_stats(torch.stack(self.rew), self.names, torch.stack(self.vx), torch.stack(self.wz), torch.stack(self.cmd), torch.stack(self.reset),
                           clf=self.clf, reset_before=self.last_reset,
                           clipped=(torch.stack(self.clipped) if self.clipped and self.clipped[0] is not None else None),
-                          vy=torch.stack(self.vy) if self.basic_mode else None, basic_mode=self.basic_mode)
+                          vy=torch.stack(self.vy) if self.basic_mode else None, basic_mode=self.basic_mode,
+                          ex39_mode=self.ex39_mode,
+                          slots=torch.stack(self.slots) if self.ex39_mode else None,
+                          flag_env=torch.stack(self.flag_env) if self.ex39_mode else None,
+                          heading=torch.stack(self.heading) if self.ex39_mode else None)
         self.last_reset = self.reset[-1].clone()
         self.reset_window()
 
         return out
 
     def reset_window(self):
-        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], [], []
+        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped, self.slots, self.flag_env, self.heading = [], [], [], [], [], [], [], [], [], []
