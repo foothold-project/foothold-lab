@@ -1,0 +1,142 @@
+> 분류: 운영 · 실패 로그 정본
+> 작성: lead · 2026-10-29
+> 근거: RULES-HUB 7 절 R1~R23 (10/25~10/29) · lead 메모리 feedback 75 건 · 실행 카드 7 절 기록
+> 요지: 반복된 실수와 그것을 막는 장치를 한 곳에 둔다. 모든 세션(Claude · Codex)은 일을 시작하거나 다음 단계를 걸기 전에 이 파일을 읽는다
+> 상태: v1 · 10/29 통합 (RULES-HUB 7 절과 메모리 교훈을 옮김). 팀장 원문은 쓰지 않는다(원문은 비공개 mai-os 원장)
+
+# 실패 로그 (정본)
+
+## 쓰는 법
+
+1. 일을 시작하거나 다음 단계(이어 학습 · 평가 사슬 · 촬영)를 걸기 전에 이 파일을 훑고, 의뢰문 · 카드 첫 줄에 해당 번호(R · M)를 적는다.
+2. 받는 세션은 시작 보고에 그 번호의 막는 장치를 자기 말로 적는다.
+3. 새 실수는 같은 날 R 번호로 이 파일에 더한다. 같은 실수의 반복이면 새 줄 대신 그 줄의 「반복 근거」 에 날짜를 더한다.
+4. 막는 장치는 사람 규칙보다 코드 관문을 먼저 찾는다(시작 스크립트 사전 점검 · 기본값 · 영수증 대조). 코드로 막았으면 그 경로를 적는다.
+5. 팀장 원문은 이 공개 저장소에 쓰지 않는다. 〔원문 비공개〕 로 적고 내용만 풀어 쓴다.
+
+## 1. 반복 실수와 막는 장치 (R)
+
+| 번호 | 실수 | 반복 근거 | 막는 장치 |
+|---|---|---|---|
+| R1 | 재지 않은 숫자 · 시각 · 상태를 사실처럼 말함 | 10/25 한도 예측 「1시간 8분 바닥」 을 공식 경고처럼 · 시각 08:20 짐작 · 전진 비율 「0.95~0.96」 을 기억으로 (실제 0.93~0.96). 앞서 10/12 시각 다섯 번 · 10/13 요약이 판정 규칙을 바꿈 | 보고 · 문서의 숫자는 그 턴에 원자료 파일(json · log)이나 명령 출력에서 읽은 것만, 경로를 같이 적는다. 범위 「a~b」 는 원자료의 최솟값 · 최댓값을 계산해서 쓴다. 예측 · 추정은 그 낱말을 붙인다. 시각은 `date` |
+| R2 | 결과 · 결정 · 정정을 정본 기록에 늦게 반영 | 10/25 상황판만 9 시간 · 승인 원장이 06:0x 뒤 비어 있었음 · #555 댓글 「0.95~0.96」 정정 누락 · mai 세션 상태가 10/24 「멈춤(한도)」 그대로. 앞서 10/13 #550 닷새 · 10/12 채팅으로만 | 점검 예약 문장의 정본 기록 순서 (3 절). **정정은 퍼진 곳 전부**: 저장소 grep · 상황판 grep · #555 댓글 · 세션 상태(mai-gauge) 를 같은 턴에 고친다. 팀장 문장이 나오면 그 턴에 승인 원장 줄을 더한다 |
+| R3 | 팀장 결정이 규칙을 바꿨는데 규칙 문장을 안 고침 | 10/25 〔원문 비공개〕 뒤에도 1 절이 〔원문 비공개〕 (15 시 발견) | 결정을 원장에 적을 때 〔원문 비공개〕 을 grep 해 같은 커밋에서 고친다 |
+| R4 | 조건이 다른 두 판을 비교 근거로 씀 | 10/25 B1500 대 EX-25 종아리 비교 (지형 레벨 다름 · 넘어진 env 포함, reviewer 가 잡음). 앞서 10/13 GPU 를 가른 것이 두 번째 변수 | 비교표 위에 조건 열(지형 해시 · 레벨 · env 수 · 지도 모드 · 체크포인트 SHA · 넘어진 env 처리)을 먼저 적고, 하나라도 다르면 「비교 불가」 로 적는다 |
+| R5 | 화면용 GPU1 에 무거운 일을 올려 느려짐 | 10/23 cuda:1 촬영이 학습을 480 초/회로 · 10/25 EX-31 3072 env 가 34 → 226 초/회 | **실험을 막지 않는다** (팀장 10/25 16시 〔원문 비공개〕). GPU1 여유가 3 GB 미만이면 super2 에 요청해 mai-tabs 로 탭 재우기 → 승인된 앱 종료 → 필요시 Chrome 종료 순으로 비운 뒤 띄운다 (팀장이 자리에 있으면 끄기 전에 묻는다). 실행은 super2: lead 가 필요한 GiB 와 실험 이름을 적어 요청 → (1) mai-tabs 탭 재우기 (2) 모자라면 10/25 승인 목록 앱 종료 (3) 그래도 모자라면 Chrome 종료 (4) nvidia-smi 숫자로 회신. 승인은 팀장이 super2 창에서 직접, 10/25 16:4x 〔원문 비공개〕 (lead 가 super2 화면에서 원문 확인, vfxpedia/mai-os#57). 띄운 뒤 첫 10 회 초/회를 GPU0 과 비교, 1.5 배 넘으면 바로 보고 |
+| R6 | 가짜 입력 시험만 믿고 실제 첫 실행에서 실패 · 실제 짧은 실행을 건너뜀 | 10/16 이름 불일치 · 10/18 sys.path · 10/25 T5 진단 훅 `dt` 인자 오류. 10/25 창 2 실행기는 Kit 짧은 실행 없이 첫 실행이 실제 창 2 (결과는 정상) | 새 실행기 · 훅은 CPU 시험 + 설치 소스 AST 대조 + **짧은 Kit 실행**(10 회 또는 평가 8 건) 셋 다 지난 뒤 장기 실행. 건너뛰면 보고에 「짧은 실행 안 함」 을 적는다 |
+| R7 | 프로세스를 이름 · 넓은 패턴으로 종료 | 10/25 Stop-Process 패턴이 내 셸을 죽임. 앞서 10/13 TaskStop 이 Isaac 을 못 죽임 | PID 로만 끄고, 끄기 전 그 PID 의 명령줄을 읽고, 끈 뒤 목록을 다시 본다 · 10/25 23:22 lead 가 평가를 멈출 때 python 과 감시 루프만 끄고 그 사이 실행 셸 (run_g0b_eval.sh) 을 놓쳐, 그 셸이 64 env 평가를 GPU1 에서 23:34 까지 돌렸다. S-B 짧은 Kit 가 그동안 118~146 초/회로 느렸고 lead 는 이를 「GPU1 페이징이라 S-B 를 못 돌린다」 로 잘못 보고했다 (깨끗한 판은 24.7~29.0 초/회). 끈 뒤에는 명령줄 패턴으로 그 일의 셸 · python 이 하나도 안 남았는지 목록을 다시 본다 |
+| R8 | 결과 해석을 평가 숫자만으로 냄 (학습 곡선 · 보행 위상 · 영상 판독 없이) | 10/25 창 1 · 2 결과 문서 (팀장 17시 〔원문 비공개〕). 회전 수치 상승을 개선으로 적었는데 영상은 몸 비틀기였다 (팀장 판독). 앞서 10/24 B1500 은 했다 | 결과 문서는 [RESULT-B1500-1024](../20261023-experiments/RESULT-B1500-1024.md) 의 9 절 형식을 따른다: 영상 먼저 (로컬 경로 · 대표 프레임) → 같은 것 · 다른 것 → 전진 · 높이 · 발 교대 (위상 그림) → 회전의 회차별 변화 그림 → 관절 · 기울기 그림 → 학습 곡선 (여러 지표) → 증거의 한계 → 다음 설계에서 바꿀 것 → 재현 경로 (코드 · 원자료). 그림은 생성 코드와 같이 figs/ 에 둔다. 이 중 빠진 것이 있으면 「해석 미완」 으로만 낸다 (10/25 17시 팀장 〔원문 비공개〕). 수치가 오른 회전은 위상 (발을 들었나) 으로 확인 뒤에만 「개선」 |
+| R9 | 결과 문서 경로 · 로컬 영상 경로를 텔레그램 · 채팅에 안 줌 | 10/25 17시 팀장 〔원문 비공개〕 | 새 결과마다 텔레그램에 결과 문서 링크 + 로컬 영상 경로 전부 (C:\ 형식), 채팅 보고에도 같은 두 가지. 점검 예약 문장에 넣음 |
+| R10 | 띄우고 확인 전에 「돈다」 고 보고 | 10/25 18:07 〔원문 비공개〕 보고, 실제는 Kit 시작에서 멈춤 (GPU 0 MiB, 표준 실행기 run_kit.sh 의 EULA · conda PATH · PCI_BUS_ID 빠짐) → 목록 CRLF 로 경로 깨짐 → 실제 시작 18:13 (팀장 〔원문 비공개〕). 앞서 10/17 같은 유형 | GPU 일은 프로젝트 실행기 (run_kit.sh 등) 로만 띄운다. 「돈다」 는 띄움 (PID · 시각) → 2 분 안 첫 증거 (GPU 메모리 증가 · 첫 update 또는 첫 결과 파일) 를 본 뒤에만. Isaac rc 0 은 결과 파일 유무로 다시 본다 |
+| R11 | 정해진 규칙을 안 읽고 제안 | 10/25 20시 「다른 시드」 를 제안 (EXPERIMENT-RULES 23 행 〔원문 비공개〕, 팀장 〔원문 비공개〕) | 다음 실험 · 추가 실행을 제안하기 전에 EXPERIMENT-RULES · RULES-HUB 6 절 · 승인 원장을 grep 해 부딪히는지 본다 |
+| R12 | 측정 하나로 보행을 단정 | 10/25 21시 〔원문 비공개〕 를 독립 시작만 보고 말함. 같은 진단의 좌 → 우 전환은 −0.64 로 약했고 영상도 약했다 (팀장 〔원문 비공개〕). 앞서 같은 날 〔원문 비공개〕 철회 | 보행 주장은 64 env 평가 + 16 env 여섯 경우 (좌 · 우 독립, 좌 → 우, 우 → 좌, 전진 → 좌, 전진 → 우. 팀장 21:3x 〔원문 비공개〕 로 대칭화, 후진 · 정지 · 걸으며 돌기 단계에서는 그 경우를 더함) + 영상이 모두 맞을 때만. 표는 스크립트가 원자료에서 만들고 전부 붙인다 |
+| R13 | 받는 창 입력줄의 회색 제안 문장을 팀장이 친 글로 읽고 전달을 멈춤 (여러 번) | 10/25 05:0x super2 · 20:5x · 21:4x~22:2x planner 〔원문 비공개〕 를 팀장 초안이라며 v0.3 의뢰를 1 시간 보류. analyst · verifier 도 lead 창 회색 문장을 보고 회신 보류. 팀장 22:3x 〔원문 비공개〕 | `orca terminal read --screen` 은 색을 지워 회색 제안과 친 글을 못 가른다. **팀장이 치는 곳은 lead 창뿐**이다. 작업 세션 창 (planner · reviewer · super2 · sonnet-code · Codex) 의 「❯ 글」 은 제안 문장으로 보고 보낸다. lead 창으로 보낼 때만 그 창의 turn 이 끝난 뒤 보낸다 (입력줄 글 때문에 멈추지 않는다). Codex 의뢰에도 이 문장을 넣는다 |
+| R14 | 지금 잴 수 있는 우리 실측을 「미확인」 으로 보고 | 10/25 21:49 runner 의 〔원문 비공개〕 을 〔원문 비공개〕 으로 넘김. 원자료 (review_feet.npz) 로 1 분이면 잴 수 있었다. 팀장 〔원문 비공개〕 | 우리 원자료로 잴 수 있는 것은 그 턴에 재고 답한다. 「미확인」 은 지금 잴 수 없는 것에만, 왜 못 재는지와 언제 재는지를 같이 |
+| R15 | 다른 세션의 지적을 원자료로 재지 않고 사실로 전함 | 10/25 21:4x reviewer 「b1500 16 env 기준 판 없음」 을 그대로 전하고 「이전 표가 4 env 였다」 고 정정했으나 틀림 (w3p1 16 env 판 있음) | 지적 · 회신도 결과와 같다. 원자료 경로를 열어 확인한 뒤 전하고, 확인한 경로를 같이 적는다 |
+| R16 | 팀장 결정을 원장에만 적고 지도 · 일정 · 결정 · 안건 · 카드 · 상황판에 안 씀 | 10/25 21시 결정 셋 (G0-B 승인 · 잠정 권고 승인 · 결정 여섯 verifier 검토) 이 21:57 까지 EXP-MAP 등 여섯 문서에 없었고 상황판 「팀장이 정할 것」 은 11 시 내용. exp_sync_check 는 rc 0 이었다 (이 항목을 안 본다) | 결정 하나마다 8.4 를 끝까지. exp_sync_check rc 0 은 「누락 없음」 이 아니다. 상황판 두 칸 (정할 것 · 지금 상태) 의 시각을 점검마다 date 와 대조 |
+| R17 | 촬영 장면의 조건을 확인하지 않고 영상으로 판정 | 10/25 rough 촬영 넷 모두 회전 구간 (seg2 · seg3) 에 x = 4.1~4.7 m, 딛은 발 높이 표준편차 0.03~0.07 cm (걸을 때 1.5~2.1 cm) 로 평지에서 돌았다. runner 판독, lead 원자료 확인 | 촬영 영수증에 구간마다 위치 · 딛은 발 높이 표준편차를 적고, 회전 구간이 의도한 지형 위인지 확인한 뒤 판정에 쓴다 |
+| R18 | 폴더째 git add 해서 다른 세션의 진행 중 산출을 커밋 · push | 10/26 00:3x lead 가 `git add --sparse inbox/jay/20261026-experiments` 로 scripter SOL-26a 진행 중 산출 15 파일 (16 만 줄) 을 6be2747a 에 같이 올림, 501deeb5 로 추적에서 뺌 | 파일 경로를 하나씩 적어 add 한다. 커밋 전 `git diff --cached --stat` 의 파일 수 · 줄 수를 보고 내가 쓴 것만인지 확인한다 |
+| R19 | 확인하지 않은 상태 · 시험 결과를 사실로 보고 | 10/26 00:3x 「한도 지킴이도 따로 돌고 있다」 (실제는 10/20 03:13 뒤 멈춤, super2 실측) · 10/26 14:4x 「test_primary 10/10 재실행 통과」 (pytest 가 시험 0 개, 스크립트로 돌리니 9/10) | 「돈다 · 통과」 는 그 턴에 프로세스 목록 · 실행 출력의 숫자 줄을 읽은 뒤에만. 시험은 실행 방식 (pytest 대 스크립트) 을 먼저 확인하고 「N 건 통과」 를 그대로 옮긴다 |
+| R20 | 다음 단계(이어 학습 · 평가 사슬)를 걸어 두기만 하고, 실제 파일 · 실제 코드 판으로 끝까지 도는지 확인하지 않음 (R6 · R10 의 반복) | 10/29 12:30 EX-38 이어 학습 시작 실패: 코드가 `status.json` 을 찾음(실제 `train_start_status.json`, CPU 시험이 가짜 파일을 같은 틀린 이름으로 만들어 통과) · GPU1 8 분 빔. 10/29 11:34~12:42 EX-36A W15 평가 사슬이 명령 4 개 고정 판(85b01f34)으로 돌아 m1750 · m2000 무효 (13 명령 판 843d7617 과 대조 안 함) · cuda:0 68 분 손실. 03:0x 에 학습 뒤 평가까지 이어지게 하라는 지시를 받고도 확인 안 함 | 다음 단계를 걸 때 그 자리에서 **실제 산출물로 DRY** 를 돌린다: 이어 학습은 이미 저장된 실제 model_N.pt 와 그 폴더로 시작 스크립트 DRY 통과, 평가 사슬은 쓰는 평가 코드 판을 마지막으로 칸 수가 다 나온 판과 diff + 실제 저장본 1 건 결과의 칸 수를 센다. 「걸어 두었다」 는 DRY 영수증 경로와 대조 결과를 같이 적을 때만 말한다. 감시 cron 문장에 이어 학습 로그의 HOLD · 평가 사슬 로그의 FAIL 을 넣는다 |
+| R21 | 학습 길이를 회차가 아니라 시각 마감으로 승인 문장에 넣음 | 10/29 lead 가 제안한 승인 문장에 「정오까지」 를 넣었고 팀장이 그대로 승인. 시작 실패 세 번으로 04:05 시작 → 12:30 에 m2709 (목표 m3001 의 1,208/1,500 회) | 승인 문장은 **회차 목표가 주 조건**, 시각은 상한으로만 쓰고, 상한에 걸리면 이어 가는 경로(저장본 · 시작 스크립트 · DRY 영수증)를 같은 문장에 적는다. 시작이 늦어지면 그 자리에서 남은 시간으로 회차를 다시 계산해 보고한다 |
+| R22 | 촬영 · 합성 의뢰 카드에 영상 규칙(4 절)을 안 옮겨 확정 규칙과 다른 영상이 나옴 · 확인 전에 「끝」 으로 보고 | 10/28 CARD-W03 에 조명 · 채도 · 이름 규칙이 없었다 → W03 촬영 222 편 전부 조명 inherit(옛 기본, 밝기 탐침 76 대 목표 150) · 채도 ×1.25 안 함 · 이름 `<실험>-<지형>-m<회차>-<구간>-<배속>` 아님. W07 합성 209 편을 lead 가 「끝」 으로 보고했고 팀장이 처음 두 편에서 발견(10/29 13:1x) | 촬영 · 합성 의뢰문에는 4 절 확정 값(조명 L4 · 채도 ×1.25 · 이름 · 배속 1x · 전 프레임 검사)을 줄째 옮기고, 받는 세션은 시작 보고에 그 값을 다시 적는다. 끝 보고 전에 영수증의 `lighting.profile` · `saturation_multiplier` · 파일 이름을 lead 가 세어 대조한다. 전량 전에 한 편 먼저 팀장 확인 |
+| R23 | 영상 파일 이름의 success · fail 이 그 영상에서 일어난 일이 아니라 다른 실행(6 s 평가)의 결과 | W03 촬영은 평가 판을 그대로 찍은 것이 아니라 같은 env 를 18 s 새로 돌린 것(물리 결정성 끔). fail 32 편 중 11 편은 영상 안에서 넘어짐 · 종료가 없고, success 171 편 중 17 편은 영상 안에서 종료가 있다(10/29 13:2x review.json 의 resets 로 셈). 예: b1500 boxes L3 env57 은 평가에서 2.7 s 에 종료, 영상은 18 s 끝까지 안 넘어짐 | 영상 이름 · 표시는 그 영상 자신의 기록(종료 · 넘어짐 · 도달)으로 붙이고, 고른 근거(평가 판의 결과)는 따로 적는다. 둘이 다르면 「평가 실패 · 영상에서는 재현 안 됨」 으로 나눠 보인다 (R17 과 같은 뿌리) |
+
+## 2. 메모리에서 옮긴 교훈 (M, 75 건)
+
+lead 한 세션의 메모리에만 있던 교훈이다. 다른 세션도 보게 여기 옮긴다. 영상 제작 · 발표 · 3DGS 만의 교훈 8 건은 실험 연구와 무관해 메모리에만 둔다.
+
+### 실행 · 시작 · GPU
+
+| 번호 | 교훈 (실수와 막는 법) | 출처 |
+|---|---|---|
+| M01 | 팀장이 GPU 실험을 위임했는데 동의 요청을 반복해 GPU 를 20 시간 놀렸다 · 10/17 〔원문 비공개〕 · 상시 동의 한 문장 · 띄운 뒤 첫 update 확인 | lead 메모리 `delegation-is-standing-dont-reask-per-run` |
+| M02 | 배경에서 도는 .sh 를 고치면 bash 가 오프셋이 밀린 자리를 파싱해 엉뚱한 문법 오류로 죽는다. 실행용 사본을 떠서 돌린다. | lead 메모리 `dont-edit-a-running-shell-script` |
+| M03 | 실험 사이클은 GPU 줄(기계, 기다리지 않음)과 판단 줄(설계 · ASTRA 검증 · 분석, GPU 가 도는 동안 병행)로 나눈다. 한 줄로 직렬화하면 사이클마다 GPU 가 논다. | lead 메모리 `gpu-lane-and-decision-lane` |
+| M04 | nvidia-smi · gpu_guard 의 사용량은 장치 전체 값이라 실행의 몫이 아니다 · 〔원문 비공개〕 로 더하면 중복 합산 · 앞서 한 말의 설정 변경(환경 변수)도 기록과 맞춰 쓴다 | lead 메모리 `gpu-memory-numbers-are-device-totals` |
+| M05 | Isaac 랜더는 화면용 GPU 를 쓴다(이 기기는 GPU 1) · CUDA_VISIBLE_DEVICES 금지 · 학습 중 촬영은 cuda:0 · TaskStop 은 Isaac 도 떼어 낸 bash 감시도 안 죽인다 | lead 메모리 `isaac-render-needs-display-gpu` |
+| M06 | 장시간 작업은 하네스가 추적하는 방식으로 띄운다 · 병렬로 바꾸다 알림 경로를 버리면 조용히 논다 | lead 메모리 `keep-the-notification-path` |
+| M07 | 두 판을 «동시에» 돌리려고 가른 자원(GPU·포트·경로)이 두 번째 변수가 된다 · 비교 전에 설정을 평탄화해 전수 대조한다 | lead 메모리 `parallel-resources-become-variables` |
+| M08 | 10/29 EX-38 시작이 두 번 죽었다(argparse 가 -1e-7 을 옵션으로 · robot_lab import 없음) · DRY · 가짜 sys.path 시험은 실제 경로를 안 거친다 · 시작 전 실제 argparse + 실제 환경 import 점검을 필수로 | lead 메모리 `prelaunch-real-path-check` |
+| M09 | 10/12 팀장 허용 · Top-down 밤 GPU 작업에서 VRAM 회수 · 작업 정리를 위한 프로세스 정리는 lead 가 스스로 해도 된다 (Mods 확인창도 허용). 필요할 때만 · 쓸데없는 위험 행동 금지 | lead 메모리 `process-cleanup-allowed-in-topdown` |
+| M10 | 일정표 날짜는 순서일 뿐 · 할 수 있는 일은 당겨서 하고 표를 고친다 · 쉬는 세션에 바로 준다 | lead 메모리 `pull-work-forward` |
+| M11 | GPU 일이 끝나기 전에 다음 일을 ASTRA 검증까지 마쳐 걸어 둔다 · 10/13 GPU 0 은 14:16, GPU 1 은 16:35 부터 놀았는데 lead 는 보고와 페이지에 매달려 있었다 | lead 메모리 `queue-next-gpu-job-before-reporting` |
+| M12 | 사용 한도에 걸리면 끝내기 전에 재개 타이머를 걸어 둔다 · 10/13 20:08 한도로 멈춘 뒤 21:30 해제됐지만 23:30 팀장 메시지까지 아무것도 안 돌았다 | lead 메모리 `resume-after-usage-limit` |
+| M13 | 긴 작업은 걸기 전에 값을 선언하고 건 뒤 1분 안에 실물을 되읽는다 · 이 툴체인은 틀린 기본값에 오류를 안 낸다 | lead 메모리 `silent-defaults-declare-then-reread` |
+
+### 시험 · 관문
+
+| 번호 | 교훈 (실수와 막는 법) | 출처 |
+|---|---|---|
+| M14 | 관문이 있다는 것과 듣는다는 것은 다르다 · 구현을 일부러 망가뜨려 시험이 잡는지 본다 | lead 메모리 `break-the-guard-to-trust-it` |
+| M15 | 가짜 cfg 로 도는 CPU 시험 328개가 첫 실제 Kit 실행에서 이름 불일치(base_contact vs illegal_contact)로 멈췄다. 실제 소스 AST 대조와 환경 task 이름 대조를 먼저 한다 | lead 메모리 `fake-cfg-tests-miss-real-config-names` |
+| M16 | 리뷰어가 준 문구·수치·기준이 코드에 대한 가정 위에 서 있으면, 그대로 받지 말고 재 보고 어긋나면 거절한다 | lead 메모리 `measure-before-obeying-a-spec` |
+| M17 | 돌연변이 시험은 사본을 망가뜨린다 · git checkout 으로 되돌리면 추적 상태에 따라 반대 방향으로 물린다 | lead 메모리 `mutate-a-copy-not-the-tracked-file` |
+| M18 | 문서가 물린 규칙이 코드에 남는다 · 기준을 코드에 박을 때는 〔원문 비공개〕까지 같이 둔다 | lead 메모리 `retracted-rules-live-on-in-code` |
+| M19 | 웹 산출물은 로컬 서버가 아니라 «실제로 서빙되는 주소»에서 실제 브라우저로 확인한다. Vercel cleanUrls 돌림이 상대경로를 전부 깨뜨렸는데 로컬 시험은 통과했다. | lead 메모리 `test-at-the-served-url` |
+| M20 | codex 검증(AGENTS 6절)이 반복해서 잡는 유형 · 리서치 문서(3DGS)와 «코드»(RL 하네스) 양쪽 | lead 메모리 `verify-rounds-recurring-findings` |
+
+### 측정 · 해석 · 판정
+
+| 번호 | 교훈 (실수와 막는 법) | 출처 |
+|---|---|---|
+| M21 | 「전수로 훑었다」고 말하기 전에 그물코를 본다 · 판별식에 숨은 전제가 있으면 전수가 아니다 | lead 메모리 `a-narrow-net-is-not-a-full-scan` |
+| M22 | 「할 수 있다/없다」 제약(라이선스 · 법 · 기술)은 원문을 열고 한 번에 정확히 · 질문엔 첫 줄에 답 · 10/18 GPL 을 「공개 불가」 처럼 말했다가 두 번 정정, 팀장 크게 화냄 | lead 메모리 `check-the-source-before-stating-constraints` |
+| M23 | 숫자를 인용하기 전에 그 값이 실린 문단과 뒤 두 문단의 주의 문구까지 읽는다 | lead 메모리 `cite-read-the-caveats` |
+| M24 | 판정 기준 정본이 다른 브랜치에 있고 작업 중에 판이 오른다 · 검증 회차마다 판부터 다시 본다 | lead 메모리 `criteria-doc-moves-under-you` |
+| M25 | AND 로 묶인 종합 지표는 성분까지 펴 보고 말한다 · 「못 한다」와 「느리다」가 같은 숫자로 내려온다 | lead 메모리 `decompose-and-metrics-before-reading` |
+| M26 | 10/13 팀장 · v2 를 꼭 계승할 필요는 없지만 MVP 뒤 실험은 늘 〔원문 비공개〕 를 v2 와 견줘 설명할 수 있어야 한다 | lead 메모리 `explain-new-approach-against-v2` |
+| M27 | 새 근거가 도착하면 그것이 «실제로 가른» 물음만 닫는다 · 옆 물음까지 같이 닫아 버리는 버릇 | lead 메모리 `new-evidence-closes-only-its-own-question` |
+| M28 | 신뢰구간이 겹치는 것은 「안 달라졌다」가 아니다 · 그리고 그 규칙을 한쪽 방향으로만 쓰면 편향이다 | lead 메모리 `overlap-is-not-no-effect` |
+| M29 | 계획·서사를 쓸 때만 기억에서 재구성해서 틀린다. 구체적 물음에는 재고 답해서 맞았다. 순위·순서·「최초」는 원문을 열고 쓴다. | lead 메모리 `plans-must-be-written-with-the-source-open` |
+| M30 | 진단을 설계하기 전에 그 설정 칸을 «코드가 어떻게 쓰는지» 읽는다 · 이름이 range 라고 뽑는 범위가 아니다 | lead 메모리 `range-suffix-is-not-always-a-range` |
+| M31 | 10/18 팀장 〔원문 비공개〕 · 공개 정보로 답할 수 있는 것은 웹을 찾아 답한다 | lead 메모리 `search-the-web-instead-of-unconfirmed` |
+| M32 | 「처음」 「유일한」 「가장」은 범위를 안 밝히면 거의 틀린다 · 쓰기 전에 그 범위를 실제로 훑는다 | lead 메모리 `superlatives-need-their-scope` |
+| M33 | 내가 만든 지표로 줄을 세우기 전에, 저장소에 이미 있는 실측으로 반례를 찾는다 · 반례는 대개 한 칸 건너에 있다 | lead 메모리 `test-my-index-against-existing-data` |
+| M34 | 근거는 팀장이 확인·지시한 것만. 전수 확인 뒤 한 번에 보고하고, 소스 추측보다 실행 기록을 우선한다 | lead 메모리 `verify-before-reporting` |
+
+### 보고 · 기록 · 소통
+
+| 번호 | 교훈 (실수와 막는 법) | 출처 |
+|---|---|---|
+| M35 | 팀장 논의 안건은 AGENDA-LEAD.md 대기열 + 무인 사슬 알림으로 꺼낸다 · 팀장이 먼저 묻기 전에 lead 가 제시 | lead 메모리 `agenda-queue-surface-first` |
+| M36 | 채팅 답은 한국어로 · 10/13 컨텍스트 요약 직후 최종 보고를 영어로 냈다가 〔원문 비공개〕 | lead 메모리 `answer-in-korean` |
+| M37 | Artifact 에 바이너리는 data.js 로 (octet-stream 서빙 안 됨) · files 는 작업 디렉터리 또는 세션 scratchpad · mp4 서빙됨 · 64 MB 넘으면 나눠 올림 · **한 판 256 MiB 넘으면 assets 저장소(/_blob/) 로 (10/18)** | lead 메모리 `artifact-binary-data-as-js` |
+| M38 | 팀장 10/12 〔원문 비공개〕 · 보고 페이지를 만들 때마다 밟는 점검표 (내용 · 배치 · 숫자 · 영상 검수 · HD 렌더 확인) | lead 메모리 `artifact-report-skill` |
+| M39 | AskUserQuestion 은 턴 전체를 멈춘다. 일꾼 보고가 안 읽히고 GPU 가 더 논다. 동의 질문은 일을 다 내보낸 뒤 마지막에, 또는 글로 묻는다 | lead 메모리 `askuserquestion-blocks-the-whole-turn` |
+| M40 | 10/13 팀장 · ASTRA 의 모든 검증 · 의견은 평생 탐구한 최고 전문가로서 비판적 · 냉정 · 현실적으로 · 의뢰문마다 넣는다 · 조사는 끝까지 (6편 같은 범위로 멈추지 않기) | lead 메모리 `astra-as-lifelong-expert` |
+| M41 | 이 기기의 Bash 도구에서 heredoc 안의 \\ 가 \ 로 줄어 정규식 · 문자열 이스케이프가 깨진다 · 역슬래시가 든 코드는 Write/Edit 로 | lead 메모리 `bash-heredoc-eats-backslashes` |
+| M42 | lab 상황판 · 텔레그램은 보고 통로일 뿐, 정본 기록(RESULT · EXP-MAP · SCHEDULE · DECISION-SYNC · 카드 · #555 · exp_sync_check)을 같은 턴에 한다 · 10/25 밤샘 동안 상황판만 갱신하다 팀장 〔원문 비공개〕 | lead 메모리 `board-is-not-the-record` |
+| M43 | codex 배정 규칙의 «정본» 은 저장소 AGENTS.md 6 절이다. 내 기억이 아니다. review_inbox.py 의 «em dash» 수는 '·' 를 세는 오검출이다 | lead 메모리 `codex-exec-stdin-and-review-script` |
+| M44 | codex 워커 모델 이름과 난이도별 배정 규칙 (팀장 2026-09-16 지시) · Claude 는 설계·관문, 실행은 codex 워커 | lead 메모리 `codex-worker-model-tiers` |
+| M45 | 생성·변환 작업은 전량 돌리기 전에 정지 이미지 한 장으로 방향 컨펌을 먼저 받는다 | lead 메모리 `confirm-one-still-first` |
+| M46 | 대시보드 메뉴 위치는 공식 문서가 아니라 실제 화면에서 확인하고 알려 준다 · Vercel 보관 기간을 문서대로 «Security» 라 했다가 팀장 화면에 없었다(실제는 Build and Deployment) | lead 메모리 `dashboard-paths-from-the-real-screen` |
+| M47 | 실험 보고는 lab 상황판(https://ai-ws01.tail025053.ts.net/lab/)에 올리고, 새 결과 · 결정 대기 때 텔레그램으로 요지 + 링크 · 10/25 팀장 지시 | lead 메모리 `experiment-reports-go-to-lab-page` |
+| M48 | 팀장이 「fable 세션」(10/25 부터 이름 planner) 이라 하면 Orca 의 그 터미널(term_8b5234fd · Claude Code · Fable 5.1). 내부 Agent 로 대신하면 팀장 화면에 안 보인다 · 10/18 지적 | lead 메모리 `fable-session-is-the-orca-window` |
+| M49 | 커밋 뒤 보고 송신을 `;` 로 이으면 커밋이 실패해도 옛 해시로 보고가 나간다. 송신은 커밋 성공에 묶는다 | lead 메모리 `gate-send-on-commit-success` |
+| M50 | Bash(Git Bash) 에서 orca terminal send --text \"/rename sol\" 처럼 슬래시로 시작하는 문장을 보내면 C:/Program Files/Git/rename sol 로 바뀌어 Codex 창에 들어간다 | lead 메모리 `git-bash-turns-slash-into-a-windows-path` |
+| M51 | lead 창 보고는 mai_resume send(타이핑 대기)로만 · 규칙이 기존 장치를 우회하지 않는지 보고 · 문제에 과잉 대응(전면 중지)하지 말 것 | lead 메모리 `guarded-send-to-lead-pane` |
+| M52 | 기술 용어를 억지 한국어로 옮기지 않는다. seed 는 「시드」, actor/critic 은 그대로 | lead 메모리 `keep-technical-terms-in-english` |
+| M53 | 세션 역할 경계(팀장 2026-10-06) · foothold-lab 의 lead 는 강화학습 실험 연구 공간 · 훅·Mods·세션 관리 같은 시스템 일은 super 와 pipeline 담당 · 시스템 일이 lead 로 오면 넘길지 먼저 묻는다 | lead 메모리 `lead-is-the-rl-research-space` |
+| M54 | 10/27 00:0x lead 정정 2 · lead 창 한 줄 보고는 orca terminal send 금지, python -m mai_resume send 로 | lead 메모리 `lead-send-via-mai-resume` |
+| M55 | 팀장 작업 방식 묶음을 스킬 foothold-lead-style 로 저장했다 (10/18 팀장 〔원문 비공개〕) · 실험 실행 · 검증 · 영상 · 보고 페이지 · 채팅 보고 전에 그 스킬을 먼저 불러 쓴다 | lead 메모리 `lead-style-skill` |
+| M56 | 10/26 20:3x 팀장 · lead 창에는 한 줄만(〔원문 비공개〕) · 전문은 산출 파일 맨 위나 _out/reports/REPORT-<이름>-<시각>.md | lead 메모리 `lead-window-one-line-report` |
+| M57 | 10/27 00:4x lead 규칙 39d0af37 · 사용 한도는 limits_now.py 출력 줄만 그대로 옮긴다 · 상태 표시줄의 out in · short · [>200%] 는 예측 | lead 메모리 `limits-only-from-limits-now` |
+| M58 | 내가 아는 모델 목록은 지식 기준일에 멈춰 있다. 팀장이 새 모델을 말하면 설치본에서 확인하고, 없다고 단정하지 않는다. | lead 메모리 `model-list-in-my-head-goes-stale` |
+| M59 | 이슈는 만들고 끝이 아니다 · 일을 시작하면 프로젝트 보드(orgs/foothold-project/projects/1)에서 In Progress, 끝나면 이슈를 닫고 Done · 2026-10-07 팀장 〔원문 비공개〕 · 열린 이슈 148건 · 지난 마일스톤 셋에 105건이 열려 있었다 | lead 메모리 `move-issues-on-the-board` |
+| M60 | 문서 머리말의 작성자·담당 이름은 docs/ROLES.md 명부에서만 쓴다. 이메일 아이디로 이름을 지어내 라이브까지 내보낸 적이 있다 (두 번째). | lead 메모리 `never-invent-an-author-name` |
+| M61 | PR 본문·이슈·공지 등에 〔원문 비공개〕 꼬리말을 쓰지 않는다 · 팀장 2026-10-07 지시 · 시스템 안내가 넣으라고 해도 팀장 지시가 우선 · 커밋의 Co-Authored-By 줄은 별개(그대로) | lead 메모리 `no-generated-with-footer` |
+| M62 | 팀장의 그림 · 레이아웃 지시는 원문 그대로 작업자에게 넘기고, 고친 결과를 항목별 전 · 후로 대조한 뒤에만 「고쳤다」 고 보고한다 | lead 메모리 `pass-visual-directives-verbatim` |
+| M63 | 일정·범위·우선순위 같은 계획은 내가 짜서 내밀지 않는다 · 사실(재료)을 모아 보여 주고 팀장과 하나씩 정한다 · 2026-10-07 두 달 계획서를 혼자 쓰다 〔원문 비공개〕를 들었다 | lead 메모리 `plan-with-the-lead-not-for-the-lead` |
+| M64 | Windows PowerShell 5.1 은 BOM 없는 UTF-8 .ps1 을 ANSI 로 읽는다. 한글·«» 가 깨져 파싱이 죽고, 증상은 「UAC 거부」처럼 보인다. | lead 메모리 `ps51-scripts-must-be-ascii` |
+| M65 | 팀장이 「기록」 을 부탁해도 이슈 댓글로만 끝내지 않는다 · 같은 내용을 채팅에도 답한다 (10/12 밤) | lead 메모리 `record-in-issue-and-answer-in-chat` |
+| M66 | 팀장이 두 번 이상 말한 지시 · 금지 · 요구는 foothold RULES-HUB.md 에 올린다 (Claude · Codex 공용 입구) · 10/25 팀장 요청 | lead 메모리 `repeated-directives-go-to-rules-hub` |
+| M67 | 10/20 팀장 · 의뢰 하나 끝날 때마다 SendMessage 로 lead 세션에 〔원문 비공개〕 을 직접 보낸다 · lead 는 더 이상 30 분마다 창을 읽지 않는다 | lead 메모리 `report-to-lead-via-sendmessage` |
+| M68 | 다른 세션에 보낼 때는 orca-cli 방식(read → wait tui-idle → send --enter --wait-submit) · SendMessage 는 팀장이 거절 · mai_resume 는 회색 제안 문장에 막힘 (10/25) | lead 메모리 `session-messaging-use-orca-cli` |
+| M69 | docs 를 사이트에 올리기 전에 미리 맞출 빌드 관문 다섯 · 10/7 한 배포에 빌드를 다섯 번 돌렸다 · 작성자 줄은 명부 이름만 · h3 에는 id 가 없다 · 선 굵기 한 벌 · 날짜 공지 이름 · 상류 wiki 변화 | lead 메모리 `site-build-gates-before-writing` |
+| M70 | 문서 머리 · 댓글의 시각은 date 로 재서 적는다. 체감으로 적으면 10~20분 늦게(미래로) 적는다 | lead 메모리 `timestamps-from-date-not-feel` |
+| M71 | 사용 한도를 말하거나 판단에 쓰기 전에 limits_now.py 를 돌려 그 줄을 그대로 옮긴다 · 상태 표시줄 예측을 사실처럼 말하지 않는다 (10/27 lead 규칙 39d0af37) | lead 메모리 `usage-limit-read-limits-now` |
+| M72 | 페이지 폭 · 배치를 바꿀 때는 팀장 말을 넓혀 해석하지 말고 시안 하나로 먼저 묻는다 · 10/12 〔원문 비공개〕를 〔원문 비공개〕로 넓혔다가 〔원문 비공개〕 | lead 메모리 `web-pages-use-full-width` |
+| M73 | 〔원문 비공개〕 = 고1 이 이해하는 글 · 전문 용어는 써도 되지만 바로 아래에 풀이나 예시 · 수치마다 «그래서 무슨 뜻인지» 를 붙인다 | lead 메모리 `write-for-a-first-year-high-schooler` |
+| M74 | seed 는 「시드」로 적는다. 「씨앗」으로 번역하지 말 것 (여러 번 지적받음) | lead 메모리 `write-seed-not-ssiat` |
+| M75 | Windows 에서 Write 도구는 CRLF 로 쓰고 foothold-lab 은 core.autocrlf=true 라 커밋은 LF 가 된다. 「LF 확인」 은 작업 사본이 아니라 git ls-files --eol 의 i/lf 로 한다 | lead 메모리 `write-tool-crlf-autocrlf` |
