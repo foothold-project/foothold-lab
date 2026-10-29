@@ -1,7 +1,7 @@
 # 실행 카드 W04 · 깃발 평가 코드 · 기록기 깃발 저장 · 계기판 깃발 · 판정 칸
 
 > 분류: 실행 카드
-> 작성: lead · 2026-10-28 02:2x (팀장 01:4x 「깃발 평가 할 때 반드시 만들어라 · 절대 놓치지 말 것」)
+> 작성: lead · 2026-10-28 02:2x (팀장 01:4x 〔원문 비공개〕)
 > 근거: `WORKLIST.md` W04 · `20261027-experiments/CARD-EVAL-FLAG-BASELINE.md`(깃발 식 · 배치 · 판정) · 계기판 v8 `runner-26a/inbox/jay/20261023-experiments/runner-26a/compose_25e_v2style8.py` · 기록기 `record_25e_x27.py`
 > 요지: 깃발 기준선 평가에 필요한 코드를 만들고, 계기판에 깃발 · 판정 칸을 붙이고, 아직 자료가 없어 못 시험한 경우(후진 · 옆걸음 · 긴 판)를 시험 촬영으로 확인한다
 > 상태: 의뢰 · 구현 sonnet-code → 검수 reviewer → 최종 planner (Codex 금지) · GPU 는 시험 촬영과 8 env 예행만
