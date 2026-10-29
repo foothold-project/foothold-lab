@@ -3,15 +3,17 @@
 쓰는 법: python _out/tools/worklist_gate.py W58
 - 앞 일: 그 W 의 「앞 일」 칸에 적힌 W 번호들과 그 상태.
 - 뒤 일: 「앞 일」 칸에 그 W 를 적은 다른 W 들(이 일이 끝나면 걸어야 할 것).
-- 종료 코드: 앞 일 중 상태에 「끝」 · 「닫힘」 · 「대체」 가 없는 것이 있으면 3, 아니면 0. 상태 칸은 사람이 쓰는 글이라
-  「끝」 이라는 낱말이 있어도 실제로 끝났다는 보장은 아니다. 근거(커밋 · 경로)는 그 행을 직접 읽는다.
+- 종료 코드: 앞 일이 끝/닫힘/대체로 시작하지 않거나 증거 경로/커밋이 미확인일 때 3.
+  증거 존재는 완료 내용의 진실성이나 실행 승인을 뜻하지 않는다. 증거는 상태 칸에 적는다.
 """
 import re
 import sys
 from pathlib import Path
+from evidence_check import check_evidence
 
 WL = Path(__file__).resolve().parents[2] / "inbox/jay/20261028-plan/WORKLIST.md"
-DONE = ("끝", "닫힘", "대체")
+ROOT = Path(__file__).resolve().parents[2]
+DONE = re.compile(r"^(?:끝|닫힘|대체)(?=$|[\s(·:])")
 
 
 def rows():
@@ -44,15 +46,22 @@ def main(argv):
     print(f"  앞 일 칸: {me['before'] or '-'}")
     for b in before:
         st = table.get(b, {}).get("state", "(표에 없음)")
-        ok = any(k in st for k in DONE)
+        ok = bool(DONE.match(st)) and not re.match(r'^(?:끝|닫힘|대체)\s*(?:아님|아니|안\s|못\s)', st)
+        _, errors = check_evidence(st, WL, ROOT) if ok else (0, ['NOT_CLOSED'])
+        ok = ok and not errors
         open_before.append(b) if not ok else None
-        print(f"    {b} [{'끝' if ok else '열림'}] {st[:160]}")
+        print(f"    {b} [{'증거 존재 확인' if ok else '미확인'}] {st[:160]}")
+        for error in errors:
+            print(f"      {error}")
+    if not before and me['before'] not in ('', '-', '없음'):
+        open_before.append(me['before'])
+        print('    UNRESOLVED_PREREQUISITE: W 번호 없는 앞 일은 자동 확인 불가')
     after = [k for k, r in table.items() if k != w and w in re.findall(r"W\d+", r["before"])]
     print("  뒤 일(이 일을 앞 일로 적은 것): " + (", ".join(after) if after else "없음"))
     for a in after:
         print(f"    {a} · {table[a]['work'][:120]} · {table[a]['state'][:80]}")
     if open_before:
-        print(f"  막음: 앞 일 {', '.join(open_before)} 가 끝나지 않았다")
+        print(f"  막음: 앞 일 {', '.join(open_before)} 완료 상태·증거 검증 미통과")
         return 3
     return 0
 
