@@ -3,17 +3,28 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime
+from importlib.metadata import version
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 
 import pytest
 import torch
+import rsl_rl
+import rsl_rl.utils
+
+EXPECTED_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+assert Path(sys.executable).resolve() == EXPECTED_PYTHON.resolve(), f"use {EXPECTED_PYTHON} for this test"
+assert version("rsl-rl-lib") == "3.1.2"
+assert "site-packages" in Path(rsl_rl.__file__).parts
+assert hasattr(rsl_rl.utils, "store_code_state")
 
 from foothold_s2 import basic_gait_ex38_continue as ex38
 from foothold_s2 import prestart_check
 from foothold_s2 import w15_one_table
-from foothold_s2.sol23f_contract import check_resume_parent
+from foothold_s2.sol23f_contract import TASKS, check_resume_parent, validate_launch
 from foothold_s2.rewards.basic_gait_bundle import E1_CANDIDATE, scheduled_lin_vel_z_weight
 from foothold_s2.runners.start_runner import CKPT_FORMAT
 
@@ -59,6 +70,16 @@ def test_ex38_completed_parent_and_relative_schedule(tmp_path):
                                                basic_ex38_continue_parent_sha=sha,
                                                max_iterations=4502, smoke_updates=None,
                                                basic_extend_arm=None)) == 3001
+    parser = prestart_check.actual_parser()
+    ns, _ = parser.parse_known_args(["--task", TASKS["SB"], "--variant", "SB", *args])
+    now = datetime.fromisoformat("2026-10-29T17:00:00+09:00").timestamp()
+    assert validate_launch(ns, now=now, verify_parent=True) > now
+    ns.max_iterations = 4501
+    assert validate_launch(ns, now=now, verify_parent=True) > now
+    for over_budget in (4503, 6001, 20001):
+        ns.max_iterations = over_budget
+        with pytest.raises(ValueError, match="at most 4502"):
+            validate_launch(ns, now=now, verify_parent=True)
 
 
 def test_ex38_parent_mutations_caught(tmp_path):

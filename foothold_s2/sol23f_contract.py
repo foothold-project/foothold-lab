@@ -18,6 +18,7 @@ CKPT_VARIANT = {"B": "B_friction_only", "TopDown": "START_TopDown", "SB": "SB_ma
 
 REVERT_SEEDS = (42,)                                            # D21: 되돌림도 원래 시드 42. 다른 시드는 전체 과정 끝의 별도 평가에서만 쓴다.
 EXTEND_MAX_ITERATIONS = 3001                                    # 이어 가기 판 총 회차 상한(부모 회차 + N 의 N 은 resume_budget 이 따로 1..1500 으로 잰다)
+EX38_CONTINUE_MAX_ITERATIONS = 4502                            # m3001 완료 뒤 m3002..4501, 추가 1500 회
 # EX-35 계열(이어 가기 총 회차 > 1501, 또는 s2a 의 smoke 2)이 부모로 받는 저장본: sha256 -> 그 저장본의 회차. 손 명령(train_sb.py 직접)도 이 표를 통과해야 한다(W19).
 RESUME_PARENTS = {
     "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d": 1500,      # S-B10 model_1500.pt (EX-35 main · smoke2)
@@ -90,7 +91,7 @@ def check_resume_parent(args) -> int:
         from foothold_s2.basic_gait_ex38_continue import check_parent
 
         parent = check_parent(path, ex38_cont_sha)
-        resume_budget(int(args.max_iterations), parent["completed_update"], limit=18500)
+        resume_budget(int(args.max_iterations), parent["completed_update"], limit=1500)
         return parent["completed_update"]
     if getattr(args, "basic_ex38", False) and sha != "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d":
         raise ValueError("EX-38 parent must be the pinned S-B10 model_1500.pt")
@@ -145,6 +146,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     ex38_cont = getattr(args, "basic_ex38_continue_parent_sha", None)
     if ex38_cont and not ex38:
         raise ValueError("EX-38 continuation SHA requires --basic-ex38")
+    if ex38_cont and args.max_iterations is not None and args.max_iterations > EX38_CONTINUE_MAX_ITERATIONS:
+        raise ValueError(f"EX-38 continuation max_iterations at most {EX38_CONTINUE_MAX_ITERATIONS}")
     fast_gt = bool(getattr(args, "fast_gt_only", False))
     reward_slots = ("basic_feet_regulation_weight", "basic_track_ang_weight",
                     "basic_track_lin_weight", "basic_joint_acc_weight", "basic_hip_pos_weight")
@@ -232,9 +235,10 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("p_map_off must be inside (0, 1)")
         if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
             raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
-        max_total = (20001 if ex38 else 3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
+        max_total = (EX38_CONTINUE_MAX_ITERATIONS if ex38_cont else 20001 if ex38
+                     else 3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
         if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= max_total):
-            raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
+            raise ValueError(f"{args.variant} is pinned to 1501 updates (this resume kind allows at most {max_total})")
     elif getattr(args, "smoke_updates", None) is not None:
         raise ValueError("smoke-updates is reserved for B")
     elif args.force_gt:
