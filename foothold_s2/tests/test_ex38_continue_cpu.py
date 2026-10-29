@@ -38,7 +38,7 @@ def parent_fixture(tmp_path: Path, iteration=2250) -> tuple[Path, str]:
                           "fast_gt_only": False},
                 "checkpoints": {checkpoint.name: sha}}
     (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    (run / "status.json").write_text(json.dumps({"state": "stopped_saved", "iter": iteration,
+    (run / "train_start_status.json").write_text(json.dumps({"state": "stopped_saved", "iter": iteration,
                                                     "checkpoint": str(checkpoint), "sha256": sha}), encoding="utf-8")
     return checkpoint, sha
 
@@ -72,7 +72,7 @@ def test_ex38_parent_mutations_caught(tmp_path):
         ex38.check_parent(str(checkpoint), sha)
     manifest["modes"]["basic_reward_schedule_start_iteration"] = 1501
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-    (checkpoint.parent / "status.json").write_text(json.dumps({"state": "running", "iter": 2250,
+    (checkpoint.parent / "train_start_status.json").write_text(json.dumps({"state": "running", "iter": 2250,
                                                                 "checkpoint": str(checkpoint), "sha256": sha}), encoding="utf-8")
     with pytest.raises(ValueError, match="completed receipt"):
         ex38.check_parent(str(checkpoint), sha)

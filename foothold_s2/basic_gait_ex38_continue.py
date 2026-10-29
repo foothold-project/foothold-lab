@@ -28,7 +28,7 @@ def check_parent(path: str, expected_sha256: str) -> dict:
         raise ValueError("EX-38 continuation iteration or model_N name mismatch")
     directory = checkpoint.parent
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
-    status = json.loads((directory / "status.json").read_text(encoding="utf-8"))
+    status = json.loads((directory / "train_start_status.json").read_text(encoding="utf-8"))
     modes = manifest.get("modes") or {}
     run = manifest.get("run") or {}
     command = modes.get("command_settings") or {}
