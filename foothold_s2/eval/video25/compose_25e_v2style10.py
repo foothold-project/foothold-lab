@@ -3,7 +3,7 @@
 v10 (W30 + 팀장 10/29 15:3x 고침): 칸 폭 · 크기 · 위치는 v8/v9 그대로(상태판 · 미니맵을 넓히지 않는다).
   - 깃발 캡처 미니맵: 원래 크기 안에서 로봇 중심으로 흐른다(로봇이 가면 깃발이 다가옴). 닿은 깃발은 지움 · 지나온 길은 작은 점 · 위치 화살표 작게.
   - 상태 칩은 실제 속도로: 이동 중 · 제자리 회전 · 서 있음 · 넘어짐(걷는 중에 서 있음이 뜨지 않는다).
-  - 맨 아래에 「이 영상이 답할 물음」 아주 얇은 띠(render(question=...)), 그 위에 영상 안 결과 줄(render(extra_line=...)).
+  - 「이 영상이 답할 물음」 은 3D 장면 안 하단 반투명 한 줄(render(question=...), 10/29 D51), 아래 타임라인 쪽에는 영상 안 결과 줄만(render(extra_line=...)).
   - 글자는 칸 오른쪽 끝을 넘으면 줄여 맞춘다(넘침 기록 OVERFLOW).
 깃발 없는 캡처는 v8/v9 와 같은 그림(위 변경 중 칩 · 아래 띠만 다름).
 
@@ -273,6 +273,16 @@ def command_segment_label(command: dict) -> str:
 EXTRA_LINE = {"text": "", "color": (200, 235, 200), "question": ""}   # render() 가 채운다
 
 
+def question_strip(scene: np.ndarray) -> np.ndarray:
+    """v10 (팀장 10/29 D51): 「이 영상이 답할 물음」 은 왼쪽 3D 장면 안 하단에 한 줄, 반투명 바탕으로 얹는다. 글자 크기 10 그대로."""
+    if not EXTRA_LINE["question"]:
+        return scene
+    y0, y1 = 703, 719
+    roi = scene[y0:y1, 0:1080].astype(np.float32)
+    scene[y0:y1, 0:1080] = (roi * 0.45 + np.array((30, 35, 43), np.float32) * 0.55).astype(np.uint8)
+    return text(scene, [((8, y0 + 1), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (225, 225, 190))], 10, limit=1072)
+
+
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
                 commands: list[dict] | None = None, lit_from: int | None = None) -> np.ndarray:
     band = np.full((360, 1920, 3), (18, 22, 27), np.uint8)
@@ -346,9 +356,6 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
     band = text(band, [((L, 318), LEGEND, (175, 175, 175))], 11, limit=R)
     if EXTRA_LINE["text"]:    # 영상 안 결과 줄(합성 호출자가 넣는다)
         band = text(band, [((L, 331), EXTRA_LINE["text"], EXTRA_LINE["color"])], 12, limit=R)
-    if EXTRA_LINE["question"]:  # 맨 아래 아주 얇은 띠: 이 영상이 답할 물음
-        cv2.rectangle(band, (0, 347), (1919, 359), (30, 35, 43), -1)
-        band = text(band, [((L, 346), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (205, 205, 170))], 10, limit=R)
     return text_right(band, label_items, 15)
 
 
@@ -405,6 +412,7 @@ def flag_state(z, d: int):
     return {"world": world, "target": min(max(target, 0), k), "reached": min(max(target, 0), k), "k": k}
 
 
+MINI_ARROW_PX = 9   # 위치 화살표 길이(10/29 D51: 7 에서 아주 조금 키움)
 STATE_MOVE_MPS, STATE_SPIN_RADPS = 0.15, 0.30   # 이동 중: 실제 수평 속력 > 0.15 m/s · 제자리 회전: 아니면서 |wz| > 0.3 rad/s
 MINI_AHEAD_M, MINI_BEHIND_M, MINI_TRAIL_S = 3.0, 1.2, 3.0   # 깃발 미니맵: 앞 3 m · 뒤 1.2 m 창, 지나온 길 점은 최근 3 s
 
@@ -462,7 +470,7 @@ def _flag_minimap(scene, z, d, j, xy, yaw0, fl, lx, rx, py0, py1):
             cv2.circle(scene, (xi, yi), 5, (150, 154, 160), 1, cv2.LINE_AA)
             cv2.putText(scene, str(i + 1), (xi + 8, yi - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (150, 154, 160), 1, cv2.LINE_AA)
     yaw = yaw_of(np.asarray(z["root_quat_w"][d], np.float64)) - yaw0
-    cv2.arrowedLine(scene, (int(ox), int(oy)), (int(ox + math.cos(yaw) * 7), int(oy - math.sin(yaw) * 7)), (240, 240, 240), 1, cv2.LINE_AA, tipLength=0.5)
+    cv2.arrowedLine(scene, (int(ox), int(oy)), (int(ox + math.cos(yaw) * MINI_ARROW_PX), int(oy - math.sin(yaw) * MINI_ARROW_PX)), (240, 240, 240), 1, cv2.LINE_AA, tipLength=0.5)
     cv2.circle(scene, (int(ox), int(oy)), 1, (240, 240, 240), -1, cv2.LINE_AA)
 
 
@@ -759,7 +767,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
 
 
 def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None) -> dict:
-    """question = 맨 아래 얇은 띠 「이 영상이 답할 물음」, extra_line = 그 위 영상 안 결과 줄, label = 머리줄에 쓸 이름(없으면 영수증 label)."""
+    """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 아래 타임라인 쪽 영상 안 결과 줄, label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
     video_style.require_approved(meta, "review.json")   # W49: style_id 가 승인 값이 아니면 합성 실패
     if label:
@@ -805,6 +813,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         scene = scene_legend(scene, meta)
         scene = speed_tag(scene, speed, segment)
         scene = scene_gauges(scene, z, row, meta)
+        scene = question_strip(scene)
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
         wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
     wr.release()
