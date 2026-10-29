@@ -59,3 +59,16 @@ def test_first_clip_back10_segment_no_longer_blinks():
 @pytest.mark.parametrize("mode,want", [("eval_pred", "복원 지도 (eval_pred)"), ("eval_gt", "정답 지도 (eval_gt)"), ("none", "지도 없음 (none)")])
 def test_header_map_label_is_one_format(mode, want):
     assert _c().policy_map_header({"map_modes": {"map_mode": {"requested": mode}}}) == want
+
+
+def test_diagonal_forward_is_not_labelled_plain_forward():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("c10", Path(__file__).resolve().parents[1] / "eval/video25/compose_25e_v2style10.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    lab = m.command_segment_label
+    assert lab({"target": [0.5, 0.5, 0.0]}) == "대각 전진 좌"
+    assert lab({"target": [0.5, -0.5, 0.0]}) == "대각 전진 우"
+    assert lab({"target": [0.5, 0.0, 0.0]}) == "전진 0.5" and lab({"target": [1.0, 0.0, 0.0]}) == "전진 1.0"
+    assert lab({"target": [-0.5, 0.5, 0.0]}) == "대각 후진 좌"

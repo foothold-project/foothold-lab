@@ -259,15 +259,15 @@ def command_segment_label(command: dict) -> str:
     target = command.get("target", [])
     vx = float(target[0]) if len(target) > 0 else 0.0
     wz = float(target[2]) if len(target) > 2 else 0.0
-    if abs(vx - 0.5) < 1e-6 and abs(wz) < 1e-6:
+    vy = float(target[1]) if len(target) > 1 else 0.0
+    if abs(vx - 0.5) < 1e-6 and abs(wz) < 1e-6 and abs(vy) < 1e-6:
         return "전진 0.5"
-    if abs(vx - 1.0) < 1e-6 and abs(wz) < 1e-6:
+    if abs(vx - 1.0) < 1e-6 and abs(wz) < 1e-6 and abs(vy) < 1e-6:
         return "전진 1.0"
     if abs(wz - 1.2) < 1e-6 and abs(vx) < 1e-6:
         return "좌회전"
     if abs(wz + 1.2) < 1e-6 and abs(vx) < 1e-6:
         return "우회전"
-    vy = float(target[1]) if len(target) > 1 else 0.0
     if abs(vx) < 1e-6 and abs(vy) < 1e-6 and abs(wz) < 1e-6:   # W15 연속 명령 셋(D51)
         return "정지"
     if abs(vy) < 1e-6 and abs(wz) < 1e-6 and vx < 0:
