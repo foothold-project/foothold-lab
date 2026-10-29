@@ -17,6 +17,7 @@ import sys
 from datetime import datetime
 
 from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
+from foothold_s2.ex39_smoke_args import check_file as check_smoke_launch_args
 from foothold_s2.sol23f_contract import EX39_PARENT_SHA256
 
 
@@ -36,6 +37,15 @@ def sha256(path: Path) -> str:
 
 def _json(path: Path):
     return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def training_env(base: dict[str, str], root: Path, end_by: str) -> dict[str, str]:
+    env = base.copy()
+    env.pop("EX39_SMOKE_UPDATES", None)
+    env.update({"LIVE": "1", "END_BY": end_by,
+                "BASIC_LOG_ROOT": str(root), "EX39_KIT_SMOKE_UPDATES": "2",
+                "EX39_REQUIRE_KIT_SMOKE": "1", "EX39_UPDATES": "1500", "EX39_LEVELS": "3"})
+    return env
 
 
 def check_sources(a: Path, b: Path, parent: Path) -> dict:
@@ -63,6 +73,9 @@ def check_training(root: Path, arm: str, shell_output: str, rc: int) -> dict:
     if not receipt_match:
         raise ValueError("run_ex39.sh did not identify its receipt")
     receipt = Path(receipt_match.group(1).strip())
+    check_smoke_launch_args(receipt.parent / "launch_args.txt")
+    if _json(receipt.parent / "smoke_args_checked.json").get("state") != "PASS":
+        raise ValueError("shell did not record a passing smoke argv boundary")
     if rc != 0 or not receipt.is_file():
         raise ValueError(f"EX-39{arm} child failed or receipt missing: rc={rc}")
     launch = _json(receipt)
@@ -162,10 +175,7 @@ def run(args, execute: bool = False, runner=subprocess.run) -> dict:
     args.out.mkdir(parents=True)
     _save(args.out / "ex39_kit_smoke.json", state)
     for arm, wt in (("A", a), ("B", b)):
-        env = os.environ.copy()
-        env.update({"LIVE": "1", "END_BY": args.end_by,
-                    "BASIC_LOG_ROOT": str(roots[arm]), "EX39_SMOKE_UPDATES": "2",
-                    "EX39_UPDATES": "1500", "EX39_LEVELS": "3"})
+        env = training_env(os.environ, roots[arm], args.end_by)
         cmd = [str(args.bash), str(wt / "foothold_s2/run_ex39.sh"), arm,
                args.device, str(args.parent), EX39_PARENT_SHA256]
         proc = runner(cmd, cwd=wt, env=env, text=True, capture_output=True, check=False)
