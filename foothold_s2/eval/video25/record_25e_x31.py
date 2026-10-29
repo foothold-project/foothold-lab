@@ -32,6 +32,7 @@ COMMANDS = (
     ("yaw_left", (0.0, 0.0, 1.2), 3.0),
     ("yaw_right", (0.0, 0.0, -1.2), 3.0),
 )
+TOPDOWN_SPARSE_KINDS = {"stepping_stones_low", "stepping_stones_high", "balance_beams", "stepping_beams", "gaps"}   # 듬성 지형 이름(연속 아님)
 TOPDOWN_KINDS = {
     "stepping_stones_low", "flat", "stepping_stones_high",
     "balance_beams", "stepping_beams", "gaps",
@@ -48,8 +49,38 @@ def fall_ref(spec) -> bool:
     return spec.get("fall_reference") is True
 
 
+def w15_ref(spec) -> bool:
+    return spec.get("w15_reference") is True
+
+
 def n_envs(spec) -> int:
-    return int(spec["envs"]) if fall_ref(spec) else SPARSE_ENV_COUNT
+    return int(spec["envs"]) if (fall_ref(spec) or w15_ref(spec)) else SPARSE_ENV_COUNT
+
+
+def _w15_cells(root: str | None = None):
+    """W15 평가의 명령 정의(map_mode_cells)를 평가 사본 파일에서 그대로 읽는다. 정의를 여기에 복사하지 않는다."""
+    import importlib.util
+    path = Path(root or W15_SOURCE_ROOT) / "foothold_s2/eval/map_mode_cells.py"
+    spec_ = importlib.util.spec_from_file_location("w15_map_mode_cells", path)
+    mod = importlib.util.module_from_spec(spec_)
+    spec_.loader.exec_module(mod)
+    return mod
+
+
+def w15_commands(spec) -> tuple:
+    cells = _w15_cells(spec["source_root"])
+    table = cells.commands("extended")
+    names = W15_SETS[spec["w15_set"]]
+    steps = cells.phase_steps(W15_STEPS, len(names))
+    return tuple((n, tuple(float(x) for x in table[n]), round(k * W15_STEP_DT_S, 6)) for n, k in zip(names, steps))
+
+
+def capture_commands(spec) -> tuple:
+    return w15_commands(spec) if w15_ref(spec) else (capture_command(spec),)
+
+
+def capture_total_s(spec) -> float:
+    return round(sum(c[2] for c in capture_commands(spec)), 6)
 
 
 def capture_command(spec):
@@ -80,6 +111,20 @@ EX35_SOURCE_FILE_SHA256 = {
     "foothold_s2/sol23f_contract.py": "b7f58a71cd6e86f598a9b6a3c7427c5cebb7b0ec7f347f544c6078557d0ac40c",
     "foothold_s2/runners/start_runner.py": "ff3406e8c22ba935f2cbe9c596b46b42c2156926a251b43f6747905f9e827e34",
 }
+W15_PROFILE = "W15"                                        # D51 대표 영상: W15 평가에 쓴 고정 사본(eval-ex36-w15fix) 그대로, 저장본 sha 는 spec 에서 받는다
+W15_SOURCE_ROOT = "C:/mai/wt/foothold-lab/eval-ex36-w15fix"
+W15_SOURCE_HEAD = "c57f2b4b6a731e22957e37d4df897afd97ff36de"
+W15_RECORDER_SHA256 = "ce86aec23ffa6e863cab746ac4da5e4504ebbe2919be1f85f2ad7af6aa7979e2"
+W15_STEPS = 300                                            # W15 평가의 --steps 기본값(run_sb_eval.sh 도 300). 구간 길이는 map_mode_cells.phase_steps 가 정한다
+W15_STEP_DT_S = 0.02
+# 연속 명령 셋(lead 10/29 D51): 명령 이름은 W15 평가 코드(map_mode_cells.commands("extended"))에서 읽는다. 셋의 순서만 여기서 정한다.
+W15_SETS = {
+    "fwd_back": ("fwd0.5", "fwd1.0", "stop", "back0.5", "back1.0"),
+    "side_diag": ("side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-"),
+    "spin_restart": ("spin+1.2", "spin-1.2", "stop", "fwd0.5"),
+    "slope_fwd": ("fwd1.0",),
+}
+W15_RULES = {"continuous_L1": {"group": "continuous", "level": 1}, "slope_L1": {"kind": "hf_pyramid_slope", "level": 1}}
 W03_PROFILE = "W03"                                        # W03 촬영: 평가에 쓴 고정 사본과 같은 코드, 세 정본 저장본만
 W03_SOURCE_ROOT = "C:/mai/wt/foothold-lab/eval-x27m4"
 W03_SOURCE_HEAD = "496e0cfed7fffe704b91c22f52f89572a5bab20e"
@@ -342,8 +387,22 @@ def parse_spec(value: str) -> dict[str, Any]:
     if experiment not in CAPTURE_EXPERIMENTS:
         raise ValueError("experiment must be B, TD, G0B, or SB")
     source_profile = spec.get("source_profile")
-    if source_profile not in (None, EX35_SOURCE_PROFILE, W03_PROFILE):
-        raise ValueError("source_profile must be omitted, EX-35 or W03")
+    if source_profile not in (None, EX35_SOURCE_PROFILE, W03_PROFILE, W15_PROFILE):
+        raise ValueError("source_profile must be omitted, EX-35, W03 or W15")
+    if "commands" in spec or "sequence" in spec:
+        raise ValueError("a commands list is not accepted: W15 sets are chosen with w15_reference=true and w15_set (names from W15_SETS)")
+    if w15_ref(spec):
+        if source_profile != W15_PROFILE or spec.get("fall_reference") is True or spec.get("w03_reference") is True or experiment != "SB":
+            raise ValueError("w15_reference requires source_profile W15, experiment SB and neither fall_reference nor w03_reference")
+        if root.rstrip("/\\").replace("\\", "/").casefold() != W15_SOURCE_ROOT.casefold():
+            raise ValueError("W15 source profile root path mismatch")
+        if spec.get("w15_set") not in W15_SETS:
+            raise ValueError("w15_set must be one of %s" % sorted(W15_SETS))
+        if "command" in spec or "duration_s" in spec:
+            raise ValueError("w15 capture takes its commands and duration from w15_set only")
+        spec["duration_s"] = capture_total_s(spec)
+    elif source_profile == W15_PROFILE:
+        raise ValueError("source_profile W15 requires w15_reference=true")
     if source_profile == EX35_SOURCE_PROFILE and experiment != "SB":
         raise ValueError("EX-35 source profile requires the S-B task")
     spec.setdefault("seed", 42)
@@ -377,14 +436,16 @@ def parse_spec(value: str) -> dict[str, Any]:
             raise ValueError("TD terrain_type must be a registered native sparse type")
         if type(spec.get("level")) is not int or not 0 <= spec["level"] <= 9:
             raise ValueError("TD level must be an integer from 0 through 9")
-    if spec.get("terrain_set") == W03_FIXED_LEVEL_KINDS and spec.get("w03_reference") is not True and not fall_ref(spec):
+    if spec.get("terrain_set") == W03_FIXED_LEVEL_KINDS and spec.get("w03_reference") is not True and not fall_ref(spec) and not w15_ref(spec):
         raise ValueError("fixed64 capture is only defined for the W03 selection reference (w03_reference=true) or the W26 fall reference (fall_reference=true)")
-    if spec.get("terrain_set") == FALL_TURN16 and not fall_ref(spec):
+    if spec.get("terrain_set") == FALL_TURN16 and not fall_ref(spec):  # w15 is fixed64 only
         raise ValueError("turn16 capture is only defined for the W26 fall reference (fall_reference=true)")
     if fall_ref(spec) and (source_profile != W03_PROFILE or spec.get("terrain_set") not in FALL_TERRAIN_SETS or spec.get("w03_reference") is True):
         raise ValueError("fall_reference requires source_profile W03, terrain_set fixed64 or turn16 and no w03_reference")
     if spec.get("w03_reference") is True and (source_profile != W03_PROFILE or spec.get("terrain_set") not in CAPTURE_TERRAIN_SETS):
         raise ValueError("w03_reference requires source_profile W03 and terrain_set sparse50 or fixed64")
+    if w15_ref(spec) and spec.get("terrain_set") != W03_FIXED_LEVEL_KINDS:
+        raise ValueError("w15_reference requires terrain_set fixed64")
     if spec.get("terrain_set") in FALL_TERRAIN_SETS:
         if spec["physics_mode"] != "sparse_eval_reference" or experiment not in ("B", "SB"):
             raise ValueError("fixed64 requires sparse_eval_reference physics and experiment B or SB")
@@ -397,19 +458,23 @@ def parse_spec(value: str) -> dict[str, Any]:
             raise ValueError("%s requires %d envs and env_id 0 through %d" % (spec["terrain_set"], _expected_n, _expected_n - 1))
         if spec.get("seed", SPARSE_EVAL_SEED) != SPARSE_EVAL_SEED:
             raise ValueError("fixed capture is seed 42")
-        if fall_ref(spec):
+        if w15_ref(spec):
+            pass   # commands come from w15_set (checked above)
+        elif fall_ref(spec):
             _c, _d = spec.get("command"), spec.get("duration_s")
             if not (isinstance(_c, list) and len(_c) == 3 and all(type(x) in (int, float) for x in _c)) or type(_d) not in (int, float) or not 0.0 < float(_d) <= 30.0:
                 raise ValueError("fall capture requires command [vx, vy, wz] and duration_s in (0, 30]")
         elif spec.get("command") != list(SPARSE_COMMAND[1]) or spec.get("duration_s") != SPARSE_COMMAND[2]:
             raise ValueError("fixed64 capture is seed 42, forward 1.0 m/s, 18 s")
-        if type(spec.get("col")) is not int or not isinstance(spec.get("kind"), str) or spec.get("selection_role") not in (("fell",) if fall_ref(spec) else ("success", "fail")):
-            raise ValueError("fixed capture requires kind, col and selection_role (success/fail, fall: fell)")
-        for key in ("eval_root", "reference_arrays"):
+        if type(spec.get("col")) is not int or not isinstance(spec.get("kind"), str) or spec.get("selection_role") not in (("w15_rule",) if w15_ref(spec) else ("fell",) if fall_ref(spec) else ("success", "fail")):
+            raise ValueError("fixed capture requires kind, col and selection_role (success/fail, fall: fell, w15: w15_rule)")
+        for key in (("terrain_receipt",) if w15_ref(spec) else ("eval_root", "reference_arrays")):
             if not isinstance(spec.get(key), str) or not Path(spec[key]).is_absolute():
                 raise ValueError(f"fixed64 requires an absolute {key}")
-        if not isinstance(spec.get("reference_arrays_sha256"), str) or not isinstance(spec.get("checkpoint_sha256"), str):
-            raise ValueError("fixed64 requires reference_arrays_sha256 and checkpoint_sha256")
+        if not isinstance(spec.get("terrain_receipt_sha256" if w15_ref(spec) else "reference_arrays_sha256"), str) or not isinstance(spec.get("checkpoint_sha256"), str):
+            raise ValueError("fixed64 requires the receipt/reference sha256 and checkpoint_sha256")
+        if w15_ref(spec) and spec.get("w15_rule") not in W15_RULES:
+            raise ValueError("w15_rule must be one of %s" % sorted(W15_RULES))
     if spec.get("terrain_set") == "sparse50":
         if spec["physics_mode"] != "sparse_eval_reference":
             raise ValueError("sparse50 must use sparse_eval_reference physics mode")
@@ -599,7 +664,30 @@ def validate_fall_reference(spec: dict[str, Any]) -> dict[str, Any]:
             "reference_arrays": str(path.resolve()), "reference_arrays_sha256": spec["reference_arrays_sha256"], "evaluation_source_sha256": {}}
 
 
+def validate_w15_reference(spec: dict[str, Any]) -> dict[str, Any]:
+    """D51: env 는 W15 평가의 고정 지형 배정(terrain_tiles)에서 규칙으로만 고른다(성공 · 실패 결과는 보지 않는다).
+    continuous_L1 = 연속 지형(듬성 아님) L1 칸 중 가장 작은 env, slope_L1 = hf_pyramid_slope L1 칸 중 가장 작은 env."""
+    path = Path(spec["terrain_receipt"])
+    if _sha(path) != spec["terrain_receipt_sha256"]:
+        raise ValueError("w15 terrain receipt SHA256 differs from the selection record")
+    tiles = json.loads(path.read_text(encoding="utf-8"))["terrain_tiles"]
+    if len(tiles) != SPARSE_ENV_COUNT:
+        raise ValueError("w15 terrain receipt must list 64 envs")
+    rule = W15_RULES[spec["w15_rule"]]
+    cand = [t for t in tiles if t["level"] == rule["level"]
+            and (t["kind"] == rule["kind"] if "kind" in rule else t["kind"] not in TOPDOWN_SPARSE_KINDS)]
+    if not cand:
+        raise ValueError("w15 rule has no tile in the evaluation assignment")
+    pick = min(cand, key=lambda t: t["env"])
+    if pick["env"] != spec["env_id"] or pick["kind"] != spec["kind"] or pick["column"] != spec["col"]:
+        raise ValueError("w15 selected env is not the lowest-numbered env of its rule in the evaluation assignment")
+    return {"rule": spec["w15_rule"], "rule_def": rule, "env_row": pick, "n_candidates": len(cand),
+            "terrain_receipt": str(path.resolve()), "terrain_receipt_sha256": spec["terrain_receipt_sha256"], "evaluation_source_sha256": {}}
+
+
 def reference_for(spec: dict[str, Any]) -> dict[str, Any]:
+    if w15_ref(spec):
+        return validate_w15_reference(spec)
     if fall_ref(spec):
         return validate_fall_reference(spec)
     return validate_w03_reference(spec) if spec.get("w03_reference") is True else validate_sparse_reference(spec)
@@ -708,6 +796,17 @@ def validate_source_root(root: Path, experiment: str | None = None,
             raise ValueError("W03 pinned source head or tracked files mismatch")
         checked = {"profile": W03_PROFILE, "git_head": head, "tracked_files_clean": "true",
                    "foothold_s2/eval/record_sol23f.py": _sha(source)}
+    elif source_profile == W15_PROFILE:
+        if root.as_posix().casefold() != Path(W15_SOURCE_ROOT).as_posix().casefold():
+            raise ValueError("W15 source profile root path mismatch")
+        if not source.is_file() or _sha(source) != W15_RECORDER_SHA256:
+            raise ValueError("W15 fixed recorder source SHA mismatch")
+        head = _git_value(root, "rev-parse", "HEAD")
+        tracked = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--"], capture_output=True, check=False)
+        if head != W15_SOURCE_HEAD or tracked.returncode:
+            raise ValueError("W15 pinned source head or tracked files mismatch")
+        checked = {"profile": W15_PROFILE, "git_head": head, "tracked_files_clean": "true",
+                   "foothold_s2/eval/record_sol23f.py": _sha(source)}
     elif source_profile == EX35_SOURCE_PROFILE:
         if experiment != "SB":
             raise ValueError("EX-35 source profile is only registered for S-B")
@@ -754,11 +853,11 @@ def validate_source_root(root: Path, experiment: str | None = None,
 def validate_checkpoint_profile(spec: dict[str, Any], checkpoint: Path) -> dict[str, str] | None:
     if spec.get("source_profile") is None:
         return None
-    if spec["source_profile"] == W03_PROFILE:
+    if spec["source_profile"] in (W03_PROFILE, W15_PROFILE):
         digest = _sha(checkpoint.resolve())
         if digest != spec.get("checkpoint_sha256"):
-            raise ValueError("W03 checkpoint SHA differs from the selection record")
-        return {"profile": W03_PROFILE, "checkpoint": str(checkpoint.resolve()), "checkpoint_sha256": digest}
+            raise ValueError("%s checkpoint SHA differs from the selection record" % spec["source_profile"])
+        return {"profile": spec["source_profile"], "checkpoint": str(checkpoint.resolve()), "checkpoint_sha256": digest}
     if spec["source_profile"] != EX35_SOURCE_PROFILE:
         raise ValueError("unregistered checkpoint source profile")
     checkpoint = checkpoint.resolve()
@@ -1127,7 +1226,7 @@ def _capture(spec: dict[str, Any]) -> None:
             task_selection = None
 
         command_cfg = env_cfg.commands.base_velocity
-        command_cfg.fixed_cmd = capture_command(spec)[1] if sparse_capture else COMMANDS[0][1]
+        command_cfg.fixed_cmd = capture_commands(spec)[0][1] if sparse_capture else COMMANDS[0][1]
         command_cfg.resampling_time_range = (LONG_COMMAND_RESAMPLE_S, LONG_COMMAND_RESAMPLE_S)
 
         gym_env = gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
@@ -1212,7 +1311,7 @@ def _capture(spec: dict[str, Any]) -> None:
                 tile = next((row for row in tiles if int(row.get("env", -1)) == spec["env_id"]), None)
                 if not tile or tile.get("kind") != spec["kind"] or tile.get("level") != spec["fixed_level"] or tile.get("col") != spec["col"]:
                     raise RuntimeError("selected env does not have the reference sparse fixed cell")
-            if int(raw.num_envs) != n_envs(spec) or float(env_cfg.episode_length_s) < capture_command(spec)[2]:
+            if int(raw.num_envs) != n_envs(spec) or float(env_cfg.episode_length_s) < capture_total_s(spec):
                 raise RuntimeError("sparse capture env count or episode length cannot cover the evaluation window")
             robot = raw.scene["robot"]
             state = robot.data.root_state_w.clone()
@@ -1227,7 +1326,7 @@ def _capture(spec: dict[str, Any]) -> None:
             if not fixed64_capture and yaw.abs().max().item() > 1.0e-3:
                 raise RuntimeError("sparse capture start yaw is not +x")
             sparse_command_term = raw.command_manager.get_term("base_velocity")
-            pin_segment_command(command_cfg, sparse_command_term, capture_command(spec)[1])
+            pin_segment_command(command_cfg, sparse_command_term, capture_commands(spec)[0][1])
             sparse_reference = reference_for(spec)
             task_selection["fixed_assignment"] = sparse_assignment
             task_selection["selected_tile"] = tile
@@ -1303,7 +1402,7 @@ def _capture(spec: dict[str, Any]) -> None:
                                saturation_multiplier=full_args.overlay_saturation)
         overlay_info: list[dict[str, Any]] = []
         step_dt = float(raw.step_dt)
-        active_commands = (capture_command(spec),) if sparse_capture else (WALK_TURN_COMMANDS if spec.get("command_profile") == "walk_turn" else COMMANDS)
+        active_commands = capture_commands(spec) if sparse_capture else (WALK_TURN_COMMANDS if spec.get("command_profile") == "walk_turn" else COMMANDS)
         capture_duration = float(spec["duration_s"]) if sparse_capture else 12.0
         if sparse_capture and full_args.fps != 25:
             raise ValueError("sparse eval video uses the fixed 25 fps frame contract")
@@ -1668,7 +1767,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("B JSON terrain and seq_video scene must match")
     if args.plan_only:
         duration = float(spec.get("duration_s", 12.0))
-        commands = (capture_command(spec),) if spec.get("terrain_set") in CAPTURE_TERRAIN_SETS else COMMANDS
+        commands = capture_commands(spec) if spec.get("terrain_set") in CAPTURE_TERRAIN_SETS else COMMANDS
         probe_contract = None
         if args.still_probe_at_s is not None:
             probe_contract = still_probe_contract(0.02, args.still_probe_at_s,
