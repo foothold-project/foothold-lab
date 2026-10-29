@@ -99,8 +99,9 @@ def test_real_argparse_defaults_are_the_approved_style(name):
     assert args.overlay_saturation == 1.25 and args.lighting_profile == "dome_plus_three_point" and args.three_point_shadows is True
 
 
-def test_composer_and_seq_video_refuse_a_non_approved_receipt(tmp_path):
-    comp = _load(EVAL / "video25" / "compose_25e_v2style9.py", "compose_v9_under_test")
+@pytest.mark.parametrize("composer", ["compose_25e_v2style9.py", "compose_25e_v2style10.py"])
+def test_composer_and_seq_video_refuse_a_non_approved_receipt(tmp_path, composer):
+    comp = _load(EVAL / "video25" / composer, "compose_under_test_" + composer[:-3])
     (tmp_path / "review.json").write_text(json.dumps({"label": "x", "style": {"style_id": "UNAPPROVED_deadbeef"}}), encoding="utf-8")
     with pytest.raises(ValueError, match="승인 화풍"):
         comp.render(tmp_path, "seq", "1x", tmp_path / "o.mp4")
