@@ -13,7 +13,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from foothold_s2.ex39_kit_probe import slot_snapshot
+from foothold_s2.ex39_kit_probe import capture_finish, check_first_forward_heading, slot_snapshot
 from foothold_s2.ex39_kit_smoke import (arm_environment, check_evaluation,
                                          check_paired_command_resamples, check_training,
                                          device_plan, launch_parallel, sha256, training_env)
@@ -41,6 +41,36 @@ def test_realized_slot_snapshot_known_input_and_mutations():
     term.heading.zero_()
     with pytest.raises(AssertionError, match="ratios"):
         slot_snapshot(term, "B")
+
+
+def test_first_heading_wz_uses_live_yaw_not_zero_after_resample(tmp_path):
+    from foothold_s2.commands.mixed_core import heading_wz
+
+    psi = torch.tensor([0.0, 0.0])
+    yaw = torch.tensor([0.08, -0.12])
+    observed = heading_wz(psi, yaw, 0.5, 2.0)
+    assert observed.tolist() == pytest.approx([-0.04, 0.06])
+    detail = {"env_count": 2, "observed_abs_max": float(observed.abs().max()),
+              "expected_abs_max": float(observed.abs().max()), "error_abs_max": 0.0,
+              "heading_error_abs_max": 0.12}
+    assert check_first_forward_heading(detail) is detail
+    for key, value in (("error_abs_max", 2e-5), ("observed_abs_max", 0.11)):
+        bad = {**detail, key: value}
+        with pytest.raises(AssertionError, match="heading wz"):
+            check_first_forward_heading(bad)
+
+    _put(tmp_path / "ex39_kit_probe.json", {"arm": "B", "checks": {}, "result": "PASS"})
+    term = SimpleNamespace(ex39_first_forward_heading_wz_detail={**detail, "error_abs_max": 2e-5},
+                           ex39_first_forward_heading_wz_max=detail["observed_abs_max"])
+    raw = SimpleNamespace(command_manager=SimpleNamespace(get_term=lambda name: term),
+                          reward_manager=SimpleNamespace(get_term_cfg=lambda name: SimpleNamespace(weight=0.0)),
+                          _ex39_kit_foot_smoke=[{"four_foot_mean": 0.012}] * 8)
+    with pytest.raises(AssertionError, match="heading wz"):
+        capture_finish(raw, tmp_path)
+    failed = json.loads((tmp_path / "ex39_kit_probe.json").read_text(encoding="utf-8"))
+    assert failed["result"] == "FAIL"
+    assert failed["first_forward_heading_wz_detail"]["error_abs_max"] == 2e-5
+    assert len(failed["first_eight_reward_step_four_foot"]) == 8
 
 
 def test_training_receipt_requires_real_probe_and_completed_checkpoint(tmp_path):

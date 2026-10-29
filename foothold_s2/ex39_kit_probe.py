@@ -117,17 +117,18 @@ def capture_finish(raw, log_dir):
     row = json.loads(path.read_text(encoding="utf-8"))
     term = raw.command_manager.get_term("base_velocity")
     arm = row["arm"]
+    samples = getattr(raw, "_ex39_kit_foot_smoke", [])
+    row["first_eight_reward_step_four_foot"] = samples
     try:
         z_weight = float(raw.reward_manager.get_term_cfg("lin_vel_z").weight)
         assert abs(z_weight) < 1e-10
         row["lin_vel_z_weight_after_update_3002"] = z_weight
         if arm == "B":
-            first_wz = term.ex39_first_forward_heading_wz_max
-            assert first_wz is not None and first_wz < 1.0e-3
-            row["first_forward_heading_wz_max"] = first_wz
-        samples = getattr(raw, "_ex39_kit_foot_smoke", [])
+            detail = term.ex39_first_forward_heading_wz_detail
+            row["first_forward_heading_wz_detail"] = detail
+            row["first_forward_heading_wz_max"] = term.ex39_first_forward_heading_wz_max
+            check_first_forward_heading(detail)
         assert len(samples) == 8 and max(x["four_foot_mean"] for x in samples) > 0.0
-        row["first_eight_reward_step_four_foot"] = samples
         # Diagnostic command-only resamples after runner.learn saved the checkpoint.
         # These are not physics steps and are excluded from the training rollout.
         ids = torch.arange(raw.num_envs, device=raw.device)
@@ -146,3 +147,12 @@ def capture_finish(raw, log_dir):
         raise
     _write(log_dir, row)
     return row
+
+
+def check_first_forward_heading(detail):
+    """First physics step may rotate yaw after resample; compare that step's rule."""
+    if (not isinstance(detail, dict) or detail.get("env_count", 0) < 1
+            or detail.get("error_abs_max") is None or detail.get("observed_abs_max") is None
+            or detail["error_abs_max"] > 1.0e-5 or detail["observed_abs_max"] > 0.1):
+        raise AssertionError("EX-39 first heading wz differs from the live heading rule or exceeds 0.1")
+    return detail

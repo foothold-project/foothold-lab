@@ -76,6 +76,7 @@ class MixedVelocityCommand(CommandTerm):
         # Read-only Kit smoke evidence for the latest sampled slot of each env.
         self.slot_current = torch.full((n,), -1, dtype=torch.long, device=dev)
         self.ex39_first_forward_heading_wz_max = None
+        self.ex39_first_forward_heading_wz_detail = None
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
@@ -240,8 +241,19 @@ class MixedVelocityCommand(CommandTerm):
         if self.params.ex39_arm == "B" and self.ex39_first_forward_heading_wz_max is None:
             first_forward = (self.slot_current == 0) & self.heading & free
             if first_forward.any():
+                expected = mc.heading_wz(self.psi_star[first_forward], yaw[first_forward],
+                                         self.params.heading_stiffness, self.params.wz_max)
+                observed = self.vel_command_b[first_forward, 2]
                 self.ex39_first_forward_heading_wz_max = float(
-                    self.vel_command_b[first_forward, 2].abs().max().item())
+                    observed.abs().max().item())
+                self.ex39_first_forward_heading_wz_detail = {
+                    "env_count": int(first_forward.sum().item()),
+                    "observed_abs_max": self.ex39_first_forward_heading_wz_max,
+                    "expected_abs_max": float(expected.abs().max().item()),
+                    "error_abs_max": float((observed - expected).abs().max().item()),
+                    "heading_error_abs_max": float(mc.wrap_to_pi(
+                        self.psi_star[first_forward] - yaw[first_forward]).abs().max().item()),
+                }
 
         if len(self.flag_ids) > 0:
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params)
