@@ -20,6 +20,7 @@ import torch
 import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
+from foothold_s2.eval import map_mode_cells as _command_cells
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
@@ -45,7 +46,7 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
-CMD_NAMES = ("fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2")
+CMD_NAMES = tuple(_command_cells.commands(args.command_suite))   # 확장 suite 는 13 명령 전부(기본 all 이 넷만 돌던 문제 수정)
 WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
 
 if not set(WANT_CMDS) <= set(CMD_NAMES):
