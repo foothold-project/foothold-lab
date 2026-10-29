@@ -25,7 +25,7 @@ def spec(w15_set="fwd_back", mode="eval_pred", rule="continuous_L1", env=23, kin
     s = {"experiment": "SB", "source_profile": "W15", "source_root": ROOT, "w15_reference": True, "w15_set": w15_set, "w15_rule": rule,
          "map_mode": mode, "terrain_set": "fixed64", "map64_levels": True, "fixed_level": 0, "fixed_terrain": True, "envs": 64, "env_id": env,
          "kind": kind, "col": col, "selection_role": "w15_rule", "terrain_receipt": str(RECEIPT).replace("\\", "/"), "terrain_receipt_sha256": _sha(RECEIPT),
-         "checkpoint_sha256": _sha(CK), "seed": 42, "z_mode": "mean", "act_mode": "mean"}
+         "checkpoint_sha256": _sha(CK), "seed": 42, "z_mode": "mean", "act_mode": "mean", "hide_others": True}
     s.update(over)
     return s
 

@@ -1137,7 +1137,7 @@ def _capture(spec: dict[str, Any]) -> None:
     sparse_capture = spec.get("terrain_set") in CAPTURE_TERRAIN_SETS
     fixed64_capture = spec.get("terrain_set") in FALL_TERRAIN_SETS
     turn16_capture = spec.get("terrain_set") == FALL_TURN16
-    eval_root = Path(spec["eval_root"]).resolve() if sparse_capture else repo
+    eval_root = Path(spec["source_root"] if w15_ref(spec) else spec["eval_root"]).resolve() if sparse_capture else repo   # W15: 평가 사본이 곧 source_root
     sys.path.insert(0, str(eval_root))
     if eval_root != repo:
         sys.path.insert(1, str(repo))
