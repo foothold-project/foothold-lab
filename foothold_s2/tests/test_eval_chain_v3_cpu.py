@@ -50,6 +50,7 @@ def test_chain_stops_after_first_bad_real_receipt(tmp_path, monkeypatch, sample,
         seen.append(out)
         (out / "map64").mkdir(parents=True)
         shutil.copyfile(sample, out / "map64" / "map_modes.json")
+        (out / "w15_verified.json").write_text("{}", encoding="utf-8")
         return {"commands": list(chain.commands("extended"))}
 
     monkeypatch.setattr(chain, "run_once", copy_actual)

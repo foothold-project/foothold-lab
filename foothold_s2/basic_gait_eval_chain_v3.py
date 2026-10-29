@@ -21,8 +21,13 @@ EXPECTED_COMMANDS = 13
 
 
 def source_head(root: Path) -> str:
-    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root,
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root,
                           capture_output=True, text=True, check=True).stdout.strip()
+    dirty = subprocess.run(["git", "status", "--porcelain", "--", "foothold_s2"], cwd=root,
+                           capture_output=True, text=True, check=True).stdout.strip()
+    if dirty:
+        raise ValueError("evaluation code changed outside pinned commit")
+    return head
 
 
 def command_gate(map_path: Path, configured_count: int = EXPECTED_COMMANDS) -> dict:
@@ -41,7 +46,7 @@ def command_gate(map_path: Path, configured_count: int = EXPECTED_COMMANDS) -> d
 
 
 def write_status(path: Path, row: dict) -> None:
-    if row.get("done") and not row.get("output_path"):
+    if row.get("done") and (not row.get("output_path") or not Path(row["output_path"]).exists()):
         raise ValueError("done requires output_path")
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
@@ -72,6 +77,10 @@ def run_chain(device: str, checkpoints: list[Path], out: Path) -> dict:
         attempt.parent.mkdir(parents=True, exist_ok=True)
         try:
             result = run_once(device, checkpoint, iteration, attempt)
+            if not (attempt / "w15_verified.json").is_file():
+                raise ValueError("verified output artifact missing")
+            if source_head(source) != head:
+                raise ValueError("evaluation source commit changed during chain")
             map_path = attempt / "map64" / "map_modes.json"
             if index == 0:
                 row["first_evidence"] = command_gate(map_path)
