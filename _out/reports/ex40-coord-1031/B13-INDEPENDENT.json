@@ -1,0 +1,141 @@
+{
+  "at": "2026-10-31T03:49:27.875386+09:00",
+  "state": "FAILED",
+  "source_head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+  "process": {
+    "started": "2026-10-31T03:13:38.6754283+09:00",
+    "finished": "2026-10-31T03:45:21.1590398+09:00",
+    "rc": 5,
+    "seconds": 1902.4836114999998,
+    "head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+    "kit_check": "C:/Users/AI-WS01/s2_lab/ex40_b12_20261031_final_f1fff17f/receipts/ex40_b11/B_smoke_20261031_030246_1124927/kit_check.json",
+    "output": "C:/Users/AI-WS01/s2_lab/ex40_b13_20261031_final_f1fff17f"
+  },
+  "eval_seconds": 1899.7960000000894,
+  "checkpoint_sha256_recomputed": "b7232f73ffd59eb00b79e39b7bf631de22b5f9bd74f4debc26bece101b92ced8",
+  "phases": [
+    {
+      "phase": "map64",
+      "rc": 0,
+      "seconds": 1045.8589999999385
+    },
+    {
+      "phase": "stand_eval_gt",
+      "rc": 0,
+      "seconds": 22.405999999959022
+    },
+    {
+      "phase": "stand_probe_prop_only",
+      "rc": 0,
+      "seconds": 22.155999999959022
+    },
+    {
+      "phase": "stand_eval_pred",
+      "rc": 0,
+      "seconds": 22.641000000061467
+    },
+    {
+      "phase": "map64_b3",
+      "rc": 0,
+      "seconds": 786.405999999959
+    },
+    {
+      "phase": "axis_v2",
+      "rc": 1,
+      "seconds": 0.31200000015087426
+    }
+  ],
+  "coverage": {
+    "map64": {
+      "checkpoint_sha_match": true,
+      "envs": 64,
+      "modes": {
+        "eval_gt": 13,
+        "probe_prop_only": 13,
+        "eval_pred": 13
+      },
+      "per_env_counts": [
+        64
+      ]
+    },
+    "map64_b3": {
+      "checkpoint_sha_match": true,
+      "envs": 64,
+      "modes": {
+        "eval_gt": 9,
+        "probe_prop_only": 9,
+        "eval_pred": 9
+      },
+      "per_env_counts": [
+        64
+      ]
+    },
+    "stand_eval_gt": {
+      "checkpoint_sha_match": true,
+      "envs": 64,
+      "per_env": 64
+    },
+    "stand_probe_prop_only": {
+      "checkpoint_sha_match": true,
+      "envs": 64,
+      "per_env": 64
+    },
+    "stand_eval_pred": {
+      "checkpoint_sha_match": true,
+      "envs": 64,
+      "per_env": 64
+    }
+  },
+  "files": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\eval_receipt.json",
+      "bytes": 1849,
+      "sha256": "9a34371ff8d9db8ef5de52400dbc61e85b0939e735902726fda47ffcc730b84c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\map64\\map_modes.json",
+      "bytes": 2968437,
+      "sha256": "153d21edf33afaa57a9e5a4ec73ac04bf6464c0d04c1d0e1b932dbb75b77bc46"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\map64_b3\\map_modes.json",
+      "bytes": 2451367,
+      "sha256": "87266da58c0e78b5acee80ac4b8cb492f4fade6f1e9d6e3543918b31ed8d6492"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\stand_eval_gt\\stand.json",
+      "bytes": 60918,
+      "sha256": "8b0109a1a9da25fcb0ca1d6e651fb3725bbf536909a83fc03f6b7ea5fa4eb5c1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\stand_probe_prop_only\\stand.json",
+      "bytes": 60953,
+      "sha256": "ad482c2e41ff9ab820ed3940ed3c39a8e8eeb1faf189204a3630b96d53362eec"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\stand_eval_pred\\stand.json",
+      "bytes": 60948,
+      "sha256": "f709c81f9c812c0c84fed0e9aa124a6c5ecb0995f0e5fd10b259f3e1aab096ef"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\axis_v2\\git_head.txt",
+      "bytes": 41,
+      "sha256": "55c8347d70a44e320b899b9bcca0a3c9ac710a61e5c2b75c0f06c41e2e9a7473"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b13_20261031_final_f1fff17f\\axis_v2\\checkpoint_sha256.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "axis_files_present": [
+    "checkpoint_sha256.txt",
+    "git_head.txt"
+  ],
+  "functional_receipt_present": false,
+  "operating_code_modified": false,
+  "additional_gpu_retry": false,
+  "runtime_adapter_status_changed": false,
+  "B14_started": false,
+  "cause": "axis wrapper stops in SHA shell prefix before Kit; underlying cause unresolved; two CPU hash/prefix checks pass"
+}

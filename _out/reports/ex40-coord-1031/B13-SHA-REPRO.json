@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-31T03:46:22.634863+09:00",
+  "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b12_20261031_final_f1fff17f\\smoke\\EX-40-B-kit-smoke_20261031_030305_155852\\model_17.pt",
+  "command_scope": "CPU sha256sum only, no Kit",
+  "rc": 0,
+  "stdout": "sha256sum is /usr/bin/sha256sum\n\\b7232f73ffd59eb00b79e39b7bf631de22b5f9bd74f4debc26bece101b92ced8 *C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_b12_20261031_final_f1fff17f\\\\smoke\\\\EX-40-B-kit-smoke_20261031_030305_155852\\\\model_17.pt\nHASH_RC=0\n",
+  "stderr": ""
+}
