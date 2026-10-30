@@ -1,14 +1,14 @@
 > 분류: 운영 · 평가 실행
 > 작성: 오흥재 (runner 반영) · 2026-10-31
-> 근거: WORKLIST D73 · D74 · analyst DR-RANGES-EX40-1030 §1.2 · Isaac Lab 설치 소스
-> 요지: EX-40 v8 DR 범위와 runtime 연결을 기록하고 Kit 미검증 상태 및 기동 관문을 보존한다
-> 상태: 분석 범위 반영 · CPU 시험 통과 · Kit/GPU 미실행 · 본 학습 기동 차단
+> 근거: WORKLIST D72~D76 · analyst DR-RANGES-EX40-1030 §1.2 · Isaac Lab 설치 소스
+> 요지: EX-40 v8 DR 연결과 D72~D76 일정을 기록하고 smoke와 본 학습의 기동 관문을 분리한다
+> 상태: CPU CLI와 셸 DRY 확인 · Kit/GPU 미실행 · 본 학습 기동 차단
 
 # EX-40 v8 DR 연결 보고
 
 ## 결과
 
-전용 worktree `C:/mai/wt/foothold-lab/runner-ex40-v8`에서 작업했다. D74 일정은 D 길이 1500 update로 고정했다. B0은 배율 0, B1~B3c는 update 1501~6000의 0~0.5 보간, D는 6001~7500의 1, T0는 7501~8000의 1이다. `max_iterations`는 8001이다. 이는 설정값이며 실측 결과가 아니다.
+기존 v8 변경은 `C:/mai/wt/foothold-lab/runner-ex40-v8`에서 했다. 현재 D72~D76 일정은 B0 m0~1500, B1 m1501~3000, B2 m3001~4500, B3a m4501~5000, B3b m5001~5500, B3c m5501~6000, D m6001~7500, T0 m7501~8000이다. D 길이는 1500 update, 마지막 update는 m8000, `max_iterations`는 8001이다. 이는 설정값이며 실측 결과가 아니다. 과거 D73 초안의 D 1500 또는 3000 선택 대기는 D74에서 1500으로 결정되었다.
 
 설치된 Isaac Lab 소스에서 `randomize_rigid_body_com`, `randomize_actuator_gains`, `push_by_setting_velocity`, `EventTermCfg`의 실제 인자와 호출 방식을 읽고 adapter를 연결했다. Interval 속도 readback은 installed source `isaaclab/assets/articulation/articulation_data.py:532`가 부르는 `get_root_velocities()`로 수정했다. Reset 이벤트는 COM, 관절 이득, DCMotor 한도를 적용한다. COM과 torque 한도는 매 reset마다 저장한 명목값을 먼저 복원해 반복 reset에서 누적되지 않게 한다. Interval 이벤트는 Isaac Lab의 velocity push를 호출한다. 지연 액션은 reset마다 현재 배율 상한을 physics tick 단위로 내림 양자화하고 표본 히스토그램을 기록한다. trainer의 `train_extra.jsonl`에 매 update 이벤트 표본 수, 실제 물리값 요약, 설정 상한, 실현 tick 및 ms 분포, 고정 잡음 설정을 남긴다. 재개 상태에는 DR 설정 해시와 직전 update를 넣어 다음 update 연속성을 검사한다.
 
@@ -69,9 +69,9 @@ D76 지시에 따라 `ex40.yaml`의 수평 속도 축 `x`, `y` 범위를 각각 
 
 Analyst `DR-RANGES-EX40-1030.md` §1.2에 따라 `ex40.yaml`의 세 범위를 채웠다. base COM은 x/y/z 각각 ±0.05 m, stiffness와 damping은 각각 [0.9, 1.1], motor strength는 [0.9, 1.1]이다. 관측 잡음은 고정 1×, D76 밀기는 world xy 각각 ±1.0 m/s와 10~15 s 간격이며 z 및 회전축은 0이다. D75의 null 표기는 반영하지 않았다.
 
-DR 일정 경계는 기존대로 update 1500까지 배율 0, 1501~6000에서 0~0.5, 6001~7500에서 1.0, 7501~8000에서 1.0이다. 재개 계약의 CPU 시험은 저장된 DR 설정 해시와 직전 update를 검사하고 다음 update에서 schedule 배율을 복원한다. 이는 schedule 연속성 검사이며 실제 Kit에서 물리 표본이 bitwise 동일하게 재개되는 증거는 아니다.
+현재 DR 일정은 update 1500까지 배율 0, 1501~6000에서 0~0.5, 6001~7500에서 1.0, 7501~8000에서 1.0이다. B3의 세 하위 단계는 D72 경계 4501, 5001, 5501이며, D74가 D 길이 1500과 T0 m7501~8000을 확정했다. 재개 계약의 CPU 시험은 저장된 DR 설정 해시와 직전 update를 검사하고 다음 update에서 schedule 배율을 복원한다. 이는 schedule 연속성 검사이며 실제 Kit에서 물리 표본이 bitwise 동일하게 재개되는 증거는 아니다.
 
-smoke 경로만 `require_smoke_ready`를 사용한다. 이 함수는 완전한 범위와 정확한 D76 push interval을 검사하지만 adapter를 `verified`로 올리지 않는다. 본 학습은 `require_launchable` 관문에 계속 막히고, smoke 실행도 하지 않았다. 준비용 명령 형식은 다음과 같으며 실제 기동 명령이나 승인이 아니다. `<A|B>`와 경로 및 종료시각은 담당자가 정해야 한다.
+smoke 경로만 `require_smoke_ready`를 사용한다. 이 함수는 완전한 범위와 정확한 D76 push interval을 검사하지만 adapter를 `verified`로 올리지 않는다. 본 학습과 resume은 `require_launchable` 관문에 계속 막힌다. 이 시점에는 공식 `ex40_launch`가 smoke에도 `require_launchable`을 호출해 막았으며, 아래 학습기 직접 호출 형식은 공식 런처 smoke의 성공 증거가 아니었다. `<A|B>`와 경로 및 종료시각은 담당자가 정해야 했다.
 
 ```text
 python foothold_s2/scripts/train_sol23f_common.py --task FootholdS2-Go2-S2-SB-v0 --variant SB --command_mode basic_gait --clock_scatter off --p_map_off 0.1 --seed 42 --num_envs 3072 --max_iterations 18 --curriculum foothold_s2/curriculum/ex40.yaml --curriculum-arm <A|B> --curriculum-kit-smoke --basic-stage smoke --basic-new-share 0.30 --basic-log-root <absolute-smoke-log-dir> --curriculum-score-dir <absolute-score-dir> --end-by <ISO8601-with-timezone> --max-wall-s 86400 --device <approved-device>
@@ -82,3 +82,13 @@ python foothold_s2/scripts/train_sol23f_common.py --task FootholdS2-Go2-S2-SB-v0
 ```text
 pytest -q foothold_s2/tests/test_ex40_dr_v8_cpu.py foothold_s2/tests/test_ex40_v7_continue_cpu.py foothold_s2/tests/test_ex40_scorer_cpu.py foothold_s2/tests/test_ex40_stage_publish_cpu.py foothold_s2/tests/test_axis_v2_cells.py foothold_s2/tests/test_axis_v2_run_cpu.py foothold_s2/tests/test_ex40_kit_argv_cpu.py foothold_s2/tests/test_w55_continuous_cpu.py
 ```
+
+## 10/31 후속: 공식 launcher smoke 경로와 문서 정정
+
+후속 기준은 `303659571b2436ee3dd4db870890202435468ff5`이고 작업은 별도 `runner-ex40-b12-smoke` worktree에서 했다. `ex40_launch.py`의 scratch 경로는 이제 `--smoke`일 때만 `require_smoke_ready`를 호출하고, 일반 scratch는 `require_launchable`을 호출한다. resume 경로는 옵션과 무관하게 `require_launchable`을 먼저 통과해야 한다. 따라서 adapter 미검증 상태에서 bounded smoke 계획을 출력할 수 있지만, main과 resume는 계속 거절된다.
+
+공식 CLI 양성 사례는 `--smoke`에서 rc 0과 `CPU_PREPARED_NOT_LAUNCHED`, `max_iterations=18`, `kit_verified=false`, `training_started=false` 영수증을 냈다. main 및 존재하지 않는 resume spec 입력은 각각 rc 2, `runtime adapter is not verified`로 거절되어 resume 파일을 열기 전에 종료했다. 셸 `run_ex40.sh ... smoke` DRY도 `prestart_pass`, `training_started=false`, `DRY: training not started`로 끝났다. 따라서 CLI/셸 준비 경로만 확인됐으며 Kit, GPU, 이벤트 실현 및 PhysX readback은 미확인이다.
+
+D72~D76에 맞춘 현재 단계 끝은 m1500, 3000, 4500, 5000, 5500, 6000, 7500, 8000이고, D 단계는 1500 update이다. 이전 D73 초안의 1500 또는 3000 선택 문구와 6000 상한, D72 전의 단계 구성은 과거 결정 이력으로 남기고 현재 설정으로 읽히지 않도록 이 단락에서 정정한다. `promotion: fixed, shadow_gate: true`는 D72의 회차 전환과 그림자 성과 기록을 뜻한다. 지형은 현재 설정 `fixed_l02`로서 L0~L2 자동 승급을 끄지만, D72~D76에는 지형 정책 최종 결정이 없어 결정 대기는 유지된다. 실제 레벨 배치와 승급 억제는 Kit에서 미확인이다.
+
+이번 후속 변경은 공식 런처 분기, CLI 회귀 시험, 이 보고서와 실행 카드다. 신규 smoke/main/resume CLI 사례 3개를 포함한 지정 CPU 묶음은 24 passed였다. 기존 EX-40 CPU 계약 및 통합 시험 전체는 이 후속에서 다시 실행하지 않았다.
