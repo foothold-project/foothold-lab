@@ -21,6 +21,7 @@ from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.ex40_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, ROOT
 from foothold_s2.ex40_score import config, judge, require_shadow_plan, sha256, stage_end_updates
 from foothold_s2.ex40_stage_report import build as build_stage_report, markdown as stage_markdown
+from foothold_s2.ex40_stage_publish import publish as publish_stage_report
 
 
 MODEL = re.compile(r"model_(\d+)\.pt\Z")
@@ -329,7 +330,7 @@ def completion(run: Path, out_root: Path, cfg_path: Path, table: Path,
 
 def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: str,
                   *, telegram_sender: Path | None = None, lab_feed: Path | None = None,
-                  sender=None) -> dict:
+                  sender=None, publish_worktree: Path | None = None) -> dict:
     """Publish each complete boundary once from the score ledger, never stage_log.
 
     A sender failure is recorded as uncertain and never retried automatically.
@@ -382,7 +383,21 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
             continue
         published.append({"stage": stage, "update": update, "path": str(markdown_path),
                           "json": str(report_path), "sha256": sha256(report_path)})
-        if telegram_sender is not None:
+        if publish_worktree is not None:
+            if telegram_sender is None:
+                raise ValueError("Git stage publication requires Telegram sender")
+            try:
+                report = json.loads(report_path.read_text(encoding="utf-8-sig"))
+                delivery = publish_stage_report(report, report_root, out_root, publish_worktree,
+                                                telegram_sender, available_update=max(by_update),
+                                                sender=sender)
+                if delivery["state"] != "sent":
+                    first_hold = first_hold or {"update": update,
+                                                "reason": f"stage_publish_{delivery['state']}"}
+            except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+                first_hold = first_hold or {"update": update,
+                                            "reason": f"stage_publish_{type(exc).__name__}: {exc}"}
+        elif telegram_sender is not None:
             delivery_path = target.with_suffix(".delivery.json")
             if not delivery_path.exists():
                 text_path = target.with_suffix(".telegram.txt")
@@ -438,6 +453,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--telegram-sender", type=Path,
                    default=Path("C:/Users/AI-WS01/s2_lab/tools_lead/tg_send.py"))
     p.add_argument("--no-telegram", action="store_true")
+    p.add_argument("--publish-worktree", type=Path,
+                   help="dedicated clean Git worktree for stage RESULT documents and PNGs")
     p.add_argument("--lab-feed", type=Path,
                    default=Path("C:/Users/AI-WS01/s2_lab/lab_status/ex40_stage_reports.json"))
     args = p.parse_args(argv)
@@ -446,6 +463,10 @@ def main(argv: list[str] | None = None) -> int:
     args.score_dir = args.score_dir.resolve()
     args.config = args.config.resolve()
     args.table = args.table.resolve()
+    if args.publish_worktree is not None:
+        args.publish_worktree = args.publish_worktree.resolve()
+        if args.no_telegram:
+            p.error("Git stage publication needs Telegram delivery")
     if not args.run_dir.is_dir() or args.out_root == args.score_dir:
         p.error("training run must exist and output and score roots must differ")
     cfg = config(args.config)
@@ -469,7 +490,7 @@ def main(argv: list[str] | None = None) -> int:
                                   args.config, args.table, args.arm, state)
             reports = stage_reports(args.run_dir, args.out_root, args.config, args.table,
                                     args.arm, telegram_sender=None if args.no_telegram else args.telegram_sender,
-                                    lab_feed=args.lab_feed)
+                                    lab_feed=args.lab_feed, publish_worktree=args.publish_worktree)
             end = completion(args.run_dir, args.out_root, args.config, args.table, args.arm, state)
             if end["state"] == "done" and reports["state"] != "done":
                 end = ({"state": "stage_report_hold", "detail": reports["first_hold"]}
