@@ -20,6 +20,7 @@ import torch
 import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
+from foothold_s2.eval import map_mode_cells as _command_cells
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
@@ -27,12 +28,13 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
-parser.add_argument("--command-suite", choices=("core", "extended"), default="core")
+parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3"), default="core")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
+parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -46,11 +48,16 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
-CMD_NAMES = ("fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2")
+CMD_NAMES = tuple(_command_cells.commands(args.command_suite))
 WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
 
 if not set(WANT_CMDS) <= set(CMD_NAMES):
     parser.error("--commands 는 %s 중에서 (Kit 기동 전 거절)" % (CMD_NAMES,))
+if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.commands != "all"
+                     or args.command_suite != "core" or args.ex39_heading_smoke_guard):
+    parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
+if args.axis_v2 and args.steps < 4:
+    parser.error("--axis-v2 requires at least four steps")
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -196,6 +203,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+res["policy_dt_s"] = float(dt)
 if args.ex39_heading_smoke_guard:
     res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
                                         "forced_heading_before_disable": True,
@@ -204,6 +212,13 @@ terrain_gen = raw.scene.terrain.cfg.terrain_generator
 terrain_props = {name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}
 terrain_names = columns.column_types(terrain_props, int(terrain_gen.num_cols))
 res["terrain_columns"] = terrain_names
+
+if args.axis_v2:
+    from foothold_s2.eval.axis_v2_run import run_suite
+
+    run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+              terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -410,7 +425,7 @@ for mode in args.modes.split(","):
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
-    if args.command_suite == "extended":
+    if args.command_suite in ("extended", "ex40_b3"):
         res.setdefault("sequences", {})[mode] = {}
         for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
             torch.manual_seed(42)

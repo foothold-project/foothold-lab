@@ -124,8 +124,24 @@ stages:
     heading_arm: null
     force_gt: true
     low_forward_fraction: 0.20
-  - id: T0
+  - id: D
     start: {fixed_update: 6001}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+    low_forward_fraction: 0.20
+  - id: T0
+    start: {fixed_update: 7501}
     adds: {map_source: reconstruction}
     shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
     ranges:

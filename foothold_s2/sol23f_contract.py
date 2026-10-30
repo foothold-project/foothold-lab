@@ -104,9 +104,9 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
         raise ValueError("D68 B0 requires basic_gait stage sampler, S-B10 clock and p_map_off 0.1")
     if args.seed != 42 or args.num_envs != 3072:
         raise ValueError("W55 seed or env count differs from its smoke/main contract")
-    expected_iterations = 18 if args.curriculum_kit_smoke else 6501
+    expected_iterations = 18 if args.curriculum_kit_smoke else 8001
     if args.max_iterations != expected_iterations:
-        raise ValueError("D72 max_iterations must finish the 18-update smoke or m6500 exactly")
+        raise ValueError("D74 max_iterations must finish the 18-update smoke or m8000 exactly")
     if args.basic_stage != ("smoke" if args.curriculum_kit_smoke else "main") or args.smoke_updates is not None:
         raise ValueError("W55 smoke and main output stages must be separate")
     if not args.basic_log_root or not Path(args.basic_log_root).is_absolute() or not getattr(args, "curriculum_score_dir", None):
