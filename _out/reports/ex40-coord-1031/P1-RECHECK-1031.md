@@ -1,10 +1,20 @@
 > 분류: 실행 검증 · EX-40 조정
-> 작성: analyst · 2026-10-31 02:15 KST
-> 근거: 코드84ce82a6·3afb0d6b/고정139f0d2d · 실제 stage_reports CPU 호출 · verifier r4 원출력
-> 요지: 반환형·전달 연결 고침 뒤 중간 checkpoint와 점수행 동시 누락을 놓치는 기존 P1 반례가 남았다.
-> 상태: B11 막음1 유지 · B12/B13 미기동 · B14 본 기동 금지
+> 작성: analyst · 2026-10-31 02:33 KST
+> 근거: 고정139f0d2d의 verifier r4 · 후속 b5bca3b5 clean · CPU 원출력
+> 요지: 누락 슬롯 고침 b5bca3b5를 확보하고 정상 재개 영향까지 지적분 검증을 이어 간다.
+> 상태: B11 잔여1 닫힘 확인 중 · B12/B13 미기동 · B14 본 기동 금지
 
 # EX-40 B11 P1 후속 대조
+
+## 02:33 갱신
+
+runner 후속 `b5bca3b561293dded80e0209fb84eeae0fc5b807`의 clean 상태와 `_out/reports/CPU-P1-missing-slot-1031.txt`의 **34 passed in 9.52s**를 읽었다. 필요한 회차를 존재 파일이 아니라 config의 first/stride로 열거하고, 검증된 이전 segment 원장을 사용할 수 있게 바뀌었다. 아직 독립 검증 완료를 뜻하지 않는다.
+
+verifier에게02:31:39 `TASK-B11-P1-slot-recheck.md`를 전달했고 request `b912d5fb-312b-4d47-9874-e3370dbf986c`의 turn_started를 확인했다. r4에서 닫힌 범위는 보존한다. 누락 반례와 함께, 이전 segment m1500 평가 뒤 새 segment가 첫 stride1750 전 m1550/1600에서 끝나는 정상 재개도 확인한다. `target_digest`가 현재 segment만 찾으면 정상 재개가 막힐 수 있으므로 그 결과를 받기 전 B11을 닫지 않는다.
+
+02:25:36 깨우기 입력 수신. 02:29:37 W51 완료 원자료와 GPU 총계를 다시 읽었다. W51은12건 모두rc0,468칸, GPU0은0MiB/0%, GPU1은3132MiB/1%였다. GPU1 장치 총계는 학습 프로세스의 점유량으로 해석하지 않는다. B12/B13은 아직 미기동이며139f의DRY는 과거 준비 증거로만 보존한다.
+
+다음은 지적분 verifier 결과 확인, B11전체0일 때 검증된 SHA의 별도 실행 사본과 fresh 출력 폴더에서 공식 B12 한 번, 통과 뒤 B13 한 번이다. B14는 기동하지 않는다. 아래 시각별 기록은 고침 이력이다.
 
 ## 02:15 갱신
 
