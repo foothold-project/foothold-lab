@@ -28,14 +28,14 @@
 | B3 | DR 범위표·밀기 논문·관측 잡음 근거 | analyst | 범위·출처·W51 결과 완료. 최종 통합본 대조는B11 | analyst-ame2 DR-RANGES-EX40-1030 v0.1f. SLR 영상 직접 확인, 논문·코드 외란은 다름. 문서96c19539 대조 이력 |
 | B4 | W51 추가 비교: EX38 m3001·EX39B m4501, 5조건+base재측정, GPU1 직렬 | analyst | 10/31 00:42:15 완료, 12/12 rc0·468칸. 감독기 종료0 및 CPU 원자료 대조 확인 | s2_lab/basic_gait_runs/eval_actuator/w51_followup_20261030/batch_done.json. analyst-ame2/_out/reports/w51-followup-1030/RESULT-W51-followup.md·audit.json. ±0.5 진단값은D76 학습값과 별개 |
 | B5 | 코드: 단계 표 v7(지형 L0~2 · 재개 계약) | runner | 끝 | v7 |
-| B6 | DR 일정·이벤트·readback·확인기 | runner · scripter(실제 Kit 결함) | B12 첫 reset 기록 실패의 CPU 고침 e53f63de 확인, 실제 Kit 미재검 | gain 표본 폭8/4 오류. 한 줄 flatten 고침, 원출력 수정 전2FAIL/후36PASS. analyst isaac311 독립2PASS/2.06s, 실제 물리 적용은 재시도 전이라 미확인 |
+| B6 | DR 일정·이벤트·readback·확인기 | runner · scripter(실제 Kit 결함) | 합친 f1fff17f 실제 Kit PASS | 최초 gain 폭8/4 기록 결함 고침 보존. B12 18개 train_extra, reset probe0/6000/6001/7501의 배율0/0.5/1/1, 관측 잡음1×고정, 실제gain·COM·밀기·지연 readback 대조. B12-INDEPENDENT.json |
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
 | B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P1 source 고침68161fc7 독립 확인 끝 | verifier §11/r6: 정상1550/1600·분리31개 consumed, target 누락/HOLD/SHA충돌 및 현재 같은 회차 다른SHA 거부. 반복재평가/추가발신0. 실제 장기 재개는 미확인 |
 | B10 | v7·v8·점수기·보고 통합 | runner · analyst(승인된 합침만) | 최종 f1fff17f 고정·clean·두 고침 외 변경0 | 68161fc7 + e53f63de의 전체 tree 정확 합, MERGE-FINAL-AUDIT.json. 합친 사본 CPU40건/15.35s. 사본 analyst-ex40-final-1031 detached, 원격 feature/ex40-kit-final-analyst와 HEAD일치 |
 | B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 기존 닫힘 보존, §11 P1 막음0. 실제 Kit는 B12에서 별도 확인 | r6 pytest38건/15.53s, results/source-guards 직접 대조. merge에서 두 고침 외 변경0·CPU40건. B12 첫 실패의 최소 고침 CPU2건도 analyst가 독립 실행. CPU 결과를 Kit PASS로 확대하지 않음 |
-| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | 첫 실패 보존, 최신 직접 승인 재시도1회 진행 | f1fff17f·cuda:0 PID155852·env3072·seed42·18갱신. 영수증 ex40_b12_20261031_final_f1fff17f/receipts/ex40_b11/B_smoke_20261031_030246_1124927. 실제 첫 reset과 갱신 통과, 종료/최종PASS는 미확인. 실패 b5b 사본/로그 보존 |
-| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | 미실행. W51은 완료했으나 실제 B12 model17이 없어 대기 | scripter-ex40-b13 29a526b1 · PREP-EX40-B13-1031.md. 짧은 model17 전체 경로 시험은 T0 성능 판정과 분리. B12 PASS 영수증 뒤 한 번 |
+| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | 03:11:46 실제18갱신 done, rc0·검사PASS. 첫 실패 보존 | f1fff17f·env3072·seed42, 8단계0/2/4/6/8/10/12/14 일치. model17 SHA b7232f73…92ced8 재해시·status·manifest 일치, 발별127616 유효 표본, hit1.0. L0/1/2=1034/1025/1013. 평균27.374s/갱신. 보고 analyst-ame2/_out/reports/ex40-coord-1031/B12-B13-KIT-1031.md |
+| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | 03:13:38 같은 f1fff17f로 승인1회 진행 중 | s2_lab/ex40_b13_20261031_final_f1fff17f/eval_receipt.json, GPU1·동일model17 SHA·smoke=false·같은HEAD. 부모PID48184/첫자식18284 확인. 여섯 단계·표·PNG·최종rc/시간은 대기. T0 성능 판정과 분리 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | D77 조건 충족 후 lead 판단. analyst 본기동 금지 유지 | analyst 위임은B12/B13과명령·ETA준비까지 |
 | B15 | 돌았다 확인(팀장 10/31 00:0x 강화): GPU0 compute-apps PID = 학습 PID · 메모리/사용률 지속(여러 번) · run.log 회차가 시각과 함께 증가 · 1 회 속도 · 저장본 · stage_log · train_extra(DR readback · 발별 · 지형 L0~2) 생성 · 영수증 HEAD = 고정 사본 · dirty 0 · 인자 = D68~D77 · 점수기 GPU1 만. 기동 직후와 10 분 뒤 두 번 | lead | 대기 | |
 
