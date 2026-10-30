@@ -106,18 +106,83 @@ def stand_penalty_values(gap_m, vertical_force_n, mass_kg, stop, elapsed_s,
     """D70 terms before RewardManager dt; height is collision sole above its ray hit."""
     if (gap_m.shape != vertical_force_n.shape or gap_m.ndim != 2 or gap_m.shape[1] != 4
             or mass_kg.shape != gap_m.shape[:1] or stop.shape != mass_kg.shape
-            or elapsed_s.shape != mass_kg.shape or not torch.isfinite(gap_m).all()
-            or not torch.isfinite(mass_kg).all() or (mass_kg <= 0).any()):
+            or elapsed_s.shape != mass_kg.shape
+            or not torch.isfinite(mass_kg[stop]).all() or (mass_kg[stop] <= 0).any()):
         raise ValueError("EX-40 stand sensor geometry or mass invalid")
-    support = (load_fraction * mass_kg * 9.81)[:, None]
-    ramp = (elapsed_s / ramp_s).clamp(0.0, 1.0) * stop.float()
-    gap = gap_weight * ((gap_m - 0.005).clamp_min(0.0) / 0.05).sum(dim=1) * ramp
-    load = load_weight * ((support - vertical_force_n.clamp_min(0.0)).clamp_min(0.0)
+    safe_mass = torch.where(stop, mass_kg, torch.ones_like(mass_kg))
+    support = (load_fraction * safe_mass * 9.81)[:, None]
+    valid = stop[:, None] & torch.isfinite(gap_m) & torch.isfinite(vertical_force_n)
+    safe_gap = torch.where(valid, gap_m, torch.full_like(gap_m, 0.005))
+    safe_force = torch.where(valid, vertical_force_n, support.expand_as(vertical_force_n))
+    ramp = torch.where(stop, (elapsed_s / ramp_s).clamp(0.0, 1.0),
+                       torch.zeros_like(elapsed_s))
+    gap = gap_weight * ((safe_gap - 0.005).clamp_min(0.0) / 0.05).sum(dim=1) * ramp
+    load = load_weight * ((support - safe_force.clamp_min(0.0)).clamp_min(0.0)
                           / support).sum(dim=1) * ramp
     return gap, load
 
 
-def _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config):
+class StandSensorEvidence:
+    """One CPU transfer per tensor at update end; only recorded EX-40 stand samples."""
+
+    def __init__(self, flat_columns: tuple[int, ...]):
+        self.flat_columns = flat_columns
+        self._rows = []
+
+    @classmethod
+    def from_env(cls, env):
+        from foothold_s2.terrains.columns import column_types
+
+        generator = env.scene.terrain.cfg.terrain_generator
+        proportions = {name: cfg.proportion for name, cfg in generator.sub_terrains.items()}
+        names = column_types(proportions, generator.num_cols)
+        return cls(tuple(index for index, name in enumerate(names) if name == "flat"))
+
+    def add(self, gap_m, hit_z, force_z, stop, terrain_types, origin_z):
+        self._rows.append(tuple(value.detach().clone() for value in
+                                (gap_m, hit_z, force_z, stop, terrain_types, origin_z)))
+
+    def summary(self) -> dict:
+        if not self._rows:
+            raise ValueError("EX-40 stand sensor evidence missing from update")
+        columns = [torch.cat([row[i] for row in self._rows]).cpu() for i in range(6)]
+        self._rows.clear()
+        gap, hit, force, stop, terrain_types, origin_z = columns
+        stand = stop.bool()[:, None].expand_as(hit)
+        hit_valid = torch.isfinite(hit)
+        force_valid = torch.isfinite(force)
+        gap_valid = torch.isfinite(gap)
+        valid = stand & hit_valid & force_valid & gap_valid
+        flat = torch.zeros_like(stop, dtype=torch.bool)
+        for index in self.flat_columns:
+            flat |= terrain_types == index
+        flat_valid = valid & flat[:, None]
+
+        def quantiles(mask):
+            values = gap[mask] * 1000.0
+            return ([float(v) for v in torch.quantile(values, torch.tensor([.05, .5, .95]))]
+                    if values.numel() else None)
+
+        sample_ids = torch.nonzero(stand & hit_valid, as_tuple=False)[:4]
+        samples = [{"row": int(row), "foot": int(foot), "hit_z_m": float(hit[row, foot]),
+                    "terrain_origin_z_m": float(origin_z[row]),
+                    "hit_minus_origin_z_m": float(hit[row, foot] - origin_z[row])}
+                   for row, foot in sample_ids]
+        total = int(stand.sum())
+        good = int((stand & hit_valid).sum())
+        return {"stand_foot_total": total, "hit_valid_count": good,
+                "hit_valid_ratio": good / total if total else None,
+                "hit_invalid_by_foot": [int(v) for v in (stand & ~hit_valid).sum(dim=0)],
+                "force_nonfinite_by_foot": [int(v) for v in (stand & ~force_valid).sum(dim=0)],
+                "gap_nonfinite_by_foot": [int(v) for v in (stand & ~gap_valid).sum(dim=0)],
+                "gap_p5_p50_p95_mm_by_foot": [quantiles(valid[:, i]) for i in range(4)],
+                "flat_stand_valid_foot_count": int(flat_valid.sum()),
+                "flat_gap_p50_mm": (float(torch.median(gap[flat_valid] * 1000.0))
+                                    if flat_valid.any() else None),
+                "hit_origin_samples": samples, "flat_columns": list(self.flat_columns)}
+
+
+def _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config, *, record=False):
     robot = env.scene[asset_cfg.name]
     term = env.command_manager.get_term(command_name)
     hit_z = torch.stack([env.scene.sensors[f"ex40_support_{i}"].data.ray_hits_w[:, 0, 2]
@@ -134,12 +199,18 @@ def _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config):
     sole_z = center_w[..., 2] - 0.022
     force_z = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids, 2]
     mass = env._ex40_total_mass_kg
-    return stand_penalty_values(sole_z - hit_z, force_z, mass, term.stand,
+    gap_m = sole_z - hit_z
+    if record and hasattr(env, "_ex40_stand_evidence"):
+        evidence = env._ex40_stand_evidence
+        evidence.add(gap_m, hit_z, force_z, term.stand,
+                     env.scene.terrain.terrain_types, env.scene.terrain.env_origins[:, 2])
+    return stand_penalty_values(gap_m, force_z, mass, term.stand,
                                 term.stop_elapsed_s, **config)
 
 
 def ex40_stand_gap(env, asset_cfg, sensor_cfg, command_name, config):
-    return _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config)[0] / config["gap_weight"]
+    return _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config,
+                            record=True)[0] / config["gap_weight"]
 
 
 def ex40_stand_load(env, asset_cfg, sensor_cfg, command_name, config):

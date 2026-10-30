@@ -89,8 +89,54 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
     for i in range(4):
         ray = ((doc.get("scene") or {}).get(f"ex40_support_{i}") or {})
         if (str(ray.get("prim_path", "")).find("_foot") < 0
+                or ray.get("ray_alignment") != "yaw"
                 or str((ray.get("offset") or {}).get("pos", "")).find("-0.002") < 0):
             raise ValueError("EX-40 dedicated collision-center foot support ray missing")
+
+
+def _check_stand_sensor(run: Path) -> dict:
+    rows = [json.loads(line) for line in (run / "train_extra.jsonl").read_text(
+        encoding="utf-8").splitlines()]
+    if [row.get("it") for row in rows] != list(range(15)):
+        raise ValueError("EX-40 stand sensor evidence needs all 15 smoke updates")
+    total_hits = 0
+    valid_hits = 0
+    flat_samples = 0
+    for row in rows:
+        sensor = row.get("ex40_stand_sensor") or {}
+        total = sensor.get("stand_foot_total")
+        valid = sensor.get("hit_valid_count")
+        ratio = sensor.get("hit_valid_ratio")
+        flat_count = sensor.get("flat_stand_valid_foot_count")
+        flat_p50 = sensor.get("flat_gap_p50_mm")
+        if (type(total) is not int or total < 0 or type(valid) is not int
+                or not 0 <= valid <= total
+                or (total and (not isinstance(ratio, (int, float))
+                    or not math.isfinite(ratio) or not math.isclose(
+                        ratio, valid / total, abs_tol=1e-12)))
+                or (not total and ratio is not None)
+                or type(flat_count) is not int or flat_count < 0
+                or (flat_count and (not isinstance(flat_p50, (int, float))
+                    or not math.isfinite(flat_p50) or not 0 <= flat_p50 <= 10))
+                or not isinstance(sensor.get("hit_origin_samples"), list)):
+            raise ValueError(f"EX-40 stand ray hit or flat gap evidence failed at update {row.get('it')}")
+        for key in ("hit_invalid_by_foot", "force_nonfinite_by_foot", "gap_nonfinite_by_foot"):
+            counts = sensor.get(key)
+            if (not isinstance(counts, list) or len(counts) != 4
+                    or any(type(value) is not int or value < 0 for value in counts)):
+                raise ValueError("EX-40 stand sensor fault counters malformed")
+        if sum(sensor["hit_invalid_by_foot"]) != total - valid:
+            raise ValueError("EX-40 stand sensor fault counters malformed")
+        if valid and not sensor["hit_origin_samples"]:
+            raise ValueError("EX-40 stand hit versus terrain origin samples missing")
+        total_hits += total
+        valid_hits += valid
+        flat_samples += flat_count
+    if total_hits == 0 or valid_hits / total_hits < .99 or flat_samples == 0:
+        raise ValueError("EX-40 stand ray hit or flat gap evidence insufficient")
+    return {"updates": 15, "aggregate_hit_valid_ratio": valid_hits / total_hits,
+            "flat_stand_valid_foot_count": flat_samples,
+            "flat_gap_p50_range_mm": [0, 10]}
 
 
 def _check_stage_log(rows: list[dict], plan: Plan, env_count: int) -> dict[str, int]:
@@ -237,6 +283,8 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
             or plan.effective_sha256 != receipt.get("effective_schedule_sha256")):
         raise ValueError("EX-40 Kit stage table differs from pinned launch receipt")
     _check_rewards(run / "params/env.yaml", plan)
+    stand_sensor = (_check_stand_sensor(run)
+                    if receipt.get("stand_sensor_evidence") == "ex40-v4" else None)
     rows = [json.loads(line) for line in (run / "stage_log.jsonl").read_text(encoding="utf-8").splitlines()]
     changed_by_stage = _check_stage_log(rows, plan, start["num_envs"])
     consumed = _check_consumption(rows, plan, changed_by_stage)
@@ -252,6 +300,7 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
             "reset_adoptions": changed_by_stage,
             "stage_consumption": consumed,
             "shares_checked": True, "reward_weights_checked": True,
+            "stand_sensor_checked": stand_sensor,
             "checkpoint": str(run / "model_14.pt"), "checkpoint_sha256": checkpoint_sha}
 
 

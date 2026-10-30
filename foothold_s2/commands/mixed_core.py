@@ -382,6 +382,12 @@ def scatter_clock(gen, n, resample_s=4.0):
     return _u(gen, (n,), 0.0, resample_s)
 
 
+def stop_elapsed_after_resample(previous_stand: torch.Tensor, new_stand: torch.Tensor,
+                                elapsed_s: torch.Tensor) -> torch.Tensor:
+    """Only a moving-to-stand transition starts the EX-40 half-second ramp."""
+    return torch.where(previous_stand & new_stand, elapsed_s, torch.zeros_like(elapsed_s))
+
+
 def scatter_episode(gen, n, max_episode_length):
     """새 프로세스의 첫 reset 직후 env 마다 에피소드 진행도(스텝) 정수 U[0, max_episode_length). rsl_rl 의 init_at_random_ep_len 과 같은 뜻(이어 가기는 그것을 끄므로 여기서 한다)."""
     return torch.clamp((_u(gen, (n,)) * max_episode_length).long(), max=max_episode_length - 1)

@@ -344,7 +344,20 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
         "rewards": rewards, "events": baseline["events"], "curriculum": expected_curriculum,
         "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"]},
                   **{f"ex40_support_{i}": {"prim_path": f"Robot/{name}_foot",
-                       "offset": {"pos": [-.002, 0, 20]}} for i, name in enumerate(("FL", "FR", "RL", "RR"))}}}),
+                       "ray_alignment": "yaw", "offset": {"pos": [-.002, 0, 20]}}
+                     for i, name in enumerate(("FL", "FR", "RL", "RR"))}}}),
+        encoding="utf-8")
+    sensor_row = {"stand_foot_total": 100, "hit_valid_count": 100,
+                  "hit_valid_ratio": 1.0, "flat_stand_valid_foot_count": 20,
+                  "flat_gap_p50_mm": 5.0,
+                  "hit_invalid_by_foot": [0] * 4,
+                  "force_nonfinite_by_foot": [0] * 4,
+                  "gap_nonfinite_by_foot": [0] * 4,
+                  "hit_origin_samples": [{"foot": 0, "hit_z_m": 1.0,
+                                          "terrain_origin_z_m": 1.0,
+                                          "hit_minus_origin_z_m": 0.0}]}
+    (run / "train_extra.jsonl").write_text("\n".join(
+        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(15)) + "\n",
         encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,

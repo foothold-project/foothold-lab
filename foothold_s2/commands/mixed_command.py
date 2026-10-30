@@ -212,6 +212,7 @@ class MixedVelocityCommand(CommandTerm):
             for group, index in groups:
                 if len(group) == 0:
                     continue
+                was_stand = self.stand[group].clone() if runtime is not None else None
                 out = (mc.resample_stage(self.gen, len(group), runtime.plan.stages[index], self._yaw(group))
                        if runtime is not None else
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
@@ -221,7 +222,11 @@ class MixedVelocityCommand(CommandTerm):
                 self.stand[group] = out["stand"].to(self.device)
                 if not hasattr(self, "stop_elapsed_s"):
                     self.stop_elapsed_s = torch.zeros(self.num_envs, device=self.device)
-                self.stop_elapsed_s[group] = 0.0
+                if runtime is None:
+                    self.stop_elapsed_s[group] = 0.0
+                else:
+                    self.stop_elapsed_s[group] = mc.stop_elapsed_after_resample(
+                        was_stand, self.stand[group], self.stop_elapsed_s[group])
                 self.spin[group] = out["spin"].to(self.device)
                 self.heading[group] = out["heading"].to(self.device)
                 self.psi_star[group] = out["psi_star"].to(self.device)

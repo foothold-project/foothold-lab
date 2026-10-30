@@ -70,6 +70,7 @@ def receipt(args: list[str], *, table: Path = TABLE) -> dict:
             "baseline_env_yaml_sha256": plan.baseline_env_yaml_sha256,
             "baseline_agent_yaml_sha256": plan.baseline_agent_yaml_sha256,
             "intentional_baseline_differences": [INTENTIONAL_CURRICULUM_DIFFERENCE],
+            "stand_sensor_evidence": "ex40-v4",
             "stand_reward": {"four_foot_contact": plan.stages[0].rewards["four_foot_contact_at_stop"],
                              "gap": plan.stand_cfg["gap_weight"], "load": plan.stand_cfg["load_weight"]},
             "parser": parsed, "argv": args,

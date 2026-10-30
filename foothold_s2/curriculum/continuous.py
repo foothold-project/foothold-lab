@@ -184,7 +184,9 @@ class Runtime:
         self.last_checkpoint: dict | None = None
         self.pending_gate: dict | None = None
         self.stage_entry_iteration = 0
+        self.b1_entry_iteration: int | None = None
         self.passes: list[dict] = []
+        self.latest_score: dict | None = None
         self.seen_scores: set[str] = set()
         self.runner = None
         self._started = False
@@ -192,6 +194,8 @@ class Runtime:
         self._done_counts = torch.zeros_like(self._step_counts)
         self._contact_counts = torch.zeros((5, len(EX39_SLOTS), 3, 4), dtype=torch.long, device=device)
         self._side_counts = torch.zeros((5, 4, 2), dtype=torch.long, device=device)
+        self._side_contact_counts = torch.zeros((5, 4, 4), dtype=torch.long, device=device)
+        self._episode_side = torch.full((env_count,), -1, dtype=torch.long, device=device)
         self._raw_samples: list[dict] = []
         self._sample_step = 0
 
@@ -222,6 +226,7 @@ class Runtime:
 
     def on_reset(self, env_ids: torch.Tensor):
         if env_ids.numel():
+            self._episode_side[env_ids] = -1
             old = self.env_stage[env_ids].clone()
             self.env_stage[env_ids] = self.active
             changed = int((old != self.active).sum().item())
@@ -291,20 +296,25 @@ class Runtime:
             self._foot_sensor_ids = sensor.find_bodies(feet)[0]
         force = sensor.data.net_forces_w[:, self._foot_sensor_ids, :]
         contact = (torch.linalg.vector_norm(force, dim=-1) > 1.0).long()
+        yaw_sign = (robot.data.heading_w >= 0).long()
+        y_sign = (robot.data.root_pos_w[:, 1] - raw.scene.terrain.env_origins[:, 1] >= 0).long()
+        new_episode = self._episode_side < 0
+        self._episode_side[new_episode] = (y_sign * 2 + yaw_sign)[new_episode]
+        side = self._episode_side.clone()
         for foot in range(4):
             self._contact_counts[..., foot] += torch.bincount(
                 code, weights=contact[:, foot].float(), minlength=self._step_counts.numel()
             ).reshape_as(self._step_counts).long()
-        yaw_sign = (robot.data.heading_w >= 0).long()
-        y_sign = (robot.data.root_pos_w[:, 1] - raw.scene.terrain.env_origins[:, 1] >= 0).long()
+            self._side_contact_counts[..., foot] += torch.bincount(
+                stage * 4 + side, weights=contact[:, foot].float(), minlength=20
+            ).reshape(5, 4).long()
         for y in (0, 1):
             for h in (0, 1):
-                labels = stage[(y_sign == y) & (yaw_sign == h)]
+                labels = stage[side == y * 2 + h]
                 self._side_counts[:, y * 2 + h, 0] += torch.bincount(labels, minlength=5)
         self._pre_step_code = code
         self._pre_stage = stage.clone()
-        self._pre_yaw_sign = yaw_sign
-        self._pre_y_sign = y_sign
+        self._pre_side = side
         if self._sample_step % 12 == 0:
             ids = torch.arange(min(8, raw.num_envs), device=stage.device)
             self._raw_samples.append({"env_ids": ids.cpu().tolist(),
@@ -319,8 +329,9 @@ class Runtime:
                                             minlength=self._step_counts.numel()).reshape_as(self._done_counts)
         for y in (0, 1):
             for h in (0, 1):
-                labels = self._pre_stage[finished & (self._pre_y_sign == y) & (self._pre_yaw_sign == h)]
+                labels = self._pre_stage[finished & (self._pre_side == y * 2 + h)]
                 self._side_counts[:, y * 2 + h, 1] += torch.bincount(labels, minlength=5)
+        self._episode_side[finished] = -1
 
     def flush_consumption(self, iteration: int):
         self._write({"event": "actual_consumption", "iteration": iteration,
@@ -329,11 +340,13 @@ class Runtime:
                      "steps": self._step_counts.cpu().tolist(), "done": self._done_counts.cpu().tolist(),
                      "contact_steps": self._contact_counts.cpu().tolist(),
                      "side_steps_done": self._side_counts.cpu().tolist(),
+                      "side_contact_steps": self._side_contact_counts.cpu().tolist(),
                      "raw_samples": self._raw_samples})
         self._step_counts.zero_()
         self._done_counts.zero_()
         self._contact_counts.zero_()
         self._side_counts.zero_()
+        self._side_contact_counts.zero_()
         self._raw_samples.clear()
 
     def on_update_start(self, iteration: int):
@@ -343,10 +356,14 @@ class Runtime:
                 self._promote(iteration, {"kind": "fixed", "checkpoint": self.last_checkpoint})
         else:
             self._scan_scores(iteration)
-            if self.pending_gate is not None:
+            if self.pending_gate is not None and self._gate_pair_valid(iteration):
                 evidence = self.pending_gate
                 self.pending_gate = None
                 self._promote(iteration, {"kind": "gate", **evidence})
+            elif self.pending_gate is not None:
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "reason": "stale_or_invalid_cached_pass", "training_continues": True})
+                self.pending_gate = None
 
     def _promote(self, iteration: int, evidence: dict):
         if self.active + 1 >= len(self.plan.stages):
@@ -356,7 +373,10 @@ class Runtime:
         before = self.plan.stages[self.active]
         self.active += 1
         self.stage_entry_iteration = iteration
+        if self.active == 1:
+            self.b1_entry_iteration = iteration
         self.passes = []
+        self.latest_score = None
         after = self.plan.stages[self.active]
         self._sync_map()
         self._sync_rewards()
@@ -396,7 +416,9 @@ class Runtime:
             cfg.weight = value
             manager.set_term_cfg(term_name, cfg)
         self.runner.basic_lin_vel_z_schedule = self.active >= 1
-        self.runner.basic_lin_vel_z_start_iteration = self.stage_entry_iteration if self.active >= 1 else 0
+        if self.active >= 1 and self.b1_entry_iteration is None:
+            raise ValueError("EX-40 B1 reward schedule origin missing")
+        self.runner.basic_lin_vel_z_start_iteration = self.b1_entry_iteration if self.active >= 1 else 0
 
     def on_checkpoint(self, iteration: int, checkpoint: str | Path):
         path = Path(checkpoint).resolve(strict=True)
@@ -422,6 +444,8 @@ class Runtime:
                 continue
             try:
                 score = json.loads(score_path.read_text(encoding="utf-8-sig"))
+                if not isinstance(score, dict):
+                    raise ValueError("score JSON must be an object")
                 if score.get("from") != self.plan.stages[self.active].id:
                     continue
                 if (score.get("format") != "foothold-ex40-score/2"
@@ -441,19 +465,30 @@ class Runtime:
                 candidates.append((update, stamp, score_path, digest, score))
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 self.seen_scores.add(digest)
+                self.passes.clear()
+                self.pending_gate = None
                 self._write({"event": "gate_hold", "iteration": iteration,
                              "score_path": str(score_path), "reason": type(exc).__name__,
-                             "score_sha256": digest})
+                              "score_sha256": digest, "training_continues": True})
         for update, _, path, digest, score in sorted(candidates):
             if digest in self.seen_scores:
                 continue
             self.seen_scores.add(digest)
             row = {"event": "gate_decision", "iteration": iteration,
                    "from": score["from"], "to": score["to"], "verdict": score["verdict"],
-                   "checkpoint_iteration": update, "score_path": str(path),
+                   "checkpoint_iteration": update, "checkpoint": score["checkpoint"],
+                   "score_path": str(path),
                    "score_sha256": digest, "checkpoint_sha256": score["checkpoint_sha256"],
                    "created_at": score["created_at"]}
             self._write(row)
+            order = (update, score["created_at"])
+            if (self.latest_score is not None and order <= (
+                    self.latest_score["checkpoint_iteration"], self.latest_score["created_at"])):
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "reason": "older_than_latest_score", "score_sha256": digest,
+                             "training_continues": True})
+                continue
+            self.latest_score = row
             if score["verdict"] != "PASS":
                 self.passes.clear()
                 self.pending_gate = None
@@ -463,12 +498,42 @@ class Runtime:
                              "stage": self.plan.stages[self.active].id,
                              "reason": "minimum_exposure_not_reached", "score_sha256": digest})
                 continue
+            self.passes = [old for old in self.passes if self._pass_valid(old, iteration)]
             self.passes.append(row)
             if (not self.plan.shadow_gate and self.plan.promotion == "gate"
                     and len(self.passes) >= 2
                     and self.passes[-1]["checkpoint_iteration"] - self.passes[-2]["checkpoint_iteration"]
-                    >= self.plan.gate_cfg["separated_checkpoints"]):
+                     >= self.plan.gate_cfg["separated_checkpoints"]
+                     and self._pass_valid(self.passes[-2], iteration)):
                 self.pending_gate = {"scores": self.passes[-2:]}
+
+    def _pass_valid(self, row: dict, iteration: int) -> bool:
+        try:
+            update = row["checkpoint_iteration"]
+            checkpoint = Path(row["checkpoint"])
+            score_path = Path(row["score_path"])
+            return (row["verdict"] == "PASS"
+                    and row["from"] == self.plan.stages[self.active].id
+                    and row["to"] == self.plan.stages[self.active + 1].id
+                    and update >= self.stage_entry_iteration
+                    and 0 <= iteration - update <= 500
+                    and checkpoint.name == f"model_{update}.pt"
+                    and sha256(checkpoint) == row["checkpoint_sha256"]
+                    and sha256(score_path) == row["score_sha256"])
+        except (KeyError, OSError, TypeError, ValueError):
+            return False
+
+    def _gate_pair_valid(self, iteration: int) -> bool:
+        scores = self.pending_gate.get("scores") if isinstance(self.pending_gate, dict) else None
+        return (isinstance(scores, list) and len(scores) == 2
+                and self.latest_score is not None
+                and self.latest_score["verdict"] == "PASS"
+                and scores[-1]["score_sha256"] == self.latest_score["score_sha256"]
+                and all(self._pass_valid(row, iteration) for row in scores)
+                and scores[0]["checkpoint_iteration"] - self.stage_entry_iteration
+                >= self.plan.gate_cfg["minimum_exposure_updates"]
+                and scores[1]["checkpoint_iteration"] - scores[0]["checkpoint_iteration"]
+                >= self.plan.gate_cfg["separated_checkpoints"])
 
     def state_dict(self) -> dict:
         return {"format": "foothold-w55-state/1", "plan_sha256": self.plan.sha256,
@@ -476,7 +541,8 @@ class Runtime:
                 "active": self.active, "env_stage": self.env_stage.clone(),
                 "last_checkpoint": self.last_checkpoint, "pending_gate": self.pending_gate,
                 "seen_scores": sorted(self.seen_scores), "stage_entry_iteration": self.stage_entry_iteration,
-                "passes": self.passes}
+                 "b1_entry_iteration": self.b1_entry_iteration,
+                 "latest_score": self.latest_score, "passes": self.passes}
 
     def load_state_dict(self, state: dict):
         if (state.get("format") != "foothold-w55-state/1"
@@ -495,7 +561,13 @@ class Runtime:
         self.pending_gate = state.get("pending_gate")
         self.seen_scores = set(state.get("seen_scores") or [])
         self.stage_entry_iteration = int(state.get("stage_entry_iteration", self.plan.stages[active].fixed_update))
+        self.b1_entry_iteration = state.get("b1_entry_iteration")
+        if active >= 1 and (type(self.b1_entry_iteration) is not int
+                            or self.b1_entry_iteration > self.stage_entry_iteration):
+            raise ValueError("EX-40 saved B1 schedule origin missing or invalid")
+        self.latest_score = state.get("latest_score")
         self.passes = list(state.get("passes") or [])
+        self._episode_side.fill_(-1)
         self._sync_map()
         self._sync_rewards()
 
@@ -511,6 +583,7 @@ class Runtime:
         self.env_stage.fill_(self.active)
         self._pending_adoption.zero_()
         self._pending_adoption_count = 0
+        self._episode_side.fill_(-1)
         self._write({"event": "physical_resume_reset", "stage": self.plan.stages[self.active].id,
                      "note": "new simulator episode; not a physically identical continuation"})
 

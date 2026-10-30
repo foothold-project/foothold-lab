@@ -466,7 +466,11 @@ class StartRunner(OnPolicyRunner):
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None) and self.log_dir is not None and not self.disable_logs:
+            sensor_evidence = getattr(getattr(self.env, "unwrapped", self.env),
+                                      "_ex40_stand_evidence", None)
+            if sensor_evidence is not None:
+                extra["ex40_stand_sensor"] = sensor_evidence.summary()
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
