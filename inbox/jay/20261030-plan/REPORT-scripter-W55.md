@@ -28,6 +28,7 @@
 - 관련 EX39 · 기본 보행 시험을 합쳐 `23 passed, 2 skipped, 1 deselected`. 제외한 옛 시험 `test_scratch_receipt_and_wrong_kind_or_share_rejected`는 2026-10-29 종료 시각을 하드코딩하여 오늘 실행에서는 `deadline has already passed`로 실패한다. EX40 수정에 따른 실패가 아니다.
 - 변경 Python의 `ruff check --select F` 0건, `python -m pyflakes` 0건, `git diff --check` 통과. 실제 `isaac311`의 `rsl-rl-lib 3.1.2` 파서와 모듈 import를 통과했다.
 - 실제 부모 파일과 실제 기동 인자를 사용한 `LIVE=0` shell DRY 두 건이 `prestart_pass`, `source_git_clean=true`로 되읽기 통과했다. Smoke A는 1511 총회차와 경계 1503 · 1506 · 1509, 본판 B는 6001 총회차와 경계 3001 · 4501 · 5501이었다. 영수증: `C:\Users\AI-WS01\s2_lab\ex40\w55_smoke_cpu_dry\receipts\ex40\A_smoke_20261030_121701_1060966\`와 `C:\Users\AI-WS01\s2_lab\ex40\w55_main_cpu_dry\receipts\ex40\B_main_20261030_121725_1061001\`.
+- 최종 고정 커밋 `2df28190`에서도 DRY를 다시 실행해 `prestart_pass`, `source_git_clean=true`, `training_started=false`를 되읽었다. 영수증: `C:\Users\AI-WS01\s2_lab\ex40\w55_final_cpu_dry\receipts\ex40\A_smoke_20261030_122134_1061295\`.
 
 ## Kit 확인과 남은 결정
 
