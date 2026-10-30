@@ -362,9 +362,23 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
             or plan.effective_sha256 != receipt.get("effective_schedule_sha256")):
         raise ValueError("EX-40 Kit stage table differs from pinned launch receipt")
     _check_rewards(run / "params/env.yaml", plan)
+    from foothold_s2.curriculum.ex40_dr_runtime import validate_runtime_summary
+
     if receipt.get("stand_sensor_evidence") != "ex40-v5":
         raise ValueError("EX-40 stand sensor evidence marker missing or stale")
     stand_sensor = _check_stand_sensor(run)
+    train_rows = [json.loads(line) for line in (run / "train_extra.jsonl").read_text(
+        encoding="utf-8").splitlines()]
+    if [row.get("it") for row in train_rows] != list(range(18)):
+        raise ValueError("EX-40 Kit smoke train_extra update coverage differs")
+    for row in train_rows:
+        validate_runtime_summary(row, row["it"])
+    dr_probe_doc = json.loads((run / "ex40_dr_schedule_smoke.json").read_text(encoding="utf-8"))
+    dr_probes = dr_probe_doc.get("probes") if dr_probe_doc.get("format") == "ex40-dr-kit-smoke/1" else None
+    if not isinstance(dr_probes, list) or [row.get("it") for row in dr_probes] != [0, 4500, 6001]:
+        raise ValueError("EX-40 Kit smoke needs actual reset probes at B0, ramp, and D entry")
+    for row in dr_probes:
+        validate_runtime_summary(row, row["it"], require_event_samples=True)
     rows = [json.loads(line) for line in (run / "stage_log.jsonl").read_text(encoding="utf-8").splitlines()]
     changed_by_stage = _check_stage_log(rows, plan, start["num_envs"])
     consumed = _check_consumption(rows, plan, changed_by_stage)
@@ -386,6 +400,8 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
                                                  INTENTIONAL_TERRAIN_DIFFERENCE],
             "reset_adoptions": changed_by_stage,
             "stage_consumption": consumed,
+            "dr_train_extra_updates_checked": len(train_rows),
+            "dr_schedule_probe_scales": [row["ex40_dr"]["scale"] for row in dr_probes],
             "shares_checked": True, "reward_weights_checked": True,
             "stand_sensor_checked": stand_sensor,
             "terrain_policy": terrain_receipt,

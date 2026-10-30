@@ -247,6 +247,7 @@ class Runtime:
         self.stage_entry_iteration = 0
         self.b1_entry_iteration: int | None = None
         self.passes: list[dict] = []
+        self.dr_runtime = None
         self.latest_score: dict | None = None
         self.seen_scores: set[str] = set()
         self.runner = None
@@ -619,8 +620,10 @@ class Runtime:
                 "terrain_receipt": terrain_receipt, "segment_index": self.segment_index,
                 "last_checkpoint": self.last_checkpoint, "pending_gate": self.pending_gate,
                 "seen_scores": sorted(self.seen_scores), "stage_entry_iteration": self.stage_entry_iteration,
-                 "b1_entry_iteration": self.b1_entry_iteration,
-                 "latest_score": self.latest_score, "passes": self.passes}
+                "b1_entry_iteration": self.b1_entry_iteration,
+                "latest_score": self.latest_score, "passes": self.passes,
+                "domain_randomization": (self.dr_runtime.state_dict()
+                                         if self.dr_runtime is not None else None)}
 
     def load_state_dict(self, state: dict):
         if (state.get("format") != "foothold-w55-state/1"
@@ -660,6 +663,13 @@ class Runtime:
             raise ValueError("EX-40 saved B1 schedule origin missing or invalid")
         self.latest_score = state.get("latest_score")
         self.passes = list(state.get("passes") or [])
+        saved_dr = state.get("domain_randomization")
+        if saved_dr is not None:
+            if self.dr_runtime is None:
+                raise ValueError("EX-40 checkpoint has DR runtime state but runtime adapter is absent")
+            self.dr_runtime.load_state_dict(saved_dr, int(self.runner.current_learning_iteration) + 1)
+        elif self.dr_runtime is not None and int(getattr(self.runner, "current_learning_iteration", -1)) != self.plan.parent_update:
+            raise ValueError("EX-40 DR runtime state missing from a non-parent checkpoint")
         self._episode_side.fill_(-1)
         self._sync_map()
         self._sync_rewards()

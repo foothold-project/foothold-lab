@@ -11,8 +11,9 @@ heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_w
 domain_randomization:
   range_source: C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md
   length_D: 1500
-  allowed_length_D: [1500, 3000]
-  runtime_adapter_status: not_implemented
+  runtime_adapter_status: implementation_in_progress
+  observation_noise: {mode: fixed, multiplier: 1.0}
+  delay_max_s: 0.015
   preserved_startup:
     friction_static_dynamic: [0.2, 1.2]
     base_mass_add_kg: [-1.0, 3.0]
@@ -20,9 +21,9 @@ domain_randomization:
     base_com: null
     actuator_gains: null
     motor_strength: null
-    delay_s: null
+    delay_s: [0.0, 0.015]
     push_velocity: null
-    policy_obs_noise_multiplier: null
+  push_interval_s: null
 stages:
   - id: B0
     start: {fixed_update: 0}

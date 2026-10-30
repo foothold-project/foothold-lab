@@ -80,13 +80,14 @@ parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
+EX40_DR_CONFIG = None
 if args_cli.curriculum:
     # v8 must not enter Kit until the analyst ranges and an implemented event
     # adapter have both been reviewed. This check deliberately precedes
     # AppLauncher construction so an incomplete YAML cannot start Kit.
     from foothold_s2.curriculum.ex40_dr import require_launchable
 
-    require_launchable(args_cli.curriculum)
+    EX40_DR_CONFIG = require_launchable(args_cli.curriculum)
 DEADLINE_EPOCH = validate_launch(args_cli, hydra_args)
 sys.argv = [sys.argv[0]] + hydra_args
 app_launcher = AppLauncher(args_cli)
@@ -205,6 +206,7 @@ def main(env_cfg, agent_cfg):
               if is_extended_resume(args_cli) else None)
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
     terrain_policy = None
+    ex40_event_contract = None
     if curriculum_plan is not None:
         from foothold_s2.curriculum.continuous import apply_terrain_policy
 
@@ -250,8 +252,40 @@ def main(env_cfg, agent_cfg):
         # 11 §2.1 JEPLO 구멍/가림/거리 잡음은 START 저자 구성이 아니다.
         from foothold_s2.sensors.start_obs import AUG
         AUG.enabled = False
-    env = gym.make(args_cli.task, cfg=env_cfg)
     if curriculum_plan is not None:
+        from foothold_s2.curriculum.ex40_dr_runtime import install_runtime_events
+
+        ex40_event_contract = install_runtime_events(
+            env_cfg, EX40_DR_CONFIG.full_ranges, EX40_DR_CONFIG.push_interval_s,
+            delay_max_s=float(EX40_DR_CONFIG.full_ranges["delay_s"][1]))
+    env = gym.make(args_cli.task, cfg=env_cfg)
+    ex40_dr_runtime = None
+    if curriculum_plan is not None:
+        from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
+
+        ex40_dr_runtime = RuntimeReadback(env.unwrapped, EX40_DR_CONFIG.full_ranges,
+                                          float(EX40_DR_CONFIG.full_ranges["delay_s"][1]),
+                                          EX40_DR_CONFIG.sha256)
+        if args_cli.curriculum_kit_smoke:
+            import tempfile
+
+            probes = []
+            for probe_update in (0, 4500, 6001):
+                ex40_dr_runtime.update_start(probe_update)
+                env.unwrapped.reset()
+                env.unwrapped.event_manager.apply(
+                    "interval", dt=float(EX40_DR_CONFIG.push_interval_s[1]))
+                probes.append({"it": probe_update, "ex40_dr": ex40_dr_runtime.summary()})
+            ex40_dr_runtime.update_start(0)
+            env.unwrapped.reset()
+            probe_path = os.path.join(log_dir, "ex40_dr_schedule_smoke.json")
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=log_dir,
+                                             delete=False, suffix=".tmp") as temp:
+                json.dump({"format": "ex40-dr-kit-smoke/1", "probes": probes}, temp,
+                          ensure_ascii=False, sort_keys=True)
+                temp.write("\n")
+                temp_name = temp.name
+            os.replace(temp_name, probe_path)
         masses = env.unwrapped.scene["robot"].root_physx_view.get_masses()
         if masses.ndim != 2 or masses.shape[0] != env.unwrapped.num_envs:
             raise ValueError("EX-40 realized per-env robot masses unavailable")
@@ -337,6 +371,8 @@ def main(env_cfg, agent_cfg):
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
     if curriculum_plan is not None:
+        runner.ex40_dr_runtime = ex40_dr_runtime
+        continuous.dr_runtime = ex40_dr_runtime
         continuous.attach(runner, command_term)
         if resume_path is None:
             continuous.start()
@@ -460,6 +496,17 @@ def main(env_cfg, agent_cfg):
              "basic_terrain_cfg_difference": (f"L0..{(args_cli.basic_ex39_level_count or 3)-1} active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
+    if EX40_DR_CONFIG is not None:
+        modes["domain_randomization"] = {
+            "schedule": "B0=0; B1-B3c=0..0.5; D=1; T0=1",
+            "length_D": EX40_DR_CONFIG.length_d,
+            "config_sha256": EX40_DR_CONFIG.sha256,
+            "range_source": EX40_DR_CONFIG.range_source,
+            "push_interval_s": EX40_DR_CONFIG.push_interval_s,
+            "observation_noise": {"mode": "fixed", "multiplier": 1.0},
+            "installed_events": ex40_event_contract,
+            "realized_readback": "train_extra.jsonl/ex40_dr per update",
+        }
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)

@@ -17,6 +17,7 @@ class DelayedJointPositionAction(JointPositionAction):
         self.delay = torch.zeros(env.num_envs, dtype=torch.long, device=self.device)
         self._prev = self._offset.clone() if torch.is_tensor(self._offset) else torch.zeros_like(self.processed_actions)
         self._sub = 0
+        self._ex40_sample_counts = None
 
     def process_actions(self, actions):
         self._prev = self.processed_actions.clone()
@@ -33,11 +34,25 @@ class DelayedJointPositionAction(JointPositionAction):
         super().reset(env_ids)
         ids = slice(None) if env_ids is None else env_ids
         n = self.num_envs if env_ids is None else len(env_ids)
+        if getattr(self.cfg, "dr_scale_from_env", False):
+            scale = getattr(self._env, "_ex40_dr_scale", None)
+            if scale is None or not 0.0 <= float(scale) <= 1.0:
+                raise RuntimeError("EX-40 delayed action requires a scheduled _ex40_dr_scale")
+            self.max_delay_substeps = int(round(float(scale) * self.cfg.max_delay_s / self._env.physics_dt))
         self.delay[ids] = torch.randint(0, self.max_delay_substeps + 1, (n,), device=self.device)
         self._prev[ids] = self._asset.data.joint_pos[ids][:, self._joint_ids]
+        if getattr(self.cfg, "dr_scale_from_env", False):
+            histogram = torch.bincount(self.delay[ids].flatten(), minlength=self.max_delay_substeps + 1)
+            if self._ex40_sample_counts is None or self._ex40_sample_counts.numel() < histogram.numel():
+                grown = torch.zeros(histogram.numel(), dtype=torch.long, device=self.device)
+                if self._ex40_sample_counts is not None:
+                    grown[:self._ex40_sample_counts.numel()] = self._ex40_sample_counts
+                self._ex40_sample_counts = grown
+            self._ex40_sample_counts[:histogram.numel()] += histogram
 
 
 @configclass
 class DelayedJointPositionActionCfg(JointPositionActionCfg):
     class_type: type = DelayedJointPositionAction
     max_delay_s: float = 0.015
+    dr_scale_from_env: bool = False
