@@ -31,9 +31,9 @@
 | B6 | DR 일정·이벤트·readback·확인기 | runner | 2da3afe5의 H2/H3 지정 반례 닫힘. 실제 Kit 미확인 | verifier §7.1/7.2: 정상 네 이벤트 PASS, COM±99·motor0·NaN·pending 거부. 실제 환경 직렬화·표본은B12에서 |
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
-| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P2·최종 완료·학습중 호출 확인. P1 중간 누락 소비 오판1 남음 | verifier r4 정상31개·분리segment consumed, 보고8건 재소비 중복없음. m5550에서 m5250 파일+score 동시누락도 consumed여서 기존P1 같은 묶음 고침 중 |
-| B10 | v7·v8·점수기·보고 통합 | runner | 후속b5bca3b5 clean 고정, P1 지적분 독립 확인 중 | runner-ex40-b11-all-fixes. analyst가CPU 원출력34 passed in9.52s를 읽음. 02:31:39 verifier request b912d5fb turn_started. 기존139f/r4 정상·반례는 보존 |
-| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | H1~H3/P2/P3와final completion 닫힘, P1 잔여1 닫힘 확인 중 | verifier-w56/_out/ex40-b11-r4/results.json·pytest.txt, analyst P1-RECHECK-1031.md 02:33절. b5bca3b5 누락 검사와 이전segment 정상 영수증 재사용, 첫 새stride 전 재개를 확인. lead00:3x대로 전체0전 Kit 대기. 139f DRY rc0는 실제Kit 증거 아님 |
+| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P2·최종completion·학습중 호출·누락 거부 확인. P1 정상 재개 출처1 남음 | r5 단일segment31개consumed. 분리segment는report8건done/completion31개done이나supervisor는과거SHA조회로pending. 앞선「분리segment consumed」표현을정정 |
+| B10 | v7·v8·점수기·보고 통합 | runner | b5bca3b5 clean 검증 뒤 정상 재개 출처 후속 고침 중 | CPU34건(독립10.05s)·r5 누락반례닫힘. 02:36:26 runner request775fb1d9 turn_started. target·보고SHA 두 소비자리를같은P1묶음에서고침 |
+| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 기존닫힘보존, P1 정상재개출처 막음1 | VERIFY-EX40-B11-1031 §10, r5 results.json/split-trace.json. 이전segment1500 평가가유효해도새segment1550/1600 pending, 분리31개도과거보고SHA없다며pending. analyst P1-RECHECK-1031 02:38절. 전체0전Kit대기, B14금지 |
 | B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | P1을 포함한 B11 막음0 뒤 한 번 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
 | B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | CPU 준비 보고 접수. B11/B12 및GPU1 W51 종료 뒤 한 번 | scripter-ex40-b13 29a526b1 · PREP-EX40-B13-1031.md. CPU32는scripter 보고, Kit 미실행. 짧은model17 전체 경로 시험은 T0 성능 판정과 분리. W51과 중복 기동 금지 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | D77 조건 충족 후 lead 판단. analyst 본기동 금지 유지 | analyst 위임은B12/B13과명령·ETA준비까지 |
