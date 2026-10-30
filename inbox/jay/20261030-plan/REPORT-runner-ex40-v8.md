@@ -1,6 +1,6 @@
 > 분류: 운영 · 평가 실행
-> 작성: 오흥재 (runner 반영) · 2026-10-30
-> 근거: WORKLIST D73 · D74 · lead EX-40 v8 지시와 22:0x 잡음 정정 · Isaac Lab 설치 소스
+> 작성: 오흥재 (runner 반영) · 2026-10-31
+> 근거: WORKLIST D73 · D74 · analyst DR-RANGES-EX40-1030 §1.2 · Isaac Lab 설치 소스
 > 요지: EX-40 v8 DR 범위와 runtime 연결을 기록하고 Kit 미검증 상태 및 기동 관문을 보존한다
 > 상태: 분석 범위 반영 · CPU 시험 통과 · Kit/GPU 미실행 · 본 학습 기동 차단
 
@@ -65,6 +65,8 @@ D76 지시에 따라 `ex40.yaml`의 수평 속도 축 `x`, `y` 범위를 각각 
 
 ## 10/31 analyst 범위 인계와 smoke 관문
 
+작업 기준 고정 HEAD는 `3010ba45`였고, 구현 변경은 `41c73dd2`에 기록했다. 이번 변경 파일은 `foothold_s2/curriculum/ex40.yaml`, `foothold_s2/curriculum/ex40_dr.py`, `foothold_s2/scripts/train_sol23f_common.py`, `foothold_s2/tests/test_ex40_dr_v8_cpu.py`, 이 보고서다.
+
 Analyst `DR-RANGES-EX40-1030.md` §1.2에 따라 `ex40.yaml`의 세 범위를 채웠다. base COM은 x/y/z 각각 ±0.05 m, stiffness와 damping은 각각 [0.9, 1.1], motor strength는 [0.9, 1.1]이다. 관측 잡음은 고정 1×, D76 밀기는 world xy 각각 ±1.0 m/s와 10~15 s 간격이며 z 및 회전축은 0이다. D75의 null 표기는 반영하지 않았다.
 
 DR 일정 경계는 기존대로 update 1500까지 배율 0, 1501~6000에서 0~0.5, 6001~7500에서 1.0, 7501~8000에서 1.0이다. 재개 계약의 CPU 시험은 저장된 DR 설정 해시와 직전 update를 검사하고 다음 update에서 schedule 배율을 복원한다. 이는 schedule 연속성 검사이며 실제 Kit에서 물리 표본이 bitwise 동일하게 재개되는 증거는 아니다.
@@ -75,4 +77,8 @@ smoke 경로만 `require_smoke_ready`를 사용한다. 이 함수는 완전한 �
 python foothold_s2/scripts/train_sol23f_common.py --task FootholdS2-Go2-S2-SB-v0 --variant SB --command_mode basic_gait --clock_scatter off --p_map_off 0.1 --seed 42 --num_envs 3072 --max_iterations 18 --curriculum foothold_s2/curriculum/ex40.yaml --curriculum-arm <A|B> --curriculum-kit-smoke --basic-stage smoke --basic-new-share 0.30 --basic-log-root <absolute-smoke-log-dir> --curriculum-score-dir <absolute-score-dir> --end-by <ISO8601-with-timezone> --max-wall-s 86400 --device <approved-device>
 ```
 
-2026-10-31 후속 CPU 검증: `py_compile` 대상 파일 통과, 통합 pytest 73 passed. 세 범위의 실제 설정값, D76 경계, 고정 잡음, smoke-only 통과 및 main launch 거부, smoke 18 update 초과 거부, RuntimeReadback의 config SHA/next-update 재개 검사를 확인했다. 실제 설치 Isaac Lab의 event 함수 및 `SceneEntityCfg` 소스는 기존 CPU 시험에서 호출/API 대조를 유지했다. Kit/GPU 실측과 runtime adapter 검증은 미실행이다.
+2026-10-31 후속 CPU 검증: `py_compile` 대상 파일 통과, 아래 통합 pytest 73 passed. 세 범위의 실제 설정값, D76 경계, 고정 잡음, smoke-only 통과 및 main launch 거부, smoke 18 update 초과 거부, RuntimeReadback의 config SHA/next-update 재개 검사를 확인했다. 실제 설치 Isaac Lab의 event 함수 및 `SceneEntityCfg` 소스는 기존 CPU 시험에서 호출/API 대조를 유지했다. Kit/GPU 실측과 runtime adapter 검증은 미실행이다.
+
+```text
+pytest -q foothold_s2/tests/test_ex40_dr_v8_cpu.py foothold_s2/tests/test_ex40_v7_continue_cpu.py foothold_s2/tests/test_ex40_scorer_cpu.py foothold_s2/tests/test_ex40_stage_publish_cpu.py foothold_s2/tests/test_axis_v2_cells.py foothold_s2/tests/test_axis_v2_run_cpu.py foothold_s2/tests/test_ex40_kit_argv_cpu.py foothold_s2/tests/test_w55_continuous_cpu.py
+```
