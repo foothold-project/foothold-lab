@@ -1,0 +1,20 @@
+﻿{
+    "at":  "2026-10-31T04:04:26.8985514+09:00",
+    "source":  "C:/mai/wt/foothold-lab/analyst-ex40-main-verified-1031",
+    "head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "LIVE":  "0",
+    "expected_finish":  "2026-11-02T23:04:26.8985514+09:00",
+    "end_by":  "2026-11-03T23:04:26.8985514+09:00",
+    "max_wall_seconds":  345600,
+    "root":  "C:/Users/AI-WS01/s2_lab/ex40_main_dry_20261031_040426",
+    "argv":  [
+                 "foothold_s2/run_ex40_b11.sh",
+                 "B",
+                 "cuda:0",
+                 "2026-11-03T23:04:26.8985514+09:00",
+                 "C:/Users/AI-WS01/s2_lab/ex40_main_dry_20261031_040426",
+                 "C:/Users/AI-WS01/s2_lab/ex40_main_dry_20261031_040426/scores",
+                 "main"
+             ],
+    "training_started":  false
+}

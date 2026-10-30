@@ -1,0 +1,240 @@
+{
+  "source_head": "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+  "score_slots": 31,
+  "first_w57": {
+    "update": 1500,
+    "stage": "B0",
+    "axis_goal": false,
+    "boundary_record": true,
+    "w57_called": true
+  },
+  "all_rows": [
+    {
+      "update": 500,
+      "stage": "B0",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 750,
+      "stage": "B0",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 1000,
+      "stage": "B0",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 1250,
+      "stage": "B0",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 1500,
+      "stage": "B0",
+      "axis_goal": false,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 1750,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 2000,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 2250,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 2500,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 2750,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": false,
+      "w57_called": false
+    },
+    {
+      "update": 3000,
+      "stage": "B1",
+      "axis_goal": false,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 3250,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 3500,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 3750,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 4000,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 4250,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 4500,
+      "stage": "B2",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 4750,
+      "stage": "B3a",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 5000,
+      "stage": "B3a",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 5250,
+      "stage": "B3b",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 5500,
+      "stage": "B3b",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 5750,
+      "stage": "B3c",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 6000,
+      "stage": "B3c",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 6250,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 6500,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 6750,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 7000,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 7250,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 7500,
+      "stage": "D",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    },
+    {
+      "update": 7750,
+      "stage": "T0",
+      "axis_goal": true,
+      "boundary_record": false,
+      "w57_called": true
+    },
+    {
+      "update": 8000,
+      "stage": "T0",
+      "axis_goal": true,
+      "boundary_record": true,
+      "w57_called": true
+    }
+  ],
+  "first_w57_hours_at_27_374444s": 11.413622345555556,
+  "stride_minutes_at_27_374444s": 114.06018333333333,
+  "recovery_code_findings": {
+    "failed_eval_committed_to_done_and_ledger": "ex40_score_watch.py:230-254",
+    "restart_same_state_skips_done_including_HOLD": "ex40_score_watch.py:175",
+    "new_out_required_else_HOLD": "ex40_score_watch.py:203-220",
+    "watch_process_owned_by_supervisor_sync": "ex40_supervisor.py:281-293,419-429",
+    "training_child_not_killed_by_pending_score": "ex40_supervisor.py:407-432",
+    "no_operator_retry_cli": "ex40_score_watch.py:459-528"
+  }
+}

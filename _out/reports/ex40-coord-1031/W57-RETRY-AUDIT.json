@@ -1,0 +1,364 @@
+{
+  "state": "W57_EXECUTION_AND_RAW_COVERAGE_PASS_SCORE_CONSUMER_HOLD",
+  "original_B13_receipt_still_failed": true,
+  "process": {
+    "started": "2026-10-31T03:52:29.823101+09:00",
+    "finished": "2026-10-31T04:04:08.508170+09:00",
+    "rc": 0,
+    "seconds": 698.685069,
+    "output": "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f",
+    "head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+    "pid": 104412
+  },
+  "axis_sha256": "e5cb7f3b7f08f551bc29396918a57668ee31a00080c896c8ede3c78188a23ac9",
+  "checkpoint_sha256": "b7232f73ffd59eb00b79e39b7bf631de22b5f9bd74f4debc26bece101b92ced8",
+  "source_head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+  "count": 30,
+  "rows": [
+    {
+      "mode": "eval_gt",
+      "case": "fwd0.5",
+      "per_env": 64,
+      "raw_sha256": "9ddc2921c535c4c7d13279a6e6171497659628031d866ff4117b5b67321c313c",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "fwd1.0",
+      "per_env": 64,
+      "raw_sha256": "9dbde552759aa7c52fced629890c78820cf9cf94555cf712f3388de5d2845287",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta000",
+      "per_env": 64,
+      "raw_sha256": "fae59804ad2ba5e6cb5f07ce6e3d62ca6a0af98cae3c18a59a7ce78100ab22e5",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014484524726867676
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta000",
+      "per_env": 64,
+      "raw_sha256": "fae59804ad2ba5e6cb5f07ce6e3d62ca6a0af98cae3c18a59a7ce78100ab22e5",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014484524726867676
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta030",
+      "per_env": 64,
+      "raw_sha256": "0ed204ffb19c9f80a54e3dfb090f0326abc2fa1a1a823bcd65bd5837f3eb4192",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta030",
+      "per_env": 64,
+      "raw_sha256": "0d71e5658cb58260e4fd79f02367a17f557b693236942e88754d4f08f32434ee",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta060",
+      "per_env": 64,
+      "raw_sha256": "7d0613c0bc9da4335cf212a303b17fb64f2bf7651ec4514be33190c12427d08a",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta060",
+      "per_env": 64,
+      "raw_sha256": "ab1fa2c9b0c5aede501d338eba4522fa8e5fab9bfc45e6dcbd2bfef255bffa34",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta090",
+      "per_env": 64,
+      "raw_sha256": "8ac51210632a99a696da178ec47bdbc11480234efb122c4e1baf71197bc37569",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta090",
+      "per_env": 64,
+      "raw_sha256": "ac0bb6185a75e286a5ed280753d7a1bb7fda3791c8140dc4a8f20fd23aaba017",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "fwd0.5",
+      "per_env": 64,
+      "raw_sha256": "17b0e04bedc0effbe6e2359c9045fe4d18eedbb329fdcdd2b4478826a6f04e5f",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "fwd1.0",
+      "per_env": 64,
+      "raw_sha256": "029ad68020fa657c421d1d5acff74ab460eb4aee1972c0536116058defdf201c",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta000",
+      "per_env": 64,
+      "raw_sha256": "5616166e88779d2a96fda42470bd6dfb51e77ebbd2413243eee63a202f2b490c",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014286935795098543
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta000",
+      "per_env": 64,
+      "raw_sha256": "5616166e88779d2a96fda42470bd6dfb51e77ebbd2413243eee63a202f2b490c",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014286935795098543
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta030",
+      "per_env": 64,
+      "raw_sha256": "fda2b556d29efbe59b33bfe07bf4126ea4ec53225805e715a470e95700dcbdc9",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta030",
+      "per_env": 64,
+      "raw_sha256": "0c8db746b480617762b955790b7cb909dd07c6e65b46fb0d185fb8248dce61e8",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta060",
+      "per_env": 64,
+      "raw_sha256": "d07bcd6167cd30fb94a68a682d97ad4be3326e8a2657bd826d9ff7784257cacb",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta060",
+      "per_env": 64,
+      "raw_sha256": "a89a98c787ffde6b2cdcd352b12593934f79abb6f170c883f9335e007783076d",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta090",
+      "per_env": 64,
+      "raw_sha256": "3b63be3dcfd2ca5941e4f857002e67aa23d48fa6b61064be202812ad04d61b2d",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta090",
+      "per_env": 64,
+      "raw_sha256": "167a7cfc29402fe7eb72cf1fb01bb67b248158f77d28baf921e43aefabb582af",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "fwd0.5",
+      "per_env": 64,
+      "raw_sha256": "23c02eb1373767ad3c53358d67af601a8222071e99985879a4d3ac8db183c5b9",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "fwd1.0",
+      "per_env": 64,
+      "raw_sha256": "188687cf105519b4f2f9a5340b3c36d110e288de9ba2f3bba05cfcd0eb103a4c",
+      "stop_complete_envs": null,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta000",
+      "per_env": 64,
+      "raw_sha256": "04596322a3e24a3b82538d8c5fd95d220acaa643b283a502879f60e7f3017bd8",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014993906021118164
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta000",
+      "per_env": 64,
+      "raw_sha256": "04596322a3e24a3b82538d8c5fd95d220acaa643b283a502879f60e7f3017bd8",
+      "stop_complete_envs": 64,
+      "stop_end_error_median_rad": 0.014993906021118164
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta030",
+      "per_env": 64,
+      "raw_sha256": "545f88a296022a6ca06cf3dee215421727b1f330d1b8281406d2d29b532c47a1",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta030",
+      "per_env": 64,
+      "raw_sha256": "2796bdbfc787c4c74f420b98fd78fa21c0ef6447189433cf1c0fe78b357945a7",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta060",
+      "per_env": 64,
+      "raw_sha256": "0e88a3b88dae8ce291d37113986b47a6a05a1fab7364a7ce5407692e24c6b3b1",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta060",
+      "per_env": 64,
+      "raw_sha256": "5a36feb8e307793fc7f504beeb11569f7a59558e93888f69cf8288064af5b3d4",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta090",
+      "per_env": 64,
+      "raw_sha256": "96d0716db52d14401618620624b09292b73eb8b865be765491fa221f0672c051",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta090",
+      "per_env": 64,
+      "raw_sha256": "4ed3f8283d7ed0d688a9bc8f04fc227dd4d53924face1196c5d13f33e0eeb108",
+      "stop_complete_envs": 0,
+      "stop_end_error_median_rad": null
+    }
+  ],
+  "null_stop_errors": [
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_left_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_gt",
+      "case": "goal_right_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_left_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "eval_pred",
+      "case": "goal_right_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta030",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta060",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_left_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "goal_right_delta090",
+      "consumer_result": "EvidenceHold: goal stop error missing or nonfinite"
+    }
+  ],
+  "prior_failure_root_cause": "not reproduced; unresolved",
+  "first_five_phases_rerun": false,
+  "hashes": {
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f\\axis_v2.json": "e5cb7f3b7f08f551bc29396918a57668ee31a00080c896c8ede3c78188a23ac9",
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f\\run.log": "0fa04de71589602e263e3ddce40fde4bd0afad53621de7073a53f56752ed9ad8",
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f\\rc.txt": "899e6e355cae48dc38e5a1b5561c56cf2c2460573e38e23babfb63c71a80d390",
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f\\git_head.txt": "55c8347d70a44e320b899b9bcca0a3c9ac710a61e5c2b75c0f06c41e2e9a7473",
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_20261031_0353_f1fff17f\\checkpoint_sha256.txt": "27353d984dbc4672194511b6056e6f9b0629911ec5838950de43903b87e719d9",
+    "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\ex40-coord-1031\\W57-RETRY-LAUNCH.json": "0d335d8eea05b7a36b6cf5163a4ab9b0f5c195b198a0d51993e3a32346613695",
+    "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\ex40-coord-1031\\W57-RETRY-stderr.txt": "be72bae69233c61ce64bf8a37f719bf12abf708414f1b4b8457e672a99d1b56b",
+    "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\ex40-coord-1031\\W57-RETRY-stdout.txt": "34f8094ee58928b8ee1a2cdf4f965a23ba48f72cf9bb460850532d1e97a98d6c",
+    "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\reports\\ex40-coord-1031\\W57-RETRY-process.json": "77c19c8ed28492ff74ac7f4675ed0428d0bbce66204d1445a8f505fc1e43c7d1"
+  }
+}
