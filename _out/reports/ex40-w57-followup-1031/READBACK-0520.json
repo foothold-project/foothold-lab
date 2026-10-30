@@ -1,0 +1,41 @@
+﻿{
+    "observed_at":  "2026-10-31T05:19:29.5144668+09:00",
+    "training_state":  "running",
+    "iter":  150,
+    "status_time":  "2026-10-31T05:18:57",
+    "iter_s":  25.588886976242065,
+    "processes":  [
+                      {
+                          "ProcessId":  141272,
+                          "Name":  "python.exe",
+                          "CreationDate":  "\/Date(1793387602510)\/"
+                      },
+                      {
+                          "ProcessId":  26240,
+                          "Name":  "python.exe",
+                          "CreationDate":  "\/Date(1793387604798)\/"
+                      },
+                      {
+                          "ProcessId":  21272,
+                          "Name":  "python.exe",
+                          "CreationDate":  "\/Date(1793390212184)\/"
+                      },
+                      {
+                          "ProcessId":  42372,
+                          "Name":  "powershell.exe",
+                          "CreationDate":  "\/Date(1793390973870)\/"
+                      }
+                  ],
+    "frozen_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "frozen_tracked_status":  [
+
+                              ],
+    "model500_exists":  false,
+    "score_watch_exists":  false,
+    "original_b13_receipt_sha256":  "9a34371ff8d9db8ef5de52400dbc61e85b0939e735902726fda47ffcc730b84c",
+    "retry_axis_sha256":  "e5cb7f3b7f08f551bc29396918a57668ee31a00080c896c8ede3c78188a23ac9",
+    "new_evaluation_head":  "5c1606412e9876b7c3105756f378b4a5a629e73c",
+    "new_evaluation_status":  [
+
+                              ]
+}

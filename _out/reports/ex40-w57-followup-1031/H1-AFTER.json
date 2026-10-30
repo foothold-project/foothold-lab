@@ -1,0 +1,200 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\scripter-ex40-w57-retry",
+  "score_py_sha256": "09041dd79bc73463c23548e188759747773ca483d97b1875b3792a84588396d4",
+  "rows": [
+    {
+      "stage": "B0",
+      "case": "zero_null",
+      "expected": "PASS",
+      "actual": "PASS",
+      "match": true,
+      "problems": []
+    },
+    {
+      "stage": "B0",
+      "case": "zero_missing_error",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 goal stop error missing"
+        }
+      ]
+    },
+    {
+      "stage": "B0",
+      "case": "positive_null",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "goal stop error missing or nonfinite"
+        }
+      ]
+    },
+    {
+      "stage": "B0",
+      "case": "missing_complete",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 goal stop completion missing"
+        }
+      ]
+    },
+    {
+      "stage": "B0",
+      "case": "zero_nan",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 zero completions has an unexpected stop error"
+        }
+      ]
+    },
+    {
+      "stage": "B0",
+      "case": "positive_nan",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "goal stop error missing or nonfinite"
+        }
+      ]
+    },
+    {
+      "stage": "B0",
+      "case": "zero_finite",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 zero completions has an unexpected stop error"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "zero_null",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "match": true,
+      "problems": [
+        {
+          "kind": "FAIL",
+          "cell": "eval_gt/goal_left_delta030",
+          "reason": "goal_stop_threshold"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "zero_missing_error",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 goal stop error missing"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "positive_null",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "goal stop error missing or nonfinite"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "missing_complete",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 goal stop completion missing"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "zero_nan",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 zero completions has an unexpected stop error"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "positive_nan",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "goal stop error missing or nonfinite"
+        }
+      ]
+    },
+    {
+      "stage": "B2",
+      "case": "zero_finite",
+      "expected": "HOLD",
+      "actual": "HOLD",
+      "match": true,
+      "problems": [
+        {
+          "kind": "HOLD",
+          "cell": "evidence",
+          "reason": "W57 zero completions has an unexpected stop error"
+        }
+      ]
+    }
+  ],
+  "passed": 14,
+  "total": 14,
+  "gpu_or_kit_started": false,
+  "live_evidence_written": false
+}

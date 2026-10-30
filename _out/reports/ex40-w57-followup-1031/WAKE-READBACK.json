@@ -1,0 +1,12 @@
+﻿{
+    "test_message":  "EX40-M500 ASCII wake test",
+    "message_time":  "2026-10-31T05:10:25.0549180+09:00",
+    "arrival_observed_in_user_turn":  true,
+    "helper_pid":  42372,
+    "helper_source_sha256":  "4fa5507220bebd7a2a853bb130339d9880a1b014ecabf517de2ede8a2d391fd6",
+    "prior_test_encoding_corrupt":  true,
+    "original_helper_exited":  "2026-10-31T05:08:41.3406323+09:00",
+    "actual_m500_evaluation_verified":  false,
+    "next_wake":  "2026-10-31T07:20:00+09:00",
+    "no_gpu_execution_authorized":  true
+}

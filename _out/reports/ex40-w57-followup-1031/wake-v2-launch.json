@@ -1,0 +1,9 @@
+﻿{
+    "pid":  42372,
+    "started":  "2026-10-31T05:09:33.8701590+09:00",
+    "script":  "C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/ex40-w57-followup-1031/wake_m500_v2.ps1",
+    "original_helper":  38132,
+    "original_exited_via_own_control_file":  true,
+    "actual_m500_reported":  false,
+    "ascii_only":  true
+}
