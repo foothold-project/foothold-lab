@@ -11,7 +11,7 @@ heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_w
 domain_randomization:
   range_source: C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md
   length_D: 1500
-  runtime_adapter_status: implementation_in_progress
+  runtime_adapter_status: verified
   observation_noise: {mode: fixed, multiplier: 1.0}
   delay_max_s: 0.015
   preserved_startup:
