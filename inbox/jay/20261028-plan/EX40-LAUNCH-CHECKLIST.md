@@ -23,9 +23,9 @@
 
 | 번호 | 일 | 담당 | 상태 | 증거 |
 |---|---|---|---|---|
-| B1 | 규칙 대조: FAILURE-LOG R · M 중 이번 기동에 걸리는 항목 목록과 대응 | verifier | 대기 | |
+| B1 | 규칙 대조: FAILURE-LOG R · M 중 이번 기동에 걸리는 항목 목록과 대응 | verifier | 끝(표 35 행, 확인은 B11 에서) | verifier-w56/_out/reports/RULES-EX40-1030.md |
 | B2 | 낡은 문서 갱신: CURRICULUM-GATES 정본(v0.7, DR 앞당김 · B3 셋 · D · T0 m7501) · FLOW · WORKLIST W 칸 · 단계 문서 · 실행카드 — 두 번 대조 | analyst(대조 · 초안) · planner(정본) · lead(WORKLIST) | 진행 | |
-| B3 | DR 범위표(출처 등급) · 밀기 논문 · 관측 잡음 근거 | analyst | 진행 | |
+| B3 | DR 범위표(출처 등급) · 밀기 논문 · 관측 잡음 근거 | analyst | 진행(중간본, 관측 잡음 1× 고정으로 정정 요청 22:0x) | analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md |
 | B4 | 축 평가 비교군 먼저: W51 이 안 잰 밀기 · 관측 잡음 상향 · 여섯 항목 동시를 EX-39B m4501 · EX-38 m3001 에(GPU1) | analyst | 진행 | |
 | B5 | 코드: 단계 표 v7(지형 L0~2 · 재개 계약) | runner | 끝 | v7 |
 | B6 | 코드: DR 일정 v8 + 실제 이벤트 연결 + readback + 확인기 | runner | 진행 | ab97794c(계약) |
