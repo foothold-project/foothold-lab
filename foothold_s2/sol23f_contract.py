@@ -38,6 +38,8 @@ def is_extended_resume(args) -> bool:
 
 def budget_iterations(args) -> int:
     """BUDGET 판(B · SB)이 쓸 총 회차: smoke 10, 이어 가기 확장 판은 준 값, 그 밖에는 1501(기존 계약 그대로)."""
+    if getattr(args, "curriculum", None):
+        return int(args.max_iterations)
     if getattr(args, "smoke_updates", None) == 10:
         return 10
     if getattr(args, "basic_ex39_arm", None) and getattr(args, "smoke_updates", None) == 2:
@@ -72,7 +74,84 @@ def command_settings(args) -> dict:
             out["command_contract"] = "basic_gait_ex39"
         out["basic_shares"] = ex39_shares() if ex39_arm else dict(zip(BASIC_SLOTS, basic_shares(share)))
         out["ex39_arm"] = ex39_arm
+        if getattr(args, "curriculum", None):
+            from foothold_s2.curriculum.continuous import Plan
+
+            plan = Plan(args.curriculum, arm=getattr(args, "curriculum_arm", None),
+                        smoke_boundaries=(1503, 1506, 1509) if getattr(args, "curriculum_kit_smoke", False) else None)
+            out["command_contract"] = "basic_gait_ex40"
+            out["basic_shares"] = plan.stages[0].shares
+            out["curriculum_sha256"] = plan.sha256
     return out
+
+
+def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True) -> float:
+    """W55 has its own long continuous budget; old EX-38/39 gates stay intact."""
+    from foothold_s2.curriculum.continuous import Plan
+    import torch
+
+    if args.variant != "SB" or args.task != TASKS["SB"] or args.agent != "rsl_rl_cfg_entry_point" or hydra_args:
+        raise ValueError("W55 requires the pinned SB task and agent without Hydra overrides")
+    if args.distributed or getattr(args, "resume", False) or getattr(args, "fast_gt_only", False):
+        raise ValueError("W55 is one ordinary-perception process, with isolated --resume_from")
+    if any(getattr(args, key, None) for key in ("basic_extend_arm", "basic_ex38", "basic_ex39_arm",
+                                                "basic_ex38_continue_parent_sha", "basic_ex39_parent_sha")):
+        raise ValueError("W55 cannot combine EX-36/38/39 launch flags")
+    if any(getattr(args, key, None) is not None for key in ("basic_track_ang_weight", "basic_track_lin_weight",
+                                                           "basic_joint_acc_weight", "basic_hip_pos_weight",
+                                                           "basic_feet_regulation_weight")) or getattr(args, "basic_lin_vel_z_schedule", False):
+        raise ValueError("W55 reward settings come only from curriculum.yaml")
+    if (args.command_mode, args.clock_scatter, args.p_map_off) != ("basic_gait", "on", 0.1):
+        raise ValueError("W55 requires basic_gait, clock scatter on and p_map_off 0.1")
+    if args.seed != 42 or args.num_envs != 3072:
+        raise ValueError("W55 seed or env count differs from its smoke/main contract")
+    if args.max_iterations != (1511 if args.curriculum_kit_smoke else 6001):
+        raise ValueError("W55 max_iterations must finish the smoke or T0 stage exactly")
+    if args.basic_stage != ("smoke" if args.curriculum_kit_smoke else "main") or args.smoke_updates is not None:
+        raise ValueError("W55 smoke and main output stages must be separate")
+    if not args.basic_log_root or not Path(args.basic_log_root).is_absolute() or not getattr(args, "curriculum_score_dir", None):
+        raise ValueError("W55 output and score directories are required")
+    if not Path(args.curriculum_score_dir).is_absolute():
+        raise ValueError("W55 score directory must be absolute")
+    if args.basic_new_share != 0.30:
+        raise ValueError("W55 B1 initial basic share must be 0.30")
+    if not args.resume_from or not Path(args.resume_from).is_file():
+        raise ValueError("W55 requires a completed SB parent checkpoint")
+    plan = Plan(args.curriculum, arm=args.curriculum_arm,
+                smoke_boundaries=(1503, 1506, 1509) if args.curriculum_kit_smoke else None)
+    if plan.arm is None:
+        raise ValueError("W55 B2 arm undecided: explicit --curriculum-arm A|B required")
+    if verify_parent:
+        parent = resume_parent(args.resume_from, "SB")
+        if parent["sha256"] == plan.parent_sha256:
+            if parent["completed_update"] != plan.parent_update:
+                raise ValueError("W55 initial parent update mismatch")
+        else:
+            state = torch.load(args.resume_from, map_location="cpu", weights_only=False)
+            saved = state.get("continuous_curriculum") or {}
+            if (saved.get("plan_sha256") != plan.sha256
+                    or saved.get("effective_sha256") != plan.effective_sha256
+                    or parent["completed_update"] < plan.parent_update):
+                raise ValueError("W55 resume is neither the pinned parent nor this curriculum")
+    if not 0 < args.max_wall_s <= 259200:
+        raise ValueError("W55 max-wall-s must be within 72 hours")
+    try:
+        end_by = datetime.fromisoformat(args.end_by)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("W55 end-by needs ISO8601 with a time zone") from exc
+    if end_by.tzinfo is None:
+        raise ValueError("W55 end-by needs an explicit time zone")
+    t = time.time() if now is None else now
+    deadline = min(t + args.max_wall_s, end_by.timestamp())
+    if not args.curriculum_kit_smoke:
+        # EX-38 observed 24..29 seconds/update. M77 requires a 24 h margin;
+        # the first 50 live updates still need a fresh measured ETA.
+        remaining = args.max_iterations - (parent["completed_update"] + 1) if verify_parent else 4500
+        if deadline - t < remaining * 29 + 86400:
+            raise ValueError("W55 end-by/max-wall-s lacks measured-upper-bound plus 24 h margin")
+    if deadline <= t:
+        raise ValueError("W55 deadline has passed")
+    return deadline
 
 
 def file_sha256(path) -> str:
@@ -137,6 +216,8 @@ def check_resume_parent(args) -> int:
 
 def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent: bool = True) -> float:
     """verify_parent=False 는 CPU 시험 전용(가짜 경로). 실제 기동(train_sol23f_common)은 기본값 True 로 부른다."""
+    if getattr(args, "curriculum", None):
+        return validate_continuous_launch(args, hydra_args, now, verify_parent)
     if args.variant not in TASKS or args.task != TASKS[args.variant]:
         raise ValueError("variant and task do not match")
     if args.agent != "rsl_rl_cfg_entry_point" or hydra_args:

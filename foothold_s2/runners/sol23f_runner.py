@@ -222,6 +222,13 @@ class Sol23FRunner(StartRunner):
     def load(self, path: str, load_optimizer: bool = True, map_location: str | None = None) -> dict:
         state = torch.load(path, weights_only=False, map_location="cpu")
         own = state.get("sol23f") or {}
+        continuous = getattr(self, "continuous_curriculum", None)
+        saved_stage = state.get("continuous_curriculum")
+        if continuous is not None and saved_stage is not None:
+            if (saved_stage.get("plan_sha256") != continuous.plan.sha256
+                    or saved_stage.get("effective_sha256") != continuous.plan.effective_sha256):
+                raise ValueError("W55 resume curriculum SHA mismatch")
+            self.pcfg["force_gt"] = bool(own.get("force_gt"))
         if own.get("variant") != self.variant:
             raise ValueError("SOL-23f variant mismatch on resume")
         if own.get("force_gt") != bool(self.pcfg.get("force_gt", False)) and self.pcfg.get("resume_adasmpl") is None:
@@ -244,6 +251,8 @@ class Sol23FRunner(StartRunner):
             path = os.path.join(self.log_dir, name)
             self.save(path)
             self._manifest_checkpoint(it, name, self.env.num_envs)
+            if getattr(self, "continuous_curriculum", None) is not None:
+                self.continuous_curriculum.on_checkpoint(it, path)
             self.save_latest()
             raise DeadlineReached(json.dumps({
                 "reason": "deadline" if due else "stop_file", "iter": it,

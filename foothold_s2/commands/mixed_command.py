@@ -70,7 +70,7 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.exposure = mc.ExposureLog()
-        self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None else
+        self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None or self.params.curriculum_mode else
                            mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS)
         self.slot_counts = torch.zeros(len(self.slot_names), dtype=torch.long, device=dev)
         # Read-only Kit smoke evidence for the latest sampled slot of each env.
@@ -155,6 +155,9 @@ class MixedVelocityCommand(CommandTerm):
     def reset(self, env_ids=None):
         """에피소드 처음: 기록과 깃발을 새 출발점으로 비운 뒤 재추출 (Isaac 은 이 시점에 spawn 이 이미 정해져 있다)."""
         ids = torch.arange(self.num_envs, device=self.device) if env_ids is None             else torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
+        runtime = getattr(self, "stage_runtime", None)
+        if runtime is not None:
+            runtime.on_reset(ids)
         self._reset_episode_state(ids)
 
         extras = super().reset(env_ids)
@@ -201,24 +204,31 @@ class MixedVelocityCommand(CommandTerm):
         free = env_ids[~self.is_flag_env[env_ids]]
 
         if len(free) > 0:
-            out = mc.resample_free_modes(self.gen, len(free), self.params, self.iteration,
-                                         self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
-                                         yaw=self._yaw(free))
-            self.vel_command_b[free] = out["cmd"].to(self.device)
-            self.stand[free] = out["stand"].to(self.device)
-            self.spin[free] = out["spin"].to(self.device)
-            self.heading[free] = out["heading"].to(self.device)
-            self.psi_star[free] = out["psi_star"].to(self.device)
-            self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
-            if "slot" in out:
-                self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
-                self.slot_current[free] = out["slot"].to(self.device)
-
-            if self.cfg.fixed_cmd is not None:
-                self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
-                self.stand[free] = False
-                self.spin[free] = False
-                self.heading[free] = False
+            runtime = getattr(self, "stage_runtime", None)
+            groups = ([(free[self.stage_runtime.env_stage[free] == i], i)
+                       for i in range(len(runtime.plan.stages))] if runtime is not None else [(free, None)])
+            for group, index in groups:
+                if len(group) == 0:
+                    continue
+                out = (mc.resample_stage(self.gen, len(group), runtime.plan.stages[index], self._yaw(group))
+                       if runtime is not None else
+                       mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
+                                              self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
+                                              yaw=self._yaw(group)))
+                self.vel_command_b[group] = out["cmd"].to(self.device)
+                self.stand[group] = out["stand"].to(self.device)
+                self.spin[group] = out["spin"].to(self.device)
+                self.heading[group] = out["heading"].to(self.device)
+                self.psi_star[group] = out["psi_star"].to(self.device)
+                self.new_task.on_resample(group, out["cmd"].to(self.device), self.params)
+                if "slot" in out:
+                    self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
+                    self.slot_current[group] = out["slot"].to(self.device)
+                if self.cfg.fixed_cmd is not None:
+                    self.vel_command_b[group] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
+                    self.stand[group] = False
+                    self.spin[group] = False
+                    self.heading[group] = False
 
         flag = env_ids[self.is_flag_env[env_ids]]
 

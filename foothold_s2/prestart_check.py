@@ -24,6 +24,9 @@ MODULES = (
     "foothold_s2.commands.basic_levels",
     "foothold_s2.rewards.basic_gait_bundle",
     "foothold_s2.sol23f_contract",
+    "foothold_s2.curriculum.continuous",
+    "foothold_s2.ex40_launch",
+    "foothold_s2.ex40_kit_smoke",
 )
 
 
@@ -54,7 +57,7 @@ def inspect_args(args: list[str]) -> dict:
     if unknown[:5] != expected or len(unknown) not in (5, 6) or (
             len(unknown) == 6 and not unknown[5].startswith("--kit_args=")):
         raise ValueError(f"unexpected AppLauncher arguments: {unknown}")
-    if parsed.basic_ex39_arm:
+    if parsed.basic_ex39_arm or parsed.curriculum:
         from foothold_s2.sol23f_contract import validate_launch
 
         parsed.agent = "rsl_rl_cfg_entry_point"

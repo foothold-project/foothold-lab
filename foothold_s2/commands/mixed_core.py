@@ -69,6 +69,7 @@ class CommandParams:
     basic_mode: bool = False
     basic_new_share: float = 0.30  # 정지 · 후진 · 옆걸음 합. 대안 0.15 는 인자로 받는다.
     ex39_arm: str | None = None
+    curriculum_mode: bool = False  # W55: stage profile is attached after gym.make
 
 
 def make_generator(seed, device="cpu"):
@@ -259,6 +260,58 @@ def resample_ex39(gen, n, arm, yaw):
     target_spin = _u(gen, (n,), -math.pi, math.pi)
     if arm == "B":
         # 15 percentage points of forward, 3 points from each spin direction.
+        heading = (forward & (forward_heading_draw < 0.5)) | (spin & (spin_heading_draw < 0.3))
+        psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
+        wz = torch.where(heading, zeros, wz)
+    return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
+            "heading": heading, "psi_star": psi_star, "slot": slot}
+
+
+def resample_stage(gen, n, stage, yaw):
+    """W55: sample one immutable episode-stage profile from curriculum.yaml.
+
+    The generator is the existing command generator. No new RNG stream or
+    reset is introduced at a stage boundary.
+    """
+    if yaw is None or yaw.shape != (n,):
+        raise ValueError("W55 stage sampler requires current yaw for every env")
+    shares = torch.tensor([stage.shares.get(name, 0.0) for name in EX39_SLOTS],
+                          dtype=torch.float64, device=gen.device)
+    if abs(float(shares.sum()) - 1.0) > 1e-9:
+        raise ValueError("W55 stage shares do not sum to one")
+    slot = torch.clamp(torch.searchsorted(shares.cumsum(0), _u(gen, (n,)).double(), right=True),
+                       max=len(EX39_SLOTS) - 1)
+    r = stage.ranges
+    zeros = torch.zeros(n, device=gen.device)
+    forward, walk, spin = slot == 0, (slot == 1) | (slot == 2), (slot == 3) | (slot == 4)
+    stand, reverse, side, diagonal = slot == 5, slot == 6, (slot == 7) | (slot == 8), slot >= 9
+    fwd_vx = _u(gen, (n,), *r["forward_vx"])
+    if stage.low_forward_fraction:
+        low = _u(gen, (n,)) < stage.low_forward_fraction
+        fwd_vx = torch.where(low, _u(gen, (n,), r["forward_vx"][0], 0.3),
+                             _u(gen, (n,), 0.3, r["forward_vx"][1]))
+    walk_vx = _u(gen, (n,), *r["walk_vx"])
+    back_vx = _u(gen, (n,), *r["reverse_vx"])
+    diag_vx = _u(gen, (n,), *(r.get("diag_vx_abs") or (0.3, 0.6)))
+    side_vy = _u(gen, (n,), *r["side_vy_abs"])
+    diag_vy = _u(gen, (n,), *(r.get("diag_vy_abs") or (0.2, 0.5)))
+    walk_wz = _u(gen, (n,), *r["walk_wz_abs"])
+    spin_wz = _u(gen, (n,), *r["spin_wz_abs"])
+    vx = torch.where(forward, fwd_vx, torch.where(walk, walk_vx,
+                     torch.where(reverse, back_vx, torch.where(diagonal,
+                     torch.where(slot < 11, diag_vx, -diag_vx), zeros))))
+    vy = torch.where(side, torch.where(slot == 7, side_vy, -side_vy),
+                     torch.where(diagonal, torch.where((slot == 9) | (slot == 11), diag_vy, -diag_vy), zeros))
+    wz = torch.where(walk, torch.where(slot == 1, walk_wz, -walk_wz),
+                     torch.where(spin, torch.where(slot == 3, spin_wz, -spin_wz), zeros))
+    heading = torch.zeros(n, dtype=torch.bool, device=gen.device)
+    psi_star = zeros.clone()
+    # The three draws are consumed in both arms to retain their shared command
+    # stream when their reset schedules happen to match.
+    forward_heading_draw = _u(gen, (n,))
+    spin_heading_draw = _u(gen, (n,))
+    target_spin = _u(gen, (n,), -math.pi, math.pi)
+    if stage.heading_arm == "B":
         heading = (forward & (forward_heading_draw < 0.5)) | (spin & (spin_heading_draw < 0.3))
         psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
         wz = torch.where(heading, zeros, wz)

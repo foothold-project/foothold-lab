@@ -1,0 +1,75 @@
+format: foothold-ex40-curriculum/1
+parent_sha256: 4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d
+parent_update: 1500
+promotion: fixed
+shadow_gate: true
+stages:
+  - id: B1
+    start: {fixed_update: 1501}
+    adds:
+      rewards:
+        track_ang_vel: 1.0
+        track_lin_vel: 2.0
+        joint_acc: -0.0000001
+        hip_pos_penalty: -0.05
+        thigh_calf_pos_l1: -0.01
+        four_foot_contact_at_stop: 0.1
+      command_slots: [forward, walk_left, walk_right, spin_left, spin_right, stand, reverse, side_left, side_right]
+    shares: {forward: 0.40, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.10, side_left: 0.05, side_right: 0.05}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.5, 1.2]
+      reverse_vx: [-0.8, -0.2]
+      side_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+  - id: B2
+    start: {fixed_update: 3001}
+    adds:
+      command_slots: [diag_fwd_left, diag_fwd_right, diag_back_left, diag_back_right]
+    shares: {forward: 0.30, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.5, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null  # EX-39 결과 뒤 lead 결정. 본 실행에서 별도 명시가 필요하다.
+    force_gt: true
+  - id: B3
+    start: {fixed_update: 4501}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+    low_forward_fraction: 0.20  # 전진 25 % 안의 20 %, 전체 5 %
+  - id: T0
+    start: {fixed_update: 5501}
+    adds: {map_source: reconstruction}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: false
+    low_forward_fraction: 0.20

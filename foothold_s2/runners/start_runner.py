@@ -307,8 +307,8 @@ class StartRunner(OnPolicyRunner):
         src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
         learn_iters = 0
         act_stats = None
-        rs_rec = (RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39"),
-                              ex39_mode=self.pcfg["contract"] == "basic_gait_ex39")
+        rs_rec = (RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39", "basic_gait_ex40"),
+                              ex39_mode=self.pcfg["contract"] in ("basic_gait_ex39", "basic_gait_ex40"))
                   if self.pcfg["log_reward_split"] else None)
         if rs_rec is not None:
             rs_rec.attach(getattr(self.env, "unwrapped", self.env))
@@ -324,6 +324,9 @@ class StartRunner(OnPolicyRunner):
         tot_iter = start_iter + num_learning_iterations
         trace = getattr(self, "training_trace", None)
         for it in range(start_iter, tot_iter):
+            continuous = getattr(self, "continuous_curriculum", None)
+            if continuous is not None:
+                continuous.on_update_start(it)
             if getattr(self, "basic_lin_vel_z_schedule", False):
                 from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
 
@@ -339,7 +342,8 @@ class StartRunner(OnPolicyRunner):
                 self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
-            contract_fn = contract_bad_fn(self.pcfg["contract"])                  # Unknown names fail before rollout.
+            contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
+                           if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
             contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
@@ -358,7 +362,14 @@ class StartRunner(OnPolicyRunner):
                     actions = self.alg.act(ppo_obs)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
-                        if self.pcfg["contract"] == "basic_gait_ex39":
+                        if continuous is not None:
+                            from foothold_s2.curriculum.continuous import command_bad
+
+                            term = self._command_term()
+                            bad_now = command_bad(consumed, term.slot_current.to(self.device),
+                                                  term.heading.to(self.device),
+                                                  continuous.env_stage.to(self.device), continuous.plan)
+                        elif self.pcfg["contract"] == "basic_gait_ex39":
                             heading = self._command_term().heading.detach().clone().to(self.device)
                             bad_now = command_sample_bad(self.pcfg["contract"], consumed, heading)
                         else:
@@ -470,8 +481,11 @@ class StartRunner(OnPolicyRunner):
             if self.log_dir is not None and not self.disable_logs:
                 self.log(locals())
                 if it % self.save_interval == 0:
-                    self.save(os.path.join(self.log_dir, f"model_{it}.pt"))
+                    checkpoint_path = os.path.join(self.log_dir, f"model_{it}.pt")
+                    self.save(checkpoint_path)
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
+                    if continuous is not None:
+                        continuous.on_checkpoint(it, checkpoint_path)
                 if it % self.pcfg["latest_interval"] == 0:
                     self._check_code(it)
                     self.save_latest()
@@ -481,8 +495,11 @@ class StartRunner(OnPolicyRunner):
             if it == start_iter and not self.disable_logs and self.log_dir is not None:
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
-            self.save(os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt"))
+            checkpoint_path = os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt")
+            self.save(checkpoint_path)
             self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
+            if getattr(self, "continuous_curriculum", None) is not None:
+                self.continuous_curriculum.on_checkpoint(self.current_learning_iteration, checkpoint_path)
             self.save_latest()
         self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
 
@@ -834,6 +851,8 @@ class StartRunner(OnPolicyRunner):
             "rng": self.rng_state(),
             "map_switch": self.map_switch_state(),
             "infos": infos,
+            "continuous_curriculum": (self.continuous_curriculum.state_dict()
+                                      if getattr(self, "continuous_curriculum", None) is not None else None),
         }
 
     def map_switch_state(self) -> dict:
@@ -1013,6 +1032,15 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        continuous = getattr(self, "continuous_curriculum", None)
+        if continuous is not None:
+            saved_stage = sd.get("continuous_curriculum")
+            if saved_stage is None:
+                if int(sd["iter"]) != continuous.plan.parent_update:
+                    raise ValueError("W55 stage state missing from a non-parent checkpoint")
+            else:
+                continuous.load_state_dict(saved_stage)
+            continuous.on_resume_checkpoint(path, int(sd["iter"]))
         self._resumed = True
         return sd["infos"]
 
