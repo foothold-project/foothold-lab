@@ -78,7 +78,7 @@ def command_settings(args) -> dict:
             from foothold_s2.curriculum.continuous import Plan
 
             plan = Plan(args.curriculum, arm=getattr(args, "curriculum_arm", None),
-                        smoke_boundaries=(1503, 1506, 1509) if getattr(args, "curriculum_kit_smoke", False) else None)
+                        smoke_boundaries=(2, 5, 8, 11) if getattr(args, "curriculum_kit_smoke", False) else None)
             out["command_contract"] = "basic_gait_ex40"
             out["basic_shares"] = plan.stages[0].shares
             out["curriculum_sha256"] = plan.sha256
@@ -88,12 +88,11 @@ def command_settings(args) -> dict:
 def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True) -> float:
     """W55 has its own long continuous budget; old EX-38/39 gates stay intact."""
     from foothold_s2.curriculum.continuous import Plan
-    import torch
 
     if args.variant != "SB" or args.task != TASKS["SB"] or args.agent != "rsl_rl_cfg_entry_point" or hydra_args:
         raise ValueError("W55 requires the pinned SB task and agent without Hydra overrides")
     if args.distributed or getattr(args, "resume", False) or getattr(args, "fast_gt_only", False):
-        raise ValueError("W55 is one ordinary-perception process, with isolated --resume_from")
+        raise ValueError("D68 EX-40 is one ordinary-perception scratch process")
     if any(getattr(args, key, None) for key in ("basic_extend_arm", "basic_ex38", "basic_ex39_arm",
                                                 "basic_ex38_continue_parent_sha", "basic_ex39_parent_sha")):
         raise ValueError("W55 cannot combine EX-36/38/39 launch flags")
@@ -101,11 +100,11 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
                                                            "basic_joint_acc_weight", "basic_hip_pos_weight",
                                                            "basic_feet_regulation_weight")) or getattr(args, "basic_lin_vel_z_schedule", False):
         raise ValueError("W55 reward settings come only from curriculum.yaml")
-    if (args.command_mode, args.clock_scatter, args.p_map_off) != ("basic_gait", "on", 0.1):
-        raise ValueError("W55 requires basic_gait, clock scatter on and p_map_off 0.1")
+    if (args.command_mode, args.clock_scatter, args.p_map_off) != ("basic_gait", "off", 0.1):
+        raise ValueError("D68 B0 requires basic_gait stage sampler, S-B10 clock and p_map_off 0.1")
     if args.seed != 42 or args.num_envs != 3072:
         raise ValueError("W55 seed or env count differs from its smoke/main contract")
-    if args.max_iterations != (1511 if args.curriculum_kit_smoke else 6001):
+    if args.max_iterations != (13 if args.curriculum_kit_smoke else 6001):
         raise ValueError("W55 max_iterations must finish the smoke or T0 stage exactly")
     if args.basic_stage != ("smoke" if args.curriculum_kit_smoke else "main") or args.smoke_updates is not None:
         raise ValueError("W55 smoke and main output stages must be separate")
@@ -115,26 +114,20 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
         raise ValueError("W55 score directory must be absolute")
     if args.basic_new_share != 0.30:
         raise ValueError("W55 B1 initial basic share must be 0.30")
-    if not args.resume_from or not Path(args.resume_from).is_file():
-        raise ValueError("W55 requires a completed SB parent checkpoint")
+    if args.resume_from:
+        raise ValueError("D68 EX-40 starts at m0 without --resume_from")
     plan = Plan(args.curriculum, arm=args.curriculum_arm,
-                smoke_boundaries=(1503, 1506, 1509) if args.curriculum_kit_smoke else None)
+                smoke_boundaries=(2, 5, 8, 11) if args.curriculum_kit_smoke else None)
     if plan.arm is None:
         raise ValueError("W55 B2 arm undecided: explicit --curriculum-arm A|B required")
     if verify_parent:
-        parent = resume_parent(args.resume_from, "SB")
-        if parent["sha256"] == plan.parent_sha256:
-            if parent["completed_update"] != plan.parent_update:
-                raise ValueError("W55 initial parent update mismatch")
-        else:
-            state = torch.load(args.resume_from, map_location="cpu", weights_only=False)
-            saved = state.get("continuous_curriculum") or {}
-            if (saved.get("plan_sha256") != plan.sha256
-                    or saved.get("effective_sha256") != plan.effective_sha256
-                    or parent["completed_update"] < plan.parent_update):
-                raise ValueError("W55 resume is neither the pinned parent nor this curriculum")
-    if not 0 < args.max_wall_s <= 259200:
-        raise ValueError("W55 max-wall-s must be within 72 hours")
+        from foothold_s2.ex40_launch import BASELINE
+
+        if (file_sha256(BASELINE / "env.yaml") != plan.baseline_env_yaml_sha256 or
+                file_sha256(BASELINE / "agent.yaml") != plan.baseline_agent_yaml_sha256):
+            raise ValueError("D68 S-B10 saved configuration SHA mismatch")
+    if not 0 < args.max_wall_s <= 345600:
+        raise ValueError("D68 max-wall-s must be within 96 hours")
     try:
         end_by = datetime.fromisoformat(args.end_by)
     except (TypeError, ValueError) as exc:
@@ -146,7 +139,7 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
     if not args.curriculum_kit_smoke:
         # EX-38 observed 24..29 seconds/update. M77 requires a 24 h margin;
         # the first 50 live updates still need a fresh measured ETA.
-        remaining = args.max_iterations - (parent["completed_update"] + 1) if verify_parent else 4500
+        remaining = args.max_iterations
         if deadline - t < remaining * 29 + 86400:
             raise ValueError("W55 end-by/max-wall-s lacks measured-upper-bound plus 24 h margin")
     if deadline <= t:

@@ -22,7 +22,7 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
           "side_vy_abs", "diag_vx_abs", "diag_vy_abs")
 FIRST_REWARDS = {"track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty",
-                 "thigh_calf_pos_l1", "four_foot_contact_at_stop"}
+                 "thigh_calf_pos_l1"}
 
 
 def sha256(path: str | Path) -> str:
@@ -54,10 +54,15 @@ class Plan:
             raise ValueError("W55 promotion must be fixed|gate and shadow_gate explicit")
         self.promotion = doc["promotion"]
         self.shadow_gate = doc["shadow_gate"]
-        self.parent_sha256 = doc.get("parent_sha256")
-        self.parent_update = doc.get("parent_update")
-        if not isinstance(self.parent_sha256, str) or len(self.parent_sha256) != 64 or self.parent_update != 1500:
-            raise ValueError("W55 parent pin or completed update changed")
+        if doc.get("start") != "scratch" or "parent_sha256" in doc or "parent_update" in doc:
+            raise ValueError("D68 EX-40 must start from scratch")
+        self.parent_sha256 = None
+        self.parent_update = None
+        self.baseline_env_yaml_sha256 = doc.get("baseline_env_yaml_sha256")
+        self.baseline_agent_yaml_sha256 = doc.get("baseline_agent_yaml_sha256")
+        if any(not isinstance(x, str) or len(x) != 64 for x in
+               (self.baseline_env_yaml_sha256, self.baseline_agent_yaml_sha256)):
+            raise ValueError("D68 S-B10 baseline YAML SHA pins missing")
         if arm not in (None, "A", "B"):
             raise ValueError("W55 heading arm must be A or B")
         self.arm = arm
@@ -65,16 +70,16 @@ class Plan:
             {"table_sha256": self.sha256, "arm": arm, "smoke_boundaries": smoke_boundaries},
             sort_keys=True).encode("utf-8")).hexdigest()
         raw = doc.get("stages")
-        if not isinstance(raw, list) or [x.get("id") for x in raw] != ["B1", "B2", "B3", "T0"]:
-            raise ValueError("W55 EX-40 needs B1, B2, B3, T0 in order")
-        if smoke_boundaries is not None and (len(smoke_boundaries) != 3 or
+        if not isinstance(raw, list) or [x.get("id") for x in raw] != ["B0", "B1", "B2", "B3", "T0"]:
+            raise ValueError("D68 EX-40 needs B0, B1, B2, B3, T0 in order")
+        if smoke_boundaries is not None and (len(smoke_boundaries) != 4 or
                                              list(smoke_boundaries) != sorted(set(smoke_boundaries))):
-            raise ValueError("W55 smoke needs three increasing boundaries")
+            raise ValueError("D68 smoke needs four increasing boundaries")
         self.stages: list[Stage] = []
         last_rewards: dict[str, float] = {}
         last_slots: set[str] = set()
         last_ranges: dict[str, tuple[float, float]] = {}
-        last_update = self.parent_update
+        last_update = -1
         for index, row in enumerate(raw):
             if not isinstance(row, dict) or not isinstance(row.get("start"), dict):
                 raise ValueError("W55 stage/start must be mappings")
@@ -92,9 +97,11 @@ class Plan:
             new_rewards = adds.get("rewards") or {}
             if not isinstance(new_rewards, dict) or set(new_rewards) & set(last_rewards):
                 raise ValueError("W55 reward terms may only be added once")
-            if index == 0 and set(new_rewards) != FIRST_REWARDS:
-                raise ValueError("W55 B1 reward additions incomplete")
-            if index > 0 and new_rewards:
+            if index == 0 and new_rewards:
+                raise ValueError("D68 B0 must retain S-B10 reward weights")
+            if index == 1 and set(new_rewards) != FIRST_REWARDS:
+                raise ValueError("D68 B1 reward additions incomplete; stand reward undecided")
+            if index > 1 and new_rewards:
                 raise ValueError("W55 later reward terms need an env-time registration adapter")
             rewards = {**last_rewards, **{k: float(v) for k, v in new_rewards.items()}}
             new_slots = adds.get("command_slots") or []
@@ -113,25 +120,27 @@ class Plan:
                                                    for v in ranges.values()):
                 raise ValueError("W55 command ranges malformed")
             if index == 0 and set(ranges) != set(RANGES[:6]):
-                raise ValueError("W55 B1 ranges incomplete")
+                raise ValueError("D68 B0 ranges incomplete")
             if index and set(ranges) != (set(RANGES) if "diag_fwd_left" in slots else set(RANGES[:6])):
                 raise ValueError("W55 active ranges incomplete")
             for key, old in last_ranges.items():
                 new = ranges[key]
-                if new[0] > old[0] + 1e-9 or new[1] < old[1] - 1e-9:
+                # B0 has the S-B10 spin range, including speeds below B1's
+                # basic-gait minimum. B1 deliberately narrows that one range.
+                if index != 1 and (new[0] > old[0] + 1e-9 or new[1] < old[1] - 1e-9):
                     raise ValueError(f"W55 range narrows: {key}")
             force_gt = row.get("force_gt")
-            if not isinstance(force_gt, bool) or (index < 3 and not force_gt) or (index == 3 and force_gt):
+            if not isinstance(force_gt, bool) or (index < 4 and not force_gt) or (index == 4 and force_gt):
                 raise ValueError("W55 T0 alone switches GT to reconstruction")
-            if index == 3 and adds.get("map_source") != "reconstruction":
+            if index == 4 and adds.get("map_source") != "reconstruction":
                 raise ValueError("W55 T0 map addition missing")
             if row.get("heading_arm") is not None:
                 raise ValueError("W55 arm must remain undecided in the shared stage table")
             low = float(row.get("low_forward_fraction", 0.0))
-            if not 0.0 <= low <= 1.0 or (index < 2 and low) or (index >= 2 and low != 0.20):
+            if not 0.0 <= low <= 1.0 or (index < 3 and low) or (index >= 3 and low != 0.20):
                 raise ValueError("W55 low-speed forward fraction differs from D59")
             self.stages.append(Stage(row["id"], update, shares, ranges, rewards, force_gt,
-                                     low, arm if index > 0 else None, adds))
+                                     low, arm if index > 1 else None, adds))
             last_rewards, last_slots, last_ranges = rewards, slots, ranges
 
 
@@ -158,6 +167,7 @@ class Runtime:
         command_term.stage_runtime = self
         runner.continuous_curriculum = self
         self._sync_map()
+        self._sync_rewards()
 
     def _write(self, row: dict):
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -165,14 +175,14 @@ class Runtime:
             stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
             stream.flush()
 
-    def start(self, parent_sha256: str):
-        if parent_sha256 != self.plan.parent_sha256:
-            raise ValueError("W55 parent SHA differs from curriculum")
+    def start(self, parent_sha256: str | None = None):
+        if parent_sha256 is not None:
+            raise ValueError("D68 scratch run must not have a parent checkpoint")
         if not self._started:
             self._write({"event": "stage_enter", "iteration": self.plan.stages[self.active].fixed_update,
                          "from": None, "to": self.plan.stages[self.active].id,
                          "changed": self.plan.stages[self.active].adds,
-                         "evidence_sha256": parent_sha256, "curriculum_sha256": self.plan.sha256,
+                         "evidence_sha256": None, "curriculum_sha256": self.plan.sha256,
                          "effective_schedule_sha256": self.plan.effective_sha256,
                          "applied_on_reset": True})
             self._started = True
@@ -243,12 +253,13 @@ class Runtime:
     def _promote(self, iteration: int, evidence: dict):
         if self.active + 1 >= len(self.plan.stages):
             return
-        if self.active == 0 and self.plan.arm is None:
+        if self.active == 1 and self.plan.arm is None:
             raise RuntimeError("W55 B2 arm unresolved; an explicit A/B decision is required")
         before = self.plan.stages[self.active]
         self.active += 1
         after = self.plan.stages[self.active]
         self._sync_map()
+        self._sync_rewards()
         changed = {"rewards_added": after.adds.get("rewards", {}),
                    "slots_added": after.adds.get("command_slots", []),
                    "shares": {k: [before.shares.get(k), v] for k, v in after.shares.items()
@@ -270,6 +281,20 @@ class Runtime:
             self.runner.adasmpl.force_gt = value
             self.runner.pcfg["force_gt"] = value
             self.runner.perception.cfg.force_gt = value
+
+    def _sync_rewards(self):
+        if self.runner is None:
+            return
+        manager = self.runner.env.unwrapped.reward_manager
+        mapping = {"hip_pos_penalty": "basic_hip_pos_penalty_l1",
+                   "thigh_calf_pos_l1": "ex39_thigh_calf_pos_l1"}
+        for name, value in self.plan.stages[self.active].rewards.items():
+            term_name = mapping.get(name, name)
+            cfg = manager.get_term_cfg(term_name)
+            cfg.weight = value
+            manager.set_term_cfg(term_name, cfg)
+        self.runner.basic_lin_vel_z_schedule = self.active >= 1
+        self.runner.basic_lin_vel_z_start_iteration = 1501
 
     def on_checkpoint(self, iteration: int, checkpoint: str | Path):
         path = Path(checkpoint).resolve(strict=True)
@@ -324,6 +349,7 @@ class Runtime:
         self.pending_gate = state.get("pending_gate")
         self.seen_scores = set(state.get("seen_scores") or [])
         self._sync_map()
+        self._sync_rewards()
 
     def on_resume_checkpoint(self, checkpoint: str | Path, iteration: int):
         """Pin the checkpoint that actually starts this process, not its predecessor."""

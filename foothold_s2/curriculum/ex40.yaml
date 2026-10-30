@@ -1,9 +1,26 @@
 format: foothold-ex40-curriculum/1
-parent_sha256: 4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d
-parent_update: 1500
+start: scratch
+baseline_env_yaml_sha256: 4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b5d12639901
+baseline_agent_yaml_sha256: 213b82acc0a8d937de3f85171619e7d20c55612b37033bdeb05c6adff3c06308
 promotion: fixed
 shadow_gate: true
 stages:
+  - id: B0
+    start: {fixed_update: 0}
+    adds:
+      command_slots: [forward, spin_left, spin_right, stand]
+    # S-B10 START: 80% forward, 20% spin. Existing stand share 10% is
+    # inserted from the W55 B1 design, leaving 72% forward and 18% spin.
+    shares: {forward: 0.72, spin_left: 0.09, spin_right: 0.09, stand: 0.10}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.0, 1.2]
+      reverse_vx: [-0.8, -0.2]
+      side_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
   - id: B1
     start: {fixed_update: 1501}
     adds:
@@ -13,8 +30,7 @@ stages:
         joint_acc: -0.0000001
         hip_pos_penalty: -0.05
         thigh_calf_pos_l1: -0.01
-        four_foot_contact_at_stop: 0.1
-      command_slots: [forward, walk_left, walk_right, spin_left, spin_right, stand, reverse, side_left, side_right]
+      command_slots: [walk_left, walk_right, reverse, side_left, side_right]
     shares: {forward: 0.40, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.10, side_left: 0.05, side_right: 0.05}
     ranges:
       forward_vx: [0.3, 1.5]

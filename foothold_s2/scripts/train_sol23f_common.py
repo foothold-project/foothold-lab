@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -56,7 +57,7 @@ parser.add_argument("--curriculum-arm", choices=("A", "B"), default=None,
 parser.add_argument("--curriculum-score-dir", type=str, default=None,
                     help="external checkpoint verdict files; EX-40 reads them in shadow mode")
 parser.add_argument("--curriculum-kit-smoke", action="store_true",
-                    help="3072 env parent-state, ten updates; B2/B3/T0 boundaries at m1503/m1506/m1509")
+                    help="D68 scratch smoke, thirteen updates; B1/B2/B3/T0 at m2/m5/m8/m11")
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
 parser.add_argument("--basic-feet-regulation-weight", type=float)
@@ -120,7 +121,7 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.curriculum.continuous import Plan
 
         curriculum_plan = Plan(args_cli.curriculum, arm=args_cli.curriculum_arm,
-                               smoke_boundaries=(1503, 1506, 1509) if args_cli.curriculum_kit_smoke else None)
+                               smoke_boundaries=(2, 5, 8, 11) if args_cli.curriculum_kit_smoke else None)
     installed = metadata.version("rsl-rl-lib")
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
@@ -180,7 +181,8 @@ def main(env_cfg, agent_cfg):
                               "basic_new_share": cmd_set["basic_new_share"],
                               "ex39_arm": cmd_set.get("ex39_arm"),
                               "curriculum_mode": bool(curriculum_plan)}
-            cmd_cfg.seed = agent_cfg.seed
+            # D68 B0 reproduces the S-B10 command seed in its saved env.yaml.
+            cmd_cfg.seed = 0 if curriculum_plan else agent_cfg.seed
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
     budget = ({"parent_completed_update": parent["completed_update"],
                "max_iterations": agent_cfg.max_iterations,
@@ -191,7 +193,8 @@ def main(env_cfg, agent_cfg):
                             18500 if args_cli.basic_ex38 else 1500)
               if is_extended_resume(args_cli) else None)
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
-    basic_l02 = args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
+    basic_l02 = (args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
+                 and curriculum_plan is None)
     if basic_l02:
         # 10행 지형의 형상은 유지하고 활성 env만 L0..2에 고정한다.
         # 두 판 모두 같은 고정을 쓰며 EX-35와 다른 설정으로 영수증에 남긴다.
@@ -211,12 +214,19 @@ def main(env_cfg, agent_cfg):
         "track_ang_vel": reward_weights.get("track_ang_vel", args_cli.basic_track_ang_weight),
         "track_lin_vel": reward_weights.get("track_lin_vel", args_cli.basic_track_lin_weight),
         "joint_acc": reward_weights.get("joint_acc", args_cli.basic_joint_acc_weight),
-        "hip_pos_penalty": reward_weights.get("hip_pos_penalty", args_cli.basic_hip_pos_weight),
-    }, bool(curriculum_plan) or args_cli.basic_lin_vel_z_schedule, args_cli.basic_feet_regulation_weight))
+        "hip_pos_penalty": (0.0 if curriculum_plan else args_cli.basic_hip_pos_weight),
+    }, args_cli.basic_lin_vel_z_schedule, args_cli.basic_feet_regulation_weight))
     if args_cli.basic_ex39_arm or curriculum_plan:
         from foothold_s2.rewards.basic_gait_bundle import apply_ex39_settings
 
         basic_reward_bundle["ex39_common"] = apply_ex39_settings(env_cfg)
+        if curriculum_plan:
+            # Register terms before gym.make, but B0 computes the exact S-B10
+            # reward. B1 activates thigh/calf at its update boundary.
+            env_cfg.rewards.ex39_thigh_calf_pos_l1.weight = 0.0
+            env_cfg.rewards.ex39_four_foot_stop.weight = 0.0
+            basic_reward_bundle["ex39_common"]["thigh_calf_pos_l1"] = 0.0
+            basic_reward_bundle["ex39_common"]["stand_four_foot_contact"] = 0.0
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -265,6 +275,17 @@ def main(env_cfg, agent_cfg):
     evidence = StepEvidence(env.unwrapped, log_dir)
     if agent_cfg.resume:
         raise ValueError("agent cfg resume is not supported; use --resume_from")
+    continuous = None
+    command_term = None
+    if curriculum_plan is not None:
+        from foothold_s2.curriculum.continuous import Runtime
+
+        continuous = Runtime(curriculum_plan, env.unwrapped.num_envs, agent_cfg.device,
+                             log_dir, args_cli.curriculum_score_dir)
+        command_term = env.unwrapped.command_manager.get_term("base_velocity")
+        # RslRlVecEnvWrapper.__init__ resets the env. Install B0 before that
+        # reset, or the first command packet would lack stand commands.
+        command_term.stage_runtime = continuous
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
 
     train_cfg = agent_cfg.to_dict()
@@ -290,13 +311,10 @@ def main(env_cfg, agent_cfg):
     runner_class = {"B": BRunner, "SB": SBRunner}.get(args_cli.variant, TopDownRunner)
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
-    continuous = None
     if curriculum_plan is not None:
-        from foothold_s2.curriculum.continuous import Runtime
-
-        continuous = Runtime(curriculum_plan, env.unwrapped.num_envs, agent_cfg.device,
-                             log_dir, args_cli.curriculum_score_dir)
-        continuous.attach(runner, env.unwrapped.command_manager.get_term("base_velocity"))
+        continuous.attach(runner, command_term)
+        if resume_path is None:
+            continuous.start()
     runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
     # EX-38 schedule is tied to its original m1501 start, including later segments.
     runner.basic_lin_vel_z_start_iteration = 1501 if (args_cli.basic_ex38 or args_cli.basic_ex39_arm or curriculum_plan) else 0
@@ -330,6 +348,26 @@ def main(env_cfg, agent_cfg):
                                             env_seed=agent_cfg.seed, command_seed=env_cfg.commands.base_velocity.seed,
                                             terrain=current_terrain, num_envs=env_cfg.scene.num_envs)
         print("BASIC_START_RECEIPT " + json.dumps(start_receipt, ensure_ascii=False), flush=True)
+    curriculum_start_receipt = None
+    if curriculum_plan is not None:
+        terrain = env.unwrapped.scene.terrain
+        levels = terrain.terrain_levels.detach().cpu().contiguous()
+        types = terrain.terrain_types.detach().cpu().contiguous()
+        curriculum_start_receipt = {
+            "start": "scratch", "stage": "B0", "env_seed": agent_cfg.seed,
+            "command_seed": env_cfg.commands.base_velocity.seed,
+            "num_envs": int(env_cfg.scene.num_envs),
+            "terrain_policy": "S-B10 curriculum active, no L0..2 rebasing",
+            "terrain_counts": torch.bincount(levels, minlength=10).tolist(),
+            "terrain_labels_sha256": hashlib.sha256(levels.numpy().tobytes() +
+                                                     types.numpy().tobytes()).hexdigest(),
+            "baseline_env_yaml_sha256": curriculum_plan.baseline_env_yaml_sha256,
+            "baseline_agent_yaml_sha256": curriculum_plan.baseline_agent_yaml_sha256,
+            "stand_reward": "undecided_disabled",
+        }
+        with open(os.path.join(log_dir, "curriculum_start_receipt.json"), "x", encoding="utf-8") as stream:
+            json.dump(curriculum_start_receipt, stream, ensure_ascii=False, indent=2)
+        print("CURRICULUM_START_RECEIPT " + json.dumps(curriculum_start_receipt), flush=True)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
     # SONNET-X11: 실행 시작 manifest(소비 파일 SHA · dirty diff · YAML · 인자 · 모드 · 초기 상태 SHA). 소비 코드가 실행 중 바뀌면 체크포인트 저장 때 멈춘다.
@@ -337,7 +375,10 @@ def main(env_cfg, agent_cfg):
              "clip_actions": agent_cfg.clip_actions, "z_rollout": "sample" if runner.perception.cfg.sample_latent_in_rollout else "mean", "action_rollout": "sample",
              "contract": runner.pcfg["contract"], "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"], "track_lin_form": getattr(env_cfg, "track_lin_form", None),
              "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task,
-             "run_kind": ("ex40_kit_smoke_10_updates" if args_cli.curriculum_kit_smoke else ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main"),
+             "run_kind": ("ex40_kit_smoke_13_updates" if args_cli.curriculum_kit_smoke else
+                          (("B_kit_smoke_10_updates" if args_cli.variant == "B" else
+                            f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates")
+                           if args_cli.smoke_updates else "main")),
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
              "fast_gt_only": bool(runner.pcfg["fast_gt_only"]),
@@ -366,6 +407,7 @@ def main(env_cfg, agent_cfg):
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,
              "basic_start_receipt": start_receipt if basic_l02 else None,
+             "curriculum_start_receipt": curriculum_start_receipt,
              "basic_terrain_cfg_difference": (f"L0..{(args_cli.basic_ex39_level_count or 3)-1} active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
