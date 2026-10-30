@@ -149,6 +149,7 @@
 | M64 | Windows PowerShell 5.1 은 BOM 없는 UTF-8 .ps1 을 ANSI 로 읽는다. 한글·«» 가 깨져 파싱이 죽고, 증상은 「UAC 거부」처럼 보인다. | lead 메모리 `ps51-scripts-must-be-ascii` |
 | M75 | Windows 에서 Write 도구는 CRLF 로 쓰고 foothold-lab 은 core.autocrlf=true 라 커밋은 LF 가 된다. 「LF 확인」 은 작업 사본이 아니라 git ls-files --eol 의 i/lf 로 한다 | lead 메모리 `write-tool-crlf-autocrlf` |
 | M76 | 학습 설정 · DR · 액추에이터를 말할 때 cfg 코드 한 파일(상속의 중간)이나 주석을 읽고 단정했다. 10/29 밤 하루에 셋: 「지연 코드 없음」(구현 있음 · 꺼짐) · 「마찰 0.8/0.6 고정」(하위 cfg 가 0.2~1.2 로 엶) · 「단계 설계에 없음」 처럼 들리게 말함(CURRICULUM-GATES C7a~C7c 에 있음). 설정은 그 판의 params/env.yaml · realized_*.json 을 코드로 뽑아서 말하고, 설계 유무는 단계표를 열고 말한다. 정본 기록부의 물리 칸도 env.yaml 에서 뽑는다(dr_extract) | 10/29 23:0x 팀장 지적 · CANON-REGISTRY 39dd5390 |
+| M77 | EX-39 기동에 lead 가 마감 상한을 10/30 15:00 으로 정했다(10/29 21:5x scripter 의뢰). 팀장은 「시간으로 끝내지 말고 회차를 다 채운다」 고 했고(R21 · 10/29 12:30 EX-38 사고), B 가 화면 GPU 에서 33 s/회로 느려 상한에 25 분 차로 걸릴 뻔했다. 도는 프로세스의 마감은 못 바꾼다. 막는 법: 시작 스크립트의 END_BY 는 「예상 끝 + 24 시간 이상」 으로만 주고, 예상 끝은 첫 50 회 실측 속도로 다시 계산해 상한과의 여유를 첫 보고에 적는다 | 10/30 09:3x 팀장 지적 |
 | M37 | Artifact 에 바이너리는 data.js 로 (octet-stream 서빙 안 됨) · files 는 작업 디렉터리 또는 세션 scratchpad · mp4 서빙됨 · 64 MB 넘으면 나눠 올림 · **한 판 256 MiB 넘으면 assets 저장소(/_blob/) 로 (10/18)** | lead 메모리 `artifact-binary-data-as-js` |
 | M58 | 내가 아는 모델 목록은 지식 기준일에 멈춰 있다. 팀장이 새 모델을 말하면 설치본에서 확인하고, 없다고 단정하지 않는다. | lead 메모리 `model-list-in-my-head-goes-stale` |
 | M50 | Bash(Git Bash) 에서 orca terminal send --text \"/rename sol\" 처럼 슬래시로 시작하는 문장을 보내면 C:/Program Files/Git/rename sol 로 바뀌어 Codex 창에 들어간다 | lead 메모리 `git-bash-turns-slash-into-a-windows-path` |
