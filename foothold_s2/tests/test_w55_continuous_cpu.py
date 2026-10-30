@@ -5,7 +5,9 @@ from __future__ import annotations
 import copy
 import ast
 import hashlib
+import inspect
 import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -18,7 +20,9 @@ from foothold_s2.curriculum.continuous import Plan, Runtime, command_bad
 from foothold_s2.ex40_kit_smoke import check as check_kit_smoke
 from foothold_s2.ex40_launch import BASELINE, TABLE, build_args, receipt
 from foothold_s2.prestart_check import actual_parser
-from foothold_s2.rewards.basic_gait_bundle import stand_penalty_values, scheduled_lin_vel_z_weight
+from foothold_s2.rewards.basic_gait_bundle import (
+    apply_ex40_stand_settings, stand_penalty_values, scheduled_lin_vel_z_weight,
+)
 
 
 def _mutated(tmp_path, change):
@@ -195,6 +199,41 @@ def test_stand_penalty_known_forces_ramp_and_npz():
                 torch.ones(n, dtype=torch.bool), torch.full((n,), 0.5))
             value = calc[0 if expected_key == "gap" else 1].mean().item()
             assert abs(value - expected) < 0.01
+
+
+def test_support_ray_hits_vertically_below_rolled_foot():
+    # RayCasterCfg is Kit-only, so inspect the actual config function without
+    # importing Isaac. The installed GridPatternCfg points straight down.
+    cfg_tree = ast.parse(inspect.getsource(apply_ex40_stand_settings))
+    calls = [node for node in ast.walk(cfg_tree)
+             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+             and node.func.id == "RayCasterCfg"]
+    assert len(calls) == 1
+    alignment = next(kw.value.value for kw in calls[0].keywords if kw.arg == "ray_alignment")
+    assert alignment == "yaw"
+    installed = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/sensors/ray_caster/ray_caster.py")
+    source = installed.read_text(encoding="utf-8")
+    yaw_branch = source.split('elif self.cfg.ray_alignment == "yaw":', 1)[1].split(
+        'elif self.cfg.ray_alignment == "base":', 1)[0]
+    assert "quat_apply_yaw" in yaw_branch
+    assert "ray_directions_w = self.ray_directions[env_ids]" in yaw_branch
+    pattern_cfg = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/sensors/ray_caster/patterns/patterns_cfg.py")
+    assert "direction: tuple[float, float, float] = (0.0, 0.0, -1.0)" in (
+        pattern_cfg.read_text(encoding="utf-8"))
+
+    # Foot prim at (1,2,0.3), collision-center x offset -0.002 m, roll 30 deg.
+    # Yaw-only start and vertical direction meet z=0 at that foot's ray XY.
+    foot_pos = torch.tensor([1.0, 2.0, 0.3])
+    foot_ray_xy = torch.tensor([1.0 - 0.002, 2.0])
+    yaw_start = foot_pos + torch.tensor([-0.002, 0.0, 20.0])
+    vertical = torch.tensor([0.0, 0.0, -1.0])
+    yaw_hit = yaw_start + yaw_start[2] * vertical
+    assert torch.equal(yaw_hit[:2], foot_ray_xy)
+    assert yaw_hit[2] == 0
+    # Full base alignment rotates the 20 m start and the ray; its hit drifts
+    # 0.3*tan(30 deg) in y, enough to intersect a neighboring stair.
+    base_hit_xy = foot_ray_xy + torch.tensor([0.0, 0.3 * math.tan(math.pi / 6)])
+    assert base_hit_xy[1] - foot_ray_xy[1] > 0.17
 
 
 def test_gate_two_eligible_passes_fail_override_and_resume(tmp_path):

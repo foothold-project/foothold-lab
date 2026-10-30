@@ -155,7 +155,7 @@ def apply_ex40_stand_settings(env_cfg, config):
         setattr(env_cfg.scene, f"ex40_support_{i}", RayCasterCfg(
             prim_path=f"{{ENV_REGEX_NS}}/Robot/{name}",
             offset=RayCasterCfg.OffsetCfg(pos=(-0.002, 0.0, 20.0)),
-            ray_alignment="base",
+            ray_alignment="yaw",
             pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.0, 0.0], ordering="yx"),
             mesh_prim_paths=["/World/ground"], update_period=0.0))
     args = {"asset_cfg": SceneEntityCfg("robot", body_names=list(feet)),
