@@ -28,7 +28,7 @@
 - `isaac311` Python: `pytest test_w55_continuous_cpu.py test_basic_gait_ex38_cpu.py test_basic_gait_cpu.py -q` → **18 passed**.
 - D68 전용 반례: 부모 인자, B0 몫 합 오류, 미결정 네 발 보상 삽입, 단계 범위 축소, B0 명령 오염, 실패 자식, reset 0 env, B0 보상 및 startup DR 변조를 거절. 새 Kit 판독기는 저장 S-B10의 지형 생성기 · curriculum · events를 실제 `params/env.yaml`과 대조하도록 했다. 실제 설치 wrapper의 첫 reset 순서도 소스와 대조했다.
 - 바뀐 Python에 `python -m pyflakes` 0건, `ruff check --select F` 0건, `git diff --check` 0건.
-- LIVE=0 실제 `run_ex40.sh` A·B 각각 rc 0. 영수증 A: `C:/Users/AI-WS01/s2_lab/ex40/d68_dry_20261030_A/receipts/ex40/A_main_20261030_135416_1068051/launch_receipt.json`; B: `C:/Users/AI-WS01/s2_lab/ex40/d68_dry_20261030_B/receipts/ex40/B_main_20261030_135444_1068089/launch_receipt.json`. 두 `prestart.json` 모두 실제 `train_sol23f_common.py` 파서, 모듈 import, `source_git_clean=true`, `max_iterations=6001`, `prestart_pass`를 기록했다. 두 영수증에 `--resume_from` 없음, `start=scratch`, `stand_reward=undecided_disabled`이다.
+- LIVE=0 실제 `run_ex40.sh` A·B 각각 rc 0. 영수증 A: `C:/Users/AI-WS01/s2_lab/ex40/d68_dry_20261030_A/receipts/ex40/A_main_20261030_135416_1068051/launch_receipt.json`; B: `C:/Users/AI-WS01/s2_lab/ex40/d68_dry_20261030_B/receipts/ex40/B_main_20261030_135444_1068089/launch_receipt.json`. 최종 코드 고정 `870a2c12`에서 A를 다시 DRY한 영수증은 `C:/Users/AI-WS01/s2_lab/ex40/d68_final_A_20261030/receipts/ex40/A_main_20261030_135735_1068287/launch_receipt.json`이다. `prestart.json`은 실제 `train_sol23f_common.py` 파서, 모듈 import, `source_git_clean=true`, `max_iterations=6001`, `prestart_pass`를 기록했다. 영수증에 `--resume_from` 없음, `start=scratch`, `stand_reward=undecided_disabled`이다.
 - 코드·카드 8파일의 SHA는 `EX40-D68-SHA256SUMS.txt`. 최초 고정 커밋 `78858c0d` 뒤 DRY를 실행했고, Kit 판독기의 지형·DR 대조를 후속 고정했다.
 
 ## 남은 관문
