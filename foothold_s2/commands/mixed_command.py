@@ -133,6 +133,8 @@ class MixedVelocityCommand(CommandTerm):
         self.goals[env_ids] = 0
         self.excluded_steps[env_ids] = 0.0
         self.ep_steps[env_ids] = 0.0
+        if hasattr(self, "stop_elapsed_s"):
+            self.stop_elapsed_s[env_ids] = 0.0
 
         if self.cfg.dynamic_flags and self.cfg.force_flag_provider is not None:
             forced = self.cfg.force_flag_provider(self._env.scene.terrain, env_ids)
@@ -217,6 +219,9 @@ class MixedVelocityCommand(CommandTerm):
                                               yaw=self._yaw(group)))
                 self.vel_command_b[group] = out["cmd"].to(self.device)
                 self.stand[group] = out["stand"].to(self.device)
+                if not hasattr(self, "stop_elapsed_s"):
+                    self.stop_elapsed_s = torch.zeros(self.num_envs, device=self.device)
+                self.stop_elapsed_s[group] = 0.0
                 self.spin[group] = out["spin"].to(self.device)
                 self.heading[group] = out["heading"].to(self.device)
                 self.psi_star[group] = out["psi_star"].to(self.device)
@@ -249,8 +254,18 @@ class MixedVelocityCommand(CommandTerm):
         dt = self._env.step_dt
 
         free = ~self.is_flag_env
-        self.vel_command_b[free] = mc.apply_heading(self.vel_command_b, self.heading, self.stand,
-                                                    self.psi_star, yaw, self.params)[free]
+        runtime = getattr(self, "stage_runtime", None)
+        if runtime is not None:
+            applied = mc.apply_stage_heading(self.vel_command_b, self.heading, self.stand,
+                                             self.psi_star, yaw, self.slot_current,
+                                             runtime.env_stage, runtime.plan.stages)
+        else:
+            applied = mc.apply_heading(self.vel_command_b, self.heading, self.stand,
+                                       self.psi_star, yaw, self.params)
+        self.vel_command_b[free] = applied[free]
+        if runtime is not None:
+            self.stop_elapsed_s = torch.where(self.stand, self.stop_elapsed_s + dt,
+                                              torch.zeros_like(self.stop_elapsed_s))
         if self.params.ex39_arm == "B" and self.ex39_first_forward_heading_wz_max is None:
             first_forward = (self.slot_current == 0) & self.heading & free
             if first_forward.any():

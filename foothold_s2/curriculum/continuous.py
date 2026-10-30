@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,7 +23,7 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
           "side_vy_abs", "diag_vx_abs", "diag_vy_abs")
 FIRST_REWARDS = {"track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty",
-                 "thigh_calf_pos_l1"}
+                 "thigh_calf_pos_l1", "four_foot_contact_at_stop", "stand_gap", "stand_load"}
 
 
 def sha256(path: str | Path) -> str:
@@ -39,6 +40,7 @@ class Stage:
     force_gt: bool
     low_forward_fraction: float
     heading_arm: str | None
+    heading_cfg: dict[str, float]
     adds: dict
 
 
@@ -54,6 +56,28 @@ class Plan:
             raise ValueError("W55 promotion must be fixed|gate and shadow_gate explicit")
         self.promotion = doc["promotion"]
         self.shadow_gate = doc["shadow_gate"]
+        if self.promotion == "gate" and self.shadow_gate:
+            raise ValueError("EX-40 gate promotion cannot be shadow-only")
+        self.gate_cfg = doc.get("gate") or {}
+        self.stand_cfg = doc.get("stand_penalty") or {}
+        self.heading_cfg = doc.get("heading") or {}
+        if (set(self.gate_cfg) != {"minimum_exposure_updates", "separated_checkpoints"}
+                or int(self.gate_cfg["minimum_exposure_updates"]) < 500
+                or int(self.gate_cfg["separated_checkpoints"]) < 250):
+            raise ValueError("EX-40 gate needs exposure and separated checkpoints")
+        if (set(self.stand_cfg) != {"gap_weight", "load_weight", "load_fraction", "ramp_s"}
+                or set(self.heading_cfg) != {"forward_fraction", "spin_target_fraction", "gain",
+                                              "forward_wz_limit", "target_wz_limit"}):
+            raise ValueError("EX-40 stand and heading parameters missing")
+        if (not all(math.isfinite(float(v)) for v in (*self.stand_cfg.values(), *self.heading_cfg.values()))
+                or self.stand_cfg["gap_weight"] >= 0 or self.stand_cfg["load_weight"] >= 0
+                or not 0 < self.stand_cfg["load_fraction"] <= 1
+                or self.stand_cfg["ramp_s"] <= 0
+                or not 0 <= self.heading_cfg["forward_fraction"] <= 1
+                or not 0 <= self.heading_cfg["spin_target_fraction"] <= 1
+                or min(self.heading_cfg["gain"], self.heading_cfg["forward_wz_limit"],
+                       self.heading_cfg["target_wz_limit"]) <= 0):
+            raise ValueError("EX-40 stand or heading settings invalid")
         if doc.get("start") != "scratch" or "parent_sha256" in doc or "parent_update" in doc:
             raise ValueError("D68 EX-40 must start from scratch")
         self.parent_sha256 = None
@@ -97,10 +121,13 @@ class Plan:
             new_rewards = adds.get("rewards") or {}
             if not isinstance(new_rewards, dict) or set(new_rewards) & set(last_rewards):
                 raise ValueError("W55 reward terms may only be added once")
-            if index == 0 and new_rewards:
-                raise ValueError("D68 B0 must retain S-B10 reward weights")
-            if index == 1 and set(new_rewards) != FIRST_REWARDS:
-                raise ValueError("D68 B1 reward additions incomplete; stand reward undecided")
+            if index == 0 and set(new_rewards) != FIRST_REWARDS:
+                raise ValueError("D70 B0 reward terms incomplete")
+            if index == 0 and (float(new_rewards["stand_gap"]) != self.stand_cfg["gap_weight"]
+                               or float(new_rewards["stand_load"]) != self.stand_cfg["load_weight"]):
+                raise ValueError("EX-40 stand weights disagree with reward terms")
+            if index == 1 and new_rewards:
+                raise ValueError("D70 B1 keeps B0 reward terms")
             if index > 1 and new_rewards:
                 raise ValueError("W55 later reward terms need an env-time registration adapter")
             rewards = {**last_rewards, **{k: float(v) for k, v in new_rewards.items()}}
@@ -125,9 +152,7 @@ class Plan:
                 raise ValueError("W55 active ranges incomplete")
             for key, old in last_ranges.items():
                 new = ranges[key]
-                # B0 has the S-B10 spin range, including speeds below B1's
-                # basic-gait minimum. B1 deliberately narrows that one range.
-                if index != 1 and (new[0] > old[0] + 1e-9 or new[1] < old[1] - 1e-9):
+                if new[0] > old[0] + 1e-9 or new[1] < old[1] - 1e-9:
                     raise ValueError(f"W55 range narrows: {key}")
             force_gt = row.get("force_gt")
             if not isinstance(force_gt, bool) or (index < 4 and not force_gt) or (index == 4 and force_gt):
@@ -140,7 +165,7 @@ class Plan:
             if not 0.0 <= low <= 1.0 or (index < 3 and low) or (index >= 3 and low != 0.20):
                 raise ValueError("W55 low-speed forward fraction differs from D59")
             self.stages.append(Stage(row["id"], update, shares, ranges, rewards, force_gt,
-                                     low, arm if index > 1 else None, adds))
+                                     low, arm, self.heading_cfg, adds))
             last_rewards, last_slots, last_ranges = rewards, slots, ranges
 
 
@@ -158,9 +183,17 @@ class Runtime:
         self.score_dir = Path(score_dir) if score_dir is not None else None
         self.last_checkpoint: dict | None = None
         self.pending_gate: dict | None = None
+        self.stage_entry_iteration = 0
+        self.passes: list[dict] = []
         self.seen_scores: set[str] = set()
         self.runner = None
         self._started = False
+        self._step_counts = torch.zeros((5, len(EX39_SLOTS), 3), dtype=torch.long, device=device)
+        self._done_counts = torch.zeros_like(self._step_counts)
+        self._contact_counts = torch.zeros((5, len(EX39_SLOTS), 3, 4), dtype=torch.long, device=device)
+        self._side_counts = torch.zeros((5, 4, 2), dtype=torch.long, device=device)
+        self._raw_samples: list[dict] = []
+        self._sample_step = 0
 
     def attach(self, runner, command_term):
         self.runner = runner
@@ -241,22 +274,89 @@ class Runtime:
                          "use_gt_envs": int(use_gt[selected].sum().item()),
                          "adasmpl_p": float(self.runner.adasmpl.p)})
 
+    def record_pre_step(self):
+        """Count the actual episode-stage command and map consumed by one env step."""
+        raw = self.runner.env.unwrapped
+        term = raw.command_manager.get_term("base_velocity")
+        stage = self.env_stage
+        slot = term.slot_current.long()
+        mode = torch.where(self.runner.pstate.map_off.bool(), 2,
+                           torch.where(self.runner.pstate.use_gt.bool(), 0, 1)).long()
+        code = (stage * len(EX39_SLOTS) + slot) * 3 + mode
+        self._step_counts += torch.bincount(code, minlength=self._step_counts.numel()).reshape_as(self._step_counts)
+        sensor = raw.scene.sensors["contact_forces"]
+        robot = raw.scene["robot"]
+        if not hasattr(self, "_foot_sensor_ids"):
+            feet = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]
+            self._foot_sensor_ids = sensor.find_bodies(feet)[0]
+        force = sensor.data.net_forces_w[:, self._foot_sensor_ids, :]
+        contact = (torch.linalg.vector_norm(force, dim=-1) > 1.0).long()
+        for foot in range(4):
+            self._contact_counts[..., foot] += torch.bincount(
+                code, weights=contact[:, foot].float(), minlength=self._step_counts.numel()
+            ).reshape_as(self._step_counts).long()
+        yaw_sign = (robot.data.heading_w >= 0).long()
+        y_sign = (robot.data.root_pos_w[:, 1] - raw.scene.terrain.env_origins[:, 1] >= 0).long()
+        for y in (0, 1):
+            for h in (0, 1):
+                labels = stage[(y_sign == y) & (yaw_sign == h)]
+                self._side_counts[:, y * 2 + h, 0] += torch.bincount(labels, minlength=5)
+        self._pre_step_code = code
+        self._pre_stage = stage.clone()
+        self._pre_yaw_sign = yaw_sign
+        self._pre_y_sign = y_sign
+        if self._sample_step % 12 == 0:
+            ids = torch.arange(min(8, raw.num_envs), device=stage.device)
+            self._raw_samples.append({"env_ids": ids.cpu().tolist(),
+                "force_w_n": force[ids].detach().cpu().tolist(),
+                "joint_target_rad": robot.data.joint_pos_target[ids].detach().cpu().tolist(),
+                "joint_actual_rad": robot.data.joint_pos[ids].detach().cpu().tolist()})
+        self._sample_step += 1
+
+    def record_post_step(self, done: torch.Tensor):
+        finished = done.bool()
+        self._done_counts += torch.bincount(self._pre_step_code[finished],
+                                            minlength=self._step_counts.numel()).reshape_as(self._done_counts)
+        for y in (0, 1):
+            for h in (0, 1):
+                labels = self._pre_stage[finished & (self._pre_y_sign == y) & (self._pre_yaw_sign == h)]
+                self._side_counts[:, y * 2 + h, 1] += torch.bincount(labels, minlength=5)
+
+    def flush_consumption(self, iteration: int):
+        self._write({"event": "actual_consumption", "iteration": iteration,
+                     "axes": {"stage": [s.id for s in self.plan.stages], "slot": list(EX39_SLOTS),
+                              "map": ["GT", "PRED", "OFF"], "side": ["y- yaw-", "y- yaw+", "y+ yaw-", "y+ yaw+"]},
+                     "steps": self._step_counts.cpu().tolist(), "done": self._done_counts.cpu().tolist(),
+                     "contact_steps": self._contact_counts.cpu().tolist(),
+                     "side_steps_done": self._side_counts.cpu().tolist(),
+                     "raw_samples": self._raw_samples})
+        self._step_counts.zero_()
+        self._done_counts.zero_()
+        self._contact_counts.zero_()
+        self._side_counts.zero_()
+        self._raw_samples.clear()
+
     def on_update_start(self, iteration: int):
         if self.plan.promotion == "fixed":
             target = self.active + 1
             if target < len(self.plan.stages) and iteration >= self.plan.stages[target].fixed_update:
                 self._promote(iteration, {"kind": "fixed", "checkpoint": self.last_checkpoint})
-        elif self.pending_gate is not None:
-            self._promote(iteration, {"kind": "gate", **self.pending_gate})
-            self.pending_gate = None
+        else:
+            self._scan_scores(iteration)
+            if self.pending_gate is not None:
+                evidence = self.pending_gate
+                self.pending_gate = None
+                self._promote(iteration, {"kind": "gate", **evidence})
 
     def _promote(self, iteration: int, evidence: dict):
         if self.active + 1 >= len(self.plan.stages):
             return
-        if self.active == 1 and self.plan.arm is None:
-            raise RuntimeError("W55 B2 arm unresolved; an explicit A/B decision is required")
+        if self.plan.arm is None:
+            raise RuntimeError("EX-40 heading arm must be explicit")
         before = self.plan.stages[self.active]
         self.active += 1
+        self.stage_entry_iteration = iteration
+        self.passes = []
         after = self.plan.stages[self.active]
         self._sync_map()
         self._sync_rewards()
@@ -287,50 +387,96 @@ class Runtime:
             return
         manager = self.runner.env.unwrapped.reward_manager
         mapping = {"hip_pos_penalty": "basic_hip_pos_penalty_l1",
-                   "thigh_calf_pos_l1": "ex39_thigh_calf_pos_l1"}
+                   "thigh_calf_pos_l1": "ex39_thigh_calf_pos_l1",
+                   "four_foot_contact_at_stop": "ex39_four_foot_stop",
+                   "stand_gap": "ex40_stand_gap", "stand_load": "ex40_stand_load"}
         for name, value in self.plan.stages[self.active].rewards.items():
             term_name = mapping.get(name, name)
             cfg = manager.get_term_cfg(term_name)
             cfg.weight = value
             manager.set_term_cfg(term_name, cfg)
         self.runner.basic_lin_vel_z_schedule = self.active >= 1
-        self.runner.basic_lin_vel_z_start_iteration = 1501
+        self.runner.basic_lin_vel_z_start_iteration = self.stage_entry_iteration if self.active >= 1 else 0
 
     def on_checkpoint(self, iteration: int, checkpoint: str | Path):
         path = Path(checkpoint).resolve(strict=True)
         self.last_checkpoint = {"iteration": iteration, "path": str(path), "sha256": sha256(path)}
+        self._scan_scores(iteration)
+        if self.plan.promotion == "gate" and self.pending_gate is None:
+            self._write({"event": "gate_hold", "iteration": iteration,
+                         "stage": self.plan.stages[self.active].id,
+                         "reason": "no_two_valid_separated_passes", "training_continues": True})
+
+    def _scan_scores(self, iteration: int):
         if self.score_dir is None or self.active + 1 >= len(self.plan.stages):
             return
-        for score_path in sorted(self.score_dir.glob("*.json")):
-            digest = sha256(score_path)
+        candidates = []
+        for score_path in self.score_dir.glob("*.json"):
+            try:
+                digest = sha256(score_path)
+            except OSError:
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "score_path": str(score_path), "reason": "score_unreadable"})
+                continue
             if digest in self.seen_scores:
                 continue
-            score = json.loads(score_path.read_text(encoding="utf-8"))
-            if score.get("format") != "foothold-w55-score/1" or score.get("verdict") not in ("EXPAND", "HOLD", "REVERT"):
-                raise ValueError(f"W55 malformed score: {score_path}")
-            if score.get("from") != self.plan.stages[self.active].id or score.get("to") != self.plan.stages[self.active + 1].id:
+            try:
+                score = json.loads(score_path.read_text(encoding="utf-8-sig"))
+                if score.get("from") != self.plan.stages[self.active].id:
+                    continue
+                if (score.get("format") != "foothold-ex40-score/2"
+                        or score.get("to") != self.plan.stages[self.active + 1].id
+                        or score.get("effective_schedule_sha256") != self.plan.effective_sha256
+                        or score.get("verdict") not in ("PASS", "FAIL", "HOLD")):
+                    raise ValueError("score stage, config, or verdict mismatch")
+                stamp = datetime.fromisoformat(score["created_at"])
+                if stamp.tzinfo is None:
+                    raise ValueError("score time has no timezone")
+                update = int(score["checkpoint_iteration"])
+                source = Path(score["checkpoint"]).resolve(strict=True)
+                if (source.name != f"model_{update}.pt" or sha256(source) != score.get("checkpoint_sha256")
+                        or update > iteration or update < self.stage_entry_iteration
+                        or iteration - update > 500):
+                    raise ValueError("score checkpoint missing, future, stale, or SHA mismatch")
+                candidates.append((update, stamp, score_path, digest, score))
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                self.seen_scores.add(digest)
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "score_path": str(score_path), "reason": type(exc).__name__,
+                             "score_sha256": digest})
+        for update, _, path, digest, score in sorted(candidates):
+            if digest in self.seen_scores:
                 continue
-            source = Path(score["checkpoint"]).resolve(strict=True)
-            if source.name != f"model_{score['checkpoint_iteration']}.pt" or sha256(source) != score.get("checkpoint_sha256"):
-                raise ValueError("W55 score checkpoint SHA or numbered file mismatch")
-            if int(score["checkpoint_iteration"]) > iteration:
-                raise ValueError("W55 score came from a future checkpoint")
             self.seen_scores.add(digest)
-            row = {"event": "shadow_gate" if self.plan.shadow_gate else "gate_decision",
-                   "iteration": iteration, "from": score["from"], "to": score["to"],
-                   "verdict": score["verdict"], "score_path": str(score_path),
-                   "score_sha256": digest, "checkpoint_sha256": score["checkpoint_sha256"]}
+            row = {"event": "gate_decision", "iteration": iteration,
+                   "from": score["from"], "to": score["to"], "verdict": score["verdict"],
+                   "checkpoint_iteration": update, "score_path": str(path),
+                   "score_sha256": digest, "checkpoint_sha256": score["checkpoint_sha256"],
+                   "created_at": score["created_at"]}
             self._write(row)
-            if not self.plan.shadow_gate and self.plan.promotion == "gate" and score["verdict"] == "EXPAND":
-                self.pending_gate = row
-            break
+            if score["verdict"] != "PASS":
+                self.passes.clear()
+                self.pending_gate = None
+                continue
+            if update - self.stage_entry_iteration < self.plan.gate_cfg["minimum_exposure_updates"]:
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "stage": self.plan.stages[self.active].id,
+                             "reason": "minimum_exposure_not_reached", "score_sha256": digest})
+                continue
+            self.passes.append(row)
+            if (not self.plan.shadow_gate and self.plan.promotion == "gate"
+                    and len(self.passes) >= 2
+                    and self.passes[-1]["checkpoint_iteration"] - self.passes[-2]["checkpoint_iteration"]
+                    >= self.plan.gate_cfg["separated_checkpoints"]):
+                self.pending_gate = {"scores": self.passes[-2:]}
 
     def state_dict(self) -> dict:
         return {"format": "foothold-w55-state/1", "plan_sha256": self.plan.sha256,
                 "effective_sha256": self.plan.effective_sha256,
                 "active": self.active, "env_stage": self.env_stage.clone(),
                 "last_checkpoint": self.last_checkpoint, "pending_gate": self.pending_gate,
-                "seen_scores": sorted(self.seen_scores)}
+                "seen_scores": sorted(self.seen_scores), "stage_entry_iteration": self.stage_entry_iteration,
+                "passes": self.passes}
 
     def load_state_dict(self, state: dict):
         if (state.get("format") != "foothold-w55-state/1"
@@ -348,6 +494,8 @@ class Runtime:
         self.last_checkpoint = state.get("last_checkpoint")
         self.pending_gate = state.get("pending_gate")
         self.seen_scores = set(state.get("seen_scores") or [])
+        self.stage_entry_iteration = int(state.get("stage_entry_iteration", self.plan.stages[active].fixed_update))
+        self.passes = list(state.get("passes") or [])
         self._sync_map()
         self._sync_rewards()
 
@@ -392,12 +540,15 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             absolute = lambda z, key: (z.abs() >= stage.ranges[key][0] - tol) & (z.abs() <= stage.ranges[key][1] + tol)
             h = heading[ids]
             if name == "forward":
-                good = bounded(x, "forward_vx") & zero(y) & torch.where(h, w.abs() <= 2.0 + tol, zero(w))
+                good = bounded(x, "forward_vx") & zero(y) & torch.where(
+                    h, w.abs() <= stage.heading_cfg["forward_wz_limit"] + tol, zero(w))
             elif name.startswith("walk_"):
                 good = bounded(x, "walk_vx") & zero(y) & absolute(w, "walk_wz_abs") & ~h
                 good &= w > 0 if name.endswith("left") else w < 0
             elif name.startswith("spin_"):
-                good = zero(x) & zero(y) & torch.where(h, w.abs() <= 2.0 + tol, absolute(w, "spin_wz_abs"))
+                good = zero(x) & zero(y) & torch.where(
+                    h, w.abs() <= stage.heading_cfg["target_wz_limit"] + tol,
+                    absolute(w, "spin_wz_abs"))
                 good &= torch.where(h, torch.ones_like(good),
                                     w > 0 if name.endswith("left") else w < 0)
             elif name == "stand":

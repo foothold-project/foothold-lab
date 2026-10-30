@@ -22,6 +22,7 @@ REWARD_TERMS = {
     "hip_pos_penalty": "basic_hip_pos_penalty_l1",
     "thigh_calf_pos_l1": "ex39_thigh_calf_pos_l1",
     "four_foot_contact_at_stop": "ex39_four_foot_stop",
+    "stand_gap": "ex40_stand_gap", "stand_load": "ex40_stand_load",
 }
 
 
@@ -60,7 +61,8 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
         raise ValueError("D68 B0 command seed or resample interval differs from S-B10")
     for source, baseline_row in (baseline.get("rewards") or {}).items():
         row = rewards.get(source) or {}
-        if not math.isclose(float(row.get("weight", "nan")), float(baseline_row["weight"]),
+        expected = plan.stages[0].rewards.get(source, float(baseline_row["weight"]))
+        if not math.isclose(float(row.get("weight", "nan")), expected,
                             rel_tol=0, abs_tol=1e-12):
             raise ValueError(f"D68 B0 reward differs from S-B10: {source}")
     for source, actual_name in REWARD_TERMS.items():
@@ -69,11 +71,14 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
             actual = float(row["weight"])
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError(f"EX-40 Kit reward weight missing: {actual_name}") from exc
-        expected = 0.0 if source in ("hip_pos_penalty", "thigh_calf_pos_l1",
-                                    "four_foot_contact_at_stop") else float(
-                                        (baseline.get("rewards") or {})[source]["weight"])
+        expected = plan.stages[0].rewards[source]
         if not math.isfinite(actual) or not math.isclose(actual, expected, rel_tol=0, abs_tol=1e-12):
             raise ValueError(f"EX-40 Kit reward weight differs from stage table: {actual_name}")
+    for i in range(4):
+        ray = ((doc.get("scene") or {}).get(f"ex40_support_{i}") or {})
+        if (str(ray.get("prim_path", "")).find("_foot") < 0
+                or str((ray.get("offset") or {}).get("pos", "")).find("-0.002") < 0):
+            raise ValueError("EX-40 dedicated collision-center foot support ray missing")
 
 
 def _check_stage_log(rows: list[dict], plan: Plan, env_count: int) -> dict[str, int]:
@@ -189,7 +194,7 @@ def _check_consumption(rows: list[dict], plan: Plan, changed_by_stage: dict[str,
 def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
     if receipt.get("state") != "CPU_PREPARED_NOT_LAUNCHED" or receipt.get("stage_boundaries") != {
-            "B0": 0, "B1": 2, "B2": 5, "B3": 8, "T0": 11}:
+            "B0": 0, "B1": 3, "B2": 6, "B3": 9, "T0": 12}:
         raise ValueError("EX-40 smoke launch receipt or stage boundaries differ")
     if rc != 0 or "Traceback" in run_log.read_text(encoding="utf-8", errors="replace"):
         raise ValueError("EX-40 Kit child failed or traceback present")
@@ -198,6 +203,9 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     if len(runs) != 1:
         raise ValueError("EX-40 smoke must have exactly one isolated child run")
     run = runs[0]
+    args = receipt["argv"]
+    table = Path(args[args.index("--curriculum") + 1])
+    plan = Plan(table, arm=receipt["arm"], smoke_boundaries=(3, 6, 9, 12))
     manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
     modes = manifest.get("modes") or {}
     cfg = modes.get("continuous_curriculum") or {}
@@ -209,11 +217,10 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     start = json.loads((run / "curriculum_start_receipt.json").read_text(encoding="utf-8-sig"))
     if (start.get("start") != "scratch" or start.get("num_envs") != 3072
             or start.get("env_seed") != 42 or start.get("command_seed") != 0
-            or start.get("stand_reward") != "undecided_disabled"):
+            or start.get("stand_reward") != {"four_foot_contact": 0.1,
+                                               "gap": plan.stand_cfg["gap_weight"],
+                                               "load": plan.stand_cfg["load_weight"]}):
         raise ValueError("EX-40 actual Kit env/command seed or env count differs")
-    args = receipt["argv"]
-    table = Path(args[args.index("--curriculum") + 1])
-    plan = Plan(table, arm=receipt["arm"], smoke_boundaries=(2, 5, 8, 11))
     if (plan.sha256 != receipt.get("curriculum_sha256")
             or plan.effective_sha256 != receipt.get("effective_schedule_sha256")):
         raise ValueError("EX-40 Kit stage table differs from pinned launch receipt")
@@ -223,16 +230,16 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     consumed = _check_consumption(rows, plan, changed_by_stage)
     entered = [(stage.id, stage.fixed_update) for stage in plan.stages]
     status = json.loads((run / "train_start_status.json").read_text(encoding="utf-8-sig"))
-    if status.get("state") != "done" or status.get("iter") != 12 or not (run / "model_12.pt").is_file():
-        raise ValueError("D68 Kit smoke did not complete and save model_12")
-    checkpoint_sha = hashlib.sha256((run / "model_12.pt").read_bytes()).hexdigest()
+    if status.get("state") != "done" or status.get("iter") != 14 or not (run / "model_14.pt").is_file():
+        raise ValueError("D70 Kit smoke did not complete and save model_14")
+    checkpoint_sha = hashlib.sha256((run / "model_14.pt").read_bytes()).hexdigest()
     if status.get("sha256") != checkpoint_sha:
         raise ValueError("EX-40 completed checkpoint SHA and status differ")
     return {"state": "PASS", "run_dir": str(run), "stages": entered,
             "reset_adoptions": changed_by_stage,
             "stage_consumption": consumed,
             "shares_checked": True, "reward_weights_checked": True,
-            "checkpoint": str(run / "model_12.pt"), "checkpoint_sha256": checkpoint_sha}
+            "checkpoint": str(run / "model_14.pt"), "checkpoint_sha256": checkpoint_sha}
 
 
 def main(argv: list[str] | None = None) -> int:

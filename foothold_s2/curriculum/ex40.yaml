@@ -4,11 +4,15 @@ baseline_env_yaml_sha256: 4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b
 baseline_agent_yaml_sha256: 213b82acc0a8d937de3f85171619e7d20c55612b37033bdeb05c6adff3c06308
 promotion: fixed
 shadow_gate: true
+gate: {minimum_exposure_updates: 500, separated_checkpoints: 250}
+stand_penalty: {gap_weight: -0.2, load_weight: -0.1, load_fraction: 0.05, ramp_s: 0.5}
+heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_wz_limit: 0.5, target_wz_limit: 1.5}
 stages:
   - id: B0
     start: {fixed_update: 0}
     adds:
       command_slots: [forward, spin_left, spin_right, stand]
+      rewards: {track_ang_vel: 1.0, track_lin_vel: 2.0, joint_acc: -0.0000001, hip_pos_penalty: -0.05, thigh_calf_pos_l1: -0.01, four_foot_contact_at_stop: 0.1, stand_gap: -0.2, stand_load: -0.1}
     # S-B10 START: 80% forward, 20% spin. Existing stand share 10% is
     # inserted from the W55 B1 design, leaving 72% forward and 18% spin.
     shares: {forward: 0.72, spin_left: 0.09, spin_right: 0.09, stand: 0.10}
@@ -16,7 +20,7 @@ stages:
       forward_vx: [0.3, 1.5]
       walk_vx: [0.3, 0.8]
       walk_wz_abs: [0.2, 0.5]
-      spin_wz_abs: [0.0, 1.2]
+      spin_wz_abs: [0.5, 1.2]
       reverse_vx: [-0.8, -0.2]
       side_vy_abs: [0.2, 0.5]
     heading_arm: null
@@ -24,12 +28,6 @@ stages:
   - id: B1
     start: {fixed_update: 1501}
     adds:
-      rewards:
-        track_ang_vel: 1.0
-        track_lin_vel: 2.0
-        joint_acc: -0.0000001
-        hip_pos_penalty: -0.05
-        thigh_calf_pos_l1: -0.01
       command_slots: [walk_left, walk_right, reverse, side_left, side_right]
     shares: {forward: 0.40, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.10, side_left: 0.05, side_right: 0.05}
     ranges:

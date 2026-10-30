@@ -83,7 +83,12 @@ def four_foot_contact_at_stop(env, command_name, sensor_cfg, threshold=1.0):
     if forces.shape[1] != 4:
         raise ValueError("EX-39 stand contact requires four foot bodies")
     in_contact = torch.linalg.vector_norm(forces, dim=-1) > threshold
-    reward = ((torch.linalg.vector_norm(command, dim=1) < 0.1) & in_contact.all(dim=1)).float()
+    term = env.command_manager.get_term(command_name)
+    if getattr(term, "stage_runtime", None) is not None:
+        stop = term.stand
+    else:
+        stop = torch.linalg.vector_norm(command, dim=1) < 0.1
+    reward = (stop & in_contact.all(dim=1)).float()
     samples = getattr(env, "_ex39_kit_foot_smoke", None)
     if samples is not None and len(samples) < 8:
         from foothold_s2.commands.mixed_core import EX39_SLOTS
@@ -93,6 +98,73 @@ def four_foot_contact_at_stop(env, command_name, sensor_cfg, threshold=1.0):
         samples.append({"stand_envs": int(stand.sum().item()),
                         "four_foot_mean": float(reward[stand].mean().item()) if stand.any() else 0.0})
     return reward
+
+
+def stand_penalty_values(gap_m, vertical_force_n, mass_kg, stop, elapsed_s,
+                         *, gap_weight=-0.2, load_weight=-0.1,
+                         load_fraction=0.05, ramp_s=0.5):
+    """D70 terms before RewardManager dt; height is collision sole above its ray hit."""
+    if (gap_m.shape != vertical_force_n.shape or gap_m.ndim != 2 or gap_m.shape[1] != 4
+            or mass_kg.shape != gap_m.shape[:1] or stop.shape != mass_kg.shape
+            or elapsed_s.shape != mass_kg.shape or not torch.isfinite(gap_m).all()
+            or not torch.isfinite(mass_kg).all() or (mass_kg <= 0).any()):
+        raise ValueError("EX-40 stand sensor geometry or mass invalid")
+    support = (load_fraction * mass_kg * 9.81)[:, None]
+    ramp = (elapsed_s / ramp_s).clamp(0.0, 1.0) * stop.float()
+    gap = gap_weight * ((gap_m - 0.005).clamp_min(0.0) / 0.05).sum(dim=1) * ramp
+    load = load_weight * ((support - vertical_force_n.clamp_min(0.0)).clamp_min(0.0)
+                          / support).sum(dim=1) * ramp
+    return gap, load
+
+
+def _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config):
+    robot = env.scene[asset_cfg.name]
+    term = env.command_manager.get_term(command_name)
+    hit_z = torch.stack([env.scene.sensors[f"ex40_support_{i}"].data.ray_hits_w[:, 0, 2]
+                         for i in range(4)], dim=1)
+    # Go2 URDF foot collision sphere: local center (-0.002, 0, 0), r=0.022.
+    # Transform the center with the full foot orientation, including roll and pitch.
+    from isaaclab.utils.math import quat_apply
+
+    center_offset = robot.data.body_pos_w.new_tensor((-0.002, 0.0, 0.0))
+    foot_quat = robot.data.body_quat_w[:, asset_cfg.body_ids]
+    center_w = robot.data.body_pos_w[:, asset_cfg.body_ids] + quat_apply(
+        foot_quat.reshape(-1, 4), center_offset.expand(foot_quat.shape[0] * 4, 3)
+    ).reshape(foot_quat.shape[0], 4, 3)
+    sole_z = center_w[..., 2] - 0.022
+    force_z = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids, 2]
+    mass = env._ex40_total_mass_kg
+    return stand_penalty_values(sole_z - hit_z, force_z, mass, term.stand,
+                                term.stop_elapsed_s, **config)
+
+
+def ex40_stand_gap(env, asset_cfg, sensor_cfg, command_name, config):
+    return _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config)[0] / config["gap_weight"]
+
+
+def ex40_stand_load(env, asset_cfg, sensor_cfg, command_name, config):
+    return _stand_penalties(env, asset_cfg, sensor_cfg, command_name, config)[1] / config["load_weight"]
+
+
+def apply_ex40_stand_settings(env_cfg, config):
+    from isaaclab.managers import RewardTermCfg as RewTerm, SceneEntityCfg
+    from isaaclab.sensors import RayCasterCfg, patterns
+
+    feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    for i, name in enumerate(feet):
+        setattr(env_cfg.scene, f"ex40_support_{i}", RayCasterCfg(
+            prim_path=f"{{ENV_REGEX_NS}}/Robot/{name}",
+            offset=RayCasterCfg.OffsetCfg(pos=(-0.002, 0.0, 20.0)),
+            ray_alignment="base",
+            pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.0, 0.0], ordering="yx"),
+            mesh_prim_paths=["/World/ground"], update_period=0.0))
+    args = {"asset_cfg": SceneEntityCfg("robot", body_names=list(feet)),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=list(feet)),
+            "command_name": "base_velocity", "config": dict(config)}
+    env_cfg.rewards.ex40_stand_gap = RewTerm(func=ex40_stand_gap,
+                                             weight=config["gap_weight"], params=args)
+    env_cfg.rewards.ex40_stand_load = RewTerm(func=ex40_stand_load,
+                                              weight=config["load_weight"], params=args)
 
 
 def apply_ex39_settings(env_cfg, contact_weight: float = 0.1) -> dict:

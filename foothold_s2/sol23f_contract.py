@@ -78,7 +78,7 @@ def command_settings(args) -> dict:
             from foothold_s2.curriculum.continuous import Plan
 
             plan = Plan(args.curriculum, arm=getattr(args, "curriculum_arm", None),
-                        smoke_boundaries=(2, 5, 8, 11) if getattr(args, "curriculum_kit_smoke", False) else None)
+                        smoke_boundaries=(3, 6, 9, 12) if getattr(args, "curriculum_kit_smoke", False) else None)
             out["command_contract"] = "basic_gait_ex40"
             out["basic_shares"] = plan.stages[0].shares
             out["curriculum_sha256"] = plan.sha256
@@ -104,7 +104,7 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
         raise ValueError("D68 B0 requires basic_gait stage sampler, S-B10 clock and p_map_off 0.1")
     if args.seed != 42 or args.num_envs != 3072:
         raise ValueError("W55 seed or env count differs from its smoke/main contract")
-    if args.max_iterations != (13 if args.curriculum_kit_smoke else 6001):
+    if args.max_iterations != (15 if args.curriculum_kit_smoke else 6001):
         raise ValueError("W55 max_iterations must finish the smoke or T0 stage exactly")
     if args.basic_stage != ("smoke" if args.curriculum_kit_smoke else "main") or args.smoke_updates is not None:
         raise ValueError("W55 smoke and main output stages must be separate")
@@ -117,7 +117,7 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
     if args.resume_from:
         raise ValueError("D68 EX-40 starts at m0 without --resume_from")
     plan = Plan(args.curriculum, arm=args.curriculum_arm,
-                smoke_boundaries=(2, 5, 8, 11) if args.curriculum_kit_smoke else None)
+                smoke_boundaries=(3, 6, 9, 12) if args.curriculum_kit_smoke else None)
     if plan.arm is None:
         raise ValueError("W55 B2 arm undecided: explicit --curriculum-arm A|B required")
     if verify_parent:

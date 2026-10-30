@@ -379,8 +379,12 @@ class StartRunner(OnPolicyRunner):
                     if trace is not None:
                         trace.pre_step(actions)
                     prev_xy = self._robot_xy_for_off()                        # M-T6: env.step 이 끝난 에피소드를 reset 해 버리기 전 위치(끝난 에피소드가 놓였던 칸을 알려고)
+                    if continuous is not None:
+                        continuous.record_pre_step()
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if continuous is not None:
+                        continuous.record_post_step(dones)
                     if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
                         lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
                         self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta, extras.get("time_outs"), self.pstate.use_gt)
@@ -476,6 +480,8 @@ class StartRunner(OnPolicyRunner):
                 self._map_switch_log(it, loss_dict)
             learn_time = time.time() - start
             self.current_learning_iteration = it
+            if continuous is not None:
+                continuous.flush_consumption(it)
             steps = self.num_steps_per_env * n * self.gpu_world_size
             self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
                                   "steps_per_s": steps / (collection_time + learn_time)})

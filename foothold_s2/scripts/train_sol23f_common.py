@@ -121,7 +121,7 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.curriculum.continuous import Plan
 
         curriculum_plan = Plan(args_cli.curriculum, arm=args_cli.curriculum_arm,
-                               smoke_boundaries=(2, 5, 8, 11) if args_cli.curriculum_kit_smoke else None)
+                               smoke_boundaries=(3, 6, 9, 12) if args_cli.curriculum_kit_smoke else None)
     installed = metadata.version("rsl-rl-lib")
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
@@ -214,19 +214,17 @@ def main(env_cfg, agent_cfg):
         "track_ang_vel": reward_weights.get("track_ang_vel", args_cli.basic_track_ang_weight),
         "track_lin_vel": reward_weights.get("track_lin_vel", args_cli.basic_track_lin_weight),
         "joint_acc": reward_weights.get("joint_acc", args_cli.basic_joint_acc_weight),
-        "hip_pos_penalty": (0.0 if curriculum_plan else args_cli.basic_hip_pos_weight),
+        "hip_pos_penalty": (reward_weights["hip_pos_penalty"] if curriculum_plan else args_cli.basic_hip_pos_weight),
     }, args_cli.basic_lin_vel_z_schedule, args_cli.basic_feet_regulation_weight))
     if args_cli.basic_ex39_arm or curriculum_plan:
         from foothold_s2.rewards.basic_gait_bundle import apply_ex39_settings
 
         basic_reward_bundle["ex39_common"] = apply_ex39_settings(env_cfg)
         if curriculum_plan:
-            # Register terms before gym.make, but B0 computes the exact S-B10
-            # reward. B1 activates thigh/calf at its update boundary.
-            env_cfg.rewards.ex39_thigh_calf_pos_l1.weight = 0.0
-            env_cfg.rewards.ex39_four_foot_stop.weight = 0.0
-            basic_reward_bundle["ex39_common"]["thigh_calf_pos_l1"] = 0.0
-            basic_reward_bundle["ex39_common"]["stand_four_foot_contact"] = 0.0
+            from foothold_s2.rewards.basic_gait_bundle import apply_ex40_stand_settings
+
+            apply_ex40_stand_settings(env_cfg, curriculum_plan.stand_cfg)
+            basic_reward_bundle["ex40_stand"] = dict(curriculum_plan.stand_cfg)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -236,6 +234,11 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.sensors.start_obs import AUG
         AUG.enabled = False
     env = gym.make(args_cli.task, cfg=env_cfg)
+    if curriculum_plan is not None:
+        masses = env.unwrapped.scene["robot"].root_physx_view.get_masses()
+        if masses.ndim != 2 or masses.shape[0] != env.unwrapped.num_envs:
+            raise ValueError("EX-40 realized per-env robot masses unavailable")
+        env.unwrapped._ex40_total_mass_kg = masses.sum(dim=1).to(env.unwrapped.device)
     basic_terrain = None
     if basic_l02:
         from foothold_s2.commands.basic_levels import place_l0n
@@ -315,9 +318,11 @@ def main(env_cfg, agent_cfg):
         continuous.attach(runner, command_term)
         if resume_path is None:
             continuous.start()
-    runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
+    runner.basic_lin_vel_z_schedule = (continuous.active >= 1 if continuous is not None
+                                        else bool(basic_reward_bundle["lin_vel_z_schedule"]))
     # EX-38 schedule is tied to its original m1501 start, including later segments.
-    runner.basic_lin_vel_z_start_iteration = 1501 if (args_cli.basic_ex38 or args_cli.basic_ex39_arm or curriculum_plan) else 0
+    runner.basic_lin_vel_z_start_iteration = (continuous.stage_entry_iteration if continuous is not None
+                                               else 1501 if (args_cli.basic_ex38 or args_cli.basic_ex39_arm) else 0)
     if resume_path is None:
         initial = os.path.join(log_dir, "model_initial.pt")
         runner.save_initial(initial)
@@ -363,7 +368,9 @@ def main(env_cfg, agent_cfg):
                                                      types.numpy().tobytes()).hexdigest(),
             "baseline_env_yaml_sha256": curriculum_plan.baseline_env_yaml_sha256,
             "baseline_agent_yaml_sha256": curriculum_plan.baseline_agent_yaml_sha256,
-            "stand_reward": "undecided_disabled",
+            "stand_reward": {"four_foot_contact": reward_weights["four_foot_contact_at_stop"],
+                             "gap": curriculum_plan.stand_cfg["gap_weight"],
+                             "load": curriculum_plan.stand_cfg["load_weight"]},
         }
         with open(os.path.join(log_dir, "curriculum_start_receipt.json"), "x", encoding="utf-8") as stream:
             json.dump(curriculum_start_receipt, stream, ensure_ascii=False, indent=2)

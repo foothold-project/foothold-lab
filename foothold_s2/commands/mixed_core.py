@@ -312,11 +312,29 @@ def resample_stage(gen, n, stage, yaw):
     spin_heading_draw = _u(gen, (n,))
     target_spin = _u(gen, (n,), -math.pi, math.pi)
     if stage.heading_arm == "B":
-        heading = (forward & (forward_heading_draw < 0.5)) | (spin & (spin_heading_draw < 0.3))
+        heading = (forward & (forward_heading_draw < stage.heading_cfg["forward_fraction"]))
+        if stage.id in ("B2", "B3", "T0"):
+            heading |= spin & (spin_heading_draw < stage.heading_cfg["spin_target_fraction"])
         psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
         wz = torch.where(heading, zeros, wz)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
             "heading": heading, "psi_star": psi_star, "slot": slot}
+
+
+def apply_stage_heading(cmd, heading, stand, psi_star, yaw, slot, stage_ids, stages):
+    """D70 heading caps differ for forward and target-facing spin slots."""
+    out = cmd.clone()
+    for index, stage in enumerate(stages):
+        mask = (stage_ids == index) & heading
+        if not bool(mask.any()):
+            continue
+        cap = torch.where(slot[mask] == EX39_SLOTS.index("forward"),
+                          torch.full_like(yaw[mask], stage.heading_cfg["forward_wz_limit"]),
+                          torch.full_like(yaw[mask], stage.heading_cfg["target_wz_limit"]))
+        error = wrap_to_pi(psi_star[mask] - yaw[mask])
+        out[mask, 2] = torch.clamp(stage.heading_cfg["gain"] * error, -cap, cap)
+    out[stand] = 0.0
+    return out
 
 
 def basic_shares(new_share):
