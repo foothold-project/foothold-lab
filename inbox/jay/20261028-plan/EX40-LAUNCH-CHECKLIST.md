@@ -28,14 +28,14 @@
 | B3 | DR 범위표·밀기 논문·관측 잡음 근거 | analyst | 범위·출처·W51 결과 완료. 최종 통합본 대조는B11 | analyst-ame2 DR-RANGES-EX40-1030 v0.1f. SLR 영상 직접 확인, 논문·코드 외란은 다름. 문서96c19539 대조 이력 |
 | B4 | W51 추가 비교: EX38 m3001·EX39B m4501, 5조건+base재측정, GPU1 직렬 | analyst | 10/31 00:42:15 완료, 12/12 rc0·468칸. 감독기 종료0 및 CPU 원자료 대조 확인 | s2_lab/basic_gait_runs/eval_actuator/w51_followup_20261030/batch_done.json. analyst-ame2/_out/reports/w51-followup-1030/RESULT-W51-followup.md·audit.json. ±0.5 진단값은D76 학습값과 별개 |
 | B5 | 코드: 단계 표 v7(지형 L0~2 · 재개 계약) | runner | 끝 | v7 |
-| B6 | DR 일정·이벤트·readback·확인기 | runner | 2da3afe5의 H2/H3 지정 반례 닫힘. 실제 Kit 미확인 | verifier §7.1/7.2: 정상 네 이벤트 PASS, COM±99·motor0·NaN·pending 거부. 실제 환경 직렬화·표본은B12에서 |
+| B6 | DR 일정·이벤트·readback·확인기 | runner · scripter(실제 Kit 결함) | B12 첫 reset 기록 실패의 CPU 고침 e53f63de 확인, 실제 Kit 미재검 | gain 표본 폭8/4 오류. 한 줄 flatten 고침, 원출력 수정 전2FAIL/후36PASS. analyst isaac311 독립2PASS/2.06s, 실제 물리 적용은 재시도 전이라 미확인 |
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
-| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P2·최종completion·학습중 호출·누락 거부 확인. P1 정상 재개 출처1 남음 | r5 단일segment31개consumed. 분리segment는report8건done/completion31개done이나supervisor는과거SHA조회로pending. 앞선「분리segment consumed」표현을정정 |
-| B10 | v7·v8·점수기·보고 통합 | runner | b5bca3b5 clean 검증 뒤 정상 재개 출처 후속 고침 중 | CPU34건(독립10.05s)·r5 누락반례닫힘. 02:36:26 runner request775fb1d9 turn_started. target·보고SHA 두 소비자리를같은P1묶음에서고침 |
-| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 기존닫힘보존, P1 정상재개출처 막음1 | VERIFY-EX40-B11-1031 §10, r5 results.json/split-trace.json. 이전segment1500 평가가유효해도새segment1550/1600 pending, 분리31개도과거보고SHA없다며pending. analyst P1-RECHECK-1031 02:38절. 전체0전Kit대기, B14금지 |
-| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | P1을 포함한 B11 막음0 뒤 한 번 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
-| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | CPU 준비 보고 접수. B11/B12 및GPU1 W51 종료 뒤 한 번 | scripter-ex40-b13 29a526b1 · PREP-EX40-B13-1031.md. CPU32는scripter 보고, Kit 미실행. 짧은model17 전체 경로 시험은 T0 성능 판정과 분리. W51과 중복 기동 금지 |
+| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P1 source 고침68161fc7 완료, 독립 지적분 확인 중 | r5 분리segment report8건/completion31개 통과와 supervisor pending을 구분한다. 68161fc7의 target·보고 SHA 출처 고침을 verifier r6에서 확인 중 |
+| B10 | v7·v8·점수기·보고 통합 | runner | P1 고정 HEAD68161fc7 clean. Kit은 별도 b5bca3b5 고정 사본 사용 | CPU 원출력38건/15.25s. P1 변경은 supervisor·시험·보고. smoke 소비 파일은 그대로. 새 B12 actuator 결함은 scripter-ex40-b12-actuator에서 분리 고침 |
+| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 기존 닫힘 보존, P1 source 지적분 재확인 대기 | §10/r5 뒤 68161fc7을 02:51:35 전달, request299c9cb0 turn_started. 최신 직접 지시(lead02:5x)에 따라 smoke 미사용 P1과 B12/B13 병행 허용. B11 전체0 또는 Kit PASS로 확대하지 않음 |
+| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | 1회 실패 rc1·갱신/저장본0. e53f63de CPU 고침 확인, 제한 재시도 미실행 | b5bca3b5 실행 사본 보존. ex40_b12_20261031_b5b/receipts/ex40_b11/B_smoke_20261031_024253_1123474/run.log:236~239. 02:43:36 failed, kit_check.json 빈 파일. 새 사본/출력에서 동일18갱신 한 번 재시도 범위를 lead에 보고 |
+| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | 미실행. W51은 완료했으나 실제 B12 model17이 없어 대기 | scripter-ex40-b13 29a526b1 · PREP-EX40-B13-1031.md. 짧은 model17 전체 경로 시험은 T0 성능 판정과 분리. B12 PASS 영수증 뒤 한 번 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | D77 조건 충족 후 lead 판단. analyst 본기동 금지 유지 | analyst 위임은B12/B13과명령·ETA준비까지 |
 | B15 | 돌았다 확인(팀장 10/31 00:0x 강화): GPU0 compute-apps PID = 학습 PID · 메모리/사용률 지속(여러 번) · run.log 회차가 시각과 함께 증가 · 1 회 속도 · 저장본 · stage_log · train_extra(DR readback · 발별 · 지형 L0~2) 생성 · 영수증 HEAD = 고정 사본 · dirty 0 · 인자 = D68~D77 · 점수기 GPU1 만. 기동 직후와 10 분 뒤 두 번 | lead | 대기 | |
 
@@ -68,3 +68,7 @@
 - analyst는 범위 고침 → verifier B11 → B12/B13 순서만 맡는다. B14는 시작하지 않고 명령·ETA·END_BY를 준비해 lead에 보고한다.
 - R6 실제 Kit, R25 범위 보존, M02 고정 실행 사본, M76 실제값 대조, M77 마감 여유를 적용한다.
 - 20분 재개 알림을 자신의 창에만 걸었다. 00:03:53 시험 문장이 실제 입력으로 도착했다. 자동GPU기동 기능은 없다. 로그: analyst-ame2/_out/reports/ex40-coord-1031/wake-status.log.
+
+## 10/31 02:53 실제 Kit 실패 갱신
+
+최신 직접 지시는 smoke 미사용 P1과 B12/B13을 병행하도록 바꿨다. 이에 b5bca3b5 고정 사본에서 B12를 한 번 실행했으나 첫 reset에서 실패했다. CPU 통과를 실제 Kit 통과로 쓰지 않는다. 원자료·해시·고침 의뢰는 `C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/ex40-coord-1031/B12-B13-KIT-1031.md`. 02:56 scripter e53f63de의 CPU 고침을 독립 대조했다. verifier P1 확인은 별도로 진행하며 B13은 실제 저장본 대기, B14는 계속 금지다.
