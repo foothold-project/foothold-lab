@@ -9,12 +9,15 @@ import json
 import math
 from pathlib import Path
 
+import torch
 import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS
 from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES
-from foothold_s2.ex40_launch import BASELINE, INTENTIONAL_CURRICULUM_DIFFERENCE
+from foothold_s2.ex40_launch import (
+    BASELINE, INTENTIONAL_CURRICULUM_DIFFERENCE, INTENTIONAL_TERRAIN_DIFFERENCE,
+)
 
 
 REWARD_TERMS = {
@@ -61,14 +64,20 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
         raise ValueError("D68 S-B10 terrain curriculum baseline changed")
     # Decision 8 changes only the frame used to score terrain promotion.
     # BaseLoader preserves YAML booleans as the strings "true" and "false".
-    expected_curriculum["terrain_levels"]["params"] = {
-        "mask_new_task": "false", "world_frame": "true"}
+    if plan.terrain_curriculum == "fixed_l02":
+        expected_curriculum["terrain_levels"] = "null"
+    else:
+        expected_curriculum["terrain_levels"]["params"] = {
+            "mask_new_task": "false", "world_frame": "true"}
     if doc.get("curriculum") != expected_curriculum:
-        raise ValueError("D68 B0 curriculum differs from S-B10 plus decision 8")
+        raise ValueError("EX-40 terrain promotion config differs from selected policy")
     terrain = ((doc.get("scene") or {}).get("terrain") or {}).get("terrain_generator")
     expected_terrain = baseline["scene"]["terrain"]["terrain_generator"]
     if terrain != expected_terrain:
         raise ValueError("D68 B0 terrain generator differs from S-B10")
+    terrain_cfg = (doc.get("scene") or {}).get("terrain") or {}
+    if plan.terrain_curriculum == "fixed_l02" and str(terrain_cfg.get("max_init_terrain_level")) != "2":
+        raise ValueError("EX-40 fixed_l02 must set max_init_terrain_level to 2")
     if (str(command.get("seed")) != str(baseline["commands"]["base_velocity"]["seed"])
             or command.get("resampling_time_range") != baseline["commands"]["base_velocity"]["resampling_time_range"]):
         raise ValueError("D68 B0 command seed or resample interval differs from S-B10")
@@ -324,15 +333,31 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     if (cfg.get("sha256") != receipt.get("curriculum_sha256")
             or cfg.get("effective_schedule_sha256") != receipt.get("effective_schedule_sha256")
             or cfg.get("arm") != receipt["arm"]
+            or cfg.get("terrain_curriculum") != receipt.get("terrain_curriculum")
             or modes.get("contract") != "basic_gait_ex40"):
         raise ValueError("EX-40 actual Kit manifest differs from CPU launch contract")
+    manifest_terrain = modes.get("terrain_policy") or {}
+    if plan.terrain_curriculum == "fixed_l02" and manifest_terrain != {
+            "policy": "fixed_l02", "max_init_terrain_level": 2, "promotion_enabled": False}:
+        raise ValueError("EX-40 manifest does not prove fixed L0..L2 with terrain promotion disabled")
     start = json.loads((run / "curriculum_start_receipt.json").read_text(encoding="utf-8-sig"))
-    if (start.get("start") != "scratch" or start.get("num_envs") != 3072
+    terrain_receipt = start.get("terrain") or {}
+    if (start.get("start") != "scratch" or start.get("segment_index") != 0
+            or start.get("parent_checkpoint") is not None or start.get("num_envs") != 3072
             or start.get("env_seed") != 42 or start.get("command_seed") != 0
             or start.get("stand_reward") != {"four_foot_contact": 0.1,
                                                "gap": plan.stand_cfg["gap_weight"],
-                                               "load": plan.stand_cfg["load_weight"]}):
+                                               "load": plan.stand_cfg["load_weight"]}
+            or terrain_receipt.get("policy") != plan.terrain_curriculum
+            or terrain_receipt.get("num_envs") != 3072
+            or sum(terrain_receipt.get("actual_counts_by_level", [])) != 3072):
         raise ValueError("EX-40 actual Kit env/command seed or env count differs")
+    if plan.terrain_curriculum == "fixed_l02" and (
+            terrain_receipt.get("max_init_terrain_level") != 2
+            or terrain_receipt.get("promotion_enabled") is not False
+            or terrain_receipt.get("level_max", 99) > 2
+            or any(terrain_receipt.get("actual_counts_by_level", [])[3:])):
+        raise ValueError("EX-40 Kit actual terrain distribution or disabled promotion differs")
     if (plan.sha256 != receipt.get("curriculum_sha256")
             or plan.effective_sha256 != receipt.get("effective_schedule_sha256")):
         raise ValueError("EX-40 Kit stage table differs from pinned launch receipt")
@@ -350,12 +375,20 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     checkpoint_sha = hashlib.sha256((run / "model_17.pt").read_bytes()).hexdigest()
     if status.get("sha256") != checkpoint_sha:
         raise ValueError("EX-40 completed checkpoint SHA and status differ")
+    state = torch.load(run / "model_17.pt", map_location="cpu", weights_only=False)
+    final_terrain = ((state.get("continuous_curriculum") or {}).get("terrain_receipt") or {})
+    if (final_terrain.get("policy") != terrain_receipt.get("policy")
+            or final_terrain.get("actual_counts_by_level") != terrain_receipt.get("actual_counts_by_level")
+            or final_terrain.get("terrain_labels_sha256") != terrain_receipt.get("terrain_labels_sha256")):
+        raise ValueError("EX-40 final checkpoint terrain distribution differs from launch receipt")
     return {"state": "PASS", "run_dir": str(run), "stages": entered,
-            "intentional_baseline_differences": [INTENTIONAL_CURRICULUM_DIFFERENCE],
+            "intentional_baseline_differences": [INTENTIONAL_CURRICULUM_DIFFERENCE,
+                                                 INTENTIONAL_TERRAIN_DIFFERENCE],
             "reset_adoptions": changed_by_stage,
             "stage_consumption": consumed,
             "shares_checked": True, "reward_weights_checked": True,
             "stand_sensor_checked": stand_sensor,
+            "terrain_policy": terrain_receipt,
             "checkpoint": str(run / "model_17.pt"), "checkpoint_sha256": checkpoint_sha}
 
 

@@ -7,6 +7,7 @@ END_BY="${3:?ISO8601 deadline with timezone}"
 LOG_ROOT="${4:?absolute isolated log root}"
 SCORE_DIR="${5:?absolute score directory}"
 KIND="${6:?smoke or main}"
+RESUME_SPEC="${7:-}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311
 PY="$ENV/python.exe"
@@ -18,13 +19,25 @@ OPTS=(--arm "$ARM" --device "$DEV" --end-by "$END_BY" --log-root "$LOG_ROOT" --s
 case "$KIND" in
   smoke) OPTS+=(--smoke) ;;
   main) ;;
-  *) echo 'kind must be smoke or main' >&2; exit 2 ;;
+  resume)
+    if [[ -z "$RESUME_SPEC" || ! -f "$RESUME_SPEC" ]]; then
+      echo 'resume needs a readable seventh argument: resume spec JSON' >&2; exit 2
+    fi
+    ;;
+  *) echo 'kind must be smoke, main, or resume' >&2; exit 2 ;;
 esac
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="$LOG_ROOT/receipts/ex40/${ARM}_${KIND}_${STAMP}_$$"
 mkdir -p "$OUT"
-"$PY" -m foothold_s2.ex40_launch "${OPTS[@]}" > "$OUT/launch_receipt.json"
-"$PY" -m foothold_s2.ex40_launch "${OPTS[@]}" --print-args > "$OUT/launch_args.txt"
+if [[ "$KIND" == "resume" ]]; then
+  RESUME_OPTS=(--resume-spec "$RESUME_SPEC" --arm "$ARM" --device "$DEV"
+               --end-by "$END_BY" --log-root "$LOG_ROOT" --score-dir "$SCORE_DIR")
+  "$PY" -m foothold_s2.ex40_launch "${RESUME_OPTS[@]}" > "$OUT/launch_receipt.json"
+  "$PY" -m foothold_s2.ex40_launch "${RESUME_OPTS[@]}" --print-args > "$OUT/launch_args.txt"
+else
+  "$PY" -m foothold_s2.ex40_launch "${OPTS[@]}" > "$OUT/launch_receipt.json"
+  "$PY" -m foothold_s2.ex40_launch "${OPTS[@]}" --print-args > "$OUT/launch_args.txt"
+fi
 "$PY" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json"
 mapfile -t ARGS < <(tr -d '\r' < "$OUT/launch_args.txt")
 git rev-parse HEAD > "$OUT/git_head.txt"

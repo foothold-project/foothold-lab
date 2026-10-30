@@ -72,7 +72,7 @@ def test_b1_schedule_origin_survives_all_stages_and_resume(tmp_path):
         assert runtime.b1_entry_iteration == runner.basic_lin_vel_z_start_iteration == 1501
         assert set_lin_vel_z_weight(runner.env, update, runner.basic_lin_vel_z_start_iteration) == pytest.approx(value)
         if update == 3001:
-            restored = Runtime(plan, 2, "cpu", tmp_path / "resumed")
+            restored = Runtime(plan, 2, "cpu", tmp_path / "resumed", segment_index=1)
             resumed_runner = attached(restored)
             restored.load_state_dict(runtime.state_dict())
             restored.on_update_start(3002)
@@ -81,7 +81,7 @@ def test_b1_schedule_origin_survives_all_stages_and_resume(tmp_path):
     with pytest.raises(ValueError, match="B1 schedule origin"):
         bad = runtime.state_dict()
         bad.pop("b1_entry_iteration")
-        Runtime(plan, 2, "cpu", tmp_path / "bad").load_state_dict(bad)
+        Runtime(plan, 2, "cpu", tmp_path / "bad", segment_index=1).load_state_dict(bad)
 
 
 def test_gate_b1_origin_is_actual_first_entry(tmp_path):

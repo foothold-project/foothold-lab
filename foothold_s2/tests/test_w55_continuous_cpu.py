@@ -264,7 +264,7 @@ def test_gate_two_eligible_passes_fail_override_and_resume(tmp_path):
     score(1000, "PASS")
     assert run.pending_gate is None
     state = run.state_dict()
-    resumed = Runtime(plan, 2, "cpu", tmp_path / "resume", scores)
+    resumed = Runtime(plan, 2, "cpu", tmp_path / "resume", scores, segment_index=1)
     resumed.load_state_dict(state)
     assert len(resumed.passes) == 1
     score(1250, "PASS")
@@ -318,7 +318,8 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                       log_root=tmp_path / "output", score_dir=tmp_path / "scores", smoke=True)
     launch = receipt(args)
     assert launch["intentional_baseline_differences"] == [
-        "S-B10 대비 의도된 차이 1: 지형 승급 판정 세계 좌표(결정 8)"]
+        "S-B10 대비 의도된 차이 1: 지형 승급 판정 세계 좌표(결정 8)",
+        "S-B10 대비 의도된 차이 2: 지형 자동 승급 끔(L0~2 고정, 팀장 결정 대기)"]
     receipt_path = tmp_path / "receipt.json"
     receipt_path.write_text(json.dumps(launch), encoding="utf-8")
     run_log = tmp_path / "run.log"
@@ -328,8 +329,7 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     plan = Plan(TABLE, arm="B", smoke_boundaries=(3, 6, 9, 12, 15))
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     expected_curriculum = copy.deepcopy(baseline["curriculum"])
-    expected_curriculum["terrain_levels"]["params"] = {
-        "mask_new_task": False, "world_frame": True}
+    expected_curriculum["terrain_levels"] = "null"
     rewards = {key: {"weight": float(value["weight"])} for key, value in baseline["rewards"].items()}
     rewards.update({actual: {"weight": plan.stages[0].rewards[source]} for source, actual in
                     (("hip_pos_penalty", "basic_hip_pos_penalty_l1"),
@@ -343,7 +343,8 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
         "params": {"curriculum_mode": True}, "flag_stride": 0, "dynamic_flags": False,
         "seed": 0, "resampling_time_range": baseline["commands"]["base_velocity"]["resampling_time_range"]}},
         "rewards": rewards, "events": baseline["events"], "curriculum": expected_curriculum,
-        "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"]},
+        "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"],
+                                "max_init_terrain_level": 2},
                   **{f"ex40_support_{i}": {"prim_path": f"Robot/{name}_foot",
                        "ray_alignment": "yaw", "offset": {"pos": [-.002, 0, 20]}}
                      for i, name in enumerate(("FL", "FR", "RL", "RR"))}}}),
@@ -366,8 +367,17 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
                                   "effective_schedule_sha256": plan.effective_sha256,
-                                  "arm": "B"}}}), encoding="utf-8")
+                                      "arm": "B", "terrain_curriculum": "fixed_l02"},
+            "terrain_policy": {"policy": "fixed_l02", "max_init_terrain_level": 2,
+                               "promotion_enabled": False}}}), encoding="utf-8")
+    terrain_levels = torch.zeros(3072, dtype=torch.long)
+    terrain_types = torch.zeros(3072, dtype=torch.long)
+    terrain_sha = hashlib.sha256(terrain_levels.numpy().tobytes() + terrain_types.numpy().tobytes()).hexdigest()
+    terrain_receipt = {"policy": "fixed_l02", "max_init_terrain_level": 2,
+        "promotion_enabled": False, "num_envs": 3072, "actual_counts_by_level": [3072] + [0] * 9,
+        "level_min": 0, "level_max": 0, "terrain_labels_sha256": terrain_sha}
     (run / "curriculum_start_receipt.json").write_text(json.dumps({"start": "scratch",
+        "segment_index": 0, "parent_checkpoint": None, "terrain": terrain_receipt,
         "num_envs": 3072, "env_seed": 42, "command_seed": 0,
         "stand_reward": {"four_foot_contact": .1, "gap": -.2, "load": -.1}}), encoding="utf-8")
     events = []
@@ -395,9 +405,10 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                             "use_gt_envs": 4, "adasmpl_p": 1.0}))
     stage_log = run / "stage_log.jsonl"
     stage_log.write_text("\n".join(json.dumps(r) for r in events) + "\n", encoding="utf-8")
-    (run / "model_17.pt").write_bytes(b"known model")
+    torch.save({"continuous_curriculum": {"terrain_receipt": terrain_receipt}}, run / "model_17.pt")
+    checkpoint_sha = hashlib.sha256((run / "model_17.pt").read_bytes()).hexdigest()
     (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 17,
-        "sha256": hashlib.sha256(b"known model").hexdigest()}), encoding="utf-8")
+        "sha256": checkpoint_sha}), encoding="utf-8")
     checked = check_kit_smoke(receipt_path, run_log, 0)
     assert checked["state"] == "PASS"
     assert checked["intentional_baseline_differences"] == launch["intentional_baseline_differences"]
@@ -417,17 +428,39 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
         json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(18)) + "\n",
         encoding="utf-8")
     good_env = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
-    for changed in (
-        {"world_frame": False, "mask_new_task": False},
-        {"world_frame": True, "mask_new_task": True},
-        {"world_frame": True, "mask_new_task": False, "extra": 1},
-    ):
+    for changed in ("promotion_enabled", "max_init_terrain_level", "terrain_count"):
         wrong_curriculum = copy.deepcopy(good_env)
-        wrong_curriculum["curriculum"]["terrain_levels"]["params"] = changed
+        if changed == "promotion_enabled":
+            wrong_curriculum["curriculum"]["terrain_levels"] = {"params": {}}
+        elif changed == "max_init_terrain_level":
+            wrong_curriculum["scene"]["terrain"]["max_init_terrain_level"] = 1
+        else:
+            terrain_generator = wrong_curriculum["scene"]["terrain"]["terrain_generator"]
+            terrain_generator["num_rows"] = int(terrain_generator["num_rows"]) + 1
         env_yaml.write_text(yaml.safe_dump(wrong_curriculum), encoding="utf-8")
-        with pytest.raises(ValueError, match="curriculum differs"):
+        with pytest.raises(ValueError):
             check_kit_smoke(receipt_path, run_log, 0)
     env_yaml.write_text(yaml.safe_dump(good_env), encoding="utf-8")
+    good_start = json.loads((run / "curriculum_start_receipt.json").read_text(encoding="utf-8"))
+    for changed in ("promotion_enabled", "level_distribution"):
+        bad_start = copy.deepcopy(good_start)
+        if changed == "promotion_enabled":
+            bad_start["terrain"]["promotion_enabled"] = True
+        else:
+            bad_start["terrain"]["actual_counts_by_level"][0] -= 1
+            bad_start["terrain"]["actual_counts_by_level"][3] = 1
+            bad_start["terrain"]["level_max"] = 3
+        (run / "curriculum_start_receipt.json").write_text(json.dumps(bad_start), encoding="utf-8")
+        with pytest.raises(ValueError, match="actual terrain distribution or disabled promotion"):
+            check_kit_smoke(receipt_path, run_log, 0)
+    (run / "curriculum_start_receipt.json").write_text(json.dumps(good_start), encoding="utf-8")
+    bad_manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+    bad_manifest["modes"]["terrain_policy"]["promotion_enabled"] = True
+    (run / "manifest.json").write_text(json.dumps(bad_manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="manifest does not prove fixed L0..L2"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    bad_manifest["modes"]["terrain_policy"]["promotion_enabled"] = False
+    (run / "manifest.json").write_text(json.dumps(bad_manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="child failed"):
         check_kit_smoke(receipt_path, run_log, 1)
     bad = copy.deepcopy(events)

@@ -53,6 +53,8 @@ parser.add_argument("--basic-ex39-updates", type=int, default=None)
 parser.add_argument("--basic-ex39-level-count", type=int, default=None)
 parser.add_argument("--basic-ex40-parent-sha", default=None,
                     help="EX-40 continuation checkpoint SHA256; resume only from a verified numbered save")
+parser.add_argument("--basic-ex40-segment-index", type=int, default=None,
+                    help="EX-40 continuation segment number, starting at 1 and checked against its parent")
 parser.add_argument("--curriculum", type=str, default=None, help="W55 EX-40 curriculum.yaml, opt-in")
 parser.add_argument("--curriculum-arm", choices=("A", "B"), default=None,
                     help="B2 heading choice, required until EX-39 decision is entered into the table")
@@ -195,6 +197,11 @@ def main(env_cfg, agent_cfg):
                             18500 if args_cli.basic_ex38 else 1500)
               if is_extended_resume(args_cli) else None)
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
+    terrain_policy = None
+    if curriculum_plan is not None:
+        from foothold_s2.curriculum.continuous import apply_terrain_policy
+
+        terrain_policy = apply_terrain_policy(env_cfg, curriculum_plan)
     basic_l02 = (args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
                  and curriculum_plan is None)
     if basic_l02:
@@ -229,7 +236,8 @@ def main(env_cfg, agent_cfg):
             basic_reward_bundle["ex40_stand"] = dict(curriculum_plan.stand_cfg)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
-                           "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
+                           "resume_parent": parent, "segment_index": args_cli.basic_ex40_segment_index or 0,
+                           "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
 
     if args_cli.variant == "TopDown":
         # 11 §2.1 JEPLO 구멍/가림/거리 잡음은 START 저자 구성이 아니다.
@@ -289,7 +297,9 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.curriculum.continuous import Runtime
 
         continuous = Runtime(curriculum_plan, env.unwrapped.num_envs, agent_cfg.device,
-                             log_dir, args_cli.curriculum_score_dir)
+                             log_dir, args_cli.curriculum_score_dir,
+                             terrain_policy=terrain_policy,
+                             segment_index=args_cli.basic_ex40_segment_index or 0)
         command_term = env.unwrapped.command_manager.get_term("base_velocity")
         # RslRlVecEnvWrapper.__init__ resets the env. Install B0 before that
         # reset, or the first command packet would lack stand commands.
@@ -346,7 +356,13 @@ def main(env_cfg, agent_cfg):
             if parent["sha256"] == curriculum_plan.parent_sha256:
                 continuous.start(parent["sha256"])
         with open(os.path.join(log_dir, "resume_parent.json"), "w", encoding="utf-8") as stream:
-            json.dump({**parent, "resume_budget": budget, "physical_resume_identical": False,
+            json.dump({**parent, "resume_budget": budget,
+                       "segment_index": args_cli.basic_ex40_segment_index,
+                       "last_completed_update": parent["completed_update"],
+                       "next_update": parent["completed_update"] + 1,
+                       "preserved_state": ["stage", "optimizer", "learning_rate", "B1_origin",
+                                           "map_switch", "collection_update", "environment_state", "RNG"],
+                       "physical_resume_identical": False,
                        "physical_reset": physical_reset,
                        "basic_terrain": basic_terrain,
                        "note": "new simulator and episode reset; terrain origins restored independently"}, stream, ensure_ascii=False, indent=2)
@@ -360,17 +376,19 @@ def main(env_cfg, agent_cfg):
         print("BASIC_START_RECEIPT " + json.dumps(start_receipt, ensure_ascii=False), flush=True)
     curriculum_start_receipt = None
     if curriculum_plan is not None:
-        terrain = env.unwrapped.scene.terrain
-        levels = terrain.terrain_levels.detach().cpu().contiguous()
-        types = terrain.terrain_types.detach().cpu().contiguous()
+        from foothold_s2.curriculum.continuous import terrain_level_receipt
+
+        terrain_readback = terrain_level_receipt(env.unwrapped, terrain_policy)
         curriculum_start_receipt = {
-            "start": "scratch", "stage": "B0", "env_seed": agent_cfg.seed,
+            "start": "resume" if resume_path else "scratch",
+            "stage": curriculum_plan.stages[continuous.active].id,
+            "segment_index": args_cli.basic_ex40_segment_index or 0,
+            "parent_checkpoint": resume_path,
+            "parent_sha256": parent["sha256"] if parent else None,
+            "env_seed": agent_cfg.seed,
             "command_seed": env_cfg.commands.base_velocity.seed,
             "num_envs": int(env_cfg.scene.num_envs),
-            "terrain_policy": "S-B10 curriculum active, no L0..2 rebasing",
-            "terrain_counts": torch.bincount(levels, minlength=10).tolist(),
-            "terrain_labels_sha256": hashlib.sha256(levels.numpy().tobytes() +
-                                                     types.numpy().tobytes()).hexdigest(),
+            "terrain": terrain_readback,
             "baseline_env_yaml_sha256": curriculum_plan.baseline_env_yaml_sha256,
             "baseline_agent_yaml_sha256": curriculum_plan.baseline_agent_yaml_sha256,
             "stand_reward": {"four_foot_contact": reward_weights["four_foot_contact_at_stop"],
@@ -413,8 +431,20 @@ def main(env_cfg, agent_cfg):
                                          "promotion": curriculum_plan.promotion,
                                          "shadow_gate": curriculum_plan.shadow_gate,
                                          "arm": curriculum_plan.arm,
+                                         "terrain_curriculum": curriculum_plan.terrain_curriculum,
                                          "stages": [{"id": s.id, "start_update": s.fixed_update} for s in curriculum_plan.stages]}
                                         if curriculum_plan else None),
+             "continuous_resume": ({"segment_index": args_cli.basic_ex40_segment_index or 0,
+                                    "start": "resume" if resume_path else "scratch",
+                                    "parent_checkpoint": resume_path,
+                                    "parent_sha256": parent["sha256"] if parent else None,
+                                    "last_completed_update": parent["completed_update"] if parent else None,
+                                    "next_update": parent["completed_update"] + 1 if parent else 0,
+                                    "physical_resume_identical": False if resume_path else None,
+                                    "preserved_state": ["stage", "optimizer", "learning_rate", "B1_origin",
+                                                        "map_switch", "collection_update", "environment_state", "RNG"]
+                                    if resume_path else []} if curriculum_plan else None),
+             "terrain_policy": terrain_policy,
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,
@@ -444,7 +474,10 @@ def main(env_cfg, agent_cfg):
     if remaining <= 0 and (command_settings(args_cli)["command_mode"] != "start" or command_settings(args_cli)["clock_scatter"]) and args_cli.variant == "SB":
         raise RuntimeError(f"명령 처치를 켰는데 남은 회차가 {remaining} 이다(학습 없이 done 이 되는 것을 막는다)")
     if remaining <= 0:
-        write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
+        write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration,
+                               "completed_updates": runner.current_learning_iteration + 1,
+                               "segment_index": args_cli.basic_ex40_segment_index or 0,
+                               "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return
     if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"]:
         runner.scatter_episode_progress(agent_cfg.seed * 1000 + 35)        # reset_segment_physics 뒤 · learn 앞(Isaac 의 _reset_idx 가 term reset 뒤에 진행도를 0 으로 덮으므로)
@@ -457,6 +490,7 @@ def main(env_cfg, agent_cfg):
     except DeadlineReached as stop:
         detail = json.loads(str(stop))
         write_status(log_dir, {"state": "stopped_saved", "variant": args_cli.variant,
+                               "segment_index": args_cli.basic_ex40_segment_index or 0,
                                "physical_resume_identical": False, **detail})
         print("TRAIN_SOL23F_STATUS stopped_saved " + json.dumps(detail), flush=True)
         return
@@ -468,7 +502,10 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.ex39_kit_probe import capture_finish
 
         capture_finish(env.unwrapped, log_dir)
-    write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "log_dir": log_dir,
+    write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration,
+                           "completed_updates": runner.current_learning_iteration + 1,
+                           "segment_index": args_cli.basic_ex40_segment_index or 0,
+                           "log_dir": log_dir,
                            "variant": args_cli.variant, "checkpoint": final, "sha256": sha256(final),
                            "physical_resume_identical": False})
     print("TRAIN_START_STATUS done", flush=True)

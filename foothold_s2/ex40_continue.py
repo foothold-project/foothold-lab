@@ -77,6 +77,7 @@ def check_parent(path: str | Path, expected_sha256: str, *,
             or curriculum.get("sha256") != plan.sha256
             or curriculum.get("effective_schedule_sha256") != plan.effective_sha256
             or curriculum.get("arm") != arm
+            or curriculum.get("terrain_curriculum") != plan.terrain_curriculum
             or modes.get("num_envs") != 3072 or modes.get("seed") != 42
             or curriculum.get("promotion") != "fixed" or curriculum.get("shadow_gate") is not True
             or modes.get("command_settings", {}).get("command_mode") != "basic_gait"):
@@ -111,6 +112,30 @@ def check_parent(path: str | Path, expected_sha256: str, *,
         value = env_state[key]
         if not isinstance(value, torch.Tensor) or value.numel() != 3072:
             raise ValueError(f"EX-40 checkpoint {key} does not contain all 3072 environments")
+    segment = (modes.get("continuous_resume") or {}).get("segment_index", 0)
+    if type(segment) is not int or segment < 0:
+        raise ValueError("EX-40 manifest continuation segment is malformed")
+    saved_terrain = state["continuous_curriculum"].get("terrain_receipt")
+    if (not isinstance(saved_terrain, dict)
+            or saved_terrain.get("policy") != plan.terrain_curriculum
+            or saved_terrain.get("num_envs") != 3072
+            or sum(saved_terrain.get("actual_counts_by_level", [])) != 3072):
+        raise ValueError("EX-40 checkpoint actual terrain distribution receipt missing")
+    levels = env_state["terrain_levels"].detach().to(device="cpu", dtype=torch.long).contiguous()
+    types = env_state["terrain_types"].detach().to(device="cpu", dtype=torch.long).contiguous()
+    actual_counts = torch.bincount(levels, minlength=len(saved_terrain["actual_counts_by_level"])).tolist()
+    labels_sha = hashlib.sha256(levels.numpy().tobytes() + types.numpy().tobytes()).hexdigest()
+    if (actual_counts != saved_terrain["actual_counts_by_level"]
+            or labels_sha != saved_terrain.get("terrain_labels_sha256")
+            or saved_terrain.get("level_min") != int(levels.min())
+            or saved_terrain.get("level_max") != int(levels.max())):
+        raise ValueError("EX-40 checkpoint terrain distribution receipt disagrees with saved env state")
+    if plan.terrain_curriculum == "fixed_l02":
+        if (saved_terrain.get("max_init_terrain_level") != 2
+                or saved_terrain.get("promotion_enabled") is not False
+                or saved_terrain.get("level_max", 99) > 2
+                or any(saved_terrain["actual_counts_by_level"][3:])):
+            raise ValueError("EX-40 fixed_l02 checkpoint contains a promoted environment")
     map_switch = state["map_switch"]
     if (not isinstance(map_switch, dict) or map_switch.get("p_map_off") != 0.1
             or map_switch.get("generator_state") is None):
@@ -137,6 +162,7 @@ def check_parent(path: str | Path, expected_sha256: str, *,
         raise ValueError("EX-40 checkpoint map mode differs from its saved stage")
     return {"checkpoint": str(checkpoint), "checkpoint_sha256": actual_sha,
             "completed_update": iteration, "active_stage": plan.stages[active].id,
+            "segment_index": segment,
             "stage_entry_iteration": saved["stage_entry_iteration"],
             "b1_entry_iteration": saved.get("b1_entry_iteration"),
             "remaining_updates": TOTAL_ITERATIONS - iteration - 1,
@@ -214,7 +240,8 @@ def build_resume_args(launch_receipt: dict, parent: dict, *, end_by: str,
         raise ValueError("source EX-40 receipt curriculum differs from the v7 table")
     args[args.index("--end-by") + 1] = end_by
     args.extend(["--resume_from", parent["checkpoint"],
-                 "--basic-ex40-parent-sha", parent["checkpoint_sha256"]])
+                 "--basic-ex40-parent-sha", parent["checkpoint_sha256"],
+                 "--basic-ex40-segment-index", str(verified_parent["segment_index"] + 1)])
     return args
 
 

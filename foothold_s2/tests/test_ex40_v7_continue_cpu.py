@@ -9,13 +9,16 @@ from types import SimpleNamespace as NS
 
 import pytest
 import torch
+import yaml
 
-from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES, Plan
+from foothold_s2.curriculum.continuous import (
+    KIT_SMOKE_BOUNDARIES, Plan, apply_terrain_policy, terrain_level_receipt,
+)
 from foothold_s2.ex40_continue import (
     TOTAL_ITERATIONS, build_resume_args, check_parent, consecutive_failure_action,
     newest_verified_checkpoint, source_decision, validate_deadline,
 )
-from foothold_s2.ex40_launch import TABLE, build_args, receipt
+from foothold_s2.ex40_launch import TABLE, build_args, prepare_resume, receipt
 from foothold_s2.runners.command_rng import restore_command_rng, save_command_rng
 
 
@@ -53,6 +56,43 @@ def test_v7_schedule_shares_ranges_and_boundaries():
         "B0": 0, "B1": 3, "B2": 6, "B3a": 9, "B3b": 12, "B3c": 15}
 
 
+def test_fixed_l02_policy_applies_to_config_and_records_actual_levels():
+    plan = Plan(TABLE, arm="B")
+    cfg = NS(scene=NS(terrain=NS(max_init_terrain_level=None)),
+             curriculum=NS(terrain_levels="promotion-term"))
+    applied = apply_terrain_policy(cfg, plan)
+    assert cfg.scene.terrain.max_init_terrain_level == 2
+    assert cfg.curriculum.terrain_levels is None
+    assert applied == {"policy": "fixed_l02", "max_init_terrain_level": 2,
+                       "promotion_enabled": False}
+    levels = torch.tensor([0, 1, 2, 0])
+    types = torch.tensor([3, 3, 3, 4])
+    terrain = NS(terrain_levels=levels, terrain_types=types,
+                 terrain_origins=torch.zeros((10, 5, 3)))
+    receipt = terrain_level_receipt(NS(scene=NS(terrain=terrain)), applied)
+    assert receipt["actual_counts_by_level"] == [2, 1, 1] + [0] * 7
+    assert (receipt["level_min"], receipt["level_max"], receipt["num_envs"]) == (0, 2, 4)
+    terrain.terrain_levels[-1] = 3
+    with pytest.raises(ValueError, match="outside L0..L2"):
+        terrain_level_receipt(NS(scene=NS(terrain=terrain)), applied)
+
+
+def test_auto_policy_requires_and_preserves_actual_promotion_term(tmp_path):
+    path = Path(TABLE)
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data["terrain_curriculum"] = "auto"
+    table = tmp_path / "ex40-auto.yaml"
+    table.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    plan = Plan(table, arm="B")
+    cfg = NS(scene=NS(terrain=NS(max_init_terrain_level=2)),
+             curriculum=NS(terrain_levels="promotion-term"))
+    assert apply_terrain_policy(cfg, plan) == {
+        "policy": "auto", "max_init_terrain_level": 2, "promotion_enabled": True}
+    cfg.curriculum.terrain_levels = None
+    with pytest.raises(ValueError, match="requires the configured"):
+        apply_terrain_policy(cfg, plan)
+
+
 def test_command_generator_rng_round_trips_and_runner_calls_helpers():
     first = NS(gen=torch.Generator().manual_seed(12))
     torch.rand(37, generator=first.gen)
@@ -74,6 +114,9 @@ def _known_checkpoint(tmp_path, iteration=5500):
     active = max(i for i, stage in enumerate(plan.stages) if stage.fixed_update <= iteration)
     stage = plan.stages[active]
     checkpoint = run / f"model_{iteration}.pt"
+    terrain_levels = torch.zeros(3072, dtype=torch.long)
+    terrain_types = torch.zeros(3072, dtype=torch.long)
+    terrain_sha = hashlib.sha256(terrain_levels.numpy().tobytes() + terrain_types.numpy().tobytes()).hexdigest()
     command_rng = torch.Generator().manual_seed(5).get_state()
     map_rng = torch.Generator().manual_seed(6).get_state()
     state = {
@@ -81,12 +124,18 @@ def _known_checkpoint(tmp_path, iteration=5500):
         "rng": {"torch": torch.tensor([1]), "numpy": ("MT",), "python": (1,)},
         "map_switch": {"p_map_off": .1, "generator_state": map_rng},
         "env_state": {"common_step_counter": iteration * 24,
-                      "terrain_levels": torch.zeros(3072, dtype=torch.long),
-                      "terrain_types": torch.zeros(3072, dtype=torch.long),
+                      "terrain_levels": terrain_levels,
+                      "terrain_types": terrain_types,
                       "command_generator_state": command_rng},
         "continuous_curriculum": {
             "format": "foothold-w55-state/1", "plan_sha256": plan.sha256,
             "effective_sha256": plan.effective_sha256, "active": active,
+            "segment_index": 0,
+            "terrain_receipt": {"policy": "fixed_l02", "max_init_terrain_level": 2,
+                                "promotion_enabled": False, "num_envs": 3072,
+                                "actual_counts_by_level": [3072] + [0] * 9,
+                                "level_min": 0, "level_max": 0,
+                                "terrain_labels_sha256": terrain_sha},
             "stage_entry_iteration": stage.fixed_update,
             "b1_entry_iteration": plan.stages[1].fixed_update,
             "env_stage": torch.full((3072,), active, dtype=torch.long),
@@ -105,7 +154,9 @@ def _known_checkpoint(tmp_path, iteration=5500):
                   "command_settings": {"command_mode": "basic_gait"},
                   "continuous_curriculum": {"sha256": plan.sha256,
                       "effective_schedule_sha256": plan.effective_sha256,
-                      "arm": "B", "promotion": "fixed", "shadow_gate": True}},
+                      "arm": "B", "promotion": "fixed", "shadow_gate": True,
+                      "terrain_curriculum": "fixed_l02"},
+                  "continuous_resume": {"segment_index": 0}},
         "checkpoints": {checkpoint.name: digest}}
     (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return run, checkpoint, digest, manifest, plan
@@ -146,6 +197,35 @@ def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path):
     assert args[args.index("--end-by") + 1] == "2026-11-02T00:00:00+09:00"
     with pytest.raises(ValueError, match="24 hours"):
         validate_deadline("2026-11-01T00:00:00+09:00", "2026-11-01T23:59:00+09:00")
+
+
+def test_resume_preparation_reuses_source_contract_and_records_segment(tmp_path):
+    _, checkpoint, digest, _, _ = _known_checkpoint(tmp_path)
+    log_root = tmp_path / "logs"
+    score_dir = tmp_path / "scores"
+    source_args = build_args(arm="B", device="cuda:0", end_by="2026-11-06T00:00:00+09:00",
+                             log_root=log_root, score_dir=score_dir, smoke=False)
+    source_path = tmp_path / "source_receipt.json"
+    source_path.write_text(json.dumps(receipt(source_args)), encoding="utf-8")
+    spec_path = tmp_path / "resume_spec.json"
+    spec_path.write_text(json.dumps({
+        "source_receipt": str(source_path), "checkpoint": str(checkpoint),
+        "checkpoint_sha256": digest, "expected_finish": "2026-11-04T00:00:00+09:00",
+    }), encoding="utf-8")
+
+    args, prepared = prepare_resume(
+        spec_path, arm="B", device="cuda:0", end_by="2026-11-05T00:00:00+09:00",
+        log_root=log_root, score_dir=score_dir)
+    assert args[args.index("--resume_from") + 1] == str(checkpoint.resolve())
+    assert args[args.index("--basic-ex40-parent-sha") + 1] == digest
+    assert args[args.index("--basic-ex40-segment-index") + 1] == "1"
+    assert args[args.index("--curriculum") + 1] == str(TABLE)
+    assert args[args.index("--curriculum-score-dir") + 1] == str(score_dir.resolve())
+    assert prepared["start"] == "resume" and prepared["origin_start"] == "scratch"
+    assert prepared["segment_index"] == 1 and prepared["parent_segment_index"] == 0
+    assert prepared["terrain_curriculum"] == "fixed_l02"
+    assert {"stage", "optimizer", "learning_rate", "B1_origin", "map_switch",
+            "collection_update"}.issubset(prepared["resume_preserves"])
 
 
 def test_retry_budget_stops_after_three_consecutive_failures():

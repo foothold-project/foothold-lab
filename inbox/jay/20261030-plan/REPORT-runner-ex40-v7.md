@@ -2,7 +2,7 @@
 > 작성: 오흥재 (runner 반영) · 2026-10-30
 > 근거: EX-40 v7 의뢰, WORKLIST D72, RULES-HUB R6 · R20 · M02 · M15 · M76 · M77
 > 요지: EX-40 B3 단계 세분화와 CPU 전용 재개 판정 및 실행 전 DRY 점검
-> 상태: CPU 시험 및 DRY 통과, Kit · GPU 미실행
+> 상태: CPU 시험 통과, Kit · GPU 미실행
 
 # EX-40 v7 단계 표와 재개 절차
 
@@ -45,9 +45,20 @@ $env:LIVE='0'
 
 ## 검증 기록
 
-- CPU 시험: `31 passed in 6.02s` (`test_ex40_v7_continue_cpu.py`, `test_w55_continuous_cpu.py`, `test_ex40_v4_cpu.py`). 단계 경계와 비율, RNG 왕복, 저장본 검증과 선택, 상태 판정, 재개 인자, deadline, 연속 실패 중단 및 잘못된 SHA/번호 반례를 포함한다.
+- CPU 시험: 최초 v7 구현은 `31 passed in 6.02s` (`test_ex40_v7_continue_cpu.py`, `test_w55_continuous_cpu.py`, `test_ex40_v4_cpu.py`). 후속 수정 시험은 아래 부록에 기록한다.
 - `python -m compileall -q foothold_s2`: 완료. 기존 `ex35_priority_marker.py` 에 invalid escape SyntaxWarning 2건이 출력됐으며 이번 범위에서 수정하지 않았다.
 - `git diff --check`: 통과.
 - main DRY: `prestart_pass`, `source_git_clean=true`, `training_started=false`, `max_iterations=6501`, 경계 B0=0, B1=1501, B2=3001, B3a=4501, B3b=5001, B3c=5501, T0=6001. 영수증: `C:/Users/AI-WS01/AppData/Local/Temp/ex40-v7-dry-main/receipts/ex40/B_main_20261030_205233_1098074/launch_receipt.json`.
 - smoke DRY: `prestart_pass`, `source_git_clean=true`, `training_started=false`, `max_iterations=18`, 경계 B0=0, B1=3, B2=6, B3a=9, B3b=12, B3c=15. 영수증: `C:/Users/AI-WS01/AppData/Local/Temp/ex40-v7-dry-smoke/receipts/ex40/B_smoke_20261030_205251_1098103/launch_receipt.json`.
 - GPU 또는 Kit 실행은 요청에 따라 하지 않았다. Kit smoke 성공 및 실제 재개는 미확인이다.
+
+## 후속: terrain 고정 및 같은 실행 재개
+
+`ex40.yaml` 기본 `terrain_curriculum: fixed_l02`를 실행 설정에 적용한다. `gym.make` 전에 최대 시작 레벨을 2로 두고 `curriculum.terrain_levels=None`으로 지형 승급을 끈다. 시작 영수증, manifest, checkpoint 연속 상태에 레벨별 실제 환경 수, 최소/최대 레벨, level/type 배열 SHA, 적용 정책을 기록한다. 고정 모드에서 L3 이상이 관측되거나 영수증과 checkpoint 상태가 다르면 실행 및 재개 검증이 실패한다. `auto`는 실제 승급 term이 있는 설정에서만 허용한다.
+
+카드에는 요청된 문구 「S-B10 대비 의도된 차이 2: 지형 자동 승급 끔(L0~2 고정, 팀장 결정 대기)」를 추가했다. 이 설정의 최종 연구 결정은 미확인이다.
+
+재개는 원 scratch launch 영수증과 SHA가 manifest에 고정된 checkpoint를 resume spec으로 입력받는다. 부모 회차와 저장 segment를 검증한 뒤 같은 arm, 장치, 로그/점수 위치, curriculum, optimizer 및 학습률, B1 시작 기준, 지도 전환, 수집 update를 유지하는 다음 segment 인자를 만든다. 새 segment 번호는 부모 번호보다 1 커야 한다. launcher는 기본적으로 CPU 준비와 prestart 검사만 하며, 실제 실행 상태·Kit·GPU는 이 작업에서 확인하지 않았다.
+
+- 후속 CPU 시험: `34 passed in 5.09s` (`test_ex40_v7_continue_cpu.py`, `test_w55_continuous_cpu.py`, `test_ex40_v4_cpu.py`). 포함: fixed L0..L2 실제 레벨 영수증, L3 반례, 자동 모드 승급 term 누락, Kit 영수증의 승급/레벨 분포 및 manifest 반례, source receipt와 parent SHA를 쓰는 resume 준비 및 segment 연속성.
+- main/smoke DRY 영수증은 앞선 v7 버전에서 생성했다. 이 후속 버전의 launcher/prestart DRY는 커밋 뒤 다시 실행하고 결과를 덧붙일 예정이다.

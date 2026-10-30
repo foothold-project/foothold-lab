@@ -4,6 +4,7 @@ baseline_env_yaml_sha256: 4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b
 baseline_agent_yaml_sha256: 213b82acc0a8d937de3f85171619e7d20c55612b37033bdeb05c6adff3c06308
 promotion: fixed
 shadow_gate: true
+terrain_curriculum: fixed_l02
 gate: {minimum_exposure_updates: 500, separated_checkpoints: 250}
 stand_penalty: {gap_weight: -0.2, load_weight: -0.1, load_fraction: 0.05, ramp_s: 0.5}
 heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_wz_limit: 0.5, target_wz_limit: 1.5}

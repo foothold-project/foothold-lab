@@ -116,8 +116,12 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
     if args.basic_new_share != 0.30:
         raise ValueError("W55 B1 initial basic share must be 0.30")
     parent_sha = getattr(args, "basic_ex40_parent_sha", None)
+    segment_index = getattr(args, "basic_ex40_segment_index", None)
     if bool(args.resume_from) != bool(parent_sha) or (parent_sha and args.curriculum_kit_smoke):
         raise ValueError("EX-40 resume needs both --resume_from and its parent SHA, for main only")
+    if (parent_sha and (type(segment_index) is not int or segment_index < 1)) or (
+            not parent_sha and segment_index is not None):
+        raise ValueError("EX-40 segment index is required only for a verified resume")
     if parent_sha and (len(parent_sha) != 64 or any(c not in "0123456789abcdef" for c in parent_sha.lower())):
         raise ValueError("EX-40 continuation parent SHA must be 64 hexadecimal characters")
     if parent_sha and verify_parent:
@@ -177,6 +181,8 @@ def check_resume_parent(args) -> int:
 
         parent = check_parent(path, ex40_sha, curriculum_path=args.curriculum,
                               arm=args.curriculum_arm)
+        if getattr(args, "basic_ex40_segment_index", None) != parent["segment_index"] + 1:
+            raise ValueError("EX-40 resume segment is not the next segment after its parent")
         return parent["completed_update"]
     if getattr(args, "basic_ex39_arm", None):
         from foothold_s2.basic_gait_ex38_continue import check_parent

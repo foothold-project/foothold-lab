@@ -58,6 +58,9 @@ class Plan:
             raise ValueError("W55 promotion must be fixed|gate and shadow_gate explicit")
         self.promotion = doc["promotion"]
         self.shadow_gate = doc["shadow_gate"]
+        self.terrain_curriculum = doc.get("terrain_curriculum", "fixed_l02")
+        if self.terrain_curriculum not in ("fixed_l02", "auto"):
+            raise ValueError("EX-40 terrain_curriculum must be fixed_l02|auto")
         if self.promotion == "gate" and self.shadow_gate:
             raise ValueError("EX-40 gate promotion cannot be shadow-only")
         self.gate_cfg = doc.get("gate") or {}
@@ -93,7 +96,8 @@ class Plan:
             raise ValueError("W55 heading arm must be A or B")
         self.arm = arm
         self.effective_sha256 = hashlib.sha256(json.dumps(
-            {"table_sha256": self.sha256, "arm": arm, "smoke_boundaries": smoke_boundaries},
+            {"table_sha256": self.sha256, "arm": arm, "smoke_boundaries": smoke_boundaries,
+             "terrain_curriculum": self.terrain_curriculum},
             sort_keys=True).encode("utf-8")).hexdigest()
         raw = doc.get("stages")
         if not isinstance(raw, list) or [x.get("id") for x in raw] != list(STAGE_IDS):
@@ -177,11 +181,53 @@ class Plan:
             last_rewards, last_slots, last_ranges = rewards, slots, ranges
 
 
+def apply_terrain_policy(env_cfg, plan: Plan) -> dict:
+    """Apply the named terrain-level policy to the actual training config."""
+    terrain_cfg = env_cfg.scene.terrain
+    curriculum = env_cfg.curriculum
+    if plan.terrain_curriculum == "fixed_l02":
+        terrain_cfg.max_init_terrain_level = 2
+        curriculum.terrain_levels = None
+        return {"policy": "fixed_l02", "max_init_terrain_level": 2,
+                "promotion_enabled": False}
+    if curriculum.terrain_levels is None:
+        raise ValueError("EX-40 auto terrain policy requires the configured terrain_levels promotion term")
+    return {"policy": "auto", "max_init_terrain_level": terrain_cfg.max_init_terrain_level,
+            "promotion_enabled": True}
+
+
+def terrain_level_receipt(env, policy: dict) -> dict:
+    """Read the actual post-placement or restored level distribution."""
+    raw = getattr(env, "unwrapped", env)
+    terrain = raw.scene.terrain
+    levels = terrain.terrain_levels.detach().to(device="cpu", dtype=torch.long).contiguous()
+    types = terrain.terrain_types.detach().to(device="cpu", dtype=torch.long).contiguous()
+    origins = terrain.terrain_origins
+    num_rows = int(origins.shape[0])
+    counts = torch.bincount(levels, minlength=num_rows).tolist()
+    if len(counts) != num_rows or sum(counts) != levels.numel():
+        raise ValueError("EX-40 terrain level counts do not match actual terrain rows")
+    if policy["policy"] == "fixed_l02":
+        if policy.get("promotion_enabled") is not False or policy.get("max_init_terrain_level") != 2:
+            raise ValueError("EX-40 fixed_l02 promotion or initial level contract differs")
+        if levels.numel() and (int(levels.min()) < 0 or int(levels.max()) > 2):
+            raise ValueError("EX-40 fixed_l02 observed a terrain level outside L0..L2")
+        if any(counts[3:]):
+            raise ValueError("EX-40 fixed_l02 has environments above L2")
+    return {**policy, "num_envs": int(levels.numel()),
+            "actual_counts_by_level": counts,
+            "level_min": int(levels.min()) if levels.numel() else None,
+            "level_max": int(levels.max()) if levels.numel() else None,
+            "terrain_labels_sha256": hashlib.sha256(
+                levels.numpy().tobytes() + types.numpy().tobytes()).hexdigest()}
+
+
 class Runtime:
     """Stage and per-env episode state, with checkpoint and score receipts."""
 
     def __init__(self, plan: Plan, env_count: int, device: str, log_dir: str | Path,
-                 score_dir: str | Path | None = None):
+                 score_dir: str | Path | None = None, terrain_policy: dict | None = None,
+                 segment_index: int = 0):
         self.plan = plan
         self.active = 0
         self.env_stage = torch.zeros(env_count, dtype=torch.long, device=device)
@@ -189,6 +235,13 @@ class Runtime:
         self._pending_adoption_count = 0
         self.log_dir = Path(log_dir)
         self.score_dir = Path(score_dir) if score_dir is not None else None
+        self.terrain_policy = terrain_policy or {
+            "policy": plan.terrain_curriculum,
+            "max_init_terrain_level": 2 if plan.terrain_curriculum == "fixed_l02" else None,
+            "promotion_enabled": plan.terrain_curriculum == "auto"}
+        if type(segment_index) is not int or segment_index < 0:
+            raise ValueError("EX-40 segment index must be a nonnegative integer")
+        self.segment_index = segment_index
         self.last_checkpoint: dict | None = None
         self.pending_gate: dict | None = None
         self.stage_entry_iteration = 0
@@ -556,9 +609,14 @@ class Runtime:
                 >= self.plan.gate_cfg["separated_checkpoints"])
 
     def state_dict(self) -> dict:
+        raw_env = getattr(getattr(self.runner, "env", None), "unwrapped", None)
+        has_terrain = getattr(getattr(raw_env, "scene", None), "terrain", None) is not None
+        terrain_receipt = (terrain_level_receipt(self.runner.env, self.terrain_policy)
+                           if has_terrain else None)
         return {"format": "foothold-w55-state/1", "plan_sha256": self.plan.sha256,
                 "effective_sha256": self.plan.effective_sha256,
                 "active": self.active, "env_stage": self.env_stage.clone(),
+                "terrain_receipt": terrain_receipt, "segment_index": self.segment_index,
                 "last_checkpoint": self.last_checkpoint, "pending_gate": self.pending_gate,
                 "seen_scores": sorted(self.seen_scores), "stage_entry_iteration": self.stage_entry_iteration,
                  "b1_entry_iteration": self.b1_entry_iteration,
@@ -569,6 +627,21 @@ class Runtime:
                 or state.get("plan_sha256") != self.plan.sha256
                 or state.get("effective_sha256") != self.plan.effective_sha256):
             raise ValueError("W55 stage state and curriculum SHA mismatch")
+        saved_segment = state.get("segment_index")
+        expected_segment = (saved_segment + 1 if type(saved_segment) is int else None)
+        if expected_segment is None or self.segment_index != expected_segment:
+            raise ValueError("EX-40 resume segment must be the next segment after the saved checkpoint")
+        saved_terrain = state.get("terrain_receipt")
+        raw_env = getattr(getattr(self.runner, "env", None), "unwrapped", None)
+        has_terrain = getattr(getattr(raw_env, "scene", None), "terrain", None) is not None
+        if has_terrain:
+            if not isinstance(saved_terrain, dict):
+                raise ValueError("EX-40 checkpoint terrain receipt is missing")
+            actual_terrain = terrain_level_receipt(self.runner.env, self.terrain_policy)
+            if saved_terrain != actual_terrain:
+                raise ValueError("EX-40 restored terrain labels differ from checkpoint receipt")
+        elif saved_terrain is not None:
+            raise ValueError("EX-40 terrain receipt cannot be restored without its environment")
         active = int(state["active"])
         env_stage = state["env_stage"].to(self.env_stage.device)
         if active not in range(len(self.plan.stages)) or env_stage.shape != self.env_stage.shape or (env_stage > active).any():
@@ -605,6 +678,8 @@ class Runtime:
         self._pending_adoption_count = 0
         self._episode_side.fill_(-1)
         self._write({"event": "physical_resume_reset", "stage": self.plan.stages[self.active].id,
+                     "segment_index": self.segment_index,
+                     "last_completed_update": (self.last_checkpoint or {}).get("iteration"),
                      "note": "new simulator episode; not a physically identical continuation"})
 
 
