@@ -123,18 +123,53 @@ def test_installed_isaac_event_signatures_are_the_called_contracts():
     assert "dr_scale_from_env" in action_source and "_ex40_dr_scale" in action_source
     assert "math.floor(" in action_source and "self.cfg.max_delay_s / self._env.physics_dt + 1e-9" in action_source
     assert "get_root_velocities()" in adapter and "get_velocities()" not in adapter
+    assert 'base_body = SceneEntityCfg("robot", body_names="base")' in adapter
+    assert 'all_joints = SceneEntityCfg("robot", joint_names=".*")' in adapter
+    assert 'params={"asset_cfg": base_body, "target_range": ranges["base_com"]}' in adapter
+    assert adapter.count('params={"asset_cfg": all_joints, "target_range": ranges[') == 2
+    assert "_require_all_joints(asset_cfg, asset, \"actuator-gain adapter\")" in adapter
+    assert "_require_all_joints(asset_cfg, asset, \"motor-strength adapter\")" in adapter
     articulation_data = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/assets/articulation/articulation_data.py")
     assert "self._root_physx_view.get_root_velocities()" in articulation_data.read_text(encoding="utf-8")
     assert 'mode="reset"' in adapter and 'mode="interval"' in adapter
 
 
 def test_com_and_motor_reset_adapters_restore_nominal_before_sampling(monkeypatch):
+    import dataclasses
     import torch
     from foothold_s2.curriculum.ex40_dr_runtime import reset_base_com, reset_motor_strength
 
+    isaac_root = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab")
+    cfg_tree = ast.parse((isaac_root / "managers" / "scene_entity_cfg.py").read_text(encoding="utf-8"))
+    cfg_node = next(node for node in cfg_tree.body
+                    if isinstance(node, ast.ClassDef) and node.name == "SceneEntityCfg")
+    cfg_module = ast.Module(body=[ast.ImportFrom(module="__future__",
+        names=[ast.alias(name="annotations")], level=0), cfg_node], type_ignores=[])
+    cfg_namespace = {"configclass": lambda cls: cls, "MISSING": dataclasses.MISSING,
+                     "TYPE_CHECKING": False, "__name__": "installed_scene_entity_cfg"}
+    exec(compile(ast.fix_missing_locations(cfg_module),
+                 str(isaac_root / "managers" / "scene_entity_cfg.py"), "exec"), cfg_namespace)
+    scene_entity_cfg = cfg_namespace["SceneEntityCfg"]
+
+    event_tree = ast.parse((isaac_root / "envs" / "mdp" / "events.py").read_text(encoding="utf-8"))
+    event_node = next(node for node in event_tree.body
+                      if isinstance(node, ast.FunctionDef) and node.name == "randomize_rigid_body_com")
+    event_module_ast = ast.Module(body=[ast.ImportFrom(module="__future__",
+        names=[ast.alias(name="annotations")], level=0), event_node], type_ignores=[])
+
+    def sample_upper(_low, high, shape, device):
+        return torch.broadcast_to(high.to(device=device), shape).clone()
+
+    event_namespace = {"torch": torch, "math_utils": types.SimpleNamespace(sample_uniform=sample_upper),
+                       "__name__": "installed_events_cpu_probe"}
+    exec(compile(ast.fix_missing_locations(event_module_ast),
+                 str(isaac_root / "envs" / "mdp" / "events.py"), "exec"),
+         event_namespace)
+
     class RootView:
         def __init__(self):
-            self.coms = torch.zeros((2, 1, 7), dtype=torch.float32)
+            self.coms = torch.zeros((2, 3, 7), dtype=torch.float32)
+            self.coms[:, :, 0] = torch.tensor([[.10, .20, .30], [.40, .50, .60]])
 
         def get_coms(self):
             return self.coms.clone()
@@ -152,21 +187,65 @@ def test_com_and_motor_reset_adapters_restore_nominal_before_sampling(monkeypatc
     class Scene(dict):
         num_envs = 2
 
-    robot = types.SimpleNamespace(root_physx_view=RootView(), device="cpu",
-                                  actuators={"all": FakeDCMotor()})
-    env = types.SimpleNamespace(scene=Scene(robot=robot), _ex40_dr_scale=1.0)
-    asset_cfg = types.SimpleNamespace(name="robot", body_ids=slice(None))
+    class Robot:
+        def __init__(self):
+            self.root_physx_view = RootView()
+            self.device = "cpu"
+            self.num_bodies = 3
+            self.body_names = ["base", "hip", "foot"]
+            self.num_joints = 3
+            self.joint_names = ["joint_a", "joint_b", "joint_c"]
+            self.actuators = {"all": FakeDCMotor()}
+
+        def find_bodies(self, names, preserve_order=False):
+            import re
+            patterns = [names] if isinstance(names, str) else names
+            matched = [i for i, body in enumerate(self.body_names)
+                       if any(re.fullmatch(pattern, body) for pattern in patterns)]
+            return matched, [self.body_names[i] for i in matched]
+
+        def find_joints(self, names, preserve_order=False):
+            import re
+            patterns = [names] if isinstance(names, str) else names
+            matched = [i for i, joint in enumerate(self.joint_names)
+                       if any(re.fullmatch(pattern, joint) for pattern in patterns)]
+            return matched, [self.joint_names[i] for i in matched]
+
+    robot = Robot()
+    scene = Scene(robot=robot)
+    asset_cfg = object.__new__(scene_entity_cfg)
+    asset_cfg.name = "robot"
+    asset_cfg.joint_names = None
+    asset_cfg.joint_ids = slice(None)
+    asset_cfg.fixed_tendon_names = None
+    asset_cfg.fixed_tendon_ids = slice(None)
+    asset_cfg.body_names = "base"
+    asset_cfg.body_ids = slice(None)
+    asset_cfg.object_collection_names = None
+    asset_cfg.object_collection_ids = slice(None)
+    asset_cfg.preserve_order = False
+    asset_cfg.resolve(scene)
+    assert asset_cfg.body_ids == [0]
+
+    all_joints_cfg = object.__new__(scene_entity_cfg)
+    all_joints_cfg.name = "robot"
+    all_joints_cfg.joint_names = ".*"
+    all_joints_cfg.joint_ids = slice(None)
+    all_joints_cfg.fixed_tendon_names = None
+    all_joints_cfg.fixed_tendon_ids = slice(None)
+    all_joints_cfg.body_names = None
+    all_joints_cfg.body_ids = slice(None)
+    all_joints_cfg.object_collection_names = None
+    all_joints_cfg.object_collection_ids = slice(None)
+    all_joints_cfg.preserve_order = False
+    all_joints_cfg.resolve(scene)
+    assert all_joints_cfg.joint_ids == [0, 1, 2]
+
+    initial_coms = robot.root_physx_view.get_coms().clone()
+    env = types.SimpleNamespace(scene=scene, _ex40_dr_scale=1.0)
 
     event_module = types.ModuleType("isaaclab.envs.mdp.events")
-
-    def randomize_com(fake_env, rows, com_range, _asset_cfg):
-        view = fake_env.scene["robot"].root_physx_view
-        values = view.get_coms()
-        offset = torch.tensor([com_range[key][1] for key in ("x", "y", "z")])
-        values[rows, :, :3] += offset
-        view.set_coms(values, rows)
-
-    event_module.randomize_rigid_body_com = randomize_com
+    event_module.randomize_rigid_body_com = event_namespace["randomize_rigid_body_com"]
     isaaclab = types.ModuleType("isaaclab")
     isaaclab.__path__ = []
     envs = types.ModuleType("isaaclab.envs")
@@ -186,28 +265,50 @@ def test_com_and_motor_reset_adapters_restore_nominal_before_sampling(monkeypatc
     com_target = {"x": [.2, .2], "y": [0.0, 0.0], "z": [0.0, 0.0]}
     reset_base_com(env, ids, asset_cfg, com_target)
     first = robot.root_physx_view.get_coms().clone()
+    assert torch.allclose(first[:, 0, 0], initial_coms[:, 0, 0] + .2)
+    assert torch.equal(first[:, 1:, :], initial_coms[:, 1:, :])
     reset_base_com(env, ids, asset_cfg, com_target)
     second = robot.root_physx_view.get_coms().clone()
     assert torch.equal(first, second)
-    assert torch.allclose(second[..., 0], torch.full((2, 1), .2))
+    assert torch.equal(second[:, 1:, :], initial_coms[:, 1:, :])
     env._ex40_dr_scale = 0.0
     reset_base_com(env, ids, asset_cfg, com_target)
-    assert torch.equal(robot.root_physx_view.get_coms(), torch.zeros((2, 1, 7)))
+    assert torch.equal(robot.root_physx_view.get_coms(), initial_coms)
 
     env._ex40_dr_scale = 1.0
     motor_range = [.5, .5]
-    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    reset_motor_strength(env, ids, all_joints_cfg, motor_range)
     first_effort = robot.actuators["all"].effort_limit.clone()
     first_stall = robot.actuators["all"]._saturation_effort.clone()
-    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    reset_motor_strength(env, ids, all_joints_cfg, motor_range)
     assert torch.equal(robot.actuators["all"].effort_limit, first_effort)
     assert torch.equal(robot.actuators["all"]._saturation_effort, first_stall)
     assert torch.equal(first_effort, torch.full((2, 3), 5.0))
     assert torch.equal(first_stall, torch.full((2, 3), 10.0))
     env._ex40_dr_scale = 0.0
-    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    reset_motor_strength(env, ids, all_joints_cfg, motor_range)
     assert torch.equal(robot.actuators["all"].effort_limit, torch.full((2, 3), 10.0))
     assert torch.equal(robot.actuators["all"]._saturation_effort, torch.full((2, 3), 20.0))
+
+    partial_joints_cfg = object.__new__(scene_entity_cfg)
+    partial_joints_cfg.name = "robot"
+    partial_joints_cfg.joint_names = ["joint_a"]
+    partial_joints_cfg.joint_ids = slice(None)
+    partial_joints_cfg.fixed_tendon_names = None
+    partial_joints_cfg.fixed_tendon_ids = slice(None)
+    partial_joints_cfg.body_names = None
+    partial_joints_cfg.body_ids = slice(None)
+    partial_joints_cfg.object_collection_names = None
+    partial_joints_cfg.object_collection_ids = slice(None)
+    partial_joints_cfg.preserve_order = False
+    partial_joints_cfg.resolve(scene)
+    assert partial_joints_cfg.joint_ids == [0]
+    from foothold_s2.curriculum.ex40_dr_runtime import reset_actuator_gains
+    with pytest.raises(ValueError, match="selecting every joint"):
+        reset_actuator_gains(env, ids, partial_joints_cfg,
+                             {"stiffness_scale": [1.0, 1.0], "damping_scale": [1.0, 1.0]})
+    with pytest.raises(ValueError, match="selecting every joint"):
+        reset_motor_strength(env, ids, partial_joints_cfg, motor_range)
 
 
 def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():

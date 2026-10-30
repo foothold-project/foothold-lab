@@ -67,6 +67,14 @@ def _ids_cpu(env_ids: Any, num_envs: int):
     return torch.as_tensor(env_ids, dtype=torch.long, device="cpu").flatten()
 
 
+def _require_all_joints(asset_cfg: Any, asset: Any, adapter_name: str) -> None:
+    selected = asset_cfg.joint_ids
+    if isinstance(selected, slice) and selected == slice(None):
+        return
+    if set(int(index) for index in selected) != set(range(asset.num_joints)):
+        raise ValueError(f"EX-40 {adapter_name} requires a SceneEntityCfg selecting every joint")
+
+
 def reset_base_com(env, env_ids, asset_cfg, target_range):
     """Restore reset rows, then call the installed Isaac Lab COM event."""
     import torch
@@ -91,6 +99,8 @@ def reset_base_com(env, env_ids, asset_cfg, target_range):
 
 def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
     """Use the installed ManagerTermBase gain randomizer for reset rows."""
+    asset = env.scene[asset_cfg.name]
+    _require_all_joints(asset_cfg, asset, "actuator-gain adapter")
     from isaaclab.envs.mdp import events
     from isaaclab.managers import EventTermCfg
 
@@ -105,7 +115,6 @@ def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
         env._ex40_dr_gain_event = helper
     helper(env, env_ids, asset_cfg, stiffness_distribution_params=stiffness,
            damping_distribution_params=damping, operation="scale", distribution="uniform")
-    asset = env.scene[asset_cfg.name]
     rows = _rows(env_ids, env.scene.num_envs, asset.device)
     samples = []
     for actuator in asset.actuators.values():
@@ -119,6 +128,7 @@ def reset_motor_strength(env, env_ids, asset_cfg, target_range):
     from isaaclab.actuators import DCMotor
 
     asset = env.scene[asset_cfg.name]
+    _require_all_joints(asset_cfg, asset, "motor-strength adapter")
     rows = _rows(env_ids, env.scene.num_envs, asset.device)
     scale = float(getattr(env, "_ex40_dr_scale", 0.0))
     low, high = _scaled_interval(tuple(target_range), scale, 1.0)
@@ -192,12 +202,14 @@ def install_runtime_events(env_cfg, ranges: dict, push_interval_s: tuple[float, 
         raise ValueError("EX-40 env config has no event manager configuration")
     events = env_cfg.events
     robot = SceneEntityCfg("robot")
+    base_body = SceneEntityCfg("robot", body_names="base")
+    all_joints = SceneEntityCfg("robot", joint_names=".*")
     events.ex40_base_com = EventTermCfg(func=reset_base_com, mode="reset",
-        params={"asset_cfg": robot, "target_range": ranges["base_com"]})
+        params={"asset_cfg": base_body, "target_range": ranges["base_com"]})
     events.ex40_actuator_gains = EventTermCfg(func=reset_actuator_gains, mode="reset",
-        params={"asset_cfg": robot, "target_range": ranges["actuator_gains"]})
+        params={"asset_cfg": all_joints, "target_range": ranges["actuator_gains"]})
     events.ex40_motor_strength = EventTermCfg(func=reset_motor_strength, mode="reset",
-        params={"asset_cfg": robot, "target_range": ranges["motor_strength"]})
+        params={"asset_cfg": all_joints, "target_range": ranges["motor_strength"]})
     events.ex40_push = EventTermCfg(func=interval_push, mode="interval",
         interval_range_s=tuple(push_interval_s), params={"asset_cfg": robot, "target_range": ranges["push_velocity"]})
 

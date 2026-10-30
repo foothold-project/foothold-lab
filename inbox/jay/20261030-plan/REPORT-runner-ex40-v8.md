@@ -41,3 +41,11 @@ Kit smoke 구현은 B0, ramp, D 진입에서 reset 이벤트를 실제 호출하
 - `inbox/jay/20261030-plan/REPORT-runner-ex40-v8.md`
 
 다음에는 범위표 수신 뒤 CPU 계약을 갱신하고, 별도 승인된 Kit smoke에서 reset·push 표본과 PhysX readback을 확인해야 한다. 그 전까지 EX-40 v8 기동은 차단된다.
+
+## 10/30 COM 대상과 관절 범위 후속
+
+`reset_base_com` 이벤트 설정을 설치 S1 설정과 맞춰 `SceneEntityCfg("robot", body_names="base")`로 한정했다. 기존 `SceneEntityCfg("robot")`는 `body_ids=slice(None)`로 모든 링크에 오프셋을 적용할 수 있었다. 설치된 `SceneEntityCfg.resolve`와 설치 `randomize_rigid_body_com` 함수 본문을 그대로 AST 로드해 CPU 시험에서 실제 호출했고, 반복 reset 뒤에도 base 이외 링크의 COM 값이 명목값으로 유지되는 것을 확인했다.
+
+모터 세기와 actuator gain 설정은 `joint_names=".*"`를 명시한다. 설치된 SceneEntityCfg의 실제 resolve 결과가 모든 관절 ID인지 확인하고, 두 reset adapter가 부분 관절 선택을 거부하도록 했다. COM 및 torque 명목값 반복 reset 시험도 유지했다.
+
+검증: `py_compile` 통과, `pytest -q foothold_s2/tests/test_ex40_dr_v8_cpu.py foothold_s2/tests/test_ex40_v7_continue_cpu.py` 결과 19 passed. COM 시험은 설치 함수와 설치 설정 클래스를 실행했으며, PhysX view는 CPU 시험용 인터페이스 대역이다. Kit/GPU 실측은 하지 않았으므로 실제 시뮬레이터 적용은 미확인이고 EX-40 launch guard 상태를 바꾸지 않는다.
