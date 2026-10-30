@@ -1,0 +1,130 @@
+{
+    "observed_at":  "2026-10-31T07:21:59.9472114+09:00",
+    "source_observed_at":  "2026-10-31T07:21:57+09:00",
+    "source_path":  "C:/mai/wt/foothold-lab/runner-ex40-b11-all-fixes/_out/reports/ex40-m500-watch-1031/observations.jsonl",
+    "actual_model500_exists":  false,
+    "manifest":  {
+                     "completed_updates":  401,
+                     "last_write":  "2026-10-31T07:04:51+09:00",
+                     "readable":  true,
+                     "schema":  "foothold-manifest/1"
+                 },
+    "m500":  {
+                 "completed_updates":  401,
+                 "exists":  false,
+                 "ready":  false,
+                 "reason":  "below_model_500_manifest_commit_threshold"
+             },
+    "train_status":  {
+                         "state":  "running",
+                         "iter":  440,
+                         "tot_iter":  8001,
+                         "iter_s":  25.40072727203369,
+                         "steps_per_s":  2902.59405608338,
+                         "mean_reward":  29.987987804412843,
+                         "mean_episode_length":  974.48,
+                         "p_smpl":  1.0,
+                         "gpu_max_allocated_GiB":  6.050112724304199,
+                         "perception":  {
+                                            "l_tr":  0.01554,
+                                            "l_ie":  2.50842,
+                                            "kl":  0.00024,
+                                            "o_next":  2.49601,
+                                            "v":  0.00941,
+                                            "hf":  0.00099,
+                                            "hb":  0.00176
+                                        },
+                         "log_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                         "time":  "2026-10-31T07:21:45",
+                         "pid":  26240
+                     },
+    "score_watch":  {
+                        "directory_exists":  false,
+                        "files":  {
+                                      "score_ledger.jsonl":  {
+                                                                 "exists":  false
+                                                             },
+                                      "watch.lock":  {
+                                                         "exists":  false
+                                                     },
+                                      "watch_completion.json":  {
+                                                                    "exists":  false
+                                                                },
+                                      "watch_state.json":  {
+                                                               "exists":  false
+                                                           }
+                                  },
+                        "model_500_evaluations":  [
+
+                                                  ],
+                        "model_500_ledger_rows":  [
+
+                                                  ],
+                        "path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch"
+                    },
+    "process_probe":  {
+                          "ok":  true,
+                          "processes":  [
+                                            {
+                                                "active_gpu_argument":  "",
+                                                "checkpoint_argument":  "",
+                                                "created":  "2026-10-30T19:13:22.5100640Z",
+                                                "device_argument":  "cuda:0",
+                                                "name":  "python.exe",
+                                                "output_argument":  "",
+                                                "physics_device_argument":  "",
+                                                "pid":  141272,
+                                                "references_model_500":  false,
+                                                "references_run":  true,
+                                                "role":  "supervisor"
+                                            },
+                                            {
+                                                "active_gpu_argument":  "",
+                                                "checkpoint_argument":  "",
+                                                "created":  "2026-10-30T19:13:24.7986110Z",
+                                                "device_argument":  "cuda:0",
+                                                "name":  "python.exe",
+                                                "output_argument":  "",
+                                                "physics_device_argument":  "",
+                                                "pid":  26240,
+                                                "references_model_500":  false,
+                                                "references_run":  true,
+                                                "role":  "trainer"
+                                            }
+                                        ]
+                      },
+    "processes":  [
+                      {
+                          "Id":  42372,
+                          "ProcessName":  "powershell",
+                          "start_local":  "2026-10-31T05:09:33.8701590+09:00"
+                      },
+                      {
+                          "Id":  21272,
+                          "ProcessName":  "python",
+                          "start_local":  "2026-10-31T04:56:52.1847486+09:00"
+                      },
+                      {
+                          "Id":  26240,
+                          "ProcessName":  "python",
+                          "start_local":  "2026-10-31T04:13:24.7986111+09:00"
+                      },
+                      {
+                          "Id":  141272,
+                          "ProcessName":  "python",
+                          "start_local":  "2026-10-31T04:13:22.5100648+09:00"
+                      }
+                  ],
+    "gpu_snapshot":  [
+                         "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 84, 12137",
+                         "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 1, 3425"
+                     ],
+    "eta_model500_assuming_current_rate":  "2026-10-31T07:47:09.0440000",
+    "frozen_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "frozen_tracked_changes":  [
+
+                               ],
+    "evaluator_gpu1_confirmed":  false,
+    "gpu1_reason":  "No model_500, evaluation receipt, or evaluator child observed",
+    "w57_status":  "separate retry prepared, not executed; no additional implementation"
+}
