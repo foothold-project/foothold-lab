@@ -102,3 +102,6 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold
 - 수정 파일은 `foothold_s2/ex40_supervisor.py`, `foothold_s2/ex40_score_watch.py`, `foothold_s2/ex40_stage_report.py`, `foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py`, `foothold_s2/tests/test_ex40_scorer_cpu.py`이다.
 - 실제 학습 child, 실제 score evaluator, Kit, CUDA, Telegram/Git 보고 게시, 남의 프로세스 조작은 수행하지 않았다. 학습 중 실제 checkpoint가 정해진 시간 간격으로 도착하는지, GPU 자원 경계, Kit 출력, 실제 결과 도달은 미확인이다.
 - P1 변경분 독립 확인은 analyst가 verifier에 한 차례 요청한다. 그 확인 전에는 B11 P1 전체를 닫거나 B12/B13 준비가 허용됐다고 말하지 않는다.
+
+
+구현 커밋(위 CPU 시험이 직접 대상으로 한 HEAD): `84ce82a6a8eae245f1cfd16ba0071d530581bc58` · 부모 `c1cefb1ab537bd5a2468dd0b9bcd1ec8133c9518`. 다음 보고 기록 커밋은 이 구현 파일을 바꾸지 않는다.
