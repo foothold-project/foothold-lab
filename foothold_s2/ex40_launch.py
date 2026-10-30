@@ -17,6 +17,7 @@ from foothold_s2.prestart_check import inspect_args
 
 ROOT = Path(__file__).resolve().parents[1]
 TABLE = ROOT / "foothold_s2/curriculum/ex40.yaml"
+INTENTIONAL_CURRICULUM_DIFFERENCE = "S-B10 대비 의도된 차이 1: 지형 승급 판정 세계 좌표(결정 8)"
 BASELINE = Path("C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/"
                 "2026-10-26_01-17-47_sb-main/params")
 from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
@@ -68,6 +69,7 @@ def receipt(args: list[str], *, table: Path = TABLE) -> dict:
             "start": "scratch", "parent": None,
             "baseline_env_yaml_sha256": plan.baseline_env_yaml_sha256,
             "baseline_agent_yaml_sha256": plan.baseline_agent_yaml_sha256,
+            "intentional_baseline_differences": [INTENTIONAL_CURRICULUM_DIFFERENCE],
             "stand_reward": {"four_foot_contact": plan.stages[0].rewards["four_foot_contact_at_stop"],
                              "gap": plan.stand_cfg["gap_weight"], "load": plan.stand_cfg["load_weight"]},
             "parser": parsed, "argv": args,

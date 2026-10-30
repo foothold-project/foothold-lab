@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -12,7 +13,7 @@ import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS
 from foothold_s2.curriculum.continuous import Plan
-from foothold_s2.ex40_launch import BASELINE
+from foothold_s2.ex40_launch import BASELINE, INTENTIONAL_CURRICULUM_DIFFERENCE
 
 
 REWARD_TERMS = {
@@ -24,6 +25,7 @@ REWARD_TERMS = {
     "four_foot_contact_at_stop": "ex39_four_foot_stop",
     "stand_gap": "ex40_stand_gap", "stand_load": "ex40_stand_load",
 }
+
 
 
 def _same_numbers(observed: dict, expected: dict) -> bool:
@@ -49,9 +51,19 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
         raise ValueError("EX-40 Kit command slots require all envs to use free velocity sampling")
     rewards = doc.get("rewards") or {}
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
-    for key in ("events", "curriculum"):
-        if doc.get(key) != baseline.get(key):
-            raise ValueError(f"D68 B0 {key} differs from S-B10 saved configuration")
+    if doc.get("events") != baseline.get("events"):
+        raise ValueError("D68 B0 events differs from S-B10 saved configuration")
+    expected_curriculum = copy.deepcopy(baseline.get("curriculum"))
+    if (not isinstance(expected_curriculum, dict)
+            or not isinstance(expected_curriculum.get("terrain_levels"), dict)
+            or expected_curriculum["terrain_levels"].get("params") != {}):
+        raise ValueError("D68 S-B10 terrain curriculum baseline changed")
+    # Decision 8 changes only the frame used to score terrain promotion.
+    # BaseLoader preserves YAML booleans as the strings "true" and "false".
+    expected_curriculum["terrain_levels"]["params"] = {
+        "mask_new_task": "false", "world_frame": "true"}
+    if doc.get("curriculum") != expected_curriculum:
+        raise ValueError("D68 B0 curriculum differs from S-B10 plus decision 8")
     terrain = ((doc.get("scene") or {}).get("terrain") or {}).get("terrain_generator")
     expected_terrain = baseline["scene"]["terrain"]["terrain_generator"]
     if terrain != expected_terrain:
@@ -236,6 +248,7 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     if status.get("sha256") != checkpoint_sha:
         raise ValueError("EX-40 completed checkpoint SHA and status differ")
     return {"state": "PASS", "run_dir": str(run), "stages": entered,
+            "intentional_baseline_differences": [INTENTIONAL_CURRICULUM_DIFFERENCE],
             "reset_adoptions": changed_by_stage,
             "stage_consumption": consumed,
             "shares_checked": True, "reward_weights_checked": True,

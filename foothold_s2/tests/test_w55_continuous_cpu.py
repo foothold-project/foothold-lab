@@ -316,6 +316,8 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     args = build_args(arm="B", device="cuda:1", end_by="2026-11-05T12:00:00+09:00",
                       log_root=tmp_path / "output", score_dir=tmp_path / "scores", smoke=True)
     launch = receipt(args)
+    assert launch["intentional_baseline_differences"] == [
+        "S-B10 대비 의도된 차이 1: 지형 승급 판정 세계 좌표(결정 8)"]
     receipt_path = tmp_path / "receipt.json"
     receipt_path.write_text(json.dumps(launch), encoding="utf-8")
     run_log = tmp_path / "run.log"
@@ -324,6 +326,9 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     (run / "params").mkdir(parents=True)
     plan = Plan(TABLE, arm="B", smoke_boundaries=(3, 6, 9, 12))
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    expected_curriculum = copy.deepcopy(baseline["curriculum"])
+    expected_curriculum["terrain_levels"]["params"] = {
+        "mask_new_task": False, "world_frame": True}
     rewards = {key: {"weight": float(value["weight"])} for key, value in baseline["rewards"].items()}
     rewards.update({actual: {"weight": plan.stages[0].rewards[source]} for source, actual in
                     (("hip_pos_penalty", "basic_hip_pos_penalty_l1"),
@@ -336,7 +341,7 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     env_yaml.write_text(yaml.safe_dump({"commands": {"base_velocity": {
         "params": {"curriculum_mode": True}, "flag_stride": 0, "dynamic_flags": False,
         "seed": 0, "resampling_time_range": baseline["commands"]["base_velocity"]["resampling_time_range"]}},
-        "rewards": rewards, "events": baseline["events"], "curriculum": baseline["curriculum"],
+        "rewards": rewards, "events": baseline["events"], "curriculum": expected_curriculum,
         "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"]},
                   **{f"ex40_support_{i}": {"prim_path": f"Robot/{name}_foot",
                        "offset": {"pos": [-.002, 0, 20]}} for i, name in enumerate(("FL", "FR", "RL", "RR"))}}}),
@@ -376,7 +381,21 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     (run / "model_14.pt").write_bytes(b"known model")
     (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 14,
         "sha256": hashlib.sha256(b"known model").hexdigest()}), encoding="utf-8")
-    assert check_kit_smoke(receipt_path, run_log, 0)["state"] == "PASS"
+    checked = check_kit_smoke(receipt_path, run_log, 0)
+    assert checked["state"] == "PASS"
+    assert checked["intentional_baseline_differences"] == launch["intentional_baseline_differences"]
+    good_env = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
+    for changed in (
+        {"world_frame": False, "mask_new_task": False},
+        {"world_frame": True, "mask_new_task": True},
+        {"world_frame": True, "mask_new_task": False, "extra": 1},
+    ):
+        wrong_curriculum = copy.deepcopy(good_env)
+        wrong_curriculum["curriculum"]["terrain_levels"]["params"] = changed
+        env_yaml.write_text(yaml.safe_dump(wrong_curriculum), encoding="utf-8")
+        with pytest.raises(ValueError, match="curriculum differs"):
+            check_kit_smoke(receipt_path, run_log, 0)
+    env_yaml.write_text(yaml.safe_dump(good_env), encoding="utf-8")
     with pytest.raises(ValueError, match="child failed"):
         check_kit_smoke(receipt_path, run_log, 1)
     bad = copy.deepcopy(events)
