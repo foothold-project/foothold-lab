@@ -6,7 +6,6 @@ import argparse
 import ast
 from pathlib import Path
 import shlex
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -88,10 +87,6 @@ def test_real_map_stand_and_w57_parser_accept_generated_argv(tmp_path, monkeypat
     bash = tmp_path / "bash.exe"
     bash.write_bytes(b"dummy, never executed")
     monkeypatch.setattr(entry, "BASH", bash)
-    # The stage table is being updated separately; this test isolates child argv.
-    monkeypatch.setattr(entry, "require_shadow_plan", lambda *a: None)
-    monkeypatch.setattr(entry, "Plan", lambda *a, **k: SimpleNamespace(
-        stages=[SimpleNamespace(id="B3a")]))
     monkeypatch.setattr(entry.subprocess, "check_output", lambda *a, **k: "frozen-head\n" if "rev-parse" in a[0] else "")
     calls = []
     monkeypatch.setattr(entry, "_run", lambda argv, env, **kwargs: calls.append((argv, env)) or 0)
@@ -116,3 +111,8 @@ def test_real_map_stand_and_w57_parser_accept_generated_argv(tmp_path, monkeypat
     w57 = _w57_argv()
     assert KIT_CACHE_ARG in w57
     assert _real_source_parser("foothold_s2.eval.eval_map_modes").parse_args(w57).kit_args == KIT_CACHE_VALUE
+    boundary = tmp_path / "model_1500.pt"
+    boundary.write_bytes(b"known stage end")
+    end_result = entry.evaluate(boundary, tmp_path / "boundary", stage="B0", arm="B")
+    assert end_result["state"] == "done"
+    assert Path(calls[-1][0][1]) == entry.AXIS

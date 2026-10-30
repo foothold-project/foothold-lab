@@ -30,7 +30,8 @@ def config(path: Path) -> dict:
     if (row.get("format") != "foothold-ex40-score-config/1"
             or row.get("device") != "cuda:1" or row.get("envs") != 64
             or list(row.get("stages", {})) != ["B0", "B1", "B2", "B3a", "B3b", "B3c", "T0"]
-            or row.get("checkpoint_stride") != 250):
+            or row.get("checkpoint_stride") != 250
+            or row.get("final_checkpoint_update") != 6500):
         raise ValueError("EX-40 score config identity or 64-env contract differs")
     all_commands = set(commands("extended"))
     for stage in row["stages"].values():
@@ -47,6 +48,18 @@ def require_shadow_plan(plan: Plan, cfg: dict) -> None:
     if ([item.id for item in plan.stages] != list(cfg["stages"])
             or plan.promotion != "fixed" or not plan.shadow_gate):
         raise ValueError("D72 score requires seven fixed stages and shadow_gate true")
+
+
+def stage_end_updates(plan: Plan, cfg: dict) -> dict[int, str]:
+    """Pin every stage's final numbered save to the v7 fixed-update table."""
+    require_shadow_plan(plan, cfg)
+    ends = {following.fixed_update - 1: previous.id
+            for previous, following in zip(plan.stages, plan.stages[1:])}
+    ends[cfg["final_checkpoint_update"]] = plan.stages[-1].id
+    if (list(ends) != [1500, 3000, 4500, 5000, 5500, 6000, 6500]
+            or any(update % cfg["checkpoint_stride"] for update in ends)):
+        raise ValueError("EX-40 stage-end saves differ from v7 boundaries")
+    return ends
 
 
 def _finite(value, label: str) -> float:
@@ -215,7 +228,8 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                         raise EvidenceHold(f"W15 sequence {mode}/{name} incomplete")
                     cells[f"{mode}/{name}_diagnostic_only"] = {
                         "alive_by_phase": [phase["alive_at_end"] for phase in phases]}
-        if stage_cfg["axis_goal"]:
+        boundary_record = iteration in stage_end_updates(plan, cfg)
+        if stage_cfg["axis_goal"] or boundary_record:
             axis_path = evidence_dir / "axis_v2" / "axis_v2.json"
             axis = json.loads(axis_path.read_text(encoding="utf-8-sig"))
             source_paths["axis_v2"] = str(axis_path)
@@ -230,7 +244,8 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                         raise EvidenceHold("W57 goal stop completion missing")
                     cells[f"{mode}/{name}"] = {"stop_complete_envs": complete,
                                                "stop_end_error_median_rad": error}
-                    if complete < cfg["axis_goal"]["complete_envs_min"] or error > cfg["axis_goal"]["stop_end_error_median_rad_max"]:
+                    if stage_cfg["axis_goal"] and (complete < cfg["axis_goal"]["complete_envs_min"]
+                            or error > cfg["axis_goal"]["stop_end_error_median_rad_max"]):
                         problems.append({"kind": "FAIL", "cell": f"{mode}/{name}",
                                          "reason": "goal_stop_threshold"})
         relative_names = set(stage_cfg.get("relative_commands", []))

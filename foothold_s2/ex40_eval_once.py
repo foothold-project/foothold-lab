@@ -15,7 +15,7 @@ import time
 
 from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
-from foothold_s2.ex40_score import config, require_shadow_plan, sha256
+from foothold_s2.ex40_score import config, require_shadow_plan, sha256, stage_end_updates
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,7 +102,8 @@ def evaluate(checkpoint: Path, out: Path, *, stage: str, arm: str,
             (out / "eval_receipt.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
             if rc:
                 raise RuntimeError(f"EX-40 Kit phase {name} failed with rc={rc}")
-        if not smoke and cfg["stages"][stage]["axis_goal"]:
+        boundary_record = int(checkpoint.stem.split("_")[-1]) in stage_end_updates(plan, cfg)
+        if not smoke and (cfg["stages"][stage]["axis_goal"] or boundary_record):
             then = time.monotonic()
             rc = _run([str(BASH), str(AXIS), str(checkpoint), str(out / "axis_v2"),
                        device, "64", "2", str(cfg["map_steps"])], env, cwd=ROOT)
