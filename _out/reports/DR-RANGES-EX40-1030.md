@@ -1,12 +1,12 @@
 > 분류: A/평가 · 일반화 벤치마크 · 지표
 > 작성: analyst · 2026-10-30
-> 근거: WORKLIST D73·D74(e18ae14c) · EX-39B 실행 YAML · 설치 Isaac Lab · PIE/START/HIM/DreamWaQ 원문 · W51 원자료
-> 요지: 마찰·질량·관측 잡음은 유지하고 DR의 소비 의미와 근거를 대조한다. 밀기는 D75에 따라 임시값이며 계단 발차기 선행 조사 후 다시 논의한다
-> 상태: v0.1d 진행 중 · 밀기 미확정(D75) · GPU1 비교 12건 진행 중 · 학습 준비 판정은 아님
+> 근거: WORKLIST D73~D76(lead_tmp 72158f46) · EX-39B 실행 YAML · 설치 Isaac Lab · PIE/START/HIM/DreamWaQ 원문 · W51 원자료
+> 요지: 마찰·질량·관측 잡음은 유지하고 DR의 소비 의미와 근거를 대조한다. 밀기는 D76 임시 범위를 준비 설정으로 기록하고 실제 Kit와 본 기동 승인을 분리한다
+> 상태: v0.1e 진행 중 · 밀기 D76 임시 준비값 · GPU1 비교 12건 진행 중 · 학습 준비 판정은 아님
 
 # EX-40 DR 전체 범위와 W51 추가 비교
 
-**관측 잡음은 m0부터 끝까지 현재 1배로 고정한다. 밀기는 D75에 따라 확정하지 않는다.** 앞서 제안한 수평 속도 변화량 각 축 ±0.5 m/s와 간격10~15초, B 끝 ±0.25 m/s는 임시안이다. 계단 위 발차기 후보 조사는 [별도 표](PUSH-KICK-PAPERS-1030.md)에 남긴다. 진행 중인 W51의 ±0.5 m/s는 이미 정한 평가 진단 조건만 뜻하며, EX-40 학습값 승인이나 실기 내성 보장이 아니다.
+**관측 잡음은 m0부터 끝까지 현재 1배로 고정한다. 밀기는 D76의 임시 준비값으로 D에서 수평 각 축 Δv±1.0 m/s, B3c 끝 ±0.5 m/s, 간격10~15초를 기록한다.** D75의 앞선 ±0.5 제안과 null 블록은 이 결정으로 대체한다. 이는 본 학습 B14 승인이나 실기 발차기 내성 보장이 아니다. 계단 발차기 조사 [별도 표](PUSH-KICK-PAPERS-1030.md)는 SLR의 논문과 코드가 같지 않음을 확인했으므로 팀장이 다시 논의할 근거로 남긴다. 진행 중인 W51 ±0.5 m/s는 이미 고정한 평가 진단 조건이며 바꾸지 않는다.
 
 ## 1. 범위와 실제로 바뀌는 것
 
@@ -20,7 +20,7 @@
 | PD 이득 | 1 / 0.95~1.05 / 0.9~1.1 배 | 명목 Kp=25, Kd=0.5를 각각 곱함. D에서 Kp22.5~27.5, Kd0.45~0.55 | PIE Table II, E/foothold_s2/tasks/s1_env_cfg.py:136 및 robots/go2_params.py. 제조 오차의 측정치는 아님 |
 | 모터 세기 | 1 / 0.95~1.05 / 0.9~1.1 배 | 현재 구현은 PD 명령 토크 전체를 곱하는 방식이 아니라 DCMotor effort_limit와 saturation_effort를 함께 조절 | PIE 계수 차용, 구현: E/foothold_s2/tasks/mdp_extra.py:32~51. 명목 한계 아래에서 작동하면 변화가 작을 수 있음 |
 | 행동 지연 | 0 / 설정 상한7.5 ms / 설정 상한15 ms | 이전 action target을 physics substep 동안 유지. 제어20 ms·물리5 ms에서 D 표본0/5/10/15 ms | 논문 PIE Table II, 코드 E/foothold_s2/tasks/delayed_action.py. 센서 지연·통신 누락·상위 명령 지연 전체를 뜻하지 않음 |
-| 밀기 | **미확정(D75)**. 임시안 0 / Δvx,Δvy 각 ±0.25 m/s / 각 ±0.5 m/s | world XY 속도에 순간 변화량을 더함. z·각속도 유지. 간격10~15 s도 임시안 | 제안·가정: Isaac Lab 공통 velocity_env_cfg.py:222~226. Go2 rough는 push=None(:33)이므로 ‘Go2 기본 활성값’이라고 부르면 틀림. 원문 근거 비교는 §3 |
+| 밀기 | **D76 임시 준비값** 0 / Δvx,Δvy 각 ±0.5 m/s / 각 ±1.0 m/s | world XY 속도에 순간 변화량을 더함. z·각속도 유지. 간격10~15 s | 팀장 결정·선행 범위 참고, 실기 미확인: Isaac Lab 공통 velocity_env_cfg.py:222~226. Go2 rough는 push=None(:33)이므로 ‘Go2 기본 활성값’이라고 부르면 틀림. 원문 근거 비교는 §3 |
 | 관측 잡음 | **m0부터 끝까지 현재1.0배 고정** | 각 관측 계산 때 U(−a,+a) 가산. 명령·이전 action에는 잡음 없음 | Y:951~1029, §2. 최종2배를 기본값으로 올릴 근거 없음. W51 noise2는 스트레스 진단만 |
 
 D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0는 COM·gain·strength·delay·push 다섯 항목의 확대 배율 0, B1~B3c에 0→0.5, D=m6001~7500, T0=m7501~8000, 총 8001갱신이다. D는 전체 범위 1배를 1500갱신 연습하는 구간으로 적는다. v0.1a의 ‘D 앞 1000갱신에 다시 확대’는 미채택 추가 제안이었으므로 실행안에서 제외한다. 코드의 일정은 `m≤1500:0`, `1501≤m≤6000:0.5×(m−1501)/4499`, `m≥6001:1`이다. 이 식은 runner v8 `ex40_dr.py:29~37`에서 직접 읽었으며, 경계에서는 각 env의 다음 자연 reset 때 적용하므로 전체 env가 동시에 1배가 되는 것은 아니다. D 진입 때 목표 범위가 두 배로 넓어지는 과도 구간은 실제 소비 배율·종료 원인과 함께 기록한다.
@@ -35,11 +35,13 @@ D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0�
 
 **runner v8 재확인, 22:29:** 앞서 049587d4에서 지적한 root velocity API와 지연 반올림은 **2adbb1d5에서 코드 수준으로 닫혔다**. `ex40_dr_runtime.py:175~177`은 설치 API와 같은 `get_root_velocities()`를 쓰고, `delayed_action.py:18·43`과 `ex40_dr.py:68`은 floor를 쓴다. analyst가 GPU를 숨겨 `test_ex40_dr_v8_cpu.py`를 직접 실행해 **10 passed, 3.41 s**를 얻었다. 이 시험 파일 수와 runner의 전체 시험 수를 혼합하지 않는다. 명목 COM·모터 세기 복원 adapter는 읽었으나, 수정된 학습 runtime의 Kit 효과 검증은 미확인이다. W51의 짧은 Kit 통과는 별도 평가 코드의 증거다.
 
-**새 막음 1, 2adbb1d5의 COM 대상:** `ex40_dr_runtime.py:194~196`은 `SceneEntityCfg("robot")`를 COM 이벤트에 전달한다. 설치 `scene_entity_cfg.py:69~80`의 기본 `body_ids=slice(None)`는 모든 링크이고, `events.py:420~435`는 그 링크 모두에 offset을 더한다. 실제 `install_runtime_events` 함수 AST를 CPU에서 호출해 `body_names=None / body_ids=slice(None)`를 재현했다. S1 설정 `s1_env_cfg.py:134`의 `body_names="base"`와 다르다. **몸통만 ±5 cm로 옮길 의도가 다리까지 같은 offset을 주는 처치로 바뀐다.** COM 이벤트 전용 asset cfg를 base로 한정하고, 반복 reset에서 base만 변하며 다른 링크 COM은 명목 그대로인 시험이 필요하다. 학습 소스는 수정하지 않았다. 이 결함은 평가 전용 W51의 S1 COM 설정에는 없다.
+**과거 막음 1, 2adbb1d5의 COM 대상(아래 후속으로 코드 수정됨):** `ex40_dr_runtime.py:194~196`은 `SceneEntityCfg("robot")`를 COM 이벤트에 전달한다. 설치 `scene_entity_cfg.py:69~80`의 기본 `body_ids=slice(None)`는 모든 링크이고, `events.py:420~435`는 그 링크 모두에 offset을 더한다. 실제 `install_runtime_events` 함수 AST를 CPU에서 호출해 `body_names=None / body_ids=slice(None)`를 재현했다. S1 설정 `s1_env_cfg.py:134`의 `body_names="base"`와 다르다. **몸통만 ±5 cm로 옮길 의도가 다리까지 같은 offset을 주는 처치로 바뀐다.** COM 이벤트 전용 asset cfg를 base로 한정하고, 반복 reset에서 base만 변하며 다른 링크 COM은 명목 그대로인 시험이 필요하다. 학습 소스는 수정하지 않았다. 이 결함은 평가 전용 W51의 S1 COM 설정에는 없다.
+
+**10/30 23:58 후속:** ac60ca36은 COM asset을 `body_names="base"`로 제한했고 bc926bb0 및 통합3010ba45에 포함된다. 보고서와 수정 소스를 다시 읽었다. 설치 함수 호출 CPU 시험과 실제 Kit의 단계별 base-only 적용은 별도 증거이며, 이 문장만으로 Kit 막음이 닫히지 않는다.
 
 ### 1.2 구현에 전달할 값
 
-아래는 §1의 권고를 runner 필드 이름으로 편 것이다. **D75 밀기는 null로 남기며 이 블록은 완성된 실행 설정이 아니다.** 가중치를 새로 정하거나 adapter 검증 상태를 바꾸는 블록은 아니다. COM 대상은 반드시 base다.
+아래는 §1의 권고를 runner 필드 이름으로 편 것이다. **밀기는 최신 D76 임시값이다. 이 블록만으로 adapter 검증 완료 또는 본 기동을 승인하지 않는다.** 가중치를 새로 정하거나 adapter 검증 상태를 바꾸는 블록은 아니다. COM 대상은 반드시 base다.
 
 ```yaml
 full_ranges:
@@ -47,8 +49,8 @@ full_ranges:
   actuator_gains: {stiffness_scale: [0.9, 1.1], damping_scale: [0.9, 1.1]}
   motor_strength: [0.9, 1.1]
   delay_s: [0.0, 0.015]
-  push_velocity: null # D75 미확정, W51 진단값을 학습값으로 소비하지 않음
-push_interval_s: null # D75 미확정
+  push_velocity: {x: [-1.0, 1.0], y: [-1.0, 1.0], z: [0.0, 0.0], roll: [0.0, 0.0], pitch: [0.0, 0.0], yaw: [0.0, 0.0]}
+push_interval_s: [10.0, 15.0] # D76 임시 준비값, B14 별도 승인
 observation_noise: {mode: fixed, multiplier: 1.0}
 ```
 
@@ -98,6 +100,8 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 
 **D75 이전 임시안, 확정 아님:** 수평 Δv 각 축 U(−0.5,+0.5)m/s, B 끝각축±0.25, z/각속도0, 에피소드 안독립 timer10~15s, instant1회. 네모 분포라 평면 최대 크기는0.707m/s(D),0.354m/s(B 끝), 방향각 균일 분포가 아니다. 배율은 크기에만 적용하고 간격을0.5배로 줄이지 않는다. 명목12kg라면 각축 최대 운동량 변화6N·s라는 계산일 뿐, 6N 힘이나 30N의 특정 지속시간과 동등하다고 단정하지 않는다. 계단 발에 걸리는 외력·장시간 끌기·수직 타격은 이 설계가 검증하지 않는다. 최종값은 계단 발차기 원문·영상 조사 뒤 다시 논의한다.
 
+**D76 현재 준비 설정:** 위 단락은 D75 이전 제안의 이력이다. D76은 D 최대를 각 축 ±1.0m/s, B 끝 각 축 ±0.5m/s, 간격10~15s로 정했다. 평면 최대 변화량은 각각1.414/0.707m/s(계산)다. 설치 Isaac Lab의 가산 의미를 따른다. SLR·HIM의 속도 대입과 수치가 같아도 동일한 외란이 아니며, 실기 내성 수준은 미확인이다.
+
 ## 4. W51 비교 조건과 실제 소비 확인
 
 기존 W51의 `dr_s1`에는 이미 지연+COM+gain+strength가 함께 들어갔다. `eval_actuator/ex38_m3001/dr_s1/map_modes.json` action지연 hist는0:663·1:546·2:507·3:780, 합2496(64×39). 반면 `ex38_m3001_v2/dc`와 `dc_delay`는 마찰·질량을 껐고 dr_s1은 켰다. 따라서 기존 차이를 ‘세 DR만의 영향’이라고 해석하지 않는다.
@@ -136,3 +140,4 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 | v0.1b | D의 미채택 추가 확대 제안을 제외하고 D74·runner의 전체 범위 1500갱신으로 정리. 평가 결과는 계속 수집 중 |
 | v0.1c | 밀기 최종 권고와 고정 잡음 문구 명확화. runner 두 수정 CPU 재확인, 밀기 interval 배율·재개 저장 범위 구분, 같은 seed 반복의 해석 한계 추가 |
 | v0.1d | D75로 앞선 밀기 확정 표현 철회, YAML 밀기 null. SLR 계단 발차기 직접 확인 및 논문·코드 불일치, JEPLO·MoE·DTC 대조 추가. 관측 잡음1배 고정 유지 |
+| v0.1e | D76 임시 밀기 준비값으로 현재 표·YAML 동기화. D75 이력과 W51 고정 진단은 보존. COM base 한정 후속 포함, B14 승인과 분리 |
