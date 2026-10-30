@@ -412,6 +412,8 @@ class StartRunner(OnPolicyRunner):
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
                                                self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
+                    if done_ids.numel() and getattr(self, "continuous_curriculum", None) is not None:
+                        self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
                 self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()

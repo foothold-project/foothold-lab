@@ -179,19 +179,44 @@ def test_smoke_checker_known_good_and_mutations(tmp_path):
     row["effective_schedule_sha256"] = plan.effective_sha256
     receipt_path.write_text(json.dumps(row), encoding="utf-8")
     (run / "params").mkdir()
-    (run / "params" / "env.yaml").write_text(
-        "curriculum_mode: true\nex39_thigh_calf_pos_l1: -0.01\nex39_four_foot_stop: 0.1\n"
-        "track_ang_vel: 1.0\ntrack_lin_vel: 2.0\n", encoding="utf-8")
+    env_yaml = run / "params" / "env.yaml"
+    env_yaml.write_text(yaml.safe_dump({
+        "commands": {"base_velocity": {"params": {"curriculum_mode": True},
+                                        "flag_stride": 0, "dynamic_flags": False}},
+        "rewards": {"track_ang_vel": {"weight": 1.0}, "track_lin_vel": {"weight": 2.0},
+                    "joint_acc": {"weight": -1e-7}, "basic_hip_pos_penalty_l1": {"weight": -0.05},
+                    "ex39_thigh_calf_pos_l1": {"weight": -0.01},
+                    "ex39_four_foot_stop": {"weight": 0.1}}}), encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
                                  "effective_schedule_sha256": plan.effective_sha256,
                                  "arm": "B"}}}), encoding="utf-8")
     (run / "basic_start_receipt.json").write_text(json.dumps({"num_envs": 3072,
         "env_seed": 42, "command_seed": 42}), encoding="utf-8")
-    events = [{"event": "stage_enter", "to": k, "iteration": v}
-              for k, v in row["stage_boundaries"].items()]
-    events[-1]["force_gt"] = False
-    events.append({"event": "env_reset_applied", "to": "B2", "changed_envs": 2})
+    events = [{"event": "physical_resume_reset", "stage": "B1"}]
+    for i, (name, iteration) in enumerate(row["stage_boundaries"].items()):
+        stage = plan.stages[i]
+        enter = {"event": "stage_enter", "to": name, "iteration": iteration,
+                 "curriculum_sha256": plan.sha256,
+                 "effective_schedule_sha256": plan.effective_sha256}
+        if i:
+            enter.update(shares=stage.shares, ranges=stage.ranges,
+                         force_gt=stage.force_gt, pending_envs=3072)
+        else:
+            enter["changed"] = stage.adds
+        events.append(enter)
+        if i:
+            events.append({"event": "env_reset_applied", "to": name,
+                           "changed_envs": 4, "remaining_old_envs": 3068,
+                           "map_source_policy": "forced_gt" if stage.force_gt
+                                                else "AdaSmpl_pred_eligible", "adasmpl_p": 1.0})
+            events.append({"event": "stage_command_consumed", "to": name,
+                           "sampled_envs": 4, "slot_counts": {slot: (4 if slot == "forward" else 0)
+                                                              for slot in EX39_SLOTS},
+                           "heading_count": 0, "command_bad_count": 0})
+            events.append({"event": "stage_map_consumed", "to": name,
+                           "reset_envs": 4, "force_gt_runtime": stage.force_gt,
+                           "use_gt_envs": 4, "adasmpl_p": 1.0})
     stage_log = run / "stage_log.jsonl"
     stage_log.write_text("\n".join(json.dumps(r) for r in events) + "\n", encoding="utf-8")
     (run / "model_1510.pt").write_bytes(b"known model")
@@ -200,6 +225,82 @@ def test_smoke_checker_known_good_and_mutations(tmp_path):
     assert check_kit_smoke(receipt_path, run_log, 0)["state"] == "PASS"
     with pytest.raises(ValueError, match="child failed"):
         check_kit_smoke(receipt_path, run_log, 1)
+    zero = copy.deepcopy(events)
+    next(r for r in zero if r["event"] == "env_reset_applied" and r["to"] == "B2")["changed_envs"] = 0
+    stage_log.write_text("\n".join(json.dumps(r) for r in zero) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="positive reset adoption"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    missing = [r for r in events if r["event"] not in ("env_reset_applied", "stage_command_consumed",
+                                                       "stage_map_consumed") or r["to"] == "B2"]
+    stage_log.write_text("\n".join(json.dumps(r) for r in missing) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="each promoted stage"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    two_only = [r for r in copy.deepcopy(events)
+                if r["event"] not in ("env_reset_applied", "stage_command_consumed",
+                                      "stage_map_consumed") or r["to"] == "B2"]
+    next(r for r in two_only if r["event"] == "env_reset_applied")["changed_envs"] = 2
+    next(r for r in two_only if r["event"] == "env_reset_applied")["remaining_old_envs"] = 3070
+    next(r for r in two_only if r["event"] == "stage_command_consumed")["sampled_envs"] = 2
+    next(r for r in two_only if r["event"] == "stage_command_consumed")["slot_counts"]["forward"] = 2
+    next(r for r in two_only if r["event"] == "stage_map_consumed")["reset_envs"] = 2
+    next(r for r in two_only if r["event"] == "stage_map_consumed")["use_gt_envs"] = 2
+    stage_log.write_text("\n".join(json.dumps(r) for r in two_only) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="each promoted stage"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    wrong_share = copy.deepcopy(events)
+    next(r for r in wrong_share if r["event"] == "stage_enter" and r["to"] == "B2")["shares"]["forward"] = 0.99
+    stage_log.write_text("\n".join(json.dumps(r) for r in wrong_share) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="stage shares"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    wrong_policy = copy.deepcopy(events)
+    next(r for r in wrong_policy if r["event"] == "env_reset_applied" and r["to"] == "T0")["map_source_policy"] = "forced_gt"
+    stage_log.write_text("\n".join(json.dumps(r) for r in wrong_policy) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="map policy"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    bad_command = copy.deepcopy(events)
+    next(r for r in bad_command if r["event"] == "stage_command_consumed")["command_bad_count"] = 1
+    stage_log.write_text("\n".join(json.dumps(r) for r in bad_command) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="consumed command evidence"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    bad_map = copy.deepcopy(events)
+    next(r for r in bad_map if r["event"] == "stage_map_consumed" and r["to"] == "T0")["force_gt_runtime"] = True
+    stage_log.write_text("\n".join(json.dumps(r) for r in bad_map) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="consumed map reset evidence"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    stage_log.write_text("\n".join(json.dumps(r) for r in events) + "\n", encoding="utf-8")
+    wrong = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
+    wrong["rewards"]["track_ang_vel"]["weight"] = 99.0
+    env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
+    with pytest.raises(ValueError, match="reward weight"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    wrong["rewards"]["track_ang_vel"]["weight"] = 1.0
+    wrong["commands"]["base_velocity"]["flag_stride"] = 5
+    env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
+    with pytest.raises(ValueError, match="all envs"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    wrong["commands"]["base_velocity"]["flag_stride"] = 0
+    env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
     stage_log.write_text("\n".join(json.dumps(r) for r in events if r.get("to") != "T0") + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="all planned stages"):
         check_kit_smoke(receipt_path, run_log, 0)
+
+
+def test_reset_sample_and_map_receipts_use_new_episode_stage(tmp_path):
+    plan = Plan(SOURCE, arm="A", smoke_boundaries=(1503, 1506, 1509))
+    runtime = Runtime(plan, 4, "cpu", tmp_path / "stage_log")
+    runner = SimpleNamespace(adasmpl=SimpleNamespace(force_gt=True, p=1.0), pcfg={"force_gt": True},
+                             perception=SimpleNamespace(cfg=SimpleNamespace(force_gt=True)))
+    runtime.attach(runner, SimpleNamespace())
+    runtime.start(plan.parent_sha256)
+    gen = make_generator(42)
+    ids = torch.tensor([0, 1])
+    for iteration in (1503, 1506, 1509):
+        runtime.on_update_start(iteration)
+        runtime.on_reset(ids)
+        sampled = resample_stage(gen, 2, plan.stages[runtime.active], torch.zeros(2))
+        runtime.record_command_sample(ids, sampled["cmd"], sampled["slot"], sampled["heading"])
+        runtime.record_map_reset(ids, torch.ones(4, dtype=torch.bool))
+    rows = [json.loads(line) for line in (tmp_path / "stage_log" / "stage_log.jsonl").read_text().splitlines()]
+    assert [r["to"] for r in rows if r["event"] == "stage_command_consumed"] == ["B2", "B3", "T0"]
+    assert [r["to"] for r in rows if r["event"] == "stage_map_consumed"] == ["B2", "B3", "T0"]
+    assert next(r for r in rows if r["event"] == "stage_map_consumed" and r["to"] == "T0")["force_gt_runtime"] is False

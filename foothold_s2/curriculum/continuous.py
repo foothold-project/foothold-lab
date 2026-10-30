@@ -143,6 +143,8 @@ class Runtime:
         self.plan = plan
         self.active = 0
         self.env_stage = torch.zeros(env_count, dtype=torch.long, device=device)
+        self._pending_adoption = torch.zeros(env_count, dtype=torch.bool, device=device)
+        self._pending_adoption_count = 0
         self.log_dir = Path(log_dir)
         self.score_dir = Path(score_dir) if score_dir is not None else None
         self.last_checkpoint: dict | None = None
@@ -181,11 +183,53 @@ class Runtime:
             self.env_stage[env_ids] = self.active
             changed = int((old != self.active).sum().item())
             if changed:
+                self._pending_adoption[env_ids[old != self.active]] = True
+                self._pending_adoption_count += changed
                 self._write({"event": "env_reset_applied", "to": self.plan.stages[self.active].id,
                              "map_source_policy": ("forced_gt" if self.plan.stages[self.active].force_gt
                                                    else "AdaSmpl_pred_eligible"),
                              "adasmpl_p": (float(self.runner.adasmpl.p) if self.runner is not None else None),
                              "changed_envs": changed, "remaining_old_envs": int((self.env_stage != self.active).sum().item())})
+
+    def record_command_sample(self, env_ids: torch.Tensor, command: torch.Tensor,
+                              slot: torch.Tensor, heading: torch.Tensor):
+        """Receipt for commands actually stored after a new stage's reset resample."""
+        if not self._pending_adoption_count:
+            return
+        adopted = self._pending_adoption[env_ids]
+        if not bool(adopted.any()):
+            return
+        selected_ids = env_ids[adopted]
+        stage_ids = self.env_stage[selected_ids]
+        if not bool((stage_ids == self.active).all()):
+            raise ValueError("W55 stage command sample did not use the active stage")
+        selected_slot = slot[adopted]
+        selected_command = command[adopted]
+        selected_heading = heading[adopted]
+        bad = int(command_bad(selected_command, selected_slot, selected_heading,
+                              stage_ids, self.plan).sum().item())
+        counts = torch.bincount(selected_slot, minlength=len(EX39_SLOTS)).cpu().tolist()
+        count = int(selected_ids.numel())
+        self._pending_adoption[selected_ids] = False
+        self._pending_adoption_count -= count
+        self._write({"event": "stage_command_consumed", "to": self.plan.stages[self.active].id,
+                     "sampled_envs": count, "slot_counts": dict(zip(EX39_SLOTS, counts)),
+                     "heading_count": int(selected_heading.sum().item()), "command_bad_count": bad})
+
+    def record_map_reset(self, env_ids: torch.Tensor, use_gt: torch.Tensor):
+        """Receipt after perception.reset_envs has installed the map flag for reset envs."""
+        if not env_ids.numel():
+            return
+        stage_ids = self.env_stage[env_ids]
+        for index, stage in enumerate(self.plan.stages):
+            selected = env_ids[stage_ids == index]
+            if not selected.numel():
+                continue
+            self._write({"event": "stage_map_consumed", "to": stage.id,
+                         "reset_envs": int(selected.numel()),
+                         "force_gt_runtime": bool(self.runner.adasmpl.force_gt),
+                         "use_gt_envs": int(use_gt[selected].sum().item()),
+                         "adasmpl_p": float(self.runner.adasmpl.p)})
 
     def on_update_start(self, iteration: int):
         if self.plan.promotion == "fixed":
@@ -274,6 +318,8 @@ class Runtime:
             raise ValueError("W55 stage state is invalid")
         self.active = active
         self.env_stage.copy_(env_stage)
+        self._pending_adoption.zero_()
+        self._pending_adoption_count = 0
         self.last_checkpoint = state.get("last_checkpoint")
         self.pending_gate = state.get("pending_gate")
         self.seen_scores = set(state.get("seen_scores") or [])
@@ -289,6 +335,8 @@ class Runtime:
     def after_physical_resume_reset(self):
         # A new process necessarily starts new episodes. This is not an in-process stage change.
         self.env_stage.fill_(self.active)
+        self._pending_adoption.zero_()
+        self._pending_adoption_count = 0
         self._write({"event": "physical_resume_reset", "stage": self.plan.stages[self.active].id,
                      "note": "new simulator episode; not a physically identical continuation"})
 

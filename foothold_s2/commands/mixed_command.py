@@ -229,6 +229,9 @@ class MixedVelocityCommand(CommandTerm):
                     self.stand[group] = False
                     self.spin[group] = False
                     self.heading[group] = False
+                if runtime is not None:
+                    runtime.record_command_sample(group, self.vel_command_b[group],
+                                                  self.slot_current[group], self.heading[group])
 
         flag = env_ids[self.is_flag_env[env_ids]]
 
