@@ -1,0 +1,104 @@
+{
+    "observed_at":  "2026-10-31T07:41:22.5378045+09:00",
+    "observer_time":  "2026-10-31T07:41:04+09:00",
+    "model500_exists":  false,
+    "manifest":  {
+                     "completed_updates":  451,
+                     "last_write":  "2026-10-31T07:25:58+09:00",
+                     "readable":  true,
+                     "schema":  "foothold-manifest/1"
+                 },
+    "state":  {
+                  "state":  "running",
+                  "iter":  480,
+                  "tot_iter":  8001,
+                  "iter_s":  25.167877435684204,
+                  "steps_per_s":  2929.4484681280655,
+                  "mean_reward":  32.85598288536072,
+                  "mean_episode_length":  979.16,
+                  "p_smpl":  1.0,
+                  "gpu_max_allocated_GiB":  6.050112724304199,
+                  "perception":  {
+                                     "l_tr":  0.01466,
+                                     "l_ie":  2.33122,
+                                     "kl":  0.00019,
+                                     "o_next":  2.31938,
+                                     "v":  0.00915,
+                                     "hf":  0.00091,
+                                     "hb":  0.00159
+                                 },
+                  "log_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                  "time":  "2026-10-31T07:38:35",
+                  "pid":  26240
+              },
+    "score_watch":  {
+                        "directory_exists":  false,
+                        "files":  {
+                                      "score_ledger.jsonl":  {
+                                                                 "exists":  false
+                                                             },
+                                      "watch.lock":  {
+                                                         "exists":  false
+                                                     },
+                                      "watch_completion.json":  {
+                                                                    "exists":  false
+                                                                },
+                                      "watch_state.json":  {
+                                                               "exists":  false
+                                                           }
+                                  },
+                        "model_500_evaluations":  [
+
+                                                  ],
+                        "model_500_ledger_rows":  [
+
+                                                  ],
+                        "path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch"
+                    },
+    "process_probe":  {
+                          "ok":  true,
+                          "processes":  [
+                                            {
+                                                "active_gpu_argument":  "",
+                                                "checkpoint_argument":  "",
+                                                "created":  "2026-10-30T19:13:22.5100640Z",
+                                                "device_argument":  "cuda:0",
+                                                "name":  "python.exe",
+                                                "output_argument":  "",
+                                                "physics_device_argument":  "",
+                                                "pid":  141272,
+                                                "references_model_500":  false,
+                                                "references_run":  true,
+                                                "role":  "supervisor"
+                                            },
+                                            {
+                                                "active_gpu_argument":  "",
+                                                "checkpoint_argument":  "",
+                                                "created":  "2026-10-30T19:13:24.7986110Z",
+                                                "device_argument":  "cuda:0",
+                                                "name":  "python.exe",
+                                                "output_argument":  "",
+                                                "physics_device_argument":  "",
+                                                "pid":  26240,
+                                                "references_model_500":  false,
+                                                "references_run":  true,
+                                                "role":  "trainer"
+                                            }
+                                        ]
+                      },
+    "frozen_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "frozen_tracked_changes":  [
+
+                               ],
+    "eta_assuming_current_rate":  "2026-10-31T07:46:58.3580000",
+    "monitor_pids":  [
+                         {
+                             "Id":  42372,
+                             "StartTime":  "\/Date(1793390973870)\/"
+                         },
+                         {
+                             "Id":  21272,
+                             "StartTime":  "\/Date(1793390212184)\/"
+                         }
+                     ]
+}
