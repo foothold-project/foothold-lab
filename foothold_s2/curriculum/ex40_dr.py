@@ -65,7 +65,9 @@ def delay_limit(scale: float, physics_dt: float = PHYSICS_DT_SECONDS) -> dict:
     if not math.isfinite(physics_dt) or physics_dt <= 0:
         raise ValueError("EX-40 physics dt must be positive")
     seconds = scale * MAX_DELAY_SECONDS
-    return {"max_seconds": seconds, "rounded_substeps": int(round(seconds / physics_dt)),
+    max_substeps = int(math.floor(seconds / physics_dt + 1e-9))
+    return {"max_seconds": seconds, "max_substeps": max_substeps,
+            "quantized_max_seconds": max_substeps * physics_dt,
             "physics_dt_seconds": physics_dt}
 
 

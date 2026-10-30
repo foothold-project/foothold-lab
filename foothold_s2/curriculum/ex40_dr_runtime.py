@@ -172,9 +172,9 @@ def interval_push(env, env_ids, asset_cfg, target_range):
     scale = float(getattr(env, "_ex40_dr_scale", 0.0))
     velocity_range = {axis: _scaled_interval(tuple(target_range.get(axis, (0.0, 0.0))), scale, 0.0)
                       for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
-    before = asset.root_physx_view.get_velocities()[rows].clone()
+    before = asset.root_physx_view.get_root_velocities()[rows].clone()
     events.push_by_setting_velocity(env, rows, velocity_range, asset_cfg)
-    after = asset.root_physx_view.get_velocities()[rows].clone()
+    after = asset.root_physx_view.get_root_velocities()[rows].clone()
     _record(env, "push_velocity_delta", after - before)
 
 
@@ -272,22 +272,28 @@ class RuntimeReadback:
         if delay is not None:
             d = delay.detach().to(device="cpu", dtype=torch.int64)
             current_hist = torch.bincount(d, minlength=int(d.max().item()) + 1 if d.numel() else 1)
-            scheduled_max_substeps = int(round(self.delay_max_s * self.scale / float(self.env.physics_dt)))
+            dt = float(self.env.physics_dt)
+            scheduled_max_substeps = int(math.floor(self.delay_max_s * self.scale / dt + 1e-9))
             reset_hist = getattr(action, "_ex40_sample_counts", None)
             if reset_hist is None:
                 reset_hist = torch.zeros(scheduled_max_substeps + 1, dtype=torch.int64)
             else:
                 reset_hist = reset_hist.detach().to(device="cpu", dtype=torch.int64)
             used = torch.nonzero(current_hist).flatten()
+            realized_max = int(used.max()) if used.numel() else None
             delay_summary = {"count": int(d.numel()),
                              "reset_sample_count": int(reset_hist.sum()),
                              "observed_min_substeps": int(used.min()) if used.numel() else None,
-                             "observed_max_substeps": int(used.max()) if used.numel() else None,
+                             "observed_max_substeps": realized_max,
                              "max_allowed_substeps": scheduled_max_substeps,
                              "current_histogram": current_hist.tolist(),
                              "reset_sample_histogram": reset_hist.tolist(),
                              "max_seconds": self.delay_max_s * self.scale,
-                             "physics_dt_seconds": float(self.env.physics_dt)}
+                             "configured_max_seconds": self.delay_max_s * self.scale,
+                             "observed_max_seconds": realized_max * dt if realized_max is not None else None,
+                             "reset_sampled_delay_ms": [index * dt * 1000
+                                 for index, count in enumerate(reset_hist.tolist()) if count],
+                             "physics_dt_seconds": dt}
             realized["delay_substeps"] = _stats(d)
         self.env._ex40_dr_samples = {}
         return {"update": self.update, "scale": self.scale, "config_sha256": self.config_sha256,
@@ -350,10 +356,15 @@ def validate_runtime_summary(row: dict, expected_update: int | None = None,
     dt = float(delay.get("physics_dt_seconds", 0))
     if dt <= 0 or not math.isclose(float(delay.get("max_seconds", -1)), expected * 0.015, abs_tol=1e-12):
         raise ValueError("EX-40 DR delay scale or physics dt invalid")
-    max_steps = int(round(expected * 0.015 / dt))
+    max_steps = int(math.floor(expected * 0.015 / dt + 1e-9))
     if (delay.get("max_allowed_substeps") != max_steps
             or (delay.get("observed_max_substeps") or 0) > max_steps):
         raise ValueError("EX-40 DR delay sampled values exceed the scaled schedule")
+    if (not math.isclose(float(delay.get("configured_max_seconds", -1)), expected * 0.015, abs_tol=1e-12)
+            or (delay.get("observed_max_seconds") is not None
+                and not math.isclose(float(delay["observed_max_seconds"]),
+                                     float(delay["observed_max_substeps"]) * dt, abs_tol=1e-12))):
+        raise ValueError("EX-40 configured delay cap and realized sample readback disagree")
     realized = receipt.get("realized_state")
     if not isinstance(realized, dict) or not realized:
         raise ValueError("EX-40 DR actual per-update state readback missing")

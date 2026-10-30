@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import ast
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -36,10 +38,12 @@ def test_schedule_boundaries_ramp_and_stage_lengths():
     with pytest.raises(ValueError, match="fixes L_D at 1500"):
         phase_bounds(3000)
     assert [smoke_scale(stage) for stage in ("B0", "B1_B3c", "D", "T0")] == [0.0, .5, 1.0, 1.0]
-    assert delay_limit(0.0) == {"max_seconds": 0.0, "rounded_substeps": 0,
-                                "physics_dt_seconds": .005}
-    assert delay_limit(.5)["rounded_substeps"] == 2
-    assert delay_limit(1.0)["rounded_substeps"] == 3
+    assert delay_limit(0.0) == {"max_seconds": 0.0, "max_substeps": 0,
+                                "quantized_max_seconds": 0.0, "physics_dt_seconds": .005}
+    assert delay_limit(.5) == {"max_seconds": .0075, "max_substeps": 1,
+                               "quantized_max_seconds": .005, "physics_dt_seconds": .005}
+    assert delay_limit(1.0) == {"max_seconds": .015, "max_substeps": 3,
+                                "quantized_max_seconds": .015, "physics_dt_seconds": .005}
 
 
 def test_range_interpolation_fixed_noise_and_startup_values_untouched():
@@ -117,8 +121,93 @@ def test_installed_isaac_event_signatures_are_the_called_contracts():
         assert call in adapter
     action_source = (Path(__file__).parents[1] / "tasks" / "delayed_action.py").read_text(encoding="utf-8")
     assert "dr_scale_from_env" in action_source and "_ex40_dr_scale" in action_source
-    assert "round(float(scale) * self.cfg.max_delay_s / self._env.physics_dt)" in action_source
+    assert "math.floor(" in action_source and "self.cfg.max_delay_s / self._env.physics_dt + 1e-9" in action_source
+    assert "get_root_velocities()" in adapter and "get_velocities()" not in adapter
+    articulation_data = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/assets/articulation/articulation_data.py")
+    assert "self._root_physx_view.get_root_velocities()" in articulation_data.read_text(encoding="utf-8")
     assert 'mode="reset"' in adapter and 'mode="interval"' in adapter
+
+
+def test_com_and_motor_reset_adapters_restore_nominal_before_sampling(monkeypatch):
+    import torch
+    from foothold_s2.curriculum.ex40_dr_runtime import reset_base_com, reset_motor_strength
+
+    class RootView:
+        def __init__(self):
+            self.coms = torch.zeros((2, 1, 7), dtype=torch.float32)
+
+        def get_coms(self):
+            return self.coms.clone()
+
+        def set_coms(self, value, env_ids):
+            self.coms[env_ids] = value[env_ids]
+
+    class FakeDCMotor:
+        def __init__(self):
+            self.effort_limit = torch.full((2, 3), 10.0)
+            self._saturation_effort = torch.full((2, 3), 20.0)
+            self.velocity_limit = torch.full((2, 3), 30.0)
+            self._vel_at_effort_lim = torch.zeros((2, 3))
+
+    class Scene(dict):
+        num_envs = 2
+
+    robot = types.SimpleNamespace(root_physx_view=RootView(), device="cpu",
+                                  actuators={"all": FakeDCMotor()})
+    env = types.SimpleNamespace(scene=Scene(robot=robot), _ex40_dr_scale=1.0)
+    asset_cfg = types.SimpleNamespace(name="robot", body_ids=slice(None))
+
+    event_module = types.ModuleType("isaaclab.envs.mdp.events")
+
+    def randomize_com(fake_env, rows, com_range, _asset_cfg):
+        view = fake_env.scene["robot"].root_physx_view
+        values = view.get_coms()
+        offset = torch.tensor([com_range[key][1] for key in ("x", "y", "z")])
+        values[rows, :, :3] += offset
+        view.set_coms(values, rows)
+
+    event_module.randomize_rigid_body_com = randomize_com
+    isaaclab = types.ModuleType("isaaclab")
+    isaaclab.__path__ = []
+    envs = types.ModuleType("isaaclab.envs")
+    envs.__path__ = []
+    mdp = types.ModuleType("isaaclab.envs.mdp")
+    mdp.__path__ = []
+    mdp.events = event_module
+    actuators = types.ModuleType("isaaclab.actuators")
+    actuators.DCMotor = FakeDCMotor
+    for name, module in (("isaaclab", isaaclab), ("isaaclab.envs", envs),
+                         ("isaaclab.envs.mdp", mdp),
+                         ("isaaclab.envs.mdp.events", event_module),
+                         ("isaaclab.actuators", actuators)):
+        monkeypatch.setitem(sys.modules, name, module)
+
+    ids = torch.tensor([0, 1], dtype=torch.long)
+    com_target = {"x": [.2, .2], "y": [0.0, 0.0], "z": [0.0, 0.0]}
+    reset_base_com(env, ids, asset_cfg, com_target)
+    first = robot.root_physx_view.get_coms().clone()
+    reset_base_com(env, ids, asset_cfg, com_target)
+    second = robot.root_physx_view.get_coms().clone()
+    assert torch.equal(first, second)
+    assert torch.allclose(second[..., 0], torch.full((2, 1), .2))
+    env._ex40_dr_scale = 0.0
+    reset_base_com(env, ids, asset_cfg, com_target)
+    assert torch.equal(robot.root_physx_view.get_coms(), torch.zeros((2, 1, 7)))
+
+    env._ex40_dr_scale = 1.0
+    motor_range = [.5, .5]
+    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    first_effort = robot.actuators["all"].effort_limit.clone()
+    first_stall = robot.actuators["all"]._saturation_effort.clone()
+    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    assert torch.equal(robot.actuators["all"].effort_limit, first_effort)
+    assert torch.equal(robot.actuators["all"]._saturation_effort, first_stall)
+    assert torch.equal(first_effort, torch.full((2, 3), 5.0))
+    assert torch.equal(first_stall, torch.full((2, 3), 10.0))
+    env._ex40_dr_scale = 0.0
+    reset_motor_strength(env, ids, asset_cfg, motor_range)
+    assert torch.equal(robot.actuators["all"].effort_limit, torch.full((2, 3), 10.0))
+    assert torch.equal(robot.actuators["all"]._saturation_effort, torch.full((2, 3), 20.0))
 
 
 def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():
@@ -138,7 +227,9 @@ def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():
         "delay_readback": {"count": 4, "reset_sample_count": 4, "observed_min_substeps": 0,
             "observed_max_substeps": 2, "max_allowed_substeps": 3,
             "current_histogram": [1, 2, 1, 0], "reset_sample_histogram": [1, 1, 2, 0],
-            "max_seconds": .015, "physics_dt_seconds": .005},
+            "max_seconds": .015, "configured_max_seconds": .015,
+            "observed_max_seconds": .01, "reset_sampled_delay_ms": [0, 5, 10],
+            "physics_dt_seconds": .005},
         "observation_noise": {"mode": "fixed", "multiplier": 1.0},
         "pending_values": ["push_velocity"]}}
     validate_runtime_summary(row, 6001)
@@ -164,7 +255,9 @@ def test_runtime_sample_counters_distinguish_zero_events_from_smoke_coverage():
         "delay_readback": {"count": 1, "reset_sample_count": 1, "observed_min_substeps": 0,
             "observed_max_substeps": 0, "max_allowed_substeps": 0,
             "current_histogram": [1], "reset_sample_histogram": [1],
-            "max_seconds": 0.0, "physics_dt_seconds": .005},
+            "max_seconds": 0.0, "configured_max_seconds": 0.0,
+            "observed_max_seconds": 0.0, "reset_sampled_delay_ms": [0.0],
+            "physics_dt_seconds": .005},
         "realized_state": {"base_com_offset_m": {"count": 1}, "delay_substeps": {"count": 1},
             "motor.stiffness": {"count": 1}, "motor.damping": {"count": 1},
             "motor.effort_limit": {"count": 1}, "motor.saturation_effort": {"count": 1}},
