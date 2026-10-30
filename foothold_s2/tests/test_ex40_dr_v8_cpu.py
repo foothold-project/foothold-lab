@@ -13,7 +13,8 @@ import yaml
 
 from foothold_s2.curriculum.ex40_dr import (
     DR_ITEMS, DRConfig, delay_limit, dr_scale, interpolate_range,
-    phase_bounds, restore_scale, resumable_state, smoke_scale, validate_full_ranges,
+    phase_bounds, require_smoke_ready, restore_scale, resumable_state, smoke_scale,
+    validate_full_ranges,
 )
 from foothold_s2.ex40_launch import TABLE, main
 
@@ -53,6 +54,11 @@ def test_range_interpolation_fixed_noise_and_startup_values_untouched():
     assert interpolate_range([0.0, .015], [0.0, .015], .5) == [0.0, .015]
     doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
     cfg = doc["domain_randomization"]
+    assert cfg["full_ranges"]["base_com"] == {
+        "x": [-0.05, 0.05], "y": [-0.05, 0.05], "z": [-0.05, 0.05]}
+    assert cfg["full_ranges"]["actuator_gains"] == {
+        "stiffness_scale": [0.9, 1.1], "damping_scale": [0.9, 1.1]}
+    assert cfg["full_ranges"]["motor_strength"] == [0.9, 1.1]
     assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
     bad_noise = dict(cfg, observation_noise={"mode": "schedule", "multiplier": 0.5})
     with pytest.raises(ValueError, match="must stay fixed at 1x"):
@@ -70,6 +76,10 @@ def test_range_interpolation_fixed_noise_and_startup_values_untouched():
     fixture_ranges["push_velocity"] = push
     assert validate_full_ranges(fixture_ranges)["push_velocity"] == push
     assert DR_ITEMS == tuple(doc["domain_randomization"]["full_ranges"])
+    smoke_config = require_smoke_ready(TABLE)
+    assert smoke_config.runtime_adapter_status == "implementation_in_progress"
+    with pytest.raises(ValueError, match="runtime adapter is not verified"):
+        DRConfig.from_mapping(cfg, require_launchable=True)
 
 
 def test_empty_ranges_refuse_launch_and_filled_fixture_is_valid(tmp_path):
@@ -77,7 +87,7 @@ def test_empty_ranges_refuse_launch_and_filled_fixture_is_valid(tmp_path):
     cfg = doc["domain_randomization"]
     assert cfg["runtime_adapter_status"] == "implementation_in_progress"
     assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
-    with pytest.raises(ValueError, match="range is blank"):
+    with pytest.raises(ValueError, match="runtime adapter is not verified"):
         DRConfig.from_mapping(cfg, require_launchable=True)
     assert set(validate_full_ranges(_synthetic_ranges())) == set(DR_ITEMS)
 
@@ -108,9 +118,62 @@ def test_resume_scale_round_trip_and_rejects_different_plan():
             "push_interval_s": [0.5, 1.0]}))
 
 
+def test_runtime_readback_resume_restores_schedule_and_rejects_wrong_next_update():
+    from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
+
+    class Env:
+        pass
+
+    ranges = _synthetic_ranges()
+    first = RuntimeReadback(Env(), ranges, config_sha256="known-config")
+    first.update_start(6000)
+    saved = json.loads(json.dumps(first.state_dict()))
+
+    resumed = RuntimeReadback(Env(), ranges, config_sha256="known-config")
+    resumed.load_state_dict(saved, next_update=6001)
+    assert resumed.update == 6000
+    assert resumed.scale == 0.5
+    resumed.update_start(6001)
+    assert resumed.scale == 1.0
+
+    wrong_config = RuntimeReadback(Env(), ranges, config_sha256="other-config")
+    with pytest.raises(ValueError, match="does not match checkpoint/config/next update"):
+        wrong_config.load_state_dict(saved, next_update=6001)
+    with pytest.raises(ValueError, match="does not match checkpoint/config/next update"):
+        resumed.load_state_dict(saved, next_update=6002)
+
+
 def test_trainer_gate_runs_before_app_launcher_construction():
     source = (Path(__file__).parents[1] / "scripts" / "train_sol23f_common.py").read_text(encoding="utf-8")
+    assert "if args_cli.curriculum_kit_smoke and not args_cli.curriculum" in source
+    assert "EX40_DR_CONFIG = require_smoke_ready(args_cli.curriculum)" in source
+    assert source.index("EX40_DR_CONFIG = require_smoke_ready(args_cli.curriculum)") < source.index("app_launcher = AppLauncher(args_cli)")
     assert source.index("EX40_DR_CONFIG = require_launchable(args_cli.curriculum)") < source.index("app_launcher = AppLauncher(args_cli)")
+    assert "else:\n        EX40_DR_CONFIG = require_launchable(args_cli.curriculum)" in source
+
+
+def test_smoke_launch_is_separate_and_exactly_bounded_to_18_updates(tmp_path):
+    from argparse import Namespace
+    from foothold_s2.sol23f_contract import validate_continuous_launch
+
+    args = Namespace(
+        variant="SB", task="FootholdS2-Go2-S2-SB-v0", agent="rsl_rl_cfg_entry_point",
+        distributed=False, resume=False, fast_gt_only=False, basic_extend_arm=None,
+        basic_ex38=False, basic_ex39_arm=None, basic_ex38_continue_parent_sha=None,
+        basic_ex39_parent_sha=None, basic_track_ang_weight=None, basic_track_lin_weight=None,
+        basic_joint_acc_weight=None, basic_hip_pos_weight=None, basic_feet_regulation_weight=None,
+        basic_lin_vel_z_schedule=False, command_mode="basic_gait", clock_scatter="off",
+        p_map_off=0.1, seed=42, num_envs=3072, max_iterations=18, basic_stage="smoke",
+        smoke_updates=None, basic_log_root=str(tmp_path / "logs"),
+        curriculum_score_dir=str(tmp_path / "scores"), basic_new_share=0.30,
+        basic_ex40_parent_sha=None, basic_ex40_segment_index=None,
+        resume_from=None, curriculum_kit_smoke=True, curriculum=TABLE, curriculum_arm="B",
+        end_by="2026-11-02T12:00:00+09:00", max_wall_s=86400.0)
+    validate_continuous_launch(args, now=1793400000, verify_parent=False)
+
+    args.max_iterations = 8001
+    with pytest.raises(ValueError, match="must finish the 18-update smoke or m8000 exactly"):
+        validate_continuous_launch(args, now=1793400000, verify_parent=False)
 
 
 def test_installed_isaac_event_signatures_are_the_called_contracts():
@@ -343,7 +406,7 @@ def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():
             "observed_max_seconds": .01, "reset_sampled_delay_ms": [0, 5, 10],
             "physics_dt_seconds": .005},
         "observation_noise": {"mode": "fixed", "multiplier": 1.0},
-        "pending_values": ["push_velocity"]}}
+        "pending_values": []}}
     validate_runtime_summary(row, 6001)
     validate_runtime_summary(row, 6001, require_event_samples=True)
     row["ex40_dr"]["observation_noise"] = {"mode": "scheduled", "multiplier": 0.5}
@@ -373,13 +436,13 @@ def test_runtime_sample_counters_distinguish_zero_events_from_smoke_coverage():
         "realized_state": {"base_com_offset_m": {"count": 1}, "delay_substeps": {"count": 1},
             "motor.stiffness": {"count": 1}, "motor.damping": {"count": 1},
             "motor.effort_limit": {"count": 1}, "motor.saturation_effort": {"count": 1}},
-        "pending_values": ["push_velocity"]}}
+        "pending_values": []}}
     validate_runtime_summary(row, 0)
     with pytest.raises(ValueError, match="did not produce actual samples"):
         validate_runtime_summary(row, 0, require_event_samples=True)
 
 
-def test_d76_push_range_is_set_while_other_ranges_keep_launch_blocked():
+def test_d76_push_range_is_set_while_other_ranges_keep_launch_blocked(tmp_path):
     doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
     cfg = doc["domain_randomization"]
     assert cfg["full_ranges"]["push_velocity"]["x"] == [-1.0, 1.0]
@@ -387,5 +450,20 @@ def test_d76_push_range_is_set_while_other_ranges_keep_launch_blocked():
     assert cfg["full_ranges"]["push_velocity"]["z"] == [0.0, 0.0]
     assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
     assert cfg["push_interval_s"] == [10.0, 15.0]
-    with pytest.raises(ValueError, match="range is blank"):
+    assert require_smoke_ready(TABLE).full_ranges == cfg["full_ranges"]
+    with pytest.raises(ValueError, match="runtime adapter is not verified"):
         DRConfig.from_mapping(cfg, require_launchable=True)
+    broken = dict(cfg, full_ranges=dict(cfg["full_ranges"], motor_strength=None))
+    broken_doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
+    broken_doc["domain_randomization"] = broken
+    broken_path = tmp_path / "ex40-incomplete-smoke.yaml"
+    broken_path.write_text(yaml.safe_dump(broken_doc, sort_keys=False), encoding="utf-8")
+    with pytest.raises(ValueError, match="range is blank: motor_strength"):
+        require_smoke_ready(broken_path)
+    bad_interval = dict(cfg, push_interval_s=[9.0, 15.0])
+    broken_doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
+    broken_doc["domain_randomization"] = bad_interval
+    broken_path = tmp_path / "ex40-d76-smoke-invalid.yaml"
+    broken_path.write_text(yaml.safe_dump(broken_doc, sort_keys=False), encoding="utf-8")
+    with pytest.raises(ValueError, match="D76 push interval"):
+        require_smoke_ready(broken_path)

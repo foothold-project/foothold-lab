@@ -1,8 +1,7 @@
 """CPU-only EX-40 v8 DR schedule contract.
 
 This module describes the requested schedule without importing Isaac or Kit.
-Launch remains blocked until the analyst ranges and runtime event adapter are
-both present and verified.
+Main launch remains blocked until the runtime event adapter is verified.
 """
 
 from __future__ import annotations
@@ -231,3 +230,20 @@ def restore_scale(state: dict, next_update: int, config: DRConfig) -> float:
 
 def require_launchable(path: str | Path) -> DRConfig:
     return load_dr_config(path, require_launchable=True)
+
+
+def require_smoke_ready(path: str | Path) -> DRConfig:
+    """Validate complete smoke inputs without certifying the runtime adapter.
+
+    This exception is for the explicitly bounded Kit smoke only. Main
+    training must continue through require_launchable(), which requires the
+    adapter status to be verified.
+    """
+    config = load_dr_config(path, require_launchable=False)
+    validate_full_ranges(config.full_ranges)
+    interval = config.push_interval_s
+    if interval != (10.0, 15.0):
+        raise ValueError("EX-40 Kit smoke requires the D76 push interval 10 to 15 seconds")
+    if config.runtime_adapter_status not in ("implementation_in_progress", "verified"):
+        raise ValueError("EX-40 Kit smoke runtime adapter has not been implemented")
+    return config

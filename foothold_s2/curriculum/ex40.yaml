@@ -18,9 +18,9 @@ domain_randomization:
     friction_static_dynamic: [0.2, 1.2]
     base_mass_add_kg: [-1.0, 3.0]
   full_ranges:
-    base_com: null
-    actuator_gains: null
-    motor_strength: null
+    base_com: {x: [-0.05, 0.05], y: [-0.05, 0.05], z: [-0.05, 0.05]}
+    actuator_gains: {stiffness_scale: [0.9, 1.1], damping_scale: [0.9, 1.1]}
+    motor_strength: [0.9, 1.1]
     delay_s: [0.0, 0.015]
     push_velocity:
       x: [-1.0, 1.0]

@@ -81,13 +81,17 @@ cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
 EX40_DR_CONFIG = None
+if args_cli.curriculum_kit_smoke and not args_cli.curriculum:
+    raise ValueError("EX-40 Kit smoke requires --curriculum")
 if args_cli.curriculum:
-    # v8 must not enter Kit until the analyst ranges and an implemented event
-    # adapter have both been reviewed. This check deliberately precedes
-    # AppLauncher construction so an incomplete YAML cannot start Kit.
-    from foothold_s2.curriculum.ex40_dr import require_launchable
+    # A bounded explicit smoke may validate a complete range table while the
+    # runtime adapter is still unverified. Main training keeps the stricter gate.
+    from foothold_s2.curriculum.ex40_dr import require_launchable, require_smoke_ready
 
-    EX40_DR_CONFIG = require_launchable(args_cli.curriculum)
+    if args_cli.curriculum_kit_smoke:
+        EX40_DR_CONFIG = require_smoke_ready(args_cli.curriculum)
+    else:
+        EX40_DR_CONFIG = require_launchable(args_cli.curriculum)
 DEADLINE_EPOCH = validate_launch(args_cli, hydra_args)
 sys.argv = [sys.argv[0]] + hydra_args
 app_launcher = AppLauncher(args_cli)
