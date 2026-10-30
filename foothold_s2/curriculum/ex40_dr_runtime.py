@@ -138,7 +138,7 @@ def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
         if bool((nominal_stiffness == 0).any()) or bool((nominal_damping == 0).any()):
             raise ValueError("EX-40 cannot measure actuator gain scale against zero nominal gain")
         samples.extend((actual_stiffness / nominal_stiffness, actual_damping / nominal_damping))
-    _record(env, "actuator_gains", torch.cat(samples), len(rows))
+    _record(env, "actuator_gains", torch.cat([sample.reshape(-1) for sample in samples]), len(rows))
 
 
 def reset_motor_strength(env, env_ids, asset_cfg, target_range):
