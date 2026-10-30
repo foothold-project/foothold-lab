@@ -52,12 +52,23 @@ def test_range_interpolation_fixed_noise_and_startup_values_untouched():
         "x": [0.0, 0.0], "y": [0.0, 0.0], "z": [0.0, 0.0]}
     assert interpolate_range([0.0, .015], [0.0, .015], .5) == [0.0, .015]
     doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
-    assert doc["domain_randomization"]["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
-    bad_noise = dict(doc["domain_randomization"], observation_noise={"mode": "schedule", "multiplier": 0.5})
+    cfg = doc["domain_randomization"]
+    assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
+    bad_noise = dict(cfg, observation_noise={"mode": "schedule", "multiplier": 0.5})
     with pytest.raises(ValueError, match="must stay fixed at 1x"):
         DRConfig.from_mapping(bad_noise)
     assert doc["domain_randomization"]["preserved_startup"] == {
         "friction_static_dynamic": [.2, 1.2], "base_mass_add_kg": [-1.0, 3.0]}
+    push = cfg["full_ranges"]["push_velocity"]
+    assert push == {"x": [-1.0, 1.0], "y": [-1.0, 1.0], "z": [0.0, 0.0],
+                    "roll": [0.0, 0.0], "pitch": [0.0, 0.0], "yaw": [0.0, 0.0]}
+    assert cfg["push_interval_s"] == [10.0, 15.0]
+    assert dr_scale(6000) == .5 and dr_scale(6001) == 1.0
+    assert interpolate_range((0.0, 0.0), tuple(push["x"]), dr_scale(6000)) == (-.5, .5)
+    assert interpolate_range((0.0, 0.0), tuple(push["y"]), smoke_scale("D")) == (-1.0, 1.0)
+    fixture_ranges = _synthetic_ranges()
+    fixture_ranges["push_velocity"] = push
+    assert validate_full_ranges(fixture_ranges)["push_velocity"] == push
     assert DR_ITEMS == tuple(doc["domain_randomization"]["full_ranges"])
 
 
@@ -368,11 +379,13 @@ def test_runtime_sample_counters_distinguish_zero_events_from_smoke_coverage():
         validate_runtime_summary(row, 0, require_event_samples=True)
 
 
-def test_push_range_remains_blank_noise_is_fixed_and_launch_blocked():
+def test_d76_push_range_is_set_while_other_ranges_keep_launch_blocked():
     doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
     cfg = doc["domain_randomization"]
-    assert cfg["full_ranges"]["push_velocity"] is None
+    assert cfg["full_ranges"]["push_velocity"]["x"] == [-1.0, 1.0]
+    assert cfg["full_ranges"]["push_velocity"]["y"] == [-1.0, 1.0]
+    assert cfg["full_ranges"]["push_velocity"]["z"] == [0.0, 0.0]
     assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
-    assert cfg["push_interval_s"] is None
+    assert cfg["push_interval_s"] == [10.0, 15.0]
     with pytest.raises(ValueError, match="range is blank"):
         DRConfig.from_mapping(cfg, require_launchable=True)

@@ -22,8 +22,14 @@ domain_randomization:
     actuator_gains: null
     motor_strength: null
     delay_s: [0.0, 0.015]
-    push_velocity: null
-  push_interval_s: null
+    push_velocity:
+      x: [-1.0, 1.0]
+      y: [-1.0, 1.0]
+      z: [0.0, 0.0]
+      roll: [0.0, 0.0]
+      pitch: [0.0, 0.0]
+      yaw: [0.0, 0.0]
+  push_interval_s: [10.0, 15.0]
 stages:
   - id: B0
     start: {fixed_update: 0}
