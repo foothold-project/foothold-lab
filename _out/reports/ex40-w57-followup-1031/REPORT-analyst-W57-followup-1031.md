@@ -1,8 +1,8 @@
 > 분류: 평가 실행 점검
-> 작성: analyst · 2026-10-31 05:20 KST
+> 작성: analyst · 2026-10-31 05:40 KST
 > 근거: lead 04:3x 의뢰 · 고정본 2df419b0 · 실제 B13/W57 원자료 · 실행 중 상태 파일
-> 요지: 평가 전용 5c160641에서 W57 재시도 구현과 검증 지적 수정 확인을 마쳤다. live 점수기 전환은 고정 호출 경로와 원장 쓰기 범위 때문에 미완료다.
-> 상태: CPU 준비 완료 · H1 닫힘 · live 적용 제약1은 lead 답 대기 · m500 실제 GPU1 평가 미도착 · 학습/감독기/고정 사본/실행 원장 변경 없음
+> 요지: 평가 전용 5c160641의 CPU 확인을 끝냈다. lead 05:3x 결정으로 live 전환은 하지 않고 별도 retry 결과만 남긴다.
+> 상태: 이 구현 단위 종료 · 실행 명령만 준비 · 추가 구현·GPU 실행 없음 · W57 보고 칸은 보류 · retry 원장 참조 · m500 관찰은 유지
 
 # EX-40 W57 평가 전용 복구와 m500 관찰
 
@@ -107,6 +107,24 @@ verifier Dispatch `ctx_7910301b1531`와 H1 고침 scripter Dispatch `ctx_01e6f51
 - runner 관찰기 PID21272가 실제 저장본 SHA, manifest, 평가 PID, 장치 로그를 읽는다. 자기 알림 PID42372의 ASCII 시험은 05:10:25 사용자 입력으로 도착했다.
 - m500은 약07:40이라는 추정 대신 실제 도착을 기준으로 한다. 이후 평가 자식의 `cuda:1`/Kit 장치와 GPU1 UUID를 대조해 lead에게 한 줄 보고한다. 학습 PID가 양 GPU의 CUDA 컨텍스트 목록에 뜨는 것은 평가가 GPU1에서 돈다는 증거가 아니다.
 
+## 05:3x 결정 반영 · 여기서 추가 구현 종료
+
+lead 답으로 질문 `msg_f12d4b6d9027`은 닫혔다. **live primary 원장·감독기·고정 ROOT 보존, scorer-only 전환 추가 구현 없음.** 단계 끝 저장본의 별도 W57 실행은 lead가 그때 결정한다. 단계 끝 보고에서 W57 칸은 **「보류 · retry 원장 참조」**로 읽고, 별도 결과가 나와도 primary 채택이나 감독기의 HOLD 해소로 표현하지 않는다. 앞 절의 전환안은 미채택 이력이다.
+
+최종 평가 사본은 `5c160641`다. 요청에 적힌 `258394c3`은 독립 검토 당시 판이며, 그 검토에서 나온 H1만 고친 최종 판과 구분한다. 추가 verifier 의뢰나 전체 시험을 다시 돌리지 않았다.
+
+### 준비한 실행 명령 한 줄 · 실행하지 않음
+
+PowerShell용이다. 아래 `$n=1500`만 실제 단계 끝 저장 번호로 바꾼다. 저장본 SHA로 원 평가 폴더를 고르고, 날짜·시각이 들어간 새 attempt 폴더와 별도 retry 원장만 만든다. 사본의 고정 설정은 `device=cuda:1`, 64환경, level2, 300스텝이며 실제 Kit 해석기는 wrapper의 `isaac311`이다. 명령을 시작하는 `isaac311-moects` Python은 CPU 재시도 조율용이다.
+
+```powershell
+& { $ErrorActionPreference='Stop'; $n=1500; $base='C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313'; $ck="$base/main/EX-40-B-main_20261031_041337_26240/model_${n}.pt"; $digest=(Get-FileHash -LiteralPath $ck -Algorithm SHA256).Hash.ToLower(); Push-Location 'C:/mai/wt/foothold-lab/scripter-ex40-w57-retry'; try { if ((git rev-parse HEAD).Trim() -ne '5c1606412e9876b7c3105756f378b4a5a629e73c') { throw 'evaluation HEAD changed' }; & 'C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe' -m foothold_s2.ex40_w57_retry --prior-eval "$base/score-watch/model_${n}_$($digest.Substring(0,12))" --checkpoint $ck --retry-root 'C:/Users/AI-WS01/s2_lab/ex40_w57_retry_separate_20261031' --attempt-id "m${n}-$(Get-Date -Format yyyyMMdd_HHmmss)"; if ($LASTEXITCODE -ne 0) { throw "W57 retry rc=$LASTEXITCODE" } } finally { Pop-Location } }
+```
+
+**현재 도구의 범위:** 원 평가 영수증이 `state=failed`, W57 자식 rc가 0이 아니고, 다른 필요한 단계는 rc0일 때 쓰는 명령이다. W57 실행은 rc0인데 옛 점수기만 HOLD한 경우나, 앞선 HOLD 때문에 다음 회차의 원 평가 폴더가 아직 없는 경우에는 이 도구가 거절한다. 없는 실패 영수증을 만들어 통과시키지 않는다. 이 경우도 W57 칸은 보류로 두고 lead의 단계 끝 결정에 넘긴다. 해당 범위를 넓히는 구현은 이번 결정대로 하지 않는다.
+
+별도 결과 위치는 `C:/Users/AI-WS01/s2_lab/ex40_w57_retry_separate_20261031/w57_retry_model_<N>_m<N>-<시각>/`, 원장은 같은 root의 `w57_retry_ledger.jsonl`이다. `retry_receipt.json`·`score.json`에 원 실패 영수증 SHA와 attempt ID가 연결된다. 새 Kit 실행·실제 retry 결과 생성은 미실행이다.
+
 ## 이력
 
 | 시각 | 내용 |
@@ -115,3 +133,4 @@ verifier Dispatch `ctx_7910301b1531`와 H1 고침 scripter Dispatch `ctx_01e6f51
 | 04:53 | 기존 소비기 CPU 반례·원본 해시 보존·알림 도착 확인. scripter 첫 묶음 및 남은 소비 경로 기록 |
 | 05:11 | 258394c3 보완본, verifier 1회 검토 시작, m500 관찰기 CPU 재확인, ASCII 깨우기 실제 도착 기록 |
 | 05:20 | verifier H1 지적→scripter 5c160641→analyst 같은 입력14개 재확인. live 적용 범위 제약과 m500 대기 분리 |
+| 05:40 | lead의 별도 retry만 채택 결정 반영. 전환 추가 구현 종료, 명령 한 줄과 기존 도구 적용 조건 기록 |
