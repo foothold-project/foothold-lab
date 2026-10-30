@@ -1,10 +1,20 @@
 > 분류: 실행 검증 · EX-40 조정
-> 작성: analyst · 2026-10-31 02:33 KST
-> 근거: 고정139f0d2d의 verifier r4 · 후속 b5bca3b5 clean · CPU 원출력
-> 요지: 누락 슬롯 고침 b5bca3b5를 확보하고 정상 재개 영향까지 지적분 검증을 이어 간다.
-> 상태: B11 잔여1 닫힘 확인 중 · B12/B13 미기동 · B14 본 기동 금지
+> 작성: analyst · 2026-10-31 02:38 KST
+> 근거: b5bca3b5 · verifier §10/r5 results.json 및 split-trace.json · CPU34 원출력
+> 요지: 누락 슬롯 반례는 닫혔고 정상 재개의 이전 segment 출처 연결1건을 같은 묶음에서 고친다.
+> 상태: B11 막음1 · runner 후속 착수 · B12/B13 미기동 · B14 본 기동 금지
 
 # EX-40 B11 P1 후속 대조
+
+## 02:38 갱신
+
+verifier §10과 `_out/ex40-b11-r5/pytest.txt`, `results.json`, `split-trace.json`을 직접 읽었다. 독립 CPU는 **34 passed in 10.05s**. m5250 checkpoint/state/ledger 동시누락은pending으로 바뀌어 이 반례는 닫혔다. 정상 단일segment31개와m5550은consumed, 이전segment의5250도consumed이며 반복 추가발송0이다.
+
+남은 **P1 막음1은 정상 재개 출처 미연결**이다. 두 소비 자리가 같은 원인이다. 이전segment m1500 평가가 유효해도 새segment m1550/1600 종료는 target SHA를 현segment에서만 찾아pending이다. 31개를 두segment로 나눈 정상 입력도 슬롯31개verified, 보고8개done 뒤 과거 단계 m1500의 보고SHA를 현segment에서 찾아None이 되어pending이다. 실제 completion은done/evaluated31이다. 코드193~195행·236~239행, r5 trace의digest=null과 일치한다.
+
+이를 `TASK-P1-segment-source.md`에 묶어02:36:26 runner에게 전달, request `775fb1d9-f96d-4874-8d8e-b6d9a552903d`의turn_started를 확인했다. b5b를 보존하고 목표·보고 두 자리의 검증된 출처만 연결한다. 정상 재개 두 경우, 누락·SHA충돌·HOLD 및 중복발송 없음은 같은 CPU 묶음에서 확인한다. 고침 뒤 verifier는 이 지적분만 확인한다.
+
+**앞선 표현 정정:** 이 문서02:15절과 체크리스트B9에서 분리segment도supervisor consumed라고 합쳐 썼으나 r4는 분리자료의report/completion을 확인한 것이다. 분리31개supervisor consumed는 확인되지 않았다. r5에서pending이 재현됐으므로 그 표현을 좁혀 바로잡았다. 원자료와 과거 보고 파일은 보존했다.
 
 ## 02:33 갱신
 
@@ -20,7 +30,7 @@ verifier에게02:31:39 `TASK-B11-P1-slot-recheck.md`를 전달했고 request `b9
 
 runner의 코드 `3afb0d6b37317c6e3a8caef7737150e68c1f3432`, 보고 포함 고정 HEAD `139f0d2dd9089c25d660a7f4d2e0052c5552c15e`를 clean 상태로 확인했다. verifier에게02:07:54 동일 P1 변경분을 전달했고 request `9a213f0a-e223-40cf-b0d4-33f41239bf61`의 turn_started를 확인했다.
 
-`verifier-w56/_out/ex40-b11-r4/pytest.txt`의 **33 passed in6.75s**와 `results.json`을 직접 읽었다. 실제 보고 함수는 published8(int), fake sender8회이고 재소비해도8회였다. 정상31개와 분리segment는 consumed, HOLD·SHA불일치·평가영수증 누락은 거부됐다. 살아 있는 가짜 자식의 wait 이전 점수 호출도 기록됐다. 실제 Kit·실제 Telegram 수신은 이 CPU 결과에 포함되지 않는다.
+`verifier-w56/_out/ex40-b11-r4/pytest.txt`의 **33 passed in6.75s**와 `results.json`을 직접 읽었다. 실제 보고 함수는 published8(int), fake sender8회이고 재소비해도8회였다. 정상 단일segment31개는consumed, 분리segment는report/completion만 확인했다(02:38 표현 정정). HOLD·SHA불일치·평가영수증 누락은 거부됐다. 살아 있는 가짜 자식의 wait 이전 점수 호출도 기록됐다. 실제 Kit·실제 Telegram 수신은 이 CPU 결과에 포함되지 않는다.
 
 **남은 한 반례:** 비stride m5550에서 m5250 checkpoint 파일과 score 행을 함께 제거하면 `missing_checkpoint_and_score5250=consumed`. 정상 m5550도 consumed였다. `ex40_supervisor.py:190~209`는 현재 존재하는 파일 집합만 순회하여 이 누락 회차를 세지 못한다. 해당 원출력과 코드로 판단했으며 analyst가 verifier 원자료를 다시 실행하거나 수정하지는 않았다.
 
