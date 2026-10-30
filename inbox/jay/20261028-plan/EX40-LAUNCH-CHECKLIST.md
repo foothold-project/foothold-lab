@@ -24,17 +24,17 @@
 | 번호 | 일 | 담당 | 상태 | 증거 |
 |---|---|---|---|---|
 | B1 | 규칙 대조: FAILURE-LOG R · M 중 이번 기동에 걸리는 항목 목록과 대응 | verifier | 끝(표 35 행, 확인은 B11 에서) | verifier-w56/_out/reports/RULES-EX40-1030.md |
-| B2 | 문서 정합 두 차례: 커리큘럼 정본·FLOW·WORKLIST W칸·단계 문서·실행카드 | analyst(대조·수정) · planner(후속확인) · lead(WORKLIST) | v0.7·실행카드v2.7·FLOW 예외 수정 커밋 완료. 통합 소비본 대조 및 planner 확인 대기 | analyst-ex40-doc-sync 96c19539: CURRICULUM-GATES·CARD-EX40-1030·현재 FLOW-experiment-cycle-1029 §1a·AUDIT-EX40-D68-D77-doc-sync. 옛 FLOW §1.8 지시를 현재 규칙 입구에 맞게 정정. planner 확인은 lead00:1x에 따라 기동 뒤 가능하나 카드·코드·설정 일치는 기동 전 필수 |
+| B2 | 문서 정합 두 차례: 커리큘럼 정본·FLOW·WORKLIST W칸·단계 문서·실행카드 | analyst(대조·수정) · planner(후속확인) · lead(WORKLIST) | 96c19539 문서 취합본2da3afe5에서 verifier P3 닫힘. planner 후속 확인 대기 | CURRICULUM·CARD·현재 FLOW §1a·AUDIT. verifier VERIFY-EX40-B11-1031 §7.2. planner 확인은 lead00:1x에 따라 기동 뒤 가능. P1 후속 코드가 문서 소비를 바꾸면 해당 변경분을 같은 묶음에서 대조 |
 | B3 | DR 범위표·밀기 논문·관측 잡음 근거 | analyst | 범위·출처·W51 결과 완료. 최종 통합본 대조는B11 | analyst-ame2 DR-RANGES-EX40-1030 v0.1f. SLR 영상 직접 확인, 논문·코드 외란은 다름. 문서96c19539 대조 이력 |
 | B4 | W51 추가 비교: EX38 m3001·EX39B m4501, 5조건+base재측정, GPU1 직렬 | analyst | 10/31 00:42:15 완료, 12/12 rc0·468칸. 감독기 종료0 및 CPU 원자료 대조 확인 | s2_lab/basic_gait_runs/eval_actuator/w51_followup_20261030/batch_done.json. analyst-ame2/_out/reports/w51-followup-1030/RESULT-W51-followup.md·audit.json. ±0.5 진단값은D76 학습값과 별개 |
 | B5 | 코드: 단계 표 v7(지형 L0~2 · 재개 계약) | runner | 끝 | v7 |
-| B6 | DR 일정·이벤트·readback·확인기 | runner | B11 H2 정상 이벤트 거부·H3 비정상 실현값 통과 수정 중. Kit 미확인 | verifier VERIFY-EX40-B11-1031. 정상 대조와 동일 반례를 통합 CPU에서 재확인 |
+| B6 | DR 일정·이벤트·readback·확인기 | runner | 2da3afe5의 H2/H3 지정 반례 닫힘. 실제 Kit 미확인 | verifier §7.1/7.2: 정상 네 이벤트 PASS, COM±99·motor0·NaN·pending 거부. 실제 환경 직렬화·표본은B12에서 |
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
-| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | B11 P1 운영 연결·P2 온전한 부모/사망 확인 막음 | 반환 함수만 있고 실제 자동 루프 연결 미확인. model·perception·두optimizer·LR·DR state 및 손상 후보 건너뛰기 고침 필요 |
-| B10 | v7·v8·점수기·보고 통합 | runner | 후속 고정 사본 하나에 전체 고침 취합 중 | 원30365957 보존. bdb32f3d H1 고침, 문서96c19539, B13 29a526b1을 함께 취합. 최종HEAD·통합CPU 한 묶음 대기 |
-| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 30365957 기준 막음6. 통합 수정 뒤 재검증 한 번 대기 | verifier-w56/_out/reports/VERIFY-EX40-B11-1031.md. Kit 전H1~H3, 본학습 준비P1~P3. 지정73+14 CPU 통과와 막음은 별개. lead00:3x 지시로 묶음 처리 |
-| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | B11 뒤 실행 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
+| B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | 2da3afe5 P2 닫힘, P1 미종결 | 감독기 final 완료가 누락30·HOLD·실제SHA불일치에서complete, 비stride 저장본의 평가잔여를consumed. 학습중 점수/보고 연결도 부족. verifier §7.3의 같은 반례를 기존 묶음에서 고침 |
+| B10 | v7·v8·점수기·보고 통합 | runner | 통합2da3afe5 고정·재검 뒤 P1 후속 고침 중 | runner-ex40-b11-all-fixes. 원30365957/bdb32f3d 보존, 문서96c19539/B13 29a526b1 취합. 통합121 CPU는runner30.33s·verifier32.09s 각각 확인. P1 남음 |
+| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 2da3afe5에서 H1~H3/P2/P3 닫힘, P1 막음1. 같은 묶음에서 P1 변경분만 재확인 예정 | verifier-w56/_out/reports/VERIFY-EX40-B11-1031.md §7·_out/ex40-b11-r2/completion-isolated-results.json. Kit 전 지정막음0과 B11전체막음0은 다름. lead00:3x대로 전체0전 Kit 대기 |
+| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | P1을 포함한 B11 막음0 뒤 한 번 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
 | B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | CPU 준비 보고 접수. B11/B12 및GPU1 W51 종료 뒤 한 번 | scripter-ex40-b13 29a526b1 · PREP-EX40-B13-1031.md. CPU32는scripter 보고, Kit 미실행. 짧은model17 전체 경로 시험은 T0 성능 판정과 분리. W51과 중복 기동 금지 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | D77 조건 충족 후 lead 판단. analyst 본기동 금지 유지 | analyst 위임은B12/B13과명령·ETA준비까지 |
 | B15 | 돌았다 확인(팀장 10/31 00:0x 강화): GPU0 compute-apps PID = 학습 PID · 메모리/사용률 지속(여러 번) · run.log 회차가 시각과 함께 증가 · 1 회 속도 · 저장본 · stage_log · train_extra(DR readback · 발별 · 지형 L0~2) 생성 · 영수증 HEAD = 고정 사본 · dirty 0 · 인자 = D68~D77 · 점수기 GPU1 만. 기동 직후와 10 분 뒤 두 번 | lead | 대기 | |
