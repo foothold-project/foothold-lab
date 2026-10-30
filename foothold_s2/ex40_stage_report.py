@@ -143,7 +143,8 @@ def _delta(current: dict, previous: dict | None) -> tuple[list[dict], list[dict]
     return gains, losses, unchanged
 
 
-def build(current_score: dict, previous_score: dict | None, run: Path) -> dict:
+def build(current_score: dict, previous_score: dict | None, run: Path, *,
+          previous_run: Path | None = None) -> dict:
     current = snapshot(current_score)
     previous = snapshot(previous_score) if previous_score is not None else None
     gains, losses, unchanged = _delta(current, previous)
@@ -153,7 +154,8 @@ def build(current_score: dict, previous_score: dict | None, run: Path) -> dict:
             "previous_stage": previous_score["from"] if previous_score else None,
             "previous_checkpoint_iteration": previous_score["checkpoint_iteration"] if previous_score else None,
             "current": current, "previous": previous, "dr_current": dr_readback(run, update),
-            "dr_previous": dr_readback(run, previous_score["checkpoint_iteration"]) if previous_score else None,
+            "dr_previous": (dr_readback(previous_run or run, previous_score["checkpoint_iteration"])
+                            if previous_score else None),
             "gains": gains, "losses": losses, "unchanged": unchanged,
             "caution": "생존 ±3/64 이내는 차이 없음. 연속값 반복 폭은 미측정이므로 판정하지 않음."}
 

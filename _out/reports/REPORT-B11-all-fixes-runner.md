@@ -2,7 +2,7 @@
 > 작성: runner · 2026-10-31
 > 근거: TASK-B11-all-fixes.md · verifier VERIFY-EX40-B11-1031.md · 고정 사본 bdb32f3d
 > 요지: H1~H3/P1~P3 여섯 막음을 한 후속 사본에 통합하고 CPU 결과와 미확인 범위를 기록한다
-> 상태: 코드와 CPU 검증 완료 · P1 운영 연결 1건 잔여 · GPU/Kit/B14 금지
+> 상태: P1 코드와 CPU 확인 기록 갱신 · verifier 변경분 확인 대기 · GPU/Kit/B14 금지
 
 # EX-40 B11 통합 수정 보고
 
@@ -52,3 +52,53 @@ Kit에서 실제 event callback이 적용된 물성, 학습 중 train_extra 표�
 ## 수정 파일
 
 foothold_s2/의 smoke·DR·resume·supervisor 구현과 CPU 시험, run_ex40_b11.sh, 문서 96c19539의 네 파일, B13 준비 보고서와 두 파일, 이 보고서를 수정했다. 원래 run_ex40.sh, s2_lab 자료와 verifier 원자료는 수정하지 않았다.
+
+
+## P1 온라인 평가와 segment 소비 후속 · 2026-10-31
+
+> 분류: A/평가 · EX-40 B11 P1
+> 작성: runner · 2026-10-31
+> 근거: TASK-B11-all-fixes.md §마지막 · VERIFY-EX40-B11-1031.md §8 · score_watch 소비 코드
+> 요지: 학습 중 저장본 평가, 단계보고 영수증, 재개 segment 원장을 기존 score_watch 경로에 연결
+> 상태: CPU fake child 확인 · 독립 P1 변경분 확인 대기 · 실제 Kit/GPU 미확인
+
+### 시작 전 규칙과 범위
+
+RULES-HUB와 FAILURE-LOG를 다시 읽었다. R6은 가짜 입력만으로 실제 실행을 확인했다고 하지 말고, Kit 확인을 못 하면 그 사실을 적으라는 규칙이다. 이번 요청은 Kit와 GPU를 금하므로 실제 Kit 실행은 생략했고 미확인으로 남긴다. R25에 따라 범위를 P1 잔여로 제한했다. M02 때문에 실행 중 shell 사본은 건드리지 않았다. M76에 따라 저장본 경로와 회차별 SHA를 score_watch 원장에 연결했다. M77에 따라 실행 마감과 학습 횟수 설정은 바꾸지 않았다.
+
+### 구현
+
+- supervisor는 child가 살아 있는 동안 주기적으로 PID manifest와 progress를 읽는다. score_watch가 정한 평가 stride 저장본이 새로 보이면 기존 `python -m foothold_s2.ex40_score_watch --once --no-telegram` 경로를 순서대로 호출한다.
+- stride가 아닌 저장본으로 segment가 끝나도 직전 stride 저장본을 목표로 계산하고, 해당 run 폴더에 남아 있는 stride 후보 중 미소비 항목을 오래된 회차부터 소비한다. 예를 들어 model_751 저장은 model_500과 model_750 잔여를 지나치지 않는다.
+- stage boundary가 평가되면 score_watch의 `stage_reports`가 로컬 `score_out/stage_reports/`에 JSON과 Markdown을 쓴다. supervisor는 현재 저장본 회차의 보고 영수증이 생기기 전에는 그 저장본을 소비 완료로 취급하지 않는다. `--lab-feed`도 같은 score_out 아래로 지정하고 Telegram 및 Git 게시 인자는 주지 않는다.
+- score ledger 행에 segment `run_dir`와 checkpoint 전체 경로를 함께 기록한다. 최종 완료 검사는 각 회차의 원래 segment manifest, 파일 SHA, stage_log, score receipt를 대조한다. 단계 비교 보고서도 현재 회차와 직전 단계 회차의 각각의 train_extra 경로를 읽는다.
+- supervisor event 원장 `supervisor_score_events.jsonl`은 PID, segment index, checkpoint 회차와 SHA, 상태, 소비된 회차, 단계보고 JSON 경로와 SHA를 기록한다. 같은 상태의 연속 관측은 중복 기록하지 않는다. 실패, HOLD, SHA 충돌, 점수 누락은 소비 완료로 바꾸지 않는다.
+- 기존 resume 흐름은 보존한다. 점수 소비 완료 뒤 기존 official launcher gate를 거쳐 다음 segment argv를 준비한다. supervisor는 child나 다른 프로세스를 종료하지 않는다.
+
+### CPU 확인과 원출력
+
+실측 실행 명령:
+
+```text
+CUDA_VISIBLE_DEVICES=''
+PYTHONDONTWRITEBYTECODE='1'
+C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold-lab/runner-ex40-b11-all-fixes/foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py C:/mai/wt/foothold-lab/runner-ex40-b11-all-fixes/foothold_s2/tests/test_ex40_scorer_cpu.py -q
+```
+
+마지막 출력 원문:
+
+```text
+..............................                                           [100%]
+30 passed in 6.74s
+```
+
+확인 입력에는 살아 있는 fake child, update 751 비stride 저장, model_500/model_750 미소비 행, stage boundary 보고, 두 개의 분리된 segment checkpoint, 같은 회차의 SHA 충돌, 누락된 점수 행이 포함된다. 비stride 저장은 두 기존 stride 저장을 모두 소비한 뒤에만 통과했고, 미소비 충돌과 누락 입력은 각각 unknown 또는 pending으로 남았다. `git diff --check` 출력은 비어 있었다. 이 시험은 CPU 계약 확인이며 실 run과 Kit 평가가 통과했다는 증거가 아니다.
+
+초기 시험 실행 중 fixture에 잘못된 임시 table 경로와 stage_report 입력이 있어 실패했다. fixture를 실제 TABLE과 분리 segment receipt에 맞춘 뒤 영향 시험 묶음을 다시 실행했다. 최종 원출력은 위 30 passed이며 초기 실패를 성공으로 합산하지 않았다.
+
+### 상태와 잔여
+
+- 코드 변경 출발점: c1cefb1ab537bd5a2468dd0b9bcd1ec8133c9518. 변경 전 보존 refs: `refs/backup/ex40-b11-pre-p1/c1cefb1a`, `refs/backup/ex40-b11-pre-p1/2da3afe5`, `refs/backup/ex40-b11-pre-p1/2647f43b`.
+- 수정 파일은 `foothold_s2/ex40_supervisor.py`, `foothold_s2/ex40_score_watch.py`, `foothold_s2/ex40_stage_report.py`, `foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py`, `foothold_s2/tests/test_ex40_scorer_cpu.py`이다.
+- 실제 학습 child, 실제 score evaluator, Kit, CUDA, Telegram/Git 보고 게시, 남의 프로세스 조작은 수행하지 않았다. 학습 중 실제 checkpoint가 정해진 시간 간격으로 도착하는지, GPU 자원 경계, Kit 출력, 실제 결과 도달은 미확인이다.
+- P1 변경분 독립 확인은 analyst가 verifier에 한 차례 요청한다. 그 확인 전에는 B11 P1 전체를 닫거나 B12/B13 준비가 허용됐다고 말하지 않는다.

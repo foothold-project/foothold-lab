@@ -128,6 +128,8 @@ def _ledger_result(run: Path, out_root: Path, update: int, digest: str, stage: s
                    score_path: Path, verdict: str) -> dict:
     row = {"format": "foothold-ex40-score-ledger/1", "checkpoint_iteration": update,
            "checkpoint_sha256": digest, "stage": stage, "verdict": verdict,
+           "run_dir": str(run.resolve()),
+           "checkpoint_path": str((run / f"model_{update}.pt").resolve()),
            "score_path": str(score_path), "score_sha256": sha256(score_path),
            "stage_log_reference": str(run / "stage_log.jsonl"),
            "recorded_at": datetime.now(timezone.utc).isoformat()}
@@ -281,16 +283,22 @@ def completion(run: Path, out_root: Path, cfg_path: Path, table: Path,
     first_pending = None
     first_problem = None
     for update in required:
-        pinned = _manifest_digest(run, update)
         saved = state["done"].get(str(update))
         ledger = rows.get(update)
+        source_run = Path(ledger.get("run_dir") or run) if ledger else run
+        source_checkpoint = (Path(ledger.get("checkpoint_path")) if ledger and ledger.get("checkpoint_path")
+                             else source_run / f"model_{update}.pt")
+        pinned = _manifest_digest(source_run, update)
         if pinned is None or saved is None or ledger is None:
             first_pending = update if first_pending is None else first_pending
+            continue
+        if not source_checkpoint.is_file() or sha256(source_checkpoint) != pinned:
+            first_problem = first_problem or {"state": "score_or_checkpoint_mismatch", "update": update}
             continue
         score_path = Path(ledger["score_path"])
         if (saved.get("checkpoint_sha256") != pinned
                 or ledger.get("checkpoint_sha256") != pinned
-                or saved.get("stage") != _stage(run, update, plan)
+                or saved.get("stage") != _stage(source_run, update, plan)
                 or update in boundaries and saved["stage"] != boundaries[update]
                 or not score_path.is_file() or sha256(score_path) != ledger.get("score_sha256")):
             first_problem = first_problem or {"state": "score_or_checkpoint_mismatch", "update": update}
@@ -338,7 +346,8 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
     """
     cfg = config(cfg_path)
     boundaries = stage_end_updates(Plan(table, arm=arm), cfg)
-    by_update = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+    ledger_rows = _ledger_rows(out_root)
+    by_update = {row["checkpoint_iteration"]: row for row in ledger_rows}
     report_root = out_root / "stage_reports"
     report_root.mkdir(parents=True, exist_ok=True)
     published = []
@@ -374,7 +383,12 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
                     if sha256(Path(score["sources"][name])) != digest:
                         raise ValueError(f"stage report source changed: {name}")
             else:
-                report = build_stage_report(score, previous, run)
+                source_run = Path(ledger.get("run_dir") or run)
+                previous_ledger = by_update.get(previous.get("checkpoint_iteration")) if previous else None
+                previous_run = (Path(previous_ledger.get("run_dir") or run)
+                                if previous_ledger else source_run)
+                report = build_stage_report(score, previous, source_run,
+                                            previous_run=previous_run)
                 _atomic(report_path, report)
                 markdown_path.write_text(stage_markdown(report), encoding="utf-8")
         except (OSError, ValueError, KeyError, TypeError) as exc:

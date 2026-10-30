@@ -396,21 +396,33 @@ def test_unpinned_or_rewritten_checkpoint_never_starts_eval(tmp_path):
 def test_final_completion_requires_all_31_scores_and_training_done(tmp_path):
     plan = Plan(DEFAULT_TABLE, arm="B")
     cfg = config(DEFAULT_CONFIG)
-    (tmp_path / "stage_log.jsonl").write_text("".join(
-        json.dumps({"event": "stage_enter", "iteration": stage.fixed_update,
-                    "to": stage.id, "effective_schedule_sha256": plan.effective_sha256}) + "\n"
-        for stage in plan.stages), encoding="utf-8")
     out_root = tmp_path / "evals"
     out_root.mkdir()
     state = _state()
     ledger_rows = []
     boundaries = stage_end_updates(plan, cfg)
+    segment_roots = {}
     for n in range(500, 8001, 250):
-        checkpoint = tmp_path / f"model_{n}.pt"
+        segment_index = (n - 500) // 2500
+        source_run = segment_roots.setdefault(segment_index, tmp_path / f"segment-{segment_index}")
+        source_run.mkdir(exist_ok=True)
+        checkpoint = source_run / f"model_{n}.pt"
         checkpoint.write_bytes(f"completed checkpoint {n}".encode())
-        _pin(tmp_path, checkpoint)
+        manifest_path = source_run / "manifest.json"
+        if manifest_path.is_file():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        else:
+            manifest = {"schema": "foothold-manifest/1", "progress": {"completed_updates": 0},
+                        "checkpoints": {}, "modes": {}}
+        manifest["progress"]["completed_updates"] = n + 1
+        manifest["checkpoints"][checkpoint.name] = sha256(checkpoint)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         stage = max((s for s in plan.stages if s.fixed_update <= n),
                     key=lambda s: s.fixed_update).id
+        (source_run / "stage_log.jsonl").write_text("".join(
+            json.dumps({"event": "stage_enter", "iteration": item.fixed_update,
+                        "to": item.id, "effective_schedule_sha256": plan.effective_sha256}) + "\n"
+            for item in plan.stages if item.fixed_update <= n), encoding="utf-8")
         stage_cfg = cfg["stages"][stage]
         phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
         if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
@@ -434,29 +446,40 @@ def test_final_completion_requires_all_31_scores_and_training_done(tmp_path):
         state["done"][str(n)] = {"state": "PASS", "stage": stage,
                                  "checkpoint_sha256": sha256(checkpoint)}
         ledger_rows.append({"checkpoint_iteration": n, "checkpoint_sha256": sha256(checkpoint),
+                            "run_dir": str(source_run.resolve()),
+                            "checkpoint_path": str(checkpoint.resolve()),
                             "score_path": str(score_path), "score_sha256": sha256(score_path)})
     (out_root / "score_ledger.jsonl").write_text("".join(json.dumps(r) + "\n" for r in ledger_rows),
                                                    encoding="utf-8")
-    final = tmp_path / "model_8000.pt"
+    final = segment_roots[3] / "model_8000.pt"
     status = {"state": "running", "iter": 8000, "checkpoint": str(final), "sha256": sha256(final)}
-    status_path = tmp_path / "train_start_status.json"
+    latest_run = segment_roots[3]
+    status_path = latest_run / "train_start_status.json"
     status_path.write_text(json.dumps(status), encoding="utf-8")
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "waiting_for_training"
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "waiting_for_training"
     status["state"] = "done"
     status_path.write_text(json.dumps(status), encoding="utf-8")
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state) == {
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state) == {
         "state": "done", "final_checkpoint": str(final), "final_sha256": sha256(final),
         "evaluated": 31, "stage_end_updates": list(boundaries)}
+    ledger_rows[0]["checkpoint_path"] = str(tmp_path / "missing-parent-model.pt")
+    (out_root / "score_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == \
+        "score_or_checkpoint_mismatch"
+    ledger_rows[0]["checkpoint_path"] = str(segment_roots[0] / "model_500.pt")
+    (out_root / "score_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
     (out_root / "evidence_8000/axis_v2.json").unlink()
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "stage_end_evidence_missing"
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "stage_end_evidence_missing"
     (out_root / "evidence_8000/axis_v2.json").write_text("{}", encoding="utf-8")
     state["done"].pop("8000")
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
     state["done"]["500"]["state"] = "HOLD"
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
     state["done"]["500"]["state"] = "PASS"
     state["done"]["8000"] = {"state": "HOLD", "stage": "T0", "checkpoint_sha256": sha256(final)}
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "score_hold"
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "score_hold"
 
 
 def test_t0_final_score_is_exported_even_without_next_stage(tmp_path, monkeypatch):

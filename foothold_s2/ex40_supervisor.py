@@ -15,6 +15,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
+from datetime import datetime, timezone
 
 from foothold_s2.ex40_continue import (consecutive_failure_action,
                                        newest_verified_checkpoint, source_decision)
@@ -111,66 +113,185 @@ def _run_dir_for_pid(log_root: Path, pid: int) -> Path:
     return matches[0]
 
 
+def _latest_score_checkpoint(run: Path, config: Path) -> tuple[int, str] | None:
+    """Return the newest committed stride checkpoint visible during training."""
+    from foothold_s2.ex40_score_watch import _manifest_digest, _models, config as score_config
+
+    cfg = score_config(config)
+    try:
+        manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
+        completed = int((manifest.get("progress") or {}).get("completed_updates", 0))
+    except (OSError, ValueError, TypeError):
+        return None
+    candidates = [(update, path) for update, path in _models(run, cfg)
+                  if update < completed]
+    if not candidates:
+        return None
+    update, _ = candidates[-1]
+    digest = _manifest_digest(run, update)
+    return (update, digest) if digest else None
+
+
+def _watch_progress(out_root: Path) -> dict:
+    """Small local snapshot used in the supervisor's segment receipt."""
+    state_path = out_root / "watch_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8-sig")) if state_path.is_file() else {}
+    reports = sorted((out_root / "stage_reports").glob("stage_*.json"))
+    return {"scored_updates": sorted(int(key) for key in (state.get("done") or {})),
+            "stage_report_receipts": [{"path": str(path),
+                                        "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                                       for path in reports]}
+
+
+def _record_watch_event(path: Path, *, pid: int, run: Path, checkpoint: tuple[int, str],
+                        score_state: str, progress: dict) -> None:
+    """Append one idempotent observation per state transition for a segment."""
+    update, digest = checkpoint
+    try:
+        manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
+        segment_index = ((manifest.get("modes") or {}).get("continuous_resume") or {}).get("segment_index")
+    except (OSError, ValueError):
+        segment_index = None
+    row = {"format": "ex40-supervisor-watch-event/1", "pid": pid,
+           "run_dir": str(run.resolve()), "segment_index": segment_index,
+           "checkpoint_iteration": update,
+           "checkpoint_sha256": digest, "score_state": score_state,
+           "progress": progress, "observed_at": datetime.now(timezone.utc).isoformat()}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_file():
+        existing = [json.loads(line) for line in path.read_text(encoding="utf-8-sig").splitlines() if line]
+        identity = (pid, row["run_dir"], update, digest, score_state, progress)
+        if existing and (existing[-1].get("pid"), existing[-1].get("run_dir"),
+                         existing[-1].get("checkpoint_iteration"),
+                         existing[-1].get("checkpoint_sha256"), existing[-1].get("score_state"),
+                         existing[-1].get("progress")) == identity:
+            return
+    with path.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
 def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                             config: Path, table: Path, arm: str,
                             update: int, digest: str, max_calls: int = 40) -> str:
     """Consume every eligible score through the candidate before continuing."""
-    from foothold_s2.ex40_score_watch import completion, config as score_config
+    from foothold_s2.curriculum.continuous import Plan
+    from foothold_s2.ex40_score_watch import (_manifest_digest, _models, completion,
+                                               config as score_config, stage_end_updates,
+                                               stage_reports)
 
     cfg = score_config(config)
     first, stride = cfg["checkpoint_first"], cfg["checkpoint_stride"]
-    if update < first or (update - first) % stride:
+    if update < first:
         return "consumed"
+    target_update = first + ((update - first) // stride) * stride
+    available = [(n, path) for n, path in _models(run, cfg) if n <= target_update]
+    if not available:
+        return "pending"
+    available_updates = {n for n, _ in available}
+    target_digest = _manifest_digest(run, target_update)
+    if target_digest is None:
+        return "pending"
+    if update == target_update and target_digest != digest:
+        return "unknown"
+    digest = target_digest
+    boundaries = stage_end_updates(Plan(table, arm=arm), cfg)
     state_path = out_root / "watch_state.json"
     for _ in range(max_calls):
         state = json.loads(state_path.read_text(encoding="utf-8-sig")) if state_path.is_file() else None
-        if state and str(update) in state.get("done", {}):
-            row = state["done"][str(update)]
-            checkpoint = run / f"model_{update}.pt"
-            try:
-                manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
-                pinned = (manifest.get("checkpoints") or {}).get(checkpoint.name)
-                actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
-            except (OSError, ValueError):
+        if state:
+            if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
-            if (row.get("checkpoint_sha256") != digest or pinned != digest or actual != digest
-                    or row.get("state") not in ("PASS", "FAIL", "HOLD")):
-                return "unknown"
-            if row["state"] == "HOLD":
-                return "pending"
-            if update == cfg["final_checkpoint_update"]:
-                finished = completion(run, out_root, config, table, arm, state)
-                if finished.get("state") == "done":
-                    return "consumed"
-                if finished.get("state") != "waiting_for_remaining_scores":
+            for scored_update in sorted(available_updates):
+                row = state.get("done", {}).get(str(scored_update))
+                if row is None:
+                    break
+                checkpoint = run / f"model_{scored_update}.pt"
+                pinned = _manifest_digest(run, scored_update)
+                try:
+                    actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+                except OSError:
+                    return "unknown"
+                if (not pinned or row.get("checkpoint_sha256") != pinned or actual != pinned
+                        or row.get("state") not in ("PASS", "FAIL", "HOLD")):
+                    return "unknown"
+                if row["state"] == "HOLD":
                     return "pending"
             else:
+                reports = stage_reports(run, out_root, config, table, arm,
+                    telegram_sender=None, lab_feed=out_root / "lab_feed.json")
+                required_reports = [n for n in boundaries if n <= target_update and n in available_updates]
+                report_updates = {item.get("update") for item in reports.get("published", [])}
+                if any(n not in report_updates for n in required_reports):
+                    return "pending"
+                if target_update == cfg["final_checkpoint_update"]:
+                    finished = completion(run, out_root, config, table, arm, state)
+                    if finished.get("state") == "done" and reports.get("state") == "done":
+                        return "consumed"
+                    return "pending"
                 return "consumed"
         cmd = [sys.executable, "-m", "foothold_s2.ex40_score_watch",
                "--run-dir", str(run), "--out-root", str(out_root),
                "--score-dir", str(score_dir), "--config", str(config),
-               "--table", str(table), "--arm", arm, "--once", "--no-telegram"]
+               "--table", str(table), "--arm", arm, "--once", "--no-telegram",
+               "--lab-feed", str(out_root / "lab_feed.json")]
         proc = subprocess.run(cmd, cwd=Path(__file__).resolve().parents[1],
                               text=True, encoding="utf-8", capture_output=True, check=False)
         if proc.returncode:
+            return "pending"
+        try:
+            payload = json.loads(proc.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            return "unknown"
+        if payload.get("evaluation", {}).get("state") == "idle":
             return "pending"
     return "pending"
 
 
 def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
               score_out: Path, score_dir: Path, expected_finish: str, end_by: str,
-              arm: str, device: str, ledger_path: Path, max_segments: int = 100) -> dict:
+              arm: str, device: str, ledger_path: Path, max_segments: int = 100,
+              poll_seconds: float | None = None, sleep=time.sleep) -> dict:
     """Run one segment at a time, evaluate its latest save, and prepare safe resume."""
-    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, config as score_config
     from foothold_s2.ex40_launch import TABLE
 
     args = list(initial_args)
     ledger = json.loads(ledger_path.read_text(encoding="utf-8-sig")) if ledger_path.is_file() else None
+    if poll_seconds is None:
+        poll_seconds = max(1.0, float(score_config(DEFAULT_CONFIG)["check_interval_seconds"]))
+    if poll_seconds < 0:
+        raise ValueError("supervisor poll interval cannot be negative")
     for _ in range(max_segments):
         child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
                                  cwd=Path(__file__).resolve().parents[1])
+        run = None
+        last_consumed = None
+        watch_events = score_out / "supervisor_score_events.jsonl"
+        while True:
+            rc = child.poll()
+            if run is None:
+                try:
+                    run = _run_dir_for_pid(log_root, child.pid)
+                except (OSError, ValueError):
+                    pass
+            if run is not None:
+                visible = _latest_score_checkpoint(run, DEFAULT_CONFIG)
+                if visible is not None and visible != last_consumed:
+                    score_state_live = _score_until_checkpoint(run, score_out, score_dir,
+                        DEFAULT_CONFIG, TABLE, arm, visible[0], visible[1])
+                    _record_watch_event(watch_events, pid=child.pid, run=run,
+                        checkpoint=visible, score_state=score_state_live,
+                        progress=_watch_progress(score_out))
+                    if score_state_live == "consumed":
+                        last_consumed = visible
+            if rc is not None:
+                break
+            sleep(poll_seconds)
         rc = child.wait()
-        run = _run_dir_for_pid(log_root, child.pid)
+        if run is None:
+            run = _run_dir_for_pid(log_root, child.pid)
         status = json.loads((run / "train_start_status.json").read_text(encoding="utf-8-sig"))
         candidate = None
         if status.get("state") == "done" and status.get("iter") == 8000:

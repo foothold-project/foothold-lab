@@ -159,12 +159,17 @@ def test_supervisor_runs_child_then_consumes_save_and_uses_official_resume_gate(
     receipt = tmp_path / "launch-receipt.json"
     receipt.write_text("{}", encoding="utf-8")
     ledger = tmp_path / "ledger.json"
-    calls = {"children": 0, "resume_gate": 0}
+    calls = {"children": 0, "resume_gate": 0, "active_score_polls": [], "active_child": None}
 
     class Child:
         def __init__(self, pid, return_code):
             self.pid = pid
             self.return_code = return_code
+            self.poll_count = 0
+
+        def poll(self):
+            self.poll_count += 1
+            return None if self.poll_count == 1 else self.return_code
 
         def wait(self):
             return self.return_code
@@ -174,7 +179,8 @@ def test_supervisor_runs_child_then_consumes_save_and_uses_official_resume_gate(
         if calls["children"] == 1:
             (run / "train_start_status.json").write_text(
                 json.dumps({"state": "failed", "iter": 5500}), encoding="utf-8")
-            return Child(7001, 1)
+            calls["active_child"] = Child(7001, 1)
+            return calls["active_child"]
         final = run / "model_8000.pt"
         final.write_bytes(b"known final checkpoint fixture")
         digest = hashlib.sha256(final.read_bytes()).hexdigest()
@@ -182,7 +188,8 @@ def test_supervisor_runs_child_then_consumes_save_and_uses_official_resume_gate(
         (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         (run / "train_start_status.json").write_text(
             json.dumps({"state": "done", "iter": 8000}), encoding="utf-8")
-        return Child(7002, 0)
+        calls["active_child"] = Child(7002, 0)
+        return calls["active_child"]
 
     def fake_run(command, **_kwargs):
         assert command[1:3] == ["-m", "foothold_s2.ex40_launch"]
@@ -195,17 +202,160 @@ def test_supervisor_runs_child_then_consumes_save_and_uses_official_resume_gate(
     monkeypatch.setattr(supervisor.subprocess, "Popen", fake_popen)
     monkeypatch.setattr(supervisor.subprocess, "run", fake_run)
     monkeypatch.setattr(supervisor, "_run_dir_for_pid", lambda _root, _pid: run)
-    monkeypatch.setattr(supervisor, "_score_until_checkpoint", lambda *_args, **_kwargs: "consumed")
+    checkpoint_sha = hashlib.sha256((run / "model_5500.pt").read_bytes()).hexdigest()
+    monkeypatch.setattr(supervisor, "_latest_score_checkpoint",
+                        lambda *_args: (5500, checkpoint_sha))
+    def fake_score(*_args, **_kwargs):
+        active_child = calls["active_child"]
+        calls["active_score_polls"].append((active_child.pid, active_child.poll_count))
+        return "consumed"
+    monkeypatch.setattr(supervisor, "_score_until_checkpoint", fake_score)
     result = supervisor.supervise(initial_args=["--fake-training-args"],
         launch_receipt=receipt, log_root=tmp_path / "logs", score_out=tmp_path / "watch",
         score_dir=tmp_path / "scores", expected_finish="2026-11-01T00:00:00+09:00",
         end_by="2026-11-03T00:00:00+09:00", arm="B", device="cuda:0",
-        ledger_path=ledger, max_segments=3)
+        ledger_path=ledger, max_segments=3, poll_seconds=0, sleep=lambda _seconds: None)
     assert result["action"] == "complete"
-    assert calls == {"children": 2, "resume_gate": 1}
+    assert calls["children"] == 2 and calls["resume_gate"] == 1
+    assert any(polls == 1 for _pid, polls in calls["active_score_polls"])
     persisted = json.loads(ledger.read_text(encoding="utf-8"))
     assert persisted["attempts"][0]["state"] == "failed"
     assert persisted["terminal"]["state"] == "done"
+    events = [json.loads(line) for line in (tmp_path / "watch" / "supervisor_score_events.jsonl")
+              .read_text(encoding="utf-8").splitlines()]
+    assert events and events[0]["pid"] == 7001
+    assert events[0]["score_state"] == "consumed"
+
+
+def test_stage_report_uses_checkpoint_source_segment_and_prior_segment(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch
+
+    first_run, second_run = tmp_path / "segment-0", tmp_path / "segment-1"
+    first_run.mkdir()
+    second_run.mkdir()
+    out_root = tmp_path / "watch"
+    out_root.mkdir()
+    calls = []
+    ledger_rows = []
+    for update, stage, run in ((500, "B0", first_run), (750, "B1", second_run)):
+        score_path = out_root / f"score_{update}.json"
+        score_path.write_text(json.dumps({"checkpoint_iteration": update, "from": stage,
+                                          "checkpoint_sha256": str(update)}), encoding="utf-8")
+        ledger_rows.append({"checkpoint_iteration": update, "stage": stage, "verdict": "PASS",
+            "run_dir": str(run), "score_path": str(score_path),
+            "score_sha256": hashlib.sha256(score_path.read_bytes()).hexdigest()})
+    (out_root / "score_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates",
+                        lambda *_args: {500: "B0", 750: "B1"})
+
+    def fake_build(current, previous, run, *, previous_run=None):
+        calls.append((current["checkpoint_iteration"], run, previous_run))
+        return {"checkpoint_sha256": current["checkpoint_sha256"],
+                "previous_checkpoint_iteration": previous["checkpoint_iteration"] if previous else None,
+                "gains": [], "losses": [], "unchanged": []}
+
+    monkeypatch.setattr(ex40_score_watch, "build_stage_report", fake_build)
+    monkeypatch.setattr(ex40_score_watch, "stage_markdown", lambda _row: "local fixture report\n")
+    result = ex40_score_watch.stage_reports(second_run, out_root, tmp_path / "cfg.yaml",
+                                              TABLE, "B")
+    assert result["state"] == "done"
+    assert calls == [(500, first_run, first_run), (750, second_run, first_run)]
+
+
+def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_receipt(
+        tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+
+    run, _, _, _, _ = _known_checkpoint(tmp_path)
+    watch = tmp_path / "watch"
+    scores = tmp_path / "scores"
+    watch.mkdir()
+    scores.mkdir()
+    checkpoints = {}
+    for update in (500, 750):
+        path = run / f"model_{update}.pt"
+        path.write_bytes(f"fixture checkpoint {update}".encode())
+        checkpoints[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    non_stride = run / "model_751.pt"
+    non_stride.write_bytes(b"non-stride save after 750")
+    checkpoints[non_stride.name] = hashlib.sha256(non_stride.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 752},
+        "checkpoints": checkpoints}), encoding="utf-8")
+    (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B", "done": {}}),
+        encoding="utf-8")
+    cfg = {"checkpoint_first": 500, "checkpoint_stride": 250,
+           "final_checkpoint_update": 1000, "check_interval_seconds": 1}
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: cfg)
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates",
+                        lambda _plan, _cfg: {750: "S1", 1000: "S2"})
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda _run, _out, *_args, **_kwargs: {
+        "state": "pending", "published": [{"update": 750, "json": str(watch / "stage_750.json")}],
+        "first_pending": 1000, "first_hold": None})
+    calls = []
+
+    def fake_watch(command, **_kwargs):
+        calls.append(command)
+        state_path = watch / "watch_state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        done = state.setdefault("done", {})
+        pending = next(update for update in (500, 750) if str(update) not in done)
+        done[str(pending)] = {"state": "PASS", "checkpoint_sha256": checkpoints[f"model_{pending}.pt"]}
+        state.update({"format": "foothold-ex40-score-watch/1", "arm": "B"})
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout=json.dumps({
+            "evaluation": {"state": "PASS", "update": pending},
+            "reports": {"state": "pending"}, "completion": {"state": "waiting_for_training"}}),
+            stderr="")
+
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run", fake_watch)
+    result = _score_until_checkpoint(run, watch, scores, tmp_path / "cfg.yaml",
+        TABLE, "B", 751, checkpoints["model_751.pt"], max_calls=4)
+    assert result == "consumed"
+    assert len(calls) == 2
+    assert "--lab-feed" in calls[0]
+    assert calls[0][calls[0].index("--lab-feed") + 1] == str(watch / "lab_feed.json")
+    saved = json.loads((watch / "watch_state.json").read_text(encoding="utf-8"))
+    assert sorted(saved["done"]) == ["500", "750"]
+
+
+def test_segment_duplicate_sha_and_missing_score_remain_unconsumed(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+
+    run = tmp_path / "segment-2"
+    watch = tmp_path / "watch"
+    run.mkdir()
+    watch.mkdir()
+    checkpoint = run / "model_5500.pt"
+    checkpoint.write_bytes(b"new segment checkpoint")
+    actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 5501},
+        "checkpoints": {checkpoint.name: actual}}), encoding="utf-8")
+    (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
+        "done": {"5500": {"state": "PASS", "checkpoint_sha256": "a" * 64}}}),
+        encoding="utf-8")
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
+        "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {})
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
+        "state": "done", "published": [], "first_pending": None, "first_hold": None})
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=0,
+            stdout=json.dumps({"evaluation": {"state": "idle"}}), stderr=""))
+    # The same update number from a resumed segment cannot inherit an older segment's SHA receipt.
+    assert _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
+        TABLE, "B", 5500, actual, max_calls=1) == "unknown"
+    # If a stride row is absent and the consumer has no stable candidate, it stays pending.
+    state = json.loads((watch / "watch_state.json").read_text(encoding="utf-8"))
+    state["done"].clear()
+    (watch / "watch_state.json").write_text(json.dumps(state), encoding="utf-8")
+    assert _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
+        TABLE, "B", 5500, actual, max_calls=1) == "pending"
 
 
 @pytest.mark.parametrize("row_state,completion_state,expected", [
@@ -227,18 +377,24 @@ def test_final_checkpoint_requires_complete_score_ledger_and_non_hold_verdict(
     checkpoint.write_bytes(b"known final model")
     digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 8001},
         "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
     (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {"8000": {"state": row_state, "checkpoint_sha256": digest}}}),
         encoding="utf-8")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
         "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
     monkeypatch.setattr(ex40_score_watch, "completion", lambda *_args: {"state": completion_state})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
+        "state": "done", "published": [{"update": 8000}], "first_pending": None,
+        "first_hold": None})
     monkeypatch.setattr(ex40_supervisor.subprocess, "run",
         lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr="fixture"))
 
     result = _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
-        tmp_path / "table.yaml", "B", 8000, digest, max_calls=1)
+        TABLE, "B", 8000, digest, max_calls=1)
     assert result == expected
 
 
@@ -253,17 +409,23 @@ def test_final_checkpoint_sha_mismatch_cannot_be_consumed(tmp_path, monkeypatch)
     checkpoint.write_bytes(b"changed final model")
     digest = "0" * 64
     (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 8001},
         "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
     (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {"8000": {"state": "PASS", "checkpoint_sha256": digest}}}),
         encoding="utf-8")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
         "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
+        "state": "done", "published": [{"update": 8000}], "first_pending": None,
+        "first_hold": None})
     monkeypatch.setattr(ex40_supervisor.subprocess, "run",
         lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr="fixture"))
 
     result = _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
-        tmp_path / "table.yaml", "B", 8000, digest, max_calls=1)
+        TABLE, "B", 8000, digest, max_calls=1)
     assert result == "unknown"
 
 
