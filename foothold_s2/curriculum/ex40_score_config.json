@@ -1,0 +1,44 @@
+{
+  "format": "foothold-ex40-score-config/1",
+  "note": "D72 fixed promotion with shadow scores. B0-B3c PRED is recorded; T0 three-mode scores are recorded, never used for automatic promotion.",
+  "device": "cuda:1",
+  "envs": 64,
+  "eval_seed": 42,
+  "map_steps": 300,
+  "stand_seconds": 3.0,
+  "stand_skip_seconds": 1.0,
+  "checkpoint_first": 500,
+  "checkpoint_stride": 250,
+  "checkpoint_stable_seconds": 5.0,
+  "check_interval_seconds": 15.0,
+  "estimated_training_seconds_per_update": 24.0,
+  "survival_min": 60,
+  "tracking_error_max": 0.15,
+  "survival_drop_hold": 3,
+  "stand": {
+    "passed_envs_min": 60,
+    "contact_force_n": 1.0,
+    "contact_fraction_min_by_foot": 0.90,
+    "mean_fz_over_mg_min_by_foot": 0.05,
+    "sole_gap_p95_m_max_by_foot": 0.01,
+    "body_speed_mean_mps_max": 0.05,
+    "abs_yaw_speed_mean_radps_max": 0.10
+  },
+  "axis_goal": {
+    "complete_envs_min": 60,
+    "stop_end_error_median_rad_max": 0.15,
+    "cases": ["goal_left_delta030", "goal_right_delta030", "goal_left_delta060", "goal_right_delta060", "goal_left_delta090", "goal_right_delta090"]
+  },
+  "b3_relative_min": 0.5,
+  "t0_pred_distance_ratio_min": 0.9,
+  "t0_pred_survival_drop_max": 3,
+  "stages": {
+    "B0": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "stop"], "axis_goal": false, "b3_relative": false},
+    "B1": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "stop", "back0.5", "side+0.5", "side-0.5"], "judge_walk_half": true, "axis_goal": false, "b3_relative": false},
+    "B2": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "b3_relative": false},
+    "B3a": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0"]},
+    "B3b": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3"]},
+    "B3c": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3", "slow0.1", "slow0.2", "slow0.3"]},
+    "T0": {"judge_modes": ["eval_gt", "probe_prop_only", "eval_pred"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3", "slow0.1", "slow0.2", "slow0.3"]}
+  }
+}

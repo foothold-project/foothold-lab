@@ -28,6 +28,17 @@ EXTRA_COMMANDS = {
     "diag-back+side-": (-0.5, -0.5, 0.0),
     "stop": (0.0, 0.0, 0.0),
 }
+EX40_B3_COMMANDS = {
+    "walk+0.5": (0.5, 0.0, 0.5),
+    "walk-0.5": (0.5, 0.0, -0.5),
+    "walk+1.0": (0.5, 0.0, 1.0),
+    "walk-1.0": (0.5, 0.0, -1.0),
+    "spin+0.3": (0.0, 0.0, 0.3),
+    "spin-0.3": (0.0, 0.0, -0.3),
+    "slow0.1": (0.1, 0.0, 0.0),
+    "slow0.2": (0.2, 0.0, 0.0),
+    "slow0.3": (0.3, 0.0, 0.0),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -53,7 +64,9 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(CORE_COMMANDS)
     if suite == "extended":
         return {**CORE_COMMANDS, **EXTRA_COMMANDS}
-    raise ValueError("command suite must be core or extended")
+    if suite == "ex40_b3":
+        return {**CORE_COMMANDS, **EXTRA_COMMANDS, **EX40_B3_COMMANDS}
+    raise ValueError("command suite must be core, extended, or ex40_b3")
 
 
 def terrain_rows(levels, types, names: list[str]) -> list[dict]:
