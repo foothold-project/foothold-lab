@@ -1,0 +1,6 @@
+{
+  "main_preflight": "REJECTED",
+  "reason": "EX-40 DR runtime adapter is not verified; refusing launch",
+  "training_started": false,
+  "source_changed": false
+}

@@ -1,0 +1,55 @@
+{
+  "source": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b12_20261031_final_f1fff17f\\receipts\\ex40_b11\\B_smoke_20261031_030246_1124927\\run.log",
+  "n_updates": 18,
+  "seconds_per_update_mean": 27.374444444444443,
+  "seconds_min": 25.69,
+  "seconds_max": 29.46,
+  "8001_updates_range_h": [
+    57.096025,
+    65.47485
+  ],
+  "stages": [
+    {
+      "checkpoint": 1500,
+      "updates": 1501,
+      "hours_mean_extrapolation": 11.4136
+    },
+    {
+      "checkpoint": 3000,
+      "updates": 3001,
+      "hours_mean_extrapolation": 22.8196
+    },
+    {
+      "checkpoint": 4500,
+      "updates": 4501,
+      "hours_mean_extrapolation": 34.2257
+    },
+    {
+      "checkpoint": 5000,
+      "updates": 5001,
+      "hours_mean_extrapolation": 38.0277
+    },
+    {
+      "checkpoint": 5500,
+      "updates": 5501,
+      "hours_mean_extrapolation": 41.8297
+    },
+    {
+      "checkpoint": 6000,
+      "updates": 6001,
+      "hours_mean_extrapolation": 45.6317
+    },
+    {
+      "checkpoint": 7500,
+      "updates": 7501,
+      "hours_mean_extrapolation": 57.0377
+    },
+    {
+      "checkpoint": 8000,
+      "updates": 8001,
+      "hours_mean_extrapolation": 60.8397
+    }
+  ],
+  "estimate_only": true,
+  "B14_started": false
+}
