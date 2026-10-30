@@ -1,0 +1,40 @@
+{
+  "mode_command_counts": {
+    "eval_gt": 13,
+    "probe_prop_only": 13,
+    "eval_pred": 13
+  },
+  "map_npz_count": 39,
+  "spin": {
+    "eval_gt/spin+1.2": {
+      "median_error": 0.18430990725755692,
+      "alive": 64
+    },
+    "eval_gt/spin-1.2": {
+      "median_error": 0.2170340120792389,
+      "alive": 64
+    },
+    "probe_prop_only/spin+1.2": {
+      "median_error": 0.18674080073833466,
+      "alive": 64
+    },
+    "probe_prop_only/spin-1.2": {
+      "median_error": 0.23619598150253296,
+      "alive": 64
+    }
+  },
+  "stand": {
+    "eval_gt": {
+      "passed": 50,
+      "envs": 64
+    },
+    "probe_prop_only": {
+      "passed": 51,
+      "envs": 64
+    },
+    "eval_pred": {
+      "passed": 49,
+      "envs": 64
+    }
+  }
+}

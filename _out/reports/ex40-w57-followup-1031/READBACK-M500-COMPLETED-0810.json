@@ -1,0 +1,307 @@
+{
+    "observed_at":  "2026-10-31T08:09:31.0818003+09:00",
+    "receipt":  {
+                    "format":  "foothold-ex40-eval-bundle/1",
+                    "checkpoint":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_500.pt",
+                    "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+                    "stage":  "B0",
+                    "arm":  "B",
+                    "device":  "cuda:1",
+                    "smoke":  false,
+                    "score_config_sha256":  "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+                    "table_sha256":  "66a519b28f5597ff41cec09f286d4cdd66af5d3877ecb1580005ca5a13a70585",
+                    "source_git_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+                    "steps":  {
+                                  "map64":  {
+                                                "rc":  0,
+                                                "seconds":  1076.5779999999795,
+                                                "output_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\map64"
+                                            },
+                                  "stand_eval_gt":  {
+                                                        "rc":  0,
+                                                        "seconds":  25.985000000102445,
+                                                        "output_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_eval_gt"
+                                                    },
+                                  "stand_probe_prop_only":  {
+                                                                "rc":  0,
+                                                                "seconds":  25.108999999938533,
+                                                                "output_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_probe_prop_only"
+                                                            },
+                                  "stand_eval_pred":  {
+                                                          "rc":  0,
+                                                          "seconds":  25.016000000061467,
+                                                          "output_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_eval_pred"
+                                                      }
+                              },
+                    "state":  "done",
+                    "elapsed_seconds":  1152.719000000041
+                },
+    "score":  {
+                  "format":  "foothold-ex40-score/2",
+                  "from":  "B0",
+                  "to":  "B1",
+                  "effective_schedule_sha256":  "b80b73ae7b077b586ea0c19fe999adccffec56e54bc50dcae8f40e96fa1a47f8",
+                  "score_config_sha256":  "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+                  "checkpoint":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_500.pt",
+                  "checkpoint_iteration":  500,
+                  "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+                  "created_at":  "2026-10-31T08:06:36.036654+09:00",
+                  "verdict":  "FAIL",
+                  "cells":  {
+                                "eval_gt/fwd0.5":  {
+                                                       "alive_envs_at_end":  61,
+                                                       "tracking_medians":  {
+                                                                                "vx_abs_error_mean_alive_mps":  0.08986730128526688
+                                                                            }
+                                                   },
+                                "eval_gt/fwd1.0":  {
+                                                       "alive_envs_at_end":  60,
+                                                       "tracking_medians":  {
+                                                                                "vx_abs_error_mean_alive_mps":  0.11088502779603004
+                                                                            }
+                                                   },
+                                "eval_gt/spin+1.2":  {
+                                                         "alive_envs_at_end":  64,
+                                                         "tracking_medians":  {
+                                                                                  "wz_abs_error_mean_alive_radps":  0.18430990725755692
+                                                                              }
+                                                     },
+                                "eval_gt/spin-1.2":  {
+                                                         "alive_envs_at_end":  64,
+                                                         "tracking_medians":  {
+                                                                                  "wz_abs_error_mean_alive_radps":  0.2170340120792389
+                                                                              }
+                                                     },
+                                "eval_gt/stop":  {
+                                                     "alive_envs_at_end":  64,
+                                                     "tracking_medians":  {
+
+                                                                          }
+                                                 },
+                                "eval_gt/flat_stand":  {
+                                                           "passed_envs":  50,
+                                                           "envs":  64
+                                                       },
+                                "probe_prop_only/fwd0.5":  {
+                                                               "alive_envs_at_end":  63,
+                                                               "tracking_medians":  {
+                                                                                        "vx_abs_error_mean_alive_mps":  0.09970702230930328
+                                                                                    }
+                                                           },
+                                "probe_prop_only/fwd1.0":  {
+                                                               "alive_envs_at_end":  62,
+                                                               "tracking_medians":  {
+                                                                                        "vx_abs_error_mean_alive_mps":  0.11732940748333931
+                                                                                    }
+                                                           },
+                                "probe_prop_only/spin+1.2":  {
+                                                                 "alive_envs_at_end":  64,
+                                                                 "tracking_medians":  {
+                                                                                          "wz_abs_error_mean_alive_radps":  0.18674080073833466
+                                                                                      }
+                                                             },
+                                "probe_prop_only/spin-1.2":  {
+                                                                 "alive_envs_at_end":  64,
+                                                                 "tracking_medians":  {
+                                                                                          "wz_abs_error_mean_alive_radps":  0.23619598150253296
+                                                                                      }
+                                                             },
+                                "probe_prop_only/stop":  {
+                                                             "alive_envs_at_end":  64,
+                                                             "tracking_medians":  {
+
+                                                                                  }
+                                                         },
+                                "probe_prop_only/flat_stand":  {
+                                                                   "passed_envs":  51,
+                                                                   "envs":  64
+                                                               },
+                                "eval_pred/flat_stand_record_only":  {
+                                                                         "passed_envs":  49,
+                                                                         "envs":  64
+                                                                     },
+                                "eval_pred/fwd0.5_record_only":  {
+                                                                     "alive_envs_at_end":  62
+                                                                 },
+                                "eval_pred/fwd1.0_record_only":  {
+                                                                     "alive_envs_at_end":  60
+                                                                 },
+                                "eval_pred/spin+1.2_record_only":  {
+                                                                       "alive_envs_at_end":  64
+                                                                   },
+                                "eval_pred/spin-1.2_record_only":  {
+                                                                       "alive_envs_at_end":  64
+                                                                   },
+                                "eval_pred/back0.5_record_only":  {
+                                                                      "alive_envs_at_end":  64
+                                                                  },
+                                "eval_pred/back1.0_record_only":  {
+                                                                      "alive_envs_at_end":  64
+                                                                  },
+                                "eval_pred/side+0.5_record_only":  {
+                                                                       "alive_envs_at_end":  64
+                                                                   },
+                                "eval_pred/side-0.5_record_only":  {
+                                                                       "alive_envs_at_end":  64
+                                                                   },
+                                "eval_pred/diag-fwd+side+_record_only":  {
+                                                                             "alive_envs_at_end":  61
+                                                                         },
+                                "eval_pred/diag-fwd+side-_record_only":  {
+                                                                             "alive_envs_at_end":  64
+                                                                         },
+                                "eval_pred/diag-back+side+_record_only":  {
+                                                                              "alive_envs_at_end":  64
+                                                                          },
+                                "eval_pred/diag-back+side-_record_only":  {
+                                                                              "alive_envs_at_end":  64
+                                                                          },
+                                "eval_pred/stop_record_only":  {
+                                                                   "alive_envs_at_end":  64
+                                                               }
+                            },
+                  "problems":  [
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "eval_gt/spin+1.2",
+                                       "reason":  "wz_abs_error_mean_alive_radps_above_tracking_limit"
+                                   },
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "eval_gt/spin-1.2",
+                                       "reason":  "wz_abs_error_mean_alive_radps_above_tracking_limit"
+                                   },
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "eval_gt/flat_stand",
+                                       "reason":  "flat_stance_below_60_of_64"
+                                   },
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "probe_prop_only/spin+1.2",
+                                       "reason":  "wz_abs_error_mean_alive_radps_above_tracking_limit"
+                                   },
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "probe_prop_only/spin-1.2",
+                                       "reason":  "wz_abs_error_mean_alive_radps_above_tracking_limit"
+                                   },
+                                   {
+                                       "kind":  "FAIL",
+                                       "cell":  "probe_prop_only/flat_stand",
+                                       "reason":  "flat_stance_below_60_of_64"
+                                   }
+                               ],
+                  "sources":  {
+                                  "map64":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\map64\\map_modes.json",
+                                  "stand_eval_gt":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_eval_gt\\stand.json",
+                                  "stand_probe_prop_only":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_probe_prop_only\\stand.json",
+                                  "stand_eval_pred":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\stand_eval_pred\\stand.json"
+                              },
+                  "judged_modes":  [
+                                       "eval_gt",
+                                       "probe_prop_only"
+                                   ],
+                  "evaluation_seconds":  1155.4839999999385,
+                  "evaluation_receipt":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\eval_receipt.json"
+              },
+    "ledger":  {
+                   "checkpoint_iteration":  500,
+                   "checkpoint_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_500.pt",
+                   "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+                   "format":  "foothold-ex40-score-ledger/1",
+                   "recorded_at":  "2026-10-30T23:06:36.066288+00:00",
+                   "run_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                   "score_path":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores\\score_500_6d0bfdde1175.json",
+                   "score_sha256":  "12c81bb358abd95c82752ef93330c511e9239d4716940feafea14fea27359e88",
+                   "stage":  "B0",
+                   "stage_log_reference":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\stage_log.jsonl",
+                   "verdict":  "FAIL"
+               },
+    "score_sha256_verified":  "12c81bb358abd95c82752ef93330c511e9239d4716940feafea14fea27359e88",
+    "supervisor_consumed_event":  {
+                                      "checkpoint_iteration":  500,
+                                      "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+                                      "format":  "ex40-supervisor-watch-event/1",
+                                      "observed_at":  "2026-10-30T23:06:36.582575+00:00",
+                                      "pid":  26240,
+                                      "progress":  {
+                                                       "scored_updates":  [
+                                                                              500
+                                                                          ],
+                                                       "stage_report_receipts":  [
+
+                                                                                 ]
+                                                   },
+                                      "run_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                                      "score_state":  "consumed",
+                                      "segment_index":  0
+                                  },
+    "training":  {
+                     "state":  "running",
+                     "iter":  550,
+                     "tot_iter":  8001,
+                     "iter_s":  25.481960773468018,
+                     "steps_per_s":  2893.3409267612587,
+                     "mean_reward":  34.32791899859905,
+                     "mean_episode_length":  952.85,
+                     "p_smpl":  1.0,
+                     "gpu_max_allocated_GiB":  6.050112724304199,
+                     "perception":  {
+                                        "l_tr":  0.01496,
+                                        "l_ie":  2.1225,
+                                        "kl":  0.00011,
+                                        "o_next":  2.11153,
+                                        "v":  0.00834,
+                                        "hf":  0.00097,
+                                        "hb":  0.00156
+                                    },
+                     "log_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                     "time":  "2026-10-31T08:09:15",
+                     "pid":  26240
+                 },
+    "independent_counts":  {
+                               "mode_command_counts":  {
+                                                           "eval_gt":  13,
+                                                           "probe_prop_only":  13,
+                                                           "eval_pred":  13
+                                                       },
+                               "map_npz_count":  39,
+                               "spin":  {
+                                            "eval_gt/spin+1.2":  {
+                                                                     "median_error":  0.18430990725755692,
+                                                                     "alive":  64
+                                                                 },
+                                            "eval_gt/spin-1.2":  {
+                                                                     "median_error":  0.2170340120792389,
+                                                                     "alive":  64
+                                                                 },
+                                            "probe_prop_only/spin+1.2":  {
+                                                                             "median_error":  0.18674080073833466,
+                                                                             "alive":  64
+                                                                         },
+                                            "probe_prop_only/spin-1.2":  {
+                                                                             "median_error":  0.23619598150253296,
+                                                                             "alive":  64
+                                                                         }
+                                        },
+                               "stand":  {
+                                             "eval_gt":  {
+                                                             "passed":  50,
+                                                             "envs":  64
+                                                         },
+                                             "probe_prop_only":  {
+                                                                     "passed":  51,
+                                                                     "envs":  64
+                                                                 },
+                                             "eval_pred":  {
+                                                               "passed":  49,
+                                                               "envs":  64
+                                                           }
+                                         }
+                           },
+    "frozen_tracked_changes":  [
+
+                               ],
+    "source_directory":  "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch/model_500_6d0bfdde1175"
+}
