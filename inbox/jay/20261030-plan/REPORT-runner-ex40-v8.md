@@ -56,3 +56,9 @@ Kit smoke 구현은 B0, ramp, D 진입에서 reset 이벤트를 실제 호출하
 D76 지시에 따라 `ex40.yaml`의 수평 속도 축 `x`, `y` 범위를 각각 -1.0~1.0 m/s, interval 간격을 10~15 s로 기록했다. 수직 및 각속도 축은 0으로 고정했다. 기존 일정에서 B3c 마지막 배율 0.5일 때 수평 범위는 각 -0.5~0.5 m/s이고 D 단계 배율 1일 때 -1.0~1.0 m/s가 된다. CPU 시험은 설정값, 전체 범위 구조, 두 배율의 기대값을 확인했다.
 
 앞서 보고한 새 막음 1은 COM 설정을 `body_names="base"`로 제한하고 실제 설치 함수 호출 시험을 추가해 닫았다. COM 이외의 세 범위는 여전히 미기입이므로 `runtime_adapter_status`는 `implementation_in_progress`이고 launch guard는 열지 않았다. 이번 범위는 CPU 시험만 수행했으며 Kit/GPU 효과는 미확인이다.
+
+## B10 고정 사본 통합
+
+고정 사본 `C:/mai/wt/foothold-lab/runner-ex40-b10`에서 v7 기반과 v8 구현을 포함한 `bc926bb0` 위에 score v8 `1910d2fb` 및 단계 Git 보고서 `9c911b87`을 병합했다. 병합 커밋은 `09d43399`이며 충돌 없이 만들어졌다. 통합 후 D76 수평 밀기 범위와 base 전용 COM 설정이 유지되는 것을 확인했다.
+
+통합 확인 중 W55 Kit smoke CPU fixture가 v8의 `ex40_dr` readback 및 단계 probe 계약을 채우지 않아 실패했다. 시험 fixture에 18개 update 행과 B0/ramp/D probe receipt를 추가해 입력 계약을 맞췄다. CPU 통합 시험 71 passed. 실제 Kit/GPU 실행은 하지 않았고 launch guard는 계속 닫혀 있다.

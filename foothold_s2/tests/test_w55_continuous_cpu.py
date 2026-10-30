@@ -17,6 +17,7 @@ import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS, apply_stage_heading, make_generator, resample_stage
 from foothold_s2.curriculum.continuous import Plan, Runtime, command_bad
+from foothold_s2.curriculum.ex40_dr import dr_scale
 from foothold_s2.ex40_kit_smoke import check as check_kit_smoke
 from foothold_s2.ex40_launch import BASELINE, TABLE, build_args, receipt
 from foothold_s2.prestart_check import actual_parser
@@ -368,9 +369,40 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                   "hit_origin_samples": [{"row": 0, "foot": 0, "hit_z_m": 1.0,
                                           "terrain_origin_z_m": 1.0,
                                           "hit_minus_origin_z_m": 0.0}]}
+    def ex40_dr_row(update, active=False):
+        scale = dr_scale(update)
+        max_steps = math.floor(scale * .015 / .005 + 1e-9)
+        event_count = 1 if active else 0
+        histogram = [1] + [0] * max_steps
+        return {"update": update, "scale": scale,
+            "observation_noise": {"mode": "fixed", "multiplier": 1.0},
+            "actual_samples": {key: {"count": event_count,
+                                      "min": 0.0 if active else None,
+                                      "max": 0.0 if active else None,
+                                      "mean": 0.0 if active else None}
+                for key in ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
+                            "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")},
+            "delay_readback": {"count": 1, "reset_sample_count": 1,
+                "observed_min_substeps": 0, "observed_max_substeps": 0,
+                "max_allowed_substeps": max_steps, "current_histogram": histogram,
+                "reset_sample_histogram": histogram, "max_seconds": scale * .015,
+                "configured_max_seconds": scale * .015, "observed_max_seconds": 0.0,
+                "reset_sampled_delay_ms": [0.0], "physics_dt_seconds": .005},
+            "realized_state": {key: {"count": 1} for key in
+                ("base_com_offset_m", "delay_substeps", "motor.stiffness", "motor.damping",
+                 "motor.effort_limit", "motor.saturation_effort")},
+            "pending_values": ["push_velocity"]}
+
+    def train_row(i, sensor):
+        return {"it": i, "ex40_stand_sensor": sensor, "ex40_dr": ex40_dr_row(i)}
+
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(18)) + "\n",
+        json.dumps(train_row(i, sensor_row)) for i in range(18)) + "\n",
         encoding="utf-8")
+    probe_rows = [ex40_dr_row(i, active=True) for i in (0, 4500, 6001)]
+    (run / "ex40_dr_schedule_smoke.json").write_text(json.dumps(
+        {"format": "ex40-dr-kit-smoke/1", "probes": [{"it": row["update"], "ex40_dr": row}
+            for row in probe_rows]}), encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
                                   "effective_schedule_sha256": plan.effective_sha256,
@@ -427,12 +459,12 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     receipt_path.write_text(json.dumps(launch), encoding="utf-8")
     invalid_sensor = {**sensor_row, "hit_valid_count_by_foot": [100] * 4}
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": invalid_sensor}) for i in range(18)) + "\n",
+        json.dumps(train_row(i, invalid_sensor)) for i in range(18)) + "\n",
         encoding="utf-8")
     with pytest.raises(ValueError, match="per-foot valid counts"):
         check_kit_smoke(receipt_path, run_log, 0)
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(18)) + "\n",
+        json.dumps(train_row(i, sensor_row)) for i in range(18)) + "\n",
         encoding="utf-8")
     good_env = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
     for changed in ("promotion_enabled", "max_init_terrain_level", "terrain_count"):
