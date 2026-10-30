@@ -427,6 +427,7 @@ def _add_valid_supervisor_slot(run: Path, watch: Path, update: int, digest: str,
 
 def _supervisor_slot_history(root: Path, *, include_prior_5250: bool, target_update: int = 5500):
     from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, config as score_config, stage_end_updates
+    from foothold_s2.eval.map_mode_cells import commands as map_commands
 
     cfg = score_config(DEFAULT_CONFIG)
     plan = Plan(TABLE, arm="B")
@@ -471,7 +472,31 @@ def _supervisor_slot_history(root: Path, *, include_prior_5250: bool, target_upd
         sources = {}
         for phase in phases:
             path = evidence / f"{phase}.json"
-            path.write_text("{}", encoding="utf-8")
+            if phase == "map64":
+                per_env = [{"samples_alive": 1,
+                    "vx_abs_error_mean_alive_mps": 0.1,
+                    "vy_abs_error_mean_alive_mps": 0.1,
+                    "wz_abs_error_mean_alive_radps": 0.1} for _ in range(64)]
+                payload = {"checkpoint_sha256": digest, "envs": 64, "modes": {
+                    mode: {name: {"alive_envs_at_end": 64, "per_env": per_env}
+                           for name in map_commands("extended")}
+                    for mode in ("eval_gt", "probe_prop_only", "eval_pred")}}
+            elif phase == "axis_v2":
+                payload = {"checkpoint_sha256": digest, "envs": 64, "modes": {
+                    mode: {"forward": {"alive_at_end": 64,
+                        "stop_end_error_median_rad": 0.1,
+                        "yaw_final_minus_start_median_rad": 0.1,
+                        "contact_left_right_gap_median": 0.1}}
+                    for mode in ("eval_gt", "probe_prop_only", "eval_pred")}}
+            elif phase.startswith("stand_"):
+                per_env = [{"feet": {foot: {"contact_fraction_gt1n": 0.5,
+                    "mean_fz_over_mg": 1.0, "sole_gap_p95_m": 0.01}
+                    for foot in ("FL_foot", "FR_foot", "RL_foot", "RR_foot")}}
+                    for _ in range(64)]
+                payload = {"checkpoint_sha256": digest, "envs": 64, "per_env": per_env}
+            else:
+                payload = {}
+            path.write_text(json.dumps(payload), encoding="utf-8")
             sources[phase] = str(path)
         receipt_path = evidence / "eval_receipt.json"
         receipt_path.write_text(json.dumps({"state": "done", "steps": {
@@ -500,6 +525,175 @@ def _supervisor_slot_history(root: Path, *, include_prior_5250: bool, target_upd
     (out_root / "score_ledger.jsonl").write_text("".join(json.dumps(row) + "\n" for row in ledger),
         encoding="utf-8")
     return current_run, out_root, score_dir, manifests[current_run]["checkpoints"][f"model_{target_update}.pt"]
+
+
+def _relocate_supervisor_history(root: Path, *, first_current: int,
+                                 non_stride_update: int | None = None):
+    """Create a real ledger-backed split run, keeping score/eval evidence intact."""
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, DEFAULT_TABLE, config as score_config
+
+    final_update = 1500 if non_stride_update is not None else 8000
+    current, watch, scores, _ = _supervisor_slot_history(
+        root, include_prior_5250=True, target_update=final_update)
+    prior = root / "segment-prior-all"
+    prior.mkdir()
+    ledger_path = watch / "score_ledger.jsonl"
+    ledger = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    for row in ledger:
+        update = row["checkpoint_iteration"]
+        destination = prior if update < first_current else current
+        checkpoint = Path(row["checkpoint_path"])
+        target = destination / checkpoint.name
+        if checkpoint.resolve() != target.resolve():
+            if target.exists():
+                target.unlink()
+            checkpoint.replace(target)
+        row["run_dir"] = str(destination)
+        row["checkpoint_path"] = str(target)
+
+    if non_stride_update is not None:
+        checkpoint = current / f"model_{non_stride_update}.pt"
+        checkpoint.write_bytes(f"non-stride segment save {non_stride_update}".encode())
+        non_stride_digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    else:
+        non_stride_digest = None
+
+    plan = Plan(DEFAULT_TABLE, arm="B")
+    for source in (prior, current):
+        source_rows = sorted((row for row in ledger if Path(row["run_dir"]) == source),
+                             key=lambda row: row["checkpoint_iteration"])
+        checkpoints = {Path(row["checkpoint_path"]).name: row["checkpoint_sha256"]
+                       for row in source_rows}
+        progress = max((row["checkpoint_iteration"] + 1 for row in source_rows), default=0)
+        if source == current and non_stride_update is not None:
+            checkpoints[f"model_{non_stride_update}.pt"] = non_stride_digest
+            progress = max(progress, non_stride_update + 1)
+        manifest = {"schema": "foothold-manifest/1",
+                    "progress": {"completed_updates": progress}, "checkpoints": checkpoints}
+        (source / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        stage_rows = []
+        seen = set()
+        for row in source_rows:
+            stage = row["stage"]
+            if stage not in seen:
+                stage_rows.append({"event": "stage_enter", "iteration": row["checkpoint_iteration"],
+                                   "to": stage,
+                                   "effective_schedule_sha256": plan.effective_sha256})
+                seen.add(stage)
+        (source / "stage_log.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in stage_rows), encoding="utf-8")
+    ledger_path.write_text("".join(json.dumps(row) + "\n" for row in ledger), encoding="utf-8")
+    if final_update == 8000:
+        final = current / "model_8000.pt"
+        final_sha = hashlib.sha256(final.read_bytes()).hexdigest()
+        (current / "train_start_status.json").write_text(json.dumps({
+            "state": "done", "iter": 8000, "checkpoint": str(final),
+            "sha256": final_sha}), encoding="utf-8")
+    return current, prior, watch, scores, non_stride_digest
+
+
+@pytest.mark.parametrize("signal_update", [1550, 1600])
+def test_resume_target_uses_verified_prior_segment_and_stage_report_sha(
+        tmp_path, monkeypatch, signal_update):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, DEFAULT_TABLE
+
+    run, prior, watch, scores, signal_sha = _relocate_supervisor_history(
+        tmp_path, first_current=1551, non_stride_update=signal_update)
+    assert signal_sha is not None
+    feed = watch / "lab_feed.json"
+    sender_path = tmp_path / "fake_sender.py"
+    sends = []
+    initial_reports = ex40_score_watch.stage_reports(
+        run, watch, DEFAULT_CONFIG, DEFAULT_TABLE, "B", telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda script, message: sends.append(message.read_text(encoding="utf-8")) or True)
+    assert initial_reports["published"] > 0 and initial_reports["first_hold"] is None
+    before_sends = len(sends)
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run",
+        lambda *_args, **_kwargs: pytest.fail("verified prior scores must not be re-evaluated"))
+
+    result = _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", signal_update, signal_sha, max_calls=1, telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda *_: sends.append("unexpected resend") or True)
+    again = _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", signal_update, signal_sha, max_calls=1, telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda *_: sends.append("unexpected resend") or True)
+
+    assert result == "consumed" and again == "consumed"
+    assert len(sends) == before_sends
+    assert ex40_score_watch._manifest_digest(prior, 1500) is not None
+
+
+def test_resume_full_31_slot_split_completes_prior_stage_reports_once(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, DEFAULT_TABLE
+
+    run, prior, watch, scores, _ = _relocate_supervisor_history(
+        tmp_path, first_current=3250)
+    ledger = ex40_score_watch._ledger_rows(watch)
+    assert len(ledger) == 31
+    assert sum(Path(row["run_dir"]) == prior for row in ledger) == 11
+    feed = watch / "lab_feed.json"
+    sender_path = tmp_path / "fake_sender.py"
+    sends = []
+    initial = ex40_score_watch.stage_reports(
+        run, watch, DEFAULT_CONFIG, DEFAULT_TABLE, "B", telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda script, message: sends.append(message.read_text(encoding="utf-8")) or True)
+    assert initial["state"] == "done" and initial["published"] == 8
+    before_sends = len(sends)
+    final_sha = ex40_score_watch._manifest_digest(run, 8000)
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run",
+        lambda *_args, **_kwargs: pytest.fail("all 31 verified slots must not be re-evaluated"))
+
+    result = _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", 8000, final_sha, max_calls=1, telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda *_: sends.append("unexpected resend") or True)
+    again = _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", 8000, final_sha, max_calls=1, telegram_sender=sender_path,
+        lab_feed=feed, sender=lambda *_: sends.append("unexpected resend") or True)
+
+    assert result == "consumed" and again == "consumed"
+    assert len(sends) == before_sends == 8
+    assert ex40_score_watch.completion(run, watch, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", json.loads((watch / "watch_state.json").read_text(encoding="utf-8")))["state"] == "done"
+
+
+def test_resume_target_missing_or_conflicting_prior_source_stays_blocked(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, DEFAULT_TABLE
+
+    missing_root = tmp_path / "missing"
+    run, prior, watch, scores, signal_sha = _relocate_supervisor_history(
+        missing_root, first_current=1551, non_stride_update=1550)
+    ledger_path = watch / "score_ledger.jsonl"
+    ledger = ex40_score_watch._ledger_rows(watch)
+    target = next(row for row in ledger if row["checkpoint_iteration"] == 1500)
+    Path(target["checkpoint_path"]).unlink()
+    manifest_path = prior / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["checkpoints"].pop("model_1500.pt")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
+        "done": {str(key): value for key, value in
+                 json.loads((watch / "watch_state.json").read_text(encoding="utf-8"))["done"].items()
+                 if key != "1500"}}), encoding="utf-8")
+    ledger_path.write_text("".join(json.dumps(row) + "\n" for row in ledger
+                                   if row["checkpoint_iteration"] != 1500), encoding="utf-8")
+    assert _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", 1550, signal_sha, max_calls=1) == "pending"
+
+    conflict_root = tmp_path / "conflict"
+    run, prior, watch, scores, signal_sha = _relocate_supervisor_history(
+        conflict_root, first_current=1551, non_stride_update=1550)
+    duplicate = run / "model_1500.pt"
+    duplicate.write_bytes(b"same update, different resumed segment bytes")
+    manifest_path = run / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["checkpoints"][duplicate.name] = hashlib.sha256(duplicate.read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    assert _score_until_checkpoint(run, watch, scores, DEFAULT_CONFIG, DEFAULT_TABLE,
+        "B", 1550, signal_sha, max_calls=1) == "unknown"
 
 
 def test_stride_slot_gap_blocks_consumption_but_verified_prior_segment_is_kept(tmp_path, monkeypatch):
@@ -600,9 +794,15 @@ def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_r
         state = json.loads(state_path.read_text(encoding="utf-8"))
         done = state.setdefault("done", {})
         pending = next(update for update in (500, 750) if str(update) not in done)
-        done[str(pending)] = {"state": "PASS", "checkpoint_sha256": checkpoints[f"model_{pending}.pt"]}
+        pinned = checkpoints[f"model_{pending}.pt"]
+        done[str(pending)] = {"state": "PASS", "checkpoint_sha256": pinned}
         state.update({"format": "foothold-ex40-score-watch/1", "arm": "B"})
         state_path.write_text(json.dumps(state), encoding="utf-8")
+        ledger_path = watch / "score_ledger.jsonl"
+        with ledger_path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"checkpoint_iteration": pending,
+                "checkpoint_sha256": pinned, "run_dir": str(run),
+                "checkpoint_path": str(run / f"model_{pending}.pt")}) + "\n")
         return SimpleNamespace(returncode=0, stdout=json.dumps({
             "evaluation": {"state": "PASS", "update": pending},
             "reports": {"state": "pending"}, "completion": {"state": "waiting_for_training"}}),
@@ -682,6 +882,9 @@ def test_final_checkpoint_requires_complete_score_ledger_and_non_hold_verdict(
         "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {"8000": {"state": row_state, "checkpoint_sha256": digest}}}),
         encoding="utf-8")
+    (watch / "score_ledger.jsonl").write_text(json.dumps({
+        "checkpoint_iteration": 8000, "checkpoint_sha256": digest,
+        "run_dir": str(run), "checkpoint_path": str(checkpoint)}) + "\n", encoding="utf-8")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
         "checkpoint_first": 8000, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
     monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")

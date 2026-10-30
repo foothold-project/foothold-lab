@@ -165,3 +165,27 @@ supervisor는 이제 정본 설정의 `checkpoint_first`와 `checkpoint_stride`�
 원출력 파일: `_out/reports/CPU-P1-missing-slot-1031.txt`. `git diff --check`는 통과했다. GPU, Kit, 실제 학습 및 외부 발송은 수행하지 않았다. 실제 Kit 동작은 미확인이다.
 
 수정은 기존 139f0d2d 검토 HEAD 뒤에만 추가하며 amend하지 않는다. P1 변경분 verifier 확인이 남아 있고 B12/B13 게이트는 그대로다.
+
+
+## P1 이전 segment 목표 및 단계 보고 SHA 연결 · 2026-10-31
+
+### 변경
+
+- 재개 신호의 목표 stride 회차가 현재 manifest에 없으면 score ledger가 지정한 이전 segment manifest를 찾습니다. 슬롯 검증이 그 checkpoint 파일, SHA, score JSON, 평가 영수증 및 source 파일을 확인한 뒤에만 소비 경로가 진행됩니다.
+- 검증된 ledger SHA를 단계 보고서 배송 검사에 전달합니다. 실제 `stage_reports()`는 ledger의 각 `run_dir`에서 점수와 이전 점수의 원자료를 읽고, 소비기는 보고 JSON · delivery receipt · lab feed SHA를 계속 대조합니다.
+- 같은 회차가 현재 segment에도 있고 SHA가 과거 검증 자료와 다르면 `unknown`, 필요한 이전 회차 자료가 없으면 `pending`입니다. 이전 결과가 검증된 재개 입력에서는 평가 subprocess를 다시 부르지 않고, 이미 전달된 단계 보고서를 다시 보내지 않습니다.
+
+### CPU 입력과 결과
+
+- m1550 및 m1600 비 stride 저장 신호에서 이전 segment model_1500을 목표로 삼는 실제 consumer 호출을 각각 확인했습니다. 기존 ledger의 1500 SHA와 실제 manifest · checkpoint · score · evaluation receipt를 검증하고 `consumed`가 나왔으며 재소비 후에도 추가 평가와 가짜 sender 호출은 0건입니다.
+- model_500~3000이 이전 segment, model_3250~8000이 현재 segment인 31 슬롯 입력에서 실제 `stage_reports()`로 8개 보고와 fake sender delivery receipts를 만들고 소비기에서 재검증했습니다. 결과는 `consumed`; 재소비 시 평가 재호출과 발송은 없었습니다.
+- 목표 model_1500의 manifest/checkpoint/score ledger 연결을 제거한 경우 `pending`; 같은 회차의 새 segment checkpoint에 다른 SHA를 넣은 경우 `unknown`으로 막혔습니다. 앞서 닫은 m5250 누락 반례 및 기존 HOLD · SHA · 완료 회귀도 함께 유지했습니다.
+
+CPU 명령은 GPU 장치를 숨긴 상태에서 두 P1 회귀 파일을 실행했습니다. 출력 원문은 `_out/reports/CPU-P1-segment-source-1031.txt`입니다.
+
+```text
+......................................                                   [100%]
+38 passed in 15.25s
+```
+
+`git diff --check` 통과. GPU, Kit, B14, 실제 evaluator, 실제 외부 발송은 실행하지 않았습니다. 이전 b5b 및 후속 커밋을 보존하고 append 커밋만 추가합니다.

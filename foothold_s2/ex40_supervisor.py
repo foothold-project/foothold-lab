@@ -189,20 +189,42 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
     target_update = first + ((update - first) // stride) * stride
     expected_updates = list(range(first, target_update + 1, stride))
     current_checkpoints = dict((n, path) for n, path in _models(run, cfg) if n <= target_update)
+    state_path = out_root / "watch_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8-sig")) if state_path.is_file() else None
+    try:
+        ledger_rows = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+    except (OSError, ValueError, KeyError, TypeError):
+        return "unknown"
+
+    # A resumed segment may stop between stride saves. Resolve the target from
+    # its verified ledger source when the current manifest does not contain it.
     target_digest = _manifest_digest(run, target_update)
+    if target_digest is None:
+        target_row = ledger_rows.get(target_update)
+        if target_row is None:
+            return "pending"
+        target_source = Path(target_row.get("run_dir") or run)
+        target_digest = _manifest_digest(target_source, target_update)
+        if target_digest is None:
+            return "pending"
+        if target_row.get("checkpoint_sha256") != target_digest:
+            return "unknown"
     if target_digest is None:
         return "pending"
     if update == target_update and target_digest != digest:
         return "unknown"
     digest = target_digest
     boundaries = stage_end_updates(Plan(table, arm=arm), cfg)
-    state_path = out_root / "watch_state.json"
     for _ in range(max_calls):
         state = json.loads(state_path.read_text(encoding="utf-8-sig")) if state_path.is_file() else None
+        try:
+            ledger_rows = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+        except (OSError, ValueError, KeyError, TypeError):
+            return "unknown"
         if state:
             if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
-            ledger_rows = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+            verified_sha = {}
             for scored_update in expected_updates:
                 row = state.get("done", {}).get(str(scored_update))
                 if row is None:
@@ -220,6 +242,19 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                                                   _manifest_digest)
                 if slot_state != "verified":
                     return slot_state
+                source_row = ledger_rows.get(scored_update)
+                if source_row is None:
+                    return "pending"
+                source_digest = source_row.get("checkpoint_sha256")
+                source_run = Path(source_row.get("run_dir") or run)
+                if _manifest_digest(source_run, scored_update) != source_digest:
+                    return "unknown"
+                current_digest = _manifest_digest(run, scored_update)
+                if current_digest is not None and current_digest != source_digest:
+                    return "unknown"
+                if scored_update in current_checkpoints and current_digest is None:
+                    return "pending"
+                verified_sha[scored_update] = source_digest
             else:
                 reports = stage_reports(run, out_root, config, table, arm,
                     telegram_sender=telegram_sender,
@@ -234,7 +269,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                     return "pending"
                 effective_lab_feed = lab_feed or out_root / "lab_feed.json"
                 if any(not _stage_report_delivery_ok(out_root, n, boundaries[n],
-                           _manifest_digest(run, n), telegram_sender, effective_lab_feed)
+                           verified_sha.get(n), telegram_sender, effective_lab_feed)
                        for n in required_reports):
                     return "pending"
                 if target_update == cfg["final_checkpoint_update"]:

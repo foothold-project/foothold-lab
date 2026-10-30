@@ -547,7 +547,9 @@ def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path, monkeypat
         score_path = out / f"score_{update}.json"
         score_path.write_text(json.dumps(score), encoding="utf-8")
         ledger.append({"checkpoint_iteration": update, "stage": stage, "verdict": "PASS",
-                       "score_path": str(score_path), "score_sha256": sha256(score_path)})
+                       "score_path": str(score_path), "score_sha256": sha256(score_path),
+                       "checkpoint_sha256": sha256(checkpoint), "run_dir": str(run),
+                       "checkpoint_path": str(checkpoint)})
         saved.append(score)
     (out / "score_ledger.jsonl").write_text("".join(json.dumps(row) + "\n" for row in ledger), encoding="utf-8")
     (run / "train_extra.jsonl").write_text("".join(json.dumps({"it": update, "ex40_dr": {
