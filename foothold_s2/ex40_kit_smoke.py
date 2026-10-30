@@ -48,6 +48,16 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
         raise ValueError("EX-40 Kit command slots require all envs to use free velocity sampling")
     rewards = doc.get("rewards") or {}
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    for key in ("events", "curriculum"):
+        if doc.get(key) != baseline.get(key):
+            raise ValueError(f"D68 B0 {key} differs from S-B10 saved configuration")
+    terrain = ((doc.get("scene") or {}).get("terrain") or {}).get("terrain_generator")
+    expected_terrain = baseline["scene"]["terrain"]["terrain_generator"]
+    if terrain != expected_terrain:
+        raise ValueError("D68 B0 terrain generator differs from S-B10")
+    if (str(command.get("seed")) != str(baseline["commands"]["base_velocity"]["seed"])
+            or command.get("resampling_time_range") != baseline["commands"]["base_velocity"]["resampling_time_range"]):
+        raise ValueError("D68 B0 command seed or resample interval differs from S-B10")
     for source, baseline_row in (baseline.get("rewards") or {}).items():
         row = rewards.get(source) or {}
         if not math.isclose(float(row.get("weight", "nan")), float(baseline_row["weight"]),

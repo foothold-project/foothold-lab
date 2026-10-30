@@ -160,8 +160,11 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                     ("basic_hip_pos_penalty_l1", "ex39_thigh_calf_pos_l1", "ex39_four_foot_stop")})
     env_yaml = run / "params" / "env.yaml"
     env_yaml.write_text(yaml.safe_dump({"commands": {"base_velocity": {
-        "params": {"curriculum_mode": True}, "flag_stride": 0, "dynamic_flags": False}},
-        "rewards": rewards}), encoding="utf-8")
+        "params": {"curriculum_mode": True}, "flag_stride": 0, "dynamic_flags": False,
+        "seed": 0, "resampling_time_range": baseline["commands"]["base_velocity"]["resampling_time_range"]}},
+        "rewards": rewards, "events": baseline["events"], "curriculum": baseline["curriculum"],
+        "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"]}}}),
+        encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
                                   "effective_schedule_sha256": plan.effective_sha256,
@@ -210,4 +213,9 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     wrong["rewards"]["track_ang_vel"]["weight"] = 99.0
     env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
     with pytest.raises(ValueError, match="B0 reward"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    wrong["rewards"]["track_ang_vel"]["weight"] = .5
+    wrong["events"]["physics_material"]["params"]["num_buckets"] = "1"
+    env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
+    with pytest.raises(ValueError, match="B0 events"):
         check_kit_smoke(receipt_path, run_log, 0)
