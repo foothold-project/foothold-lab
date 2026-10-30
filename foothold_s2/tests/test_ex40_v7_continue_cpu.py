@@ -14,6 +14,7 @@ import yaml
 from foothold_s2.curriculum.continuous import (
     KIT_SMOKE_BOUNDARIES, Plan, apply_terrain_policy, terrain_level_receipt,
 )
+from foothold_s2.curriculum.ex40_dr import dr_scale
 from foothold_s2.ex40_continue import (
     TOTAL_ITERATIONS, build_resume_args, check_parent, consecutive_failure_action,
     newest_verified_checkpoint, source_decision, validate_deadline,
@@ -43,7 +44,8 @@ def test_v7_schedule_shares_ranges_and_boundaries():
     assert t0.shares == d.shares == b3c.shares and t0.ranges == d.ranges == b3c.ranges
     smoke = Plan(TABLE, arm="B", smoke_boundaries=KIT_SMOKE_BOUNDARIES)
     assert [(stage.id, stage.fixed_update) for stage in smoke.stages] == [
-        ("B0", 0), ("B1", 3), ("B2", 6), ("B3a", 9), ("B3b", 12), ("B3c", 15)]
+        ("B0", 0), ("B1", 2), ("B2", 4), ("B3a", 6), ("B3b", 8),
+        ("B3c", 10), ("D", 12), ("T0", 14)]
     args = build_args(arm="B", device="cuda:0", end_by="2026-11-05T12:00:00+09:00",
                       log_root=Path("C:/tmp/ex40-v7-main"),
                       score_dir=Path("C:/tmp/ex40-v7-scores"), smoke=False)
@@ -53,7 +55,8 @@ def test_v7_schedule_shares_ranges_and_boundaries():
     assert args[args.index("--max_iterations") + 1] == str(TOTAL_ITERATIONS)
     assert smoke_args[smoke_args.index("--max_iterations") + 1] == "18"
     assert receipt(smoke_args)["stage_boundaries"] == {
-        "B0": 0, "B1": 3, "B2": 6, "B3a": 9, "B3b": 12, "B3c": 15}
+        "B0": 0, "B1": 2, "B2": 4, "B3a": 6, "B3b": 8, "B3c": 10,
+        "D": 12, "T0": 14}
 
 
 def test_fixed_l02_policy_applies_to_config_and_records_actual_levels():
@@ -121,6 +124,11 @@ def _known_checkpoint(tmp_path, iteration=5500):
     map_rng = torch.Generator().manual_seed(6).get_state()
     state = {
         "format": "foothold-start/1", "iter": iteration,
+        "model_state_dict": {"policy.weight": torch.tensor([1.0])},
+        "perception_state_dict": {"encoder.weight": torch.tensor([1.0])},
+        "optimizer_state_dict": {"state": {}, "param_groups": [{"lr": 0.001}]},
+        "perception_optimizer_state_dict": {"state": {}, "param_groups": [{"lr": 0.001}]},
+        "ppo_learning_rate": 0.001,
         "rng": {"torch": torch.tensor([1]), "numpy": ("MT",), "python": (1,)},
         "map_switch": {"p_map_off": .1, "generator_state": map_rng},
         "env_state": {"common_step_counter": iteration * 24,
@@ -139,7 +147,15 @@ def _known_checkpoint(tmp_path, iteration=5500):
             "stage_entry_iteration": stage.fixed_update,
             "b1_entry_iteration": plan.stages[1].fixed_update,
             "env_stage": torch.full((3072,), active, dtype=torch.long),
-            "pending_gate": None, "seen_scores": [], "latest_score": None, "passes": []},
+            "pending_gate": None, "seen_scores": [], "latest_score": None, "passes": [],
+            "domain_randomization": {"format": "ex40-dr-runtime-readback/1",
+                "config_sha256": "fixture-dr-sha", "last_update": iteration,
+                "schedule_update": iteration, "smoke_schedule": False,
+                "scale": dr_scale(iteration),
+                "com_baseline": torch.zeros((3072, 1, 7)),
+                "motor_baselines": {"legs": {
+                    "effort_limit": torch.ones((3072, 12)) * 8.0,
+                    "saturation_effort": torch.ones((3072, 12)) * 20.0}}}},
         "adasmpl": {"force_gt": stage.force_gt},
         "sol23f": {"variant": "SB_map_switch", "map_input": "reconstruction",
                    "force_gt": stage.force_gt},
@@ -151,6 +167,7 @@ def _known_checkpoint(tmp_path, iteration=5500):
             "max_iterations": TOTAL_ITERATIONS, "curriculum_arm": "B",
             "curriculum_kit_smoke": False, "curriculum": str(TABLE)}},
         "modes": {"contract": "basic_gait_ex40", "num_envs": 3072, "seed": 42,
+                  "domain_randomization": {"config_sha256": "fixture-dr-sha"},
                   "command_settings": {"command_mode": "basic_gait"},
                   "continuous_curriculum": {"sha256": plan.sha256,
                       "effective_schedule_sha256": plan.effective_sha256,
@@ -173,6 +190,7 @@ def test_newest_manifest_checkpoint_and_stage_state_verified(tmp_path):
         json.dumps({"state": "failed", "iter": 5500}), encoding="utf-8")
     assert source_decision(run=run, shell_finished=True, process_alive=False)["state"] == "ready_to_continue"
     assert source_decision(run=run, shell_finished=False, process_alive=True)["state"] == "waiting_for_original_exit"
+    assert source_decision(run=run, shell_finished=False, process_alive=None)["state"] == "waiting_for_process_state"
     (run / "train_start_status.json").write_text(
         json.dumps({"state": "running", "iter": 5500}), encoding="utf-8")
     assert source_decision(run=run, shell_finished=False, process_alive=None)["state"] == "waiting_for_process_state"
@@ -180,6 +198,48 @@ def test_newest_manifest_checkpoint_and_stage_state_verified(tmp_path):
         json.dumps({"state": "done", "iter": 8000}), encoding="utf-8")
     assert source_decision(run=run, shell_finished=True, process_alive=False) == {
         "state": "already_complete", "completed_update": 8000}
+
+
+@pytest.mark.parametrize("missing", ["model_state_dict", "perception_state_dict",
+                                     "optimizer_state_dict", "perception_optimizer_state_dict",
+                                     "ppo_learning_rate", "domain_randomization"])
+def test_resume_rejects_checkpoint_missing_real_load_contract(tmp_path, missing):
+    run, checkpoint, _, manifest, _ = _known_checkpoint(tmp_path)
+    state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    if missing == "domain_randomization":
+        del state["continuous_curriculum"][missing]
+    else:
+        del state[missing]
+    torch.save(state, checkpoint)
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    manifest["checkpoints"][checkpoint.name] = digest
+    (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="checkpoint|DR runtime"):
+        check_parent(checkpoint, digest)
+
+
+def test_resume_rejects_checkpoint_missing_persisted_motor_baseline(tmp_path):
+    run, checkpoint, _, manifest, _ = _known_checkpoint(tmp_path)
+    state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    del state["continuous_curriculum"]["domain_randomization"]["motor_baselines"]
+    torch.save(state, checkpoint)
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    manifest["checkpoints"][checkpoint.name] = digest
+    (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="DR runtime"):
+        check_parent(checkpoint, digest)
+
+
+def test_latest_malformed_checkpoint_records_reason_and_falls_back(tmp_path):
+    run, checkpoint, _, manifest, _ = _known_checkpoint(tmp_path)
+    bad = run / "model_5551.pt"
+    bad.write_bytes(b"not a pickle file")
+    manifest["checkpoints"][bad.name] = hashlib.sha256(bad.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    row = newest_verified_checkpoint(run)
+    assert row["checkpoint"] == str(checkpoint.resolve())
+    assert row["rejected_candidates"][0]["checkpoint"] == bad.name
+    assert "cannot be loaded" in row["rejected_candidates"][0]["reason"]
 
 
 def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path):

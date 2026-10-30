@@ -269,17 +269,19 @@ def main(env_cfg, agent_cfg):
 
         ex40_dr_runtime = RuntimeReadback(env.unwrapped, EX40_DR_CONFIG.full_ranges,
                                           float(EX40_DR_CONFIG.full_ranges["delay_s"][1]),
-                                          EX40_DR_CONFIG.sha256)
+                                          EX40_DR_CONFIG.sha256,
+                                          smoke=args_cli.curriculum_kit_smoke)
         if args_cli.curriculum_kit_smoke:
             import tempfile
 
             probes = []
-            for probe_update in (0, 4500, 6001):
+            for probe_update in (0, 11, 12, 14):
                 ex40_dr_runtime.update_start(probe_update)
                 env.unwrapped.reset()
                 env.unwrapped.event_manager.apply(
                     "interval", dt=float(EX40_DR_CONFIG.push_interval_s[1]))
-                probes.append({"it": probe_update, "ex40_dr": ex40_dr_runtime.summary()})
+                probes.append({"it": probe_update, "schedule_update": ex40_dr_runtime.schedule_update,
+                               "ex40_dr": ex40_dr_runtime.summary()})
             ex40_dr_runtime.update_start(0)
             env.unwrapped.reset()
             probe_path = os.path.join(log_dir, "ex40_dr_schedule_smoke.json")

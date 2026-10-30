@@ -31,6 +31,58 @@ REWARD_TERMS = {
 }
 
 
+def _check_events(actual: dict, baseline: dict, plan: Plan) -> None:
+    """Preserve saved S-B10 terms and validate the serialized EX-40 DR terms."""
+    names = {"ex40_base_com": ("reset", "reset_base_com", "base"),
+             "ex40_actuator_gains": ("reset", "reset_actuator_gains", None),
+             "ex40_motor_strength": ("reset", "reset_motor_strength", None),
+             "ex40_push": ("interval", "interval_push", None)}
+    if not isinstance(actual, dict) or not isinstance(baseline, dict):
+        raise ValueError("EX-40 serialized event mappings missing")
+    if any(actual.get(key) != value for key, value in baseline.items()):
+        raise ValueError("D68 preserved S-B10 event changed")
+    if set(actual) != set(baseline) | set(names):
+        raise ValueError("EX-40 serialized event set differs from S-B10 plus four DR terms")
+    cfg = yaml.safe_load(plan.path.read_text(encoding="utf-8"))["domain_randomization"]
+    ranges, push_interval = cfg["full_ranges"], cfg["push_interval_s"]
+    def numbers(value):
+        if isinstance(value, dict):
+            return {key: numbers(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [numbers(item) for item in value]
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                return value
+        return value
+
+    for key, (mode, function, body) in names.items():
+        event = actual[key]
+        if not isinstance(event, dict) or event.get("mode") != mode:
+            raise ValueError(f"EX-40 DR event mode differs: {key}")
+        if function not in json.dumps(event, sort_keys=True, default=str):
+            raise ValueError(f"EX-40 DR event function differs: {key}")
+        params = event.get("params") or {}
+        if key == "ex40_push":
+            if (numbers(event.get("interval_range_s")) != numbers(push_interval)
+                    or numbers(params.get("target_range")) != numbers(ranges["push_velocity"])):
+                raise ValueError("EX-40 interval push target differs from configured contract")
+            continue
+        expected_range = (ranges["base_com"] if key == "ex40_base_com" else
+                          ranges["actuator_gains"] if key == "ex40_actuator_gains" else
+                          ranges["motor_strength"])
+        if numbers(params.get("target_range")) != numbers(expected_range):
+            raise ValueError(f"EX-40 reset target differs from configured contract: {key}")
+        asset_cfg = params.get("asset_cfg") or {}
+        if asset_cfg.get("name") != "robot":
+            raise ValueError(f"EX-40 DR asset differs: {key}")
+        if body is not None and asset_cfg.get("body_names") != body:
+            raise ValueError("EX-40 COM event must target only base")
+        if body is None and asset_cfg.get("joint_names") not in (".*", [".*"]):
+            raise ValueError(f"EX-40 actuator event must target all joints: {key}")
+
+
 
 def _same_numbers(observed: dict, expected: dict) -> bool:
     if not isinstance(observed, dict) or set(observed) != set(expected):
@@ -55,8 +107,7 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
         raise ValueError("EX-40 Kit command slots require all envs to use free velocity sampling")
     rewards = doc.get("rewards") or {}
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
-    if doc.get("events") != baseline.get("events"):
-        raise ValueError("D68 B0 events differs from S-B10 saved configuration")
+    _check_events(doc.get("events"), baseline.get("events"), plan)
     expected_curriculum = copy.deepcopy(baseline.get("curriculum"))
     if (not isinstance(expected_curriculum, dict)
             or not isinstance(expected_curriculum.get("terrain_levels"), dict)
@@ -314,7 +365,8 @@ def _check_consumption(rows: list[dict], plan: Plan, changed_by_stage: dict[str,
 
 def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
-    expected_boundaries = {"B0": 0, "B1": 3, "B2": 6, "B3a": 9, "B3b": 12, "B3c": 15}
+    expected_boundaries = {"B0": 0, "B1": 2, "B2": 4, "B3a": 6,
+                           "B3b": 8, "B3c": 10, "D": 12, "T0": 14}
     if receipt.get("state") != "CPU_PREPARED_NOT_LAUNCHED" or receipt.get("stage_boundaries") != expected_boundaries:
         raise ValueError("EX-40 smoke launch receipt or stage boundaries differ")
     if rc != 0 or "Traceback" in run_log.read_text(encoding="utf-8", errors="replace"):
@@ -372,13 +424,16 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     if [row.get("it") for row in train_rows] != list(range(18)):
         raise ValueError("EX-40 Kit smoke train_extra update coverage differs")
     for row in train_rows:
-        validate_runtime_summary(row, row["it"])
+        validate_runtime_summary(row, row["it"], ranges=plan.domain_randomization["full_ranges"])
     dr_probe_doc = json.loads((run / "ex40_dr_schedule_smoke.json").read_text(encoding="utf-8"))
     dr_probes = dr_probe_doc.get("probes") if dr_probe_doc.get("format") == "ex40-dr-kit-smoke/1" else None
-    if not isinstance(dr_probes, list) or [row.get("it") for row in dr_probes] != [0, 4500, 6001]:
-        raise ValueError("EX-40 Kit smoke needs actual reset probes at B0, ramp, and D entry")
+    if not isinstance(dr_probes, list) or [row.get("it") for row in dr_probes] != [0, 11, 12, 14]:
+        raise ValueError("EX-40 Kit smoke needs reset probes at B0, m6000 scale .5, D, and T0")
+    if [row.get("schedule_update") for row in dr_probes] != [0, 6000, 6001, 7501]:
+        raise ValueError("EX-40 Kit smoke probes differ from mapped production boundaries")
     for row in dr_probes:
-        validate_runtime_summary(row, row["it"], require_event_samples=True)
+        validate_runtime_summary(row, row["it"], require_event_samples=True,
+                                 ranges=plan.domain_randomization["full_ranges"])
     rows = [json.loads(line) for line in (run / "stage_log.jsonl").read_text(encoding="utf-8").splitlines()]
     changed_by_stage = _check_stage_log(rows, plan, start["num_envs"])
     consumed = _check_consumption(rows, plan, changed_by_stage)

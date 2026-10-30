@@ -143,6 +143,104 @@ def test_runtime_readback_resume_restores_schedule_and_rejects_wrong_next_update
         resumed.load_state_dict(saved, next_update=6002)
 
 
+def test_runtime_readback_persists_nominal_com_and_motor_baselines():
+    import torch
+    from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
+
+    class Scene:
+        device = "cpu"
+
+    class Env:
+        scene = Scene()
+
+    source = Env()
+    source._ex40_dr_com_baseline = torch.arange(21, dtype=torch.float32).reshape(1, 3, 7)
+    source._ex40_dr_motor_baselines = {"legs": {
+        "effort_limit": torch.full((2, 12), 8.0),
+        "saturation_effort": torch.full((2, 12), 20.0)}}
+    original = RuntimeReadback(source, _synthetic_ranges(), config_sha256="known-config")
+    original.update_start(6000)
+    saved = original.state_dict()
+    restored = RuntimeReadback(Env(), _synthetic_ranges(), config_sha256="known-config")
+    restored.load_state_dict(saved, next_update=6001)
+    assert torch.equal(restored.env._ex40_dr_com_baseline, source._ex40_dr_com_baseline)
+    for key, value in source._ex40_dr_motor_baselines["legs"].items():
+        assert torch.equal(restored.env._ex40_dr_motor_baselines["legs"][key], value)
+
+
+def test_gain_event_receipt_records_multiplier_not_absolute_gain(monkeypatch):
+    import sys
+    import types
+    import torch
+    from foothold_s2.curriculum.ex40_dr_runtime import reset_actuator_gains
+
+    class Actuator:
+        joint_indices = torch.tensor([0, 1])
+
+        def __init__(self):
+            self.stiffness = torch.tensor([[40.0, 20.0], [60.0, 30.0]])
+            self.damping = torch.tensor([[4.0, 2.0], [6.0, 3.0]])
+
+    class Asset:
+        device = "cpu"
+        num_joints = 2
+
+        def __init__(self):
+            self.actuators = {"legs": Actuator()}
+            self.data = types.SimpleNamespace(
+                default_joint_stiffness=torch.tensor([[40.0, 20.0], [60.0, 30.0]]),
+                default_joint_damping=torch.tensor([[4.0, 2.0], [6.0, 3.0]]))
+
+    class Scene:
+        num_envs = 2
+
+        def __init__(self, asset):
+            self.asset = asset
+
+        def __getitem__(self, key):
+            assert key == "robot"
+            return self.asset
+
+    class Env:
+        _ex40_dr_scale = 1.0
+
+        def __init__(self):
+            self.asset = Asset()
+            self.scene = Scene(self.asset)
+
+    class Helper:
+        def __call__(self, env, env_ids, asset_cfg, stiffness_distribution_params,
+                     damping_distribution_params, operation, distribution):
+            rows = env_ids
+            env.asset.actuators["legs"].stiffness[rows] = (
+                env.asset.data.default_joint_stiffness[rows] * stiffness_distribution_params[0])
+            env.asset.actuators["legs"].damping[rows] = (
+                env.asset.data.default_joint_damping[rows] * damping_distribution_params[0])
+
+    events = types.ModuleType("isaaclab.envs.mdp.events")
+    events.randomize_actuator_gains = lambda cfg, env: Helper()
+    mdp = types.ModuleType("isaaclab.envs.mdp")
+    mdp.events = events
+    envs = types.ModuleType("isaaclab.envs")
+    envs.mdp = mdp
+    isaaclab = types.ModuleType("isaaclab")
+    managers = types.ModuleType("isaaclab.managers")
+    managers.EventTermCfg = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    for name, module in (("isaaclab", isaaclab), ("isaaclab.envs", envs),
+                         ("isaaclab.envs.mdp", mdp), ("isaaclab.envs.mdp.events", events),
+                         ("isaaclab.managers", managers)):
+        monkeypatch.setitem(sys.modules, name, module)
+    env = Env()
+    cfg = types.SimpleNamespace(name="robot", joint_ids=slice(None))
+    reset_actuator_gains(env, torch.tensor([1]), cfg, {
+        "stiffness_scale": [.9, 1.1], "damping_scale": [.9, 1.1]})
+    receipt = env._ex40_dr_samples["actuator_gains"]
+    assert receipt["count"] == 4
+    assert receipt["target_envs"] == 1
+    assert receipt["min"] == pytest.approx(.9)
+    assert receipt["max"] == pytest.approx(.9)
+
+
 def test_trainer_gate_runs_before_app_launcher_construction():
     source = (Path(__file__).parents[1] / "scripts" / "train_sol23f_common.py").read_text(encoding="utf-8")
     assert "if args_cli.curriculum_kit_smoke and not args_cli.curriculum" in source
@@ -388,10 +486,22 @@ def test_com_and_motor_reset_adapters_restore_nominal_before_sampling(monkeypatc
 def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():
     from foothold_s2.curriculum.ex40_dr_runtime import validate_runtime_summary
 
-    sample_summary = {name: {"count": 1, "min": 0.0, "max": 0.0, "mean": 0.0}
+    sample_summary = {name: {"count": 1, "min": 0.0, "max": 0.0, "mean": 0.0, "target_envs": 1}
         for name in ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
                      "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")}
+    sample_summary["actuator_gains"].update(min=.9, max=1.1, mean=1.0)
+    sample_summary["motor_strength_multiplier"].update(min=.9, max=1.1, mean=1.0)
+    sample_summary["motor_effort_limit"].update(min=8.0, max=12.0, mean=10.0)
+    sample_summary["motor_saturation_effort"].update(min=20.0, max=30.0, mean=25.0)
+    sample_summary["base_com_offset_m"].update(min=-.02, max=.02, mean=0.0)
+    sample_summary["push_velocity_delta"].update(min=-.2, max=.3, mean=0.0)
+    dr_cfg = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))["domain_randomization"]
     row = {"it": 6001, "ex40_dr": {"update": 6001, "scale": 1.0,
+        "target_ranges": {"base_com": dr_cfg["full_ranges"]["base_com"],
+            "actuator_gains": dr_cfg["full_ranges"]["actuator_gains"],
+            "motor_strength": dr_cfg["full_ranges"]["motor_strength"],
+            "push_velocity": dr_cfg["full_ranges"]["push_velocity"],
+            "delay_max_seconds": .015},
         "actual_samples": sample_summary, "realized_state": {
             "base_com_offset_m": {"count": 12, "min": -.02, "max": .02, "mean": 0.0},
             "delay_substeps": {"count": 4, "min": 0, "max": 2, "mean": 1.0},
@@ -421,11 +531,17 @@ def test_runtime_readback_accepts_measured_values_and_rejects_forged_schedule():
 def test_runtime_sample_counters_distinguish_zero_events_from_smoke_coverage():
     from foothold_s2.curriculum.ex40_dr_runtime import validate_runtime_summary
 
+    dr_cfg = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))["domain_randomization"]
     names = ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
              "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")
     row = {"ex40_dr": {"update": 0, "scale": 0.0,
         "observation_noise": {"mode": "fixed", "multiplier": 1.0},
-        "actual_samples": {name: {"count": 0, "min": None, "max": None, "mean": None}
+        "target_ranges": {"base_com": dr_cfg["full_ranges"]["base_com"],
+            "actuator_gains": dr_cfg["full_ranges"]["actuator_gains"],
+            "motor_strength": dr_cfg["full_ranges"]["motor_strength"],
+            "push_velocity": dr_cfg["full_ranges"]["push_velocity"],
+            "delay_max_seconds": 0.0},
+        "actual_samples": {name: {"count": 0, "min": None, "max": None, "mean": None, "target_envs": 0}
                            for name in names},
         "delay_readback": {"count": 1, "reset_sample_count": 1, "observed_min_substeps": 0,
             "observed_max_substeps": 0, "max_allowed_substeps": 0,
@@ -433,9 +549,11 @@ def test_runtime_sample_counters_distinguish_zero_events_from_smoke_coverage():
             "max_seconds": 0.0, "configured_max_seconds": 0.0,
             "observed_max_seconds": 0.0, "reset_sampled_delay_ms": [0.0],
             "physics_dt_seconds": .005},
-        "realized_state": {"base_com_offset_m": {"count": 1}, "delay_substeps": {"count": 1},
-            "motor.stiffness": {"count": 1}, "motor.damping": {"count": 1},
-            "motor.effort_limit": {"count": 1}, "motor.saturation_effort": {"count": 1}},
+        "realized_state": {"base_com_offset_m": {"count": 1, "min": 0.0, "max": 0.0, "mean": 0.0}, "delay_substeps": {"count": 1},
+            "motor.stiffness": {"count": 1, "min": 1.0, "max": 1.0, "mean": 1.0},
+            "motor.damping": {"count": 1, "min": 1.0, "max": 1.0, "mean": 1.0},
+            "motor.effort_limit": {"count": 1, "min": 8.0, "max": 8.0, "mean": 8.0},
+            "motor.saturation_effort": {"count": 1, "min": 20.0, "max": 20.0, "mean": 20.0}},
         "pending_values": []}}
     validate_runtime_summary(row, 0)
     with pytest.raises(ValueError, match="did not produce actual samples"):

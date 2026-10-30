@@ -11,6 +11,8 @@ import argparse
 from datetime import datetime, timedelta
 import hashlib
 import json
+import math
+import pickle
 from pathlib import Path
 import re
 
@@ -89,9 +91,19 @@ def check_parent(path: str | Path, expected_sha256: str, *,
             or cli.get("curriculum") is None):
         raise ValueError("EX-40 manifest CLI is not the v7 main run")
 
-    state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    try:
+        state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    except (pickle.UnpicklingError, EOFError, RuntimeError, ValueError) as exc:
+        raise ValueError(f"EX-40 checkpoint cannot be loaded: {type(exc).__name__}: {exc}") from exc
     if not isinstance(state, dict) or state.get("iter") != iteration:
         raise ValueError("EX-40 checkpoint filename and saved iteration differ")
+    required_learning = ("model_state_dict", "perception_state_dict", "optimizer_state_dict",
+                         "perception_optimizer_state_dict")
+    if any(not isinstance(state.get(key), dict) or not state[key] for key in required_learning):
+        raise ValueError("EX-40 checkpoint is missing policy, perception, or optimizer load state")
+    lr = state.get("ppo_learning_rate")
+    if not isinstance(lr, (int, float)) or isinstance(lr, bool) or not math.isfinite(lr) or lr <= 0:
+        raise ValueError("EX-40 checkpoint PPO learning rate is missing or invalid")
     required = ("rng", "map_switch", "env_state", "continuous_curriculum", "adasmpl", "sol23f")
     if any(key not in state for key in required):
         raise ValueError("EX-40 checkpoint is missing training, map, environment, or curriculum state")
@@ -141,6 +153,31 @@ def check_parent(path: str | Path, expected_sha256: str, *,
             or map_switch.get("generator_state") is None):
         raise ValueError("EX-40 checkpoint lacks its map-switch shadow state")
     saved = state["continuous_curriculum"]
+    saved_dr = saved.get("domain_randomization") if isinstance(saved, dict) else None
+    expected_dr_sha = (modes.get("domain_randomization") or {}).get("config_sha256")
+    from foothold_s2.curriculum.ex40_dr import dr_scale
+    if (not isinstance(saved_dr, dict)
+            or saved_dr.get("format") != "ex40-dr-runtime-readback/1"
+            or saved_dr.get("config_sha256") != expected_dr_sha
+            or saved_dr.get("last_update") != iteration
+            or saved_dr.get("schedule_update") != iteration
+            or not math.isclose(float(saved_dr.get("scale", -1)), dr_scale(iteration), abs_tol=1e-12)
+            or not isinstance(saved_dr.get("com_baseline"), torch.Tensor)
+            or saved_dr["com_baseline"].ndim != 3
+            or not torch.isfinite(saved_dr["com_baseline"]).all()
+            or not isinstance(saved_dr.get("motor_baselines"), dict)
+            or not saved_dr["motor_baselines"]):
+        raise ValueError("EX-40 checkpoint DR runtime state missing or inconsistent with update/config")
+    for name, baseline in saved_dr["motor_baselines"].items():
+        if (not isinstance(name, str) or not isinstance(baseline, dict)
+                or not isinstance(baseline.get("effort_limit"), torch.Tensor)
+                or not isinstance(baseline.get("saturation_effort"), torch.Tensor)
+                or baseline["effort_limit"].shape != baseline["saturation_effort"].shape
+                or not torch.isfinite(baseline["effort_limit"]).all()
+                or not torch.isfinite(baseline["saturation_effort"]).all()
+                or bool((baseline["effort_limit"] <= 0).any())
+                or bool((baseline["saturation_effort"] <= 0).any())):
+            raise ValueError("EX-40 checkpoint DR motor baseline is malformed")
     active = _stage_at(plan, iteration)
     if (not isinstance(saved, dict) or saved.get("format") != "foothold-w55-state/1"
             or saved.get("plan_sha256") != plan.sha256
@@ -178,13 +215,19 @@ def newest_verified_checkpoint(run: str | Path, *, curriculum_path: str | Path =
         match = re.fullmatch(r"model_(\d+)\.pt", name)
         if match and int(match.group(1)) < TARGET_UPDATE and isinstance(digest, str):
             entries.append((int(match.group(1)), name, digest))
+    rejected = []
     for iteration, name, digest in sorted(entries, reverse=True):
         path = root / name
         try:
-            return check_parent(path, digest, curriculum_path=curriculum_path, arm=arm)
-        except (OSError, ValueError, RuntimeError, EOFError):
+            result = check_parent(path, digest, curriculum_path=curriculum_path, arm=arm)
+            result["rejected_candidates"] = rejected
+            return result
+        except (OSError, ValueError, RuntimeError, EOFError, pickle.UnpicklingError,
+                KeyError, TypeError, IndexError) as exc:
+            rejected.append({"checkpoint": name, "reason": f"{type(exc).__name__}: {exc}"})
             continue
-    raise ValueError("no intact, manifest-pinned EX-40 checkpoint is resumable")
+    detail = json.dumps(rejected, ensure_ascii=False, sort_keys=True)
+    raise ValueError(f"no intact, manifest-pinned EX-40 checkpoint is resumable; rejected={detail}")
 
 
 def source_decision(*, run: str | Path, shell_finished: bool, process_alive: bool | None,
@@ -195,8 +238,11 @@ def source_decision(*, run: str | Path, shell_finished: bool, process_alive: boo
     if process_alive is True:
         return {"state": "waiting_for_original_exit", "status": status.get("state"),
                 "iteration": status.get("iter")}
-    if process_alive is None and not shell_finished and status.get("state") == "running":
-        return {"state": "waiting_for_process_state", "status": "running",
+    if process_alive is None and not shell_finished and status.get("state") in ("running", "failed", "stopped_saved"):
+        return {"state": "waiting_for_process_state", "status": status.get("state"),
+                "iteration": status.get("iter")}
+    if process_alive is None and status.get("state") not in ("done",):
+        return {"state": "waiting_for_process_state", "status": status.get("state"),
                 "iteration": status.get("iter")}
     if not shell_finished and status.get("state") == "running":
         return {"state": "waiting_for_terminal_receipt", "status": "running",

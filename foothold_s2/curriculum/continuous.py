@@ -23,7 +23,10 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
           "side_vy_abs", "diag_vx_abs", "diag_vy_abs")
 STAGE_IDS = ("B0", "B1", "B2", "B3a", "B3b", "B3c", "D", "T0")
-KIT_SMOKE_BOUNDARIES = (3, 6, 9, 12, 15)
+# The 18-update bounded smoke traverses all eight production stages.  Update
+# 11 is the last B3c sample at production update 6000 (DR scale .5); D begins
+# at update 12 (production 6001) and T0 at update 14 (production 7501).
+KIT_SMOKE_BOUNDARIES = (2, 4, 6, 8, 10, 12, 14)
 FIRST_REWARDS = {"track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty",
                  "thigh_calf_pos_l1", "four_foot_contact_at_stop", "stand_gap", "stand_load"}
 
@@ -52,6 +55,7 @@ class Plan:
         self.path = Path(path).resolve(strict=True)
         self.sha256 = sha256(self.path)
         doc = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.domain_randomization = doc.get("domain_randomization") or {}
         if not isinstance(doc, dict) or doc.get("format") != "foothold-ex40-curriculum/1":
             raise ValueError("W55 curriculum format missing")
         if doc.get("promotion") not in ("fixed", "gate") or not isinstance(doc.get("shadow_gate"), bool):
@@ -102,9 +106,9 @@ class Plan:
         raw = doc.get("stages")
         if not isinstance(raw, list) or [x.get("id") for x in raw] != list(STAGE_IDS):
             raise ValueError("D74 EX-40 needs B0, B1, B2, B3a, B3b, B3c, D, T0 in order")
-        if smoke_boundaries is not None and (len(smoke_boundaries) not in (5, 6) or
+        if smoke_boundaries is not None and (len(smoke_boundaries) not in (5, 6, 7) or
                                              list(smoke_boundaries) != sorted(set(smoke_boundaries))):
-            raise ValueError("D74 smoke needs five or six increasing boundaries")
+            raise ValueError("D74 smoke boundaries must be five to seven increasing updates")
         if smoke_boundaries is not None:
             raw = raw[:len(smoke_boundaries) + 1]
         self.stages: list[Stage] = []

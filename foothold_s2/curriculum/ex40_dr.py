@@ -24,6 +24,9 @@ PRESERVED_STARTUP = {"static_dynamic_friction": [0.2, 1.2], "base_mass_add_kg": 
 RANGE_SOURCE = Path("C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md")
 MAX_DELAY_SECONDS = 0.015
 PHYSICS_DT_SECONDS = 0.005
+KIT_SMOKE_SCHEDULE_UPDATES = (0, 750, 1501, 2251, 3001, 3751, 4501, 4751,
+                              5001, 5251, 5501, 6000, 6001, 6751, 7501,
+                              7751, 8000, 8000)
 
 
 def dr_scale(update: int) -> float:
@@ -56,6 +59,13 @@ def smoke_scale(phase: str) -> float:
         return stages[phase]
     except KeyError as exc:
         raise ValueError(f"unknown EX-40 DR smoke phase: {phase}") from exc
+
+
+def smoke_schedule_update(update: int) -> int:
+    """Map an 18-update smoke index to the production schedule position."""
+    if type(update) is not int or not 0 <= update < len(KIT_SMOKE_SCHEDULE_UPDATES):
+        raise ValueError("EX-40 smoke update must be in [0, 17]")
+    return KIT_SMOKE_SCHEDULE_UPDATES[update]
 
 
 def delay_limit(scale: float, physics_dt: float = PHYSICS_DT_SECONDS) -> dict:

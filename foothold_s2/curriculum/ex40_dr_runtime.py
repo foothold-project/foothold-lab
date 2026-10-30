@@ -7,6 +7,7 @@ module contains no guessed ranges and is imported only after Kit starts.
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Any
 
 from foothold_s2.curriculum.ex40_dr import dr_scale, interpolate_range
@@ -25,12 +26,13 @@ def _scaled_interval(target: tuple[float, float], scale: float, neutral: float) 
     return float(result[0]), float(result[1])
 
 
-def _record(env: Any, key: str, values: Any) -> None:
+def _record(env: Any, key: str, values: Any, target_envs: int | None = None) -> None:
     """Keep compact actual-sample aggregates for the next train_extra row."""
     import torch
 
     value = torch.as_tensor(values).detach().to(device="cpu", dtype=torch.float64).flatten()
-    value = value[torch.isfinite(value)]
+    if value.numel() and not bool(torch.isfinite(value).all()):
+        raise ValueError(f"EX-40 nonfinite realized sample: {key}")
     if not value.numel():
         return
     totals = getattr(env, "_ex40_dr_samples", None)
@@ -39,12 +41,14 @@ def _record(env: Any, key: str, values: Any) -> None:
         env._ex40_dr_samples = totals
     old = totals.get(key)
     item = {"count": int(value.numel()), "min": float(value.min()),
-            "max": float(value.max()), "sum": float(value.sum())}
+            "max": float(value.max()), "sum": float(value.sum()),
+            "target_envs": int(target_envs if target_envs is not None else value.numel())}
     if old:
         item = {"count": old["count"] + item["count"],
                 "min": min(old["min"], item["min"]),
                 "max": max(old["max"], item["max"]),
-                "sum": old["sum"] + item["sum"]}
+                "sum": old["sum"] + item["sum"],
+                "target_envs": old["target_envs"] + item["target_envs"]}
     totals[key] = item
 
 
@@ -52,7 +56,8 @@ def _stats(values: Any) -> dict:
     import torch
 
     value = torch.as_tensor(values).detach().to(device="cpu", dtype=torch.float64).flatten()
-    value = value[torch.isfinite(value)]
+    if value.numel() and not bool(torch.isfinite(value).all()):
+        raise ValueError("EX-40 nonfinite realized state")
     if not value.numel():
         return {"count": 0, "min": None, "max": None, "mean": None}
     return {"count": int(value.numel()), "min": float(value.min()),
@@ -94,11 +99,13 @@ def reset_base_com(env, env_ids, asset_cfg, target_range):
                  for axis in ("x", "y", "z")}
     events.randomize_rigid_body_com(env, rows, com_range, asset_cfg)
     readback = asset.root_physx_view.get_coms()[rows, asset_cfg.body_ids, :3]
-    _record(env, "base_com_offset_m", readback - baseline[rows, asset_cfg.body_ids, :3])
+    _record(env, "base_com_offset_m", readback - baseline[rows, asset_cfg.body_ids, :3], len(rows))
 
 
 def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
     """Use the installed ManagerTermBase gain randomizer for reset rows."""
+    import torch
+
     asset = env.scene[asset_cfg.name]
     _require_all_joints(asset_cfg, asset, "actuator-gain adapter")
     from isaaclab.envs.mdp import events
@@ -118,8 +125,20 @@ def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
     rows = _rows(env_ids, env.scene.num_envs, asset.device)
     samples = []
     for actuator in asset.actuators.values():
-        samples.extend((actuator.stiffness[rows].flatten(), actuator.damping[rows].flatten()))
-    _record(env, "actuator_gains", __import__("torch").cat(samples))
+        joints = actuator.joint_indices
+        if isinstance(joints, slice):
+            nominal_stiffness = asset.data.default_joint_stiffness[rows]
+            nominal_damping = asset.data.default_joint_damping[rows]
+        else:
+            joints = joints.to(device=asset.device, dtype=torch.long)
+            nominal_stiffness = asset.data.default_joint_stiffness[rows][:, joints]
+            nominal_damping = asset.data.default_joint_damping[rows][:, joints]
+        actual_stiffness = actuator.stiffness[rows]
+        actual_damping = actuator.damping[rows]
+        if bool((nominal_stiffness == 0).any()) or bool((nominal_damping == 0).any()):
+            raise ValueError("EX-40 cannot measure actuator gain scale against zero nominal gain")
+        samples.extend((actual_stiffness / nominal_stiffness, actual_damping / nominal_damping))
+    _record(env, "actuator_gains", torch.cat(samples), len(rows))
 
 
 def reset_motor_strength(env, env_ids, asset_cfg, target_range):
@@ -163,10 +182,10 @@ def reset_motor_strength(env, env_ids, asset_cfg, target_range):
         actuator._saturation_effort[rows] = stall[rows] * sampled[:, None]
         actuator._vel_at_effort_lim = actuator.velocity_limit * (
             1 + actuator.effort_limit / actuator._saturation_effort)
-    _record(env, "motor_strength_multiplier", sampled)
+    _record(env, "motor_strength_multiplier", sampled, len(rows))
     for actuator in asset.actuators.values():
-        _record(env, "motor_effort_limit", actuator.effort_limit[rows])
-        _record(env, "motor_saturation_effort", actuator._saturation_effort[rows])
+        _record(env, "motor_effort_limit", actuator.effort_limit[rows], len(rows))
+        _record(env, "motor_saturation_effort", actuator._saturation_effort[rows], len(rows))
 
 
 def interval_push(env, env_ids, asset_cfg, target_range):
@@ -185,7 +204,7 @@ def interval_push(env, env_ids, asset_cfg, target_range):
     before = asset.root_physx_view.get_root_velocities()[rows].clone()
     events.push_by_setting_velocity(env, rows, velocity_range, asset_cfg)
     after = asset.root_physx_view.get_root_velocities()[rows].clone()
-    _record(env, "push_velocity_delta", after - before)
+    _record(env, "push_velocity_delta", after - before, len(rows))
 
 
 def install_runtime_events(env_cfg, ranges: dict, push_interval_s: tuple[float, float] | None,
@@ -232,20 +251,25 @@ class RuntimeReadback:
     """Update scale hook and compact per-update realized-value receipt."""
 
     def __init__(self, env: Any, ranges: dict, delay_max_s: float = 0.015,
-                 config_sha256: str | None = None):
+                 config_sha256: str | None = None, smoke: bool = False):
         self.env = env
         self.ranges = ranges
         self.delay_max_s = float(delay_max_s)
         self.config_sha256 = config_sha256
+        self.smoke = bool(smoke)
         self.update = None
+        self.schedule_update = None
         self.scale = 0.0
         self._first_update = True
         self.env._ex40_dr_scale = 0.0
         self.env._ex40_dr_samples = {}
 
     def update_start(self, update: int) -> None:
+        from foothold_s2.curriculum.ex40_dr import smoke_schedule_update
+
         self.update = int(update)
-        self.scale = dr_scale(self.update)
+        self.schedule_update = smoke_schedule_update(self.update) if self.smoke else self.update
+        self.scale = dr_scale(self.schedule_update)
         self.env._ex40_dr_scale = self.scale
         if not self._first_update:
             self.env._ex40_dr_samples = {}
@@ -260,11 +284,13 @@ class RuntimeReadback:
         samples = getattr(self.env, "_ex40_dr_samples", {})
         expected_sample_keys = ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
                                 "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")
-        summary = {key: {"count": 0, "min": None, "max": None, "mean": None}
+        summary = {key: {"count": 0, "min": None, "max": None, "mean": None,
+                         "target_envs": 0}
                    for key in expected_sample_keys}
         for key, values in samples.items():
             summary[key] = {"count": values["count"], "min": values["min"],
-                            "max": values["max"], "mean": values["sum"] / values["count"]}
+                            "max": values["max"], "mean": values["sum"] / values["count"],
+                            "target_envs": values["target_envs"]}
         asset = self.env.scene["robot"]
         realized = {}
         com_baseline = getattr(self.env, "_ex40_dr_com_baseline", None)
@@ -308,7 +334,14 @@ class RuntimeReadback:
                              "physics_dt_seconds": dt}
             realized["delay_substeps"] = _stats(d)
         self.env._ex40_dr_samples = {}
-        return {"update": self.update, "scale": self.scale, "config_sha256": self.config_sha256,
+        return {"update": self.update, "schedule_update": self.schedule_update,
+                "smoke_schedule": self.smoke, "scale": self.scale,
+                "config_sha256": self.config_sha256,
+                "target_ranges": {"base_com": self.ranges.get("base_com"),
+                    "actuator_gains": self.ranges.get("actuator_gains"),
+                    "motor_strength": self.ranges.get("motor_strength"),
+                    "push_velocity": self.ranges.get("push_velocity"),
+                    "delay_max_seconds": self.delay_max_s * self.scale},
                 "actual_samples": summary, "realized_state": realized,
                 "delay_readback": delay_summary,
                 "observation_noise": {"mode": "fixed", "multiplier": 1.0},
@@ -316,30 +349,66 @@ class RuntimeReadback:
                                    if self.ranges.get(name) is None]}
 
     def state_dict(self) -> dict:
+        def cpu_state(value):
+            if value is None:
+                return None
+            if isinstance(value, dict):
+                return {key: cpu_state(item) for key, item in value.items()}
+            return value.detach().to(device="cpu").clone()
+
         return {"format": "ex40-dr-runtime-readback/1", "config_sha256": self.config_sha256,
-                "last_update": self.update, "scale": self.scale}
+                "last_update": self.update, "schedule_update": self.schedule_update,
+                "smoke_schedule": self.smoke, "scale": self.scale,
+                "com_baseline": cpu_state(getattr(self.env, "_ex40_dr_com_baseline", None)),
+                "motor_baselines": cpu_state(getattr(self.env, "_ex40_dr_motor_baselines", None))}
 
     def load_state_dict(self, state: dict, next_update: int) -> None:
         if not isinstance(state, dict):
             raise ValueError("EX-40 DR runtime state does not match checkpoint/config/next update")
         last_update = state.get("last_update")
+        from foothold_s2.curriculum.ex40_dr import smoke_schedule_update
+        saved_smoke = state.get("smoke_schedule", False)
+        expected_schedule_update = (smoke_schedule_update(last_update)
+                                    if saved_smoke and type(last_update) is int else last_update)
         initial_state = last_update is None and next_update in (0, 1) and state.get("scale") == 0.0
         continued_state = (type(last_update) is int and last_update >= 0
                            and last_update + 1 == next_update
-                           and state.get("scale") == dr_scale(last_update))
+                           and state.get("schedule_update") == expected_schedule_update
+                           and state.get("scale") == dr_scale(expected_schedule_update))
         if (not isinstance(state, dict) or state.get("format") != "ex40-dr-runtime-readback/1"
                 or state.get("config_sha256") != self.config_sha256
+                or bool(saved_smoke) != self.smoke
+                or (initial_state and state.get("schedule_update") is not None)
                 or not (initial_state or continued_state)):
             raise ValueError("EX-40 DR runtime state does not match checkpoint/config/next update")
         self.update = last_update
         self.scale = float(state["scale"])
         self.env._ex40_dr_scale = self.scale
+        import torch
+
+        device = getattr(self.env, "device",
+                         getattr(getattr(self.env, "scene", None), "device", "cpu"))
+        com_baseline = state.get("com_baseline")
+        if com_baseline is not None:
+            self.env._ex40_dr_com_baseline = torch.as_tensor(com_baseline).to(device=device).clone()
+        motor_baselines = state.get("motor_baselines")
+        if motor_baselines is not None:
+            self.env._ex40_dr_motor_baselines = {
+                name: {key: torch.as_tensor(value).to(device=device).clone()
+                       for key, value in values.items()}
+                for name, values in motor_baselines.items()}
 
 
 def validate_runtime_summary(row: dict, expected_update: int | None = None,
-                             require_event_samples: bool = False) -> None:
+                             require_event_samples: bool = False,
+                             ranges: dict | None = None) -> None:
     """Validate one Kit-produced train_extra receipt row, not a config mock."""
-    from foothold_s2.curriculum.ex40_dr import dr_scale
+    from foothold_s2.curriculum.ex40_dr import dr_scale, smoke_schedule_update
+    import yaml
+
+    if ranges is None:
+        ranges = yaml.safe_load((Path(__file__).with_name("ex40.yaml")).read_text(
+            encoding="utf-8"))["domain_randomization"]["full_ranges"]
 
     receipt = row.get("ex40_dr") if isinstance(row, dict) else None
     if not isinstance(receipt, dict):
@@ -347,7 +416,13 @@ def validate_runtime_summary(row: dict, expected_update: int | None = None,
     update = receipt.get("update")
     if type(update) is not int or (expected_update is not None and update != expected_update):
         raise ValueError("EX-40 DR readback update index mismatch")
-    expected = dr_scale(update)
+    schedule_update = receipt.get("schedule_update", update)
+    if receipt.get("smoke_schedule", False):
+        if schedule_update != smoke_schedule_update(update):
+            raise ValueError("EX-40 smoke schedule update differs from compressed stage mapping")
+    elif schedule_update != update:
+        raise ValueError("EX-40 production schedule update differs from train update")
+    expected = dr_scale(schedule_update)
     if not math.isclose(float(receipt.get("scale", -1)), expected, abs_tol=1e-12):
         raise ValueError("EX-40 DR readback scale differs from schedule")
     if receipt.get("observation_noise") != {"mode": "fixed", "multiplier": 1.0}:
@@ -360,6 +435,11 @@ def validate_runtime_summary(row: dict, expected_update: int | None = None,
             or type(actual_samples[key].get("count")) is not int
             or actual_samples[key]["count"] < 0 for key in required_sample_keys):
         raise ValueError("EX-40 per-update DR event sample counters missing or malformed")
+    if any(type(actual_samples[key].get("target_envs")) is not int
+           or actual_samples[key]["target_envs"] < 0
+           or actual_samples[key]["target_envs"] > actual_samples[key]["count"]
+           for key in required_sample_keys):
+        raise ValueError("EX-40 DR event target environment counts missing or invalid")
     if require_event_samples and any(actual_samples[key]["count"] <= 0 for key in required_sample_keys):
         raise ValueError("EX-40 reset/interval event did not produce actual samples")
     delay = receipt.get("delay_readback")
@@ -399,5 +479,60 @@ def validate_runtime_summary(row: dict, expected_update: int | None = None,
             or len(histogram) > max_steps + 1 or len(reset_histogram) > max_steps + 1):
         raise ValueError("EX-40 DR delay histogram does not match actual reset samples")
     pending = receipt.get("pending_values", [])
-    if not isinstance(pending, list):
-        raise ValueError("EX-40 pending range list malformed")
+    if not isinstance(pending, list) or pending:
+        raise ValueError("EX-40 pending DR range values remain unresolved")
+
+    expected_target_ranges = {"base_com": ranges["base_com"],
+        "actuator_gains": ranges["actuator_gains"],
+        "motor_strength": ranges["motor_strength"],
+        "push_velocity": ranges["push_velocity"],
+        "delay_max_seconds": float(ranges.get("delay_s", [0.0, 0.015])[1]) * expected}
+    if receipt.get("target_ranges") != expected_target_ranges:
+        raise ValueError("EX-40 DR nominal targets or scale differ from configured ranges")
+
+    def finite_stats(stats: dict, name: str) -> tuple[float, float, float]:
+        if not isinstance(stats, dict) or type(stats.get("count")) is not int or stats["count"] <= 0:
+            raise ValueError(f"EX-40 DR sample statistics missing: {name}")
+        values = []
+        for field in ("min", "max", "mean"):
+            value = stats.get(field)
+            if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+                raise ValueError(f"EX-40 DR sample statistics nonfinite: {name}.{field}")
+            values.append(float(value))
+        if values[0] > values[1] or not values[0] - 1e-9 <= values[2] <= values[1] + 1e-9:
+            raise ValueError(f"EX-40 DR sample statistics inconsistent: {name}")
+        return tuple(values)
+
+    def within(stats: dict, bounds: tuple[float, float], name: str) -> None:
+        low, high, _ = finite_stats(stats, name)
+        if low < bounds[0] - 1e-6 or high > bounds[1] + 1e-6:
+            raise ValueError(f"EX-40 DR realized samples exceed target range: {name}")
+
+    def scaled(pair, neutral):
+        return _scaled_interval(tuple(float(v) for v in pair), expected, neutral)
+
+    sample_bounds = {
+        "base_com_offset_m": (min(scaled(ranges["base_com"][axis], 0.0)[0]
+                                   for axis in ("x", "y", "z")),
+                              max(scaled(ranges["base_com"][axis], 0.0)[1]
+                                   for axis in ("x", "y", "z"))),
+        "actuator_gains": (min(scaled(ranges["actuator_gains"][key], 1.0)[0]
+                                for key in ("stiffness_scale", "damping_scale")),
+                           max(scaled(ranges["actuator_gains"][key], 1.0)[1]
+                                for key in ("stiffness_scale", "damping_scale"))),
+        "motor_strength_multiplier": scaled(ranges["motor_strength"], 1.0),
+        "push_velocity_delta": (min(scaled(pair, 0.0)[0] for pair in ranges["push_velocity"].values()),
+                                max(scaled(pair, 0.0)[1] for pair in ranges["push_velocity"].values())),
+    }
+    for key, bounds in sample_bounds.items():
+        stats = actual_samples[key]
+        if stats["count"]:
+            within(stats, bounds, f"actual_samples.{key}")
+    full_com = (min(float(v[0]) for v in ranges["base_com"].values()),
+                max(float(v[1]) for v in ranges["base_com"].values()))
+    within(realized["base_com_offset_m"], full_com, "realized_state.base_com_offset_m")
+    for key, stats in realized.items():
+        if key.endswith((".stiffness", ".damping", ".effort_limit", ".saturation_effort")):
+            low, _, _ = finite_stats(stats, f"realized_state.{key}")
+            if low <= 0:
+                raise ValueError(f"EX-40 DR actuator readback must be positive: {key}")

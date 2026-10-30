@@ -16,8 +16,8 @@ import torch
 import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS, apply_stage_heading, make_generator, resample_stage
-from foothold_s2.curriculum.continuous import Plan, Runtime, command_bad
-from foothold_s2.curriculum.ex40_dr import dr_scale
+from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES, Plan, Runtime, command_bad
+from foothold_s2.curriculum.ex40_dr import dr_scale, smoke_schedule_update
 from foothold_s2.ex40_kit_smoke import check as check_kit_smoke
 from foothold_s2.ex40_launch import BASELINE, TABLE, build_args, receipt
 from foothold_s2.prestart_check import actual_parser
@@ -334,7 +334,7 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     run_log.write_text("Learning iteration 17/18\n", encoding="utf-8")
     run = tmp_path / "output" / "smoke" / "EX-40-B-kit-smoke_20261030_1"
     (run / "params").mkdir(parents=True)
-    plan = Plan(TABLE, arm="B", smoke_boundaries=(3, 6, 9, 12, 15))
+    plan = Plan(TABLE, arm="B", smoke_boundaries=KIT_SMOKE_BOUNDARIES)
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     expected_curriculum = copy.deepcopy(baseline["curriculum"])
     expected_curriculum["terrain_levels"] = "null"
@@ -346,11 +346,26 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                      ("stand_gap", "ex40_stand_gap"), ("stand_load", "ex40_stand_load"))})
     for key in ("track_ang_vel", "track_lin_vel", "joint_acc"):
         rewards[key]["weight"] = plan.stages[0].rewards[key]
+    smoke_events = copy.deepcopy(baseline["events"])
+    ranges = plan.domain_randomization["full_ranges"]
+    smoke_events.update({
+        "ex40_base_com": {"func": "foothold_s2.curriculum.ex40_dr_runtime.reset_base_com",
+            "mode": "reset", "params": {"asset_cfg": {"name": "robot", "body_names": "base"},
+                "target_range": ranges["base_com"]}},
+        "ex40_actuator_gains": {"func": "foothold_s2.curriculum.ex40_dr_runtime.reset_actuator_gains",
+            "mode": "reset", "params": {"asset_cfg": {"name": "robot", "joint_names": ".*"},
+                "target_range": ranges["actuator_gains"]}},
+        "ex40_motor_strength": {"func": "foothold_s2.curriculum.ex40_dr_runtime.reset_motor_strength",
+            "mode": "reset", "params": {"asset_cfg": {"name": "robot", "joint_names": ".*"},
+                "target_range": ranges["motor_strength"]}},
+        "ex40_push": {"func": "foothold_s2.curriculum.ex40_dr_runtime.interval_push",
+            "mode": "interval", "interval_range_s": plan.domain_randomization["push_interval_s"],
+            "params": {"asset_cfg": {"name": "robot"}, "target_range": ranges["push_velocity"]}}})
     env_yaml = run / "params" / "env.yaml"
     env_yaml.write_text(yaml.safe_dump({"commands": {"base_velocity": {
         "params": {"curriculum_mode": True}, "flag_stride": 0, "dynamic_flags": False,
         "seed": 0, "resampling_time_range": baseline["commands"]["base_velocity"]["resampling_time_range"]}},
-        "rewards": rewards, "events": baseline["events"], "curriculum": expected_curriculum,
+        "rewards": rewards, "events": smoke_events, "curriculum": expected_curriculum,
         "scene": {"terrain": {"terrain_generator": baseline["scene"]["terrain"]["terrain_generator"],
                                 "max_init_terrain_level": 2},
                   **{f"ex40_support_{i}": {"prim_path": f"Robot/{name}_foot",
@@ -369,29 +384,44 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                   "hit_origin_samples": [{"row": 0, "foot": 0, "hit_z_m": 1.0,
                                           "terrain_origin_z_m": 1.0,
                                           "hit_minus_origin_z_m": 0.0}]}
+    dr_ranges = plan.domain_randomization["full_ranges"]
+
     def ex40_dr_row(update, active=False):
-        scale = dr_scale(update)
+        schedule_update = smoke_schedule_update(update)
+        scale = dr_scale(schedule_update)
         max_steps = math.floor(scale * .015 / .005 + 1e-9)
         event_count = 1 if active else 0
         histogram = [1] + [0] * max_steps
-        return {"update": update, "scale": scale,
+        actual_samples = {}
+        for key in ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
+                    "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta"):
+            value = ({"base_com_offset_m": 0.0, "actuator_gains": 1.0,
+                      "motor_strength_multiplier": 1.0, "motor_effort_limit": 10.0,
+                      "motor_saturation_effort": 20.0, "push_velocity_delta": 0.0}[key])
+            actual_samples[key] = {"count": event_count, "target_envs": event_count,
+                "min": value if active else None, "max": value if active else None,
+                "mean": value if active else None}
+        realized_stats = {
+            "base_com_offset_m": {"count": 3, "min": 0.0, "max": 0.0, "mean": 0.0},
+            "delay_substeps": {"count": 1, "min": 0, "max": 0, "mean": 0.0},
+            "motor.stiffness": {"count": 2, "min": 40.0, "max": 40.0, "mean": 40.0},
+            "motor.damping": {"count": 2, "min": 4.0, "max": 4.0, "mean": 4.0},
+            "motor.effort_limit": {"count": 2, "min": 10.0, "max": 10.0, "mean": 10.0},
+            "motor.saturation_effort": {"count": 2, "min": 20.0, "max": 20.0, "mean": 20.0}}
+        return {"update": update, "schedule_update": schedule_update, "smoke_schedule": True,
+            "scale": scale, "target_ranges": {
+                "base_com": dr_ranges["base_com"], "actuator_gains": dr_ranges["actuator_gains"],
+                "motor_strength": dr_ranges["motor_strength"],
+                "push_velocity": dr_ranges["push_velocity"], "delay_max_seconds": scale * .015},
             "observation_noise": {"mode": "fixed", "multiplier": 1.0},
-            "actual_samples": {key: {"count": event_count,
-                                      "min": 0.0 if active else None,
-                                      "max": 0.0 if active else None,
-                                      "mean": 0.0 if active else None}
-                for key in ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
-                            "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")},
+            "actual_samples": actual_samples,
             "delay_readback": {"count": 1, "reset_sample_count": 1,
                 "observed_min_substeps": 0, "observed_max_substeps": 0,
                 "max_allowed_substeps": max_steps, "current_histogram": histogram,
                 "reset_sample_histogram": histogram, "max_seconds": scale * .015,
                 "configured_max_seconds": scale * .015, "observed_max_seconds": 0.0,
                 "reset_sampled_delay_ms": [0.0], "physics_dt_seconds": .005},
-            "realized_state": {key: {"count": 1} for key in
-                ("base_com_offset_m", "delay_substeps", "motor.stiffness", "motor.damping",
-                 "motor.effort_limit", "motor.saturation_effort")},
-            "pending_values": ["push_velocity"]}
+            "realized_state": realized_stats, "pending_values": []}
 
     def train_row(i, sensor):
         return {"it": i, "ex40_stand_sensor": sensor, "ex40_dr": ex40_dr_row(i)}
@@ -399,9 +429,11 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     (run / "train_extra.jsonl").write_text("\n".join(
         json.dumps(train_row(i, sensor_row)) for i in range(18)) + "\n",
         encoding="utf-8")
-    probe_rows = [ex40_dr_row(i, active=True) for i in (0, 4500, 6001)]
+    probe_updates = (0, 11, 12, 14)
+    probe_rows = [ex40_dr_row(i, active=True) for i in probe_updates]
     (run / "ex40_dr_schedule_smoke.json").write_text(json.dumps(
-        {"format": "ex40-dr-kit-smoke/1", "probes": [{"it": row["update"], "ex40_dr": row}
+        {"format": "ex40-dr-kit-smoke/1", "probes": [{"it": row["update"],
+            "schedule_update": row["schedule_update"], "ex40_dr": row}
             for row in probe_rows]}), encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
@@ -516,5 +548,5 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     wrong["rewards"]["track_ang_vel"]["weight"] = 1.0
     wrong["events"]["physics_material"]["params"]["num_buckets"] = "1"
     env_yaml.write_text(yaml.safe_dump(wrong), encoding="utf-8")
-    with pytest.raises(ValueError, match="B0 events"):
+    with pytest.raises(ValueError, match="preserved S-B10 event changed"):
         check_kit_smoke(receipt_path, run_log, 0)
