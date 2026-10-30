@@ -144,7 +144,7 @@ def read_run(policy, variant, rep):
 def write_csv(name, rows):
     if rows:
         with (OUT/name).open('w',encoding='utf-8-sig',newline='') as f:
-            w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
+            w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator='\n');w.writeheader();w.writerows(rows)
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--partial',action='store_true');args=parser.parse_args()
@@ -182,7 +182,7 @@ def main():
                data_checks='64env/300steps, maps3x13, first-episode vx/alive recompute, map consumption, noise readback, push readback',
                limits='Yaw uses persisted per-env means, no independent raw-wz replay; tilt is persisted pooled mean. No gait/feet/video. Identical-seed baseline replay is a repeatability check, not an uncertainty estimate or statistical bound. Additional DR draws can change subsequent RNG consumption; identical per-step random noise trajectories are not verified.',inputs=inputs)
     write_csv('cells.csv',rows);write_csv('terrain_cells.csv',terrains);write_csv('differences.csv',comparison)
-    (OUT/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+    (OUT/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8',newline='\n')
     print(json.dumps({k:audit[k] for k in ('complete','runs','cells','missing','all_common_conditions_match')},ensure_ascii=False))
     if not audit['all_common_conditions_match']:print('CAUTION: paired physical/configuration inputs differ; inspect audit before causal interpretation')
 

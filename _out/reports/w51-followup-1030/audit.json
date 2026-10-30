@@ -1,0 +1,2054 @@
+{
+  "complete": true,
+  "runs": 12,
+  "expected_runs": 12,
+  "cells": 468,
+  "missing": [],
+  "condition_matches": [
+    {
+      "policy": "ex38",
+      "variant": "w51_base",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex38",
+      "variant": "w51_base",
+      "rep": 2,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex38",
+      "variant": "w51_push",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex38",
+      "variant": "w51_noise2",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex38",
+      "variant": "w51_combo4",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex38",
+      "variant": "w51_all6",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_base",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_base",
+      "rep": 2,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_push",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_noise2",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_combo4",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    },
+    {
+      "policy": "ex39b",
+      "variant": "w51_all6",
+      "rep": 1,
+      "materials": true,
+      "masses": true,
+      "terrain_assignment": true,
+      "checkpoint": true,
+      "source": true
+    }
+  ],
+  "all_common_conditions_match": true,
+  "data_checks": "64env/300steps, maps3x13, first-episode vx/alive recompute, map consumption, noise readback, push readback",
+  "limits": "Yaw uses persisted per-env means, no independent raw-wz replay; tilt is persisted pooled mean. No gait/feet/video. Identical-seed baseline replay is a repeatability check, not an uncertainty estimate or statistical bound. Additional DR draws can change subsequent RNG consumption; identical per-step random noise trajectories are not verified.",
+  "inputs": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\map_modes.json",
+      "sha256": "a3cda59c2d68ffd096238da0dc9386d47d5ad3bcb3d70605dd989ec7b22e5989"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "a27101d6babea2959f8f38df3c6311a503c3c71ede01615d513f717314ecac01"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "667f84d4dad6a61eb651d077dc02f170405fb23d124ad0681f0fbf11aa1f411e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "7e3e463152e5e0167b247afd3e3b37a11506e8a7948af29fa2efeb8b72bdd2ff"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "8205bfb73c2459dd0962948714e0080500d7dfcbe5bfb296268c0b06a370f92b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "3d9ed66e8a64d0c3ba8a9b17240d0b96a2db9994c4d7b6ef1e8dfc110900886b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "c6ec31bceb2b1317d191fc80488eb30d281c6fd7ccbcea99d210d84634d33d98"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "d28f5051e102e9ad3cf636947e007375c28944a6b147624e472adc7368407b8e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "0b49f34033d8ece2b1bc505f26609a106a862f91563b13be25e167e0ebd313ea"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "3a3e9ccead244f72941a19f7c0c0f3f89c5c0594038a74de3cba94f1cfaaf636"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "4ea9c75c63b272ccb2744d1d76f02538f89e4105fdef0866ad256d416e595274"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "5f0509fa1b4eec33ff0a24a576dbe246ad394f871709b4089ee9e377584c6e10"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "d235cbfc74e51ad36c2b05f79a175b011f4e4a003f8d1fc3a5d789d1e9f853cc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "b0d55a0fe38c88e5c2352f869fde7432e4ca34b829cfea1b7b7382fb3dc1fe31"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "9eb0c0dbb0a51e6f8455b0a7a9706c9cb22249470ee17f890840d23ca84f7a6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "cb632fe4fc03b373d4275be538aadc18dfbea9c1a1d3f4181b8489375e0ff17b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "992903a42db3c0204f799b19e54ddd3b8db416b1ac6ba0944f5893d043dc55c0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "bafb12e11a365ff517f42b2da0d5468f3004c87181fe4e84e2cc547c7ba4e7b8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "0befa17bdccbb546442c1ab32934755dba1071801842e32cca7b28120dbbb33c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "ada65a9b8fbb1e031a80bdaea10eb424879d5609ea8a090f507e3ae81bc7eb19"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "6cbe28312e14d20402aa25b799ee5532ce8f44a6557913967eec859e9946c632"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "0d36c7092b2babc54cebd9d13171502a25472deeb549c65205e2b2f0e1a6f873"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "06439c4776af81445e7194d49f2bb6c86f60a6dcf12ee8344a1dfe994121b4e8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "518ff4a0b501123f0f3e82f840bddcd4169817130ee3cd731a00de2f64ac54b7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "46716cd882e574daffee50d86fd6d784a05231b3a49cd01f5a8ba502e66c9b28"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "9d3a53bdefc4ecc430741f50536ee1834b2c42b8b7e68f646c4eff63ad0aa3f3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "328bd5ff764be7005e0983e0c9b39f893410115d3f60ae4c899f8a1b3d5334f6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "139e242573dda953046d996aa9be40cea18842fb5aab206071535e52fea0abd5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "eeb1050fc4ff9babd73e1789f36ae95b1699796fe5c380cb86f3b200ac121044"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "bb4a02af17c40265dbc7edb4ac986cef858aad07be4ab6b6e283d87e5d9713c2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "2813d705e112401c2661eb0d629856e370745dcc3d8e6d71f5f93b7a4ba1fc42"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "28e482e0f5550ed2430a6ba9edb9387d4329620f73553eb9b9fa4d4a17f1a232"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "3c283ec54ec4d86ef7062909e14cdd009976b9cf851c1f85ba6778dd2513cf4d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "d52413c9582005973f933ad6f54db020aec56914db6564c7cd1ef7f41c21799a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "99254e1288238618eb206ee308840d82c40acf845d7b1ec1cdf19ecdcaeb5f99"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "31a534a4024f017434ee71be6a28b7f63ed93833b154c78edefdb97ae480cb5d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "769065d439bdd348e146fcca8b947724dbf31e47c8147a3708c4dfbbf3f6dcbe"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "f0b8e9ee3be161b472fd1b9640325d59be24f1cca074802cdab0c7fd90ed51df"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "401eb4cb0a3fc436e3e045dd8b6a73b5e307a64f1a24bdf86ae5228ea483f45f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "5725f17f5cbc3736c6d26198ba52da44a81a5d051e0688a614af6530b32a6a73"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\map_modes.json",
+      "sha256": "a3cda59c2d68ffd096238da0dc9386d47d5ad3bcb3d70605dd989ec7b22e5989"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "a27101d6babea2959f8f38df3c6311a503c3c71ede01615d513f717314ecac01"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "667f84d4dad6a61eb651d077dc02f170405fb23d124ad0681f0fbf11aa1f411e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "7e3e463152e5e0167b247afd3e3b37a11506e8a7948af29fa2efeb8b72bdd2ff"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "8205bfb73c2459dd0962948714e0080500d7dfcbe5bfb296268c0b06a370f92b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "3d9ed66e8a64d0c3ba8a9b17240d0b96a2db9994c4d7b6ef1e8dfc110900886b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "c6ec31bceb2b1317d191fc80488eb30d281c6fd7ccbcea99d210d84634d33d98"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "d28f5051e102e9ad3cf636947e007375c28944a6b147624e472adc7368407b8e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "0b49f34033d8ece2b1bc505f26609a106a862f91563b13be25e167e0ebd313ea"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "3a3e9ccead244f72941a19f7c0c0f3f89c5c0594038a74de3cba94f1cfaaf636"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "4ea9c75c63b272ccb2744d1d76f02538f89e4105fdef0866ad256d416e595274"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "5f0509fa1b4eec33ff0a24a576dbe246ad394f871709b4089ee9e377584c6e10"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "d235cbfc74e51ad36c2b05f79a175b011f4e4a003f8d1fc3a5d789d1e9f853cc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_gt_stop.npz",
+      "sha256": "b0d55a0fe38c88e5c2352f869fde7432e4ca34b829cfea1b7b7382fb3dc1fe31"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "9eb0c0dbb0a51e6f8455b0a7a9706c9cb22249470ee17f890840d23ca84f7a6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "cb632fe4fc03b373d4275be538aadc18dfbea9c1a1d3f4181b8489375e0ff17b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "992903a42db3c0204f799b19e54ddd3b8db416b1ac6ba0944f5893d043dc55c0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "bafb12e11a365ff517f42b2da0d5468f3004c87181fe4e84e2cc547c7ba4e7b8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "0befa17bdccbb546442c1ab32934755dba1071801842e32cca7b28120dbbb33c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "ada65a9b8fbb1e031a80bdaea10eb424879d5609ea8a090f507e3ae81bc7eb19"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "6cbe28312e14d20402aa25b799ee5532ce8f44a6557913967eec859e9946c632"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "0d36c7092b2babc54cebd9d13171502a25472deeb549c65205e2b2f0e1a6f873"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "06439c4776af81445e7194d49f2bb6c86f60a6dcf12ee8344a1dfe994121b4e8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "518ff4a0b501123f0f3e82f840bddcd4169817130ee3cd731a00de2f64ac54b7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "46716cd882e574daffee50d86fd6d784a05231b3a49cd01f5a8ba502e66c9b28"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "9d3a53bdefc4ecc430741f50536ee1834b2c42b8b7e68f646c4eff63ad0aa3f3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_eval_pred_stop.npz",
+      "sha256": "328bd5ff764be7005e0983e0c9b39f893410115d3f60ae4c899f8a1b3d5334f6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "139e242573dda953046d996aa9be40cea18842fb5aab206071535e52fea0abd5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "eeb1050fc4ff9babd73e1789f36ae95b1699796fe5c380cb86f3b200ac121044"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "bb4a02af17c40265dbc7edb4ac986cef858aad07be4ab6b6e283d87e5d9713c2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "2813d705e112401c2661eb0d629856e370745dcc3d8e6d71f5f93b7a4ba1fc42"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "28e482e0f5550ed2430a6ba9edb9387d4329620f73553eb9b9fa4d4a17f1a232"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "3c283ec54ec4d86ef7062909e14cdd009976b9cf851c1f85ba6778dd2513cf4d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "d52413c9582005973f933ad6f54db020aec56914db6564c7cd1ef7f41c21799a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "99254e1288238618eb206ee308840d82c40acf845d7b1ec1cdf19ecdcaeb5f99"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "31a534a4024f017434ee71be6a28b7f63ed93833b154c78edefdb97ae480cb5d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "769065d439bdd348e146fcca8b947724dbf31e47c8147a3708c4dfbbf3f6dcbe"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "f0b8e9ee3be161b472fd1b9640325d59be24f1cca074802cdab0c7fd90ed51df"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "401eb4cb0a3fc436e3e045dd8b6a73b5e307a64f1a24bdf86ae5228ea483f45f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_base\\rep2\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "5725f17f5cbc3736c6d26198ba52da44a81a5d051e0688a614af6530b32a6a73"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\map_modes.json",
+      "sha256": "ec3b549585013ba02ba28113eb61bb932b462d7fc43a8c08d658da8ec91e9a17"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "afcb705d1a5e68b49d304dd4b443bc22d6789e6b6ecba1b7ec5fd84c50a355a2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "88c4041a501ae93bb7a54c5160237868b522f30221ba93747f8d62d4629f3b13"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "3a01742c16c12f862f6d4c7426159b14d82720550e10657a8d3d8df254773a6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "582822620fde14595ce91fa544211f7258a281cb6f2dfdeb6d9c3103c5512cb9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "abdde53507ef896524b7bd5c33007674906215ef76d3e252fc4c71baa2741036"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "0c55321d437ed6b0560582e9d2923003a82f4f60350a4433c9b8cb45e0869f63"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "95bdf72b77b5211720865cea7a5d615cfa2d8fd601172696d523829c7d8eb31d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "63f402eacce22902bd0181cfdce90b92970d8caca40dff36d4ab48cd1295935c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "eb667f9ea4407d8d9a24f9d6bf1f636efeafb1ca3f9e58a3d00c8234d4e213f2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "0b2f98f13f2314d5b66589537fe44cce08d31ddad0f5f61a460590db0d98cc2b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "f90c12ea1adefae0be8a2475bd6e74b95579595073cbd8399de10dce2c2f5a27"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "a40fa1ed9608b2dbf26a11994cb753553d2af1a20557a19951ae6fe5d4f31fe9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "3a8fdf7ee8e4978ae6c3d432ee11e03e9c2e1370155661b06be2ab2877e944e5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "1ad323046e5904de3ed430f748292dc7ecfa010e35a3dc46c2be2bfffada5ec6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "33a85cea7f2093f9c8a6b12e8bea1a24bd994c14cfcaaddbc25e5df404f8ced4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "124d72b341abf4343e8a823c3d8d43f0080d66fbd98f81e9cd8c87722f4ba736"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "951de92c62c6f700a35d8aa01d7b418b2bc491c26b33b1b56ee10770c0f4512a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "475967f26aa4d7ab8576f2c19339bb7f56cb3bbb26779d8d2a7cd1c9b1de2128"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "243b77510a1fea4077fff2af1ced666fed1bc95bd23f7ef86de1763dc729689b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "df348443c92bded088dd7ca8c0397e736c1fabba5a2d4b3eb36126753cc4452f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "a0419693024b623d4dcf5cb1f9140aff5387a9a236f3f672bdeb44d90ffdcf38"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "61061a6ee6d3119230ef14c4ce0121d5a467567e84b4828e5edcf176ac3d2d88"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "f57c351eb999a5afcea7cf02a13766ccb9bda78e1552eb427e2f4a4c9b2589eb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "9bdbe2ad70c9206d76920bda36b745fe0a8207e84a8393a5a2c5895ccada6e7c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "4d3bbf556163c75b9de6185ab9bd289505a939ea9cf10b2d8006de5fed950bc1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "16efa0f069b69fb6279f57670a131c104cef348b74b90d90ef4b4f26dfe1de57"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "79fc9aa3390a285aca0255c8e72f7f45441216285f46f47c3e1c6394aa328692"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "b8d37747611dc68b0a8f2910000babe63d6e92ae54fae8c5438c76d654af60fb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "c46afe1ee58ee51195ae62984d9da098979c7115aa2b9a0869b258c92b85d9a5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "6f7f0fd506a30a42ba90a1617e182d504158ad34edbc95d917b46ad89829ee47"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "03240d942ff12fb329f37a16113c945c7681c5bbb4c9c11712180f5100ccc17d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "69f5b82532f445d7834a9c41cb0077e1f982e26dd2976e9479e4041819412f86"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "4f0634ae0536935edefc9ed77da1a3d46539ab8d9a688f6e3aedb88f44cce4c9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "dac34d32c3edc5dc49fc4567f2478581c921a33bd1f358d4d1d7ae08da9f13a9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "841567e5b759a1fd24849e8ccc16ee6409d9864684a8cdd16716ae7fd5083945"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "e9ad9373e83cb52b64da0ff36b081c7e21554c80e04aad8cd36a5a1c82b980ff"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "86799b10a1fb6fc19abbf8ce7e9452da780ad5c18963e3668cfb9418b113f60e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "2ff0963ad4b58165159f429683570dc25c0f22ae855f1451d6d2cf439b1a79a5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_push\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "e5fdca4745825a86c474e03cbfebdba50545032425dfb8d448b70e2a681c9223"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\map_modes.json",
+      "sha256": "c05289064f05eab28fb6040ba1c722490e3aae30a1e2e7d36848b8f23d80e473"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "5218a809a20b6dfd89f2259a0875d2dafaac5a3b848722d52ec4b2fe842f4f21"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "ae1ac098c461d13cde237fae8247f8b19f00264c890d2305d6f62fb3bcedec1e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "82e92708c821405a61698f851fae8bd3ee44ba2a0b075243e7a86cb6b4de3db5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "be5919f7c162d9468771692652add3b576a27c9593ea921855add12c725e4d43"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "014c9abf5e8f3b53e40c498409192585a364647f68947e65f6df0552eb2524c9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "aee2432eddfd6fdccfe4992c7defb4e65f7d7ebfe8589ed1d9a438df6cbf24dc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "723af79a9a8fd413314c38d1c9f55864ede10244cde47cc10163ee3ce48464ac"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "7316d4c056343e009f96fe3e75c9abc4ebf33c8f79a5ed38dcf63315a59b47d0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "2aae2454eed05e1ee1823d5b2c4e05f3a24c67825ce52c21a658f2d215190176"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "8b1b6fe45fdb427f893ded5b0690bfd3ccb613ff0a051c3b05657fbc249bfed0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "4942a0d83e50769de18fa7a637338d07aa40ceaa82cf3d45ef573197f94fb1c5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "8883191ca62b2fb63dd656de0cfbf68108598b6887ca2ae2648b0e47ad4eae3f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "af6a1538edb249ecc98a9900e2fd7a1a7c6852ed75b664cb3dddd0d539048b9f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "1994b13ad7bfcc63f71e18f99723d0b95591b8722766c7525fa875d874492fc2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "9174a27e4951208ecc096ecf589c9b24726ef9fcb7e0524f685bc4cc72ed6cc8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "f12d5717f5040ef45cc9d391dd8b039c5a0c5b05a69476e3d7afe2f17097e686"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "4849f1f416bb57997e8d752603087c504be114913fcff4dac276f85299f73be0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "78eeba4ed62cef41d3c0107d0515c3f735fbbc3c1186bf53036b68cf106f7ec8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "5aa9c7e1aead8dd27a9b85c569631a143fdd301d86f925320cd47c5e1768d1d2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "1d081e6f9057757af16395c4a1c90d9443beb342e9751de8a18a6f6b4f177b4e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "545a87747befec0344195239364f07a87427b85e9becad7b053d232c45ae7be3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "a7b06288dca74ef3d35d37452cc78f1620bbd399a6342730030a8984529ba342"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "9583a786123fc8bf831a770a4c876f89335913aeca5a6c210a2530ca544f467a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "fd6b291d55020e2d3b2e0c5d6a211ca5ae76a81f994770003e9eca2741830e3b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "5b25cb7d771f637696a6de34d4a8018594d460e06ca76a43330d12b42fa88530"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "bcb85b86cfbdb94aba574f02cce1e496378443efd3fae11a834224a85b76024b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "12da224f62e9691a221c6d51d3ab24f2a190ce2c20f50ae6a77da1735b484c26"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "a149e321ebd5cf064bad83241c5220e9df9dfc40f7abb74758b6e4aed530c9bc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "de3f2270754880939fbf4deaabe9eb3829599ac86433d9494c76383844bcee1f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "f16200572adc8461c4e17f8cb40beeb7dc1c8d3c302a05d0575a2a3b1c2da4a5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "6fcfb4f490dc449750ff1694d87858097892d739d2b3b1c557b5b8145fa4c951"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "85b83cbfe8de8ec05fbaa2fa3efe563bbafe91dc8cf4d9303f8ab3a4113d76af"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "c7199496639dc7c57becad9f578a2eaaaef4576f87777be79c958e122b7c7539"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "e1087b4c8acc1ff64ffe293b492735167c744354ecb2dc91c5a119025d433a64"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "f776c5dd0b6f935885040edaab27ec7c3a8c8143b16caa8d8f3042104f33dabd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "c4380a95f0a71775ea4336fb49c9d6cdc0bc1e9a2b59f6488de5f5daa8b27f06"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "cbdd7a4e56e4207ee0c77b91210df2a214fcde6b605a3837632ae18056236bc1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "bb16300b85267d742a6c78d6b5cccb92a73ccffa94fb18a69025e32671862621"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_noise2\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "e5cb0724c932381c3313c2bb3d821ab8ce2f4d3c730c377713ec9abd261f9aa9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\map_modes.json",
+      "sha256": "b70eb54301a7ed949f944a528727d118fd07a0dbf2412894f896541afcecc58d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "47fd89d343a86a2665842bcb313edca27b4e3161cb693dd9daa0feb2322f2afe"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "963c9d8fd600c3f0db7817908ad8c643c22cc3ecf4fc3ce74fd3f77bffdb4718"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "d59c03b904582549e5fae619717202e4c0b9534c756aedebc112737651664f6f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "0cf557cca65f1e624e8a864ddf73d943e26cf8b18b831f81a029ac9fd2effe8d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "6c60936cfe8fa0920376c491e5b72c1435b7a885d19ec11a8f806e05476cf47a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "85f19f1ce5d80d87a15b933f3541cabbcf21390a328dab18f6d29c90f61f60fa"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "8b0eeb45e54b70abfb2f99ceae0c4f719e6deec0d689e98726172c17b9d96ea5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "5a8506a60c23ba2156129b778fecde5ae956a4de12fa5779955248784339cf71"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "1d43caff0d8a902bf3e47af4c892945ffa956952fcb643787259895f4d9eeb82"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "96e6c89398ad6207176cf326a3574dcf80a57938fe7505bc7b33c5c32856c410"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "9c65ab5fc82b3eb58645fed88425a5d3c5ad20fed475d4b099563a5fde88a829"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "e295bea48aa234f210bd05768a6973e303fe1394cdd3b26ad9d81ec65906a0d0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "e0acfbce8337cb0ac80f60b45e83c25bcec4514b5d68dbda017c9e3795ebf361"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "347a3332db305a2881c551301cfb4d0ff0083e7bf3db659ee9be05f92f4d380b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "9764cf46d5e4b9c0dd724894a449f42725d71b6281f596b5631426f59fd8d086"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "f0288a0749792c62d3919d94914a8a94975f6e8c0e70ffc086ae691e5bf36c27"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "cb60d2b636afd30e1b10b4a3a135585060db8434f242ce2b032bed5c9bf44ddf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "c06bdc0fa5f9726cd0ef44dadce49bc6a4e957ad5c8d6698dbe8f19e30125e99"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "e03a05d294e2f91b6c00757171754a1a920dbd16b28240df5f6d35f6fe399bfb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "648afa83d343eca11826fc9586487c7c0af452db87ec336961b69e2608ddadf1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "10ff12913b0950677ac87bfb5365dc12d9959c0b026d3e5c4d268278d565e18d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "ac41146f3e0f4901f7a13f0805966d23ea31fa87d33bccba489ce58401b48642"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "d8e5fa7488491b067ee23e73142e2b305838b15004bdb8708fe52056c122078d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "a0d6616d207b879e4018c9bb00b175adc9a682773126467604f115aa6c4832ac"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "7a51b5d689cfab43e422e2546a2021aed0be8053bf3c88b30c35cc6c96b9108b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "b65f27a8e45c98ffc18d43ca0a2c8345822e3e4f93caeb47bb435c3c0412ea21"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "61ed9d710141087d3ce3dac0b57c242dd9f63f7806b482b328bd0db82f363d20"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "f0a0b44bbd9acc392e2d55ecabe8a178b19f6dc3107744e65a4565af0e230790"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "735cc27fb9524634fd75fa144c86db67e5192b4fa13cd04a14eba6bb18358c98"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "ea3000c9cefad996fd908485cef54ad027ae411378a12f77d8a34a5e41668ca6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "46813aabaf3462ca58c257e9cbe8b7c66866768b8390fda0481d49b68c9d8a15"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "7571fe41a8f912649fef38ba1999b9fb66a5cf3e1608c7b1f3565519c59b9567"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "0caa4f88ffdc74516cc7df7ecc31ffdf8e1c7c217c0198b424c429dfdd2823fe"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "bca2d9520ba9505872c9a5d09f52de13704732cd182b48d685caf66007bc6323"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "42bcdf122baf38f5984b85925ea6c6c7f9bff0997825abc2be59c48ae8a80065"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "40f085298a733d6015a3bdeaf9339b7a2ac9bce03051c9f71dec9b86ce0ef5ee"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "8b331c48a9edfd249289f11869eaec76f46a1a40265078e6454e6f8ac5aa4e21"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "7da0b6f208b74bbe0036e55cd6869ab85e717de2a7aba09e8da77ca15e854fa9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_combo4\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "12ca9c674c0d3fec1dab5df1cf0f465f4fff4cc94b3f3c354ed3827b2d42d686"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\map_modes.json",
+      "sha256": "c5f1889ed422125cc57b03fa2fdc5fd4167dc00c3d7bec79f605b6e01ea46114"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "3dd6d329ae11b014e708e975ee7592cdeafd004788c44de78d9c6ef5f4e936db"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "e66ba4f171adfe6c6e4089c3173ce1974cee919b866490ed932b2a8bedf5d282"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "fad9cd8564dde2dde7548566073fad746e32ad2f8738f67b9984ef6f8d6ddd1f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "60a11cc019c4552a8895e8bbc269b0dc1cf4a59bee5232777596e8c415c4d627"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "0ee4f7940fc6b4d1270a434002ddff0ef85093e76a6315cadd64215e97e1ba5a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "fb5dadc400af445adc86732f66ae37c33d6132b40e5669fc81b1b9f19d65b59d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "daf85773215115b1d52cee0334c2152933677b88b231c46ac8cecd305ba99b2a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "96a5bcb536122b052adf8048c085227aca639ea74aae10c9c8f1085fd8f5a3d8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "4f5fe819d69a3684d0d18a5dd67316c64f4311d643fd889f2bd063ef9c95bc5b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "93c67935c098b75646367bed72231a16bda03b82bfbe21a0532c8fc0dfe00f5a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "a5d66c17ab834ef432d7eb6eae6b76c31c73e291fe29f401fe08d7766bb62f84"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "719f0d4fc134eacd66da0671ec0de8d713ecd9f720c9b1167cdbff1bd1b34cff"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "ab48978c283bd37fc2e8b5f98515d877252c3c807223c8f8a7b9582cfb541b00"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "ffe8d22bdb9fb80ed28a1b0d1637774fe70ae937c7113a034c478b5c043006e2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "754d8de3f5ffc58bf77dd531fcf55f72b6c864bb30afe3943ec3b54b6c77e3c2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "19b0be2197d3e62033e5b890083642cfcc84c09cd4b24163731afe1034a9edf5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "910af8a774cdab321072163d2ff932d416e171316482bf937b48b9fdcacde153"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "7d3e43ef0feb236fe2a6b86aee1375f6d8e70688044817d6709a05eb46b3e9c7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "fc3c9e11f3e02342204e5f54043aa6d8b9431c8358489933ed84c46a23afe4f0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "179efaf8dff9e7ee29335f7b5aa03166e9016d23543cc473542ae71a9872961d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "edcebe0f7e8c89e00c0d74145e48e06c7fcd78e2ed4903108a6f8e6a328bbc00"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "0b7a2b563e618d334fcca23b23fc5a598cc2a0981d8bf67391cad31ef26b71aa"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "115f2ecd40b754f1eb918fc7ae28e855b9d52bb3e4322d4efb683284d5458588"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "c2b7587f58846222d80cb95133d67a4db4d1452996f853dc3d7feddbc293ede6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "4d2b7732fd6882ad6633173d20f2ca15d310c3b3d98f4f52011b8cbe0289c797"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "aba42ae4b731fc501ed215d73e1af2e8111617356ec9d69a32b90eab09dba6d8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "b1246bc32a85e5332993b431903eb4a262198c564e668bc374ab60c6c6c500a8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "bb9e6826a18e2ea9674ee5093523b7f8c219e7563c7d3adddffd3fb316d8e442"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "9c9eaedeac9b8b4aaea121ca712a7d05cba6b1c824f931f1b51a215fbbc2ebe9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "d2548a64c1c95b1e45a22a9d6c96cc239fd59f8edb5cf31229e6e93bb2ca07bc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "12abc6a706cc47af3fd12976912244828e7f045094b513360c4e89bab6381a86"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "5eaea6af300e40310ea18f184ce146123d1573b18ac039e635e049b6d391187f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "47694f0d51b01ccd9479f8715ee5fce947a2ffbebf6d25bb697be5d319eb0e6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "a7959c27792b13640aaf0889b279d4d45803e80550e857c803f0442028a84682"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "27ee68bddcb8c3d0dff0f156336bc3bd773b066c69d2dc429f47d11af9a10952"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "4e2fb9de770bdbb73f6a33eb64fb3f1a2a7cc069f2a72d97a5e1df8ca64bfb0b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "97af419276bb0a929753ffb47f390da723718fb6397b756ecffe55cb7c3ea435"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "949370f67a5c4b085f617ab577f5ab2409adcf6046bbcaa5fe80f60bd3be511f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex38\\w51_all6\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "cc994bea53de6fce3482cb3940781062d2a86e659833326d548b07563026b2a0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\map_modes.json",
+      "sha256": "ee4f17384e4aed74c7a67ac331fa1034709309a5371f68e488b652f7f5f5a975"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "ce2949f12fc46d3cf120da3b3d71b000761fc77d159f97c36505fcd6c4a04ae8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "09e3ff9aa9432843d9eb163344180f9d6c3f2c612c3a8e2b26cd99926c3c49aa"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "62605039b12990216b622b9f28ace683eadb36ee122948bf853e45d8a3fed19e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "ab4651c922bc264855bd4723c7b941e18c05ae05a337e6409f43435d82d85e3f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "af576524ea1c8c6ce4de44e63e50acd16cbb1525226cd76a0881437cc001f5ad"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "3a3181404c519f9ca0d219a097fd913cccc5ec1e5789912bbb3ad8ce79529b02"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "a9ac8135928665c1c8454737e080f05f3b42441d182d5f4409df74598a4e5c13"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "30475a3d6a5e1476b9f3f3cff24a6170ede84dd1a15ce4438b87b5ca8625462f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "3b8ddaf27a3750b66e076968ca8dd9d296ff3119e65cdba0d8c586e875f5cd66"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "00528a75851f5f3f16976a9aecf334b02ceca9eca8679f78a2ff349c2776f5a0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "e7ffcf169944baea42e0fde43e09df87b9966f8f124f711c14c33ab6530efa06"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "6201255a4ec209c0a7a521710c68f0aab56118699810eb9d2ca34d5f43a58623"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "a4520400b64dad6cad18cf76107354fbfc41cd4d15125640b4b669b0f8df667f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "44c606a7ccab58aa059e57af510cbf6032a3c121209626607ceb3fbb185c5745"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "a88977e3a85e18e000084794121486bfda28de2430f9fcf87692d789c2e9e87e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "03605c540a83b9d93105dd73e91e607246f9093601c32ba6374653512e363efd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "9fc94cd17bfe97708bb6aa58ef4d637b953595f77ff321505655236c42b63242"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "d0906465360f078cfe51b03338cb48bf94d3b9034468b7d77dd4577cedaf07dd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "0a031261b9626bd82883347e382b44d38eb4565a2af60d879c8778382637b29e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "a4ad13ffedf7c6a40646258ad7e8bea6fb93e26fd977a92d057fbff21fc36f21"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "b4b3fbee535b8fe8fd9a535a241c5dfd9966126c2e0c564a1d03d1524ec03ccf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "0b2a6ea374b6419fb4e2372bc7e78c10e620cb4ed42467b985f0339443b4693c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "c11370afb2281f2b3ae37730004d702cd6c6d245d080e6a600aec7bb1e284408"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "17281a9c4bb4a327f1028984afc600916e5608bd2469fc6cb3301d0ff3569819"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "dc2bf86d26491a37a66097ca9867e7517ad3a41fa4663efe3b3189e6795ecfb8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "6c492d5f03d8b2fe7bc92223eebf75ed10b6bd2d15c57a0b67c155a0004abc51"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "3b7bcd363b5c0e8f0a480d58b06f2b40dc71ed7af947979d86713f21241ef047"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "bad6406e9f49781b039d26610ed2aca3142fcbc63412c8e98eb7fbee7b104630"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "573a0f5804adeddc738eb2d45f72335fa86e83faf0e33de1ca1f2fd1c0f8cf6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "2ce196d40de9f1d81fad8ae79b7463367d56406df0c226d10b8c5b337425c14f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "00f7a96ab0b54de11388cd0e31fb3da94be8390235ba5ed58ffe64fee0f7647b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "23469fbe64a0efef0be557ef3f387eba4531dcc7e9763f9ea44c0acec6749f42"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "9351e2ceb06e43f916de919d84f603f1b1129dd155acf0fe0608abc3ff300858"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "b53030736511ce2362eb8cdcaa32ea1c70a4c4d11eb1f7de0ea85f985951c705"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "4fa2d5bcf7785fcf88d43c277a64528bf954a6c24524bdbc41a78b84a2dfe8a3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "9ad47f056e73a74d790e68af9f09c2137f4be12c36772f5ea86affcd2c236c28"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "321f20d5e8b39308d517db65654af6d3a1ec2b513c591d77c6c72214adc15c6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "18e3a3d8ff47f3798df6c5f810999ae50050e62cc83a18ae48d6aea1e37ed746"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "3a2317de5302ce39b26e09deab9ae9b07349f91e22d55e9eba9e5aa5b54a2003"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\map_modes.json",
+      "sha256": "ee4f17384e4aed74c7a67ac331fa1034709309a5371f68e488b652f7f5f5a975"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "ce2949f12fc46d3cf120da3b3d71b000761fc77d159f97c36505fcd6c4a04ae8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "09e3ff9aa9432843d9eb163344180f9d6c3f2c612c3a8e2b26cd99926c3c49aa"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "62605039b12990216b622b9f28ace683eadb36ee122948bf853e45d8a3fed19e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "ab4651c922bc264855bd4723c7b941e18c05ae05a337e6409f43435d82d85e3f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "af576524ea1c8c6ce4de44e63e50acd16cbb1525226cd76a0881437cc001f5ad"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "3a3181404c519f9ca0d219a097fd913cccc5ec1e5789912bbb3ad8ce79529b02"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "a9ac8135928665c1c8454737e080f05f3b42441d182d5f4409df74598a4e5c13"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "30475a3d6a5e1476b9f3f3cff24a6170ede84dd1a15ce4438b87b5ca8625462f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "3b8ddaf27a3750b66e076968ca8dd9d296ff3119e65cdba0d8c586e875f5cd66"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "00528a75851f5f3f16976a9aecf334b02ceca9eca8679f78a2ff349c2776f5a0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "e7ffcf169944baea42e0fde43e09df87b9966f8f124f711c14c33ab6530efa06"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "6201255a4ec209c0a7a521710c68f0aab56118699810eb9d2ca34d5f43a58623"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_gt_stop.npz",
+      "sha256": "a4520400b64dad6cad18cf76107354fbfc41cd4d15125640b4b669b0f8df667f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "44c606a7ccab58aa059e57af510cbf6032a3c121209626607ceb3fbb185c5745"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "a88977e3a85e18e000084794121486bfda28de2430f9fcf87692d789c2e9e87e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "03605c540a83b9d93105dd73e91e607246f9093601c32ba6374653512e363efd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "9fc94cd17bfe97708bb6aa58ef4d637b953595f77ff321505655236c42b63242"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "d0906465360f078cfe51b03338cb48bf94d3b9034468b7d77dd4577cedaf07dd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "0a031261b9626bd82883347e382b44d38eb4565a2af60d879c8778382637b29e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "a4ad13ffedf7c6a40646258ad7e8bea6fb93e26fd977a92d057fbff21fc36f21"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "b4b3fbee535b8fe8fd9a535a241c5dfd9966126c2e0c564a1d03d1524ec03ccf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "0b2a6ea374b6419fb4e2372bc7e78c10e620cb4ed42467b985f0339443b4693c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "c11370afb2281f2b3ae37730004d702cd6c6d245d080e6a600aec7bb1e284408"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "17281a9c4bb4a327f1028984afc600916e5608bd2469fc6cb3301d0ff3569819"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "dc2bf86d26491a37a66097ca9867e7517ad3a41fa4663efe3b3189e6795ecfb8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_eval_pred_stop.npz",
+      "sha256": "6c492d5f03d8b2fe7bc92223eebf75ed10b6bd2d15c57a0b67c155a0004abc51"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "3b7bcd363b5c0e8f0a480d58b06f2b40dc71ed7af947979d86713f21241ef047"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "bad6406e9f49781b039d26610ed2aca3142fcbc63412c8e98eb7fbee7b104630"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "573a0f5804adeddc738eb2d45f72335fa86e83faf0e33de1ca1f2fd1c0f8cf6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "2ce196d40de9f1d81fad8ae79b7463367d56406df0c226d10b8c5b337425c14f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "00f7a96ab0b54de11388cd0e31fb3da94be8390235ba5ed58ffe64fee0f7647b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "23469fbe64a0efef0be557ef3f387eba4531dcc7e9763f9ea44c0acec6749f42"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "9351e2ceb06e43f916de919d84f603f1b1129dd155acf0fe0608abc3ff300858"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "b53030736511ce2362eb8cdcaa32ea1c70a4c4d11eb1f7de0ea85f985951c705"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "4fa2d5bcf7785fcf88d43c277a64528bf954a6c24524bdbc41a78b84a2dfe8a3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "9ad47f056e73a74d790e68af9f09c2137f4be12c36772f5ea86affcd2c236c28"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "321f20d5e8b39308d517db65654af6d3a1ec2b513c591d77c6c72214adc15c6d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "18e3a3d8ff47f3798df6c5f810999ae50050e62cc83a18ae48d6aea1e37ed746"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_base\\rep2\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "3a2317de5302ce39b26e09deab9ae9b07349f91e22d55e9eba9e5aa5b54a2003"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\map_modes.json",
+      "sha256": "363965bc1ef455c6a2b0145ce133bbdfbce402d8ff6d185b9fbb1d782644ecf4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "ac84306c52c1a9f4bf6309a9121acc481703d557bf3f8d13c2fcd50122b4e91a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "ec2d8a276ad232462b90ec2e30df10de8ff4117cdd3ba5412a5c09b6046781c9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "fcee72bd99fd8f504b72036eee5fd296ad2e94470fe4da28dc3f0ed1d9bf244e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "a2c9b4d3bbd83603bbe5f3b7c5dc012f534d7d5541d5ec178b03880ab42c90e2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "c0253378bae17569dab9eaa3b797870dc7c8062ee9d2446650398ef9960e5c19"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "2606db7e52d1d68699f52729be1342325cc02d07cb63c494882ea9c6aacb2fc5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "af1a3cfc8e919d403b170a2d13b0c63a29f1b9bfbd230c777832a0167ec6bf0d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "0d24bd7ca659d3e3add8c1e8e949db9116c701cb223a7757c6618dae1d9271da"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "bf8bb082cc12271bfeb6d00c872ffae9ffc8ea0f6e43f9f28e27f73992705232"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "1aebf3c2e57a4fbae9930df9b82e433d0090f6bd11b7de94319ef3926edd5082"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "3512214d471107fc0e999d8313924523c7b2d18e4900d60c4b0baa4a52e08cc3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "57b2d82655874ce70fb88d9ba87e3ad7654b82892c94627f91053a054873dbc8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "0dd2ea9b7c8139d4701bbf7fca51ca089c2ccc7bbd0278ff73f3ecfb3ba03bdb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "268f0b36ccd7094de582487b53631a8100b598a8aaf45614a40a9ebe049dbe8c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "1ece07d143d36eee4621131dde9edb562684f9adabb0865165a40e14492d81a9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "8ee1c4e5e4c6938288b1c118abf9f822d7e9f2c1b5afeb281904146ff585eb7a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "6566022b4aa657519d0937361d317526d746d9cb819b9e63250239ecf0aeb10f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "ded41da14e76c65c4cad6cee14b9a2d11c950ea38a702019642761fc84072f80"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "0c169d9da54aca5cb0f39493e39ee2be2f83333809424db23c3a2d1add35cd63"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "be6092300f5dcb9254c17fba7408f7dd1dfd4ab2631f1bbc6f73af9cea4e31a4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "efe0a2c4d705193c23c8dd7589d9fdbaebc68dc9b377d42642743f27fd15e9b2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "165d858b9d4a102512b3bfb62855e2b4b126ebf4e2589846ab8be85407bc086f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "020b621ab2a701d951ef447814f751d5a0b8eacfb5b0015f5071324a70bb7fff"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "de0c4f3cf01ec74872fe3cda000289294b880ed96b9f2ba7844386ed43b0fcbf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "478b24d348f33850140441103df84d35f0243ca269b2eee6bdd953dc8b2bf0b9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "663f9480c68893cd6f2bad2a5ea845d3b005bfdfe0cb660714a78325d25913ea"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "063cd2a77ede3915c672a8feb0a0498293576f5e8dd8dcdeedf1e996dcca1226"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "3daac2ba8609720f972261724c38156fd341390eebe62f24ba44d966b9272cc4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "432506608d7d5462c9c620e3b939fd64e950c957c2e54e3925f854292e009f9e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "7230a9610c70d3fd851d02d050233810f36016a19e3f6d9ab102fdd93764d927"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "32cbaa7228a79f62d796b482d54f0561f111fd2a474a4b7729516f34876494fc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "57934fbc9636e9aa9e966ad8c7946626b18b9916b032a797d5094b3ac6b554c4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "e2306407c51bef6b608a2de327305454b58d9eb7ee738d5793b02eeba642f6f0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "bf3ce992c3b8f2f9c67643a7325f73db92e3f0eb97a99ecd6d218a51e8af4774"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "548b84a899da2b4455f32f3642c8dd7edbde09a556f608d9043de5c823daeb26"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "36f72de907c3addc9574c290fb8897466d262c1bf1cba33b88a344f171dbe30e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "5e25de5484d4a9d5c9fa8efa72df7501da78d12e146e1fbdb066b4eb8107c049"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "ea3e49f82c5ba8bc13572eab01d14f06c04e71a787a389443f7070daae4bf895"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_push\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "e88c34d16ca3f17f2cd311459ff136e4075f721a6bdec6069b759f8197952299"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\map_modes.json",
+      "sha256": "1f61d2fe029ff0bf0ff4f9e83658fbeac27157602307a4e40a1217dd30e2312c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "57ef2b13494738437f8c3d80383e878e7fff829db98574d3705af1e1dd62e398"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "d1e0e684e8c9fd7557665b746e511780187547c80911d548e4a2ad0a79b48f41"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "9e258330dc3d7806d96bf6cceda9dbe3abbab5d3e21df0c94bda84123d74f44b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "51f7e13d08127ed983a27837b80a35ae60425a32f18f558f3e41645796c9c476"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "e8b0260d4b1de679be6cd5fd12e89b0a2b52305d9f5dff3bcb6866293ae172fb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "14fef910dc61d92b77627832536d9bb93b4f8ad54920864eaa1663a53294509e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "6db3abbf3ffec5459f1a49ede96955cfb888fb88efd10c1ba17eb29b14db0cee"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "e0f708496792812670ab2cf39f6b42d272c1b49502e2b25dd74f242dc12f4593"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "81574d6a7ed31a9b45fd7f330cf175681e316b32a30dca269ed5c3d05c227f72"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "217f51b08a2d137932bf438fd60d4a1f185c1093370179cd106ff9fcbb234ff4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "3dcf56af7b6e29f9edf8fd70fc8d71a54d6006296c314b04e77cc2a272d8dacb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "dc9e93172b86cf66837ad302dc981a6a778959d7ea1ae99a1cf6749e17b77cbb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "c27e46ff3cc22953320e030f31245a672a4fec364f31a7770b2107f7da4852b4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "47180c059c46a7eb6b098360a6127172ddb09d762db5612e0059bf10d37e89c3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "129ce94753c7dfe9355145747acbac3d6d01bc12605f3b246b4cc4f5e840b8fd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "3632e4bd9c22d55b0154d4151c10a91da2553524ee04dd16e5471993937affcd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "813d4643f4c5f209d3c73b9ca7a27d78ce93bc62c3a28a39e6b50376bfcaa350"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "2abf814173ac86e41b10d0c578c225a322423abed9b991c5b7052b7c2ad12ea6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "7032ffb4715c72e25bb8753833f4a16fd89ae9d913fddea0542300a513dc4171"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "edbc416cb2c14ff08ebc82d5ae43217f2e822fe33de4e0fa7af0ed5ea3fcf309"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "e274f2a16da791897847b7544bc954c696ae08a2c8c2fe6ad1f01c93744fe570"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "b50960326522ec06ff181accf46e07216044c97e7953432db0f8fa04ebcb9da6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "72dbd62b1893190fc506b080bdfb9a3c2e2ba705f9d9057aafbd5aa61fa47a0f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "d1aa6ee9aa05f39dd7a1299892cb3802e8c942bc2b4ee34e5b98f8d0d4de9f5e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "8977e343427c208e3aaf5fa52c6c94d28da72f57ecc30f527ceb6ed9589fb72e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "018c1094896c5dc179350f9b861a5caf5e2e84b4863a5775c646b35c7ef028e9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "eb14af9172f44fc2f867a12d7705a77fddbd1a956ef27488cf51beac82bfc678"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "9758ec2ab7831d3d269093b446856a9f3c70cd933d62e817fc078745d23fe87b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "974ed772587715a32b43b1b484ba418bd0521d79f3b3cc005752f3cc50c749e6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "9b730144e5e41a11b08f3d2807db34140aaa70af710b742d492aab473b65840a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "89a41dc9e573ea207601b1796a3654472652dd7f44d12dc8917e707b78f8daf4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "945514d7fb7506dea4d416c65af2f2c167b403ce64780fd25380f5d5e6f2f068"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "eceae02795a6ba180cda24738bc29b95f07b20effc83fd97088e75680ef430d9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "3b011537a7afca94fe6777b8a14408eff66771fc163cf85baa3dddfbf1135b4c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "257b5ef9a6633378f78f7b30189318be64015547c35df3ca79a80565d27d934b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "30dd17865af4b9809abedb60a7e9be4696d4692250a039e70c3c1053e592b4b0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "dcfb27befac7664d5029aa24cd13ad524442080d3c65bc35ef613ef501123d05"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "3c052dc4a75ee600aa65cbc4b644196c2a1dc7f15f43ef7e709efbe0107f3722"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_noise2\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "a347a0d014ef69ac3d8f3342e571c31b10d19b6e5f8052e33121666f025a37c5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\map_modes.json",
+      "sha256": "b2da843590f6e5f80712c2187d1117931c34eb1ead602d37dc5957804d52018d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "0cfe9b81fafb3b5c1ff61cdda956e4ae0074eb0e1a165299cb4169207cafd04e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "b60f320b759882a6bac4155ccedb65f18c290984e0e1f895a6325a38b0c1bebc"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "d1834860329c164dc7c7bf2ac74cabfcb8027835ed2985bd74b64c5a5a03ae96"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "263d31319f162407d6b9fe171435dfd3d1a81746683be53f27036f4c5f85d047"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "80375cce868a65aee8f869fe6c19bede7506dffb74cbd77ac3aed0ee97adaad6"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "cc997abab176ff695fd9b6881c7d5a0d3b4b78c35dcef1dc47b15dacb6abe909"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "6daa37376bc68ec59c8cbb3a549dcec91906a950558a041953cfc034aaddb692"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "511cd39acc4e9e3bde8f375e6f2416d7a498e71117281236a7d208b95bde3820"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "f186f21692b402df81d9262ef642d03c1e73603264dbb1b8171883747210ae6e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "8228a91268e29c29dc6b52f21e2f5aebdb82d6bd1d39e8fda314102ebc17f3c1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "c2062c10335a9db700ba0ef4d8366177c401fdd17fa6c3b9a4a017f6fcde0fcb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "79f1be57408e27b705ae69faf352ee97e3b0258f2d969dd7565d8e56b23329dd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "7f319599137127405cfc01da3d6094033194c74a4964756de2adb11f892e3a16"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "09b7058209495ebab0a79a1bc2a4c81e63fe29b0232d82b38876d8118c4b7d68"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "e8ee3cc2234fb1c580ec76effe085be0fba942b5b733bf2efb7285ba2da004bf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "191677f145644637a0e09732fc027242da5b8d2c6daa7ba571913f43a8d8da4f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "0c0b6f8625574c8ed775e0ebc910c04f0b248cf058f96d88c16b6ccbeedfb0cf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "3d86a0911144dc0e71b82c1c386fa4fd134cc014b48a7d4d85b6d01e5de2386e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "0261a1de95f147cc847f940481386a674b6589120cf937451ac325405457c725"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "6aaa859a2609316b3246c8ce92d9a89b8e79486ace442ea4419ace17435246c0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "1e1428d2539ad4bd503b22f545383fbb6ca7769b5c439440dad1d4f2b7f32757"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "7ed7e67ae6c27bf54b0488f98a617cf44a074c3423ad1732efa90f28d1a4bf55"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "c3f9382a69bd1910568515f8aa9d998d57e9f2b3db8d17425d05249ab69087d2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "41e707e45948fd19cb36d26c11380e9092b8907d32640d693f7bd07122e7be89"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "b0802262e1457cc42afc5eb775448804aeebae60e7f344e910733a48bb6d4006"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "a59af875bd9b4dcd90d06dc90446e142161bf1abe4c795cf7fb8a601d607940f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "5557c6ffcc112dc1b9290a39df408bac1aeb65ecc3376a8c5c8733eee24fff0e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "3f25b30e6f0eb38f7ed36cfa283f25ea8d7b753564883c782b27aa4d978b71a9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "d7c46bb5b853b2d64050ce1667d07859114cdd021d57df56ecef0842b7cac834"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "e83fde40b38d36dbae33b3a7181f197f1f37c235aee8a1225431ab98a868cf20"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "92644ef755208a55d6dc63f6729ed680e7e0ea3578e7dd4e33e6feb18ebf754b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "cc00e57cc4d5861af678bba49c46d845831f418139c0dc8bd84e94094560954b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "02c83242950f5d234db6d9b1e34890d221b6ce417de7062cadf685516d3cf006"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "802fb0dbc141a08629d4f9947ac7fd9837f4c3c66b8e716c87c33fa5454689e3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "6c58cc1bc97ed1e65d1a47b6ebfd0cd9d523139d57fc3b19fa5000dc752608ee"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "8acb5ad2f00e1f96587f6ffa53bf5d96b5ea598461f22f549a98fcc475311d29"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "6d32c1cf57850c50b26ace2316f8b8740f2c666f0f4e2745050c36618175aeb4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "c9a5e3a91be1c955e24b06ae0f3f62cc33457808767484bb6f24106fb2213ff3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_combo4\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "6fce46e7b3f00fc93ab6b38deebd0d17926dbee1398c98df9b6e0af214437d5c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\map_modes.json",
+      "sha256": "255d86f8b406db1c5c9d682b138f2600536118144ead5f8378aedac21f659221"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "16aae921b979b61fc117cf0ba2a766cd2c5d7f5f20e0d384958f20fbce4833ad"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "6d6a821724ff41632b00efa1cd280473eb1114d15b1bc5a6ea520deb067a6eb3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "f8a8ba32b88ac4fa647b5cc3642a582c3d194540c476e18367a88150d886296d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "55c2ce9ab17cd621feebf7b038cf00ec28386647d176b80d6fd9a73736ec76f8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "b9074664c829e88d947efa341a4c845f3f304414f08966dd674c92cfc2d39e17"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_back1.0.npz",
+      "sha256": "a7b43ce02c13eb4ba5015877218b808106675374be39f91b5a1fa472a98ccfb1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "4495ebad9334720f1bceaf32accda14bbfae8b233d99d241f98ac0e3fdd3d085"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "c81ef1bc8b85737c0b2b7e41f96f12e1aa1da84a20811112d6f9d3075e75a05b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_diag-fwd+side+.npz",
+      "sha256": "d0dbbf02c13c2a260c5635f22ea5ecb3ccd4ff9efc0d5b4684787ae6998a05c2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_diag-fwd+side-.npz",
+      "sha256": "2265415f351f44904a9c004e4e7e240eff84c01d68ea539e077a939f2f31bab7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_diag-back+side+.npz",
+      "sha256": "acdf657d531722631cfefc73e486fb5c79368e8a5ff742fd4e6d116223f8c277"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_diag-back+side-.npz",
+      "sha256": "f14c63ffd535e45a25c94f322fff035c6e76089237724890b1b0e1ee76bf5952"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_gt_stop.npz",
+      "sha256": "8c058ceae87c1c55794d21388dd8d8906cd7fe90de5ad5f8a53c61e206379af0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "1940d1378d5e0b8b4251a1f61e9b0a6bf5cc4c24c6de67d9cf508d0d881f8893"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "8305a0a313349f61616a1a2689aef990f6c2b17cc7eeed46fd410c58e62f02d0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "302d28e6f9ce14821ca8f7cdddec8740d416c222e139b69ad6be7dbb32d129cf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "cee6863159804e51fcfbd0f6e269c68b7b070cf7b1af5c2847916b2efa2221b7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "eb561bf19a635367f5395f1a0763ac2db0aa28c39ac6ca2343e7e0a83aa94606"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_back1.0.npz",
+      "sha256": "0d4cff848e1219cd2ef74bced1485df27d6d3d420fc94c287c1d2a6b6e5abe54"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "8ef2742cdf2dfbdbf1e5943235ead6352151db5cead03d8c899308f031dc71c5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "3dbbdcd3db28779dc9768db5b5bb6d578d6ee251663f70863ec3324160752bc5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_diag-fwd+side+.npz",
+      "sha256": "aa64d6c00a7db1393859da1dbddc3d48b30709002524094ddced94d240a6d5bf"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_diag-fwd+side-.npz",
+      "sha256": "9e57b86fae5f15eb07dda648e6a0bf83f8df85fb401bbcfeb9d7eb27daa0b3ca"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_diag-back+side+.npz",
+      "sha256": "60e8c5640ab5f49a8ed5aa7fbe14efa2cdae1df09b267ca02bf2a38d46c2a8c2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_diag-back+side-.npz",
+      "sha256": "c28e8443bc41e654eb29e88c3ccb6e83f3f272583132d58e9aa9d8af4ff61390"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_eval_pred_stop.npz",
+      "sha256": "ff7fd28a2ce0050e23631abe9b219995de58d9a4b777db9fc04f9887bcd841f1"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "b273d35aee560c0c103e8810bca7ac8d43907d76ff076d26902f225ee5df5214"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "455e7ce385096f6d55bcfcd38010058e07143114a4472412c7413e296b8c6319"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "7a762d3eae3798c6b57a4ef55b24f32a2608c61cb84f8185cae138275eabda51"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "54d3b3b5fd6bcd8ae4fb7b7824d554cecb1d72e81fcf2451e60f54689f1ce56f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "ee12f2412fd47697c222630ca5b311278c8af74a048a6be06a290f13e2007869"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_back1.0.npz",
+      "sha256": "ad0d55b7653eede2dfdc38d0ec5d4356aff10a50577cd506323df51eeb7b11d4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "dd092111c469cc85264aaa2630afc742a51861e760e299bcb47e480923a728f4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "e32cd0cd26bdd6de67cd0f96f81f0abf164967fe458559269432b519e3013740"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "sha256": "d13f62a9c9d414e7574c199860b592e522daa801cc17a995ac9fe47afec4f1b9"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "sha256": "af14bb4e56ee5bff095805e483b5e2d0cd418aab954e3a82222e61c22ef2ade3"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-back+side+.npz",
+      "sha256": "923df22873320a3b768ff778fa2acd9367b460785a9a6fa2e33477b631a4480f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_diag-back+side-.npz",
+      "sha256": "316b0715b269823d2f3e121f3f73614984fa57e855acaa460b4a36e4a5249ff5"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\basic_gait_runs\\eval_actuator\\w51_followup_20261030\\ex39b\\w51_all6\\rep1\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "39b267293215e5bb5ebfd4e7637dff8ce8a8ed1b6876c278e4cb747d8d46b32e"
+    }
+  ]
+}
