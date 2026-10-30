@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from pathlib import Path
 from types import SimpleNamespace as NS
 
 import pytest
@@ -331,3 +332,20 @@ def test_new_kit_sensor_gate_requires_ratio_per_foot_gap_and_schema(tmp_path):
         json.dumps({"it": i, "ex40_stand_sensor": good if i == 14 else no_stand})
         for i in range(15)) + "\n", encoding="utf-8")
     assert _check_stand_sensor(tmp_path)["aggregate_hit_valid_ratio"] == 1.0
+
+
+def test_v5_counterexample_zero_gap_count_with_finite_hit(tmp_path):
+    fixture = (Path(__file__).parent / "fixtures" /
+               "ex40_v5_zero_gap_count_with_all_finite_hits.jsonl")
+    raw = fixture.read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == (
+        "71baed5d5d035a14a58b80597c1d4764efed1181d1a62f99eb089afab3d0d4c0")
+    rows = [json.loads(line) for line in raw.splitlines()]
+    assert len(rows) == 15
+    first = rows[0]["ex40_stand_sensor"]
+    assert first["hit_valid_count_by_foot"][0] == 1
+    assert first["gap_valid_count_by_foot"][0] == 0
+    assert first["gap_nonfinite_by_foot"][0] == 0
+    (tmp_path / "train_extra.jsonl").write_bytes(raw)
+    with pytest.raises(ValueError, match="gap valid count differs from finite hits"):
+        _check_stand_sensor(tmp_path)

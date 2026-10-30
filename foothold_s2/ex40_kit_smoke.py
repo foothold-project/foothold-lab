@@ -150,6 +150,8 @@ def _check_stand_sensor(run: Path) -> dict:
                 or any(sensor[key][i] != 0 for key in (
                     "force_nonfinite_by_foot", "gap_nonfinite_by_foot") for i in range(4))):
             raise ValueError("EX-40 stand sensor fault counters malformed")
+        if any(gap_by_foot[i] != hit_by_foot[i] for i in range(4)):
+            raise ValueError("EX-40 stand gap valid count differs from finite hits")
         quantiles = sensor.get("gap_p5_p50_p95_mm_by_foot")
         if not isinstance(quantiles, list) or len(quantiles) != 4:
             raise ValueError("EX-40 stand per-foot quantiles missing")
