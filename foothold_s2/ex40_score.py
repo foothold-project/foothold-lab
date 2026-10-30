@@ -29,9 +29,9 @@ def config(path: Path) -> dict:
     row = json.loads(path.read_text(encoding="utf-8-sig"))
     if (row.get("format") != "foothold-ex40-score-config/1"
             or row.get("device") != "cuda:1" or row.get("envs") != 64
-            or list(row.get("stages", {})) != ["B0", "B1", "B2", "B3a", "B3b", "B3c", "T0"]
+            or list(row.get("stages", {})) != ["B0", "B1", "B2", "B3a", "B3b", "B3c", "D", "T0"]
             or row.get("checkpoint_stride") != 250
-            or row.get("final_checkpoint_update") != 6500):
+            or row.get("final_checkpoint_update") != 8000):
         raise ValueError("EX-40 score config identity or 64-env contract differs")
     all_commands = set(commands("extended"))
     for stage in row["stages"].values():
@@ -44,21 +44,21 @@ def config(path: Path) -> dict:
 
 
 def require_shadow_plan(plan: Plan, cfg: dict) -> None:
-    """D72 scores must follow the exact seven fixed stages without auto-promotion."""
+    """D72 and D74 scores follow eight fixed stages without auto-promotion."""
     if ([item.id for item in plan.stages] != list(cfg["stages"])
             or plan.promotion != "fixed" or not plan.shadow_gate):
-        raise ValueError("D72 score requires seven fixed stages and shadow_gate true")
+        raise ValueError("D74 score requires eight fixed stages and shadow_gate true")
 
 
 def stage_end_updates(plan: Plan, cfg: dict) -> dict[int, str]:
-    """Pin every stage's final numbered save to the v7 fixed-update table."""
+    """Pin every stage's final numbered save to the D74 fixed-update table."""
     require_shadow_plan(plan, cfg)
     ends = {following.fixed_update - 1: previous.id
             for previous, following in zip(plan.stages, plan.stages[1:])}
     ends[cfg["final_checkpoint_update"]] = plan.stages[-1].id
-    if (list(ends) != [1500, 3000, 4500, 5000, 5500, 6000, 6500]
+    if (list(ends) != [1500, 3000, 4500, 5000, 5500, 6000, 7500, 8000]
             or any(update % cfg["checkpoint_stride"] for update in ends)):
-        raise ValueError("EX-40 stage-end saves differ from v7 boundaries")
+        raise ValueError("EX-40 stage-end saves differ from D74 boundaries")
     return ends
 
 

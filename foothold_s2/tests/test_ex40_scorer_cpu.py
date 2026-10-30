@@ -15,7 +15,8 @@ from foothold_s2.eval.map_mode_cells import EX40_B3_COMMANDS, commands
 from foothold_s2.ex40_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE
 from foothold_s2.ex40_score import config, judge, require_shadow_plan, sha256, stage_end_updates
 from foothold_s2.ex40_score_smoke import check as check_smoke
-from foothold_s2.ex40_score_watch import process_once, completion, _stable
+from foothold_s2.ex40_score_watch import process_once, completion, stage_reports, _stable
+from foothold_s2.ex40_stage_report import build as build_stage_report
 
 
 def _source(tmp: Path, update: int = 500):
@@ -166,13 +167,13 @@ def test_d72_rejects_old_five_stage_plan():
     old = SimpleNamespace(stages=[SimpleNamespace(id=name) for name in
                                   ("B0", "B1", "B2", "B3", "T0")],
                           promotion="fixed", shadow_gate=True)
-    with pytest.raises(ValueError, match="seven fixed stages"):
+    with pytest.raises(ValueError, match="eight fixed stages"):
         require_shadow_plan(old, cfg)
-    seven = Plan(DEFAULT_TABLE, arm="B")
-    require_shadow_plan(seven, cfg)
-    seven.shadow_gate = False
+    eight = Plan(DEFAULT_TABLE, arm="B")
+    require_shadow_plan(eight, cfg)
+    eight.shadow_gate = False
     with pytest.raises(ValueError, match="shadow_gate"):
-        require_shadow_plan(seven, cfg)
+        require_shadow_plan(eight, cfg)
 
 
 def test_watch_one_at_a_time_duplicate_failure_and_no_skip(tmp_path):
@@ -265,7 +266,7 @@ def test_b2_axis_and_b3_relative_are_separate_gates(tmp_path):
     assert missing_axis["verdict"] == "HOLD"
     cfg = json.loads(DEFAULT_CONFIG.read_text(encoding="utf-8"))
     axis = {"checkpoint_sha256": sha256(checkpoint), "envs": 64,
-            "modes": {mode: {name: {"stop_complete_envs": 64,
+            "modes": {mode: {name: {"alive_at_end": 64, "stop_complete_envs": 64,
                                      "stop_end_error_median_rad": .01}
                              for name in cfg["axis_goal"]["cases"]}
                       for mode in ("eval_gt", "probe_prop_only", "eval_pred")}}
@@ -280,7 +281,7 @@ def test_b2_axis_and_b3_relative_are_separate_gates(tmp_path):
     assert failed["verdict"] == "FAIL"
     axis["modes"]["eval_gt"][cfg["axis_goal"]["cases"][0]]["stop_complete_envs"] = 64
     axis_path.write_text(json.dumps(axis), encoding="utf-8")
-    for stage in ("B3a", "B3b", "B3c"):
+    for stage in ("B3a", "B3b", "B3c", "D"):
         row, _ = judge(checkpoint, stage, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B")
         assert row["verdict"] == "PASS"
     extra["modes"]["eval_gt"]["spin+0.3"]["yaw_follow_median"] = .3
@@ -320,7 +321,7 @@ def test_smoke_check_known_receipt(tmp_path):
 def _axis(out: Path, checkpoint: Path):
     cfg = config(DEFAULT_CONFIG)
     axis = {"checkpoint_sha256": sha256(checkpoint), "envs": 64,
-            "modes": {mode: {name: {"stop_complete_envs": 64,
+            "modes": {mode: {name: {"alive_at_end": 64, "stop_complete_envs": 64,
                                      "stop_end_error_median_rad": .01}
                              for name in cfg["axis_goal"]["cases"]}
                       for mode in ("eval_gt", "probe_prop_only", "eval_pred")}}
@@ -328,11 +329,11 @@ def _axis(out: Path, checkpoint: Path):
     (out / "axis_v2/axis_v2.json").write_text(json.dumps(axis), encoding="utf-8")
 
 
-def test_v7_stage_ends_require_w57_and_keep_old_stage_score(tmp_path):
+def test_d74_stage_ends_require_w57_and_keep_old_stage_score(tmp_path):
     checkpoint, plan = _source(tmp_path, update=1500)
     assert stage_end_updates(plan, config(DEFAULT_CONFIG)) == {
         1500: "B0", 3000: "B1", 4500: "B2", 5000: "B3a",
-        5500: "B3b", 6000: "B3c", 6500: "T0"}
+        5500: "B3b", 6000: "B3c", 7500: "D", 8000: "T0"}
     out_root, scores = tmp_path / "evals", tmp_path / "scores"
     source_log = tmp_path / "stage_log.jsonl"
     with source_log.open("a", encoding="utf-8") as stream:
@@ -392,7 +393,7 @@ def test_unpinned_or_rewritten_checkpoint_never_starts_eval(tmp_path):
         sleep=lambda _: checkpoint.write_bytes(b"changed during probe"))["reason"]
 
 
-def test_final_completion_requires_all_25_scores_and_training_done(tmp_path):
+def test_final_completion_requires_all_31_scores_and_training_done(tmp_path):
     plan = Plan(DEFAULT_TABLE, arm="B")
     cfg = config(DEFAULT_CONFIG)
     (tmp_path / "stage_log.jsonl").write_text("".join(
@@ -404,7 +405,7 @@ def test_final_completion_requires_all_25_scores_and_training_done(tmp_path):
     state = _state()
     ledger_rows = []
     boundaries = stage_end_updates(plan, cfg)
-    for n in range(500, 6501, 250):
+    for n in range(500, 8001, 250):
         checkpoint = tmp_path / f"model_{n}.pt"
         checkpoint.write_bytes(f"completed checkpoint {n}".encode())
         _pin(tmp_path, checkpoint)
@@ -436,8 +437,8 @@ def test_final_completion_requires_all_25_scores_and_training_done(tmp_path):
                             "score_path": str(score_path), "score_sha256": sha256(score_path)})
     (out_root / "score_ledger.jsonl").write_text("".join(json.dumps(r) + "\n" for r in ledger_rows),
                                                    encoding="utf-8")
-    final = tmp_path / "model_6500.pt"
-    status = {"state": "running", "iter": 6500, "checkpoint": str(final), "sha256": sha256(final)}
+    final = tmp_path / "model_8000.pt"
+    status = {"state": "running", "iter": 8000, "checkpoint": str(final), "sha256": sha256(final)}
     status_path = tmp_path / "train_start_status.json"
     status_path.write_text(json.dumps(status), encoding="utf-8")
     assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "waiting_for_training"
@@ -445,28 +446,28 @@ def test_final_completion_requires_all_25_scores_and_training_done(tmp_path):
     status_path.write_text(json.dumps(status), encoding="utf-8")
     assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state) == {
         "state": "done", "final_checkpoint": str(final), "final_sha256": sha256(final),
-        "evaluated": 25, "stage_end_updates": list(boundaries)}
-    (out_root / "evidence_6500/axis_v2.json").unlink()
+        "evaluated": 31, "stage_end_updates": list(boundaries)}
+    (out_root / "evidence_8000/axis_v2.json").unlink()
     assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "stage_end_evidence_missing"
-    (out_root / "evidence_6500/axis_v2.json").write_text("{}", encoding="utf-8")
-    state["done"].pop("6500")
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 6500
+    (out_root / "evidence_8000/axis_v2.json").write_text("{}", encoding="utf-8")
+    state["done"].pop("8000")
+    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
     state["done"]["500"]["state"] = "HOLD"
-    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 6500
+    assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["first_missing"] == 8000
     state["done"]["500"]["state"] = "PASS"
-    state["done"]["6500"] = {"state": "HOLD", "stage": "T0", "checkpoint_sha256": sha256(final)}
+    state["done"]["8000"] = {"state": "HOLD", "stage": "T0", "checkpoint_sha256": sha256(final)}
     assert completion(tmp_path, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state)["state"] == "score_hold"
 
 
 def test_t0_final_score_is_exported_even_without_next_stage(tmp_path, monkeypatch):
-    checkpoint, plan = _source(tmp_path, update=6500)
+    checkpoint, plan = _source(tmp_path, update=8000)
     with (tmp_path / "stage_log.jsonl").open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps({"event": "stage_enter", "iteration": 6001,
+        stream.write(json.dumps({"event": "stage_enter", "iteration": 7501,
                                  "to": "T0", "effective_schedule_sha256":
                                  plan.effective_sha256}) + "\n")
     def fake_judge(source, stage, out, cfg_path, table, arm, baseline=None):
         return ({"format": "foothold-ex40-score/2", "from": "T0", "to": None,
-                 "checkpoint": str(source), "checkpoint_iteration": 6500,
+                 "checkpoint": str(source), "checkpoint_iteration": 8000,
                  "checkpoint_sha256": sha256(source), "verdict": "PASS",
                  "problems": [], "sources": {"axis_v2": "present"}}, {})
     monkeypatch.setattr("foothold_s2.ex40_score_watch.judge", fake_judge)
@@ -477,5 +478,69 @@ def test_t0_final_score_is_exported_even_without_next_stage(tmp_path, monkeypatc
                                                  "receipt": {"state": "done"}},
                        sleep=lambda _: None)
     assert row["stage"] == "T0" and row["state"] == "PASS"
-    assert len(list(scores.glob("score_6500_*.json"))) == 1
+    assert len(list(scores.glob("score_8000_*.json"))) == 1
     assert json.loads((out_root / "score_ledger.jsonl").read_text(encoding="utf-8"))["stage"] == "T0"
+
+
+def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path):
+    run, out = tmp_path / "run", tmp_path / "score_watch"
+    run.mkdir()
+    out.mkdir()
+    ledger = []
+    saved = []
+    for update, stage in ((1500, "B0"), (3000, "B1")):
+        checkpoint = run / f"model_{update}.pt"
+        checkpoint.write_bytes(f"model {update}".encode())
+        evidence = out / f"eval_{update}"
+        map_row = _evidence(evidence, checkpoint)
+        _axis(evidence, checkpoint)
+        if update == 3000:
+            map_row["modes"]["eval_gt"]["fwd0.5"]["alive_envs_at_end"] = 59
+            map_row["modes"]["eval_gt"]["fwd1.0"]["alive_envs_at_end"] = 61
+            (evidence / "map64/map_modes.json").write_text(json.dumps(map_row), encoding="utf-8")
+        sources = {"map64": str(evidence / "map64/map_modes.json"),
+                   "axis_v2": str(evidence / "axis_v2/axis_v2.json")}
+        sources.update({f"stand_{mode}": str(evidence / f"stand_{mode}/stand.json")
+                        for mode in ("eval_gt", "probe_prop_only", "eval_pred")})
+        score = {"format": "foothold-ex40-score/2", "from": stage,
+                 "checkpoint_iteration": update, "checkpoint_sha256": sha256(checkpoint),
+                 "sources": sources}
+        score_path = out / f"score_{update}.json"
+        score_path.write_text(json.dumps(score), encoding="utf-8")
+        ledger.append({"checkpoint_iteration": update, "stage": stage, "verdict": "PASS",
+                       "score_path": str(score_path), "score_sha256": sha256(score_path)})
+        saved.append(score)
+    (out / "score_ledger.jsonl").write_text("".join(json.dumps(row) + "\n" for row in ledger), encoding="utf-8")
+    (run / "train_extra.jsonl").write_text("".join(json.dumps({"it": update, "ex40_dr": {
+        "update": update, "scale": scale,
+        "actual_samples": {"base_com_offset_m": {"count": 2, "min": 0., "max": .01, "mean": .005}},
+        "delay_readback": {"observed_min_substeps": 0, "observed_max_substeps": 1},
+        "pending_values": []}}) + "\n" for update, scale in ((1500, 0.), (3000, .2))), encoding="utf-8")
+    row = build_stage_report(saved[1], saved[0], run)
+    assert len(row["current"]["w15"]) == 39
+    assert row["dr_current"]["actual_samples"]["base_com_offset_m"]["max"] == .01
+    assert any(item["cell"] == "w15/eval_gt/fwd0.5" and item["delta"] == -5 for item in row["losses"])
+    assert any(item["cell"] == "w15/eval_gt/fwd1.0" and item["delta"] == -3 for item in row["unchanged"])
+    sent = []
+    result = stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B",
+                           telegram_sender=tmp_path / "sender.py", lab_feed=tmp_path / "lab_feed.json",
+                           sender=lambda script, message: sent.append(message.read_text(encoding="utf-8")) or True)
+    assert result["published"] == 2 and result["first_pending"] == 4500
+    assert len(sent) == 2 and (out / "stage_reports/stage_B1_m3000.md").is_file()
+    assert json.loads((tmp_path / "lab_feed.json").read_text(encoding="utf-8"))["stage_reports"][1]["stage"] == "B1"
+    assert "B1 m3000" in (tmp_path / "lab_feed.html").read_text(encoding="utf-8")
+    stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B",
+                  telegram_sender=tmp_path / "sender.py", sender=lambda *_: pytest.fail("duplicate send"))
+    assert len(sent) == 2
+    delivery = out / "stage_reports/stage_B1_m3000.delivery.json"
+    delivery.write_text(json.dumps({"state": "uncertain"}), encoding="utf-8")
+    held = stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B",
+                         telegram_sender=tmp_path / "sender.py", sender=lambda *_: pytest.fail("uncertain resend"))
+    assert held["state"] == "hold" and held["first_hold"]["reason"] == "telegram_delivery_uncertain"
+    (out / "eval_3000/map64/map_modes.json").write_text("{}", encoding="utf-8")
+    changed = stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B")
+    assert changed["state"] == "hold" and "source changed" in changed["first_hold"]["reason"]
+    bad = copy.deepcopy(saved[1])
+    bad["checkpoint_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="checkpoint"):
+        build_stage_report(bad, saved[0], run)

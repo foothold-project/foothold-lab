@@ -37,7 +37,7 @@ def test_scratch_stages_and_baseline_pins(tmp_path):
     plan = Plan(TABLE, arm="A")
     assert [(s.id, s.fixed_update) for s in plan.stages] == [
         ("B0", 0), ("B1", 1501), ("B2", 3001), ("B3a", 4501),
-        ("B3b", 5001), ("B3c", 5501), ("T0", 6001)]
+        ("B3b", 5001), ("B3c", 5501), ("D", 6001), ("T0", 7501)]
     assert plan.parent_sha256 is None
     assert hashlib.sha256((BASELINE / "env.yaml").read_bytes()).hexdigest() == plan.baseline_env_yaml_sha256
     assert hashlib.sha256((BASELINE / "agent.yaml").read_bytes()).hexdigest() == plan.baseline_agent_yaml_sha256
@@ -141,7 +141,7 @@ def test_b0_to_b1_reward_and_reset_boundary(tmp_path):
 
 
 def test_actual_parser_and_scratch_receipt(tmp_path):
-    for smoke, final in ((True, 18), (False, 6501)):
+    for smoke, final in ((True, 18), (False, 8001)):
         args = build_args(arm="A", device="cuda:0", end_by="2026-11-05T12:00:00+09:00",
                           log_root=tmp_path / "output", score_dir=tmp_path / "scores", smoke=smoke)
         parsed, unknown = actual_parser().parse_known_args([
@@ -152,6 +152,13 @@ def test_actual_parser_and_scratch_receipt(tmp_path):
         assert row["start"] == "scratch" and row["parent"] is None
         assert row["stand_reward"] == {"four_foot_contact": .1, "gap": -.2, "load": -.1}
         assert row["stage_boundaries"]["B0"] == 0
+        if not smoke:
+            assert row["stage_boundaries"]["D"] == 6001
+            assert row["stage_boundaries"]["T0"] == 7501
+            bad_length = list(args)
+            bad_length[bad_length.index("--max_iterations") + 1] = "6501"
+            with pytest.raises(ValueError, match="m8000"):
+                receipt(bad_length)
     with pytest.raises(ValueError, match="resume needs both"):
         receipt(args + ["--resume_from", str(BASELINE / "agent.yaml")])
     bad = _mutated(tmp_path, lambda d: d.update(baseline_env_yaml_sha256="0" * 64))

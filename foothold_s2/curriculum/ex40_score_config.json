@@ -1,6 +1,6 @@
 {
   "format": "foothold-ex40-score-config/1",
-  "note": "D72 fixed promotion with shadow scores. B0-B3c PRED is recorded; T0 three-mode scores are recorded, never used for automatic promotion.",
+  "note": "D72 and D74 fixed promotion with shadow scores. B0-D PRED is recorded; T0 three-mode scores are recorded, never used for automatic promotion.",
   "device": "cuda:1",
   "envs": 64,
   "eval_seed": 42,
@@ -9,7 +9,7 @@
   "stand_skip_seconds": 1.0,
   "checkpoint_first": 500,
   "checkpoint_stride": 250,
-  "final_checkpoint_update": 6500,
+  "final_checkpoint_update": 8000,
   "checkpoint_stable_seconds": 5.0,
   "check_interval_seconds": 15.0,
   "estimated_training_seconds_per_update": 24.0,
@@ -40,6 +40,7 @@
     "B3a": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0"]},
     "B3b": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3"]},
     "B3c": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3", "slow0.1", "slow0.2", "slow0.3"]},
+    "D": {"judge_modes": ["eval_gt", "probe_prop_only"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3", "slow0.1", "slow0.2", "slow0.3"]},
     "T0": {"judge_modes": ["eval_gt", "probe_prop_only", "eval_pred"], "judge_commands": ["fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "back0.5", "back1.0", "side+0.5", "side-0.5", "diag-fwd+side+", "diag-fwd+side-", "diag-back+side+", "diag-back+side-", "stop"], "judge_walk_half": true, "axis_goal": true, "relative_commands": ["walk+1.0", "walk-1.0", "spin+0.3", "spin-0.3", "slow0.1", "slow0.2", "slow0.3"]}
   }
 }

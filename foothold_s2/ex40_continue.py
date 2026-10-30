@@ -20,7 +20,7 @@ from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.ex40_launch import TABLE
 
 
-TOTAL_ITERATIONS = 6501
+TOTAL_ITERATIONS = 8001
 TARGET_UPDATE = TOTAL_ITERATIONS - 1
 
 

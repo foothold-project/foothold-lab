@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--checkpoint", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--stage", choices=("B0", "B1", "B2", "B3a", "B3b", "B3c", "T0"), required=True)
+    p.add_argument("--stage", choices=("B0", "B1", "B2", "B3a", "B3b", "B3c", "D", "T0"), required=True)
     p.add_argument("--arm", choices=("A", "B"), required=True)
     p.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     p.add_argument("--table", type=Path, default=DEFAULT_TABLE)

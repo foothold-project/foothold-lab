@@ -22,7 +22,7 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
           "side_vy_abs", "diag_vx_abs", "diag_vy_abs")
-STAGE_IDS = ("B0", "B1", "B2", "B3a", "B3b", "B3c", "T0")
+STAGE_IDS = ("B0", "B1", "B2", "B3a", "B3b", "B3c", "D", "T0")
 KIT_SMOKE_BOUNDARIES = (3, 6, 9, 12, 15)
 FIRST_REWARDS = {"track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty",
                  "thigh_calf_pos_l1", "four_foot_contact_at_stop", "stand_gap", "stand_load"}
@@ -97,10 +97,10 @@ class Plan:
             sort_keys=True).encode("utf-8")).hexdigest()
         raw = doc.get("stages")
         if not isinstance(raw, list) or [x.get("id") for x in raw] != list(STAGE_IDS):
-            raise ValueError("D72 EX-40 needs B0, B1, B2, B3a, B3b, B3c, T0 in order")
-        if smoke_boundaries is not None and (len(smoke_boundaries) != len(STAGE_IDS) - 2 or
+            raise ValueError("D74 EX-40 needs B0, B1, B2, B3a, B3b, B3c, D, T0 in order")
+        if smoke_boundaries is not None and (len(smoke_boundaries) not in (5, 6) or
                                              list(smoke_boundaries) != sorted(set(smoke_boundaries))):
-            raise ValueError("D72 smoke needs five increasing boundaries")
+            raise ValueError("D74 smoke needs five or six increasing boundaries")
         if smoke_boundaries is not None:
             raw = raw[:len(smoke_boundaries) + 1]
         self.stages: list[Stage] = []
@@ -169,9 +169,9 @@ class Plan:
             if row.get("heading_arm") is not None:
                 raise ValueError("W55 arm must remain undecided in the shared stage table")
             low = float(row.get("low_forward_fraction", 0.0))
-            expected_low = 0.20 if row["id"] in ("B3c", "T0") else 0.0
+            expected_low = 0.20 if row["id"] in ("B3c", "D", "T0") else 0.0
             if not 0.0 <= low <= 1.0 or not math.isclose(low, expected_low, abs_tol=1e-12):
-                raise ValueError("D72 low-speed forward fraction is allowed only in B3c and T0")
+                raise ValueError("D74 low-speed forward fraction is allowed only from B3c onward")
             self.stages.append(Stage(row["id"], update, shares, ranges, rewards, force_gt,
                                      low, arm, self.heading_cfg, adds))
             last_rewards, last_slots, last_ranges = rewards, slots, ranges

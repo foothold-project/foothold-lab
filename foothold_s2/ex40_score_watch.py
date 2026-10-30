@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import html
 import json
 import os
 from pathlib import Path
@@ -19,6 +20,7 @@ import time
 from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.ex40_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, ROOT
 from foothold_s2.ex40_score import config, judge, require_shadow_plan, sha256, stage_end_updates
+from foothold_s2.ex40_stage_report import build as build_stage_report, markdown as stage_markdown
 
 
 MODEL = re.compile(r"model_(\d+)\.pt\Z")
@@ -32,6 +34,19 @@ def _atomic(path: Path, row: dict) -> None:
         try:
             os.replace(temporary, path)
             break
+        except PermissionError:
+            if attempt == 199:
+                raise
+            time.sleep(.01)
+
+
+def _atomic_text(path: Path, content: str) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(content, encoding="utf-8")
+    for attempt in range(200):
+        try:
+            os.replace(temporary, path)
+            return
         except PermissionError:
             if attempt == 199:
                 raise
@@ -312,6 +327,105 @@ def completion(run: Path, out_root: Path, cfg_path: Path, table: Path,
             "stage_end_updates": list(boundaries)}
 
 
+def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: str,
+                  *, telegram_sender: Path | None = None, lab_feed: Path | None = None,
+                  sender=None) -> dict:
+    """Publish each complete boundary once from the score ledger, never stage_log.
+
+    A sender failure is recorded as uncertain and never retried automatically.
+    The operator can inspect the report and delivery row before retrying.
+    """
+    cfg = config(cfg_path)
+    boundaries = stage_end_updates(Plan(table, arm=arm), cfg)
+    by_update = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+    report_root = out_root / "stage_reports"
+    report_root.mkdir(parents=True, exist_ok=True)
+    published = []
+    first_pending = None
+    first_hold = None
+    previous = None
+    for update, stage in boundaries.items():
+        ledger = by_update.get(update)
+        if ledger is None:
+            first_pending = first_pending or update
+            break
+        score_path = Path(ledger["score_path"])
+        if (ledger["stage"] != stage or ledger["verdict"] not in ("PASS", "FAIL")
+                or not score_path.is_file() or sha256(score_path) != ledger["score_sha256"]):
+            first_pending = first_pending or update
+            break
+        score = json.loads(score_path.read_text(encoding="utf-8-sig"))
+        if score.get("checkpoint_iteration") != update or score.get("from") != stage:
+            raise ValueError("stage report score identity mismatch")
+        target = report_root / f"stage_{stage}_m{update}"
+        report_path = target.with_suffix(".json")
+        markdown_path = target.with_suffix(".md")
+        try:
+            if report_path.exists() or markdown_path.exists():
+                if not (report_path.exists() and markdown_path.exists()):
+                    raise ValueError("stage report pair incomplete")
+                existing = json.loads(report_path.read_text(encoding="utf-8-sig"))
+                if (existing.get("checkpoint_sha256") != score["checkpoint_sha256"]
+                        or existing.get("previous_checkpoint_iteration") !=
+                        (previous["checkpoint_iteration"] if previous else None)):
+                    raise ValueError("stage report conflicts with pinned score")
+                for name, digest in existing["current"]["source_sha256"].items():
+                    if sha256(Path(score["sources"][name])) != digest:
+                        raise ValueError(f"stage report source changed: {name}")
+            else:
+                report = build_stage_report(score, previous, run)
+                _atomic(report_path, report)
+                markdown_path.write_text(stage_markdown(report), encoding="utf-8")
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            first_hold = first_hold or {"update": update, "reason": f"{type(exc).__name__}: {exc}"}
+            previous = score
+            continue
+        published.append({"stage": stage, "update": update, "path": str(markdown_path),
+                          "json": str(report_path), "sha256": sha256(report_path)})
+        if telegram_sender is not None:
+            delivery_path = target.with_suffix(".delivery.json")
+            if not delivery_path.exists():
+                text_path = target.with_suffix(".telegram.txt")
+                report = json.loads(report_path.read_text(encoding="utf-8-sig"))
+                summary = (f"EX-40 {stage} m{update} 평가 완료. 얻은 점 {len(report['gains'])}칸, "
+                           f"잃은 점 {len(report['losses'])}칸, 차이 없음 {len(report['unchanged'])}칸. "
+                           "상황판: https://ai-ws01.tail025053.ts.net/lab/ex40_stage_reports.html "
+                           f"상세: {markdown_path}")
+                text_path.write_text(summary + "\n", encoding="utf-8")
+                if sender is None:
+                    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                    attempt = subprocess.run([sys.executable, str(telegram_sender), str(text_path)],
+                                             capture_output=True, text=True, timeout=90,
+                                             creationflags=flags, check=False)
+                    accepted = attempt.returncode == 0 and attempt.stdout.split(maxsplit=1)[:1] == ["0"]
+                else:
+                    accepted = bool(sender(telegram_sender, text_path))
+                _atomic(delivery_path, {"state": "sent" if accepted else "uncertain",
+                                        "summary_sha256": sha256(text_path),
+                                        "sender_path": str(telegram_sender)})
+            if json.loads(delivery_path.read_text(encoding="utf-8"))["state"] != "sent":
+                first_hold = first_hold or {"update": update, "reason": "telegram_delivery_uncertain"}
+        previous = score
+    if lab_feed is not None:
+        _atomic(lab_feed, {"format": "foothold-ex40-lab-feed/1", "stage_reports": published,
+                           "first_pending": first_pending})
+        items = []
+        for item in published:
+            report = json.loads(Path(item["json"]).read_text(encoding="utf-8"))
+            items.append("<li><strong>" + html.escape(item["stage"]) + " m" + str(item["update"])
+                         + "</strong> · 얻은 점 " + str(len(report["gains"]))
+                         + "칸 · 잃은 점 " + str(len(report["losses"]))
+                         + "칸 · 상세 문서: <code>" + html.escape(item["path"])
+                         + "</code></li>")
+        page = ("<!doctype html><html lang='ko'><meta charset='utf-8'>"
+                "<title>EX-40 단계 끝 보고</title><main><h1>EX-40 단계 끝 보고</h1>"
+                "<p>생존 반복 폭 ±3/64 이내는 차이 없음. 원자료 숫자는 각 문서와 JSON에 있습니다.</p>"
+                "<ol>" + "".join(items) + "</ol></main></html>\n")
+        _atomic_text(lab_feed.with_suffix(".html"), page)
+    return {"state": "hold" if first_hold else "pending" if first_pending is not None else "done",
+            "published": len(published), "first_pending": first_pending, "first_hold": first_hold}
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--run-dir", type=Path, required=True)
@@ -321,6 +435,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--table", type=Path, default=DEFAULT_TABLE)
     p.add_argument("--arm", choices=("A", "B"), required=True)
     p.add_argument("--once", action="store_true")
+    p.add_argument("--telegram-sender", type=Path,
+                   default=Path("C:/Users/AI-WS01/s2_lab/tools_lead/tg_send.py"))
+    p.add_argument("--no-telegram", action="store_true")
+    p.add_argument("--lab-feed", type=Path,
+                   default=Path("C:/Users/AI-WS01/s2_lab/lab_status/ex40_stage_reports.json"))
     args = p.parse_args(argv)
     args.run_dir = args.run_dir.resolve()
     args.out_root = args.out_root.resolve()
@@ -348,15 +467,22 @@ def main(argv: list[str] | None = None) -> int:
         while True:
             result = process_once(args.run_dir, args.out_root, args.score_dir,
                                   args.config, args.table, args.arm, state)
+            reports = stage_reports(args.run_dir, args.out_root, args.config, args.table,
+                                    args.arm, telegram_sender=None if args.no_telegram else args.telegram_sender,
+                                    lab_feed=args.lab_feed)
             end = completion(args.run_dir, args.out_root, args.config, args.table, args.arm, state)
+            if end["state"] == "done" and reports["state"] != "done":
+                end = ({"state": "stage_report_hold", "detail": reports["first_hold"]}
+                       if reports["state"] == "hold" else
+                       {"state": "waiting_for_stage_reports", "first_missing": reports["first_pending"]})
             if end["state"] in ("done", "training_not_complete", "score_hold",
                                 "score_or_checkpoint_mismatch", "stage_end_evidence_missing",
                                 "evaluation_receipt_missing", "evaluation_evidence_missing",
-                                "final_training_receipt_mismatch"):
+                                "final_training_receipt_mismatch", "stage_report_hold"):
                 state["terminal"] = end
                 _atomic(args.out_root / "watch_completion.json", end)
             _atomic(path, state)
-            print(json.dumps({"evaluation": result, "completion": end}, ensure_ascii=False), flush=True)
+            print(json.dumps({"evaluation": result, "reports": reports, "completion": end}, ensure_ascii=False), flush=True)
             if args.once:
                 return 0
             if "terminal" in state:

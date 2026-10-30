@@ -23,10 +23,10 @@ def test_v7_schedule_shares_ranges_and_boundaries():
     plan = Plan(TABLE, arm="B")
     assert [(stage.id, stage.fixed_update) for stage in plan.stages] == [
         ("B0", 0), ("B1", 1501), ("B2", 3001), ("B3a", 4501),
-        ("B3b", 5001), ("B3c", 5501), ("T0", 6001)]
+        ("B3b", 5001), ("B3c", 5501), ("D", 6001), ("T0", 7501)]
     for stage in plan.stages:
         assert sum(stage.shares.values()) == pytest.approx(1.0)
-    b3a, b3b, b3c, t0 = plan.stages[3:]
+    b3a, b3b, b3c, d, t0 = plan.stages[3:]
     assert b3a.shares["forward"] == .25
     assert b3a.shares["walk_left"] == b3a.shares["walk_right"] == .075
     assert b3a.ranges["walk_wz_abs"] == (.2, 1.0)
@@ -34,10 +34,10 @@ def test_v7_schedule_shares_ranges_and_boundaries():
     assert b3a.low_forward_fraction == 0
     assert b3b.ranges["spin_wz_abs"] == (.3, 1.5)
     assert b3b.ranges["forward_vx"] == (.3, 1.5)
-    assert b3c.ranges["forward_vx"] == t0.ranges["forward_vx"] == (.1, 1.5)
-    assert b3c.low_forward_fraction == t0.low_forward_fraction == .2
-    assert b3c.force_gt and not t0.force_gt
-    assert t0.shares == b3c.shares and t0.ranges == b3c.ranges
+    assert b3c.ranges["forward_vx"] == d.ranges["forward_vx"] == t0.ranges["forward_vx"] == (.1, 1.5)
+    assert b3c.low_forward_fraction == d.low_forward_fraction == t0.low_forward_fraction == .2
+    assert b3c.force_gt and d.force_gt and not t0.force_gt
+    assert t0.shares == d.shares == b3c.shares and t0.ranges == d.ranges == b3c.ranges
     smoke = Plan(TABLE, arm="B", smoke_boundaries=KIT_SMOKE_BOUNDARIES)
     assert [(stage.id, stage.fixed_update) for stage in smoke.stages] == [
         ("B0", 0), ("B1", 3), ("B2", 6), ("B3a", 9), ("B3b", 12), ("B3c", 15)]
@@ -116,7 +116,7 @@ def test_newest_manifest_checkpoint_and_stage_state_verified(tmp_path):
     row = check_parent(checkpoint, digest)
     assert row["completed_update"] == 5500
     assert row["active_stage"] == "B3b"
-    assert row["remaining_updates"] == 1000
+    assert row["remaining_updates"] == 2500
     assert newest_verified_checkpoint(run)["checkpoint_sha256"] == digest
     (run / "train_start_status.json").write_text(
         json.dumps({"state": "failed", "iter": 5500}), encoding="utf-8")
@@ -126,9 +126,9 @@ def test_newest_manifest_checkpoint_and_stage_state_verified(tmp_path):
         json.dumps({"state": "running", "iter": 5500}), encoding="utf-8")
     assert source_decision(run=run, shell_finished=False, process_alive=None)["state"] == "waiting_for_process_state"
     (run / "train_start_status.json").write_text(
-        json.dumps({"state": "done", "iter": 6500}), encoding="utf-8")
+        json.dumps({"state": "done", "iter": 8000}), encoding="utf-8")
     assert source_decision(run=run, shell_finished=True, process_alive=False) == {
-        "state": "already_complete", "completed_update": 6500}
+        "state": "already_complete", "completed_update": 8000}
 
 
 def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path):
