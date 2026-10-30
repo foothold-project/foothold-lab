@@ -137,3 +137,5 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold
 - 이 후속은 기존 P1/B8 범위다. 이전 보고의 P1 전면 완료 표시는 없으며 analyst의 P1 변경분 verifier 확인이 여전히 필요하다.
 - GPU, Kit, 학습 child, 실제 score evaluator 및 외부 발신/게시를 실행하지 않았다. 실제 lab 서비스가 파일을 읽고 실제 Telegram 수신자가 받는지는 미확인이다.
 - 관련 변경은 `foothold_s2/ex40_supervisor.py`, `foothold_s2/ex40_score_watch.py`, `foothold_s2/run_ex40_b11.sh`, 두 CPU 시험 파일 및 이 보고서다. push하지 않았다.
+
+구현 커밋: `3afb0d6b37317c6e3a8caef7737150e68c1f3432`.
