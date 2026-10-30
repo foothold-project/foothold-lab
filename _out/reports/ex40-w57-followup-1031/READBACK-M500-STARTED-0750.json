@@ -1,0 +1,128 @@
+{
+    "observed_at":  "2026-10-31T07:50:59.9699662+09:00",
+    "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+    "manifest_progress":  {
+                              "completed_updates":  501,
+                              "total_env_steps":  36937728
+                          },
+    "train_status":  {
+                         "state":  "running",
+                         "iter":  500,
+                         "tot_iter":  8001,
+                         "iter_s":  25.934906721115112,
+                         "steps_per_s":  2842.809530522574,
+                         "mean_reward":  32.341044157743454,
+                         "mean_episode_length":  951.06,
+                         "p_smpl":  1.0,
+                         "gpu_max_allocated_GiB":  6.050112724304199,
+                         "perception":  {
+                                            "l_tr":  0.01487,
+                                            "l_ie":  2.31197,
+                                            "kl":  0.00015,
+                                            "o_next":  2.3005,
+                                            "v":  0.00869,
+                                            "hf":  0.00093,
+                                            "hb":  0.0017
+                                        },
+                         "log_dir":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240",
+                         "time":  "2026-10-31T07:47:01",
+                         "pid":  26240
+                     },
+    "eval_receipt":  {
+                         "format":  "foothold-ex40-eval-bundle/1",
+                         "checkpoint":  "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_500.pt",
+                         "checkpoint_sha256":  "6d0bfdde1175032bd3b51c1824f08bc1d668a2f4be9dc88e2c4388c9059706da",
+                         "stage":  "B0",
+                         "arm":  "B",
+                         "device":  "cuda:1",
+                         "smoke":  false,
+                         "score_config_sha256":  "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+                         "table_sha256":  "66a519b28f5597ff41cec09f286d4cdd66af5d3877ecb1580005ca5a13a70585",
+                         "source_git_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+                         "steps":  {
+
+                                   },
+                         "state":  "running"
+                     },
+    "evaluator_pid":  122212,
+    "evaluator_parent_pid":  117500,
+    "evaluator_command":  "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\python.exe -m foothold_s2.eval.eval_map_modes --task FootholdS2-Go2-S2-SB-v0 --checkpoint C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_500.pt --envs 64 --steps 300 --modes eval_gt,probe_prop_only,eval_pred --command-suite extended --commands all --fixed-terrain --eval-seed 42 --kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache --out C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch\\model_500_6d0bfdde1175\\map64 --headless --device cuda:1",
+    "eval_gpu_entries":  [
+                             "122212, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\python.exe",
+                             "122212, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\python.exe"
+                         ],
+    "map64_device_lines":  [
+                               {
+                                   "line":  1,
+                                   "text":  "[INFO][AppLauncher]: Using device: cuda:1"
+                               },
+                               {
+                                   "line":  45,
+                                   "text":  "\tEnvironment device    : cuda:1"
+                               }
+                           ],
+    "kit_physics_device_lines":  [
+                                     {
+                                         "line":  2399,
+                                         "text":  "2026-10-30T22:47:34Z [6,751ms] [Info] [omni.physx.plugin] Using CUDA device ordinal 1."
+                                     },
+                                     {
+                                         "line":  2463,
+                                         "text":  "2026-10-30T22:47:40Z [12,984ms] [Info] [omni.physx.tensors.plugin] Physics using context 00000140E359C010, device 1"
+                                     }
+                                 ],
+    "kit_log_path":  "C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20261031_074727.log",
+    "map64_files":  [
+                        {
+                            "Name":  "env_arrays_eval_gt_back0.5.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400574893)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_back1.0.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400597168)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_fwd0.5.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400486169)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_fwd1.0.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400508459)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_side+0.5.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400619563)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_side-0.5.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400641098)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_spin+1.2.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400530066)\/"
+                        },
+                        {
+                            "Name":  "env_arrays_eval_gt_spin-1.2.npz",
+                            "Length":  754842,
+                            "LastWriteTime":  "\/Date(1793400552406)\/"
+                        }
+                    ],
+    "frozen_head":  "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "frozen_tracked_changes":  [
+
+                               ],
+    "exclusive_gpu1_claim":  false,
+    "exclusive_gpu1_reason":  "Kit active table and compute context list include both devices; PhysX and environment explicitly use device1",
+    "received_events":  [
+                            "msg_d78488076d1a",
+                            "msg_3801d6a51886"
+                        ],
+    "ack_delivery":  "delivery_a3aa516b31e5"
+}
