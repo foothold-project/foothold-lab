@@ -35,6 +35,8 @@ def read_run(policy, variant, rep):
     d = json.loads(path.read_text(encoding='utf-8'))
     assert d['run_identity']['gpu_index'] == 1
     assert d['run_identity']['code_dirty_files'] == 0
+    assert d['run_identity']['code_head'] == '907fe1ed80b3a4f0a190734854fb4a7f0931bf9a'
+    assert d['eval_seed'] == 42
     assert d['run_identity']['checkpoint_sha256'] == d['checkpoint_sha256']
     assert d['envs'] == 64 and d['steps'] == 300
     assert set(d['modes']) == set(MAPS) and len(d['env_arrays']) == 39
@@ -48,6 +50,30 @@ def read_run(policy, variant, rep):
         np.testing.assert_allclose([rn[k]['n_min'],rn[k]['n_max']],[-a*nscale,a*nscale])
         assert rn[k]['operation'] == 'add'
     physical = d['w51']['physical_startup']
+    material = np.asarray(physical['materials']['values'])
+    assert np.all(material[..., 1] <= material[..., 0])
+    assert np.min(material[..., :2]) >= .2 - 1e-6 and np.max(material[..., :2]) <= 1.2 + 1e-6
+    combo = variant in ('w51_combo4', 'w51_all6')
+    delay_hist = d['actuator']['delay_samples_by_reset']['action']
+    assert sum(delay_hist.values()) == 64 * 39
+    assert set(delay_hist) <= ({'0','1','2','3'} if combo else {'0'})
+    assert not combo or len(delay_hist) == 4
+    expected_events = {'add_base_mass', 'physics_material'}
+    if combo:
+        expected_events |= {'base_com', 'actuator_gains', 'motor_strength'}
+    assert set(d['w51']['config']['active_events']) == expected_events
+    for case, groups in d['actuator']['runtime_first_step'].items():
+        if case.endswith('/action'):
+            continue
+        for group, info in groups.items():
+            nominal_torque = 23.5 if group == 'hip_thigh' else 45.43
+            nominal = {'stiffness_nm_per_rad':25., 'damping_nms_per_rad':.5,
+                       'effort_limit_nm':nominal_torque, 'saturation_effort_nm':nominal_torque}
+            lo, hi = (.9,1.1) if combo else (1.,1.)
+            for key, n in nominal.items():
+                for stats in info['active_per_joint_limits'][key].values():
+                    assert stats['min'] >= n * lo - 1e-5
+                    assert stats['max'] <= n * hi + 1e-5
     push = d['w51']['pushes']
     has_push = variant in ('w51_push','w51_all6')
     assert len(push) == (39 if has_push else 0)
@@ -154,7 +180,7 @@ def main():
     audit=dict(complete=not missing,runs=len(data),expected_runs=12,cells=len(rows),missing=missing,
                condition_matches=matches,all_common_conditions_match=all(all(x[k] for k in ('materials','masses','terrain_assignment','checkpoint','source')) for x in matches),
                data_checks='64env/300steps, maps3x13, first-episode vx/alive recompute, map consumption, noise readback, push readback',
-               limits='Yaw uses persisted per-env means, no independent raw-wz replay; tilt is persisted pooled mean. No gait/feet/video. Baseline repeat difference is observed width, not a statistical bound.',inputs=inputs)
+               limits='Yaw uses persisted per-env means, no independent raw-wz replay; tilt is persisted pooled mean. No gait/feet/video. Identical-seed baseline replay is a repeatability check, not an uncertainty estimate or statistical bound. Additional DR draws can change subsequent RNG consumption; identical per-step random noise trajectories are not verified.',inputs=inputs)
     write_csv('cells.csv',rows);write_csv('terrain_cells.csv',terrains);write_csv('differences.csv',comparison)
     (OUT/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({k:audit[k] for k in ('complete','runs','cells','missing','all_common_conditions_match')},ensure_ascii=False))

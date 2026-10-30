@@ -14,7 +14,7 @@
 
 | 항목 | m0 / B3c 끝 / D 전체 범위 | 실제 소비와 단위 | 근거·판단 |
 |---|---|---|---|
-| 마찰 | 처음부터 정적·동적 각각 U(0.2,1.2), 그대로 | 몸 링크 재질에 적용, 두 값의 combine 방식도 보존 | 코드·채택: Y physics_material, E/foothold_s2/eval/actuator_variants.py:233. 이미 켠 항목을 새 여섯 항목의 효과로 세지 않음 |
+| 마찰 | 처음부터 정적·동적 표집 범위 각각0.2~1.2, 그대로 | make_consistent=True로 동마찰을 min(정마찰, 원래 동마찰)로 제한. 최종 두 값이 독립 균등 분포라는 뜻은 아님 | 코드·채택: Y physics_material, E/foothold_s2/tasks/s1_env_cfg.py:122~127, I/envs/mdp/events.py:234~241. 재질 combine 방식도 보존 |
 | 몸 추가 질량 | 처음부터 U(−1,+3) kg, 그대로 | base 링크 질량에 더함. 총질량 1~3 kg라는 뜻 아님 | 코드·채택: Y add_base_mass, D63·74. PIE의 −1~2 kg와 다름 |
 | COM | 0 / 각 축 ±0.025 m / 각 축 ±0.05 m | base COM의 x,y,z 이동. ±5 cm 구면 반경이 아닌 정육면체 표본 | 논문: [PIE Table II](https://arxiv.org/html/2408.13740v3#S3.T2), 코드: E/foothold_s2/tasks/s1_env_cfg.py:132. 3축 끝점 길이 8.66 cm는 계산. Go2 실제 오차 실측 없음. 특히 수직 ±5 cm는 넓은 강건성 시험 |
 | PD 이득 | 1 / 0.95~1.05 / 0.9~1.1 배 | 명목 Kp=25, Kd=0.5를 각각 곱함. D에서 Kp22.5~27.5, Kd0.45~0.55 | PIE Table II, E/foothold_s2/tasks/s1_env_cfg.py:136 및 robots/go2_params.py. 제조 오차의 측정치는 아님 |
@@ -34,6 +34,8 @@ D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0�
 5. 중간 cfg를 수정해도 초기화 때 복사된 observation manager·actuator·PhysX 값이 따라 바뀐다고 볼 수 없다. 적용 직후 실제 배열, env_ids, 배율, 최초 명목값 해시와 지연 hist를 기록한다. 현재 `RuntimeReadback.state_dict():306~308`은 설정 해시·회차·배율만 저장한다. 환경별 물리값·push 잔여 시각까지 복원한다는 증거는 아니며, 재개 시 새 환경의 재표집 여부와 실제값을 별도로 기록한다.
 
 **runner v8 재확인, 22:29:** 앞서 049587d4에서 지적한 root velocity API와 지연 반올림은 **2adbb1d5에서 코드 수준으로 닫혔다**. `ex40_dr_runtime.py:175~177`은 설치 API와 같은 `get_root_velocities()`를 쓰고, `delayed_action.py:18·43`과 `ex40_dr.py:68`은 floor를 쓴다. analyst가 GPU를 숨겨 `test_ex40_dr_v8_cpu.py`를 직접 실행해 **10 passed, 3.41 s**를 얻었다. 이 시험 파일 수와 runner의 전체 시험 수를 혼합하지 않는다. 명목 COM·모터 세기 복원 adapter는 읽었으나, 수정된 학습 runtime의 Kit 효과 검증은 미확인이다. W51의 짧은 Kit 통과는 별도 평가 코드의 증거다.
+
+**새 막음 1, 2adbb1d5의 COM 대상:** `ex40_dr_runtime.py:194~196`은 `SceneEntityCfg("robot")`를 COM 이벤트에 전달한다. 설치 `scene_entity_cfg.py:69~80`의 기본 `body_ids=slice(None)`는 모든 링크이고, `events.py:420~435`는 그 링크 모두에 offset을 더한다. 실제 `install_runtime_events` 함수 AST를 CPU에서 호출해 `body_names=None / body_ids=slice(None)`를 재현했다. S1 설정 `s1_env_cfg.py:134`의 `body_names="base"`와 다르다. **몸통만 ±5 cm로 옮길 의도가 다리까지 같은 offset을 주는 처치로 바뀐다.** COM 이벤트 전용 asset cfg를 base로 한정하고, 반복 reset에서 base만 변하며 다른 링크 COM은 명목 그대로인 시험이 필요하다. 학습 소스는 수정하지 않았다. 이 결함은 평가 전용 W51의 S1 COM 설정에는 없다.
 
 ## 2. 관측 잡음과 실제 Go2 공개값
 
