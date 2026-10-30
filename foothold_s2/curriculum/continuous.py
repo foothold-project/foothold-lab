@@ -482,8 +482,18 @@ class Runtime:
                    "created_at": score["created_at"]}
             self._write(row)
             order = (update, score["created_at"])
-            if (self.latest_score is not None and order <= (
-                    self.latest_score["checkpoint_iteration"], self.latest_score["created_at"])):
+            latest_order = ((self.latest_score["checkpoint_iteration"],
+                             self.latest_score["created_at"]) if self.latest_score else None)
+            if latest_order == order and score["verdict"] != self.latest_score["verdict"]:
+                self.latest_score = {**row, "verdict": "HOLD",
+                                     "conflict": "same_checkpoint_and_time"}
+                self.passes.clear()
+                self.pending_gate = None
+                self._write({"event": "gate_hold", "iteration": iteration,
+                             "reason": "same_checkpoint_conflicting_verdict",
+                             "score_sha256": digest, "training_continues": True})
+                continue
+            if latest_order is not None and order <= latest_order:
                 self._write({"event": "gate_hold", "iteration": iteration,
                              "reason": "older_than_latest_score", "score_sha256": digest,
                              "training_continues": True})

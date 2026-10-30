@@ -348,12 +348,15 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                      for i, name in enumerate(("FL", "FR", "RL", "RR"))}}}),
         encoding="utf-8")
     sensor_row = {"stand_foot_total": 100, "hit_valid_count": 100,
-                  "hit_valid_ratio": 1.0, "flat_stand_valid_foot_count": 20,
-                  "flat_gap_p50_mm": 5.0,
+                  "hit_valid_ratio": 1.0, "flat_stand_valid_foot_count": 0,
+                  "flat_gap_p50_mm": None, "flat_columns": [],
+                  "hit_valid_count_by_foot": [25] * 4,
+                  "gap_valid_count_by_foot": [25] * 4,
+                  "gap_p5_p50_p95_mm_by_foot": [[5.0] * 3 for _ in range(4)],
                   "hit_invalid_by_foot": [0] * 4,
                   "force_nonfinite_by_foot": [0] * 4,
                   "gap_nonfinite_by_foot": [0] * 4,
-                  "hit_origin_samples": [{"foot": 0, "hit_z_m": 1.0,
+                  "hit_origin_samples": [{"row": 0, "foot": 0, "hit_z_m": 1.0,
                                           "terrain_origin_z_m": 1.0,
                                           "hit_minus_origin_z_m": 0.0}]}
     (run / "train_extra.jsonl").write_text("\n".join(
@@ -397,6 +400,21 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     checked = check_kit_smoke(receipt_path, run_log, 0)
     assert checked["state"] == "PASS"
     assert checked["intentional_baseline_differences"] == launch["intentional_baseline_differences"]
+    missing_marker = json.loads(receipt_path.read_text(encoding="utf-8"))
+    missing_marker.pop("stand_sensor_evidence")
+    receipt_path.write_text(json.dumps(missing_marker), encoding="utf-8")
+    with pytest.raises(ValueError, match="sensor evidence marker"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    receipt_path.write_text(json.dumps(launch), encoding="utf-8")
+    invalid_sensor = {**sensor_row, "hit_valid_count_by_foot": [100] * 4}
+    (run / "train_extra.jsonl").write_text("\n".join(
+        json.dumps({"it": i, "ex40_stand_sensor": invalid_sensor}) for i in range(15)) + "\n",
+        encoding="utf-8")
+    with pytest.raises(ValueError, match="per-foot valid counts"):
+        check_kit_smoke(receipt_path, run_log, 0)
+    (run / "train_extra.jsonl").write_text("\n".join(
+        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(15)) + "\n",
+        encoding="utf-8")
     good_env = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
     for changed in (
         {"world_frame": False, "mask_new_task": False},

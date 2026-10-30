@@ -111,9 +111,10 @@ def stand_penalty_values(gap_m, vertical_force_n, mass_kg, stop, elapsed_s,
         raise ValueError("EX-40 stand sensor geometry or mass invalid")
     safe_mass = torch.where(stop, mass_kg, torch.ones_like(mass_kg))
     support = (load_fraction * safe_mass * 9.81)[:, None]
-    valid = stop[:, None] & torch.isfinite(gap_m) & torch.isfinite(vertical_force_n)
-    safe_gap = torch.where(valid, gap_m, torch.full_like(gap_m, 0.005))
-    safe_force = torch.where(valid, vertical_force_n, support.expand_as(vertical_force_n))
+    gap_valid = stop[:, None] & torch.isfinite(gap_m)
+    load_valid = stop[:, None] & torch.isfinite(vertical_force_n)
+    safe_gap = torch.where(gap_valid, gap_m, torch.full_like(gap_m, 0.005))
+    safe_force = torch.where(load_valid, vertical_force_n, support.expand_as(vertical_force_n))
     ramp = torch.where(stop, (elapsed_s / ramp_s).clamp(0.0, 1.0),
                        torch.zeros_like(elapsed_s))
     gap = gap_weight * ((safe_gap - 0.005).clamp_min(0.0) / 0.05).sum(dim=1) * ramp
@@ -152,14 +153,14 @@ class StandSensorEvidence:
         hit_valid = torch.isfinite(hit)
         force_valid = torch.isfinite(force)
         gap_valid = torch.isfinite(gap)
-        valid = stand & hit_valid & force_valid & gap_valid
+        valid = stand & hit_valid & gap_valid
         flat = torch.zeros_like(stop, dtype=torch.bool)
         for index in self.flat_columns:
             flat |= terrain_types == index
         flat_valid = valid & flat[:, None]
 
-        def quantiles(mask):
-            values = gap[mask] * 1000.0
+        def quantiles(foot):
+            values = gap[:, foot][valid[:, foot]] * 1000.0
             return ([float(v) for v in torch.quantile(values, torch.tensor([.05, .5, .95]))]
                     if values.numel() else None)
 
@@ -172,10 +173,12 @@ class StandSensorEvidence:
         good = int((stand & hit_valid).sum())
         return {"stand_foot_total": total, "hit_valid_count": good,
                 "hit_valid_ratio": good / total if total else None,
+                "hit_valid_count_by_foot": [int(v) for v in (stand & hit_valid).sum(dim=0)],
+                "gap_valid_count_by_foot": [int(v) for v in valid.sum(dim=0)],
                 "hit_invalid_by_foot": [int(v) for v in (stand & ~hit_valid).sum(dim=0)],
                 "force_nonfinite_by_foot": [int(v) for v in (stand & ~force_valid).sum(dim=0)],
                 "gap_nonfinite_by_foot": [int(v) for v in (stand & ~gap_valid).sum(dim=0)],
-                "gap_p5_p50_p95_mm_by_foot": [quantiles(valid[:, i]) for i in range(4)],
+                "gap_p5_p50_p95_mm_by_foot": [quantiles(i) for i in range(4)],
                 "flat_stand_valid_foot_count": int(flat_valid.sum()),
                 "flat_gap_p50_mm": (float(torch.median(gap[flat_valid] * 1000.0))
                                     if flat_valid.any() else None),

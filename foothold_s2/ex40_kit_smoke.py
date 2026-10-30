@@ -101,7 +101,8 @@ def _check_stand_sensor(run: Path) -> dict:
         raise ValueError("EX-40 stand sensor evidence needs all 15 smoke updates")
     total_hits = 0
     valid_hits = 0
-    flat_samples = 0
+    gap_samples_by_foot = [0] * 4
+    flat_columns = None
     for row in rows:
         sensor = row.get("ex40_stand_sensor") or {}
         total = sensor.get("stand_foot_total")
@@ -109,34 +110,84 @@ def _check_stand_sensor(run: Path) -> dict:
         ratio = sensor.get("hit_valid_ratio")
         flat_count = sensor.get("flat_stand_valid_foot_count")
         flat_p50 = sensor.get("flat_gap_p50_mm")
-        if (type(total) is not int or total < 0 or type(valid) is not int
+        columns = sensor.get("flat_columns")
+        if (type(total) is not int or total < 0 or total % 4
+                or type(valid) is not int
                 or not 0 <= valid <= total
                 or (total and (not isinstance(ratio, (int, float))
                     or not math.isfinite(ratio) or not math.isclose(
                         ratio, valid / total, abs_tol=1e-12)))
                 or (not total and ratio is not None)
                 or type(flat_count) is not int or flat_count < 0
-                or (flat_count and (not isinstance(flat_p50, (int, float))
-                    or not math.isfinite(flat_p50) or not 0 <= flat_p50 <= 10))
-                or not isinstance(sensor.get("hit_origin_samples"), list)):
-            raise ValueError(f"EX-40 stand ray hit or flat gap evidence failed at update {row.get('it')}")
+                or not isinstance(columns, list)
+                or any(type(value) is not int or value < 0 for value in columns)
+                or (flat_count == 0 and flat_p50 is not None)
+                or (flat_count > 0 and (not isinstance(flat_p50, (int, float))
+                    or not math.isfinite(flat_p50)))):
+            raise ValueError(f"EX-40 stand sensor counts or ratio invalid at update {row.get('it')}")
+        if flat_columns is None:
+            flat_columns = columns
+        elif columns != flat_columns:
+            raise ValueError("EX-40 stand terrain columns changed during smoke")
+        hit_by_foot = sensor.get("hit_valid_count_by_foot")
+        gap_by_foot = sensor.get("gap_valid_count_by_foot")
+        if (not isinstance(hit_by_foot, list) or len(hit_by_foot) != 4
+                or not isinstance(gap_by_foot, list) or len(gap_by_foot) != 4
+                or any(type(value) is not int or not 0 <= value <= total // 4
+                       for value in hit_by_foot)
+                or any(type(value) is not int or not 0 <= value <= hit_by_foot[i]
+                       for i, value in enumerate(gap_by_foot))
+                or sum(hit_by_foot) != valid or flat_count > sum(gap_by_foot)
+                or (not columns and flat_count != 0)):
+            raise ValueError("EX-40 stand per-foot valid counts inconsistent")
         for key in ("hit_invalid_by_foot", "force_nonfinite_by_foot", "gap_nonfinite_by_foot"):
             counts = sensor.get(key)
             if (not isinstance(counts, list) or len(counts) != 4
                     or any(type(value) is not int or value < 0 for value in counts)):
                 raise ValueError("EX-40 stand sensor fault counters malformed")
-        if sum(sensor["hit_invalid_by_foot"]) != total - valid:
+        if (any(sensor["hit_invalid_by_foot"][i] != total // 4 - hit_by_foot[i]
+                for i in range(4))
+                or any(sensor[key][i] != 0 for key in (
+                    "force_nonfinite_by_foot", "gap_nonfinite_by_foot") for i in range(4))):
             raise ValueError("EX-40 stand sensor fault counters malformed")
-        if valid and not sensor["hit_origin_samples"]:
+        quantiles = sensor.get("gap_p5_p50_p95_mm_by_foot")
+        if not isinstance(quantiles, list) or len(quantiles) != 4:
+            raise ValueError("EX-40 stand per-foot quantiles missing")
+        for foot, values in enumerate(quantiles):
+            if gap_by_foot[foot] == 0:
+                if values is not None:
+                    raise ValueError("EX-40 stand empty foot has quantiles")
+            elif (not isinstance(values, list) or len(values) != 3
+                  or any(not isinstance(value, (int, float)) or not math.isfinite(value)
+                         for value in values)
+                  or not values[0] <= values[1] <= values[2]
+                  or not 0 <= values[1] <= 10):
+                raise ValueError(f"EX-40 stand foot {foot} gap p50 outside 0 to 10 mm")
+            gap_samples_by_foot[foot] += gap_by_foot[foot]
+        samples = sensor.get("hit_origin_samples")
+        if not isinstance(samples, list) or len(samples) > 4:
+            raise ValueError("EX-40 stand hit versus terrain origin samples malformed")
+        if valid and not samples:
             raise ValueError("EX-40 stand hit versus terrain origin samples missing")
+        for sample in samples:
+            if (not isinstance(sample, dict)
+                    or type(sample.get("row")) is not int or sample["row"] < 0
+                    or type(sample.get("foot")) is not int or sample["foot"] not in range(4)
+                    or any(not isinstance(sample.get(key), (int, float))
+                           or not math.isfinite(sample[key]) for key in (
+                               "hit_z_m", "terrain_origin_z_m", "hit_minus_origin_z_m"))
+                    or not math.isclose(sample["hit_z_m"] - sample["terrain_origin_z_m"],
+                                        sample["hit_minus_origin_z_m"], abs_tol=1e-5)):
+                raise ValueError("EX-40 stand hit versus terrain origin sample invalid")
         total_hits += total
         valid_hits += valid
-        flat_samples += flat_count
-    if total_hits == 0 or valid_hits / total_hits < .99 or flat_samples == 0:
-        raise ValueError("EX-40 stand ray hit or flat gap evidence insufficient")
+    if (total_hits == 0 or valid_hits / total_hits < .99
+            or any(count == 0 for count in gap_samples_by_foot)):
+        raise ValueError("EX-40 stand ray hit or per-foot gap evidence insufficient")
     return {"updates": 15, "aggregate_hit_valid_ratio": valid_hits / total_hits,
-            "flat_stand_valid_foot_count": flat_samples,
-            "flat_gap_p50_range_mm": [0, 10]}
+            "gap_valid_count_by_foot": gap_samples_by_foot,
+            "per_foot_gap_p50_range_mm": [0, 10],
+            "terrain_flat_columns": flat_columns}
 
 
 def _check_stage_log(rows: list[dict], plan: Plan, env_count: int) -> dict[str, int]:
@@ -283,8 +334,9 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
             or plan.effective_sha256 != receipt.get("effective_schedule_sha256")):
         raise ValueError("EX-40 Kit stage table differs from pinned launch receipt")
     _check_rewards(run / "params/env.yaml", plan)
-    stand_sensor = (_check_stand_sensor(run)
-                    if receipt.get("stand_sensor_evidence") == "ex40-v4" else None)
+    if receipt.get("stand_sensor_evidence") != "ex40-v5":
+        raise ValueError("EX-40 stand sensor evidence marker missing or stale")
+    stand_sensor = _check_stand_sensor(run)
     rows = [json.loads(line) for line in (run / "stage_log.jsonl").read_text(encoding="utf-8").splitlines()]
     changed_by_stage = _check_stage_log(rows, plan, start["num_envs"])
     consumed = _check_consumption(rows, plan, changed_by_stage)

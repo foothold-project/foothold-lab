@@ -154,6 +154,23 @@ def test_gate_rechecks_cached_checkpoint_before_promotion(tmp_path):
     assert runtime.active == 0 and runtime.pending_gate is None
 
 
+@pytest.mark.parametrize("verdict", ["FAIL", "HOLD"])
+def test_gate_same_update_and_timestamp_conflicting_fail_holds(tmp_path, verdict):
+    plan = gate_plan(tmp_path)
+    scores = tmp_path / "scores"
+    scores.mkdir()
+    runtime = Runtime(plan, 2, "cpu", tmp_path / "log", scores)
+    runtime.start()
+    score(tmp_path, scores, plan, 500, "PASS")
+    score(tmp_path, scores, plan, 750, "PASS")
+    runtime._scan_scores(750)
+    assert runtime.pending_gate is not None
+    score(tmp_path, scores, plan, 750, verdict)
+    runtime.on_update_start(751)
+    assert runtime.active == 0 and runtime.pending_gate is None
+    assert runtime.latest_score["verdict"] == "HOLD"
+
+
 def test_episode_side_cohort_carries_steps_done_and_contact(tmp_path):
     runtime = Runtime(Plan(TABLE, arm="A"), 1, "cpu", tmp_path)
     sensor = NS(find_bodies=lambda names: (list(range(4)), names),
@@ -194,7 +211,8 @@ def test_nonfinite_foot_is_excluded_and_counted_without_stopping():
     stop = torch.tensor([True, False])
     g, l = stand_penalty_values(gap, force, torch.tensor([20., float("nan")]),
                                 stop, torch.tensor([.5, float("nan")]))
-    assert torch.equal(g, torch.zeros(2)) and torch.equal(l, torch.zeros(2))
+    assert g.tolist() == pytest.approx([-.2, 0.])
+    assert torch.equal(l, torch.zeros(2))
     evidence = StandSensorEvidence((0,))
     evidence.add(gap, torch.tensor([[float("inf"), 1., 1., 1.],
                                     [float("inf"), 1., 1., 1.]]), force, stop,
@@ -203,7 +221,36 @@ def test_nonfinite_foot_is_excluded_and_counted_without_stopping():
     assert row["stand_foot_total"] == 4 and row["hit_valid_count"] == 3
     assert row["hit_invalid_by_foot"] == [1, 0, 0, 0]
     assert row["force_nonfinite_by_foot"] == [0, 1, 0, 0]
-    assert row["flat_stand_valid_foot_count"] == 2
+    assert row["flat_stand_valid_foot_count"] == 3
+
+
+def test_gap_and_load_masks_are_independent():
+    gap = torch.tensor([[.055, float("nan"), .005, .005]])
+    force = torch.tensor([[float("nan"), 0., 49.05, 49.05]])
+    gap_reward, load_reward = stand_penalty_values(
+        gap, force, torch.tensor([20.]), torch.tensor([True]), torch.tensor([.5]))
+    assert gap_reward.item() == pytest.approx(-.2)
+    assert load_reward.item() == pytest.approx(-.1)
+
+
+def test_stand_sensor_quantiles_keep_each_foot_column():
+    evidence = StandSensorEvidence(())
+    gap = torch.tensor([[.001, .002, .003, .004], [.001, .002, .003, .004]])
+    evidence.add(gap, torch.ones_like(gap), torch.ones_like(gap),
+                 torch.ones(2, dtype=torch.bool), torch.zeros(2, dtype=torch.long),
+                 torch.zeros(2))
+    row = evidence.summary()
+    assert row["flat_columns"] == [] and row["flat_stand_valid_foot_count"] == 0
+    assert row["gap_p5_p50_p95_mm_by_foot"] == [
+        pytest.approx([value] * 3) for value in (1., 2., 3., 4.)]
+    evidence.add(torch.tensor([[float("nan"), .002, .003, .004]]),
+                 torch.ones((1, 4)), torch.ones((1, 4)),
+                 torch.ones(1, dtype=torch.bool), torch.zeros(1, dtype=torch.long),
+                 torch.zeros(1))
+    row = evidence.summary()
+    assert row["gap_p5_p50_p95_mm_by_foot"][0] is None
+    assert row["gap_p5_p50_p95_mm_by_foot"][1:] == [
+        pytest.approx([value] * 3) for value in (2., 3., 4.)]
 
 
 def test_stand_to_stand_resample_keeps_ramp_and_move_to_stand_restarts():
@@ -223,12 +270,16 @@ def test_yaw_ray_and_full_pitch_center_can_straddle_stair_edge():
     assert .002 * (1 - math.cos(math.pi / 3)) == pytest.approx(.001)
 
 
-def test_new_kit_sensor_gate_requires_ratio_and_flat_gap(tmp_path):
+def test_new_kit_sensor_gate_requires_ratio_per_foot_gap_and_schema(tmp_path):
     good = {"stand_foot_total": 100, "hit_valid_count": 100, "hit_valid_ratio": 1.0,
-            "flat_stand_valid_foot_count": 20, "flat_gap_p50_mm": 5.,
+            "flat_stand_valid_foot_count": 0, "flat_gap_p50_mm": None,
+            "flat_columns": [], "hit_valid_count_by_foot": [25] * 4,
+            "gap_valid_count_by_foot": [25] * 4,
+            "gap_p5_p50_p95_mm_by_foot": [[5.] * 3 for _ in range(4)],
             "hit_invalid_by_foot": [0] * 4, "force_nonfinite_by_foot": [0] * 4,
             "gap_nonfinite_by_foot": [0] * 4,
-            "hit_origin_samples": [{"hit_z_m": 1., "terrain_origin_z_m": 1.,
+            "hit_origin_samples": [{"row": 0, "foot": 0,
+                                    "hit_z_m": 1., "terrain_origin_z_m": 1.,
                                     "hit_minus_origin_z_m": 0.}]}
 
     def write(row):
@@ -239,11 +290,32 @@ def test_new_kit_sensor_gate_requires_ratio_and_flat_gap(tmp_path):
     write(good)
     assert _check_stand_sensor(tmp_path)["updates"] == 15
     write({**good, "hit_valid_count": 98, "hit_valid_ratio": .98,
+           "hit_valid_count_by_foot": [23, 25, 25, 25],
+           "gap_valid_count_by_foot": [23, 25, 25, 25],
            "hit_invalid_by_foot": [2, 0, 0, 0]})
     with pytest.raises(ValueError, match="ray hit"):
         _check_stand_sensor(tmp_path)
-    write({**good, "flat_gap_p50_mm": 11.})
-    with pytest.raises(ValueError, match="flat gap"):
+    write({**good, "gap_p5_p50_p95_mm_by_foot": [[5.] * 3, [5.] * 3,
+                                                  [5., 11., 11.], [5.] * 3]})
+    with pytest.raises(ValueError, match="foot 2 gap p50"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "hit_valid_count_by_foot": [100] * 4})
+    with pytest.raises(ValueError, match="per-foot valid counts"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "hit_valid_count": 101, "hit_valid_ratio": 1.01})
+    with pytest.raises(ValueError, match="counts or ratio"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "hit_origin_samples": [{}]})
+    with pytest.raises(ValueError, match="sample invalid"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "gap_p5_p50_p95_mm_by_foot": [[float("nan")] * 3] + [[5.] * 3] * 3})
+    with pytest.raises(ValueError, match="foot 0 gap p50"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "force_nonfinite_by_foot": [1, 0, 0, 0]})
+    with pytest.raises(ValueError, match="fault counters"):
+        _check_stand_sensor(tmp_path)
+    write({**good, "gap_nonfinite_by_foot": [1, 0, 0, 0]})
+    with pytest.raises(ValueError, match="fault counters"):
         _check_stand_sensor(tmp_path)
     write({**good, "hit_invalid_by_foot": []})
     with pytest.raises(ValueError, match="fault counters"):
@@ -251,7 +323,10 @@ def test_new_kit_sensor_gate_requires_ratio_and_flat_gap(tmp_path):
 
     no_stand = {**good, "stand_foot_total": 0, "hit_valid_count": 0,
                 "hit_valid_ratio": None, "flat_stand_valid_foot_count": 0,
-                "flat_gap_p50_mm": None, "hit_origin_samples": []}
+                "flat_gap_p50_mm": None, "hit_origin_samples": [],
+                "hit_valid_count_by_foot": [0] * 4,
+                "gap_valid_count_by_foot": [0] * 4,
+                "gap_p5_p50_p95_mm_by_foot": [None] * 4}
     (tmp_path / "train_extra.jsonl").write_text("\n".join(
         json.dumps({"it": i, "ex40_stand_sensor": good if i == 14 else no_stand})
         for i in range(15)) + "\n", encoding="utf-8")
