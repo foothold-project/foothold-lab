@@ -37,7 +37,7 @@
 | B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | B11 뒤 실행 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
 | B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | B11 및GPU1 W51 종료 뒤 | W51과 중복 기동 금지 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | 대기 | |
-| B15 | 돌았다 세 줄: 띄움(PID · 시각) → 첫 update → (끝 확인서) | lead | 대기 | |
+| B15 | 돌았다 확인(팀장 10/31 00:0x 강화): GPU0 compute-apps PID = 학습 PID · 메모리/사용률 지속(여러 번) · run.log 회차가 시각과 함께 증가 · 1 회 속도 · 저장본 · stage_log · train_extra(DR readback · 발별 · 지형 L0~2) 생성 · 영수증 HEAD = 고정 사본 · dirty 0 · 인자 = D68~D77 · 점수기 GPU1 만. 기동 직후와 10 분 뒤 두 번 | lead | 대기 | |
 
 ## C. 학습 중 (자동)
 
