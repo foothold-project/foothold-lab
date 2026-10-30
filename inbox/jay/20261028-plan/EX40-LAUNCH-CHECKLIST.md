@@ -1,8 +1,8 @@
 > 분류: 실험 실행 점검표
 > 작성: lead · 2026-10-30 21:5x
-> 근거: WORKLIST D57 · D59 · D62 · D65 · D66 · D68~D74, FAILURE-LOG R1~R25 · M01~M77, FLOW-experiment-cycle-1029 8 단계
+> 근거: WORKLIST D57 · D59 · D62 · D65 · D66 · D68~D76, FAILURE-LOG R1~R25 · M01~M77, FLOW-experiment-cycle-1029 8 단계
 > 요지: EX-40 기동 전에 끝내야 할 일과 학습 중 자동으로 돌 일을 한 장에. 칸이 모두 「끝 + 증거」가 되어야 기동한다.
-> 상태: 진행 중 · 팀장 결정 대기 없음
+> 상태: 진행 중 · analyst가 B11~B13 조정 · B14 본 기동 금지(10/30 23:4x 위임)
 
 # EX-40 기동 점검표
 
@@ -14,28 +14,28 @@
 |---|---|---|
 | A1 | 단계 넘김: 회차 + 성과 그림자 기록 | D72 |
 | A2 | B0 · B1 · B2 · B3a · B3b · B3c · D · T0, m0~m8000 (8001 갱신) | D72 · D74 |
-| A3 | DR 여섯 항목 m0 등록, 배율 0 → B3c 끝 0.5 → D 1, 지연 0 → 7.5 → 0~15 ms, 마찰 · 질량 그대로 | D73 · D74 |
+| A3 | COM·이득·모터·지연·밀기 다섯 항목 확대 0 → B3c 끝0.5 → D1. 관측 잡음은 m0부터 끝까지1배 고정. 지연 상한0 → 7.5 → 15ms(5ms 내림). 마찰·질량 유지 | D74 · D75 |
 | A4 | 보상 · 정지 두 항 · heading · 대칭 끔 · 깃발 0 % | D70 · D71 |
 | A5 | 지형 L0~2 고정(자동 승급 끔) | lead 권고 · 팀장 「방향 동의」 21:5x |
-| A6 | 근거로 정할 값: 밀기(논문), 관측 잡음(유지 권고, 실기 잡음 대조) | analyst 근거 → lead 확인, 권고와 어긋나면 팀장 보고 |
+| A6 | 밀기 임시 준비값: D 수평 각 축Δv±1.0m/s, B 끝±0.5, 간격10~15s. 선행 조사와 실기 강건성 보장은 분리. 관측 잡음 유지 | D76 · analyst 범위표66a6a4f1. 본 기동 승인은 별도 |
 
 ## B. 기동 전 (순서대로)
 
 | 번호 | 일 | 담당 | 상태 | 증거 |
 |---|---|---|---|---|
 | B1 | 규칙 대조: FAILURE-LOG R · M 중 이번 기동에 걸리는 항목 목록과 대응 | verifier | 끝(표 35 행, 확인은 B11 에서) | verifier-w56/_out/reports/RULES-EX40-1030.md |
-| B2 | 낡은 문서 갱신: CURRICULUM-GATES 정본(v0.7, DR 앞당김 · B3 셋 · D · T0 m7501) · FLOW · WORKLIST W 칸 · 단계 문서 · 실행카드 — 두 번 대조 | analyst(대조 · 초안) · planner(정본) · lead(WORKLIST) | 진행 | |
-| B3 | DR 범위표(출처 등급) · 밀기 논문 · 관측 잡음 근거 | analyst | 진행(중간본, 관측 잡음 1× 고정으로 정정 요청 22:0x) | analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md |
-| B4 | 축 평가 비교군 먼저: W51 이 안 잰 밀기 · 관측 잡음 상향 · 여섯 항목 동시를 EX-39B m4501 · EX-38 m3001 에(GPU1) | analyst | 진행 | |
+| B2 | 문서 정합 두 차례: 커리큘럼 정본·FLOW·WORKLIST W칸·단계 문서·실행카드 | analyst(대조·초안) · planner(정본) · lead(WORKLIST) | 미완료. 인계의 정본v0.7을 현재 사본에서 확인 못함 | fable-25a CURRICULUM-GATES는v0.6c, FLOW §1.8은EX40 D72 예외 미표기. 범위표·카드 초안66a6a4f1 |
+| B3 | DR 범위표·밀기 논문·관측 잡음 근거 | analyst | 범위·출처 표 작성. W51 결과·최종 대조 남음 | analyst-ame2 66a6a4f1, DR-RANGES-EX40-1030 v0.1e. SLR 영상 직접 확인, 논문·코드 외란은 다름 |
+| B4 | W51 추가 비교: EX38 m3001·EX39B m4501, 5조건+base재측정, GPU1 직렬 | analyst | 10/30 23:58 기준8/12완료. 다음은push | s2_lab/basic_gait_runs/eval_actuator/w51_followup_20261030/batch_progress.json. ±0.5 진단값은D76 학습값과 별개 |
 | B5 | 코드: 단계 표 v7(지형 L0~2 · 재개 계약) | runner | 끝 | v7 |
-| B6 | 코드: DR 일정 v8 + 실제 이벤트 연결 + readback + 확인기 | runner | 연결 끝 · 범위표 수신 · Kit 대기(막음 2 = 그 둘) | 049587d4 (runner-ex40-v8) |
+| B6 | DR 일정·이벤트·readback·확인기 | runner | 범위 세 칸과 smoke 경로 수정 중, Kit 미확인 | ac60ca36 base전용COM·bc926bb0 D76, 3010ba45 통합. 23:57 analyst 의뢰 시작 확인 |
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
 | B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | v7 에 포함, 재검증 필요 | |
-| B10 | 세 갈래(v7 · v8 · 점수기 · 보고) 한 고정 사본으로 합치기 | runner | 대기 | |
+| B10 | v7·v8·점수기·보고 통합 | runner | 3010ba45 통합 완료, 후속범위 수정 중. 최종HEAD 다시 고정 예정 | runner-ex40-b10, 병합09d43399. 71 CPU는runner보고, analyst 최종고정본 재확인 전 |
 | B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 대기 | |
-| B12 | 학습 Kit 짧은 확인(GPU0): 단계 경계 · DR 배율 실현 · 지형 L0~2 · 광선 · 발별 기록 | lead | 대기 | |
-| B13 | 점수기 Kit 확인(GPU1): 단계 끝 전체 평가 1 회, 저장본 하나 평가 시간 실측 | lead | 대기 | |
+| B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | B11 뒤 실행 | handoff_analyst_coord.md. 이 위임은 B14를 포함하지 않음 |
+| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | B11 및GPU1 W51 종료 뒤 | W51과 중복 기동 금지 |
 | B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | 대기 | |
 | B15 | 돌았다 세 줄: 띄움(PID · 시각) → 첫 update → (끝 확인서) | lead | 대기 | |
 
@@ -62,3 +62,9 @@
 - 기동 목표: 10/31(토) 오전, B 칸이 모두 끝 + 증거일 때.
 - 8001 갱신 × 약 24 s(EX-38 · 39 실측 근사) ≈ 53.3 h. 10:00 기동이면 11/2(월) 15:20 전후 끝. DR 켠 뒤 속도 변화는 Kit 에서 다시 재서 고친다.
 - 단계 끝 예상(10:00 기동 기준): B0 20:00(10/31) · B1 06:00(11/1) · B2 16:00 · B3a 19:20 · B3b 22:40 · B3c 02:00(11/2) · D 12:00 · T0 15:20.
+
+## 10/31 00:04 조정 인계
+
+- analyst는 범위 고침 → verifier B11 → B12/B13 순서만 맡는다. B14는 시작하지 않고 명령·ETA·END_BY를 준비해 lead에 보고한다.
+- R6 실제 Kit, R25 범위 보존, M02 고정 실행 사본, M76 실제값 대조, M77 마감 여유를 적용한다.
+- 20분 재개 알림을 자신의 창에만 걸었다. 00:03:53 시험 문장이 실제 입력으로 도착했다. 자동GPU기동 기능은 없다. 로그: analyst-ame2/_out/reports/ex40-coord-1031/wake-status.log.
