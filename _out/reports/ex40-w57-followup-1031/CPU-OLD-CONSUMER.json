@@ -1,0 +1,23 @@
+{
+  "source": "2df419b0",
+  "cases": [
+    {
+      "case": "single_original_hold_accepted_as_row",
+      "result": true
+    },
+    {
+      "case": "same_iteration_retry_append",
+      "result": "score ledger has a malformed or duplicate checkpoint iteration"
+    },
+    {
+      "case": "legacy_saved_hold_before_fresh_evidence",
+      "result": "pending"
+    },
+    {
+      "case": "valid_zero_completion_null_error_old_consumer",
+      "result": "EvidenceHold: goal stop error missing or nonfinite"
+    }
+  ],
+  "gpu_used": false,
+  "live_writes": false
+}
