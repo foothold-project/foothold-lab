@@ -80,6 +80,13 @@ parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
+if args_cli.curriculum:
+    # v8 must not enter Kit until the analyst ranges and an implemented event
+    # adapter have both been reviewed. This check deliberately precedes
+    # AppLauncher construction so an incomplete YAML cannot start Kit.
+    from foothold_s2.curriculum.ex40_dr import require_launchable
+
+    require_launchable(args_cli.curriculum)
 DEADLINE_EPOCH = validate_launch(args_cli, hydra_args)
 sys.argv = [sys.argv[0]] + hydra_args
 app_launcher = AppLauncher(args_cli)

@@ -8,6 +8,21 @@ terrain_curriculum: fixed_l02
 gate: {minimum_exposure_updates: 500, separated_checkpoints: 250}
 stand_penalty: {gap_weight: -0.2, load_weight: -0.1, load_fraction: 0.05, ramp_s: 0.5}
 heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_wz_limit: 0.5, target_wz_limit: 1.5}
+domain_randomization:
+  range_source: C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md
+  length_D: 1500
+  allowed_length_D: [1500, 3000]
+  runtime_adapter_status: not_implemented
+  preserved_startup:
+    friction_static_dynamic: [0.2, 1.2]
+    base_mass_add_kg: [-1.0, 3.0]
+  full_ranges:
+    base_com: null
+    actuator_gains: null
+    motor_strength: null
+    delay_s: null
+    push_velocity: null
+    policy_obs_noise_multiplier: null
 stages:
   - id: B0
     start: {fixed_update: 0}

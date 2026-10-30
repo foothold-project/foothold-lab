@@ -13,6 +13,7 @@ from pathlib import Path
 
 from foothold_s2.curriculum.continuous import Plan
 from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES
+from foothold_s2.curriculum.ex40_dr import require_launchable
 from foothold_s2.prestart_check import inspect_args
 
 
@@ -144,6 +145,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.resume_spec:
         if a.smoke or None in (a.arm, a.device, a.end_by, a.log_root, a.score_dir):
             p.error("--resume-spec requires arm, device, end-by, log-root and score-dir, and cannot be smoke")
+        try:
+            require_launchable(a.table)
+        except ValueError as exc:
+            p.error(str(exc))
         args, row = prepare_resume(a.resume_spec, arm=a.arm, device=a.device,
                                    end_by=a.end_by, log_root=a.log_root, score_dir=a.score_dir)
         print("\n".join(args) if a.print_args else json.dumps(row, ensure_ascii=False,
@@ -151,6 +156,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if None in (a.arm, a.device, a.end_by, a.log_root, a.score_dir):
         p.error("scratch launch requires arm, device, end-by, log-root and score-dir")
+    try:
+        require_launchable(a.table)
+    except ValueError as exc:
+        p.error(str(exc))
     args = build_args(arm=a.arm, device=a.device, end_by=a.end_by,
                       log_root=a.log_root, score_dir=a.score_dir, smoke=a.smoke,
                       table=a.table)
