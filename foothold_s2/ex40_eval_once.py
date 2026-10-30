@@ -14,6 +14,7 @@ import subprocess
 import time
 
 from foothold_s2.curriculum.continuous import Plan
+from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
 from foothold_s2.ex40_score import config, require_shadow_plan, sha256
 
 
@@ -23,7 +24,6 @@ DEFAULT_TABLE = ROOT / "foothold_s2/curriculum/ex40.yaml"
 BASH = Path("C:/Program Files/Git/bin/bash.exe")
 KIT = ROOT / "foothold_s2/eval/run_kit.sh"
 AXIS = ROOT / "foothold_s2/run_axis_v2.sh"
-CACHE = "--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache"
 MODES = ("eval_gt", "probe_prop_only", "eval_pred")
 
 
@@ -55,7 +55,7 @@ def evaluate(checkpoint: Path, out: Path, *, stage: str, arm: str,
     env = os.environ.copy()
     env["PYTHONUTF8"] = "1"
     env["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-    env["BASIC_GAIT_KIT_ARG"] = CACHE
+    env["BASIC_GAIT_KIT_ARG"] = KIT_CACHE_ARG
     env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     # The fixed renderer and the policy use the same explicit PCI ordinal.
     env.pop("CUDA_VISIBLE_DEVICES", None)
@@ -96,7 +96,7 @@ def evaluate(checkpoint: Path, out: Path, *, stage: str, arm: str,
         for name, module, args in phases:
             phase_env = {**env, "MODULE": module, "DEVICE": device}
             then = time.monotonic()
-            rc = _run([str(BASH), str(KIT), str(out / name), *args, CACHE], phase_env, cwd=ROOT)
+            rc = _run([str(BASH), str(KIT), str(out / name), *args, KIT_CACHE_ARG], phase_env, cwd=ROOT)
             status["steps"][name] = {"rc": rc, "seconds": time.monotonic() - then,
                                      "output_path": str(out / name)}
             (out / "eval_receipt.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
