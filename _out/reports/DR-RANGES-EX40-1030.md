@@ -2,11 +2,11 @@
 > 작성: analyst · 2026-10-30
 > 근거: WORKLIST D73·D74(e18ae14c) · EX-39B 실행 YAML · 설치 Isaac Lab · PIE/START/HIM/DreamWaQ 원문 · W51 원자료
 > 요지: 마찰·질량·관측 잡음은 유지하고 다섯 DR의 소비 의미·범위·일정을 고정하며, 같은 조건의 GPU1 비교로 영향과 한계를 확인한다
-> 상태: v0.1b 진행 중 · 범위 원문 대조 확인됨 · GPU1 비교 12건 진행 중 · 결과와 문서 정합 대조는 아래에 추가
+> 상태: v0.1c 진행 중 · 범위 권고 확정 · GPU1 비교 12건 진행 중 · 학습 준비 판정은 아님
 
 # EX-40 DR 전체 범위와 W51 추가 비교
 
-**권고: 관측 잡음의 최종 크기는 현재 값으로 유지한다. 밀기는 수평 속도 변화량 각 축 ±0.5 m/s, 에피소드 안 10~15초 간격을 D 단계 제안값으로 둔다.** 이는 실기 성공이 보장된 값이 아니라 선행 코드에서 가져온 우리 가정이다. 아래 측정은 기존 정책의 단기 내성 시험이며 EX-40의 학습 성공 증거가 아니다.
+**권고: 관측 잡음은 m0부터 끝까지 현재 1배로 고정한다. 밀기는 수평 속도 변화량 각 축 ±0.5 m/s, 에피소드 안 10~15초 간격을 D 단계 값으로 제안한다.** B 끝은 각 축 ±0.25 m/s다. 밀기 값은 실기 성공이 보장된 수치가 아니라 선행 코드에서 고른 우리 설계값이다. 아래 측정은 기존 정책의 단기 내성 시험이며 EX-40의 학습 성공 증거가 아니다.
 
 ## 1. 범위와 실제로 바뀌는 것
 
@@ -29,11 +29,11 @@ D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0�
 
 1. `randomize_motor_strength`는 현재 모든 env를 곱하고 `env_ids`를 쓰지 않는다(E/foothold_s2/tasks/mdp_extra.py:38~50). reset 이벤트로 이름만 바꾸면 다른 env까지 바뀌고 곱셈이 누적된다. `명목 한계 × 이번 배율`을 reset 대상에만 대입해야 한다.
 2. 설치 `randomize_rigid_body_com`도 현재 COM에 `+= rand_samples`를 한다(I/envs/mdp/events.py:400~435). reset마다 그대로 쓰면 COM이 랜덤워크한다. 최초 명목 COM을 보존해 `명목+이번 offset`으로 대상 env에만 대입해야 한다.
-3. 지연7.5 ms는 물리5 ms의 정수 buffer로 정확히 표현되지 않는다. 현재 `round(max_delay_s/dt)`는 반올림 결과10 ms를 허용할 수 있다. 상한을 넘기지 않는 `floor`를 쓰면 B 끝 실제 표본은0/5 ms다. 설정 상한과 실현 표본을 함께 적고, 정확한7.5 ms 연속 지연이라고 주장하지 않는다. 물리 dt 변경이나 action 보간은 별도 처치다.
-4. 관측 잡음은 현재 manager가 매 관측 계산 때1배 잡음을 뽑는 경로를 유지한다. reset별 배율 일정에 넣지 않는다. 밀기도 reset 순간에 로봇을 치는 것이 아니라 reset에서 다음 에피소드의 강도·간격을 정하고 interval에 발생시킨다.
-5. 중간 cfg를 수정해도 초기화 때 복사된 observation manager·actuator·PhysX 값이 따라 바뀐다고 볼 수 없다. 적용 직후 실제 배열, env_ids, 배율, 최초 명목값 해시와 지연 hist를 기록한다. 재개도 이 상태와 다음 push 시각을 보존한다.
+3. 지연 7.5 ms는 물리 5 ms의 정수 buffer로 정확히 표현되지 않는다. 049587d4의 `round(max_delay_s/dt)`는 10 ms를 허용했다. 수정된 2adbb1d5의 `floor`는 B 끝 실제 표본을 0/5 ms로 제한한다. 설정 상한과 실현 표본을 함께 적고, 정확한 7.5 ms 연속 지연이라고 주장하지 않는다. 물리 dt 변경이나 action 보간은 별도 처치다.
+4. 관측 잡음은 현재 manager가 매 관측 계산 때 1배 잡음을 뽑는 경로를 유지한다. reset별 배율 일정에 넣지 않는다. **COM·이득·모터·지연은 자연 reset에서 표집하지만, 밀기는 interval 발생 시점의 전역 배율을 사용한다**(2adbb1d5 `ex40_dr_runtime.py:172`). 설치 `event_manager.py:126~148`은 env가 reset될 때 다음 interval을 다시 뽑는다. 따라서 ‘다섯 항목의 강도가 모두 reset에서 고정된다’고 적으면 틀린다.
+5. 중간 cfg를 수정해도 초기화 때 복사된 observation manager·actuator·PhysX 값이 따라 바뀐다고 볼 수 없다. 적용 직후 실제 배열, env_ids, 배율, 최초 명목값 해시와 지연 hist를 기록한다. 현재 `RuntimeReadback.state_dict():306~308`은 설정 해시·회차·배율만 저장한다. 환경별 물리값·push 잔여 시각까지 복원한다는 증거는 아니며, 재개 시 새 환경의 재표집 여부와 실제값을 별도로 기록한다.
 
-**runner v8 읽기 대조, 22:15:** `runner-ex40-v8` 049587d4의 `ex40_dr_runtime.py:174~177`은 articulation view에 `get_velocities()`를 호출한다. 설치 API는 `get_root_velocities()`이며, 이 차이로 이번 W51 첫 짧은 Kit도 실제 실패했다. 수정 후 W51의 두 번째 짧은 Kit에서는 push 전후 실제 값 읽기가 통과했다. 따라서 이 호출이 남은 v8은 밀기 시점에 멈출 구체 결함이다. 같은 v8의 `delayed_action.py:37`과 `ex40_dr.py:62`는 여전히 round를 써 배율0.5에서10ms를 허용한다. 명목 COM·모터 세기 복원 adapter는 새로 들어간 것을 읽었으나, 새 v8 Kit 효과 검증은 이 의뢰에서 수행하지 않았다. 아래 두 항목을 runner가 고쳐야 한다: root velocity API, 7.5ms 상한과 양립하는 양자화 규칙.
+**runner v8 재확인, 22:29:** 앞서 049587d4에서 지적한 root velocity API와 지연 반올림은 **2adbb1d5에서 코드 수준으로 닫혔다**. `ex40_dr_runtime.py:175~177`은 설치 API와 같은 `get_root_velocities()`를 쓰고, `delayed_action.py:18·43`과 `ex40_dr.py:68`은 floor를 쓴다. analyst가 GPU를 숨겨 `test_ex40_dr_v8_cpu.py`를 직접 실행해 **10 passed, 3.41 s**를 얻었다. 이 시험 파일 수와 runner의 전체 시험 수를 혼합하지 않는다. 명목 COM·모터 세기 복원 adapter는 읽었으나, 수정된 학습 runtime의 Kit 효과 검증은 미확인이다. W51의 짧은 Kit 통과는 별도 평가 코드의 증거다.
 
 ## 2. 관측 잡음과 실제 Go2 공개값
 
@@ -68,6 +68,7 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 | [HIM ICLR2024 Appendix A.2 Table6](https://arxiv.org/html/2312.11460v3#A1.SS2), A1 계단/외란 실험 | 힘 xyz 각 −30~30 N | 논문은 간격·힘 지속시간 미기재 | [공식 페이지](https://junfenglong.com/HIMLoco/)에 계단에서 발차기·다리/등 끌기 시연이 명시됨. 이번에 해당 동영상 전체를 직접 판독한 것은 아님 |
 | [HIM 공식 코드 ef289aca](https://github.com/InternRobotics/HIMLoco/blob/ef289acaa62795009363b7b819c9186690630441/legged_gym/legged_gym/envs/base/legged_robot_config.py#L152) | 힘±30N 및 XY 속도±1m/s 두 장치 | disturbance_interval=8은robot.py:452의policy step 나머지연산, push는16s. robot.py:543은 XY속도 **대입**, :550은 로컬 힘 | 논문 표와 현재 공개코드의 다른 범위를 섞지 않음. `8`을8초라고읽지않음. force함수1회가물리엔진에서유지되는시간은이자료만으로확정하지않음 |
 | [DreamWaQ III-B/III-F](https://arxiv.org/html/2301.10602v2), Unitree A1 | TableII에는 push 행 없음 | III-F의 xyz 무작위 속도·1초 간격은 **시험 조건** | 최대push1.121±0.164m/s 결과를 학습 설정으로 옮기면 틀림 |
+| [PA-LOCO Table III](https://arxiv.org/html/2407.04224v1#S3.T3), Unitree Go1 | 수평 힘 각 축 ±60 N, 수직 ±10 N, 힘 잡음 ±2 N | 힘의 간격·지속은 미기재. 별도 각속도 외란 2.5 rad/s의 간격은 15 s | §V-A의 발차기 내성과 §V-D의 계단 주행을 한 ‘계단 발차기’ 실험으로 합치지 않음. 힘 확대를 추종 보상으로 조절하나 수치 문턱은 미기재 |
 | [Rudin 공식 legged_gym 8fa29acc](https://github.com/leggedrobotics/legged_gym/blob/8fa29acc6fd1910c3d9659eef6310bdd301cde0a/legged_gym/envs/base/legged_robot_config.py#L112) | XY 속도±1m/s | 15s, 순간 속도 대입 | ANYmal 기반 선행 코드. Go2 실측 아님 |
 | 설치 Isaac Lab 공통 velocity task | XY 속도변화량±0.5m/s | 10~15s, world XY 가산, 순간 | events.py:1046~1073의 **본문은 가산**. docstring의 ‘set’만 보고 속도 대입이라고 읽으면 틀림. Go2 rough는 끔 |
 | START III-D/PIE III-C3 | PIE TableII DR 따름, push 미기재 | 간격·힘·지속 없음 | START가 특정 밀기 값을 검증했다고 쓰지 않음 |
@@ -90,7 +91,7 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 
 각각64env·6초·13명령×지도3모드=39칸. 연속 지형7종 L1, fixed terrain seed42, 초기 생존episode만 계산. 정지·전후진·횡·대각·좌우회전 포함. 빠른 비교의 밀기는6초 안에서2회로 강제해 **제안 학습 간격10~15초보다 빈번**하다. 이는 기존정책 스트레스 시험이며 D학습성공/실기안전 판정이 아니다. 명령 전환 sequence는 이번 좁은 비교에서 제외했다.
 
-예정12실행=468칸, 29,952 env-case. baseline 두 반복의 최대차를 정책·명령·지도별 계산한다. 이는 seed일반화나 오차의 확정 상한이 아니다. 추가DR군의차이가 같은조건 반복폭보다 큰지와 칸별 방향을 같이 보고, 통계적으로 원인이 증명됐다고 부르지 않는다. 생존/추종/기울기는 측정하지만 발위상·관절하중·영상은 이번 평가 코드의 기록에 없어 미확인이다.
+예정 12실행=468칸, 29,952 env-case. baseline 두 반복의 차이는 정책·명령·지도별로 계산한다. **같은 seed의 반복은 재실행 확인이며 평가 불확실성이나 시드 일반화의 추정치가 아니다.** EX-38 기준 두 반복은 현재 재계산한 생존·거리·회전·기울기에서 같은 값이다. 따라서 DR군의 작은 차이가 0보다 크다는 이유로 통계적 유의성을 주장하지 않는다. 생존·추종·기울기는 측정하지만 발 위상·관절 하중·영상은 이번 평가 코드의 기록에 없어 미확인이다.
 
 첫 CPU17시험 통과. 첫8env Kit는 PhysX read API 오기로실패했고 원자료 보존. `get_root_velocities`로 설치source 대조후 두번째실행 통과:8/8생존, push각8env×2회 readback차0, GT2400/2400, 지연hist0:3·1:1·2:3·3:1. 짧은통과를 전체통과로쓰지 않는다.
 
@@ -110,3 +111,4 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 |---|---|
 | v0.1a | lead 22:0x 정정 반영. 관측 잡음은 m0부터 1배 고정, 다섯 DR만 확대. GPU 비교 설정에는 변경 없음 |
 | v0.1b | D의 미채택 추가 확대 제안을 제외하고 D74·runner의 전체 범위 1500갱신으로 정리. 평가 결과는 계속 수집 중 |
+| v0.1c | 밀기 최종 권고와 고정 잡음 문구 명확화. runner 두 수정 CPU 재확인, 밀기 interval 배율·재개 저장 범위 구분, 같은 seed 반복의 해석 한계 추가 |
