@@ -1,10 +1,24 @@
 > 분류: 실행 검증 · EX-40 조정
-> 작성: analyst · 2026-10-31 01:55 KST
-> 근거: 고정 코드84ce82a6·보고de2510e7 · 실제 stage_reports CPU 호출 · verifier §8
-> 요지: P1 후속본의 실제 보고 반환형 불일치와 운영 전달 연결 누락을 같은 수정 묶음으로 돌려보냈다.
+> 작성: analyst · 2026-10-31 02:15 KST
+> 근거: 코드84ce82a6·3afb0d6b/고정139f0d2d · 실제 stage_reports CPU 호출 · verifier r4 원출력
+> 요지: 반환형·전달 연결 고침 뒤 중간 checkpoint와 점수행 동시 누락을 놓치는 기존 P1 반례가 남았다.
 > 상태: B11 막음1 유지 · B12/B13 미기동 · B14 본 기동 금지
 
 # EX-40 B11 P1 후속 대조
+
+## 02:15 갱신
+
+runner의 코드 `3afb0d6b37317c6e3a8caef7737150e68c1f3432`, 보고 포함 고정 HEAD `139f0d2dd9089c25d660a7f4d2e0052c5552c15e`를 clean 상태로 확인했다. verifier에게02:07:54 동일 P1 변경분을 전달했고 request `9a213f0a-e223-40cf-b0d4-33f41239bf61`의 turn_started를 확인했다.
+
+`verifier-w56/_out/ex40-b11-r4/pytest.txt`의 **33 passed in6.75s**와 `results.json`을 직접 읽었다. 실제 보고 함수는 published8(int), fake sender8회이고 재소비해도8회였다. 정상31개와 분리segment는 consumed, HOLD·SHA불일치·평가영수증 누락은 거부됐다. 살아 있는 가짜 자식의 wait 이전 점수 호출도 기록됐다. 실제 Kit·실제 Telegram 수신은 이 CPU 결과에 포함되지 않는다.
+
+**남은 한 반례:** 비stride m5550에서 m5250 checkpoint 파일과 score 행을 함께 제거하면 `missing_checkpoint_and_score5250=consumed`. 정상 m5550도 consumed였다. `ex40_supervisor.py:190~209`는 현재 존재하는 파일 집합만 순회하여 이 누락 회차를 세지 못한다. 해당 원출력과 코드로 판단했으며 analyst가 verifier 원자료를 다시 실행하거나 수정하지는 않았다.
+
+이 지적을 `TASK-P1-missing-slot.md`에 한 묶음으로 적어 runner에게02:14:16 전달, request `f56a12b1-17ba-4246-9271-65bad9946063`의 turn_started를 확인했다. 누락 집합 검사와 정상 segment 출처 보존만 고치며 기존 닫힘을 다시 열지 않는다. verifier 최종 보고와 후속 고침 확인은 남아 있다.
+
+B12 준비 DRY는139f0d2d 공식 `run_ex40_b11.sh`에서 rc0, `prestart_pass`, source_git_clean=true, B scratch18회, 단계0/2/4/6/8/10/12/14를 확인했다. 영수증은 `C:/Users/AI-WS01/s2_lab/ex40_preflight_20261031_b11_139f/receipts/ex40_b11/B_smoke_20261031_020942_1121058/`. **LIVE=0이므로 GPU/Kit 학습은 시작하지 않았다.** 실제 기동은 후속 고정본 B11 막음0 뒤다.
+
+02:08:39 GPU 장치총계0번0MiB/1번3109MiB, W51·EX40 학습/평가 python 프로세스 없음. W51은12개 rc0,468칸 완료 기록을 다시 읽었다. 02:05:20 깨우기 입력 수신. B14 금지는 유지한다. 아래01:55 기록은 당시 결함과 처리의 이력이다.
 
 ## 현재 사실
 
