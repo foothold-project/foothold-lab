@@ -2,7 +2,7 @@
 > 작성: lead · 2026-10-30 21:5x
 > 근거: WORKLIST D57 · D59 · D62 · D65 · D66 · D68~D77, FAILURE-LOG R1~R25 · M01~M77, FLOW-experiment-cycle-1029 8 단계
 > 요지: EX-40 기동 전에 끝내야 할 일과 학습 중 자동으로 돌 일을 한 장에. 칸이 모두 「끝 + 증거」가 되어야 기동한다.
-> 상태: 진행 중 · analyst가 B11~B13 조정 · B14 본 기동 금지(10/30 23:4x 위임)
+> 상태: B12 PASS · B13 map64/B3/정지 PASS·W57 기록 완료/점수 미결1 · 최종2df419b0 main DRY PASS · B14 LIVE=1은lead
 
 # EX-40 기동 점검표
 
@@ -32,11 +32,11 @@
 | B7 | 코드: 그림자 점수기(8 단계 이름 · 원장 · 단계 끝 전체 평가 · 끝난 뒤 잔여 평가) | scripter | CPU 끝 | 1910d2fb (scripter-ex40-score-v8) |
 | B8 | 코드: 단계 끝 자동 보고(얻은 점 · 잃은 점 · 앞 단계 대비 칸별 변화 · 발별 정지 · 좌우) → lab 페이지 · 텔레그램 요지 | scripter | CPU 끝 · lab 첫 화면 링크는 갱신기 소유(남음) | 1910d2fb · lab_status/ex40_stage_reports.html · tg_send.py |
 | B9 | 코드: 재개 감시기(마지막 온전한 저장본, 3 회 연속 실패 시 멈춤) | runner | P1 source 고침68161fc7 독립 확인 끝 | verifier §11/r6: 정상1550/1600·분리31개 consumed, target 누락/HOLD/SHA충돌 및 현재 같은 회차 다른SHA 거부. 반복재평가/추가발신0. 실제 장기 재개는 미확인 |
-| B10 | v7·v8·점수기·보고 통합 | runner · analyst(승인된 합침만) | 최종 f1fff17f 고정·clean·두 고침 외 변경0 | 68161fc7 + e53f63de의 전체 tree 정확 합, MERGE-FINAL-AUDIT.json. 합친 사본 CPU40건/15.35s. 사본 analyst-ex40-final-1031 detached, 원격 feature/ex40-kit-final-analyst와 HEAD일치 |
-| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | 기존 닫힘 보존, §11 P1 막음0. 실제 Kit는 B12에서 별도 확인 | r6 pytest38건/15.53s, results/source-guards 직접 대조. merge에서 두 고침 외 변경0·CPU40건. B12 첫 실패의 최소 고침 CPU2건도 analyst가 독립 실행. CPU 결과를 Kit PASS로 확대하지 않음 |
+| B10 | v7·v8·점수기·보고 통합 | runner · analyst(승인된 합침만) | Kit 고정f1fff17f와 표식만 바꾼 최종2df419b0 구분 | 68161fc7 + e53f63de 전체tree 정확합·CPU40건. 새 analyst-ex40-main-verified-1031은 runtime_adapter_status 1줄+증거문서만 변경, detached·clean·원격HEAD일치 |
+| B11 | verifier 최종 재검증: 문서 · 카드 · 코드 · 설정 · 재개 · 점수기 · 보고, 막음 0 | verifier | §11 P1 닫힘 유지, §12 표식 변경분 main DRY 준비 막음0 | 2df419b0 부모f1fff17f exact diff2파일·원자료SHA10/10. 새HEAD의 실제 main DRY는prestart_pass. W57 점수소비 한계는B13으로 분리 |
 | B12 | 학습 Kit 짧은 확인(GPU0): 단계·실제DR·L0~2·광선·발별기록 | analyst(직접위임) | 03:11:46 실제18갱신 done, rc0·검사PASS. 첫 실패 보존 | f1fff17f·env3072·seed42, 8단계0/2/4/6/8/10/12/14 일치. model17 SHA b7232f73…92ced8 재해시·status·manifest 일치, 발별127616 유효 표본, hit1.0. L0/1/2=1034/1025/1013. 평균27.374s/갱신. 보고 analyst-ame2/_out/reports/ex40-coord-1031/B12-B13-KIT-1031.md |
-| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | 03:13:38 같은 f1fff17f로 승인1회 진행 중 | s2_lab/ex40_b13_20261031_final_f1fff17f/eval_receipt.json, GPU1·동일model17 SHA·smoke=false·같은HEAD. 부모PID48184/첫자식18284 확인. 여섯 단계·표·PNG·최종rc/시간은 대기. T0 성능 판정과 분리 |
-| B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | D77 조건 충족 후 lead 판단. analyst 본기동 금지 유지 | analyst 위임은B12/B13과명령·ETA준비까지 |
+| B13 | 점수기 Kit(GPU1): 단계끝 전체평가1회·실제시간 | analyst(직접위임) | map64·B3·정지 PASS, W57 단독rc0·원자료완료. 전체점수 미결1 | 첫 전체시도31분42.484초·rc5·원실패보존. 승인된W57만 새폴더1회11분38.685초·30칸×64env·원자료SHA30개일치. m17 목표정지18칸오차null → 점수기EvidenceHold. 전체PASS영수증·최종표·5PNG미생성. analyst-ame2 451dc72b B12-B13-KIT-1031.md |
+| B14 | 기동: 시작 스크립트 · 고정 사본(detached) · 실제 경로 점검 · END_BY ≥ 예상 끝 + 24 h · GPU0 | lead | 2df419b0 LIVE=0 main DRY rc0·prestart_pass. 실제 LIVE=1 안 함 | s2_lab/ex40_main_dry_20261031_040426/receipts/ex40_b11/B_main_20261031_040427_1129247. 명령·ETA·점수기미결은 analyst-ame2 451dc72b B14-PREP-1031.md. 03:5x 지시로W57미결과기동준비 병행 |
 | B15 | 돌았다 확인(팀장 10/31 00:0x 강화): GPU0 compute-apps PID = 학습 PID · 메모리/사용률 지속(여러 번) · run.log 회차가 시각과 함께 증가 · 1 회 속도 · 저장본 · stage_log · train_extra(DR readback · 발별 · 지형 L0~2) 생성 · 영수증 HEAD = 고정 사본 · dirty 0 · 인자 = D68~D77 · 점수기 GPU1 만. 기동 직후와 10 분 뒤 두 번 | lead | 대기 | |
 
 ## C. 학습 중 (자동)
@@ -59,9 +59,10 @@
 
 ## 예상 시각 (추정, 갱신)
 
-- 기동 목표: 10/31(토) 오전, B 칸이 모두 끝 + 증거일 때.
-- 8001 갱신 × 약 24 s(EX-38 · 39 실측 근사) ≈ 53.3 h. 10:00 기동이면 11/2(월) 15:20 전후 끝. DR 켠 뒤 속도 변화는 Kit 에서 다시 재서 고친다.
-- 단계 끝 예상(10:00 기동 기준): B0 20:00(10/31) · B1 06:00(11/1) · B2 16:00 · B3a 19:20 · B3b 22:40 · B3c 02:00(11/2) · D 12:00 · T0 15:20.
+- B12 18갱신 실측 평균27.374444초. 8001갱신 약60.84시간, 관측속도 범위를 대입하면57.10~65.48시간. 장기·GPU1평가 병행속도는 미측정이며 첫50갱신 뒤 갱신한다.
+- 시작 대비 단계 끝 추정: B0 11.41h · B1 22.82h · B2 34.23h · B3a 38.03h · B3b 41.83h · B3c 45.63h · D 57.04h · T0 60.84h.
+- lead용 기동명령은 예상끝 시작+67h, END_BY 시작+91h(예상끝+24h), max-wall96h로 준비했다. 실제 시작 때 시간을 다시 계산한다. B12의 짧은 deadline을 복사하지 않는다.
+- 250갱신 간격 약114.06분. 첫B13 실패시도31분42.48초(27.80%), 별도W57까지 두 실행의 시간합43분21.17초(38.01%). 시간합을 성공한 단일전체평가 실측으로 쓰지 않는다.
 
 ## 10/31 00:04 조정 인계
 
@@ -76,3 +77,9 @@
 ## 10/31 03:06 합친 고정본 재시도
 
 lead의 최신 직접 답변으로 두 고침을 한 사본에 합친 뒤 B12 재시도1회, PASS면 동일 HEAD로 B13 한 번을 승인받았다. 최종 `f1fff17fecf82ac77fe843c9a48214f166b154ca`의 원격·로컬 HEAD와 clean, 전체 tree의 두 고침 외 변경0을 확인했다. 코드 diff check0, 보존한 수정 전 pytest 원출력에는 공백6줄 경고만 있다. B12는 실제 첫 reset을 넘어 학습 중이다. B14 본 기동은 하지 않는다.
+
+## 10/31 04:08 W57 재시도와 최종 DRY
+
+lead03:5x에 따라 첫다섯단계 재실행 없이 W57만 새폴더에서1회 확인했고, f1fff17f 기반 새고정본에 표식1줄·증거만 커밋했다. 최종HEAD `2df419b0a4278981f6bd26e5eaedecbf7e8458db`, 원격 feature/ex40-runtime-verified-analyst. verifier§12 변경분 확인 뒤 같은HEAD main LIVE=0 DRY에서 실제prestart_pass를 확인했다. B14 본학습은 시작하지 않았다.
+
+W57의 첫호출은 B2끝m4500이 아니라 B0끝m1500(약11.41h)이다. `axis_goal OR boundary_record`를 실제31슬롯으로 확인했다. 또 실패한 평가가done/HOLD원장에 기록되므로 점수기 단순재시작은 해당회차를 복구하지 않는다. 학습·감독기·기존원장은 보존하고, 평가전용 고침본의 새폴더 측정과 정식재시도 연결이 필요하다. 현재 연결CLI는 없으며 문서만으로 구현됐다고 하지 않는다. W57 단독rc0 이후에도 m17의정지오차null을점수기가HOLD로읽어 최종전체기능PASS는미확인이다. 이둘을 B14판단자료에 분리해전달했다.
