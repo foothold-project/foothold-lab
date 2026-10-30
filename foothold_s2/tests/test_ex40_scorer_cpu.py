@@ -548,10 +548,23 @@ def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path):
     result = stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B",
                            telegram_sender=tmp_path / "sender.py", lab_feed=tmp_path / "lab_feed.json",
                            sender=lambda script, message: sent.append(message.read_text(encoding="utf-8")) or True)
+    assert type(result["published"]) is int
     assert result["published"] == 2 and result["first_pending"] == 4500
     assert len(sent) == 2 and (out / "stage_reports/stage_B1_m3000.md").is_file()
     assert json.loads((tmp_path / "lab_feed.json").read_text(encoding="utf-8"))["stage_reports"][1]["stage"] == "B1"
     assert "B1 m3000" in (tmp_path / "lab_feed.html").read_text(encoding="utf-8")
+    # Exercise the supervisor with this real score_watch stage-report output.
+    from foothold_s2.ex40_supervisor import _score_until_checkpoint
+    _pin(run, run / "model_1500.pt", run / "model_3000.pt")
+    (out / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
+        "done": {str(update): {"state": "PASS", "checkpoint_sha256": sha256(run / f"model_{update}.pt")}
+                 for update in (1500, 3000)}}), encoding="utf-8")
+    consumed = _score_until_checkpoint(run, out, tmp_path / "scores", DEFAULT_CONFIG,
+        DEFAULT_TABLE, "B", 3000, sha256(run / "model_3000.pt"), max_calls=1,
+        telegram_sender=tmp_path / "sender.py", lab_feed=tmp_path / "lab_feed.json",
+        sender=lambda *_: pytest.fail("existing delivery receipt must suppress duplicate send"))
+    assert consumed == "consumed"
     stage_reports(run, out, DEFAULT_CONFIG, DEFAULT_TABLE, "B",
                   telegram_sender=tmp_path / "sender.py", sender=lambda *_: pytest.fail("duplicate send"))
     assert len(sent) == 2

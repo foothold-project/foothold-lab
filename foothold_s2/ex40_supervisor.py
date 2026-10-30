@@ -174,7 +174,9 @@ def _record_watch_event(path: Path, *, pid: int, run: Path, checkpoint: tuple[in
 
 def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                             config: Path, table: Path, arm: str,
-                            update: int, digest: str, max_calls: int = 40) -> str:
+                            update: int, digest: str, max_calls: int = 40,
+                            *, telegram_sender: Path | None = None,
+                            lab_feed: Path | None = None, sender=None) -> str:
     """Consume every eligible score through the candidate before continuing."""
     from foothold_s2.curriculum.continuous import Plan
     from foothold_s2.ex40_score_watch import (_manifest_digest, _models, completion,
@@ -220,10 +222,20 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                     return "pending"
             else:
                 reports = stage_reports(run, out_root, config, table, arm,
-                    telegram_sender=None, lab_feed=out_root / "lab_feed.json")
+                    telegram_sender=telegram_sender,
+                    lab_feed=lab_feed or out_root / "lab_feed.json", sender=sender)
                 required_reports = [n for n in boundaries if n <= target_update and n in available_updates]
-                report_updates = {item.get("update") for item in reports.get("published", [])}
-                if any(n not in report_updates for n in required_reports):
+                published = reports.get("published")
+                if type(published) is not int or published < 0:
+                    return "unknown"
+                if published < len(required_reports):
+                    return "pending"
+                if reports.get("first_hold") is not None:
+                    return "pending"
+                effective_lab_feed = lab_feed or out_root / "lab_feed.json"
+                if any(not _stage_report_delivery_ok(out_root, n, boundaries[n],
+                           _manifest_digest(run, n), telegram_sender, effective_lab_feed)
+                       for n in required_reports):
                     return "pending"
                 if target_update == cfg["final_checkpoint_update"]:
                     finished = completion(run, out_root, config, table, arm, state)
@@ -234,8 +246,12 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
         cmd = [sys.executable, "-m", "foothold_s2.ex40_score_watch",
                "--run-dir", str(run), "--out-root", str(out_root),
                "--score-dir", str(score_dir), "--config", str(config),
-               "--table", str(table), "--arm", arm, "--once", "--no-telegram",
-               "--lab-feed", str(out_root / "lab_feed.json")]
+               "--table", str(table), "--arm", arm, "--once",
+               "--lab-feed", str(lab_feed or out_root / "lab_feed.json")]
+        if telegram_sender is None:
+            cmd.append("--no-telegram")
+        else:
+            cmd.extend(("--telegram-sender", str(telegram_sender)))
         proc = subprocess.run(cmd, cwd=Path(__file__).resolve().parents[1],
                               text=True, encoding="utf-8", capture_output=True, check=False)
         if proc.returncode:
@@ -249,10 +265,46 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
     return "pending"
 
 
+def _stage_report_delivery_ok(out_root: Path, update: int, stage: str,
+                              checkpoint_sha: str | None, telegram_sender: Path | None,
+                              lab_feed: Path | None) -> bool:
+    """Require the real stage report and configured delivery receipts at a boundary."""
+    if not checkpoint_sha:
+        return False
+    target = out_root / "stage_reports" / f"stage_{stage}_m{update}"
+    report_path, markdown_path = target.with_suffix(".json"), target.with_suffix(".md")
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8-sig"))
+        if (report.get("checkpoint_iteration") != update
+                or report.get("checkpoint_sha256") != checkpoint_sha
+                or not markdown_path.is_file()):
+            return False
+        if telegram_sender is not None:
+            delivery_path = target.with_suffix(".delivery.json")
+            delivery = json.loads(delivery_path.read_text(encoding="utf-8-sig"))
+            summary_path = target.with_suffix(".telegram.txt")
+            if (delivery.get("state") != "sent" or not summary_path.is_file()
+                    or delivery.get("summary_sha256") != hashlib.sha256(summary_path.read_bytes()).hexdigest()):
+                return False
+        if lab_feed is not None:
+            feed_path = lab_feed.resolve()
+            feed = json.loads(feed_path.read_text(encoding="utf-8-sig"))
+            html_path = feed_path.with_suffix(".html")
+            if not html_path.is_file() or not any(
+                    item.get("stage") == stage and item.get("update") == update
+                    and item.get("sha256") == hashlib.sha256(report_path.read_bytes()).hexdigest()
+                    for item in feed.get("stage_reports", [])):
+                return False
+        return True
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
               score_out: Path, score_dir: Path, expected_finish: str, end_by: str,
               arm: str, device: str, ledger_path: Path, max_segments: int = 100,
-              poll_seconds: float | None = None, sleep=time.sleep) -> dict:
+              poll_seconds: float | None = None, sleep=time.sleep,
+              telegram_sender: Path | None = None, lab_feed: Path | None = None) -> dict:
     """Run one segment at a time, evaluate its latest save, and prepare safe resume."""
     from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, config as score_config
     from foothold_s2.ex40_launch import TABLE
@@ -280,7 +332,8 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
                 visible = _latest_score_checkpoint(run, DEFAULT_CONFIG)
                 if visible is not None and visible != last_consumed:
                     score_state_live = _score_until_checkpoint(run, score_out, score_dir,
-                        DEFAULT_CONFIG, TABLE, arm, visible[0], visible[1])
+                        DEFAULT_CONFIG, TABLE, arm, visible[0], visible[1],
+                        telegram_sender=telegram_sender, lab_feed=lab_feed)
                     _record_watch_event(watch_events, pid=child.pid, run=run,
                         checkpoint=visible, score_state=score_state_live,
                         progress=_watch_progress(score_out))
@@ -305,7 +358,8 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
             except (OSError, ValueError):
                 pass
         score_state = (_score_until_checkpoint(run, score_out, score_dir, DEFAULT_CONFIG, TABLE, arm,
-                                              candidate["completed_update"], candidate["checkpoint_sha256"])
+                                              candidate["completed_update"], candidate["checkpoint_sha256"],
+                                              telegram_sender=telegram_sender, lab_feed=lab_feed)
                        if candidate else "unknown")
         action, ledger = transition(run=run, rc=rc, shell_finished=True,
                                     process_alive=False, score_state=score_state,
@@ -364,6 +418,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--launch-receipt", type=Path)
     parser.add_argument("--score-out", type=Path)
     parser.add_argument("--score-dir", type=Path)
+    parser.add_argument("--telegram-sender", type=Path,
+                        help="existing score_watch sender used for stage summaries")
+    parser.add_argument("--lab-feed", type=Path,
+                        help="shared lab status feed consumed by the EX-40 page")
     parser.add_argument("--expected-finish")
     parser.add_argument("--end-by")
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"))
@@ -383,7 +441,9 @@ def main(argv: list[str] | None = None) -> int:
             log_root=args.log_root.resolve(), score_out=args.score_out.resolve(),
             score_dir=args.score_dir.resolve(), expected_finish=args.expected_finish,
             end_by=args.end_by, arm=args.arm, device=args.device,
-            ledger_path=args.ledger.resolve())
+            ledger_path=args.ledger.resolve(),
+            telegram_sender=args.telegram_sender.resolve(strict=True) if args.telegram_sender else None,
+            lab_feed=args.lab_feed.resolve() if args.lab_feed else None)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 0 if result.get("action") in ("complete", "resume_prepared_but_launch_guard_closed") else 5
     ledger = json.loads(args.ledger.read_text(encoding="utf-8-sig")) if args.ledger.is_file() else None

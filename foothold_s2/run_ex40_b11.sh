@@ -60,9 +60,12 @@ if [[ "$KIND" == "resume" ]]; then
 else
   SUPERVISOR_SOURCE_RECEIPT="$OUT/launch_receipt.json"
 fi
+EX40_TELEGRAM_SENDER="${EX40_TELEGRAM_SENDER:-C:/Users/AI-WS01/s2_lab/tools_lead/tg_send.py}"
+EX40_LAB_FEED="${EX40_LAB_FEED:-C:/Users/AI-WS01/s2_lab/lab_status/ex40_stage_reports.json}"
 "$PY" -m foothold_s2.ex40_supervisor --supervise --arm "$ARM" --device "$DEV" \
   --args-file "$OUT/launch_args.txt" --launch-receipt "$SUPERVISOR_SOURCE_RECEIPT" \
   --log-root "$LOG_ROOT" --score-out "$LOG_ROOT/score-watch" --score-dir "$SCORE_DIR" \
+  --telegram-sender "$EX40_TELEGRAM_SENDER" --lab-feed "$EX40_LAB_FEED" \
   --expected-finish "$EX40_EXPECTED_FINISH" --end-by "$END_BY" \
   --ledger "$LOG_ROOT/supervisor-ledger.json" > "$OUT/supervisor_result.json"
 cat "$OUT/supervisor_result.json"

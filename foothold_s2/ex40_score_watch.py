@@ -436,6 +436,7 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
                 first_hold = first_hold or {"update": update, "reason": "telegram_delivery_uncertain"}
         previous = score
     if lab_feed is not None:
+        lab_feed.parent.mkdir(parents=True, exist_ok=True)
         _atomic(lab_feed, {"format": "foothold-ex40-lab-feed/1", "stage_reports": published,
                            "first_pending": first_pending})
         items = []

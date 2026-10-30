@@ -105,3 +105,35 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold
 
 
 구현 커밋(위 CPU 시험이 직접 대상으로 한 HEAD): `84ce82a6a8eae245f1cfd16ba0071d530581bc58` · 부모 `c1cefb1ab537bd5a2468dd0b9bcd1ec8133c9518`. 다음 보고 기록 커밋은 이 구현 파일을 바꾸지 않는다.
+
+## 01:54 P1 실제 반환값과 운영 발신 인자 후속 · 2026-10-31
+
+### 확인 및 변경
+
+- 기존 감독기는 `stage_reports()`의 `published`를 목록으로 순회했다. 실제 함수는 성공 건수 정수 `0` 또는 양의 정수를 반환한다. 실제 빈 경계 입력에서 반환값 `0`, 형식 `int`를 관측했고, 이전 순회식은 `TypeError: 'int' object is not iterable`가 되는 계약 오류였다.
+- supervisor는 이제 정수 건수를 형식 검사하고, 요구 경계별 JSON/Markdown 보고서, checkpoint 회차와 SHA, 공유 lab feed JSON/HTML, 설정된 경우 요약 `.delivery.json` 및 본문 SHA를 확인한다. 건수가 부족하거나 배송 영수증이 없으면 pending, 형식이 계약과 다르면 unknown으로 둔다.
+- 성공 경계 시험은 실제 `stage_reports()`와 실제 score ledger, 체크포인트 SHA, 보고서 파일 및 fake sender를 거쳤다. sender는 실제 발신 대신 수락 응답만 돌려주며, 생성된 lab feed와 배송 영수증을 확인한다. 완료된 영수증 재소비 때 중복 발신을 하지 않는 것도 확인한다.
+- `run_ex40_b11.sh`에서 supervisor에 기존 `tg_send.py`와 `lab_status/ex40_stage_reports.json` 기본 경로를 전달한다. 운영자가 `EX40_TELEGRAM_SENDER`, `EX40_LAB_FEED`로 경로를 덮을 수 있다. supervisor는 이를 기존 `ex40_score_watch --telegram-sender --lab-feed` 인자로 전달하며, sender가 없을 때만 `--no-telegram`을 쓴다. score_watch가 lab feed 부모 디렉터리를 만들도록 했다.
+
+### CPU 확인
+
+명령:
+
+```text
+C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold-lab/runner-ex40-b11-all-fixes/foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py C:/mai/wt/foothold-lab/runner-ex40-b11-all-fixes/foothold_s2/tests/test_ex40_scorer_cpu.py -q
+```
+
+원출력:
+
+```text
+.................................                                        [100%]
+33 passed in 6.63s
+```
+
+실제 성공 stage-report 함수 경로, 실제 `published=0` 정수 반환의 pending 처리, fake sender, 배송/요약 SHA 및 공유 lab JSON/HTML, 공식 supervisor 인자 전달, 셸 기본 경로를 시험했다. 외부 Telegram 발신은 없었다.
+
+### 상태와 잔여
+
+- 이 후속은 기존 P1/B8 범위다. 이전 보고의 P1 전면 완료 표시는 없으며 analyst의 P1 변경분 verifier 확인이 여전히 필요하다.
+- GPU, Kit, 학습 child, 실제 score evaluator 및 외부 발신/게시를 실행하지 않았다. 실제 lab 서비스가 파일을 읽고 실제 Telegram 수신자가 받는지는 미확인이다.
+- 관련 변경은 `foothold_s2/ex40_supervisor.py`, `foothold_s2/ex40_score_watch.py`, `foothold_s2/run_ex40_b11.sh`, 두 CPU 시험 파일 및 이 보고서다. push하지 않았다.

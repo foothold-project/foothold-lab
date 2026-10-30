@@ -264,6 +264,131 @@ def test_stage_report_uses_checkpoint_source_segment_and_prior_segment(tmp_path,
     assert calls == [(500, first_run, first_run), (750, second_run, first_run)]
 
 
+def test_supervisor_consumes_actual_stage_report_count_and_fake_delivery(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch
+    from foothold_s2.ex40_supervisor import _score_until_checkpoint
+
+    run, watch, scores = tmp_path / "run", tmp_path / "watch", tmp_path / "scores"
+    run.mkdir()
+    watch.mkdir()
+    scores.mkdir()
+    checkpoint = run / "model_500.pt"
+    checkpoint.write_bytes(b"actual CPU checkpoint input")
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 501},
+        "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
+    (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
+        "done": {"500": {"state": "PASS", "checkpoint_sha256": digest}}}), encoding="utf-8")
+    score_path = watch / "score_500.json"
+    score_path.write_text(json.dumps({"checkpoint_iteration": 500, "from": "B0",
+                                      "checkpoint_sha256": digest}), encoding="utf-8")
+    (watch / "score_ledger.jsonl").write_text(json.dumps({
+        "checkpoint_iteration": 500, "stage": "B0", "verdict": "PASS",
+        "run_dir": str(run), "score_path": str(score_path),
+        "score_sha256": hashlib.sha256(score_path.read_bytes()).hexdigest()}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
+        "checkpoint_first": 500, "checkpoint_stride": 250,
+        "final_checkpoint_update": 1000})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {500: "B0"})
+    monkeypatch.setattr(ex40_score_watch, "build_stage_report", lambda current, previous, _run,
+        **_kwargs: {"checkpoint_iteration": current["checkpoint_iteration"],
+                    "checkpoint_sha256": current["checkpoint_sha256"],
+                    "previous_checkpoint_iteration": None, "gains": [], "losses": [],
+                    "unchanged": [], "current": {"source_sha256": {}}})
+    monkeypatch.setattr(ex40_score_watch, "stage_markdown", lambda _row: "CPU receipt\n")
+    sent = []
+    sender_path = tmp_path / "fake_sender.py"
+    lab_feed = tmp_path / "lab" / "ex40_stage_reports.json"
+    state = _score_until_checkpoint(run, watch, scores, tmp_path / "cfg.yaml", TABLE,
+        "B", 500, digest, max_calls=1, telegram_sender=sender_path, lab_feed=lab_feed,
+        sender=lambda script, message: sent.append((script, message.read_text(encoding="utf-8"))) or True)
+
+    assert state == "consumed"
+    stage_root = watch / "stage_reports"
+    report = stage_root / "stage_B0_m500.json"
+    delivery = json.loads((stage_root / "stage_B0_m500.delivery.json").read_text(encoding="utf-8"))
+    assert json.loads(report.read_text(encoding="utf-8"))["checkpoint_sha256"] == digest
+    assert delivery["state"] == "sent"
+    assert len(sent) == 1 and "상황판:" in sent[0][1]
+    feed = json.loads(lab_feed.read_text(encoding="utf-8"))
+    assert feed["stage_reports"][0]["update"] == 500
+    assert lab_feed.with_suffix(".html").is_file()
+
+
+def test_supervisor_handles_actual_zero_published_count_as_pending(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch
+    from foothold_s2.ex40_supervisor import _score_until_checkpoint
+
+    run, watch, scores = tmp_path / "run", tmp_path / "watch", tmp_path / "scores"
+    run.mkdir()
+    watch.mkdir()
+    scores.mkdir()
+    checkpoint = run / "model_500.pt"
+    checkpoint.write_bytes(b"zero published count checkpoint")
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 501},
+        "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
+    (watch / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B",
+        "done": {"500": {"state": "PASS", "checkpoint_sha256": digest}}}), encoding="utf-8")
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
+        "checkpoint_first": 500, "checkpoint_stride": 250,
+        "final_checkpoint_update": 1000})
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {500: "B0"})
+    real_stage_reports = ex40_score_watch.stage_reports
+    observed = []
+
+    def observe(*args, **kwargs):
+        result = real_stage_reports(*args, **kwargs)
+        observed.append((result["published"], type(result["published"])))
+        return result
+
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", observe)
+    result = _score_until_checkpoint(run, watch, scores, tmp_path / "cfg.yaml", TABLE,
+        "B", 500, digest, max_calls=1)
+    assert observed == [(0, int)]
+    assert result == "pending"
+    with pytest.raises(TypeError, match="'int' object is not iterable"):
+        set(observed[0][0])
+
+
+def test_supervisor_watch_command_routes_sender_and_shared_lab_feed(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+
+    run, watch, scores = tmp_path / "run", tmp_path / "watch", tmp_path / "scores"
+    run.mkdir()
+    watch.mkdir()
+    scores.mkdir()
+    checkpoint = run / "model_500.pt"
+    checkpoint.write_bytes(b"routing probe checkpoint")
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "schema": "foothold-manifest/1", "progress": {"completed_updates": 501},
+        "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
+    cfg = {"checkpoint_first": 500, "checkpoint_stride": 250,
+           "final_checkpoint_update": 1000, "check_interval_seconds": 1}
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: cfg)
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {750: "B1"})
+    command_rows = []
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run", lambda command, **_kwargs: (
+        command_rows.append(command) or SimpleNamespace(returncode=0,
+            stdout=json.dumps({"evaluation": {"state": "PASS"}}), stderr="")))
+    sender_path = tmp_path / "sender.py"
+    lab_feed = tmp_path / "shared" / "stage_reports.json"
+    assert _score_until_checkpoint(run, watch, scores, tmp_path / "cfg.yaml", TABLE,
+        "B", 501, digest, max_calls=1, telegram_sender=sender_path,
+        lab_feed=lab_feed) == "pending"
+    command = command_rows[0]
+    assert "--telegram-sender" in command
+    assert command[command.index("--telegram-sender") + 1] == str(sender_path)
+    assert "--no-telegram" not in command
+    assert command[command.index("--lab-feed") + 1] == str(lab_feed)
+
+
 def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_receipt(
         tmp_path, monkeypatch):
     from foothold_s2 import ex40_score_watch, ex40_supervisor
@@ -292,9 +417,29 @@ def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_r
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: cfg)
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates",
                         lambda _plan, _cfg: {750: "S1", 1000: "S2"})
-    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda _run, _out, *_args, **_kwargs: {
-        "state": "pending", "published": [{"update": 750, "json": str(watch / "stage_750.json")}],
-        "first_pending": 1000, "first_hold": None})
+    sender_path = tmp_path / "sender.py"
+    lab_feed = tmp_path / "shared" / "stage_reports.json"
+
+    def fake_stage_reports(_run, out_root, *_args, **kwargs):
+        stage_root = out_root / "stage_reports"
+        stage_root.mkdir(exist_ok=True)
+        report_path = stage_root / "stage_S1_m750.json"
+        report_path.write_text(json.dumps({"checkpoint_iteration": 750,
+            "checkpoint_sha256": checkpoints["model_750.pt"]}), encoding="utf-8")
+        (stage_root / "stage_S1_m750.md").write_text("fake report\n", encoding="utf-8")
+        summary = stage_root / "stage_S1_m750.telegram.txt"
+        summary.write_text("fake summary\n", encoding="utf-8")
+        (stage_root / "stage_S1_m750.delivery.json").write_text(json.dumps({
+            "state": "sent", "summary_sha256": hashlib.sha256(summary.read_bytes()).hexdigest()}),
+            encoding="utf-8")
+        feed = kwargs["lab_feed"]
+        feed.parent.mkdir(parents=True, exist_ok=True)
+        feed.write_text(json.dumps({"stage_reports": [{"stage": "S1", "update": 750,
+            "sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}]}), encoding="utf-8")
+        feed.with_suffix(".html").write_text("<html></html>\n", encoding="utf-8")
+        return {"state": "pending", "published": 1, "first_pending": 1000, "first_hold": None}
+
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", fake_stage_reports)
     calls = []
 
     def fake_watch(command, **_kwargs):
@@ -313,11 +458,13 @@ def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_r
 
     monkeypatch.setattr(ex40_supervisor.subprocess, "run", fake_watch)
     result = _score_until_checkpoint(run, watch, scores, tmp_path / "cfg.yaml",
-        TABLE, "B", 751, checkpoints["model_751.pt"], max_calls=4)
+        TABLE, "B", 751, checkpoints["model_751.pt"], max_calls=4,
+        telegram_sender=sender_path, lab_feed=lab_feed)
     assert result == "consumed"
     assert len(calls) == 2
-    assert "--lab-feed" in calls[0]
-    assert calls[0][calls[0].index("--lab-feed") + 1] == str(watch / "lab_feed.json")
+    assert "--telegram-sender" in calls[0] and "--no-telegram" not in calls[0]
+    assert calls[0][calls[0].index("--telegram-sender") + 1] == str(sender_path)
+    assert calls[0][calls[0].index("--lab-feed") + 1] == str(lab_feed)
     saved = json.loads((watch / "watch_state.json").read_text(encoding="utf-8"))
     assert sorted(saved["done"]) == ["500", "750"]
 
@@ -343,7 +490,7 @@ def test_segment_duplicate_sha_and_missing_score_remain_unconsumed(tmp_path, mon
         "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {})
     monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
-        "state": "done", "published": [], "first_pending": None, "first_hold": None})
+        "state": "done", "published": 0, "first_pending": None, "first_hold": None})
     monkeypatch.setattr(ex40_supervisor.subprocess, "run",
         lambda *_args, **_kwargs: SimpleNamespace(returncode=0,
             stdout=json.dumps({"evaluation": {"state": "idle"}}), stderr=""))
@@ -388,8 +535,9 @@ def test_final_checkpoint_requires_complete_score_ledger_and_non_hold_verdict(
     monkeypatch.setattr(ex40_score_watch, "completion", lambda *_args: {"state": completion_state})
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
     monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
-        "state": "done", "published": [{"update": 8000}], "first_pending": None,
+        "state": "done", "published": 1, "first_pending": None,
         "first_hold": None})
+    monkeypatch.setattr(ex40_supervisor, "_stage_report_delivery_ok", lambda *_args: True)
     monkeypatch.setattr(ex40_supervisor.subprocess, "run",
         lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr="fixture"))
 
@@ -419,7 +567,7 @@ def test_final_checkpoint_sha_mismatch_cannot_be_consumed(tmp_path, monkeypatch)
         "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
     monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
-        "state": "done", "published": [{"update": 8000}], "first_pending": None,
+        "state": "done", "published": 1, "first_pending": None,
         "first_hold": None})
     monkeypatch.setattr(ex40_supervisor.subprocess, "run",
         lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr="fixture"))
@@ -435,5 +583,8 @@ def test_supervised_execution_copy_calls_watchdog_without_touching_original():
     script = copy_script.read_text(encoding="utf-8")
     assert "ex40_supervisor --supervise" in script
     assert "EX40_EXPECTED_FINISH" in script
+    assert "EX40_TELEGRAM_SENDER:-C:/Users/AI-WS01/s2_lab/tools_lead/tg_send.py" in script
+    assert "EX40_LAB_FEED:-C:/Users/AI-WS01/s2_lab/lab_status/ex40_stage_reports.json" in script
+    assert "--telegram-sender \"$EX40_TELEGRAM_SENDER\" --lab-feed \"$EX40_LAB_FEED\"" in script
     assert original.is_file()
     assert "ex40_supervisor" not in original.read_text(encoding="utf-8")
