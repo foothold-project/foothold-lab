@@ -1,0 +1,940 @@
+{
+  "state": "PASS",
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b12_20261031_final_f1fff17f\\smoke\\EX-40-B-kit-smoke_20261031_030305_155852",
+  "source_head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+  "checkpoint_sha256": "b7232f73ffd59eb00b79e39b7bf631de22b5f9bd74f4debc26bece101b92ced8",
+  "completed_updates": 18,
+  "stage_entries": [
+    [
+      "B0",
+      0
+    ],
+    [
+      "B1",
+      2
+    ],
+    [
+      "B2",
+      4
+    ],
+    [
+      "B3a",
+      6
+    ],
+    [
+      "B3b",
+      8
+    ],
+    [
+      "B3c",
+      10
+    ],
+    [
+      "D",
+      12
+    ],
+    [
+      "T0",
+      14
+    ]
+  ],
+  "dr_probe_scales": [
+    0.0,
+    0.5,
+    1.0,
+    1.0
+  ],
+  "dr_probes": [
+    {
+      "ex40_dr": {
+        "actual_samples": {
+          "actuator_gains": {
+            "count": 73728,
+            "max": 1.0,
+            "mean": 1.0,
+            "min": 1.0,
+            "target_envs": 3072
+          },
+          "base_com_offset_m": {
+            "count": 9216,
+            "max": 0.0,
+            "mean": 0.0,
+            "min": 0.0,
+            "target_envs": 3072
+          },
+          "motor_effort_limit": {
+            "count": 36864,
+            "max": 45.43000030517578,
+            "mean": 30.81000010172526,
+            "min": 23.5,
+            "target_envs": 6144
+          },
+          "motor_saturation_effort": {
+            "count": 36864,
+            "max": 45.43000030517578,
+            "mean": 30.81000010172526,
+            "min": 23.5,
+            "target_envs": 6144
+          },
+          "motor_strength_multiplier": {
+            "count": 3072,
+            "max": 1.0,
+            "mean": 1.0,
+            "min": 1.0,
+            "target_envs": 3072
+          },
+          "push_velocity_delta": {
+            "count": 18432,
+            "max": 0.0,
+            "mean": 0.0,
+            "min": 0.0,
+            "target_envs": 3072
+          }
+        },
+        "config_sha256": "00170bc13eb5a4fcf2237c2982ba8d5beafec38b7daef775bf50b5195aa08af6",
+        "delay_readback": {
+          "configured_max_seconds": 0.0,
+          "count": 3072,
+          "current_histogram": [
+            3072
+          ],
+          "max_allowed_substeps": 0,
+          "max_seconds": 0.0,
+          "observed_max_seconds": 0.0,
+          "observed_max_substeps": 0,
+          "observed_min_substeps": 0,
+          "physics_dt_seconds": 0.005,
+          "reset_sample_count": 3072,
+          "reset_sample_histogram": [
+            3072
+          ],
+          "reset_sampled_delay_ms": [
+            0.0
+          ]
+        },
+        "observation_noise": {
+          "mode": "fixed",
+          "multiplier": 1.0
+        },
+        "pending_values": [],
+        "realized_state": {
+          "base_com_offset_m": {
+            "count": 175104,
+            "max": 0.0,
+            "mean": 0.0,
+            "min": 0.0
+          },
+          "calf.damping": {
+            "count": 12288,
+            "max": 0.5,
+            "mean": 0.5,
+            "min": 0.5
+          },
+          "calf.effort_limit": {
+            "count": 12288,
+            "max": 45.43000030517578,
+            "mean": 45.43000030517578,
+            "min": 45.43000030517578
+          },
+          "calf.saturation_effort": {
+            "count": 12288,
+            "max": 45.43000030517578,
+            "mean": 45.43000030517578,
+            "min": 45.43000030517578
+          },
+          "calf.stiffness": {
+            "count": 12288,
+            "max": 25.0,
+            "mean": 25.0,
+            "min": 25.0
+          },
+          "delay_substeps": {
+            "count": 3072,
+            "max": 0.0,
+            "mean": 0.0,
+            "min": 0.0
+          },
+          "hip_thigh.damping": {
+            "count": 24576,
+            "max": 0.5,
+            "mean": 0.5,
+            "min": 0.5
+          },
+          "hip_thigh.effort_limit": {
+            "count": 24576,
+            "max": 23.5,
+            "mean": 23.5,
+            "min": 23.5
+          },
+          "hip_thigh.saturation_effort": {
+            "count": 24576,
+            "max": 23.5,
+            "mean": 23.5,
+            "min": 23.5
+          },
+          "hip_thigh.stiffness": {
+            "count": 24576,
+            "max": 25.0,
+            "mean": 25.0,
+            "min": 25.0
+          }
+        },
+        "scale": 0.0,
+        "schedule_update": 0,
+        "smoke_schedule": true,
+        "target_ranges": {
+          "actuator_gains": {
+            "damping_scale": [
+              0.9,
+              1.1
+            ],
+            "stiffness_scale": [
+              0.9,
+              1.1
+            ]
+          },
+          "base_com": {
+            "x": [
+              -0.05,
+              0.05
+            ],
+            "y": [
+              -0.05,
+              0.05
+            ],
+            "z": [
+              -0.05,
+              0.05
+            ]
+          },
+          "delay_max_seconds": 0.0,
+          "motor_strength": [
+            0.9,
+            1.1
+          ],
+          "push_velocity": {
+            "pitch": [
+              0.0,
+              0.0
+            ],
+            "roll": [
+              0.0,
+              0.0
+            ],
+            "x": [
+              -1.0,
+              1.0
+            ],
+            "y": [
+              -1.0,
+              1.0
+            ],
+            "yaw": [
+              0.0,
+              0.0
+            ],
+            "z": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "update": 0
+      },
+      "it": 0,
+      "schedule_update": 0
+    },
+    {
+      "ex40_dr": {
+        "actual_samples": {
+          "actuator_gains": {
+            "count": 73728,
+            "max": 1.0499979257583618,
+            "mean": 0.9997858795023704,
+            "min": 0.9500000476837158,
+            "target_envs": 3072
+          },
+          "base_com_offset_m": {
+            "count": 9216,
+            "max": 0.024997515603899956,
+            "mean": 1.4861940245383368e-05,
+            "min": -0.02499927021563053,
+            "target_envs": 3072
+          },
+          "motor_effort_limit": {
+            "count": 36864,
+            "max": 47.70149230957031,
+            "mean": 30.80090908333659,
+            "min": 22.325260162353516,
+            "target_envs": 6144
+          },
+          "motor_saturation_effort": {
+            "count": 36864,
+            "max": 47.70149230957031,
+            "mean": 30.80090908333659,
+            "min": 22.325260162353516,
+            "target_envs": 6144
+          },
+          "motor_strength_multiplier": {
+            "count": 3072,
+            "max": 1.0499998331069946,
+            "mean": 0.9997049333954541,
+            "min": 0.9500110745429993,
+            "target_envs": 3072
+          },
+          "push_velocity_delta": {
+            "count": 18432,
+            "max": 0.4999315142631531,
+            "mean": 0.0011468490200867462,
+            "min": -0.4999081790447235,
+            "target_envs": 3072
+          }
+        },
+        "config_sha256": "00170bc13eb5a4fcf2237c2982ba8d5beafec38b7daef775bf50b5195aa08af6",
+        "delay_readback": {
+          "configured_max_seconds": 0.0075,
+          "count": 3072,
+          "current_histogram": [
+            1564,
+            1508
+          ],
+          "max_allowed_substeps": 1,
+          "max_seconds": 0.0075,
+          "observed_max_seconds": 0.005,
+          "observed_max_substeps": 1,
+          "observed_min_substeps": 0,
+          "physics_dt_seconds": 0.005,
+          "reset_sample_count": 3072,
+          "reset_sample_histogram": [
+            1564,
+            1508
+          ],
+          "reset_sampled_delay_ms": [
+            0.0,
+            5.0
+          ]
+        },
+        "observation_noise": {
+          "mode": "fixed",
+          "multiplier": 1.0
+        },
+        "pending_values": [],
+        "realized_state": {
+          "base_com_offset_m": {
+            "count": 175104,
+            "max": 0.024997515603899956,
+            "mean": 7.822073813359667e-07,
+            "min": -0.02499927021563053
+          },
+          "calf.damping": {
+            "count": 12288,
+            "max": 0.5249943137168884,
+            "mean": 0.49981137675301096,
+            "min": 0.4750007390975952
+          },
+          "calf.effort_limit": {
+            "count": 12288,
+            "max": 47.70149230957031,
+            "mean": 45.4165954378744,
+            "min": 43.15900421142578
+          },
+          "calf.saturation_effort": {
+            "count": 12288,
+            "max": 47.70149230957031,
+            "mean": 45.4165954378744,
+            "min": 43.15900421142578
+          },
+          "calf.stiffness": {
+            "count": 12288,
+            "max": 26.249774932861328,
+            "mean": 24.989611523691565,
+            "min": 23.750001907348633
+          },
+          "delay_substeps": {
+            "count": 3072,
+            "max": 1.0,
+            "mean": 0.4908854166666667,
+            "min": 0.0
+          },
+          "hip_thigh.damping": {
+            "count": 24576,
+            "max": 0.5249989032745361,
+            "mean": 0.49989206949976506,
+            "min": 0.4750003516674042
+          },
+          "hip_thigh.effort_limit": {
+            "count": 24576,
+            "max": 24.67499542236328,
+            "mean": 23.493065906067688,
+            "min": 22.325260162353516
+          },
+          "hip_thigh.saturation_effort": {
+            "count": 24576,
+            "max": 24.67499542236328,
+            "mean": 23.493065906067688,
+            "min": 22.325260162353516
+          },
+          "hip_thigh.stiffness": {
+            "count": 24576,
+            "max": 26.249948501586914,
+            "mean": 24.99924731339949,
+            "min": 23.750181198120117
+          }
+        },
+        "scale": 0.5,
+        "schedule_update": 6000,
+        "smoke_schedule": true,
+        "target_ranges": {
+          "actuator_gains": {
+            "damping_scale": [
+              0.9,
+              1.1
+            ],
+            "stiffness_scale": [
+              0.9,
+              1.1
+            ]
+          },
+          "base_com": {
+            "x": [
+              -0.05,
+              0.05
+            ],
+            "y": [
+              -0.05,
+              0.05
+            ],
+            "z": [
+              -0.05,
+              0.05
+            ]
+          },
+          "delay_max_seconds": 0.0075,
+          "motor_strength": [
+            0.9,
+            1.1
+          ],
+          "push_velocity": {
+            "pitch": [
+              0.0,
+              0.0
+            ],
+            "roll": [
+              0.0,
+              0.0
+            ],
+            "x": [
+              -1.0,
+              1.0
+            ],
+            "y": [
+              -1.0,
+              1.0
+            ],
+            "yaw": [
+              0.0,
+              0.0
+            ],
+            "z": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "update": 11
+      },
+      "it": 11,
+      "schedule_update": 6000
+    },
+    {
+      "ex40_dr": {
+        "actual_samples": {
+          "actuator_gains": {
+            "count": 73728,
+            "max": 1.0999990701675415,
+            "mean": 0.9998568671427266,
+            "min": 0.9000003337860107,
+            "target_envs": 3072
+          },
+          "base_com_offset_m": {
+            "count": 9216,
+            "max": 0.049984004348516464,
+            "mean": -9.950431073472525e-05,
+            "min": -0.049971044063568115,
+            "target_envs": 3072
+          },
+          "motor_effort_limit": {
+            "count": 36864,
+            "max": 49.97163772583008,
+            "mean": 30.781335116260582,
+            "min": 21.150287628173828,
+            "target_envs": 6144
+          },
+          "motor_saturation_effort": {
+            "count": 36864,
+            "max": 49.97163772583008,
+            "mean": 30.781335116260582,
+            "min": 21.150287628173828,
+            "target_envs": 6144
+          },
+          "motor_strength_multiplier": {
+            "count": 3072,
+            "max": 1.0999699831008911,
+            "mean": 0.9990696205447117,
+            "min": 0.9000122547149658,
+            "target_envs": 3072
+          },
+          "push_velocity_delta": {
+            "count": 18432,
+            "max": 0.999981164932251,
+            "mean": -0.0022074719082512376,
+            "min": -0.9994451999664307,
+            "target_envs": 3072
+          }
+        },
+        "config_sha256": "00170bc13eb5a4fcf2237c2982ba8d5beafec38b7daef775bf50b5195aa08af6",
+        "delay_readback": {
+          "configured_max_seconds": 0.015,
+          "count": 3072,
+          "current_histogram": [
+            758,
+            771,
+            773,
+            770
+          ],
+          "max_allowed_substeps": 3,
+          "max_seconds": 0.015,
+          "observed_max_seconds": 0.015,
+          "observed_max_substeps": 3,
+          "observed_min_substeps": 0,
+          "physics_dt_seconds": 0.005,
+          "reset_sample_count": 3072,
+          "reset_sample_histogram": [
+            758,
+            771,
+            773,
+            770
+          ],
+          "reset_sampled_delay_ms": [
+            0.0,
+            5.0,
+            10.0,
+            15.0
+          ]
+        },
+        "observation_noise": {
+          "mode": "fixed",
+          "multiplier": 1.0
+        },
+        "pending_values": [],
+        "realized_state": {
+          "base_com_offset_m": {
+            "count": 175104,
+            "max": 0.049984004348516464,
+            "mean": -5.237068986038171e-06,
+            "min": -0.049971044063568115
+          },
+          "calf.damping": {
+            "count": 12288,
+            "max": 0.5499995350837708,
+            "mean": 0.49994545238102245,
+            "min": 0.4500056505203247
+          },
+          "calf.effort_limit": {
+            "count": 12288,
+            "max": 49.97163772583008,
+            "mean": 45.3877331626912,
+            "min": 40.88755798339844
+          },
+          "calf.saturation_effort": {
+            "count": 12288,
+            "max": 49.97163772583008,
+            "mean": 45.3877331626912,
+            "min": 40.88755798339844
+          },
+          "calf.stiffness": {
+            "count": 12288,
+            "max": 27.49951171875,
+            "mean": 24.998145710211247,
+            "min": 22.50000762939453
+          },
+          "delay_substeps": {
+            "count": 3072,
+            "max": 3.0,
+            "mean": 1.5061848958333333,
+            "min": 0.0
+          },
+          "hip_thigh.damping": {
+            "count": 24576,
+            "max": 0.5499907732009888,
+            "mean": 0.4997053331862844,
+            "min": 0.4500036835670471
+          },
+          "hip_thigh.effort_limit": {
+            "count": 24576,
+            "max": 25.849294662475586,
+            "mean": 23.478136093045276,
+            "min": 21.150287628173828
+          },
+          "hip_thigh.saturation_effort": {
+            "count": 24576,
+            "max": 25.849294662475586,
+            "mean": 23.478136093045276,
+            "min": 21.150287628173828
+          },
+          "hip_thigh.stiffness": {
+            "count": 24576,
+            "max": 27.499881744384766,
+            "mean": 25.006289201400552,
+            "min": 22.500333786010742
+          }
+        },
+        "scale": 1.0,
+        "schedule_update": 6001,
+        "smoke_schedule": true,
+        "target_ranges": {
+          "actuator_gains": {
+            "damping_scale": [
+              0.9,
+              1.1
+            ],
+            "stiffness_scale": [
+              0.9,
+              1.1
+            ]
+          },
+          "base_com": {
+            "x": [
+              -0.05,
+              0.05
+            ],
+            "y": [
+              -0.05,
+              0.05
+            ],
+            "z": [
+              -0.05,
+              0.05
+            ]
+          },
+          "delay_max_seconds": 0.015,
+          "motor_strength": [
+            0.9,
+            1.1
+          ],
+          "push_velocity": {
+            "pitch": [
+              0.0,
+              0.0
+            ],
+            "roll": [
+              0.0,
+              0.0
+            ],
+            "x": [
+              -1.0,
+              1.0
+            ],
+            "y": [
+              -1.0,
+              1.0
+            ],
+            "yaw": [
+              0.0,
+              0.0
+            ],
+            "z": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "update": 12
+      },
+      "it": 12,
+      "schedule_update": 6001
+    },
+    {
+      "ex40_dr": {
+        "actual_samples": {
+          "actuator_gains": {
+            "count": 73728,
+            "max": 1.0999979972839355,
+            "mean": 0.9999855232890695,
+            "min": 0.9000022411346436,
+            "target_envs": 3072
+          },
+          "base_com_offset_m": {
+            "count": 9216,
+            "max": 0.04999226704239845,
+            "mean": -6.0620117286210494e-05,
+            "min": -0.04999654367566109,
+            "target_envs": 3072
+          },
+          "motor_effort_limit": {
+            "count": 36864,
+            "max": 49.97285461425781,
+            "mean": 30.860318241847885,
+            "min": 21.152982711791992,
+            "target_envs": 6144
+          },
+          "motor_saturation_effort": {
+            "count": 36864,
+            "max": 49.97285461425781,
+            "mean": 30.860318241847885,
+            "min": 21.152982711791992,
+            "target_envs": 6144
+          },
+          "motor_strength_multiplier": {
+            "count": 3072,
+            "max": 1.09999680519104,
+            "mean": 1.0016331758039694,
+            "min": 0.9001269340515137,
+            "target_envs": 3072
+          },
+          "push_velocity_delta": {
+            "count": 18432,
+            "max": 0.999143123626709,
+            "mean": -0.0003679170687165525,
+            "min": -0.999863862991333,
+            "target_envs": 3072
+          }
+        },
+        "config_sha256": "00170bc13eb5a4fcf2237c2982ba8d5beafec38b7daef775bf50b5195aa08af6",
+        "delay_readback": {
+          "configured_max_seconds": 0.015,
+          "count": 3072,
+          "current_histogram": [
+            787,
+            767,
+            781,
+            737
+          ],
+          "max_allowed_substeps": 3,
+          "max_seconds": 0.015,
+          "observed_max_seconds": 0.015,
+          "observed_max_substeps": 3,
+          "observed_min_substeps": 0,
+          "physics_dt_seconds": 0.005,
+          "reset_sample_count": 3072,
+          "reset_sample_histogram": [
+            787,
+            767,
+            781,
+            737
+          ],
+          "reset_sampled_delay_ms": [
+            0.0,
+            5.0,
+            10.0,
+            15.0
+          ]
+        },
+        "observation_noise": {
+          "mode": "fixed",
+          "multiplier": 1.0
+        },
+        "pending_values": [],
+        "realized_state": {
+          "base_com_offset_m": {
+            "count": 175104,
+            "max": 0.04999226704239845,
+            "mean": -3.1905324887479207e-06,
+            "min": -0.04999654367566109
+          },
+          "calf.damping": {
+            "count": 12288,
+            "max": 0.549996554851532,
+            "mean": 0.49990568099989713,
+            "min": 0.4500047266483307
+          },
+          "calf.effort_limit": {
+            "count": 12288,
+            "max": 49.97285461425781,
+            "mean": 45.50419549271464,
+            "min": 40.892765045166016
+          },
+          "calf.saturation_effort": {
+            "count": 12288,
+            "max": 49.97285461425781,
+            "mean": 45.50419549271464,
+            "min": 40.892765045166016
+          },
+          "calf.stiffness": {
+            "count": 12288,
+            "max": 27.49880599975586,
+            "mean": 25.01100699417293,
+            "min": 22.500410079956055
+          },
+          "delay_substeps": {
+            "count": 3072,
+            "max": 3.0,
+            "mean": 1.4778645833333333,
+            "min": 0.0
+          },
+          "hip_thigh.damping": {
+            "count": 24576,
+            "max": 0.5499989986419678,
+            "mean": 0.5001154276020922,
+            "min": 0.4500100612640381
+          },
+          "hip_thigh.effort_limit": {
+            "count": 24576,
+            "max": 25.849924087524414,
+            "mean": 23.538379616414506,
+            "min": 21.152982711791992
+          },
+          "hip_thigh.saturation_effort": {
+            "count": 24576,
+            "max": 25.849924087524414,
+            "mean": 23.538379616414506,
+            "min": 21.152982711791992
+          },
+          "hip_thigh.stiffness": {
+            "count": 24576,
+            "max": 27.499675750732422,
+            "mean": 24.98999734191845,
+            "min": 22.50005531311035
+          }
+        },
+        "scale": 1.0,
+        "schedule_update": 7501,
+        "smoke_schedule": true,
+        "target_ranges": {
+          "actuator_gains": {
+            "damping_scale": [
+              0.9,
+              1.1
+            ],
+            "stiffness_scale": [
+              0.9,
+              1.1
+            ]
+          },
+          "base_com": {
+            "x": [
+              -0.05,
+              0.05
+            ],
+            "y": [
+              -0.05,
+              0.05
+            ],
+            "z": [
+              -0.05,
+              0.05
+            ]
+          },
+          "delay_max_seconds": 0.015,
+          "motor_strength": [
+            0.9,
+            1.1
+          ],
+          "push_velocity": {
+            "pitch": [
+              0.0,
+              0.0
+            ],
+            "roll": [
+              0.0,
+              0.0
+            ],
+            "x": [
+              -1.0,
+              1.0
+            ],
+            "y": [
+              -1.0,
+              1.0
+            ],
+            "yaw": [
+              0.0,
+              0.0
+            ],
+            "z": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "update": 14
+      },
+      "it": 14,
+      "schedule_update": 7501
+    }
+  ],
+  "stand_checker_receipt": {
+    "aggregate_hit_valid_ratio": 1.0,
+    "gap_valid_count_by_foot": [
+      127616,
+      127616,
+      127616,
+      127616
+    ],
+    "per_foot_gap_p50_range_mm": [
+      0,
+      10
+    ],
+    "terrain_flat_columns": [],
+    "updates": 18
+  },
+  "start_receipt": {
+    "start": "scratch",
+    "stage": "B0",
+    "segment_index": 0,
+    "parent_checkpoint": null,
+    "parent_sha256": null,
+    "env_seed": 42,
+    "command_seed": 0,
+    "num_envs": 3072,
+    "terrain": {
+      "policy": "fixed_l02",
+      "max_init_terrain_level": 2,
+      "promotion_enabled": false,
+      "num_envs": 3072,
+      "actual_counts_by_level": [
+        1034,
+        1025,
+        1013,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "level_min": 0,
+      "level_max": 2,
+      "terrain_labels_sha256": "533404a0ed3e41e0dbf8a4e751026e0a4b5f36aece64e39300aef8f8144010b1"
+    },
+    "baseline_env_yaml_sha256": "4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b5d12639901",
+    "baseline_agent_yaml_sha256": "213b82acc0a8d937de3f85171619e7d20c55612b37033bdeb05c6adff3c06308",
+    "stand_reward": {
+      "four_foot_contact": 0.1,
+      "gap": -0.2,
+      "load": -0.1
+    }
+  },
+  "train_status": {
+    "state": "done",
+    "iter": 17,
+    "completed_updates": 18,
+    "segment_index": 0,
+    "log_dir": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b12_20261031_final_f1fff17f\\smoke\\EX-40-B-kit-smoke_20261031_030305_155852",
+    "variant": "SB",
+    "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex40_b12_20261031_final_f1fff17f\\smoke\\EX-40-B-kit-smoke_20261031_030305_155852\\model_17.pt",
+    "sha256": "b7232f73ffd59eb00b79e39b7bf631de22b5f9bd74f4debc26bece101b92ced8",
+    "physical_resume_identical": false,
+    "time": "2026-10-31T03:11:46",
+    "pid": 155852
+  },
+  "evidence_hashes": {
+    "kit_check.json": "193431809340362aeb0ff5b4f831df916f3670d4305eca19f55e243a45700df9",
+    "run.log": "7ddb69c473ef897c5b4909b462037b381d4fd00f208812e9258d2dae82d73198",
+    "train_extra.jsonl": "45a36eebba36e0e1da2081d8be62ef0c03bc8b46b3fec5102c45f6af1b9c0836",
+    "stage_log.jsonl": "59cf27e6e68cb7f7e06024f6af0332fe838e3807765b4891cc989350f325d0e8",
+    "ex40_dr_schedule_smoke.json": "d1660508684e8f157337efda03f7ec698a5e6e1fef33de8997a7282c0958a26d",
+    "manifest.json": "a286501d92270cb0b10a7d682e4e6d25c77e4f52849898d6242af093572ae299"
+  }
+}
