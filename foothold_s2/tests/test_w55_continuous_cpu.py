@@ -36,7 +36,8 @@ def _mutated(tmp_path, change):
 def test_scratch_stages_and_baseline_pins(tmp_path):
     plan = Plan(TABLE, arm="A")
     assert [(s.id, s.fixed_update) for s in plan.stages] == [
-        ("B0", 0), ("B1", 1501), ("B2", 3001), ("B3", 4501), ("T0", 5501)]
+        ("B0", 0), ("B1", 1501), ("B2", 3001), ("B3a", 4501),
+        ("B3b", 5001), ("B3c", 5501), ("T0", 6001)]
     assert plan.parent_sha256 is None
     assert hashlib.sha256((BASELINE / "env.yaml").read_bytes()).hexdigest() == plan.baseline_env_yaml_sha256
     assert hashlib.sha256((BASELINE / "agent.yaml").read_bytes()).hexdigest() == plan.baseline_agent_yaml_sha256
@@ -107,7 +108,7 @@ class _Manager:
 
 
 def test_b0_to_b1_reward_and_reset_boundary(tmp_path):
-    plan = Plan(TABLE, arm="A", smoke_boundaries=(3, 6, 9, 12))
+    plan = Plan(TABLE, arm="A", smoke_boundaries=(3, 6, 9, 12, 15))
     runtime = Runtime(plan, 4, "cpu", tmp_path)
     manager = _Manager()
     runner = SimpleNamespace(env=SimpleNamespace(unwrapped=SimpleNamespace(reward_manager=manager)),
@@ -140,7 +141,7 @@ def test_b0_to_b1_reward_and_reset_boundary(tmp_path):
 
 
 def test_actual_parser_and_scratch_receipt(tmp_path):
-    for smoke, final in ((True, 15), (False, 6001)):
+    for smoke, final in ((True, 18), (False, 6501)):
         args = build_args(arm="A", device="cuda:0", end_by="2026-11-05T12:00:00+09:00",
                           log_root=tmp_path / "output", score_dir=tmp_path / "scores", smoke=smoke)
         parsed, unknown = actual_parser().parse_known_args([
@@ -151,7 +152,7 @@ def test_actual_parser_and_scratch_receipt(tmp_path):
         assert row["start"] == "scratch" and row["parent"] is None
         assert row["stand_reward"] == {"four_foot_contact": .1, "gap": -.2, "load": -.1}
         assert row["stage_boundaries"]["B0"] == 0
-    with pytest.raises(ValueError, match="without --resume_from"):
+    with pytest.raises(ValueError, match="resume needs both"):
         receipt(args + ["--resume_from", str(BASELINE / "agent.yaml")])
     bad = _mutated(tmp_path, lambda d: d.update(baseline_env_yaml_sha256="0" * 64))
     with pytest.raises(ValueError, match="saved configuration SHA"):
@@ -321,10 +322,10 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     receipt_path = tmp_path / "receipt.json"
     receipt_path.write_text(json.dumps(launch), encoding="utf-8")
     run_log = tmp_path / "run.log"
-    run_log.write_text("Learning iteration 14/15\n", encoding="utf-8")
+    run_log.write_text("Learning iteration 17/18\n", encoding="utf-8")
     run = tmp_path / "output" / "smoke" / "EX-40-B-kit-smoke_20261030_1"
     (run / "params").mkdir(parents=True)
-    plan = Plan(TABLE, arm="B", smoke_boundaries=(3, 6, 9, 12))
+    plan = Plan(TABLE, arm="B", smoke_boundaries=(3, 6, 9, 12, 15))
     baseline = yaml.load((BASELINE / "env.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     expected_curriculum = copy.deepcopy(baseline["curriculum"])
     expected_curriculum["terrain_levels"]["params"] = {
@@ -360,7 +361,7 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                                           "terrain_origin_z_m": 1.0,
                                           "hit_minus_origin_z_m": 0.0}]}
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(15)) + "\n",
+        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(18)) + "\n",
         encoding="utf-8")
     (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
         "continuous_curriculum": {"sha256": plan.sha256,
@@ -394,8 +395,8 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
                             "use_gt_envs": 4, "adasmpl_p": 1.0}))
     stage_log = run / "stage_log.jsonl"
     stage_log.write_text("\n".join(json.dumps(r) for r in events) + "\n", encoding="utf-8")
-    (run / "model_14.pt").write_bytes(b"known model")
-    (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 14,
+    (run / "model_17.pt").write_bytes(b"known model")
+    (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 17,
         "sha256": hashlib.sha256(b"known model").hexdigest()}), encoding="utf-8")
     checked = check_kit_smoke(receipt_path, run_log, 0)
     assert checked["state"] == "PASS"
@@ -408,12 +409,12 @@ def test_kit_receipt_known_good_and_mutations(tmp_path):
     receipt_path.write_text(json.dumps(launch), encoding="utf-8")
     invalid_sensor = {**sensor_row, "hit_valid_count_by_foot": [100] * 4}
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": invalid_sensor}) for i in range(15)) + "\n",
+        json.dumps({"it": i, "ex40_stand_sensor": invalid_sensor}) for i in range(18)) + "\n",
         encoding="utf-8")
     with pytest.raises(ValueError, match="per-foot valid counts"):
         check_kit_smoke(receipt_path, run_log, 0)
     (run / "train_extra.jsonl").write_text("\n".join(
-        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(15)) + "\n",
+        json.dumps({"it": i, "ex40_stand_sensor": sensor_row}) for i in range(18)) + "\n",
         encoding="utf-8")
     good_env = yaml.safe_load(env_yaml.read_text(encoding="utf-8"))
     for changed in (

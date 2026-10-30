@@ -22,6 +22,8 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
           "side_vy_abs", "diag_vx_abs", "diag_vy_abs")
+STAGE_IDS = ("B0", "B1", "B2", "B3a", "B3b", "B3c", "T0")
+KIT_SMOKE_BOUNDARIES = (3, 6, 9, 12, 15)
 FIRST_REWARDS = {"track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty",
                  "thigh_calf_pos_l1", "four_foot_contact_at_stop", "stand_gap", "stand_load"}
 
@@ -94,11 +96,13 @@ class Plan:
             {"table_sha256": self.sha256, "arm": arm, "smoke_boundaries": smoke_boundaries},
             sort_keys=True).encode("utf-8")).hexdigest()
         raw = doc.get("stages")
-        if not isinstance(raw, list) or [x.get("id") for x in raw] != ["B0", "B1", "B2", "B3", "T0"]:
-            raise ValueError("D68 EX-40 needs B0, B1, B2, B3, T0 in order")
-        if smoke_boundaries is not None and (len(smoke_boundaries) != 4 or
+        if not isinstance(raw, list) or [x.get("id") for x in raw] != list(STAGE_IDS):
+            raise ValueError("D72 EX-40 needs B0, B1, B2, B3a, B3b, B3c, T0 in order")
+        if smoke_boundaries is not None and (len(smoke_boundaries) != len(STAGE_IDS) - 2 or
                                              list(smoke_boundaries) != sorted(set(smoke_boundaries))):
-            raise ValueError("D68 smoke needs four increasing boundaries")
+            raise ValueError("D72 smoke needs five increasing boundaries")
+        if smoke_boundaries is not None:
+            raw = raw[:len(smoke_boundaries) + 1]
         self.stages: list[Stage] = []
         last_rewards: dict[str, float] = {}
         last_slots: set[str] = set()
@@ -155,15 +159,19 @@ class Plan:
                 if new[0] > old[0] + 1e-9 or new[1] < old[1] - 1e-9:
                     raise ValueError(f"W55 range narrows: {key}")
             force_gt = row.get("force_gt")
-            if not isinstance(force_gt, bool) or (index < 4 and not force_gt) or (index == 4 and force_gt):
+            is_t0 = row["id"] == "T0"
+            if not isinstance(force_gt, bool) or force_gt == is_t0:
                 raise ValueError("W55 T0 alone switches GT to reconstruction")
-            if index == 4 and adds.get("map_source") != "reconstruction":
+            if is_t0 and adds.get("map_source") != "reconstruction":
                 raise ValueError("W55 T0 map addition missing")
+            if not is_t0 and adds.get("map_source") is not None:
+                raise ValueError("W55 reconstruction map switch is reserved for T0")
             if row.get("heading_arm") is not None:
                 raise ValueError("W55 arm must remain undecided in the shared stage table")
             low = float(row.get("low_forward_fraction", 0.0))
-            if not 0.0 <= low <= 1.0 or (index < 3 and low) or (index >= 3 and low != 0.20):
-                raise ValueError("W55 low-speed forward fraction differs from D59")
+            expected_low = 0.20 if row["id"] in ("B3c", "T0") else 0.0
+            if not 0.0 <= low <= 1.0 or not math.isclose(low, expected_low, abs_tol=1e-12):
+                raise ValueError("D72 low-speed forward fraction is allowed only in B3c and T0")
             self.stages.append(Stage(row["id"], update, shares, ranges, rewards, force_gt,
                                      low, arm, self.heading_cfg, adds))
             last_rewards, last_slots, last_ranges = rewards, slots, ranges
@@ -190,11 +198,11 @@ class Runtime:
         self.seen_scores: set[str] = set()
         self.runner = None
         self._started = False
-        self._step_counts = torch.zeros((5, len(EX39_SLOTS), 3), dtype=torch.long, device=device)
+        self._step_counts = torch.zeros((len(plan.stages), len(EX39_SLOTS), 3), dtype=torch.long, device=device)
         self._done_counts = torch.zeros_like(self._step_counts)
-        self._contact_counts = torch.zeros((5, len(EX39_SLOTS), 3, 4), dtype=torch.long, device=device)
-        self._side_counts = torch.zeros((5, 4, 2), dtype=torch.long, device=device)
-        self._side_contact_counts = torch.zeros((5, 4, 4), dtype=torch.long, device=device)
+        self._contact_counts = torch.zeros((len(plan.stages), len(EX39_SLOTS), 3, 4), dtype=torch.long, device=device)
+        self._side_counts = torch.zeros((len(plan.stages), 4, 2), dtype=torch.long, device=device)
+        self._side_contact_counts = torch.zeros((len(plan.stages), 4, 4), dtype=torch.long, device=device)
         self._episode_side = torch.full((env_count,), -1, dtype=torch.long, device=device)
         self._raw_samples: list[dict] = []
         self._sample_step = 0
@@ -306,12 +314,13 @@ class Runtime:
                 code, weights=contact[:, foot].float(), minlength=self._step_counts.numel()
             ).reshape_as(self._step_counts).long()
             self._side_contact_counts[..., foot] += torch.bincount(
-                stage * 4 + side, weights=contact[:, foot].float(), minlength=20
-            ).reshape(5, 4).long()
+                stage * 4 + side, weights=contact[:, foot].float(), minlength=len(self.plan.stages) * 4
+            ).reshape(len(self.plan.stages), 4).long()
         for y in (0, 1):
             for h in (0, 1):
                 labels = stage[side == y * 2 + h]
-                self._side_counts[:, y * 2 + h, 0] += torch.bincount(labels, minlength=5)
+                self._side_counts[:, y * 2 + h, 0] += torch.bincount(
+                    labels, minlength=len(self.plan.stages))
         self._pre_step_code = code
         self._pre_stage = stage.clone()
         self._pre_side = side
@@ -330,7 +339,8 @@ class Runtime:
         for y in (0, 1):
             for h in (0, 1):
                 labels = self._pre_stage[finished & (self._pre_side == y * 2 + h)]
-                self._side_counts[:, y * 2 + h, 1] += torch.bincount(labels, minlength=5)
+                self._side_counts[:, y * 2 + h, 1] += torch.bincount(
+                    labels, minlength=len(self.plan.stages))
         self._episode_side[finished] = -1
 
     def flush_consumption(self, iteration: int):

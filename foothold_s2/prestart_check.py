@@ -26,6 +26,7 @@ MODULES = (
     "foothold_s2.sol23f_contract",
     "foothold_s2.curriculum.continuous",
     "foothold_s2.ex40_launch",
+    "foothold_s2.ex40_continue",
     "foothold_s2.ex40_kit_smoke",
 )
 

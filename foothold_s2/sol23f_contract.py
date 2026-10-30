@@ -75,10 +75,10 @@ def command_settings(args) -> dict:
         out["basic_shares"] = ex39_shares() if ex39_arm else dict(zip(BASIC_SLOTS, basic_shares(share)))
         out["ex39_arm"] = ex39_arm
         if getattr(args, "curriculum", None):
-            from foothold_s2.curriculum.continuous import Plan
+            from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES, Plan
 
             plan = Plan(args.curriculum, arm=getattr(args, "curriculum_arm", None),
-                        smoke_boundaries=(3, 6, 9, 12) if getattr(args, "curriculum_kit_smoke", False) else None)
+                        smoke_boundaries=KIT_SMOKE_BOUNDARIES if getattr(args, "curriculum_kit_smoke", False) else None)
             out["command_contract"] = "basic_gait_ex40"
             out["basic_shares"] = plan.stages[0].shares
             out["curriculum_sha256"] = plan.sha256
@@ -87,12 +87,12 @@ def command_settings(args) -> dict:
 
 def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True) -> float:
     """W55 has its own long continuous budget; old EX-38/39 gates stay intact."""
-    from foothold_s2.curriculum.continuous import Plan
+    from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES, Plan
 
     if args.variant != "SB" or args.task != TASKS["SB"] or args.agent != "rsl_rl_cfg_entry_point" or hydra_args:
         raise ValueError("W55 requires the pinned SB task and agent without Hydra overrides")
     if args.distributed or getattr(args, "resume", False) or getattr(args, "fast_gt_only", False):
-        raise ValueError("D68 EX-40 is one ordinary-perception scratch process")
+        raise ValueError("D68 EX-40 uses one ordinary-perception process")
     if any(getattr(args, key, None) for key in ("basic_extend_arm", "basic_ex38", "basic_ex39_arm",
                                                 "basic_ex38_continue_parent_sha", "basic_ex39_parent_sha")):
         raise ValueError("W55 cannot combine EX-36/38/39 launch flags")
@@ -104,8 +104,9 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
         raise ValueError("D68 B0 requires basic_gait stage sampler, S-B10 clock and p_map_off 0.1")
     if args.seed != 42 or args.num_envs != 3072:
         raise ValueError("W55 seed or env count differs from its smoke/main contract")
-    if args.max_iterations != (15 if args.curriculum_kit_smoke else 6001):
-        raise ValueError("W55 max_iterations must finish the smoke or T0 stage exactly")
+    expected_iterations = 18 if args.curriculum_kit_smoke else 6501
+    if args.max_iterations != expected_iterations:
+        raise ValueError("D72 max_iterations must finish the 18-update smoke or m6500 exactly")
     if args.basic_stage != ("smoke" if args.curriculum_kit_smoke else "main") or args.smoke_updates is not None:
         raise ValueError("W55 smoke and main output stages must be separate")
     if not args.basic_log_root or not Path(args.basic_log_root).is_absolute() or not getattr(args, "curriculum_score_dir", None):
@@ -114,10 +115,15 @@ def validate_continuous_launch(args, hydra_args=(), now=None, verify_parent=True
         raise ValueError("W55 score directory must be absolute")
     if args.basic_new_share != 0.30:
         raise ValueError("W55 B1 initial basic share must be 0.30")
-    if args.resume_from:
-        raise ValueError("D68 EX-40 starts at m0 without --resume_from")
+    parent_sha = getattr(args, "basic_ex40_parent_sha", None)
+    if bool(args.resume_from) != bool(parent_sha) or (parent_sha and args.curriculum_kit_smoke):
+        raise ValueError("EX-40 resume needs both --resume_from and its parent SHA, for main only")
+    if parent_sha and (len(parent_sha) != 64 or any(c not in "0123456789abcdef" for c in parent_sha.lower())):
+        raise ValueError("EX-40 continuation parent SHA must be 64 hexadecimal characters")
+    if parent_sha and verify_parent:
+        check_resume_parent(args)
     plan = Plan(args.curriculum, arm=args.curriculum_arm,
-                smoke_boundaries=(3, 6, 9, 12) if args.curriculum_kit_smoke else None)
+                smoke_boundaries=KIT_SMOKE_BOUNDARIES if args.curriculum_kit_smoke else None)
     if plan.arm is None:
         raise ValueError("W55 B2 arm undecided: explicit --curriculum-arm A|B required")
     if verify_parent:
@@ -165,6 +171,13 @@ def check_resume_parent(args) -> int:
     if not path or not Path(path).is_file():
         raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
     sha = file_sha256(path)
+    ex40_sha = getattr(args, "basic_ex40_parent_sha", None)
+    if ex40_sha:
+        from foothold_s2.ex40_continue import check_parent
+
+        parent = check_parent(path, ex40_sha, curriculum_path=args.curriculum,
+                              arm=args.curriculum_arm)
+        return parent["completed_update"]
     if getattr(args, "basic_ex39_arm", None):
         from foothold_s2.basic_gait_ex38_continue import check_parent
 
@@ -338,7 +351,9 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
         raise ValueError("--command_mode s2a / --clock_scatter on need --resume_from and --max_iterations above 1501 (otherwise 0 updates run and the run ends as done)")
     if cm == "s2a" and getattr(args, "smoke_updates", None) == 10:
         raise ValueError("s2a command mode starts from a parent checkpoint: use --resume_from (smoke 2) or the main resume")
-    if verify_parent and args.variant == "SB" and (is_extended_resume(args) or (getattr(args, "smoke_updates", None) == 2 and cm in ("s2a", "basic_gait"))):
+    if verify_parent and args.variant == "SB" and (is_extended_resume(args) or
+            getattr(args, "basic_ex40_parent_sha", None) or
+            (getattr(args, "smoke_updates", None) == 2 and cm in ("s2a", "basic_gait"))):
         check_resume_parent(args)
     if args.variant in BUDGET_VARIANTS:
         smoke = getattr(args, "smoke_updates", None)

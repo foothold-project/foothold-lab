@@ -313,7 +313,7 @@ def resample_stage(gen, n, stage, yaw):
     target_spin = _u(gen, (n,), -math.pi, math.pi)
     if stage.heading_arm == "B":
         heading = (forward & (forward_heading_draw < stage.heading_cfg["forward_fraction"]))
-        if stage.id in ("B2", "B3", "T0"):
+        if stage.id == "B2" or stage.id.startswith("B3") or stage.id == "T0":
             heading |= spin & (spin_heading_draw < stage.heading_cfg["spin_target_fraction"])
         psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
         wz = torch.where(heading, zeros, wz)

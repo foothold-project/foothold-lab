@@ -51,13 +51,15 @@ parser.add_argument("--basic-ex39-arm", choices=("A", "B"), default=None)
 parser.add_argument("--basic-ex39-parent-sha", default=None)
 parser.add_argument("--basic-ex39-updates", type=int, default=None)
 parser.add_argument("--basic-ex39-level-count", type=int, default=None)
+parser.add_argument("--basic-ex40-parent-sha", default=None,
+                    help="EX-40 continuation checkpoint SHA256; resume only from a verified numbered save")
 parser.add_argument("--curriculum", type=str, default=None, help="W55 EX-40 curriculum.yaml, opt-in")
 parser.add_argument("--curriculum-arm", choices=("A", "B"), default=None,
                     help="B2 heading choice, required until EX-39 decision is entered into the table")
 parser.add_argument("--curriculum-score-dir", type=str, default=None,
                     help="external checkpoint verdict files; EX-40 reads them in shadow mode")
 parser.add_argument("--curriculum-kit-smoke", action="store_true",
-                    help="D68 scratch smoke, thirteen updates; B1/B2/B3/T0 at m2/m5/m8/m11")
+                    help="D72 scratch smoke, eighteen updates; B1/B2/B3a/B3b/B3c at m3/m6/m9/m12/m15")
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
 parser.add_argument("--basic-feet-regulation-weight", type=float)
@@ -118,10 +120,10 @@ def main(env_cfg, agent_cfg):
     deadline_epoch = DEADLINE_EPOCH
     curriculum_plan = None
     if args_cli.curriculum:
-        from foothold_s2.curriculum.continuous import Plan
+        from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES, Plan
 
         curriculum_plan = Plan(args_cli.curriculum, arm=args_cli.curriculum_arm,
-                               smoke_boundaries=(3, 6, 9, 12) if args_cli.curriculum_kit_smoke else None)
+                               smoke_boundaries=KIT_SMOKE_BOUNDARIES if args_cli.curriculum_kit_smoke else None)
     installed = metadata.version("rsl-rl-lib")
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
@@ -385,7 +387,7 @@ def main(env_cfg, agent_cfg):
              "clip_actions": agent_cfg.clip_actions, "z_rollout": "sample" if runner.perception.cfg.sample_latent_in_rollout else "mean", "action_rollout": "sample",
              "contract": runner.pcfg["contract"], "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"], "track_lin_form": getattr(env_cfg, "track_lin_form", None),
              "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task,
-             "run_kind": ("ex40_kit_smoke_13_updates" if args_cli.curriculum_kit_smoke else
+              "run_kind": ("ex40_kit_smoke_18_updates" if args_cli.curriculum_kit_smoke else
                           (("B_kit_smoke_10_updates" if args_cli.variant == "B" else
                             f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates")
                            if args_cli.smoke_updates else "main")),

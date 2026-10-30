@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 from foothold_s2.curriculum.continuous import Plan
+from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES
 from foothold_s2.prestart_check import inspect_args
 
 
@@ -38,14 +39,14 @@ def build_args(*, arm: str, device: str, end_by: str, log_root: Path,
         raise ValueError("W55 explicit arm and cuda:0|cuda:1 required")
     if not all(p.is_absolute() for p in (log_root, score_dir, table)):
         raise ValueError("W55 launch paths must be absolute")
-    plan = Plan(table, arm=arm, smoke_boundaries=(3, 6, 9, 12) if smoke else None)
+    plan = Plan(table, arm=arm, smoke_boundaries=KIT_SMOKE_BOUNDARIES if smoke else None)
     if (sha256(BASELINE / "env.yaml") != plan.baseline_env_yaml_sha256 or
             sha256(BASELINE / "agent.yaml") != plan.baseline_agent_yaml_sha256):
         raise ValueError("D68 S-B10 saved configuration SHA mismatch")
     args = ["--headless", "--device", device, "--num_envs", "3072", "--seed", "42",
             "--run_name", f"EX-40-{arm}-{'kit-smoke' if smoke else 'main'}",
             "--end-by", end_by, "--max-wall-s", "345600" if not smoke else "21600",
-            "--max_iterations", "15" if smoke else "6001",
+            "--max_iterations", "18" if smoke else "6501",
             "--command_mode", "basic_gait", "--basic-new-share", "0.30",
             "--basic-log-root", str(log_root), "--basic-stage", "smoke" if smoke else "main",
             "--clock_scatter", "off", "--p_map_off", "0.1",
@@ -60,7 +61,7 @@ def build_args(*, arm: str, device: str, end_by: str, log_root: Path,
 def receipt(args: list[str], *, table: Path = TABLE) -> dict:
     parsed = inspect_args(args)
     plan = Plan(table, arm=args[args.index("--curriculum-arm") + 1],
-                smoke_boundaries=(3, 6, 9, 12) if "--curriculum-kit-smoke" in args else None)
+                smoke_boundaries=KIT_SMOKE_BOUNDARIES if "--curriculum-kit-smoke" in args else None)
     if "--resume_from" in args:
         raise ValueError("D68 EX-40 scratch launch forbids a parent checkpoint")
     return {"format": "foothold-ex40-launch/1", "state": "CPU_PREPARED_NOT_LAUNCHED",

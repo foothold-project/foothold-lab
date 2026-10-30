@@ -800,6 +800,10 @@ class StartRunner(OnPolicyRunner):
         rc = getattr(self._command_term(), "range_curriculum", None)
         if rc is not None:
             out["range_curriculum"] = {k: (list(v) if isinstance(v, list) else v) for k, v in vars(rc).items()}
+        command = self._command_term()
+        from foothold_s2.runners.command_rng import save_command_rng
+
+        save_command_rng(command, out)
         hook = getattr(u, "foothold_state_dict", None)
         if callable(hook):
             out["env_hook"] = hook()
@@ -826,6 +830,9 @@ class StartRunner(OnPolicyRunner):
         if rc is not None and "range_curriculum" in sd:
             for k, v in sd["range_curriculum"].items():
                 setattr(rc, k, v)
+        from foothold_s2.runners.command_rng import restore_command_rng
+
+        restore_command_rng(self._command_term(), sd)
         if "env_hook" in sd:
             hook = getattr(u, "foothold_load_state_dict", None)
             if not callable(hook):

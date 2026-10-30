@@ -289,38 +289,38 @@ def test_new_kit_sensor_gate_requires_ratio_per_foot_gap_and_schema(tmp_path):
             encoding="utf-8")
 
     write(good)
-    assert _check_stand_sensor(tmp_path)["updates"] == 15
+    assert _check_stand_sensor(tmp_path, expected_updates=15)["updates"] == 15
     write({**good, "hit_valid_count": 98, "hit_valid_ratio": .98,
            "hit_valid_count_by_foot": [23, 25, 25, 25],
            "gap_valid_count_by_foot": [23, 25, 25, 25],
            "hit_invalid_by_foot": [2, 0, 0, 0]})
     with pytest.raises(ValueError, match="ray hit"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "gap_p5_p50_p95_mm_by_foot": [[5.] * 3, [5.] * 3,
                                                   [5., 11., 11.], [5.] * 3]})
     with pytest.raises(ValueError, match="foot 2 gap p50"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "hit_valid_count_by_foot": [100] * 4})
     with pytest.raises(ValueError, match="per-foot valid counts"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "hit_valid_count": 101, "hit_valid_ratio": 1.01})
     with pytest.raises(ValueError, match="counts or ratio"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "hit_origin_samples": [{}]})
     with pytest.raises(ValueError, match="sample invalid"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "gap_p5_p50_p95_mm_by_foot": [[float("nan")] * 3] + [[5.] * 3] * 3})
     with pytest.raises(ValueError, match="foot 0 gap p50"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "force_nonfinite_by_foot": [1, 0, 0, 0]})
     with pytest.raises(ValueError, match="fault counters"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "gap_nonfinite_by_foot": [1, 0, 0, 0]})
     with pytest.raises(ValueError, match="fault counters"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
     write({**good, "hit_invalid_by_foot": []})
     with pytest.raises(ValueError, match="fault counters"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)
 
     no_stand = {**good, "stand_foot_total": 0, "hit_valid_count": 0,
                 "hit_valid_ratio": None, "flat_stand_valid_foot_count": 0,
@@ -331,7 +331,7 @@ def test_new_kit_sensor_gate_requires_ratio_per_foot_gap_and_schema(tmp_path):
     (tmp_path / "train_extra.jsonl").write_text("\n".join(
         json.dumps({"it": i, "ex40_stand_sensor": good if i == 14 else no_stand})
         for i in range(15)) + "\n", encoding="utf-8")
-    assert _check_stand_sensor(tmp_path)["aggregate_hit_valid_ratio"] == 1.0
+    assert _check_stand_sensor(tmp_path, expected_updates=15)["aggregate_hit_valid_ratio"] == 1.0
 
 
 def test_v5_counterexample_zero_gap_count_with_finite_hit(tmp_path):
@@ -348,4 +348,4 @@ def test_v5_counterexample_zero_gap_count_with_finite_hit(tmp_path):
     assert first["gap_nonfinite_by_foot"][0] == 0
     (tmp_path / "train_extra.jsonl").write_bytes(raw)
     with pytest.raises(ValueError, match="gap valid count differs from finite hits"):
-        _check_stand_sensor(tmp_path)
+        _check_stand_sensor(tmp_path, expected_updates=15)

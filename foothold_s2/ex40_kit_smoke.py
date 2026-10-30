@@ -13,6 +13,7 @@ import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS
 from foothold_s2.curriculum.continuous import Plan
+from foothold_s2.curriculum.continuous import KIT_SMOKE_BOUNDARIES
 from foothold_s2.ex40_launch import BASELINE, INTENTIONAL_CURRICULUM_DIFFERENCE
 
 
@@ -94,11 +95,11 @@ def _check_rewards(env_path: Path, plan: Plan) -> None:
             raise ValueError("EX-40 dedicated collision-center foot support ray missing")
 
 
-def _check_stand_sensor(run: Path) -> dict:
+def _check_stand_sensor(run: Path, expected_updates: int = 18) -> dict:
     rows = [json.loads(line) for line in (run / "train_extra.jsonl").read_text(
         encoding="utf-8").splitlines()]
-    if [row.get("it") for row in rows] != list(range(15)):
-        raise ValueError("EX-40 stand sensor evidence needs all 15 smoke updates")
+    if [row.get("it") for row in rows] != list(range(expected_updates)):
+        raise ValueError(f"EX-40 stand sensor evidence needs all {expected_updates} smoke updates")
     total_hits = 0
     valid_hits = 0
     gap_samples_by_foot = [0] * 4
@@ -186,7 +187,7 @@ def _check_stand_sensor(run: Path) -> dict:
     if (total_hits == 0 or valid_hits / total_hits < .99
             or any(count == 0 for count in gap_samples_by_foot)):
         raise ValueError("EX-40 stand ray hit or per-foot gap evidence insufficient")
-    return {"updates": 15, "aggregate_hit_valid_ratio": valid_hits / total_hits,
+    return {"updates": expected_updates, "aggregate_hit_valid_ratio": valid_hits / total_hits,
             "gap_valid_count_by_foot": gap_samples_by_foot,
             "per_foot_gap_p50_range_mm": [0, 10],
             "terrain_flat_columns": flat_columns}
@@ -304,8 +305,8 @@ def _check_consumption(rows: list[dict], plan: Plan, changed_by_stage: dict[str,
 
 def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
-    if receipt.get("state") != "CPU_PREPARED_NOT_LAUNCHED" or receipt.get("stage_boundaries") != {
-            "B0": 0, "B1": 3, "B2": 6, "B3": 9, "T0": 12}:
+    expected_boundaries = {"B0": 0, "B1": 3, "B2": 6, "B3a": 9, "B3b": 12, "B3c": 15}
+    if receipt.get("state") != "CPU_PREPARED_NOT_LAUNCHED" or receipt.get("stage_boundaries") != expected_boundaries:
         raise ValueError("EX-40 smoke launch receipt or stage boundaries differ")
     if rc != 0 or "Traceback" in run_log.read_text(encoding="utf-8", errors="replace"):
         raise ValueError("EX-40 Kit child failed or traceback present")
@@ -316,7 +317,7 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     run = runs[0]
     args = receipt["argv"]
     table = Path(args[args.index("--curriculum") + 1])
-    plan = Plan(table, arm=receipt["arm"], smoke_boundaries=(3, 6, 9, 12))
+    plan = Plan(table, arm=receipt["arm"], smoke_boundaries=KIT_SMOKE_BOUNDARIES)
     manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
     modes = manifest.get("modes") or {}
     cfg = modes.get("continuous_curriculum") or {}
@@ -344,9 +345,9 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     consumed = _check_consumption(rows, plan, changed_by_stage)
     entered = [(stage.id, stage.fixed_update) for stage in plan.stages]
     status = json.loads((run / "train_start_status.json").read_text(encoding="utf-8-sig"))
-    if status.get("state") != "done" or status.get("iter") != 14 or not (run / "model_14.pt").is_file():
-        raise ValueError("D70 Kit smoke did not complete and save model_14")
-    checkpoint_sha = hashlib.sha256((run / "model_14.pt").read_bytes()).hexdigest()
+    if status.get("state") != "done" or status.get("iter") != 17 or not (run / "model_17.pt").is_file():
+        raise ValueError("D72 Kit smoke did not complete and save model_17")
+    checkpoint_sha = hashlib.sha256((run / "model_17.pt").read_bytes()).hexdigest()
     if status.get("sha256") != checkpoint_sha:
         raise ValueError("EX-40 completed checkpoint SHA and status differ")
     return {"state": "PASS", "run_dir": str(run), "stages": entered,
@@ -355,7 +356,7 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
             "stage_consumption": consumed,
             "shares_checked": True, "reward_weights_checked": True,
             "stand_sensor_checked": stand_sensor,
-            "checkpoint": str(run / "model_14.pt"), "checkpoint_sha256": checkpoint_sha}
+            "checkpoint": str(run / "model_17.pt"), "checkpoint_sha256": checkpoint_sha}
 
 
 def main(argv: list[str] | None = None) -> int:
