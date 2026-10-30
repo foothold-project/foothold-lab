@@ -462,6 +462,22 @@ def test_final_completion_requires_all_31_scores_and_training_done(tmp_path):
     assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state) == {
         "state": "done", "final_checkpoint": str(final), "final_sha256": sha256(final),
         "evaluated": 31, "stage_end_updates": list(boundaries)}
+    missing_update = 5250
+    missing_checkpoint = segment_roots[(missing_update - 500) // 2500] / f"model_{missing_update}.pt"
+    missing_row = next(row for row in ledger_rows
+                       if row["checkpoint_iteration"] == missing_update)
+    state_row = state["done"].pop(str(missing_update))
+    ledger_rows.remove(missing_row)
+    (out_root / "score_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
+    assert completion(latest_run, out_root, DEFAULT_CONFIG, DEFAULT_TABLE, "B", state) == {
+        "state": "waiting_for_remaining_scores", "first_missing": missing_update}
+    state["done"][str(missing_update)] = state_row
+    ledger_rows.append(missing_row)
+    ledger_rows.sort(key=lambda row: row["checkpoint_iteration"])
+    (out_root / "score_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
+    assert missing_checkpoint.is_file()
     ledger_rows[0]["checkpoint_path"] = str(tmp_path / "missing-parent-model.pt")
     (out_root / "score_ledger.jsonl").write_text(
         "".join(json.dumps(row) + "\n" for row in ledger_rows), encoding="utf-8")
@@ -505,7 +521,7 @@ def test_t0_final_score_is_exported_even_without_next_stage(tmp_path, monkeypatc
     assert json.loads((out_root / "score_ledger.jsonl").read_text(encoding="utf-8"))["stage"] == "T0"
 
 
-def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path):
+def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path, monkeypatch):
     run, out = tmp_path / "run", tmp_path / "score_watch"
     run.mkdir()
     out.mkdir()
@@ -553,13 +569,21 @@ def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path):
     assert len(sent) == 2 and (out / "stage_reports/stage_B1_m3000.md").is_file()
     assert json.loads((tmp_path / "lab_feed.json").read_text(encoding="utf-8"))["stage_reports"][1]["stage"] == "B1"
     assert "B1 m3000" in (tmp_path / "lab_feed.html").read_text(encoding="utf-8")
-    # Exercise the supervisor with this real score_watch stage-report output.
+    # Exercise consumer deduplication on the already-published real boundary.
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
     from foothold_s2.ex40_supervisor import _score_until_checkpoint
     _pin(run, run / "model_1500.pt", run / "model_3000.pt")
     (out / "watch_state.json").write_text(json.dumps({
         "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {str(update): {"state": "PASS", "checkpoint_sha256": sha256(run / f"model_{update}.pt")}
                  for update in (1500, 3000)}}), encoding="utf-8")
+    supervisor_cfg = config(DEFAULT_CONFIG)
+    supervisor_cfg.update({"checkpoint_first": 1500, "checkpoint_stride": 1500,
+                           "final_checkpoint_update": 8000})
+    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: supervisor_cfg)
+    monkeypatch.setattr(ex40_score_watch, "stage_end_updates",
+                        lambda *_args: {1500: "B0", 3000: "B1"})
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     consumed = _score_until_checkpoint(run, out, tmp_path / "scores", DEFAULT_CONFIG,
         DEFAULT_TABLE, "B", 3000, sha256(run / "model_3000.pt"), max_calls=1,
         telegram_sender=tmp_path / "sender.py", lab_feed=tmp_path / "lab_feed.json",

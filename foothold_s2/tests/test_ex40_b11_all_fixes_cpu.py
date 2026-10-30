@@ -265,7 +265,7 @@ def test_stage_report_uses_checkpoint_source_segment_and_prior_segment(tmp_path,
 
 
 def test_supervisor_consumes_actual_stage_report_count_and_fake_delivery(tmp_path, monkeypatch):
-    from foothold_s2 import ex40_score_watch
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
     from foothold_s2.ex40_supervisor import _score_until_checkpoint
 
     run, watch, scores = tmp_path / "run", tmp_path / "watch", tmp_path / "scores"
@@ -281,17 +281,11 @@ def test_supervisor_consumes_actual_stage_report_count_and_fake_delivery(tmp_pat
     (watch / "watch_state.json").write_text(json.dumps({
         "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {"500": {"state": "PASS", "checkpoint_sha256": digest}}}), encoding="utf-8")
-    score_path = watch / "score_500.json"
-    score_path.write_text(json.dumps({"checkpoint_iteration": 500, "from": "B0",
-                                      "checkpoint_sha256": digest}), encoding="utf-8")
-    (watch / "score_ledger.jsonl").write_text(json.dumps({
-        "checkpoint_iteration": 500, "stage": "B0", "verdict": "PASS",
-        "run_dir": str(run), "score_path": str(score_path),
-        "score_sha256": hashlib.sha256(score_path.read_bytes()).hexdigest()}) + "\n",
-        encoding="utf-8")
+    _add_valid_supervisor_slot(run, watch, 500, digest, "B0")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
         "checkpoint_first": 500, "checkpoint_stride": 250,
         "final_checkpoint_update": 1000})
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {500: "B0"})
     monkeypatch.setattr(ex40_score_watch, "build_stage_report", lambda current, previous, _run,
         **_kwargs: {"checkpoint_iteration": current["checkpoint_iteration"],
@@ -319,7 +313,7 @@ def test_supervisor_consumes_actual_stage_report_count_and_fake_delivery(tmp_pat
 
 
 def test_supervisor_handles_actual_zero_published_count_as_pending(tmp_path, monkeypatch):
-    from foothold_s2 import ex40_score_watch
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
     from foothold_s2.ex40_supervisor import _score_until_checkpoint
 
     run, watch, scores = tmp_path / "run", tmp_path / "watch", tmp_path / "scores"
@@ -335,9 +329,11 @@ def test_supervisor_handles_actual_zero_published_count_as_pending(tmp_path, mon
     (watch / "watch_state.json").write_text(json.dumps({
         "format": "foothold-ex40-score-watch/1", "arm": "B",
         "done": {"500": {"state": "PASS", "checkpoint_sha256": digest}}}), encoding="utf-8")
+    _add_valid_supervisor_slot(run, watch, 500, digest, "B0")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
         "checkpoint_first": 500, "checkpoint_stride": 250,
         "final_checkpoint_update": 1000})
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {500: "B0"})
     real_stage_reports = ex40_score_watch.stage_reports
     observed = []
@@ -372,6 +368,7 @@ def test_supervisor_watch_command_routes_sender_and_shared_lab_feed(tmp_path, mo
     cfg = {"checkpoint_first": 500, "checkpoint_stride": 250,
            "final_checkpoint_update": 1000, "check_interval_seconds": 1}
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: cfg)
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {750: "B1"})
     command_rows = []
     monkeypatch.setattr(ex40_supervisor.subprocess, "run", lambda command, **_kwargs: (
@@ -387,6 +384,160 @@ def test_supervisor_watch_command_routes_sender_and_shared_lab_feed(tmp_path, mo
     assert command[command.index("--telegram-sender") + 1] == str(sender_path)
     assert "--no-telegram" not in command
     assert command[command.index("--lab-feed") + 1] == str(lab_feed)
+
+
+def _add_valid_supervisor_slot(run: Path, watch: Path, update: int, digest: str, stage: str):
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, config as score_config
+
+    cfg = score_config(DEFAULT_CONFIG)
+    plan = Plan(TABLE, arm="B")
+    (run / "stage_log.jsonl").write_text(json.dumps({"event": "stage_enter",
+        "iteration": 0, "to": stage, "effective_schedule_sha256": plan.effective_sha256}) + "\n",
+        encoding="utf-8")
+    stage_cfg = cfg["stages"][stage]
+    phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
+    if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
+        phases.add("map64_b3")
+    phases.add("axis_v2")
+    evidence = watch / f"evidence_{update}"
+    evidence.mkdir(exist_ok=True)
+    sources = {}
+    for phase in phases:
+        source = evidence / f"{phase}.json"
+        source.write_text("{}", encoding="utf-8")
+        sources[phase] = str(source)
+    receipt = evidence / "eval_receipt.json"
+    receipt.write_text(json.dumps({"state": "done", "steps": {
+        phase: {"rc": 0} for phase in phases}}), encoding="utf-8")
+    score_path = watch / f"score_{update}.json"
+    score_path.write_text(json.dumps({"checkpoint_iteration": update,
+        "checkpoint_sha256": digest, "from": stage, "verdict": "PASS",
+        "sources": sources, "evaluation_receipt": str(receipt)}), encoding="utf-8")
+    state_path = watch / "watch_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["done"][str(update)].update({"stage": stage, "score_path": str(score_path)})
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    row = {"checkpoint_iteration": update, "checkpoint_sha256": digest,
+        "stage": stage, "verdict": "PASS", "run_dir": str(run),
+        "checkpoint_path": str(run / f"model_{update}.pt"),
+        "score_path": str(score_path),
+        "score_sha256": hashlib.sha256(score_path.read_bytes()).hexdigest()}
+    (watch / "score_ledger.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+
+def _supervisor_slot_history(root: Path, *, include_prior_5250: bool, target_update: int = 5500):
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, config as score_config, stage_end_updates
+
+    cfg = score_config(DEFAULT_CONFIG)
+    plan = Plan(TABLE, arm="B")
+    boundaries = stage_end_updates(plan, cfg)
+    current_run = root / "segment-current"
+    old_run = root / "segment-prior"
+    current_run.mkdir(parents=True)
+    old_run.mkdir(parents=True)
+    out_root = root / "watch"
+    out_root.mkdir()
+    manifests = {current_run: {"schema": "foothold-manifest/1",
+                               "progress": {"completed_updates": 0}, "checkpoints": {}},
+                 old_run: {"schema": "foothold-manifest/1",
+                           "progress": {"completed_updates": 0}, "checkpoints": {}}}
+    stages_by_run = {current_run: set(), old_run: set()}
+    done, ledger = {}, []
+    score_dir = root / "scores"
+    score_dir.mkdir()
+    for update in range(cfg["checkpoint_first"], target_update + 1, cfg["checkpoint_stride"]):
+        if update == 5250 and not include_prior_5250:
+            continue
+        source_run = old_run if update == 5250 else current_run
+        checkpoint = source_run / f"model_{update}.pt"
+        checkpoint.write_bytes(f"verified checkpoint {update}".encode())
+        digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+        manifest = manifests[source_run]
+        manifest["checkpoints"][checkpoint.name] = digest
+        manifest["progress"]["completed_updates"] = max(
+            manifest["progress"]["completed_updates"], update + 1)
+        stage = max((item for item in plan.stages if item.fixed_update <= update),
+                    key=lambda item: item.fixed_update).id
+        stages_by_run[source_run].update((item.fixed_update, item.id)
+                                         for item in plan.stages if item.fixed_update <= update)
+        stage_cfg = cfg["stages"][stage]
+        phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
+        if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
+            phases.add("map64_b3")
+        if stage_cfg["axis_goal"] or update in boundaries:
+            phases.add("axis_v2")
+        evidence = out_root / f"evidence_{update}"
+        evidence.mkdir()
+        sources = {}
+        for phase in phases:
+            path = evidence / f"{phase}.json"
+            path.write_text("{}", encoding="utf-8")
+            sources[phase] = str(path)
+        receipt_path = evidence / "eval_receipt.json"
+        receipt_path.write_text(json.dumps({"state": "done", "steps": {
+            phase: {"rc": 0} for phase in phases}}), encoding="utf-8")
+        score_path = score_dir / f"score_{update}.json"
+        score_path.write_text(json.dumps({"checkpoint_iteration": update,
+            "checkpoint_sha256": digest, "from": stage, "verdict": "PASS",
+            "sources": sources, "evaluation_receipt": str(receipt_path)}), encoding="utf-8")
+        done[str(update)] = {"state": "PASS", "stage": stage,
+                             "checkpoint_sha256": digest, "score_path": str(score_path)}
+        ledger.append({"checkpoint_iteration": update, "checkpoint_sha256": digest,
+            "stage": stage, "verdict": "PASS", "run_dir": str(source_run),
+            "checkpoint_path": str(checkpoint), "score_path": str(score_path),
+            "score_sha256": hashlib.sha256(score_path.read_bytes()).hexdigest()})
+    for source_run, manifest in manifests.items():
+        (source_run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        rows = sorted(stages_by_run[source_run])
+        (source_run / "stage_log.jsonl").write_text("".join(json.dumps({
+            "event": "stage_enter", "iteration": iteration, "to": stage_id,
+            "effective_schedule_sha256": plan.effective_sha256}) + "\n"
+            for iteration, stage_id in rows),
+            encoding="utf-8")
+    (out_root / "watch_state.json").write_text(json.dumps({
+        "format": "foothold-ex40-score-watch/1", "arm": "B", "done": done}),
+        encoding="utf-8")
+    (out_root / "score_ledger.jsonl").write_text("".join(json.dumps(row) + "\n" for row in ledger),
+        encoding="utf-8")
+    return current_run, out_root, score_dir, manifests[current_run]["checkpoints"][f"model_{target_update}.pt"]
+
+
+def test_stride_slot_gap_blocks_consumption_but_verified_prior_segment_is_kept(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+    from foothold_s2.ex40_score_watch import DEFAULT_CONFIG, DEFAULT_TABLE
+
+    reports_called = []
+    child_calls = []
+    monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: (
+        reports_called.append(True) or {"state": "pending", "published": 99,
+            "first_pending": None, "first_hold": None}))
+    monkeypatch.setattr(ex40_supervisor, "_stage_report_delivery_ok", lambda *_args: True)
+    monkeypatch.setattr(ex40_supervisor.subprocess, "run", lambda *args, **kwargs:
+        child_calls.append((args, kwargs)) or SimpleNamespace(returncode=1, stdout="", stderr="unexpected"))
+
+    missing_run, missing_watch, missing_scores, missing_sha = _supervisor_slot_history(
+        tmp_path / "gap", include_prior_5250=False)
+    assert _score_until_checkpoint(missing_run, missing_watch, missing_scores, DEFAULT_CONFIG,
+        DEFAULT_TABLE, "B", 5550, missing_sha, max_calls=1) == "pending"
+    assert reports_called == []
+
+    prior_run, prior_watch, prior_scores, prior_sha = _supervisor_slot_history(
+        tmp_path / "prior", include_prior_5250=True)
+    prior_state_path = prior_watch / "watch_state.json"
+    prior_state = json.loads(prior_state_path.read_text(encoding="utf-8"))
+    prior_state["done"].pop("5250")
+    prior_state_path.write_text(json.dumps(prior_state), encoding="utf-8")
+    assert _score_until_checkpoint(prior_run, prior_watch, prior_scores, DEFAULT_CONFIG,
+        DEFAULT_TABLE, "B", 5550, prior_sha, max_calls=1) == "consumed"
+    assert reports_called == [True]
+    assert child_calls == []
+
+    conflict_run, conflict_watch, conflict_scores, conflict_sha = _supervisor_slot_history(
+        tmp_path / "conflict", include_prior_5250=True)
+    prior_checkpoint = conflict_run.parent / "segment-prior" / "model_5250.pt"
+    prior_checkpoint.write_bytes(b"changed after score receipt")
+    assert _score_until_checkpoint(conflict_run, conflict_watch, conflict_scores, DEFAULT_CONFIG,
+        DEFAULT_TABLE, "B", 5550, conflict_sha, max_calls=1) == "unknown"
 
 
 def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_receipt(
@@ -415,6 +566,7 @@ def test_non_stride_save_drains_pending_stride_scores_and_requires_local_stage_r
     cfg = {"checkpoint_first": 500, "checkpoint_stride": 250,
            "final_checkpoint_update": 1000, "check_interval_seconds": 1}
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: cfg)
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates",
                         lambda _plan, _cfg: {750: "S1", 1000: "S2"})
     sender_path = tmp_path / "sender.py"
@@ -496,7 +648,7 @@ def test_segment_duplicate_sha_and_missing_score_remain_unconsumed(tmp_path, mon
             stdout=json.dumps({"evaluation": {"state": "idle"}}), stderr=""))
     # The same update number from a resumed segment cannot inherit an older segment's SHA receipt.
     assert _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
-        TABLE, "B", 5500, actual, max_calls=1) == "unknown"
+        TABLE, "B", 5500, actual, max_calls=1) == "pending"
     # If a stride row is absent and the consumer has no stable candidate, it stays pending.
     state = json.loads((watch / "watch_state.json").read_text(encoding="utf-8"))
     state["done"].clear()
@@ -531,7 +683,8 @@ def test_final_checkpoint_requires_complete_score_ledger_and_non_hold_verdict(
         "done": {"8000": {"state": row_state, "checkpoint_sha256": digest}}}),
         encoding="utf-8")
     monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
-        "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
+        "checkpoint_first": 8000, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
+    monkeypatch.setattr(ex40_supervisor, "_verified_score_slot", lambda *_args: "verified")
     monkeypatch.setattr(ex40_score_watch, "completion", lambda *_args: {"state": completion_state})
     monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
     monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
@@ -549,31 +702,16 @@ def test_final_checkpoint_requires_complete_score_ledger_and_non_hold_verdict(
 def test_final_checkpoint_sha_mismatch_cannot_be_consumed(tmp_path, monkeypatch):
     from foothold_s2 import ex40_score_watch, ex40_supervisor
 
-    run = tmp_path / "run"
-    watch = tmp_path / "watch"
-    run.mkdir()
-    watch.mkdir()
-    checkpoint = run / "model_8000.pt"
-    checkpoint.write_bytes(b"changed final model")
-    digest = "0" * 64
-    (run / "manifest.json").write_text(json.dumps({
-        "schema": "foothold-manifest/1", "progress": {"completed_updates": 8001},
-        "checkpoints": {checkpoint.name: digest}}), encoding="utf-8")
-    (watch / "watch_state.json").write_text(json.dumps({
-        "format": "foothold-ex40-score-watch/1", "arm": "B",
-        "done": {"8000": {"state": "PASS", "checkpoint_sha256": digest}}}),
-        encoding="utf-8")
-    monkeypatch.setattr(ex40_score_watch, "config", lambda _path: {
-        "checkpoint_first": 500, "checkpoint_stride": 250, "final_checkpoint_update": 8000})
-    monkeypatch.setattr(ex40_score_watch, "stage_end_updates", lambda *_args: {8000: "S2"})
+    run, watch, scores, digest = _supervisor_slot_history(
+        tmp_path, include_prior_5250=True, target_update=8000)
+    (run / "model_8000.pt").write_bytes(b"changed final model")
     monkeypatch.setattr(ex40_score_watch, "stage_reports", lambda *_args, **_kwargs: {
-        "state": "done", "published": 1, "first_pending": None,
+        "state": "done", "published": 99, "first_pending": None,
         "first_hold": None})
-    monkeypatch.setattr(ex40_supervisor.subprocess, "run",
-        lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr="fixture"))
+    monkeypatch.setattr(ex40_supervisor, "_stage_report_delivery_ok", lambda *_args: True)
 
-    result = _score_until_checkpoint(run, watch, tmp_path / "scores", tmp_path / "cfg.yaml",
-        TABLE, "B", 8000, digest, max_calls=1)
+    result = _score_until_checkpoint(run, watch, scores, ex40_score_watch.DEFAULT_CONFIG,
+        ex40_score_watch.DEFAULT_TABLE, "B", 8000, digest, max_calls=1)
     assert result == "unknown"
 
 

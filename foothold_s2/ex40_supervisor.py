@@ -179,19 +179,16 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                             lab_feed: Path | None = None, sender=None) -> str:
     """Consume every eligible score through the candidate before continuing."""
     from foothold_s2.curriculum.continuous import Plan
-    from foothold_s2.ex40_score_watch import (_manifest_digest, _models, completion,
-                                               config as score_config, stage_end_updates,
-                                               stage_reports)
+    from foothold_s2.ex40_score_watch import (_ledger_rows, _manifest_digest, _models,
+        _stage, completion, config as score_config, stage_end_updates, stage_reports)
 
     cfg = score_config(config)
     first, stride = cfg["checkpoint_first"], cfg["checkpoint_stride"]
     if update < first:
         return "consumed"
     target_update = first + ((update - first) // stride) * stride
-    available = [(n, path) for n, path in _models(run, cfg) if n <= target_update]
-    if not available:
-        return "pending"
-    available_updates = {n for n, _ in available}
+    expected_updates = list(range(first, target_update + 1, stride))
+    current_checkpoints = dict((n, path) for n, path in _models(run, cfg) if n <= target_update)
     target_digest = _manifest_digest(run, target_update)
     if target_digest is None:
         return "pending"
@@ -205,26 +202,29 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
         if state:
             if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
-            for scored_update in sorted(available_updates):
+            ledger_rows = {row["checkpoint_iteration"]: row for row in _ledger_rows(out_root)}
+            for scored_update in expected_updates:
                 row = state.get("done", {}).get(str(scored_update))
                 if row is None:
-                    break
-                checkpoint = run / f"model_{scored_update}.pt"
-                pinned = _manifest_digest(run, scored_update)
-                try:
-                    actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
-                except OSError:
-                    return "unknown"
-                if (not pinned or row.get("checkpoint_sha256") != pinned or actual != pinned
-                        or row.get("state") not in ("PASS", "FAIL", "HOLD")):
-                    return "unknown"
-                if row["state"] == "HOLD":
-                    return "pending"
+                    prior = ledger_rows.get(scored_update)
+                    if prior is not None:
+                        row = {"state": prior.get("verdict"),
+                               "stage": prior.get("stage"),
+                               "checkpoint_sha256": prior.get("checkpoint_sha256")}
+                    elif scored_update not in current_checkpoints:
+                        return "pending"
+                    else:
+                        break
+                slot_state = _verified_score_slot(scored_update, run, ledger_rows, row,
+                                                  cfg, Plan(table, arm=arm), boundaries, _stage,
+                                                  _manifest_digest)
+                if slot_state != "verified":
+                    return slot_state
             else:
                 reports = stage_reports(run, out_root, config, table, arm,
                     telegram_sender=telegram_sender,
                     lab_feed=lab_feed or out_root / "lab_feed.json", sender=sender)
-                required_reports = [n for n in boundaries if n <= target_update and n in available_updates]
+                required_reports = [n for n in boundaries if n <= target_update]
                 published = reports.get("published")
                 if type(published) is not int or published < 0:
                     return "unknown"
@@ -263,6 +263,59 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
         if payload.get("evaluation", {}).get("state") == "idle":
             return "pending"
     return "pending"
+
+
+def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
+                         saved: dict, cfg: dict, plan, boundaries: dict,
+                         stage_for, manifest_digest) -> str:
+    """Validate a stride slot from its recorded source segment, even after resume."""
+    ledger = ledger_rows.get(update)
+    if ledger is None or saved.get("state") == "HOLD":
+        return "pending"
+    if saved.get("state") not in ("PASS", "FAIL"):
+        return "unknown"
+    source_run = Path(ledger.get("run_dir") or current_run)
+    checkpoint = Path(ledger.get("checkpoint_path") or source_run / f"model_{update}.pt")
+    pinned = manifest_digest(source_run, update)
+    if pinned is None:
+        return "pending"
+    try:
+        if hashlib.sha256(checkpoint.read_bytes()).hexdigest() != pinned:
+            return "unknown"
+        score_path = Path(ledger["score_path"])
+        if not score_path.is_file():
+            return "pending"
+        if hashlib.sha256(score_path.read_bytes()).hexdigest() != ledger.get("score_sha256"):
+            return "unknown"
+        score = json.loads(score_path.read_text(encoding="utf-8-sig"))
+        stage = stage_for(source_run, update, plan)
+        if (ledger.get("checkpoint_sha256") != pinned
+                or saved.get("checkpoint_sha256") != pinned
+                or ledger.get("stage") != stage or saved.get("stage") != stage
+                or update in boundaries and boundaries[update] != stage
+                or score.get("checkpoint_iteration") != update
+                or score.get("checkpoint_sha256") != pinned
+                or score.get("from") != stage or score.get("verdict") != saved.get("state")):
+            return "unknown"
+        stage_cfg = cfg["stages"][stage]
+        phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
+        if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
+            phases.add("map64_b3")
+        if stage_cfg["axis_goal"] or update in boundaries:
+            phases.add("axis_v2")
+        receipt_path = Path(score.get("evaluation_receipt", ""))
+        if not receipt_path.is_file():
+            return "pending"
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
+        sources = score.get("sources") or {}
+        if (receipt.get("state") != "done" or not phases <= set(receipt.get("steps", {}))
+                or any(receipt["steps"][phase].get("rc") != 0 for phase in phases)
+                or not phases <= set(sources)
+                or any(not Path(sources[phase]).is_file() for phase in phases)):
+            return "pending"
+    except (OSError, ValueError, KeyError, TypeError):
+        return "pending"
+    return "verified"
 
 
 def _stage_report_delivery_ok(out_root: Path, update: int, stage: str,

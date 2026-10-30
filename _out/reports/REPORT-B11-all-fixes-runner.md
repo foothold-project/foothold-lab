@@ -139,3 +139,29 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest C:/mai/wt/foothold
 - 관련 변경은 `foothold_s2/ex40_supervisor.py`, `foothold_s2/ex40_score_watch.py`, `foothold_s2/run_ex40_b11.sh`, 두 CPU 시험 파일 및 이 보고서다. push하지 않았다.
 
 구현 커밋: `3afb0d6b37317c6e3a8caef7737150e68c1f3432`.
+
+## P1 stride 슬롯 누락 후속 · 2026-10-31
+
+### 수정 범위
+
+supervisor는 이제 정본 설정의 `checkpoint_first`와 `checkpoint_stride`로 대상 회차 집합을 만든다. 예를 들어 model_5550 저장 신호는 stride 경계 model_5500까지 점수 소비를 확인하며, 중간 model_5250이 현재 segment에 없다는 이유로 건너뛰지 않는다. 현재 상태행이 없더라도 score ledger가 가리키는 이전 segment의 검증된 manifest, checkpoint SHA, score JSON SHA, 평가 receipt와 필요한 source 파일 경로가 확인되면 그 결과를 재사용한다. 유효한 과거 자료가 전혀 없으면 pending으로 남긴다.
+
+### CPU 반례와 회귀 확인
+
+- m5250 checkpoint와 점수 ledger 행이 모두 없는 입력은 m5550 소비를 pending으로 막았다.
+- m5250이 별도 과거 segment에 있고 checkpoint 및 score/evaluation receipt가 검증되면 현재 state 행이 없어도 m5550 소비가 가능했다. 이 경로에서 새 평가 subprocess는 호출되지 않았다.
+- 과거 segment checkpoint의 실제 바이트를 SHA 기록 뒤 바꾸면 소비 결과는 unknown이었다.
+- completion 확인에서 m5250 state와 ledger 행이 사라진 입력은 `waiting_for_remaining_scores`, `first_missing: 5250`으로 남겼다. 기존 31개 분리 segment 정상 완료 검증도 통과했다.
+
+### 시험 원출력
+
+실행은 GPU 장치를 숨기고 `PYTHONDONTWRITEBYTECODE=1`로 수행했다. 명령은 두 P1 관련 CPU 시험 파일을 pytest로 실행한 것이다.
+
+```text
+..................................                                       [100%]
+34 passed in 9.52s
+```
+
+원출력 파일: `_out/reports/CPU-P1-missing-slot-1031.txt`. `git diff --check`는 통과했다. GPU, Kit, 실제 학습 및 외부 발송은 수행하지 않았다. 실제 Kit 동작은 미확인이다.
+
+수정은 기존 139f0d2d 검토 HEAD 뒤에만 추가하며 amend하지 않는다. P1 변경분 verifier 확인이 남아 있고 B12/B13 게이트는 그대로다.
