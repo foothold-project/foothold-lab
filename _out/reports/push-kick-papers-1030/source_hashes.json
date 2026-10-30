@@ -1,0 +1,42 @@
+[
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\slr_go2.py",
+    "sha256": "5d26748f751c501bd46c582f72d9389a2ef03bf2f1643b7098737b53f7f95c3c",
+    "bytes": 9258
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\slr_robot.py",
+    "sha256": "fcf6f2367fb7c12489c6fb8dbd7abab643b7ff8e60a4025ffdf24ab3a352e6dd",
+    "bytes": 69028
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\slr_train.py",
+    "sha256": "ed280c61ceefd8b3f7648ba386eab3ccade02882785c448a32617ea9ad2cd92a",
+    "bytes": 768
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\jeplo_config.py",
+    "sha256": "daef156f0a84e2ec9fc8fc67eee0de3dbf20f881ba05ed3fd50bdbecb382a505",
+    "bytes": 10641
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\wtw_config.py",
+    "sha256": "2f8106d704c88c6e2e78d7d8f8fca8d772d4c891052e88901eb8e318ebcfe1b2",
+    "bytes": 15911
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\wtw_train.py",
+    "sha256": "99c846c689a65e70f59b11ad38cc99b8d78cc1673c90743c9356d3ec8ed42020",
+    "bytes": 10489
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\moects_current_env.py",
+    "sha256": "ecf41e7d4ecee43aec745c62e2f3a455dce24e88a0498ac96df0e0211a8bfd67",
+    "bytes": 24631
+  },
+  {
+    "local_path": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\starred_20261030.json",
+    "sha256": "2ebc161ed1f723c4cbd3c89641b7e375fadba3fb7f03ee4b57c1d6a4838a2a5f",
+    "bytes": 102553
+  }
+]

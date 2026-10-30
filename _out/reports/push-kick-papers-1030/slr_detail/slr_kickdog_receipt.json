@@ -1,0 +1,33 @@
+{
+  "video": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\push_videos\\slr_kickdog.mp4",
+  "sha256": "8ac346511887a582db72fb67dede30ce7366ee26cbe645e4a0ca4b699a396a27",
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080,
+        "r_frame_rate": "30/1"
+      },
+      {
+        "codec_type": "audio",
+        "r_frame_rate": "0/0"
+      }
+    ],
+    "format": {
+      "duration": "11.166667",
+      "size": "11911167"
+    }
+  },
+  "start_s": 4.5,
+  "step_s": 0.1,
+  "stop_s": 5.5,
+  "frames": 11,
+  "grids": [
+    "_out\\reports\\push-kick-papers-1030\\slr_detail\\slr_kickdog_sheet1.jpg"
+  ],
+  "audio_reviewed": false,
+  "gpu_used": false
+}

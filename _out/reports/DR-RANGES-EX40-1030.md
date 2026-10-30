@@ -1,12 +1,12 @@
 > 분류: A/평가 · 일반화 벤치마크 · 지표
 > 작성: analyst · 2026-10-30
 > 근거: WORKLIST D73·D74(e18ae14c) · EX-39B 실행 YAML · 설치 Isaac Lab · PIE/START/HIM/DreamWaQ 원문 · W51 원자료
-> 요지: 마찰·질량·관측 잡음은 유지하고 다섯 DR의 소비 의미·범위·일정을 고정하며, 같은 조건의 GPU1 비교로 영향과 한계를 확인한다
-> 상태: v0.1c 진행 중 · 범위 권고 확정 · GPU1 비교 12건 진행 중 · 학습 준비 판정은 아님
+> 요지: 마찰·질량·관측 잡음은 유지하고 DR의 소비 의미와 근거를 대조한다. 밀기는 D75에 따라 임시값이며 계단 발차기 선행 조사 후 다시 논의한다
+> 상태: v0.1d 진행 중 · 밀기 미확정(D75) · GPU1 비교 12건 진행 중 · 학습 준비 판정은 아님
 
 # EX-40 DR 전체 범위와 W51 추가 비교
 
-**권고: 관측 잡음은 m0부터 끝까지 현재 1배로 고정한다. 밀기는 수평 속도 변화량 각 축 ±0.5 m/s, 에피소드 안 10~15초 간격을 D 단계 값으로 제안한다.** B 끝은 각 축 ±0.25 m/s다. 밀기 값은 실기 성공이 보장된 수치가 아니라 선행 코드에서 고른 우리 설계값이다. 아래 측정은 기존 정책의 단기 내성 시험이며 EX-40의 학습 성공 증거가 아니다.
+**관측 잡음은 m0부터 끝까지 현재 1배로 고정한다. 밀기는 D75에 따라 확정하지 않는다.** 앞서 제안한 수평 속도 변화량 각 축 ±0.5 m/s와 간격10~15초, B 끝 ±0.25 m/s는 임시안이다. 계단 위 발차기 후보 조사는 [별도 표](PUSH-KICK-PAPERS-1030.md)에 남긴다. 진행 중인 W51의 ±0.5 m/s는 이미 정한 평가 진단 조건만 뜻하며, EX-40 학습값 승인이나 실기 내성 보장이 아니다.
 
 ## 1. 범위와 실제로 바뀌는 것
 
@@ -20,7 +20,7 @@
 | PD 이득 | 1 / 0.95~1.05 / 0.9~1.1 배 | 명목 Kp=25, Kd=0.5를 각각 곱함. D에서 Kp22.5~27.5, Kd0.45~0.55 | PIE Table II, E/foothold_s2/tasks/s1_env_cfg.py:136 및 robots/go2_params.py. 제조 오차의 측정치는 아님 |
 | 모터 세기 | 1 / 0.95~1.05 / 0.9~1.1 배 | 현재 구현은 PD 명령 토크 전체를 곱하는 방식이 아니라 DCMotor effort_limit와 saturation_effort를 함께 조절 | PIE 계수 차용, 구현: E/foothold_s2/tasks/mdp_extra.py:32~51. 명목 한계 아래에서 작동하면 변화가 작을 수 있음 |
 | 행동 지연 | 0 / 설정 상한7.5 ms / 설정 상한15 ms | 이전 action target을 physics substep 동안 유지. 제어20 ms·물리5 ms에서 D 표본0/5/10/15 ms | 논문 PIE Table II, 코드 E/foothold_s2/tasks/delayed_action.py. 센서 지연·통신 누락·상위 명령 지연 전체를 뜻하지 않음 |
-| 밀기 | 0 / Δvx,Δvy 각 ±0.25 m/s / 각 ±0.5 m/s | world XY 속도에 순간 변화량을 더함. z·각속도 유지. 간격10~15 s는 강도와 별도 | 제안·가정: Isaac Lab 공통 velocity_env_cfg.py:222~226. Go2 rough는 push=None(:33)이므로 ‘Go2 기본 활성값’이라고 부르면 틀림. 원문 근거 비교는 §3 |
+| 밀기 | **미확정(D75)**. 임시안 0 / Δvx,Δvy 각 ±0.25 m/s / 각 ±0.5 m/s | world XY 속도에 순간 변화량을 더함. z·각속도 유지. 간격10~15 s도 임시안 | 제안·가정: Isaac Lab 공통 velocity_env_cfg.py:222~226. Go2 rough는 push=None(:33)이므로 ‘Go2 기본 활성값’이라고 부르면 틀림. 원문 근거 비교는 §3 |
 | 관측 잡음 | **m0부터 끝까지 현재1.0배 고정** | 각 관측 계산 때 U(−a,+a) 가산. 명령·이전 action에는 잡음 없음 | Y:951~1029, §2. 최종2배를 기본값으로 올릴 근거 없음. W51 noise2는 스트레스 진단만 |
 
 D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0는 COM·gain·strength·delay·push 다섯 항목의 확대 배율 0, B1~B3c에 0→0.5, D=m6001~7500, T0=m7501~8000, 총 8001갱신이다. D는 전체 범위 1배를 1500갱신 연습하는 구간으로 적는다. v0.1a의 ‘D 앞 1000갱신에 다시 확대’는 미채택 추가 제안이었으므로 실행안에서 제외한다. 코드의 일정은 `m≤1500:0`, `1501≤m≤6000:0.5×(m−1501)/4499`, `m≥6001:1`이다. 이 식은 runner v8 `ex40_dr.py:29~37`에서 직접 읽었으며, 경계에서는 각 env의 다음 자연 reset 때 적용하므로 전체 env가 동시에 1배가 되는 것은 아니다. D 진입 때 목표 범위가 두 배로 넓어지는 과도 구간은 실제 소비 배율·종료 원인과 함께 기록한다.
@@ -36,6 +36,21 @@ D74 및 lead 22:0x 정정: 관측 잡음은 처음부터 1배 고정한다. B0�
 **runner v8 재확인, 22:29:** 앞서 049587d4에서 지적한 root velocity API와 지연 반올림은 **2adbb1d5에서 코드 수준으로 닫혔다**. `ex40_dr_runtime.py:175~177`은 설치 API와 같은 `get_root_velocities()`를 쓰고, `delayed_action.py:18·43`과 `ex40_dr.py:68`은 floor를 쓴다. analyst가 GPU를 숨겨 `test_ex40_dr_v8_cpu.py`를 직접 실행해 **10 passed, 3.41 s**를 얻었다. 이 시험 파일 수와 runner의 전체 시험 수를 혼합하지 않는다. 명목 COM·모터 세기 복원 adapter는 읽었으나, 수정된 학습 runtime의 Kit 효과 검증은 미확인이다. W51의 짧은 Kit 통과는 별도 평가 코드의 증거다.
 
 **새 막음 1, 2adbb1d5의 COM 대상:** `ex40_dr_runtime.py:194~196`은 `SceneEntityCfg("robot")`를 COM 이벤트에 전달한다. 설치 `scene_entity_cfg.py:69~80`의 기본 `body_ids=slice(None)`는 모든 링크이고, `events.py:420~435`는 그 링크 모두에 offset을 더한다. 실제 `install_runtime_events` 함수 AST를 CPU에서 호출해 `body_names=None / body_ids=slice(None)`를 재현했다. S1 설정 `s1_env_cfg.py:134`의 `body_names="base"`와 다르다. **몸통만 ±5 cm로 옮길 의도가 다리까지 같은 offset을 주는 처치로 바뀐다.** COM 이벤트 전용 asset cfg를 base로 한정하고, 반복 reset에서 base만 변하며 다른 링크 COM은 명목 그대로인 시험이 필요하다. 학습 소스는 수정하지 않았다. 이 결함은 평가 전용 W51의 S1 COM 설정에는 없다.
+
+### 1.2 구현에 전달할 값
+
+아래는 §1의 권고를 runner 필드 이름으로 편 것이다. **D75 밀기는 null로 남기며 이 블록은 완성된 실행 설정이 아니다.** 가중치를 새로 정하거나 adapter 검증 상태를 바꾸는 블록은 아니다. COM 대상은 반드시 base다.
+
+```yaml
+full_ranges:
+  base_com: {x: [-0.05, 0.05], y: [-0.05, 0.05], z: [-0.05, 0.05]}
+  actuator_gains: {stiffness_scale: [0.9, 1.1], damping_scale: [0.9, 1.1]}
+  motor_strength: [0.9, 1.1]
+  delay_s: [0.0, 0.015]
+  push_velocity: null # D75 미확정, W51 진단값을 학습값으로 소비하지 않음
+push_interval_s: null # D75 미확정
+observation_noise: {mode: fixed, multiplier: 1.0}
+```
 
 ## 2. 관측 잡음과 실제 Go2 공개값
 
@@ -63,19 +78,25 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 
 위 외부 실측의 [latency_v4_results.json](https://github.com/AstroKido/go2pro_benchmarks/blob/fd42769b2df1fceef14bd4c0703782f77470316c/results/latency_v4_results.json)은 유선 저수준 토크 입력부터 `tau_est`가 입력 변화의20%를 넘는 시점까지 선형 보간한199회: 평균5.513ms·p95 7.022·p99 8.612·최대10.178. 우리의 action→관절 운동이나 웹앱→서버→ROS 경로와 같은 측정이 아니다. 0~15ms는 이 자료의 해당 응답 범위를 덮지만 우리 end-to-end 지연을 덮는지는 미확인이다. 장기 packet gap은 별도이며 고정 action delay만으로 재현되지 않는다.
 
-## 3. 계단 위 외란 선행과 밀기 제안
+## 3. 계단 위 외란 선행과 D75 임시안
+
+**D75 조사 결과:** 기억한 장면에 가장 가까운 후보는 [SLR 공식 계단 발차기 영상](https://11chens.github.io/SLR/static/videos/kickdog.mp4)이다. 5.3~5.5초 접촉을 0.1초 간격 프레임으로 확인했다. 논문 ±30 N과 공개 코드의 외력 비활성 상태가 달라, 이 영상에서 EX-40 밀기 값을 곧바로 정하지 않는다. [후보 전체 표와 코드 대조](PUSH-KICK-PAPERS-1030.md).
 
 | 출처·실기 관련성 | 학습 때의 외란 | 간격·방향·지속 | 해석 |
 |---|---|---|---|
+| [SLR Appendix A.3 Table A2](https://arxiv.org/html/2406.04835v2#A1.SS3), Go2 계단 발차기 직접 확인 | 논문 xyz 각 ±30 N. 공개 코드 8b454a14는 force 경로 끔, XY 속도±1 m/s 경로 켬 | 속도 대입15s. force interval=8은 step, 지속시간 미확인 | 영상 체크포인트가 공개 기본 설정으로 훈련됐는지 미확인. 논문 힘과 코드 속도를 합쳐 하나의 설정처럼 쓰지 않음 |
+| [JEPLO Table IV](https://arxiv.org/html/2609.15770v1#S7.SS1), Go2 | Δvxy 각±0.4 m/s, Δωxyz 각±0.6 rad/s | 0.25Hz=4s, 순간 속도 변화 | 학습 cfg 460e2272와 일치. 계단 발차기 장면은 이번 조사에서 미확인 |
+| [MoE-CTS 공개 cfg 6c95d9fe](https://github.com/wty-yy/go2_rl_gym/blob/6c95d9feef4814c25eb6536e61bb38e1d1d718d4/source/go2_rl_lab/go2_rl_lab/tasks/mixed/env_cfg.py#L259), Go2 | XY±0.4 m/s, 각속도xyz±0.6 rad/s | 4s. 우리 E1 원본 28b4516d도 같은 범위 | 공식 Kick 영상은 평지이며 계단 영상과 별개. 85~100N 끌기는 실기 시연 표기이고 학습 힘이 아님 |
+| [DTC 보충 Training Details](https://arxiv.org/html/2309.15462v2), ANYmal | 10s 뒤 twist 변화 U(−1,1), episode별 base wrench±15, 발 힘±2 N | 본문의 twist 단위 m/s, wrench 성분별 단위 불명확 | 강건성 평가의5s·±2는 훈련값과 분리. Go2 크기와 같지 않음 |
 | [HIM ICLR2024 Appendix A.2 Table6](https://arxiv.org/html/2312.11460v3#A1.SS2), A1 계단/외란 실험 | 힘 xyz 각 −30~30 N | 논문은 간격·힘 지속시간 미기재 | [공식 페이지](https://junfenglong.com/HIMLoco/)에 계단에서 발차기·다리/등 끌기 시연이 명시됨. 이번에 해당 동영상 전체를 직접 판독한 것은 아님 |
 | [HIM 공식 코드 ef289aca](https://github.com/InternRobotics/HIMLoco/blob/ef289acaa62795009363b7b819c9186690630441/legged_gym/legged_gym/envs/base/legged_robot_config.py#L152) | 힘±30N 및 XY 속도±1m/s 두 장치 | disturbance_interval=8은robot.py:452의policy step 나머지연산, push는16s. robot.py:543은 XY속도 **대입**, :550은 로컬 힘 | 논문 표와 현재 공개코드의 다른 범위를 섞지 않음. `8`을8초라고읽지않음. force함수1회가물리엔진에서유지되는시간은이자료만으로확정하지않음 |
 | [DreamWaQ III-B/III-F](https://arxiv.org/html/2301.10602v2), Unitree A1 | TableII에는 push 행 없음 | III-F의 xyz 무작위 속도·1초 간격은 **시험 조건** | 최대push1.121±0.164m/s 결과를 학습 설정으로 옮기면 틀림 |
 | [PA-LOCO Table III](https://arxiv.org/html/2407.04224v1#S3.T3), Unitree Go1 | 수평 힘 각 축 ±60 N, 수직 ±10 N, 힘 잡음 ±2 N | 힘의 간격·지속은 미기재. 별도 각속도 외란 2.5 rad/s의 간격은 15 s | §V-A의 발차기 내성과 §V-D의 계단 주행을 한 ‘계단 발차기’ 실험으로 합치지 않음. 힘 확대를 추종 보상으로 조절하나 수치 문턱은 미기재 |
 | [Rudin 공식 legged_gym 8fa29acc](https://github.com/leggedrobotics/legged_gym/blob/8fa29acc6fd1910c3d9659eef6310bdd301cde0a/legged_gym/envs/base/legged_robot_config.py#L112) | XY 속도±1m/s | 15s, 순간 속도 대입 | ANYmal 기반 선행 코드. Go2 실측 아님 |
 | 설치 Isaac Lab 공통 velocity task | XY 속도변화량±0.5m/s | 10~15s, world XY 가산, 순간 | events.py:1046~1073의 **본문은 가산**. docstring의 ‘set’만 보고 속도 대입이라고 읽으면 틀림. Go2 rough는 끔 |
-| START III-D/PIE III-C3 | PIE TableII DR 따름, push 미기재 | 간격·힘·지속 없음 | START가 특정 밀기 값을 검증했다고 쓰지 않음 |
+| START II-D1/PIE III-C3 | PIE TableII DR 따름, push 미기재 | 간격·힘·지속 없음 | START가 특정 밀기 값을 검증했다고 쓰지 않음 |
 
-권고 D: **수평 Δv 각 축 U(−0.5,+0.5)m/s**, B 끝각축±0.25, z/각속도0, 에피소드 안독립 timer10~15s, instant1회. 네모 분포라 평면 최대 크기는0.707m/s(D),0.354m/s(B 끝), 방향각 균일 분포가 아니다. 배율은 크기에만 적용하고 간격을0.5배로 줄이지 않는다. 명목12kg라면 각축 최대 운동량 변화6N·s라는 계산일 뿐, 6N 힘이나 30N의 특정 지속시간과 동등하다고 단정하지 않는다. 계단 발에 걸리는 외력·장시간 끌기·수직 타격은 이 설계가 검증하지 않는다.
+**D75 이전 임시안, 확정 아님:** 수평 Δv 각 축 U(−0.5,+0.5)m/s, B 끝각축±0.25, z/각속도0, 에피소드 안독립 timer10~15s, instant1회. 네모 분포라 평면 최대 크기는0.707m/s(D),0.354m/s(B 끝), 방향각 균일 분포가 아니다. 배율은 크기에만 적용하고 간격을0.5배로 줄이지 않는다. 명목12kg라면 각축 최대 운동량 변화6N·s라는 계산일 뿐, 6N 힘이나 30N의 특정 지속시간과 동등하다고 단정하지 않는다. 계단 발에 걸리는 외력·장시간 끌기·수직 타격은 이 설계가 검증하지 않는다. 최종값은 계단 발차기 원문·영상 조사 뒤 다시 논의한다.
 
 ## 4. W51 비교 조건과 실제 소비 확인
 
@@ -114,3 +135,4 @@ Go2 제조사의 공개 자료·SDK에서 IMU noise density, encoder 절대 정�
 | v0.1a | lead 22:0x 정정 반영. 관측 잡음은 m0부터 1배 고정, 다섯 DR만 확대. GPU 비교 설정에는 변경 없음 |
 | v0.1b | D의 미채택 추가 확대 제안을 제외하고 D74·runner의 전체 범위 1500갱신으로 정리. 평가 결과는 계속 수집 중 |
 | v0.1c | 밀기 최종 권고와 고정 잡음 문구 명확화. runner 두 수정 CPU 재확인, 밀기 interval 배율·재개 저장 범위 구분, 같은 seed 반복의 해석 한계 추가 |
+| v0.1d | D75로 앞선 밀기 확정 표현 철회, YAML 밀기 null. SLR 계단 발차기 직접 확인 및 논문·코드 불일치, JEPLO·MoE·DTC 대조 추가. 관측 잡음1배 고정 유지 |

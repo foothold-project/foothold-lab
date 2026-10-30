@@ -1,0 +1,437 @@
+{
+  "checked_at": "2026-10-30T23:22:08.460149+09:00",
+  "links": [
+    {
+      "url": "https://11chens.github.io/SLR/",
+      "status": 200,
+      "final_url": "https://11chens.github.io/SLR/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://11chens.github.io/SLR/static/videos/kickdog.mp4",
+      "status": 200,
+      "final_url": "https://11chens.github.io/SLR/static/videos/kickdog.mp4",
+      "method": "HEAD",
+      "content_type": "video/mp4",
+      "sample_bytes": 0
+    },
+    {
+      "url": "https://arxiv.org/html/2301.10602v2",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2301.10602v2",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2309.15462v2",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2309.15462v2",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2312.11460v3#A1.SS2",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2312.11460v3",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2405.10830v2",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2405.10830v2",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2406.04835v2#A1.SS3",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2406.04835v2",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2408.13740v3",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2408.13740v3",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2512.13153v1",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2512.13153v1",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2601.08485v3#A2",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2601.08485v3",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2604.26504v1",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2604.26504v1",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://arxiv.org/html/2609.15770v1#S7.SS1",
+      "status": 200,
+      "final_url": "https://arxiv.org/html/2609.15770v1",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://asig-x.github.io/jeplo_web/",
+      "status": 200,
+      "final_url": "https://asig-x.github.io/jeplo_web/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://clearlab-sustech.github.io/concurrentTS/",
+      "status": 200,
+      "final_url": "https://clearlab-sustech.github.io/concurrentTS/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://clearlab-sustech.github.io/concurrentTS/static/videos/full_video.mp4",
+      "status": 200,
+      "final_url": "https://clearlab-sustech.github.io/concurrentTS/static/videos/full_video.mp4",
+      "method": "HEAD",
+      "content_type": "video/mp4",
+      "sample_bytes": 0
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/configs/go2_config.py#L172",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/configs/go2_config.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/configs/go2_config.py#L186",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/configs/go2_config.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/envs/legged_robot.py#L1123",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/envs/legged_robot.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/envs/legged_robot.py#L563",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/envs/legged_robot.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/train.py#L4",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/blob/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e/train.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/11chens/SLR-master/tree/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e",
+      "status": 200,
+      "final_url": "https://github.com/11chens/SLR-master/tree/8b454a142401ebcf87c33f26bb7b7dba7c0f7e6e",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/ASIG-X/JEPLO",
+      "status": 200,
+      "final_url": "https://github.com/ASIG-X/JEPLO",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/ASIG-X/JEPLO/blob/460e2272907af053d6e66b57fec71fdbe6ca1774/training/go2_parkour/go2_parkour/tasks/go2_loco_env_cfg.py#L86",
+      "status": 200,
+      "final_url": "https://github.com/ASIG-X/JEPLO/blob/460e2272907af053d6e66b57fec71fdbe6ca1774/training/go2_parkour/go2_parkour/tasks/go2_loco_env_cfg.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/Improbable-AI/walk-these-ways/blob/0e7236bdc81ce855cbe3d70345a7899452bdeb1c/go1_gym/envs/base/legged_robot_config.py#L266",
+      "status": 200,
+      "final_url": "https://github.com/Improbable-AI/walk-these-ways/blob/0e7236bdc81ce855cbe3d70345a7899452bdeb1c/go1_gym/envs/base/legged_robot_config.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/Improbable-AI/walk-these-ways/blob/0e7236bdc81ce855cbe3d70345a7899452bdeb1c/scripts/train.py#L66",
+      "status": 200,
+      "final_url": "https://github.com/Improbable-AI/walk-these-ways/blob/0e7236bdc81ce855cbe3d70345a7899452bdeb1c/scripts/train.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/MartinOpat/open-diffloco",
+      "status": 200,
+      "final_url": "https://github.com/MartinOpat/open-diffloco",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/amazon-far/php_parkour",
+      "status": 200,
+      "final_url": "https://github.com/amazon-far/php_parkour",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/arclab-hku/MGDP",
+      "status": 200,
+      "final_url": "https://github.com/arclab-hku/MGDP",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/ame2_minimal",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/ame2_minimal",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/ame2_minimal/blob/8beb9a688d67882828019583f7d5a78e3517f233/ame2/ame2/tasks/ame2_env_cfg.py#L322",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/ame2_minimal/blob/8beb9a688d67882828019583f7d5a78e3517f233/ame2/ame2/tasks/ame2_env_cfg.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/ame2_minimal/blob/8beb9a688d67882828019583f7d5a78e3517f233/ame2/ame2/tasks/mdp/events.py#L322",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/ame2_minimal/blob/8beb9a688d67882828019583f7d5a78e3517f233/ame2/ame2/tasks/mdp/events.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/ame2_minimal/tree/8beb9a688d67882828019583f7d5a78e3517f233",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/ame2_minimal/tree/8beb9a688d67882828019583f7d5a78e3517f233",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/legged_gym",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/legged_gym",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/leggedrobotics/legged_gym/blob/8fa29acc6fd1910c3d9659eef6310bdd301cde0a/legged_gym/envs/base/legged_robot_config.py#L112",
+      "status": 200,
+      "final_url": "https://github.com/leggedrobotics/legged_gym/blob/8fa29acc6fd1910c3d9659eef6310bdd301cde0a/legged_gym/envs/base/legged_robot_config.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/wertyuilife2/go2_rl_robotlab",
+      "status": 200,
+      "final_url": "https://github.com/wertyuilife2/go2_rl_robotlab",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/wty-yy/RoboGauge",
+      "status": 200,
+      "final_url": "https://github.com/wty-yy/RoboGauge",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/wty-yy/go2_rl_gym/blob/6c95d9feef4814c25eb6536e61bb38e1d1d718d4/source/go2_rl_lab/go2_rl_lab/tasks/mixed/env_cfg.py#L259",
+      "status": 200,
+      "final_url": "https://github.com/wty-yy/go2_rl_lab/blob/6c95d9feef4814c25eb6536e61bb38e1d1d718d4/source/go2_rl_lab/go2_rl_lab/tasks/mixed/env_cfg.py",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/wty-yy/go2_rl_lab",
+      "status": 200,
+      "final_url": "https://github.com/wty-yy/go2_rl_lab",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://github.com/yhx1203/parkour_mjlab",
+      "status": 200,
+      "final_url": "https://github.com/yhx1203/parkour_mjlab",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://gmargo11.github.io/walk-these-ways/",
+      "status": 200,
+      "final_url": "https://gmargo11.github.io/walk-these-ways/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://junfenglong.com/HIMLoco/",
+      "status": 200,
+      "final_url": "https://junfenglong.com/HIMLoco/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://robogauge.github.io/complete/",
+      "status": 200,
+      "final_url": "https://robogauge.github.io/complete/",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://robogauge.github.io/static/videos/Kick.mp4",
+      "status": 200,
+      "final_url": "https://robogauge.github.io/static/videos/Kick.mp4",
+      "method": "HEAD",
+      "content_type": "video/mp4",
+      "sample_bytes": 0
+    },
+    {
+      "url": "https://sgvr.kaist.ac.kr/~Jeil/project_page_HiPAN/",
+      "status": 200,
+      "final_url": "https://sgvr.kaist.ac.kr/~Jeil/project_page_HiPAN/",
+      "method": "GET",
+      "content_type": "text/html",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://sgvr.kaist.ac.kr/~Jeil/project_page_HiPAN/assets/video/real_outdoor_1.mp4",
+      "status": 200,
+      "final_url": "https://sgvr.kaist.ac.kr/~Jeil/project_page_HiPAN/assets/video/real_outdoor_1.mp4",
+      "method": "HEAD",
+      "content_type": "video/mp4",
+      "sample_bytes": 0
+    },
+    {
+      "url": "https://sites.google.com/leggedrobotics.com/ame-2",
+      "status": 200,
+      "final_url": "https://sites.google.com/leggedrobotics.com/ame-2",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://sites.google.com/view/dreamwaq",
+      "status": 200,
+      "final_url": "https://sites.google.com/view/dreamwaq",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=FNA1crvtBLs",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=FNA1crvtBLs",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=FViNnwLk5wI",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=FViNnwLk5wI",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=HekLtX37ijs",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=HekLtX37ijs",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=gUhpe_72y2k",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=gUhpe_72y2k",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=nipH-yl8lR0",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=nipH-yl8lR0",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://youtu.be/XsjFNcND6js",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=XsjFNcND6js&feature=youtu.be",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    },
+    {
+      "url": "https://youtu.be/j85qVv_kVyI",
+      "status": 200,
+      "final_url": "https://www.youtube.com/watch?v=j85qVv_kVyI&feature=youtu.be",
+      "method": "GET",
+      "content_type": "text/html; charset=utf-8",
+      "sample_bytes": 512
+    }
+  ]
+}

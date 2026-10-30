@@ -1,0 +1,35 @@
+{
+  "video": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\_out\\dr_sources\\push_videos\\cts_full.mp4",
+  "sha256": "3d2c15d98f58f4ff407d269456036c4cf2ac0864c3ee158275c05e24f04a4e15",
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080,
+        "r_frame_rate": "1000/33"
+      },
+      {
+        "codec_type": "audio",
+        "r_frame_rate": "0/0"
+      }
+    ],
+    "format": {
+      "duration": "160.751746",
+      "size": "38428019"
+    }
+  },
+  "start_s": 0.0,
+  "step_s": 5.0,
+  "stop_s": 160.751746,
+  "frames": 33,
+  "grids": [
+    "_out\\dr_sources\\push_videos\\cts_frames\\cts_full_sheet1.jpg",
+    "_out\\dr_sources\\push_videos\\cts_frames\\cts_full_sheet2.jpg",
+    "_out\\dr_sources\\push_videos\\cts_frames\\cts_full_sheet3.jpg"
+  ],
+  "audio_reviewed": false,
+  "gpu_used": false
+}

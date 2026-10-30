@@ -1,0 +1,114 @@
+[
+  {
+    "name": "slr_disturb1",
+    "url": "https://11chens.github.io/SLR/static/videos/disturb_1.mp4",
+    "path": "_out\\dr_sources\\push_videos\\slr_disturb1.mp4",
+    "sha256": "56517be40c58ba8367963929ab0a4ca8fb6ea1c5612a7d2b1b483dd98cf195b9",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_type": "video",
+          "width": 960,
+          "height": 544,
+          "r_frame_rate": "30000/1001"
+        },
+        {
+          "index": 1,
+          "codec_type": "audio",
+          "r_frame_rate": "0/0"
+        }
+      ],
+      "format": {
+        "duration": "14.205000",
+        "size": "2975462"
+      }
+    }
+  },
+  {
+    "name": "slr_disturb2",
+    "url": "https://11chens.github.io/SLR/static/videos/disturb_2.mp4",
+    "path": "_out\\dr_sources\\push_videos\\slr_disturb2.mp4",
+    "sha256": "29e877dfca07a1c7355ee682f364baabd914cfd72a81a32d3103ce3faabb35b0",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_type": "video",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30000/1001"
+        },
+        {
+          "index": 1,
+          "codec_type": "audio",
+          "r_frame_rate": "0/0"
+        }
+      ],
+      "format": {
+        "duration": "14.805000",
+        "size": "3108414"
+      }
+    }
+  },
+  {
+    "name": "slr_kickdog",
+    "url": "https://11chens.github.io/SLR/static/videos/kickdog.mp4",
+    "path": "_out\\dr_sources\\push_videos\\slr_kickdog.mp4",
+    "sha256": "8ac346511887a582db72fb67dede30ce7366ee26cbe645e4a0ca4b699a396a27",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_type": "video",
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1"
+        },
+        {
+          "index": 1,
+          "codec_type": "audio",
+          "r_frame_rate": "0/0"
+        }
+      ],
+      "format": {
+        "duration": "11.166667",
+        "size": "11911167"
+      }
+    }
+  },
+  {
+    "name": "moects_kick",
+    "url": "https://robogauge.github.io/static/videos/Kick.mp4",
+    "path": "_out\\dr_sources\\push_videos\\moects_kick.mp4",
+    "sha256": "d00d3bb0426eccbac914a3afc2c82527e9f5dabfc9221641cbf71c25a5bf4c35",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_type": "video",
+          "width": 2560,
+          "height": 1440,
+          "r_frame_rate": "30/1"
+        },
+        {
+          "index": 1,
+          "codec_type": "audio",
+          "r_frame_rate": "0/0"
+        }
+      ],
+      "format": {
+        "duration": "18.041995",
+        "size": "11301425"
+      }
+    }
+  }
+]
