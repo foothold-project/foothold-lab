@@ -1,0 +1,24 @@
+{
+  "state": "PASS",
+  "base": "b5bca3b561293dded80e0209fb84eeae0fc5b807",
+  "P1": "68161fc7fded932844aa7ecfc44a045970d13a58",
+  "actuator_fix": "e53f63de8b8479f5f317d70a0738f8d425b9f202",
+  "final_head": "f1fff17fecf82ac77fe843c9a48214f166b154ca",
+  "entire_tree_exact_union": true,
+  "source_clean": true,
+  "P1_files": [
+    "_out/reports/CPU-P1-segment-source-1031.txt",
+    "_out/reports/REPORT-B11-all-fixes-runner.md",
+    "foothold_s2/ex40_supervisor.py",
+    "foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py",
+    "foothold_s2/tests/test_ex40_scorer_cpu.py"
+  ],
+  "actuator_fix_files": [
+    "_out/reports/EX40-B12-first-fail.txt",
+    "_out/reports/EX40-B12-fixed-regression.txt",
+    "_out/reports/REPORT-EX40-B12-ACTUATOR-1031.md",
+    "foothold_s2/curriculum/ex40_dr_runtime.py",
+    "foothold_s2/tests/test_ex40_b12_actuator_width_cpu.py"
+  ],
+  "unexpected_files": []
+}

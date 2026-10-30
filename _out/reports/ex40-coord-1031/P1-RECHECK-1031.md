@@ -1,8 +1,14 @@
 > 분류: 실행 검증 · EX-40 조정
-> 작성: analyst · 2026-10-31 02:38 KST
-> 근거: b5bca3b5 · verifier §10/r5 results.json 및 split-trace.json · CPU34 원출력
-> 요지: 누락 슬롯 반례는 닫혔고 정상 재개의 이전 segment 출처 연결1건을 같은 묶음에서 고친다.
-> 상태: B11 막음1 · runner 후속 착수 · B12/B13 미기동 · B14 본 기동 금지
+> 작성: analyst · 2026-10-31 03:05 KST
+> 근거: 68161fc7 · verifier §11/r6 results.json와 source-guards.json · CPU38 원출력
+> 요지: P1 정상 재개 source 두 자리의 반례가 닫혔다. B12 실제 Kit 실패는 별도 기록으로 관리한다.
+> 상태: P1 막음0 · B12 합친 고정본 재시도 진행 · B13 대기 · B14 본 기동 금지
+
+## 03:05 P1 지적분 닫힘
+
+verifier §11, r6 `pytest.txt`의 38 passed in15.53s, `results.json`, `source-guards.json`을 직접 읽었다. 이전 segment m1500 뒤 새 m1550/m1600과 분리31개가 consumed이며 반복 추가 발송0, evaluator_calls0이다. 과거 target 누락은 pending, SHA 충돌은 unknown, HOLD는 pending이다. 현재 segment에 같은 회차 다른 SHA가 있으면 옛 원장으로 통과시키지 않고 unknown을 낸다. m5250 checkpoint/state/ledger 동시 누락도 pending으로 유지됐다. 실제 GPU 재개·장기 병행 부하·외부 전달은 이 CPU 닫힘에 포함하지 않는다.
+
+`68161fc7`의 두 소비자와 위 원자료를 대조해 P1 잔여0을 채택한다. B12는 b5b 첫 시도에서 별도 gain 기록 폭8/4 오류로 실패했고, scripter `e53f63de` 한 줄 고침을 받았다. 최신 직접 승인에 따라 두 고침을 정확히 합친 `f1fff17f`로 B12 재시도 한 번을 진행 중이다. 이력의 「B11 전체0까지 Kit 대기」는 그 뒤 직접 지시로 바뀌었다. 현재 Kit 상태 정본은 `B12-B13-KIT-1031.md`이며, 아래는 당시 판단을 보존한 기록이다.
 
 # EX-40 B11 P1 후속 대조
 
