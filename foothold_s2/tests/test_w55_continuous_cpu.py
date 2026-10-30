@@ -174,13 +174,26 @@ def test_smoke_checker_known_good_and_mutations(tmp_path):
     run_log.write_text("Learning iteration 1501/1511\n", encoding="utf-8")
     run = tmp_path / "output" / "smoke" / "EX-40-B-kit-smoke_20261030_1"
     run.mkdir(parents=True)
+    plan = Plan(SOURCE, arm="B", smoke_boundaries=(1503, 1506, 1509))
+    row["curriculum_sha256"] = plan.sha256
+    row["effective_schedule_sha256"] = plan.effective_sha256
+    receipt_path.write_text(json.dumps(row), encoding="utf-8")
+    (run / "params").mkdir()
+    (run / "params" / "env.yaml").write_text(
+        "curriculum_mode: true\nex39_thigh_calf_pos_l1: -0.01\nex39_four_foot_stop: 0.1\n"
+        "track_ang_vel: 1.0\ntrack_lin_vel: 2.0\n", encoding="utf-8")
+    (run / "manifest.json").write_text(json.dumps({"modes": {"contract": "basic_gait_ex40",
+        "continuous_curriculum": {"sha256": plan.sha256,
+                                 "effective_schedule_sha256": plan.effective_sha256,
+                                 "arm": "B"}}}), encoding="utf-8")
+    (run / "basic_start_receipt.json").write_text(json.dumps({"num_envs": 3072,
+        "env_seed": 42, "command_seed": 42}), encoding="utf-8")
     events = [{"event": "stage_enter", "to": k, "iteration": v}
               for k, v in row["stage_boundaries"].items()]
     events[-1]["force_gt"] = False
     events.append({"event": "env_reset_applied", "to": "B2", "changed_envs": 2})
     stage_log = run / "stage_log.jsonl"
     stage_log.write_text("\n".join(json.dumps(r) for r in events) + "\n", encoding="utf-8")
-    (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 1510}), encoding="utf-8")
     (run / "model_1510.pt").write_bytes(b"known model")
     (run / "train_start_status.json").write_text(json.dumps({"state": "done", "iter": 1510,
         "sha256": __import__("hashlib").sha256(b"known model").hexdigest()}), encoding="utf-8")

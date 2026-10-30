@@ -20,6 +20,21 @@ def check(receipt_path: Path, run_log: Path, rc: int) -> dict:
     if len(runs) != 1:
         raise ValueError("EX-40 smoke must have exactly one isolated child run")
     run = runs[0]
+    manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
+    modes = manifest.get("modes") or {}
+    cfg = modes.get("continuous_curriculum") or {}
+    if (cfg.get("sha256") != receipt.get("curriculum_sha256")
+            or cfg.get("effective_schedule_sha256") != receipt.get("effective_schedule_sha256")
+            or cfg.get("arm") != receipt["arm"]
+            or modes.get("contract") != "basic_gait_ex40"):
+        raise ValueError("EX-40 actual Kit manifest differs from CPU launch contract")
+    env_cfg = (run / "params/env.yaml").read_text(encoding="utf-8")
+    if any(token not in env_cfg for token in ("curriculum_mode", "ex39_thigh_calf_pos_l1",
+                                               "ex39_four_foot_stop", "track_ang_vel", "track_lin_vel")):
+        raise ValueError("EX-40 actual Kit environment cfg lacks command or reward terms")
+    start = json.loads((run / "basic_start_receipt.json").read_text(encoding="utf-8-sig"))
+    if start.get("num_envs") != 3072 or start.get("env_seed") != 42 or start.get("command_seed") != 42:
+        raise ValueError("EX-40 actual Kit env/command seed or env count differs")
     rows = [json.loads(line) for line in (run / "stage_log.jsonl").read_text(encoding="utf-8").splitlines()]
     entered = [(row.get("to"), row.get("iteration")) for row in rows if row.get("event") == "stage_enter"]
     if entered != list(receipt["stage_boundaries"].items()):
