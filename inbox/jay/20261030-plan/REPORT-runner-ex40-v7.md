@@ -61,4 +61,7 @@ $env:LIVE='0'
 재개는 원 scratch launch 영수증과 SHA가 manifest에 고정된 checkpoint를 resume spec으로 입력받는다. 부모 회차와 저장 segment를 검증한 뒤 같은 arm, 장치, 로그/점수 위치, curriculum, optimizer 및 학습률, B1 시작 기준, 지도 전환, 수집 update를 유지하는 다음 segment 인자를 만든다. 새 segment 번호는 부모 번호보다 1 커야 한다. launcher는 기본적으로 CPU 준비와 prestart 검사만 하며, 실제 실행 상태·Kit·GPU는 이 작업에서 확인하지 않았다.
 
 - 후속 CPU 시험: `34 passed in 5.09s` (`test_ex40_v7_continue_cpu.py`, `test_w55_continuous_cpu.py`, `test_ex40_v4_cpu.py`). 포함: fixed L0..L2 실제 레벨 영수증, L3 반례, 자동 모드 승급 term 누락, Kit 영수증의 승급/레벨 분포 및 manifest 반례, source receipt와 parent SHA를 쓰는 resume 준비 및 segment 연속성.
-- main/smoke DRY 영수증은 앞선 v7 버전에서 생성했다. 이 후속 버전의 launcher/prestart DRY는 커밋 뒤 다시 실행하고 결과를 덧붙일 예정이다.
+- 후속 main DRY: `prestart_pass`, `source_git_clean=true`, `training_started=false`, `terrain_curriculum=fixed_l02`. 영수증 폴더: `C:/Users/AI-WS01/AppData/Local/Temp/ex40-v7-followup-main/receipts/ex40/B_main_20261030_212054_1100119/`.
+- 후속 smoke DRY: `prestart_pass`, `source_git_clean=true`, `training_started=false`, `terrain_curriculum=fixed_l02`. 영수증 폴더: `C:/Users/AI-WS01/AppData/Local/Temp/ex40-v7-followup-smoke/receipts/ex40/B_smoke_20261030_212102_1100139/`.
+- 후속 resume DRY: 알려진 CPU `model_5500.pt` fixture와 manifest SHA를 source receipt/spec에 연결했다. `prestart_pass`, `source_git_clean=true`, `start=resume`, `segment_index=1`, `terrain_curriculum=fixed_l02`, `training_started=false`. 영수증 폴더: `C:/Users/AI-WS01/AppData/Local/Temp/ex40-v7-followup-resume/logs/receipts/ex40/B_resume_20261030_212154_1100205/`.
+- 이 DRY는 실제 Kit 배치 분포, 실제 저장본 재개, optimizer의 실기 연속성 검증이 아니다. Kit와 GPU는 실행하지 않았다.
