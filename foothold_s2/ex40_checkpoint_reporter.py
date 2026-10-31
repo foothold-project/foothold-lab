@@ -159,7 +159,10 @@ def _map_cells(score: dict) -> tuple[dict, dict]:
     for mode in MODES:
         if not set(CASES) <= set(raw["modes"][mode]):
             raise ValueError(f"map64 command missing for {mode}")
-        for name in CASES:
+        names = list(CASES) + sorted(n for n, v in raw["modes"][mode].items()
+                                     if n not in CASES and isinstance(v, dict) and "per_env" in v
+                                     and "alive_envs_at_end" in v)
+        for name in names:
             case = raw["modes"][mode][name]
             rows = case["per_env"]
             if len(rows) != 64:
@@ -251,6 +254,8 @@ def build_row(ledger: dict, score: dict, previous: dict | None, final: int) -> d
             "training": _training(run, update, final, include_curves=update in STAGE_END),
             "command_slots": extra["command_slots"], "dr": extra["ex40_dr"],
             "cells": cells, "map_error": map_error, "stand": _stand(score),
+            "judged": sorted(k.split("/", 1)[1] for k in score["cells"]
+                             if k.startswith("eval_gt/") and "flat_stand" not in k),
             "stand_passed": stand_passed, "initial_reward_weights": weights,
             "changed_cells_over_band": deltas,
             "previous_update": previous["update"] if previous else None,
@@ -258,6 +263,33 @@ def build_row(ledger: dict, score: dict, previous: dict | None, final: int) -> d
                         "map64": score["sources"]["map64"],
                         "map64_sha256": sha256(Path(score["sources"]["map64"])),
                         "env_yaml_sha256": sha256(config_path)}}
+
+
+def insights(row: dict) -> list[str]:
+    """lead 10/31 D79: 의미 있는 점 2~4 줄. 기준은 그림자 판정과 같은 값(생존 60/64, 오차 0.15)."""
+    out, below = [], []
+    for mode in ("eval_gt", "probe_prop_only"):
+        for name in row.get("judged") or CASES:
+            if f"{mode}/{name}" not in row["cells"]:
+                continue
+            cell = row["cells"][f"{mode}/{name}"]
+            errs = [v for v in cell["tracking_median"].values() if v is not None]
+            worst = max(errs) if errs else None
+            if cell["alive"] < 60 or (worst is not None and worst > 0.15):
+                tag = "정답" if mode == "eval_gt" else "끔"
+                below.append(f"{name}({tag} 생존 {cell['alive']}" + (f", 오차 {worst:.3f}" if worst is not None else "") + ")")
+    out.append("미달 칸: " + (", ".join(below) if below else "없음 (생존 ≥60 · 오차 ≤0.15)"))
+    changed = row["changed_cells_over_band"]
+    out.append("앞 저장본 대비 생존 변화(±3 초과): " + (", ".join(
+        f"{x['cell']} {x['before']}→{x['after']}" for x in changed) or "없음"))
+    feet = row["stand"]["eval_gt"]["feet"]
+    low = min(FEET, key=lambda f: feet[f]["mean_fz_over_mg"])
+    out.append(f"서 있기: 네 발 동시 접촉 {row['stand']['eval_gt']['all_four_90pct_envs']}/64, 가장 약한 발 {low} "
+               f"{feet[low]['mean_fz_over_mg']:.2f} mg (RR {feet['RR_foot' if 'RR_foot' in feet else 'RR']['mean_fz_over_mg']:.2f})")
+    left, right = (row["cells"][f"eval_gt/spin{s}1.2"]["tracking_median"]["wz_abs_error_mean_alive_radps"] for s in ("+", "-"))
+    if left is not None and right is not None:
+        out.append(f"좌우 회전 오차 {left:.3f}/{right:.3f} (차 {right - left:+.3f}, +면 오른쪽이 약함)")
+    return out
 
 
 def markdown(row: dict, *, stage_doc: str | None = None, video: str | None = None,
@@ -269,6 +301,7 @@ def markdown(row: dict, *, stage_doc: str | None = None, video: str | None = Non
              "> 근거: EX-40 점수 원장 · 평가 원자료 · TensorBoard · train_extra",
              "> 요지: 저장본 평가와 학습 진행을 원자료에서 기록",
              "> 상태: 자동 생성 · 그림자 판정 · 독립 평가", "",
+             "## 핵심", ""] + [f"- {line}" for line in insights(row)] + ["",
              f"- 완료: m{update}, 학습 기록 {train['at']}, 점수 {row['score_created_at']}",
              f"- 경과 {train['elapsed_s'] / 3600:.2f} h, 최근 {train['seconds_per_update']:.2f} s/update, 예상 끝 {train['eta']}",
              f"- 단계 {row['stage']}, 그림자 판정 {row['verdict']}, 앞 저장본 m{row['previous_update'] or '없음'}",
@@ -282,11 +315,11 @@ def markdown(row: dict, *, stage_doc: str | None = None, video: str | None = Non
              f"- DR 배율 {row['dr']['scale']}; 실제 표본: " + ", ".join(
                  f"{name} {sample['min']}~{sample['max']} (n={sample['count']})"
                  for name, sample in row["dr"].get("actual_samples", {}).items()), "",
-             "## 평가 6칸 × 지도 3모드", "",
+             "## 평가 칸 × 지도 3모드 (그림자 판정 대상은 단계에서 배운 칸)", "",
              "| 모드/칸 | 생존 /64 | vx 오차 m/s | vy 오차 m/s | wz 오차 rad/s | 복원 지도 cm (env 수) |",
              "|---|---:|---:|---:|---:|---:|"]
     for mode in MODES:
-        for name in CASES:
+        for name in [k.split("/", 1)[1] for k in row["cells"] if k.startswith(mode + "/")]:
             key = f"{mode}/{name}"
             cell, err = row["cells"][key], row["map_error"][key]
             values = cell["tracking_median"]
@@ -346,6 +379,7 @@ def _telegram(row: dict, link: str, local: Path, push_error: str | None = None,
              f"속도 {train['seconds_per_update']:.1f}s/회 · 예상 끝 {train['eta']}",
              f"변한 칸(±3 초과): {change}",
              f"서 있기 네 발 {stand}/64 · GT 좌/우 회전 생존 {gt_left}/{gt_right}/64",
+             *insights(row)[:3],
              (f"push 실패 · 로컬: {local}" if push_error else
               f"보고: {link} · 로컬: {local}")]
     if stage_doc:
