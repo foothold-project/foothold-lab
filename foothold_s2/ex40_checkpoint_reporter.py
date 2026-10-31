@@ -248,6 +248,7 @@ def build_row(ledger: dict, score: dict, previous: dict | None, final: int) -> d
         stand_passed[mode] = score["cells"][key]["passed_envs"]
     return {"format": "foothold-ex40-checkpoint-report/1", "update": update,
             "stage": ledger["stage"], "verdict": ledger["verdict"],
+            "problems": score.get("problems", []),
             "score_created_at": score["created_at"],
             "checkpoint_sha256": ledger["checkpoint_sha256"],
             "score_sha256": ledger["score_sha256"],
@@ -263,6 +264,11 @@ def build_row(ledger: dict, score: dict, previous: dict | None, final: int) -> d
                         "map64": score["sources"]["map64"],
                         "map64_sha256": sha256(Path(score["sources"]["map64"])),
                         "env_yaml_sha256": sha256(config_path)}}
+
+
+def problem_text(row: dict) -> str:
+    """lead 11/01: HOLD · FAIL 의 이유를 채점기 원문 그대로(칸 · 이유)."""
+    return " · ".join(f"{p.get('kind')} {p.get('cell')}: {p.get('reason')}" for p in row.get("problems", []))
 
 
 def insights(row: dict) -> list[str]:
@@ -305,6 +311,7 @@ def markdown(row: dict, *, stage_doc: str | None = None, video: str | None = Non
              f"- 완료: m{update}, 학습 기록 {train['at']}, 점수 {row['score_created_at']}",
              f"- 경과 {train['elapsed_s'] / 3600:.2f} h, 최근 {train['seconds_per_update']:.2f} s/update, 예상 끝 {train['eta']}",
              f"- 단계 {row['stage']}, 그림자 판정 {row['verdict']}, 앞 저장본 m{row['previous_update'] or '없음'}",
+             *([f"- 판정 이유: {problem_text(row)}"] if row.get("problems") else []),
              f"- 학습 보상 {train['reward']:.4f}, 에피소드 길이 {train['episode_length']:.2f}", "",
              "## 설정과 실현", "",
              "- 명령 비율 (학습 실현): " + ", ".join(
@@ -376,6 +383,7 @@ def _telegram(row: dict, link: str, local: Path, push_error: str | None = None,
     gt_left = row["cells"]["eval_gt/spin+1.2"]["alive"]
     gt_right = row["cells"]["eval_gt/spin-1.2"]["alive"]
     lines = [f"EX-40 m{row['update']} · {row['stage']} · 그림자 {row['verdict']}",
+             *(["판정 이유: " + problem_text(row)] if row.get("problems") else []),
              f"속도 {train['seconds_per_update']:.1f}s/회 · 예상 끝 {train['eta']}",
              f"변한 칸(±3 초과): {change}",
              f"서 있기 네 발 {stand}/64 · GT 좌/우 회전 생존 {gt_left}/{gt_right}/64",
