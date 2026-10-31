@@ -139,6 +139,19 @@ def _tracking(case: dict, command: tuple[float, float, float]) -> dict:
     return out
 
 
+def _sequence_phase_alive(phase: dict) -> int | None:
+    """Survivors at a W15 sequence phase end: the sum over terrain kinds. None if the record is incomplete."""
+    kinds = phase.get("by_kind")
+    if not isinstance(kinds, dict) or not kinds:
+        return None
+    counts = [(row.get("env_count"), row.get("alive_at_end")) for row in kinds.values()]
+    if any(type(n) is not int or type(a) is not int or not 0 <= a <= n for n, a in counts):
+        return None
+    if sum(n for n, _ in counts) != phase.get("env_count"):
+        return None
+    return sum(a for _, a in counts)
+
+
 def _stand_pass(row: dict, cfg: dict) -> bool:
     if row.get("valid_samples_after_1s", 0) < 1:
         return False
@@ -221,13 +234,15 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                                           ("spin_right_to_left", 2),
                                           ("stop_and_restart", 4)):
                     phases = sequences.get(name, {}).get("phases", [])
+                    # eval_map_modes writes a phase's survival only per terrain kind (phase["by_kind"][kind]
+                    # ["alive_at_end"], map_mode_cells.py:168), never as one phase-level integer.
+                    alive_by_phase = [_sequence_phase_alive(phase) for phase in phases]
                     if len(phases) != phase_count or any(
-                            phase.get("env_count") != 64
-                            or type(phase.get("alive_at_end")) is not int
-                            for phase in phases):
+                            phase.get("env_count") != 64 or alive is None
+                            for phase, alive in zip(phases, alive_by_phase)):
                         raise EvidenceHold(f"W15 sequence {mode}/{name} incomplete")
                     cells[f"{mode}/{name}_diagnostic_only"] = {
-                        "alive_by_phase": [phase["alive_at_end"] for phase in phases]}
+                        "alive_by_phase": alive_by_phase}
         boundary_record = iteration in stage_end_updates(plan, cfg)
         if stage_cfg["axis_goal"] or boundary_record:
             axis_path = evidence_dir / "axis_v2" / "axis_v2.json"
