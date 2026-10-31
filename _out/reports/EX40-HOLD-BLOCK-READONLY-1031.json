@@ -1,0 +1,21 @@
+{
+  "target": 1250,
+  "target_sha": "728d8517f973692f43459545ae20483cfe5b5c3ce67424094e00c7c0045a4e5e",
+  "result": "pending",
+  "visited": [
+    {
+      "update": 500,
+      "state": "verified"
+    },
+    {
+      "update": 750,
+      "state": "verified"
+    },
+    {
+      "update": 1000,
+      "state": "pending"
+    }
+  ],
+  "child_launch_count": 0,
+  "live_mutations": false
+}
