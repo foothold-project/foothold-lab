@@ -266,6 +266,25 @@ def build_row(ledger: dict, score: dict, previous: dict | None, final: int) -> d
                         "env_yaml_sha256": sha256(config_path)}}
 
 
+def yaw_text(row: dict) -> str:
+    """lead 11/01: 250 회마다 따로 잰 W57 전진 yaw 누적(axis250/summary.jsonl, 정답 지도 중앙값). 점수 뒤에 재므로 보통 한 저장본 늦다."""
+    path = Path(row["sources"]["run"]).parent.parent / "axis250" / "summary.jsonl"
+    rows = []
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                item = json.loads(line)
+            except ValueError:
+                continue
+            if item.get("update", 10**9) <= row["update"]:
+                rows.append(item)
+    if not rows:
+        return "전진 yaw 누적: 아직 측정 없음 (250 회 W57 은 점수 뒤에 잰다)"
+    last = max(rows, key=lambda item: item["update"])
+    return (f"전진 yaw 누적(정답 지도, m{last['update']} 측정): 0.5 m/s {last['fwd0.5_yaw_deg']}° · "
+            f"1.0 m/s {last['fwd1.0_yaw_deg']}°")
+
+
 def problem_text(row: dict) -> str:
     """lead 11/01: HOLD · FAIL 의 이유를 채점기 원문 그대로(칸 · 이유)."""
     return " · ".join(f"{p.get('kind')} {p.get('cell')}: {p.get('reason')}" for p in row.get("problems", []))
@@ -356,7 +375,7 @@ def markdown(row: dict, *, stage_doc: str | None = None, video: str | None = Non
         lines.append(f"- {mode} 회전 좌/우 생존 {left['alive']}/{right['alive']}/64; "
                      f"요속도 오차 {left['tracking_median']['wz_abs_error_mean_alive_radps']:.3f}/"
                      f"{right['tracking_median']['wz_abs_error_mean_alive_radps']:.3f} rad/s.")
-    lines += ["- 전진 yaw 누적: 미측 (이 평가 NPZ에 yaw 시계열 없음).", ""]
+    lines += [f"- {yaw_text(row)}", ""]
     if stage_end:
         lines += ["## 단계 끝 전체 보고", "",
                   f"- W15 13×3, W57, DR, 단계별 그림: {stage_doc or '점수기 단계 보고 대기'}",
@@ -384,6 +403,7 @@ def _telegram(row: dict, link: str, local: Path, push_error: str | None = None,
     gt_right = row["cells"]["eval_gt/spin-1.2"]["alive"]
     lines = [f"EX-40 m{row['update']} · {row['stage']} · 그림자 {row['verdict']}",
              *(["판정 이유: " + problem_text(row)] if row.get("problems") else []),
+             yaw_text(row),
              f"속도 {train['seconds_per_update']:.1f}s/회 · 예상 끝 {train['eta']}",
              f"변한 칸(±3 초과): {change}",
              f"서 있기 네 발 {stand}/64 · GT 좌/우 회전 생존 {gt_left}/{gt_right}/64",
