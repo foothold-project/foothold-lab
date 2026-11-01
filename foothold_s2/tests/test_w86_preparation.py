@@ -38,16 +38,16 @@ def test_ahead_points_use_reverse_sideways_and_rotation_not_always_front():
 
 def test_stationary_or_contact_foot_does_not_earn_swing_reward():
     z = torch.zeros(2, 4)
-    reward = w86.swing_reward(z, z+.08, torch.zeros(2, 4, 2),
+    reward = w86.swing_penalty(z, z+.08, torch.zeros(2, 4, 2),
                              torch.ones(2, 4, dtype=torch.bool), torch.ones_like(z, dtype=torch.bool),
                              torch.tensor([True, False]))
     torch.testing.assert_close(reward, torch.zeros(2))
 
 
 def test_one_swing_foot_error_has_known_exponential_value():
-    result = w86.swing_reward(torch.tensor([[.1]]), torch.tensor([[.2]]), torch.tensor([[[1., 0.]]]),
+    result = w86.swing_penalty(torch.tensor([[.1]]), torch.tensor([[.2]]), torch.tensor([[[1., 0.]]]),
                              torch.tensor([[False]]), torch.tensor([[True]]), torch.tensor([True]))
-    assert result.item() == pytest.approx(math.exp(-.01*math.tanh(2)/.05), abs=1e-6)
+    assert result.item() == pytest.approx(math.expm1(-.01*math.tanh(2)/w86.SWING_SIGMA_M2), abs=1e-6)
 
 
 def test_stumble_is_force_ratio_not_fall_or_edge_truth():
@@ -119,4 +119,45 @@ def test_preparation_yaml_matches_cost_weights_and_is_unwired():
     assert {k: v['weight'] for k, v in cfg['preregistered'].items()} == {
         k: 0. for k in w86.PREREGISTERED}
     assert {k: v['weight'] for k, v in cfg['terms'].items()} == {
-        k: w86.INITIAL_WEIGHTS[k] for k in ('zero_yaw', 'swing', 'stumble')}
+        k: w86.INITIAL_WEIGHTS[k] for k in ('zero_yaw', 'swing')}
+    assert {k: v['weight'] for k, v in cfg['existing_terms'].items()} == w86.MAINTAINED_WEIGHTS
+    assert set(cfg['preregistered']).isdisjoint(cfg['existing_terms'])
+    assert cfg['terms']['swing']['sigma_m2'] == pytest.approx(w86.SWING_SIGMA_M2, abs=1e-15)
+
+
+def test_no_bonus_for_hover_and_moving_false_with_airborne_feet():
+    # moving drag, moving hover, stationary airborne: none gets positive reward.
+    got = w86.swing_penalty(torch.tensor([[0.], [.1], [0.]]), torch.full((3, 1), .08),
+                            torch.tensor([[[1., 0.]], [[0., 0.]], [[1., 0.]]]),
+                            torch.zeros(3, 1, dtype=torch.bool), torch.ones(3, 1, dtype=torch.bool),
+                            torch.tensor([True, True, False]))
+    assert got[0] < -.9
+    torch.testing.assert_close(got[1:], torch.zeros(2))
+
+
+def test_calibrated_sigma_half_penalty_at_four_cm_half_meter_per_second():
+    got = w86.swing_penalty(torch.tensor([[.04]]), torch.tensor([[.08]]),
+                            torch.tensor([[[.5, 0.]]]), torch.tensor([[False]]),
+                            torch.tensor([[True]]), torch.tensor([True]))
+    assert got.item() == pytest.approx(-.5, abs=1e-6)
+
+
+def test_inactive_nan_does_not_leak_and_active_nan_fails():
+    nan = float('nan')
+    torch.testing.assert_close(w86.zero_yaw_l1(torch.tensor([nan]), torch.tensor([.1]),
+                                             torch.tensor([False])), torch.zeros(1))
+    torch.testing.assert_close(w86.air_time_term(torch.tensor([[nan]]), torch.tensor([[False]]),
+                                               torch.tensor([False])), torch.zeros(1))
+    torch.testing.assert_close(w86.slip_cost(torch.tensor([[[nan, nan]]]), torch.tensor([[False]])), torch.zeros(1))
+    with pytest.raises(ValueError):
+        w86.zero_yaw_l1(torch.tensor([nan]), torch.tensor([0.]), torch.tensor([False]))
+    with pytest.raises(ValueError):
+        w86.effort_margin_cost(torch.tensor([[nan]]), torch.ones(1))
+    with pytest.raises(ValueError):
+        w86.joint_limit_cost(torch.zeros(1, 1), torch.zeros(1), torch.ones(1), margin=nan)
+
+
+def test_force_floor_is_optional_diagnostic_and_default_preserves_existing_stumble():
+    force = torch.tensor([[[.1, 0., 0.]], [[5., 0., 1.]]])
+    torch.testing.assert_close(w86.stumble_cost(force), torch.ones(2))
+    torch.testing.assert_close(w86.stumble_cost(force, min_force_n=1.), torch.tensor([0., 1.]))

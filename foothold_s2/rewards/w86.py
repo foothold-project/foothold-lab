@@ -1,20 +1,29 @@
 """W86 CPU-testable preparation. No live reward/curriculum registration.
 
-Costs are positive; the config supplies their negative weight exactly once.
+Costs are positive with negative weights; swing_penalty is nonpositive with a
+positive weight. Existing terms must not be registered a second time.
 Inputs must already use explicit feet/joint names and compatible world frames.
 """
 import math
 import torch
 from foothold_s2.rewards import core
 
-PREREGISTERED = ('body_collision', 'thigh_collision', 'knee_effort_margin',
-                 'joint_limit_margin', 'feet_air_time', 'foot_slip', 'smoothness', 'energy')
-INITIAL_WEIGHTS = {'zero_yaw': -.5, 'swing': .5, 'stumble': -1., **{name: 0. for name in PREREGISTERED}}
+PREREGISTERED = ('knee_effort_margin', 'joint_limit_margin', 'feet_air_time', 'foot_slip')
+MAINTAINED_WEIGHTS = {'collision': -10., 'action_smoothness': -.01,
+                      'joint_power': -2e-5, 'stumble': -1.}
+INITIAL_WEIGHTS = {'zero_yaw': -.5, 'swing': .5, **MAINTAINED_WEIGHTS,
+                   **{name: 0. for name in PREREGISTERED}}
+# Proposal: one swinging foot, 4 cm error at 0.5 m/s -> penalty -0.5.
+SWING_SIGMA_M2 = .04**2 * math.tanh(2*.5) / math.log(2)
 
 
 def zero_yaw_l1(yaw_rate_body, command_yaw, heading_active):
+    if not torch.isfinite(command_yaw).all():
+        raise ValueError('nonfinite yaw command')
     active = (command_yaw.abs() < 1e-6) & ~heading_active.bool()
-    return yaw_rate_body.abs() * active
+    if (active & ~torch.isfinite(yaw_rate_body)).any():
+        raise ValueError('nonfinite active yaw rate')
+    return torch.where(active, yaw_rate_body.abs(), torch.zeros_like(yaw_rate_body))
 
 
 def ahead_points_body(feet_xy_body, command_body, distances):
@@ -45,9 +54,9 @@ def swing_target(ground_below_world, ground_ahead_world, clearance=.08):
     return torch.where(valid, target, torch.zeros_like(target)), valid
 
 
-def swing_reward(foot_bottom_z_world, target_z_world, foot_velocity_xy_world,
-                 contact, ray_valid, moving_command, sigma=.05, tanh_multiplier=2.):
-    """Terrain-relative Spot-like exponential, swing feet only, no stand bonus.
+def swing_penalty(foot_bottom_z_world, target_z_world, foot_velocity_xy_world,
+                  contact, ray_valid, moving_command, sigma=SWING_SIGMA_M2, tanh_multiplier=2.):
+    """Nonpositive exp(-cost/sigma)-1, swing feet only, positive config weight.
 
     sigma is the denominator in m^2 (not a standard deviation to square again).
     The terrain reference, swing mask and moving gate are our design changes.
@@ -60,12 +69,21 @@ def swing_reward(foot_bottom_z_world, target_z_world, foot_velocity_xy_world,
     error = torch.where(active, foot_bottom_z_world-target_z_world, torch.zeros_like(target_z_world))
     speed = torch.linalg.vector_norm(torch.nan_to_num(foot_velocity_xy_world), dim=-1)
     cost = (error.square()*torch.tanh(tanh_multiplier*speed)).sum(-1)
-    return torch.exp(-cost/sigma) * active.any(-1)
+    return torch.where(active.any(-1), torch.expm1(-cost/sigma), torch.zeros_like(cost))
 
 
-def stumble_cost(foot_forces_world):
-    """START proxy: any ||Fxy|| > 4*|Fz|, not proof of an actual edge impact."""
-    return core.stumble(foot_forces_world)
+def stumble_cost(foot_forces_world, min_force_n=0.):
+    """Existing START term, never an additional registered reward.
+
+    Optional force floor is for paired diagnostic logging, not a default change.
+    """
+    if not torch.isfinite(foot_forces_world).all() or not math.isfinite(min_force_n) or min_force_n < 0:
+        raise ValueError('invalid stumble forces or floor')
+    if min_force_n == 0:
+        return core.stumble(foot_forces_world)
+    norm = torch.linalg.vector_norm(foot_forces_world, dim=-1)
+    ratio = torch.linalg.vector_norm(foot_forces_world[..., :2], dim=-1) > 4*foot_forces_world[..., 2].abs()
+    return (ratio & (norm > min_force_n)).any(-1).float()
 
 
 def collision_cost(body_forces_world, threshold=.1):
@@ -76,23 +94,33 @@ def effort_margin_cost(torque, effort_limits, ratio=.9):
     # Limits must come from this asset/actuator, not a robot-wide guessed scalar.
     if not torch.isfinite(effort_limits).all() or not (effort_limits > 0).all():
         raise ValueError('effort limits must be positive and finite')
+    if not torch.isfinite(torque).all() or not math.isfinite(ratio) or not 0 <= ratio <= 1:
+        raise ValueError('invalid torque or effort margin ratio')
     return torch.relu(torque.abs()/effort_limits-ratio).square().sum(-1)
 
 
 def joint_limit_cost(position, lower, upper, margin=.05):
     if not torch.isfinite(lower).all() or not torch.isfinite(upper).all() or not (upper > lower).all():
         raise ValueError('invalid joint limits')
-    if margin <= 0:
+    if not torch.isfinite(position).all() or not math.isfinite(margin) or margin <= 0:
         raise ValueError('margin must be positive')
     return (torch.relu(lower+margin-position).square() + torch.relu(position-upper+margin).square()).sum(-1)
 
 
 def air_time_term(air_time_at_touchdown, first_contact, moving_command, threshold=.5):
-    return ((air_time_at_touchdown-threshold)*first_contact).sum(-1)*moving_command
+    """Signed air-time reward for a positive weight, currently preregistered zero."""
+    active = first_contact.bool() & moving_command[:, None].bool()
+    if not math.isfinite(threshold) or (active & ~torch.isfinite(air_time_at_touchdown)).any():
+        raise ValueError('invalid active air time or threshold')
+    return torch.where(active, air_time_at_touchdown-threshold, torch.zeros_like(air_time_at_touchdown)).sum(-1)
 
 
 def slip_cost(foot_velocity_xy_world, contact):
-    return (foot_velocity_xy_world.square().sum(-1)*contact).sum(-1)
+    active = contact.bool()
+    if (active & ~torch.isfinite(foot_velocity_xy_world).all(-1)).any():
+        raise ValueError('nonfinite active slip velocity')
+    safe = torch.where(active[..., None], foot_velocity_xy_world, torch.zeros_like(foot_velocity_xy_world))
+    return safe.square().sum((-1, -2))
 
 
 def smoothness_cost(action, previous, previous2):
@@ -120,6 +148,8 @@ def propose_weights(changes, *, reason, evidence, current_weights=None):
         raise ValueError('current weights must contain the complete finite preparation contract')
     if before['zero_yaw'] != INITIAL_WEIGHTS['zero_yaw'] or any(before[k] != 0 for k in PREREGISTERED):
         raise ValueError('current weights violate fixed yaw or preregistered zero terms')
+    if any(before[k] != value for k, value in MAINTAINED_WEIGHTS.items() if k != 'stumble'):
+        raise ValueError('current weights changed maintained terms')
     if not 0 <= before['swing'] <= .5 or not -1 <= before['stumble'] <= 0:
         raise ValueError('current weights outside proposed interval')
     weights = before.copy()

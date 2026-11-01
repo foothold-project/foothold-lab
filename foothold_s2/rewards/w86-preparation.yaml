@@ -1,4 +1,4 @@
-schema: w86-preparation-v1
+schema: w86-preparation-v2
 execution_connected: false
 base_commit: 2df419b0
 design_reference: c48d9bc7
@@ -15,25 +15,32 @@ terms:
     clearance_status: approved_value
     reference: max_ground_below_and_ahead_world
     foot_position: collision_sphere_bottom_world
-    sigma_m2: 0.05
+    function: swing_penalty
+    output_range: [-1.0, 0.0]
+    sigma_m2: 0.0017579969791478368
+    sigma_status: proposal_half_penalty_at_error_0_04m_speed_0_5mps_one_foot
     tanh_multiplier: 2.0
     swing_only: true
     moving_command_only: true
     lookahead_m: [0.0, 0.05, 0.10]
     lookahead_status: proposal_not_measured
-  stumble:
-    weight: -1.0
-    weight_status: proposal_START_existing_term
-    horizontal_vertical_force_ratio: 4.0
+existing_terms:
+  stumble: {weight: -1.0, status: preserve_single_existing_term, force_floor_n: 0.0}
+  collision: {weight: -10.0, status: preserve_single_existing_term, body_names: [base, '.*_thigh', 'Head_.*'], threshold_n: 0.1}
+  action_smoothness: {weight: -0.01, status: preserve_single_existing_term}
+  joint_power: {weight: -0.00002, status: preserve_single_existing_term}
 preregistered:
-  body_collision: {weight: 0.0, status: '미리 등록 · 지금 0'}
-  thigh_collision: {weight: 0.0, status: '미리 등록 · 지금 0'}
   knee_effort_margin: {weight: 0.0, status: '미리 등록 · 지금 0', ratio: 0.9}
   joint_limit_margin: {weight: 0.0, status: '미리 등록 · 지금 0', margin_rad: 0.05}
-  feet_air_time: {weight: 0.0, status: '미리 등록 · 지금 0', threshold_s: 0.5}
+  feet_air_time: {weight: 0.0, status: '미리 등록 · 지금 0', threshold_s: 0.5, future_weight_sign: positive_reward}
   foot_slip: {weight: 0.0, status: '미리 등록 · 지금 0'}
-  smoothness: {weight: 0.0, status: '미리 등록 · 지금 0'}
-  energy: {weight: 0.0, status: '미리 등록 · 지금 0'}
+registration:
+  new_terms_at: n0_only
+  zero_weight_metrics: separate_recorder_required
+  stumble_update: replace_existing_weight_only_no_second_term
+diagnostics_only:
+  stumble_min_force_n: 1.0
+  force_floor_applied_to_reward: false
 performance_weight_interface:
   runtime_adapter: absent_W72_not_implemented
   scope: stage_boundary_only
