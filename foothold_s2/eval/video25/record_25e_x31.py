@@ -126,7 +126,8 @@ W15_SETS = {
     "spin_restart": ("spin+1.2", "spin-1.2", "stop", "fwd0.5"),
     "slope_fwd": ("fwd1.0",),
 }
-W15_RULES = {"continuous_L1": {"group": "continuous", "level": 1}, "slope_L1": {"kind": "hf_pyramid_slope", "level": 1}}
+W15_RULES = {"continuous_L1": {"group": "continuous", "level": 1}, "slope_L1": {"kind": "hf_pyramid_slope", "level": 1},
+             "stairs_inv_L1": {"kind": "pyramid_stairs_inv", "level": 1}}   # lead 11/01 W80: pit stairs, walking outward climbs
 W03_PROFILE = "W03"                                        # W03 촬영: 평가에 쓴 고정 사본과 같은 코드, 세 정본 저장본만
 W03_SOURCE_ROOT = "C:/mai/wt/foothold-lab/eval-x27m4"
 W03_SOURCE_HEAD = "496e0cfed7fffe704b91c22f52f89572a5bab20e"
