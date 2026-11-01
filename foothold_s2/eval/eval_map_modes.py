@@ -35,6 +35,7 @@ parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="d
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
+parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
 parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
 parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
 parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
@@ -61,6 +62,8 @@ if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.
     parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
 if args.axis_v2 and args.steps < 4:
     parser.error("--axis-v2 requires at least four steps")
+if args.terrain_skill and (args.axis_v2 or args.terrain_skill_v2 or not args.fixed_terrain or args.fixed_level is None or args.terrain_set != "default"):
+    parser.error("--terrain-skill requires --fixed-terrain --fixed-level N on the default set, without --axis-v2 or --terrain-skill-v2")
 if args.terrain_skill_v2:
     from foothold_s2.eval.terrain_skill_v2_run import validate_request
 
@@ -228,6 +231,13 @@ if args.axis_v2:
 
     run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
+
+if args.terrain_skill:
+    from foothold_s2.eval.terrain_skill_run import run_suite as run_terrain_skill
+
+    run_terrain_skill(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+                      terrain_names, dr_off, curriculum_off, _run_identity())
     os._exit(0)
 
 if args.terrain_skill_v2:
