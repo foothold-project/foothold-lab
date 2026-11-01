@@ -1,0 +1,43 @@
+schema: w86-preparation-v1
+execution_connected: false
+base_commit: 2df419b0
+design_reference: c48d9bc7
+terms:
+  zero_yaw:
+    weight: -0.5
+    status: approved_value_unwired
+    command_abs_threshold: 0.000001
+    excludes_heading: true
+  swing:
+    weight: 0.5
+    weight_status: proposal_from_design_v0_4
+    flat_clearance_m: 0.08
+    clearance_status: approved_value
+    reference: max_ground_below_and_ahead_world
+    foot_position: collision_sphere_bottom_world
+    sigma_m2: 0.05
+    tanh_multiplier: 2.0
+    swing_only: true
+    moving_command_only: true
+    lookahead_m: [0.0, 0.05, 0.10]
+    lookahead_status: proposal_not_measured
+  stumble:
+    weight: -1.0
+    weight_status: proposal_START_existing_term
+    horizontal_vertical_force_ratio: 4.0
+preregistered:
+  body_collision: {weight: 0.0, status: '미리 등록 · 지금 0'}
+  thigh_collision: {weight: 0.0, status: '미리 등록 · 지금 0'}
+  knee_effort_margin: {weight: 0.0, status: '미리 등록 · 지금 0', ratio: 0.9}
+  joint_limit_margin: {weight: 0.0, status: '미리 등록 · 지금 0', margin_rad: 0.05}
+  feet_air_time: {weight: 0.0, status: '미리 등록 · 지금 0', threshold_s: 0.5}
+  foot_slip: {weight: 0.0, status: '미리 등록 · 지금 0'}
+  smoothness: {weight: 0.0, status: '미리 등록 · 지금 0'}
+  energy: {weight: 0.0, status: '미리 등록 · 지금 0'}
+performance_weight_interface:
+  runtime_adapter: absent_W72_not_implemented
+  scope: stage_boundary_only
+  allowed_terms: [swing, stumble]
+  proposed_bounds: {swing: [0.0, 0.5], stumble: [-1.0, 0.0]}
+  required_record: [before, after, checkpoint_sha, score_sha, reason, decision_id]
+  preregistered_activation_allowed: false
