@@ -1,4 +1,4 @@
-schema: w86-preparation-v2
+schema: w86-preparation-v3
 execution_connected: false
 base_commit: 2df419b0
 design_reference: c48d9bc7
@@ -9,18 +9,18 @@ terms:
     command_abs_threshold: 0.000001
     excludes_heading: true
   swing:
-    weight: 0.5
-    weight_status: proposal_from_design_v0_4
+    weight: -0.5
+    weight_status: proposal_magnitude_0_5_for_unbounded_quadratic_cost
     flat_clearance_m: 0.08
     clearance_status: approved_value
     reference: max_ground_below_and_ahead_world
     foot_position: collision_sphere_bottom_world
-    function: swing_penalty
-    output_range: [-1.0, 0.0]
-    sigma_m2: 0.0017579969791478368
-    sigma_status: proposal_half_penalty_at_error_0_04m_speed_0_5mps_one_foot
+    function: swing_clearance_cost
+    cost: sum_squared_height_error_times_tanh_foot_speed
+    output_units: m_squared
+    exponential: false
     tanh_multiplier: 2.0
-    swing_only: true
+    includes_contact_feet: true
     moving_command_only: true
     lookahead_m: [0.0, 0.05, 0.10]
     lookahead_status: proposal_not_measured
@@ -38,6 +38,8 @@ registration:
   new_terms_at: n0_only
   zero_weight_metrics: separate_recorder_required
   stumble_update: replace_existing_weight_only_no_second_term
+  active_nonfinite_contract: terminate_reset_only_affected_env_and_record_no_global_stop
+  invalid_observations: do_not_write_nonfinite_values_to_rollout
 diagnostics_only:
   stumble_min_force_n: 1.0
   force_floor_applied_to_reward: false
@@ -45,6 +47,6 @@ performance_weight_interface:
   runtime_adapter: absent_W72_not_implemented
   scope: stage_boundary_only
   allowed_terms: [swing, stumble]
-  proposed_bounds: {swing: [0.0, 0.5], stumble: [-1.0, 0.0]}
+  proposed_bounds: {swing: [-0.5, 0.0], stumble: [-1.0, 0.0]}
   required_record: [before, after, checkpoint_sha, score_sha, reason, decision_id]
   preregistered_activation_allowed: false

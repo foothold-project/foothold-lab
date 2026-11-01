@@ -1,7 +1,7 @@
 """W86 CPU-testable preparation. No live reward/curriculum registration.
 
-Costs are positive with negative weights; swing_penalty is nonpositive with a
-positive weight. Existing terms must not be registered a second time.
+Costs are positive with negative weights. Existing terms must not be registered
+a second time. Air time is a signed reward for a future positive weight.
 Inputs must already use explicit feet/joint names and compatible world frames.
 """
 import math
@@ -11,10 +11,8 @@ from foothold_s2.rewards import core
 PREREGISTERED = ('knee_effort_margin', 'joint_limit_margin', 'feet_air_time', 'foot_slip')
 MAINTAINED_WEIGHTS = {'collision': -10., 'action_smoothness': -.01,
                       'joint_power': -2e-5, 'stumble': -1.}
-INITIAL_WEIGHTS = {'zero_yaw': -.5, 'swing': .5, **MAINTAINED_WEIGHTS,
+INITIAL_WEIGHTS = {'zero_yaw': -.5, 'swing': -.5, **MAINTAINED_WEIGHTS,
                    **{name: 0. for name in PREREGISTERED}}
-# Proposal: one swinging foot, 4 cm error at 0.5 m/s -> penalty -0.5.
-SWING_SIGMA_M2 = .04**2 * math.tanh(2*.5) / math.log(2)
 
 
 def zero_yaw_l1(yaw_rate_body, command_yaw, heading_active):
@@ -54,22 +52,23 @@ def swing_target(ground_below_world, ground_ahead_world, clearance=.08):
     return torch.where(valid, target, torch.zeros_like(target)), valid
 
 
-def swing_penalty(foot_bottom_z_world, target_z_world, foot_velocity_xy_world,
-                  contact, ray_valid, moving_command, sigma=SWING_SIGMA_M2, tanh_multiplier=2.):
-    """Nonpositive exp(-cost/sigma)-1, swing feet only, positive config weight.
+def swing_clearance_cost(foot_bottom_z_world, target_z_world, foot_velocity_xy_world,
+                         contact, ray_valid, moving_command, tanh_multiplier=2.):
+    """Spot inner squared-error cost, no exp/sigma, negative config weight.
 
-    sigma is the denominator in m^2 (not a standard deviation to square again).
-    The terrain reference, swing mask and moving gate are our design changes.
+    Contact does not gate this cost: dragging contact feet are included. The
+    contact argument remains for the paired diagnostic interface only.
+    Terrain-relative target and moving/valid masks are our design changes.
     """
-    if sigma <= 0 or not math.isfinite(sigma) or tanh_multiplier < 0 or not math.isfinite(tanh_multiplier):
+    if tanh_multiplier < 0 or not math.isfinite(tanh_multiplier):
         raise ValueError('invalid swing shaping parameters')
     finite = (torch.isfinite(foot_bottom_z_world) & torch.isfinite(target_z_world)
               & torch.isfinite(foot_velocity_xy_world).all(-1))
-    active = ~contact.bool() & ray_valid.bool() & finite & moving_command[:, None].bool()
+    active = ray_valid.bool() & finite & moving_command[:, None].bool()
     error = torch.where(active, foot_bottom_z_world-target_z_world, torch.zeros_like(target_z_world))
     speed = torch.linalg.vector_norm(torch.nan_to_num(foot_velocity_xy_world), dim=-1)
     cost = (error.square()*torch.tanh(tanh_multiplier*speed)).sum(-1)
-    return torch.where(active.any(-1), torch.expm1(-cost/sigma), torch.zeros_like(cost))
+    return cost
 
 
 def stumble_cost(foot_forces_world, min_force_n=0.):
@@ -134,7 +133,7 @@ def energy_cost(torque, joint_velocity):
 def propose_weights(changes, *, reason, evidence, current_weights=None):
     """Pure W72 handoff record. Does not mutate an env, YAML, ledger or manager.
 
-    Bounds are preparation proposals (.5 and -1 initial magnitudes). Activation
+    Bounds are preparation proposals (-.5 and -1 initial weights). Activation
     and performance rules must be reviewed/approved in the later W72 adapter.
     """
     if not reason or not evidence:
@@ -150,11 +149,11 @@ def propose_weights(changes, *, reason, evidence, current_weights=None):
         raise ValueError('current weights violate fixed yaw or preregistered zero terms')
     if any(before[k] != value for k, value in MAINTAINED_WEIGHTS.items() if k != 'stumble'):
         raise ValueError('current weights changed maintained terms')
-    if not 0 <= before['swing'] <= .5 or not -1 <= before['stumble'] <= 0:
+    if not -.5 <= before['swing'] <= 0 or not -1 <= before['stumble'] <= 0:
         raise ValueError('current weights outside proposed interval')
     weights = before.copy()
     for name, value in changes.items():
-        lo, hi = (0., .5) if name == 'swing' else (-1., 0.)
+        lo, hi = (-.5, 0.) if name == 'swing' else (-1., 0.)
         if not math.isfinite(value) or not lo <= value <= hi:
             raise ValueError(f'{name} outside preregistered proposed interval')
         weights[name] = value

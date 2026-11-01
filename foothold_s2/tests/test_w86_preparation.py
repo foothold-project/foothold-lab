@@ -38,16 +38,16 @@ def test_ahead_points_use_reverse_sideways_and_rotation_not_always_front():
 
 def test_stationary_or_contact_foot_does_not_earn_swing_reward():
     z = torch.zeros(2, 4)
-    reward = w86.swing_penalty(z, z+.08, torch.zeros(2, 4, 2),
+    reward = w86.swing_clearance_cost(z, z+.08, torch.zeros(2, 4, 2),
                              torch.ones(2, 4, dtype=torch.bool), torch.ones_like(z, dtype=torch.bool),
                              torch.tensor([True, False]))
     torch.testing.assert_close(reward, torch.zeros(2))
 
 
-def test_one_swing_foot_error_has_known_exponential_value():
-    result = w86.swing_penalty(torch.tensor([[.1]]), torch.tensor([[.2]]), torch.tensor([[[1., 0.]]]),
+def test_one_foot_error_has_known_quadratic_cost():
+    result = w86.swing_clearance_cost(torch.tensor([[.1]]), torch.tensor([[.2]]), torch.tensor([[[1., 0.]]]),
                              torch.tensor([[False]]), torch.tensor([[True]]), torch.tensor([True]))
-    assert result.item() == pytest.approx(math.expm1(-.01*math.tanh(2)/w86.SWING_SIGMA_M2), abs=1e-6)
+    assert result.item() == pytest.approx(.01*math.tanh(2), abs=1e-6)
 
 
 def test_stumble_is_force_ratio_not_fall_or_edge_truth():
@@ -69,11 +69,11 @@ def test_zero_preregistered_terms_cannot_be_enabled_by_weight_update():
 
 def test_performance_weight_change_requires_evidence_and_cannot_change_yaw():
     with pytest.raises(ValueError):
-        w86.propose_weights({'swing': .25}, reason='', evidence='')
+        w86.propose_weights({'swing': -.25}, reason='', evidence='')
     with pytest.raises(ValueError):
         w86.propose_weights({'zero_yaw': -.2}, reason='x', evidence='a.json')
-    update = w86.propose_weights({'swing': .25, 'stumble': -.5}, reason='registered boundary decision', evidence='score.json')
-    assert update['weights']['swing'] == .25
+    update = w86.propose_weights({'swing': -.25, 'stumble': -.5}, reason='registered boundary decision', evidence='score.json')
+    assert update['weights']['swing'] == -.25
     assert update['execution_connected'] is False
 
 
@@ -89,10 +89,10 @@ def test_drag_denominator_is_moving_contact_frames_not_all_frames():
 
 def test_weight_proposal_preserves_other_previous_boundary_changes():
     first = w86.propose_weights({'stumble': -.25}, reason='one', evidence='one.json')
-    second = w86.propose_weights({'swing': .1}, current_weights=first['weights'],
+    second = w86.propose_weights({'swing': -.1}, current_weights=first['weights'],
                                  reason='two', evidence='two.json')
     assert second['weights']['stumble'] == -.25
-    assert first['weights']['swing'] == .5
+    assert first['weights']['swing'] == -.5
     assert second['before'] == first['weights']
 
 
@@ -122,24 +122,36 @@ def test_preparation_yaml_matches_cost_weights_and_is_unwired():
         k: w86.INITIAL_WEIGHTS[k] for k in ('zero_yaw', 'swing')}
     assert {k: v['weight'] for k, v in cfg['existing_terms'].items()} == w86.MAINTAINED_WEIGHTS
     assert set(cfg['preregistered']).isdisjoint(cfg['existing_terms'])
-    assert cfg['terms']['swing']['sigma_m2'] == pytest.approx(w86.SWING_SIGMA_M2, abs=1e-15)
+    assert 'sigma_m2' not in cfg['terms']['swing']
+    assert cfg['terms']['swing']['includes_contact_feet'] is True
 
 
 def test_no_bonus_for_hover_and_moving_false_with_airborne_feet():
     # moving drag, moving hover, stationary airborne: none gets positive reward.
-    got = w86.swing_penalty(torch.tensor([[0.], [.1], [0.]]), torch.full((3, 1), .08),
+    got = w86.swing_clearance_cost(torch.tensor([[0.], [.1], [0.]]), torch.full((3, 1), .08),
                             torch.tensor([[[1., 0.]], [[0., 0.]], [[1., 0.]]]),
                             torch.zeros(3, 1, dtype=torch.bool), torch.ones(3, 1, dtype=torch.bool),
                             torch.tensor([True, True, False]))
-    assert got[0] < -.9
+    assert got[0] > 0
     torch.testing.assert_close(got[1:], torch.zeros(2))
 
 
-def test_calibrated_sigma_half_penalty_at_four_cm_half_meter_per_second():
-    got = w86.swing_penalty(torch.tensor([[.04]]), torch.tensor([[.08]]),
-                            torch.tensor([[[.5, 0.]]]), torch.tensor([[False]]),
-                            torch.tensor([[True]]), torch.tensor([True]))
-    assert got.item() == pytest.approx(-.5, abs=1e-6)
+def test_contact_drag_penalty_is_worse_than_target_height_and_error_never_saturates():
+    errors = torch.tensor([[.04], [.08], [.13], [0.]])
+    got = w86.swing_clearance_cost(.08-errors, torch.full((4, 1), .08),
+                                   torch.tensor([[[.5, 0.]]]*4), torch.ones(4, 1, dtype=torch.bool),
+                                   torch.ones(4, 1, dtype=torch.bool), torch.ones(4, dtype=torch.bool))
+    torch.testing.assert_close(got, errors[:, 0].square()*math.tanh(1))
+    assert 0 < got[0] < got[1] < got[2]
+    assert got[3] == 0
+    assert w86.INITIAL_WEIGHTS['swing']*got[1] < w86.INITIAL_WEIGHTS['swing']*got[3]
+
+
+def test_invalid_ray_skips_cost_even_for_contact_drag():
+    got = w86.swing_clearance_cost(torch.zeros(1, 1), torch.ones(1, 1), torch.ones(1, 1, 2),
+                                   torch.ones(1, 1, dtype=torch.bool), torch.zeros(1, 1, dtype=torch.bool),
+                                   torch.ones(1, dtype=torch.bool))
+    assert got.item() == 0
 
 
 def test_inactive_nan_does_not_leak_and_active_nan_fails():
