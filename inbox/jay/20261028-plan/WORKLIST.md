@@ -194,6 +194,8 @@
 | W77 | 기본 보행 구간의 모든 판은 그림자 평가 루프(`s2_lab/tools/shadow_loop.sh ROOT RUN OUT SCORES ARM FINAL`)를 시작 스크립트가 첫 update 확인 뒤 자동으로 띄운다(감독기와 따로). EX-40 은 11/01 00:14 부터 이 공용 스크립트로 돎(PID 178332, 채점기 38ee51df) | lead · analyst | W71 | 진행 |
 | W78 | 지형 기술 평가 칸(W59 앞, EX-40 저장본으로 먼저 잼): 계단 옆으로 오르기 · 내리기, 계단 뒷걸음 내리기, 계단 오르다 180° 돌아 내리기, 계단참 회전(D44), 계단 위 정지 후 재출발, 가파른 경사(0.4 → 0.5) 1.0 m/s 오르기. 기존 코드: 승급은 방향 무관 거리 규칙(`curriculum/terrain_levels_mixed.py:27~31` · rules.judge, 옆 방향 승급 구현됨) · 듬성한 지형 p_advance(`terrains/progression.py`) · 깃발 env(`commands/mixed_command.py`, 칸 가운데 직선 4 깃발). 없는 것: 이 평가 칸 · 깃발을 넘어야 할 지형 너머에 놓기(W60) · D44 칸 | lead 구현 · reviewer | W70 | 시작(11/01 13시) |
 | W79 | 기어가기 시뮬 시험: Isaac Lab `MeshFloatingRingTerrainCfg`(떠 있는 고리 · 낮은 천장) 지형을 평가 지형에 더해 ① EX-40 저장본 기준선(몸 높이 명령 없음) ② 지형 2 판의 HiPAN 식 몸 높이 · roll 명령 정책을 같은 지형에서 잰다 | lead | W78 | 대기 |
+| W80 | A층에 지형 기술 영상 세트 추가(FLOW 3절 「단계마다 그 단계의 A층 목록」, 11/01 팀장 지적): 녹화기에 W78 경우(계단 L2 옆 좌 · 우 오르기, 뒷걸음, 오르다 돌아 내려오기, 오르다 뒷걸음 내려오기)를 세트로 더하고 stage_loop 가 단계 끝마다 찍음, m4500 소급. 지형 판은 레벨을 올려 같은 세트, 기어가기는 W79 · 지형 2 판 A층 | lead | W78 | 대기 |
+| W81 | 문서 동기화: CURRICULUM-GATES(10/31 01:34 판, EX-40 코드 브랜치)에 11/01 결정(W72 승인 칸만 · 막는 칸, D52 깃발 시점, HiPAN 식 몸 높이 · roll 명령, B층 7 규칙, yaw 대응) 반영 · 점검은 원격판 WORKLIST 로(M82) | lead | - | 대기 |
 
 ## W01 계기판 v8
 
