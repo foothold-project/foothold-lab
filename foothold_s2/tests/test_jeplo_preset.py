@@ -52,9 +52,32 @@ def test_adapter_rejects_existing_eight_metre_layout_instead_of_silently_resizin
 
 
 def test_adapter_returns_mesh_and_origin_at_exact_explicit_level():
+    pytest.importorskip('trimesh')
     cfg = SimpleNamespace(size=(9, 9), kind='box', seed=42, jeplo_level=9)
-    meshes, origin = tile_function(0.2, cfg)
-    tile = build_heightfield('box', 9, 42)
+    with pytest.warns(RuntimeWarning, match='explicit'):
+        meshes, origin = tile_function(0.2, cfg)
+    from foothold_s2.terrains.jeplo_preset import adapter_seed
+    tile = build_heightfield('box', 9, adapter_seed('box', 0.2, 42))
     assert len(meshes) == 1
     np.testing.assert_array_equal(origin, tile.origin)
     assert meshes[0].bounds[1, 0] == 9.0
+
+
+def test_none_generator_seed_is_rejected_before_optional_mesh_import():
+    with pytest.raises(ValueError, match='seed'):
+        tile_function(0.2, SimpleNamespace(size=(9, 9), kind='box', seed=None))
+
+
+def test_same_level_different_tile_difficulty_has_different_local_geometry_seed():
+    pytest.importorskip('trimesh')
+    cfg = SimpleNamespace(size=(9, 9), kind='box', seed=42)
+    first, _ = tile_function(0.21, cfg)
+    second, _ = tile_function(0.22, cfg)
+    assert not np.array_equal(first[0].vertices, second[0].vertices)
+
+
+@pytest.mark.parametrize('rows,interval', [(9, (0, 1)), (10, (0.1, 1))])
+def test_noncanonical_row_layout_rejected(rows, interval):
+    from foothold_s2.terrains.jeplo_preset import validate_layout
+    with pytest.raises(ValueError):
+        validate_layout((9, 9), rows, interval, 42)

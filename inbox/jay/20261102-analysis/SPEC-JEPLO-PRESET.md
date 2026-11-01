@@ -52,11 +52,17 @@ CPU 대조: 7종 × 10레벨 × seed {0,42,2026}, roughness 켬/끔. 원본을 �
 
 `jeplo_subterrains`는 명시적으로 호출할 때만 Isaac cfg를 만든다. 기존 Isaac의 행별 입력 d∈[L/10,(L+1)/10) 는 먼저 행 L로 바꾸고 생성은 원본의 L/9를 쓴다. 정확한 레벨을 지정하려면 cfg.jeplo_level을 쓴다. 따라서 원본 d를 그대로 넘기는 API는 CPU build_heightfield가 아니라 정수 level 입력이다. 9×9 이외 cfg는 거절한다. 목표 8개·목표 y 이동범위·원본 edge semantic mask는 이번 높이장 생성기의 출력이 아니며, 우리 깃발/발 가장자리 판정과의 연결은 EX-42 명세에서 따로 정의해야 한다. 형상 일치를 JEPLO 환경 전체 이식으로 부르지 않는다.
 
+11/02 독립 검토 반영: Isaac가 subcfg.seed를 parent seed로 덮어쓰므로 adapter는 **실제 generator seed + kind + 양자화 전 difficulty**의 해시로 타일별 uint32 seed를 만든다. 기존 `sparse_terrains.seed_of`·`level_of`를 재사용한다. 같은 행에서도 다른 difficulty를 받는 열은 다른 기하가 된다. 정확히 같은 seed·kind·difficulty는 캐시와 재현을 위해 같은 타일이며, 이를 서로 다른 독립 표본으로 세지 않는다. seed=None은 난수 생성 전에 명시 거절한다. dedicated `build_generator`가 9m·10행·difficulty_range=(0,1)을 검사한다. 다른 parent generator로 갈아 끼워 행 수만 바꾸는 사용은 지원하지 않는다. jeplo_level 강제는 경고를 내고, trimesh는 크기/seed 검사 뒤에만 불러온다. 최종 trimesh는 원본과 같이 process=True다.
+
+roughness의 spline 좌표 `size * horizontal_scale`는 원본이 미터 길이에 다시 scale을 곱하는 단위 결함까지 수치 대조 목적으로 보존한 것이다. 원본/조회 양쪽 축을 같은 비율로 바꾸므로 현재 정규화된 보간 위치는 같지만, 이 식을 올바른 물리 좌표식으로 인용하지 않는다.
+
 ## 5. CPU 검증 결과
 
 `JEPLO-CPU-comparison.json`: 420/420 경우, 높이장 차이 0칸·최대 0m, mesh 정점 최대 차이 0m, 삼각형 인덱스 모두 동일. 원본 HEAD와 파일의 커밋 바이트(LF 정규화)를 확인하고 읽기 전용으로 실행했다. 원본의 Isaac 설정 껍질만 CPU 자료 객체로 대신했고 수치 함수와 preset 리터럴은 원본 파일에서 읽었다. 전역 난수는 oracle 과정에만 쓰며 우리 생성기는 local RandomState로 격리한다.
 
 첫 대조는 420 중 54 경우에서 discrete_obstacles 끝 평지 영역 한 칸 차이를 잡았다. y 구간의 끝점(배열 slice는 끝 미포함)을 고친 뒤 0건이 됐다. 자체 답 아는 시험 11개 통과(첫 실행은 구현 모듈 부재로 실패). 생성기와 mesh adapter를 CPU에서 실제 호출했다. Isaac configclass로 factory를 만드는 과정·Kit 접촉·GPU 광선·전체 300타일 배치·통과 성능은 미확인이다.
+
+후속 수정: 알려진 반례 5개를 수정 전 실패로 확인하고 수정 뒤 자체 **15/15 통과**, oracle **420/420** 재통과. 원본 `utils.py` wrapper를 실제 호출한 origin 대조도 추가하여 최대 오차 **0m**. CPU 환경 Python3.11.15·NumPy1.26.0·SciPy1.15.3·trimesh4.5.1(isaac311-moects), CUDA_VISIBLE_DEVICES 빈 값. trimesh가 없는 환경은 mesh 시험만 importorskip하며, 잘못된 크기·seed 검사 시험은 계속 수행한다. 독립 검토자의 돌연변이 결과는 별도 보고이며 여기서 재측정한 것으로 세지 않았다.
 
 재현 명령(저장소 루트):
 ```powershell

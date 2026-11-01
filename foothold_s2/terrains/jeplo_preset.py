@@ -6,9 +6,11 @@ The external GPL implementation is never imported by this production module.
 """
 from dataclasses import dataclass
 import math
+import warnings
 
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
+from foothold_s2.terrains.sparse_terrains import level_of, seed_of
 
 
 KINDS = ('gap', 'flat', 'box', 'discrete_obstacles', 'discrete_grid',
@@ -123,6 +125,8 @@ def build_heightfield(kind, level, seed, *, roughness=True):
     """Return the full 113x113 field, where one integer means 5 mm."""
     if kind not in KINDS or isinstance(level, bool) or not isinstance(level, (int, np.integer)) or not 0 <= level <= 9:
         raise ValueError('expected an execution-preset kind and integer level 0..9')
+    if isinstance(seed, bool) or not isinstance(seed, (int, np.integer)) or not 0 <= seed < 2**32:
+        raise ValueError('seed must be an explicit uint32 integer')
     rng = np.random.RandomState(seed)
     d = level / 9
     noise = (0.02, 0.06)
@@ -172,28 +176,44 @@ def mesh_arrays(tile, slope_threshold=0.5):
     return vertices, triangles
 
 
+def validate_layout(size, num_rows, difficulty_range, seed):
+    if tuple(size) != (SIZE, SIZE):
+        raise ValueError('JEPLO execution preset requires a separate 9x9 m tile layout')
+    if num_rows != 10 or tuple(difficulty_range) != (0, 1):
+        raise ValueError('JEPLO adapter requires 10 rows and difficulty_range=(0,1)')
+    if isinstance(seed, bool) or not isinstance(seed, (int, np.integer)) or not 0 <= seed < 2**32:
+        raise ValueError('generator seed must be an explicit uint32 integer, never None')
+
+
+def adapter_seed(kind, difficulty, generator_seed):
+    """Use the seed actually assigned by Isaac, plus unquantized tile identity."""
+    return seed_of(f'jeplo/{generator_seed}/{kind}', difficulty) % 2**32
+
+
 def tile_function(difficulty, cfg):
     """Isaac SubTerrainBaseCfg interface. Standard row bins map to JEPLO L/9.
 
     A caller building an exact level uses cfg.jeplo_level. This function does
     not register itself in an environment or alter any current terrain mix.
     """
-    import trimesh
-
-    if tuple(cfg.size) != (SIZE, SIZE):
-        raise ValueError('JEPLO execution preset requires a separate 9x9 m tile layout')
+    validate_layout(cfg.size, getattr(cfg, 'jeplo_num_rows', 10),
+                    getattr(cfg, 'jeplo_difficulty_range', (0, 1)), cfg.seed)
     if not np.isfinite(difficulty) or not 0 <= difficulty <= 1:
         raise ValueError('difficulty must be in [0,1]')
     level = getattr(cfg, 'jeplo_level', None)
     if level is None:
-        level = min(9, int(difficulty*10))
-    tile = build_heightfield(cfg.kind, level, cfg.seed)
+        level = level_of(difficulty)
+    else:
+        warnings.warn('explicit jeplo_level overrides row difficulty', RuntimeWarning, stacklevel=2)
+    tile = build_heightfield(cfg.kind, level, adapter_seed(cfg.kind, difficulty, cfg.seed))
     vertices, faces = mesh_arrays(tile)
-    return [trimesh.Trimesh(vertices=vertices, faces=faces, process=False)], tile.origin
+    import trimesh
+    return [trimesh.Trimesh(vertices=vertices, faces=faces, process=True)], tile.origin
 
 
 def jeplo_subterrains(seed=42):
     """Opt-in factory matching our existing sparse_subterrains API. Never auto-register."""
+    validate_layout((SIZE, SIZE), 10, (0, 1), seed)
     from isaaclab.terrains import SubTerrainBaseCfg
     from isaaclab.utils import configclass
 
@@ -203,6 +223,18 @@ def jeplo_subterrains(seed=42):
         kind: str = 'flat'
         seed: int = 42
         jeplo_level: int | None = None
+        jeplo_num_rows: int = 10
+        jeplo_difficulty_range: tuple[float, float] = (0.0, 1.0)
 
     return {'jeplo_'+kind: ExecutionPresetCfg(kind=kind, seed=seed, size=(SIZE, SIZE), proportion=1/7)
             for kind in KINDS}
+
+
+def build_generator(*, seed, num_cols=30, num_rows=10, size=(SIZE, SIZE), difficulty_range=(0, 1)):
+    """Dedicated opt-in layout, preventing the existing 8 m/seed=None default."""
+    validate_layout(size, num_rows, difficulty_range, seed)
+    from isaaclab.terrains import TerrainGeneratorCfg
+    return TerrainGeneratorCfg(seed=seed, size=size, num_rows=num_rows, num_cols=num_cols,
+                               horizontal_scale=H, vertical_scale=V, slope_threshold=0.5,
+                               difficulty_range=difficulty_range, border_width=20.0,
+                               use_cache=False, curriculum=True, sub_terrains=jeplo_subterrains(seed))

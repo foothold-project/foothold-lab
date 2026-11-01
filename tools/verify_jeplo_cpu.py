@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
+import functools
 import hashlib
 import json
 from pathlib import Path
@@ -17,6 +18,8 @@ from types import SimpleNamespace
 
 import numpy as np
 from scipy import interpolate
+from scipy.ndimage import binary_dilation
+import trimesh
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from foothold_s2.terrains.jeplo_preset import KINDS, build_heightfield, mesh_arrays
@@ -59,9 +62,10 @@ def load_oracle(root):
     config['parkour_terrians'] = SimpleNamespace(**geometry)
     load_definitions(paths[1], config, (ast.ClassDef,))
     load_definitions(paths[2], config, (ast.Assign,))
-    mesh = {'np': np}
+    mesh = {'np': np, 'copy': copy, 'functools': functools, 'trimesh': trimesh,
+            'binary_dilation': binary_dilation}
     load_definitions(paths[4], mesh, (ast.FunctionDef,))
-    return config['PARKOUR_TERRAINS_CFG'], geometry, mesh['convert_height_field_to_mesh'], paths
+    return config['PARKOUR_TERRAINS_CFG'], geometry, mesh, paths
 
 
 def main():
@@ -69,7 +73,8 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    preset, geometry, triangulate, paths = load_oracle(args.source)
+    preset, geometry, mesh, paths = load_oracle(args.source)
+    triangulate = mesh['convert_height_field_to_mesh']
     names = {'gap': 'gap', 'flat': 'hurdle', 'box': 'box', 'discrete_obstacles': 'discrete_obstacles',
              'discrete_grid': 'discrete_obstacles', 'pyramid_stairs': 'pyramid_stairs',
              'inverted_pyramid_stairs': 'pyramid_stairs'}
@@ -94,12 +99,17 @@ def main():
                     expected_v, expected_f = triangulate(original, cfg.horizontal_scale, cfg.vertical_scale,
                                                         cfg.slope_threshold, terrain_size=preset.size)
                     vertices, faces = mesh_arrays(tile)
+                    cfg.size = preset.size
+                    np.random.seed(seed)
+                    wrapped = mesh['parkour_field_to_mesh'](geometry['parkour_'+names[kind]+'_terrain'])
+                    wrapped_result = wrapped(level/9, cfg, 8)
                     rows.append(dict(kind=kind, level=level, seed=seed, roughness=rough,
                                      mismatched_cells=int(np.count_nonzero(difference)),
                                      maximum_height_error_m=float(abs(difference).max()*cfg.vertical_scale),
                                      mesh_max_error_m=float(abs(vertices-expected_v).max()),
+                                     origin_max_error_m=float(abs(tile.origin-wrapped_result[1]).max()),
                                      triangles_equal=bool(np.array_equal(faces, expected_f))))
-    failures = [r for r in rows if r['mismatched_cells'] or r['mesh_max_error_m'] or not r['triangles_equal']]
+    failures = [r for r in rows if r['mismatched_cells'] or r['mesh_max_error_m'] or r['origin_max_error_m'] or not r['triangles_equal']]
     report = dict(source_revision=REVISION, source_hashes={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
                   cpu_only=True, cases=len(rows), failures=len(failures), results=rows)
     args.output.parent.mkdir(parents=True, exist_ok=True)
