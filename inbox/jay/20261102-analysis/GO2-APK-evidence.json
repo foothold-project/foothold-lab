@@ -1,0 +1,41 @@
+{
+  "apk_sha256": "7a36e9a847997ebea02d88fde6ccdd6e5c4c8d3f7e57619584b3c6718bfa2cf1",
+  "rea_evidence_id": "ev_5b52f98f222c5c082579b0b20caf68b1e36a1520ff62a42bc376c58a5113e634",
+  "rea_subject": {
+    "name": "C:\\Users\\AI-WS01\\data\\go2-app-study-20261013\\astra10\\runtime-web\\js\\robot",
+    "digest": {
+      "sha256": "1408402b94b307083c9e1d18984778f011b8c6eb1325c2c23d4c81e31df5d811"
+    },
+    "format": "directory",
+    "architecture": null,
+    "local_path": "C:\\Users\\AI-WS01\\data\\go2-app-study-20261013\\astra10\\runtime-web\\js\\robot"
+  },
+  "rea_limitations": [
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+    "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+    "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+    "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+  ],
+  "sources": [
+    {
+      "path": "C:\\Users\\AI-WS01\\data\\go2-app-study-20261013\\astra10\\runtime-web\\assets\\main-LIOZh9o1.js",
+      "sha256": "cebfc3e7e2d7838cf8adf650d0a32edbf7fbd32df8ede486d7521f96afb6ab15",
+      "lines": 20124
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\data\\go2-app-study-20261013\\astra10\\runtime-web\\js\\store\\store.-Ml-K330.js",
+      "sha256": "fcd48d6ea8fe411fe9ca6ea639b70b86f8dd5be515005d06aa655d466e529884",
+      "lines": 24403
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\data\\go2-app-study-20261013\\astra10\\runtime-web\\js\\robot\\RobotModelLoader.BK0VqEMu.js",
+      "sha256": "c307ec7bb45f2383dd93cc62483e21fe831e56f77b08b92b147f73f3d2d3e013",
+      "lines": 483
+    }
+  ],
+  "apk_entries": 2589,
+  "model_extension_candidates": [
+    "DebugProbesKt.bin"
+  ]
+}
