@@ -25,3 +25,12 @@ def test_env_rows_phase_height_and_fall():
     assert abs(rows[0]["phases"][1]["dz_m"] - 0.0) < 1e-9 and rows[0]["phases"][1]["radius_m"] == 1
     assert not rows[1]["alive_end"] and rows[1]["phases"][1]["alive"] is False
     assert abs(rows[1]["phases"][1]["dz_m"] - (-0.1)) < 1e-9                   # last valid sample, not post-reset
+
+
+def test_env_rows_yaw_change_unwraps():
+    steps = [3]
+    yaw = np.array([[3.0], [3.1], [-3.1]])                 # crosses +pi: true change is about +0.28 rad
+    rows = ts.env_rows([{"kind": "a"}], np.zeros(1), np.zeros((3, 1)), np.zeros((3, 1, 2)),
+                       np.ones((3, 1), dtype=bool), steps, yaw, np.array([3.0]))
+    assert abs(rows[0]["dyaw_deg"] - np.degrees(2 * np.pi - 6.1)) < 1e-6
+    assert "flat_fwd1.0_heading" in ts.HEADING_CASES and "flat_fwd1.0_heading" in ts.CASES
