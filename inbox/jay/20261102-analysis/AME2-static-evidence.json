@@ -1,0 +1,66 @@
+{
+  "app_commit": "135a8469896fd4b5ae222a8a89663ac5fb114efd",
+  "raw_source_hashes": [
+    {
+      "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\rsl_rl\\rsl_rl\\models\\AME2_models.py",
+      "sha256": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d"
+    },
+    {
+      "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\rsl_rl\\rsl_rl\\modules\\ame2_modules.py",
+      "sha256": "b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c"
+    },
+    {
+      "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\go2\\ame2_go2\\tasks\\mdp\\observations.py",
+      "sha256": "02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6"
+    },
+    {
+      "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\go2\\ame2_go2\\tasks\\mdp\\actions.py",
+      "sha256": "792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756"
+    },
+    {
+      "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\go2\\ame2_go2\\tasks\\go2_env_cfg.py",
+      "sha256": "58342b6abedc758e42ec0878a2ffedde2f74440c8277139a1ab93bb75e9f7ded"
+    }
+  ],
+  "grid_identity": [
+    {
+      "i": 0,
+      "x": -0.42,
+      "y": -0.36
+    },
+    {
+      "i": 12,
+      "x": -0.42,
+      "y": 0.36
+    },
+    {
+      "i": 13,
+      "x": -0.36,
+      "y": -0.36
+    },
+    {
+      "i": 376,
+      "x": 1.26,
+      "y": 0.36
+    }
+  ],
+  "cpu_arithmetic_counterexample": {
+    "label": "constructed, not a simulated fall",
+    "root_z": 0.35,
+    "stair_top": 0.2,
+    "support_z": 0.2,
+    "app_z": 0.14999999999999997,
+    "app_fell_due_to_height": true,
+    "gravity_z": -1,
+    "reason": "max trunk-footprint support height is not contact state"
+  },
+  "ray_origin_example": {
+    "label": "constructed, not measured failure",
+    "root_z": 0.35,
+    "app_ray_z": 0.851,
+    "training_ray_z": 20.35,
+    "future_stair_top": 0.9,
+    "app_ray_above_surface": false
+  },
+  "executed": "hash/parse/arithmetic only; no inference, physics or GPU"
+}
