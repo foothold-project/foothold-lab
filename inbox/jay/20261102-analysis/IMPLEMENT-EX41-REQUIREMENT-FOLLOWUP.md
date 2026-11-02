@@ -77,6 +77,14 @@ lead18:5x 결정에 맞춰 fixed5000은 경계마다 `critic_mirror_observation`
 
 fixed5000 종료는 졸업 판정과 구별한다. 마지막 T0′ 저장 직후 실제 파일 SHA로 `final_eval_requests/final_<N>_<sha12>.json`을 만들며, `graduated=false`를 유지한다. 같은 요청의 재호출은 한 파일이고 다른 회차는 거절한다. CPU 2 PASS(6.42초), `D:/mai-tmp/analyst/p7-green-1902.log`. 아직 runner의 최종 평가 소비·planner의 졸업식 확정은 남아 있다. T0′ 500회와 250회 간격 평가에서 세 저장본 연속 판독의 대상 범위는 planner에 확인 요청했다. 마지막 저장을 일반 주기 저장과 같은 SHA라고 가정하지 않는다.
 
+## P8 · 고정 지형에서 성과 승급으로 넘어가는 실제 소비 기록
+
+n0에 등록한 `ex41_terrain_levels` 함수를 유지한 채 fixed5000의 실제 stage hook으로 S2a/b/c의 `fixed_l02`에서 S2d의 `performance`·상한 L5로 전환한다. 설정 이름만 바뀌었는지 확인하는 대신 `update_env_origins` 전후 레벨 차이를 직접 세어 승급·강등·유지·요청과 실제 불일치를 기록한다. 기존 `stage_log.jsonl`의 `terrain_distribution.promotion_readback`에 실려 나온다. 누적 범위는 `since_process_start`이며 재시작 전 누계라고 주장하지 않는다. 기존 승급식과 문턱은 변경하지 않았다.
+
+답을 아는 4 env 입력에서 고정 구간 12 env-reset 동안 L2가 유지됐다. 성과 구간은 `[2,2,2,2]`에서 `[3,3,1,2]`, `[4,4,0,2]`, `[5,5,0,2]`로 변하고 그 뒤 상한을 넘지 않았다. 실제 승급6·강등2·유지8·불일치0이며 배출된 JSONL 숫자와 일치한다. `update_env_origins`를 아무 일도 하지 않는 함수로 바꾼 반례는 실제 승급0·불일치4로 드러났다.
+
+실측: P8·U12·runtime **31 PASS(45.79초)**, `D:/mai-tmp/analyst/p8-first-1927.log`. CPU 장면에서 실제 Git 계획과 stage hook, 알려진 지형 상태를 사용했다. Isaac GPU 지형 생성·물리 보행에서 실제 승급했다는 증거는 아니다. 통합 Kit에서 이 기록과 종류별 레벨 분포를 확인해야 한다.
+
 ## 남은 항목
 
-U6 소비자 종료 처리·U10 채점기 연결·P7 졸업식과 최종 평가 소비·P8 실제 지형 승급 확인·G11/P5 새 EX41 그림자 채점기. U12/U15/U16/U17/P3의 위 CPU 결과를 실제 통합 Kit 결과로 확대하지 않는다. P7 문턱은 planner 정본 확인 뒤 연결한다.
+U6 소비자 종료 처리·P7 졸업식·P3 집계식·G11 통합 실행 확인. 9521dc11 채점기는 U10 소비와 P7 최종 요청 소비를 CPU로 연결했으며 실제 EX40 출력 재생을 확인했다. P8은 위 CPU 승급·배출 기록까지 확인했다. W78 실제 출력, 첫 update 이후 자동 기동, 최종 평가와 GPU/Kit 소비는 미확인이다. CPU 결과를 실제 통합 Kit 결과로 확대하지 않는다. P7 문턱은 planner 정본 확인 뒤 연결한다.

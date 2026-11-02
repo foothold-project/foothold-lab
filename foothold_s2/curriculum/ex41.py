@@ -748,7 +748,7 @@ class EX41DRReadback:
 
 
 def prepare_terrain_cfg(env_cfg,plan):
-    """Register the term at n0, fixed until the runtime enables S2c."""
+    """Register at n0; fixed5000 enables performance at S2d, by runtime policy."""
     from isaaclab.managers import CurriculumTermCfg
     env_cfg.scene.terrain.max_init_terrain_level=2
     env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,
@@ -771,15 +771,24 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     from foothold_s2.curriculum import rules
     terrain=env.scene.terrain
     settings=getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})
-    if settings['policy']!='performance': return terrain.terrain_levels.float().mean()
-    term=env.command_manager.get_term(command_name)
     ids=torch.as_tensor(env_ids,device=env.device,dtype=torch.long)
+    if not hasattr(env,'_ex41_terrain_diagnostics'):
+        env._ex41_terrain_diagnostics=torch.zeros(6,device=env.device,dtype=torch.long)
+    counts=env._ex41_terrain_diagnostics
+    if settings['policy']!='performance':
+        counts[0]+=ids.numel()
+        return terrain.terrain_levels.float().mean()
+    term=env.command_manager.get_term(command_name)
     if not world_frame or not hasattr(term,'cmd_sum_w'): raise ValueError('EX41 requires world-frame command displacement')
     if term.is_flag_env[ids].any(): raise ValueError('EX41 has no flag slots; new terrain contract required')
     summed=term.cmd_sum_w[ids]*env.step_dt/resample_s
     moves=rules.judge_free(term.max_dist[ids],summed,size_x=terrain.cfg.terrain_generator.size[0],resample_s=resample_s)
-    moves=capped_moves(terrain.terrain_levels[ids],moves,settings['level_cap'])
+    before=terrain.terrain_levels[ids].clone()
+    moves=capped_moves(before,moves,settings['level_cap'])
     terrain.update_env_origins(ids,moves>0,moves<0)
+    actual=terrain.terrain_levels[ids]-before
+    counts[1:]+=torch.stack((torch.ones_like(actual).sum(),(actual>0).sum(),(actual<0).sum(),
+                             (actual==0).sum(),(actual!=moves).sum()))
     return terrain.terrain_levels.float().mean()
 
 
@@ -803,7 +812,14 @@ def terrain_distribution(env):
     for name in names:
         mask=torch.tensor([columns[i]==name for i in types.tolist()],dtype=torch.bool)
         per_kind[name]={'env_count':int(mask.sum()),'levels':torch.bincount(levels[mask],minlength=cfg.num_rows).tolist()}
+    counts=getattr(env,'_ex41_terrain_diagnostics',None)
+    progress={'available':False} if counts is None else dict(zip(
+        ('fixed_env_resets','performance_env_resets','actual_promotions','actual_demotions',
+         'actual_unchanged','requested_actual_mismatch'),counts.detach().cpu().tolist()))
+    if counts is not None:progress.update(available=True,scope='since_process_start',
+        policy=copy.deepcopy(getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})))
     return {'columns':columns,'by_terrain':per_kind,'mean_level':float(levels.float().mean()),
+            'promotion_readback':progress,
             'labels_sha256':hashlib.sha256(levels.numpy().tobytes()+types.numpy().tobytes()).hexdigest()}
 
 
