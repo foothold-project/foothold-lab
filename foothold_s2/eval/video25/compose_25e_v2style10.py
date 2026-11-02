@@ -34,6 +34,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from foothold_s2.eval import flag_eval as FE  # noqa: E402  (W04: 깃발 거리 · 방향 · 판정 성분은 평가 코드와 같은 함수)
+from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_overlay  # noqa: E402
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
@@ -829,7 +830,8 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
     return text(scene, items, LEGEND_FONT)
 
 
-def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None) -> dict:
+def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None,
+           push_events: Path | None = None, push_rollout_key: str | None = None, push_env_id: int | None = None) -> dict:
     """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 물음 띠 안 물음 뒤에 붙는 짧은 영상 안 결과(아래 타임라인 쪽에는 그리지 않는다), label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
     video_style.require_approved(meta, "review.json")   # W49: style_id 가 승인 값이 아니면 합성 실패
@@ -837,8 +839,16 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         meta["label"] = label
     EXTRA_LINE.update({"text": extra_line, "color": extra_color, "question": question})
     z = np.load(capture / "review_feet.npz", allow_pickle=False)
+    push_overlay = None
+    if push_events is not None:
+        if push_rollout_key is None or push_env_id is None:
+            raise ValueError("push overlay requires rollout key and filmed env id")
+        push_overlay = load_overlay(push_events, sha256(capture / "review.done"),
+                                    push_rollout_key, push_env_id)
     contract = meta.get("step_contract", {})
     expected_capture_frames, duration_s, fps, steps = capture_frame_contract(meta)
+    if push_overlay is not None and any(event["t_s"] >= duration_s for event in push_overlay["events"]):
+        raise ValueError("push event lies outside filmed duration")
     attn = meta.get("overlay_25e", {}).get("attention_rows_per_step") or [None] * len(z["t"])
     cmd = np.asarray(z["command"], np.float32)
     err = recon_error_series(z)
@@ -877,6 +887,8 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         scene = speed_tag(scene, speed, segment)
         scene = scene_gauges(scene, z, row, meta)
         scene = question_strip(scene)
+        if push_overlay is not None:
+            scene = draw_push_overlay(scene, push_overlay, float(z["t"][row]))
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
         wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
     wr.release()
@@ -895,7 +907,10 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
            "speed": speed, "duration_s": duration_s, "fps": fps,
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),
-           "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256")}
+           "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256"),
+           "push_overlay": ({"source": str(push_events), "source_sha256": sha256(push_events),
+                             "rollout_key": push_rollout_key, "env_id": push_env_id,
+                             "meaning": push_overlay["meaning"]} if push_overlay is not None else None)}
     out.with_suffix(".json").write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return rec
 
@@ -908,5 +923,11 @@ if __name__ == "__main__":
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--question", default="")
     ap.add_argument("--label", default=None)
+    ap.add_argument("--push-events", type=Path)
+    ap.add_argument("--push-rollout-key")
+    ap.add_argument("--push-env-id", type=int)
     a = ap.parse_args()
-    print(json.dumps(render(a.capture, a.segment, a.speed, a.out, question=a.question, label=a.label), ensure_ascii=False))
+    print(json.dumps(render(a.capture, a.segment, a.speed, a.out, question=a.question,
+                            label=a.label, push_events=a.push_events,
+                            push_rollout_key=a.push_rollout_key, push_env_id=a.push_env_id),
+                     ensure_ascii=False))

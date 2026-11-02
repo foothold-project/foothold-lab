@@ -17,6 +17,7 @@ import shutil
 import subprocess
 
 from foothold_s2.eval.c_layer_frame_audit import audit_video
+from foothold_s2.eval.c_layer_progress import run_recorder
 
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
@@ -374,11 +375,10 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                         or preview.get("checkpoint_profile", {}).get("checkpoint_sha256") != plan["checkpoint_sha256"]
                         or preview.get("spec", {}).get("map_mode") != row["map_mode"]):
                     raise ValueError("C76 recorder preflight differs from registered attempt")
-                with (attempt_root / "child.log").open("wb") as log:
-                    child = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT,
-                                           check=False, env=child_env)
-                if child.returncode:
-                    raise ValueError("recorder child exit %d" % child.returncode)
+                child_rc = run_recorder(argv, attempt_root / "child.log", child_env,
+                                        no_progress_s=float(plan.get("no_progress_timeout_s", 600)))
+                if child_rc:
+                    raise ValueError("recorder child exit %d" % child_rc)
                 if child_log_has_traceback(attempt_root / "child.log"):
                     raise ValueError("recorder child logged a Traceback despite exit 0")
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)

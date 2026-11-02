@@ -28,6 +28,11 @@ KINDS = {
 def fake_frame_decoder(monkeypatch):
     """Queue fixtures use byte strings, while frame statistics are tested separately."""
     monkeypatch.setattr(q, "audit_video", lambda *_a, **_k: {"pass": True, "frames": 450})
+    def simulated_recorder(argv, log_path, env, **_kwargs):
+        with log_path.open("wb") as log:
+            result = q.subprocess.run(argv, env=env, stdout=log, stderr=subprocess.STDOUT)
+        return result.returncode
+    monkeypatch.setattr(q, "run_recorder", simulated_recorder)
 
 
 def fixture(tmp_path: Path, *, complete: bool = True):
@@ -110,6 +115,22 @@ def fake_capture(plan: dict, outcomes: list[int]):
         return subprocess.CompletedProcess(argv, 0)
 
     return run, calls
+
+
+def test_no_progress_is_failure_without_success_receipt(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    fake_run, _ = fake_capture(plan, [0])
+    monkeypatch.setattr(q.subprocess, "run", fake_run)
+    def timed_out(_argv, log_path, _env, **_kwargs):
+        log_path.write_text("Kit started, no frame\n", encoding="utf-8")
+        raise ValueError("recorder_no_progress_timeout after 600s; last_frame=0")
+    monkeypatch.setattr(q, "run_recorder", timed_out)
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[], only_cell=q._slot(rows[0]))
+    assert result["state"] == "capture_failed"
+    assert "no_progress_timeout" in result["reason"]
+    assert not list((out / "receipts").glob("*_success.json"))
+    assert not list((out / "receipts").glob("*_fail.json"))
 
 
 def test_recorder_child_env_matches_seq_video_block(tmp_path):

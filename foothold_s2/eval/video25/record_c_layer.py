@@ -17,6 +17,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 from typing import Any
 
 # C_LAYER_SEED_V1: C-layer outcomes are observed in this recording's resets.
@@ -1510,6 +1511,7 @@ def _capture(spec: dict[str, Any]) -> None:
         stream.width, stream.height, stream.pix_fmt = full_args.width, full_args.height, "yuv420p"
         stream.options = {"crf": "20", "preset": "medium"}
         frame_count = 0
+        capture_wall_start = time.monotonic()
         data = {key: [] for key in ("t", "seg", "foot_xyz", "foot_contact", "joint_pos",
                                     "root_pos_w", "root_quat_w", "body_height_foot_center_m",
                                     "policy_action", "joint_pos_target_last_substep",
@@ -1592,6 +1594,10 @@ def _capture(spec: dict[str, Any]) -> None:
                 for packet in stream.encode(av.VideoFrame.from_ndarray(pixels, format="rgb24")):
                     container.mux(packet)
                 frame_count += 1
+                if frame_count % 50 == 0:
+                    print("C76_PROGRESS " + json.dumps({"frame": frame_count,
+                          "step": k, "elapsed_s": round(time.monotonic() - capture_wall_start, 3)}),
+                          flush=True)
 
             root_pos_w = robot.data.root_pos_w[capture_env_id].detach().cpu().numpy().copy()
             quat = robot.data.root_quat_w[capture_env_id].detach().cpu().numpy().copy()
