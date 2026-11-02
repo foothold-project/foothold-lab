@@ -139,6 +139,22 @@ if v010:
         for kw in ("조건부 비율", "command_weights", "assigned_mode", "9.5", "초기 상태 사전 등록", "from_maintenance_items", "(preset, kind)"):
             ok(kw in sec, f"v0.11 「{kw}」")
         ok(any(l.startswith("| v0.10 재확인") for l in e6.splitlines()), "E.6 v0.10 재확인 행")
+    if "| v0.11 재확인(" in sec:   # v0.12 · analyst REVIEW-EX42-v011-1103 막음 2
+        for old in ("생존 · W57 · 부모 경보는 학습 종료 에피소드 창 64 개", "복원 100 ·", "| 창 64 |", "| 창 64 전체 |", "alive 스텝 중앙값 · 분모 = alive 스텝"):
+            ok(old not in pre, f"옛 문구 없음(v0.12): {old}")
+        ax = [l for l in sec.splitlines() if l.startswith("| 축 등록표 ")]
+        ok(len(ax) == 1 and "`terrain.kind_task.*.command_weights.*`" in ax[0] and "`terrain.kind_task.*.command_set`" in ax[0], "B2 C 축에 command_set · command_weights 두 경로")
+        ok("합 ≠ 1" in pre and "`maintenance.items[].source` 가 `fixed_eval` 이 아닌" in pre, "B2 · B5 파서 거절(가중치 합 · source)")
+        src_rows = [l for l in sec.splitlines() if l.startswith("| `maintenance.items[].source` |")]
+        ok(len(src_rows) == 1 and "`fixed_eval`" in src_rows[0] and "`train_episode_window`" in src_rows[0] and "`assigned_mode_cumulative`" in src_rows[0], "E.4 maintenance.items[].source 행(출처 enum 셋)")
+        if e31:
+            head = e31.group(0)
+            ok(all(k in head for k in ("①", "②", "③", "alive_envs_at_end", "per_env", "kept 규칙")), "E.3.1 표본 출처 ①②③ · 생산자 필드 · kept 규칙")
+            ph = [l for l in e31.group(0).splitlines() if l.startswith("| 보행 접촉 위상")]
+            ok(len(ph) == 1 and all(k in ph[0] for k in ("FL→RR", "FR→RL", "R(", "주기", "undefined", "recompute.py:45~58", "> 1 N")), "B5 쌍 위상 행(쌍 · R · 주기 · undefined · 접촉 문턱)")
+            surv = [l for l in e31.group(0).splitlines() if l.startswith("| 생존 26 칸") or l.startswith("| W57 ") or l.startswith("| 부모 대비")]
+            ok(len(surv) == 3 and all("① 고정 평가 칸 64 env" in cells(l)[2] for l in surv), "B5 생존 · W57 · 부모 행 분모 = ① 고정 평가 칸")
+        ok(any(l.startswith("| v0.11 재확인") for l in e6.splitlines()), "E.6 v0.11 재확인 행")
 
 ok(chr(0x2014) not in sec, "em dash 없음(정본 절)")
 for n, line in enumerate(sec.splitlines(), 1):
