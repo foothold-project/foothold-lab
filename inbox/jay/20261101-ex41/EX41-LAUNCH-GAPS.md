@@ -73,3 +73,5 @@ EX-40 그림자 채점 31개 중 마지막 PASS 는 m1250. m1500~m8000 은 전�
 G16 닫힘(15:2x): CANON-REGISTRY 에 EX-40_m6000 등록 48846e53. SHA(저장본 · env · agent · 기준 점수) lead 실측, force_gt true · AdaSmpl p 1.0(checkpoint 상태), 기준 점수 HOLD 와 W57 칸 없음 명시, current.ex41_parent · c_layer_canon 지정. (JSON 다시 쓰며 들여쓰기만 바뀜, 기존 3 항목 내용 동일)
 
 15:2x 닫힘: analyst 08a8c99c 두 겹 검토(verifier VERIFY-EX41-08a8c99c 막음 0 · 독립 막음 0, CPU 55 · 101) → G4 · G5 · G7 · D133 닫힘, G6 소비 쪽 닫힘(생산 루프 G11 runner 남음). C1~C6 scripter 519a430f, verifier 재검토 중. C층 첫 한 편 1차는 대기열이 Isaac EULA 환경 변수를 안 넣어 7초 만에 실패(기술 실패로 정상 기록) → scripter 수정 중, lead 가 표준 env 로 2차 촬영 중.
+
+15:3x 닫힘: G15(analyst a407377c · a0f82867) 두 겹 막음 0(verifier VERIFY-EX41-G15-a0f82867 · 독립). 실제 m2500 HOLD→PASS 재현, 돌연변이 14 개 모두 HOLD. 낮음: ex41_scoring 은 고친 judge 를 쓰지 않음(EX-41 판정은 ex41 런타임 쪽). W71 75df4e87 · D125 e5a908a2 두 겹 검토 중. C층 C4 막음(전 프레임 검사 반례 셋) scripter 처리 중.
