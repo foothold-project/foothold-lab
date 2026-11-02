@@ -47,7 +47,9 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
         "sha256": plan.parent_sha256,
         "iteration": plan.parent_update,
     }
-    cfg["max_iterations"] = 6500
+    # The runner uses zero-based iteration indices; one extra loop entry is
+    # needed to observe the runtime's terminal completed-update boundary.
+    cfg["max_iterations"] = 6501
     if cfg.get("ex41_w86_required") is not True:
         raise ValueError("EX-41 requires W86")
     return cfg

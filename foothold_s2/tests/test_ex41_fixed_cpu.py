@@ -9,7 +9,7 @@ from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
 from foothold_s2.curriculum.ex41_fixed import Clock,CELLS,maintenance,baseline_counts
 from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
 from foothold_s2.tests.test_ex41_runtime_cpu import score
-from foothold_s2.runners.start_runner import curriculum_finished
+from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
@@ -105,12 +105,14 @@ def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
         if n in expected: assert r.effective['stage_id']==expected[n]
     assert r.finished and not r.graduated and r.dr_scale(5001)==1.
     assert curriculum_finished(r)
+    assert curriculum_update_number(r, 0) == 1
+    assert curriculum_update_number(r, 6500) == 6501
     assert r._stage_baseline_sha==r.plan.parent_sha256
 
 
 def test_start_runner_consumes_terminal_flag_before_next_rollout():
     source=(Path(__file__).parents[1]/'runners/start_runner.py').read_text(encoding='utf-8')
-    boundary=source.index('continuous.on_update_start(it)')
+    boundary=source.index('continuous.on_update_start(curriculum_it)')
     stop=source.index('if curriculum_finished(continuous):',boundary)
     rollout=source.index('for step_k in range(self.num_steps_per_env):',stop)
     assert boundary < stop < rollout

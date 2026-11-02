@@ -105,6 +105,14 @@ def curriculum_finished(runtime) -> bool:
     return bool(getattr(runtime, "finished", False))
 
 
+def curriculum_update_number(runtime, loop_iteration: int) -> int:
+    """Map the zero-based PPO loop index to the runtime's completed-update n."""
+    if type(loop_iteration) is not int or loop_iteration < 0:
+        raise ValueError("training loop iteration must be a nonnegative integer")
+    plan = getattr(runtime, "plan", None)
+    return loop_iteration + 1 if getattr(plan, "is_ex41", False) else loop_iteration
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -456,14 +464,18 @@ class StartRunner(OnPolicyRunner):
             self.broadcast_all()
 
         # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
-        start_iter = self.current_learning_iteration + (1 if self._resumed else 0)
+        active_curriculum = getattr(self, "continuous_curriculum", None)
+        ex41_local_index = getattr(getattr(active_curriculum, "plan", None), "is_ex41", False)
+        start_iter = self.current_learning_iteration + (1 if self._resumed and not ex41_local_index else 0)
         self.current_learning_iteration = start_iter
         tot_iter = start_iter + num_learning_iterations
         trace = getattr(self, "training_trace", None)
-        for it in range(start_iter, tot_iter):
+        for loop_it in range(start_iter, tot_iter):
             continuous = getattr(self, "continuous_curriculum", None)
+            it = curriculum_update_number(continuous, loop_it) if continuous is not None else loop_it
+            curriculum_it = it
             if continuous is not None:
-                continuous.on_update_start(it)
+                continuous.on_update_start(curriculum_it)
                 # Runtime state transitions happen at update boundaries. Stop
                 # before collecting another rollout after the terminal update.
                 if curriculum_finished(continuous):
@@ -647,7 +659,7 @@ class StartRunner(OnPolicyRunner):
             learn_time = time.time() - start
             self.current_learning_iteration = it
             if continuous is not None:
-                continuous.flush_consumption(it)
+                continuous.flush_consumption(curriculum_it)
             steps = self.num_steps_per_env * n * self.gpu_world_size
             self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
                                   "steps_per_s": steps / (collection_time + learn_time)})
@@ -659,14 +671,14 @@ class StartRunner(OnPolicyRunner):
                     self.save(checkpoint_path)
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
                     if continuous is not None:
-                        continuous.on_checkpoint(it, checkpoint_path)
+                        continuous.on_checkpoint(curriculum_it, checkpoint_path)
                 if it % self.pcfg["latest_interval"] == 0:
                     self._check_code(it)
                     self.save_latest()
-                if it == start_iter or it % self.pcfg["status_interval"] == 0:
+                if loop_it == start_iter or it % self.pcfg["status_interval"] == 0:
                     self._write_running_status(it, tot_iter, rewbuffer, lenbuffer, collection_time + learn_time, steps)
             ep_infos.clear()
-            if it == start_iter and not self.disable_logs and self.log_dir is not None:
+            if loop_it == start_iter and not self.disable_logs and self.log_dir is not None:
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
             checkpoint_path = os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt")

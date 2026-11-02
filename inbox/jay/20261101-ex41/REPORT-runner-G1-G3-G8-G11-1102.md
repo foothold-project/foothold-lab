@@ -13,8 +13,8 @@
 
 | G | 상태 | 증거와 남은 조건 |
 |---|---|---|
-| G1 | 부분 연결, 미완료 | `train_start.py` 경로에 계획 로드, env 설정 준비, W86 부착, 부모 이식, runtime 생성과 stage hook, 초기 DR 0.5 설정이 연결되어 있다. 안전 DRY는 실제 CLI parser 경로에서 Kit import 전에 종료했다. 실제 task env import, 첫 reset readback, 승인된 10 update GPU 예행은 미확인이다. |
-| G3 | CPU 경계 시험 통과 | runtime `finished`를 update 시작 직후 검사하여 다음 rollout 전에 멈추도록 연결했다. fixed runtime의 5001 종료 경계와 loop source 순서를 CPU 시험했다. 실제 학습 실행은 하지 않았다. |
+| G1 | 부분 연결, 미완료 | `train_start.py` 경로에 계획 로드, env 설정 준비, W86 부착, 부모 이식, runtime 생성과 stage hook, 초기 DR 0.5 설정이 연결되어 있다. 안전 DRY는 실제 CLI parser 경로에서 Kit import 전에 종료했다. CPU에서 S-B task 등록은 확인했다. 고정 isaac311의 Kit 없는 task config import는 `ModuleNotFoundError: pxr`로 실패했다. 첫 reset readback과 승인된 10 update GPU 예행은 미확인이다. |
+| G3 | CPU 경계 시험 통과 | EX-41 local n=1부터 시작하도록 PPO loop index를 매핑하고, runtime `finished`를 update 시작 직후 소비해 다음 rollout 전에 멈춘다. 마지막 n=6501 종료 확인을 위해 6500 update ceiling 뒤 경계 검사 한 회를 예약한다. fixed runtime의 n=5001 종료 상태와 loop source 순서를 CPU 시험했다. 실제 학습 실행은 하지 않았다. |
 | G8 | 닫음 | preflight가 `model_6000.pt` 및 manifest update 6000 이상을 받는다. 같은 시험에서 `model_7500.pt`는 거절된다. |
 | G11 | 미완료 | 저장본을 받아 단계별 eval 3모드, W57, 촬영, 전 프레임 검사, axis250, shadow, 고정 `_playlists` 게시까지 수행하는 EX-41 loop 연결이 아직 없다. 확인한 EX-40 shell loop는 EX-40 경로·도구 전용이라 EX-41 명령으로 간주하지 않았다. 실제 촬영은 Kit/GPU 승인이 없어 수행하지 않았다. |
 | PPO skip 0 | 닫음(CPU) | W86 producer와 통합 PPO consumer를 같은 고정 runner 코드에서 검사하도록 bridge 의 외부 worktree 환경변수 skip을 제거했다. |
@@ -23,7 +23,7 @@
 
 명령: `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_ex41_start_preflight_cpu.py foothold_s2/tests/test_ex41_fixed_cpu.py foothold_s2/tests/test_ex41_runtime_cpu.py foothold_s2/tests/test_ex41_startup_integration_cpu.py foothold_s2/tests/test_ex41_ppo_valid.py foothold_s2/tests/test_ex41_ppo_bridge.py -q -rs`
 
-결과: `76 passed in 102.72s`, skip 0. `ruff check --select F` 대상 파일 통과, `git diff --check` 통과.
+결과: `77 passed in 94.18s`, skip 0. `ruff check --select F` 대상 파일 통과, `git diff --check` 통과.
 
 안전 DRY 명령은 `python -m foothold_s2.scripts.train_start --task FootholdS2-Go2-S2-SB-v0 --ex41_table foothold_s2/curriculum/ex41-fixed5000.yaml --ex41_dry_run`이다. 출력은 `kit_started=false`, `gpu_used=false`, `initial_dr_scale=0.5`, `parent_update=6000`, `w71_ready=false`, `production_launch_allowed=false`였다. 이는 환경 import나 Kit 동작 검증이 아니다.
 

@@ -119,6 +119,7 @@ from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
 
 import foothold_s2.tasks  # noqa: E402,F401  (lead 의 gym 등록)
+import foothold_s2.sb_tasks  # noqa: E402,F401  (EX-41 S-B task registration)
 import foothold_s2.x15_tasks  # noqa: E402,F401  (EX-15 등록: 실행 중인 학습이 소비하는 tasks/__init__ 를 고치지 않으려고 새 모듈)
 import foothold_s2.x16_tasks  # noqa: E402,F401  (EX-16 등록: 새 모듈)
 import foothold_s2.x16n_tasks  # noqa: E402,F401  (EX-16 NVIDIA Go2 보상 세트 등록: 새 모듈)
@@ -277,7 +278,8 @@ def main(env_cfg, agent_cfg):
         MapStatsRecorder(runner, log_dir).attach()
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
-    remaining = ex41_runtime.max_updates if ex41_runtime is not None else agent_cfg.max_iterations - done
+    remaining = (ex41_runtime.max_updates + 1 if ex41_runtime is not None
+                 and ex41_runtime.max_updates is not None else agent_cfg.max_iterations - done)
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return

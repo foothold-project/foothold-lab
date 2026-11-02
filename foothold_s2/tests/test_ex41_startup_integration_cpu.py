@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import ast
 import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import gymnasium as gym
 import pytest
 
 from foothold_s2.curriculum.ex41_fixed import CELLS, CASES, baseline_counts, maintenance
@@ -22,6 +24,19 @@ from foothold_s2.scripts.ex41_startup import (
 
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / "foothold_s2/curriculum/ex41-fixed5000.yaml"
+
+
+def test_ex41_task_registration_and_config_entrypoint_source():
+    import foothold_s2.sb_tasks  # noqa: F401
+
+    spec = gym.spec("FootholdS2-Go2-S2-SB-v0")
+    module_name, class_name = spec.kwargs["env_cfg_entry_point"].split(":", 1)
+    config_path = REPO.joinpath(*module_name.split(".")).with_suffix(".py")
+    tree = ast.parse(config_path.read_text(encoding="utf-8"), filename=str(config_path))
+    assert class_name == "FootholdS2SBEnvCfg"
+    assert any(isinstance(node, ast.ClassDef) and node.name == class_name for node in tree.body)
+    source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    assert source.index("import foothold_s2.sb_tasks") < source.index("@hydra_task_config")
 
 
 def _map_modes(iteration: int, checkpoint_sha: str, alive: int = 64):
@@ -74,6 +89,7 @@ def test_train_cfg_requires_pose_and_w86_with_pinned_parent(tmp_path):
     cfg = configure_ex41_train_cfg({}, plan, parent)
     assert cfg["ex41_pose_commands"] is True
     assert cfg["ex41_w86_required"] is True
+    assert cfg["max_iterations"] == 6501
     assert cfg["ex41_parent"] == {"path": str(parent.resolve()),
                                   "sha256": plan.parent_sha256, "iteration": 6000}
 
