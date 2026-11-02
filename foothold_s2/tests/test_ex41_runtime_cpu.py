@@ -10,6 +10,7 @@ from datetime import datetime,timezone
 from foothold_s2.curriculum.continuous import sha256
 from foothold_s2.curriculum.continuous import load_plan, make_runtime
 from foothold_s2.curriculum import w72
+from foothold_s2.tests.ex41_runtime_fixture import real_runtime, attach_consumer
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41.yaml'
 
@@ -30,7 +31,7 @@ def runtime(tmp_path,monkeypatch):
 
 
 def test_n0_to_first_rollout_preserves_dr_and_episode_command_version(tmp_path,monkeypatch):
-    r,_=runtime(tmp_path,monkeypatch)
+    r,consumer=real_runtime(tmp_path)
     assert r.effective['dr']['scale']==1.
     r.on_update_start(1)
     assert r.plan.stages[r.active].id=='S2a'
@@ -39,6 +40,7 @@ def test_n0_to_first_rollout_preserves_dr_and_episode_command_version(tmp_path,m
     assert r.env_stage[1]==r.active and r.env_stage[0]==0
     assert r.plan.stages[0].shares['forward']==.25
     assert r.plan.stages[r.active].shares['forward']==.23
+    assert consumer.alg.entropy_coef==.01 and consumer.env.unwrapped._ex41_terrain['level_cap']==2
 
 
 def test_rejected_boundary_keeps_previous_and_no_callback(tmp_path,monkeypatch):
@@ -53,14 +55,15 @@ def test_rejected_boundary_keeps_previous_and_no_callback(tmp_path,monkeypatch):
 
 
 def test_resume_preserves_boundary_state_and_never_repeats_receipt(tmp_path,monkeypatch):
-    r,_=runtime(tmp_path/'a',monkeypatch); r.on_update_start(1)
+    r,_=real_runtime(tmp_path/'a'); r.on_update_start(1)
     state=r.state_dict()
-    p=load_plan(TABLE,arm='B'); b=make_runtime(p,4,'cpu',tmp_path/'b',segment_index=1)
-    b.set_stage_changed_hook(lambda s,e: e)
+    p=load_plan(r.plan.path,arm='B'); b=make_runtime(p,4,'cpu',tmp_path/'b',segment_index=1)
+    consumer=attach_consumer(b)
     b.load_state_dict(state)
     assert b.effective==r.effective and b.stage_entry_iteration==1
     b.on_update_start(1)
     assert b.boundary_receipt()==r.boundary_receipt()
+    assert consumer.alg.desired_kl==.01
 
 
 def test_resume_changed_mirror_approval_stays_off_and_records_rejection(tmp_path,monkeypatch):
@@ -292,14 +295,7 @@ def test_dr_ramp_starts_from_current_value_and_n0_is_not_ex40_zero(tmp_path,monk
 @pytest.mark.parametrize('parent,initial',[(6000,.5),(7500,1.)])
 def test_parent_and_initial_dr_are_configuration_not_hardcoded(tmp_path,monkeypatch,parent,initial):
     from foothold_s2.curriculum.ex41 import EX41DRReadback
-    doc=yaml.safe_load(TABLE.read_text()); doc['parent_update']=parent
-    doc['domain_randomization']['scale']=initial
-    doc['parent_sha256']=('d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5' if parent==6000 else doc['parent_sha256'])
-    table=tmp_path/'candidate.yaml'; table.write_text(yaml.safe_dump(doc),encoding='utf-8')
-    snap=snapshot(); snap['config']['values']['dr']={'target_scale':initial,'ramp_updates':0}
-    monkeypatch.setattr(w72,'read_committed_pair',lambda *a:copy.deepcopy(snap))
-    p=load_plan(table,arm='B'); assert p.initial_dr_scale==initial
-    r=make_runtime(p,4,'cpu',tmp_path/'run'); r.set_stage_changed_hook(lambda s,e:e); r.start(p.parent_sha256)
+    r,_=real_runtime(tmp_path,parent=parent); assert r.plan.initial_dr_scale==initial
     base=SimpleNamespace(scale=0.,env=SimpleNamespace(_ex40_dr_scale=0.))
     EX41DRReadback(base,r)
     assert r.dr_scale(0)==base.env._ex40_dr_scale==initial

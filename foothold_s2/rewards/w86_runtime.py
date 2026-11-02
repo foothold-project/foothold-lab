@@ -12,6 +12,10 @@ from foothold_s2.rewards import w86
 
 FEET=('FL_foot','FR_foot','RL_foot','RR_foot')
 KNEES=('FL_calf_joint','FR_calf_joint','RL_calf_joint','RR_calf_joint')
+# Corruption guards, not learning thresholds or clipped reward targets.
+# Terrain-relative distances keep valid high world elevations unaffected.
+MAX_FOOT_HEIGHT_ERROR_M=5.
+MAX_SWING_COST_M2=4*MAX_FOOT_HEIGHT_ERROR_M**2
 
 
 def rotate(q,v):
@@ -138,6 +142,11 @@ class W86Runtime:
         self.mark(bad,'nonfinite_physical_state')
         # Invalid rays are missing terrain evidence, not a zero-height surface.
         target,ray_valid=w86.swing_target(d['ground_z'][...,0],d['ground_z'])
+        huge=((d['sole_z']-target).abs()>MAX_FOOT_HEIGHT_ERROR_M) & ray_valid
+        huge |= ((d['sole_z']-d['ground_z'][...,0]).abs()>MAX_FOOT_HEIGHT_ERROR_M) & torch.isfinite(d['ground_z'][...,0])
+        huge=huge.any(-1)
+        self.mark(huge,'physical_height_out_of_bounds')
+        bad |=huge
         ray_valid &= ~bad[:,None]
         cmd=_safe(d['command']); moving=(torch.linalg.vector_norm(cmd,dim=-1)>.1) & ~bad
         contact=torch.linalg.vector_norm(_safe(d['forces']),dim=-1)>1.
@@ -168,6 +177,9 @@ class W86Runtime:
         }
         overflow=torch.zeros_like(bad)
         for value in terms.values(): overflow |=~torch.isfinite(value)
+        excessive=terms['swing']>MAX_SWING_COST_M2
+        self.mark(excessive,'swing_cost_out_of_bounds')
+        overflow |=excessive
         self.mark(overflow,'nonfinite_derived_reward')
         bad |=overflow; ray_valid &=~bad[:,None]; complete &=~bad[:,None]
         self._sum('complete_swing_count',complete.long())
@@ -279,6 +291,10 @@ def quarantine_actions(runner,actions):
 def quarantine_step(runner,observations,rewards,dones,extras):
     env=runner.env.unwrapped; a=env._ex41_w86; n=len(a.pending)
     bad=a.pending | _bad_rows(observations,n,a.pending.device) | _bad_rows(rewards,n,a.pending.device)
+    extras=dict(extras)
+    # Snapshot before pending is cleared. Normal termination remains valid.
+    # The PPO consumer must apply this to GAE/normalization/loss/KL denominators.
+    extras['ex41_ppo_valid']=(~bad).clone()
     if not bad.any(): return observations,rewards,dones,extras
     a.mark(bad,'post_step_quarantine')
     # If the termination manager already reset a bad env, do not reset it twice.
