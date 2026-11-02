@@ -56,7 +56,7 @@ import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, map_mode_cells, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
+from foothold_s2.eval import adapters, ex41_eval_loader, map_mode_cells, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
 CASES = P.select_cases(args.cases)                                        # 잘못된 --cases 는 환경을 만들기 전에 거절
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
@@ -64,6 +64,8 @@ agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
 env_cfg.scene.num_envs = args.envs
 env_cfg.sim.device = args.device
 agent_cfg.device = args.device
+checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(
+    env_cfg, args.checkpoint)
 dr_off = []
 
 for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"):
@@ -145,12 +147,14 @@ def _update(*args, **kwargs):                  # ManagerBasedRLEnv.step 은 scen
 
 
 raw.scene.update = _update
-runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
+runner, sd = adapters.load_s2_runner(
+    env, agent_cfg.to_dict(), args.checkpoint, args.device,
+    checkpoint_state=checkpoint_state)
 map_input = runner.pcfg.get("map_input")
 
 if (map_input == "none") != (args.map_mode == "none"):
     raise RuntimeError("map_input=%r 인 체크포인트에 --map-mode %s 는 쓸 수 없다" % (map_input, args.map_mode))
-result = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint), "checkpoint_iter": int(sd.get("iter", -1)),
+result = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint), "ex41_checkpoint_preparation": checkpoint_preparation, "checkpoint_iter": int(sd.get("iter", -1)),
           "map_input": map_input, "map_mode": args.map_mode, "envs": N, "thresholds": L.thresholds(), "logic_blob_sha": L.module_blob_sha(), "dr_off": dr_off, "curriculum_off": curriculum_off, "static": static, "fixed_terrain": None, "protocols": {}, "judged": {}}
 os.makedirs(args.out, exist_ok=True)
 per_protocol = {}
@@ -196,6 +200,8 @@ for pname in CASES:
     term.vel_command_b[:, :3] = torch.tensor(proto["cmd"], device=dev)
     policy = adapters.S2Policy(runner, N, z_mode="mean", act_mode="mean", map_mode=None if args.map_mode == "none" else args.map_mode)
     obs = env.get_observations()
+    if checkpoint_preparation["checkpoint_pose_commands"]:
+        ex41_eval_loader.verify_ex41_pose_observation(obs)
     if proto["pre"] is not None:
         obs, _, pre_alive_end = run_segment(proto["pre"], P.PRE_S, policy, obs, False)
     else:

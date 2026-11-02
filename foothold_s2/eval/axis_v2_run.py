@@ -143,6 +143,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
     source = {p.name: sha256_file(str(p)) for p in source_paths}
     result = {"schema": "foothold-axis-v2/1", "suite": "W57-v2", "not_w15": True,
               "checkpoint": args.checkpoint, "checkpoint_sha256": sha256_file(args.checkpoint),
+              "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
               "source_sha256": source, "run_identity": run_identity, "envs": n, "steps": steps,
               "dt_s": dt, "eval_seed": args.eval_seed, "terrain_set": args.terrain_set,
               "fixed_level": args.fixed_level, "dr_off": dr_off, "curriculum_off": curriculum_off,
@@ -158,7 +159,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
     for mode in args.modes.split(","):
         if mode not in ("eval_gt", "eval_pred", "probe_prop_only", "none"):
             raise ValueError(f"unknown W57 map mode {mode!r}")
-        runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
+        runner, sd = adapters.load_s2_runner(
+            env, agent_cfg.to_dict(), args.checkpoint, args.device,
+            checkpoint_state=getattr(args, "ex41_checkpoint_state", None))
         saved_map_input = runner.pcfg.get("map_input")
         if (saved_map_input == "none") != (mode == "none"):
             raise RuntimeError(f"W57 map_input={saved_map_input!r} disagrees with mode={mode!r}")

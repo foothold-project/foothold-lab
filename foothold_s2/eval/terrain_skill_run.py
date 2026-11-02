@@ -136,6 +136,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                     Path(adapters.__file__), Path(fixed_terrain.__file__))
     result = {"schema": "foothold-terrain-skill/1", "suite": "W78-v1",
               "checkpoint": args.checkpoint, "checkpoint_sha256": sha256_file(args.checkpoint),
+              "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
               "source_sha256": {p.name: sha256_file(str(p)) for p in source_paths}, "run_identity": run_identity,
               "envs": n, "dt_s": dt, "eval_seed": args.eval_seed, "fixed_level": args.fixed_level,
               "dr_off": dr_off, "curriculum_off": curriculum_off,
@@ -145,7 +146,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
     for mode in args.modes.split(","):
         if mode not in ("eval_gt", "eval_pred", "probe_prop_only"):
             raise ValueError(f"unknown W78 map mode {mode!r}")
-        runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
+        runner, sd = adapters.load_s2_runner(
+            env, agent_cfg.to_dict(), args.checkpoint, args.device,
+            checkpoint_state=getattr(args, "ex41_checkpoint_state", None))
         result.setdefault("checkpoint_iter", int(sd.get("iter", -1)))
         result["modes"][mode] = {}
         for name, (phases, kinds) in CASES.items():

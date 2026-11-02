@@ -88,7 +88,7 @@ import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task Foo
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, fixed_terrain, map_error as ME, map_mode_cells  # noqa: E402
+from foothold_s2.eval import adapters, ex41_eval_loader, fixed_terrain, map_error as ME, map_mode_cells  # noqa: E402
 from foothold_s2.terrains import columns  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
@@ -147,6 +147,9 @@ if parser_sparse:                                                               
     sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
     env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
                                                               seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
+checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(env_cfg, args.checkpoint)
+args.ex41_checkpoint_state = checkpoint_state
+args.ex41_checkpoint_preparation = checkpoint_preparation
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
 dev = raw.device
@@ -227,7 +230,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
                               "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
 
 
-res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
 res["policy_dt_s"] = float(dt)
 if args.ex39_heading_smoke_guard:
     res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
@@ -259,7 +262,9 @@ if args.terrain_skill_v2:
                          terrain_names, dr_off, curriculum_off, _run_identity())
     os._exit(0)
 for mode in args.modes.split(","):
-    runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
+    runner, sd = adapters.load_s2_runner(
+        env, agent_cfg.to_dict(), args.checkpoint, args.device,
+        checkpoint_state=checkpoint_state)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
     res["checkpoint_iter"] = int(sd.get("iter", -1))
     saved_map_input = runner.pcfg.get("map_input")
     res["map_input"] = saved_map_input
@@ -357,6 +362,8 @@ for mode in args.modes.split(","):
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
+        if checkpoint_preparation["checkpoint_pose_commands"]:
+            ex41_eval_loader.verify_ex41_pose_observation(obs)
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         root_xy_start = robot.data.root_pos_w[:, :2].clone()
         VX, VY, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(4))
@@ -485,6 +492,8 @@ for mode in args.modes.split(","):
                 term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
                 map_mode_cells.disable_heading_for_fixed_eval(term)
                 obs = env.get_observations()
+                if checkpoint_preparation["checkpoint_pose_commands"]:
+                    ex41_eval_loader.verify_ex41_pose_observation(obs)
                 xy_start = robot.data.root_pos_w[:, :2].clone()
                 vx_t, vy_t, wz_t = (torch.zeros(nsteps, env.num_envs, device=dev) for _ in range(3))
                 xy_t = torch.zeros(nsteps, env.num_envs, 2, device=dev)
