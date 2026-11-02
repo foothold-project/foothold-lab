@@ -82,6 +82,14 @@ def test_b0_commands_are_start_distribution_plus_stand():
     assert bad[0] and int(bad.sum()) == 1
 
 
+def test_unassigned_first_command_uses_start_domain_until_slot_is_sampled():
+    plan = Plan(TABLE, arm="B")
+    commands = torch.tensor([[0.59856975, 0.0, 0.0], [0.1, 0.0, 0.0]])
+    bad = command_bad(commands, torch.tensor([-1, -1]), torch.tensor([False, False]),
+                      torch.tensor([0, 0]), plan)
+    assert bad.tolist() == [False, True]
+
+
 def test_heading_caps_and_b2_target_spin():
     plan = Plan(TABLE, arm="B")
     out = apply_stage_heading(torch.zeros((2, 3)), torch.ones(2, dtype=torch.bool),
@@ -292,11 +300,11 @@ def test_actual_consumption_counts_before_reset(tmp_path):
     run = Runtime(plan, 2, "cpu", tmp_path)
     sensor = SimpleNamespace(find_bodies=lambda names: (list(range(4)), names),
         data=SimpleNamespace(net_forces_w=torch.tensor([
-            [[0., 0., 2.]] * 4, [[0., 0., 0.]] * 4])))
+            [[0., 0., 2.]] * 4, [[0., 0., 2.]] * 4])))
     robot = SimpleNamespace(data=SimpleNamespace(heading_w=torch.tensor([-0.2, 0.2]),
         root_pos_w=torch.tensor([[0., -1., 0.], [0., 1., 0.]]),
         joint_pos_target=torch.zeros((2, 12)), joint_pos=torch.zeros((2, 12))))
-    term = SimpleNamespace(slot_current=torch.zeros(2, dtype=torch.long))
+    term = SimpleNamespace(slot_current=torch.tensor([-1, 0], dtype=torch.long))
 
     class Scene:
         sensors = {"contact_forces": sensor}
@@ -311,13 +319,14 @@ def test_actual_consumption_counts_before_reset(tmp_path):
         pstate=SimpleNamespace(map_off=torch.zeros(2, dtype=torch.bool),
                                use_gt=torch.ones(2, dtype=torch.bool)))
     run.record_pre_step()
-    run.record_post_step(torch.tensor([True, False]))
+    run.record_post_step(torch.tensor([True, True]))
     run.flush_consumption(0)
     rows = [json.loads(line) for line in (tmp_path / "stage_log.jsonl").read_text().splitlines()]
     row = rows[-1]
-    assert row["steps"][0][0][0] == 2 and row["done"][0][0][0] == 1
+    assert row["steps"][0][0][0] == 1 and row["done"][0][0][0] == 1
     assert row["contact_steps"][0][0][0] == [1, 1, 1, 1]
-    assert row["side_steps_done"][0][0][1] == 1
+    assert row["side_steps_done"][0][3][1] == 1
+    assert row["unassigned_command_steps"] == 1
     assert row["raw_samples"][0]["joint_target_rad"][0] == [0.0] * 12
 
 

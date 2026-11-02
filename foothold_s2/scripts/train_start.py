@@ -308,6 +308,10 @@ def main(env_cfg, agent_cfg):
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None
     if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import attach_ex41_stand_runtime_data
+
+        stand_data_receipt = attach_ex41_stand_runtime_data(env)
+        print("EX41_STAND_MASS_READBACK " + json.dumps(stand_data_receipt, sort_keys=True), flush=True)
         from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
         from foothold_s2.rewards.w86_runtime import attach_runtime
         dr_cfg = EX41_PLAN.domain_randomization
@@ -375,8 +379,20 @@ def main(env_cfg, agent_cfg):
         resume_segment_index = (EX41_RESUME_PREFLIGHT["segment_index"]
                                 if EX41_RESUME_PREFLIGHT else 0)
         ex41_runtime = make_runtime(EX41_PLAN, env.num_envs, agent_cfg.device, log_dir,
-                                    score_dir=score_dir, segment_index=resume_segment_index)
+                                    score_dir=score_dir, segment_index=resume_segment_index,
+                                    allow_w71_unverified=EX41_REHEARSAL)
+        if EX41_REHEARSAL:
+            # A rehearsal is bounded by its explicit CLI request, not by the
+            # production fixed-schedule horizon stored in the plan.
+            ex41_runtime.max_updates = args_cli.ex41_rehearsal_updates
+        if ex41_dr_readback is None:
+            raise ValueError("EX-41 DR readback runtime was not created before runner attachment")
+        runner.ex40_dr_runtime = ex41_dr_readback
         command_term = env.unwrapped.command_manager.get_term("base_velocity")
+        from foothold_s2.scripts.ex41_startup import configure_ex41_command_slots
+
+        slot_receipt = configure_ex41_command_slots(command_term)
+        print("EX41_COMMAND_SLOT_READBACK " + json.dumps(slot_receipt, sort_keys=True), flush=True)
         ex41_runtime.attach(runner, command_term)
         ex41_runtime.set_stage_changed_hook(partial(apply_runtime_fields, runner))
         if resume_path is None:

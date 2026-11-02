@@ -18,6 +18,7 @@ import torch
 import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS
+from foothold_s2.runners.contracts import start_contract_bad
 
 
 RANGES = ("forward_vx", "walk_vx", "walk_wz_abs", "spin_wz_abs", "reverse_vx",
@@ -52,7 +53,8 @@ def load_plan(path: str | Path, *, arm: str | None = None,
 
 def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
                  score_dir: str | Path | None = None,
-                 terrain_policy: dict | None = None, segment_index: int = 0):
+                 terrain_policy: dict | None = None, segment_index: int = 0,
+                 allow_w71_unverified: bool = False):
     """Return Runtime or EX41Runtime. Same attach/reset/checkpoint interface.
 
     EX41 uses local completed update n (parent m7500 is recorded separately).
@@ -62,7 +64,9 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
     if getattr(plan, 'is_ex41', False):
         if getattr(plan, 'fixed_schedule', None):
             from foothold_s2.curriculum.ex41_fixed import EX41FixedRuntime
-            return EX41FixedRuntime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
+            return EX41FixedRuntime(plan, env_count, device, log_dir, score_dir,
+                                    terrain_policy, segment_index,
+                                    allow_w71_unverified=allow_w71_unverified)
         from foothold_s2.curriculum.ex41 import EX41Runtime
         return EX41Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
     return Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
@@ -297,6 +301,7 @@ class Runtime:
         self._contact_counts = torch.zeros((len(plan.stages), len(EX39_SLOTS), 3, 4), dtype=torch.long, device=device)
         self._side_counts = torch.zeros((len(plan.stages), 4, 2), dtype=torch.long, device=device)
         self._side_contact_counts = torch.zeros((len(plan.stages), 4, 4), dtype=torch.long, device=device)
+        self._unassigned_command_steps = 0
         self._episode_side = torch.full((env_count,), -1, dtype=torch.long, device=device)
         self._raw_samples: list[dict] = []
         self._sample_step = 0
@@ -389,8 +394,14 @@ class Runtime:
         slot = term.slot_current.long()
         mode = torch.where(self.runner.pstate.map_off.bool(), 2,
                            torch.where(self.runner.pstate.use_gt.bool(), 0, 1)).long()
-        code = (stage * len(EX39_SLOTS) + slot) * 3 + mode
-        self._step_counts += torch.bincount(code, minlength=self._step_counts.numel()).reshape_as(self._step_counts)
+        valid = ((stage >= 0) & (stage < len(self.plan.stages))
+                 & (slot >= 0) & (slot < len(EX39_SLOTS)))
+        code = torch.full_like(slot, -1)
+        code[valid] = (stage[valid] * len(EX39_SLOTS) + slot[valid]) * 3 + mode[valid]
+        self._unassigned_command_steps += int((~valid).sum().item())
+        if valid.any():
+            self._step_counts += torch.bincount(
+                code[valid], minlength=self._step_counts.numel()).reshape_as(self._step_counts)
         sensor = raw.scene.sensors["contact_forces"]
         robot = raw.scene["robot"]
         if not hasattr(self, "_foot_sensor_ids"):
@@ -405,14 +416,15 @@ class Runtime:
         side = self._episode_side.clone()
         for foot in range(4):
             self._contact_counts[..., foot] += torch.bincount(
-                code, weights=contact[:, foot].float(), minlength=self._step_counts.numel()
+                code[valid], weights=contact[valid, foot].float(), minlength=self._step_counts.numel()
             ).reshape_as(self._step_counts).long()
             self._side_contact_counts[..., foot] += torch.bincount(
-                stage * 4 + side, weights=contact[:, foot].float(), minlength=len(self.plan.stages) * 4
+                stage[valid] * 4 + side[valid], weights=contact[valid, foot].float(),
+                minlength=len(self.plan.stages) * 4
             ).reshape(len(self.plan.stages), 4).long()
         for y in (0, 1):
             for h in (0, 1):
-                labels = stage[side == y * 2 + h]
+                labels = stage[valid & (side == y * 2 + h)]
                 self._side_counts[:, y * 2 + h, 0] += torch.bincount(
                     labels, minlength=len(self.plan.stages))
         self._pre_step_code = code
@@ -428,11 +440,13 @@ class Runtime:
 
     def record_post_step(self, done: torch.Tensor):
         finished = done.bool()
-        self._done_counts += torch.bincount(self._pre_step_code[finished],
-                                            minlength=self._step_counts.numel()).reshape_as(self._done_counts)
+        valid_finished = finished & (self._pre_step_code >= 0)
+        if valid_finished.any():
+            self._done_counts += torch.bincount(self._pre_step_code[valid_finished],
+                                                minlength=self._step_counts.numel()).reshape_as(self._done_counts)
         for y in (0, 1):
             for h in (0, 1):
-                labels = self._pre_stage[finished & (self._pre_side == y * 2 + h)]
+                labels = self._pre_stage[valid_finished & (self._pre_side == y * 2 + h)]
                 self._side_counts[:, y * 2 + h, 1] += torch.bincount(
                     labels, minlength=len(self.plan.stages))
         self._episode_side[finished] = -1
@@ -445,12 +459,14 @@ class Runtime:
                      "contact_steps": self._contact_counts.cpu().tolist(),
                      "side_steps_done": self._side_counts.cpu().tolist(),
                       "side_contact_steps": self._side_contact_counts.cpu().tolist(),
+                     "unassigned_command_steps": self._unassigned_command_steps,
                      "raw_samples": self._raw_samples})
         self._step_counts.zero_()
         self._done_counts.zero_()
         self._contact_counts.zero_()
         self._side_counts.zero_()
         self._side_contact_counts.zero_()
+        self._unassigned_command_steps = 0
         self._raw_samples.clear()
 
     def on_update_start(self, iteration: int):
@@ -781,5 +797,11 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
                 good &= x > 0 if name.startswith("diag_fwd") else x < 0
                 good &= y > 0 if name.endswith("left") else y < 0
             bad[ids] = bad[ids] | ~good
-    bad |= (slot < 0) | (slot >= len(EX39_SLOTS)) | (stage_ids < 0) | (stage_ids >= len(plan.stages))
+    unassigned = (slot == -1) & (stage_ids >= 0) & (stage_ids < len(plan.stages))
+    if unassigned.any():
+        # The task reset precedes command-term's first compute/resample. Until
+        # that first slot assignment, enforce the pinned START command domain
+        # without inventing a stage-slot label.
+        bad[unassigned] |= start_contract_bad(c[unassigned], tol=tol)
+    bad |= (slot < -1) | (slot >= len(EX39_SLOTS)) | (stage_ids < 0) | (stage_ids >= len(plan.stages))
     return bad

@@ -12,6 +12,7 @@ import torch
 
 from foothold_s2.curriculum.ex41_fixed import baseline_counts
 from foothold_s2.scripts.ex41_startup import (
+    attach_ex41_stand_runtime_data,
     capture_first_observation,
     configure_ex41_train_cfg,
     first_observation_readback,
@@ -61,12 +62,35 @@ def test_current_production_boundary_refuses_unverified_w71():
         require_production_authorization(plan)
 
 
+def test_fixed_runtime_only_allows_unverified_w71_in_bounded_rehearsal(tmp_path):
+    from foothold_s2.curriculum.continuous import make_runtime
+
+    plan = load_fixed_plan(TABLE)
+    values = {"ppo": {"entropy_coef": 0.01, "desired_kl": 0.01},
+              "dr": {"target_scale": 0.5, "ramp_updates": 0},
+              "reward_weights": {"zero_yaw": -0.5, "swing": -10.0, "stumble": -2.0},
+              "heading_forward_fraction": 0.3, "critic_mirror": False,
+              "terrain_level_cap": 5, "w71_ready": False, "episode_length_s": 20.0}
+    production = make_runtime(plan, 64, "cpu", tmp_path / "production")
+    with pytest.raises(ValueError, match="verified W71 consumer"):
+        production._check_values(values)
+    rehearsal = make_runtime(plan, 64, "cpu", tmp_path / "rehearsal",
+                             allow_w71_unverified=True)
+    rehearsal._check_values(values)
+
+
 def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
     assert source.index("require_production_authorization(EX41_PLAN)") < source.index(
         "from isaaclab.app import AppLauncher")
     assert "prepare_ex41_env_cfg(env_cfg, EX41_PLAN)" in source
     assert "attach_runtime(env.unwrapped, EX41_PLAN, log_dir)" in source
+    assert "configure_ex41_command_slots(command_term)" in source
+    assert source.index("runner.ex40_dr_runtime = ex41_dr_readback") < source.index("ex41_runtime.attach(runner, command_term)")
+    assert "ex41_runtime.max_updates = args_cli.ex41_rehearsal_updates" in source
+    assert source.index("ex41_runtime.max_updates = args_cli.ex41_rehearsal_updates") < source.index(
+        "remaining = max(0, ex41_runtime.max_updates - completed)")
+    assert "EX-41 DR readback runtime was not created before runner attachment" in source
     assert "ex41_runtime.start(EX41_PLAN.parent_sha256)" in source
     assert "runner.load_ex41_parent()" in source
     assert "runner.ex41_w86_required" in source
@@ -77,6 +101,20 @@ def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
 
 def test_ex41_env_preparation_calls_pose_producer_and_records_contract(monkeypatch):
     called = []
+    rewards = {"track_ang_vel": 1.0, "track_lin_vel": 2.0, "joint_acc": -1e-7,
+               "hip_pos_penalty": -0.05, "thigh_calf_pos_l1": -0.01,
+               "four_foot_contact_at_stop": 0.1, "stand_gap": -0.2,
+               "stand_load": -0.1, "zero_yaw": -0.5, "swing": -10.0,
+               "stumble": -2.0, "knee_effort_margin": 0.0,
+               "joint_limit_margin": 0.0, "feet_air_time": 0.0, "foot_slip": 0.0}
+    stand_cfg = {"gap_weight": -0.2, "load_weight": -0.1,
+                 "load_fraction": 0.05, "ramp_s": 0.5}
+    basic = SimpleNamespace(
+        validate_settings=lambda weights, **kwargs: {"weights": weights, **kwargs},
+        apply_settings=lambda cfg, settings: called.append(("basic", settings)),
+        apply_ex39_settings=lambda cfg: {"thigh_calf_pos_l1": -0.01},
+        apply_ex40_stand_settings=lambda cfg, config: called.append(("stand", config)))
+    monkeypatch.setitem(sys.modules, "foothold_s2.rewards.basic_gait_bundle", basic)
     monkeypatch.setitem(sys.modules, "foothold_s2.curriculum.ex41", SimpleNamespace(
         prepare_terrain_cfg=lambda cfg, plan: {"terrain": "fixed"}))
     monkeypatch.setitem(sys.modules, "foothold_s2.curriculum.ex40_dr_runtime", SimpleNamespace(
@@ -95,17 +133,40 @@ def test_ex41_env_preparation_calls_pose_producer_and_records_contract(monkeypat
     cfg = SimpleNamespace(observations=SimpleNamespace(), events=SimpleNamespace(**terms))
     plan = SimpleNamespace(domain_randomization={"full_ranges": {"delay_s": [0., .015]},
                                                   "push_interval_s": [10., 15.]},
-                           initial_dr_scale=.5)
+                           initial_dr_scale=.5, stages=[SimpleNamespace(rewards=rewards)],
+                           stand_cfg=stand_cfg)
 
     receipt = prepare_ex41_env_cfg(cfg, plan)
 
-    assert called == [cfg]
+    assert called[0][0] == "basic"
+    assert called[0][1]["weights"] == {key: rewards[key] for key in
+                                        ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")}
+    assert called[1] == ("stand", stand_cfg)
+    assert called[2] == cfg
     assert cfg.observations.pose_cmd is not None
     assert receipt["pose_observation"] == {
         "group": "pose_cmd", "shape_per_env": [2],
         "columns": ["height_delta_m", "body_roll_rad"],
         "configured_value": [0.0, 0.0],
         "producer": "foothold_s2.sensors.start_obs.zero_pose_command"}
+    assert receipt["reward_contract"]["first_stage_weights"] == rewards
+
+
+def test_attached_stand_runtime_data_uses_realized_per_env_mass(monkeypatch):
+    recorded = []
+    monkeypatch.setitem(sys.modules, "foothold_s2.rewards.basic_gait_bundle",
+                        SimpleNamespace(StandSensorEvidence=SimpleNamespace(
+                            from_env=lambda env: recorded.append(env) or {"attached": True})))
+    class PhysXView:
+        def get_masses(self):
+            return torch.tensor([[1.0, 2.0], [1.5, 2.5]])
+    robot = SimpleNamespace(root_physx_view=PhysXView())
+    raw = SimpleNamespace(scene={"robot": robot}, num_envs=2, device="cpu")
+    receipt = attach_ex41_stand_runtime_data(SimpleNamespace(unwrapped=raw))
+    assert torch.equal(raw._ex40_total_mass_kg, torch.tensor([3.0, 4.0]))
+    assert raw._ex40_stand_evidence == {"attached": True} and recorded == [raw]
+    assert receipt == {"num_envs": 2, "mass_min_kg": 3.0, "mass_max_kg": 4.0,
+                       "source": "root_physx_view.get_masses"}
 
 
 def _first_obs(envs=3, pose=None):
@@ -152,10 +213,14 @@ def test_train_cfg_requires_pose_and_w86_with_pinned_parent(tmp_path):
     plan = load_fixed_plan(TABLE)
     parent = tmp_path / "model_6000.pt"
     parent.write_bytes(b"test checkpoint placeholder")
+    params = tmp_path / "params"
+    params.mkdir()
+    (params / "agent.yaml").write_text("perception:\n  p_map_off: 0.1\n", encoding="utf-8")
     cfg = configure_ex41_train_cfg({}, plan, parent)
     assert cfg["ex41_pose_commands"] is True
     assert cfg["ex41_w86_required"] is True
     assert cfg["max_iterations"] == 6501
+    assert cfg["perception"]["p_map_off"] == 0.1
     assert cfg["ex41_parent"] == {"path": str(parent.resolve()),
                                   "sha256": plan.parent_sha256, "iteration": 6000}
 
@@ -192,6 +257,9 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
     plan = load_fixed_plan(TABLE)
     parent = tmp_path / "model_6000.pt"
     parent.write_bytes(b"known parent")
+    params = tmp_path / "params"
+    params.mkdir()
+    (params / "agent.yaml").write_text("perception:\n  p_map_off: 0.1\n", encoding="utf-8")
     configured = configure_ex41_train_cfg(
         {"ex41_w86_required": True, "save_interval": 100}, plan, parent,
         rehearsal_updates=10)
@@ -316,19 +384,24 @@ def test_training_entry_keeps_dr_08_opt_in_and_marks_unconnected_rehearsal_steps
 
 
 def test_initial_dr_is_seeded_once_and_later_stage_scale_survives_resets():
+    import inspect
+
     calls = []
-    def event(env, env_ids=None):
-        calls.append((env._ex40_dr_scale, env_ids))
+    def event(env, env_ids, asset_cfg, target_range):
+        calls.append((env._ex40_dr_scale, env_ids, asset_cfg, target_range))
     cfg = SimpleNamespace(events=SimpleNamespace(**{
         name: SimpleNamespace(func=event)
         for name in ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")
     }))
     receipt = install_initial_dr_scale(cfg, 0.5)
     env = SimpleNamespace(_ex40_dr_scale=0.)
+    expected_signature = inspect.signature(event)
     for name in receipt["reset_terms"]:
-        getattr(cfg.events, name).func(env, env_ids=[0])
+        wrapped = getattr(cfg.events, name).func
+        assert inspect.signature(wrapped) == expected_signature
+        wrapped(env, env_ids=[0], asset_cfg="robot", target_range={"x": 1})
     assert receipt["before_first_reset"] is True
-    assert len(calls) == 3 and all(scale == 0.5 for scale, _ in calls)
+    assert len(calls) == 3 and all(scale == 0.5 for scale, *_ in calls)
     assert env._ex41_initial_dr_scale_applied == 0.5
 
     # A later W72 stage may raise scale; the next reset must not put it back
@@ -336,15 +409,47 @@ def test_initial_dr_is_seeded_once_and_later_stage_scale_survives_resets():
     env._ex40_dr_scale = 1.0
     calls.clear()
     for name in receipt["reset_terms"]:
-        getattr(cfg.events, name).func(env, env_ids=[1])
-    assert len(calls) == 3 and all(scale == 1.0 for scale, _ in calls)
+        getattr(cfg.events, name).func(
+            env, env_ids=[1], asset_cfg="robot", target_range={"x": 1})
+    assert len(calls) == 3 and all(scale == 1.0 for scale, *_ in calls)
     assert env._ex40_dr_scale == 1.0
+
+
+def test_rng_restore_normalizes_checkpoint_rng_tensors_to_cpu(monkeypatch):
+    import foothold_s2.runners.start_runner as start_runner
+
+    seen = {}
+
+    class MappedState:
+        def cpu(self):
+            seen["cpu_called"] = True
+            return torch.tensor([1, 2, 3], dtype=torch.uint8)
+
+    monkeypatch.setattr(start_runner.torch, "set_rng_state",
+                        lambda value: seen.update(device=value.device.type, dtype=str(value.dtype)))
+    monkeypatch.setattr(start_runner.np.random, "set_state", lambda _value: None)
+    monkeypatch.setattr(start_runner.random, "setstate", lambda _value: None)
+    start_runner.StartRunner.set_rng_state({"torch": MappedState(), "numpy": object(),
+                                            "python": object()})
+    assert seen == {"cpu_called": True, "device": "cpu", "dtype": "torch.uint8"}
 
 
 def test_existing_dr_runtime_readback_is_set_to_half_before_rollout():
     runtime, env = SimpleNamespace(scale=0.), SimpleNamespace(_ex40_dr_scale=0.)
     assert set_live_initial_dr_scale(runtime, env, 0.5) == {
         "runtime_scale": 0.5, "env_scale": 0.5}
+
+
+def test_ex41_command_slot_counter_expands_and_preserves_existing_counts():
+    from foothold_s2.scripts.ex41_startup import configure_ex41_command_slots
+
+    term = SimpleNamespace(slot_names=("forward", "walk_left", "walk_right", "spin_left", "spin_right"),
+                           slot_counts=torch.tensor([10, 11, 12, 13, 14]))
+    receipt = configure_ex41_command_slots(term)
+    assert len(term.slot_names) == 13 and term.slot_names[:5] == (
+        "forward", "walk_left", "walk_right", "spin_left", "spin_right")
+    assert term.slot_counts.tolist() == [10, 11, 12, 13, 14, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert receipt["preserved_counts"] == 60
 
 
 def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path):

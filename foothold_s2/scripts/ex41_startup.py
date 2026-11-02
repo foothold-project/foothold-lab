@@ -17,6 +17,7 @@ import time
 import uuid
 import warnings
 from contextlib import contextmanager
+from functools import wraps
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,32 @@ EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
 EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
 EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+
+
+def configure_ex41_command_slots(command_term: Any) -> dict[str, Any]:
+    """Expand the pre-runtime W/T counter to EX-41's full slot contract.
+
+    The task config initially creates a five-slot W/T command term. EX-41's
+    first stages sample seven or more slots, so the cumulative counter must be
+    resized when its runtime is attached, before the first rollout reset.
+    Preserve counts already collected under matching names.
+    """
+    from foothold_s2.commands.mixed_core import EX39_SLOTS
+
+    target = tuple(EX39_SLOTS)
+    old_names = tuple(command_term.slot_names)
+    old_counts = command_term.slot_counts
+    if old_counts.ndim != 1 or old_counts.numel() != len(old_names):
+        raise ValueError("EX-41 command slot names/counts differ before runtime attachment")
+    if any(name not in target for name in old_names):
+        raise ValueError("EX-41 command term has an unknown pre-runtime slot")
+    counts = old_counts.new_zeros(len(target))
+    for index, name in enumerate(old_names):
+        counts[target.index(name)] = old_counts[index]
+    command_term.slot_names = target
+    command_term.slot_counts = counts
+    return {"slot_names": list(target), "preserved_counts": int(old_counts.sum().item()),
+            "prior_slot_names": list(old_names)}
 
 
 def ex41_score_watch_argv(run_dir: str | Path, score_dir: str | Path, *,
@@ -344,6 +371,17 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
                              disk_guard: dict[str, Any] | None = None) -> dict[str, Any]:
     """Set mandatory transfer flags and the parent reference in a fresh cfg."""
     cfg = dict(train_cfg)
+    parent_agent_path = Path(parent_path).resolve(strict=True).parent / "params" / "agent.yaml"
+    parent_agent = yaml.safe_load(parent_agent_path.read_text(encoding="utf-8-sig"))
+    parent_perception = parent_agent.get("perception") if isinstance(parent_agent, dict) else None
+    parent_p_map_off = parent_perception.get("p_map_off") if isinstance(parent_perception, dict) else None
+    if (type(parent_p_map_off) not in (int, float)
+            or not math.isfinite(float(parent_p_map_off))
+            or not 0.0 <= float(parent_p_map_off) <= 1.0):
+        raise ValueError("EX-41 parent agent.yaml has no valid perception.p_map_off")
+    perception = dict(cfg.get("perception") or {})
+    perception["p_map_off"] = float(parent_p_map_off)
+    cfg["perception"] = perception
     cfg["ex41_pose_commands"] = True
     cfg["ex41_w86_required"] = True
     cfg["ex41_parent"] = {
@@ -473,8 +511,30 @@ def write_ex41_start_readback(log_dir: str | Path, receipt: dict[str, Any]) -> P
     return target
 
 
+def attach_ex41_stand_runtime_data(env: Any) -> dict[str, Any]:
+    """Provide the realized per-env mass consumed by the inherited EX-40 stand rewards."""
+    import torch
+
+    raw = getattr(env, "unwrapped", env)
+    masses = raw.scene["robot"].root_physx_view.get_masses()
+    if masses.ndim != 2 or masses.shape[0] != int(raw.num_envs) or masses.shape[1] <= 0:
+        raise ValueError("EX-41 realized per-env robot mass tensor is invalid")
+    total = masses.sum(dim=1).to(device=raw.device)
+    if not bool(torch.isfinite(total).all()) or bool((total <= 0).any()):
+        raise ValueError("EX-41 realized per-env robot masses must be finite and positive")
+    raw._ex40_total_mass_kg = total
+    from foothold_s2.rewards.basic_gait_bundle import StandSensorEvidence
+
+    raw._ex40_stand_evidence = StandSensorEvidence.from_env(raw)
+    return {"num_envs": int(total.numel()), "mass_min_kg": float(total.min().item()),
+            "mass_max_kg": float(total.max().item()), "source": "root_physx_view.get_masses"}
+
+
 def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     """Install EX-41-only pose observations, terrain, DR consumers, and W86 before gym.make."""
+    from foothold_s2.rewards.basic_gait_bundle import (
+        apply_ex39_settings, apply_ex40_stand_settings, apply_settings, validate_settings,
+    )
     from foothold_s2.curriculum.ex41 import prepare_terrain_cfg
     from foothold_s2.curriculum.ex40_dr_runtime import install_runtime_events
     from foothold_s2.rewards.w86_runtime import prepare_env_cfg
@@ -482,6 +542,13 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
 
     dr = plan.domain_randomization
     ranges = dr["full_ranges"]
+    first_rewards = dict(plan.stages[0].rewards)
+    reward_settings = validate_settings(
+        {key: first_rewards[key] for key in ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")},
+        lin_vel_z_schedule=False, feet_regulation_weight=None)
+    apply_settings(env_cfg, reward_settings)
+    ex39_reward_receipt = apply_ex39_settings(env_cfg)
+    apply_ex40_stand_settings(env_cfg, plan.stand_cfg)
     apply_ex41_pose_observation(env_cfg)
     pose_receipt = {"group": "pose_cmd", "shape_per_env": [2],
                     "columns": ["height_delta_m", "body_roll_rad"],
@@ -495,7 +562,11 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     w86_receipt = prepare_env_cfg(env_cfg, plan)
     return {"events": event_receipt, "initial_dr": dr_receipt,
             "terrain": terrain_receipt, "w86": w86_receipt,
-            "pose_observation": pose_receipt}
+            "pose_observation": pose_receipt,
+            "reward_contract": {"source": "EX-41 first stage plus EX-39/EX-40 helpers",
+                                "first_stage_weights": first_rewards,
+                                "ex39": ex39_reward_receipt,
+                                "stand": dict(plan.stand_cfg)}}
 
 
 def first_observation_readback(raw: Any, expected_envs: int) -> dict[str, Any]:
@@ -563,6 +634,7 @@ def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
         if not callable(func):
             raise ValueError(f"EX-41 reset DR consumer missing: {name}")
 
+        @wraps(func)
         def seeded(env, *args, _func=func, **kwargs):
             # Seed only at the first reset. Stage progression owns subsequent
             # scale changes, and later environment resets must preserve them.

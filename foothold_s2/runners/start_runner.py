@@ -916,7 +916,14 @@ class StartRunner(OnPolicyRunner):
         est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
         o = snap["batch"]["obs"]
         T, K = o.shape[0], o.shape[1]
-        td = TensorDict({ACTOR_KEY: torch.cat([o, est_in], -1).reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            # D93 fixes both pose-command columns to zero for this stage.
+            # PerceptionReplay intentionally stores the base observation only,
+            # so reproduce the checked pose suffix for the actor KL probe.
+            pose = torch.zeros(T, K, 2, dtype=actor.dtype, device=actor.device)
+            actor = torch.cat([actor, pose], -1)
+        td = TensorDict({ACTOR_KEY: actor.reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
         return kl_probe.policy_dist(self.alg.policy, td)
 
     def _kl_phi_after(self, snap: dict) -> dict:
@@ -1073,11 +1080,13 @@ class StartRunner(OnPolicyRunner):
 
     @staticmethod
     def set_rng_state(s: dict) -> None:
-        torch.set_rng_state(s["torch"])
+        # torch.load(map_location=self.device) can move the global CPU RNG
+        # ByteTensor onto CUDA; torch.set_rng_state only accepts a CPU tensor.
+        torch.set_rng_state(s["torch"].cpu())
         np.random.set_state(s["numpy"])
         random.setstate(s["python"])
         if "cuda" in s and torch.cuda.is_available():
-            torch.cuda.set_rng_state_all(s["cuda"])
+            torch.cuda.set_rng_state_all([state.cpu() for state in s["cuda"]])
 
     def state_dict(self, infos: dict | None = None) -> dict:
         return {

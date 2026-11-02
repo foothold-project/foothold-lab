@@ -15,6 +15,7 @@ from tensordict import TensorDict
 from foothold_s2.models.start_policy import OBS_GROUPS, StartActorCritic
 from foothold_s2.runners.ex41_critic_mirror import EXPECTED_JOINT_NAMES, assert_joint_order, mirror_critic, value_loss
 from foothold_s2.runners.ex41_transfer import policy_state
+from foothold_s2.runners import kl_probe
 from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 from foothold_s2.tests.ex41_authorization_fixture import real_authorization
@@ -70,6 +71,8 @@ def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
     with pytest.raises(ValueError, match="W72 HOLD"):
         runner.set_ex41_critic_mirror(True, wrong)
     runner.set_ex41_critic_mirror(True, good)
+
+
     assert runner.alg.mirror_enabled is True
     runner.env.scene["robot"].joint_names = tuple(reversed(EXPECTED_JOINT_NAMES))
     with pytest.raises(ValueError, match="joint_names"):
@@ -83,6 +86,23 @@ def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
     assert runner.alg.mirror_enabled is False and runner.ex41_critic_mirror is False
     raw["pose_cmd"].zero_()
     runner.learn(1)  # The boundary failure does not kill an otherwise healthy rollout.
+
+
+def test_phi_kl_probe_includes_zero_pose_suffix(monkeypatch):
+    runner = pose_runner()
+    T, K = 3, 2
+    batch = {"obs": torch.zeros(T, K, 45), "base_vel": torch.zeros(T, K, 3)}
+    runner.perception.est_sequence = lambda _batch, _eps: torch.zeros(T, K, 51)
+    seen = {}
+
+    def capture(_policy, td):
+        seen["actor"] = td["actor_in"].clone()
+        return torch.zeros(T * K, 12), torch.ones(T * K, 12)
+
+    monkeypatch.setattr(kl_probe, "policy_dist", capture)
+    runner._phi_dist({"batch": batch, "eps": torch.zeros(T, K, 16)})
+    assert seen["actor"].shape == (T * K, 98)
+    assert torch.count_nonzero(seen["actor"][:, -2:]) == 0
 
 
 @pytest.mark.parametrize("changed", ["missing", "modified"])

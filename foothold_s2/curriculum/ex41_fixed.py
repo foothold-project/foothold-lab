@@ -190,8 +190,9 @@ class Clock:
 
 
 class EX41FixedRuntime(EX41Runtime):
-    def __init__(self,*args,**kwargs):
+    def __init__(self,*args,allow_w71_unverified=False,**kwargs):
         super().__init__(*args,**kwargs)
+        self.allow_w71_unverified=bool(allow_w71_unverified)
         self.clock=Clock(self.plan.clock_settings); self.baseline=None
         self._missing_maintenance_boundaries=0
         self._last_mirror_observed_score=None
@@ -205,7 +206,7 @@ class EX41FixedRuntime(EX41Runtime):
 
     def _check_values(self,values):
         super()._check_values(values)
-        if not values['w71_ready']:
+        if not values['w71_ready'] and not self.allow_w71_unverified:
             raise ValueError('EX41 fixed schedule requires verified W71 consumer before launch')
 
     def dr_scale(self,n): return self.clock.scale(n)
