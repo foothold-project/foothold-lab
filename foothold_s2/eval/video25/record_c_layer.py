@@ -1813,7 +1813,7 @@ def _capture(spec: dict[str, Any]) -> None:
                             "composition_contract": {"min_color_span_cm": 5.0,
                                                      "attention_tokens": 128,
                                                      "attention_fixed_range": [0.0, 0.3],
-                                                     "feet_markers": "unchanged"}},
+                                                     "feet_markers": "airborne-black-gray-all-three-map-panels"}},
         }
         _json_atomic(output.with_suffix(".json"), metadata)
         print("SOL23F_CAPTURE", json.dumps({"frames": frame_count, "steps": step_count,

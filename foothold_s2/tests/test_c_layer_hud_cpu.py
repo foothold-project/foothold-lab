@@ -38,7 +38,7 @@ def test_unused_map_tile_is_grey_but_used_map_keeps_colour():
     assert np.array_equal(unused[:, :, 1], unused[:, :, 2])
 
 
-def test_eval_gt_panel_really_greys_unused_reconstruction():
+def test_eval_gt_panel_keeps_reconstruction_colour_under_d139():
     grid = np.linspace(-1, 1, 512, dtype=np.float32).reshape(32, 16)
     z = {
         "gt_map": np.stack([grid, grid]), "refined_map": np.stack([grid, grid]),
@@ -53,4 +53,4 @@ def test_eval_gt_panel_really_greys_unused_reconstruction():
     gt = panel[120, 50]
     unused = panel[120, 250]
     assert not (gt[0] == gt[1] == gt[2])
-    assert unused[0] == unused[1] == unused[2]
+    assert not (unused[0] == unused[1] == unused[2])

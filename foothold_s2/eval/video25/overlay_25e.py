@@ -8,7 +8,6 @@ same camera frame as the robot (not a 2D paste):
   - foot trails attached to the feet (last 1.5 s), bigger dot while in contact
   - height scan points on the ground: GT map (gt_map_scan ray hits) white, reconstructed map
     (refined) orange at base_z + value; the map the policy did NOT use is drawn grey
-  - foot scan points (foot_scan_0..3 ray hits) cyan
   - attention: top-k map tokens by last-layer attention of the prop token, red, size by weight
 """
 from __future__ import annotations
@@ -77,13 +76,13 @@ class SceneOverlay:
         self.maps = VisualizationMarkers(_sphere_cfg("/Visuals/v25e/map_points", {
             "gt": (0.003, (0.2, 1.0, 0.3)), "pred": (0.0019, (0.25, 0.6, 1.0)),
             "gt_off": (0.003, (0.2, 1.0, 0.3)), "pred_off": (0.0019, (0.25, 0.6, 1.0)),
-            "foot": (0.0026, (1.0, 0.9, 0.05)), "err": (0.0022, (1.0, 0.12, 0.12))},
+            "err": (0.0022, (1.0, 0.12, 0.12))},
             self.saturation_multiplier))
         # GT = green dots, reconstructed = blue wireframe (rows and columns of the 32x16 grid),
-        # red vertical sticks where |reconstructed - GT| > 2 cm, foot scan = yellow dots  # used / unused drawn the same; HUD says which map the policy used
+        # red vertical sticks where |reconstructed - GT| > 2 cm.
         self.attn = VisualizationMarkers(_sphere_cfg("/Visuals/v25e/attention", {
             "a": (0.008, (1.0, 0.28, 0.0))}, self.saturation_multiplier))
-        # 10/25 lead review: map points / foot scan / attention dots clutter the scene.
+        # 10/25 lead review: map points and attention dots clutter the scene.
         # They move to the 2D map panel (compose_25e.py); the scene keeps arrows, arcs, footprints.
         self.attn_rows: list = []
         self.history: deque = deque(maxlen=TRAIL_STEPS)
@@ -234,7 +233,7 @@ class SceneOverlay:
                     q[:, 2] = hits[bad, 2] + a * diff[bad]
                     sticks.append(q)
                 mp.append(torch.cat(sticks) + torch.tensor([0.0, 0.0, 0.006], device=dev))
-                mi.append(torch.full((6 * int(bad.sum()),), 5, device=dev))
+                mi.append(torch.full((6 * int(bad.sum()),), 4, device=dev))
             info["recon_err_cells_over_2cm"] = int(bad.sum())
         self.maps.visualize(torch.cat(mp), marker_indices=torch.cat(mi))
 
