@@ -20,7 +20,6 @@ from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 from foothold_s2.tests.ex41_authorization_fixture import real_authorization
 
 
-PARENT_SHA = "3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368"
 W72_AUTHORIZATION = json.loads((Path(__file__).parent / "fixtures" / "ex41_authorization.json").read_text(encoding="utf-8"))
 
 
@@ -35,7 +34,7 @@ class PoseEnv(FakeStartEnv):
         return raw
 
 
-def pose_runner(mirror=False, parent_mode=False, approval=None, log_dir=None):
+def pose_runner(mirror=False, parent_mode=False, approval=None, log_dir=None, parent_ref=None):
     perception = {"microbatch_envs": 2}
     if parent_mode:
         perception.update({"critic_mode": "clean52", "map_input": "reconstruction",
@@ -44,6 +43,8 @@ def pose_runner(mirror=False, parent_mode=False, approval=None, log_dir=None):
     cfg = train_cfg(2, perception)
     cfg["ex41_pose_commands"] = True
     cfg["ex41_critic_mirror"] = mirror
+    if parent_ref is not None:
+        cfg["ex41_parent"] = parent_ref
     if mirror:
         cfg["ex41_mirror_approval"] = approval
     return StartRunner(PoseEnv(num_envs=4), cfg, log_dir=log_dir, device="cpu")
@@ -118,13 +119,16 @@ def test_resume_stale_mirror_approval_keeps_training_and_records_hold(tmp_path, 
     assert later.alg.mirror_enabled is False
 
 
-def test_parent_zero_columns_bit_equal_and_adam_moments():
-    path = os.environ.get("EX41_PARENT_CHECKPOINT")
-    if not path or not os.path.isfile(path):
-        pytest.skip("set EX41_PARENT_CHECKPOINT to the verified m7500 file")
+@pytest.mark.parametrize("iteration", [6000, 7500])
+def test_parent_zero_columns_bit_equal_and_adam_moments(iteration, tmp_path):
+    path = os.environ.get(f"EX41_PARENT_{iteration}_CHECKPOINT")
+    expected_sha = os.environ.get(f"EX41_PARENT_{iteration}_SHA256")
+    if not path or not expected_sha or not os.path.isfile(path):
+        pytest.skip(f"set EX41_PARENT_{iteration}_CHECKPOINT and SHA256 to the verified file")
+    parent_ref = {"path": path, "sha256": expected_sha, "iteration": iteration}
     torch.set_num_threads(1)
     parent = torch.load(path, map_location="cpu", weights_only=False)
-    runner = pose_runner(parent_mode=True)
+    runner = pose_runner(parent_mode=True, parent_ref=parent_ref)
     # The parent used a CUDA Philox generator (16-byte state).  CPU PyTorch
     # generators use a different representation, so capture the exact state
     # passed to the runtime restore without pretending CPU can execute it.
@@ -137,11 +141,14 @@ def test_parent_zero_columns_bit_equal_and_adam_moments():
     captured = CapturingGenerator()
     runner.map_switch_gen = captured
     # Test the actual parent and the strict SHA gate, without restoring an EX-40 env.
+    runner.cfg["ex41_parent"] = dict(parent_ref, sha256="0" * 64)
     with pytest.raises(ValueError, match="SHA256"):
-        runner.load_ex41_parent(path, "0" * 64)
-    receipt = runner.load_ex41_parent(path, PARENT_SHA)
+        runner.load_ex41_parent()
+    runner.cfg["ex41_parent"] = parent_ref
+    receipt = runner.load_ex41_parent()
     assert torch.equal(captured.state, parent["map_switch"]["generator_state"])
-    assert receipt["parent_iteration"] == 7500 and runner.current_learning_iteration == 7500
+    assert receipt["parent_iteration"] == iteration and runner.current_learning_iteration == iteration
+    assert receipt["parent_path"] == os.path.abspath(path) and receipt["parent_sha256"] == expected_sha
     assert runner.alg.learning_rate == parent["ppo_learning_rate"]
     target = runner.alg.policy.state_dict()
     expanded = policy_state(parent["model_state_dict"], target)
@@ -183,6 +190,12 @@ def test_parent_zero_columns_bit_equal_and_adam_moments():
                     assert (earlier - later).abs().max() <= 3e-6
                 else:
                     assert torch.equal(earlier, later)
+        runner.set_ex41_critic_mirror(True, real_authorization(tmp_path / f"w72_{iteration}"))
+        mirrored_obs = new_obs.clone()
+        mirrored_obs["critic_in"] = mirror_critic(new_obs["critic_in"])
+        assert runner.alg.mirror_enabled is True
+        assert torch.isfinite(runner.alg.policy.evaluate(mirrored_obs)).all()
+        assert torch.equal(old.act_inference(old_obs), runner.alg.policy.act_inference(new_obs))
     assert all(torch.equal(parent["perception_state_dict"][k], v) for k, v in runner.perception.state_dict().items())
     # Before an update, nonzero new inputs are intentionally inert.  After a
     # gradient step they must become consumable without moving perception.

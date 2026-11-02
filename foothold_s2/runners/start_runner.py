@@ -1215,7 +1215,7 @@ class StartRunner(OnPolicyRunner):
         self._resumed = True
         return sd["infos"]
 
-    def load_ex41_parent(self, path: str, expected_sha256: str) -> dict:
+    def load_ex41_parent(self) -> dict:
         """D93 one-time EX-40 transplant.  Never restore old physical env/stage.
 
         EX-41's own later checkpoints must use ``load`` instead.  The caller
@@ -1225,13 +1225,25 @@ class StartRunner(OnPolicyRunner):
 
         if not self.ex41_pose_commands or self._resumed:
             raise ValueError("EX-41 parent transplant requires a fresh 98/666 runner")
+        parent_cfg = self.cfg.get("ex41_parent")
+        if not isinstance(parent_cfg, dict) or set(parent_cfg) != {"path", "sha256", "iteration"}:
+            raise ValueError("EX-41 parent needs configured path, sha256, and iteration")
+        path, expected_sha256, expected_iteration = (parent_cfg[key] for key in ("path", "sha256", "iteration"))
+        if (not isinstance(path, str) or not Path(path).is_absolute()
+                or not isinstance(expected_sha256, str)
+                or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
+                or type(expected_iteration) is not int or expected_iteration <= 0):
+            raise ValueError("EX-41 parent configuration has invalid path, sha256, or iteration")
+        if Path(path).name != f"model_{expected_iteration}.pt":
+            raise ValueError("EX-41 parent filename differs from configured iteration")
         with open(path, "rb") as fh:
             actual_sha256 = hashlib.file_digest(fh, "sha256").hexdigest()
         if actual_sha256 != expected_sha256:
             raise ValueError("EX-41 parent checkpoint SHA256 mismatch")
         sd = torch.load(path, weights_only=False, map_location=self.device)
-        if sd.get("format") != CKPT_FORMAT or int(sd.get("iter", -1)) != 7500 or sd.get("ex41_pose_commands"):
-            raise ValueError("EX-41 parent must be the EX-40 m7500 START checkpoint")
+        if (sd.get("format") != CKPT_FORMAT or int(sd.get("iter", -1)) != expected_iteration
+                or sd.get("ex41_pose_commands")):
+            raise ValueError("EX-41 parent does not match the configured EX-40 START checkpoint")
         saved = sd.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
@@ -1250,7 +1262,7 @@ class StartRunner(OnPolicyRunner):
         self.current_learning_iteration = int(sd["iter"])
         self.ex41_parent_transfer = {
             "parent_path": os.path.abspath(path), "parent_sha256": actual_sha256,
-            "parent_iteration": 7500,
+            "parent_iteration": expected_iteration,
             "preserved": ["policy", "policy_adam_moments_and_step", "policy_learning_rate",
                           "perception", "perception_adam", "adasmpl", "map_switch", "rng"],
             "new": ["pose_command_zero_columns", "pose_command_zero_moments", "physical_env_reset",

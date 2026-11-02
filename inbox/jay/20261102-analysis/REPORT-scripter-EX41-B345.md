@@ -5,7 +5,7 @@
 > 근거: EX-40 고정본 2df419b0 · READINESS-EX41-1102 §1, §3 · 실제 model_7500.pt
 > 요지: 자세 명령 두 칸의 0 초기화 이식과 critic 전용 거울 PPO를 러너에 준비했다.
 > 상태: CPU 재확인됨 · Kit 및 CUDA 미확인 · analyst factory 연결 대기
-> 판: v1.2
+> 판: v1.3
 
 ## 소유권과 계약
 
@@ -25,8 +25,9 @@ analyst가 소유한 `stage_changed`는 검증된 `effective.authorization`으�
 | 거울 PPO | 실제 PPO 한 갱신에서 `value_function`은 원래 손실, `value_mirror`는 거울 손실, `value_combined`는 그 평균으로 기록되며 모두 유한. 원래 PPO 손실로 actor와 std를 원래 전역 norm 규칙에 따라 clip한 뒤 critic gradient만 거울 평균 value 손실로 대체하고 별도 clip한다. 동일 batch에서 거울 켬·끔의 actor 및 std gradient는 clip 뒤 `torch.equal` |
 | 거울 승인 | 기본 꺼짐. 현재 파일과 커밋 바이트 SHA 대조 실패, 가짜 고정 SHA, 관절 순서 불일치를 거절하고 거울 꺼짐 유지 |
 | 체크포인트 재개 | 거울 켠 저장본의 승인 파일이 삭제되거나 바뀌면 예전 코드는 `ValueError`로 멈춤. 수정 후 거울만 끄고 `RuntimeWarning` 및 `ex41_mirror_events.jsonl`의 `resume_hold` 행을 남긴다. 정책·optimizer 상태는 복원되고 학습 한 걸음이 진행됨. 후속 저장본에 보류 이유가 남으며 거울 끈 구성으로 다시 로드됨 |
+| 부모 선택 | `train_cfg.ex41_parent`의 절대 경로·SHA256·완료 회차를 시작 이식 호출에서 대조한다. m6000 `d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5`와 m7500 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368` 모두 0 입력 출력, Adam 확장, 지각 상태, 거울 유한 출력 시험 통과. 설정 SHA를 0으로 바꾸면 실제 파일을 거절. 어느 부모를 채택할지는 미정 |
 
-CPU 시험은 `CUDA_VISIBLE_DEVICES=''`, `EX41_PARENT_CHECKPOINT=<위 model_7500.pt>`, `EX41_COORDINATE_METADATA=<같은 run의 training_trace/coordinate_metadata.json>`을 지정하고 `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_ex41_b345.py foothold_s2/tests/test_start_runner.py -q -p no:cacheprovider`로 실행했다. 거울 승인 파일 삭제·내용 변경 반례는 수정 전 `2 failed`, 수정 후 전체 `15 passed in 57.10s`다. pyflakes 0건, `ruff check --select F` 통과, `git diff --check` 통과. 원장 파일 쓰기 자체가 실패하면 학습을 중단하지 않고 추가 경고를 남긴다. Kit 및 장기 재개는 미확인이다.
+CPU 시험은 `CUDA_VISIBLE_DEVICES=''`, `EX41_PARENT_6000_CHECKPOINT`와 `_SHA256`, `EX41_PARENT_7500_CHECKPOINT`와 `_SHA256`, `EX41_COORDINATE_METADATA`를 위 실제 파일로 지정하고 `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_ex41_b345.py foothold_s2/tests/test_start_runner.py -q -p no:cacheprovider`로 실행했다. 거울 승인 파일 삭제·내용 변경 반례는 수정 전 `2 failed`, 수정 후 두 부모 포함 전체 `16 passed in 60.31s`다. pyflakes 0건, `ruff check --select F` 통과, `git diff --check` 통과. 원장 파일 쓰기 자체가 실패하면 학습을 중단하지 않고 추가 경고를 남긴다. Kit 및 장기 재개는 미확인이다.
 
 부모의 지도 선택 CUDA 생성기 상태는 16바이트여서 CPU 생성기에 직접 복원할 수 없다. CPU 시험은 저장된 바이트가 런타임 복원 호출에 그대로 전달되는지 확인했다. 실제 CUDA 복원, 물리 reset, Kit rollout은 미확인이다. 부모의 물리 환경 상태를 동일 궤적으로 재개한다는 뜻이 아니다.
 
@@ -35,16 +36,18 @@ CPU 시험은 `CUDA_VISIBLE_DEVICES=''`, `EX41_PARENT_CHECKPOINT=<위 model_7500
 | 파일 | SHA256 |
 |---|---|
 | `foothold_s2/models/start_policy.py` | `e9320c38ae7587495ab62a2dfbcd61a886bfeaf7999be57bf4da2c7f9e07a06b` |
-| `foothold_s2/runners/start_runner.py` | `1b2693cf13494fab2958976d3839c21a348818dd38f0406751b0ff16349f1e85` |
+| `foothold_s2/runners/start_runner.py` | `3740343183fec8ebd1901d556d6b4ce0e9b556cb0f8427c4c4cb6fd1af24101b` |
 | `foothold_s2/runners/ex41_transfer.py` | `6ae4ec2a07915f01ad34319bef1f70abdf358875652d3b3f913b0440699ceb17` |
 | `foothold_s2/runners/ex41_critic_mirror.py` | `5fc1124ed8890b10e1eb5cb01de000ca600622bd27fe021c3d28332340170627` |
-| `foothold_s2/tests/test_ex41_b345.py` | `ce13c8ad65253d1b84890aafdf9b445b1980c761b8ba1bcf376797936f8a6d33` |
+| `foothold_s2/tests/test_ex41_b345.py` | `6400313e4adfdd76f5202395d1c08e8d7c217a57937f060d1fed7b455b6c4821` |
 | `foothold_s2/tests/ex41_authorization_fixture.py` | `e1f786ed8fbfed1f8b2fa981f56d0b0db3f4efef324c2b9b81d0d1948775b16f` |
 | `foothold_s2/tests/fixtures/ex41_authorization.json` | `70c8a7eb7896648634c69d0fed1250dca7f61f984feaf7f809579e5df682f6ab` |
 
 ## 다음 확인
 
 runner 통합본에서 analyst의 `effective.authorization` 검증, W72 stage hook, pose 관측 생성과 B5 runtime을 연결한 뒤 CPU와 Kit 경계 시험이 필요하다. runner 소유 시작 스크립트와 학습 기동은 이 사본에서 수행하지 않았다.
+
+`foothold_s2/scripts/train_start.py`는 아직 `load_ex41_parent()` 호출을 갖지 않는다. 시작 스크립트 담당 runner가 정한 부모 설정을 `train_cfg.ex41_parent`에 넣고 이식 메서드를 연결해야 실제 EX-41 기동에서 이 관문이 작동한다. 이 보고의 CPU 결과를 기동 완료로 읽지 않는다.
 
 ## 이력
 
@@ -53,3 +56,4 @@ runner 통합본에서 analyst의 `effective.authorization` 검증, W72 stage ho
 | v1.0 | 2026-11-02 | B3/B4 러너 이식과 CPU 근거 |
 | v1.1 | 2026-11-02 | 실제 관절 순열, W72 파일 대조, critic 전용 clip, batch 1 오차 범위 재확인 |
 | v1.2 | 2026-11-02 | 거울 승인 파일 삭제·변경 시 재개 보류 기록과 학습 지속, batch별 일치 범위 명시 |
+| v1.3 | 2026-11-02 | 부모 경로·SHA·회차를 설정에서 대조하고 m6000·m7500 실제 저장본으로 동일 시험 |
