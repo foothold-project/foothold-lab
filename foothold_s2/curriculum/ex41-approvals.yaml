@@ -1,0 +1,13 @@
+format: foothold-ex41-approvals/1
+fields:
+  reward_weights.swing: {decision_id: D123, bounds: [-20.0, -2.0]}
+  reward_weights.stumble: {decision_id: D123, bounds: [-3.0, -1.0]}
+  reward_weights.zero_yaw: {decision_id: D97-lower-once, bounds: [-0.5, -0.25]}
+  # No broad permission for PPO/DR/termination changes. Add a concrete decision
+  # and its interval in the same committed snapshot before changing a value.
+automatic:
+  pair_bias: D93-pair-one-point-limit-two
+  reward_halving: D97-lower-once
+  critic_mirror: D101
+  extension: D110-one-extension
+  cap_transition: D110
