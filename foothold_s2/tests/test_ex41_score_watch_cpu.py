@@ -91,6 +91,39 @@ def test_default_dry_never_calls_child_or_creates_score(tmp_path,monkeypatch):
     assert not (tmp_path/'scores').exists() and not state['done']
 
 
+def test_auxiliary_root_resolves_w57_bundle_phase_and_iteration_layouts(tmp_path):
+    cp = tmp_path/'model_10.pt'; cp.write_bytes(b'fixture')
+    model_root = tmp_path/'axis250'/'model_10'; model_root.mkdir(parents=True)
+    expected = model_root/'axis_v2.json'; expected.write_text('{}', encoding='utf-8')
+    assert watch.resolve_auxiliary_path(tmp_path/'axis250', 10, 'axis_v2.json') == expected
+
+    bundle = tmp_path/'bundle'; phase = bundle/'axis_v2'; phase.mkdir(parents=True)
+    phase_file = phase/'axis_v2.json'; phase_file.write_text('{}', encoding='utf-8')
+    assert watch.resolve_auxiliary_path(bundle, 10, 'axis_v2.json') == phase_file
+    assert watch.resolve_auxiliary_path(phase, 10, 'axis_v2.json') == phase_file
+
+
+def test_missing_w57_during_running_bundle_is_pending_not_file_not_found(tmp_path):
+    bundle = tmp_path/'bundle'; bundle.mkdir()
+    receipt = bundle/'eval_receipt.json'
+    receipt.write_text(json.dumps({'state':'running'}), encoding='utf-8')
+    assert watch.auxiliary_pending_during_bundle(bundle, bundle/'axis_v2/axis_v2.json')
+    receipt.write_text(json.dumps({'state':'HOLD'}), encoding='utf-8')
+    assert not watch.auxiliary_pending_during_bundle(bundle, bundle/'axis_v2/axis_v2.json')
+
+
+def test_zero_exit_with_w78_hold_error_makes_bundle_hold_and_nonzero(tmp_path):
+    error_dir = tmp_path/'w78_v2'; error_dir.mkdir()
+    (error_dir/'terrain_skill_v2.error.json').write_text(json.dumps({
+        'state':'HOLD', 'reason':'known W78 HOLD', 'completed':0, 'expected':240,
+    }), encoding='utf-8')
+    child = {'state':'done', 'rc':0, 'pid':123}
+    result = evaluator.reconcile_child_result('w78_v2', child, error_dir)
+    terminal = evaluator.bundle_terminal_status({'w78_v2':result})
+    assert result['process_rc'] == 0 and result['state'] == 'HOLD' and result['rc'] != 0
+    assert terminal == {'state':'HOLD', 'rc':5, 'auxiliary_missing':['axis_v2','w78_v2']}
+
+
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
     rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
     assert [r['name'] for r in rows]==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2','w78_v2']
@@ -298,7 +331,7 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
     monkeypatch.setattr(evaluator,'hidden_child',spy)
     row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation')
     assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
-    assert row['state']=='done' and row['auxiliary_missing']==['axis_v2','w78_v2']
+    assert row['state']=='HOLD' and row['rc']==5 and row['auxiliary_missing']==['axis_v2','w78_v2']
 
 
 def test_stage_receipt_at_next_update_does_not_relabel_previous_checkpoint(tmp_path):

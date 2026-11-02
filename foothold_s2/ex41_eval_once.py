@@ -82,6 +82,61 @@ def prepare_phase_output(argv):
     return output
 
 
+def auxiliary_phase_status(name, output):
+    """Read the phase's durable result, not only the child process exit code."""
+    output = Path(output)
+    contracts = {
+        'axis_v2': ('axis_v2.json', 'axis_v2.error.json', 'foothold-axis-v2/1'),
+        'w78_v2': ('terrain_skill_v2.json', 'terrain_skill_v2.error.json',
+                   'foothold-terrain-skill-v2/1'),
+    }
+    if name not in contracts:
+        return {'state': 'done'}
+    result_name, error_name, schema = contracts[name]
+    error_path = output / error_name
+    if error_path.is_file():
+        try:
+            error = json.loads(error_path.read_text(encoding='utf-8-sig'))
+        except (OSError, ValueError) as exc:
+            return {'state': 'HOLD', 'reason': f'{error_name} unreadable: {exc}'}
+        return {'state': 'HOLD', 'reason': str(error.get('reason', 'child error receipt')),
+                'error_path': str(error_path)}
+    result_path = output / result_name
+    if not result_path.is_file():
+        return {'state': 'HOLD', 'reason': f'{result_name} absent',
+                'result_path': str(result_path)}
+    try:
+        result = json.loads(result_path.read_text(encoding='utf-8-sig'))
+    except (OSError, ValueError) as exc:
+        return {'state': 'HOLD', 'reason': f'{result_name} unreadable: {exc}',
+                'result_path': str(result_path)}
+    if result.get('schema') != schema:
+        return {'state': 'HOLD', 'reason': f'{result_name} schema differs',
+                'result_path': str(result_path)}
+    if name == 'w78_v2' and result.get('state') != 'done':
+        return {'state': 'HOLD', 'reason': f'{result_name} state is not done',
+                'result_path': str(result_path)}
+    return {'state': 'done', 'result_path': str(result_path)}
+
+
+def reconcile_child_result(name, child, output):
+    """A zero process exit cannot override a durable auxiliary HOLD receipt."""
+    result = dict(child)
+    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2'):
+        artifact = auxiliary_phase_status(name, output)
+        if artifact['state'] != 'done':
+            result.update(state='HOLD', process_rc=result['rc'], rc=5,
+                          reason=artifact['reason'], artifact=artifact)
+    return result
+
+
+def bundle_terminal_status(steps):
+    missing = [name for name in ('axis_v2', 'w78_v2')
+               if steps.get(name, {}).get('state') != 'done']
+    return {'state': 'HOLD' if missing else 'done', 'rc': 5 if missing else 0,
+            'auxiliary_missing': missing}
+
+
 def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
@@ -116,16 +171,15 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
                 continue
             prepare_phase_output(phase['argv'])
             result = hidden_child(phase['argv'], out/'children'/phase['name'], env=env)
+            result = reconcile_child_result(phase['name'], result, out/phase['name'])
             row['steps'][phase['name']] = result
             _atomic(out/'eval_receipt.json', row)
             if result['rc'] != 0 and phase['name'] not in ('axis_v2','w78_v2'):
                 raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
         if sha256(checkpoint) != before: raise ValueError('checkpoint changed during evaluation')
-        row['state'] = 'done'  # Maintenance only; CPU scorer verifies all content.
-        row['auxiliary_missing']=[name for name in ('axis_v2','w78_v2')
-                                  if row['steps'].get(name,{}).get('state')!='done']
+        row.update(bundle_terminal_status(row['steps']))
     except Exception as exc:
-        row.update(state='failed', reason=f'{type(exc).__name__}: {exc}')
+        row.update(state='failed', rc=1, reason=f'{type(exc).__name__}: {exc}')
     row['seconds'] = time.monotonic()-start
     _atomic(out/'eval_receipt.json', row)
     return row

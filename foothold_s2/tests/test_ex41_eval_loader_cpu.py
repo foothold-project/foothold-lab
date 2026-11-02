@@ -186,3 +186,32 @@ def test_production_eval_entrypoints_use_shared_loader_before_gym_make():
     assert recorder.index("load_checkpoint_for_eval(") < recorder.index("gym.make(")
     assert "checkpoint_state=ex41_checkpoint_state" in recorder
     assert "verify_ex41_pose_observation(obs)" in recorder
+
+
+def test_w78_eval_attaches_w86_to_unwrapped_env_before_suite(tmp_path, monkeypatch):
+    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_w86_runtime
+    from foothold_s2.rewards import w86_runtime
+
+    raw = SimpleNamespace()
+    wrapper = SimpleNamespace(unwrapped=raw)
+    plan = object()
+    seen = {}
+
+    attached = SimpleNamespace(log_dir=tmp_path / "ex41_w86")
+
+    def attach_with_runtime(env, actual_plan, log_dir):
+        seen.update(env=env, plan=actual_plan, log_dir=log_dir)
+        env._ex41_w86 = attached
+        return attached
+
+    monkeypatch.setattr(w86_runtime, "attach_runtime", attach_with_runtime)
+    receipt = attach_ex41_w86_runtime(wrapper, plan, tmp_path)
+    assert receipt == {"attached": True, "runtime": "SimpleNamespace",
+                       "log_dir": str(tmp_path / "ex41_w86")}
+    assert seen == {"env": raw, "plan": plan, "log_dir": tmp_path / "ex41_w86"}
+
+    source = (Path(__file__).resolve().parents[1] / "eval" / "eval_map_modes.py").read_text(encoding="utf-8")
+    attach_at = source.index("attach_ex41_w86_runtime(env, plan, args.out)")
+    make_at = source.index("gym.make(")
+    suite_at = source.index("run_terrain_skill_v2(args")
+    assert make_at < attach_at < suite_at

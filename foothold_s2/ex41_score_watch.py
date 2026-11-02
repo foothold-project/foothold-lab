@@ -173,6 +173,9 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
     for label, path, function in (
         ('w57', w57_path or bundle/'axis_v2/axis_v2.json', lambda p:measure_w57(p, checkpoint, cfg)),
         ('w78_v2', w78_path or bundle/'w78_v2/terrain_skill_v2.json', lambda p:measure_w78(p, checkpoint))):
+        if auxiliary_pending_during_bundle(bundle, path):
+            row['components'][label] = 'pending: evaluation bundle has not published the auxiliary result yet'
+            continue
         try:
             metrics, refs = function(path)
             json.dumps(metrics,allow_nan=False)  # Auxiliary NaN cannot poison the maintenance row.
@@ -207,6 +210,28 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
         row['maintenance_pass'] = False  # reader rejects missing stand, creates latest-invalid tombstone.
     json.dumps(row, allow_nan=False)
     return row
+
+
+def resolve_auxiliary_path(root, iteration, filename):
+    """Resolve an auxiliary file from a stage root, bundle root, or phase root."""
+    root = Path(root)
+    if root.is_file():
+        return root
+    phase = 'axis_v2' if filename == 'axis_v2.json' else 'w78_v2'
+    candidates = (root/f'model_{iteration}'/filename, root/filename,
+                  root/phase/filename)
+    return next((path for path in candidates if path.is_file()), candidates[0])
+
+
+def auxiliary_pending_during_bundle(bundle, path):
+    """A missing auxiliary artifact is pending, not a FileNotFound HOLD, while its bundle runs."""
+    if Path(path).is_file():
+        return False
+    try:
+        receipt = read(Path(bundle) / 'eval_receipt.json')
+    except (OSError, ValueError, TypeError):
+        return False
+    return receipt.get('state') == 'running'
 
 
 def stage_at(run, iteration, plan):
@@ -448,8 +473,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                     '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()), '--execute']
             child = hidden_child(argv, target/'bundle_child')
         row = collect(cp, stage, source, plan, eval_config,
-                      w57_path=(Path(w57_root)/f'model_{iteration}'/'axis_v2.json') if w57_root else None,
-                      w78_path=(Path(w78_root)/f'model_{iteration}'/'terrain_skill_v2.json') if w78_root else None,
+                      w57_path=resolve_auxiliary_path(w57_root, iteration, 'axis_v2.json') if w57_root else None,
+                      w78_path=resolve_auxiliary_path(w78_root, iteration, 'terrain_skill_v2.json') if w78_root else None,
                       w86_path=run/'ex41_w86.jsonl' if execute else None, snapshot_dir=target/'training')
         if interrupted:
             row['components']['evaluation_child'] = 'HOLD: prior interrupted attempt preserved'

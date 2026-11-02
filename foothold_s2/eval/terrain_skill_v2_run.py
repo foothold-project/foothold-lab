@@ -35,6 +35,18 @@ def prepare_ex41_environment(env_cfg, *, table=EX41_TABLE):
     return plan, receipt
 
 
+def attach_ex41_w86_runtime(env, plan, out_dir: str | Path):
+    """Attach the EX-41 diagnostic runtime to a W78 evaluation environment."""
+    from foothold_s2.rewards.w86_runtime import attach_runtime
+
+    raw = getattr(env, "unwrapped", env)
+    runtime = attach_runtime(raw, plan, Path(out_dir) / "ex41_w86")
+    if getattr(raw, "_ex41_w86", None) is not runtime:
+        raise RuntimeError("W78 v2 EX-41 W86 runtime attachment did not stick")
+    return {"attached": True, "runtime": type(runtime).__name__,
+            "log_dir": str(runtime.log_dir)}
+
+
 def _int_set(value, *, label: str, required: tuple[int, ...]) -> tuple[int, ...]:
     try:
         numbers = tuple(int(part) for part in value.split(","))
@@ -320,6 +332,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "levels": LEVELS, "start_angles_deg": ANGLES_DEG, "modes": {},
               "ex41_environment_preparation": getattr(args, "ex41_env_preparation", None),
               "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
+              "ex41_w86_attachment": getattr(args, "ex41_w86_attachment", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
                                "focus_kinds": list(kinds)} for name, (phases, kinds) in V2_CASES.items()},
