@@ -49,6 +49,16 @@ def test_cache_termination_before_reward_and_invalid_ray(tmp_path):
     assert 'foot_slip' in row['terms'] and Path(tmp_path/'ex41_w86.jsonl').is_file()
 
 
+def test_finite_input_overflow_quarantines_one_env_before_metric_flush(tmp_path):
+    env=SimpleNamespace(num_envs=3,device='cpu',step_dt=.02,common_step_counter=1)
+    data=sample(); data['torque'][1,0]=1e30
+    a=wr.W86Runtime(env,tmp_path,source=lambda:data); env._ex41_w86=a
+    assert wr.invalid_env(env).tolist()==[False,True,False]
+    row=a.flush(1)
+    assert row['quarantine_env_count']==1
+    assert all(math.isfinite(t['sum']) for t in row['terms'].values())
+
+
 def test_swing_cost_order_and_stationary_zero(tmp_path):
     env=SimpleNamespace(num_envs=4,device='cpu',step_dt=.02,common_step_counter=1)
     d=sample(4); d['sole_z'][:]=.08; d['sole_z'][:,0]=torch.tensor([.04,0.,-.05,.08])

@@ -287,3 +287,33 @@ def test_dr_ramp_starts_from_current_value_and_n0_is_not_ex40_zero(tmp_path,monk
     values=copy.deepcopy(r._config_values); values['dr']={'target_scale':.5,'ramp_updates':100}
     r._apply(1,251,values,[],None,'known ramp')
     assert r.dr_scale(251)==1. and r.dr_scale(301)==.75 and r.dr_scale(351)==.5
+
+
+@pytest.mark.parametrize('parent,initial',[(6000,.5),(7500,1.)])
+def test_parent_and_initial_dr_are_configuration_not_hardcoded(tmp_path,monkeypatch,parent,initial):
+    from foothold_s2.curriculum.ex41 import EX41DRReadback
+    doc=yaml.safe_load(TABLE.read_text()); doc['parent_update']=parent
+    doc['domain_randomization']['scale']=initial
+    doc['parent_sha256']=('d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5' if parent==6000 else doc['parent_sha256'])
+    table=tmp_path/'candidate.yaml'; table.write_text(yaml.safe_dump(doc),encoding='utf-8')
+    snap=snapshot(); snap['config']['values']['dr']={'target_scale':initial,'ramp_updates':0}
+    monkeypatch.setattr(w72,'read_committed_pair',lambda *a:copy.deepcopy(snap))
+    p=load_plan(table,arm='B'); assert p.initial_dr_scale==initial
+    r=make_runtime(p,4,'cpu',tmp_path/'run'); r.set_stage_changed_hook(lambda s,e:e); r.start(p.parent_sha256)
+    base=SimpleNamespace(scale=0.,env=SimpleNamespace(_ex40_dr_scale=0.))
+    EX41DRReadback(base,r)
+    assert r.dr_scale(0)==base.env._ex40_dr_scale==initial
+    assert r.boundary_receipt()['parent_update']==parent
+    values=copy.deepcopy(r._config_values); values['dr']={'target_scale':.7,'ramp_updates':500}
+    r._apply(1,1,values,[],None,'known candidate ramp')
+    assert r.dr_scale(1)==initial
+    assert r.dr_scale(251)==pytest.approx((initial+.7)/2)
+    assert r.dr_scale(501)==.7
+
+
+def test_initial_boundary_cannot_silently_jump_parent_dr(tmp_path,monkeypatch):
+    doc=yaml.safe_load(TABLE.read_text()); doc['parent_update']=6000; doc['domain_randomization']['scale']=.5
+    table=tmp_path/'candidate.yaml'; table.write_text(yaml.safe_dump(doc),encoding='utf-8')
+    monkeypatch.setattr(w72,'read_committed_pair',lambda *a:snapshot())  # initial target1 differs
+    p=load_plan(table,arm='B'); r=make_runtime(p,4,'cpu',tmp_path/'run'); r.set_stage_changed_hook(lambda s,e:e)
+    with pytest.raises(ValueError,match='initial DR'): r.start(p.parent_sha256)

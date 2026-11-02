@@ -74,3 +74,11 @@ EX-40 params/env.yaml:1890~1894의 전진 추종은 exp 항 가중2.0. :21 dt0.0
 - 점수 생산자의 `foothold-ex41-score/1` 연결과 runtime `finished/stop_requested` 소비는 runner/scripter 통합 후 실제 경로 시험이 필요하다. S2a/S2b는 임의 회차 상한을 만들지 않았다.
 - 활성 물리/action/관측 NaN은 env 단위 처리하지만 전역 신경망 parameter NaN, reset 후에도 지속되는 물리 이상은 복구됐다고 가장하지 않고 별도 오류로 남긴다. 정상적인 한 env NaN 복구는 CPU 확인, Kit 복구와 비용은 미측정이다.
 - parser/저장 상태의 추가 엄격 검증 및 W71 실제 점수 입력은 독립 검토 범위다. 자동 stumble 상향은 발동 조건 미확정이므로 승인 범위 경계 변경만 구현했다. 실제 GPU 학습을 준비 완료로 선언하지 않는다.
+
+## 13:18 부모·DR 설정 분리와 비용 overflow
+
+13:0x 의뢰대로 m6000/m7500을 파서에서 모두 허용하고 `plan.initial_dr_scale`을 `domain_randomization.scale`에서 읽는다. runtime 초기값·n0 영수증 부모·DR wrapper가 이 값을 소비한다. runner도 **첫 reset 전 이 속성**을 써야 한다. 부모 checkpoint·tensor·optimizer 이식은 scripter 소유이며 새 부모 실행 승인은 아니다. 기존 YAML m7500/1은 보존했다. m6000/.5 후보도 초기 경계 파일의 dr가 .5/0이어야 시작하며, 이전1/0 파일을 그대로 써서 첫 reset 뒤 몰래1로 뛰는 반례를 거절한다. 이후 목표/길이는 승인된 W72 경계 설정으로 현재값에서 램프가 계산된다. 자동 단계별 목표 배정은 아직 설계 미확정으로 추가하지 않았다.
+
+확인됨: 두 실제 파일의 SHA256을 직접 읽음. m6000 `d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5`, m7500 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`. CPU는 두 후보 초기값·중간값·도달값과 초기 mismatch, **59통과5.89초**, pyflakes/diff check 오류0. 부모·DR 반례 수정 전3실패. 이 시험은 checkpoint 해시 확인과 runtime 일정 소비 시험이며 새 부모의 신경망 이식 성공을 대신하지 않는다.
+
+W86는 유한 입력도 제곱 비용에서 overflow가 날 수 있음을 답 아는 큰 torque 입력으로 재현(수정 전1실패). 파생 비용의 비유한 행도 env 단위 quarantine하고 집계는 float64로 올렸다. 기록이 마지막 flush에서 NaN 때문에 터지는 경로를 막았다. CPU 정상 env와 유효 집계 보존 확인. 전역 오류·Kit 한계는 위 절 그대로다. DR의 요청 배율과 실제 env별 물리 분포는 다르며, reset/interval 이벤트로 차츰 소비되므로 readback을 함께 확인해야 한다.
