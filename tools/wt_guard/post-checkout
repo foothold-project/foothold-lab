@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# wt_guard post-checkout 훅 (D138 · RULES-HUB 2절 526052dc)
+#
+# 새 작업 사본이 생길 때(git worktree add · git clone: 이전 HEAD 가 0) 최상위 경로가
+# MAI_WT_ROOT 밖이면 크게 경고하고, 경보 파일을 쓰고, orchestration 으로 lead 에 알린다.
+# checkout 자체는 막지 않는다(항상 종료 코드 0). 보통 checkout(이전 HEAD 가 0 이 아님)에서는 아무것도 안 한다.
+# Git for Windows 의 bash 와 Linux bash 공통.
+#
+# 설정 우선순위: 환경 변수 > ~/.mai/wt_guard.env(또는 $MAI_WT_GUARD_CONFIG)
+#              > <사본>/tools/wt_guard/wt_guard.default.env > 내장값.
+# 시험용 고리: MAI_WT_NOTIFY=0(안 알림) · MAI_WT_NOTIFY_CMD=<실행 파일>(orca 대신 "<제목>" "<본문>" 두 인자로 부름).
+set -u
+
+prev_head="${1:-}"
+new_head="${2:-}"
+branch_flag="${3:-}"
+ZERO=0000000000000000000000000000000000000000
+[ "$prev_head" = "$ZERO" ] || exit 0
+
+say() { printf '%s\n' "$*" >&2; }
+
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*|Windows_NT) WT_OS=windows ;;
+  *) WT_OS=linux ;;
+esac
+
+top="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+[ -n "$top" ] || exit 0
+
+# KEY=VALUE 파일에서 아직 없는 변수만 채운다(환경 변수가 가장 세다).
+load_if_unset() {
+  local f="$1" line key val
+  [ -f "$f" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    case "$line" in ''|'#'*) continue ;; esac
+    key="${line%%=*}"
+    val="${line#*=}"
+    case "$key" in ''|*[!A-Za-z0-9_]*) continue ;; esac
+    if eval "test -z \"\${$key+x}\""; then
+      export "$key=$val"
+    fi
+  done < "$f"
+}
+load_if_unset "${MAI_WT_GUARD_CONFIG:-${HOME:-/nonexistent}/.mai/wt_guard.env}"
+load_if_unset "$top/tools/wt_guard/wt_guard.default.env"
+
+# pick VAR 내장값 : VAR 이 있으면 그것, 없으면 VAR_WINDOWS / VAR_LINUX, 그것도 없으면 내장값
+pick() {
+  local var="$1" builtin="$2" os_var val
+  if [ "$WT_OS" = windows ]; then os_var="${var}_WINDOWS"; else os_var="${var}_LINUX"; fi
+  eval "val=\${$var:-}"
+  [ -n "$val" ] || eval "val=\${$os_var:-}"
+  [ -n "$val" ] || val="$builtin"
+  printf '%s' "$val"
+}
+if [ "$WT_OS" = windows ]; then
+  WT_ROOT="$(pick MAI_WT_ROOT D:/mai-wt)"
+  ALERT_DIR="$(pick MAI_WT_ALERT_DIR D:/mai-tmp/wt_guard/alerts)"
+else
+  WT_ROOT="$(pick MAI_WT_ROOT /data/mai-wt)"
+  ALERT_DIR="$(pick MAI_WT_ALERT_DIR /data/mai-tmp/wt_guard/alerts)"
+fi
+
+# 경로 정규화: Windows 는 역슬래시 → 슬래시, 소문자(대소문자 안 가리는 파일 시스템). 끝 슬래시 제거.
+norm() {
+  local p="$1"
+  if [ "$WT_OS" = windows ]; then
+    if command -v cygpath >/dev/null 2>&1; then
+      p="$(cygpath -m "$p" 2>/dev/null || printf '%s' "$p")"
+    fi
+    p="${p//\\//}"
+    p="$(printf '%s' "$p" | tr 'A-Z' 'a-z')"
+  fi
+  p="${p%/}"
+  printf '%s' "$p"
+}
+top_n="$(norm "$top")"
+root_n="$(norm "$WT_ROOT")"
+inside=0
+case "$top_n/" in
+  "$root_n/"*) inside=1 ;;
+esac
+
+# LFS 권고: 새 사본마다 한 줄(사본 크기의 주범이 풀린 LFS 저장본이라서).
+if [ "${GIT_LFS_SKIP_SMUDGE:-}" != 1 ]; then
+  say "wt_guard: 권고 · 새 사본은 GIT_LFS_SKIP_SMUDGE=1 을 앞에 두고 만들면 LFS 저장본(mp4 · m4a · pt)이 풀리지 않아 작아집니다. 예: GIT_LFS_SKIP_SMUDGE=1 git worktree add <경로> <브랜치>"
+fi
+
+[ "$inside" = 1 ] && exit 0
+
+ts="$(date +%Y%m%dT%H%M%S)"
+role="${MAI_ROLE:-${USER:-${USERNAME:-unknown}}}"
+host="$(hostname 2>/dev/null || echo unknown)"
+
+say ""
+say "################################################################################"
+say "#  wt_guard 경고 (D138): 작업 사본이 허용 자리 밖에 생겼습니다"
+say "#  사본: $top"
+say "#  허용 뿌리: $WT_ROOT   (MAI_WT_ROOT · ~/.mai/wt_guard.env 로 바꿀 수 있음)"
+say "#  규칙: 새 작업 사본은 $WT_ROOT/<저장소>/<이름> 에만 (RULES-HUB 2절 D138)"
+say "#  조치: git worktree remove <이 사본> 뒤 $WT_ROOT 아래에 다시 만들거나, 이미 쓰는 사본을 계속 쓰세요"
+say "################################################################################"
+say ""
+
+if ! mkdir -p "$ALERT_DIR" 2>/dev/null || [ ! -w "$ALERT_DIR" ]; then
+  ALERT_DIR="${HOME:-.}/.mai/wt_guard/alerts"
+  mkdir -p "$ALERT_DIR" 2>/dev/null || ALERT_DIR="."
+fi
+alert="$ALERT_DIR/wt-outside-$ts-$$.json"
+
+subject="[wt_guard] 허용 자리 밖 사본 생성 경고 · $role · $top"
+body="새 작업 사본 $top 이(가) MAI_WT_ROOT=$WT_ROOT 밖에 생겼습니다(D138). 기기 $host · 역할 $role · 시각 $ts · 경보 파일 $alert"
+
+notify_status=skipped
+if [ "${MAI_WT_NOTIFY:-1}" != 0 ]; then
+  tmo=""
+  command -v timeout >/dev/null 2>&1 && tmo="timeout 30"
+  if [ -n "${MAI_WT_NOTIFY_CMD:-}" ]; then
+    if $tmo "$MAI_WT_NOTIFY_CMD" "$subject" "$body" >/dev/null 2>&1; then notify_status=sent; else notify_status=failed; fi
+  elif command -v orca >/dev/null 2>&1; then
+    run="${MAI_WT_NOTIFY_RUN:-}"
+    to="${MAI_WT_NOTIFY_TO:-}"
+    if [ -n "$run" ] && [ -n "$to" ]; then
+      if MSYS_NO_PATHCONV=1 $tmo orca orchestration send --run "$run" --to "$to" --type status \
+           --subject "$subject" --body "$body" >/dev/null 2>&1; then
+        notify_status=sent
+      else
+        notify_status=failed
+      fi
+    else
+      notify_status=no_run_id
+    fi
+  else
+    notify_status=no_orca
+  fi
+fi
+
+json_escape() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+{
+  printf '{"schema":"wt-guard-alert/1","at":"%s","role":"%s","host":"%s","os":"%s",' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(json_escape "$role")" "$(json_escape "$host")" "$WT_OS"
+  printf '"worktree":"%s","wt_root":"%s","prev_head":"%s","new_head":"%s","branch_flag":"%s","notify":"%s"}\n' \
+    "$(json_escape "$top")" "$(json_escape "$WT_ROOT")" "$prev_head" "$new_head" "$branch_flag" "$notify_status"
+} > "$alert" 2>/dev/null || say "wt_guard: 경보 파일을 쓰지 못했습니다 ($alert)"
+
+say "wt_guard: 경보 파일 $alert · lead 알림 $notify_status"
+exit 0
