@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +25,18 @@ V2_CASES = {**CASES, STOP_BACK_CASE: (
     [((0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0),
      ((-0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0)],
     ("pyramid_stairs", "pyramid_stairs_inv"))}
+
+
+def _write_result_json(path, record, *, attempts=8, retry_delay_s=0.25):
+    """Retry transient Windows sharing violations while publishing W78 receipts."""
+    for attempt in range(attempts):
+        try:
+            _atomic_json(path, record)
+            return
+        except PermissionError:
+            if attempt + 1 == attempts:
+                raise
+            time.sleep(retry_delay_s * (attempt + 1))
 
 
 def prepare_ex41_environment(env_cfg, *, table=EX41_TABLE):
@@ -413,7 +426,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                             "phase_steps": steps, "raw_file": filename,
                             "raw_sha256": sha256_file(str(out / filename)), **summary}
                         completed.add(key)
-                        _atomic_json(partial, result)
+                        _write_result_json(partial, result)
                         print("TERRAIN_SKILL_V2_CASE", *key, flush=True)
         require_complete(completed)
         result["w78_min_lr_ratio"] = {}
@@ -429,12 +442,12 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                             "min_lr_ratio": min(left, right) if left is not None and right is not None else None,
                             "definition": "minimum of signed left and right movement ratios; no threshold"}
         result["state"] = "done"
-        _atomic_json(final, result)
+        _write_result_json(final, result)
         partial.unlink()
         print("TERRAIN_SKILL_V2_DONE", final, flush=True)
         return result
     except Exception as exc:
-        _atomic_json(error_path, {"state": "HOLD", "reason": repr(exc),
-                                  "completed": len(completed), "expected": len(expected_keys),
-                                  "partial_path": str(partial)})
+        _write_result_json(error_path, {"state": "HOLD", "reason": repr(exc),
+                                        "completed": len(completed), "expected": len(expected_keys),
+                                        "partial_path": str(partial)})
         raise

@@ -107,6 +107,38 @@ def test_exact_result_grid_requires_every_level_angle_mode_and_case():
         v2.require_complete(full | {(9, 0, "eval_gt", "stairs_fwd")})
 
 
+def test_receipt_replace_retries_transient_windows_permission_error(monkeypatch, tmp_path):
+    calls = []
+
+    def replace_then_succeed(path, record):
+        calls.append((path, record))
+        if len(calls) < 3:
+            raise PermissionError("known transient Windows file sharing lock")
+
+    monkeypatch.setattr(v2, "_atomic_json", replace_then_succeed)
+    monkeypatch.setattr(v2.time, "sleep", lambda _seconds: None)
+    target = tmp_path / "receipt.json"
+    v2._write_result_json(target, {"state": "running"})
+
+    assert len(calls) == 3
+    assert calls[-1][0] == target
+    assert calls[-1][1] == {"state": "running"}
+
+
+def test_receipt_replace_permanent_permission_error_still_fails(monkeypatch, tmp_path):
+    calls = []
+
+    def always_locked(path, record):
+        calls.append(path)
+        raise PermissionError("permanent known lock")
+
+    monkeypatch.setattr(v2, "_atomic_json", always_locked)
+    monkeypatch.setattr(v2.time, "sleep", lambda _seconds: None)
+    with pytest.raises(PermissionError, match="permanent known lock"):
+        v2._write_result_json(tmp_path / "receipt.json", {"state": "running"})
+    assert len(calls) == 8
+
+
 class FakeRobot:
     def __init__(self, n=3):
         state = torch.zeros(n, 13)
