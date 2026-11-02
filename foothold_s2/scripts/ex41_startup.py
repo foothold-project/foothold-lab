@@ -695,8 +695,9 @@ def attach_ex41_stand_runtime_data(env: Any) -> dict[str, Any]:
             "mass_max_kg": float(total.max().item()), "source": "root_physx_view.get_masses"}
 
 
-def normalize_ex41_dr_baselines(env: Any) -> dict[str, Any]:
-    """Move CPU-mapped checkpoint DR baselines onto the live environment device."""
+def normalize_ex41_dr_baselines(env: Any, *, additional_envs=(),
+                                reset_guard_log: bool = False) -> dict[str, Any]:
+    """Normalize checkpoint DR baselines on both runtime and event-owned envs."""
     import torch
 
     raw = getattr(env, "unwrapped", env)
@@ -704,35 +705,120 @@ def normalize_ex41_dr_baselines(env: Any) -> dict[str, Any]:
     device = getattr(raw, "device", None)
     if device is None:
         device = getattr(scene, "device", None)
-    if device is None:
+    owners = [raw]
+    owners.extend(owner for owner in additional_envs if owner is not None and owner is not raw)
+    tracked = ("_ex40_dr_com_baseline", "_ex40_dr_motor_baselines",
+               "_ex40_dr_gain_baselines", "_ex40_dr_delay_baseline",
+               "_ex40_dr_delay_baselines")
+    has_state = any(any(getattr(owner, name, None) is not None for name in tracked)
+                    or getattr(owner, "action_manager", None) is not None
+                    or getattr(owner, "scene", None) is not None for owner in owners)
+    if device is None and has_state:
         raise ValueError("EX-41 resumed DR baseline target device is unavailable")
+    if device is None:
+        return {"device": None, "state": "no_device_bound_dr_state",
+                "com_baseline": {"state": "absent"}, "motor_baselines": {},
+                "other_baselines": {}, "action_delay": {"state": "absent"},
+                "owners": []}
     device = torch.device(device)
 
-    def move(value: Any) -> tuple[Any, dict[str, str]]:
+    def move_tree(value: Any, path: str):
+        if torch.is_tensor(value):
+            source = str(value.device)
+            moved = value if value.device == device else value.to(device=device).clone()
+            return moved, {"state": "matched" if source == str(device) else "normalized",
+                           "from_device": source, "to_device": str(moved.device),
+                           "path": path}
+        if isinstance(value, dict):
+            moved, receipts = {}, {}
+            for key, item in value.items():
+                moved[key], receipts[str(key)] = move_tree(item, f"{path}.{key}")
+            return moved, receipts
+        if isinstance(value, list):
+            moved, receipts = [], {}
+            for index, item in enumerate(value):
+                child, receipt = move_tree(item, f"{path}[{index}]")
+                moved.append(child)
+                receipts[str(index)] = receipt
+            return moved, receipts
+        if isinstance(value, tuple):
+            moved, receipts = [], {}
+            for index, item in enumerate(value):
+                child, receipt = move_tree(item, f"{path}[{index}]")
+                moved.append(child)
+                receipts[str(index)] = receipt
+            return tuple(moved), receipts
         if value is None:
-            return None, {"state": "absent"}
-        tensor = torch.as_tensor(value)
-        source = str(tensor.device)
-        moved = tensor.to(device=device).clone()
-        return moved, {"state": "normalized", "from_device": source,
-                       "to_device": str(moved.device)}
+            return None, {"state": "absent", "path": path}
+        return value, {"state": "non_tensor", "path": path}
 
-    com, com_receipt = move(getattr(raw, "_ex40_dr_com_baseline", None))
-    if com is not None:
-        raw._ex40_dr_com_baseline = com
-    motor_receipt: dict[str, Any] = {}
-    motor_baselines = getattr(raw, "_ex40_dr_motor_baselines", None)
-    if motor_baselines is not None:
-        moved_motor: dict[str, dict[str, Any]] = {}
-        for group, values in motor_baselines.items():
-            if not isinstance(values, dict):
-                raise ValueError(f"EX-41 resumed motor baseline group is invalid: {group}")
-            moved_motor[group] = {}
-            for name, value in values.items():
-                moved_motor[group][name], motor_receipt[f"{group}.{name}"] = move(value)
-        raw._ex40_dr_motor_baselines = moved_motor
-    return {"device": str(device), "com_baseline": com_receipt,
-            "motor_baselines": motor_receipt}
+    owner_receipts = []
+    primary_receipt: dict[str, Any] = {}
+    for index, owner in enumerate(owners):
+        row: dict[str, Any] = {"owner_index": index}
+        if reset_guard_log:
+            owner._ex41_dr_device_guard_logged = set()
+        for name in tracked:
+            value = getattr(owner, name, None)
+            moved, receipt = move_tree(value, name)
+            if value is not None:
+                setattr(owner, name, moved)
+            row[name] = receipt
+        action_receipt = {"state": "absent"}
+        manager = getattr(owner, "action_manager", None)
+        get_term = getattr(manager, "get_term", None)
+        if callable(get_term):
+            try:
+                action = get_term("joint_pos")
+            except (KeyError, LookupError, ValueError):
+                action = None
+            delay = getattr(action, "delay", None)
+            if torch.is_tensor(delay):
+                moved, action_receipt = move_tree(delay, "action_manager.joint_pos.delay")
+                action.delay = moved
+            if action is not None and torch.is_tensor(getattr(action, "_prev", None)):
+                action._prev, prev_receipt = move_tree(
+                    action._prev, "action_manager.joint_pos._prev")
+                action_receipt["_prev"] = prev_receipt
+            if action is not None and torch.is_tensor(getattr(action, "_ex40_sample_counts", None)):
+                action._ex40_sample_counts, sample_receipt = move_tree(
+                    action._ex40_sample_counts, "action_manager.joint_pos._ex40_sample_counts")
+                action_receipt["_ex40_sample_counts"] = sample_receipt
+        physical_receipt: dict[str, Any] = {}
+        scene = getattr(owner, "scene", None)
+        if scene is not None:
+            try:
+                asset = scene["robot"]
+            except (KeyError, LookupError, TypeError):
+                asset = None
+            if asset is not None:
+                asset_data = getattr(asset, "data", None)
+                for name in ("default_joint_stiffness", "default_joint_damping"):
+                    value = getattr(asset_data, name, None)
+                    if torch.is_tensor(value):
+                        moved, physical_receipt[f"data.{name}"] = move_tree(
+                            value, f"scene.robot.data.{name}")
+                        setattr(asset_data, name, moved)
+                for actuator_name, actuator in getattr(asset, "actuators", {}).items():
+                    for name in ("stiffness", "damping", "effort_limit", "_saturation_effort"):
+                        value = getattr(actuator, name, None)
+                        if torch.is_tensor(value):
+                            moved, physical_receipt[f"{actuator_name}.{name}"] = move_tree(
+                                value, f"scene.robot.actuators.{actuator_name}.{name}")
+                            setattr(actuator, name, moved)
+        row["action_delay"] = action_receipt
+        row["physical_dr_tensors"] = physical_receipt
+        owner_receipts.append(row)
+        if index == 0:
+            primary_receipt = {
+                "com_baseline": row["_ex40_dr_com_baseline"],
+                "motor_baselines": row["_ex40_dr_motor_baselines"],
+                "other_baselines": {name: row[name] for name in tracked
+                                    if name not in ("_ex40_dr_com_baseline",
+                                                    "_ex40_dr_motor_baselines")},
+                "action_delay": action_receipt, "physical_dr_tensors": physical_receipt,
+            }
+    return {"device": str(device), **primary_receipt, "owners": owner_receipts}
 
 
 def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
@@ -840,12 +926,21 @@ def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
             raise ValueError(f"EX-41 reset DR consumer missing: {name}")
 
         @wraps(func)
-        def seeded(env, *args, _func=func, **kwargs):
+        def seeded(env, *args, _func=func, _name=name, **kwargs):
             # Seed only at the first reset. Stage progression owns subsequent
             # scale changes, and later environment resets must preserve them.
             if getattr(env, "_ex41_initial_dr_scale_applied", None) is None:
                 env._ex40_dr_scale = 0.5
                 env._ex41_initial_dr_scale_applied = 0.5
+            device_receipt = normalize_ex41_dr_baselines(env)
+            device_receipt["reset_term"] = _name
+            env._ex41_dr_device_guard = device_receipt
+            logged_terms = set(getattr(env, "_ex41_dr_device_guard_logged", ()))
+            if _name not in logged_terms:
+                print("EX41_RESET_DR_DEVICE_GUARD "
+                      + json.dumps(device_receipt, sort_keys=True), flush=True)
+                logged_terms.add(_name)
+                env._ex41_dr_device_guard_logged = logged_terms
             return _func(env, *args, **kwargs)
 
         term.func = seeded

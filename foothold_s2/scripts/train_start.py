@@ -459,7 +459,10 @@ def main(env_cfg, agent_cfg):
             runner.load(resume_path, map_location="cpu")
             from foothold_s2.scripts.ex41_startup import normalize_ex41_dr_baselines
 
-            dr_device_receipt = normalize_ex41_dr_baselines(env)
+            dr_runtime = getattr(runner, "ex40_dr_runtime", None)
+            dr_runtime_env = getattr(getattr(dr_runtime, "base", None), "env", None)
+            dr_device_receipt = normalize_ex41_dr_baselines(
+                env, additional_envs=(dr_runtime_env,), reset_guard_log=True)
             print("EX41_RESUME_DR_DEVICE_READBACK "
                   + json.dumps(dr_device_receipt, sort_keys=True), flush=True)
             restored_state = runner.state_dict()

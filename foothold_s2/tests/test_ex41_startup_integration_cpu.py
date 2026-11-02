@@ -357,7 +357,13 @@ def test_resume_dr_baselines_move_from_cpu_checkpoint_to_environment_device():
         )
         com_cpu = raw._ex40_dr_com_baseline
         motors_cpu = raw._ex40_dr_motor_baselines["legs"]["stiffness"]
-        receipt = ex41_startup.normalize_ex41_dr_baselines(raw)
+        runtime_env = SimpleNamespace(
+            device=torch.device("cpu"),
+            _ex40_dr_com_baseline=torch.ones((1, 1, 7)),
+        )
+        runtime_cpu = runtime_env._ex40_dr_com_baseline
+        receipt = ex41_startup.normalize_ex41_dr_baselines(
+            raw, additional_envs=(runtime_env,))
 
         assert raw._ex40_dr_com_baseline.device == torch.device("cuda:0")
         assert raw._ex40_dr_com_baseline.shape == com_cpu.shape
@@ -365,9 +371,66 @@ def test_resume_dr_baselines_move_from_cpu_checkpoint_to_environment_device():
         assert raw._ex40_dr_motor_baselines["legs"]["damping"].device == torch.device("cuda:0")
         assert com_cpu.device == torch.device("cpu")
         assert motors_cpu.device == torch.device("cpu")
+        assert runtime_env._ex40_dr_com_baseline.device == torch.device("cuda:0")
+        assert runtime_cpu.device == torch.device("cpu")
         assert receipt["device"] == "cuda:0"
         assert receipt["com_baseline"]["from_device"] == "cpu"
         assert receipt["com_baseline"]["to_device"] == "cuda:0"
+        assert receipt["owners"][1]["_ex40_dr_com_baseline"]["from_device"] == "cpu"
+        assert receipt["owners"][1]["_ex40_dr_com_baseline"]["to_device"] == "cuda:0"
+
+
+def test_resume_dr_reset_guard_normalizes_actual_event_env_before_consumers():
+    from torch._subclasses.fake_tensor import FakeTensorMode
+
+    mode = FakeTensorMode(allow_non_fake_inputs=True)
+    calls = []
+    with mode:
+        action = SimpleNamespace(delay=torch.zeros(2, dtype=torch.long),
+                                 _prev=torch.ones((2, 12)),
+                                 _ex40_sample_counts=torch.ones((3,), dtype=torch.long))
+        actuator = SimpleNamespace(stiffness=torch.ones((2, 12)),
+                                   damping=torch.ones((2, 12)),
+                                   effort_limit=torch.ones((2, 12)),
+                                   _saturation_effort=torch.ones((2, 12)))
+        robot = SimpleNamespace(
+            data=SimpleNamespace(default_joint_stiffness=torch.ones((2, 12)),
+                                 default_joint_damping=torch.ones((2, 12))),
+            actuators={"legs": actuator},
+        )
+        raw = SimpleNamespace(
+            device=torch.device("cuda:0"),
+            _ex40_dr_scale=0.5,
+            _ex40_dr_com_baseline=torch.ones((2, 1, 7)),
+            _ex40_dr_motor_baselines={"legs": {"effort_limit": torch.ones((2, 12))}},
+            _ex40_dr_gain_baselines={"legs": {"stiffness": torch.ones((2, 12))}},
+            _ex40_dr_delay_baseline=torch.zeros((2,), dtype=torch.long),
+            action_manager=SimpleNamespace(get_term=lambda _name: action),
+            scene={"robot": robot},
+        )
+        cfg = SimpleNamespace(events=SimpleNamespace(**{
+            name: SimpleNamespace(func=lambda env, *args, **kwargs: calls.append(env))
+            for name in ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")
+        }))
+        install_initial_dr_scale(cfg, 0.5)
+        cfg.events.ex40_base_com.func(raw, env_ids=[0])
+
+        assert calls == [raw]
+        assert raw._ex40_dr_com_baseline.device == torch.device("cuda:0")
+        assert raw._ex40_dr_motor_baselines["legs"]["effort_limit"].device == torch.device("cuda:0")
+        assert raw._ex40_dr_gain_baselines["legs"]["stiffness"].device == torch.device("cuda:0")
+        assert raw._ex40_dr_delay_baseline.device == torch.device("cuda:0")
+        assert action.delay.device == torch.device("cuda:0")
+        assert action._prev.device == torch.device("cuda:0")
+        assert action._ex40_sample_counts.device == torch.device("cuda:0")
+        assert robot.data.default_joint_stiffness.device == torch.device("cuda:0")
+        assert robot.data.default_joint_damping.device == torch.device("cuda:0")
+        assert actuator.stiffness.device == torch.device("cuda:0")
+        assert actuator.damping.device == torch.device("cuda:0")
+        assert actuator.effort_limit.device == torch.device("cuda:0")
+        assert actuator._saturation_effort.device == torch.device("cuda:0")
+        assert raw._ex41_dr_device_guard["reset_term"] == "ex40_base_com"
+        assert raw._ex41_dr_device_guard["action_delay"]["to_device"] == "cuda:0"
 
 
 def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
@@ -490,7 +553,8 @@ def test_training_entry_keeps_dr_08_opt_in_and_marks_rehearsal_followups_explici
     assert "if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:" in branch
     assert "run_rehearsal_dr_proof(" in branch
     resume = source[source.index("runner.load(resume_path, map_location=\"cpu\")"):]
-    assert resume.index("normalize_ex41_dr_baselines(env)") < resume.index("restored_state = runner.state_dict()")
+    assert resume.index("normalize_ex41_dr_baselines(") < resume.index("restored_state = runner.state_dict()")
+    assert "additional_envs=(dr_runtime_env,)" in resume
     assert '"dr_baseline_device_readback": dr_device_receipt' in resume
     for receipt_field in (
         '"local_update_origin": runner.current_learning_iteration',
