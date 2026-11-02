@@ -162,6 +162,7 @@ class EX41Runtime(Runtime):
         self._last_boundary=-1; self._iteration=0; self._extensions=0
         self._pair_bias={}; self._halved=set(); self._auto_disabled=False
         self._mirror_pending=False; self._auto_seen=set(); self._history=[]
+        self._score_rejections={}
         self._level_history=[]; self._s2c_pass=False
         self._ramp=(0,plan.initial_dr_scale,plan.initial_dr_scale,0)
         self._stage_baseline_sha=plan.parent_sha256
@@ -387,14 +388,16 @@ class EX41Runtime(Runtime):
         if self.score_dir is None: return []
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
-            h=None
+            h=None; it=None
             try:
                 h=sha256(p)
-                if h in self.seen_scores: continue
-                d=json.loads(p.read_text(encoding='utf-8-sig')); json.dumps(d,allow_nan=False)
+                if h in self.seen_scores and str(p) not in self._score_rejections: continue
+                d=json.loads(p.read_text(encoding='utf-8-sig'))
                 if not isinstance(d,dict): raise ValueError('EX41 score must be an object')
                 it=d.get('iteration')
-                if type(it) is not int or it>n: continue  # not yet consumable
+                if type(it) is not int or it<0: raise ValueError('EX41 score iteration invalid')
+                if it>n: continue  # not yet consumable
+                json.dumps(d,allow_nan=False)
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')
                 if d.get('stage_id')!=self.effective['stage_id']: raise ValueError('EX41 score stage differs')
                 if d.get('schedule_sha256')!=self.plan.effective_sha256 or d.get('parent_sha256')!=self.plan.parent_sha256:
@@ -409,7 +412,6 @@ class EX41Runtime(Runtime):
                     raise ValueError('EX41 score decisions missing')
                 if not isinstance(d.get('metrics'),dict) or not isinstance(d.get('evidence'),list) or not d['evidence']:
                     raise ValueError('EX41 score measured evidence missing')
-                validate_metrics(d['metrics'])
                 for e in d['evidence']:
                     if not isinstance(e,dict): raise ValueError('EX41 evidence must be an object')
                     if sha256(Path(e['path']).resolve(strict=True))!=e['sha256']: raise ValueError('EX41 raw evidence SHA differs')
@@ -417,9 +419,20 @@ class EX41Runtime(Runtime):
                 if d['safety_stop']:
                     self.stop_requested=True
                     self._write({'event':'registered_safety_stop','score_sha256':h,'iteration':n})
+                validate_metrics(d['metrics'])
+                if 'stand_min_passed' not in d['metrics']:
+                    raise ValueError('EX41 score missing stand_min_passed')
+                self._score_rejections.pop(str(p),None)
                 d['_sha256']=h; rows.append(d)
             except (ValueError,KeyError,OSError,TypeError) as exc:
                 self._write({'event':'score_rejected','path':str(p),'sha256':h,'reason':str(exc)})
+                # Keep negative evidence: removing a bad latest row must not
+                # promote an older PASS to the latest observation.
+                match=re.match(r'^score_(\d+)(?:_|\.)',p.name)
+                observed=(it if type(it) is int and it>=0 else int(match[1]) if match else max(0,n-1))
+                previous=self._score_rejections.get(str(p))
+                if previous and previous['sha256']==h: observed=previous['iteration']
+                self._score_rejections[str(p)]={'iteration':observed,'sha256':h,'reason':str(exc)}
                 if h is not None: self.seen_scores.add(h)
         # A conflict at the same checkpoint invalidates all versions, not just
         # whichever file happened to sort last.
@@ -429,6 +442,7 @@ class EX41Runtime(Runtime):
             existing=[r for r in self._history if r['iteration']==it]
             if len(group)+len(existing)>1:
                 self._history=[r for r in self._history if r['iteration']!=it]
+                self._score_rejections['conflict:'+str(it)]={'iteration':it,'sha256':None,'reason':'duplicate conflicting score'}
                 self._write({'event':'score_conflict','iteration':it,'hashes':[r['_sha256'] for r in group+existing]})
             else: out.extend(group)
             self.seen_scores.update(r['_sha256'] for r in group)
@@ -531,6 +545,10 @@ class EX41Runtime(Runtime):
                          'reason':reason if reason!='boundary_config' else 'missing_or_insufficient_performance; training continues'})
 
     def _automatic(self,values,score,stage_boundary,*,next_pos=None):
+        if 'stand_min_passed' not in score.get('metrics',{}):
+            self._write({'event':'automatic_score_rejected','reason':'stand_min_passed missing',
+                         'iteration':score.get('iteration')})
+            return []
         if score['_sha256'] in self._auto_seen: return []
         self._auto_seen.add(score['_sha256'])
         metrics=score['metrics']; rules=self._snapshot['approvals'].get('automatic',{}); changes=[]
@@ -542,7 +560,7 @@ class EX41Runtime(Runtime):
         if twice('gait_sync',lambda x:x<cfg['gait_sync_floor']): lower.add('zero_yaw')
         if twice('knee_limit_delta',lambda x:x>cfg['knee_limit_increase']): lower.add('swing')
         if twice('forward_error_delta',lambda x:x>cfg['forward_error_increase']): lower.update(('swing','zero_yaw'))
-        if metrics.get('stand_min_passed',64)<cfg['stand_min_passed']:
+        if metrics['stand_min_passed']<cfg['stand_min_passed']:
             lower.add('swing'); self._auto_disabled=True
         if rules.get('reward_halving'):
             for name in sorted(lower-self._halved):
@@ -601,12 +619,18 @@ class EX41Runtime(Runtime):
             level_history=list(self._level_history),s2c_pass=self._s2c_pass,ramp=self._ramp,
             stage_baseline_sha=self._stage_baseline_sha,receipt=copy.deepcopy(self._receipt),applied_ids=sorted(self._applied_ids),
             finished=self.finished,stop_requested=self.stop_requested,graduated=self.graduated)
+        state['score_rejections']=copy.deepcopy(self._score_rejections)
         return state
 
     def load_state_dict(self,state):
         if state.get('format')!='foothold-ex41-state/1' or state.get('plan_sha256')!=self.plan.sha256 or state.get('effective_sha256')!=self.plan.effective_sha256:
             raise ValueError('EX41 self-resume state/plan differs; parent transfer is a separate path')
         if self.segment_index!=state['segment_index']+1: raise ValueError('EX41 resume segment differs')
+        rejected=state.get('score_rejections',{})
+        if not isinstance(rejected,dict) or any(not isinstance(r,dict) or type(r.get('iteration')) is not int
+                or r['iteration']<0 or 'sha256' not in r for r in rejected.values()):
+            raise ValueError('EX41 saved score rejections invalid')
+        self._score_rejections=copy.deepcopy(rejected)
         saved_terrain=state.get('terrain_receipt')
         env=getattr(getattr(self.runner,'env',None),'unwrapped',None)
         terrain=getattr(getattr(env,'scene',None),'terrain',None)

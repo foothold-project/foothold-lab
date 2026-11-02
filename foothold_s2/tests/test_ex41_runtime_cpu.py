@@ -198,7 +198,7 @@ def score(r,n,passed=True,metrics=None,folder=None):
     row=dict(format='foothold-ex41-score/1',iteration=n,stage_id=r.effective['stage_id'],
         schedule_sha256=r.plan.effective_sha256,parent_sha256=r.plan.parent_sha256,
         checkpoint_path=str(cp),checkpoint_sha256=sha256(cp),created_at=datetime.now(timezone.utc).isoformat(),
-        maintenance_pass=True,stage_pass=passed,safety_stop=False,metrics=metrics or {},
+        maintenance_pass=True,stage_pass=passed,safety_stop=False,metrics={'stand_min_passed':64} if metrics is None else metrics,
         baseline_checkpoint_sha256=r._stage_baseline_sha,evidence=[{'path':str(raw),'sha256':sha256(raw)}])
     out=r.score_dir/(folder or f'score_{n}.json'); out.write_text(json.dumps(row),encoding='utf-8')
     return out
@@ -264,7 +264,7 @@ def test_invalid_automatic_metric_is_rejected_and_training_continues(tmp_path,mo
 
 def test_delayed_scores_adjust_only_once_per_boundary(tmp_path,monkeypatch):
     r,_=runtime(tmp_path,monkeypatch); r.on_update_start(1)
-    metric={'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}}
+    metric={'stand_min_passed':64,'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}}
     score(r,250,False,metric); score(r,500,False,metric)
     r.on_update_start(501)
     assert r._pair_bias['side_left|side_right']==pytest.approx(.01)

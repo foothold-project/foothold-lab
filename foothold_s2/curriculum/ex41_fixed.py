@@ -222,6 +222,11 @@ class EX41FixedRuntime(EX41Runtime):
         # 250-update recovery, stand-restoration or extension observation.
         fresh=[r for r in self._history if n-250<=r['iteration']<n]
         score=fresh[-1] if fresh else None
+        invalid=[r['iteration'] for r in self._score_rejections.values() if n-250<=r['iteration']<n]
+        if invalid and (score is None or max(invalid)>=score['iteration']):
+            self._write({'event':'latest_score_invalid_hold','iteration':n,
+                         'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
+            score=None
         failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
         if n>=251:
             self._missing_maintenance_boundaries=(self._missing_maintenance_boundaries+1 if failed is None else 0)

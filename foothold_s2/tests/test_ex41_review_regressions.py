@@ -101,7 +101,7 @@ def test_next_stage_pair_cannot_remove_command(tmp_path,monkeypatch):
     # right-hand command. Checking only the old stage would apply the change.
     ex41.validate_shares(r.templates[2].shares)
     value={'_sha256':'known-score','iteration':500,
-           'metrics':{'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}}}
+           'metrics':{'stand_min_passed':64,'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}}}
     changes=r._automatic(copy.deepcopy(r._config_values),value,True,next_pos=2)
     assert not changes and not r._pair_bias
     assert 'would_remove_existing_command' in (r.log_dir/'stage_log.jsonl').read_text()
@@ -152,7 +152,7 @@ def test_valid_mask_keeps_normal_done_and_remembers_action_fault(tmp_path):
 
 def test_rejected_boundary_score_adjusts_once_after_repair(tmp_path,monkeypatch):
     r,snap=runtime(tmp_path,monkeypatch); r.on_update_start(1)
-    score(r,250,False,{'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}})
+    score(r,250,False,{'stand_min_passed':64,'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}})
     snap['config']['values']['ppo']['clip_param']=.1; commit_inputs(r,snap)
     r.on_update_start(251)
     assert not r._pair_bias and len(r._history)==1

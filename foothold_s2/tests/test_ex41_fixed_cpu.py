@@ -310,3 +310,34 @@ def test_stand_threshold_and_clock_accounting_cannot_be_changed_silently(tmp_pat
     b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
     attach_consumer(b)
     with pytest.raises(ValueError,match='clock'):b.load_state_dict(state)
+
+
+@pytest.mark.parametrize('bad',['nan','sha','stand_missing','iteration_nan','truncated','evidence_sha'])
+def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    d=json.loads(p.read_text())
+    if bad=='nan':d['metrics']['gait_sync']=float('nan')
+    if bad=='sha':d['checkpoint_sha256']='0'*64
+    if bad=='stand_missing':del d['metrics']['stand_min_passed']
+    if bad=='iteration_nan':d['iteration']=float('nan')
+    if bad=='evidence_sha':d['evidence'][0]['sha256']='0'*64
+    p.write_text('{"iteration":' if bad=='truncated' else json.dumps(d));r.on_update_start(1251)
+    assert r.clock.paused and r.clock.recovered==0
+    assert r.dr_scale(1501)==r.dr_scale(1251)
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='score_rejected' and str(p) in x['path'] for x in rows)
+    assert any(x['event']=='latest_score_invalid_hold' for x in rows)
+
+
+def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
+    r,_=fixture(tmp_path/'a');tick(r,751);tick(r,1001)
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['checkpoint_sha256']='0'*64;p.write_text(json.dumps(data))
+    r.on_update_start(1251);assert r.clock.paused
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(r.state_dict())
+    assert b._score_rejections==r._score_rejections and b._score_rejections
+    tick(b,1501);assert b.clock.paused and b.clock.recovered==1
+    tick(b,1751);assert not b.clock.paused and b.clock.pause_used==500
