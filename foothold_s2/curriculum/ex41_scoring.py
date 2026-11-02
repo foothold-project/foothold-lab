@@ -16,6 +16,9 @@ DEFAULT_CONFIG=Path(__file__).with_name('ex40_score_config.json')
 
 def maintenance_counts_from_map_modes(map_modes, baseline):
     """Exact numeric producer used by the runner, not a second set of rules."""
+    from foothold_s2.eval.eval_dr_mode import require_dr_off_document
+
+    require_dr_off_document(map_modes, where="EX-41 maintenance map_modes")
     if (not isinstance(map_modes,dict) or type(map_modes.get('envs')) is not int
         or map_modes['envs']!=64 or map_modes.get('command_suite')!='extended'
         or not isinstance(map_modes.get('modes'),dict) or set(map_modes['modes'])!=set(MODES)):
