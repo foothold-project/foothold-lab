@@ -11,6 +11,7 @@ import math
 
 from foothold_s2.curriculum.ex41_fixed import CASES, build_maintenance_counts, baseline_counts, maintenance
 from foothold_s2.ex40_score import config, sha256, _map_rows, _stand_rows, _stand_pass
+from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 
 MODES=('eval_gt','probe_prop_only','eval_pred')
 DEFAULT_CONFIG=Path(__file__).with_name('ex40_score_config.json')
@@ -62,9 +63,6 @@ def enrich_training_metrics(draft, w86_metrics_path, *, snapshot_dir):
 
 def maintenance_counts_from_map_modes(map_modes, baseline):
     """Exact numeric producer used by the runner, not a second set of rules."""
-    from foothold_s2.eval.eval_dr_mode import require_dr_off_document
-
-    require_dr_off_document(map_modes, where="EX-41 maintenance map_modes")
     if (not isinstance(map_modes,dict) or type(map_modes.get('envs')) is not int
         or map_modes['envs']!=64 or map_modes.get('command_suite')!='extended'
         or not isinstance(map_modes.get('modes'),dict) or set(map_modes['modes'])!=set(MODES)):
@@ -119,6 +117,8 @@ def measurement_bundle(map_modes_path, stand_paths, checkpoint_path, baseline, *
 
 def enrich_score_metrics(draft, map_modes_path, stand_paths, plan, *, score_config_path=DEFAULT_CONFIG):
     """Runner's one score/1 enrichment entry; existing stage verdict is preserved."""
+    require_dr_off_document(json.loads(Path(map_modes_path).read_text(encoding='utf-8-sig')),
+                            where=str(map_modes_path))
     if (not isinstance(draft,dict) or draft.get('format')!='foothold-ex41-score/1'
         or type(draft.get('iteration')) is not int or not isinstance(draft.get('metrics'),dict)
         or not isinstance(draft.get('evidence'),list)

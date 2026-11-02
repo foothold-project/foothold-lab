@@ -24,6 +24,9 @@ def digest(value):
 
 def validate_metrics(metrics):
     """Reject malformed scorer input before automatic arithmetic or promotion."""
+    if 'critic_mirror_symmetry' in metrics:
+        from foothold_s2.curriculum.ex41_symmetry import validate
+        validate(metrics['critic_mirror_symmetry'])
     for name in ('gait_sync','knee_limit_delta','forward_error_delta','w78_min_lr_ratio'):
         if name in metrics and (type(metrics[name]) not in (int,float) or not math.isfinite(metrics[name])):
             raise ValueError('EX41 invalid automatic metric: '+name)
@@ -386,25 +389,41 @@ class EX41Runtime(Runtime):
             config_commit=None,config_sha256=None,approval_sha256=None,score_sha256=None,checkpoint_sha256=None,
             decisions=[],before=copy.deepcopy(self.effective),after=copy.deepcopy(self.effective),readback={},reason=str(exc)))
 
+    def _score_context_allowed(self,d,n):
+        return (d.get('stage_id')==self.effective['stage_id']
+                and d['iteration']>=self.stage_entry_iteration)
+
     def _read_scores(self,n):
         if self.score_dir is None: return []
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
             h=None; it=None
+            match=re.fullmatch(r'score_(0|[1-9][0-9]*)_([0-9a-f]{12})\.json',p.name)
+            named_iteration=int(match[1]) if match else None
             try:
                 h=sha256(p)
-                if h in self.seen_scores and str(p) not in self._score_rejections: continue
+                if match is None: raise ValueError('EX41 score filename outside producer contract')
                 d=json.loads(p.read_text(encoding='utf-8-sig'))
                 if not isinstance(d,dict): raise ValueError('EX41 score must be an object')
                 it=d.get('iteration')
                 if type(it) is not int or it<0: raise ValueError('EX41 score iteration invalid')
+                if named_iteration is not None and named_iteration!=it:
+                    raise ValueError('EX41 filename iteration differs from score iteration')
+                checkpoint_sha=d.get('checkpoint_sha256')
+                if not isinstance(checkpoint_sha,str) or re.fullmatch(r'[0-9a-f]{64}',checkpoint_sha) is None:
+                    raise ValueError('EX41 checkpoint SHA256 invalid')
+                if match[2]!=checkpoint_sha[:12]:
+                    raise ValueError('EX41 filename SHA12 differs from checkpoint SHA256')
+                # A previously seen body may have appeared under a new, false
+                # filename. Check its identity before suppressing rereads.
+                if h in self.seen_scores and str(p) not in self._score_rejections: continue
                 if it>n: continue  # not yet consumable
                 json.dumps(d,allow_nan=False)
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')
-                if d.get('stage_id')!=self.effective['stage_id']: raise ValueError('EX41 score stage differs')
+                if not self._score_context_allowed(d,n):raise ValueError('EX41 score stage/entry differs')
                 if d.get('schedule_sha256')!=self.plan.effective_sha256 or d.get('parent_sha256')!=self.plan.parent_sha256:
                     raise ValueError('EX41 score run differs')
-                if it<self.stage_entry_iteration or n-it>self.plan.gate_cfg['maximum_score_age']:
+                if n-it>self.plan.gate_cfg['maximum_score_age']:
                     raise ValueError('EX41 stale score')
                 cp=Path(d['checkpoint_path']).resolve(strict=True)
                 if cp.name!=f'model_{it}.pt' or sha256(cp)!=d['checkpoint_sha256']: raise ValueError('EX41 score checkpoint differs')
@@ -430,10 +449,12 @@ class EX41Runtime(Runtime):
                 self._write({'event':'score_rejected','path':str(p),'sha256':h,'reason':str(exc)})
                 # Keep negative evidence: removing a bad latest row must not
                 # promote an older PASS to the latest observation.
-                match=re.match(r'^score_(\d+)(?:_|\.)',p.name)
-                observed=(it if type(it) is int and it>=0 else int(match[1]) if match else max(0,n-1))
+                # An invalid JSON body is not an authority for its observation
+                # time. Use the producer filename; unnamed failures use now.
+                observed=(named_iteration if named_iteration is not None else max(0,n-1))
                 previous=self._score_rejections.get(str(p))
-                if previous and previous['sha256']==h: observed=previous['iteration']
+                if named_iteration is None and previous and previous['sha256']==h:
+                    observed=previous['iteration']
                 self._score_rejections[str(p)]={'iteration':observed,'sha256':h,'reason':str(exc)}
                 if h is not None: self.seen_scores.add(h)
         # A conflict at the same checkpoint invalidates all versions, not just
@@ -605,15 +626,28 @@ class EX41Runtime(Runtime):
         self.last_checkpoint={'iteration':iteration,'path':str(p),'sha256':sha256(p)}
 
     def flush_consumption(self,iteration):
+        # Count before the inherited writer clears its actual env-step counters.
+        steps=self._step_counts.detach().cpu()
+        totals=steps.sum(dim=(1,2)); total=int(totals.sum()); current=int(totals[self.active])
+        self._write({'event':'config_consumption','iteration':iteration,
+            'active_version':self.active,'env_steps':total,'current_command_env_steps':current,
+            'old_command_env_steps':total-current,'current_command_fraction':current/total if total else None,
+            'current_env_count':int((self.env_stage==self.active).sum()),
+            'old_env_count':int((self.env_stage!=self.active).sum()),
+            'global_effective_sha256':digest(self.effective),'dr_scale':self.dr_scale(iteration),
+            'scope':'command versions change on reset; global fields apply at boundary; map usage in actual_consumption',
+            'versions':[{'version':i,'stage_id':s.id,'command_config_sha256':digest(asdict(s)),
+                'slot_env_steps':steps[i].sum(-1).tolist(),'env_steps':int(totals[i])}
+                for i,s in enumerate(self.plan.stages) if int(totals[i]) or i==self.active]})
         super().flush_consumption(iteration)
         if self.runner is not None:
             w86=getattr(self.runner.env.unwrapped,'_ex41_w86',None)
             if w86 is not None:
                 # One owner for the rollout interval; includes zero-weight diagnostics.
                 w86.flush(iteration)
-        if self.runner is not None and iteration%50==0:
+        if self.runner is not None and (iteration%50==0 or iteration==self._last_boundary):
             row=terrain_distribution(self.runner.env.unwrapped)
-            self._level_history.append((iteration,row['mean_level']))
+            if iteration%50==0:self._level_history.append((iteration,row['mean_level']))
             self._write({'event':'terrain_distribution','iteration':iteration,**row})
 
     def state_dict(self):
@@ -721,7 +755,7 @@ class EX41DRReadback:
 
 
 def prepare_terrain_cfg(env_cfg,plan):
-    """Register the term at n0, fixed until the runtime enables S2c."""
+    """Register at n0; fixed5000 enables performance at S2d, by runtime policy."""
     from isaaclab.managers import CurriculumTermCfg
     env_cfg.scene.terrain.max_init_terrain_level=2
     env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,
@@ -744,15 +778,24 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     from foothold_s2.curriculum import rules
     terrain=env.scene.terrain
     settings=getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})
-    if settings['policy']!='performance': return terrain.terrain_levels.float().mean()
-    term=env.command_manager.get_term(command_name)
     ids=torch.as_tensor(env_ids,device=env.device,dtype=torch.long)
+    if not hasattr(env,'_ex41_terrain_diagnostics'):
+        env._ex41_terrain_diagnostics=torch.zeros(6,device=env.device,dtype=torch.long)
+    counts=env._ex41_terrain_diagnostics
+    if settings['policy']!='performance':
+        counts[0]+=ids.numel()
+        return terrain.terrain_levels.float().mean()
+    term=env.command_manager.get_term(command_name)
     if not world_frame or not hasattr(term,'cmd_sum_w'): raise ValueError('EX41 requires world-frame command displacement')
     if term.is_flag_env[ids].any(): raise ValueError('EX41 has no flag slots; new terrain contract required')
     summed=term.cmd_sum_w[ids]*env.step_dt/resample_s
     moves=rules.judge_free(term.max_dist[ids],summed,size_x=terrain.cfg.terrain_generator.size[0],resample_s=resample_s)
-    moves=capped_moves(terrain.terrain_levels[ids],moves,settings['level_cap'])
+    before=terrain.terrain_levels[ids].clone()
+    moves=capped_moves(before,moves,settings['level_cap'])
     terrain.update_env_origins(ids,moves>0,moves<0)
+    actual=terrain.terrain_levels[ids]-before
+    counts[1:]+=torch.stack((torch.ones_like(actual).sum(),(actual>0).sum(),(actual<0).sum(),
+                             (actual==0).sum(),(actual!=moves).sum()))
     return terrain.terrain_levels.float().mean()
 
 
@@ -765,13 +808,25 @@ def terrain_distribution(env):
     cumulative=[]; total=0.
     for p in proportions: total+=p/sum(proportions); cumulative.append(total)
     columns=[names[next(j for j,c in enumerate(cumulative) if i/cfg.num_cols+.001<c)] for i in range(cfg.num_cols)]
-    levels=terrain.terrain_levels.detach().cpu().long(); types=terrain.terrain_types.detach().cpu().long()
+    raw_levels=terrain.terrain_levels.detach().cpu(); raw_types=terrain.terrain_types.detach().cpu()
+    if (not torch.isfinite(raw_levels).all() or not torch.isfinite(raw_types).all()
+        or (raw_levels!=raw_levels.long()).any() or (raw_types!=raw_types.long()).any()
+        or (raw_levels<0).any() or (raw_levels>=cfg.num_rows).any()):
+        raise ValueError('EX41 terrain label outside integer row range')
+    levels=raw_levels.long(); types=raw_types.long()
     if levels.shape!=types.shape or (types<0).any() or (types>=len(columns)).any(): raise ValueError('EX41 terrain label mismatch')
     per_kind={}
     for name in names:
         mask=torch.tensor([columns[i]==name for i in types.tolist()],dtype=torch.bool)
         per_kind[name]={'env_count':int(mask.sum()),'levels':torch.bincount(levels[mask],minlength=cfg.num_rows).tolist()}
+    counts=getattr(env,'_ex41_terrain_diagnostics',None)
+    progress={'available':False} if counts is None else dict(zip(
+        ('fixed_env_resets','performance_env_resets','actual_promotions','actual_demotions',
+         'actual_unchanged','requested_actual_mismatch'),counts.detach().cpu().tolist()))
+    if counts is not None:progress.update(available=True,scope='since_process_start',
+        policy=copy.deepcopy(getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})))
     return {'columns':columns,'by_terrain':per_kind,'mean_level':float(levels.float().mean()),
+            'promotion_readback':progress,
             'labels_sha256':hashlib.sha256(levels.numpy().tobytes()+types.numpy().tobytes()).hexdigest()}
 
 

@@ -1,11 +1,31 @@
-"""CPU bridge from the integrated W86 producer to the integrated PPO consumer."""
+"""CPU contract bridge: analyst W86 producer to a pinned scripter consumer.
+
+Set EX41_PPO_CONSUMER_ROOT to the independently committed consumer worktree.
+This deliberately does not copy or modify runner-owned source files.
+"""
 import copy
+import os
+from pathlib import Path
 from types import SimpleNamespace
+import subprocess
 import pytest
 import torch
 from foothold_s2.rewards import w86_runtime as wr
 from foothold_s2.tests.test_w86_runtime_cpu import sample
-from foothold_s2.tests.test_ex41_ppo_valid import _alg
+
+ROOT=os.environ.get('EX41_PPO_CONSUMER_ROOT')
+pytestmark=pytest.mark.skipif(not ROOT,reason='set pinned EX41_PPO_CONSUMER_ROOT')
+if ROOT:
+    root=Path(ROOT)
+    head=subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD']).decode().strip()
+    if head!='36f6cddf4eb7e34ba21a7c6a0aa95f34dbfc34bd':
+        raise ValueError('CPU bridge requires reviewed consumer 36f6cddf')
+    import foothold_s2.models
+    import foothold_s2.runners
+    import foothold_s2.tests
+    for module,folder in [(foothold_s2.models,'models'),(foothold_s2.runners,'runners'),(foothold_s2.tests,'tests')]:
+        module.__path__=[str(root/'foothold_s2'/folder),*module.__path__]
+    from foothold_s2.tests.test_ex41_ppo_valid import _alg
 
 
 @pytest.mark.parametrize('mirror',[False,True])

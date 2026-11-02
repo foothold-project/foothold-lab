@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from foothold_s2.curriculum.continuous import Plan
+from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 from foothold_s2.eval.map_mode_cells import EX40_B3_COMMANDS, commands
 
 
@@ -71,6 +72,11 @@ def _finite(value, label: str) -> float:
 def _map_rows(path: Path, checkpoint: Path, config_row: dict, *, extra: bool = False,
               wanted_extra: set[str] | None = None) -> dict:
     data = json.loads(path.read_text(encoding="utf-8-sig"))
+    try:
+        require_dr_off_document(data, where=str(path))
+    except RuntimeError as exc:
+        # Reject contaminated evidence as HOLD, without crashing the score worker.
+        raise EvidenceHold(str(exc)) from exc
     suite = "ex40_b3" if extra else "extended"
     wanted = (wanted_extra if wanted_extra is not None else set(EX40_B3_COMMANDS)) if extra else set(commands("extended"))
     command_values = commands(suite)
@@ -137,6 +143,19 @@ def _tracking(case: dict, command: tuple[float, float, float]) -> dict:
             raise EvidenceHold(f"{field} has fewer than 60 measured envs")
         out[field] = statistics.median(values)
     return out
+
+
+def _sequence_phase_alive(phase: dict) -> int | None:
+    """Survivors at a W15 sequence phase end: the sum over terrain kinds. None if the record is incomplete."""
+    kinds = phase.get("by_kind")
+    if not isinstance(kinds, dict) or not kinds:
+        return None
+    counts = [(row.get("env_count"), row.get("alive_at_end")) for row in kinds.values()]
+    if any(type(n) is not int or type(a) is not int or not 0 <= a <= n for n, a in counts):
+        return None
+    if sum(n for n, _ in counts) != phase.get("env_count"):
+        return None
+    return sum(a for _, a in counts)
 
 
 def _stand_pass(row: dict, cfg: dict) -> bool:
@@ -221,13 +240,15 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                                           ("spin_right_to_left", 2),
                                           ("stop_and_restart", 4)):
                     phases = sequences.get(name, {}).get("phases", [])
+                    # eval_map_modes writes a phase's survival only per terrain kind (phase["by_kind"][kind]
+                    # ["alive_at_end"], map_mode_cells.py:168), never as one phase-level integer.
+                    alive_by_phase = [_sequence_phase_alive(phase) for phase in phases]
                     if len(phases) != phase_count or any(
-                            phase.get("env_count") != 64
-                            or type(phase.get("alive_at_end")) is not int
-                            for phase in phases):
+                            phase.get("env_count") != 64 or alive is None
+                            for phase, alive in zip(phases, alive_by_phase)):
                         raise EvidenceHold(f"W15 sequence {mode}/{name} incomplete")
                     cells[f"{mode}/{name}_diagnostic_only"] = {
-                        "alive_by_phase": [phase["alive_at_end"] for phase in phases]}
+                        "alive_by_phase": alive_by_phase}
         boundary_record = iteration in stage_end_updates(plan, cfg)
         if stage_cfg["axis_goal"] or boundary_record:
             axis_path = evidence_dir / "axis_v2" / "axis_v2.json"
@@ -239,13 +260,21 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                 for name in cfg["axis_goal"]["cases"]:
                     case = axis["modes"][mode][name]
                     complete = case.get("stop_complete_envs")
-                    error = _finite(case.get("stop_end_error_median_rad"), "goal stop error")
                     if type(complete) is not int or not 0 <= complete <= 64:
                         raise EvidenceHold("W57 goal stop completion missing")
+                    if "stop_end_error_median_rad" not in case:
+                        raise EvidenceHold("W57 goal stop error missing")
+                    raw_error = case.get("stop_end_error_median_rad")
+                    if complete == 0:
+                        if raw_error is not None:
+                            raise EvidenceHold("W57 zero completions has an unexpected stop error")
+                        error = None
+                    else:
+                        error = _finite(raw_error, "goal stop error")
                     cells[f"{mode}/{name}"] = {"stop_complete_envs": complete,
                                                "stop_end_error_median_rad": error}
                     if stage_cfg["axis_goal"] and (complete < cfg["axis_goal"]["complete_envs_min"]
-                            or error > cfg["axis_goal"]["stop_end_error_median_rad_max"]):
+                            or (error is not None and error > cfg["axis_goal"]["stop_end_error_median_rad_max"])):
                         problems.append({"kind": "FAIL", "cell": f"{mode}/{name}",
                                          "reason": "goal_stop_threshold"})
         relative_names = set(stage_cfg.get("relative_commands", []))

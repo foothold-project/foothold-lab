@@ -1,0 +1,374 @@
+"""Actual EX40 outputs replayed through EX41; no invented evaluation success."""
+import json
+from pathlib import Path
+import shutil
+import sys
+
+import numpy as np
+import pytest
+
+from foothold_s2 import ex41_score_watch as watch
+from foothold_s2 import ex41_eval_once as evaluator
+from foothold_s2.ex41_eval_once import commands, hidden_child
+from foothold_s2.curriculum.continuous import load_plan
+from foothold_s2.curriculum.ex41_fixed import EX41FixedRuntime
+from foothold_s2.ex40_score import config, sha256
+
+SOURCE = Path('C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313')
+RUN = SOURCE/'main/EX-40-B-main_20261031_041337_26240'
+TABLE = watch.DEFAULT_TABLE
+
+
+def native(n):
+    cp=RUN/f'model_{n}.pt'
+    return cp,SOURCE/'score-watch-b'/f'model_{n}_{sha256(cp)[:12]}'
+
+
+def test_real_m5750_w57_recomputed_from_all30_npz():
+    cp,_=native(5750)
+    got,refs=watch.measure_w57(SOURCE/'axis250/model_5750/axis_v2.json',cp,config(watch.DEFAULT_CONFIG))
+    assert len(refs)==31 and set(got)==set(watch.MODES)
+    assert all(len(cases)==10 for cases in got.values())
+    raw=SOURCE/'axis250/model_5750/axis_v2_eval_gt_fwd1.0.npz'
+    with np.load(raw) as z:
+        total=[]
+        for i in range(64):
+            valid=z['alive'][:,i].astype(bool)
+            if valid.any():
+                y=np.r_[z['start_yaw'][i],z['yaw'][valid,i]]
+                total.append(np.abs(np.arctan2(np.sin(np.diff(y)),np.cos(np.diff(y)))).sum())
+    assert got['eval_gt']['fwd1.0']['absolute_accum_median_rad']==pytest.approx(float(np.median(total)),abs=1e-6)
+
+
+def test_real_m6000_maintenance_complete_without_w78(tmp_path):
+    cp,folder=native(6000);plan=load_plan(TABLE,arm='B')
+    row=watch.collect(cp,'S2a',folder,plan)
+    assert row['components']['maintenance_stand']=='complete'
+    assert row['evaluation_state']=='complete' and row['maintenance_pass'] and not row['stage_pass']
+    assert 'w78_v2' in row['auxiliary_missing'] and 'critic_mirror_symmetry' in row['auxiliary_missing']
+    assert len(row['metrics']['maintenance_counts'])==26
+    expected=json.loads(Path(plan.fixed_schedule['maintenance_baseline']['path']).read_text(encoding='utf-8'))
+    recorded=row['metrics']['record_counts'];assert len(recorded)==39
+    for key,value in recorded.items(): assert value['passed']==expected['cells'][key]['alive_envs_at_end']
+
+
+def replay_run(tmp):
+    run=tmp/'run';run.mkdir()
+    pins={}
+    for n in (5750,6000):
+        cp,_=native(n);shutil.copy2(cp,run/cp.name);pins[cp.name]=sha256(cp)
+    (run/'manifest.json').write_text(json.dumps({'schema':'foothold-manifest/1',
+        'progress':{'completed_updates':6001},'checkpoints':pins}))
+    # Only coordinator metadata is a test fixture; all measured numbers and model bytes are real.
+    (run/'ex41_application.jsonl').write_text(json.dumps({'format':'foothold-ex41-application/1',
+        'status':'applied','iteration':1,'parent_update':6000,'stage_after':'S2a','after':{'stage_id':'S2a'}})+'\n')
+    return run
+
+
+def test_actual_replay_hold_does_not_starve_next_checkpoint_or_become_old_pass(tmp_path):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    # Known interruption, not lack of W78, creates the first HOLD.
+    (tmp_path/'out'/f'model_5750_{sha256(run/"model_5750.pt")[:12]}').mkdir(parents=True)
+    def tick():return watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,
+        replay_root=SOURCE/'score-watch-b',w57_root=SOURCE/'axis250',sleep=lambda _:None)
+    first=tick();assert first['iteration']==5750 and first['state']=='HOLD'
+    second=tick();assert second['iteration']==6000 and second['state']=='complete'
+    assert tick()['state']=='idle' and len(state['done'])==2
+    plan=load_plan(TABLE,arm='B')
+    runtime=EX41FixedRuntime(plan,4,'cpu',tmp_path/'runtime',tmp_path/'scores')
+    runtime.effective={'stage_id':'S2a'};runtime.stage_entry_iteration=1
+    rows=runtime._read_scores(6001)
+    assert [r['iteration'] for r in rows]==[6000]
+    assert any(r['iteration']==5750 for r in runtime._score_rejections.values())
+    assert len((tmp_path/'out/score_ledger.jsonl').read_text(encoding='utf-8').splitlines())==2
+
+
+def test_default_dry_never_calls_child_or_creates_score(tmp_path,monkeypatch):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    monkeypatch.setattr(watch,'hidden_child',lambda *a,**k:pytest.fail('DRY spawned a process'))
+    row=watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,sleep=lambda _:None)
+    assert row['state']=='dry' and len(row['commands'])==6
+    assert not (tmp_path/'scores').exists() and not state['done']
+
+
+def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
+    rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
+    assert [r['name'] for r in rows]==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2','w78_v2']
+    for r in rows:
+        a=r['argv'];assert a[a.index('--device')+1]=='cuda:1'
+        assert not Path(a[a.index('--out')+1]).exists()
+    assert '--terrain-skill-v2' in rows[-1]['argv'] and '--axis-v2' in rows[-2]['argv']
+    assert '--fixed-level' not in rows[-1]['argv']
+
+
+def test_hidden_child_actual_stdin_devnull_and_separate_streams(tmp_path,monkeypatch):
+    original=evaluator.subprocess.Popen;observed=[]
+    def checked(*args,**kwargs):
+        observed.append(kwargs)
+        assert kwargs.get('stdin')==evaluator.subprocess.DEVNULL
+        return original(*args,**kwargs)
+    monkeypatch.setattr(evaluator.subprocess,'Popen',checked)
+    code="import sys; assert sys.stdin.read()==''; print('actual stdout'); print('actual stderr',file=sys.stderr)"
+    row=hidden_child([sys.executable,'-c',code],tmp_path/'child')
+    assert row['rc']==0 and row['stdin']=='DEVNULL' and row['pid']>0
+    assert len(observed)==1
+    assert 'actual stdout' in (tmp_path/'child/stdout.log').read_text(encoding='utf-8')
+    assert 'actual stderr' in (tmp_path/'child/stderr.log').read_text(encoding='utf-8')
+
+
+def test_dr_on_actual_map_document_rejected(tmp_path):
+    cp,folder=native(6000);dest=tmp_path/'bundle/map64';dest.mkdir(parents=True)
+    data=json.loads((folder/'map64/map_modes.json').read_text(encoding='utf-8'))
+    for mode in watch.MODES:
+        shutil.copytree(folder/f'stand_{mode}',dest.parent/f'stand_{mode}')
+    (dest/'map_modes.json').write_text(json.dumps(data))
+    good=watch.collect(cp,'S2a',dest.parent,load_plan(TABLE,arm='B'))
+    assert good['components']['maintenance_stand']=='complete'
+    data['dr']={'enabled':True}
+    (dest/'map_modes.json').write_text(json.dumps(data))
+    row=watch.collect(cp,'S2a',dest.parent,load_plan(TABLE,arm='B'))
+    assert row['components']['maintenance_stand'].startswith('HOLD') and row['metrics']=={}
+    assert 'DR' in row['components']['maintenance_stand']
+
+
+def test_w57_false_yaw_summary_detected_against_original_raw(tmp_path):
+    cp,_=native(5750);source=SOURCE/'axis250/model_5750'
+    doc=json.loads((source/'axis_v2.json').read_text(encoding='utf-8'))
+    doc['modes']['eval_gt']['fwd0.5']['per_env'][0]['yaw_signed_accum_rad']=999.
+    # Copy untouched real NPZ bytes into an isolated corrupted-summary experiment.
+    for mode in doc['modes'].values():
+        for row in mode.values():shutil.copy2(source/row['raw_file'],tmp_path/row['raw_file'])
+    (tmp_path/'axis_v2.json').write_text(json.dumps(doc))
+    with pytest.raises(ValueError,match='disagrees'):watch.measure_w57(tmp_path/'axis_v2.json',cp,config(watch.DEFAULT_CONFIG))
+
+
+def test_interrupted_old_folder_is_hold_and_next_actual_checkpoint_runs(tmp_path):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    digest=sha256(run/'model_5750.pt');partial=tmp_path/'out'/f'model_5750_{digest[:12]}'
+    partial.mkdir(parents=True);(partial/'old.log').write_text('preserve exact prior partial')
+    def tick():return watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,
+        replay_root=SOURCE/'score-watch-b',w57_root=SOURCE/'axis250',sleep=lambda _:None)
+    assert tick()['state']=='HOLD'
+    assert tick()['iteration']==6000 and (partial/'old.log').read_text(encoding='utf-8')=='preserve exact prior partial'
+
+
+def test_real_json_wrong_sha_mutation_cannot_be_published_as_success(tmp_path):
+    cp,folder=native(6000);dst=tmp_path/'map64';dst.mkdir()
+    data=json.loads((folder/'map64/map_modes.json').read_text(encoding='utf-8'));data['checkpoint_sha256']='0'*64
+    (dst/'map_modes.json').write_text(json.dumps(data))
+    row=watch.collect(cp,'S2a',tmp_path,load_plan(TABLE,arm='B'))
+    assert row['components']['maintenance_stand'].startswith('HOLD') and row['evaluation_state']=='HOLD'
+
+
+def test_training_done_is_not_implicit_final_score_or_graduation(tmp_path):
+    run=replay_run(tmp_path);plan=load_plan(TABLE,arm='B')
+    (run/'train_start_status.json').write_text(json.dumps({'state':'done','iter':6000}))
+    state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    assert watch.completion(run,plan,state)['state']=='waiting_for_remaining_scores'
+    for n in (5750,6000):
+        sha=sha256(run/f'model_{n}.pt');state['done'][f'{n}_{sha}']={'state':'HOLD'}
+    assert watch.completion(run,plan,state)['state']=='waiting_for_final_checkpoint_request'
+
+
+@pytest.mark.parametrize('late',[False,True])
+def test_final_request_same_sha_before_or_after_regular_score_never_waits_forever(tmp_path,late):
+    run=replay_run(tmp_path);plan=load_plan(TABLE,arm='B')
+    application=watch.read(run/'ex41_application.jsonl')
+    application.update(stage_after='T0_prime',after={'stage_id':'T0_prime'})
+    (run/'ex41_application.jsonl').write_text(json.dumps(application)+'\n')
+    (run/'train_start_status.json').write_text(json.dumps({'state':'done'}))
+    state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    def tick():return watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,
+        replay_root=SOURCE/'score-watch-b',sleep=lambda _:None)
+    cp=run/'model_6000.pt';sha=sha256(cp)
+    req={'format':'foothold-ex41-final-eval-request/1','training_finished':True,'graduated':False,
+        'checkpoint':{'iteration':6000,'path':str(cp.resolve()),'sha256':sha},'stage_id':'T0_prime',
+        'parent_sha256':plan.parent_sha256,'schedule_sha256':plan.effective_sha256,'plan_sha256':plan.sha256}
+    req['request_id']=watch.digest(req)
+    def publish():
+        dest=run/'final_eval_requests';dest.mkdir()
+        (dest/f'final_6000_{sha[:12]}.json').write_text(json.dumps(req))
+    if not late:publish()
+    assert tick()['iteration']==5750
+    regular=tick();assert regular['iteration']==6000
+    score_path=Path(regular['score_path']);score_bytes=score_path.read_bytes()
+    attempt=tmp_path/'out'/f'model_6000_{sha[:12]}'/'attempt.json';attempt_bytes=attempt.read_bytes()
+    if late:
+        publish()
+        assert watch.completion(run,plan,state)['state']=='waiting_for_final_request_score'
+        linked=tick();assert linked['state']=='final_request_linked'
+        assert watch.read(linked['link_path'])['request_id']==req['request_id']
+        assert score_path.read_bytes()==score_bytes and attempt.read_bytes()==attempt_bytes
+        # A crash after receipt publication but before state persistence reuses it.
+        state.pop('final_links'); assert tick()['state']=='final_request_linked'
+        assert len(list((tmp_path/'out/final_links').glob('*.json')))==1
+    assert tick()['state']=='idle'
+    assert watch.completion(run,plan,state)=={'state':'complete','hold_count':0,
+                                             'training_state':'done','graduated':False}
+    if late:
+        Path(linked['link_path']).write_text('{}')
+        with pytest.raises(ValueError,match='final link'):watch.completion(run,plan,state)
+
+
+def replay_tick(tmp,run,state):
+    return watch.process_once(run,tmp/'out',tmp/'scores',TABLE,state,
+                              replay_root=SOURCE/'score-watch-b',sleep=lambda _:None)
+
+
+def test_crash_after_score_before_attempt_finalization_recovers_immutable_score(tmp_path,monkeypatch):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    original=watch._atomic
+    def crash(path,row):
+        if path.name=='attempt.json' and row.get('state')=='complete':
+            raise OSError('injected death after score publication')
+        return original(path,row)
+    monkeypatch.setattr(watch,'_atomic',crash)
+    with pytest.raises(OSError,match='injected'):replay_tick(tmp_path,run,state)
+    path=next((tmp_path/'scores').glob('score_5750_*.json'));before=path.read_bytes()
+    attempt=next((tmp_path/'out').glob('model_5750_*/attempt.json'));partial=attempt.read_bytes()
+    assert not state['done'] and watch.read(attempt)['state']=='running'
+    monkeypatch.setattr(watch,'_atomic',original)
+    recovered=replay_tick(tmp_path,run,state)
+    assert recovered['iteration']==5750 and recovered['state']=='complete' and recovered['recovered_from_score']
+    assert path.read_bytes()==before and attempt.read_bytes()==partial
+    assert len(list((tmp_path/'out/recoveries').glob('*.json')))==1
+    assert replay_tick(tmp_path,run,state)['iteration']==6000
+    # Losing only state after recovery does not create a second evaluation.
+    state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    assert replay_tick(tmp_path,run,state)['recovered_from_score']
+    assert len(list((tmp_path/'out/recoveries').glob('*.json')))==1
+
+
+def test_two_interrupted_folders_and_no_receipt_preserved_and_next_runs(tmp_path):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    name=f'model_5750_{sha256(run/"model_5750.pt")[:12]}'
+    for suffix in ('','_interrupted'):
+        p=tmp_path/'out'/(name+suffix);p.mkdir(parents=True)
+        (p/'partial.txt').write_text(suffix or 'original')
+    row=replay_tick(tmp_path,run,state)
+    assert row['state']=='HOLD' and row['iteration']==5750
+    scored=watch.read(row['score_path'])
+    assert scored['metrics']=={} and scored['components']['maintenance_stand']=='complete'
+    assert 'prior interrupted' in scored['components']['evaluation_child']
+    assert (tmp_path/'out'/name/'partial.txt').read_text()=='original'
+    assert (tmp_path/'out'/(name+'_interrupted')/'partial.txt').read_text()=='_interrupted'
+    assert (tmp_path/'out'/(name+'_interrupted_001')/'attempt.json').is_file()
+    assert replay_tick(tmp_path,run,state)['state']=='complete'
+
+
+def test_stale_pending_never_blocks_publication_or_next_checkpoint(tmp_path):
+    run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
+    scores=tmp_path/'scores';scores.mkdir()
+    stale=scores/f'score_5750_{sha256(run/"model_5750.pt")[:12]}.pending'
+    stale.write_bytes(b'{interrupted')
+    assert replay_tick(tmp_path,run,state)['state']=='complete'
+    assert stale.read_bytes()==b'{interrupted'
+    assert replay_tick(tmp_path,run,state)['iteration']==6000
+
+
+def test_main_loop_replays_actual_outputs_past_hold_until_final_receipt(tmp_path,monkeypatch):
+    run=replay_run(tmp_path)
+    (tmp_path/'out'/f'model_5750_{sha256(run/"model_5750.pt")[:12]}').mkdir(parents=True)
+    (run/'train_start_status.json').write_text(json.dumps({'state':'stopped_saved'}))
+    stable=watch._stable
+    monkeypatch.setattr(watch,'_stable',lambda p,t,s:stable(p,0,lambda _:None))
+    monkeypatch.setattr(watch.time,'sleep',lambda _:None)
+    rc=watch.main(['--run-dir',str(run),'--out-root',str(tmp_path/'out'),
+                   '--score-dir',str(tmp_path/'scores'),'--replay-root',str(SOURCE/'score-watch-b')])
+    assert rc==5
+    saved=watch.read(tmp_path/'out/watch_state.json')
+    assert [(r['iteration'],r['state']) for r in saved['done'].values()]==[(5750,'HOLD'),(6000,'complete')]
+    end=watch.read(tmp_path/'out/watch_completion.json')
+    assert end['state']=='complete_with_hold' and end['hold_count']==1 and not end['graduated']
+
+
+def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,monkeypatch):
+    # Coordinator-only spy, not a claim that mocked children measured anything.
+    root=tmp_path/'source';p=root/'foothold_s2/eval';p.mkdir(parents=True)
+    (p/'eval_map_modes.py').write_text('# no W78 parser',encoding='utf-8')
+    monkeypatch.setattr(evaluator,'ROOT',root)
+    monkeypatch.setattr(evaluator.subprocess,'check_output',lambda args,**kw:'' if 'status' in args else '1'*40)
+    launched=[]
+    def spy(argv,folder,**kwargs):
+        launched.append(folder.name)
+        # An auxiliary failure also must not turn maintenance into failed rc.
+        return {'rc':7,'state':'failed'} if folder.name=='axis_v2' else {'rc':0,'state':'done'}
+    monkeypatch.setattr(evaluator,'hidden_child',spy)
+    row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation')
+    assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
+    assert row['state']=='done' and row['auxiliary_missing']==['axis_v2','w78_v2']
+
+
+def test_stage_receipt_at_next_update_does_not_relabel_previous_checkpoint(tmp_path):
+    run=replay_run(tmp_path);plan=load_plan(TABLE,arm='B')
+    row=watch.read(run/'ex41_application.jsonl')
+    second={**row,'iteration':251,'stage_after':'S2b','after':{'stage_id':'S2b'}}
+    with (run/'ex41_application.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(second)+'\n')
+    assert watch.stage_at(run,250,plan)=='S2a'
+    assert watch.stage_at(run,251,plan)=='S2b'
+    # local250, not parent6000 + local250. Parent identity is independently pinned.
+    row['parent_update']=5999
+    (run/'ex41_application.jsonl').write_text(json.dumps(row)+'\n')
+    with pytest.raises(ValueError,match='identity'):watch.stage_at(run,250,plan)
+
+
+def test_dead_watcher_lock_archived_but_live_owner_never_reclaimed(tmp_path):
+    import os
+    import subprocess
+    child=subprocess.Popen([sys.executable,'-c','pass'],stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+        creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+    assert child.wait()==0
+    lock=tmp_path/'watch.lock';raw=json.dumps({'pid':child.pid}).encode()
+    lock.write_bytes(raw)
+    watch.acquire_watch_lock(lock)
+    assert next(tmp_path.glob('watch.lock.dead.*')).read_bytes()==raw
+    assert watch.read(lock)['pid']==os.getpid()
+    with pytest.raises(ValueError,match='live'):watch.acquire_watch_lock(lock)
+    assert watch.read(lock)['pid']==os.getpid()
+
+
+def test_w78_producer_to_p3_metric_no_hand_inserted_runtime_scalar(tmp_path):
+    # Known-input W78 contract fixture, not measured robot performance.
+    # Map/stand still use untouched EX40 outputs. The real JSON reader and
+    # collect() must produce the derived metric consumed by runtime.
+    from foothold_s2.curriculum.ex41_symmetry import validate
+    from foothold_s2.eval.eval_dr_mode import EXPECTED_DR_OFF
+    cp,folder=native(6000);plan=load_plan(TABLE,arm='B')
+    raw=tmp_path/'known.npz';np.savez(raw,known=np.array([1.4,.7]))
+    data={'schema':'foothold-terrain-skill-v2/1','state':'done','checkpoint_sha256':sha256(cp),
+        'checkpoint_iter':6000,'envs':64,'levels':[2,5],'start_angles_deg':[0,30,60,90],
+        'modes':{},'w78_min_lr_ratio':{},'dr_off':list(EXPECTED_DR_OFF)}
+    for mode in watch.MODES:
+        data['modes'][mode]={}
+        for level in (2,5):
+            for angle in (0,30,60,90):
+                for name in watch.W78_CASES:
+                    data['modes'][mode][f'L{level}_a{angle:03d}_{name}']={
+                        'level':level,'stair_start_angle_deg':angle,'case':name,
+                        'terrain_assignment_sha256':'a'*64,'raw_file':raw.name,'raw_sha256':sha256(raw),
+                        'terrain_tiles':[{'env':i,'level':level} for i in range(64)],
+                        'per_env':[{'env':i} for i in range(64)],'by_terrain_kind':{}}
+                for kind in ('pyramid_stairs','pyramid_stairs_inv'):
+                    data['w78_min_lr_ratio'][f'L{level}_a{angle:03d}_{mode}_{kind}']={
+                        'left':1.4,'right':.7,'min_lr_ratio':.7}
+    path=tmp_path/'terrain_skill_v2.json';path.write_text(json.dumps(data))
+    row=watch.collect(cp,'S2a',folder,plan,w78_path=path)
+    assert row['components']['critic_mirror_symmetry']=='complete'
+    metric=row['metrics']['critic_mirror_symmetry'];validate(metric)
+    assert metric['modes']['eval_gt']['w78/L2_a000_pyramid_stairs']['symmetry']==.5
+    assert len(row['metrics']['w78_v2']['min_lr_ratio_by_cell'])==48
+    assert row['metrics']['w78_v2']['min_lr_ratio_by_cell']==data['w78_min_lr_ratio']
+    assert 'w78_min_lr_ratio' not in row['metrics']  # no ambiguous scalar
+    scores=tmp_path/'scores';scores.mkdir()
+    watch.immutable(scores/f'score_6000_{sha256(cp)[:12]}.json',row)
+    runtime=EX41FixedRuntime(plan,4,'cpu',tmp_path/'runtime',scores)
+    runtime.effective={'stage_id':'S2a'};runtime.stage_entry_iteration=1
+    loaded=runtime._read_scores(6001)
+    assert len(loaded)==1 and loaded[0]['metrics']['critic_mirror_symmetry']==metric
+    # Broken auxiliary numbers stay missing without destroying the 26 counts.
+    data['modes']['eval_gt']['L2_a000_stairs_fwd']['per_env'][0]['untrusted_metric']=float('nan')
+    path.write_text(json.dumps(data))
+    bad=watch.collect(cp,'S2a',folder,plan,w78_path=path)
+    assert bad['evaluation_state']=='complete' and len(bad['metrics']['maintenance_counts'])==26
+    assert 'w78_v2' in bad['auxiliary_missing'] and 'critic_mirror_symmetry' in bad['auxiliary_missing']

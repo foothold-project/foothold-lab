@@ -412,6 +412,13 @@ def main(env_cfg, agent_cfg):
             run_manifest.write_manifest(log_dir, manifest)
         if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:
             raise ValueError("EX-41 requires attached W86 runtime before learning")
+        from foothold_s2.scripts.ex41_startup import install_ex41_score_watch_after_first_update
+
+        install_ex41_score_watch_after_first_update(
+            runner, log_dir, score_dir, table=os.path.abspath(args_cli.ex41_table),
+            eval_config=os.path.join(REPO, "foothold_s2", "curriculum",
+                                     "ex40_score_config.json"),
+            enabled=not EX41_REHEARSAL)
     elif resume_path:
         print(f"[INFO] START 체크포인트에서 이어 감: {resume_path}")
         runner.load(resume_path)

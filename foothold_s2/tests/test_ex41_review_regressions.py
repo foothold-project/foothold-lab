@@ -18,7 +18,7 @@ from foothold_s2.rewards import w86_runtime as wr
 def test_unreadable_score_is_recorded_and_valid_neighbor_consumed(tmp_path,monkeypatch,kind):
     r,_=runtime(tmp_path,monkeypatch); r.on_update_start(1)
     score(r,250)
-    bad=r.score_dir/'a_bad.json'
+    bad=r.score_dir/'score_249_000000000000.json'
     if kind=='directory': bad.mkdir()
     else: bad.write_text('[]')
     original=ex41.sha256
@@ -30,6 +30,8 @@ def test_unreadable_score_is_recorded_and_valid_neighbor_consumed(tmp_path,monke
     assert len(r._history)==1 and not r.stop_requested
     rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
     assert any(x['event']=='score_rejected' and x.get('path')==str(bad) for x in rows)
+    if kind=='array':
+        assert any(x['event']=='score_rejected' and 'must be an object' in x['reason'] for x in rows)
 
 
 def test_safety_score_survives_locked_config_error(tmp_path,monkeypatch):

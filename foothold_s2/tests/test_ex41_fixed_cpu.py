@@ -1,11 +1,10 @@
-﻿"""Fixed5000 endpoints, pause/recovery/exhaustion and real committed runtime."""
+"""Fixed5000 endpoints, pause/recovery/exhaustion and real committed runtime."""
 import copy
 import json
 from pathlib import Path
 import subprocess
 import pytest
 import yaml
-from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
 from foothold_s2.curriculum.ex41_fixed import (Clock,CELLS,maintenance,baseline_counts,
     maintenance_cells,build_maintenance_counts)
@@ -44,7 +43,8 @@ def counts(r,passed=64):
 def tick(r,n,*,failed=False,stand=64,stage_pass=False):
     c=counts(r)
     if failed: c[CELLS[0]]['passed']=60
-    score(r,n-1,passed=stage_pass,metrics={'maintenance_counts':c,'stand_min_passed':stand})
+    score(r,max(0,n-1-r.clock.settings['interval_updates']),passed=stage_pass,
+          metrics={'maintenance_counts':c,'stand_min_passed':stand})
     r.on_update_start(n)
 
 
@@ -271,7 +271,7 @@ def test_record_only_selection_26_or39_and_plan_hash(tmp_path):
 
 def test_stage_change_retains_audit_history_but_not_stale_recovery(tmp_path):
     r,_=fixture(tmp_path);tick(r,751,failed=True)
-    assert r.effective['stage_id']=='S2b' and [s['iteration'] for s in r._history]==[750]
+    assert r.effective['stage_id']=='S2b' and [s['iteration'] for s in r._history]==[500]
     r.on_update_start(1001)
     assert r.clock.recovered==0 and r._missing_maintenance_boundaries==1
 
@@ -352,7 +352,7 @@ def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
 
 def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
     r,_=fixture(tmp_path/'a');tick(r,751);tick(r,1001)
-    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1000,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
     data=json.loads(p.read_text());data['checkpoint_sha256']='0'*64;p.write_text(json.dumps(data))
     r.on_update_start(1251);assert r.clock.paused
     b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
@@ -368,13 +368,13 @@ def test_d133_record39_judge26_pred_zero_is_not_dr_failure(tmp_path):
     records={k:{'passed':64,'baseline_passed':64,'total':64} for k in CELLS}
     records[CELLS[-1]]['passed']=0
     judged={k:copy.deepcopy(records[k]) for k in r.baseline}
-    score(r,750,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
+    score(r,500,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
     r.on_update_start(751)
     assert not r.clock.paused and len(r._history[-1]['metrics']['record_counts'])==39
     assert len(r._history[-1]['metrics']['maintenance_counts'])==26
     records[CELLS[0]]['passed']=60
     judged={k:copy.deepcopy(records[k]) for k in r.baseline}
-    score(r,1000,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
+    score(r,750,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
     r.on_update_start(1001)
     assert r.clock.paused
 
@@ -387,6 +387,70 @@ def test_second_share_change_at_s2c_not_dr_start(tmp_path):
     for n in (1001,1251,1501,1751):tick(r,n)
     assert r.effective['stage_id']=='S2c' and r.effective['shares']!=first
     assert r.effective['shares']['side_left']==.07
+
+
+@pytest.mark.parametrize('stage_index',range(6))
+def test_load_plan_rejects_unapproved_stage_shares(tmp_path,stage_index):
+    doc=yaml.safe_load(TABLE.read_text())
+    if stage_index==1:
+        # The formerly accepted n751 regression: restore second mix too early.
+        doc['stages'][1]['shares']=copy.deepcopy(doc['stages'][2]['shares'])
+    else:
+        shares=doc['stages'][stage_index]['shares']
+        shares['forward']-=.01
+        shares['reverse']+=.01
+    path=tmp_path/'bad-plan.yaml';path.write_text(yaml.safe_dump(doc))
+    with pytest.raises(ValueError,match='approved shares'):
+        load_plan(path,arm='B')
+
+
+@pytest.mark.parametrize('body_iteration',[0,750,1400])
+def test_rejected_score_uses_filename_not_untrusted_body_time(tmp_path,body_iteration):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['iteration']=body_iteration
+    p.write_text(json.dumps(data));r.on_update_start(1251)
+    assert r._score_rejections[str(p)]['iteration']==1250
+    assert 'filename iteration' in r._score_rejections[str(p)]['reason']
+    assert r.clock.paused and r.clock.recovered==0
+    assert r.dr_scale(1501)==r.dr_scale(1251)
+
+
+def test_valid_future_named_score_waits_until_consumable(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1000,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1500,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    r.on_update_start(1251)
+    assert str(p) not in r._score_rejections and not r.clock.paused
+    score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    r.on_update_start(1501)
+    assert r._history[-1]['iteration']==1500 and not r.clock.paused
+    r.on_update_start(1751)
+    events=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert [x for x in events if x['event']=='dr_score_clock'][-1]['selected_score_iteration']==1500
+
+
+def test_old_rejection_snapshot_cannot_override_named_iteration(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['iteration']=0;p.write_text(json.dumps(data))
+    # Old snapshots used the invalid body time. Re-read must repair this entry.
+    r._score_rejections[str(p)]={'iteration':0,'sha256':sha256(p),'reason':'old rejection'}
+    r.on_update_start(1251)
+    assert r._score_rejections[str(p)]['iteration']==1250
+    assert r.clock.paused and r.clock.recovered==0
+
+
+@pytest.mark.parametrize('filename',['other.json','score_1250.invalid.json','score_-1.json'])
+def test_score_filename_outside_producer_contract_is_rejected(tmp_path,filename):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,folder=filename,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    r.on_update_start(1251)
+    assert 'filename' in r._score_rejections[str(p)]['reason']
+    assert r.clock.paused and r.clock.recovered==0
 
 
 def test_transferred_lin_vel_z_keeps_actual_parent_zero_at_each_boundary(tmp_path):

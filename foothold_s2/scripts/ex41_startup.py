@@ -8,8 +8,13 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 import shutil
+import subprocess
+import sys
+import time
+import uuid
 import warnings
 from contextlib import contextmanager
 from pathlib import Path
@@ -28,6 +33,122 @@ EX41_DISK_REFERENCE_UPDATES = 8001
 EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
 EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
+EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+
+
+def ex41_score_watch_argv(run_dir: str | Path, score_dir: str | Path, *,
+                          table: str | Path, eval_config: str | Path,
+                          python: str | Path = sys.executable) -> list[str]:
+    """Build the production EX-41 watcher command without starting a child."""
+    run = Path(run_dir).resolve(strict=True)
+    score = Path(score_dir).resolve()
+    table_path = Path(table).resolve(strict=True)
+    eval_path = Path(eval_config).resolve(strict=True)
+    interpreter = Path(python).resolve(strict=True)
+    if os.path.normcase(str(interpreter)) != os.path.normcase(str(EX41_ISAAC_PYTHON.resolve(strict=False))):
+        raise ValueError("EX-41 score watcher requires the pinned isaac311 interpreter")
+    return [str(interpreter), "-m", "foothold_s2.ex41_score_watch",
+            "--run-dir", str(run), "--out-root", str(run / "shadow-score-watch"),
+            "--score-dir", str(score), "--table", str(table_path),
+            "--eval-config", str(eval_path), "--execute"]
+
+
+def _write_score_watch_receipt(path: Path, row: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+    data = (json.dumps(row, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+    try:
+        with tmp.open("xb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def launch_ex41_score_watch(run_dir: str | Path, score_dir: str | Path, *,
+                            table: str | Path, eval_config: str | Path,
+                            python: str | Path = sys.executable,
+                            trigger_update: int,
+                            popen=subprocess.Popen) -> dict:
+    """Start the detached numeric evaluator after the first update status."""
+    if type(trigger_update) is not int or trigger_update < 1:
+        raise ValueError("EX-41 watcher trigger must be a completed positive update")
+    argv = ex41_score_watch_argv(run_dir, score_dir, table=table,
+                                 eval_config=eval_config, python=python)
+    run = Path(run_dir).resolve(strict=True)
+    out = run / "shadow-score-watch"
+    out.mkdir(parents=True, exist_ok=True)
+    lock = out / "watch.lock"
+    if lock.is_file():
+        try:
+            owner = json.loads(lock.read_text(encoding="utf-8"))
+            import psutil
+            pid = owner.get("pid")
+            if type(pid) is not int or pid <= 0:
+                return {"state": "blocked_unknown_lock_owner", "lock": str(lock)}
+            if psutil.pid_exists(pid):
+                return {"state": "already_running", "pid": pid, "lock": str(lock)}
+        except (OSError, ValueError, ImportError):
+            return {"state": "blocked_unreadable_lock", "lock": str(lock)}
+    if (out / "watch_completion.json").is_file():
+        return {"state": "already_complete", "completion": str(out / "watch_completion.json")}
+
+    env = dict(os.environ)
+    repo = Path(__file__).resolve().parents[2]
+    env["PYTHONPATH"] = str(repo) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONUNBUFFERED"] = "1"
+    stdout_path, stderr_path = out / "watcher.stdout.log", out / "watcher.stderr.log"
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    with stdout_path.open("ab") as stdout, stderr_path.open("ab") as stderr:
+        child = popen(argv, cwd=str(repo), env=env, stdin=subprocess.DEVNULL,
+                      stdout=stdout, stderr=stderr, creationflags=flags, close_fds=True)
+    row = {"format": "foothold-ex41-score-watch-launch/1", "state": "running",
+           "pid": int(child.pid), "started_unix": time.time(), "argv": argv,
+           "cwd": str(repo), "stdout": str(stdout_path), "stderr": str(stderr_path),
+           "trigger": "first_completed_update", "trigger_update": trigger_update}
+    receipt = out / "launches" / f"launch_{row['started_unix']:.6f}_{child.pid}.json"
+    _write_score_watch_receipt(receipt, row)
+    return row | {"receipt": str(receipt)}
+
+
+def install_ex41_score_watch_after_first_update(runner, run_dir: str | Path,
+                                                 score_dir: str | Path, *,
+                                                 table: str | Path,
+                                                 eval_config: str | Path,
+                                                 enabled: bool = True,
+                                                 launch=launch_ex41_score_watch) -> None:
+    """Bind one launch to StartRunner's existing first-update status write."""
+    if not enabled:
+        return
+    if getattr(runner, "_ex41_score_watch_hook_installed", False):
+        raise ValueError("EX-41 score watcher hook already installed")
+    original = runner._write_running_status
+    state = {"started": False}
+
+    def after_status(iteration, *args, **kwargs):
+        result = original(iteration, *args, **kwargs)
+        if type(iteration) is int and iteration >= 1 and not state["started"]:
+            state["started"] = True
+            try:
+                receipt = launch(run_dir, score_dir, table=table,
+                                 eval_config=eval_config, trigger_update=iteration)
+                runner._ex41_score_watch_launch = receipt
+                print("EX41_SCORE_WATCH " + json.dumps(receipt, sort_keys=True), flush=True)
+            except Exception as exc:
+                failure = {"state": "failed", "trigger": "first_completed_update",
+                           "reason": f"{type(exc).__name__}: {exc}"}
+                runner._ex41_score_watch_launch = failure
+                failure_path = (Path(run_dir) / "shadow-score-watch" / "launches" /
+                                f"failed_{time.time():.6f}_{uuid.uuid4().hex[:8]}.json")
+                _write_score_watch_receipt(failure_path, failure)
+                print("EX41_SCORE_WATCH_FAILED " + json.dumps(failure, sort_keys=True), flush=True)
+        return result
+
+    runner._write_running_status = after_status
+    runner._ex41_score_watch_hook_installed = True
 
 
 def checkpoint_count_for_updates(planned_updates: int, save_interval: int) -> int:

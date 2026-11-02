@@ -120,13 +120,14 @@ def test_physical_source_ray_geometry_rotation_and_names():
                                         get_term=lambda n:SimpleNamespace(heading=torch.zeros(1,dtype=torch.bool))))
     s=wr.PhysicalSource.__new__(wr.PhysicalSource); s.env=env; s.robot=SimpleNamespace(data=d)
     s.sensor=SimpleNamespace(data=SimpleNamespace(net_forces_w=torch.zeros(1,4,3)))
-    s.feet=list(range(4)); s.force_ids=list(range(4)); s.knees=[8,9,10,11]; s.mesh=object()
+    s.feet=list(range(4)); s.force_ids=list(range(4)); s.knees=[8,9,10,11]; s.mesh=object(); s.link_names=wr.FEET
     seen={}
     def cast(starts,directions,mesh,max_dist):
         seen['starts']=starts.clone(); seen['directions']=directions.clone()
         out=starts.clone(); out[...,2]=3.
         return out,None,None,None
     s.cast=cast; r=s()
+    assert r['all_link_names']==wr.FEET and r['all_forces'].shape==(1,4,3)
     assert seen['starts'].shape==(1,4,3,3)
     torch.testing.assert_close(seen['starts'][0,0,1]-seen['starts'][0,0,0],torch.tensor([0.,.05,0.]),atol=1e-6,rtol=0)
     torch.testing.assert_close(r['sole_z'],torch.full((1,4),3.))

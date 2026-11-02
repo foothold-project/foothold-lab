@@ -190,17 +190,21 @@ def test_capped_performance_term_and_spin_neutral():
     assert manifest['by_terrain']['rough']['levels'][2]==1
 
 
-def score(r,n,passed=True,metrics=None,folder=None):
+def score(r,n,passed=True,metrics=None,folder=None,checkpoint_variant=''):
     root=r.log_dir; root.mkdir(parents=True,exist_ok=True)
     r.score_dir=root/'scores'; r.score_dir.mkdir(exist_ok=True)
-    cp=root/f'model_{n}.pt'; cp.write_bytes(f'known-cpu-checkpoint-{n}'.encode())
+    cp_root=root/checkpoint_variant; cp_root.mkdir(parents=True,exist_ok=True)
+    cp=cp_root/f'model_{n}.pt'
+    cp.write_bytes((f'known-cpu-checkpoint-{n}'+('-'+checkpoint_variant if checkpoint_variant else '')).encode())
     raw=root/f'raw_{n}.json'; raw.write_text('{}')
-    row=dict(format='foothold-ex41-score/1',iteration=n,stage_id=r.effective['stage_id'],
+    history=[(it,stage) for it,stage in getattr(r,'_score_stage_history',[]) if it<=n]
+    actual_stage=history[-1][1] if history else r.effective['stage_id']
+    row=dict(format='foothold-ex41-score/1',iteration=n,stage_id=actual_stage,
         schedule_sha256=r.plan.effective_sha256,parent_sha256=r.plan.parent_sha256,
         checkpoint_path=str(cp),checkpoint_sha256=sha256(cp),created_at=datetime.now(timezone.utc).isoformat(),
         maintenance_pass=True,stage_pass=passed,safety_stop=False,metrics={'stand_min_passed':64} if metrics is None else metrics,
         baseline_checkpoint_sha256=r._stage_baseline_sha,evidence=[{'path':str(raw),'sha256':sha256(raw)}])
-    out=r.score_dir/(folder or f'score_{n}.json'); out.write_text(json.dumps(row),encoding='utf-8')
+    out=r.score_dir/(folder or f'score_{n}_{row["checkpoint_sha256"][:12]}.json'); out.write_text(json.dumps(row),encoding='utf-8')
     return out
 
 
@@ -217,9 +221,11 @@ def test_two_real_files_promote_at_500_and_missing_w71_holds(tmp_path,monkeypatc
 
 def test_same_checkpoint_conflict_is_not_two_passes(tmp_path,monkeypatch):
     r,_=runtime(tmp_path,monkeypatch); r.on_update_start(1)
-    score(r,500,folder='a.json'); score(r,500,folder='b.json')
+    first=score(r,500,checkpoint_variant='a'); second=score(r,500,checkpoint_variant='b')
+    assert first.name!=second.name
     r.on_update_start(501)
     assert r.effective['stage_id']=='S2a' and not r._history
+    assert r._score_rejections['conflict:500']['reason']=='duplicate conflicting score'
 
 
 @pytest.mark.parametrize('mutate',[lambda d:d.update(checkpoint_sha256='0'*64),
