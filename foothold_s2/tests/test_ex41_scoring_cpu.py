@@ -30,7 +30,7 @@ def test_actual_m6000_generated_file_matches_all39_and_stand_cells(actual,tmp_pa
         'checkpoint_sha256':native['checkpoint_sha256'],'created_at':datetime.now(timezone.utc).isoformat(),
         'metrics':{},'evidence':[],'maintenance_pass':False,'stage_pass':False,'safety_stop':False}
     result=enrich_score_metrics(draft,ROOT/'map64/map_modes.json',stands,plan)
-    out=tmp_path/'score_6000.json';out.write_text(json.dumps(result,allow_nan=False))
+    out=tmp_path/f'score_6000_{result["checkpoint_sha256"][:12]}.json';out.write_text(json.dumps(result,allow_nan=False))
     got=json.loads(out.read_text());counts=got['metrics']['record_counts']
     assert len(counts)==39 and len(got['metrics']['maintenance_counts'])==26
     assert maintenance(got['metrics']['maintenance_counts'],baseline_counts(plan))==[]

@@ -391,18 +391,25 @@ class EX41Runtime(Runtime):
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
             h=None; it=None
-            match=re.fullmatch(r'score_(\d+)(?:_[A-Za-z0-9_-]+)?\.json',p.name)
+            match=re.fullmatch(r'score_(0|[1-9][0-9]*)_([0-9a-f]{12})\.json',p.name)
             named_iteration=int(match[1]) if match else None
             try:
                 h=sha256(p)
                 if match is None: raise ValueError('EX41 score filename outside producer contract')
-                if h in self.seen_scores and str(p) not in self._score_rejections: continue
                 d=json.loads(p.read_text(encoding='utf-8-sig'))
                 if not isinstance(d,dict): raise ValueError('EX41 score must be an object')
                 it=d.get('iteration')
                 if type(it) is not int or it<0: raise ValueError('EX41 score iteration invalid')
                 if named_iteration is not None and named_iteration!=it:
                     raise ValueError('EX41 filename iteration differs from score iteration')
+                checkpoint_sha=d.get('checkpoint_sha256')
+                if not isinstance(checkpoint_sha,str) or re.fullmatch(r'[0-9a-f]{64}',checkpoint_sha) is None:
+                    raise ValueError('EX41 checkpoint SHA256 invalid')
+                if match[2]!=checkpoint_sha[:12]:
+                    raise ValueError('EX41 filename SHA12 differs from checkpoint SHA256')
+                # A previously seen body may have appeared under a new, false
+                # filename. Check its identity before suppressing rereads.
+                if h in self.seen_scores and str(p) not in self._score_rejections: continue
                 if it>n: continue  # not yet consumable
                 json.dumps(d,allow_nan=False)
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')

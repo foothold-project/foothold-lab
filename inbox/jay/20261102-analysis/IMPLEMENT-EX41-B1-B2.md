@@ -290,3 +290,19 @@ L3는 `score_N.json` 또는 `score_N_<영숫자·밑줄·하이픈>.json` 전체
 수정 전 알려진 반례: 원래 score_watch→숨김 평가 Python→Git Bash에서 바깥 rc0·Bash rc0이지만 sha256sum rc1(`Bad file descriptor`). 파일명 세 반례와 L2의 앞선 증거 파일도 실패하여 **5 FAIL·1 PASS, 12.01초**였다. stdin 누락 세 곳과 이 두 잔여 고침은 한 고정본으로 인도한다. runner 소유 eval_once·chain/runner.py는 수정하지 않았다.
 
 확인됨: 수정 뒤 첫 회귀는 C: 임시 공간 부족(`Errno 28`)으로 143 PASS·1 FAIL·30 ERROR(162.93초)에서 끝났다. 전체 통과로 세지 않았다. 파일 삭제 없이 D:의 새 임시 폴더로 시험 위치만 바꿔 같은 일곱 파일을 다시 실행한 결과 **174 PASS, 190.77초**다. 명령 대상·JUnit·로그 SHA는 [CPU 근거](evidence/EX41-W71-original-path-cpu.json)에 기록했다. pyflakes·git diff --check 통과. EX-41 통합 연결과 GPU/Kit 검증은 이 CPU 결과의 범위 밖이며 `w71_ready=false`를 유지한다.
+
+## 23. 점수 파일명 정본 형식 (11/02 16:4x 후속)
+
+lead가 acb35d7f의 두 겹 검토 막음 0과 W71 코드 쪽 종결을 전달했다. 이 절은 남은 낮은 항목인 점수 파일명만 좁힌다. EX-41 루프 소비는 runner G11이며 `w71_ready=false`는 바꾸지 않는다.
+
+소비 형식은 `score_<N>_<sha12>.json`이다. N은 ASCII 비음수 정수 표기이며 0 이외 앞자리 0을 허용하지 않는다. sha12는 소문자 ASCII hex 12자리이고 본문 `checkpoint_sha256` 64자리의 앞 12자와 같아야 한다. 본문의 회차 일치, 실제 체크포인트 파일 SHA 대조는 그대로 유지한다. 이름과 본문 SHA를 함께 거짓 값으로 바꿔도 실제 파일 SHA 검사에서 거절한다.
+
+실제 JSON reader 반례는 해시 없는 이름, copy 접미사, 앞자리 0, 전각 숫자, 길이 오류, 다른 해시, 대문자 해시다. 수정 전 **8 FAIL·3 PASS, 20.07초**였다. 정상 이름의 소비와 이름·본문만 함께 바꾼 거짓 해시의 거절도 같은 묶음에서 확인했다.
+
+기존 시험 고정물도 정본 이름을 생성한다. 중복 회차 반례는 같은 회차의 서로 다른 CPU 체크포인트 두 개를 별도 폴더에 만들고, 각각 실제 해시 이름을 쓰도록 고쳤다. `duplicate conflicting score`까지 확인하므로 파일명 오류만으로 중복 시험이 통과하지 않는다. JSON 최상위 목록 반례도 정식 이름으로 바꿔 `must be an object` 오류를 직접 확인한다. 실제 m6000 재집계의 출력 이름도 같은 형식으로 맞춘다.
+
+작업·임시·산출은 D:에만 작성했다. 독립 작업 사본은 `D:/mai-wt/foothold-lab/analyst-ex41-score-name-1102`, 브랜치는 `feature/analyst-ex41-score-name-1102-jay`다. 이 사본의 Git 메타데이터도 D:에 있고 원래 C: 저장소의 커밋 객체만 읽는다. GPU·Kit·학습·라이브 사본·원장은 변경하지 않았다. 통합 때 runner가 점수 생산 호출의 출력 이름도 이 계약으로 만드는지 확인해야 한다.
+
+첫 고침 뒤 여섯 파일 **130 PASS, 173.00초**였다. 이후 소비 순서 대조에서 이미 읽은 본문을 다른 SHA12 이름으로 복사하면 `seen_scores`가 이름 대조 전에 건너뛰는 반례 **1 FAIL, 3.69초**를 추가 확인했다. 이름·회차·본문 SHA 대조를 마친 뒤에만 같은 본문 재읽기를 생략하도록 옮겼다. 아래 최종 시험은 이 순서 고침까지 포함한다.
+
+최종 확인됨: 파일명 시험 전체·runtime·review_regressions와 fixed의 최신 오류·이전 PASS·재개·미래 점수·파일명 시점 반례를 다시 실행해 **73 PASS, 98.47초**다. 앞 130개와 겹치므로 합산하지 않는다. 네 차례 JUnit 경로·SHA·시험 이름은 [CPU 근거](evidence/EX41-score-filename-cpu.json)에 남겼다. pyflakes·git diff --check 통과. 실행 설정·학습 조건·판정 문턱 변경 없음.
