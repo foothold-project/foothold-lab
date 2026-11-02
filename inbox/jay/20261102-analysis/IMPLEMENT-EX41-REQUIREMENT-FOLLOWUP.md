@@ -16,6 +16,16 @@ W86 생산부는 `FatalTrainingFault(ValueError)`와 `ex41_fatal.jsonl`을 제�
 
 실측: 수정 전7 FAIL(2.66초), 수정 뒤 U6와 기존 W86 19 PASS(4.91초). 원자료 D:/mai-tmp/analyst/u6-red-1814.log, u6-green-1816.log. 실행기·학습 프로세스·원장 변경 없음.
 
+## U10 · 무릎 토크 한계 접근 기록
+
+기존 0.9 비율 문턱을 그대로 쓴다. FL/FR/RL/RR calf의 `abs(applied_torque)/joint_effort_limit >= 0.9` 횟수·정상 표본 수·비율을 `ex41_w86.jsonl`의 `knee_effort.joints`에 기록한다. 불량 env는 분모에서도 빼며, 표본이 없으면 비율은 null이다. 기록용이며 보상·승급 문턱을 새로 만들지 않는다.
+
+빠져 있던 실제 호출은 `EX41Runtime.flush_consumption`이 맡는다. 기존 runner의 회차 종료 호출에서 W86 기록도 함께 배출한다. 알려진 3 env 입력에서 불량 한 행을 제외한 네 무릎 분자는 `[1,1,2,0]`, 분모는 `[2,2,2,2]`, 비율은 `[0.5,0.5,1,0]`이었다. 실제 Git 설정을 읽는 runtime 시험은 수정 전 파일 없음으로 실패, 연결 뒤 통과했다.
+
+점수 소비 인터페이스는 `ex41_scoring.enrich_training_metrics(draft, w86_metrics_path, *, snapshot_dir)`이다. 같은 회차 기록 하나를 검증하고 `metrics.training_knee_effort`를 넣는다. 늘어나는 JSONL 대신 읽은 회차의 고정 JSON 사본과 SHA를 evidence에 남긴다. 중복·누락·NaN·비율 불일치는 거절한다. **runner 점수기에서 이 함수를 호출하는 연결은 미완료**이며, 그 전에는 U10 전체 완료로 세지 않는다.
+
+실측: U10 첫 반례6 FAIL, 기록 호출 반례1 FAIL. U10·U6·W86·점수·runtime 회귀 60 PASS(40.89초). 원자료 `D:/mai-tmp/analyst/u10-green-1829.log`. GPU·Kit 미실행.
+
 ## 남은 항목
 
 U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.

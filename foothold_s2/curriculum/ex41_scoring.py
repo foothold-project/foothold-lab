@@ -6,6 +6,8 @@ restoration threshold remains 61/64 in its runtime. map64_b3 is not a substitute
 from pathlib import Path
 import copy
 import json
+import hashlib
+import math
 
 from foothold_s2.curriculum.ex41_fixed import CASES, build_maintenance_counts, baseline_counts, maintenance
 from foothold_s2.ex40_score import config, sha256, _map_rows, _stand_rows, _stand_pass
@@ -13,6 +15,50 @@ from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 
 MODES=('eval_gt','probe_prop_only','eval_pred')
 DEFAULT_CONFIG=Path(__file__).with_name('ex40_score_config.json')
+
+
+def enrich_training_metrics(draft, w86_metrics_path, *, snapshot_dir):
+    """U10 record-only score fields; copy evidence out of a growing training log.
+
+    Runner calls after enrich_score_metrics, before publishing the score. A
+    missing or incomplete same-iteration record is missing evidence, never 0.
+    This function changes no maintenance/stage verdict and no reward weight.
+    """
+    from foothold_s2.rewards.w86_runtime import KNEES
+    iteration=draft.get('iteration')
+    if type(iteration) is not int or not isinstance(draft.get('metrics'),dict) or not isinstance(draft.get('evidence'),list):
+        raise ValueError('EX41 training metrics draft invalid')
+    path=Path(w86_metrics_path).resolve(strict=True); raw=path.read_bytes()
+    records=[json.loads(line) for line in raw.decode('utf-8-sig').splitlines() if line.strip()]
+    selected=[r for r in records if isinstance(r,dict) and type(r.get('iteration')) is int and r['iteration']==iteration]
+    if len(selected)!=1: raise ValueError('EX41 training metric missing or duplicate iteration')
+    row=selected[0]; data=row.get('knee_effort')
+    if (row.get('format')!='ex41-w86-metrics/1' or not isinstance(data,dict)
+        or data.get('threshold_fraction')!=.9 or data.get('record_only') is not True
+        or not isinstance(data.get('joints'),dict) or set(data['joints'])!=set(KNEES)):
+        raise ValueError('EX41 knee metric contract differs')
+    for name,item in data['joints'].items():
+        if not isinstance(item,dict): raise ValueError('EX41 knee row invalid: '+name)
+        num,den,ratio=(item.get(k) for k in ('near_limit_frames','valid_frames','ratio'))
+        if type(num) is not int or type(den) is not int or not 0<=num<=den:
+            raise ValueError('EX41 knee counts invalid: '+name)
+        if (den==0 and ratio is not None) or (den>0 and (type(ratio) not in (int,float)
+            or not math.isfinite(ratio) or not math.isclose(ratio,num/den,abs_tol=1e-12))):
+            raise ValueError('EX41 knee ratio/count mismatch: '+name)
+    payload={'format':'ex41-training-metrics-evidence/1','source_path':str(path),
+             'source_prefix_sha256':hashlib.sha256(raw).hexdigest(),'source_byte_count':len(raw),'record':row}
+    content=(json.dumps(payload,ensure_ascii=False,sort_keys=True,allow_nan=False)+'\n').encode('utf-8')
+    digest=hashlib.sha256(content).hexdigest()
+    folder=Path(snapshot_dir).resolve(); folder.mkdir(parents=True,exist_ok=True)
+    dest=folder/f'w86_{iteration}_{digest[:12]}.json'
+    try:
+        with dest.open('xb') as out: out.write(content)
+    except FileExistsError:
+        if dest.read_bytes()!=content: raise ValueError('EX41 training snapshot hash/name collision')
+    result=copy.deepcopy(draft);result['metrics']['training_knee_effort']=copy.deepcopy(data)
+    evidence={'path':str(dest),'sha256':digest}
+    if evidence not in result['evidence']:result['evidence'].append(evidence)
+    return result
 
 
 def maintenance_counts_from_map_modes(map_modes, baseline):
