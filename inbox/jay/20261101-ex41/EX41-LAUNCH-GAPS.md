@@ -77,3 +77,5 @@ G16 닫힘(15:2x): CANON-REGISTRY 에 EX-40_m6000 등록 48846e53. SHA(저장본
 15:3x 닫힘: G15(analyst a407377c · a0f82867) 두 겹 막음 0(verifier VERIFY-EX41-G15-a0f82867 · 독립). 실제 m2500 HOLD→PASS 재현, 돌연변이 14 개 모두 HOLD. 낮음: ex41_scoring 은 고친 judge 를 쓰지 않음(EX-41 판정은 ex41 런타임 쪽). W71 75df4e87 · D125 e5a908a2 두 겹 검토 중. C층 C4 막음(전 프레임 검사 반례 셋) scripter 처리 중.
 
 정정(15:5x): G14 「W57 rc=1 의 정체」 는 단정이 아니라 유력 가설이다. 재현 조건은 숨은 부모 python 이 표준 핸들 없이 뜰 때뿐(C:/Users/AI-WS01/.claude/jobs/2fb71c60/tmp/stdin_repro/ V1). EX-40 의 실제 띄움 방식과 로그 직접 증거(Bad file descriptor 문자열)는 score-watch-b · retry 폴더에서 찾지 못함(stderr 미보존). 고침(stdin=DEVNULL 전수)은 어느 경우든 무해하므로 그대로 진행.
+
+G18 (16:0x, 팀장 물음 「밀기 · 영상에서 어디로 얼마나 밀리는지」): 학습에는 밀기가 있다(ex41-fixed5000.yaml:66-87, 수평 속도 축마다 ±1.0 m/s × DR 배율, 간격 10~15 s). 그러나 평가 DR 켠 칸에서는 밀기 0 회(D125 B1), C층 · 단계 끝 촬영기는 fixed 모드에서 push_robot 을 꺼서(record_c_layer.py:270-276) 밀기 장면 자체가 없고, 밀기 방향 · 크기를 그리는 HUD 도 없다. 할 일: 평가에 「명령 안 고정 시각 밀기」 칸(시각 · Δv 벡터 기록) → 영상에 밀기 화살표(방향 · 크기 m/s) + 회복 지표(쓰러짐 · 경로 이탈 · 회복 시간). 담당: planner(평가 · 기록) → scripter(영상 화살표).
