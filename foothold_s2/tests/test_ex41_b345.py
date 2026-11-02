@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import os
 import json
+import copy
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import torch
 from tensordict import TensorDict
 
 from foothold_s2.models.start_policy import OBS_GROUPS, StartActorCritic
-from foothold_s2.runners.ex41_critic_mirror import mirror_critic, value_loss
+from foothold_s2.runners.ex41_critic_mirror import EXPECTED_JOINT_NAMES, assert_joint_order, mirror_critic, value_loss
 from foothold_s2.runners.ex41_transfer import policy_state
 from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
+from foothold_s2.tests.ex41_authorization_fixture import real_authorization
 
 
 PARENT_SHA = "3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368"
@@ -22,13 +25,17 @@ W72_AUTHORIZATION = json.loads((Path(__file__).parent / "fixtures" / "ex41_autho
 
 
 class PoseEnv(FakeStartEnv):
+    def __init__(self, *args, **kwargs):
+        self.scene = {"robot": SimpleNamespace(joint_names=EXPECTED_JOINT_NAMES)}
+        super().__init__(*args, **kwargs)
+
     def _make(self):
         raw = super()._make()
         raw["pose_cmd"] = torch.zeros(self.num_envs, 2)
         return raw
 
 
-def pose_runner(mirror=False, parent_mode=False):
+def pose_runner(mirror=False, parent_mode=False, approval=None):
     perception = {"microbatch_envs": 2}
     if parent_mode:
         perception.update({"critic_mode": "clean52", "map_input": "reconstruction",
@@ -38,11 +45,11 @@ def pose_runner(mirror=False, parent_mode=False):
     cfg["ex41_pose_commands"] = True
     cfg["ex41_critic_mirror"] = mirror
     if mirror:
-        cfg["ex41_mirror_approval"] = dict(W72_AUTHORIZATION)
+        cfg["ex41_mirror_approval"] = approval
     return StartRunner(PoseEnv(num_envs=4), cfg, device="cpu")
 
 
-def test_pose_is_appended_and_zero_stage_rejects_nonzero():
+def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
     runner = pose_runner()
     assert runner.ex41_critic_mirror is False and runner.alg.mirror_enabled is False
     raw = runner.env.get_observations()
@@ -55,13 +62,28 @@ def test_pose_is_appended_and_zero_stage_rejects_nonzero():
     raw["pose_cmd"][0, 0] = 0.1
     with pytest.raises(ValueError, match="must be finite and zero"):
         runner._ppo_obs(raw, torch.zeros(4, 51))
-    with pytest.raises(ValueError, match="W72 APPROVED"):
+    with pytest.raises(ValueError, match="W72 HOLD"):
         runner.set_ex41_critic_mirror(True)
-    wrong = dict(W72_AUTHORIZATION, approval_id="d" * 64)
-    with pytest.raises(ValueError, match="W72 APPROVED"):
+    with pytest.raises(ValueError, match="W72 HOLD"):
+        runner.set_ex41_critic_mirror(True, dict(W72_AUTHORIZATION))
+    good = real_authorization(tmp_path / "w72")
+    wrong = dict(good, approval_id="d" * 64)
+    with pytest.raises(ValueError, match="W72 HOLD"):
         runner.set_ex41_critic_mirror(True, wrong)
-    runner.set_ex41_critic_mirror(True, dict(W72_AUTHORIZATION))
+    runner.set_ex41_critic_mirror(True, good)
     assert runner.alg.mirror_enabled is True
+    runner.env.scene["robot"].joint_names = tuple(reversed(EXPECTED_JOINT_NAMES))
+    with pytest.raises(ValueError, match="joint_names"):
+        runner.set_ex41_critic_mirror(True, good)
+    assert runner.alg.mirror_enabled is False
+    runner.env.scene["robot"].joint_names = EXPECTED_JOINT_NAMES
+    runner.set_ex41_critic_mirror(True, good)
+    (tmp_path / "w72" / "ex41-approvals.yaml").write_bytes(b"changed\n")
+    with pytest.raises(ValueError, match="W72 HOLD"):
+        runner.set_ex41_critic_mirror(True, good)
+    assert runner.alg.mirror_enabled is False and runner.ex41_critic_mirror is False
+    raw["pose_cmd"].zero_()
+    runner.learn(1)  # The boundary failure does not kill an otherwise healthy rollout.
 
 
 def test_parent_zero_columns_bit_equal_and_adam_moments():
@@ -117,6 +139,18 @@ def test_parent_zero_columns_bit_equal_and_adam_moments():
         assert torch.equal(old.act_inference(old_obs), runner.alg.policy.act_inference(new_obs))
         assert torch.equal(old.evaluate(old_obs), runner.alg.policy.evaluate(new_obs))
         assert torch.equal(old.std, runner.alg.policy.std)
+        comparison_gen = torch.Generator().manual_seed(20261102)
+        for batch in (1, 64, 3072):
+            previous = TensorDict({"actor_in": torch.randn(batch, 96, generator=comparison_gen),
+                                   "critic_in": torch.randn(batch, 664, generator=comparison_gen)}, batch_size=[batch])
+            widened = TensorDict({"actor_in": torch.cat([previous["actor_in"], torch.zeros(batch, 2)], -1),
+                                  "critic_in": torch.cat([previous["critic_in"], torch.zeros(batch, 2)], -1)}, batch_size=[batch])
+            for earlier, later in ((old.act_inference(previous), runner.alg.policy.act_inference(widened)),
+                                   (old.evaluate(previous), runner.alg.policy.evaluate(widened))):
+                if batch == 1:
+                    assert (earlier - later).abs().max() <= 3e-6
+                else:
+                    assert torch.equal(earlier, later)
     assert all(torch.equal(parent["perception_state_dict"][k], v) for k, v in runner.perception.state_dict().items())
     # Before an update, nonzero new inputs are intentionally inert.  After a
     # gradient step they must become consumable without moving perception.
@@ -140,7 +174,22 @@ def test_mirror_known_components_and_involution():
     assert torch.equal(mirror_critic(y), x)
     assert y[0, 0] == -x[0, 0] and y[0, 1] == x[0, 1]
     assert y[0, 7] == -x[0, 7] and y[0, 8] == -x[0, 8]
-    assert y[0, 9] == -x[0, 12] and y[0, 10] == x[0, 13]
+    source = os.environ.get("EX41_COORDINATE_METADATA")
+    if source and Path(source).is_file():
+        recorded = json.loads(Path(source).read_text(encoding="utf-8"))["joint_names"]
+        assert_joint_order(recorded)
+        names = list(recorded)
+        for lo in (9, 21, 33):
+            for dest, name in enumerate(names):
+                leg, joint, suffix = name.split("_")
+                other = {"FL": "FR", "FR": "FL", "RL": "RR", "RR": "RL"}[leg]
+                source_index = names.index(f"{other}_{joint}_{suffix}")
+                sign = -1 if joint == "hip" else 1
+                assert y[0, lo + dest] == sign * x[0, lo + source_index]
+    else:
+        pytest.skip("set EX41_COORDINATE_METADATA to the recorded EX-40 joint names")
+    with pytest.raises(ValueError, match="joint_names"):
+        assert_joint_order(tuple(reversed(EXPECTED_JOINT_NAMES)))
     assert y[0, 48] == x[0, 49] and y[0, 50] == x[0, 51]
     assert y[0, 52] == x[0, 67] and y[0, 564] == x[0, 593]
     assert y[0, 664] == x[0, 664] and y[0, 665] == -x[0, 665]
@@ -158,9 +207,9 @@ def test_value_mirror_does_not_require_false_old_mirrored_value():
     assert v.grad.item() == pytest.approx(2.0)
 
 
-def test_critic_mirror_runs_one_real_ppo_update_with_expected_loss_keys():
+def test_critic_mirror_runs_one_real_ppo_update_with_expected_loss_keys(tmp_path):
     torch.set_num_threads(1)
-    runner = pose_runner(mirror=True)
+    runner = pose_runner(mirror=True, approval=real_authorization(tmp_path / "w72"))
     runner.alg.num_learning_epochs = 1
     runner.alg.num_mini_batches = 2
     captured = {}
@@ -173,7 +222,42 @@ def test_critic_mirror_runs_one_real_ppo_update_with_expected_loss_keys():
     runner.alg.update = update
     runner.learn(1)
     assert runner.current_learning_iteration >= 0
-    assert {"value_function", "value_mirror", "surrogate", "entropy"} <= set(captured)
+    assert {"value_function", "value_mirror", "value_combined", "surrogate", "entropy"} <= set(captured)
+    assert captured["value_combined"] == pytest.approx((captured["value_function"] + captured["value_mirror"]) / 2)
     assert all(torch.isfinite(torch.tensor(value)) for value in captured.values())
+
+
+def test_mirror_critic_does_not_change_actor_gradient_after_clip(tmp_path):
+    torch.set_num_threads(1)
+    torch.manual_seed(41)
+    base = pose_runner()
+    mirror = pose_runner(mirror=True, approval=real_authorization(tmp_path / "w72"))
+    mirror.alg.policy.load_state_dict(base.alg.policy.state_dict())
+    original = base.alg.update
+
+    def collect_only():
+        raise StopIteration
+
+    base.alg.update = collect_only
+    try:
+        base.learn(1)
+    except StopIteration:
+        pass
+    base.alg.update = original
+    mirror.alg.storage = copy.deepcopy(base.alg.storage)
+    for alg in (base.alg, mirror.alg):
+        alg.num_learning_epochs = 1
+        alg.num_mini_batches = 1
+        alg.desired_kl = None
+    captured = []
+    for alg in (base.alg, mirror.alg):
+        def capture_step(current=alg):
+            captured.append({name: param.grad.clone() for name, param in current.policy.named_parameters()
+                             if name.startswith("actor.") or name == "std"})
+        alg.optimizer.step = capture_step
+        torch.manual_seed(99)
+        alg.update()
+    assert captured[0].keys() == captured[1].keys()
+    assert all(torch.equal(captured[0][name], captured[1][name]) for name in captured[0])
 
 

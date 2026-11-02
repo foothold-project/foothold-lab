@@ -16,7 +16,19 @@ from foothold_s2.models.start_policy import CRITIC_KEY
 
 
 LEG_SWAP = (1, 0, 3, 2)
-JOINT_SIGNS = (-1, 1, 1) * 4
+JOINT_IDS = tuple(4 * joint + LEG_SWAP[leg] for joint in range(3) for leg in range(4))
+JOINT_SIGNS = (-1,) * 4 + (1,) * 8
+EXPECTED_JOINT_NAMES = tuple(
+    f"{leg}_{joint}_joint"
+    for joint in ("hip", "thigh", "calf")
+    for leg in ("FL", "FR", "RL", "RR")
+)
+
+
+def assert_joint_order(joint_names) -> None:
+    """Reject an env whose policy joint order differs from EX-40 evidence."""
+    if tuple(joint_names) != EXPECTED_JOINT_NAMES:
+        raise ValueError("EX-41 critic mirror joint_names differ from EX-40 coordinate metadata")
 
 
 def mirror_critic(x: torch.Tensor) -> torch.Tensor:
@@ -27,10 +39,9 @@ def mirror_critic(x: torch.Tensor) -> torch.Tensor:
     y[..., 0:3] = x[..., 0:3] * x.new_tensor((-1, 1, -1))
     y[..., 3:6] = x[..., 3:6] * x.new_tensor((1, -1, 1))
     y[..., 6:9] = x[..., 6:9] * x.new_tensor((1, -1, -1))
-    joint_ids = [3 * leg + j for leg in LEG_SWAP for j in range(3)]
     joint_signs = x.new_tensor(JOINT_SIGNS)
     for lo in (9, 21, 33):
-        y[..., lo:lo + 12] = x[..., lo:lo + 12][..., joint_ids] * joint_signs
+        y[..., lo:lo + 12] = x[..., lo:lo + 12][..., JOINT_IDS] * joint_signs
     y[..., 45:48] = x[..., 45:48] * x.new_tensor((1, -1, 1))
     y[..., 48:52] = x[..., 48:52][..., list(LEG_SWAP)]
     y[..., 52:564] = x[..., 52:564].reshape(*x.shape[:-1], 32, 16).flip(-1).flatten(-2)
@@ -54,8 +65,10 @@ class CriticMirrorPPO(PPO):
     Mirrored old values were never stored.  Therefore the mirror branch uses
     an unclipped squared return loss.  The original branch retains PPO's
     configured clipping.  The two value losses are averaged to keep scale.
-    Actor observations, actions, old log probabilities and advantages are
-    neither mirrored nor repeated.  Symmetry/RND/recurrent PPO are rejected.
+    The actor uses the original all-parameter PPO gradient clip before mirror
+    critic gradients are substituted and clipped separately.  Actor data are
+    neither mirrored nor repeated.  Multi-GPU, symmetry, RND and recurrence
+    are rejected for this specialized update.
     """
 
     mirror_enabled = False
@@ -63,9 +76,9 @@ class CriticMirrorPPO(PPO):
     def update(self) -> dict[str, float]:
         if not self.mirror_enabled:
             return super().update()
-        if self.symmetry or self.rnd or self.policy.is_recurrent:
-            raise ValueError("EX-41 critic mirror supports feed-forward PPO without actor symmetry or RND")
-        total_v = total_m = total_s = total_e = 0.0
+        if self.symmetry or self.rnd or self.policy.is_recurrent or self.is_multi_gpu:
+            raise ValueError("EX-41 critic mirror supports single-GPU feed-forward PPO without symmetry or RND")
+        total_v = total_m = total_combined = total_s = total_e = 0.0
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma,
              hidden, masks) in batches:
@@ -104,18 +117,24 @@ class CriticMirrorPPO(PPO):
             mirror_value = self.policy.evaluate(mirrored, masks=masks, hidden_state=hidden[1])
             mirror_loss = (mirror_value - returns).square().mean()
             combined_value = 0.5 * (original_value + mirror_loss)
-            loss = surrogate + self.value_loss_coef * combined_value - self.entropy_coef * entropy.mean()
+            base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
             self.optimizer.zero_grad()
-            loss.backward()
-            if self.is_multi_gpu:
-                self.reduce_parameters()
+            base_loss.backward(retain_graph=True)
+            # Preserve the exact unaugmented PPO clip for actor and std.
             nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+            critic_params = tuple(self.policy.critic.parameters())
+            critic_grads = torch.autograd.grad(self.value_loss_coef * combined_value, critic_params)
+            for param, grad in zip(critic_params, critic_grads, strict=True):
+                param.grad = grad
+            nn.utils.clip_grad_norm_(critic_params, self.max_grad_norm)
             self.optimizer.step()
-            total_v += float(combined_value.detach())
+            total_v += float(original_value.detach())
             total_m += float(mirror_loss.detach())
+            total_combined += float(combined_value.detach())
             total_s += float(surrogate.detach())
             total_e += float(entropy.mean().detach())
         count = self.num_learning_epochs * self.num_mini_batches
         self.storage.clear()
         return {"value_function": total_v / count, "value_mirror": total_m / count,
+                "value_combined": total_combined / count,
                 "surrogate": total_s / count, "entropy": total_e / count}

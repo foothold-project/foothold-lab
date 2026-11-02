@@ -26,7 +26,9 @@ import hashlib
 import os
 import random
 import re
+import subprocess
 import time
+from pathlib import Path
 from collections import deque
 
 import numpy as np
@@ -291,12 +293,24 @@ class StartRunner(OnPolicyRunner):
         alg_cfg.pop("class_name", None)
         if self.ex41_pose_commands:
             from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+            if self.ex41_critic_mirror:
+                self._assert_ex41_joint_order()
             alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
             alg.mirror_enabled = self.ex41_critic_mirror
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         return alg
+
+    def _assert_ex41_joint_order(self) -> None:
+        from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
+
+        base = getattr(self.env, "unwrapped", self.env)
+        try:
+            joint_names = base.scene["robot"].joint_names
+        except (AttributeError, KeyError, TypeError) as exc:
+            raise ValueError("EX-41 critic mirror needs env robot.joint_names") from exc
+        assert_joint_order(joint_names)
 
     @staticmethod
     def _valid_ex41_mirror_approval(receipt: dict | None) -> bool:
@@ -305,19 +319,47 @@ class StartRunner(OnPolicyRunner):
         sha = receipt.get("approval_sha256")
         cfg_sha = receipt.get("config_sha256")
         decisions = receipt.get("decision_ids")
-        return (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) is not None
+        shape_ok = (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) is not None
                 and receipt.get("approval_id") == sha
                 and isinstance(cfg_sha, str) and re.fullmatch(r"[0-9a-f]{64}", cfg_sha) is not None
-                and isinstance(receipt.get("config_commit"), str) and bool(receipt["config_commit"])
+                and isinstance(receipt.get("config_commit"), str)
+                and re.fullmatch(r"[0-9a-f]{40}", receipt["config_commit"]) is not None
                 and isinstance(decisions, list) and bool(decisions)
                 and all(isinstance(item, str) and bool(item) for item in decisions))
+        if not shape_ok:
+            return False
+        try:
+            files = [Path(receipt[key]).resolve(strict=True) for key in ("boundary_file", "approval_file")]
+            root_text = subprocess.check_output(["git", "-C", str(files[0].parent), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            root = Path(root_text.decode().strip()).resolve(strict=True)
+            if any(root not in path.parents for path in files):
+                return False
+            for path, expected in zip(files, (cfg_sha, sha), strict=True):
+                rel = path.relative_to(root).as_posix()
+                committed = subprocess.check_output(["git", "-C", str(root), "show", f"{receipt['config_commit']}:{rel}"], stderr=subprocess.DEVNULL)
+                if hashlib.sha256(committed).hexdigest() != expected or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                    return False
+        except (OSError, ValueError, KeyError, subprocess.CalledProcessError):
+            return False
+        return True
 
     def set_ex41_critic_mirror(self, enabled: bool, approval: dict | None = None) -> None:
         """Called only after analyst's W72 stage gate has validated a receipt."""
         if not self.ex41_pose_commands or not isinstance(enabled, bool):
             raise ValueError("EX-41 critic mirror transition needs the pose runner and bool value")
         if enabled and not self._valid_ex41_mirror_approval(approval):
-            raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
+            self.ex41_critic_mirror = False
+            self.ex41_mirror_approval = None
+            self.alg.mirror_enabled = False
+            raise ValueError("EX-41 W72 HOLD: committed approval files or SHA256 differ; critic mirror is off")
+        if enabled:
+            try:
+                self._assert_ex41_joint_order()
+            except ValueError:
+                self.ex41_critic_mirror = False
+                self.ex41_mirror_approval = None
+                self.alg.mirror_enabled = False
+                raise
         self.ex41_critic_mirror = enabled
         self.ex41_mirror_approval = approval if enabled else None
         self.alg.mirror_enabled = enabled
