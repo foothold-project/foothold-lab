@@ -2,8 +2,8 @@
 > 작성: analyst · 2026-10-31
 > 근거: WORKLIST D68~D77 · planner 794f96d0 · 통합 코드 30365957 · lead 00:1x 문서 정합 의뢰
 > 요지: EX-40은 m0부터 8000까지 회차 전환과 성과 그림자 기록으로 진행하며 DR을 기본 보행 안으로 앞당긴다
-> 상태: v0.8 · 결정 반영 고침 · planner 검토 대기 · B11 CPU 통합 및 verifier 재검토 대기, Kit 미확인 · **v0.9**(11/03 01:xx planner): 「EX-42 지형 커리큘럼 정본 (D163)」 절 추가(두 층 · YAML 칸 표) · analyst 검증 요청 중 · **v0.10**(11/03 01:3x planner): analyst 재검 막음 B1~B5 반영(§E.3.1 · §E.6) · analyst 재확인 요청 중
-> 판: v0.10(EX-42 정본 절 · 나머지는 v0.8 그대로)
+> 상태: v0.8 · 결정 반영 고침 · planner 검토 대기 · B11 CPU 통합 및 verifier 재검토 대기, Kit 미확인 · **v0.9**(11/03 01:xx planner): 「EX-42 지형 커리큘럼 정본 (D163)」 절 추가(두 층 · YAML 칸 표) · analyst 검증 요청 중 · **v0.10**(11/03 01:3x planner): analyst 재검 막음 B1~B5 반영(§E.3.1 · §E.6) · analyst 재확인 요청 중 · **v0.11**(11/03 02:1x planner): 재확인 잔여 넷(B2~B5) 반영 · analyst 2 차 재확인 요청 중
+> 판: v0.11(EX-42 정본 절 · 나머지는 v0.8 그대로)
 
 # CURRICULUM-GATES · EX-40 결정 반영
 
@@ -175,9 +175,9 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 
 ## EX-42 지형 커리큘럼 정본 (D163 · 11/03 01:0x 팀장 요지 · v0.9 planner) · 두 층
 
-이 절이 EX-42 지형 커리큘럼의 **정본**이다. `inbox/jay/20261102-ex42/DESIGN-EX42-TERRAIN-draft.md`(v0.4) 는 근거 · 대안 · 정할 것을 담고 이 절을 가리킨다. 둘이 다르면 이 절이 이긴다. 순서는 analyst `D:/mai-tmp/analyst/REVIEW-EX42-Q7-ORDER.md`(11/02 22:28) 권고 **부모 재확인 → 익숙한 지형에서 명령 · 깃발 → 쉬운 새 발 놓기 소량 → 종류별 치수 · 불규칙성 확대 → 고난도 · 전신 자세**(**D163**) 다. 들어간 결정: D52(깃발 10 → 15 → 20 %) · D81(틈 사다리 0.3 → 0.6 → 0.8 · 지형 2 판 치수는 W73) · D115(p_map_off 0.1 · 이어진 지형) · D156(END_BY 는 학습을 안 끊음) · D157(영상은 칸마다 성공 한 편 · GPU 빌 때만) · D158(학습 치수 Go2 축척 · 평가 전용 열은 더 어렵게) · D159(문턱 52/64 · 60/64 두 창 · 3,072 env · 사전 고정 + 성과 노출 + 교환 학습 감시) · D160(판정 26 · 복원 13 늘 기록) · D162(지도 모드 셋). 숫자마다 등급: **결정** · **코드** · **실측** · **계산** · **가정**(결과 전에 고정하고 소급하지 않음) · **읽기**(analyst 숫자를 planner 가 재계산하지 않음). **v0.10**(11/03 01:3x planner): analyst 재검 `D:/mai-tmp/analyst/REVIEW-EX42-TWO-LAYER-1103.md`(11/03 01:1x) 막음 B1(지형 수치) · B2(변경 계약) · B3(과제 연결) · B4(지도 표본) · B5(유지 판정) 을 반영했다. 어디를 고쳤는지는 §E.6 표.
+이 절이 EX-42 지형 커리큘럼의 **정본**이다. `inbox/jay/20261102-ex42/DESIGN-EX42-TERRAIN-draft.md`(v0.4) 는 근거 · 대안 · 정할 것을 담고 이 절을 가리킨다. 둘이 다르면 이 절이 이긴다. 순서는 analyst `D:/mai-tmp/analyst/REVIEW-EX42-Q7-ORDER.md`(11/02 22:28) 권고 **부모 재확인 → 익숙한 지형에서 명령 · 깃발 → 쉬운 새 발 놓기 소량 → 종류별 치수 · 불규칙성 확대 → 고난도 · 전신 자세**(**D163**) 다. 들어간 결정: D52(깃발 10 → 15 → 20 %) · D81(틈 사다리 0.3 → 0.6 → 0.8 · 지형 2 판 치수는 W73) · D115(p_map_off 0.1 · 이어진 지형) · D156(END_BY 는 학습을 안 끊음) · D157(영상은 칸마다 성공 한 편 · GPU 빌 때만) · D158(학습 치수 Go2 축척 · 평가 전용 열은 더 어렵게) · D159(문턱 52/64 · 60/64 두 창 · 3,072 env · 사전 고정 + 성과 노출 + 교환 학습 감시) · D160(판정 26 · 복원 13 늘 기록) · D162(지도 모드 셋). 숫자마다 등급: **결정** · **코드** · **실측** · **계산** · **가정**(결과 전에 고정하고 소급하지 않음) · **읽기**(analyst 숫자를 planner 가 재계산하지 않음). **v0.10**(11/03 01:3x planner): analyst 재검 `D:/mai-tmp/analyst/REVIEW-EX42-TWO-LAYER-1103.md`(11/03 01:1x) 막음 B1(지형 수치) · B2(변경 계약) · B3(과제 연결) · B4(지도 표본) · B5(유지 판정) 을 반영했다. 어디를 고쳤는지는 §E.6 표. **v0.11**(11/03 02:1x): analyst 재확인 `REVIEW-EX42-v010-1103.md`(02:0x · B1 닫힘 · B2~B5 잔여 넷) 반영(§E.6 마지막 행).
 
-읽는 법과 단위. 「회차」 = PPO update 1 회(EX-41 실측 5,000 회 35.7 h → 1,000 회 ≈ 7.1 h, **계산** · EX-42 메시는 3.9 배 넓어 더 느릴 수 있음 **미확인**). 「env 몫」 = 3,072 env 가운데 비율 %(괄호는 env 수 = 반올림). 「창」 = 같은 `(family, kind, level, dir, map_mode)` 의 독립 종료 에피소드 64 개. 「경계」 = W72 승인 칸에서 설정을 다시 읽는 순간이고 **한 경계에 바꾸는 축은 하나**(경계 종류 S · L+ · C · K · D · M 은 사람용 이름이고 실행 축은 §E.3 「축 등록표」 의 `axis_id` 하나다. 값은 그 축에 등록된 `allowed_diff_paths` 묶음 안에서만 바뀌고, 메타데이터 `id · start · duration · extension · boundary` 는 diff 비교에서 뺀다 · B2). 원형의 결합 레벨(L+1 에서 돌 · 틈 x · 틈 y 가 함께 변함 · `start_sheet.py:113~115`) 은 「사전 등록된 기하 벡터 변화」 이지 단일 치수 원인 분석이 아니다. 단계는 경계 여러 개를 묶은 이름이다. Sonnet 코더는 §E.3 공통 기본값 + §E.2 단계표 + §E.4 YAML 칸 표만 보고 표(yaml) 를 쓸 수 있어야 한다. 빠진 값이 있으면 코드를 짓지 말고 lead 에 묻는다.
+읽는 법과 단위. 「회차」 = PPO update 1 회(EX-41 요약값 5,000 회 35.7 h · 원시 타이밍 미확인 **읽기** → 1,000 회 ≈ 7.1 h **계산** · EX-42 메시는 3.9 배 넓어 더 느릴 수 있음 **미확인**). 「env 몫」 = 3,072 env 가운데 비율 %(괄호는 env 수 = 반올림). 「창」 = 같은 `(family, kind, level, dir, map_mode)` 의 독립 종료 에피소드 64 개. 「경계」 = W72 승인 칸에서 설정을 다시 읽는 순간이고 **한 경계에 바꾸는 축은 하나**(경계 종류 S · L+ · C · K · D · M 은 사람용 이름이고 실행 축은 §E.3 「축 등록표」 의 `axis_id` 하나다. 값은 그 축에 등록된 `allowed_diff_paths` 묶음 안에서만 바뀌고, 메타데이터 `id · start · duration · extension · boundary` 는 diff 비교에서 뺀다 · B2). 원형의 결합 레벨(L+1 에서 돌 · 틈 x · 틈 y 가 함께 변함 · `start_sheet.py:113~115`) 은 「사전 등록된 기하 벡터 변화」 이지 단일 치수 원인 분석이 아니다. 단계는 경계 여러 개를 묶은 이름이다. Sonnet 코더는 §E.3 공통 기본값 + §E.2 단계표 + §E.4 YAML 칸 표만 보고 표(yaml) 를 쓸 수 있어야 한다. 빠진 값이 있으면 코드를 짓지 말고 lead 에 묻는다.
 
 ### E.1 1 차: 단계 큰 줄기
 
@@ -186,7 +186,7 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 | **E0** | 부모 · 메시 확인 | 새 메시(네 묶음 35 종 열 · 노출 0) 위에서 부모(EX-41 T0′ 졸업본) 능력 재확인. 진입 직후(회차 0) 값이 `parent_eval`(원부모 평가) 이고 250 회 뒤 값은 `e0_eval`(E0 적응 뒤 값) 이지 「부모 재평가」 가 아니다. 둘 다 해시와 함께 저장 | S | P7 `graduation.json` graduated True · DR 배율 · 보상 가중 · optimizer 이어짐 기록 · manifest 검사(§E.4) | 26 판정 · 복원 13 기록 · W57 회전 칸이 졸업 점수 − 반복 폭(3/64) 이상 · 반복 폭 영수증 `calibration.json`(§E.3.1) 생성 | 250 · 연장 없음(미달이면 Q11: 시작 안 함) |
 | **E1** | 익숙한 연속 지형 다지기 | 명령 과제(D44 계단참 회전 · 계단 정지 재출발 · 취약 방향 · 회전 전환) · 연속 상한은 성과가 차면 L5 → L6 | L+(조건부, 없으면 축 변경 0) | E0 통과 | 유지표 전부 하한 이상 + D44 칸 ≥ 52/64 · 60/64 두 창 | 1,000 · +500 × 2 |
 | **E1F** | 깃발 계약 확인 | 익숙한 연속 지형의 깃발 열(15-TERRAIN 83 행) 에서 목표 추종 · 정지 · 다음 목표 · 재출발 | C(깃발 0 → 10 %) | E1 통과 | 깃발 도달 ≥ 52/64 두 창(W09 기준선 뒤 값 고정) + 유지표 | 750 · +500 × 1 |
-| **E2** | 쉬운 새 발 놓기 하나 | 넓은 저무작위 징검돌 L0(기본) · 대안 두 줄 평균대 L0 · 작은 틈 L0 가운데 **하나**만 5 % | K | E1F 통과 · §E.3 M0~M3 영수증 | 그 종류 L0 창 성공 ≥ 52/64 · 생존 ≥ 60/64 두 창 + 유지표 + 교환 학습 감시 통과 | 1,500 · +500 × 2 |
+| **E2** | 쉬운 새 발 놓기 하나 | 넓은 저무작위 징검돌 L0(기본) · 대안 한 줄 평균대 L0(코드 대체판 · 원형 두 줄은 `start_orig`) · 작은 틈 L0 가운데 **하나**만 5 % | K | E1F 통과 · §E.3 M0~M3 영수증 | 그 종류 L0 창 성공 ≥ 52/64 · 생존 ≥ 60/64 두 창 + 유지표 + 교환 학습 감시 통과 | 1,500 · +500 × 2 |
 | **E3** | 종류별 치수 · 불규칙성 확대 | 이미 연 종류의 레벨 +1(한 축) · 다음 쉬운 종류 0 → 5 %(START 나머지 · AME-2 계단 · rough · boxes · JEPLO 계단 · 격자) · 연속 L6 → L9 · 깃발 15 % | D · K · L+ · C 가운데 경계마다 하나 | E2 통과 | **정본 exit 한 문장**(§E.2 E3 승급 행과 같음): START 네 종 L5 이상 · AME-2 · JEPLO 쉬운 종류 L3 이상 · 연속 L9 · 깃발 15 % · 유지표 통과(각각 두 창) | 3,000 · +1,000 × 2 |
 | **E4** | 고난도 종류 | AME-2 climb_up · climb_down · gap · pallets · stones · beam · consecutive · JEPLO gap · box · 회전 상자 · START 틈 0.8(별도 승인) · 깃발 20 % | K · D · C 가운데 하나 | E3 통과 | 연 종류 전부 L3 이상 두 창 + 유지표 | 2,000 · +1,000 × 2 |
 | **E5** | 혼합 · 방향 일반화 | 익힌 종류의 조합 · 방향 · 지형 너머 깃발 · 듬성 몫 안 비율 10 / 70 / 20 | K(exposure 벡터 재배분) · C(듬성 종류에 후진 · 옆 명령 배정) | E4 통과 | 노출 종류 전부 대표 레벨 전진 · 깃발 두 창 + 유지표. 듬성 종류의 후진 · 옆 네 방향은 **새 과제 창**(기록 · 생존 ≥ 60/64 만 **가정**) 이고 기존 유지 칸과 분리 | 1,500 · +500 × 2 |
@@ -208,7 +208,7 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 | 레벨 | 연속 7 종 상한 5(부모 분포 그대로 · `terrain.policy performance · level_cap 5`) · 나머지 종류 열은 L0~9 생성만 | **코드** `ex41-fixed5000.yaml:421~423` |
 | 치수 | 연속 7 종: 계단 단 0.05 → 0.23 m · 폭 0.3 / boxes 격자 0.45 · 높이 0.025 → 0.1 / rough 잡음 0.01 → 0.06 / 경사 0 → 0.4 / stage_stairs 단 0.15 고정(바꾸지 않음) | m · **코드** `rough_go2_cfg.py:20~36` |
 | env 몫 | 연속 7 종 100 %(3,072) · 새 종류 0 % | % · 결정 |
-| 바꾸는 축 하나 | 지형 메시 교체(막는 칸 · S 경계). 명령 몫 · 레벨 상한 · DR · 보상 · p_map_off 는 부모와 같아야 함(diff 0) | 결정 D114 |
+| 바꾸는 축 하나 | 지형 메시 교체(막는 칸 · S 경계). 명령 몫 · 레벨 상한 · DR · 보상 · p_map_off 는 부모와 같아야 함(diff 0). E0 설정에 35 종 전부의 `terrain.preset` · `kind_task` · `exposure.<family>.<kind>.{share: 0, level_cap: 0}` 을 미리 적는다(초기 상태 사전 등록). 뒤의 K 경계는 `share` 만 바꾸고 `kind_task` · `preset` · `level_cap` 을 새로 더하지 않는다(경로 검사에 걸림) | 결정 D114 · B2 |
 | 유지 칸 | 공통. 이 단계의 값이 뒤 모든 단계의 「부모 기준표」(S3-0 열) 가 된다 | 결정 D160 |
 | 망각 방지 몫 | 공통(정지 10 · 후진 14 · 옆 7 + 7 · 복원 100 · 끔 10) | % · **코드** T0′ |
 | 승급 문턱 | 승급 없음. 통과 조건: 26 판정 · 복원 13 기록 · W57 회전 6 칸이 EX-41 졸업 점수 − 3/64 이상(오차 + 0.03 이내) | 칸 · **가정**(3/64 · 0.03) |
@@ -255,7 +255,7 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 
 | 행 | 값 | 단위 · 등급 |
 |---|---|---|
-| 지형 종류 | **기본** `stepping_stones_low`(저무작위 = START 시작 조건) · 대안 `balance_beams`(두 줄 L0) · `gaps`(L0). 하나만 고르고 선택을 원장에 적는다(lead · 시작 전) | 결정 D163 · analyst §5 2 행 |
+| 지형 종류 | **기본** `stepping_stones_low`(저무작위 = START 시작 조건) · 대안 `balance_beams`(한 줄 L0 · 대체판) · `gaps`(L0). 하나만 고르고 선택을 원장에 적는다(lead · 시작 전) | 결정 D163 · analyst §5 2 행 |
 | 레벨 | 새 종류 L0 만(`level_cap 0`) · 연속은 E1 끝 상한 유지 | |
 | 치수 | `start_go2_v1` L0: stepping_stones_low 돌 x 0.554 · y 0.443(원본 정사각 0.5) · 틈 x 0.194(0.175) · y 0.089(0.1) · 높이 ±0.05 · 무작위 r 0 / balance_beams 한 줄(코드 대체판 · 논문의 두 줄 돌 아님) 폭 y 0.531(0.6) · 길이 x 구간 전체 · 깊이 U[0.2, 0.7] / gaps 틈 x 0.111(0.1) × 3 · 깊이 U[0.2, 0.7] | m · **계산**(`start_sheet.py:39~47` × D158 축 비) · 깊이 · 높이는 축척 없음 **코드** |
 | env 몫 | 새 종류 5 %(154) · 연속 95 % | % · GATES T4 245 행 |
@@ -309,7 +309,7 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 | 지형 종류 | E2~E4 에서 연 종류 전부 + 연속 7 종 | |
 | 레벨 | 각 종류 현재 상한 유지(올리지 않음) · 낮은 레벨(L0~2) 도 계속 노출 | |
 | 치수 | 같음 | |
-| env 몫 | 새 10 / 현재 70 / 쉬움 20 을 종류 전체에 적용 · 연속 ≥ 20 % · 깃발 env 20 % 가운데 절반은 지형 너머 깃발 | % · Q5 · D52 |
+| env 몫 | 듬성 몫 안(Σ `exposure.share`) 의 새 10 / 현재 70 / 쉬움 20 비율을 연 종류 전체에 적용(E3 「env 몫」 행과 같은 분모) · 연속 ≥ 20 % · 깃발 env 20 % 가운데 절반은 지형 너머 깃발 | % · Q5 · D52 |
 | 바꾸는 축 하나 | `terrain_exposure`(K · 모든 `exposure.*.share` 를 한 벡터로 재배분 · 한 경계에 한 벡터 · 영수증에 전 경로) 또는 `command_allocation`(C · 듬성 종류 `kind_task.command_set` 에 후진 · 옆 추가) · 같은 경계에 둘 금지 | 결정 |
 | 유지 칸 | 공통(기존 유지 칸은 그대로) · 듬성 종류 대표 레벨 × 4 방향은 **새 과제 창**이지 유지 칸이 아니다(§E.3 과제 묶음) | 설계 §6.2 · B3 |
 | 망각 방지 몫 | 공통 | |
@@ -375,19 +375,19 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 | 묶음 | 칸 | 기본값 | 단위 · 등급 |
 |---|---|---|---|
 | env | `num_envs` | 3072 | 개 · 결정 D159 |
-| 망각 방지 몫(명령) | 13 슬롯 몫은 EX-41 T0′ 값에서 시작: 전진 23 · 걸으며 돌기 6 + 6 · 제자리 회전 9 + 9 · **정지 10 · 후진 14 · 옆 7 + 7** · 대각 2 + 2 + 2.5 + 2.5. 깃발 몫은 전진 · 회전 · 대각에서만 뗀다. **정지 · 후진 · 옆은 전 과정 고정 하한** | % · **코드** `ex41-fixed5000.yaml:381~394` |
+| 망각 방지 몫(명령) | 13 슬롯 몫은 EX-41 T0′ 값에서 시작: 전진 23 · 걸으며 돌기 6 + 6 · 제자리 회전 9 + 9 · **정지 10 · 후진 14 · 옆 7 + 7** · 대각 2 + 2 + 2.5 + 2.5. 깃발 몫은 전진 · 회전 · 대각에서만 뗀다. **정지 · 후진 · 옆은 전 과정 고정 하한**. 분모(**가정** · 팀장 확인): 이 몫은 **기존 연속 지형 env 안의 조건부 비율**이다(새 종류 env 는 `kind_task` 명령만 받음). 전역(3,072) 몫은 연속 몫 × 비율이라 E2 에서 정지 9.5 · 후진 13.3 · 옆 6.65 + 6.65 %(**계산**) 이고, 연속 몫 20 % 하한에서는 정지 2 · 후진 2.8 · 옆 1.4 + 1.4 % 까지 내려가므로 전역 하한이 아니라 `learned_cells` 32 하한이 유지 표본을 받친다. 전역 몫과 칸별 누적 유지 표본 수는 `boundary_log` 에 따로 적는다 | % · **코드** `ex41-fixed5000.yaml:381~394` · **가정**(분모) |
 | 망각 방지 몫(지도) | `force_gt false` = **정답 강제 해제**(코드 `start_perception.py:329` `torch.where(use_gt, gt_map, refined)` · AdaSmpl 이 GT 를 고르면 GT 가 실제 입력 · **False 는 PRED 전용이 아니다** · 이 문서 EX-40 절 156 행과 같은 뜻) · 끔 추첨 `p_map_off.continuous` 0.1(M 뒤 0.3) · `p_map_off.sparse` 0 · 기록 셋을 분리: 학습 배정 `map_on_adaptive / map_off` · 학습 실제 소비 `GT / PRED / OFF`(에피소드 안에서 바뀌면 `mixed` · 고정 PRED 로 세지 않음 · use_gt_frac 묶음별 · 경고 0.3) · 평가 모드 `GT / forced_PRED / OFF` | 확률 · **코드** · 결정 D115 · D136 · D162 · B4 |
-| 망각 방지 몫(지형) | 연속 7 종 ≥ 20 % · 연 종류 각 ≥ 2 % · 연속 L0~2 ≥ 연속 몫의 30 % · 경계마다 종류 × 레벨대(L0~2 · 3~5 · 6~9) × 방향군(전진 · 후진 · 옆좌 · 옆우 · 좌회전 · 우회전 · 정지 · 깃발 · 좌우는 묶지 않음) × 모드(실제 소비 GT · PRED · OFF) 의 **실제 종료 에피소드 수**를 `boundary_log` 에 적고 `learned_cells` 등록표(아래 행) 의 칸이 32 미만이면 확대 안 함(HOLD) | % · 개 · GATES T4 · **가정**(2 · 30 · 32) |
-| 배운 칸 등록표 `learned_cells`(B4) | 진입: 종류의 첫 창 통과 때 `(kind, level ≤ 그때 상한, direction, mode)` 를 등록 · 못 배운 레벨 · 미개방 깃발 · `p_map_off 0` 인 묶음의 OFF 칸은 등록하지 않음(기록만 · 「영원히 0」 함정) · 수집 창 = 직전 경계부터 지금 경계까지 누적 종료 에피소드(에피소드 ID 중복 제거 · 경계 뒤 설정이 섞인 에피소드 제외) · 칸당 ≥ 32 는 동시 env 보장이 아니라 누적 표본 하한(**가정**) · 32 미만 칸이 있으면 확대 보류 + pending 칸 목록 보고 · 연속 7 종 OFF 유지 칸은 D160 판정 그대로 · 듬성 OFF 는 기록(별도 결정 전) | 개 · **가정**(32) · 결정 D160 |
+| 망각 방지 몫(지형) | 연속 7 종 ≥ 20 % · 연 종류 각 ≥ 2 % · 연속 L0~2 ≥ 연속 몫의 30 % · 경계마다 종류 × 레벨대(L0~2 · 3~5 · 6~9) × 방향군(전진 · 후진 · 옆좌 · 옆우 · 좌회전 · 우회전 · 정지 · 깃발 · 좌우는 묶지 않음) × 모드(배정 `map_on_adaptive` · `map_off`) 의 **실제 종료 에피소드 수**를 `boundary_log` 에 적고 `learned_cells` 등록표(아래 행) 의 칸이 32 미만이면 확대 안 함(HOLD) | % · 개 · GATES T4 · **가정**(2 · 30 · 32) |
+| 배운 칸 등록표 `learned_cells`(B4) | 진입: 종류의 첫 창 통과 때 `(kind, level ≤ 그때 상한, direction, assigned_mode)` 를 등록(모드는 **배정** `map_on_adaptive / map_off` · 실제 소비 GT · PRED · OFF 는 스텝 수 · 비율과 mixed 에피소드 수로 따로 기록 · 정상 on-adaptive 64 개가 모두 mixed 여도 HOLD 가 아니고 두 칸에 겹쳐 세지도 않음 · 지도 품질별 유지는 강제 GT · PRED · OFF 평가에서 본다) · 못 배운 레벨 · 미개방 깃발 · `p_map_off 0` 인 묶음의 OFF 칸은 등록하지 않음(기록만 · 「영원히 0」 함정) · 수집 창 = 직전 경계부터 지금 경계까지 누적 종료 에피소드(에피소드 ID 중복 제거 · 경계 뒤 설정이 섞인 에피소드 제외) · 칸당 ≥ 32 는 동시 env 보장이 아니라 누적 표본 하한(**가정**) · 32 미만 칸이 있으면 확대 보류 + pending 칸 목록 보고 · 연속 7 종 OFF 유지 칸은 D160 판정 그대로 · 듬성 OFF 는 기록(별도 결정 전) | 개 · **가정**(32) · 결정 D160 |
 | 유지 칸(판정) | 26 칸(13 명령 × 정답 · 끔 · 연속 L0~2 · 64 env · 복원 13 칸은 기록) 생존 ≥ 기준 − 3/64 · 추종 오차 ≤ 기준 + 0.03 m/s(vx · vy) · + 0.05 rad/s(wz · **가정**). 기준 둘: `pre_drop_anchor`(마지막 PASS 경계 값 · D159 의 직전 비교 · HOLD 기준) 와 `parent_eval`(원부모 · 누적 하락 경보 기준 · 생존 < 부모 − 6/64 **가정** 이면 경보 · 추가 HOLD 는 팀장 결정 · 64 → 61 → 58 → 55 꼴 단계 하락 반례 때문). 산출 둘: `skill_maintenance`(항마다 역할 · 값 · 판정 · pending) 와 `promotion_ready`(judge 항만) | 결정 D130 · D159 · D160 · **가정**(3 · 0.03 · 0.05 · 6) · B5 |
-| 유지 항 표(B5) | 항마다 metric · unit · statistic · 분모 · baseline · comparator · role(judge / record) · on_missing · on_fail 을 §E.3.1 표에 고정. role 이 judge 인 항만 `promotion_ready` 에 들어가고 record 항은 `skill_maintenance` 와 경보(텔레그램) 만. record 항을 judge 로 올리는 것은 D 번호가 필요 · 복원 13 칸의 기록 지위를 DR 판정에 섞지 않음 | 결정 D151 · D159 · D160 · **가정** |
+| 유지 항 표(B5) | 항마다 metric · unit · statistic · 분모 · baseline · comparator · role(judge / record) · on_missing · on_fail 을 §E.3.1 표에 고정(comparator 의 정본은 그 표 하나 · `forgetting_watch` · 회복 · 승급이 같은 식을 참조). role 이 judge 인 항만 `promotion_ready` 에 들어가고 record 항은 `skill_maintenance` 와 경보(텔레그램) 만. record 항을 judge 로 올리는 것은 D 번호가 필요 · 복원 13 칸의 기록 지위를 DR 판정에 섞지 않음 | 결정 D151 · D159 · D160 · **가정** |
 | 승급 문턱(종류 · 레벨) | 창 64 · 연속 2 창 · 성공 ≥ 52 · 생존 ≥ 60 · 분모 = 그 종류 env 의 전진 · 깃발 에피소드 전부(policy 실패 포함) · 무판정(reset invalid · 경계 뒤 설정 섞임) 만 뺌 · 분모 < 64 면 보류 · 창마다 에피소드 ID · 지형 seed · 방향 · 모드 기록 | 개 · 결정 D159 · 반복 폭 실측 뒤 결과 전 고정 |
 | env 레벨 승급(①) | `rules.judge_free`(코드 `rules.py:14~22` · 승급 = 최대 이동 > 칸 길이 절반 · 강등 = 0.5 × ‖Σcmd‖ × 4 s × 0.9 미만) 는 **env 레벨** 용이고 `world_frame=True`(`terrain_levels_mixed.py:14 · 44~45` · 세계 좌표 기대 변위) 를 그대로 둔다(옛 몸 명령 합 식으로 되돌리지 않음) · 깃발 env 는 `judge_flag` · 창 성공(완료 정의 · 아래 행) 은 **단계 승급** 용 · 둘 다 세계 좌표 · 우선순위: 실패 사건(넘어짐 · 구덩이 바닥 접촉 · 시간 초과) 이 성공보다 먼저이고 완료 뒤 0.5 s 안 넘어짐은 실패 · 무판정 = reset invalid · 경계 뒤 설정 섞임 · policy 실패 에피소드는 분모에서 빼지 않음 | **코드** · **가정**(0.5 s) · B3 |
-| 새 종류 과제 묶음 `kind_task`(B3 · `(preset, kind, learned_direction)` 마다) | 듬성 칸에도 깃발 열이 있다(발판 위로 옮긴 4 개 · `sparse_terrains.py:113~135 · 158` · 15-TERRAIN 79~81 행) · 새 종류 env 의 명령 = `command_set: [forward_1.0, flag]`(스폰은 출발 단 · +x 향함 · `learned_direction +x`) 이고 정지 · 후진 · 옆 · 회전은 E5 전에 그 종류에 배정하지 않음(E5 의 C 경계로 추가) · 기존 지형(연속 7 종) 의 명령 분포는 그대로 · 성공 = 완료 정의(아래) · 실패 = 넘어짐 · 구덩이 바닥(지지면 아님) 접촉 · 시간 초과 · 「범위 밖 명령을 따라 실패」 는 명령 집합으로 막고 「명령을 못 따름」 과 섞지 않음 · 새 종류 L0 첫 노출(K) 은 이 묶음 전체가 사전 등록된 과제 | 결정 D163 · **코드** · **가정**(명령 집합) |
-| 완료 정의 `promotion.completion`(종류 → 이름) | START 4 종 · AME-2 stair · climb · gap · pallets · stones · beam · consecutive · JEPLO 계단 · 격자 · gap = `last_support_0.5s`(도착 단 +x 도달 + 0.5 s 생존) · JEPLO box = `box_center_pass`(중앙 최고점 통과 · 우회 분리 기록) · AME-2 obstacles · JEPLO discrete_obstacles = `tile_end_reach`(칸 끝 +x) · 깃발 = `flag_reach_0.3m`(0.3 m 안 정지 0.5 s) · crawl = `tunnel_exit_no_contact` · high_ledge = `landing_0.5s` | 결정 · **가정**(이름 · 0.5 s · 0.3 m) |
+| 새 종류 과제 묶음 `kind_task`(B3 · `(preset, kind, learned_direction)` 마다) | 듬성 칸에도 깃발 열이 있다(발판 위로 옮긴 4 개 · `sparse_terrains.py:113~135 · 158` · 15-TERRAIN 79~81 행) · 새 종류 env 의 명령 = `command_set: [forward_1.0, flag]` 와 `command_weights`(사전 등록 · 집합은 분포가 아니므로 · 기본 = 부모의 전진 · 깃발 몫 0.17 : 0.10 재정규화 0.630 : 0.370 · **가정** · E5 에서 방향을 더할 때도 같은 규칙)(스폰은 출발 단 · +x 향함 · `learned_direction +x`) 이고 정지 · 후진 · 옆 · 회전은 E5 전에 그 종류에 배정하지 않음(E5 의 C 경계로 추가) · 기존 지형(연속 7 종) 의 명령 분포는 그대로 · 성공 = 완료 정의(아래) · 실패 = 넘어짐 · 구덩이 바닥(지지면 아님) 접촉 · 시간 초과 · 「범위 밖 명령을 따라 실패」 는 명령 집합으로 막고 「명령을 못 따름」 과 섞지 않음 · 새 종류 L0 첫 노출(K) 은 이 묶음 전체가 사전 등록된 과제 | 결정 D163 · **코드** · **가정**(명령 집합) |
+| 완료 정의 `promotion.completion`(종류 → 이름) | START 4 종 · AME-2 stair · climb · gap · pallets · stones · beam · consecutive · JEPLO 계단 · 격자 · gap = `last_support_0.5s`(도착 단 +x 도달 + 0.5 s 생존) · JEPLO box = `box_center_pass`(중앙 최고점 통과 · 우회 분리 기록) · AME-2 rough · boxes · obstacles · JEPLO flat · discrete_obstacles = `tile_end_reach`(칸 끝 +x) · 키는 `(preset, kind)` 라 연속 7 종 boxes 와 AME-2 boxes 를 합치지 않음 · 종류 진입 전 빈칸이면 그 K 경계 거절 · 깃발 = `flag_reach_0.3m`(0.3 m 안 정지 0.5 s) · crawl = `tunnel_exit_no_contact` · high_ledge = `landing_0.5s` | 결정 · **가정**(이름 · 0.5 s · 0.3 m) |
 | 축 등록표 `axis_id` → `allowed_diff_paths`(B2) | `terrain_mesh_swap`(S): `terrain_manifest_sha256` / `terrain_level_cap`(L+): `terrain.continuous_level_cap` / `command_allocation`(C): `shares.*`(합 1 보존 · 공여 벡터) 와 `terrain.kind_task.*.command_set` / `terrain_exposure`(K): `terrain.exposure.*.share`(+ 파생 연속 몫) / `terrain_kind_level_cap`(D): `terrain.exposure.<family>.<kind>.level_cap` 하나 / `map_off_probability`(M): `p_map_off.continuous` / `posture_height`(C): `ranges.delta_h` + `rewards.height.weight` / `posture_roll`(C): `ranges.roll` + `rewards.roll.weight`. 메타데이터(`id · start · duration · extension · boundary`) 는 diff 제외 · 그 밖의 경로가 바뀌면 거절 | 결정(이름은 analyst 권고) |
-| 몫 공여(B2) | C 경계: 깃발 +Δ 는 전진 · 회전 · 대각에서만 떼고 공여 벡터를 `boundary.donor` 에 적는다(정지 · 후진 · 옆 고정) · K 경계: 새 +5 % · 현재 +5 % · 쉬움 −7 % 의 공여 · 회수는 연속 몫(1 − Σ share) 에서 하되 연속이 20 % 하한에 닿으면 쉬움 등급 종류에서 같은 양씩(각 2 % 하한) · D · L+ · M 경계는 몫 변경 0 · 경로 전부 영수증 | **가정** |
-| 교환 학습 감시 | 노출 확대 경계마다 노출된 모든 종류의 기록 칸을 직전 경계와 비교 · 반복 폭(생존 3/64 · 오차 0.03) 밖 하락이면 확대 멈춤 + 보고 · 학습은 안 끊음 · 재개 = 걸린 칸 전부 「`pre_drop_anchor` − 반복 폭」 이상을 연속 2 창(가정) | 결정 D159 · D156 · **가정**(재개 · 2 창) |
+| 몫 공여(B2) | C 경계: 깃발 +Δ 는 전진 · 회전 · 대각에서만 떼고 공여 벡터를 `boundary.donor` 에 적는다(정지 · 후진 · 옆 고정) · K 경계: 새 +5 % · 현재 +5 % · 쉬움 −7 % 의 공여 · 회수는 연속 몫(1 − Σ share) 에서 하되 연속이 20 % 하한에 닿으면 쉬움 등급 종류에서 같은 양씩(각 2 % 하한) · D · L+ · M 경계는 몫 변경 0 · 경로 전부 영수증 · 공여량이 하한(연속 20 % · 쉬움 2 %) 을 깎지 않고는 마련되지 않으면 그 경계는 거절 · 보류(보고) 이고 임의 재정규화는 하지 않는다 | **가정** |
+| 교환 학습 감시 | 노출 확대 경계마다 노출된 모든 종류의 기록 칸을 직전 경계와 비교 · §E.3.1 의 항별 comparator(생존 ≥ 기준 − 3 · vx · vy ≤ 기준 + 0.03 · wz ≤ 기준 + 0.05 · 작을수록 좋은 오차는 ≤ 방향) 를 그대로 써서 judge 항이 어긋나면 확대 멈춤 + 보고 · 별도 숫자 없음 · 학습은 안 끊음 · 재개 = 걸린 항 전부 항별 comparator 를 연속 2 창 만족(가정) | 결정 D159 · D156 · **가정**(재개 · 2 창) |
 | 미달 시 | 노출 확대 보류 + 마지막 PASS 경계의 `exposure` 로 되돌림(`pre_drop_anchor` 보존 · 내려간 분포를 새 정상으로 삼지 않음) · 회복 = 연속 2 창 · 최신 필수 점수가 없거나 손상이면 `pending`(과거 PASS 로 확대 금지 · pending 목록 보고) · 자동 정지 없음 · 두 경계 연속이면 팀장 보고 | 결정 D156 · **가정**(되돌림 범위 · 2 창) |
 | 평가 칸(모든 경계 · 250 회차) | W15 13 명령 × 3 모드 L0~2(39) · 고정 L3 · L6 · L9 × 4 방향 × 3 모드 · D44 칸(E1 부터) · 종류별 `(family, kind, level)` × 전진 1.0 × 3 모드(노출된 종류 + L0 기록 · 듬성 OFF 칸은 기록 · 판정 아님) · 깃발 도달(E1F 부터) · 자세 칸(E6a 부터) · 밀기 칸 기록 · 복원 소비 묶음별 | 결정 D114 · D160 · W78 v2 |
 | 평가 전용 열(D158) | START 네 종 더 어려운 치수(배율 **미정** · 숫자 예 길이 × 1.15 · 폭 × 0.85 · `start_orig` 도 후보) · 학습 노출 0 · 별도 preset ID · 성과를 학습 열과 합치지 않음 | 결정 D158 · **가정** |
@@ -397,7 +397,7 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 
 #### E.3.1 유지 항 표 (B5 · 항마다 고정)
 
-분모와 통계는 항마다 다르다. 창은 같은 `(family, kind, level, dir, map_mode)` 의 종료 에피소드 64 개이고 policy 실패 에피소드도 분모에 든다. 기준(baseline) 은 `pre_drop_anchor`(마지막 PASS 경계 값) 이고 `parent_eval`(원부모 · E0 회차 0) 은 누적 하락 경보에만 쓴다. 문턱 값은 전부 **calibration 전 가정값**이다: E0 에서 같은 저장본 · 같은 seed × 2(결정성) 와 seed 만 바꾼 × 3(표본차) 을 재어 `calibration.json` 영수증을 만들고, 문턱 = max(가정값, 측정 폭) 을 결과 전에 고정한다. 두 관측의 차이를 보장된 잡음 상한이라 부르지 않는다. 영수증이 없으면 E1 진입을 거절한다.
+분모와 통계는 항마다 다르다. 창은 같은 `(family, kind, level, dir, map_mode)` 의 종료 에피소드 64 개이고 policy 실패 에피소드도 분모에 든다. 기준(baseline) 은 `pre_drop_anchor`(마지막 PASS 경계 값) 이고 `parent_eval`(원부모 · E0 회차 0) 은 누적 하락 경보에만 쓴다. 문턱 값은 전부 **calibration 전 가정값**이다: E0 에서 같은 저장본 · 같은 seed × 2(결정성) 와 seed 만 바꾼 × 3(표본차) 을 재어 `calibration.json` 영수증을 만들고, 문턱 = max(가정값, 측정 폭) 을 결과 전에 고정한다. 두 관측의 차이를 보장된 잡음 상한이라 부르지 않는다. 측정 폭이 가정값의 2 배(**가정**) 를 넘으면 결정 영수증(D 번호) 없이 올리지 않는다. 영수증이 없으면 E1 진입을 거절한다. 분모는 항마다 적는다: 생존 · W57 · 부모 경보는 학습 종료 에피소드 창 64 개, 투영 거리 · 접촉 · 위상 · yaw 는 고정 평가 칸 64 env(W15 · 6 s). record 항이 아무리 나빠도 `promotion_ready` 는 judge 항만으로 정해진다(이 한계는 명세의 논리 그대로이고 어떤 악화를 확대 보류에 쓸지는 lead · 팀장 결정 · analyst 반례: 투영 거리 2.5 → 1.0 m 또는 RR 정지 접촉 0.99 → 0 이어도 true 일 수 있음).
 
 | 항 | metric · unit | statistic · 분모 | comparator(기준 = `pre_drop_anchor`) | role | on_missing · on_fail |
 |---|---|---|---|---|---|
@@ -405,9 +405,9 @@ planner v0.6c의 미커밋 인계 파일은 건드리지 않고 794f96d0에서 �
 | 추종 오차 vx · vy | \|v_cmd − v_body\| · m/s | alive 스텝 중앙값 · 분모 = alive 스텝 | ≤ 기준 + 0.03 | judge | 같음 |
 | 추종 오차 wz | \|w_cmd − w_body\| · rad/s | 같음 | ≤ 기준 + 0.05(**가정**) | judge | 같음 |
 | 방향별 투영 거리(전진 · 후진 · 옆좌 · 옆우) | `command_xy_projection_integral_m` · m(명령 방향 투영 Σ alive·(vx·cx + vy·cy)/‖c‖·dt · `map_mode_cells.py:140~148` · 양수가 정상 · npz 에는 vx 만 있고 값은 `map_modes.json per_env[*]` 에 있음) | 64 env 중앙값 | ≥ 기준 − 0.1 × `parent_eval`(부모 값 ≤ 0 이면 항 invalid → 기록 · 0 · 음수 비율 함정 없음) | record + 경보 | missing → pending · 하락 → 텔레그램 경보 · HOLD 는 팀장 결정 |
-| 정지 접촉(발마다 FL · FR · RL · RR) | 정지 명령 alive 스텝의 접촉 비율 · 비율 | 발마다 따로(네 발 평균 금지) · 첫 1 s 뒤 | min(네 발) ≥ 기준 − 0.1 | record + 경보 | 같음 |
-| 보행 접촉 위상(duty · 발 끌림) | 비율 · m | 전진 명령 alive 스텝 | 계약 없음 | record | 없음 |
-| yaw 누적(전진 명령 중 \|Δyaw\|) | rad | 중앙값 | 기록 | record | 없음 |
+| 정지 접촉(발마다 FL · FR · RL · RR) | 정지 명령 평가 칸(고정 64 env · 6 s) 첫 1 s 뒤 alive 스텝의 발별 접촉 비율(수직 접촉력 > 1 N · **가정**) · 비율 | 발마다 64 env 중앙값 · 유효 표본 = alive ≥ 50 스텝인 env(네 발 평균 금지) | baseline 은 발별 벡터 넷 · 발마다 ≥ 기준(그 발) − 0.1 | record + 경보 | 같음 |
+| 보행 접촉 위상(duty · 발 끌림) | duty = 전진 1.0 평가 칸 발별 접촉 스텝 비율 · 끌림 = 접촉 중 발 수평 이동 거리 합 · 비율 · m | 발별 64 env 중앙값 · 유효 표본 alive ≥ 50 스텝 | baseline 발별 벡터 · 비교 식 없음(기록 전용 · judge 승격은 팀장) | record | missing → pending 표시만 |
+| yaw 누적(전진 1.0 평가 칸 \|Δyaw\| 적분) | rad | 64 env 중앙값 · 유효 표본 alive ≥ 50 스텝 | baseline 스칼라 · 비교 식 없음(기록 전용) | record | missing → pending 표시만 |
 | W57 회전 6 칸 생존 | 개 | 창 64 | ≥ 기준 − 3 | judge(D151) | HOLD |
 | 부모 대비 누적 하락 | 생존 26 칸(복원 13 칸은 기록) · 개 | 창 64 | ≥ `parent_eval` − 6(**가정**) | 경보 | 경보 · 추가 HOLD 는 팀장 결정 |
 | 반복 폭 영수증 | `calibration.json`(항마다 결정성 폭 · 표본차 폭 · seed · 저장본 sha) | E0 | 없음 | 전제 | 없음 → E1 진입 거절 |
@@ -416,7 +416,7 @@ EX-40 map64 GT(m6000 → m7500) 에서 planner 가 11/03 `map_modes.json` 으로
 
 ### E.4 YAML 칸 표 (`foothold-ex42-curriculum/1` · EX-41 표 꼴에 더함 · Sonnet 코더용)
 
-EX-41 `ex41-fixed5000.yaml` 의 칸(`stages[].id · start · duration · shares · ranges · force_gt · terrain · automatic`) 은 그대로 두고 아래를 더한다. 자료형은 YAML 기본형. 「기본값」 은 표에 값이 없을 때 파서가 넣는 값이고, 단계표(§E.2) 의 값이 있으면 그것이 우선한다. 파서(`curriculum/ex41.py:121` 의 `terrain` 키는 꼴을 안 본다) 는 W86 에서 아래 꼴을 검사하게 넓힌다. 모르는 키 · 빠진 필수 키 · 한 경계에 축 둘 · `allowed_diff_paths` 밖 경로의 diff(메타데이터 제외) 면 **거절**(시작 안 함).
+EX-41 `ex41-fixed5000.yaml` 의 칸(`stages[].id · start · duration · shares · ranges · force_gt · terrain · automatic`) 은 그대로 두고 아래를 더한다. 자료형은 YAML 기본형. 「기본값」 은 표에 값이 없을 때 파서가 넣는 값이고, 단계표(§E.2) 의 값이 있으면 그것이 우선한다. `maintenance.items` 는 §E.3.1 표에서 **한 번만** 생성해(기본값) 승급 · 교환 학습 감시 · 회복이 같은 목록을 소비한다(별도 숫자 없음). 파서(`curriculum/ex41.py:121` 의 `terrain` 키는 꼴을 안 본다) 는 W86 에서 아래 꼴을 검사하게 넓힌다. 모르는 키 · 빠진 필수 키 · 한 경계에 축 둘 · `allowed_diff_paths` 밖 경로의 diff(메타데이터 제외) 면 **거절**(시작 안 함).
 
 | 칸 이름(YAML 경로) | 자료형 | 단위 | 기본값 | 뜻 · 근거 |
 |---|---|---|---|---|
@@ -436,17 +436,17 @@ EX-41 `ex41-fixed5000.yaml` 의 칸(`stages[].id · start · duration · shares 
 | `stages[].shares.<slot>` | float | 비율(합 1.0) | T0′ 값(§E.3) | 슬롯 13 + `flag`. `stand ≥ 0.10 · reverse ≥ 0.14 · side_left · side_right ≥ 0.07` 아래면 거절 |
 | `stages[].ranges.*` | [float, float] | m/s · rad/s · m · rad | EX-41 T0′ 값 | `delta_h` [0, 0] · `roll` [0, 0] 를 더함(E6a 에서 경계 셋으로 염) |
 | `stages[].rewards.height.weight` · `stages[].rewards.roll.weight` | float · float | | 0 · 0 | `posture_height` · `posture_roll` 축의 기능 묶음(E6a) |
-| `stages[].force_gt` | bool | | false | 전 구간 복원(D162) |
+| `stages[].force_gt` | bool | | false | 정답 강제 해제(AdaSmpl 이 고르면 GT 도 들어감 · D162 · §E.3 지도 행) |
 | `stages[].p_map_off.continuous` · `stages[].p_map_off.sparse` | float · float | 확률 | 0.1 · 0.0 | D115 · env 집단 태그로 적용(열 이름 역산 금지) |
 | `stages[].terrain.policy` | enum | | `ex42` | |
 | `stages[].terrain.preset.<family>` | map family → str | | `A: start_go2_v1 · B: ame2_go2_mix_v1 · C: jeplo_preset_v1 · continuous: rough_go2_cfg` | §E.2 머리(B1) · manifest 의 preset ID 와 일치해야 함 |
-| `stages[].terrain.kind_task.<kind>.command_set` | [str] | | `[forward_1.0, flag]` | 새 종류 env 의 명령 집합(B3) · E5 의 C 경계에서만 늘림 |
+| `stages[].terrain.kind_task.<kind>.command_set` · `.command_weights` | [str] · map str → float(합 1) | | `[forward_1.0, flag]` · `{forward_1.0: 0.63, flag: 0.37}` | 새 종류 env 의 명령 집합과 분포(B3) · E5 의 C 경계에서만 늘림 |
 | `stages[].terrain.continuous_level_cap` | int | 레벨 | 5 | L+ 경계에서만 +1 |
 | `stages[].terrain.exposure.<family>.<kind>.share` | float | 비율 | 0.0 | family ∈ `A · B · C · D` · kind 는 manifest 이름 · 합(연속 포함) = 1.0 |
 | `stages[].terrain.exposure.<family>.<kind>.level_cap` | int | 레벨 | 0 | D 경계에서만 +1 |
 | `stages[].terrain.floors.continuous_share_min` · `opened_kind_share_min` · `continuous_low_level_frac_min` | float | 비율 | 0.20 · 0.02 · 0.30 | §E.3 망각 방지(지형) · 아래면 거절 |
 | `promotion.window_episodes` · `windows` · `success_min` · `survival_min` · `hold_if_invalid` | int · int · int · int · bool | 개 · 번 · 개 · 개 | 64 · 2 · 52 · 60 · true | D159 |
-| `promotion.completion` | map kind → str | | §E.3 완료 정의 행 | 종류별 완료 정의 이름(`last_support_0.5s` · `box_center_pass` · `tile_end_reach` · `flag_reach_0.3m` · `tunnel_exit_no_contact` · `landing_0.5s`) |
+| `promotion.completion` | map (preset, kind) → str | | §E.3 완료 정의 행 | 종류별 완료 정의 이름(`last_support_0.5s` · `box_center_pass` · `tile_end_reach` · `flag_reach_0.3m` · `tunnel_exit_no_contact` · `landing_0.5s`) |
 | `promotion.denominator` | enum | | `forward+flag_all` | 그 종류 env 의 전진 · 깃발 에피소드 전부(policy 실패 포함 · 무판정만 뺌) |
 | `maintenance.judge_cells` · `record_cells` | int · int | 개 | 26 · 13 | D160 · 합 39 보존 |
 | `maintenance.anchor` · `maintenance.parent_alarm.survival_drop` | enum · int | · 개 | `pre_drop_anchor` · 6 | HOLD 기준은 마지막 PASS 경계 · 부모 대비 누적 하락은 경보(B5 · 가정) |
@@ -454,9 +454,9 @@ EX-41 `ex41-fixed5000.yaml` 의 칸(`stages[].id · start · duration · shares 
 | `maintenance.items[]` | [map] | | §E.3.1 표 | 항마다 `name · metric · unit · statistic · comparator · role · on_missing · on_fail`(표 밖 항 추가는 D 번호) |
 | `maintenance.calibration.receipt` | str | | 없음(E1 부터 필수) | `calibration.json` 경로 · 없으면 E1 진입 거절 |
 | `maintenance.recovery.windows` | int | 번 | 2 | 회복에 필요한 연속 창 수 |
-| `maintenance.learned_cells.min_episodes` · `modes_required` · `dedupe` | int · [str] · bool | 개 | 32 · `[gt_adaptive, off_if_p_off_gt_0]` · true | 배운 칸 등록표(B4) · 누적 하한 |
+| `maintenance.learned_cells.min_episodes` · `modes_required` · `dedupe` | int · [str] · bool | 개 | 32 · `[map_on_adaptive, map_off_if_p_off_gt_0]` · true | 배운 칸 등록표(B4) · 배정 모드 기준 · 누적 하한 |
 | `maintenance.on_fail.hold_exposure` · `restore_previous_exposure` · `stop_training` · `report` | bool × 3 · enum | | true · true · **false** · `telegram+ledger` | D156 · D159 |
-| `forgetting_watch.compare_to` · `tolerance.survival` · `tolerance.error` · `resume_rule` | enum · int · float · str | | `previous_boundary` · 3 · 0.03 · `recover_to_pre_drop_minus_tolerance` | §6.1 |
+| `forgetting_watch.compare_to` · `comparator` · `resume_rule` | enum · enum · str | | `pre_drop_anchor` · `from_maintenance_items` · `per_item_comparator_2_windows` | 항별 comparator 를 그대로 참조(별도 숫자 없음 · B5) · §6.1 |
 | `eval.every_updates` · `fixed_levels` · `directions` · `map_modes` | int · [int] · [str] · [str] | 회차 | 250 · [3, 6, 9] · [fwd, back, left, right] · [gt, pred, off] | W78 v2 · D160 |
 | `eval.d44_cells` · `flag_cells` · `posture_cells` · `push_cells` | enum | | `from:E1` · `from:E1F` · `from:E6a` · `record` | |
 | `eval.kind_cells` | enum | | `exposed+L0` | 노출된 종류 + 모든 종류 L0 기록 |
@@ -478,16 +478,17 @@ maintenance:
   judge_cells: 26
   record_cells: 13
   survival_drop_max: 3
-  error_rise_max: 0.03
+  error_rise_max_vxvy: 0.03
+  error_rise_max_wz: 0.05
   contact_drop_max: 0.1
-  distance_ratio_min: 0.9
+  distance_drop_frac_of_parent: 0.1
   anchor: pre_drop_anchor
   parent_alarm: {survival_drop: 6}
   calibration: {receipt: <calibration.json 경로>}
   recovery: {windows: 2}
-  learned_cells: {min_episodes: 32, modes_required: [gt_adaptive, off_if_p_off_gt_0], dedupe: true}
+  learned_cells: {min_episodes: 32, modes_required: [map_on_adaptive, map_off_if_p_off_gt_0], dedupe: true}
   on_fail: {hold_exposure: true, restore_previous_exposure: true, stop_training: false, report: telegram+ledger}
-forgetting_watch: {compare_to: previous_boundary, tolerance: {survival: 3, error: 0.03}, resume_rule: recover_to_pre_drop_minus_tolerance}
+forgetting_watch: {compare_to: pre_drop_anchor, comparator: from_maintenance_items, resume_rule: per_item_comparator_2_windows}
 eval: {every_updates: 250, fixed_levels: [3, 6, 9], directions: [fwd, back, left, right], map_modes: [gt, pred, off], d44_cells: from:E1, flag_cells: from:E1F, posture_cells: from:E6a, push_cells: record, kind_cells: exposed+L0, sparse_off_role: record}
 logging: {map_mode: assigned+consumed+eval}
 video: {per_kind_success: 1, per_kind_fail: 1, overview: 1, when: gpu_idle, name: "EX42_<stage>_<kind>_L<level>_<ok|fail>_<update>.mp4"}
@@ -503,7 +504,7 @@ stages:
   terrain:
     policy: ex42
     preset: {A: start_go2_v1, B: ame2_go2_mix_v1, C: jeplo_preset_v1, continuous: rough_go2_cfg}
-    kind_task: {stepping_stones_low: {command_set: [forward_1.0, flag]}}
+    kind_task: {stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}}
     continuous_level_cap: 6
     exposure:
       A: {stepping_stones_low: {share: 0.05, level_cap: 0}}
@@ -530,6 +531,7 @@ stages:
 | B5 유지 판정 | 항마다 단위 · 통계 · 기준 · 역할 · 결측 처리 · 0 · 음수 비율 · 부모 누적 하락 · 반복 폭 영수증 · 회복 anchor | §E.3.1 유지 항 표 · E.3 유지 칸 행 둘 · 교환 학습 감시 · 미달 시 행 · E.4 `maintenance.*` 열 · E0 영수증 | 64 → 61 → 58 → 55 반례 · −1/−1 비율 반례(산술 일치) · 옆걸음 투영 JSON 재계산 2.5065 → 2.2402 · 2.3319 → 2.5676 · 후진 +5.1247 → +5.1106(**실측** · `map_modes.json per_env[*].command_xy_projection_integral_m`) | 문턱 값은 전부 calibration 전 가정 · record 항을 judge 로 올릴지 팀장 |
 | §3 추가 | E3 큰 표 · 세부 표 완료 조건 불일치 · E0 250 회 뒤 값은 부모 재평가가 아님 · M 재진입 · 연장 소진 처리 · 종류별 분기 | E.1 E0 · E3 행 · E.2 E3 승급 행 · 합계 문단 · E.5 | 합계 13,500 · 24,000 · 95.85 h · 170.4 h 재계산 일치 | 분기 여부 팀장 · 원시 타이밍 미확인(읽기) |
 | §4 옆걸음 | NPZ 가 아니라 JSON 키 · 후진 부호 양수 | §E.3.1 투영 거리 행과 재계산 문단 · 설계 §6.2 278 행 정정 | planner 11/03 재계산 일치 | 없음 |
+| v0.10 재확인(`REVIEW-EX42-v010-1103.md` 02:0x) | B1 닫힘 · B2 예시가 옛 키 사용 · K 초기 상태 · B3 명령 몫 분모(전역 vs 조건부) · `command_weights` · rough · boxes · flat 완료 정의 · B4 mixed 집계 모드 · B5 comparator 둘(0.03 vs 0.05) · 접촉 · 위상 정의 · 분모 env/episode · 작은 정정 다섯(두 줄 평균대 이름 · 10/70/20 분모 · force_gt 문구 · 35.7 h 등급 · 설계 상태 줄) | v0.11: E0 바꾸는 축 행 · 몫 공여 행 · 예시 YAML 키 · E.4 머리(items 한 번 생성) / 명령 몫 행(조건부 분모) · 과제 묶음 `command_weights` · 완료 정의 `(preset, kind)` / 지형 행 · 등록표 행 · `modes_required` / 유지 항 표 머리 · 접촉 · 위상 · yaw 행 · 교환 학습 행 · `forgetting_watch` 칸 / E.1 E2 · E2 · E5 · `force_gt` · 머리 | 전역 몫 재계산 정지 9.5 · 후진 13.3 · 옆 6.65 %(**계산** 일치) · 재정규화 0.630 : 0.370(**계산**) | 명령 몫 분모(조건부) 는 가정 · 팀장 확인 · record 승격 · 듬성 후진 · 옆 완료 정의 · 접촉력 문턱 1 N 가정 |
 
 ## v0.6c 이전 원문 보존
 

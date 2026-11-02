@@ -92,6 +92,12 @@ if ym:
             ok(set(st["terrain"]["preset"]) == {"A", "B", "C", "continuous"} and st["terrain"]["preset"]["A"] == "start_go2_v1", "예시 terrain.preset 네 묶음 · A = start_go2_v1")
             ok(list(st["terrain"]["kind_task"].values())[0]["command_set"] == ["forward_1.0", "flag"], "예시 kind_task command_set [forward_1.0, flag]")
             ok(y["eval"]["sparse_off_role"] == "record" and y["logging"]["map_mode"] == "assigned+consumed+eval", "예시 sparse OFF 기록 · 지도 모드 기록 셋")
+            if "| v0.10 재확인(" in sec:   # v0.11
+                ok({"error_rise_max_vxvy", "error_rise_max_wz", "distance_drop_frac_of_parent"} <= set(mt) and "error_rise_max" not in mt and "distance_ratio_min" not in mt, "예시 maintenance 키가 E.4 새 이름(옛 키 없음)")
+                ok(y["forgetting_watch"]["comparator"] == "from_maintenance_items" and "tolerance" not in y["forgetting_watch"], "예시 forgetting_watch 는 항별 comparator 참조(별도 숫자 없음)")
+                kt = list(st["terrain"]["kind_task"].values())[0]
+                ok(abs(sum(kt["command_weights"].values()) - 1.0) < 1e-9 and set(kt["command_weights"]) == set(kt["command_set"]), "예시 command_weights 합 1 · command_set 과 같은 키")
+                ok(mt["learned_cells"]["modes_required"][0] == "map_on_adaptive", "예시 learned_cells 는 배정 모드")
         else:
             ok(bd["changed_axis"].startswith("terrain.exposure"), "예시 boundary 축 하나")
         ok(y["maintenance"]["judge_cells"] == 26 and y["maintenance"]["record_cells"] == 13 and y["maintenance"]["on_fail"]["stop_training"] is False, "예시 26 · 13 · stop_training false")
@@ -127,6 +133,12 @@ if v010:
     rows6 = [l for l in e6.splitlines() if re.match(r"\| (B[1-5] |§[34] )", l)]
     ok(len(rows6) == 7 and all(len(cells(l)) == 5 for l in rows6), f"E.6 반영 표 7 행 × 5 칸 ({len(rows6)})")
     ok(all(len(cells(l)[2].strip()) >= 10 for l in rows6), "E.6 「고친 자리」 칸 비지 않음")
+    if "| v0.10 재확인(" in sec:   # v0.11
+        for old in ("두 줄 평균대 L0", "tolerance.survival", "전 구간 복원(D162)", "gt_adaptive"):
+            ok(old not in pre, f"옛 문구 없음(v0.11): {old}")
+        for kw in ("조건부 비율", "command_weights", "assigned_mode", "9.5", "초기 상태 사전 등록", "from_maintenance_items", "(preset, kind)"):
+            ok(kw in sec, f"v0.11 「{kw}」")
+        ok(any(l.startswith("| v0.10 재확인") for l in e6.splitlines()), "E.6 v0.10 재확인 행")
 
 ok(chr(0x2014) not in sec, "em dash 없음(정본 절)")
 for n, line in enumerate(sec.splitlines(), 1):
