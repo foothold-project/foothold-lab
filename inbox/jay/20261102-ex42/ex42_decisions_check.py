@@ -51,12 +51,43 @@ if "**D160**" in text:
 if "### 1.1 왜 이 난이도 순서인가" in text:
     m11 = re.search(r"^### 1\.1 .*?(?=^## 2\. )", text, re.M | re.S)
     trows = [l for l in m11.group(0).splitlines() if re.match(r"\| \d+ \| \*\*", l)]
-    names = ["S3-0", "T1", "T2", "F1", "T3", "F2", "T4", "F3", "T5", "T6", "지형 2 판"]
-    ok(len(trows) == 11 and all(nm in r for nm, r in zip(names, trows)), f"§1.1 순서 표 11 행 {len(trows)}")
+    v04 = "### 1.2 경계표" in text
+    names = (["S3-0", "T1", "F1", "T2", "T3", "F2", "T4", "F3", "T5", "옛 T6", "지형 2 판"] if v04
+             else ["S3-0", "T1", "T2", "F1", "T3", "F2", "T4", "F3", "T5", "T6", "지형 2 판"])
+    ok(len(trows) == 11 and all(nm in r for nm, r in zip(names, trows)), f"§1.1 순서 표 11 행 {len(trows)} · 순서 {'v0.4' if v04 else 'v0.3'}")
     for r in trows:
         cells = [c.strip() for c in r.strip("|").split("|")]
         ok(len(cells) == 4 and len(cells[2]) >= 40 and len(cells[3]) >= 8, f"§1.1 {cells[1][:12]} 이유 · analyst 칸")
     ok("analyst 의견" in m11.group(0).splitlines()[4] if len(m11.group(0).splitlines()) > 4 else False, "§1.1 표 머리에 analyst 의견 열")
+
+# (H) v0.4 analyst REVIEW-EX42-Q7-ORDER 막음 A · B · C
+if "### 1.2 경계표" in text:
+    m11 = re.search(r"^### 1\.1 .*?(?=^### 1\.2 )", text, re.M | re.S).group(0)
+    row = {}
+    for l in m11.splitlines():
+        if re.match(r"\| \d+ \| \*\*", l):
+            row[re.search(r"\*\*(.+?)\*\*", l).group(1)] = l
+    ok("start_sheet.py:35" in row.get("T2", "") and "딛는 면이 아니다" in row.get("T2", ""), "(A) T2 평균대 낙차 코드 근거 정정")
+    ok("미확인" in row.get("T3", "") and "보폭" in row.get("T3", ""), "(A) T3 틈 보폭 근거 정정(미확인)")
+    ok("삭제" in row.get("F2", "") and "15-TERRAIN 83" in row.get("F2", ""), "(문구) F2 깃발 문구 삭제 · 연속 지형 깃발 열")
+    ok("값 활성화" in row.get("지형 2 판", "") and "D93" in row.get("지형 2 판", ""), "(문구) 지형 2 판 h/roll 값 활성화 · D93")
+    for old in ("떨어져도 평지라 틈보다", "0.3 은 보폭 안(hip 간격 0.387 m, §4.1)", "열린 뒤에야 지형 너머 깃발이 뜻을 가진다 ·"):
+        ok(old not in text, f"옛 문장 없음: {old[:24]}")
+    m12 = re.search(r"^### 1\.2 .*?(?=^## 2\. )", text, re.M | re.S).group(0)
+    ok("학습에서 바뀌는 축(하나)" in m12, "(B) §1.2 표 머리 「학습에서 바뀌는 축(하나)」")
+    kinds = [l for l in m12.splitlines() if re.match(r"\| (S|L\+|C|K|D|M)\(", l)]
+    ok(len(kinds) == 6 and all(len([c for c in l.strip("|").split("|")]) == 5 for l in kinds), f"(B) §1.2 경계 종류 6 행 {len(kinds)}")
+    ok("모든 경계에서 늘 잰다" in m12 and "L+" in m12, "(B) 평가 지점 L3/6/9 늘 잼 · 학습 상한은 L+ 경계")
+    m62 = re.search(r"^### 6\.2 .*?(?=^## 7\. )", text, re.M | re.S)
+    ok(m62 is not None, "(C) §6.2 유지 계약 절")
+    if m62:
+        s = m62.group(0)
+        for kw in ("정지 0.10", "후진 0.14", "옆 0.07", "지도 모드", "추종", "접촉", "되돌림", "yaml:381~394", "실제 종료 에피소드 수", "소급"):
+            ok(kw in s, f"(C) §6.2 「{kw}」")
+        ok("읽기" in s and "미재측" in s, "(C) §6.2 analyst 숫자는 읽기 · 미재측 표시")
+    ok("### 13b-2." in text and "| A 선행 기술" in text and "| B 변경 경계" in text and "| C 유지 계약" in text, "§13b-2 반영 표 A · B · C")
+    r7 = rows.get("Q7")
+    ok(r7 is not None and not r7[0].startswith("~~") and "v0.4 안을 정본" in r7[1], "§13 Q7 열림 · v0.4 안(종류별 선행 기술) 을 정본으로")
 
 # (E) D159 Q13 교환 학습
 if "### 6.1 교환 학습 감시 규칙" in text:
