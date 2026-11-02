@@ -60,6 +60,13 @@ def test_runner_score_entry_uses_required_three_stand_sources(actual,tmp_path):
     assert len(result['metrics']['maintenance_counts'])==26
     assert len(result['metrics']['record_counts'])==39
     assert len(result['evidence'])==8
+    pred=result['metrics']['eval_pred_tracking_errors']
+    assert len(pred)==13
+    assert pred['fwd0.5']['gt_used']==0
+    assert pred['fwd0.5']['measured_envs']['vx_abs_error_mean_alive_mps']==64
+    assert pred['fwd0.5']['tracking_medians']['vx_abs_error_mean_alive_mps']==pytest.approx(0.04734360799193382)
+    assert pred['spin+1.2']['tracking_medians']['wz_abs_error_mean_alive_radps']==pytest.approx(0.08733033016324043)
+    assert pred['stop']['tracking_medians']=={}
 
 
 def test_runner_score_entry_rejects_missing_stand_path(actual,tmp_path):

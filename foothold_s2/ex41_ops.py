@@ -22,12 +22,13 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _score_snapshot(runtime, completed_update: int) -> tuple[dict | None, str]:
+    expected_iteration = completed_update - 250
     rows = [row for row in getattr(runtime, "_history", [])
             if type(row.get("iteration")) is int
-            and completed_update - 250 < row["iteration"] <= completed_update]
-    if not rows:
+            and row["iteration"] == expected_iteration]
+    if expected_iteration < 1 or not rows:
         return None, "tool_hold"
-    score = max(rows, key=lambda row: row["iteration"])
+    score = rows[-1]
     metrics = score.get("metrics")
     counts = metrics.get("record_counts") if isinstance(metrics, dict) else None
     if not isinstance(counts, dict) or len(counts) != 39:
@@ -220,6 +221,7 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         "checkpoint_iteration": completed,
         "checkpoint_sha256": (score or {}).get("checkpoint_sha256"),
         "score_iteration": (score or {}).get("iteration"),
+        "score_expected_iteration": completed - 250,
         "score_sha256": (score or {}).get("_sha256"),
         "score_state": hold_kind,
         "score_rejections": rejected_scores,

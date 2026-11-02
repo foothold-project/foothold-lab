@@ -467,12 +467,56 @@ def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float) -> dict[s
 def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
                       stand_paths: dict[str, str | Path],
                       table_path: str | Path, out_path: str | Path) -> Path:
-    """Use the analyst-owned raw-evidence contract for all EX-41 score fields."""
+    """Enrich the score from analyst-owned evidence and retain eval_pred tracking errors."""
     from foothold_s2.curriculum.ex41_scoring import enrich_score_metrics
 
     plan = load_fixed_plan(table_path)
     score = json.loads(Path(score_path).read_text(encoding="utf-8-sig"))
     result = enrich_score_metrics(score, map_modes_path, stand_paths, plan)
+    modes = json.loads(Path(map_modes_path).read_text(encoding="utf-8-sig"))
+    eval_pred = modes.get("modes", {}).get("eval_pred")
+    commands = modes.get("commands")
+    if not isinstance(eval_pred, dict) or not isinstance(commands, dict) or set(eval_pred) != set(commands):
+        raise ValueError("EX-41 eval_pred tracking source has incomplete command cells")
+    tracking_cells = {}
+    axes = ((0, "vx_abs_error_mean_alive_mps"),
+            (1, "vy_abs_error_mean_alive_mps"),
+            (2, "wz_abs_error_mean_alive_radps"))
+    for case, row in eval_pred.items():
+        command = commands[case]
+        per_env = row.get("per_env") if isinstance(row, dict) else None
+        if (not isinstance(command, list) or len(command) != 3
+                or not isinstance(per_env, list) or len(per_env) != 64
+                or type(row.get("gt_used")) is not int or row["gt_used"] != 0
+                or type(row.get("alive_envs_at_end")) is not int):
+            raise ValueError(f"EX-41 eval_pred tracking evidence is invalid: {case}")
+        medians = {}
+        measured = {}
+        for axis, field in axes:
+            if float(command[axis]) == 0.0:
+                continue
+            values = []
+            for env_row in per_env:
+                if (not isinstance(env_row, dict) or type(env_row.get("samples_alive")) is not int
+                        or env_row["samples_alive"] <= 0):
+                    continue
+                value = env_row.get(field)
+                if isinstance(value, (int, float)) and math.isfinite(float(value)):
+                    values.append(float(value))
+            if len(values) < 60:
+                raise ValueError(f"EX-41 eval_pred tracking has fewer than 60 measured envs: {case}/{field}")
+            ordered = sorted(values)
+            middle = len(ordered) // 2
+            medians[field] = (ordered[middle] if len(ordered) % 2
+                              else (ordered[middle - 1] + ordered[middle]) / 2.0)
+            measured[field] = len(values)
+        tracking_cells[case] = {
+            "gt_used": 0,
+            "alive_envs_at_end": row["alive_envs_at_end"],
+            "tracking_medians": medians,
+            "measured_envs": measured,
+        }
+    result.setdefault("metrics", {})["eval_pred_tracking_errors"] = tracking_cells
     target = Path(out_path)
     if target.resolve() == Path(score_path).resolve():
         raise ValueError("EX-41 enriched score must not overwrite its draft")

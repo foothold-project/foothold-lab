@@ -35,15 +35,27 @@ def _score(update=250):
                         "stand_min_passed": 64}}
 
 
-def test_ex41_250_report_includes_39_cells_dr_hold_and_extension(tmp_path):
+def test_ex41_boundary_uses_exact_score_250_and_records_dr_hold(tmp_path):
     runtime = FakeRuntime(_score(), {"status": "applied", "stage_before": "S2a",
                                      "stage_after": "S2a", "decisions": []},
                           paused=True, extension=500)
-    report = record_boundary(runtime, tmp_path, 251)
-    assert report["checkpoint_iteration"] == 250
+    runtime._history.append(_score(500))
+    report = record_boundary(runtime, tmp_path, 501)
+    assert report["checkpoint_iteration"] == 500
+    assert report["score_iteration"] == report["score_expected_iteration"] == 250
     assert len(report["maintenance_counts"]) == 39
     assert report["dr_hold"] is True and report["extension_updates"] == 500
-    assert json.loads((tmp_path / "ex41_reports/update_00250.json").read_text()) == report
+    assert json.loads((tmp_path / "ex41_reports/update_00500.json").read_text()) == report
+
+
+def test_ex41_boundary_keeps_dr_when_exact_reference_score_is_missing(tmp_path):
+    runtime = FakeRuntime(_score(750))
+    report = record_boundary(runtime, tmp_path, 751)
+    assert report["score_expected_iteration"] == 500
+    assert report["score_iteration"] is None
+    assert report["score_state"] == "tool_hold"
+    assert report["dr_scale"] == 0.5
+    assert report["finished"] is False
 
 
 def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path):
