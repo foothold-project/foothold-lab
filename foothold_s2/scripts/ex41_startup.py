@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +38,26 @@ def require_production_authorization(plan) -> dict[str, Any]:
     return snapshot
 
 
-def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path) -> dict[str, Any]:
+def validate_rehearsal_request(updates: int, output_dir: str | Path,
+                               device: str, headless: bool,
+                               distributed: bool = False) -> Path:
+    """Allow only the explicitly bounded, isolated 10-update Kit rehearsal."""
+    if type(updates) is not int or updates != 10:
+        raise ValueError("EX-41 rehearsal is fixed to exactly 10 updates")
+    path = Path(output_dir)
+    if not path.is_absolute() or path.parent.name.lower() != "s2_lab":
+        raise ValueError("EX-41 rehearsal output must be an absolute s2_lab child")
+    if not re.fullmatch(r"ex41_rehearsal_[0-9]{8}_[0-9]{6}", path.name):
+        raise ValueError("EX-41 rehearsal output must use ex41_rehearsal_YYYYMMDD_HHMMSS")
+    if device != "cuda:0" or not headless or distributed:
+        raise ValueError("EX-41 rehearsal requires headless cuda:0 and one process")
+    if path.exists() and any(path.iterdir()):
+        raise ValueError("EX-41 rehearsal output must be new or empty")
+    return path
+
+
+def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,
+                             rehearsal_updates: int | None = None) -> dict[str, Any]:
     """Set mandatory transfer flags and the parent reference in a fresh cfg."""
     cfg = dict(train_cfg)
     cfg["ex41_pose_commands"] = True
@@ -46,9 +67,16 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
         "sha256": plan.parent_sha256,
         "iteration": plan.parent_update,
     }
-    # The runner uses zero-based iteration indices; one extra loop entry is
-    # needed to observe the runtime's terminal completed-update boundary.
-    cfg["max_iterations"] = 6501
+    if rehearsal_updates is None:
+        # The runner uses zero-based iteration indices; one extra loop entry is
+        # needed to observe the runtime's terminal completed-update boundary.
+        cfg["max_iterations"] = 6501
+    else:
+        if type(rehearsal_updates) is not int or rehearsal_updates != 10:
+            raise ValueError("EX-41 rehearsal is fixed to exactly 10 updates")
+        cfg["max_iterations"] = rehearsal_updates
+        cfg["save_interval"] = 1
+        cfg["ex41_rehearsal"] = True
     if cfg.get("ex41_w86_required") is not True:
         raise ValueError("EX-41 requires W86")
     return cfg
@@ -81,13 +109,19 @@ def verify_m6000_parent(plan, parent_path: str | Path) -> dict[str, Any]:
 
 
 def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
-    """Install the fixed terrain, existing DR consumers, and W86 before gym.make."""
+    """Install EX-41-only pose observations, terrain, DR consumers, and W86 before gym.make."""
     from foothold_s2.curriculum.ex41 import prepare_terrain_cfg
     from foothold_s2.curriculum.ex40_dr_runtime import install_runtime_events
     from foothold_s2.rewards.w86_runtime import prepare_env_cfg
+    from foothold_s2.sensors.start_obs import apply_ex41_pose_observation
 
     dr = plan.domain_randomization
     ranges = dr["full_ranges"]
+    apply_ex41_pose_observation(env_cfg)
+    pose_receipt = {"group": "pose_cmd", "shape_per_env": [2],
+                    "columns": ["height_delta_m", "body_roll_rad"],
+                    "configured_value": [0.0, 0.0],
+                    "producer": "foothold_s2.sensors.start_obs.zero_pose_command"}
     event_receipt = install_runtime_events(
         env_cfg, ranges, tuple(dr["push_interval_s"]),
         delay_max_s=float(ranges["delay_s"][1]))
@@ -95,7 +129,55 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     terrain_receipt = prepare_terrain_cfg(env_cfg, plan)
     w86_receipt = prepare_env_cfg(env_cfg, plan)
     return {"events": event_receipt, "initial_dr": dr_receipt,
-            "terrain": terrain_receipt, "w86": w86_receipt}
+            "terrain": terrain_receipt, "w86": w86_receipt,
+            "pose_observation": pose_receipt}
+
+
+def first_observation_readback(raw: Any, expected_envs: int) -> dict[str, Any]:
+    """Validate and summarize the actual first TensorDict consumed by StartRunner."""
+    required = {"policy": [45], "depth": [60, 60], "gt_map": [512],
+                "gt_feet": [100], "base_vel": [3], "contacts": [4],
+                "pose_cmd": [2]}
+    groups = {}
+    for name, expected_shape in required.items():
+        if name not in raw.keys():
+            raise ValueError(f"EX-41 first observation missing group {name}")
+        value = raw[name]
+        got = list(value.shape[1:])
+        if name == "depth" and value[0].numel() == 3600:
+            got = [60, 60]
+        if got != expected_shape or int(value.shape[0]) != int(expected_envs):
+            raise ValueError(f"EX-41 first observation shape differs for {name}: {list(value.shape)}")
+        groups[name] = list(value.shape[1:])
+    pose = raw["pose_cmd"]
+    if not bool(pose.isfinite().all().item()):
+        raise ValueError("EX-41 first pose_cmd is not finite")
+    nonzero_by_column = pose.detach().ne(0).any(dim=0).cpu().tolist()
+    if nonzero_by_column != [False, False]:
+        raise ValueError("EX-41 first pose_cmd columns are not both zero")
+    return {"groups": groups,
+            "pose_cmd": {"columns": ["height_delta_m", "body_roll_rad"],
+                         "zero_by_column": [True, True],
+                         "shape": list(pose.shape)}}
+
+
+@contextmanager
+def capture_first_observation(env: Any):
+    """Record StartRunner's existing first read without computing observations twice."""
+    original = env.get_observations
+    receipt: dict[str, Any] = {}
+
+    def capture(*args, **kwargs):
+        raw = original(*args, **kwargs)
+        if not receipt:
+            receipt.update(first_observation_readback(raw, env.num_envs))
+        return raw
+
+    env.get_observations = capture
+    try:
+        yield receipt
+    finally:
+        env.get_observations = original
 
 
 def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:

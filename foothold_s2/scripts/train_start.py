@@ -37,35 +37,64 @@ _pre.add_argument("--ex41_table")
 _pre.add_argument("--ex41_parent_checkpoint")
 _pre.add_argument("--ex41_score_dir")
 _pre.add_argument("--ex41_dry_run", action="store_true")
+_pre.add_argument("--ex41_rehearsal_updates", type=int)
+_pre.add_argument("--ex41_rehearsal_output")
+_pre.add_argument("--device")
+_pre.add_argument("--headless", action="store_true")
+_pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
 EX41_PLAN = None
 EX41_AUTHORIZATION = None
 EX41_PARENT_RECEIPT = None
+EX41_REHEARSAL = False
 if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
         authorization_snapshot, load_fixed_plan, require_production_authorization,
+        validate_rehearsal_request,
         verify_m6000_parent,
     )
 
     EX41_PLAN = load_fixed_plan(_pre_args.ex41_table)
+    if _pre_args.ex41_rehearsal_updates is not None:
+        if not _pre_args.ex41_rehearsal_output:
+            raise ValueError("EX-41 rehearsal requires --ex41_rehearsal_output")
+        validate_rehearsal_request(_pre_args.ex41_rehearsal_updates,
+                                   _pre_args.ex41_rehearsal_output,
+                                   _pre_args.device or "", _pre_args.headless,
+                                   _pre_args.distributed)
+    elif _pre_args.ex41_rehearsal_output:
+        raise ValueError("--ex41_rehearsal_output requires --ex41_rehearsal_updates")
     if _pre_args.ex41_dry_run:
         _snapshot = authorization_snapshot(EX41_PLAN)
         _w71_ready = _snapshot["config"]["values"].get("w71_ready") is True
+        if _pre_args.ex41_rehearsal_updates is not None:
+            if not _pre_args.ex41_parent_checkpoint:
+                raise ValueError("EX-41 rehearsal requires the pinned m6000 parent checkpoint")
+            EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
         print(json.dumps({"state": "dry_run", "task": _pre_args.task,
             "kit_started": False, "gpu_used": False,
             "task_config_import": "not_run_Kit_bootstrap_not_authorized",
             "table_sha256": EX41_PLAN.sha256,
             "parent_update": EX41_PLAN.parent_update,
             "parent_sha256": EX41_PLAN.parent_sha256,
+            "parent_receipt": EX41_PARENT_RECEIPT,
             "initial_dr_scale": EX41_PLAN.initial_dr_scale,
             "w71_ready": _w71_ready,
+            "rehearsal_updates": _pre_args.ex41_rehearsal_updates,
+            "rehearsal_output": _pre_args.ex41_rehearsal_output,
+            "rehearsal_device": _pre_args.device,
             "production_launch_allowed": False}, sort_keys=True))
         raise SystemExit(0)
     if not _pre_args.ex41_parent_checkpoint:
         raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
-    EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
     EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
-elif _pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run:
+    if _pre_args.ex41_rehearsal_updates is not None:
+        EX41_AUTHORIZATION = authorization_snapshot(EX41_PLAN)
+        EX41_REHEARSAL = True
+    else:
+        EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
+elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run
+      or _pre_args.ex41_rehearsal_updates is not None or _pre_args.ex41_rehearsal_output):
     raise ValueError("EX-41 options require --ex41_table")
 
 from isaaclab.app import AppLauncher  # noqa: E402
@@ -93,6 +122,10 @@ parser.add_argument("--ex41_score_dir", type=str, default=None,
                     help="Directory consumed by EX-41 numeric score receipts")
 parser.add_argument("--ex41_dry_run", action="store_true",
                     help="Check EX-41 plan and parser path without starting Kit")
+parser.add_argument("--ex41_rehearsal_updates", type=int,
+                    help="Run the bounded 10-update EX-41 Kit rehearsal only")
+parser.add_argument("--ex41_rehearsal_output", type=str,
+                    help="New s2_lab/ex41_rehearsal_YYYYMMDD_HHMMSS output directory")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -102,6 +135,16 @@ sys.argv = [sys.argv[0]] + hydra_args
 
 if args_cli.ex41_table != _pre_args.ex41_table:
     raise ValueError("EX-41 preflight and runtime parser disagree on plan path")
+if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
+        or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output):
+    raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
+if EX41_REHEARSAL:
+    from foothold_s2.scripts.ex41_startup import validate_rehearsal_request
+    if args_cli.max_iterations is not None:
+        raise ValueError("Use --ex41_rehearsal_updates, not --max_iterations, for rehearsal")
+    validate_rehearsal_request(args_cli.ex41_rehearsal_updates,
+                               args_cli.ex41_rehearsal_output, args_cli.device,
+                               args_cli.headless, args_cli.distributed)
 
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
@@ -181,6 +224,12 @@ def main(env_cfg, agent_cfg):
         if agent_cfg.run_name:
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
+    if EX41_REHEARSAL:
+        from foothold_s2.scripts.ex41_startup import validate_rehearsal_request
+
+        log_dir = str(validate_rehearsal_request(
+            args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
+            args_cli.device, args_cli.headless, args_cli.distributed))
     env_cfg.log_dir = log_dir
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞(결정 8: 설정과 실행 인자로 고름)
     ex41_cfg_contract = None
@@ -189,7 +238,10 @@ def main(env_cfg, agent_cfg):
 
         ex41_cfg_contract = prepare_ex41_env_cfg(env_cfg, EX41_PLAN)
     STATE["log_dir"] = log_dir
-    write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path, "seed": agent_cfg.seed})
+    write_status(log_dir, {"state": "starting", "task": args_cli.task,
+                           "resume_from": resume_path, "seed": agent_cfg.seed,
+                           "ex41_rehearsal": EX41_REHEARSAL,
+                           "max_updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None})
 
     env = gym.make(args_cli.task, cfg=env_cfg)
     ex41_w86_receipt = None
@@ -219,8 +271,20 @@ def main(env_cfg, agent_cfg):
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import configure_ex41_train_cfg
 
-        train_cfg = configure_ex41_train_cfg(train_cfg, EX41_PLAN, parent_checkpoint_path)
-    runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
+        train_cfg = configure_ex41_train_cfg(
+            train_cfg, EX41_PLAN, parent_checkpoint_path,
+            rehearsal_updates=args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None)
+    ex41_first_observation = None
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import capture_first_observation
+
+        with capture_first_observation(env) as ex41_first_observation:
+            runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
+        if not ex41_first_observation:
+            raise RuntimeError("EX-41 StartRunner did not expose its first observation readback")
+        print("EX41_FIRST_OBSERVATION " + json.dumps(ex41_first_observation, sort_keys=True), flush=True)
+    else:
+        runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
     if EX41_PLAN is not None:
@@ -265,6 +329,12 @@ def main(env_cfg, agent_cfg):
                                                    "env_scale": env.unwrapped._ex40_dr_scale},
                           "terrain_contract": ex41_cfg_contract["terrain"],
                           "w86_contract": ex41_cfg_contract["w86"],
+                           "pose_observation_contract": ex41_cfg_contract["pose_observation"],
+                           "first_observation": ex41_first_observation,
+                           "rehearsal": {"enabled": EX41_REHEARSAL,
+                                         "updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None,
+                                         "shadow_loop": False if EX41_REHEARSAL else None,
+                                         "score_evaluation": "not_run" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
                           "local_update_range": [1, ex41_runtime.max_updates]}
@@ -272,6 +342,23 @@ def main(env_cfg, agent_cfg):
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
+    if EX41_REHEARSAL:
+        print("EX41_REHEARSAL_READBACK " + json.dumps({
+            "output": log_dir,
+            "parent_update": EX41_PARENT_RECEIPT["completed_updates"],
+            "parent_sha256": EX41_PARENT_RECEIPT["sha256"],
+            "initial_dr_scale": {"configured": EX41_PLAN.initial_dr_scale,
+                                 "runtime": ex41_dr_readback.scale,
+                                 "env": env.unwrapped._ex40_dr_scale,
+                                 "first_reset_term_wrapped": ex41_cfg_contract["initial_dr"]["before_first_reset"]},
+            "observations": ex41_first_observation,
+            "w86_items": list(ex41_cfg_contract["w86"]["weights"]),
+            "w86_feet": ex41_cfg_contract["w86"]["feet"],
+            "updates": args_cli.ex41_rehearsal_updates,
+            "save_interval": train_cfg["save_interval"],
+            "score_evaluation": "not_run",
+            "shadow_loop": False,
+        }, sort_keys=True), flush=True)
     if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)
         from foothold_s2.runners.map_stats import MapStatsRecorder
 
