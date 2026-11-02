@@ -34,6 +34,14 @@ W86 생산부는 `FatalTrainingFault(ValueError)`와 `ex41_fatal.jsonl`을 제�
 
 실측: 실제 Git 설정 runtime의 4 env 중 2 env만 reset한 입력에서 신 설정2/구 설정2 걸음, 소비율0.5와 종류별2 env가 일치. U12 4 PASS(5.49초), 함께 돌린 기존 U10·runtime 32 PASS. 최초 묶음의 실패1은 시험 장면을 너무 일찍 붙인 fixture 누락(pcfg)으로 고친 뒤 해당 시험을 재확인했다. 원자료 `D:/mai-tmp/analyst/u12-green-1834.log`에는 그 중간 실패가 남아 있으므로 전체 통과 로그로 부르지 않는다. GPU 미확인.
 
+## U15 · 모든 링크 접촉 진단
+
+실제 ContactSensor의 `body_names` 순서로 `net_forces_w`를 받는다. 로봇 링크 전체와 센서 링크 집합이 다르면 attach에서 거절한다. 발·종아리·허벅지·몸통·기타 링크별 접촉 횟수(힘 크기 >1 N), 정상 표본 수, 접촉 비율, 평균 힘과 최대 힘을 `all_link_contact`로 남긴다. 알려진 3 env·6 링크 힘에서 불량 env를 제외한 접촉 수 `[1,1,2,1,0,1]`, 정상 분모2, 최대 힘 `[4,2,5,6,1,7]`을 확인했다. resume에도 링크 순서·누적값이 보존되며, 순서가 바뀌면 합치지 않는다.
+
+한계: 제어 주기의 reset 전 순힘 표본이다. 물리 substep의 모든 충격이나 서로 상쇄된 접촉까지 증명하지 않는다. 원자료가 없으면 unavailable이며 접촉0으로 꾸미지 않는다. 기록만 추가했고 충돌 보상/종료 문턱은 바꾸지 않았다. 설치 API 근거: IsaacLab `sensors/contact_sensor/contact_sensor.py:117`, `assets/articulation/articulation.py:161`. 실제 Kit 연결은 미확인이다.
+
+수정 전 U15 반례3 FAIL. U15·기존 W86 최종 15 PASS(5.21초), 이어받기·이름·분모 시험을 포함한다. 원자료 `D:/mai-tmp/analyst/u15-final-1840.log`. 중간 물리 fixture의 새 이름 필드 누락은 원래 광선 회전 시험을 유지하며 보완했다.
+
 ## 남은 항목
 
 U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.
