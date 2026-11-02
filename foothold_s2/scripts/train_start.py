@@ -12,13 +12,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
-from foothold_s2.runtime_environment import current_runtime_identity
+from foothold_s2.runtime_environment import current_runtime_identity  # noqa: E402
 
 # Enforce the measured Python/RSL-RL pair before importing tensors or AppLauncher.
 LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()
@@ -26,6 +27,46 @@ LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()
 # tensordict 의 C 확장은 Kit 이 뜬 뒤 처음 불러오면 이 기기에서 access violation 으로 죽는다(10/20 start_gate 실측 두 번).
 import tensordict  # noqa: F401,E402
 import torch  # noqa: E402
+
+# Handle EX-41 authorization before importing AppLauncher. Importing Isaac's
+# app module can bootstrap Omniverse on this installation, so the W71=false
+# and CPU dry branches must exit above that import boundary.
+_pre = argparse.ArgumentParser(add_help=False)
+_pre.add_argument("--task")
+_pre.add_argument("--ex41_table")
+_pre.add_argument("--ex41_parent_checkpoint")
+_pre.add_argument("--ex41_score_dir")
+_pre.add_argument("--ex41_dry_run", action="store_true")
+_pre_args, _pre_unknown = _pre.parse_known_args()
+EX41_PLAN = None
+EX41_AUTHORIZATION = None
+EX41_PARENT_RECEIPT = None
+if _pre_args.ex41_table:
+    from foothold_s2.scripts.ex41_startup import (
+        authorization_snapshot, load_fixed_plan, require_production_authorization,
+        verify_m6000_parent,
+    )
+
+    EX41_PLAN = load_fixed_plan(_pre_args.ex41_table)
+    if _pre_args.ex41_dry_run:
+        _snapshot = authorization_snapshot(EX41_PLAN)
+        _w71_ready = _snapshot["config"]["values"].get("w71_ready") is True
+        print(json.dumps({"state": "dry_run", "task": _pre_args.task,
+            "kit_started": False, "gpu_used": False,
+            "task_config_import": "not_run_Kit_bootstrap_not_authorized",
+            "table_sha256": EX41_PLAN.sha256,
+            "parent_update": EX41_PLAN.parent_update,
+            "parent_sha256": EX41_PLAN.parent_sha256,
+            "initial_dr_scale": EX41_PLAN.initial_dr_scale,
+            "w71_ready": _w71_ready,
+            "production_launch_allowed": False}, sort_keys=True))
+        raise SystemExit(0)
+    if not _pre_args.ex41_parent_checkpoint:
+        raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
+    EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
+    EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
+elif _pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run:
+    raise ValueError("EX-41 options require --ex41_table")
 
 from isaaclab.app import AppLauncher  # noqa: E402
 
@@ -44,12 +85,24 @@ parser.add_argument("--map_input", type=str, default=None, help="reconstruction(
 parser.add_argument("--force_gt", action="store_true", default=False, help="G0-gt")
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로(보통 <run>/latest.pt). 같은 폴더에 이어 쓰고 남은 회차만 돈다")
+parser.add_argument("--ex41_table", type=str, default=None,
+                    help="EX-41 fixed5000 plan; production start requires committed W71 readiness")
+parser.add_argument("--ex41_parent_checkpoint", type=str, default=None,
+                    help="Explicit EX-41 m6000 parent checkpoint")
+parser.add_argument("--ex41_score_dir", type=str, default=None,
+                    help="Directory consumed by EX-41 numeric score receipts")
+parser.add_argument("--ex41_dry_run", action="store_true",
+                    help="Check EX-41 plan and parser path without starting Kit")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + hydra_args
+
+if args_cli.ex41_table != _pre_args.ex41_table:
+    raise ValueError("EX-41 preflight and runtime parser disagree on plan path")
+
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
@@ -105,23 +158,53 @@ def main(env_cfg, agent_cfg):
         agent_cfg.seed = seed
 
     log_root = os.path.abspath(os.path.join("logs", "rsl_rl", agent_cfg.experiment_name))
-    if args_cli.resume_from:
+    if EX41_PLAN is not None:
+        if args_cli.resume_from:
+            raise ValueError("EX-41 parent transfer uses --ex41_parent_checkpoint, not --resume_from")
+        parent_checkpoint_path = os.path.abspath(args_cli.ex41_parent_checkpoint)
+        resume_path = None
+        agent_cfg.resume = False
+        log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        if agent_cfg.run_name:
+            log_dir += f"_{agent_cfg.run_name}_EX41"
+        log_dir = os.path.join(log_root, log_dir)
+    elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
+        parent_checkpoint_path = None
         log_dir = os.path.dirname(resume_path)
     else:
         resume_path = None
+        parent_checkpoint_path = None
         log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         if agent_cfg.run_name:
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
     env_cfg.log_dir = log_dir
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞(결정 8: 설정과 실행 인자로 고름)
+    ex41_cfg_contract = None
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import prepare_ex41_env_cfg
+
+        ex41_cfg_contract = prepare_ex41_env_cfg(env_cfg, EX41_PLAN)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path, "seed": agent_cfg.seed})
 
     env = gym.make(args_cli.task, cfg=env_cfg)
-    if resume_path is None and agent_cfg.resume:
+    ex41_w86_receipt = None
+    ex41_dr_readback = None
+    if EX41_PLAN is not None:
+        from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
+        from foothold_s2.rewards.w86_runtime import attach_runtime
+        dr_cfg = EX41_PLAN.domain_randomization
+        ex41_dr_readback = RuntimeReadback(
+            env.unwrapped, dr_cfg["full_ranges"], float(dr_cfg["full_ranges"]["delay_s"][1]),
+            EX41_PLAN.sha256)
+        from foothold_s2.scripts.ex41_startup import set_live_initial_dr_scale
+
+        set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
+        ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
+    if resume_path is None and agent_cfg.resume and EX41_PLAN is None:
         resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
 
@@ -132,9 +215,31 @@ def main(env_cfg, agent_cfg):
     if args_cli.force_gt:
         pc["force_gt"] = True
     train_cfg["perception"] = pc
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import configure_ex41_train_cfg
+
+        train_cfg = configure_ex41_train_cfg(train_cfg, EX41_PLAN, parent_checkpoint_path)
     runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
     runner.add_git_repo_to_log(__file__)
-    if resume_path:
+    ex41_runtime = None
+    if EX41_PLAN is not None:
+        from functools import partial
+        from foothold_s2.curriculum.continuous import make_runtime
+        from foothold_s2.curriculum.ex41 import apply_runtime_fields
+
+        parent_transfer = runner.load_ex41_parent()
+        # EX-41 updates are local to this new run; parent m6000 stays in its receipt.
+        runner.current_learning_iteration = 0
+        score_dir = os.path.abspath(args_cli.ex41_score_dir or os.path.join(log_dir, "scores"))
+        ex41_runtime = make_runtime(EX41_PLAN, env.num_envs, agent_cfg.device, log_dir,
+                                    score_dir=score_dir)
+        command_term = env.unwrapped.command_manager.get_term("base_velocity")
+        ex41_runtime.attach(runner, command_term)
+        ex41_runtime.set_stage_changed_hook(partial(apply_runtime_fields, runner))
+        ex41_runtime.start(EX41_PLAN.parent_sha256)
+        if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:
+            raise ValueError("EX-41 requires attached W86 runtime before learning")
+    elif resume_path:
         print(f"[INFO] START 체크포인트에서 이어 감: {resume_path}")
         runner.load(resume_path)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
@@ -147,6 +252,21 @@ def main(env_cfg, agent_cfg):
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None,
              "launcher_environment": LAUNCH_RUNTIME_IDENTITY}
+    if EX41_PLAN is not None:
+        modes["ex41"] = {"plan_sha256": EX41_PLAN.sha256,
+                          "effective_sha256": EX41_PLAN.effective_sha256,
+                          "parent": EX41_PARENT_RECEIPT,
+                          "transfer": parent_transfer,
+                          "w71_authorization": EX41_AUTHORIZATION,
+                          "initial_dr_scale": EX41_PLAN.initial_dr_scale,
+                          "initial_dr_contract": ex41_cfg_contract["initial_dr"],
+                          "initial_dr_readback": {"runtime_scale": ex41_dr_readback.scale,
+                                                   "env_scale": env.unwrapped._ex40_dr_scale},
+                          "terrain_contract": ex41_cfg_contract["terrain"],
+                          "w86_contract": ex41_cfg_contract["w86"],
+                          "w86_attached": ex41_w86_receipt is not None,
+                          "score_dir": score_dir,
+                          "local_update_range": [1, ex41_runtime.max_updates]}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)
@@ -157,7 +277,7 @@ def main(env_cfg, agent_cfg):
         MapStatsRecorder(runner, log_dir).attach()
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
-    remaining = agent_cfg.max_iterations - done
+    remaining = ex41_runtime.max_updates if ex41_runtime is not None else agent_cfg.max_iterations - done
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return

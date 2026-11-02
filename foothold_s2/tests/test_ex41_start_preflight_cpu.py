@@ -68,15 +68,19 @@ class Ex41PreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run = Path(tmp) / "run"
             run.mkdir()
-            checkpoint = run / "model_7500.pt"
+            checkpoint = run / "model_6000.pt"
             checkpoint.write_bytes(b"known parent bytes")
             digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
             manifest = {"checkpoints": {checkpoint.name: digest},
-                        "progress": {"completed_updates": 7501}}
+                        "progress": {"completed_updates": 6001}}
             (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
             row = verify_parent_checkpoint(checkpoint, digest)
             self.assertTrue(row["verified"])
-            self.assertEqual(row["completed_updates"], 7501)
+            self.assertEqual(row["completed_updates"], 6001)
+            old_parent = run / "model_7500.pt"
+            old_parent.write_bytes(b"old parent bytes")
+            with self.assertRaisesRegex(ValueError, "model_6000.pt"):
+                verify_parent_checkpoint(old_parent, hashlib.sha256(old_parent.read_bytes()).hexdigest())
             with self.assertRaisesRegex(ValueError, "SHA256 mismatch"):
                 verify_parent_checkpoint(checkpoint, "0" * 64)
             manifest["progress"]["completed_updates"] = 499
@@ -93,22 +97,22 @@ class Ex41PreflightTests(unittest.TestCase):
 
     def test_actual_train_start_and_installed_rsl_args_parse_candidate(self):
         argv = ["--task", "FootholdS2-Go2-S2-SB-v0", "--num_envs", "3072",
-                "--max_iterations", "8000", "--resume_from", "model_7500.pt",
+                "--max_iterations", "6500", "--resume_from", "model_6000.pt",
                 "--distributed", "--run_name", "EX-41-B-cpu-dry",
                 "--headless", "--device", "cuda:1"]
         row = inspect_train_argv(REPO, argv)
-        self.assertEqual(row["max_iterations"], 8000)
+        self.assertEqual(row["max_iterations"], 6500)
         self.assertEqual(row["device"], "cuda:1")
         self.assertFalse(row["applauncher_imported"])
         self.assertFalse(row["training_started"])
 
     def test_candidate_parser_rejects_implicit_device_or_low_update_target(self):
         base = ["--task", "FootholdS2-Go2-S2-SB-v0", "--num_envs", "3072",
-                "--max_iterations", "7500", "--resume_from", "model_7500.pt",
+                "--max_iterations", "6000", "--resume_from", "model_6000.pt",
                 "--distributed", "--run_name", "EX-41-B-cpu-dry", "--headless"]
-        with self.assertRaisesRegex(ValueError, "above m7500"):
+        with self.assertRaisesRegex(ValueError, "above m6000"):
             inspect_train_argv(REPO, base + ["--device", "cuda:1"])
-        base[base.index("--max_iterations") + 1] = "8000"
+        base[base.index("--max_iterations") + 1] = "6500"
         with self.assertRaisesRegex(ValueError, "exactly one --headless and --device"):
             inspect_train_argv(REPO, base)
 

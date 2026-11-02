@@ -100,6 +100,11 @@ def _nan_to_none(x):
     return x
 
 
+def curriculum_finished(runtime) -> bool:
+    """Return the state-machine terminal flag consumed by the training loop."""
+    return bool(getattr(runtime, "finished", False))
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -459,6 +464,10 @@ class StartRunner(OnPolicyRunner):
             continuous = getattr(self, "continuous_curriculum", None)
             if continuous is not None:
                 continuous.on_update_start(it)
+                # Runtime state transitions happen at update boundaries. Stop
+                # before collecting another rollout after the terminal update.
+                if curriculum_finished(continuous):
+                    break
             ex40_dr_runtime = getattr(self, "ex40_dr_runtime", None)
             if ex40_dr_runtime is not None:
                 ex40_dr_runtime.update_start(it)

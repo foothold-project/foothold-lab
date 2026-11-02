@@ -15,7 +15,7 @@ from typing import Any
 from foothold_s2.runtime_environment import current_runtime_identity
 
 
-REQUIRED_PARENT_UPDATE = 7500
+REQUIRED_PARENT_UPDATE = 6000
 REQUIRED_TRAIN_FLAGS = (
     "--task", "--agent", "--num_envs", "--seed", "--max_iterations",
     "--resume_from",
@@ -74,7 +74,7 @@ def verify_parent_checkpoint(checkpoint: str | Path, expected_sha256: str,
         raise ValueError("parent checkpoint must be named model_<update>.pt")
     update = int(match.group(1))
     if update != REQUIRED_PARENT_UPDATE:
-        raise ValueError("EX-41 parent must be model_7500.pt")
+        raise ValueError(f"EX-41 parent must be model_{REQUIRED_PARENT_UPDATE}.pt")
     actual = sha256_file(ckpt)
     if actual != expected_sha256:
         raise ValueError("parent checkpoint SHA256 mismatch")
@@ -164,7 +164,7 @@ def inspect_train_argv(repo: str | Path, argv: list[str]) -> dict[str, Any]:
     if known.task is None or not known.resume_from:
         raise ValueError("candidate EX-41 launch requires explicit task and parent checkpoint")
     if known.num_envs is None or known.max_iterations is None or known.max_iterations <= REQUIRED_PARENT_UPDATE:
-        raise ValueError("candidate launch needs explicit env count and a total update target above m7500")
+        raise ValueError(f"candidate launch needs explicit env count and a total update target above m{REQUIRED_PARENT_UPDATE}")
     if not known.run_name or not known.distributed:
         raise ValueError("candidate EX-41 launch needs a run name and distributed flag choice")
     if unknown.count("--headless") != 1 or unknown.count("--device") != 1:
