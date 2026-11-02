@@ -60,6 +60,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
                                  for name in ("training", "evaluation", "a_layer")},
             "recorder": str(recorder), "recorder_sha256": q.sha256(recorder),
             "composer": str(composer), "composer_sha256": q.sha256(composer), "jobs": rows}
+    plan["playlist_dir"] = str(tmp_path / "_playlists")
     return plan, rows
 
 
@@ -220,6 +221,28 @@ def test_canonical_video_comes_from_hud_composer_not_raw_capture(tmp_path, monke
     assert Path(receipt["video"]).read_bytes() == b"composed HUD video"
     assert Path(receipt["attempt_dir"], "styled.mp4").read_bytes() == b"composed HUD video"
     assert receipt["composer_sha256"] == plan["composer_sha256"]
+    playlist = Path(plan["playlist_dir"]) / "EX40-C-m08000-all.m3u8"
+    assert playlist.is_file()
+    assert str(Path(receipt["video"])) in playlist.read_text(encoding="utf-8")
+
+
+def test_playlist_uses_verified_receipts_and_keeps_fail_separate(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    run, _calls = fake_capture(plan, [0, 1])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    out = tmp_path / "out"
+    q.run_one(plan, out=out, high_priority_markers=[])
+    q.run_one(plan, out=out, high_priority_markers=[])
+    root = Path(plan["playlist_dir"])
+    all_lines = (root / "EX40-C-m08000-all.m3u8").read_text(encoding="utf-8").splitlines()
+    fail_lines = (root / "EX40-C-m08000-fail.m3u8").read_text(encoding="utf-8").splitlines()
+    assert len([line for line in all_lines if line.endswith(".mp4")]) == 2
+    assert len([line for line in fail_lines if line.endswith(".mp4")]) == 1
+    receipt = next((out / "receipts").glob("*_success.json"))
+    source = json.loads(receipt.read_text(encoding="utf-8"))["video"]
+    Path(source).write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="SHA256"):
+        q.publish_playlists(plan, out)
 
 
 def test_failed_full_frame_audit_never_publishes_or_consumes_seed(tmp_path, monkeypatch):

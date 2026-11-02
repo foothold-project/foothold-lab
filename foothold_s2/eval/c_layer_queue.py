@@ -70,6 +70,9 @@ def validate_plan(plan: dict) -> dict:
     if b"C_LAYER_SEED_V1" not in recorder.read_bytes():
         raise ValueError("recorder lacks variable-seed C76 profile")
     _source(plan["composer"], plan["composer_sha256"])
+    playlist_dir = Path(plan["playlist_dir"])
+    if not playlist_dir.is_absolute() or playlist_dir.name != "_playlists":
+        raise ValueError("C76 playlists must use the shared _playlists directory")
     rows = plan.get("jobs")
     if not isinstance(rows, list):
         raise ValueError("jobs must be a list")
@@ -239,6 +242,39 @@ def _summary(out: Path, row: dict) -> dict:
             "receipts": {role: str(path) for role, path in receipts.items() if path.exists()}}
 
 
+def publish_playlists(plan: dict, out: Path) -> dict:
+    """D102 absolute-path playlists from verified canonical receipts only."""
+    selected = {role: [] for role in ("all", "fail")}
+    for receipt_path in sorted((out / "receipts").glob("*.json")):
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if receipt.get("format") != "foothold-c-layer-canonical/1":
+            continue
+        video = Path(receipt["video"])
+        if (receipt.get("canonical") is not True or not video.is_absolute()
+                or video.parent != out or not video.is_file()
+                or sha256(video) != receipt["video_sha256"]):
+            raise ValueError("C76 playlist source video or SHA256 invalid")
+        selected["all"].append(video)
+        if receipt["own_result"] == "fail":
+            selected["fail"].append(video)
+    root = Path(plan["playlist_dir"])
+    root.mkdir(parents=True, exist_ok=True)
+    prefix = f"{plan['canon_label']}-C-m{plan['iteration']:05d}"
+    written = {}
+    for role, videos in selected.items():
+        if not videos:
+            continue
+        target = root / f"{prefix}-{role}.m3u8"
+        lines = ["#EXTM3U"]
+        for video in videos:
+            lines += ["#EXTINF:-1," + video.stem, str(video)]
+        temp = target.with_suffix(".publishing")
+        temp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        os.replace(temp, target)
+        written[role] = {"path": str(target), "count": len(videos), "sha256": sha256(target)}
+    return written
+
+
 def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe") -> dict:
     """Capture one seed for one cell; retain both roles and every attempt."""
     summary = validate_plan(plan)
@@ -257,6 +293,10 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
         os.write(fd, str(os.getpid()).encode())
         os.close(fd)
         (out / "receipts").mkdir(exist_ok=True)
+        try:
+            publish_playlists(plan, out)
+        except (OSError, KeyError, ValueError) as exc:
+            return {"state": "playlist_hold", "reason": str(exc)}
         for row in plan["jobs"]:
             cell = _summary(out, row)
             if cell["state"] == "incomplete_attempt_hold":
@@ -357,7 +397,11 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 _write(attempt_root / "closed.json", {"state": "validated", "result": own_result})
                 final = _summary(out, row)
                 _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
-                return {**final, "event": "captured"}
+                try:
+                    playlists = publish_playlists(plan, out)
+                except (OSError, KeyError, ValueError) as exc:
+                    return {**final, "state": "playlist_hold", "event": "captured", "reason": str(exc)}
+                return {**final, "event": "captured", "playlists": playlists}
             except (OSError, KeyError, ValueError) as exc:
                 failure = {"format": "foothold-c-layer-failure/1", "cell": cell["cell"],
                            "ordinal": ordinal, "seed": seed, "reason": str(exc)}
