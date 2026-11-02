@@ -22,8 +22,10 @@ critic 입력 664 는 이 runner 가 [policy, base_vel, contacts, gt_map, gt_fee
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import random
+import re
 import time
 from collections import deque
 
@@ -103,6 +105,17 @@ class StartRunner(OnPolicyRunner):
         torch.backends.cudnn.allow_tf32 = False
         torch.backends.cuda.matmul.allow_tf32 = False
         self.cfg = train_cfg
+        # D93: opt in only.  The old 45-wide proprioceptive observation and
+        # its 10-step perception history remain byte-for-byte unchanged.
+        self.ex41_pose_commands = train_cfg.get("ex41_pose_commands", False)
+        if not isinstance(self.ex41_pose_commands, bool):
+            raise ValueError("ex41_pose_commands must be bool")
+        self.ex41_critic_mirror = train_cfg.get("ex41_critic_mirror", False)
+        if not isinstance(self.ex41_critic_mirror, bool) or (self.ex41_critic_mirror and not self.ex41_pose_commands):
+            raise ValueError("ex41_critic_mirror requires ex41_pose_commands and a bool setting")
+        self.ex41_mirror_approval = train_cfg.get("ex41_mirror_approval")
+        if self.ex41_critic_mirror and not self._valid_ex41_mirror_approval(self.ex41_mirror_approval):
+            raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
         self.alg_cfg = train_cfg["algorithm"]
         self.policy_cfg = train_cfg["policy"]
         self.device = device
@@ -178,6 +191,7 @@ class StartRunner(OnPolicyRunner):
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
         self._resumed = False
+        self.ex41_parent_transfer = None
         self.memory_marks: dict[str, int] = {}
         self.memory_log: list[dict] = []  # iteration 마다 단계별 peak (18 §5.2 측정)
         self.iter_log: list[dict] = []
@@ -199,6 +213,22 @@ class StartRunner(OnPolicyRunner):
                 raise KeyError("critic_mode=clean52 인데 env 관측에 (N, 52) 'critic' 묶음이 없다")
         if "gt_map" not in raw.keys() or raw["gt_map"][0].numel() != 512:
             raise ValueError("'gt_map' 은 512 칸(32 x 16)이어야 한다")
+        if self.ex41_pose_commands:
+            self._pose_command(raw)
+
+    @staticmethod
+    def _pose_command(raw: TensorDict) -> torch.Tensor:
+        """D93 order: [body height delta in metres, body roll in radians].
+
+        EX-41's first stage fixes both to zero.  The check is repeated for every
+        rollout observation, including after reset, before the policy sees it.
+        """
+        if "pose_cmd" not in raw.keys() or tuple(raw["pose_cmd"].shape) != (raw.batch_size[0], 2):
+            raise ValueError("EX-41 pose_cmd must have shape (N,2)")
+        pose = raw["pose_cmd"]
+        if not torch.isfinite(pose).all() or torch.count_nonzero(pose):
+            raise ValueError("EX-41 D93 pose_cmd must be finite and zero in this stage")
+        return pose
 
     @staticmethod
     def _split(raw: TensorDict):
@@ -239,9 +269,14 @@ class StartRunner(OnPolicyRunner):
             critic = torch.cat([raw["critic"].reshape(n, 52), gmap.reshape(n, -1), gfeet], -1)
         else:
             critic = torch.cat([o, vel, con, gmap.reshape(n, -1), gfeet], -1)
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            pose = self._pose_command(raw)
+            actor = torch.cat([actor, pose], -1)
+            critic = torch.cat([critic, pose], -1)
         return TensorDict(
             {
-                ACTOR_KEY: torch.cat([o, est_in], -1),
+                ACTOR_KEY: actor,
                 CRITIC_KEY: critic,
             },
             batch_size=[n],
@@ -250,12 +285,42 @@ class StartRunner(OnPolicyRunner):
 
     def _construct_algorithm(self, obs: TensorDict) -> PPO:
         self.policy_cfg.pop("class_name", None)
-        policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions, **self.policy_cfg).to(self.device)
+        policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
+                                  pose_command_dim=2 if self.ex41_pose_commands else 0, **self.policy_cfg).to(self.device)
         alg_cfg = dict(self.alg_cfg)
         alg_cfg.pop("class_name", None)
-        alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+        if self.ex41_pose_commands:
+            from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+            alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+            alg.mirror_enabled = self.ex41_critic_mirror
+        else:
+            alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         return alg
+
+    @staticmethod
+    def _valid_ex41_mirror_approval(receipt: dict | None) -> bool:
+        if not isinstance(receipt, dict) or receipt.get("status") != "APPROVED" or receipt.get("gate") != "W72":
+            return False
+        sha = receipt.get("approval_sha256")
+        cfg_sha = receipt.get("config_sha256")
+        decisions = receipt.get("decision_ids")
+        return (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) is not None
+                and receipt.get("approval_id") == sha
+                and isinstance(cfg_sha, str) and re.fullmatch(r"[0-9a-f]{64}", cfg_sha) is not None
+                and isinstance(receipt.get("config_commit"), str) and bool(receipt["config_commit"])
+                and isinstance(decisions, list) and bool(decisions)
+                and all(isinstance(item, str) and bool(item) for item in decisions))
+
+    def set_ex41_critic_mirror(self, enabled: bool, approval: dict | None = None) -> None:
+        """Called only after analyst's W72 stage gate has validated a receipt."""
+        if not self.ex41_pose_commands or not isinstance(enabled, bool):
+            raise ValueError("EX-41 critic mirror transition needs the pose runner and bool value")
+        if enabled and not self._valid_ex41_mirror_approval(approval):
+            raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
+        self.ex41_critic_mirror = enabled
+        self.ex41_mirror_approval = approval if enabled else None
+        self.alg.mirror_enabled = enabled
 
     # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
     def _cuda(self) -> bool:
@@ -862,6 +927,10 @@ class StartRunner(OnPolicyRunner):
     def state_dict(self, infos: dict | None = None) -> dict:
         return {
             "format": CKPT_FORMAT,
+            "ex41_pose_commands": self.ex41_pose_commands,
+            "ex41_critic_mirror": self.ex41_critic_mirror,
+            "ex41_mirror_approval": self.ex41_mirror_approval,
+            "ex41_parent_transfer": self.ex41_parent_transfer,
             "model_state_dict": self.alg.policy.state_dict(),  # 정책 + 관측 정규화 통계(EmpiricalNormalization 버퍼)
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
@@ -1040,6 +1109,8 @@ class StartRunner(OnPolicyRunner):
         sd = torch.load(path, weights_only=False, map_location=map_location)
         if sd.get("format") != CKPT_FORMAT:
             raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
+        if bool(sd.get("ex41_pose_commands", False)) != self.ex41_pose_commands or bool(sd.get("ex41_critic_mirror", False)) != self.ex41_critic_mirror:
+            raise ValueError("EX-41 pose/mirror settings differ from the checkpoint; use explicit parent transplant for EX-40")
         saved = sd.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
@@ -1056,6 +1127,13 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        self.ex41_parent_transfer = sd.get("ex41_parent_transfer")
+        if self.ex41_critic_mirror:
+            approval = sd.get("ex41_mirror_approval")
+            if not self._valid_ex41_mirror_approval(approval):
+                raise ValueError("EX-41 checkpoint mirror approval is missing")
+            self.ex41_mirror_approval = approval
+            self.alg.mirror_enabled = True
         continuous = getattr(self, "continuous_curriculum", None)
         if continuous is not None:
             saved_stage = sd.get("continuous_curriculum")
@@ -1067,6 +1145,50 @@ class StartRunner(OnPolicyRunner):
             continuous.on_resume_checkpoint(path, int(sd["iter"]))
         self._resumed = True
         return sd["infos"]
+
+    def load_ex41_parent(self, path: str, expected_sha256: str) -> dict:
+        """D93 one-time EX-40 transplant.  Never restore old physical env/stage.
+
+        EX-41's own later checkpoints must use ``load`` instead.  The caller
+        creates the new EX-41 stage state; this method leaves it untouched.
+        """
+        from foothold_s2.runners.ex41_transfer import optimizer_state, policy_state
+
+        if not self.ex41_pose_commands or self._resumed:
+            raise ValueError("EX-41 parent transplant requires a fresh 98/666 runner")
+        with open(path, "rb") as fh:
+            actual_sha256 = hashlib.file_digest(fh, "sha256").hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise ValueError("EX-41 parent checkpoint SHA256 mismatch")
+        sd = torch.load(path, weights_only=False, map_location=self.device)
+        if sd.get("format") != CKPT_FORMAT or int(sd.get("iter", -1)) != 7500 or sd.get("ex41_pose_commands"):
+            raise ValueError("EX-41 parent must be the EX-40 m7500 START checkpoint")
+        saved = sd.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"EX-41 parent perception mode {key} differs")
+        target_policy = self.alg.policy
+        names = [name for name, _ in target_policy.named_parameters()]
+        target_policy.load_state_dict(policy_state(sd["model_state_dict"], target_policy.state_dict()))
+        self.perception.load_state_dict(sd["perception_state_dict"])
+        self.adasmpl.load_state_dict(sd["adasmpl"])
+        self.alg.optimizer.load_state_dict(optimizer_state(
+            sd["optimizer_state_dict"], self.alg.optimizer.state_dict(), names, names))
+        self.alg.learning_rate = sd["ppo_learning_rate"]
+        self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+        self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self.set_rng_state(sd["rng"])
+        self.current_learning_iteration = int(sd["iter"])
+        self.ex41_parent_transfer = {
+            "parent_path": os.path.abspath(path), "parent_sha256": actual_sha256,
+            "parent_iteration": 7500,
+            "preserved": ["policy", "policy_adam_moments_and_step", "policy_learning_rate",
+                          "perception", "perception_adam", "adasmpl", "map_switch", "rng"],
+            "new": ["pose_command_zero_columns", "pose_command_zero_moments", "physical_env_reset",
+                    "episode_history_reset", "ex41_curriculum_state"],
+        }
+        self._resumed = True
+        return dict(self.ex41_parent_transfer)
 
     def train_mode(self) -> None:
         super().train_mode()

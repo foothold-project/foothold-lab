@@ -1,0 +1,9 @@
+{
+  "gate": "W72",
+  "status": "APPROVED",
+  "approval_id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "decision_ids": ["D101"],
+  "config_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "config_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "approval_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}
