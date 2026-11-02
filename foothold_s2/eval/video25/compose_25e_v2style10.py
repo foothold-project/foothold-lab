@@ -11,7 +11,7 @@ Layout
   left 1280x720 : Isaac scene (green/blue velocity arrows and yaw arcs, contact footprints)
   right 640x720 : top-down 2D height maps, forward = up, robot left = left:
                   GT map | reconstructed map | policy input. The map the policy did not use is grey
-                  with "정책에는 0". Policy input carries the top attention tokens (white boxes)
+                  with "정책에는 0". Policy input carries the full 128-token attention heatmap
                   and the four feet (filled = contact).
   bottom 1920x360: segment timeline with cursor, command vs actual vx / wz over capture duration,
                   foot contact raster (gait diagram), one short legend line.
@@ -49,6 +49,8 @@ MAP_CELL_WIDTH = 176
 MAP_TILE_Y = 92
 MAP_GRAPH_X = 24
 MAP_GRAPH_WIDTH = 576
+MAP_MIN_SPAN_M = 0.05
+ATTENTION_MAX = 0.30
 BOTTOM_GRAPH_X = 58
 BOTTOM_LABEL_RIGHT = 44
 FONT = Path("C:/Windows/Fonts/malgun.ttf")
@@ -117,9 +119,10 @@ def map_tile(grid32x16: np.ndarray, active: bool, cell: int = 11, scale=None) ->
     ok = np.isfinite(g)
     if scale is None:
         centre = float(np.median(g[ok])) if ok.any() else 0.0
-        span = max(float(np.percentile(np.abs(g[ok] - centre), 95)) if ok.any() else 0.0, 0.01)
+        span = max(float(np.percentile(np.abs(g[ok] - centre), 95)) if ok.any() else 0.0, MAP_MIN_SPAN_M)
     else:
-        centre, span = scale  # at least +-1 cm so a flat floor stays one colour
+        centre, span = scale
+        span = max(float(span), MAP_MIN_SPAN_M)
     norm = np.clip((g - centre) / span, -1.0, 1.0)
     u8 = np.uint8((norm + 1.0) * 127.5)
     big = cv2.resize(u8, (16 * cell, 32 * cell), interpolation=cv2.INTER_NEAREST)
@@ -139,6 +142,20 @@ def cell_of(local_xy) -> tuple[float, float]:
 
 def map_tile_x(card_x: int, cell: int) -> int:
     return card_x + (MAP_CELL_WIDTH - 16 * cell) // 2
+
+
+def attention_heatmap_tile(attn_row, base_tile: np.ndarray, cell: int = 11) -> np.ndarray:
+    """Show all 128 tokens with one fixed 0..0.30 scale in the policy map."""
+    a = np.asarray(attn_row, np.float32).reshape(16, 8)
+    if not np.isfinite(a).all():
+        raise ValueError("attention weights must be finite")
+    values = a[::-1, ::-1].repeat(2 * cell, axis=0).repeat(2 * cell, axis=1)
+    norm = np.clip(values / ATTENTION_MAX, 0.0, 1.0)
+    heat = cv2.applyColorMap(np.uint8(np.rint(norm * 255)), cv2.COLORMAP_INFERNO)
+    grey = cv2.cvtColor(cv2.cvtColor(base_tile, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)
+    grey = np.uint8(grey.astype(np.float32) * 0.55)
+    alpha = (0.25 + 0.75 * norm)[..., None]
+    return np.uint8(np.rint(grey * (1.0 - alpha) + heat * alpha))
 
 
 def recon_error_series(z) -> np.ndarray:
@@ -205,7 +222,7 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
     tiles = ((gt, use_gt), (pred, not use_gt), (chosen, True))
     g_ok = np.isfinite(np.asarray(gt, np.float32))
     c0 = float(np.median(np.asarray(gt)[g_ok]))
-    common = (c0, max(float(np.percentile(np.abs(np.asarray(gt)[g_ok] - c0), 95)), 0.01))  # same colour scale for all
+    common = (c0, max(float(np.percentile(np.abs(np.asarray(gt)[g_ok] - c0), 95)), MAP_MIN_SPAN_M))  # same colour scale for all
     for x, (g, active) in zip(tile_xs, tiles):
         t = map_tile(g, active, cell, common)
         panel[y0:y0 + t.shape[0], x:x + t.shape[1]] = t
@@ -213,15 +230,8 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
                       (230, 230, 230) if active else (90, 90, 90), 1)
     xin = tile_xs[2]
     if attn_row is not None:
-        a = np.asarray(attn_row, np.float32).reshape(16, 8)
-        top = np.argsort(a.ravel())[::-1][:5]
-        amax = float(a.max()) or 1.0
-        for t in top:
-            i, j = divmod(int(t), 8)
-            r0 = (31 - (2 * i + 1)) * cell
-            c0 = (15 - (2 * j + 1)) * cell
-            th = 1 + int(round(3 * float(a.ravel()[t]) / amax))
-            cv2.rectangle(panel, (xin + c0, y0 + r0), (xin + c0 + 2 * cell, y0 + r0 + 2 * cell), (255, 255, 255), th)
+        source_tile = panel[y0:y0 + 32 * cell, xin:xin + 16 * cell].copy()
+        panel[y0:y0 + 32 * cell, xin:xin + 16 * cell] = attention_heatmap_tile(attn_row, source_tile, cell)
     base = np.asarray(z["root_pos_w"][row, :2], np.float64)
     yaw = yaw_of(z["root_quat_w"][row])
     rot = np.asarray(((math.cos(yaw), math.sin(yaw)), (-math.sin(yaw), math.cos(yaw))))
@@ -236,9 +246,9 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
             if bool(z["foot_contact"][row, f]):
                 cv2.circle(panel, q, 6, FOOT_BGR[f], -1, cv2.LINE_AA)
             cv2.circle(panel, q, 6, (255, 255, 255), 1, cv2.LINE_AA)
-    lab = [((24, 455), "흰 상자 = 정책이 많이 본 칸 (상위 5) · 세 칸 같은 색 범위", (200, 200, 200)),
+    lab = [((24, 455), "Attention: 128 cells, fixed 0.00..0.30", (200, 200, 200)),
            ((24, 530), f"Mean | Reconstructed - GT |  =  {float(err[row]) if err is not None else float('nan'):.1f} cm   (lower is better, 0 = perfect)", (200, 200, 200)),
-           ((24, 490), f"색 범위 ±{common[1] * 100:.1f} cm · 정답 평균 {float(np.nanmean(gt)):+.3f} m · 복원 {float(np.nanmean(pred)):+.3f} m", (190, 190, 190))]
+           ((24, 490), f"Map colour range: {c0 - common[1]:+.3f}..{c0 + common[1]:+.3f} m (centre {c0:+.3f}, span ±{common[1] * 100:.1f} cm)", (190, 190, 190))]
     map_labels = (
         "정답 지도" if use_gt else "정답 지도 · 정책에는 0",
         "복원 지도 · 정책에는 0" if use_gt else "복원 지도",
@@ -248,6 +258,12 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
                  (150, 150, 150) if "정책에는 0" in label else
                  (255, 215, 0) if label.startswith("정책 입력") else (235, 235, 235))
                 for x, label in zip(xs, map_labels)]
+    if attn_row is not None:
+        ramp = np.arange(256, dtype=np.uint8)[None, :]
+        ramp = cv2.resize(ramp, (160, 12), interpolation=cv2.INTER_LINEAR)
+        panel[452:464, 442:602] = cv2.applyColorMap(ramp, cv2.COLORMAP_INFERNO)
+        panel = text(panel, [((438, 467), "0.00", (190, 190, 190)),
+                             ((560, 467), "0.30", (190, 190, 190))], 13)
     panel = text(panel, lab, 17)
     panel = text(panel, [((24, 16), "위에서 본 높이 지도 (위 = 앞)", (235, 235, 235))], 17)
     panel = text(panel, headings, 17)
@@ -908,6 +924,9 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),
            "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256"),
+           "map_panel": {"min_color_span_cm": MAP_MIN_SPAN_M * 100,
+                         "attention_tokens": 128, "attention_fixed_range": [0.0, ATTENTION_MAX],
+                         "feet_markers": "unchanged"},
            "push_overlay": ({"source": str(push_events), "source_sha256": sha256(push_events),
                              "rollout_key": push_rollout_key, "env_id": push_env_id,
                              "meaning": push_overlay["meaning"]} if push_overlay is not None else None)}

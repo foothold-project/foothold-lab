@@ -1787,7 +1787,11 @@ def _capture(spec: dict[str, Any]) -> None:
                             "gt_map_vs_ray_hits_max_abs_m": (max(overlay.gt_check) if overlay.gt_check else None),
                             "frames": overlay_info, "attention_rows_per_step": overlay.attn_rows},
             "map_display": {"height_shape": list(HEIGHT_MAP_SHAPE), "height_scale_m": list(HEIGHT_SCALE_M),
-                            "depth_scale_m": list(DEPTH_SCALE_M)},
+                            "depth_scale_m": list(DEPTH_SCALE_M),
+                            "composition_contract": {"min_color_span_cm": 5.0,
+                                                     "attention_tokens": 128,
+                                                     "attention_fixed_range": [0.0, 0.3],
+                                                     "feet_markers": "unchanged"}},
         }
         _json_atomic(output.with_suffix(".json"), metadata)
         print("SOL23F_CAPTURE", json.dumps({"frames": frame_count, "steps": step_count,
