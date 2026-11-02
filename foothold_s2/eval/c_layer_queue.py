@@ -214,14 +214,23 @@ def _slot(row: dict) -> str:
 def _summary(out: Path, row: dict) -> dict:
     slot = _slot(row)
     receipts = {role: out / "receipts" / (slot + "_" + role + ".json") for role in ROLES}
-    directories = list((out / "attempts" / slot).glob("[0-9][0-9]"))
-    attempts = len(directories)
+    attempt_dir = out / "attempts" / slot
+    directories = [path for path in attempt_dir.iterdir() if path.is_dir() and path.name.isdecimal()] if attempt_dir.exists() else []
+    validated = [path for path in directories if (path / "attempt.json").is_file()
+                 and (path / "closed.json").is_file()
+                 and json.loads((path / "closed.json").read_text(encoding="utf-8")).get("state") == "validated"]
+    failures = [path for path in directories if (path / "failure.json").is_file()
+                and (path / "closed.json").is_file()]
+    attempts = len(validated)  # D48 seed budget counts measured outcomes, never technical failures.
     missing = ["성공 없음" if role == "success" else "실패 없음"
                for role in ROLES if not receipts[role].exists()]
     incomplete = [str(path) for path in directories if not (path / "closed.json").exists()]
     state = ("incomplete_attempt_hold" if incomplete else "complete" if not missing else
              "exhausted" if attempts >= len(row["seeds"]) else "pending")
-    return {"cell": slot, "state": state, "attempts": attempts, "missing": missing,
+    return {"cell": slot, "state": state, "attempts": attempts,
+            "technical_failures": len(failures), "attempt_dirs": len(directories),
+            "next_ordinal": max((int(path.name) for path in directories), default=0) + 1,
+            "missing": missing,
             "incomplete": incomplete,
             "receipts": {role: str(path) for role, path in receipts.items() if path.exists()}}
 
@@ -253,8 +262,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 continue
             if any(path.exists() for path in high_priority_markers):
                 return {"state": "yielded_to_higher_priority", "cell": cell["cell"]}
-            ordinal = cell["attempts"] + 1
-            seed = row["seeds"][ordinal - 1]
+            ordinal = cell["next_ordinal"]
+            seed = row["seeds"][cell["attempts"]]
             attempt_root = out / "attempts" / cell["cell"] / f"{ordinal:02d}"
             if attempt_root.exists():
                 return {"state": "incomplete_attempt_hold", "attempt_dir": str(attempt_root)}
@@ -317,7 +326,16 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 final = _summary(out, row)
                 _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
                 return {"state": "capture_failed", **failure, "cell_summary": final}
-        return {"state": "all_cells_closed", "cells": 216}
+        cells = [_summary(out, row) for row in plan["jobs"]]
+        mode_video_counts = {mode: sum(
+            bool(cell["receipts"]) for cell, row in zip(cells, plan["jobs"])
+            if row["map_mode"] == mode) for mode in MAP_MODES}
+        missing_cells = [cell["cell"] for cell in cells if cell["state"] != "complete"]
+        if missing_cells or any(count == 0 for count in mode_video_counts.values()):
+            return {"state": "canonical_missing_hold", "missing_cells": missing_cells,
+                    "mode_video_counts": mode_video_counts}
+        return {"state": "all_cells_closed", "cells": 216,
+                "mode_video_counts": mode_video_counts}
     finally:
         lock.unlink(missing_ok=True)
 

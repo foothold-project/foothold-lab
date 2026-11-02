@@ -143,7 +143,7 @@ def test_four_attempt_cap_and_missing_role(tmp_path, monkeypatch, resets, expect
     assert not (out / "attempts" / summary["cell"] / "05").exists()
 
 
-def test_failed_child_uses_one_attempt_and_never_publishes(tmp_path, monkeypatch):
+def test_failed_child_does_not_use_seed_budget_or_publish(tmp_path, monkeypatch):
     plan, _ = fixture(tmp_path)
     def fail_live(argv, **_kw):
         if "--plan-only" in argv:
@@ -156,7 +156,55 @@ def test_failed_child_uses_one_attempt_and_never_publishes(tmp_path, monkeypatch
     result = q.run_one(plan, out=out, high_priority_markers=[])
     assert result["state"] == "capture_failed" and result["ordinal"] == 1
     assert (out / "attempts" / result["cell"] / "01" / "failure.json").is_file()
+    assert result["cell_summary"]["attempts"] == 0
+    assert result["cell_summary"]["technical_failures"] == 1
+    assert result["cell_summary"]["state"] == "pending"
     assert not list(out.glob("*.mp4"))
+
+
+def test_four_technical_failures_retry_same_seed_then_measure_first_outcome(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    good_run, captures = fake_capture(plan, [0])
+    seen_seeds = []
+
+    def fail_then_succeed(argv, **kwargs):
+        if "--plan-only" in argv or argv[0] == "ffprobe":
+            return good_run(argv, **kwargs)
+        seen_seeds.append(json.loads(argv[argv.index("--policy") + 1])["seed"])
+        if len(seen_seeds) <= 4:
+            return subprocess.CompletedProcess(argv, 9)
+        return good_run(argv, **kwargs)
+
+    monkeypatch.setattr(q.subprocess, "run", fail_then_succeed)
+    out = tmp_path / "out"
+    for attempt in range(4):
+        result = q.run_one(plan, out=out, high_priority_markers=[])
+        assert result["state"] == "capture_failed"
+        assert result["cell_summary"]["attempts"] == 0
+        assert result["cell_summary"]["state"] == "pending"
+        assert result["cell_summary"]["technical_failures"] == attempt + 1
+    measured = q.run_one(plan, out=out, high_priority_markers=[])
+    assert measured["event"] == "captured"
+    assert measured["attempts"] == 1 and measured["technical_failures"] == 4
+    assert measured["state"] == "pending" and seen_seeds == [42] * 5
+    assert len(captures) == 1
+    assert (out / "attempts" / measured["cell"] / "05" / "attempt.json").is_file()
+
+
+def test_missing_mode_video_never_reports_all_cells_closed(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    out = tmp_path / "out"
+    monkeypatch.setattr(q, "_summary", lambda _out, row: {
+        "cell": q._slot(row), "state": "exhausted", "attempts": 4,
+        "technical_failures": 0, "attempt_dirs": 4, "next_ordinal": 5,
+        "missing": ["성공 없음", "실패 없음"], "incomplete": [], "receipts": {},
+    })
+    monkeypatch.setattr(q.subprocess, "run", lambda *_a, **_k: (_ for _ in ()).throw(
+        AssertionError("closed seed budget must not launch child")))
+    result = q.run_one(plan, out=out, high_priority_markers=[])
+    assert result["state"] == "canonical_missing_hold"
+    assert len(result["missing_cells"]) == 216
+    assert result["mode_video_counts"] == {mode: 0 for mode in q.MAP_MODES}
 
 
 def test_preflight_wrong_seed_fails_before_kit_child(tmp_path, monkeypatch):
@@ -208,7 +256,7 @@ def test_incomplete_attempt_holds_instead_of_skipping_seed(tmp_path, monkeypatch
         AssertionError("incomplete attempt was silently skipped")))
     result = q.run_one(plan, out=out, high_priority_markers=[])
     assert result["state"] == "incomplete_attempt_hold"
-    assert result["attempts"] == 1
+    assert result["attempts"] == 0 and result["attempt_dirs"] == 1
 
 
 @pytest.mark.parametrize(("terrain_set", "kind", "col"), [
