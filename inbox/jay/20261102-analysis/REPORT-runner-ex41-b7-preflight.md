@@ -15,7 +15,7 @@
 
 ## 확인된 자료
 
-부모 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_7500.pt`는 SHA256 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`이다. 같은 폴더 manifest의 `checkpoints.model_7500.pt` SHA가 일치하고 `progress.completed_updates`는 7801이다. `train_start_status.json`은 readback 시 `running`, iter 7810을 기록했다. 이 둘의 시각 차이는 학습 중 갱신 차이로 보이며, m7500 체크포인트의 바이트·manifest 검증 결과에는 영향이 없다.
+부모 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_7500.pt`는 SHA256 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`이다. 같은 폴더 manifest의 `checkpoints.model_7500.pt` SHA가 일치하고 `progress.completed_updates`는 7801이다. 별도 `train_start_status.json` readback은 `running`, iter 7810이었다. 두 파일의 관찰 시각은 별도이므로 차이의 원인은 추정하지 않는다. m7500 체크포인트 바이트와 manifest SHA 대조는 통과했다.
 
 ## 시험
 
