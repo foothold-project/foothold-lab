@@ -439,6 +439,9 @@ automatic:
   weight_halvings_max: 1
   provenance: lead-team-1102-1400-fixed5000-stand-only-extension
 fixed_schedule:
+  # Pending team choice: true keeps all 39; false selects GT/proprio 26.
+  # Changing this changes the plan SHA and requires a new launch decision.
+  include_record_only: true
   duration_updates: 5000
   pause_limit_updates: 1000
   recovery_boundaries: 2
