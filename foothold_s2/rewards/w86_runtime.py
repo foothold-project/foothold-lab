@@ -273,8 +273,22 @@ def _bad_rows(value,n,device):
 
 
 def _sanitize(value,bad,fill=0.):
-    for tensor in _leaves(value):
-        if tensor.ndim and tensor.shape[0]==len(bad): tensor[bad.to(tensor.device)]=fill
+    """Return owned transition storage; rollout tensors can alias policy std.
+
+    In particular action_sigma is an expanded view of the policy parameter.
+    Writing even one invalid row in place would modify every environment's std.
+    Preserve TensorDict containers and never write into caller-owned leaves.
+    """
+    if isinstance(value,torch.Tensor):
+        if value.ndim and value.shape[0]==len(bad):
+            result=value.detach().clone()
+            result[bad.to(result.device)]=fill
+            return result
+    elif isinstance(value,Mapping) or hasattr(value,'items'):
+        result=value.clone() if hasattr(value,'clone') else copy.copy(value)
+        for key,child in value.items(): result[key]=_sanitize(child,bad,fill)
+        return result
+    return value
 
 
 def quarantine_actions(runner,actions):
@@ -323,7 +337,7 @@ def quarantine_step(runner,observations,rewards,dones,extras):
     transition=getattr(runner.alg,'transition',None)
     if transition is not None:
         for name,value in vars(transition).items():
-            _sanitize(value,bad,1. if name in ('action_sigma','action_std') else 0.)
+            setattr(transition,name,_sanitize(value,bad,1. if name in ('action_sigma','action_std') else 0.))
     # Other episode aggregate log values must not poison training summaries.
     for group in ('episode','log'):
         if group in extras:

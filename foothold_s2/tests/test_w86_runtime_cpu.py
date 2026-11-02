@@ -152,3 +152,20 @@ def test_save_restore_metrics_without_fake_complete_physical_cycle(tmp_path):
     b=wr.W86Runtime(env,tmp_path/'b',source=lambda:d); b.load_state_dict(a.state_dict())
     assert b.count==1 and not b.observed.any()
     assert b.flush(1500)['feet']['complete_swing_count']==[0]*4
+
+
+@pytest.mark.parametrize('tensordict',[False,True])
+def test_sanitize_owns_storage_without_changing_policy_or_observations(tensordict):
+    from tensordict import TensorDict
+    std=torch.nn.Parameter(torch.full((12,),.46))
+    obs=torch.ones(3,4)
+    source={'nested':{'policy':obs},'sigma':std.detach().expand(3,12)}
+    if tensordict: source=TensorDict(source,batch_size=[3])
+    out=wr._sanitize(source,torch.tensor([False,True,False]),fill=0.)
+    assert std.eq(.46).all() and obs.eq(1).all()
+    assert source['sigma'].eq(.46).all()
+    assert source['nested']['policy'].eq(1).all()
+    assert out['sigma'][1].eq(0).all() and out['sigma'][0].eq(.46).all()
+    assert out['nested']['policy'][1].eq(0).all()
+    assert out['nested']['policy'][2].eq(1).all()
+    if tensordict: assert isinstance(out,TensorDict) and out.batch_size==torch.Size([3])
