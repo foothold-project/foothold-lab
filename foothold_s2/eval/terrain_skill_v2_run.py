@@ -19,10 +19,20 @@ from foothold_s2.runners.manifest import sha256_file
 LEVELS = (2, 5)
 ANGLES_DEG = (0, 30, 60, 90)
 STOP_BACK_CASE = "stairs_fwd_stop_back"
+EX41_TABLE = Path(__file__).resolve().parents[1] / "curriculum" / "ex41-fixed5000.yaml"
 V2_CASES = {**CASES, STOP_BACK_CASE: (
     [((0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0),
      ((-0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0)],
     ("pyramid_stairs", "pyramid_stairs_inv"))}
+
+
+def prepare_ex41_environment(env_cfg, *, table=EX41_TABLE):
+    """Apply the fixed EX-41 observation/config contract before gym.make."""
+    from foothold_s2.scripts.ex41_startup import load_fixed_plan, prepare_ex41_env_cfg
+
+    plan = load_fixed_plan(table)
+    receipt = prepare_ex41_env_cfg(env_cfg, plan)
+    return plan, receipt
 
 
 def _int_set(value, *, label: str, required: tuple[int, ...]) -> tuple[int, ...]:
@@ -302,6 +312,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "source_sha256": {p.name: sha256_file(str(p)) for p in source_paths},
               "run_identity": run_identity, "envs": n, "dt_s": dt, "eval_seed": args.eval_seed,
               "levels": LEVELS, "start_angles_deg": ANGLES_DEG, "modes": {},
+              "ex41_environment_preparation": getattr(args, "ex41_env_preparation", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
                                "focus_kinds": list(kinds)} for name, (phases, kinds) in V2_CASES.items()},

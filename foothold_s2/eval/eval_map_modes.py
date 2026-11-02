@@ -96,6 +96,18 @@ agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
 env_cfg.scene.num_envs = args.envs
 env_cfg.sim.device = args.device
 agent_cfg.device = args.device
+args.ex41_env_preparation = None
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
+
+    plan, preparation = prepare_ex41_environment(env_cfg)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
+    args.ex41_env_preparation = {
+        "plan_path": str(plan.path), "plan_sha256": plan.sha256,
+        "parent_update": plan.parent_update, "parent_sha256": plan.parent_sha256,
+        "initial_dr_scale": plan.initial_dr_scale, "receipt": preparation,
+    }
 if args.ex39_heading_smoke_guard:
     cmd_cfg = env_cfg.commands.base_velocity
     cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}

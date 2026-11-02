@@ -44,6 +44,44 @@ def test_request_accepts_exact_grid_and_rejects_nonempty_output(tmp_path):
         v2.validate_request(cfg)
 
 
+def test_ex41_environment_preparation_loads_fixed_plan_and_records_observation_contract(monkeypatch):
+    from foothold_s2.scripts import ex41_startup
+
+    calls = []
+    plan = SimpleNamespace(sha256="a" * 64, parent_update=6000,
+                           parent_sha256="b" * 64, initial_dr_scale=0.5)
+
+    def load_fixed_plan(path):
+        calls.append(("load", Path(path)))
+        return plan
+
+    def prepare(env_cfg, got_plan):
+        calls.append(("prepare", env_cfg, got_plan))
+        env_cfg.pose_cmd_ready = True
+        return {"pose_observation": {"shape_per_env": [2],
+                                      "columns": ["height_delta_m", "body_roll_rad"],
+                                      "configured_value": [0.0, 0.0]}}
+
+    monkeypatch.setattr(ex41_startup, "load_fixed_plan", load_fixed_plan)
+    monkeypatch.setattr(ex41_startup, "prepare_ex41_env_cfg", prepare)
+    cfg = SimpleNamespace()
+    plan_out, receipt = v2.prepare_ex41_environment(cfg)
+
+    assert calls == [("load", v2.EX41_TABLE), ("prepare", cfg, plan)]
+    assert cfg.pose_cmd_ready is True
+    assert plan_out is plan
+    assert receipt["pose_observation"]["configured_value"] == [0.0, 0.0]
+
+
+def test_eval_entry_connects_ex41_prepare_before_gym_make():
+    source = (Path(v2.__file__).with_name("eval_map_modes.py")).read_text(encoding="utf-8")
+    prepare_at = source.index("prepare_ex41_environment(env_cfg)")
+    make_at = source.index("gym.make(args.task, cfg=env_cfg)")
+    assert "if args.terrain_skill_v2:" in source
+    assert prepare_at < make_at
+    assert "args.ex41_env_preparation" in source
+
+
 def test_exact_result_grid_requires_every_level_angle_mode_and_case():
     full = v2.expected_combinations()
     assert len(full) == 2 * 4 * 3 * len(v2.V2_CASES)
