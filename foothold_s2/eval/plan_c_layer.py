@@ -48,7 +48,8 @@ def assignments() -> dict[str, tuple[int, int]]:
 
 def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer: Path,
                python: Path, playlist_dir: Path, priority_markers: dict[str, Path],
-               device: str) -> dict:
+               device: str, gpu_jobs_tool: Path, gpu_jobs_config: Path,
+               first_success_only: bool = False) -> dict:
     if checkpoint.name != "model_6000.pt":
         raise ValueError("D131 C layer checkpoint must be model_6000.pt")
     if device not in ("cuda:0", "cuda:1") or not python.is_file():
@@ -57,6 +58,8 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
     source_root = source_root.resolve(strict=True)
     recorder = recorder.resolve(strict=True)
     composer = composer.resolve(strict=True)
+    gpu_jobs_tool = gpu_jobs_tool.resolve(strict=True)
+    gpu_jobs_config = gpu_jobs_config.resolve(strict=True)
     head = _head(source_root)
     source_recorder = source_root / "foothold_s2/eval/record_sol23f.py"
     if not source_recorder.is_file():
@@ -89,6 +92,7 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
                      "env_id": env_id, "label": label, "seeds": list(CAPTURE_SEEDS),
                      "policy": policy, "recorder_argv": argv})
     plan = {"status": "approved_canon", "decision": "D131", "canon_label": "EX40",
+            "target_results": ["success"] if first_success_only else ["success", "fail"],
             "iteration": 6000, "kinds": KINDS, "checkpoint": str(checkpoint),
             "checkpoint_sha256": checkpoint_sha, "priority_markers": {
                 key: str(value.resolve()) for key, value in priority_markers.items()},
@@ -96,6 +100,8 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
             "composer": str(composer), "composer_sha256": queue.sha256(composer),
             "queue": str(Path(queue.__file__).resolve()),
             "queue_sha256": queue.sha256(Path(queue.__file__).resolve()),
+            "gpu_jobs_tool": str(gpu_jobs_tool), "gpu_jobs_tool_sha256": queue.sha256(gpu_jobs_tool),
+            "gpu_jobs_config": str(gpu_jobs_config), "gpu_jobs_config_sha256": queue.sha256(gpu_jobs_config),
             "runtime_sources_sha256": {
                 str(path): queue.sha256(path) for path in (
                     recorder.parent / "overlay_25e.py",
@@ -121,13 +127,19 @@ def main() -> int:
     parser.add_argument("--evaluation-marker", type=Path, required=True)
     parser.add_argument("--a-layer-marker", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
+    parser.add_argument("--first-success-only", action="store_true",
+                        help="first C-layer pass seeks one successful clip per cell")
+    parser.add_argument("--gpu-jobs-tool", type=Path, required=True)
+    parser.add_argument("--gpu-jobs-config", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     plan = build_plan(checkpoint=args.checkpoint, source_root=args.source_root,
                       recorder=args.recorder, composer=args.composer, python=args.python,
                       playlist_dir=args.playlist_dir, priority_markers={
                           "training": args.training_marker, "evaluation": args.evaluation_marker,
-                          "a_layer": args.a_layer_marker}, device=args.device)
+                      "a_layer": args.a_layer_marker}, device=args.device,
+                      gpu_jobs_tool=args.gpu_jobs_tool, gpu_jobs_config=args.gpu_jobs_config,
+                      first_success_only=args.first_success_only)
     if args.out.exists():
         raise ValueError("C76 plan.json already exists; preserve the original SHA")
     args.out.parent.mkdir(parents=True, exist_ok=True)

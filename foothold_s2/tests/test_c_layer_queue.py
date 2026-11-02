@@ -33,6 +33,7 @@ def fake_frame_decoder(monkeypatch):
             result = q.subprocess.run(argv, env=env, stdout=log, stderr=subprocess.STDOUT)
         return result.returncode
     monkeypatch.setattr(q, "run_recorder", simulated_recorder)
+    monkeypatch.setattr(q, "_gpu_gate", lambda _plan, _job: {"job": "c-layer", "admit_next_unit": True})
 
 
 def fixture(tmp_path: Path, *, complete: bool = True):
@@ -73,6 +74,10 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     plan["playlist_dir"] = str(tmp_path / "_playlists")
     plan["queue"] = str(Path(q.__file__).resolve())
     plan["queue_sha256"] = q.sha256(Path(q.__file__).resolve())
+    gpu_tool = Path(__file__).resolve().parents[2] / "_out/tools/gpu_jobs/gpu_jobs.py"
+    gpu_config = Path(__file__).resolve().parents[2] / "_out/tools/gpu_jobs/jobs.json"
+    plan["gpu_jobs_tool"], plan["gpu_jobs_tool_sha256"] = str(gpu_tool), q.sha256(gpu_tool)
+    plan["gpu_jobs_config"], plan["gpu_jobs_config_sha256"] = str(gpu_config), q.sha256(gpu_config)
     plan["runtime_sources_sha256"] = {
         str(path): q.sha256(path) for path in (
             overlay,
@@ -338,6 +343,31 @@ def test_two_outcomes_publish_canonical_without_eval_suffix(tmp_path, monkeypatc
     assert rows[0]["label"] not in [p.stem for p in out.glob("*.mp4")]
 
 
+def test_first_pass_seeks_one_success_and_keeps_failed_attempt_only(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    plan["target_results"] = ["success"]
+    run, calls = fake_capture(plan, [1, 0])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    out = tmp_path / "out"
+    first = q.run_one(plan, out=out, high_priority_markers=[], only_cell=q._slot(rows[0]))
+    assert first["event"] == "captured" and first["state"] == "pending"
+    assert first["missing"] == ["성공 없음"]
+    assert not list((out / "receipts").glob("*_fail.json"))
+    assert not list(out.glob("*-fail.mp4"))
+    second = q.run_one(plan, out=out, high_priority_markers=[], only_cell=q._slot(rows[0]))
+    assert second["state"] == "complete" and second["missing"] == []
+    assert len(calls) == 2 and len(list((out / "receipts").glob("*_success.json"))) == 1
+    assert (out / "attempts" / first["cell"] / "01" / "attempt.json").is_file()
+    assert (out / "attempts" / first["cell"] / "02" / "attempt.json").is_file()
+
+
+def test_first_pass_rejects_unknown_target_results(tmp_path):
+    plan, _ = fixture(tmp_path)
+    plan["target_results"] = ["fail"]
+    with pytest.raises(ValueError, match="target_results"):
+        q.validate_plan(plan)
+
+
 @pytest.mark.parametrize(("resets", "expected"), [(0, "실패 없음"), (1, "성공 없음")])
 def test_four_attempt_cap_and_missing_role(tmp_path, monkeypatch, resets, expected):
     plan, _ = fixture(tmp_path)
@@ -451,7 +481,7 @@ def test_failed_full_frame_audit_never_publishes_or_consumes_seed(tmp_path, monk
 def test_missing_mode_video_never_reports_all_cells_closed(tmp_path, monkeypatch):
     plan, _ = fixture(tmp_path)
     out = tmp_path / "out"
-    monkeypatch.setattr(q, "_summary", lambda _out, row: {
+    monkeypatch.setattr(q, "_summary", lambda _out, row, _targets: {
         "cell": q._slot(row), "state": "exhausted", "attempts": 4,
         "technical_failures": 0, "attempt_dirs": 4, "next_ordinal": 5,
         "missing": ["성공 없음", "실패 없음"], "incomplete": [], "receipts": {},

@@ -82,6 +82,8 @@ def _source(path: str, wanted: str) -> Path:
 def validate_plan(plan: dict) -> dict:
     """Validate all 216 cells before any GPU attempt."""
     keys = inventory(plan["kinds"])
+    if plan.get("target_results", list(ROLES)) not in (list(ROLES), ["success"]):
+        raise ValueError("C layer target_results must be success+fail or first-success only")
     markers = plan.get("priority_markers")
     if (not isinstance(markers, dict) or set(markers) != {"training", "evaluation", "a_layer"}
             or any(not isinstance(value, str) or not Path(value).is_absolute() for value in markers.values())):
@@ -102,6 +104,11 @@ def validate_plan(plan: dict) -> dict:
     queue_source = _source(plan["queue"], plan["queue_sha256"])
     if queue_source.resolve() != Path(__file__).resolve():
         raise ValueError("video_rule_hold: plan points to another queue revision")
+    _source(plan["gpu_jobs_tool"], plan["gpu_jobs_tool_sha256"])
+    gate_config = _source(plan["gpu_jobs_config"], plan["gpu_jobs_config_sha256"])
+    gate = json.loads(gate_config.read_text(encoding="utf-8-sig"))
+    if gate["sources"]["ex41_p1_marker"] != "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1":
+        raise ValueError("EX-41 P1 marker path differs from approved contract")
     runtime_sources = plan.get("runtime_sources_sha256")
     expected_sources = {
         str(recorder.parent / "overlay_25e.py"),
@@ -270,7 +277,24 @@ def _slot(row: dict) -> str:
     return f"{row['kind']}_L{row['level']}_{row['map_mode']}"
 
 
-def _summary(out: Path, row: dict) -> dict:
+def _gpu_gate(plan: dict, job_id: str) -> dict:
+    argv = [plan["jobs"][0]["recorder_argv"][0], plan["gpu_jobs_tool"],
+            "--config", plan["gpu_jobs_config"], "gate", job_id]
+    result = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
+                            errors="replace", check=False)
+    if result.returncode not in (0, 3):
+        return {"admit_next_unit": False, "reason": "gpu_gate_error",
+                "exit_code": result.returncode, "stderr": result.stderr[-500:]}
+    try:
+        decision = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {"admit_next_unit": False, "reason": "gpu_gate_malformed"}
+    if decision.get("job") != job_id or decision.get("admit_next_unit") is not (result.returncode == 0):
+        return {"admit_next_unit": False, "reason": "gpu_gate_inconsistent"}
+    return decision
+
+
+def _summary(out: Path, row: dict, target_results: tuple[str, ...] = ROLES) -> dict:
     slot = _slot(row)
     receipts = {role: out / "receipts" / (slot + "_" + role + ".json") for role in ROLES}
     attempt_dir = out / "attempts" / slot
@@ -282,7 +306,7 @@ def _summary(out: Path, row: dict) -> dict:
                 and (path / "closed.json").is_file()]
     attempts = len(validated)  # D48 seed budget counts measured outcomes, never technical failures.
     missing = ["성공 없음" if role == "success" else "실패 없음"
-               for role in ROLES if not receipts[role].exists()]
+               for role in target_results if not receipts[role].exists()]
     incomplete = [str(path) for path in directories if not (path / "closed.json").exists()]
     state = ("incomplete_attempt_hold" if incomplete else "complete" if not missing else
              "exhausted" if attempts >= len(row["seeds"]) else "pending")
@@ -330,15 +354,20 @@ def publish_playlists(plan: dict, out: Path) -> dict:
 
 def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe",
             only_cell: str | None = None) -> dict:
-    """Capture one seed for one cell; retain both roles and every attempt."""
+    """Capture one seed for one cell; retain each measured outcome."""
     summary = validate_plan(plan)
+    targets = tuple(plan.get("target_results", ROLES))
     if summary["missing"]:
         raise ValueError("all 216 C-layer cells must be registered before capture")
     if only_cell is not None and only_cell not in {_slot(row) for row in plan["jobs"]}:
         raise ValueError("--only-cell is absent from the registered plan")
-    high_priority_markers = [Path(value) for value in plan["priority_markers"].values()] + high_priority_markers
+    # EX-41 evaluation marker is checked by the P4 gate with PID/create-time validation.
+    high_priority_markers = [Path(plan["priority_markers"][key]) for key in ("training", "a_layer")] + high_priority_markers
     if any(path.exists() for path in high_priority_markers):
         return {"state": "yielded_to_higher_priority"}
+    gate = _gpu_gate(plan, "c-layer")
+    if not gate["admit_next_unit"]:
+        return {"state": "yielded_to_higher_priority", "gate": gate}
     out.mkdir(parents=True, exist_ok=True)
     lock = out / "c_layer.lock"
     try:
@@ -356,7 +385,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
         for row in plan["jobs"]:
             if only_cell is not None and _slot(row) != only_cell:
                 continue
-            cell = _summary(out, row)
+            cell = _summary(out, row, targets)
             if cell["state"] == "incomplete_attempt_hold":
                 return cell
             if cell["state"] in ("complete", "exhausted"):
@@ -364,6 +393,9 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 continue
             if any(path.exists() for path in high_priority_markers):
                 return {"state": "yielded_to_higher_priority", "cell": cell["cell"]}
+            gate = _gpu_gate(plan, "c-layer")
+            if not gate["admit_next_unit"]:
+                return {"state": "yielded_to_higher_priority", "cell": cell["cell"], "gate": gate}
             ordinal = cell["next_ordinal"]
             seed = row["seeds"][cell["attempts"]]
             attempt_root = out / "attempts" / cell["cell"] / f"{ordinal:02d}"
@@ -455,7 +487,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                             "styled_audit_sha256": sha256(attempt_root / "styled_frame_audit.json")}
                 _write(attempt_root / "attempt.json", evidence)
                 receipt_path = out / "receipts" / (cell["cell"] + "_" + own_result + ".json")
-                if not receipt_path.exists():
+                if own_result in targets and not receipt_path.exists():
                     name = _video_style().video_name(plan["canon_label"], row["kind"], row["level"],
                                                      plan["iteration"], own_result, segment=row["map_mode"])
                     target = out / (name + ".mp4")
@@ -473,7 +505,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                                           "video_rule_version": VIDEO_RULE_VERSION,
                                           "attempt_sha256": sha256(attempt_root / "attempt.json")})
                 _write(attempt_root / "closed.json", {"state": "validated", "result": own_result})
-                final = _summary(out, row)
+                final = _summary(out, row, targets)
                 _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
                 try:
                     playlists = publish_playlists(plan, out)
@@ -485,13 +517,13 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                            "ordinal": ordinal, "seed": seed, "reason": str(exc)}
                 _write(attempt_root / "failure.json", failure)
                 _write(attempt_root / "closed.json", {"state": "failed", "reason": str(exc)})
-                final = _summary(out, row)
+                final = _summary(out, row, targets)
                 _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
                 return {"state": "capture_failed", **failure, "cell_summary": final}
         if only_cell is not None:
             return {"state": "only_cell_closed", "cell": _summary(
-                out, next(row for row in plan["jobs"] if _slot(row) == only_cell))}
-        cells = [_summary(out, row) for row in plan["jobs"]]
+                out, next(row for row in plan["jobs"] if _slot(row) == only_cell), targets)}
+        cells = [_summary(out, row, targets) for row in plan["jobs"]]
         mode_video_counts = {mode: sum(
             bool(cell["receipts"]) for cell, row in zip(cells, plan["jobs"])
             if row["map_mode"] == mode) for mode in MAP_MODES}
