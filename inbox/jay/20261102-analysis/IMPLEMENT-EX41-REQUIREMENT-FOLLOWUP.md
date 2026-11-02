@@ -42,6 +42,12 @@ W86 생산부는 `FatalTrainingFault(ValueError)`와 `ex41_fatal.jsonl`을 제�
 
 수정 전 U15 반례3 FAIL. U15·기존 W86 최종 15 PASS(5.21초), 이어받기·이름·분모 시험을 포함한다. 원자료 `D:/mai-tmp/analyst/u15-final-1840.log`. 중간 물리 fixture의 새 이름 필드 누락은 원래 광선 회전 시험을 유지하며 보완했다.
 
+## U16 · foot_slip와 W53 어댑터의 구분
+
+`prepare_env_cfg`의 `ex41_foot_slip`은 n0에 가중0으로 등록된다. RewardManager가 0 가중 항을 건너뛰어도 `terminations.ex41_invalid` → `invalid_env` → `refresh`가 계측을 생산하며 U10의 실제 flush 호출이 파일로 남긴다. CPU 답: 접지 발 수평 속도(0.3,0.4) m/s에서 비용0.25 m²/s², 공중 발 속도(3,4)는 제외했다. 가중0 항의 가짜 보상 로그로 대신하지 않는다. 등록·실제 termination 소비·옛 어댑터 차단 4 PASS(2.58초).
+
+W53에서 막힌 `basic_gait_bundle.validate_settings(... feet_regulation_weight=...)`는 별개의 지면 기준 어댑터다. 0이나 음의 가중을 넘겨도 기존 거절이 유지된다. **그 어댑터가 검증됐다고 쓰지 않는다.** 현재 foot_slip는 접촉력 크기 >1 N인 발 링크의 세계 XY 속도 제곱 합이다. 지면 법선에 투영한 접선 속도나 접촉점의 회전 속도까지 포함한 참 미끄럼량은 아니다. 경사면·움직이는 바닥 해석에는 한계가 있으며, 이에 대한 새 보상 연결은 이번 범위에 없다. 실제 Kit 계측은 미확인이다.
+
 ## 남은 항목
 
 U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.
