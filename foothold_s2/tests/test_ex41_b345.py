@@ -20,9 +20,6 @@ from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 from foothold_s2.tests.ex41_authorization_fixture import real_authorization
 
 
-W72_AUTHORIZATION = json.loads((Path(__file__).parent / "fixtures" / "ex41_authorization.json").read_text(encoding="utf-8"))
-
-
 class PoseEnv(FakeStartEnv):
     def __init__(self, *args, **kwargs):
         self.scene = {"robot": SimpleNamespace(joint_names=EXPECTED_JOINT_NAMES)}
@@ -65,9 +62,10 @@ def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
         runner._ppo_obs(raw, torch.zeros(4, 51))
     with pytest.raises(ValueError, match="W72 HOLD"):
         runner.set_ex41_critic_mirror(True)
-    with pytest.raises(ValueError, match="W72 HOLD"):
-        runner.set_ex41_critic_mirror(True, dict(W72_AUTHORIZATION))
     good = real_authorization(tmp_path / "w72")
+    missing_boundary = dict(good, boundary_file=str(tmp_path / "missing-boundary.yaml"))
+    with pytest.raises(ValueError, match="W72 HOLD"):
+        runner.set_ex41_critic_mirror(True, missing_boundary)
     wrong = dict(good, approval_id="d" * 64)
     with pytest.raises(ValueError, match="W72 HOLD"):
         runner.set_ex41_critic_mirror(True, wrong)
