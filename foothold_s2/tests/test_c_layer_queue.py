@@ -22,6 +22,12 @@ KINDS = {
 }
 
 
+@pytest.fixture(autouse=True)
+def fake_frame_decoder(monkeypatch):
+    """Queue fixtures use byte strings, while frame statistics are tested separately."""
+    monkeypatch.setattr(q, "audit_video", lambda *_a, **_k: {"pass": True, "frames": 450})
+
+
 def fixture(tmp_path: Path, *, complete: bool = True):
     checkpoint = tmp_path / "model_8000.pt"
     recorder = tmp_path / "record.py"
@@ -214,6 +220,20 @@ def test_canonical_video_comes_from_hud_composer_not_raw_capture(tmp_path, monke
     assert Path(receipt["video"]).read_bytes() == b"composed HUD video"
     assert Path(receipt["attempt_dir"], "styled.mp4").read_bytes() == b"composed HUD video"
     assert receipt["composer_sha256"] == plan["composer_sha256"]
+
+
+def test_failed_full_frame_audit_never_publishes_or_consumes_seed(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    run, _calls = fake_capture(plan, [0])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    monkeypatch.setattr(q, "audit_video", lambda *_a, **_k: {
+        "pass": False, "issues": ["frame_17_dark_scene"]})
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[])
+    assert result["state"] == "capture_failed"
+    assert result["cell_summary"]["attempts"] == 0
+    assert result["cell_summary"]["technical_failures"] == 1
+    assert not list(out.glob("*.mp4"))
 
 
 def test_missing_mode_video_never_reports_all_cells_closed(tmp_path, monkeypatch):

@@ -16,6 +16,8 @@ import re
 import shutil
 import subprocess
 
+from foothold_s2.eval.c_layer_frame_audit import audit_video
+
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 ROLES = ("success", "fail")
@@ -294,6 +296,10 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if child.returncode:
                     raise ValueError("recorder child exit %d" % child.returncode)
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
+                raw_audit = audit_video(mp4, expected=450, width=1280, height=720)
+                _write(attempt_root / "raw_frame_audit.json", raw_audit)
+                if not raw_audit["pass"]:
+                    raise ValueError("C76 raw full-frame audit failed")
                 capture_files = {name: sha256(mp4.with_name(name)) for name in
                                  ("review.mp4", "review.json", "review_feet.npz")}
                 _write(mp4.with_name("review.done"), {
@@ -320,10 +326,16 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                         or composition.get("checkpoint_sha256") != plan["checkpoint_sha256"]
                         or composition.get("capture") != str(attempt)):
                     raise ValueError("C76 HUD receipt differs from validated capture")
+                styled_audit = audit_video(styled, expected=450, width=1920, height=1080)
+                _write(attempt_root / "styled_frame_audit.json", styled_audit)
+                if not styled_audit["pass"]:
+                    raise ValueError("C76 styled full-frame audit failed")
                 evidence = {"format": "foothold-c-layer-attempt/1", "cell": cell["cell"],
                             "ordinal": ordinal, "seed": seed, "result": own_result,
                             "files": capture_files, "frames": meta["frames"],
-                            "styled_sha256": sha256(styled), "composer_sha256": plan["composer_sha256"]}
+                            "styled_sha256": sha256(styled), "composer_sha256": plan["composer_sha256"],
+                            "raw_audit_sha256": sha256(attempt_root / "raw_frame_audit.json"),
+                            "styled_audit_sha256": sha256(attempt_root / "styled_frame_audit.json")}
                 _write(attempt_root / "attempt.json", evidence)
                 receipt_path = out / "receipts" / (cell["cell"] + "_" + own_result + ".json")
                 if not receipt_path.exists():
