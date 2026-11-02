@@ -48,3 +48,7 @@ G6 점수 소비는 분석 소유 `curriculum/ex41_scoring.py`의 `enrich_score_
 분석 고정본 08a8c99c를 통합했다. G6 점수는 `maintenance_counts` 판정26칸과 `record_counts` 기록39칸을 분리하며, runner 진입점은 D133의 `enrich_score_metrics`를 호출하고 세 모드의 stand 경로를 요구한다. 중복된 구형 39칸 점수 변환기와 그 전제 시험을 제거했다.
 
 D133 이후 전체 CPU 묶음 재실행 결과는 `138 passed in 185.34s`, skip 0이다. 대상에는 startup/preflight, 26·39 점수 계약, runtime 경계, PPO valid/bridge, no-window Git Bash가 포함된다. G1의 Kit/GPU 10-update 확인과 G11 전체 loop 연결은 여전히 미완료이며, 이번 수정으로도 완료로 표시하지 않는다.
+
+## 최신 W71 인계
+
+분석 75df4e87의 W71 API 인계는 확인했다. `reconstruction_summary`와 `cmp_link`가 EX-41 loop에서 소비되어야 하지만, 이 worktree에는 아직 해당 생산자·소비자 loop가 없다. G11은 열어 둔다. API 통합 뒤 검증된 완료 영수증이 연결될 때까지 W71 readiness와 production launch는 false 유지다.
