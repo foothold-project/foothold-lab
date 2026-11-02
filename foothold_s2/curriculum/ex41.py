@@ -495,10 +495,13 @@ class EX41Runtime(Runtime):
         auto_state=(copy.deepcopy(self._pair_bias),set(self._halved),self._auto_disabled,self._mirror_pending,set(self._auto_seen))
         # At most one command adjustment per boundary, even if several delayed
         # score files arrived together. They still all inform consecutive tests.
-        if score_rows:
-            score=score_rows[-1]
+        # A valid score read at a rejected configuration boundary stays in
+        # history. Consume it once after repair while it remains fresh.
+        pending_auto=[r for r in fresh if r['_sha256'] not in self._auto_seen]
+        if pending_auto:
+            score=pending_auto[-1]
             decisions+=self._automatic(values,score,next_pos!=self.stage_pos,next_pos=next_pos)
-            self._auto_seen.update(r['_sha256'] for r in score_rows)
+            self._auto_seen.update(r['_sha256'] for r in pending_auto)
         if next_pos!=self.stage_pos and self._mirror_pending:
             values['critic_mirror']=True
             if not any(d['path']=='critic_mirror' for d in decisions):
