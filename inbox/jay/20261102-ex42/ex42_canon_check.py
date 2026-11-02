@@ -22,8 +22,8 @@ def ok(cond, label):
 STAGES = ["E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"]
 ROWS = ["지형 종류", "레벨", "치수", "env 몫", "바꾸는 축 하나", "유지 칸", "망각 방지 몫", "승급 문턱", "최대 회차", "연장", "평가 칸", "영상"]
 def cells(line):
-    """표 한 줄의 칸 목록. 이스케이프한 세로줄(\|) 은 칸 안 글자다."""
-    return re.split(r"(?<!\)\|", line.strip())[1:-1]
+    """표 한 줄의 칸 목록. 역슬래시로 이스케이프한 세로줄은 칸 안 글자다(E.3.1 의 절댓값 기호)."""
+    return re.split(r"(?<!\\)\|", line.strip())[1:-1]
 
 AXES = ("terrain_mesh_swap", "terrain_level_cap", "command_allocation", "terrain_exposure", "terrain_kind_level_cap", "map_off_probability", "posture_height", "posture_roll")
 
@@ -120,7 +120,7 @@ if v010:
         hdr = [l for l in e31.group(0).splitlines() if l.startswith("| 항 |")]
         ok(len(hdr) == 1 and "comparator" in hdr[0] and "role" in hdr[0] and "on_missing" in hdr[0], "E.3.1 머리(comparator · role · on_missing)")
         items = [l for l in e31.group(0).splitlines() if l.startswith("| ") and not l.startswith("| 항 |") and not l.startswith("|---")]
-        ok(len(items) == 10 and all(len(cells(l)) == 6 for l in items), f"E.3.1 유지 항 10 행 × 6 칸(\| 는 칸 안 글자) ({len(items)})")
+        ok(len(items) == 10 and all(len(cells(l)) == 6 for l in items), f"E.3.1 유지 항 10 행 × 6 칸(이스케이프 세로줄은 칸 안 글자) ({len(items)})")
         ok(sum("judge" in l for l in items) >= 4 and sum("record" in l for l in items) >= 4, "E.3.1 judge · record 역할 둘 다")
         ok("2.5065" in e31.group(0) and "5.1106" in e31.group(0) and "실측" in e31.group(0), "E.3.1 투영 거리 재계산(실측)")
     e6 = sec[sec.index("### E.6 "):]
