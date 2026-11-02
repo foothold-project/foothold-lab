@@ -70,7 +70,7 @@ if "4,096 의 출처" in text:
     closed_with("Q9", "D159")
     ok("4,096 은 별도" not in text, "「4,096 은 별도」 없음")
     m2 = [l for l in text.splitlines() if l.startswith("| M2 업로드 · 메모리 |")]
-    ok(len(m2) == 1 and "3,072" in m2[0] and "4,096" not in m2[0].split("삭제")[0], "M2 행 상한 3,072")
+    ok(len(m2) == 1 and "3,072" in m2[0] and "4,096" not in m2[0], "M2 행 상한 3,072 · 4,096 없음")
     ok(re.search(r"env\.yaml:86", text) is not None and "3072" in text, "3,072 근거 env.yaml:86")
 
 ok(chr(0x2014) not in text, "em dash 없음")

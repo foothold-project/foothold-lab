@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 설계 초안 (EX-42 지형 구간 · 지형 미리 넣기 · 종류별 승급 · 평가 칸 · 시작 전 측정)
-> 작성: planner · 2026-11-02 17:4x v0.1 (lead 17:1x 의뢰: 「이후 실험도 잘 준비하고 있나」 · 근거를 열고 쓸 것 · 정할 것은 표로) · 19:5x **v0.2**(lead 18:2x: analyst `D:/mai-tmp/analyst/OPINION-EX42-Q-1102.md` 반영. Q6 유지 판정 26 · 기록 39 로 정정, Q7 발 들기 「새로 켬」 삭제, Q1 · Q2 · Q4 · Q9 · Q11 · Q13 의 의견을 §13b 에 나란히. Q11 은 P7 졸업 판정 정본(`inbox/jay/20261101-ex41/P7-GRADUATION-SPEC.md` 53fda76c) 에 연결) · 21:5x v0.3 (B) D158 Q1(lead 21:2x · 21:4x 대기열) · (C) D160 Q6 문구 · (D) Q7 순서별 이유 + analyst 의견 · (E) D159 Q13 교환 학습 규칙
+> 작성: planner · 2026-11-02 17:4x v0.1 (lead 17:1x 의뢰: 「이후 실험도 잘 준비하고 있나」 · 근거를 열고 쓸 것 · 정할 것은 표로) · 19:5x **v0.2**(lead 18:2x: analyst `D:/mai-tmp/analyst/OPINION-EX42-Q-1102.md` 반영. Q6 유지 판정 26 · 기록 39 로 정정, Q7 발 들기 「새로 켬」 삭제, Q1 · Q2 · Q4 · Q9 · Q11 · Q13 의 의견을 §13b 에 나란히. Q11 은 P7 졸업 판정 정본(`inbox/jay/20261101-ex41/P7-GRADUATION-SPEC.md` 53fda76c) 에 연결) · 21:5x v0.3 (B) D158 Q1(lead 21:2x · 21:4x 대기열) · (C) D160 Q6 문구 · (D) Q7 순서별 이유 + analyst 의견 · (E) D159 Q13 교환 학습 규칙 · (F) Q9 4096 근거 · 기본 3072
 > 근거: WORKLIST 122a6435 D106 · D113 · D114 · D115 · D117 · D124 · D126 · D130 · D133 · D136 · D138 · W55 · W59 · W72 · W86 / analyst `inbox/jay/20261102-analysis/PLAN-EX42-TERRAIN-GATES.md`(fb9cda8d) · `SPEC-JEPLO-PRESET.md`(f2ca807c) · `foothold_s2/terrains/jeplo_preset.py` / `inbox/jay/20261019-design/15-TERRAIN-CURRICULUM.md` v1.4 §2~8 · `14-COMMAND-GENERATOR.md` §3 · §5 / `inbox/jay/20261018-next-arch/SPEC-ame2-go2.md` §1.6 / `inbox/jay/20261012-arch-discussion/PAPERS-architecture.md` START 표(II-D3 · Fig. 6 · Table II) · AME-2 부록 A / `inbox/jay/20261026-experiments/CURRICULUM-GATES.md` v0.6c T0~T7 · 1b.6 · 1b.7 / `inbox/jay/20261101-ex41/DESIGN-EX41-STAGE2-draft.md` v0.7.3 §4 · §11 / 코드(ceadc326 · d5c14948): `terrains/columns.py` · `rough_go2_cfg.py` · `s2_layout.py` · `s2_runtime.py` · `progression.py` · `sparse_terrains.py` · `tasks/s2_env_cfg.py` · `eval/fixed_terrain.py` · `eval/map_mode_cells.py` · `eval/axis_v2_run.py:180~200` · `curriculum/ex41-fixed5000.yaml` · `curriculum/ex41.py` · `curriculum/rules.py` · `runners/start_runner.py:86~146` · `runners/map_stats.py` · `eval/eval_dr_mode.py` / Isaac Lab 2.3.2 `terrain_generator.py:240~262` / EX-40 실행 `main/EX-40-B-main_20261031_041337_26240/params/env.yaml`(num_envs 3072 · 23 열 · 8 × 8 m · use_cache false · max_init 2 · height_scanner 0.1 m × [1.6, 1.0] · depth_cam 60 × 60 · 0.1 s) / Go2 URDF `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf`(sha256 f130b1d2…) · Lite3 URDF `…/MGDP/…/all_dog/lite3/urdf/lite3.urdf`(f5e5003d…) 실측 / 웹 제원(Lite3 610 × 370 mm · Go2 700 × 310 × 400 mm, 아래 §4)
 > 요지: EX-42 는 EX-41 T0′ 졸업 저장본에서 시작하는 「지형 구간」 이다. 시작 경계에서 지형 네 묶음(15-TERRAIN 13 종 50 열 · AME-2 12 종 · JEPLO 7 종 · 지형 2 판 3 종 = 35 종) 을 **한 번에 열로 만들고** 노출은 env 재배정으로만 올린다(D114 · W86 · Isaac 은 비율 0 이면 열이 안 생김). 승급은 두 층(env 레벨 = 종류별 완료 정의 · 종류 노출 확대 = 종류별 성과 창), 평가 칸은 env 번호가 아니라 `(묶음, 종류, 레벨)` 로 찾고, 시작 전에 메모리 · 생성 시간 · 광선 비용을 새 프로세스로 잰다. START 치수의 Go2 축척은 15-TERRAIN v1.4 의 「절대 치수 재현」 결정과 부딪히므로 두 안을 숫자로 나란히 두고 팀장 결정으로 올린다(Q1). 숫자는 전부 출처 등급을 달았고, 가정값은 §13 표에 모았다.
 > 상태: v0.3(11/02 21:5x 부터 D158 · D159 · D160 · D162 와 Q7 이유 · 교환 학습 · 4096 근거를 단계별 커밋으로 반영 중) · 코드 · GPU 없음 · analyst 의견 1 차 반영(§13b) · 두 겹 검토 전 · 시험 `ex42_decisions_check.py`
@@ -277,11 +277,14 @@ planner 의견: 문턱은 **반복 폭 실측 뒤** 결과 전에 고정(둘 다
 |---|---|---|---|
 | M0 CPU | 묶음 · 종류 · L0/L5/L9 의 치수 · 삼각형 수 · 높이장 · metadata · 전역 열 표 | GPU 없음 | `terrain_manifest.json`(§5.2) · 알려진 답 시험(JEPLO 420 경우는 이미 있음) |
 | M1 생성 시간 | 묶음별 생성기 벽시계 · CPU RSS · use_cache True/False 두 번(캐시 적중) | GPU1 · env 0(생성만) | `receipt_terrain_gen.json` |
-| M2 업로드 · 메모리 | 접촉 메시 · 광선 메시 업로드 뒤 GPU allocated · reserved · 최대, 128 → 512 → 3,072 env(앞 크기에서 여유 확인 뒤만) · 4,096 은 별도 요청 | GPU1 · 학습 없음 · PPO update 없음 | `receipt_terrain_mem.json` |
+| M2 업로드 · 메모리 | 접촉 메시 · 광선 메시 업로드 뒤 GPU allocated · reserved · 최대, 128 → 512 → **3,072** env(앞 크기에서 여유 확인 뒤만 · 기본 3,072 은 D159) · 그 위 크기는 없음(v0.1 에 있던 더 큰 env 수 행은 지움 · 근거는 아래 출처 문단) | GPU1 · 학습 없음 · PPO update 없음 | `receipt_terrain_mem.json` |
 | M3 광선 | height_scanner · depth_cam 따로 · 합쳐서, warmup 20 뒤 100 회, CUDA event 동기화, 평균 · p50 · p95 · 최대, reset 포함 / 제외, cold / warm | 같음 | `receipt_rays.json` |
 | 중단선 | 여유 < 2 GiB 면 그 크기에서 멈추고 다음 크기를 안 띄움(analyst 2 GiB · **가정** · lead 승인 전 고정 안 함) | | |
 
 GPU1 이 비었다는 관측만으로 실행 권한이 생기지 않는다(analyst 같음 · 이 문서도 GPU 금지). 결정은 Q9(범위 · 예산). **v0.2(analyst Q9)**: 위 기준값 1.39 × 10⁸ /s 는 height_scanner 187 + depth_cam 3,600 만 센 것이고, analyst 읽기로는 `sensors/start_obs.py:84~99` 의 정답 지도 512 · 발 100 광선이 더 있다(**미재측** · M3 에서 센서마다 실제 활성 여부 · 주기 · lazy 호출을 같이 잰다). 측정은 기존 lead 조건(GPU1 그림자 · axis250 · stage_loop2 · 미채점 저장본)에 양보하고 **한 번 10 분 이내**를 예산에 명시한다. 총예산은 생성 실측 전 미확정. 2 GiB 는 보장값이 아니라 **후보 중단선**이다.
+
+**4,096 의 출처(lead 21:2x (F) · D159 「기본 3072 env」)**: v0.1 M2 행의 「더 큰 env 수는 별도 요청」 칸은 planner 가 넣은 것이고 S2 문서 · 코드 어디에도 근거가 없었다. 4,096 은 **foothold-v2(S1) 학습의 env 수**다(`docs/research/20260928-v2-mvp-report.md:884` `num_envs 4096` · `docs/FLOW.md:61`, **읽기**). S2 는 처음부터 3,072 다: EX-40 run `params/env.yaml:86` `num_envs: 3072`(**실측**) · `foothold_s2/scripts/start_measure_s2.py:28` 기본값 3072(**코드**) · 10/20 메모리 측정 `start_mem3_3072_mb128_a1_20261020.json`(num_envs 3072 · cuda:0 · 단계별 GiB: 센서 1.01 · rollout 6.06 · PPO update 2.96 · 지각 update 7.36, **실측** · 그때 코드 · microbatch 128 기준이라 지금 run 과 같다고 보지 않음). 따라서 M2 의 상한은 3,072 이고 4,096 행은 지운다. §14 의 「EX-40 GPU 메모리 실측값을 찾지 못했다」 는 「EX-40 run 자체의 값은 없고 10/20 측정 json 이 있다」 로 좁힌다.
+
 
 ## 9. D115 · p_map_off 는 이어진 지형 조건
 
@@ -338,7 +341,7 @@ EX-42 는 T0′ 뒤라 **전 구간 force_gt False**(`map_input reconstruction`,
 | Q6 | ~~유지 판정 26 칸(정답 · 끔, 복원 13 은 기록 · 39 숫자 보존) 을 EX-42 에서도 연속 7 종 L0~2 로 둘지~~ | (닫힘) | **D160**(11/02 21:1x 팀장): 판정은 정답 · 끔 26 칸, 복원 13 칸은 늘 기록(39 보존), 모든 문서에 복원 기록을 적는다. 종류별 칸은 기록이되 노출 확대 순간엔 필수 관문 · 새 부모 기준표 SHA 먼저 고정(v0.2 안 그대로) | 닫힘 |
 | Q7 | 단계 순서의 정본 · 순서마다 이유 | GATES v0.6c T 행 / D81(§11) / 병합(§1 그림) | 병합안은 제안, 정본은 성과 의존관계(§1 v0.2) · 순서별 이유와 analyst 의견은 **§1.1 표**(lead 21:2x (D)). 단계별 새 analyst 의견은 미수신 → lead 가 analyst 에 물을 것 | 팀장 |
 | Q8 | DESIGN-EX41 §11 의 「같은 메시 위 상한 올림」 철회 | 철회(시작 경계 메시 교체) / 유지 | 철회(D114 · W86 이 뒤에 정해짐) | lead |
-| Q9 | §8 측정 범위 · GPU1 예산 | M0 만 / M0~M3 / 4,096 포함 | M0~M3, 4,096 은 별도 | lead → 팀장 |
+| Q9 | ~~§8 측정 범위 · GPU1 예산~~ | (닫힘) | **D159**(11/02 21:1x 팀장): M0~M3 · 한 번 10 분 · **기본 3,072 env**. 4,096 은 v2(S1) 숫자의 관성이라 삭제(§8 「4,096 의 출처」) | 닫힘 |
 | Q10 | 복원 소비 경고선 | 없음 / 0.3 / 묶음별 다르게 | 0.3 경고(기록 전용) | lead |
 | Q11 | T0′ 미달 때 | 시작 안 함 / 복원 구간을 EX-42 첫 단계로 | 시작 안 함(기본, analyst 동의) · 미달 줄 분리 · 보완은 별도 승인 카드 · 판정은 P7 정본(P7-1~P7-7 은 그쪽 표) | 팀장 |
 | Q12 | crawl(천장) 의 센서 처리 | 두 번째 히트 / 마스크 / 지형 2 판까지 보류 | 보류 · 지형 2 판 카드에서 | lead |
@@ -364,7 +367,7 @@ analyst 가 의견을 내지 않은 Q3 · Q5 · Q8 · Q10 · Q12 는 v0.1 그대
 
 - 코드 · GPU · Kit · 학습 없음. 지형 2 판 치수 · 깃발 배치 코드(W60) · W86 파서 확장은 설계만 적고 만들지 않았다.
 - START 논문 PDF · AME-2 부록 A 원문을 다시 열지 않았다(저장소 요약 문서 두 개에 의존 · 등급 「읽기」). 숫자가 갈리면 원문이 이긴다.
-- EX-40 의 GPU 메모리 · 지형 생성 시간 실측값을 찾지 못했다(미확인 · §8).
+- EX-40 run 자체의 GPU 메모리 · 지형 생성 시간 값은 없다(미확인 · §8). 10/20 의 3,072 env 단계별 메모리 측정 json 은 있고 §8 에 적었다(그때 코드 기준).
 - analyst PLAN 의 35 행 완료 정의는 검토하지 않고 가리키기만 했다(겹침 방지). 반박 검토는 lead 가 걸면 따로.
 - v0.2: analyst 의견이 가리킨 `start_obs.py:84~99`(광선 512 · 100) · `ex41_fixed.py:142~160`(DR 상한 소진) 은 다시 열지 않았다(analyst 읽기 그대로, §13b). 의견 Q3 · Q5 · Q8 · Q10 · Q12 는 없었다.
 - W59 카드(T1 L3 첫 판) 는 이 문서가 아니다. worklist_gate 가 W55 증거 경로로 막혀 있다(§12).
