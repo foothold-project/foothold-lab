@@ -266,6 +266,7 @@ for mode in args.modes.split(","):
         torch.manual_seed(args.eval_seed)
         if args.ex39_heading_smoke_guard:
             term.params.ex39_arm = "B"
+        DR.begin(raw, "%s/%s" % (mode, cname), S, args.envs, dt)                        # 켠 모드: 이 명령의 표본만 모으게 비우고 밀기 step(시작 2.0 s) · 시드를 정한다. off: no-op
         env.reset()
         terrain = raw.scene.terrain
 
@@ -353,6 +354,7 @@ for mode in args.modes.split(","):
             if last_err["e"] is not None:
                 ERR[:, k] = torch.stack(last_err["e"])
 
+            DR.step(raw, k)                                                                # 켠 모드: 밀기 step 이면 env 전부를 한 번 민다. off: no-op
             obs, _r, dones, _x = env.step(a)
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
             if args.ex39_heading_smoke_guard:
@@ -434,13 +436,15 @@ for mode in args.modes.split(","):
         if last_err.get("rel_error"):
             res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
         res["modes"][mode][cname] = row
+        DR.collect(raw, "%s/%s" % (mode, cname), res, row,                              # 켠 모드: 발화 수 · 범위 확인 뒤 점수 행에 dr_scale · dr_fired · dr_push · dr_recovery. off: no-op
+                   arrays={"alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy, "xy": XY.cpu().numpy()})
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
-        DR.collect(raw, "%s/%s" % (mode, cname), res)                                  # 켠 모드: reset 표본 · 지연 상한 확인 뒤 기록
 
     if args.command_suite in ("extended", "ex40_b3"):
         res.setdefault("sequences", {})[mode] = {}
         for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
             torch.manual_seed(42)
+            DR.begin(raw, "%s/seq/%s" % (mode, seq_name), S, args.envs, dt)
             env.reset()
             if args.fixed_terrain:
                 fixed_terrain.apply(raw)
@@ -467,6 +471,7 @@ for mode in args.modes.split(","):
                     term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
                     map_mode_cells.assert_heading_off_for_fixed_eval(term)
                     action = policy(obs)
+                    DR.step(raw, sum(seq_row["phase_steps"][:phase_index]) + step)
                     obs, _reward, dones, _extra = env.step(action)
                     map_mode_cells.assert_heading_off_for_fixed_eval(term)
                     policy.reset(dones)
@@ -495,7 +500,7 @@ for mode in args.modes.split(","):
             seq_row["gt_used"] = counts["gt"]
             seq_row["policy_steps_x_envs"] = counts["total"]
             res["sequences"][mode][seq_name] = seq_row
-            DR.collect(raw, "%s/seq/%s" % (mode, seq_name), res)
+            DR.collect(raw, "%s/seq/%s" % (mode, seq_name), res, seq_row)
             print("MAPMODE_SEQUENCE", mode, seq_name, json.dumps({
                 "alive_at_end": [p["by_kind"] for p in seq_row["phases"]],
                 "gt_used": counts["gt"]}), flush=True)
