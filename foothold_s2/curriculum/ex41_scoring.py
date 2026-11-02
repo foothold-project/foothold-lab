@@ -9,6 +9,7 @@ import json
 
 from foothold_s2.curriculum.ex41_fixed import CASES, build_maintenance_counts, baseline_counts, maintenance
 from foothold_s2.ex40_score import config, sha256, _map_rows, _stand_rows, _stand_pass
+from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 
 MODES=('eval_gt','probe_prop_only','eval_pred')
 DEFAULT_CONFIG=Path(__file__).with_name('ex40_score_config.json')
@@ -70,6 +71,8 @@ def measurement_bundle(map_modes_path, stand_paths, checkpoint_path, baseline, *
 
 def enrich_score_metrics(draft, map_modes_path, stand_paths, plan, *, score_config_path=DEFAULT_CONFIG):
     """Runner's one score/1 enrichment entry; existing stage verdict is preserved."""
+    require_dr_off_document(json.loads(Path(map_modes_path).read_text(encoding='utf-8-sig')),
+                            where=str(map_modes_path))
     if (not isinstance(draft,dict) or draft.get('format')!='foothold-ex41-score/1'
         or type(draft.get('iteration')) is not int or not isinstance(draft.get('metrics'),dict)
         or not isinstance(draft.get('evidence'),list)

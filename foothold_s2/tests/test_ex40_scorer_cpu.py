@@ -70,6 +70,7 @@ def _evidence(out: Path, checkpoint: Path, *, missing_stand=False):
                "checkpoint_iter": int(checkpoint.stem.split("_")[-1]),
                "envs": 64, "steps": cfg["map_steps"], "eval_seed": cfg["eval_seed"],
                "command_suite": "extended",
+               "dr_off": ["physics_material", "add_base_mass"],
                "commands": commands("extended"), "fixed_terrain": {"rows": 10},
                "terrain_tiles": [{"env": i} for i in range(64)],
                "modes": command_rows,

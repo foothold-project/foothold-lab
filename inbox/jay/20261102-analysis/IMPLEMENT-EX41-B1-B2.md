@@ -306,3 +306,13 @@ lead가 acb35d7f의 두 겹 검토 막음 0과 W71 코드 쪽 종결을 전달�
 첫 고침 뒤 여섯 파일 **130 PASS, 173.00초**였다. 이후 소비 순서 대조에서 이미 읽은 본문을 다른 SHA12 이름으로 복사하면 `seen_scores`가 이름 대조 전에 건너뛰는 반례 **1 FAIL, 3.69초**를 추가 확인했다. 이름·회차·본문 SHA 대조를 마친 뒤에만 같은 본문 재읽기를 생략하도록 옮겼다. 아래 최종 시험은 이 순서 고침까지 포함한다.
 
 최종 확인됨: 파일명 시험 전체·runtime·review_regressions와 fixed의 최신 오류·이전 PASS·재개·미래 점수·파일명 시점 반례를 다시 실행해 **73 PASS, 98.47초**다. 앞 130개와 겹치므로 합산하지 않는다. 네 차례 JUnit 경로·SHA·시험 이름은 [CPU 근거](evidence/EX41-score-filename-cpu.json)에 남겼다. pyflakes·git diff --check 통과. 실행 설정·학습 조건·판정 문턱 변경 없음.
+
+## 24. D125 B2 · DR 켠 자료의 유지 판정 유입 차단 (11/02 17:5x 의뢰)
+
+확인됨: `ex40_score._map_rows`와 `ex41_scoring.enrich_score_metrics` 입구에 planner d5c14948의 `require_dr_off_document`를 연결했다. 최상위 `dr` 키(값 None 포함), 빠지거나 바뀐 `dr_off`, 점수 행의 `dr_scale`·`dr_fired`·`dr_push`·`dr_recovery`를 거절한다. 시퀀스 행도 확인한다. EX-40은 검사 오류를 `EvidenceHold`로 바꿔 공개 `judge` 결과를 HOLD로 남긴다. EX-41은 숫자 계산 전에 RuntimeError로 거절하며 점수 초안을 변경하지 않는다.
+
+현재 가지에는 검사 모듈이 없어서 `foothold_s2/eval/eval_dr_mode.py`를 d5c14948의 파일 그대로 가져왔다. Git blob `cf3abb08e54238a9499cf0477c7224b50a622b73` 일치를 확인했다. 별도 검사식을 만들지 않았고 planner의 평가 실행기는 가져오거나 고치지 않았다. 통합 시 이 모듈 의존성도 함께 들어가야 한다.
+
+답을 아는 정상 자료는 원래 평가기가 기록하는 `dr_off=[physics_material, add_base_mass]`를 포함한다. 이 정상 자료는 PASS다. 각 소비자에서 위반 아홉 가지를 넣은 수정 전 반례는 **18 FAIL, 4.08초**였다. EX-41 반례는 뒤쪽 계산을 막는 spy를 두어 EX-40의 공통 검사만으로 입구 시험이 통과하지 않게 했다. 수정 후 반례·EX-40 scorer·EX-41 scoring·W57 retry·W71 다섯 파일 **81 PASS, 19.41초**. 실제 m6000 원자료의 39칸 기록·26칸 유지·서 있기 64/64 재집계 시험도 포함된다. 원자료는 읽기만 했다.
+
+근거: [CPU 결과와 로그 해시](evidence/EX41-D125-B2-cpu.json). pyflakes와 `git diff --check` 통과. D: 사본·임시·산출만 사용했다. 학습 설정·문턱·GPU·Kit·EX-40 고정본·라이브 루프·원장은 변경하지 않았다. 독립 검토와 runner 통합은 대기다. runner가 enrichment 입구를 실제로 호출하는지는 통합판에서 확인해야 하며, 이 CPU 통과를 기동 승인으로 쓰지 않는다.

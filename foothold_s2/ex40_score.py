@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from foothold_s2.curriculum.continuous import Plan
+from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 from foothold_s2.eval.map_mode_cells import EX40_B3_COMMANDS, commands
 
 
@@ -71,6 +72,11 @@ def _finite(value, label: str) -> float:
 def _map_rows(path: Path, checkpoint: Path, config_row: dict, *, extra: bool = False,
               wanted_extra: set[str] | None = None) -> dict:
     data = json.loads(path.read_text(encoding="utf-8-sig"))
+    try:
+        require_dr_off_document(data, where=str(path))
+    except RuntimeError as exc:
+        # Reject contaminated evidence as HOLD, without crashing the score worker.
+        raise EvidenceHold(str(exc)) from exc
     suite = "ex40_b3" if extra else "extended"
     wanted = (wanted_extra if wanted_extra is not None else set(EX40_B3_COMMANDS)) if extra else set(commands("extended"))
     command_values = commands(suite)
