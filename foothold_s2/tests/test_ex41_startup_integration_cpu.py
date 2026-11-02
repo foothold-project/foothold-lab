@@ -297,17 +297,20 @@ def test_rehearsal_dr_proof_forces_interval_event_then_restores_half_scale(tmp_p
     assert saved["state"] == "verified" and saved["scale"] == 0.8
 
 
-def test_training_entry_runs_dr_08_proof_only_for_bounded_rehearsal():
+def test_training_entry_keeps_dr_08_opt_in_and_marks_unconnected_rehearsal_steps():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
     branch = source[source.index("if resume_path is None:"):source.index("ex41_w86_receipt = attach_runtime")]
-    assert "if EX41_REHEARSAL:" in branch
+    assert "if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:" in branch
     assert "run_rehearsal_dr_proof(" in branch
     for receipt_field in (
         '"local_update_origin": runner.current_learning_iteration',
         '"first_completed_update": runner.current_learning_iteration + 1',
         '"new_process_resume_u5": "미연결"',
-        '"schedule_boundary_0_8": "미연결; forced reset readback is separate"',
+        '"schedule_boundary_0_8": "미연결"',
         '"score_watch_26_cells_once": "미연결"',
+        '"dr_scale_08": "미연결 (다음 판)" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback"',
+        '_pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")',
+        'parser.add_argument("--ex41_rehearsal_dr_08", action="store_true"',
     ):
         assert receipt_field in source
 

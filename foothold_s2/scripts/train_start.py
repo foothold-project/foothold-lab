@@ -40,6 +40,7 @@ _pre.add_argument("--ex41_log_root")
 _pre.add_argument("--ex41_dry_run", action="store_true")
 _pre.add_argument("--ex41_rehearsal_updates", type=int)
 _pre.add_argument("--ex41_rehearsal_output")
+_pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--headless", action="store_true")
@@ -169,6 +170,8 @@ parser.add_argument("--ex41_rehearsal_updates", type=int,
                     help="Run the bounded 10-update EX-41 Kit rehearsal only")
 parser.add_argument("--ex41_rehearsal_output", type=str,
                     help="New s2_lab/ex41_rehearsal_YYYYMMDD_HHMMSS output directory")
+parser.add_argument("--ex41_rehearsal_dr_08", action="store_true",
+                    help="Force the optional 0.8 reset/readback proof during rehearsal")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -185,7 +188,8 @@ if args_cli.ex41_score_dir != _pre_args.ex41_score_dir:
 if args_cli.resume_from != _pre_args.resume_from:
     raise ValueError("EX-41 preflight and runtime parser disagree on resume checkpoint")
 if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
-        or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output):
+        or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output
+        or args_cli.ex41_rehearsal_dr_08 != _pre_args.ex41_rehearsal_dr_08):
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
 if EX41_REHEARSAL:
     from foothold_s2.scripts.ex41_startup import validate_rehearsal_request
@@ -314,7 +318,7 @@ def main(env_cfg, agent_cfg):
 
         if resume_path is None:
             set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
-            if EX41_REHEARSAL:
+            if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:
                 from foothold_s2.scripts.ex41_startup import run_rehearsal_dr_proof
 
                 ex41_rehearsal_dr_proof = run_rehearsal_dr_proof(
@@ -461,10 +465,11 @@ def main(env_cfg, agent_cfg):
                                          "local_update_origin": 0 if EX41_REHEARSAL else None,
                                          "first_completed_update": 1 if EX41_REHEARSAL else None,
                                          "dr_scale_proof": ex41_rehearsal_dr_proof,
+                                         "dr_scale_08": "미연결 (다음 판)" if EX41_REHEARSAL and not args_cli.ex41_rehearsal_dr_08 else None,
                                          "shadow_loop": False if EX41_REHEARSAL else None,
                                          "score_evaluation": "미연결" if EX41_REHEARSAL else None,
                                          "new_process_resume_u5": "미연결" if EX41_REHEARSAL else None,
-                                         "schedule_boundary_0_8": "미연결; forced reset readback is separate" if EX41_REHEARSAL else None,
+                                         "schedule_boundary_0_8": "미연결" if EX41_REHEARSAL else None,
                                          "score_watch_26_cells_once": "미연결" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
@@ -516,9 +521,10 @@ def main(env_cfg, agent_cfg):
             "first_completed_update": runner.current_learning_iteration + 1,
             "save_interval": train_cfg["save_interval"],
             "new_process_resume_u5": "미연결",
-            "schedule_boundary_0_8": "미연결; forced reset readback is separate",
+            "schedule_boundary_0_8": "미연결",
             "score_watch_26_cells_once": "미연결",
             "score_evaluation": "미연결",
+            "dr_scale_08": "미연결 (다음 판)" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback",
             "shadow_loop": False,
         }, sort_keys=True), flush=True)
     if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)
