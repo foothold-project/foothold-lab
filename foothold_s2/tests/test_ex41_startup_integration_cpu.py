@@ -484,6 +484,36 @@ def test_reset_base_com_restores_env_device_baseline_through_cpu_physx_contract(
                      "event_env_ids_device": "cpu", "event_scale": 0.8}
 
 
+def test_runtime_readback_summary_bridges_cpu_physx_com_to_env_device_baseline(monkeypatch):
+    from torch._subclasses.fake_tensor import FakeTensorMode
+
+    from foothold_s2.curriculum import ex40_dr_runtime
+
+    captured = []
+    monkeypatch.setattr(
+        ex40_dr_runtime, "_stats",
+        lambda values: captured.append((str(values.device), tuple(values.shape))) or {"count": 2},
+    )
+    mode = FakeTensorMode(allow_non_fake_inputs=True)
+    with mode:
+        env = SimpleNamespace(
+            device=torch.device("cuda:0"),
+            scene={"robot": SimpleNamespace(
+                root_physx_view=SimpleNamespace(
+                    get_coms=lambda: torch.zeros((2, 1, 7), device="cpu")),
+                actuators={},
+            )},
+            action_manager=SimpleNamespace(get_term=lambda _name: SimpleNamespace(delay=None)),
+            physics_dt=0.005,
+            _ex40_dr_com_baseline=torch.ones((2, 1, 7), device="cuda:0"),
+            _ex40_dr_samples={},
+        )
+        result = ex40_dr_runtime.RuntimeReadback(env, ranges={}).summary()
+
+    assert result["realized_state"]["base_com_offset_m"] == {"count": 2}
+    assert captured == [("cuda:0", (2, 1, 3))]
+
+
 def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
     plan = load_fixed_plan(TABLE)
     started = datetime(2026, 11, 3, tzinfo=timezone.utc)

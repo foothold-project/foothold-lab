@@ -303,7 +303,7 @@ class RuntimeReadback:
         realized = {}
         com_baseline = getattr(self.env, "_ex40_dr_com_baseline", None)
         if com_baseline is not None:
-            com = asset.root_physx_view.get_coms()
+            com = asset.root_physx_view.get_coms().to(device=com_baseline.device)
             realized["base_com_offset_m"] = _stats(com[..., :3] - com_baseline[..., :3])
         for name, actuator in asset.actuators.items():
             realized[f"{name}.stiffness"] = _stats(actuator.stiffness)
