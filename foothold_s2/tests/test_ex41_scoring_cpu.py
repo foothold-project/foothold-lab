@@ -14,6 +14,15 @@ ROOT=Path('C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
 
+def _w86_metrics(path, iteration):
+    from foothold_s2.rewards.w86_runtime import KNEES
+    row={'format':'ex41-w86-metrics/1','iteration':iteration,
+         'knee_effort':{'threshold_fraction':.9,'record_only':True,'joints':{
+             name:{'near_limit_frames':0,'valid_frames':64,'ratio':0.0} for name in KNEES}}}
+    path.write_text(json.dumps(row,allow_nan=False)+'\n',encoding='utf-8')
+    return path
+
+
 @pytest.fixture(scope='module')
 def actual():
     plan=load_plan(TABLE,arm='B')
@@ -54,12 +63,14 @@ def test_runner_score_entry_uses_required_three_stand_sources(actual,tmp_path):
         'maintenance_pass':False,'stage_pass':False,'safety_stop':False}
     source=tmp_path/'draft.json';source.write_text(json.dumps(draft))
     target=tmp_path/'score.json'
-    enrich_score_file(source,ROOT/'map64/map_modes.json',stands,TABLE,target)
+    w86=_w86_metrics(tmp_path/'ex41_w86.jsonl',draft['iteration'])
+    enrich_score_file(source,ROOT/'map64/map_modes.json',stands,TABLE,target,w86)
     result=json.loads(target.read_text())
     assert set(result['metrics']['stand_counts'])==set(MODES)
     assert len(result['metrics']['maintenance_counts'])==26
     assert len(result['metrics']['record_counts'])==39
-    assert len(result['evidence'])==8
+    assert len(result['evidence'])==9
+    assert result['metrics']['training_knee_effort']['joints']['FL_calf_joint']['valid_frames']==64
     pred=result['metrics']['eval_pred_tracking_errors']
     assert len(pred)==13
     assert pred['fwd0.5']['gt_used']==0
@@ -79,7 +90,8 @@ def test_runner_score_entry_rejects_missing_stand_path(actual,tmp_path):
     source=tmp_path/'draft.json';source.write_text(json.dumps(draft))
     with pytest.raises(ValueError,match='three modes'):
         enrich_score_file(source,ROOT/'map64/map_modes.json',
-                          {k:v for k,v in stands.items() if k!='eval_pred'},TABLE,tmp_path/'out.json')
+                          {k:v for k,v in stands.items() if k!='eval_pred'},TABLE,
+                          tmp_path/'out.json',tmp_path/'missing_w86.jsonl')
 
 
 def test_b3_is_not_extended_maintenance_source(actual):

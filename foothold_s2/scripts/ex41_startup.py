@@ -466,13 +466,21 @@ def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float) -> dict[s
 
 def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
                       stand_paths: dict[str, str | Path],
-                      table_path: str | Path, out_path: str | Path) -> Path:
-    """Enrich the score from analyst-owned evidence and retain eval_pred tracking errors."""
-    from foothold_s2.curriculum.ex41_scoring import enrich_score_metrics
+                      table_path: str | Path, out_path: str | Path,
+                      w86_metrics_path: str | Path) -> Path:
+    """Enrich the score from evaluation and same-iteration W86 evidence."""
+    from foothold_s2.curriculum.ex41_scoring import (
+        enrich_score_metrics, enrich_training_metrics,
+    )
 
     plan = load_fixed_plan(table_path)
     score = json.loads(Path(score_path).read_text(encoding="utf-8-sig"))
     result = enrich_score_metrics(score, map_modes_path, stand_paths, plan)
+    result = enrich_training_metrics(
+        result,
+        w86_metrics_path,
+        snapshot_dir=Path(out_path).parent / "w86_evidence",
+    )
     modes = json.loads(Path(map_modes_path).read_text(encoding="utf-8-sig"))
     eval_pred = modes.get("modes", {}).get("eval_pred")
     commands = modes.get("commands")
