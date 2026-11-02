@@ -92,7 +92,7 @@ def _foot_body_ids(robot) -> list[int]:
 
 
 def collect_case(env, raw, robot, term, policy, sensor, sensor_feet, body_feet,
-                 phases, steps, *, heading: bool) -> dict[str, np.ndarray]:
+                 phases, steps, *, heading: bool, verify_pose_cmd: bool = False) -> dict[str, np.ndarray]:
     """Capture each scheduled step; valid excludes post-reset values after a done."""
     n, total = env.num_envs, sum(steps)
     device = raw.device
@@ -114,6 +114,9 @@ def collect_case(env, raw, robot, term, policy, sensor, sensor_feet, body_feet,
     term_names = tuple(raw.termination_manager.active_terms)
     term_bits = torch.zeros(total, n, len(term_names), dtype=torch.bool, device=device)
     obs = env.get_observations()
+    if verify_pose_cmd:
+        from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+        verify_ex41_pose_observation(obs)
     tick = 0
     for phase_id, ((command, _seconds), count) in enumerate(zip(phases, steps, strict=True)):
         for _ in range(count):
@@ -130,6 +133,9 @@ def collect_case(env, raw, robot, term, policy, sensor, sensor_feet, body_feet,
             term.stand.fill_(not any(command))
             action = policy(obs)
             obs, _reward, dones, _extras = env.step(action)
+            if verify_pose_cmd:
+                from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+                verify_ex41_pose_observation(obs)
             policy.reset(dones)
             valid[tick] = alive & ~dones.bool()
             done_out[tick] = alive & dones.bool()
@@ -338,9 +344,6 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                         env.reset()
                         fixed = fixed_terrain.apply(raw, level)
                         env.reset()
-                        if getattr(args, "ex41_checkpoint_preparation", {}).get("checkpoint_pose_commands"):
-                            from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
-                            verify_ex41_pose_observation(env.get_observations())
                         actual = raw.scene.terrain
                         tiles = map_mode_cells.terrain_rows(actual.terrain_levels.cpu().numpy(),
                                                             actual.terrain_types.cpu().numpy(), terrain_names)
@@ -358,8 +361,11 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                         policy.reset(torch.ones(n, dtype=torch.bool, device=raw.device))
                         map_mode_cells.disable_heading_for_fixed_eval(term)
                         steps = case_steps(phases, dt)
-                        data = collect_case(env, raw, robot, term, policy, sensor, sensor_feet,
-                                            body_feet, phases, steps, heading=name in HEADING_CASES)
+                        data = collect_case(
+                            env, raw, robot, term, policy, sensor, sensor_feet,
+                            body_feet, phases, steps, heading=name in HEADING_CASES,
+                            verify_pose_cmd=bool(getattr(args, "ex41_checkpoint_preparation", {}).get(
+                                "checkpoint_pose_commands", False)))
                         data["dt"] = np.asarray(dt)
                         data["phase_steps"] = np.asarray(steps)
                         data["t"] = np.arange(sum(steps), dtype=np.float64) * dt

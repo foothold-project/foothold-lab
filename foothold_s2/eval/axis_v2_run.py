@@ -60,7 +60,8 @@ def directional_slope_kinds(tiles, require: bool):
     return kinds
 
 
-def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, steps):
+def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, steps,
+                      *, verify_pose_cmd: bool = False):
     """Execute the real per-step command boundary; also exercised with a CPU env."""
     n = env.num_envs
     goal_turn = spec["kind"] == "goal_turn_stop"
@@ -101,8 +102,14 @@ def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target,
         stand_pre[step] = term.stand
         if goal_turn or step == 0:
             obs = env.get_observations()
+            if verify_pose_cmd:
+                from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+                verify_ex41_pose_observation(obs)
         action = policy(obs)
         obs, _reward, done, _extras = env.step(action)
+        if verify_pose_cmd:
+            from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+            verify_ex41_pose_observation(obs)
         cmd_post[step] = term.vel_command_b[:, :3]
         policy.reset(done)
         done_rows[step] = done.bool()
@@ -208,7 +215,10 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                                        map_mode="eval_pred" if mode == "none" else mode)
             policy.reset(torch.ones(n, dtype=torch.bool, device=raw.device))
             map_mode_cells.disable_heading_for_fixed_eval(term)
-            samples = execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, steps)
+            samples = execute_case_loop(
+                env, raw, robot, term, policy, sensor, feet, spec, target, steps,
+                verify_pose_cmd=bool(getattr(args, "ex41_checkpoint_preparation", {}).get(
+                    "checkpoint_pose_commands", False)))
             if counts["total"] != n * steps:
                 raise RuntimeError(f"W57 policy perception step count invalid: {counts}")
             if (mode == "eval_gt" and counts["gt"] != counts["total"]) or (mode != "eval_gt" and counts["gt"] != 0):

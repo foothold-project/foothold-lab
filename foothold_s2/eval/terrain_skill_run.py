@@ -49,7 +49,8 @@ def case_steps(phases, dt: float) -> list[int]:
     return steps
 
 
-def execute_phases(env, raw, robot, term, policy, sensor, feet, phases, steps, heading=False):
+def execute_phases(env, raw, robot, term, policy, sensor, feet, phases, steps,
+                   heading=False, verify_pose_cmd=False):
     """Per-step command boundary identical to axis_v2_run.execute_case_loop (stand off). heading=False as W57;
     heading=True keeps the term's own heading wz (target = reset yaw) and only sets vx, vy."""
     n, total = env.num_envs, sum(steps)
@@ -64,6 +65,9 @@ def execute_phases(env, raw, robot, term, policy, sensor, feet, phases, steps, h
     psi0 = yaw_from_quat(robot.data.root_quat_w).clone()
     origin = raw.scene.env_origins[:, :2].clone()
     obs = env.get_observations()
+    if verify_pose_cmd:
+        from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+        verify_ex41_pose_observation(obs)
     step = 0
     for (command, _sec), count in zip(phases, steps):
         for _ in range(count):
@@ -80,6 +84,9 @@ def execute_phases(env, raw, robot, term, policy, sensor, feet, phases, steps, h
             term.stand.fill_(False)
             action = policy(obs)
             obs, _reward, done, _extras = env.step(action)
+            if verify_pose_cmd:
+                from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+                verify_ex41_pose_observation(obs)
             cmd_post[step] = term.vel_command_b[:, :3]
             policy.reset(done)
             valid[step] = alive & ~done.bool()
@@ -170,7 +177,11 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
             policy = adapters.S2Policy(runner, n, z_mode="mean", act_mode="mean", map_mode=mode)
             policy.reset(torch.ones(n, dtype=torch.bool, device=raw.device))
             map_mode_cells.disable_heading_for_fixed_eval(term)
-            s = execute_phases(env, raw, robot, term, policy, sensor, feet, phases, steps, heading=name in HEADING_CASES)
+            s = execute_phases(
+                env, raw, robot, term, policy, sensor, feet, phases, steps,
+                heading=name in HEADING_CASES,
+                verify_pose_cmd=bool(getattr(args, "ex41_checkpoint_preparation", {}).get(
+                    "checkpoint_pose_commands", False)))
             z, xy, valid = (s[k].cpu().numpy() for k in ("z", "xy", "valid"))
             rows = env_rows(tiles, z0, z, xy, valid, steps, s["yaw"].cpu().numpy(), s["psi0"].cpu().numpy())
             by_kind = {}

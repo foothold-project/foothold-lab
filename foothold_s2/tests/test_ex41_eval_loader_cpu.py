@@ -120,6 +120,7 @@ def test_production_eval_entrypoints_use_shared_loader_before_gym_make():
     for name in ("axis_v2_run.py", "terrain_skill_run.py", "terrain_skill_v2_run.py"):
         source = (root / name).read_text(encoding="utf-8")
         assert "checkpoint_state=getattr(args, \"ex41_checkpoint_state\", None)" in source, name
+        assert "verify_ex41_pose_observation" in source, name
 
     probe = (root / "turn_probe.py").read_text(encoding="utf-8")
     assert "verify_ex41_pose_observation(obs)" in probe
