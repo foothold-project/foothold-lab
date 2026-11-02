@@ -143,6 +143,27 @@ def test_first_real_pose_observation_must_be_exactly_two_zero_columns():
         verify_ex41_pose_observation({"policy": torch.zeros((4, 45))})
 
 
+def test_eval_dr_receipt_lists_events_but_not_action_delay():
+    from foothold_s2.eval.adapters import disable_eval_randomization
+
+    env_cfg = SimpleNamespace(
+        events=SimpleNamespace(
+            physics_material=object(), add_base_mass=object(),
+            actuator_gains=None, motor_strength=None, base_com=None,
+            push_robot=None, base_external_force_torque=None,
+        ),
+        actions=SimpleNamespace(joint_pos=SimpleNamespace(max_delay_s=0.015)),
+    )
+
+    disabled = disable_eval_randomization(env_cfg)
+
+    assert disabled == ["physics_material", "add_base_mass"]
+    assert env_cfg.events.physics_material is None
+    assert env_cfg.events.add_base_mass is None
+    assert env_cfg.actions.joint_pos.max_delay_s == 0.0
+    assert "action_delay" not in disabled
+
+
 def test_production_eval_entrypoints_use_shared_loader_before_gym_make():
     root = Path(__file__).resolve().parents[1] / "eval"
     for name in ("eval_map_modes.py", "ex40_stand_eval.py", "turn_probe.py"):

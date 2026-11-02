@@ -112,16 +112,7 @@ if args.ex39_heading_smoke_guard:
     cmd_cfg = env_cfg.commands.base_velocity
     cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
     cmd_cfg.seed = 42
-dr_off = []
-
-for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"):
-    if getattr(env_cfg.events, name, None) is not None:
-        setattr(env_cfg.events, name, None)
-        dr_off.append(name)
-
-if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
-    env_cfg.actions.joint_pos.max_delay_s = 0.0
-    dr_off.append("action_delay")
+dr_off = adapters.disable_eval_randomization(env_cfg)
 
 START_OFFSET_MAX_M = 0.5
 EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다

@@ -69,6 +69,26 @@ def apply_terrain_settings(env_cfg, generator, seed, difficulty, changes):
                       else "생성기 값 %r (난이도 행 그대로)" % (generator.difficulty_range,)))
 
 
+def disable_eval_randomization(env_cfg):
+    """Disable configured eval DR events and action delay, returning event names only."""
+    disabled_events = []
+    for name in (
+        "actuator_gains", "motor_strength", "physics_material", "add_base_mass",
+        "base_com", "push_robot", "base_external_force_torque",
+    ):
+        if getattr(env_cfg.events, name, None) is not None:
+            setattr(env_cfg.events, name, None)
+            disabled_events.append(name)
+
+    # Delay is an action setting, not an event. Keep it out of the event receipt
+    # so EXPECTED_DR_OFF remains an exact check of the configured event set.
+    joint_pos = getattr(getattr(env_cfg, "actions", None), "joint_pos", None)
+    if joint_pos is not None and hasattr(joint_pos, "max_delay_s"):
+        joint_pos.max_delay_s = 0.0
+
+    return disabled_events
+
+
 class E1Adapter:
     name = "e1"
 
