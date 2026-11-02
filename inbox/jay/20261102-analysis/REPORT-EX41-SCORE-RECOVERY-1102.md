@@ -1,10 +1,12 @@
-> 분류: A/평가
+> 분류: 실험
 > 작성: analyst · 2026-11-02
 > 근거: lead 19:4x · 19:5x · verifier 9521dc11 검토 · 실제 EX40 평가 원자료
 > 요지: 최종 요청 연결 · 비동기 DR 점수 · 선택 보조 평가 · 중단 복구 수정
 > 상태: CPU 확인됨 · 독립 재검과 통합 Kit 대기 · GPU 미실행
 
 # EX41 그림자 채점기 후속 검증
+
+`확인됨`: 아래 CPU 결과와 원자료 대조. `미확인`: 통합 Kit. [수정 코드 1dee4924](https://github.com/foothold-project/foothold-lab/blob/1dee4924/foothold_s2/ex41_score_watch.py).
 
 수정 전 기준은 9521dc11, P3 선행 구현은 c6fff190이다. 학습·실행 EX40·그림자 루프·원장은 건드리지 않았다. 현재 D: 작업 사본만 수정했고 실제 EX40 출력은 읽기 전용으로 재생했다. 최신 HEAD는 이 파일을 포함한 커밋으로 보고한다.
 

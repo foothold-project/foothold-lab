@@ -1,10 +1,12 @@
-> 분류: A/평가
+> 분류: 실험
 > 작성: analyst · 2026-11-02
 > 근거: lead 19:0x · EX40 W71 · ex41_scoring.py · D125 · D133
 > 요지: EX41 저장본 감지부터 런타임 점수까지 연결하는 CLI 계약
 > 상태: 구현 v0.4 · lead 19:5x 유지/보조 분리 · 재기동 복구 · 통합 Kit 미확인
 
 # EX41 그림자 채점기 계약
+
+`코드확인`: [수정 소스 1dee4924](https://github.com/foothold-project/foothold-lab/blob/1dee4924/foothold_s2/ex41_score_watch.py). `미확인`: 통합 Kit와 실제 학습 연결.
 
 진입점은 `python -m foothold_s2.ex41_score_watch`다. 필수 인자는 `--run-dir`(실제 model/manifest/stage_log 폴더), `--out-root`(평가·영수증 전용 새 폴더), `--score-dir`(학습 runtime의 score_dir와 같은 경로), `--table`(고정 EX41 YAML)이다. `--eval-config`는 기존 ex40_score_config.json의 측정 조건만 소비한다. EX40 단계·판정 규칙은 이식하지 않는다.
 
