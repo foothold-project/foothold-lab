@@ -44,3 +44,9 @@ EX41-LAUNCH-GAPS.md 의 G1~G20 · C1~C6 막음이 모두 닫히고 GPU 예행(�
 | 독립 에이전트 | | | | |
 | planner | | | | |
 | verifier | | | | |
+
+## 요구 등록부 반영 (18:2x)
+
+전수 등록부: [EX41-REQUIREMENT-REGISTER.md](EX41-REQUIREMENT-REGISTER.md) (WORKLIST D · W · CURRICULUM-GATES · FAILURE-LOG · RULES-HUB · #555 댓글 113 건 · 실행 YAML). 감사표 Q1~Q14 · GAPS G · C 에 없는 요구 22 건(U1~U22), 일부만 덮인 14 건(P1~P14). 최종 감사는 Q1~Q14 에 더해 U1~U22 · P1~P14 를 모두 대조한다.
+
+담당(1차): U1 WSL 정리 · 재부팅 시점은 팀장(재부팅) · U2 · U3 · U13 보고 · 경보 경로 runner · U4 평가 묶음 시간 측정 runner · U5 이어 학습 실제 경로 시험 runner · U6 전역 NaN · reset 실패 analyst · U7 END_BY · 회차 기준 승인 문장 lead · U8 GPU 배정 lead · U9 결과 시나리오표 · 다음 실험 DRY planner · U10 무릎 토크 한계 기록 analyst · U11 관문 수치 확정 절차 lead(결과 전 고정 규칙과 정합) · U12 경계별 실제 소비율 기록 analyst · U14 PROVENANCE runner · U15 링크 접촉 진단 analyst · U16 foot_slip 어댑터 analyst · U17 기존 8 FAIL 처리 기록 analyst · U18 회전 여섯 경우 진단 대체 근거 planner · U19 영상 이름 규칙 scripter · U20 앱용 저장본 선택 조건 lead · U21 기동 뒤 1 분 되읽기 runner · U22 무인 사슬과 EX-42 이어짐 승인 정리 lead. P1 G11 실제 저장본 DRY runner · P3 critic 거울 켜는 길(approvals 칸 · w78_min_lr_ratio 소비) analyst+scripter · P4 학습 쪽 계단 방향 · 옆걸음 몫 planner · P5 G17 빠진 두 항 runner · P7 EX-41 졸업 판정 · 최종 T0′ 점수 경로 planner+analyst · P8 지형 레벨 승급 확인 칸 analyst · P14 lin_vel_z 0 팀장 확인.
