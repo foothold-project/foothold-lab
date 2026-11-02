@@ -1,6 +1,6 @@
 > 분류: 외부 연락 초안 (발송 전)
 > 작성: lead · 2026-11-02 16:3x
-> 근거: START arXiv 2512.13153 (Ruiqi Yu 외, Qiuguo Zhu 연구실, RA-L 2025) · HiPAN arXiv 2604.26504 (Jeil Jeong 외, KAIST SGVR Lab Sung-eui Yoon 교수, RA-L 2026) · 팀장 11/02 16:3x 「저자에게 이메일 시도」
+> 근거: START arXiv 2512.13153 (Ruiqi Yu 외, Qiuguo Zhu 연구실, RA-L 2025) · HiPAN arXiv 2604.26504 (Jeil Jeong 외, KAIST SGVR Lab Sung-eui Yoon 교수, RA-L 2026) · 팀장 11/02 16:3x 지시(저자 연락 시도)
 > 요지: 두 논문 저자에게 학습 코드 · 가중치 · 하이퍼파라미터 공유를 요청하는 초안. 발송은 팀장이 직접(또는 팀장이 건별 승인)
 > 상태: 초안. 받는 주소는 논문 PDF 의 교신 저자 주소를 팀장이 확인해 넣을 것(미확인)
 
