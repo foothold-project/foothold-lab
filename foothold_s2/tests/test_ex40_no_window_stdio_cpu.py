@@ -49,6 +49,39 @@ def test_ex40_python_child_processes_explicitly_close_stdin():
                 missing.append(f"{path.name}:{node.lineno}:{node.func.attr}")
     assert missing == []
 
+    publish = ROOT / "foothold_s2" / "ex40_stage_publish.py"
+    tree = ast.parse(publish.read_text(encoding="utf-8-sig"))
+    hidden_calls = [node for node in ast.walk(tree)
+                    if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id == "subprocess"
+                    and node.func.attr == "run"
+                    and any(keyword.arg == "creationflags" for keyword in node.keywords)]
+    assert len(hidden_calls) == 1
+    assert any(keyword.arg == "stdin"
+               and isinstance(keyword.value, ast.Attribute)
+               and isinstance(keyword.value.value, ast.Name)
+               and keyword.value.value.id == "subprocess"
+               and keyword.value.attr == "DEVNULL"
+               for keyword in hidden_calls[0].keywords)
+
+
+def test_hidden_stage_sender_gets_eof_without_external_send(tmp_path):
+    from foothold_s2.ex40_stage_publish import _send
+
+    sender = tmp_path / "fake_sender.py"
+    observed = tmp_path / "stdin.txt"
+    sender.write_text(
+        f"import pathlib, sys; pathlib.Path({str(observed)!r}).write_text("
+        "sys.stdin.read(), encoding='utf-8'); print('0 fake-accepted')\n",
+        encoding="utf-8")
+    text_path = tmp_path / "message.txt"
+    text_path.write_text("CPU fixture only\n", encoding="utf-8")
+
+    assert _send(text_path, sender)
+    assert observed.read_text(encoding="utf-8") == ""
+
 
 def test_hidden_parent_can_launch_hidden_child_with_closed_stdin(tmp_path):
     parent_receipt = tmp_path / "parent.json"
