@@ -47,6 +47,15 @@ def attach_ex41_w86_runtime(env, plan, out_dir: str | Path):
             "log_dir": str(runtime.log_dir)}
 
 
+def attach_ex41_eval_runtime(env, plan, out_dir: str | Path):
+    """Install the EX-40 stand evidence and EX-41 W86 consumers before evaluation steps."""
+    from foothold_s2.scripts.ex41_startup import attach_ex41_stand_runtime_data
+
+    stand = attach_ex41_stand_runtime_data(env)
+    w86 = attach_ex41_w86_runtime(env, plan, out_dir)
+    return {"stand": stand, "w86": w86}
+
+
 def _int_set(value, *, label: str, required: tuple[int, ...]) -> tuple[int, ...]:
     try:
         numbers = tuple(int(part) for part in value.split(","))
@@ -344,7 +353,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "levels": LEVELS, "start_angles_deg": ANGLES_DEG, "modes": {},
               "ex41_environment_preparation": getattr(args, "ex41_env_preparation", None),
               "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
-              "ex41_w86_attachment": getattr(args, "ex41_w86_attachment", None),
+              "ex41_runtime_attachment": getattr(args, "ex41_runtime_attachment", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
                                "focus_kinds": list(kinds)} for name, (phases, kinds) in V2_CASES.items()},

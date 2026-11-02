@@ -144,10 +144,12 @@ args.ex41_checkpoint_preparation = checkpoint_preparation
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
 args.ex41_w86_attachment = None
+args.ex41_runtime_attachment = None
 if args.terrain_skill_v2:
-    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_w86_runtime
+    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_eval_runtime
 
-    args.ex41_w86_attachment = attach_ex41_w86_runtime(env, plan, args.out)
+    args.ex41_runtime_attachment = attach_ex41_eval_runtime(env, plan, args.out)
+    args.ex41_w86_attachment = args.ex41_runtime_attachment["w86"]
 dev = raw.device
 robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")

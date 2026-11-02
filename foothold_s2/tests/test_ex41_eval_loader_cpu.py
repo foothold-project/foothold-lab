@@ -189,13 +189,19 @@ def test_production_eval_entrypoints_use_shared_loader_before_gym_make():
 
 
 def test_w78_eval_attaches_w86_to_unwrapped_env_before_suite(tmp_path, monkeypatch):
-    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_w86_runtime
+    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_eval_runtime
     from foothold_s2.rewards import w86_runtime
+    from foothold_s2.scripts import ex41_startup
 
     raw = SimpleNamespace()
     wrapper = SimpleNamespace(unwrapped=raw)
     plan = object()
     seen = {}
+    def attach_stand(env):
+        seen["stand_env"] = env.unwrapped
+        return {"mass_readback": True}
+
+    monkeypatch.setattr(ex41_startup, "attach_ex41_stand_runtime_data", attach_stand)
 
     attached = SimpleNamespace(log_dir=tmp_path / "ex41_w86")
 
@@ -205,13 +211,14 @@ def test_w78_eval_attaches_w86_to_unwrapped_env_before_suite(tmp_path, monkeypat
         return attached
 
     monkeypatch.setattr(w86_runtime, "attach_runtime", attach_with_runtime)
-    receipt = attach_ex41_w86_runtime(wrapper, plan, tmp_path)
-    assert receipt == {"attached": True, "runtime": "SimpleNamespace",
-                       "log_dir": str(tmp_path / "ex41_w86")}
-    assert seen == {"env": raw, "plan": plan, "log_dir": tmp_path / "ex41_w86"}
+    receipt = attach_ex41_eval_runtime(wrapper, plan, tmp_path)
+    assert receipt == {"stand": {"mass_readback": True},
+                       "w86": {"attached": True, "runtime": "SimpleNamespace",
+                               "log_dir": str(tmp_path / "ex41_w86")}}
+    assert seen == {"stand_env": raw, "env": raw, "plan": plan, "log_dir": tmp_path / "ex41_w86"}
 
     source = (Path(__file__).resolve().parents[1] / "eval" / "eval_map_modes.py").read_text(encoding="utf-8")
-    attach_at = source.index("attach_ex41_w86_runtime(env, plan, args.out)")
+    attach_at = source.index("attach_ex41_eval_runtime(env, plan, args.out)")
     make_at = source.index("gym.make(")
     suite_at = source.index("run_terrain_skill_v2(args")
     assert make_at < attach_at < suite_at
