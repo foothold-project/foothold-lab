@@ -43,14 +43,15 @@ def counts(r,passed=64):
 
 def tick(r,n,*,failed=False,stand=64,stage_pass=False):
     c=counts(r)
-    if failed: c[CELLS[-1]]['passed']=60
+    if failed: c[CELLS[0]]['passed']=60
     score(r,n-1,passed=stage_pass,metrics={'maintenance_counts':c,'stand_min_passed':stand})
     r.on_update_start(n)
 
 
-def test_actual_parent_baseline_has_all39_pinned_cells():
+def test_actual_parent_baseline_judges26_and_preserves39_pinned_cells():
     p=load_plan(TABLE,arm='B');b=baseline_counts(p)
-    assert len(b)==39 and p.parent_update==6000 and p.initial_dr_scale==.5
+    assert len(b)==26 and len(baseline_counts(p,include_record_only=True))==39
+    assert p.parent_update==6000 and p.initial_dr_scale==.5
     assert p.fixed_schedule['duration_updates']==5000
     assert [s.id for s in p.stages]==['S2a','S2b','S2c','S2d','S2e','T0_prime']
 
@@ -61,6 +62,21 @@ def test_nominal_clock_endpoints_and_slopes():
         assert c.scale(n)==pytest.approx(expected)
     assert c.scale(1751)-c.scale(1750)==pytest.approx(.15/1000)
     assert c.scale(4001)-c.scale(4000)==pytest.approx(.2/1250)
+
+
+def test_clock_uses_supplied_lengths_and_limits_instead_of_literals():
+    # CPU clock-only known input, not an approved alternative launch plan.
+    cfg=copy.deepcopy(Clock().settings)
+    cfg['durations']=tuple(n*2 for n in cfg['durations'])
+    cfg.update(duration_updates=10000,pause_limit_updates=500,interval_updates=125)
+    c=Clock(cfg)
+    assert c.scale(1001)==.5 and c.scale(3501)==pytest.approx(.65)
+    assert c.position(8001)==4
+    c.boundary(1501,['bad'],1500)
+    c.boundary(1876,[],1875)
+    event=c.boundary(2001,[],2000)
+    assert c.pause_used==500 and event=='dr_resume_same_slope'
+    assert c.frozen_scale is None and c.scale(2251)==pytest.approx(.51875)
 
 
 def test_any_cell_fails_exact_minus3_passes_and_missing_is_unknown():
@@ -221,7 +237,7 @@ def test_stand_missing_reports_unknown_never_pass_default(tmp_path):
 
 
 def test_native_producer_actual_parent_contract_uses_alive_not_success():
-    p=load_plan(TABLE,arm='B');b=baseline_counts(p)
+    p=load_plan(TABLE,arm='B');b=baseline_counts(p,include_record_only=True)
     raw=json.loads(Path(p.fixed_schedule['maintenance_baseline']['path']).read_text(encoding='utf-8-sig'))
     c=build_maintenance_counts(raw,b,total_envs=64)
     assert len(c)==39 and maintenance(c,b)==[]
@@ -241,13 +257,15 @@ def test_native_producer_rejects_wrong_denominator(total):
 
 def test_record_only_selection_26_or39_and_plan_hash(tmp_path):
     r,_=fixture(tmp_path);old_sha=r.plan.sha256
-    doc=yaml.safe_load(r.plan.path.read_text());doc['fixed_schedule']['include_record_only']=False
+    doc=yaml.safe_load(r.plan.path.read_text());doc['fixed_schedule']['include_record_only']=True
     r.plan.path.write_text(yaml.safe_dump(doc))
     p=load_plan(r.plan.path,arm='B');b=baseline_counts(p)
-    assert p.sha256!=old_sha and len(b)==26 and tuple(b)==maintenance_cells(False)
+    assert p.sha256!=old_sha and len(b)==39 and tuple(b)==maintenance_cells(True)
     raw={'cells':{k:{'alive_envs_at_end':64} for k in CELLS}}
     raw['cells']['eval_pred/stop_record_only']['alive_envs_at_end']=0
-    assert maintenance(build_maintenance_counts(raw,b,total_envs=64),b)==[]
+    records=build_maintenance_counts(raw,b,total_envs=64)
+    assert maintenance(records,b)==['eval_pred/stop_record_only']
+    assert maintenance({k:records[k] for k in r.baseline},r.baseline)==[]
     with pytest.raises(ValueError,match='bool'):maintenance_cells(1)
 
 
@@ -311,3 +329,93 @@ def test_stand_threshold_and_clock_accounting_cannot_be_changed_silently(tmp_pat
     b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
     attach_consumer(b)
     with pytest.raises(ValueError,match='clock'):b.load_state_dict(state)
+
+
+@pytest.mark.parametrize('bad',['nan','sha','stand_missing','iteration_nan','truncated','evidence_sha'])
+def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    d=json.loads(p.read_text())
+    if bad=='nan':d['metrics']['gait_sync']=float('nan')
+    if bad=='sha':d['checkpoint_sha256']='0'*64
+    if bad=='stand_missing':del d['metrics']['stand_min_passed']
+    if bad=='iteration_nan':d['iteration']=float('nan')
+    if bad=='evidence_sha':d['evidence'][0]['sha256']='0'*64
+    p.write_text('{"iteration":' if bad=='truncated' else json.dumps(d));r.on_update_start(1251)
+    assert r.clock.paused and r.clock.recovered==0
+    assert r.dr_scale(1501)==r.dr_scale(1251)
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='score_rejected' and str(p) in x['path'] for x in rows)
+    assert any(x['event']=='latest_score_invalid_hold' for x in rows)
+
+
+def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
+    r,_=fixture(tmp_path/'a');tick(r,751);tick(r,1001)
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['checkpoint_sha256']='0'*64;p.write_text(json.dumps(data))
+    r.on_update_start(1251);assert r.clock.paused
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(r.state_dict())
+    assert b._score_rejections==r._score_rejections and b._score_rejections
+    tick(b,1501);assert b.clock.paused and b.clock.recovered==1
+    tick(b,1751);assert not b.clock.paused and b.clock.pause_used==500
+
+
+def test_d133_record39_judge26_pred_zero_is_not_dr_failure(tmp_path):
+    r,_=fixture(tmp_path)
+    assert r.plan.fixed_schedule['include_record_only'] is False and len(r.baseline)==26
+    records={k:{'passed':64,'baseline_passed':64,'total':64} for k in CELLS}
+    records[CELLS[-1]]['passed']=0
+    judged={k:copy.deepcopy(records[k]) for k in r.baseline}
+    score(r,750,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
+    r.on_update_start(751)
+    assert not r.clock.paused and len(r._history[-1]['metrics']['record_counts'])==39
+    assert len(r._history[-1]['metrics']['maintenance_counts'])==26
+    records[CELLS[0]]['passed']=60
+    judged={k:copy.deepcopy(records[k]) for k in r.baseline}
+    score(r,1000,metrics={'maintenance_counts':judged,'record_counts':records,'stand_min_passed':64})
+    r.on_update_start(1001)
+    assert r.clock.paused
+
+
+def test_second_share_change_at_s2c_not_dr_start(tmp_path):
+    r,_=fixture(tmp_path)
+    first=copy.deepcopy(r.effective['shares'])
+    tick(r,751)
+    assert r.effective['stage_id']=='S2b' and r.effective['shares']==first
+    for n in (1001,1251,1501,1751):tick(r,n)
+    assert r.effective['stage_id']=='S2c' and r.effective['shares']!=first
+    assert r.effective['shares']['side_left']==.07
+
+
+def test_transferred_lin_vel_z_keeps_actual_parent_zero_at_each_boundary(tmp_path):
+    from types import SimpleNamespace
+    from foothold_s2.rewards.basic_gait_bundle import scheduled_lin_vel_z_weight
+    r,_=fixture(tmp_path)
+    actual_parent=scheduled_lin_vel_z_weight(6000,start_iteration=1501)
+    assert actual_parent==0.
+    class Manager:
+        def __init__(self):self.terms={'lin_vel_z':SimpleNamespace(weight=-2.)}
+        def get_term_cfg(self,key):return self.terms.setdefault(key,SimpleNamespace(weight=0.))
+        def set_term_cfg(self,key,cfg):self.terms[key]=cfg
+    manager=Manager()
+    r.runner=SimpleNamespace(env=SimpleNamespace(unwrapped=SimpleNamespace(reward_manager=manager)),
+                              basic_lin_vel_z_schedule=True)
+    for _ in range(3):
+        r._sync_rewards()
+        assert manager.get_term_cfg('lin_vel_z').weight==actual_parent
+        assert r.runner.basic_lin_vel_z_schedule is False
+
+
+@pytest.mark.parametrize('bad',['nan','sha','stand_missing'])
+def test_latest_bad_while_already_held_is_not_first_recovery(tmp_path,bad):
+    r,_=fixture(tmp_path);tick(r,751,failed=True);tick(r,1001,failed=True)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    d=json.loads(p.read_text())
+    if bad=='nan':d['metrics']['gait_sync']=float('nan')
+    elif bad=='sha':d['checkpoint_sha256']='0'*64
+    else:del d['metrics']['stand_min_passed']
+    p.write_text(json.dumps(d));r.on_update_start(1251)
+    assert r.clock.paused and r.clock.recovered==0

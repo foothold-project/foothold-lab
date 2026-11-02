@@ -62,7 +62,7 @@ def measurement_bundle(map_modes_path, stand_paths, checkpoint_path, baseline, *
         passed=sum(bool(_stand_pass(row,cfg['stand'])) for row in rows)
         stands[mode]={'passed':passed,'total':64}
         evidence.extend((path,path.parent/'stand_raw.npz'))
-    return {'metrics':{'maintenance_counts':counts,'stand_counts':stands,
+    return {'metrics':{'record_counts':counts,'stand_counts':stands,
                        'stand_min_passed':min(r['passed'] for r in stands.values())},
             'checkpoint_iteration':data['checkpoint_iter'],'checkpoint_sha256':data['checkpoint_sha256'],
             'evidence':[{'path':str(p),'sha256':sha256(p)} for p in evidence]}
@@ -78,13 +78,15 @@ def enrich_score_metrics(draft, map_modes_path, stand_paths, plan, *, score_conf
         or draft.get('parent_sha256')!=plan.parent_sha256
         or draft.get('baseline_checkpoint_sha256')!=plan.parent_sha256):
         raise ValueError('EX41 score draft identity/fields differ')
-    baseline=baseline_counts(plan)
+    baseline=baseline_counts(plan,include_record_only=True)  # D133 records all 39
     bundle=measurement_bundle(map_modes_path,stand_paths,draft['checkpoint_path'],baseline,
                               score_config_path=score_config_path)
     if (bundle['checkpoint_iteration']!=draft['iteration'] or bundle['checkpoint_sha256']!=draft.get('checkpoint_sha256')):
         raise ValueError('EX41 measured checkpoint differs from draft')
     result=copy.deepcopy(draft); result['metrics'].update(bundle['metrics'])
-    result['maintenance_pass']=maintenance(result['metrics']['maintenance_counts'],baseline)==[]
+    judged=baseline_counts(plan)
+    result['metrics']['maintenance_counts']={k:copy.deepcopy(bundle['metrics']['record_counts'][k]) for k in judged}
+    result['maintenance_pass']=maintenance(result['metrics']['maintenance_counts'],judged)==[]
     for row in bundle['evidence']:
         if row not in result['evidence']:result['evidence'].append(row)
     json.dumps(result,allow_nan=False)

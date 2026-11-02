@@ -32,8 +32,11 @@ def test_actual_m6000_generated_file_matches_all39_and_stand_cells(actual,tmp_pa
         'metrics':{},'evidence':[],'maintenance_pass':False,'stage_pass':False,'safety_stop':False}
     result=enrich_score_metrics(draft,ROOT/'map64/map_modes.json',stands,plan)
     out=tmp_path/'score_6000.json';out.write_text(json.dumps(result,allow_nan=False))
-    got=json.loads(out.read_text());counts=got['metrics']['maintenance_counts']
-    assert len(counts)==39 and maintenance(counts,baseline_counts(plan))==[]
+    got=json.loads(out.read_text());counts=got['metrics']['record_counts']
+    assert len(counts)==39 and len(got['metrics']['maintenance_counts'])==26
+    assert maintenance(got['metrics']['maintenance_counts'],baseline_counts(plan))==[]
+    assert set(got['metrics']['maintenance_counts'])==set(counts)-{k for k in counts if k.startswith('eval_pred/')}
+    for key,row in got['metrics']['maintenance_counts'].items():assert row==counts[key]
     for key,row in counts.items():assert row['passed']==row['baseline_passed']==native['cells'][key]['alive_envs_at_end']
     for mode,row in got['metrics']['stand_counts'].items():
         key=f'{mode}/flat_stand'+('_record_only' if mode=='eval_pred' else '')
