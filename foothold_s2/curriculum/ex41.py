@@ -22,6 +22,25 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
 
+def validate_metrics(metrics):
+    """Reject malformed scorer input before automatic arithmetic or promotion."""
+    for name in ('gait_sync','knee_limit_delta','forward_error_delta','w78_min_lr_ratio'):
+        if name in metrics and (type(metrics[name]) not in (int,float) or not math.isfinite(metrics[name])):
+            raise ValueError('EX41 invalid automatic metric: '+name)
+    for name in ('gait_sync','w78_min_lr_ratio'):
+        if name in metrics and not 0<=metrics[name]<=1: raise ValueError('EX41 ratio outside [0,1]: '+name)
+    if 'stand_min_passed' in metrics and (type(metrics['stand_min_passed']) is not int or not 0<=metrics['stand_min_passed']<=64):
+        raise ValueError('EX41 stand count outside 64 env contract')
+    if 'pairs' in metrics:
+        if not isinstance(metrics['pairs'],dict): raise ValueError('EX41 pairs mapping required')
+        for name,pair in metrics['pairs'].items():
+            if name not in ('side','diag_fwd','diag_back') or not isinstance(pair,dict) or set(pair)!={'left','right'}:
+                raise ValueError('EX41 automatic pair shape differs')
+            for sample in pair.values():
+                if not isinstance(sample,list) or len(sample)!=2 or type(sample[0]) is not int or not 0<=sample[0]<=64 or type(sample[1]) not in (int,float) or not math.isfinite(sample[1]) or sample[1]<0:
+                    raise ValueError('EX41 automatic pair must be [survivors/64, absolute_error]')
+
+
 def validate_shares(shares):
     if set(shares) != set(EX39_SLOTS) or any(type(v) not in (int,float) or not math.isfinite(v) or v <= 0 for v in shares.values()):
         raise ValueError('EX41 requires all finite positive command slots')
@@ -258,6 +277,9 @@ class EX41Runtime(Runtime):
             readback=self._hook(s,copy.deepcopy(after))
             if not isinstance(readback,dict) or not readback: raise ValueError('EX41 consumer readback must be a nonempty mapping')
             json.dumps(readback,allow_nan=False)
+            for key in ('terrain','ppo','critic_mirror','episode_length_s','authorization'):
+                if key not in readback or digest(readback[key])!=digest(after[key]):
+                    raise ValueError('EX41 consumer readback differs: '+key)
             self.effective=after
             self._sync_map(); self._sync_rewards()
             old_dr=before.get('dr',{})
@@ -354,6 +376,7 @@ class EX41Runtime(Runtime):
                     raise ValueError('EX41 score decisions missing')
                 if not isinstance(d.get('metrics'),dict) or not isinstance(d.get('evidence'),list) or not d['evidence']:
                     raise ValueError('EX41 score measured evidence missing')
+                validate_metrics(d['metrics'])
                 for e in d['evidence']:
                     if sha256(Path(e['path']).resolve(strict=True))!=e['sha256']: raise ValueError('EX41 raw evidence SHA differs')
                 if d.get('baseline_checkpoint_sha256')!=self._stage_baseline_sha: raise ValueError('EX41 stage baseline differs')
@@ -423,7 +446,7 @@ class EX41Runtime(Runtime):
                     if self.stage_pos==3: self._s2c_pass=True
             elif self.stage_pos==3 and elapsed>=meta['maximum_updates']+self._extensions*meta['extension_updates']:
                 delta=self._level_delta()
-                if snap['approvals'].get('automatic',{}).get('extension') and self._extensions<meta['maximum_extensions'] and delta is not None and delta>=self.plan.automatic['extension_level_delta'] and latest and latest in fresh and latest['maintenance_pass'] and latest['metrics'].get('stand_min_passed',0)>=61:
+                if snap['approvals'].get('automatic',{}).get('extension') and self._extensions<meta['maximum_extensions'] and delta is not None and delta>=self.plan.automatic['extension_level_delta'] and latest and latest in fresh and latest['maintenance_pass'] and latest['metrics'].get('stand_min_passed',0)>=self.plan.automatic['stand_min_passed']:
                     self._extensions+=1; reason='D110 extension once'
                 else: next_pos=4; reason='D110 cap transition; S2c NOT graduated'
             elif self.stage_pos==4 and elapsed>=meta['maximum_updates']:
@@ -459,13 +482,14 @@ class EX41Runtime(Runtime):
         self._auto_seen.add(score['_sha256'])
         metrics=score['metrics']; rules=self._snapshot['approvals'].get('automatic',{}); changes=[]
         latest=self._history[-2:]
+        cfg=self.plan.automatic
         def twice(key,pred):
-            return len(latest)==2 and latest[1]['iteration']-latest[0]['iteration']>=250 and all(key in r['metrics'] and pred(r['metrics'][key]) for r in latest)
+            return len(latest)==2 and latest[1]['iteration']-latest[0]['iteration']>=self.plan.gate_cfg['separated_checkpoints'] and all(key in r['metrics'] and pred(r['metrics'][key]) for r in latest)
         lower=set()
-        if twice('gait_sync',lambda x:x<.79): lower.add('zero_yaw')
-        if twice('knee_limit_delta',lambda x:x>.10): lower.add('swing')
-        if twice('forward_error_delta',lambda x:x>.05): lower.update(('swing','zero_yaw'))
-        if metrics.get('stand_min_passed',64)<61:
+        if twice('gait_sync',lambda x:x<cfg['gait_sync_floor']): lower.add('zero_yaw')
+        if twice('knee_limit_delta',lambda x:x>cfg['knee_limit_increase']): lower.add('swing')
+        if twice('forward_error_delta',lambda x:x>cfg['forward_error_increase']): lower.update(('swing','zero_yaw'))
+        if metrics.get('stand_min_passed',64)<cfg['stand_min_passed']:
             lower.add('swing'); self._auto_disabled=True
         if rules.get('reward_halving'):
             for name in sorted(lower-self._halved):
@@ -477,7 +501,8 @@ class EX41Runtime(Runtime):
                 pair=metrics.get('pairs',{}).get(name)
                 if not isinstance(pair,dict) or set(pair)!={'left','right'}: continue
                 key=name+'_left|'+name+'_right'; old=self._pair_bias.get(key,0.)
-                try: new=w72.adjust_pair(old,pair['left'],pair['right'])
+                try: new=w72.adjust_pair(old,pair['left'],pair['right'],step=cfg['pair_step'],limit=cfg['pair_limit'],
+                                        survival_noise=cfg['pair_survival_noise'],error_noise=cfg['pair_error_noise'])
                 except (ValueError,TypeError): continue
                 base=self.templates[self.stage_pos].shares
                 if base[name+'_left']+new<=0 or base[name+'_right']-new<=0:
@@ -486,7 +511,7 @@ class EX41Runtime(Runtime):
                 if new!=old:
                     self._pair_bias[key]=new
                     changes.append(dict(path='pair_bias.'+name,before=old,after=new,decision_id=rules['pair_bias'],automatic=True))
-        if rules.get('critic_mirror') and score['iteration']<=1000 and twice('w78_min_lr_ratio',lambda x:x<.8):
+        if rules.get('critic_mirror') and score['iteration']<=1000 and twice('w78_min_lr_ratio',lambda x:x<cfg['critic_both_fail_fraction']):
             self._mirror_pending=True
             if stage_boundary:
                 values['critic_mirror']=True
@@ -555,7 +580,24 @@ class EX41Runtime(Runtime):
         self._halved=set(state['halved']); self._auto_seen=set(state['auto_seen']); self._applied_ids=set(state['applied_ids'])
         self.seen_scores=set(state['seen_scores']); self._started=True
         if self._hook is None: raise ValueError('EX41 restore hook missing')
-        self._hook(self.plan.stages[self.active],copy.deepcopy(self.effective))
+        before=copy.deepcopy(self.effective)
+        try:
+            self._hook(self.plan.stages[self.active],copy.deepcopy(before))
+        except ValueError as exc:
+            if not before.get('critic_mirror'): raise
+            # A saved ON value is not a permanent authorization. The setter
+            # already disabled it; restore the other fields with mirror OFF.
+            after=copy.deepcopy(before); after['critic_mirror']=False
+            readback=self._hook(self.plan.stages[self.active],copy.deepcopy(after))
+            self.effective=after; self._mirror_pending=False
+            row=copy.deepcopy(self._receipt or {})
+            row.update(format='foothold-ex41-application/1',
+                event_id=digest(['resume_mirror_rejected_off',self.segment_index,before]),
+                status='rejected',iteration=self._iteration,before=before,after=after,
+                readback=readback,reason=f'resume_mirror_rejected_off: {exc}')
+            self._record_receipt(row)
+            self._write({'event':'resume_mirror_rejected_off','iteration':self._iteration,
+                         'error':str(exc),'critic_mirror':False})
         self._sync_map(); self._sync_rewards()
         if state.get('domain_randomization') is not None:
             if self.dr_runtime is None: raise ValueError('EX41 saved DR consumer missing')
@@ -663,7 +705,13 @@ def apply_runtime_fields(runner,stage,effective):
     if int(env.scene.terrain.terrain_levels.max())>cap: raise ValueError('EX41 cap cannot silently discard current levels')
     setter=getattr(runner,'set_ex41_critic_mirror',None)
     if not callable(setter): raise ValueError('EX41 critic mirror consumer not installed')
-    setter(effective['critic_mirror'],approval=effective['authorization'] if effective['critic_mirror'] else None)
+    try:
+        setter(effective['critic_mirror'],approval=effective['authorization'] if effective['critic_mirror'] else None)
+    except ValueError:
+        # The enclosing runtime transaction records rejected and restores
+        # other fields. Never leave a failed ON request effective at the hook.
+        setter(False,approval=None)
+        raise
     runner.alg.entropy_coef=effective['ppo']['entropy_coef']; runner.alg.desired_kl=effective['ppo']['desired_kl']
     env.cfg.episode_length_s=effective['episode_length_s']
     env._ex41_terrain=copy.deepcopy(terrain)

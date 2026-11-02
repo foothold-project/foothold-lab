@@ -43,10 +43,34 @@
 - score 형식은 `foothold-ex41-score/1`, `iteration`은 EX41 local n이다. stage_id·schedule_sha256·parent_sha256·checkpoint 실제 경로/해시·created_at·maintenance_pass/stage_pass/safety_stop(bool)·metrics·evidence(경로/해시)·baseline_checkpoint_sha256를 요구한다. stage 판정 수치 생산은 runner 점수기와 통합할 부분이며 B1은 그 bool을 대신 발명하지 않는다.
 - 남은 B1 검증: 저장 상태 엄격 검증, 소비 readback 값 대조, 실제 score 생산과 늦게 도착한 점수 연결, W71 승인 갱신, D121 종료조건 개방의 구체 필드, smoke 전 경로. 자동 걸림 상향의 발동 조건은 미확정이며 지금은 승인 범위 내 경계값 변경만 구현했다.
 
-확인됨: 12:43 B1 CPU 23통과(5.40초), 실제 파일 변경 rollback 시험 포함. `test_ex41_runtime_cpu.py · test_ex41_boundary_cpu.py · test_w72_cpu.py`, isaac311-moects Python, CUDA 숨김, pytest cache 끔. `git diff --check` 오류0. 선택한 구판 시험 4실패는 읽기 전용 2df419b0 고정본에서도 똑같이 재현: 날짜가 지난 end_by 예제1개, runtime_adapter_status를 implementation_in_progress로 기대하는 EX40 DR 시험3개. 그 사본은 고치지 않았다. isaac311-moects는 pyflakes 미설치. scripter 개발 중 사본을 독립 재시험한 3실패는 고정 HEAD 재확인 전까지 미해소이며 과거 5통과 보고를 현재 통과로 쓰지 않는다.
+확인됨: 12:43 B1 CPU 23통과(5.40초), 실제 파일 변경 rollback 시험 포함. `test_ex41_runtime_cpu.py · test_ex41_boundary_cpu.py · test_w72_cpu.py`, isaac311-moects Python, CUDA 숨김, pytest cache 끔. `git diff --check` 오류0. 선택한 구판 시험 4실패는 읽기 전용 2df419b0 고정본에서도 똑같이 재현: 날짜가 지난 end_by 예제1개, runtime_adapter_status를 implementation_in_progress로 기대하는 EX40 DR 시험3개. 그 사본은 고치지 않았다. isaac311-moects는 pyflakes 미설치. scripter 개발 중 사본의 3실패는 이후 고정140f9a79에서 직접 6통과(9.53초)로 재확인했다. 양측 실제 승인 fixture SHA는 e1f786ed8fbfed1f8b2fa981f56d0b0db3f4efef324c2b9b81d0d1948775b16f로 같다.
 
 ## 보상 가중 계산
 
 EX-40 params/env.yaml:1890~1894의 전진 추종은 exp 항 가중2.0. :21 dt0.005·:84 decimation4이므로 step_dt0.02. 설치 reward_manager.py:150은 모든 항에 가중×dt, :157의 기록은 다시 dt로 나눔.
 
 가정 계산: 두 발이 목표보다0.08m 낮고 각 발 수평속도0.5m/s이면 비용=2×0.08²×tanh(1)=0.0097484. 가중−10이면 −0.097484/s, 추종2.0×0.8=1.6/s의6.09%. dt 적용 후 −0.00194968 대0.032로 같은 비율. 속도1.0m/s이면7.71%. 이는 보상 크기 설계 계산이며 실측 보행 효과가 아니다. lead 11/02 12:0x 범위 안에서 swing−10, 허용[−20,−2], stumble 단일항−2, 허용[−3,−1]을 쓴다.
+
+## 13:10 B2 CPU 본문과 추가 반례
+
+이 절은 앞의 12:42 중간 상태를 갱신한다. **B2 빈 함수는 구현했고 단위 시험은 통과했다. 실제 학습 진입점 통합·두 겹 검토·Kit은 미확인이다.** 부모 m6000 제안은 별도 `OPINION-EX41-PARENT-1309.md`; 이 커밋의 기존 YAML m7500을 변경 승인으로 읽지 않는다.
+
+확인됨: isaac311 Python, CUDA 숨김, pytest cache 끔으로 B1/B5/W72/W86 **55통과 4.65초**. 명령은 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_ex41_runtime_cpu.py foothold_s2/tests/test_ex41_boundary_cpu.py foothold_s2/tests/test_w72_cpu.py foothold_s2/tests/test_w86_preparation.py foothold_s2/tests/test_w86_runtime_cpu.py -q`. stage hook의 setter 호출을 try/except로 감쌌고 상위 transaction이 rejected를 기록한다. 저장본 복원에서도 ON 승인 거절 시 OFF 적용 후 다음 갱신으로 간다. 복원 반례는 수정 전1실패, 소비 readback 불일치와 잘못된 자동 점수 반례는 수정 전2실패였다.
+
+| 연결 자리 | 소비 계약 | 현재 확인 |
+|---|---|---|
+| gym.make 전 | `w86_runtime.prepare_env_cfg(env_cfg, plan)` | n0 신규 항·종료·reset 등록. 기존 collision−10/smooth−.01/power−2e−5 보존, 기존 stumble만−2 |
+| gym.make 뒤 첫 wrapper reset 전 | `attach_runtime(raw_env,plan,log_dir)` | PhysicalSource 발·관절 이름 명시, 실제 지형 mesh 광선 0/.05/.10m. Isaac/Warp import는 이때만 |
+| alg.act 뒤 env.step 전 | `quarantine_actions(runner,actions)` | 나쁜 행만 행동0, 정상행 그대로 |
+| env.step 직후 | `quarantine_step(runner,raw,rewards,dones,extras)` | 기록·finite 검사·replay.add_post·PPO process 전에. 나쁜 env만 done/reset, 보상0, transition행0(std1), timeoutFalse |
+| 매 update 끝 | `raw_env._ex41_w86.flush(n)` | 0가중 네 항도 별도 기록, 광선 무효·발별 끌림·완전 스윙 주기 분자/분모 |
+| checkpoint와 재개 | W86 `state_dict/load_state_dict` | 집계 이어받음. 실제 물리 에피소드 reset 때문에 반쪽 스윙을 완전 주기로 잇지 않음 |
+| stage hook | `partial(ex41.apply_runtime_fields,runner)` | 실제 소비값 불일치 거절. 승인 파일 변경과 rollback 재켜기 실패 모두 OFF+rejected |
+
+광선 무효는 높이0 정답으로 간주하지 않고 해당 발 비용을 제외해 무효 비율을 남긴다. 로봇 상태 NaN과 구별한다. 몸 yaw90°에서 전진 광선이 world+y로 이동하는 입력과 발바닥 높이를 CPU로 확인했다. 접촉 판정1N, 이동 명령norm>.1, 앞광선 .05/.10m, 끌림 높이.02m·속도.05m/s는 우리 기록/설계 값이며 효과 미측정이다. 비용은 Spot `C:/isaac/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/spot/mdp/rewards.py:187~189` 꼴, 지수 출력은 쓰지 않는다.
+
+미확인·통합 주의:
+- runner 기존 `ex40_dr.require_launchable`은 EX41 DR schema를 바로 읽지 못한다. EX41 전용 진입 검증과 첫 reset 전 scale1 설정을 runner에게 전달했다. 기본값 verified를 근거 없이 붙이지 않는다.
+- 점수 생산자의 `foothold-ex41-score/1` 연결과 runtime `finished/stop_requested` 소비는 runner/scripter 통합 후 실제 경로 시험이 필요하다. S2a/S2b는 임의 회차 상한을 만들지 않았다.
+- 활성 물리/action/관측 NaN은 env 단위 처리하지만 전역 신경망 parameter NaN, reset 후에도 지속되는 물리 이상은 복구됐다고 가장하지 않고 별도 오류로 남긴다. 정상적인 한 env NaN 복구는 CPU 확인, Kit 복구와 비용은 미측정이다.
+- parser/저장 상태의 추가 엄격 검증 및 W71 실제 점수 입력은 독립 검토 범위다. 자동 stumble 상향은 발동 조건 미확정이므로 승인 범위 경계 변경만 구현했다. 실제 GPU 학습을 준비 완료로 선언하지 않는다.
