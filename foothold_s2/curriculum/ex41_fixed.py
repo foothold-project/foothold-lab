@@ -13,9 +13,7 @@ from foothold_s2.curriculum import w72
 from foothold_s2.curriculum.continuous import sha256
 from foothold_s2.curriculum.ex41 import EX41Runtime
 
-DURATIONS=(750,1000,1000,1250,500,500)
-STARTS=(0,750,1750,2750,4000,4500)
-POINTS=((0,.5),(750,.5),(1750,.65),(2750,.8),(4000,1.),(5000,1.))
+DURATIONS=(750,1000,1000,1250,500,500)  # approved schema guard, not the elapsed clock
 CASES=('fwd0.5','fwd1.0','spin+1.2','spin-1.2','back0.5','back1.0',
        'side+0.5','side-0.5','diag-fwd+side+','diag-fwd+side-',
        'diag-back+side+','diag-back+side-','stop')
@@ -24,7 +22,7 @@ CELLS=tuple(f'{mode}/{case}'+('_record_only' if mode=='eval_pred' else '')
 
 
 def maintenance_cells(include_record_only=True):
-    """Exact producer/consumer contract. Default 39; 26 needs a new plan decision."""
+    """All 39 recorded cells; D133's runtime selection uses only the first 26."""
     if type(include_record_only) is not bool: raise ValueError('record_only selection must be bool')
     return CELLS if include_record_only else CELLS[:26]
 
@@ -57,8 +55,11 @@ def validate_plan(plan,doc):
     expected={'duration_updates':5000,'pause_limit_updates':1000,'recovery_boundaries':2,
               'extension_updates':500,'maximum_extensions':1,'maintenance_drop_count':3,
               'interval_updates':250}
-    if set(cfg)!=set(expected)|{'maintenance_baseline','include_record_only'} or any(cfg[k]!=v for k,v in expected.items()):
+    if set(cfg)!=set(expected)|{'maintenance_baseline','include_record_only','dr_stage_end_scales'} or any(cfg[k]!=v for k,v in expected.items()):
         raise ValueError('EX41 fixed5000 decision parameters differ')
+    if (cfg['dr_stage_end_scales']!=[.5,.65,.8,1.,1.,1.]
+        or any(type(x) not in (int,float) for x in cfg['dr_stage_end_scales'])):
+        raise ValueError('EX41 approved stage DR endpoints differ')
     maintenance_cells(cfg['include_record_only'])
     if type(plan.automatic['stand_min_passed']) is not int or plan.automatic['stand_min_passed']!=61:
         raise ValueError('EX41 approved stand_min_passed is 61')
@@ -70,16 +71,27 @@ def validate_plan(plan,doc):
     if not isinstance(b,dict) or set(b)!={'path','sha256'} or not isinstance(b['path'],str) or len(b['sha256'])!=64:
         raise ValueError('EX41 pinned maintenance baseline required')
     if plan.initial_dr_scale!=.5: raise ValueError('EX41 fixed schedule starts at .5')
+    plan.clock_settings=clock_settings(doc)
 
 
-def baseline_counts(plan):
+def clock_settings(doc):
+    """Copy clock limits, stage lengths and DR endpoints from the pinned YAML."""
+    cfg=doc['fixed_schedule']
+    return {**{k:cfg[k] for k in ('duration_updates','pause_limit_updates','recovery_boundaries',
+              'extension_updates','maximum_extensions','interval_updates')},
+            'durations':tuple(row['duration']['maximum_updates'] for row in doc['stages']),
+            'dr_end_scales':tuple(cfg['dr_stage_end_scales']),
+            'initial_scale':doc['domain_randomization']['scale']}
+
+
+def baseline_counts(plan, *, include_record_only=None):
     cfg=plan.fixed_schedule['maintenance_baseline']; p=Path(cfg['path']).resolve(strict=True)
     if sha256(p)!=cfg['sha256']: raise ValueError('EX41 maintenance baseline SHA differs')
     data=json.loads(p.read_text(encoding='utf-8-sig'))
     if data['checkpoint_iteration']!=6000 or data['checkpoint_sha256']!=plan.parent_sha256:
         raise ValueError('EX41 maintenance baseline parent differs')
-    out={key:data['cells'][key]['alive_envs_at_end']
-         for key in maintenance_cells(plan.fixed_schedule['include_record_only'])}
+    selection=plan.fixed_schedule['include_record_only'] if include_record_only is None else include_record_only
+    out={key:data['cells'][key]['alive_envs_at_end'] for key in maintenance_cells(selection)}
     if any(type(v) is not int or not 0<=v<=64 for v in out.values()):
         raise ValueError('EX41 maintenance baseline requires selected counts out of 64')
     return out
@@ -89,19 +101,31 @@ def maintenance(counts,baseline):
     """None means missing evidence. No missing mode/cell can count as recovery."""
     if not isinstance(counts,dict) or set(counts)!=set(baseline): return None
     failed=[]
-    for key,b in baseline.items():
-        row=counts[key]
+    for key,row in counts.items():
         if (not isinstance(row,dict) or set(row)!={'passed','baseline_passed','total'}
             or type(row['passed']) is not int or not 0<=row['passed']<=64
-            or type(row['baseline_passed']) is not int or row['baseline_passed']!=b
+            or type(row['baseline_passed']) is not int or not 0<=row['baseline_passed']<=64
             or type(row['total']) is not int or row['total']!=64): return None
+        b=baseline[key]
+        if row['baseline_passed']!=b: return None
         if row['passed']<b-3: failed.append(key)
     return failed
 
 
 class Clock:
     """Serializable elapsed-time clock, even when a consumer rejects a setting."""
-    def __init__(self):
+    __slots__=('settings','starts','points','__dict__')
+
+    def __init__(self,settings=None):
+        if settings is None:
+            doc=yaml.safe_load(Path(__file__).with_name('ex41-fixed5000.yaml').read_text(encoding='utf-8-sig'))
+            settings=clock_settings(doc)
+        self.settings=copy.deepcopy(settings)
+        ends=[]; elapsed=0
+        for duration in settings['durations']:
+            elapsed+=duration; ends.append(elapsed)
+        self.starts=(0,*ends[:-1])
+        self.points=((0,settings['initial_scale']),*zip(ends,settings['dr_end_scales']))
         self.anchor=1; self.elapsed=0; self.paused=False; self.pause_used=0
         self.recovered=0; self.last_score_iteration=None; self.frozen_scale=None
         self.extension=0; self.extension_decided=False
@@ -111,9 +135,9 @@ class Clock:
     def scale(self,n):
         if self.frozen_scale is not None: return self.frozen_scale
         t=self.time(n)
-        for (a,x),(b,y) in zip(POINTS,POINTS[1:]):
+        for (a,x),(b,y) in zip(self.points,self.points[1:]):
             if t<=b: return x+(y-x)*max(0,min(1,(t-a)/(b-a)))
-        return 1.
+        return self.points[-1][1]
 
     def boundary(self,n,failed,score_iteration):
         if n<self.anchor: raise ValueError('EX41 schedule clock cannot go backwards')
@@ -121,7 +145,7 @@ class Clock:
         old_scale=self.scale(n)
         event='schedule_continue'
         if self.paused:
-            held=min(delta,max(0,1000-self.pause_used))
+            held=min(delta,max(0,self.settings['pause_limit_updates']-self.pause_used))
             self.pause_used+=held
             if held<delta:
                 # A skipped/rejected boundary cannot spend an extra 250 hold.
@@ -131,8 +155,9 @@ class Clock:
         else: self.elapsed+=delta
         self.anchor=n
         # Only a rising DR segment needs a pause. Initial adaptation still gets
-        # its full 750 updates, even when evidence is absent in an early window.
-        can_rise=750<=self.elapsed<4000 and self.frozen_scale is None
+        # its full configured span, even when early evidence is absent.
+        can_rise=(self.frozen_scale is None and any(a<=self.elapsed<b and x<y
+                  for (a,x),(b,y) in zip(self.points,self.points[1:])))
         if can_rise:
             if failed is None or failed:
                 self.paused=True; self.recovered=0; self.last_score_iteration=None
@@ -140,29 +165,30 @@ class Clock:
             elif self.paused:
                 if score_iteration!=self.last_score_iteration:
                     self.recovered=(self.recovered+1 if self.last_score_iteration is not None
-                                    and score_iteration-self.last_score_iteration==250 else 1)
+                                    and score_iteration-self.last_score_iteration==self.settings['interval_updates'] else 1)
                     self.last_score_iteration=score_iteration
-                if self.recovered>=2:
+                if self.recovered>=self.settings['recovery_boundaries']:
                     self.paused=False; self.recovered=0; event='dr_resume_same_slope'
                 else: event='dr_hold_recovery_1_of_2'
         # Recovery at the exact cap has priority. Freeze only while unrecovered.
-        if self.paused and self.pause_used>=1000:
+        if self.paused and self.pause_used>=self.settings['pause_limit_updates']:
             self.paused=False; self.frozen_scale=old_scale; self.recovered=0
             event='dr_pause_budget_exhausted_frozen_report'
         return event
 
     def position(self,n):
         t=self.time(n)
-        starts=(*STARTS[:-1],STARTS[-1]+self.extension)
+        starts=(*self.starts[:-1],self.starts[-1]+self.extension)
         return max(i for i,start in enumerate(starts) if t>=start)
 
 
 class EX41FixedRuntime(EX41Runtime):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        self.clock=Clock(); self.baseline=None
+        self.clock=Clock(self.plan.clock_settings); self.baseline=None
         self._missing_maintenance_boundaries=0
-        self.max_updates=6500  # 5000 + bounded DR holds1000 + one extension500.
+        cfg=self.clock.settings
+        self.max_updates=cfg['duration_updates']+cfg['pause_limit_updates']+cfg['extension_updates']*cfg['maximum_extensions']
 
     def start(self,parent_sha256=None):
         self.baseline=baseline_counts(self.plan)
@@ -194,7 +220,8 @@ class EX41FixedRuntime(EX41Runtime):
         if type(n) is not int or n<0: raise ValueError('EX41 local n invalid')
         self._iteration=n
         smoke=self.plan.smoke_boundaries
-        boundary=(n in (*smoke,smoke[-1]+2)) if smoke else n>=1 and (n-1)%250==0
+        interval=self.clock.settings['interval_updates']
+        boundary=(n in (*smoke,smoke[-1]+2)) if smoke else n>=1 and (n-1)%interval==0
         if not boundary or n<=self._last_boundary: return
         if self.finished: return
         self._last_boundary=n
@@ -220,15 +247,15 @@ class EX41FixedRuntime(EX41Runtime):
                     values['reward_weights'][d['path'].split('.')[1]]=d['after']
         # Historical rows may be retained for audit, never reused as a fresh
         # 250-update recovery, stand-restoration or extension observation.
-        fresh=[r for r in self._history if n-250<=r['iteration']<n]
+        fresh=[r for r in self._history if n-interval<=r['iteration']<n]
         score=fresh[-1] if fresh else None
-        invalid=[r['iteration'] for r in self._score_rejections.values() if n-250<=r['iteration']<n]
+        invalid=[r['iteration'] for r in self._score_rejections.values() if n-interval<=r['iteration']<n]
         if invalid and (score is None or max(invalid)>=score['iteration']):
             self._write({'event':'latest_score_invalid_hold','iteration':n,
                          'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
             score=None
         failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
-        if n>=251:
+        if n>=interval+1:
             self._missing_maintenance_boundaries=(self._missing_maintenance_boundaries+1 if failed is None else 0)
             if self._missing_maintenance_boundaries>=2:
                 self._write({'event':'maintenance_evidence_missing_warning','iteration':n,
@@ -244,7 +271,7 @@ class EX41FixedRuntime(EX41Runtime):
         stand=score['metrics'].get('stand_min_passed') if score else None
         stand_valid=type(stand) is int and 0<=stand<=64
         stand_floor=self.plan.automatic['stand_min_passed']
-        if n>=251 and not stand_valid:
+        if n>=interval+1 and not stand_valid:
             self._write({'event':'stand_evidence_missing','iteration':n,'action':'no_automatic_stand_change_or_extension'})
         if stand_valid and stand<stand_floor and 'swing' not in self._halved:
             if snap['approvals'].get('automatic',{}).get('stand_restore'):
@@ -253,14 +280,14 @@ class EX41FixedRuntime(EX41Runtime):
                 decisions.append(dict(path='reward_weights.swing',before=old,after=new,
                     decision_id=snap['approvals']['automatic']['stand_restore'],automatic=True))
         # Existing D110 one-time extension, immediately before T0 at full DR.
-        if not smoke and self.clock.time(n)>=4500 and not self.clock.extension_decided:
+        if not smoke and self.clock.time(n)>=self.clock.starts[-1] and not self.clock.extension_decided:
             self.clock.extension_decided=True
             delta=self._level_delta()
             if (self.dr_scale(n)==1. and score and failed==[] and score['maintenance_pass']
                 and stand_valid and stand>=stand_floor and delta is not None
                 and delta>=self.plan.automatic['extension_level_delta']
                 and snap['approvals'].get('automatic',{}).get('extension')):
-                self.clock.extension=500; pos=4; event='D110_extension_once'
+                self.clock.extension=self.clock.settings['extension_updates']; pos=len(self.templates)-2; event='D110_extension_once'
         if self.templates[pos].id!=self.effective['stage_id'] and self.stage_meta[self.templates[pos].id]['terrain']['policy']=='performance' and not values['w71_ready']:
             self._reject_boundary(n,ValueError('w71_not_ready')); return
         # Reapply even within a stage to retain a single boundary receipt with
@@ -271,7 +298,7 @@ class EX41FixedRuntime(EX41Runtime):
             self._write({'event':event,'iteration':n,'schedule_clock':copy.deepcopy(self.clock.__dict__),
                          'failed_cells':failed,'baseline_sha256':self.plan.fixed_schedule['maintenance_baseline']['sha256'],
                          'dr_scale':self.dr_scale(n),'stage':self.effective['stage_id']})
-            ended=n==smoke[-1]+2 if smoke else self.clock.time(n)>=5000+self.clock.extension
+            ended=n==smoke[-1]+2 if smoke else self.clock.time(n)>=self.clock.settings['duration_updates']+self.clock.extension
             if ended:
                 self.finished=True; self.graduated=False
                 self._write({'event':'fixed_schedule_finished','iteration':n,'graduated':False,
@@ -298,9 +325,10 @@ class EX41FixedRuntime(EX41Runtime):
         if not isinstance(clock,dict) or set(clock)!=set(self.clock.__dict__): raise ValueError('EX41 fixed clock missing')
         for key in ('anchor','elapsed','pause_used','recovered','extension'):
             if type(clock[key]) is not int or clock[key]<0: raise ValueError('EX41 fixed clock count invalid')
-        if (clock['pause_used']>1000 or clock['extension'] not in (0,500)
+        cfg=self.clock.settings
+        if (clock['pause_used']>cfg['pause_limit_updates'] or clock['extension'] not in (0,cfg['extension_updates'])
             or type(clock['paused']) is not bool or type(clock['extension_decided']) is not bool
-            or clock['recovered']>2 or clock['elapsed']>5500):
+            or clock['recovered']>cfg['recovery_boundaries'] or clock['elapsed']>cfg['duration_updates']+cfg['extension_updates']):
             raise ValueError('EX41 fixed clock bounds invalid')
         last=clock['last_score_iteration']; boundary=state.get('last_boundary'); iteration=state.get('iteration')
         initial=boundary==-1 and iteration==0 and clock['anchor']==1
@@ -308,7 +336,7 @@ class EX41FixedRuntime(EX41Runtime):
         if (type(boundary) is not int or type(iteration) is not int
             or (not initial and (clock['anchor']>iteration or clock['anchor']<1
                 or (clock['anchor']!=boundary and not stopped)))
-            or (not self.plan.smoke_boundaries and (clock['anchor']-1)%250!=0)
+            or (not self.plan.smoke_boundaries and (clock['anchor']-1)%cfg['interval_updates']!=0)
             or clock['elapsed']+clock['pause_used']!=clock['anchor']-1
             or (last is not None and (type(last) is not int or not 0<=last<clock['anchor']))
             or (clock['recovered'] and (last is None or not clock['paused']))):

@@ -376,6 +376,8 @@ class EX41Runtime(Runtime):
             key=mapping.get(name,name); cfg=copy.deepcopy(manager.get_term_cfg(key))
             cfg.weight=value; manager.set_term_cfg(key,cfg)
         self.runner.basic_lin_vel_z_schedule=False
+        # m6000 actual Loss/basic_reward/lin_vel_z_weight is 0 (B1 origin1501).
+        # env.yaml's -2 is the initial value, not the transferred runtime weight.
         cfg=copy.deepcopy(manager.get_term_cfg('lin_vel_z')); cfg.weight=0.; manager.set_term_cfg('lin_vel_z',cfg)
 
     def _reject_boundary(self,n,exc):

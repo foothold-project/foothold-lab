@@ -220,3 +220,36 @@ enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
 읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), SHA256 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
 
 검증 기록: isaac311·CUDA 숨김으로 fixed/runtime/boundary/review_regressions/scoring 다섯 시험 파일 **96PASS170.29초**, pyflakes·git diff 검사 통과. 실제 reader의 NaN·체크포인트 SHA·원자료 SHA·정지 숫자 누락·깨진 JSON·잘못된 회차 반례와 오류 상태 저장·재개 뒤 새 점수 두 개의 회복을 확인했다. G5·G7의 runtime 고침과 G6 helper/원자료 대조를 닫을 수 있어도, G6 전체는 runner 진입점이 이 함수를 실제 호출하는 통합본을 확인해야 닫는다. 낮은 항목 D121 과제 변경 평가 연결·W72 추가 승인 칸·D93 히스토그램은 이 커밋에서 닫았다고 하지 않는다. 후속 교차검증의 명령 몫2차 S2c 이동과 m6000 lin_vel_z 실측은 이 묶음 다음 작업이다.
+
+## 19. D133 판정26·기록39와 교차검증 후속 · 11/02 15:0x
+
+**현재 계약은 이 절을 따른다.** §17~18의 기본39칸 판정은 이전 판 기록이다. D133에 따라 `include_record_only=false`로 고쳤다. 점수의 `metrics.maintenance_counts`는 GT·OFF26칸, `metrics.record_counts`는 PRED까지39칸이다. `stand_counts`는 세 모드 모두 남기며 `stand_min_passed`도 세 모드 최솟값이다. 복원 지도 생존 저하는 DR 유지 판정에서 제외하지만 복원 지도 정지 실패는 별도 서 있기 복원 규칙의 대상이다.
+
+| 칸 | 현재 상태 | 근거·시험 |
+|---|---|---|
+| G5·G7 최신 오류·정지 누락 | ed672e88 CPU 고침, verifier도 닫힘 보고 | 정상1200+오류1250이 기존 PASS나 첫 회복으로 들어가지 않음. 유지 중 NaN/SHA/정지 누락 세 반례도 추가 |
+| D133 숫자 분리 | 판정26·기록39, 두 dict의 공통26행 같은 값 | 실제 m6000 원자료와39/39 일치, 차이0. PRED 생존0은 기록에 남고 DR은 상승 가능, GT 생존60은 유지 |
+| 명령 몫2차 | S2b n751은 S2a 몫 유지, S2c n1751에서 변경 | 변경 전 반례 실패. 유지로 일정이 밀리면 명목 n1751에 대응하는 S2c 시작도 함께 밀림 |
+| Clock 상수 | pause 한도·경계 주기·회복 수·단계 길이·DR 끝 배율·연장을 고정 YAML에서 읽음 | 길이2배·한도500·주기125의 CPU 시계 입력이 해당 값대로 동작. 실행 parser는 승인된5000회 값과 대조하며 새 일정 승인으로 쓰지 않음 |
+| lin_vel_z | 부모 실측0 유지. −2.0 복원 안 함 | 아래 원자료·수식·소비 경로 삼중 대조, 경계3회 반복에도0 |
+| S2e +500 | 기존 위치 유지 | T0′ 직전 S2e 연장, 상한·회복 동시 시험 유지 |
+
+시작 표 원바이트 SHA256은 `da3ee91a490115f33ed5fd188dc69de2328c0e8cde35d9b44c0790d6d7544d8d`, 일반 실행 `effective_sha256`은 `8f3e784b9bbbbe90f9246e6fff89819bd640fa7c5ded3607515cc656bab4cd18`이다. smoke는 별도 계획 SHA를 가진다. W71 미확인 표식은 여전히 false이므로 이 파일만으로 본기동 가능한 상태라는 뜻은 아니다.
+
+[D133 m6000 재계산](evidence/EX41-D133-m6000-contract.json)의 SHA256은 `e5e620cae36db2a4ef61d1e504a9f2231a07f8fc7b4177fb60237f587ea97c14`다. 이 파일은 실행 점수가 아니라 CPU 대조 자료다. 원자료와 기존 부모표는 바꾸지 않았다. runner는 §18의 `enrich_score_metrics` 반환값을 그대로 써야 한다. 이 helper가 판정·기록 dict를 둘 다 만든다.
+
+### m6000 lin_vel_z: 초기 설정과 실제 실행 값의 구분
+
+원본 실행 `params/env.yaml:1901~1904`는 초기 −2.0이다. 그러나 m6000 저장본의 `continuous_curriculum.b1_entry_iteration=1501`, `active=5`다. `basic_gait_bundle.py:35~41`의 일정은 `−2 × (1 − min(iter−1501,1500)/1500)`이므로 m3001부터0이다. `continuous.py:522~525`가 시작점을 runner에 넣고 `start_runner.py:333~337`이 매 갱신 실제 RewardManager에 적용하며 `:454~455`가 가중을 기록한다.
+
+확인됨: 실행 tfevents의 `Loss/basic_reward/lin_vel_z_weight`는 m1501=−2.0, m3000=−0.0013333333, m3001=0, m5950=0, **m6000=0**, m6001=0이다. `Episode_Reward/lin_vel_z`도 m5950·6000·6001에서0이다. 따라서 EX41 `_sync_rewards`의0은 부모 실제 가중을 보존한다. [재계산 스크립트](recompute-ex41-parent.py)와 [숫자·원자료 SHA](evidence/EX41-parent-weight-levels.json)를 남겼다. 후자 SHA256은 `cadfd7ec2c2fcac25fd55eb3e865fb5e78ffe6ffecf3caeabbcd4923bdca6b90`다.
+
+### extension_level_delta 권고와 한계
+
+EX40 `ex40.yaml:7`은 `fixed_l02`다. m6000의 실제3072환경은 L0=1034, L1=1025, L2=1013, 전체 평균0.993164다. **성과로 레벨을 올린 자료가 아니므로 EX40의 레벨 상승 속도로0.2나0.5를 정당화할 수 없다.** ON/OFF 분해 평균도 지도 선택에 따라 소속 env가 바뀌므로 승급량으로 읽으면 안 된다.
+
+현재 `_level_delta()`와 같은5개50회 표본의 두250회 창 차이를 EX40의8개 구간에 적용하면 ON은 −0.005876~+0.008859, OFF는 −0.078036~+0.052059다. 이 값은 고정 지형에서 지도 선택에 따른 평균 차이며 EX41의 전체 env 평균 레벨 상승과 다른 통계량이다.
+
+제안은 **0.2, 근거 등급은 가정**이다. 전체 환경20%가 순증으로 한 레벨 오른 정도의 계속 학습 신호를 뜻하도록 낮추자는 제안이며, 실측으로 검증된 문턱은 아니다.0.5는50% 한 레벨 순증을 요구한다. 어느 값도 절대 보행 합격선이 아니며 생존·정지·DR 조건과 함께 +500을 더 할지만 고른다. 승인 전에는 요청대로 **코드0.5를 유지**한다. EX41의 실제 승급 자료가 생기면 기록해 후속 판의 사전 기준을 정할 수 있다.
+
+확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 CPU 시험 파일 **103PASS189.74초**. 추가 전 D133·몫 변경 두 반례는2FAIL12.27초였고, 유지 중 오류 세 반례는 이미 고친 ed672e88에서3PASS였다. pyflakes·diff 검사 통과, 문서 U+2014 0개. GPU·Kit·학습·EX40 원장 변경 없음. G6 루프 실제 연결, D121 과제 변경 전후 평가, W72 추가 승인 칸, D93 히스토그램은 다른 연결과 함께 남아 있다.
