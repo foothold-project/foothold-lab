@@ -35,7 +35,7 @@ class PoseEnv(FakeStartEnv):
         return raw
 
 
-def pose_runner(mirror=False, parent_mode=False, approval=None):
+def pose_runner(mirror=False, parent_mode=False, approval=None, log_dir=None):
     perception = {"microbatch_envs": 2}
     if parent_mode:
         perception.update({"critic_mode": "clean52", "map_input": "reconstruction",
@@ -46,7 +46,7 @@ def pose_runner(mirror=False, parent_mode=False, approval=None):
     cfg["ex41_critic_mirror"] = mirror
     if mirror:
         cfg["ex41_mirror_approval"] = approval
-    return StartRunner(PoseEnv(num_envs=4), cfg, device="cpu")
+    return StartRunner(PoseEnv(num_envs=4), cfg, log_dir=log_dir, device="cpu")
 
 
 def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
@@ -84,6 +84,38 @@ def test_pose_is_appended_and_zero_stage_rejects_nonzero(tmp_path):
     assert runner.alg.mirror_enabled is False and runner.ex41_critic_mirror is False
     raw["pose_cmd"].zero_()
     runner.learn(1)  # The boundary failure does not kill an otherwise healthy rollout.
+
+
+@pytest.mark.parametrize("changed", ["missing", "modified"])
+def test_resume_stale_mirror_approval_keeps_training_and_records_hold(tmp_path, changed):
+    source_approval = real_authorization(tmp_path / "source_w72")
+    source = pose_runner(mirror=True, approval=source_approval)
+    checkpoint = tmp_path / "mirror.pt"
+    source.save(str(checkpoint))
+    valid_resume_approval = real_authorization(tmp_path / "resume_w72")
+    resumed = pose_runner(mirror=True, approval=valid_resume_approval, log_dir=str(tmp_path / "resumed"))
+    approval_file = Path(source_approval["approval_file"])
+    if changed == "missing":
+        approval_file.unlink()
+    else:
+        approval_file.write_bytes(b"modified approval\n")
+    with pytest.warns(RuntimeWarning, match="EX-41 W72 HOLD"):
+        resumed.load(str(checkpoint))
+    assert resumed._resumed is True
+    assert resumed.ex41_critic_mirror is False and resumed.alg.mirror_enabled is False
+    assert resumed.ex41_mirror_approval is None
+    ledger = tmp_path / "resumed" / "ex41_mirror_events.jsonl"
+    rows = [json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 1 and rows[0]["event"] == "resume_hold"
+    assert rows[0]["mirror_enabled"] is False and rows[0]["iteration"] == 0
+    assert rows[0]["reason"] == resumed.ex41_mirror_hold_reason
+    resumed.learn(1)
+    followup = tmp_path / "after_hold.pt"
+    resumed.save(str(followup))
+    later = pose_runner(mirror=False)
+    later.load(str(followup))
+    assert later.ex41_mirror_hold_reason == rows[0]["reason"]
+    assert later.alg.mirror_enabled is False
 
 
 def test_parent_zero_columns_bit_equal_and_adam_moments():

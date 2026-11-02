@@ -28,6 +28,7 @@ import random
 import re
 import subprocess
 import time
+import warnings
 from pathlib import Path
 from collections import deque
 
@@ -116,6 +117,7 @@ class StartRunner(OnPolicyRunner):
         if not isinstance(self.ex41_critic_mirror, bool) or (self.ex41_critic_mirror and not self.ex41_pose_commands):
             raise ValueError("ex41_critic_mirror requires ex41_pose_commands and a bool setting")
         self.ex41_mirror_approval = train_cfg.get("ex41_mirror_approval")
+        self.ex41_mirror_hold_reason = None
         if self.ex41_critic_mirror and not self._valid_ex41_mirror_approval(self.ex41_mirror_approval):
             raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
         self.alg_cfg = train_cfg["algorithm"]
@@ -363,6 +365,26 @@ class StartRunner(OnPolicyRunner):
         self.ex41_critic_mirror = enabled
         self.ex41_mirror_approval = approval if enabled else None
         self.alg.mirror_enabled = enabled
+
+    def _hold_ex41_mirror_resume(self, checkpoint: str, iteration: int, reason: str) -> None:
+        """Keep a valid policy resume running with the optional mirror off."""
+        self.ex41_critic_mirror = False
+        self.ex41_mirror_approval = None
+        self.alg.mirror_enabled = False
+        self.ex41_mirror_hold_reason = reason
+        warnings.warn(reason, RuntimeWarning, stacklevel=2)
+        if self.log_dir is None:
+            return
+        row = {"event": "resume_hold", "iteration": iteration, "checkpoint": checkpoint,
+               "mirror_enabled": False, "reason": reason, "time": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        try:
+            os.makedirs(self.log_dir, exist_ok=True)
+            with open(os.path.join(self.log_dir, "ex41_mirror_events.jsonl"), "a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+        except OSError as exc:
+            warnings.warn(f"EX-41 W72 ledger write failed: {exc}", RuntimeWarning, stacklevel=2)
 
     # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
     def _cuda(self) -> bool:
@@ -972,6 +994,7 @@ class StartRunner(OnPolicyRunner):
             "ex41_pose_commands": self.ex41_pose_commands,
             "ex41_critic_mirror": self.ex41_critic_mirror,
             "ex41_mirror_approval": self.ex41_mirror_approval,
+            "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
             "ex41_parent_transfer": self.ex41_parent_transfer,
             "model_state_dict": self.alg.policy.state_dict(),  # 정책 + 관측 정규화 통계(EmpiricalNormalization 버퍼)
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
@@ -1170,12 +1193,16 @@ class StartRunner(OnPolicyRunner):
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
         self.ex41_parent_transfer = sd.get("ex41_parent_transfer")
+        self.ex41_mirror_hold_reason = sd.get("ex41_mirror_hold_reason")
         if self.ex41_critic_mirror:
             approval = sd.get("ex41_mirror_approval")
             if not self._valid_ex41_mirror_approval(approval):
-                raise ValueError("EX-41 checkpoint mirror approval is missing")
-            self.ex41_mirror_approval = approval
-            self.alg.mirror_enabled = True
+                self._hold_ex41_mirror_resume(
+                    path, int(sd["iter"]), "EX-41 W72 HOLD: checkpoint mirror approval file missing or SHA256 changed"
+                )
+            else:
+                self.ex41_mirror_approval = approval
+                self.alg.mirror_enabled = True
         continuous = getattr(self, "continuous_curriculum", None)
         if continuous is not None:
             saved_stage = sd.get("continuous_curriculum")
