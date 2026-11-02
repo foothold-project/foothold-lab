@@ -13,7 +13,7 @@ def sample(n=3):
                 command=torch.tensor([[.5,0.,0.]]*n), heading=torch.zeros(n,dtype=torch.bool),
                 yaw=torch.zeros(n), joint_pos=torch.zeros(n,12), torque=torch.zeros(n,12),
                 effort_limits=torch.ones(n,12)*20, joint_limits=torch.tensor([[[-1.,1.]]*12]*n),
-                physical_valid=torch.ones(n,dtype=torch.bool))
+                physical_valid=torch.ones(n,dtype=torch.bool),knee_ids=[8,9,10,11])
 
 
 def test_registration_existing_single_stumble_and_zero_recording(monkeypatch):
@@ -51,7 +51,7 @@ def test_cache_termination_before_reward_and_invalid_ray(tmp_path):
 
 def test_finite_input_overflow_quarantines_one_env_before_metric_flush(tmp_path):
     env=SimpleNamespace(num_envs=3,device='cpu',step_dt=.02,common_step_counter=1)
-    data=sample(); data['torque'][1,0]=1e30
+    data=sample(); data['torque'][1,8]=1e30
     a=wr.W86Runtime(env,tmp_path,source=lambda:data); env._ex41_w86=a
     assert wr.invalid_env(env).tolist()==[False,True,False]
     row=a.flush(1)

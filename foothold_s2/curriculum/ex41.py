@@ -606,6 +606,11 @@ class EX41Runtime(Runtime):
 
     def flush_consumption(self,iteration):
         super().flush_consumption(iteration)
+        if self.runner is not None:
+            w86=getattr(self.runner.env.unwrapped,'_ex41_w86',None)
+            if w86 is not None:
+                # One owner for the rollout interval; includes zero-weight diagnostics.
+                w86.flush(iteration)
         if self.runner is not None and iteration%50==0:
             row=terrain_distribution(self.runner.env.unwrapped)
             self._level_history.append((iteration,row['mean_level']))

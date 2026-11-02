@@ -165,7 +165,9 @@ class W86Runtime:
         self.in_swing &=ray_valid
         touchdown &=self.in_swing
         complete=touchdown & ray_valid & moving[:,None]
-        knee_ids=d.get('knee_ids',list(range(d['torque'].shape[1])))
+        knee_ids=d['knee_ids']
+        if len(knee_ids)!=4 or len(set(knee_ids))!=4:
+            raise ValueError('W86 requires four explicitly ordered knee indices')
         effort=d['effort_limits'][:,knee_ids]; limits=d['joint_limits']
         if not torch.isfinite(effort).all() or (effort<=0).any() or not torch.isfinite(limits).all():
             raise ValueError('W86 static actuator/joint limits invalid')
@@ -199,6 +201,7 @@ class W86Runtime:
         self._sum('valid_foot_frames',fm['valid'] & ~bad[:,None])
         self._sum('swing_height_sum_m',torch.where(fm['swing_frames'].bool(),fm['height_m'],torch.zeros_like(gap)))
         self._sum('knee_limit_frames',(_safe(d['torque'])[:,knee_ids].abs()/effort>=.9) & ~bad[:,None])
+        self._sum('knee_valid_frames',(~bad[:,None]).expand(-1,4))
         self.in_swing &=~contact & ~bad[:,None]
         self.observed[:]=~bad[:,None]; self.last_contact=contact.clone()
         self.count+=n; self.key=key; self.cache={'terms':terms,'bad':bad,'ray_valid':ray_valid}
@@ -217,6 +220,14 @@ class W86Runtime:
                 row['terms'][name[5:]]={'sum':float(value.cpu()),'denominator':self.count,
                                        'mean':float(value.cpu())/self.count if self.count else None}
             else: row['feet'][name]=value.cpu().tolist()
+        near=self.sums.get('knee_limit_frames',torch.zeros(4,dtype=torch.int64))
+        valid=self.sums.get('knee_valid_frames',torch.zeros(4,dtype=torch.int64))
+        row['knee_effort']={'definition':'abs(applied_torque)/joint_effort_limit >= threshold_fraction',
+                           'threshold_fraction':.9,'record_only':True,'joints':{}}
+        for i,name in enumerate(KNEES):
+            numerator,denominator=int(near[i]),int(valid[i])
+            row['knee_effort']['joints'][name]={'near_limit_frames':numerator,'valid_frames':denominator,
+                'ratio':numerator/denominator if denominator else None}
         self.log_dir.mkdir(parents=True,exist_ok=True)
         with (self.log_dir/'ex41_w86.jsonl').open('a',encoding='utf-8') as f:
             f.write(json.dumps(row,allow_nan=False)+'\n')
