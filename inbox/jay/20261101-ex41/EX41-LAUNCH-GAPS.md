@@ -84,3 +84,5 @@ G18 확장(16:3x, 팀장: 밀기를 학습하면 평가 · 영상도 당연히):
 
 G19 (17:4x, 팀장): 영상 규칙 v3(D137) 판 고정 장치 = 합성기 VIDEO_RULE_VERSION v3-D137 · SHA 를 영수증에, 검사 · 재생 목록 · C층 · 단계 끝 루프가 다른 판 거절(R22 재발 방지). EX-40 원자료 122 개를 v3 로 재합성(한 편 먼저 lead 확인 → 전량 → 전 프레임 검사 → 재생 목록), 출력 D:/mai-video/ex40_v3. 담당 scripter.
 G20 (17:4x, 팀장 「이후 실험 준비」): EX-42 지형 설계 초안(D113 · D114 · AME-2 12 종 · START 지형 Go2 축척 · D115 · D136 · G18 · EX-41→EX-42 이어짐) planner, DESIGN-EX42-TERRAIN-draft v0.1.
+
+G11 보강(19:0x): EX-41 그림자 채점기(score-watch)가 없음(runner P5 확인). analyst 가 CLI 계약 → 구현(EX-40 score_watch + W71 고침 · 판정 26 · 기록 39 · DR 켠 거절 · W57 yaw 누적 · W78 v2), runner 가 W77 첫 update 뒤 자동 기동 · 단계 끝 루프 · 경보 연결. 없으면 점수 0 → DR 0.5 고정.
