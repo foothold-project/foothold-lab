@@ -129,6 +129,22 @@ def test_partial_plan_cannot_launch(tmp_path):
         q.run_one(plan, out=tmp_path / "out", high_priority_markers=[])
 
 
+def test_only_cell_keeps_full_plan_gate_and_stops_after_target(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    run, calls = fake_capture(plan, [0])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    target = q._slot(rows[0])
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[], only_cell=target)
+    assert result["event"] == "captured" and result["cell"] == target
+    assert len(calls) == 1
+    with pytest.raises(ValueError, match="absent"):
+        q.run_one(plan, out=out, high_priority_markers=[], only_cell="unknown_L0_eval_gt")
+    rows.pop()
+    with pytest.raises(ValueError, match="216"):
+        q.run_one(plan, out=out, high_priority_markers=[], only_cell=target)
+
+
 def test_two_outcomes_publish_canonical_without_eval_suffix(tmp_path, monkeypatch):
     plan, rows = fixture(tmp_path)
     run, calls = fake_capture(plan, [0, 1])

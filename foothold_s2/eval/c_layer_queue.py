@@ -275,11 +275,14 @@ def publish_playlists(plan: dict, out: Path) -> dict:
     return written
 
 
-def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe") -> dict:
+def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe",
+            only_cell: str | None = None) -> dict:
     """Capture one seed for one cell; retain both roles and every attempt."""
     summary = validate_plan(plan)
     if summary["missing"]:
         raise ValueError("all 216 C-layer cells must be registered before capture")
+    if only_cell is not None and only_cell not in {_slot(row) for row in plan["jobs"]}:
+        raise ValueError("--only-cell is absent from the registered plan")
     high_priority_markers = [Path(value) for value in plan["priority_markers"].values()] + high_priority_markers
     if any(path.exists() for path in high_priority_markers):
         return {"state": "yielded_to_higher_priority"}
@@ -298,6 +301,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
         except (OSError, KeyError, ValueError) as exc:
             return {"state": "playlist_hold", "reason": str(exc)}
         for row in plan["jobs"]:
+            if only_cell is not None and _slot(row) != only_cell:
+                continue
             cell = _summary(out, row)
             if cell["state"] == "incomplete_attempt_hold":
                 return cell
@@ -410,6 +415,9 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 final = _summary(out, row)
                 _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
                 return {"state": "capture_failed", **failure, "cell_summary": final}
+        if only_cell is not None:
+            return {"state": "only_cell_closed", "cell": _summary(
+                out, next(row for row in plan["jobs"] if _slot(row) == only_cell))}
         cells = [_summary(out, row) for row in plan["jobs"]]
         mode_video_counts = {mode: sum(
             bool(cell["receipts"]) for cell, row in zip(cells, plan["jobs"])
@@ -429,11 +437,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("plan")
     parser.add_argument("--out", required=True)
     parser.add_argument("--run-one", action="store_true")
+    parser.add_argument("--only-cell", help="one registered cell for a bounded lead Kit trial")
     parser.add_argument("--high-priority-marker", action="append", default=[])
     parser.add_argument("--ffprobe", default="ffprobe")
     args = parser.parse_args(argv)
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8-sig"))
-    result = (run_one(plan, out=Path(args.out), high_priority_markers=[Path(p) for p in args.high_priority_marker], ffprobe=args.ffprobe)
+    if args.only_cell and not args.run_one:
+        parser.error("--only-cell requires --run-one")
+    result = (run_one(plan, out=Path(args.out), high_priority_markers=[Path(p) for p in args.high_priority_marker],
+                      ffprobe=args.ffprobe, only_cell=args.only_cell)
               if args.run_one else validate_plan(plan))
     print(json.dumps(result, ensure_ascii=False))
     return 0
