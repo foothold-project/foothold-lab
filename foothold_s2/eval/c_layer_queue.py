@@ -18,6 +18,7 @@ import subprocess
 
 from foothold_s2.eval.c_layer_frame_audit import audit_video
 from foothold_s2.eval.c_layer_progress import run_recorder
+from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
@@ -95,8 +96,12 @@ def validate_plan(plan: dict) -> dict:
     recorder = _source(plan["recorder"], plan["recorder_sha256"])
     if b"C_LAYER_SEED_V1" not in recorder.read_bytes():
         raise ValueError("recorder lacks variable-seed C76 profile")
-    _source(plan["composer"], plan["composer_sha256"])
-    _source(plan["queue"], plan["queue_sha256"])
+    composer = _source(plan["composer"], plan["composer_sha256"])
+    if composer_version(composer) != VIDEO_RULE_VERSION:
+        raise ValueError("video_rule_hold: composer has an older video rule")
+    queue_source = _source(plan["queue"], plan["queue_sha256"])
+    if queue_source.resolve() != Path(__file__).resolve():
+        raise ValueError("video_rule_hold: plan points to another queue revision")
     playlist_dir = Path(plan["playlist_dir"])
     if not playlist_dir.is_absolute() or playlist_dir.name != "_playlists":
         raise ValueError("C76 playlists must use the shared _playlists directory")
@@ -130,8 +135,9 @@ def validate_plan(plan: dict) -> dict:
         if (row["policy"].get("c_layer_reference") is not True
                 or row["policy"].get("source_profile") != "C76"
                 or row["policy"].get("selection_role") != "c_layer"
+                or row["policy"].get("hide_others") is not True
                 or row["policy"]["seed"] != "{seed}"):
-            raise ValueError("C76 policy must replace seed per attempt")
+            raise ValueError("C76 policy must replace seed and hide other robots")
         expected_set = "fixed64" if row["kind"] in plan["kinds"]["continuous"] else "sparse50"
         if (row["policy"].get("terrain_set") != expected_set
                 or row["policy"].get("fixed_terrain") is not True
@@ -285,6 +291,7 @@ def publish_playlists(plan: dict, out: Path) -> dict:
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
         if receipt.get("format") != "foothold-c-layer-canonical/1":
             continue
+        require_video_rule(receipt, composer_sha256=plan["composer_sha256"])
         video = Path(receipt["video"])
         if (receipt.get("canonical") is not True or not video.is_absolute()
                 or video.parent != out or not video.is_file()
@@ -382,8 +389,14 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if child_log_has_traceback(attempt_root / "child.log"):
                     raise ValueError("recorder child logged a Traceback despite exit 0")
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
+                mask_evidence = meta.get("robot_instance_evidence")
+                if (not isinstance(mask_evidence, list) or len(mask_evidence) != 450
+                        or any(item.get("selected_robot_pixels", 0) < 80
+                               or item.get("other_robot_pixels", -1) != 0 for item in mask_evidence)):
+                    raise ValueError("C76 robot instance mask missing subject or shows another robot")
                 raw_audit = audit_video(mp4, expected=450, width=1280, height=720,
-                                        screen_evidence=meta.get("camera_screen_projection"))
+                                        screen_evidence=meta.get("camera_screen_projection"),
+                                        robot_instance_evidence=mask_evidence)
                 _write(attempt_root / "raw_frame_audit.json", raw_audit)
                 if not raw_audit["pass"]:
                     raise ValueError("C76 raw full-frame audit failed")
@@ -408,6 +421,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if not styled.is_file() or not styled_receipt.is_file() or styled.stat().st_size == 0:
                     raise ValueError("C76 HUD output or receipt missing")
                 composition = json.loads(styled_receipt.read_text(encoding="utf-8"))
+                require_video_rule(composition, composer_sha256=plan["composer_sha256"])
                 if (composition.get("sha256") != sha256(styled)
                         or composition.get("frames") != 450
                         or composition.get("fps") != 25
@@ -415,7 +429,10 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                         or composition.get("capture") != str(attempt)):
                     raise ValueError("C76 HUD receipt differs from validated capture")
                 styled_audit = audit_video(styled, expected=450, width=1920, height=1080,
-                                           screen_evidence=meta.get("camera_screen_projection"))
+                                           screen_evidence=meta.get("camera_screen_projection"),
+                                           robot_instance_evidence=mask_evidence,
+                                           composite_receipt=styled_receipt,
+                                           composer_sha256=plan["composer_sha256"])
                 _write(attempt_root / "styled_frame_audit.json", styled_audit)
                 if not styled_audit["pass"]:
                     raise ValueError("C76 styled full-frame audit failed")
@@ -423,6 +440,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                             "ordinal": ordinal, "seed": seed, "result": own_result,
                             "files": capture_files, "frames": meta["frames"],
                             "styled_sha256": sha256(styled), "composer_sha256": plan["composer_sha256"],
+                            "video_rule_version": VIDEO_RULE_VERSION,
                             "raw_audit_sha256": sha256(attempt_root / "raw_frame_audit.json"),
                             "styled_audit_sha256": sha256(attempt_root / "styled_frame_audit.json")}
                 _write(attempt_root / "attempt.json", evidence)
@@ -442,6 +460,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                                           "recorder_sha256": plan["recorder_sha256"], "video": str(target),
                                           "video_sha256": sha256(target), "attempt_dir": str(attempt_root),
                                           "composer_sha256": plan["composer_sha256"],
+                                          "video_rule_version": VIDEO_RULE_VERSION,
                                           "attempt_sha256": sha256(attempt_root / "attempt.json")})
                 _write(attempt_root / "closed.json", {"state": "validated", "result": own_result})
                 final = _summary(out, row)

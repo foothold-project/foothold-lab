@@ -38,6 +38,7 @@ from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
+VIDEO_RULE_VERSION = "v3-D137"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 CMD_BGR, ACT_BGR = (51, 230, 26), (255, 89, 38)  # green command, blue actual (scene arrows)
@@ -388,7 +389,7 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
 
 SCENE_KEY = (("dot", (77, 255, 51), "GT height map"), ("grid", (255, 153, 64), "Reconstructed map"),
              ("bar", (31, 31, 255), "Recon. error > 2 cm"), ("dot", (13, 230, 255), "Foot scan (20 cm)"),
-             ("dot", (0, 140, 255), "Attention top cells"), ("arrow", (51, 230, 26), "Command"),
+             ("dot", (0, 140, 255), "Attention 128 cells (0~0.30)"), ("arrow", (51, 230, 26), "Command"),
              ("arrow", (255, 89, 38), "Actual"), ("line", (200, 200, 200), "Foot trail 1.5 s"))
 
 
@@ -815,7 +816,7 @@ def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
 
 
 def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
-    x0, y0, w, h = 1280 - 196, 34, 188, 14 + LEGEND_ROW * len(SCENE_KEY)
+    x0, y0, w, h = 1280 - 260, 34, 252, 14 + LEGEND_ROW * len(SCENE_KEY)
     roi = scene[y0:y0 + h, x0:x0 + w].astype(np.float32)
     scene[y0:y0 + h, x0:x0 + w] = (roi * 0.35 + 10).astype(np.uint8)
     mode = (meta or {}).get("map_modes", {}).get("map_mode", {}).get("requested")
@@ -920,6 +921,8 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
     if n != len(idx) or not math.isclose(output_fps, fps, abs_tol=0.01):
         raise ValueError(f"composed output is {n} frames at {output_fps:g} fps; expected {len(idx)} at {fps} fps")
     rec = {"output": str(out), "sha256": sha256(out), "frames": n, "expected": len(idx), "segment": segment,
+           "video_rule_version": VIDEO_RULE_VERSION,
+           "composer_sha256": sha256(Path(__file__).resolve()),
            "speed": speed, "duration_s": duration_s, "fps": fps,
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),

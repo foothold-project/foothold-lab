@@ -98,3 +98,16 @@ def test_projection_is_recorded_body_position_and_required_for_screen_candidate(
     misplaced = inspect_frames([frame()], expected=1, width=128, height=72,
                                screen_evidence=evidence(1, (120, 10)))
     assert "robot_candidate_not_at_projection" in str(misplaced["issues"])
+
+
+def test_white_box_at_projection_cannot_replace_instance_mask():
+    image = frame()
+    image[20:51, 40:72] = 255
+    missing = [{"selected_robot_pixels": 0, "other_robot_pixels": 0}]
+    report = inspect_frames([image], expected=1, width=128, height=72,
+                            screen_evidence=evidence(1), robot_instance_evidence=missing)
+    assert "frame_1_robot_instance_count" in report["issues"]
+    mixed = [{"selected_robot_pixels": 150, "other_robot_pixels": 90}]
+    report = inspect_frames([image], expected=1, width=128, height=72,
+                            screen_evidence=evidence(1), robot_instance_evidence=mixed)
+    assert "frame_1_robot_instance_count" in report["issues"]

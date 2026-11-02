@@ -6,9 +6,12 @@ A human still checks the first Kit clip before bulk publishing.
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 import cv2
 import numpy as np
+
+from foothold_s2.eval.video_rule import require_video_rule
 
 
 def project_world_point(point, eye, target, *, width: int, height: int,
@@ -41,7 +44,8 @@ def project_world_point(point, eye, target, *, width: int, height: int,
 
 
 def inspect_frames(frames, *, expected: int, width: int, height: int,
-                   screen_evidence: list[dict] | None = None) -> dict:
+                   screen_evidence: list[dict] | None = None,
+                   robot_instance_evidence: list[dict] | None = None) -> dict:
     count = 0
     min_mean = min_std = min_center_white = min_panel_mean = min_bottom_mean = float("inf")
     max_same_run = same_run = 0
@@ -51,11 +55,17 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
     issues = []
     if not isinstance(screen_evidence, list) or len(screen_evidence) != expected:
         issues.append("camera_screen_projection_missing_or_short")
+    if robot_instance_evidence is not None and len(robot_instance_evidence) != expected:
+        issues.append("robot_instance_evidence_missing_or_short")
     for frame in frames:
         count += 1
         if frame is None or frame.shape != (height, width, 3):
             issues.append(f"frame_{count}_shape")
             continue
+        if robot_instance_evidence is not None:
+            row = robot_instance_evidence[count - 1] if count <= len(robot_instance_evidence) else {}
+            if row.get("selected_robot_pixels", 0) < 80 or row.get("other_robot_pixels", -1) != 0:
+                issues.append(f"frame_{count}_robot_instance_count")
         styled = width == 1920 and height == 1080
         camera = screen_evidence[count - 1] if isinstance(screen_evidence, list) and count <= len(screen_evidence) else None
         pixel = camera.get("root_center_px") if isinstance(camera, dict) else None
@@ -90,7 +100,7 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
             issues.append(f"frame_{count}_dark_scene")
         if std < 6:
             issues.append(f"frame_{count}_flat_scene")
-        if white_fraction < .001:
+        if robot_instance_evidence is None and white_fraction < .001:
             issues.append(f"frame_{count}_robot_out_of_view_proxy")
         # Record a bounded white body candidate in the rendered scene, rather
         # than treating all white terrain pixels as evidence of a visible robot.
@@ -111,14 +121,15 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
         if candidates:
             _, x, y, bw, bh = max(candidates)
             screen_boxes.append([x, y + int(height * .08), bw, bh])
-            if pixel is not None:
+            if pixel is not None and robot_instance_evidence is None:
                 margin = .08 * (1280 if styled else width)
                 if not (x - margin <= pixel[0] <= x + bw + margin
                         and y + int(height * .08) - margin <= pixel[1] <= y + int(height * .08) + bh + margin):
                     issues.append(f"frame_{count}_robot_candidate_not_at_projection")
         else:
             screen_boxes.append(None)
-            issues.append(f"frame_{count}_robot_screen_candidate_missing")
+            if robot_instance_evidence is None:
+                issues.append(f"frame_{count}_robot_screen_candidate_missing")
         reduced = cv2.resize(luminance, (160, 90), interpolation=cv2.INTER_AREA)
         if previous is not None and np.array_equal(previous, reduced):
             same_run += 1
@@ -150,7 +161,15 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
 
 
 def audit_video(path: Path, *, expected: int, width: int, height: int,
-                screen_evidence: list[dict] | None = None) -> dict:
+                screen_evidence: list[dict] | None = None,
+                robot_instance_evidence: list[dict] | None = None,
+                composite_receipt: Path | None = None,
+                composer_sha256: str | None = None) -> dict:
+    if composite_receipt is not None:
+        if composer_sha256 is None:
+            raise ValueError("video_rule_hold: compositor SHA is required for styled audit")
+        require_video_rule(json.loads(composite_receipt.read_text(encoding="utf-8")),
+                           composer_sha256=composer_sha256)
     capture = cv2.VideoCapture(str(path))
     if not capture.isOpened():
         raise ValueError("C76 video cannot be decoded: " + str(path))
@@ -162,6 +181,7 @@ def audit_video(path: Path, *, expected: int, width: int, height: int,
                     break
                 yield frame
         return inspect_frames(frames(), expected=expected, width=width, height=height,
-                              screen_evidence=screen_evidence)
+                              screen_evidence=screen_evidence,
+                              robot_instance_evidence=robot_instance_evidence)
     finally:
         capture.release()

@@ -41,7 +41,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     composer = tmp_path / "compose.py"
     checkpoint.write_bytes(b"checkpoint")
     recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
-    composer.write_bytes(b"# CPU composer fixture\n")
+    composer.write_bytes(b'VIDEO_RULE_VERSION = "v3-D137"\n')
     rows = []
     cells = q.inventory(KINDS) if complete else [("boxes", 2, "eval_gt")]
     for kind, level, mode in cells:
@@ -56,6 +56,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
                                 "geometry_seed": 20261026,
                                 "command": [1.0, 0.0, 0.0], "duration_s": 18.0,
                                 "seed": "{seed}", "c_layer_reference": True,
+                                "hide_others": True,
                                 "checkpoint_sha256": q.sha256(checkpoint), "envs": 64,
                                 "map_mode": mode, "env_id": 7, "kind": kind, "col": 4},
                      "recorder_argv": ["python", str(recorder), "--policy", "{policy}",
@@ -81,6 +82,8 @@ def make_capture(mp4: Path, plan: dict, row: dict, seed: int, resets: int):
         "map_modes": {"map_mode": {"requested": row["map_mode"]}},
         "style": {"style_id": video_style.STYLE_ID},
         "frames": 450, "fps": 25, "duration_s": 18.0, "resets": resets,
+        "robot_instance_evidence": [{"selected_robot_pixels": 1000,
+                                     "other_robot_pixels": 0} for _ in range(450)],
     }), encoding="utf-8")
     done = np.zeros(900, dtype=bool)
     done[:resets] = True
@@ -103,6 +106,8 @@ def fake_capture(plan: dict, outcomes: list[int]):
             styled.write_bytes(b"composed HUD video")
             styled.with_suffix(".json").write_text(json.dumps({
                 "sha256": q.sha256(styled), "frames": 450, "fps": 25,
+                "video_rule_version": q.VIDEO_RULE_VERSION,
+                "composer_sha256": plan["composer_sha256"],
                 "checkpoint_sha256": plan["checkpoint_sha256"],
                 "capture": argv[argv.index("--capture") + 1],
             }), encoding="utf-8")
@@ -237,6 +242,34 @@ def test_inventory_and_seed_gate(tmp_path):
     plan["recorder_sha256"] = q.sha256(Path(plan["recorder"]))
     with pytest.raises(ValueError, match="variable-seed"):
         q.validate_plan(plan)
+
+
+def test_old_composer_and_missing_robot_visibility_are_held(tmp_path):
+    plan, rows = fixture(tmp_path)
+    rows[0]["policy"].pop("hide_others")
+    with pytest.raises(ValueError, match="hide other robots"):
+        q.validate_plan(plan)
+    rows[0]["policy"]["hide_others"] = True
+    composer = Path(plan["composer"])
+    composer.write_text('VIDEO_RULE_VERSION = "v2"\n', encoding="utf-8")
+    plan["composer_sha256"] = q.sha256(composer)
+    with pytest.raises(ValueError, match="older video rule"):
+        q.validate_plan(plan)
+
+
+def test_playlist_rejects_receipt_without_v3_rule(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    run, _ = fake_capture(plan, [0])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[], only_cell=q._slot(rows[0]))
+    assert result["event"] == "captured"
+    receipt = next((out / "receipts").glob("*_success.json"))
+    data = json.loads(receipt.read_text(encoding="utf-8"))
+    data.pop("video_rule_version")
+    receipt.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="video_rule_hold"):
+        q.publish_playlists(plan, out)
 
 
 def test_partial_plan_cannot_launch(tmp_path):

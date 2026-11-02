@@ -76,7 +76,7 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
                   "selection_role": "c_layer", "terrain_set": terrain_set,
                   "fixed_terrain": True, "fixed_level": level, "geometry_seed": GEOMETRY_SEED,
                   "command": [1.0, 0.0, 0.0], "duration_s": 18.0,
-                  "seed": "{seed}", "c_layer_reference": True,
+                  "seed": "{seed}", "c_layer_reference": True, "hide_others": True,
                   "checkpoint_sha256": checkpoint_sha, "envs": 64,
                   "map_mode": mode, "env_id": env_id, "kind": kind, "col": col,
                   "start_yaw_rad": 0.0}

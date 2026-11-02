@@ -1195,6 +1195,7 @@ def _capture(spec: dict[str, Any]) -> None:
     import av
     from PIL import Image, ImageDraw, ImageFont
     from foothold_s2.eval.c_layer_frame_audit import project_world_point
+    from foothold_s2.eval.c_layer_segmentation import robot_pixel_evidence, require_single_visible_robot
 
     import importlib
     preload_kit_dependencies(importlib.import_module, lambda: None)
@@ -1426,12 +1427,16 @@ def _capture(spec: dict[str, Any]) -> None:
         map_snapshot: dict[str, Any] = {}
         capture_env_id = int(spec["env_id"]) if sparse_capture else 0
         render_visibility_record = {"enabled": False, "reason": "single-environment capture"}
-        if sparse_capture and spec.get("hide_others"):
+        if c_layer_ref(spec) or (sparse_capture and spec.get("hide_others")):
             import omni.usd
             render_visibility_record = hide_nonselected_robot_roots(
                 omni.usd.get_context().get_stage(), env_cfg.scene.robot.prim_path,
-                capture_env_id, n_envs(spec), keep_env_ids=(0,))
-            render_visibility_record["kept_env_ids"] = [0, capture_env_id]
+                capture_env_id, n_envs(spec),
+                keep_env_ids=() if c_layer_ref(spec) else (0,))
+            render_visibility_record["kept_env_ids"] = ([capture_env_id] if c_layer_ref(spec)
+                                                         else [0, capture_env_id])
+            if c_layer_ref(spec) and len(render_visibility_record["hidden_robot_roots"]) != n_envs(spec) - 1:
+                raise RuntimeError("C76 expected all other robot roots to be invisible")
 
         def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
             result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
@@ -1535,6 +1540,15 @@ def _capture(spec: dict[str, Any]) -> None:
         refresh_observation = True
         for _ in range(12):
             raw.render()
+        instance_annotator = None
+        instance_evidence: list[dict[str, Any]] = []
+        if c_layer_ref(spec):
+            import omni.replicator.core as rep
+            if not hasattr(raw, "_render_product"):
+                raise RuntimeError("C76 RGB render product missing for instance mask")
+            instance_annotator = rep.AnnotatorRegistry.get_annotator(
+                "instance_id_segmentation_fast", init_params={"colorize": False}, device="cpu")
+            instance_annotator.attach([raw._render_product])
         for k in range(step_count):
             now_s = k * step_dt
             starts = contract["commands"]
@@ -1578,6 +1592,12 @@ def _capture(spec: dict[str, Any]) -> None:
                 overlay_info.append({"physics_tick": k, **oi})
                 frame, retry_checks = render_frame_guarded(raw, robot, command_term, sensor,
                                                            env_index=capture_env_id)
+                if instance_annotator is not None:
+                    mask_row = robot_pixel_evidence(
+                        instance_annotator.get_data(), selected_env=capture_env_id,
+                        env_count=n_envs(spec), height=full_args.height, width=full_args.width)
+                    require_single_visible_robot(mask_row)
+                    instance_evidence.append(mask_row)
                 render_retry_checks.extend({"physics_tick": k, **check} for check in retry_checks)
                 if frame.shape[:2] != (full_args.height, full_args.width):
                     frame = np.asarray(Image.fromarray(frame).resize((full_args.width, full_args.height)))
@@ -1761,6 +1781,7 @@ def _capture(spec: dict[str, Any]) -> None:
             "render_visibility": render_visibility_record
             if sparse_capture else {"enabled": False, "reason": "single-environment capture"},
             "camera_screen_projection": camera_screen_projection,
+            "robot_instance_evidence": instance_evidence if c_layer_ref(spec) else None,
             "target_robot_marker": target_marker_record,
             "capture_start": start_record,
             "segment_observations": segment_observations,
