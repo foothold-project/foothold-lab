@@ -35,6 +35,9 @@ parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="d
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
+parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
+parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
+parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -58,6 +61,13 @@ if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.
     parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
 if args.axis_v2 and args.steps < 4:
     parser.error("--axis-v2 requires at least four steps")
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import validate_request
+
+    try:
+        validate_request(args)
+    except ValueError as exc:
+        parser.error(str(exc))
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -220,6 +230,12 @@ if args.axis_v2:
               terrain_names, dr_off, curriculum_off, _run_identity())
     os._exit(0)
 
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import run_suite as run_terrain_skill_v2
+
+    run_terrain_skill_v2(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+                         terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
     res["checkpoint_iter"] = int(sd.get("iter", -1))
