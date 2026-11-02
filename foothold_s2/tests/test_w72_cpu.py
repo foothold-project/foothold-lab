@@ -41,5 +41,7 @@ def test_pair_control_is_bounded_and_noise_reverts():
     bias=0.
     for _ in range(8): bias=w72.adjust_pair(bias, (55, .2), (64,.1))
     assert bias==pytest.approx(.02)
+    bias=w72.adjust_pair(bias,(64,.11),(64,.10))
+    assert bias==pytest.approx(.01)
     assert w72.adjust_pair(bias,(64,.11),(64,.10))==0.
     assert w72.adjust_pair(0.,(64,.1),(60,.1))==pytest.approx(-.01)

@@ -88,12 +88,16 @@ class EX41Plan(Plan):
         self.terrain_curriculum=d['terrain_curriculum']
         self.heading_cfg=copy.deepcopy(d['heading']); self.stand_cfg=copy.deepcopy(d['stand_penalty'])
         self.gate_cfg=d['gate']; self.automatic=d['automatic']; self.domain_randomization=d['domain_randomization']
+        w72.validate_pair_bounds(self.automatic['pair_step'],self.automatic['pair_limit'])
+        if self.automatic['interval_updates']!=250: raise ValueError('EX41 approved boundary interval is 250')
         dr=self.domain_randomization
         if (not isinstance(dr,dict) or dr.get('mode') not in ('constant','boundary_ramp')
             or type(dr.get('scale')) not in (int,float) or not math.isfinite(dr['scale'])
             or not 0<=dr['scale']<=1 or dr.get('observation_noise')!={'mode':'fixed','multiplier':1.}):
             raise ValueError('EX41 initial DR scale/noise invalid')
         self.initial_dr_scale=float(dr['scale'])
+        if self.initial_dr_scale!={6000:.5,7500:1.}[self.parent_update]:
+            raise ValueError('EX41 parent initial DR scale differs: m6000=.5, m7500=1')
         self.boundary_path=self.path.with_name(d['boundary_file']); self.approvals_path=self.path.with_name(d['approval_file'])
         self.effective_sha256=digest({'table':self.sha256,'arm':arm,'smoke':smoke_boundaries})
         rewards=d['first_rewards']
@@ -261,7 +265,15 @@ class EX41Runtime(Runtime):
         self._receipt=copy.deepcopy(row)
 
     def _apply(self,pos,n,values,decisions,score,reason):
-        before=copy.deepcopy(self.effective); after=self._effective(pos,n,values)
+        before=copy.deepcopy(self.effective)
+        try:
+            self._check_values(values)
+            after=self._effective(pos,n,values)
+            if before and after['dr']['target_scale']!=self.dr_scale(n) and after['dr']['ramp_updates']<=0:
+                raise ValueError('EX41 DR target change requires positive ramp_updates')
+        except (ValueError,TypeError,KeyError,OverflowError) as exc:
+            self._reject_boundary(n,exc)
+            return False
         snap=self._snapshot or {}
         after['authorization']={'gate':'W72','status':'APPROVED','approval_id':snap.get('approval_sha256'),
             'decision_ids':sorted(set([d['decision_id'] for d in decisions]+([reason] if reason!='boundary_config' else []))),
@@ -366,10 +378,13 @@ class EX41Runtime(Runtime):
         if self.score_dir is None: return []
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
-            h=sha256(p)
-            if h in self.seen_scores: continue
+            h=None
             try:
-                d=json.loads(p.read_text(encoding='utf-8-sig')); json.dumps(d,allow_nan=False); it=d.get('iteration')
+                h=sha256(p)
+                if h in self.seen_scores: continue
+                d=json.loads(p.read_text(encoding='utf-8-sig')); json.dumps(d,allow_nan=False)
+                if not isinstance(d,dict): raise ValueError('EX41 score must be an object')
+                it=d.get('iteration')
                 if type(it) is not int or it>n: continue  # not yet consumable
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')
                 if d.get('stage_id')!=self.effective['stage_id']: raise ValueError('EX41 score stage differs')
@@ -387,12 +402,16 @@ class EX41Runtime(Runtime):
                     raise ValueError('EX41 score measured evidence missing')
                 validate_metrics(d['metrics'])
                 for e in d['evidence']:
+                    if not isinstance(e,dict): raise ValueError('EX41 evidence must be an object')
                     if sha256(Path(e['path']).resolve(strict=True))!=e['sha256']: raise ValueError('EX41 raw evidence SHA differs')
                 if d.get('baseline_checkpoint_sha256')!=self._stage_baseline_sha: raise ValueError('EX41 stage baseline differs')
+                if d['safety_stop']:
+                    self.stop_requested=True
+                    self._write({'event':'registered_safety_stop','score_sha256':h,'iteration':n})
                 d['_sha256']=h; rows.append(d)
             except (ValueError,KeyError,OSError,TypeError) as exc:
                 self._write({'event':'score_rejected','path':str(p),'sha256':h,'reason':str(exc)})
-                self.seen_scores.add(h)
+                if h is not None: self.seen_scores.add(h)
         # A conflict at the same checkpoint invalidates all versions, not just
         # whichever file happened to sort last.
         out=[]
@@ -410,8 +429,14 @@ class EX41Runtime(Runtime):
         if not self._started: raise ValueError('EX41 start/load required before rollout')
         if type(iteration) is not int or iteration<0: raise ValueError('EX41 local n invalid')
         self._iteration=iteration
-        if iteration<=self._last_boundary or (iteration-1)%self.plan.automatic['interval_updates']!=0: return
+        smoke=self.plan.smoke_boundaries
+        boundary=(iteration in (*smoke,smoke[-1]+2)) if smoke else (iteration-1)%250==0
+        if iteration<=self._last_boundary or not boundary: return
         self._last_boundary=iteration
+        # Safety is independent of a broken or dirty W72 configuration. Valid
+        # stop evidence is consumed even when configuration is rejected below.
+        score_rows=self._read_scores(iteration)
+        self._history=sorted(self._history+score_rows,key=lambda r:r['iteration'])[-8:]
         try:
             snap=w72.read_committed_pair(self.plan.boundary_path,self.plan.approvals_path)
             manual=snap['config'].get('values'); self._check_values(manual)
@@ -428,13 +453,6 @@ class EX41Runtime(Runtime):
             dst=values; parts=d['path'].split('.')
             for part in parts[:-1]: dst=dst[part]
             dst[parts[-1]]=d['after']
-        score_rows=self._read_scores(iteration)
-        for score in score_rows:
-            self._history.append(score)
-            if score['safety_stop']:
-                self.stop_requested=True
-                self._write({'event':'registered_safety_stop','score_sha256':score['_sha256'],'iteration':iteration})
-        self._history=sorted(self._history,key=lambda r:r['iteration'])[-8:]
         if self.stop_requested:
             return
         latest=self._history[-1] if self._history else None
@@ -442,7 +460,19 @@ class EX41Runtime(Runtime):
         elapsed=iteration-self.stage_entry_iteration
         transition_state=(self._extensions,self._s2c_pass,self.finished,self.graduated)
         next_pos=self.stage_pos; reason='boundary_config'
-        if self.stage_pos==0: next_pos=1; reason='first_rollout'
+        if smoke:
+            if iteration==smoke[-1]+2:
+                self.finished=self.stage_pos==4; self.graduated=False
+                self._write({'event':'smoke_finished','iteration':iteration,'finished':self.finished,'graduated':False})
+            else:
+                requested=smoke.index(iteration)+1
+                if requested!=self.stage_pos+1:
+                    reason='smoke_previous_boundary_not_applied'
+                elif requested>=3 and not values['w71_ready']:
+                    reason='w71_not_ready'
+                else:
+                    next_pos=requested; reason='smoke_boundary_only_NOT_graduated'
+        elif self.stage_pos==0: next_pos=1; reason='first_rollout'
         elif not self.stop_requested:
             meta=self.stage_meta[self.templates[self.stage_pos].id]
             pair=fresh[-2:]
@@ -453,6 +483,7 @@ class EX41Runtime(Runtime):
                 if self.stage_pos!=2 or values['w71_ready']:
                     next_pos+=1; reason='performance_pass'
                     if self.stage_pos==3: self._s2c_pass=True
+                else: reason='w71_not_ready'
             elif self.stage_pos==3 and elapsed>=meta['maximum_updates']+self._extensions*meta['extension_updates']:
                 delta=self._level_delta()
                 if snap['approvals'].get('automatic',{}).get('extension') and self._extensions<meta['maximum_extensions'] and delta is not None and delta>=self.plan.automatic['extension_level_delta'] and latest and latest in fresh and latest['maintenance_pass'] and latest['metrics'].get('stand_min_passed',0)>=self.plan.automatic['stand_min_passed']:
@@ -466,7 +497,7 @@ class EX41Runtime(Runtime):
         # score files arrived together. They still all inform consecutive tests.
         if score_rows:
             score=score_rows[-1]
-            decisions+=self._automatic(values,score,next_pos!=self.stage_pos)
+            decisions+=self._automatic(values,score,next_pos!=self.stage_pos,next_pos=next_pos)
             self._auto_seen.update(r['_sha256'] for r in score_rows)
         if next_pos!=self.stage_pos and self._mirror_pending:
             values['critic_mirror']=True
@@ -484,9 +515,10 @@ class EX41Runtime(Runtime):
                     self._mirror_pending=False
         else:
             self._config_values=copy.deepcopy(manual)
-            self._write({'event':'boundary_keep','iteration':iteration,'stage':self.effective['stage_id'],'reason':'missing_or_insufficient_performance; training continues'})
+            self._write({'event':'boundary_keep','iteration':iteration,'stage':self.effective['stage_id'],
+                         'reason':reason if reason!='boundary_config' else 'missing_or_insufficient_performance; training continues'})
 
-    def _automatic(self,values,score,stage_boundary):
+    def _automatic(self,values,score,stage_boundary,*,next_pos=None):
         if score['_sha256'] in self._auto_seen: return []
         self._auto_seen.add(score['_sha256'])
         metrics=score['metrics']; rules=self._snapshot['approvals'].get('automatic',{}); changes=[]
@@ -513,7 +545,7 @@ class EX41Runtime(Runtime):
                 try: new=w72.adjust_pair(old,pair['left'],pair['right'],step=cfg['pair_step'],limit=cfg['pair_limit'],
                                         survival_noise=cfg['pair_survival_noise'],error_noise=cfg['pair_error_noise'])
                 except (ValueError,TypeError): continue
-                base=self.templates[self.stage_pos].shares
+                base=self.templates[self.stage_pos if next_pos is None else next_pos].shares
                 if base[name+'_left']+new<=0 or base[name+'_right']-new<=0:
                     self._write({'event':'automatic_pair_kept','pair':name,'reason':'would_remove_existing_command','requested_bias':new})
                     continue

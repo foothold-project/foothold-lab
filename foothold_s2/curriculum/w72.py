@@ -12,6 +12,15 @@ BOUNDS = {'reward_weights.swing':(-20.,-2.), 'reward_weights.stumble':(-3.,-1.),
           'dr.ramp_updates':(0,100000), 'heading_forward_fraction':(0.,1.),
           'terrain_level_cap':(0,5), 'episode_length_s':(1.,120.)}
 BOOLS = {'critic_mirror','w71_ready'}
+PAIR_STEP_MAX = .01  # D93-pair-one-point-limit-two: fractions, not percent.
+PAIR_LIMIT_MAX = .02
+
+
+def validate_pair_bounds(step, limit):
+    if (type(step) not in (int,float) or type(limit) not in (int,float)
+        or not math.isfinite(step) or not math.isfinite(limit)
+        or not 0 < step <= PAIR_STEP_MAX or not 0 < limit <= PAIR_LIMIT_MAX):
+        raise ValueError('W72 pair bounds exceed approved +/-1 / +/-2 percentage points')
 
 
 def _git(root, *args):
@@ -72,6 +81,9 @@ def validate_change(before: dict, after: dict, approvals: dict) -> list[dict]:
         raise ValueError('W72 approvals missing')
     b,a=_leaves(before),_leaves(after)
     if set(b)!=set(a): raise ValueError('W72 cannot add/remove runtime fields')
+    if (a.get('dr.target_scale')!=b.get('dr.target_scale')
+        and a.get('dr.ramp_updates',0)<=0):
+        raise ValueError('W72 changed DR target requires positive ramp_updates')
     decisions=[]
     for key in sorted(a):
         value=a[key]
@@ -104,12 +116,15 @@ def adjust_pair(bias, left, right, *, step=.01, limit=.02,
                 survival_noise=3/64, error_noise=.03):
     """Survivors out of 64 and absolute error; positive bias favors left.
 
-    A tie inside BOTH repeatability bands returns exactly to zero. A weak side
+    A tie inside BOTH repeatability bands moves one step toward zero. A weak side
     is selected by survival first, then error, as design 5.3 specifies.
     """
+    validate_pair_bounds(step,limit)
     ls,le=left; rs,re=right
     if any(not math.isfinite(float(x)) for x in (bias,ls,le,rs,re)) or not (0<=ls<=64 and 0<=rs<=64):
         raise ValueError('W72 pair evidence invalid')
-    if abs(ls-rs)<=64*survival_noise and abs(le-re)<=error_noise: return 0.
+    if abs(bias)>limit+1e-12: raise ValueError('W72 existing pair bias exceeds approved limit')
+    if abs(ls-rs)<=64*survival_noise and abs(le-re)<=error_noise:
+        return math.copysign(max(0.,abs(bias)-step),bias) if bias else 0.
     direction=1 if ls<rs or (ls==rs and le>re) else -1
     return max(-limit,min(limit,bias+direction*step))

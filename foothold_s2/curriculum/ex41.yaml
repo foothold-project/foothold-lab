@@ -36,6 +36,8 @@ first_rewards:
   zero_yaw: -0.5
   # lead decision 11/02 12:0x. Two dragging feet, error .08m, speed .5m/s:
   # 2*.08^2*tanh(1)*10 / (2*.8) = 6.09%; common dt .02 cancels.
+  # .8 tracking score is an assumption. At speed 1m/s and tracking 1.0:
+  # 2*.08^2*tanh(2)*10 / 2 = 6.17%; not measured learning efficacy.
   swing: -10.0
   stumble: -2.0  # Existing single term; lead 11/02 12:0x. W72 bounds [-3,-1].
   knee_effort_margin: 0.0
