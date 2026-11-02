@@ -15,7 +15,7 @@ SPEC.loader.exec_module(GATE)
 
 def marker(path: Path, *, created=100.0):
     path.write_text(json.dumps({"job": "ex41-eval", "pid": 42,
-                                "process_create_time": created,
+                                "process_created_at": created,
                                 "started_at": "2026-11-02T21:00:00+09:00",
                                 "iteration": 1500}), encoding="utf-8")
 

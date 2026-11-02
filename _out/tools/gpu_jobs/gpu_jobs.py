@@ -18,7 +18,7 @@ def marker_state(path: Path) -> dict:
         marker = json.loads(path.read_text(encoding="utf-8-sig"))
         if not isinstance(marker, dict) or not isinstance(marker.get("job"), str):
             raise ValueError("job missing")
-        pid, created = marker["pid"], marker["process_create_time"]
+        pid, created = marker["pid"], marker["process_created_at"]
         if type(pid) is not int or pid <= 0 or type(created) not in (int, float):
             raise ValueError("invalid process identity")
         if not isinstance(marker["started_at"], str) or type(marker["iteration"]) is not int:
