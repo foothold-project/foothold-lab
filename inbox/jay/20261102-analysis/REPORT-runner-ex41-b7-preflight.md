@@ -27,4 +27,4 @@
 
 고정 인터페이스 `8e0dc7a8`의 factory와 runtime 구현은 현재 `NotImplementedError` placeholder이다. 따라서 EX-41 runtime, EX-41 score watcher, shadow/stage loop가 사용할 정확한 score schema는 아직 없다. EX-40 watcher를 EX-41 결과에 연결하면 잘못된 판정 경로가 되므로 연결하지 않았다. Playlist 생성기만 준비되어 있고 단계 종료 시 호출하는 연결도 runtime/score schema 뒤에 남아 있다.
 
-실제 train entrypoint parser 전체 실행, task/environment import, detached 고정 실행 worktree readback, Kit smoke, 첫 update는 미확인이다. AppLauncher import는 이 환경에서 Kit 부트스트랩과 EULA 프롬프트를 시작하는 경로여서 재호출하지 않았다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
+고정 실행 후보 `C:/mai/wt/foothold-lab/runner-ex41-b7-fixed`는 코드 HEAD `9da108bdaf4edeb7bfdadea0fb567b88e690008b`에서 detached·clean readback을 통과했고, 그 자리에서 부모와 source audit를 다시 읽었다. 실제 train entrypoint 전체 실행, task/environment import, Kit smoke, 첫 update는 미확인이다. AppLauncher import는 이 환경에서 Kit 부트스트랩과 EULA 프롬프트를 시작하는 경로여서 재호출하지 않았다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
