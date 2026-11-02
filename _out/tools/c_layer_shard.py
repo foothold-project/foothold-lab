@@ -81,6 +81,44 @@ def completed_receipt(path: Path, cell: str, checkpoint_sha256: str) -> bool:
     return True
 
 
+def technical_hold(out: Path, cell: str, *, limit: int = 3) -> dict | None:
+    """Hold a cell after closed technical failures, without spending seed budget."""
+    root = out / "attempts" / cell
+    if not root.exists():
+        return None
+    attempts = sorted(path for path in root.iterdir() if path.is_dir() and path.name.isdecimal())
+    failures = []
+    validated = 0
+    for attempt in attempts:
+        closed_path = attempt / "closed.json"
+        if not closed_path.is_file():
+            return None  # An incomplete attempt is a queue HOLD, never a retryable failure.
+        closed = json.loads(closed_path.read_text(encoding="utf-8-sig"))
+        if closed.get("state") == "validated":
+            validated += 1
+        if closed.get("state") == "failed":
+            failure_path = attempt / "failure.json"
+            if not failure_path.is_file():
+                raise ValueError("closed technical failure has no failure receipt")
+            failure = json.loads(failure_path.read_text(encoding="utf-8-sig"))
+            if failure.get("cell") != cell or failure.get("ordinal") != int(attempt.name):
+                raise ValueError("technical failure receipt differs from attempt")
+            failures.append(str(failure_path))
+    if len(failures) < limit:
+        return None
+    return {"state": "cell_technical_hold", "cell": cell,
+            "technical_failures": len(failures), "seed_budget_spent": validated,
+            "failure_receipts": failures}
+
+
+def record_hold(out: Path, hold: dict) -> None:
+    destination = out / "shard_holds" / (hold["cell"] + ".json")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(destination.name + f".{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(hold, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(temporary, destination)
+
+
 def run_one(path: Path, out: Path, gpu: int, *, check_only: bool = False) -> dict:
     plan, assigned = inspect_plan(path, gpu, out)
     env = temporary_env(gpu)
@@ -97,12 +135,18 @@ def run_one(path: Path, out: Path, gpu: int, *, check_only: bool = False) -> dic
     if check_only:
         return {"state": "checked", "gpu": gpu, "assigned": len(assigned),
                 "first": assigned[0], "last": assigned[-1], "queue_sha256": sha256(queue)}
+    held = []
     for cell in assigned:
         hold = priority_hold(plan, gpu)
         if hold is not None:
             return {"state": "yielded_to_training_or_evaluation", "marker": hold, "next": cell}
         receipt = out / "receipts" / (cell + "_success.json")
         if completed_receipt(receipt, cell, plan["checkpoint_sha256"]):
+            continue
+        cell_hold = technical_hold(out, cell)
+        if cell_hold is not None:
+            record_hold(out, cell_hold)
+            held.append(cell_hold)
             continue
         command = [str(python), str(queue), str(path), "--out", str(out),
                    "--run-one", "--only-cell", cell]
@@ -113,8 +157,15 @@ def run_one(path: Path, out: Path, gpu: int, *, check_only: bool = False) -> dic
         event = json.loads(result.stdout)
         if event.get("state") == "only_cell_closed":
             continue
-        return {"gpu": gpu, "cell": cell, "queue_event": event}
-    return {"state": "assigned_cells_complete", "gpu": gpu, "assigned": len(assigned)}
+        cell_hold = technical_hold(out, cell)
+        if cell_hold is not None:
+            record_hold(out, cell_hold)
+            held.append(cell_hold)
+            continue
+        return {"state": event.get("state", "queue_event_unknown"),
+                "gpu": gpu, "cell": cell, "queue_event": event, "held": held}
+    return {"state": "assigned_cells_with_holds" if held else "assigned_cells_complete",
+            "gpu": gpu, "assigned": len(assigned), "held": held}
 
 
 def main() -> int:

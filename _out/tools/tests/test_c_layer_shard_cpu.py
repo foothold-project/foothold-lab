@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -64,3 +65,70 @@ def test_gpu_temporaries_and_receipt_integrity(tmp_path):
     video.write_bytes(b"corrupted")
     with pytest.raises(ValueError, match="corrupted"):
         shard.completed_receipt(receipt, "cell", "a" * 64)
+
+
+def _failed_attempt(out: Path, cell: str, ordinal: int) -> None:
+    attempt = out / "attempts" / cell / f"{ordinal:02d}"
+    attempt.mkdir(parents=True)
+    (attempt / "failure.json").write_text(json.dumps({"cell": cell, "ordinal": ordinal,
+                                                       "seed": 42, "reason": "instance IDs missing"}), encoding="utf-8")
+    (attempt / "closed.json").write_text(json.dumps({"state": "failed"}), encoding="utf-8")
+
+
+def test_three_closed_failures_hold_without_spending_seed(tmp_path):
+    for ordinal in (1, 2):
+        _failed_attempt(tmp_path, "pit", ordinal)
+    assert shard.technical_hold(tmp_path, "pit") is None
+    _failed_attempt(tmp_path, "pit", 3)
+    hold = shard.technical_hold(tmp_path, "pit")
+    assert hold["state"] == "cell_technical_hold"
+    assert hold["technical_failures"] == 3 and hold["seed_budget_spent"] == 0
+    assert len(hold["failure_receipts"]) == 3
+    shard.record_hold(tmp_path, hold)
+    assert json.loads((tmp_path / "shard_holds" / "pit.json").read_text())["cell"] == "pit"
+    (tmp_path / "attempts" / "pit" / "04").mkdir()
+    assert shard.technical_hold(tmp_path, "pit") is None  # open attempt must not be skipped
+
+
+def test_hold_skips_bad_cell_and_runs_next_with_state(monkeypatch, tmp_path):
+    queue = tmp_path / "queue.py"
+    queue.write_text("# frozen fake queue", encoding="utf-8")
+    for ordinal in (1, 2, 3):
+        _failed_attempt(tmp_path, "pit", ordinal)
+    plan = {"queue": str(queue), "checkpoint_sha256": "a" * 64,
+            "jobs": [{"recorder_argv": [sys.executable]}],
+            "execution_shard": {"priority_markers": []}}
+    monkeypatch.setattr(shard, "inspect_plan", lambda *_: (plan, ["pit", "next"]))
+    monkeypatch.setattr(shard, "priority_hold", lambda *_: None)
+    calls = []
+    def fake_run(command, **_kwargs):
+        calls.append(command)
+        if "--run-one" not in command:
+            return SimpleNamespace(returncode=0, stdout=json.dumps({"expected": 216, "ready": 216}), stderr="")
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"state": "capture_failed", "cell": "next"}), stderr="")
+    monkeypatch.setattr(shard.subprocess, "run", fake_run)
+    result = shard.run_one(tmp_path / "plan.json", tmp_path, 1)
+    assert result["state"] == "capture_failed" and result["cell"] == "next"
+    assert len(result["held"]) == 1 and result["held"][0]["cell"] == "pit"
+    assert len(calls) == 2 and calls[1][-1] == "next"
+    assert (tmp_path / "shard_holds" / "pit.json").is_file()
+
+
+def test_hold_then_closed_next_has_explicit_final_state(monkeypatch, tmp_path):
+    queue = tmp_path / "queue.py"
+    queue.write_text("# frozen fake queue", encoding="utf-8")
+    for ordinal in (1, 2, 3):
+        _failed_attempt(tmp_path, "pit", ordinal)
+    plan = {"queue": str(queue), "checkpoint_sha256": "a" * 64,
+            "jobs": [{"recorder_argv": [sys.executable]}],
+            "execution_shard": {"priority_markers": []}}
+    monkeypatch.setattr(shard, "inspect_plan", lambda *_: (plan, ["pit", "next"]))
+    monkeypatch.setattr(shard, "priority_hold", lambda *_: None)
+    def fake_run(command, **_kwargs):
+        payload = ({"state": "only_cell_closed"} if "--run-one" in command else
+                   {"expected": 216, "ready": 216})
+        return SimpleNamespace(returncode=0, stdout=json.dumps(payload), stderr="")
+    monkeypatch.setattr(shard.subprocess, "run", fake_run)
+    result = shard.run_one(tmp_path / "plan.json", tmp_path, 1)
+    assert result["state"] == "assigned_cells_with_holds"
+    assert result["held"][0]["technical_failures"] == 3
