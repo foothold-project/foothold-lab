@@ -196,27 +196,3 @@ metrics['maintenance_counts'] = build_maintenance_counts(
 확인됨: 최종 일정 시험 **34PASS77.90초**, 관련 경계·회귀 **23PASS28.14초**, 합계 **57PASS**. 명령은 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_ex41_fixed_cpu.py -q` 및 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_ex41_boundary_cpu.py foothold_s2/tests/test_ex41_review_regressions.py -q`다. 실행 경로는 isaac311이며 GPU를 숨겼다. 남은 통합 확인은 runner의 helper 실제 연결, W71·유효 PPO mask의 실행 경로, 통합본 독립 검토와 승인 뒤 Kit 예행이다. 본 후속본으로 실행 승인이나 GPU 검증 완료를 주장하지 않는다.
 
 결정·작업 연속성은 [이슈 #555의 직전 기록](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6569612303)에 이어 남긴다. 이 문서는 analyst가 정리했다. pyflakes와 git diff 검사는 통과했다. own worktree에는 review_inbox.py가 없어 lead 사본으로 읽었다. 그 검사기는 문서의 확인됨 표기를0개, 금지 줄표를205개로 보고하여 자동 문서 검사는 통과로 적지 않는다. 별도 문자 검사에서 U+2014는0개였고, 이 문서의 확인됨 문장은 위에 보존했다. 검사기 수정은 이 후속본 범위 밖이다.
-
-## 18. G5·G6·G7: 최신 오류 보존과 원자료 점수 생성
-
-G4는 a0581766에서 상한 회복 우선 시험으로 처리했다. 그 뒤 verifier H1/H2와 lead G5~G7을 받았다. 시간창을250으로 줄이는 것만으로 충분하지 않았다. 실제 reader에 n1000 정상 → n1200 정상 + n1250 NaN/체크포인트 SHA 오류/정지 숫자 누락을 넣으면 **수정 전 세 경우 모두FAIL14.42초**였고 DR이 다시 올라갔다.
-
-고침: 점수 파일의 최신 오류를 `score_rejections`로 따로 보존하고 저장·재개에도 잇는다. 경계의 최신 오류 회차가 정상 점수보다 같거나 크면 `latest_score_invalid_hold`로 남기고 과거 PASS를 사용하지 않는다. malformed JSON·잘못된 iteration도 파일명의 회차를 보고, 회차를 알 수 없으면 관측한 현재 창의 미확인 증거로 남긴다. 새로운 유효 점수가 두250경계 연속으로 와야 DR을 재개한다. 오래된 오류 자체가 이후의 더 새로운 정상 점수를 영원히 막지는 않는다. 같은 회차의 상충 파일도 정상 점수로 숨기지 않는다.
-
-`stand_min_passed` 누락은 고정 일정뿐 아니라 EX41 reader에서 불완전 점수로 거절한다. 옛 자동 조정 함수의 누락64 기본값도 제거했다. 오류가 난 최신 점수는 유지 판단에서 증거 부족이다. 신원과 원자료 SHA가 확인된 등록 안전 중단은 정지 지표 완전성 검사보다 먼저 읽어 보존한다.
-
-숫자 생성의 정본은 `curriculum/ex41_scoring.py`다. runner의 `ex41_score.py`·`scripts/ex41_startup.py`는 읽었으며 직접 고치지 않았다. 아래 함수가 기존 draft를 받아 정확한 숫자와 증거 SHA를 붙인다. stage_pass·safety_stop은 기존 등록 판정을 보존하며 새 문턱을 만들지 않는다.
-
-```python
-enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
-# stand_paths: eval_gt / probe_prop_only / eval_pred 각각의 stand.json
-# 반환 metrics: maintenance_counts, stand_counts, stand_min_passed
-```
-
-`maintenance_counts_from_map_modes`는 세 지도 모드, extended13명령,64개 고유 env 번호와 alive boolean 합을 대조한 뒤 §17의 helper 하나로 변환한다. `measurement_bundle`은 실제 checkpoint SHA·명령값·평가300스텝·지형 manifest와 각 stand_raw.npz SHA도 확인한다. 정지 성공의 발 접촉·하중·틈·몸속도·yaw 정의는 기존 `ex40_score._stand_rows/_stand_pass`를 재사용했다. EX40의 전체 성공 문턱60을 EX41에 가져온 것이 아니다. 여기서는 모드별 통과 숫자만 만들며 EX41 복원 조건은 승인된61이다.
-
-확인됨: m6000의 `score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json`이 부모 유지 기준의 원본이다. extended13명령×3모드로 **39/39 숫자 일치, 차이0**. 정지 세 모드는64/64·64/64·64/64로 부모표와 일치했다. `map64_b3`는 walk·작은 spin·저속의9명령으로 별도 과제이며 유지39칸을 대신하면 거절한다. 이 선택은 새 기준 선택이 아니라 SHA고정 부모표의 실제 출처 대조다.
-
-읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), SHA256 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
-
-검증 기록: isaac311·CUDA 숨김으로 fixed/runtime/boundary/review_regressions/scoring 다섯 시험 파일 **96PASS170.29초**, pyflakes·git diff 검사 통과. 실제 reader의 NaN·체크포인트 SHA·원자료 SHA·정지 숫자 누락·깨진 JSON·잘못된 회차 반례와 오류 상태 저장·재개 뒤 새 점수 두 개의 회복을 확인했다. G5·G7의 runtime 고침과 G6 helper/원자료 대조를 닫을 수 있어도, G6 전체는 runner 진입점이 이 함수를 실제 호출하는 통합본을 확인해야 닫는다. 낮은 항목 D121 과제 변경 평가 연결·W72 추가 승인 칸·D93 히스토그램은 이 커밋에서 닫았다고 하지 않는다. 후속 교차검증의 명령 몫2차 S2c 이동과 m6000 lin_vel_z 실측은 이 묶음 다음 작업이다.

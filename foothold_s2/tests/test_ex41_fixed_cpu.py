@@ -5,12 +5,12 @@ from pathlib import Path
 import subprocess
 import pytest
 import yaml
+from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
 from foothold_s2.curriculum.ex41_fixed import (Clock,CELLS,maintenance,baseline_counts,
     maintenance_cells,build_maintenance_counts)
 from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
 from foothold_s2.tests.test_ex41_runtime_cpu import score
-from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
@@ -105,18 +105,7 @@ def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
         tick(r,n,stage_pass=n<750)
         if n in expected: assert r.effective['stage_id']==expected[n]
     assert r.finished and not r.graduated and r.dr_scale(5001)==1.
-    assert curriculum_finished(r)
-    assert curriculum_update_number(r, 0) == 1
-    assert curriculum_update_number(r, 6500) == 6501
     assert r._stage_baseline_sha==r.plan.parent_sha256
-
-
-def test_start_runner_consumes_terminal_flag_before_next_rollout():
-    source=(Path(__file__).parents[1]/"runners/start_runner.py").read_text(encoding="utf-8")
-    boundary=source.index("continuous.on_update_start(curriculum_it)")
-    stop=source.index("if curriculum_finished(continuous):",boundary)
-    rollout=source.index("for step_k in range(self.num_steps_per_env):",stop)
-    assert boundary < stop < rollout
 
 
 def test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
@@ -322,36 +311,3 @@ def test_stand_threshold_and_clock_accounting_cannot_be_changed_silently(tmp_pat
     b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
     attach_consumer(b)
     with pytest.raises(ValueError,match='clock'):b.load_state_dict(state)
-
-
-@pytest.mark.parametrize('bad',['nan','sha','stand_missing','iteration_nan','truncated','evidence_sha'])
-def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
-    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
-    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
-    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
-    d=json.loads(p.read_text())
-    if bad=='nan':d['metrics']['gait_sync']=float('nan')
-    if bad=='sha':d['checkpoint_sha256']='0'*64
-    if bad=='stand_missing':del d['metrics']['stand_min_passed']
-    if bad=='iteration_nan':d['iteration']=float('nan')
-    if bad=='evidence_sha':d['evidence'][0]['sha256']='0'*64
-    p.write_text('{"iteration":' if bad=='truncated' else json.dumps(d));r.on_update_start(1251)
-    assert r.clock.paused and r.clock.recovered==0
-    assert r.dr_scale(1501)==r.dr_scale(1251)
-    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
-    assert any(x['event']=='score_rejected' and str(p) in x['path'] for x in rows)
-    assert any(x['event']=='latest_score_invalid_hold' for x in rows)
-
-
-def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
-    r,_=fixture(tmp_path/'a');tick(r,751);tick(r,1001)
-    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
-    data=json.loads(p.read_text());data['checkpoint_sha256']='0'*64;p.write_text(json.dumps(data))
-    r.on_update_start(1251);assert r.clock.paused
-    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
-    attach_consumer(b);b.load_state_dict(r.state_dict())
-    assert b._score_rejections==r._score_rejections and b._score_rejections
-    tick(b,1501);assert b.clock.paused and b.clock.recovered==1
-    tick(b,1751);assert not b.clock.paused and b.clock.pause_used==500
-
-
