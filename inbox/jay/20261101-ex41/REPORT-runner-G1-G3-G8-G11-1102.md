@@ -40,3 +40,5 @@ G6 점수 소비는 분석 소유 `curriculum/ex41_scoring.py`의 `enrich_score_
 통합 범위 CPU 묶음은 고정 `isaac311`에서 **127 PASS, skip 0, 164.10초**였다. 포함 파일은 EX-41 preflight · fixed/runtime · regression · startup integration · PPO valid/bridge · scoring, G14 no-window 시험이다. 별도 안전 DRY 실행은 `kit_started=false`, `gpu_used=false`, `parent_update=6000`, `initial_dr_scale=0.5`, `w71_ready=false`, `production_launch_allowed=false`를 반환했다.
 
 닫힘 상태: G3 · G6 · G8 · G14(Python 및 shell stdin 계약). G1은 시작 코드 연결과 CPU DRY까지 확인했으나 task config의 실제 import가 `pxr` 부재로 실패했고 승인된 첫 10 update Kit/GPU 예행이 미실행이라 부분 상태다. G11은 EX-41 단계 끝 3모드 평가 · W57 · 촬영 · 프레임 검사 · axis250 · shadow · 고정 경로 playlist를 묶는 loop가 없어서 열려 있다. PPO valid와 bridge는 19 PASS, skip 0이다. G14의 단계 종료 영수증 보강도 미확인으로 남긴다.
+
+정적 검사 한계: `isaac311`에 `ruff` 모듈이 없어 `python -m ruff check --select F`는 실행되지 않았다. `git diff --check`는 통과했다.
