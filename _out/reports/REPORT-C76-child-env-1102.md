@@ -17,3 +17,11 @@ isaac311 CPU 시험: `python -m pytest foothold_s2/tests/test_c_layer_queue.py -
 ## 낮은 위험 두 건 후속
 
 계획 검사에서 `--device cuda:0|cuda:1` 정확히 한 번과 전 칸 동일 장치를 요구한다. 기록기가 종료 코드 0을 냈더라도 child.log에 Python Traceback이 있으면 해당 시도를 기술 실패로 남기고 정본 영상은 만들지 않는다. CPU 반례는 `--device cpu`, 칸 사이 장치 혼합, rc0와 Traceback 조합이다. 후속 대기열 시험 결과는 24 passed이다.
+
+## C4 화면 감사 후속
+
+검사 결과에 매 프레임 흰 Go2 몸 후보의 화면 bbox와 후보 수를 남긴다. 회색·흰 지형 전체의 흰 픽셀 비율만으로 로봇 가시성을 주장하지 않으며, 몸 후보가 없는 프레임은 실패한다. 이는 RGB의 형태 기반 화면 후보이고 semantic segmentation 증명은 아니다. 첫 Kit 촬영의 실제 화면을 사람이 확인해야 한다.
+
+밝기만 1단계 번갈아 변하는 정지 영상은 그레이 영상 차분의 공간 표준편차와 25프레임 연속 조건으로 거절한다. styled 1920×1080의 아래 360행은 장면과 분리해 전 프레임 밝기를 검사한다. verifier의 로봇 없는 흰 지형 · 밝기 흔들림 · 검은 아래 띠 반례를 CPU 시험에 넣었다. 기존 A층 원본 375프레임 한 편(`C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/video_a/parent_m1500/EX34-SB10-pyramid_stairs_L1_env23-m1500-fwd_back_probe_prop_only-1x/review.mp4`, SHA256 580bfa2e277b65a875c6e39203aa0d11818ef33181e090570618c50b67f1afe5)은 후보 375/375 · 저변동 연속 0 · 감사 PASS였다. 이는 C층 첫 Kit 편의 품질 결과가 아니다.
+
+관련 C층 CPU 시험 35 passed, ruff F · pyflakes 0건. 첫 실제 Kit 편의 raw와 styled 영수증 검사는 lead가 새 고정본으로 실행한 뒤 확인한다.

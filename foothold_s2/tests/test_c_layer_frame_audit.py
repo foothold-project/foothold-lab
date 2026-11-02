@@ -40,3 +40,33 @@ def test_styled_dark_map_panel_is_rejected_even_with_visible_scene():
     image[30:710, 1280:1900] = 0
     report = inspect_frames([image], expected=1, width=1920, height=1080)
     assert "dark_map_panel" in str(report["issues"])
+
+
+def test_white_terrain_without_bounded_robot_is_rejected():
+    rng = np.random.default_rng(28)
+    gray = rng.integers(90, 220, size=(720, 1280), dtype=np.uint8)
+    terrain = np.repeat(gray[:, :, None], 3, axis=2)
+    report = inspect_frames([np.roll(terrain, index, axis=1) for index in range(3)],
+                            expected=3, width=1280, height=720)
+    assert report["min_center_white_fraction"] > .1
+    assert report["robot_screen_candidate_count"] == 0
+    assert "robot_screen_candidate_missing" in str(report["issues"])
+
+
+def test_one_step_brightness_noise_does_not_hide_frozen_scene():
+    original = frame()
+    flicker = [np.clip(original.astype(np.int16) + index % 2, 0, 255).astype(np.uint8)
+               for index in range(30)]
+    report = inspect_frames(flicker, expected=30, width=128, height=72)
+    assert report["max_identical_run"] < 25
+    assert report["max_low_motion_run"] >= 25
+    assert "low_motion_frozen" in str(report["issues"])
+
+
+def test_styled_black_bottom_band_is_rejected_separately():
+    image = np.tile(frame(), (15, 15, 1))
+    image[30:710, 1280:1900] = 30
+    image[720:1080] = 0
+    report = inspect_frames([image], expected=1, width=1920, height=1080)
+    assert "dark_bottom_band" in str(report["issues"])
+    assert "dark_map_panel" not in str(report["issues"])
