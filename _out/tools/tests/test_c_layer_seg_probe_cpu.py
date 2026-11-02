@@ -36,7 +36,8 @@ def test_render_only_retry_recovers_and_preserves_state():
         np.zeros((4, 4, 3), dtype=np.uint8), max_retries=2)
     assert row["selected_robot_pixels"] == 100 and frame.mean() == 42
     assert len(renders) == len(checks) == 1 and checks[0]["state_unchanged"]
-    assert failed is None and reason is None
+    assert failed["info"]["idToLabels"]["5"] == "/World/envs/env_5/Robot"
+    assert reason is None
 
 
 def test_retry_fails_if_physics_changes():
@@ -65,6 +66,20 @@ def test_exhausted_retry_writes_visible_label_and_rgb(tmp_path):
     assert data["selected_labels"] == {"5": "/World/envs/env_5/Robot"}
     assert data["robot_labels_with_pixels"] == {"1": "/World/envs/env_0/Robot"}
     assert data["rgb_mean"] == 42 and (tmp_path / "segmentation_failure_rgb.png").is_file()
+
+
+def test_visible_id_but_zero_selected_pixels_is_diagnostic(tmp_path):
+    packet = {"info": {"idToLabels": {"5": "/World/envs/env_5/Robot"}},
+              "data": np.zeros((2, 2), dtype=np.uint32)}
+    target = probe.write_failure(tmp_path, packet=packet,
+                                 frame=np.full((2, 2, 3), 100, dtype=np.uint8),
+                                 selected_env=5, selected_root="/World/envs/env_5/Robot",
+                                 root_visibility="inherited", camera={"root_in_frame": True},
+                                 checks=[], reason="C76 robot instance mask missing subject or shows another robot",
+                                 mask_evidence={"selected_robot_pixels": 0, "other_robot_pixels": 0})
+    row = json.loads(target.read_text(encoding="utf-8"))
+    assert row["selected_labels"] == {"5": "/World/envs/env_5/Robot"}
+    assert row["mask_evidence"] == {"selected_robot_pixels": 0, "other_robot_pixels": 0}
 
 
 def test_diagnostic_plan_preserves_frozen_source_and_queue(tmp_path):

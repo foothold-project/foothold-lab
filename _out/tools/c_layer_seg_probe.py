@@ -27,7 +27,7 @@ def recognize_after_render(
     for retry in range(max_retries + 1):
         packet = get_packet()
         try:
-            return recognize(packet), frame, checks, None, None
+            return recognize(packet), frame, checks, packet, None
         except ValueError as exc:
             if not any(token in str(exc) for token in RETRYABLE):
                 raise
@@ -45,7 +45,8 @@ def recognize_after_render(
 
 def write_failure(out_dir: Path, *, packet: dict, frame: np.ndarray,
                   selected_env: int, selected_root: str, root_visibility: str,
-                  camera: dict, checks: list[dict], reason: str) -> Path:
+                  camera: dict, checks: list[dict], reason: str,
+                  mask_evidence: dict | None = None) -> Path:
     """Preserve the RGB and ID labels needed to separate occlusion from ID mismatch."""
     from PIL import Image
 
@@ -63,6 +64,7 @@ def write_failure(out_dir: Path, *, packet: dict, frame: np.ndarray,
         "selected_env": selected_env, "selected_root": selected_root,
         "root_visibility": root_visibility, "camera": camera,
         "render_only_retries": checks, "rgb_mean": float(frame.mean()),
+        "mask_evidence": mask_evidence,
         "robot_labels": paths,
         "robot_labels_with_pixels": {key: path for key, path in paths.items() if int(key) in visible_ids},
         "selected_labels": {key: path for key, path in paths.items()

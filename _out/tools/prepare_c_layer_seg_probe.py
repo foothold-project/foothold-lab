@@ -39,7 +39,16 @@ NEW = """                    if hashlib.sha256(Path(__file__).resolve().with_nam
                             camera=camera_screen_projection[-1], checks=seg_checks,
                             reason=seg_reason)
                         raise ValueError("C76 selected robot instance IDs missing; diagnostic=" + str(diagnostic))
-                    require_single_visible_robot(mask_row)
+                    try:
+                        require_single_visible_robot(mask_row)
+                    except ValueError as seg_exc:
+                        diagnostic = write_failure(
+                            output.parent, packet=failed_packet, frame=frame,
+                            selected_env=capture_env_id, selected_root=selected_path,
+                            root_visibility=selected_visibility,
+                            camera=camera_screen_projection[-1], checks=seg_checks,
+                            reason=str(seg_exc), mask_evidence=mask_row)
+                        raise ValueError(str(seg_exc) + "; diagnostic=" + str(diagnostic)) from seg_exc
                     instance_evidence.append(mask_row)
                     render_retry_checks.extend({"physics_tick": k, "segmentation": True, **check}
                                                for check in seg_checks)
