@@ -12,6 +12,8 @@ import re
 import subprocess
 from typing import Any
 
+from foothold_s2.runtime_environment import current_runtime_identity
+
 
 REQUIRED_PARENT_UPDATE = 7500
 REQUIRED_TRAIN_FLAGS = (
@@ -106,13 +108,20 @@ def audit_train_source(repo: str | Path) -> dict[str, Any]:
         missing.append("AppLauncher parser source")
     if "AppLauncher.add_app_launcher_args(parser)" not in text:
         missing.append("AppLauncher parser hookup")
+    if ("LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()" not in text
+            or text.index("LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()")
+            > text.index("import tensordict")):
+        missing.append("pre-Kit runtime identity guard")
+    if '"launcher_environment": LAUNCH_RUNTIME_IDENTITY' not in text:
+        missing.append("manifest launcher environment identity")
     if missing:
         raise ValueError("required training CLI declarations are missing: " + ", ".join(missing))
     return {"train_start": str(train), "required_flags_source_checked": list(REQUIRED_TRAIN_FLAGS),
             "rsl_rl_parser_source": str(ISAAC_RSL_CLI), "app_launcher_parser_source": str(APPLAUNCHER_SOURCE),
             "task_import_source_checked": "foothold_s2.tasks",
             "parser_execution": "source_ast_and_safe_rsl_args_only", "environment_import": "not_run",
-            "kit_launch": "not_run", "state": "static_source_audit_only"}
+            "kit_launch": "not_run", "runtime_identity": current_runtime_identity(),
+            "state": "static_source_audit_only"}
 
 
 def train_parser_from_source(repo: str | Path) -> argparse.ArgumentParser:

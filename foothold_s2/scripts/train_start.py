@@ -15,6 +15,14 @@ import argparse
 import os
 import sys
 
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if REPO not in sys.path:
+    sys.path.insert(0, REPO)
+from foothold_s2.runtime_environment import current_runtime_identity
+
+# Enforce the measured Python/RSL-RL pair before importing tensors or AppLauncher.
+LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()
+
 # tensordict 의 C 확장은 Kit 이 뜬 뒤 처음 불러오면 이 기기에서 access violation 으로 죽는다(10/20 start_gate 실측 두 번).
 import tensordict  # noqa: F401,E402
 import torch  # noqa: E402
@@ -57,9 +65,6 @@ import isaaclab_tasks  # noqa: E402,F401
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
 
-REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if REPO not in sys.path:
-    sys.path.insert(0, REPO)
 import foothold_s2.tasks  # noqa: E402,F401  (lead 의 gym 등록)
 import foothold_s2.x15_tasks  # noqa: E402,F401  (EX-15 등록: 실행 중인 학습이 소비하는 tasks/__init__ 를 고치지 않으려고 새 모듈)
 import foothold_s2.x16_tasks  # noqa: E402,F401  (EX-16 등록: 새 모듈)
@@ -140,7 +145,8 @@ def main(env_cfg, agent_cfg):
              "contract": runner.pcfg["contract"], "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"], "track_lin_form": getattr(env_cfg, "track_lin_form", None),
              "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task, "terrain_judge": tlm.judge_settings(env_cfg),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
-             "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
+             "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None,
+             "launcher_environment": LAUNCH_RUNTIME_IDENTITY}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)

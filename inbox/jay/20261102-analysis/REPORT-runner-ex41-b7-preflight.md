@@ -10,6 +10,7 @@
 
 - `foothold_s2/ex41_start_preflight.py`는 고정 checkout의 detached/clean/HEAD, 부모 체크포인트 경로·SHA·manifest 진행 회차를 읽기 전용으로 확인한다.
 - 실제 `train_start.py`의 argparse 선언을 AST에서 추출하고 설치된 `cli_args.py`의 RSL-RL 인자 등록 함수를 호출해 후보 인자를 CPU에서 파싱한다. AppLauncher와 학습 스크립트는 import하지 않는다.
+- `foothold_s2/runtime_environment.py`가 AppLauncher와 tensor import 전에 Python 경로, `rsl_rl` 모듈 경로와 배포판 버전을 확인한다. `train_start.py`는 이 정보를 manifest의 `launcher_environment`에 기록하고 기대값이 다르면 Kit 전에 거절한다.
 - `foothold_s2/scripts/make_ex41_playlists.py`는 명시한 영상 root와 출력 폴더만 사용해 `EX-41-mNNNNN-all|fail.m3u8`을 만든다. 실제 학습·평가 루프나 파일을 실행하지 않는다.
 - W71 HOLD 수정은 기존 커밋 `4b3edd21`, W78 v2 CLI/산출 계약은 `5f326ece`에 있다. W78 계약에는 이동 비율, 계단 방향 0/30/60/90도, 세 지도 모드, 발별 스윙 높이, 끌림 비율이 들어 있다.
 
@@ -17,14 +18,16 @@
 
 부모 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_7500.pt`는 SHA256 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`이다. 같은 폴더 manifest의 `checkpoints.model_7500.pt` SHA가 일치하고 `progress.completed_updates`는 7801이다. 별도 `train_start_status.json` readback은 `running`, iter 7810이었다. 두 파일의 관찰 시각은 별도이므로 차이의 원인은 추정하지 않는다. m7500 체크포인트 바이트와 manifest SHA 대조는 통과했다.
 
+환경 고정 지시 뒤 `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe`에서 직접 API를 확인했다. `rsl-rl-lib` 3.1.2, 모듈 경로 `C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/rsl_rl/__init__.py`; PPO 생성자에 `storage` 인자가 없고 `init_storage`가 있다. 앞서 `isaac311-moects`로 실행한 CPU 결과는 새 기준에 맞지 않아 검증 근거로 사용하지 않는다.
+
 ## 시험
 
-`C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -m pytest foothold_s2/tests/test_ex41_start_preflight_cpu.py foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py -q`
+`C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_runtime_environment_cpu.py foothold_s2/tests/test_ex41_start_preflight_cpu.py foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py -q`
 
-결과: `34 passed in 17.44s`. EX-41 사전검사 7개는 clean detached 양성, attached/dirty 음성, 부모 SHA/manifest/progress 양성·음성, 실제 parser 선언 기반 인자 양성·음성, 명시한 출력 경로와 fail 목록 범위를 확인했다. W71 CPU 회귀 27개도 통과했다. `git diff --check` 통과.
+결과: `37 passed in 15.95s`. EX-41 사전검사 7개는 clean detached 양성, attached/dirty 음성, 부모 SHA/manifest/progress 양성·음성, 실제 parser 선언 기반 인자 양성·음성, 명시한 출력 경로와 fail 목록 범위를 확인했다. 환경 고정 시험 3개는 isaac311 실측 양성, Python·모듈·버전 불일치와 PPO API 반례 거절을 확인했다. W71 CPU 회귀 27개도 통과했다. `git diff --check` 통과.
 
 ## 미완료와 경계
 
 고정 인터페이스 `8e0dc7a8`의 factory와 runtime 구현은 현재 `NotImplementedError` placeholder이다. 따라서 EX-41 runtime, EX-41 score watcher, shadow/stage loop가 사용할 정확한 score schema는 아직 없다. EX-40 watcher를 EX-41 결과에 연결하면 잘못된 판정 경로가 되므로 연결하지 않았다. Playlist 생성기만 준비되어 있고 단계 종료 시 호출하는 연결도 runtime/score schema 뒤에 남아 있다.
 
-고정 실행 후보 `C:/mai/wt/foothold-lab/runner-ex41-b7-fixed`는 코드 HEAD `9da108bdaf4edeb7bfdadea0fb567b88e690008b`에서 detached·clean readback을 통과했고, 그 자리에서 부모와 source audit를 다시 읽었다. 실제 train entrypoint 전체 실행, task/environment import, Kit smoke, 첫 update는 미확인이다. AppLauncher import는 이 환경에서 Kit 부트스트랩과 EULA 프롬프트를 시작하는 경로여서 재호출하지 않았다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
+고정 실행 후보 `C:/mai/wt/foothold-lab/runner-ex41-b7-fixed`의 detached·clean 검사는 통과했다. 실제 train entrypoint 전체 실행, task/environment import, Kit smoke, 첫 update는 미확인이다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
