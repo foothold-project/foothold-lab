@@ -155,6 +155,15 @@ if v010:
             surv = [l for l in e31.group(0).splitlines() if l.startswith("| 생존 26 칸") or l.startswith("| W57 ") or l.startswith("| 부모 대비")]
             ok(len(surv) == 3 and all("① 고정 평가 칸 64 env" in cells(l)[2] for l in surv), "B5 생존 · W57 · 부모 행 분모 = ① 고정 평가 칸")
         ok(any(l.startswith("| v0.11 재확인") for l in e6.splitlines()), "E.6 v0.11 재확인 행")
+    if "| v0.12 재확인(" in sec:   # v0.13 · analyst REVIEW-EX42-v012-1103 막음 1(위상 각도 env 간 집계)
+        if e31:
+            head = e31.group(0)
+            ph = [l for l in head.splitlines() if l.startswith("| 보행 접촉 위상")]
+            ok(len(ph) == 1 and all(k in cells(ph[0])[2] for k in ("env 간은 원형 평균 `phase_deg_circ`", "wrap180", "n_valid", "R_env", "일반 중앙값 금지")), "B5 위상 각도 env 간 원형 통계(원형 평균 · R_env · n_valid · wrap180)")
+            ok(len(ph) == 1 and "쌍별 64 env 중앙값(R · n · 주기는" not in ph[0], "옛 문구 없음(v0.13): 각도 일반 중앙값")
+            ok(all(k in head for k in ("같은 집계식", "n_valid", "0 으로 채우지")), "E.3.1 통계 ID 같은 집계식 · n_valid · 0 대체 금지")
+        ok(any(l.startswith("| `maintenance.min_valid_envs` |") for l in sec.splitlines()), "E.4 maintenance.min_valid_envs 행")
+        ok(any(l.startswith("| v0.12 재확인") for l in e6.splitlines()), "E.6 v0.12 재확인 행")
 
 ok(chr(0x2014) not in sec, "em dash 없음(정본 절)")
 for n, line in enumerate(sec.splitlines(), 1):
