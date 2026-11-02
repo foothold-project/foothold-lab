@@ -8,6 +8,7 @@ from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.curriculum.ex41_fixed import baseline_counts,maintenance
 from foothold_s2.curriculum.ex41_scoring import (MODES,measurement_bundle,enrich_score_metrics,
                                                maintenance_counts_from_map_modes)
+from foothold_s2.scripts.ex41_startup import enrich_score_file
 
 ROOT=Path('C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33')
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
@@ -39,6 +40,35 @@ def test_actual_m6000_generated_file_matches_all39_and_stand_cells(actual,tmp_pa
         assert row['passed']==native['cells'][key]['passed_envs']==64 and row['total']==64
     assert got['metrics']['stand_min_passed']==64 and len(got['evidence'])==8
     assert got['stage_pass'] is False and not draft['metrics']
+
+
+def test_runner_score_entry_uses_required_three_stand_sources(actual,tmp_path):
+    plan,native,stands=actual
+    draft={'format':'foothold-ex41-score/1','iteration':6000,'stage_id':'S2e',
+        'schedule_sha256':plan.effective_sha256,'parent_sha256':plan.parent_sha256,
+        'baseline_checkpoint_sha256':plan.parent_sha256,'checkpoint_path':native['checkpoint'],
+        'checkpoint_sha256':native['checkpoint_sha256'],'metrics':{},'evidence':[],
+        'maintenance_pass':False,'stage_pass':False,'safety_stop':False}
+    source=tmp_path/'draft.json';source.write_text(json.dumps(draft))
+    target=tmp_path/'score.json'
+    enrich_score_file(source,ROOT/'map64/map_modes.json',stands,TABLE,target)
+    result=json.loads(target.read_text())
+    assert set(result['metrics']['stand_counts'])==set(MODES)
+    assert len(result['metrics']['maintenance_counts'])==39
+    assert len(result['evidence'])==8
+
+
+def test_runner_score_entry_rejects_missing_stand_path(actual,tmp_path):
+    plan,native,stands=actual
+    draft={'format':'foothold-ex41-score/1','iteration':6000,'stage_id':'S2e',
+        'schedule_sha256':plan.effective_sha256,'parent_sha256':plan.parent_sha256,
+        'baseline_checkpoint_sha256':plan.parent_sha256,'checkpoint_path':native['checkpoint'],
+        'checkpoint_sha256':native['checkpoint_sha256'],'metrics':{},'evidence':[],
+        'maintenance_pass':False,'stage_pass':False,'safety_stop':False}
+    source=tmp_path/'draft.json';source.write_text(json.dumps(draft))
+    with pytest.raises(ValueError,match='three modes'):
+        enrich_score_file(source,ROOT/'map64/map_modes.json',
+                          {k:v for k,v in stands.items() if k!='eval_pred'},TABLE,tmp_path/'out.json')
 
 
 def test_b3_is_not_extended_maintenance_source(actual):

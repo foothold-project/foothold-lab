@@ -9,7 +9,8 @@ from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
 from foothold_s2.curriculum.ex41_fixed import (Clock,CELLS,maintenance,baseline_counts,
     maintenance_cells,build_maintenance_counts)
 from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
-from foothold_s2.tests.test_ex41_runtime_cpu import score`nfrom foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
+from foothold_s2.tests.test_ex41_runtime_cpu import score
+from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
@@ -104,10 +105,21 @@ def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
         tick(r,n,stage_pass=n<750)
         if n in expected: assert r.effective['stage_id']==expected[n]
     assert r.finished and not r.graduated and r.dr_scale(5001)==1.
+    assert curriculum_finished(r)
+    assert curriculum_update_number(r, 0) == 1
+    assert curriculum_update_number(r, 6500) == 6501
     assert r._stage_baseline_sha==r.plan.parent_sha256
 
 
-def test_start_runner_consumes_terminal_flag_before_next_rollout():`n    source=(Path(__file__).parents[1]/"runners/start_runner.py").read_text(encoding="utf-8")`n    boundary=source.index("continuous.on_update_start(curriculum_it)")`n    stop=source.index("if curriculum_finished(continuous):",boundary)`n    rollout=source.index("for step_k in range(self.num_steps_per_env):",stop)`n    assert boundary < stop < rollout`n`n`ndef test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
+def test_start_runner_consumes_terminal_flag_before_next_rollout():
+    source=(Path(__file__).parents[1]/"runners/start_runner.py").read_text(encoding="utf-8")
+    boundary=source.index("continuous.on_update_start(curriculum_it)")
+    stop=source.index("if curriculum_finished(continuous):",boundary)
+    rollout=source.index("for step_k in range(self.num_steps_per_env):",stop)
+    assert boundary < stop < rollout
+
+
+def test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
     r,_=fixture(tmp_path)
     for n in (251,501): tick(r,n,stand=60)
     assert r.effective['reward_weights']['swing']==-5.
@@ -341,4 +353,5 @@ def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
     assert b._score_rejections==r._score_rejections and b._score_rejections
     tick(b,1501);assert b.clock.paused and b.clock.recovered==1
     tick(b,1751);assert not b.clock.paused and b.clock.pause_used==500
+
 

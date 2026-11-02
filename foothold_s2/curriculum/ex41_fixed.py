@@ -23,6 +23,30 @@ CELLS=tuple(f'{mode}/{case}'+('_record_only' if mode=='eval_pred' else '')
             for mode in ('eval_gt','probe_prop_only','eval_pred') for case in CASES)
 
 
+def maintenance_cells(include_record_only=True):
+    if type(include_record_only) is not bool:
+        raise ValueError('record_only selection must be bool')
+    return CELLS if include_record_only else CELLS[:26]
+
+
+def build_maintenance_counts(score, baseline, *, total_envs):
+    """Convert native alive counts into the approved numeric maintenance rows."""
+    if type(total_envs) is not int or total_envs != 64:
+        raise ValueError('maintenance counts require exactly 64 evaluated envs')
+    if not isinstance(baseline, dict) or set(baseline) not in (set(CELLS), set(CELLS[:26])):
+        raise ValueError('maintenance baseline must select exact 39 or 26 cells')
+    if not isinstance(score, dict) or not isinstance(score.get('cells'), dict):
+        raise ValueError('native score.cells mapping required')
+    out = {}
+    for key, base in baseline.items():
+        row = score['cells'].get(key)
+        value = row.get('alive_envs_at_end') if isinstance(row, dict) else None
+        if any(type(v) is not int or not 0 <= v <= 64 for v in (value, base)):
+            raise ValueError('invalid or missing alive_envs_at_end: ' + key)
+        out[key] = {'passed': value, 'baseline_passed': base, 'total': 64}
+    return out
+
+
 def validate_plan(plan,doc):
     cfg=plan.fixed_schedule
     expected={'duration_updates':5000,'pause_limit_updates':1000,'recovery_boundaries':2,

@@ -203,16 +203,14 @@ def add_maintenance_counts(score: dict[str, Any], map_modes: dict[str, Any],
 
 
 def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
+                      stand_paths: dict[str, str | Path],
                       table_path: str | Path, out_path: str | Path) -> Path:
+    """Use the analyst-owned raw-evidence contract for all EX-41 score fields."""
+    from foothold_s2.curriculum.ex41_scoring import enrich_score_metrics
+
     plan = load_fixed_plan(table_path)
-    baseline = baseline_counts(plan)
     score = json.loads(Path(score_path).read_text(encoding="utf-8-sig"))
-    map_modes = json.loads(Path(map_modes_path).read_text(encoding="utf-8-sig"))
-    if (score.get("schedule_sha256") != plan.effective_sha256
-            or score.get("parent_sha256") != plan.parent_sha256
-            or score.get("baseline_checkpoint_sha256") != plan.parent_sha256):
-        raise ValueError("EX-41 score draft plan or parent differs")
-    result = add_maintenance_counts(score, map_modes, baseline, map_modes_path)
+    result = enrich_score_metrics(score, map_modes_path, stand_paths, plan)
     target = Path(out_path)
     if target.resolve() == Path(score_path).resolve():
         raise ValueError("EX-41 enriched score must not overwrite its draft")
