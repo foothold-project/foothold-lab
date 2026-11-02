@@ -189,10 +189,12 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
     else:
         row['components']['training_metrics'] = 'unavailable_in_EX40_replay'
     try:
-        row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(read(bundle/'map64/map_modes.json')),
-            row['metrics']['w78_v2']['min_lr_ratio_by_cell'])
-        row['components']['critic_mirror_symmetry'] = 'complete'
-    except (OSError,ValueError,TypeError,KeyError) as exc:
+        map_doc=read(bundle/'map64/map_modes.json')
+        require_dr_off_document(map_doc)
+        w78=row['metrics'].get('w78_v2',{}).get('min_lr_ratio_by_cell')
+        row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(map_doc),w78)
+        row['components']['critic_mirror_symmetry'] = 'complete' if w78 is not None else 'partial_missing_w78'
+    except (OSError,ValueError,RuntimeError,TypeError,KeyError) as exc:
         row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
     # Lead 19:5x: map64 + three stand modes alone produce maintenance 26 and
     # record 39. Missing auxiliary W57/W78/U10 is not a maintenance HOLD.
@@ -231,23 +233,50 @@ def initial_state(run, table, eval_config):
             'table_sha256':sha256(table), 'eval_config_sha256':sha256(eval_config), 'done':{}}
 
 
-def candidates(run, plan):
+def candidates(run, plan, *, on_error=None):
     found = []
     for p in run.glob('model_*.pt'):
         m = MODEL.fullmatch(p.name)
         if m and int(m[1]) >= 250 and int(m[1]) % 250 == 0: found.append((int(m[1]), p, None))
     for path in (run/'final_eval_requests').glob('final_*.json'):
-        r = read(path); original = dict(r); request_id = original.pop('request_id', None)
-        cp = r.get('checkpoint', {}); p = Path(cp.get('path', '')).resolve()
-        if (request_id != digest(original) or r.get('format') != 'foothold-ex41-final-eval-request/1'
-            or r.get('schedule_sha256') != plan.effective_sha256 or r.get('parent_sha256') != plan.parent_sha256
-            or r.get('training_finished') is not True or r.get('graduated') is not False
-            or type(cp.get('iteration')) is not int or p != (run/f'model_{cp["iteration"]}.pt').resolve()
-            or sha256(p) != cp.get('sha256') or r.get('stage_id') != 'T0_prime'):
-            raise ValueError('final checkpoint request invalid')
+        try:
+            r = read(path); original = dict(r); request_id = original.pop('request_id', None)
+            cp = r.get('checkpoint', {})
+            if not isinstance(cp,dict):raise ValueError('final checkpoint must be an object')
+            p = Path(cp.get('path', '')).resolve()
+            if (request_id != digest(original) or r.get('format') != 'foothold-ex41-final-eval-request/1'
+                or r.get('schedule_sha256') != plan.effective_sha256 or r.get('parent_sha256') != plan.parent_sha256
+                or r.get('training_finished') is not True or r.get('graduated') is not False
+                or type(cp.get('iteration')) is not int or p != (run/f'model_{cp["iteration"]}.pt').resolve()
+                or sha256(p) != cp.get('sha256') or r.get('stage_id') != 'T0_prime'):
+                raise ValueError('final checkpoint request invalid')
+        except (OSError,ValueError,TypeError,KeyError) as exc:
+            if on_error is None:raise
+            on_error(path,exc)
+            continue  # Keep the periodic checkpoint, reject only its final designation.
         found = [x for x in found if x[0] != cp['iteration']]
         found.append((cp['iteration'], p, path))
     return sorted(found, key=lambda x:x[0])
+
+
+def record_final_error(out_root,state,request,exc):
+    """Persist and announce a rejected final request without touching its score."""
+    try:ref=evidence(request)
+    except OSError:ref={'path':str(Path(request).resolve()),'sha256':None}
+    row={'format':'foothold-ex41-final-request-error/1','event':'final_request_rejected',
+         'request':ref,'reason':f'{type(exc).__name__}: {exc}',
+         'alert':True,'graduated':False,'action':'continue_other_checkpoints; final_completion_pending'}
+    key=digest(row)
+    dest=out_root/'final_request_errors'/f'error_{key}.json'
+    immutable(dest,row)
+    errors=state.setdefault('final_request_errors',{})
+    if key not in errors:
+        print(json.dumps(row,ensure_ascii=True,allow_nan=False),flush=True)
+    errors[key]=evidence(dest)
+
+
+def require_final_stage(stage):
+    if stage!='T0_prime':raise ValueError('final request stage differs from checkpoint stage')
 
 
 def final_link_valid(request, previous, ref):
@@ -270,8 +299,8 @@ def final_link_valid(request, previous, ref):
 
 def link_final_request(out_root,request,previous):
     req=read(request);cp=req['checkpoint'];sha=cp['sha256'];iteration=cp['iteration']
+    require_final_stage(previous.get('stage_id'))
     if (previous.get('iteration')!=iteration or previous.get('checkpoint_sha256')!=sha
-        or previous.get('stage_id')!='T0_prime'
         or sha256(Path(cp['path']))!=sha):
         raise ValueError('final link checkpoint/stage differs from scored attempt')
     candidates=list(out_root.glob(f'model_{iteration}_{sha[:12]}*/attempt.json'))
@@ -339,7 +368,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if sha256(Path(previous['score_path'])) != previous['score_sha256']:
             raise ValueError('prior score changed')
     pending = None
-    for iteration, cp, final_request in candidates(run, plan):
+    def reject_final(request,exc):record_final_error(out_root,state,request,exc)
+    for iteration, cp, final_request in candidates(run, plan,on_error=reject_final):
         pinned = _manifest_digest(run, iteration)
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
@@ -347,16 +377,20 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if key in state['done']:
             previous=state['done'][key]
             if final_request:
-                request_id=read(final_request)['request_id']
-                if previous.get('final_request_id')!=request_id:
-                    ref=state.get('final_links',{}).get(request_id)
-                    if not final_link_valid(final_request,previous,ref):
-                        if not execute and replay_root is None:
-                            return {'state':'dry','action':'link_final_request','iteration':iteration,'request_id':request_id}
-                        ref=link_final_request(out_root,final_request,previous)
-                        state.setdefault('final_links',{})[request_id]=ref
-                        return {'state':'final_request_linked','iteration':iteration,'request_id':request_id,
-                                'link_path':ref['path'],'link_sha256':ref['sha256']}
+                try:
+                    require_final_stage(previous.get('stage_id'))
+                    request_id=read(final_request)['request_id']
+                    if previous.get('final_request_id')!=request_id:
+                        ref=state.get('final_links',{}).get(request_id)
+                        if not final_link_valid(final_request,previous,ref):
+                            if not execute and replay_root is None:
+                                return {'state':'dry','action':'link_final_request','iteration':iteration,'request_id':request_id}
+                            ref=link_final_request(out_root,final_request,previous)
+                            state.setdefault('final_links',{})[request_id]=ref
+                            return {'state':'final_request_linked','iteration':iteration,'request_id':request_id,
+                                    'link_path':ref['path'],'link_sha256':ref['sha256']}
+                except (OSError,ValueError,TypeError,KeyError) as exc:
+                    reject_final(final_request,exc)
             continue
         if final_request is None and any(r['iteration']==iteration and r['checkpoint_sha256']!=pinned
                                          for r in state['done'].values()):
@@ -368,6 +402,11 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         except (OSError, ValueError, KeyError, TypeError) as exc:
             pending = {'state':'pending','iteration':iteration,'reason':f'stage_receipt: {exc}'}
             continue
+        if final_request:
+            try:require_final_stage(stage)
+            except ValueError as exc:
+                reject_final(final_request,exc)
+                final_request=None  # Still measure this periodic checkpoint.
         target = out_root/f'model_{iteration}_{pinned[:12]}'
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
@@ -450,15 +489,21 @@ def completion(run, plan, state):
     training=read(path)
     if training.get('state') not in ('done','failed','stopped_saved'):
         return {'state':'waiting_for_training'}
-    saved=candidates(run,plan)
+    errors=[]
+    saved=candidates(run,plan,on_error=lambda p,e:errors.append({'path':str(p),'reason':str(e)}))
+    if errors:return {'state':'final_request_error','errors':errors,'graduated':False}
     for iteration,cp,request in saved:
         pinned=_manifest_digest(run,iteration)
         result=state['done'].get(f'{iteration}_{pinned}')
         if result is None:return {'state':'waiting_for_remaining_scores','iteration':iteration}
         if request and result.get('final_request_id')!=read(request)['request_id']:
             ref=state.get('final_links',{}).get(read(request)['request_id'])
-            if not final_link_valid(request,result,ref):
-                return {'state':'waiting_for_final_request_score','iteration':iteration}
+            try:
+                require_final_stage(result.get('stage_id'))
+                if not final_link_valid(request,result,ref):
+                    return {'state':'waiting_for_final_request_score','iteration':iteration}
+            except (OSError,ValueError,TypeError,KeyError) as exc:
+                return {'state':'final_request_error','iteration':iteration,'reason':str(exc),'graduated':False}
     if training['state']=='done' and not any(request for _,_,request in saved):
         return {'state':'waiting_for_final_checkpoint_request'}
     holds=sum(row['state']=='HOLD' for row in state['done'].values())

@@ -207,7 +207,9 @@ def test_final_request_same_sha_before_or_after_regular_score_never_waits_foreve
                                              'training_state':'done','graduated':False}
     if late:
         Path(linked['link_path']).write_text('{}')
-        with pytest.raises(ValueError,match='final link'):watch.completion(run,plan,state)
+        failed=watch.completion(run,plan,state)
+        assert failed['state']=='final_request_error' and not failed['graduated']
+        assert 'final link' in failed['reason']
 
 
 def replay_tick(tmp,run,state):
