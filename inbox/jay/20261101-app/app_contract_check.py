@@ -2,7 +2,7 @@
 
 사용: python -X utf8 app_contract_check.py [문서 md] [run 폴더] [ex40.yaml] [--no-sha]
 종료 0 = 전부 일치 · 1 = 어긋남(어느 칸인지 출력) · 2 = 입력 없음.
-문서 숫자가 설정과 갈라지면(예: Kp 를 30 으로 적음) 여기서 걸린다. --no-sha 는 27 MB 해시를 건너뛴다.
+문서 숫자가 설정과 갈라지면(예: Kp 를 30 으로 적음) 여기서 걸린다. v0.2: m6000 명령 파일 값이 min(D108, B3c) 와 다르거나 §0a 표와 다르면 걸린다. --no-sha 는 27 MB 해시를 건너뛴다.
 """
 import hashlib
 import json
@@ -99,6 +99,16 @@ if not rng:
         if isinstance(v, dict) and "forward_vx" in v:
             rng = v
 eq({k: [float(x) for x in rng[k]] for k in spec["b3c_ranges"]}, spec["b3c_ranges"], "B3c 명령 범위")
+d108, caps, b = spec["d108_caps"], spec["app_caps_m6000"], spec["b3c_ranges"]
+want = {"forward_vx": min(d108["forward_vx"], b["forward_vx"][1]),
+        "reverse_vx_abs": min(d108["reverse_vx_abs"], abs(b["reverse_vx"][0])),
+        "side_vy_abs": min(d108["side_vy_abs"], b["side_vy_abs"][1]),
+        "spin_wz_abs": min(d108["spin_wz_abs"], b["spin_wz_abs"][1]),
+        "walk_wz_abs": b["walk_wz_abs"][1]}
+eq(caps, want, "m6000 명령 파일 값 = min(D108, B3c 학습 상한)")
+txt = doc.read_text(encoding="utf-8")
+for ax, v in (("전진", caps["forward_vx"]), ("후진", caps["reverse_vx_abs"]), ("옆", caps["side_vy_abs"]), ("제자리 회전", caps["spin_wz_abs"])):
+    ok(f"{ax} **{v:.1f}**" in txt, f"§0a 표에 {ax} {v:.1f}")
 if not no_sha and model.is_file():
     h = hashlib.sha256(model.read_bytes()).hexdigest()
     eq(h, spec["model_sha256"], "model_6000 sha256")
