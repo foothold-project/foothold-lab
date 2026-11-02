@@ -73,6 +73,7 @@ def _failed_attempt(out: Path, cell: str, ordinal: int) -> None:
     (attempt / "failure.json").write_text(json.dumps({"cell": cell, "ordinal": ordinal,
                                                        "seed": 42, "reason": "instance IDs missing"}), encoding="utf-8")
     (attempt / "closed.json").write_text(json.dumps({"state": "failed"}), encoding="utf-8")
+    (attempt / "started.json").write_text(json.dumps({"recorder_sha256": "b" * 64}), encoding="utf-8")
 
 
 def test_three_closed_failures_hold_without_spending_seed(tmp_path):
@@ -84,6 +85,8 @@ def test_three_closed_failures_hold_without_spending_seed(tmp_path):
     assert hold["state"] == "cell_technical_hold"
     assert hold["technical_failures"] == 3 and hold["seed_budget_spent"] == 0
     assert len(hold["failure_receipts"]) == 3
+    assert shard.technical_hold(tmp_path, "pit", recorder_sha256="c" * 64) is None
+    assert shard.technical_hold(tmp_path, "pit", recorder_sha256="b" * 64)["technical_failures"] == 3
     shard.record_hold(tmp_path, hold)
     assert json.loads((tmp_path / "shard_holds" / "pit.json").read_text())["cell"] == "pit"
     (tmp_path / "attempts" / "pit" / "04").mkdir()
@@ -96,6 +99,7 @@ def test_hold_skips_bad_cell_and_runs_next_with_state(monkeypatch, tmp_path):
     for ordinal in (1, 2, 3):
         _failed_attempt(tmp_path, "pit", ordinal)
     plan = {"queue": str(queue), "checkpoint_sha256": "a" * 64,
+            "recorder_sha256": "b" * 64,
             "jobs": [{"recorder_argv": [sys.executable]}],
             "execution_shard": {"priority_markers": []}}
     monkeypatch.setattr(shard, "inspect_plan", lambda *_: (plan, ["pit", "next"]))
@@ -120,6 +124,7 @@ def test_hold_then_closed_next_has_explicit_final_state(monkeypatch, tmp_path):
     for ordinal in (1, 2, 3):
         _failed_attempt(tmp_path, "pit", ordinal)
     plan = {"queue": str(queue), "checkpoint_sha256": "a" * 64,
+            "recorder_sha256": "b" * 64,
             "jobs": [{"recorder_argv": [sys.executable]}],
             "execution_shard": {"priority_markers": []}}
     monkeypatch.setattr(shard, "inspect_plan", lambda *_: (plan, ["pit", "next"]))

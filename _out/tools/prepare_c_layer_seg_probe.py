@@ -15,7 +15,9 @@ OLD = """                    mask_row = robot_pixel_evidence(
                     require_single_visible_robot(mask_row)
                     instance_evidence.append(mask_row)
 """
-NEW = """                    from c_layer_seg_probe import recognize_after_render, write_failure
+NEW = """                    if hashlib.sha256(Path(__file__).resolve().with_name("c_layer_seg_probe.py").read_bytes()).hexdigest() != "__C_LAYER_PROBE_SHA__":
+                        raise RuntimeError("C76 segmentation probe source SHA differs")
+                    from c_layer_seg_probe import recognize_after_render, write_failure
                     from pxr import UsdGeom
                     selected_path = render_visibility_record["visible_robot_root"]
                     selected_prim = omni.usd.get_context().get_stage().GetPrimAtPath(selected_path)
@@ -42,13 +44,27 @@ NEW = """                    from c_layer_seg_probe import recognize_after_rende
                     render_retry_checks.extend({"physics_tick": k, "segmentation": True, **check}
                                                for check in seg_checks)
 """
+VISIBILITY_OLD = """            if c_layer_ref(spec) and len(render_visibility_record["hidden_robot_roots"]) != n_envs(spec) - 1:
+                raise RuntimeError("C76 expected all other robot roots to be invisible")
+"""
+VISIBILITY_NEW = VISIBILITY_OLD + """            if c_layer_ref(spec):
+                if hashlib.sha256(Path(__file__).resolve().with_name("c_layer_visibility.py").read_bytes()).hexdigest() != "__C_LAYER_VISIBILITY_SHA__":
+                    raise RuntimeError("C76 visibility helper source SHA differs")
+                from c_layer_visibility import ensure_only_selected_visible
+                from pxr import UsdGeom
+                render_visibility_record["visibility_check"] = ensure_only_selected_visible(
+                    omni.usd.get_context().get_stage(),
+                    render_visibility_record["visible_robot_root"],
+                    render_visibility_record["hidden_robot_roots"], UsdGeom.Imageable)
+"""
 
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build(frozen: Path, base_plan: Path, output_root: Path, diagnostic_out: Path, cell: str) -> dict:
+def build(frozen: Path, base_plan: Path, output_root: Path, diagnostic_out: Path,
+          cell: str, runner: Path | None = None) -> dict:
     source = frozen / "foothold_s2/eval/video25/record_c_layer.py"
     if digest(source) != FROZEN_RECORDER_SHA256:
         raise ValueError("frozen C76 recorder SHA differs")
@@ -56,11 +72,15 @@ def build(frozen: Path, base_plan: Path, output_root: Path, diagnostic_out: Path
     recorder_dir.mkdir(parents=True, exist_ok=True)
     recorder = recorder_dir / "record_c_layer.py"
     text = source.read_text(encoding="utf-8")
-    if text.count(OLD) != 1:
+    if text.count(OLD) != 1 or text.count(VISIBILITY_OLD) != 1:
         raise ValueError("C76 instance-mask insertion point differs")
-    recorder.write_text(text.replace(OLD, NEW), encoding="utf-8")
     tools = Path(__file__).resolve().parent
+    patched = text.replace(OLD, NEW).replace(VISIBILITY_OLD, VISIBILITY_NEW)
+    patched = patched.replace("__C_LAYER_PROBE_SHA__", digest(tools / "c_layer_seg_probe.py"))
+    patched = patched.replace("__C_LAYER_VISIBILITY_SHA__", digest(tools / "c_layer_visibility.py"))
+    recorder.write_text(patched, encoding="utf-8")
     shutil.copyfile(tools / "c_layer_seg_probe.py", recorder_dir / "c_layer_seg_probe.py")
+    shutil.copyfile(tools / "c_layer_visibility.py", recorder_dir / "c_layer_visibility.py")
     for relative in ("foothold_s2/eval/video25/overlay_25e.py", "foothold_s2/eval/video_style.py"):
         destination = output_root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -79,11 +99,15 @@ def build(frozen: Path, base_plan: Path, output_root: Path, diagnostic_out: Path
         row["recorder_argv"][1] = str(recorder.resolve())
     # This is a diagnostic run, not a canonical success receipt. Use a fresh out.
     plan["execution_shard"]["output"] = str(diagnostic_out.resolve())
+    if runner is not None:
+        plan["execution_shard"]["runner"] = str(runner.resolve())
+        plan["execution_shard"]["runner_sha256"] = digest(runner)
     target = output_root / "diagnostic_plan.json"
     target.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"cell": cell, "plan": str(target), "plan_sha256": digest(target),
             "recorder": str(recorder), "recorder_sha256": digest(recorder),
             "probe_sha256": digest(recorder_dir / "c_layer_seg_probe.py"),
+            "visibility_sha256": digest(recorder_dir / "c_layer_visibility.py"),
             "diagnostic_out": str(diagnostic_out.resolve())}
 
 
@@ -94,9 +118,10 @@ def main() -> int:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--diagnostic-out", type=Path, required=True)
     parser.add_argument("--cell", required=True)
+    parser.add_argument("--runner", type=Path)
     args = parser.parse_args()
     print(json.dumps(build(args.frozen, args.base_plan, args.output_root,
-                           args.diagnostic_out, args.cell), sort_keys=True))
+                           args.diagnostic_out, args.cell, args.runner), sort_keys=True))
     return 0
 
 

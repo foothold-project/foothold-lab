@@ -13,6 +13,7 @@ import pytest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 import c_layer_seg_probe as probe  # noqa: E402
+import c_layer_visibility as visibility  # noqa: E402
 import prepare_c_layer_seg_probe as prepare  # noqa: E402
 
 
@@ -79,3 +80,66 @@ def test_diagnostic_plan_preserves_frozen_source_and_queue(tmp_path):
     queue = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(queue)
     assert queue.validate_plan(plan)["ready"] == 216
+
+
+class _Prim:
+    def __init__(self, value):
+        self.value = value
+
+    def IsValid(self):
+        return True
+
+    def ComputeVisibility(self):
+        return self.value
+
+    def MakeVisible(self):
+        self.value = "inherited"
+
+
+def test_nonzero_robot_is_revealed_without_revealing_other_robots():
+    roots = {f"/World/envs/env_{i}/Robot": _Prim("invisible") for i in range(64)}
+    class Stage:
+        def GetPrimAtPath(self, path):
+            return roots[path]
+    selected = "/World/envs/env_5/Robot"
+    result = visibility.ensure_only_selected_visible(
+        Stage(), selected, [path for path in roots if path != selected], lambda prim: prim)
+    assert result["selected_visibility_before"] == "invisible"
+    assert result["selected_visibility_after"] == "inherited"
+    assert result["hidden_robot_count"] == 63
+    assert all(root.ComputeVisibility() == ("inherited" if path == selected else "invisible")
+               for path, root in roots.items())
+
+
+def test_env0_visibility_is_also_explicitly_checked():
+    roots = {"/World/envs/env_0/Robot": _Prim("inherited"),
+             "/World/envs/env_1/Robot": _Prim("invisible")}
+    class Stage:
+        def GetPrimAtPath(self, path):
+            return roots[path]
+    result = visibility.ensure_only_selected_visible(
+        Stage(), "/World/envs/env_0/Robot", ["/World/envs/env_1/Robot"], lambda prim: prim)
+    assert result["selected_visibility_before"] == result["selected_visibility_after"] == "inherited"
+    assert roots["/World/envs/env_1/Robot"].ComputeVisibility() == "invisible"
+
+
+def test_visibility_mutations_are_rejected():
+    roots = {"/World/envs/env_0/Robot": _Prim("invisible"),
+             "/World/envs/env_5/Robot": _Prim("invisible")}
+    class Stage:
+        def GetPrimAtPath(self, path):
+            return roots[path]
+    class NoOpImageable:
+        def __init__(self, prim):
+            self.prim = prim
+        def ComputeVisibility(self):
+            return self.prim.value
+        def MakeVisible(self):
+            pass
+    with pytest.raises(ValueError, match="remains invisible"):
+        visibility.ensure_only_selected_visible(Stage(), "/World/envs/env_5/Robot",
+                                                ["/World/envs/env_0/Robot"], NoOpImageable)
+    roots["/World/envs/env_0/Robot"].value = "inherited"
+    with pytest.raises(ValueError, match="another robot became visible"):
+        visibility.ensure_only_selected_visible(Stage(), "/World/envs/env_5/Robot",
+                                                ["/World/envs/env_0/Robot"], lambda prim: prim)

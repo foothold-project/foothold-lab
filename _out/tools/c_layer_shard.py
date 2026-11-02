@@ -81,7 +81,8 @@ def completed_receipt(path: Path, cell: str, checkpoint_sha256: str) -> bool:
     return True
 
 
-def technical_hold(out: Path, cell: str, *, limit: int = 3) -> dict | None:
+def technical_hold(out: Path, cell: str, *, limit: int = 3,
+                   recorder_sha256: str | None = None) -> dict | None:
     """Hold a cell after closed technical failures, without spending seed budget."""
     root = out / "attempts" / cell
     if not root.exists():
@@ -103,11 +104,19 @@ def technical_hold(out: Path, cell: str, *, limit: int = 3) -> dict | None:
             failure = json.loads(failure_path.read_text(encoding="utf-8-sig"))
             if failure.get("cell") != cell or failure.get("ordinal") != int(attempt.name):
                 raise ValueError("technical failure receipt differs from attempt")
+            if recorder_sha256 is not None:
+                started_path = attempt / "started.json"
+                if not started_path.is_file():
+                    raise ValueError("technical failure has no recorder source receipt")
+                started = json.loads(started_path.read_text(encoding="utf-8-sig"))
+                if started.get("recorder_sha256") != recorder_sha256:
+                    continue
             failures.append(str(failure_path))
     if len(failures) < limit:
         return None
     return {"state": "cell_technical_hold", "cell": cell,
             "technical_failures": len(failures), "seed_budget_spent": validated,
+            "recorder_sha256": recorder_sha256,
             "failure_receipts": failures}
 
 
@@ -143,7 +152,7 @@ def run_one(path: Path, out: Path, gpu: int, *, check_only: bool = False) -> dic
         receipt = out / "receipts" / (cell + "_success.json")
         if completed_receipt(receipt, cell, plan["checkpoint_sha256"]):
             continue
-        cell_hold = technical_hold(out, cell)
+        cell_hold = technical_hold(out, cell, recorder_sha256=plan["recorder_sha256"])
         if cell_hold is not None:
             record_hold(out, cell_hold)
             held.append(cell_hold)
@@ -157,7 +166,7 @@ def run_one(path: Path, out: Path, gpu: int, *, check_only: bool = False) -> dic
         event = json.loads(result.stdout)
         if event.get("state") == "only_cell_closed":
             continue
-        cell_hold = technical_hold(out, cell)
+        cell_hold = technical_hold(out, cell, recorder_sha256=plan["recorder_sha256"])
         if cell_hold is not None:
             record_hold(out, cell_hold)
             held.append(cell_hold)
