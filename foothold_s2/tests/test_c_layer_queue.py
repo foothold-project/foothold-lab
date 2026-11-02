@@ -1,4 +1,4 @@
-"""Known-input CPU checks for the D46 C-layer planner and one-clip runner."""
+"""Known-input CPU tests for D48 reset-derived C-layer capture."""
 from __future__ import annotations
 
 import json
@@ -10,6 +10,7 @@ import pytest
 
 from foothold_s2.eval import c_layer_queue as q
 from foothold_s2.eval import video_style
+from foothold_s2.eval.video25 import record_c_layer
 
 
 KINDS = {
@@ -20,126 +21,211 @@ KINDS = {
 }
 
 
-def fixture(tmp_path: Path):
+def fixture(tmp_path: Path, *, complete: bool = True):
     checkpoint = tmp_path / "model_8000.pt"
     recorder = tmp_path / "record.py"
-    source = tmp_path / "env_arrays_eval_gt_fwd1.0.npz"
-    for path, value in ((checkpoint, b"checkpoint"), (recorder, b"recorder")):
-        path.write_bytes(value)
-    np.savez(source, env=np.arange(8), kind=np.array(["random_rough"] * 7 + ["boxes"]),
-             terrain_level=np.array([0] * 7 + [2]), terrain_col=np.array([0] * 7 + [4]),
-             alive_end=np.array([True] * 7 + [False]), body_vx_integral_m=np.array([5.0] * 8))
-    label = video_style.capture_name("EX40", "boxes", 2, 7, 8000, segment="eval_gt")
-    row = {"kind": "boxes", "level": 2, "map_mode": "eval_gt", "role": "fail",
-           "env_id": 7, "label": label, "selection_source": "evaluation",
-           "selection_result": "fail", "selection_path": str(source),
-           "selection_sha256": q.sha256(source), "capture_provenance": "evaluation_replay",
-           "policy": {"experiment": "SB", "source_profile": "W15", "source_root": str(tmp_path),
-                      "terrain_set": "fixed64", "seed": 42, "checkpoint_sha256": q.sha256(checkpoint),
-                      "envs": 8, "map_mode": "eval_gt", "env_id": 7, "kind": "boxes", "col": 4},
-           "selection_success_fwd_m": 3.0, "own_success_fwd_m": 3.0,
-           "recorder_argv": ["python", str(recorder), "--policy", "{policy}",
-                             "--checkpoint", str(checkpoint), "--label", "{label}", "--mp4", "{mp4}"]}
+    checkpoint.write_bytes(b"checkpoint")
+    recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
+    rows = []
+    cells = q.inventory(KINDS) if complete else [("boxes", 2, "eval_gt")]
+    for kind, level, mode in cells:
+        label = video_style.capture_name("EX40", kind, level, 7, 8000, segment=mode)
+        rows.append({"kind": kind, "level": level, "map_mode": mode, "env_id": 7,
+                     "label": label, "seeds": [42, 43, 44, 45],
+                     "policy": {"experiment": "SB", "source_root": str(tmp_path),
+                                "source_profile": "C76", "source_head": "a" * 40,
+                                "source_recorder_sha256": "b" * 64, "selection_role": "c_layer",
+                                "terrain_set": ("fixed64" if kind in KINDS["continuous"] else "sparse50"),
+                                "fixed_terrain": True, "fixed_level": level,
+                                "geometry_seed": 20261026,
+                                "command": [1.0, 0.0, 0.0], "duration_s": 18.0,
+                                "seed": "{seed}", "c_layer_reference": True,
+                                "checkpoint_sha256": q.sha256(checkpoint), "envs": 64,
+                                "map_mode": mode, "env_id": 7, "kind": kind, "col": 4},
+                     "recorder_argv": ["python", str(recorder), "--policy", "{policy}",
+                                       "--checkpoint", str(checkpoint), "--label", "{label}",
+                                       "--mp4", "{mp4}"]})
     plan = {"status": "approved_canon", "canon_label": "EX40", "iteration": 8000,
             "kinds": KINDS, "checkpoint": str(checkpoint), "checkpoint_sha256": q.sha256(checkpoint),
-            "recorder": str(recorder), "recorder_sha256": q.sha256(recorder), "jobs": [row]}
-    return plan, row
+            "priority_markers": {name: str(tmp_path / (name + ".busy"))
+                                 for name in ("training", "evaluation", "a_layer")},
+            "recorder": str(recorder), "recorder_sha256": q.sha256(recorder), "jobs": rows}
+    return plan, rows
 
 
-def test_inventory_and_missing_selection(tmp_path):
-    plan, _ = fixture(tmp_path)
-    result = q.validate_plan(plan)
-    assert result["expected"] == 432 and result["ready"] == 1 and result["missing"] == 431
-    plan["jobs"].append(dict(plan["jobs"][0]))
-    with pytest.raises(ValueError, match="duplicate"):
-        q.validate_plan(plan)
+def make_capture(mp4: Path, plan: dict, row: dict, seed: int, resets: int):
+    mp4.write_bytes(b"cpu fake video")
+    mp4.with_name("review.json").write_text(json.dumps({
+        "checkpoint_sha256": plan["checkpoint_sha256"], "label": row["label"], "seed": seed,
+        "selected_environment": {"env_id": 7, "kind": row["kind"], "level": row["level"]},
+        "map_modes": {"map_mode": {"requested": row["map_mode"]}},
+        "style": {"style_id": video_style.STYLE_ID},
+        "frames": 450, "fps": 25, "duration_s": 18.0, "resets": resets,
+    }), encoding="utf-8")
+    done = np.zeros(900, dtype=bool)
+    done[:resets] = True
+    np.savez(mp4.with_name("review_feet.npz"), t=np.arange(900) * .02, dt=.02, done=done)
 
 
-def test_wrong_checkpoint_or_selection_is_rejected(tmp_path):
-    plan, row = fixture(tmp_path)
-    plan["checkpoint_sha256"] = "0" * 64
-    with pytest.raises(ValueError, match="SHA256 mismatch"):
-        q.validate_plan(plan)
-    plan, row = fixture(tmp_path)
-    row["policy"]["map_mode"] = "eval_pred"
-    with pytest.raises(ValueError, match="map mode"):
-        q.validate_plan(plan)
-
-
-def test_own_result_and_eval_result_get_separate_name(tmp_path, monkeypatch):
-    plan, row = fixture(tmp_path)
+def fake_capture(plan: dict, outcomes: list[int]):
     calls = []
 
-    def fake_run(argv, **kwargs):
-        calls.append(argv)
+    def run(argv, **_kwargs):
         if argv[0] == "ffprobe":
-            return subprocess.CompletedProcess(argv, 0, '{"streams":[{"nb_read_frames":"300"}]}', "")
+            return subprocess.CompletedProcess(argv, 0, '{"streams":[{"nb_read_frames":"450"}]}', "")
+        if "--plan-only" in argv:
+            policy = json.loads(argv[argv.index("--policy") + 1])
+            preview = {"spec": policy, "target_frames": 450,
+                       "checkpoint_profile": {"checkpoint_sha256": plan["checkpoint_sha256"]}}
+            return subprocess.CompletedProcess(argv, 0, json.dumps(preview), "")
+        calls.append(argv)
+        row = plan["jobs"][0]
         mp4 = Path(argv[argv.index("--mp4") + 1])
-        mp4.write_bytes(b"fake video for CPU validator")
-        mp4.with_name("review.json").write_text(json.dumps({
-            "checkpoint_sha256": plan["checkpoint_sha256"], "label": row["label"],
-            "selected_environment": {"env_id": 7, "kind": "boxes", "level": 2},
-            "map_modes": {"map_mode": {"requested": "eval_gt"}}, "style": {"style_id": video_style.STYLE_ID},
-            "frames": 300, "fps": 25, "duration_s": 12.0, "resets": 0}), encoding="utf-8")
-        np.savez(mp4.with_name("review_feet.npz"), t=np.arange(600) * .02,
-                 dt=.02, done=np.zeros(600, dtype=bool), vx=np.ones(600))
-        mp4.with_name("review.done").write_text(json.dumps({
-            "format": "d51-capture-receipt/1", "name": row["label"],
-            "checkpoint_sha256": plan["checkpoint_sha256"],
-            "recorder_sha256": plan["recorder_sha256"],
-            "env": 7, "kind": "boxes", "level": 2, "map_mode": "eval_gt",
-            "files": {name: q.sha256(mp4.with_name(name)) for name in (
-                "review.mp4", "review.json", "review_feet.npz")},
-        }), encoding="utf-8")
+        policy = json.loads(argv[argv.index("--policy") + 1])
+        make_capture(mp4, plan, row, policy["seed"], outcomes[len(calls) - 1])
         return subprocess.CompletedProcess(argv, 0)
 
-    monkeypatch.setattr(q.subprocess, "run", fake_run)
-    out = tmp_path / "out"
-    result = q.run_one(plan, out=out, high_priority_markers=[])
-    assert result["state"] == "candidate_captured"
-    receipt = json.loads(Path(result["receipt"]).read_text(encoding="utf-8"))
-    assert receipt["own_result"] == "success" and receipt["selection_result"] == "fail"
-    assert receipt["video"].endswith("-success-evalfail.mp4")
-    assert receipt["canonical"] is False and receipt["state"] == "candidate"
-    assert len(calls) == 2
-    assert q.run_one(plan, out=out, high_priority_markers=[])["state"] == "listed_jobs_have_candidate_receipts"
-    attempt_mp4 = Path(receipt["attempt_dir"]) / "review.mp4"
-    attempt_mp4.with_name("review.done").unlink()
-    with pytest.raises(ValueError, match="capture artifact missing"):
-        q.verify_attempt(attempt_mp4, row, plan, ffprobe="ffprobe")
+    return run, calls
 
 
-def test_higher_priority_yields_before_capture(tmp_path, monkeypatch):
-    plan, _ = fixture(tmp_path)
-    marker = tmp_path / "PRIORITY_BUSY"
-    marker.write_text("evaluation", encoding="utf-8")
+def test_inventory_and_seed_gate(tmp_path):
+    plan, rows = fixture(tmp_path)
+    assert len(q.inventory(KINDS)) == 216
+    assert q.validate_plan(plan)["ready"] == 216
+    rows[0]["seeds"] = [42, 42]
+    with pytest.raises(ValueError, match="distinct"):
+        q.validate_plan(plan)
+    rows[0]["seeds"] = [42, 43, 44, 45]
+    Path(plan["recorder"]).write_bytes(b"legacy seed 42 only")
+    plan["recorder_sha256"] = q.sha256(Path(plan["recorder"]))
+    with pytest.raises(ValueError, match="variable-seed"):
+        q.validate_plan(plan)
 
-    def should_not_run(*_args, **_kwargs):
-        raise AssertionError("capture launched despite higher priority")
 
-    monkeypatch.setattr(q.subprocess, "run", should_not_run)
-    assert q.run_one(plan, out=tmp_path / "out", high_priority_markers=[marker])["state"] == "yielded_to_higher_priority"
+def test_partial_plan_cannot_launch(tmp_path):
+    plan, _ = fixture(tmp_path, complete=False)
+    assert q.validate_plan(plan)["missing"] == 215
+    with pytest.raises(ValueError, match="216"):
+        q.run_one(plan, out=tmp_path / "out", high_priority_markers=[])
 
 
-def test_failed_attempt_has_separate_evidence_and_is_retryable(tmp_path, monkeypatch):
-    plan, _ = fixture(tmp_path)
-    monkeypatch.setattr(q.subprocess, "run", lambda argv, **kwargs: subprocess.CompletedProcess(argv, 9))
+def test_two_outcomes_publish_canonical_without_eval_suffix(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    run, calls = fake_capture(plan, [0, 1])
+    monkeypatch.setattr(q.subprocess, "run", run)
     out = tmp_path / "out"
     first = q.run_one(plan, out=out, high_priority_markers=[])
     second = q.run_one(plan, out=out, high_priority_markers=[])
-    assert first["state"] == second["state"] == "capture_failed"
-    assert first["attempt_dir"] != second["attempt_dir"]
-    assert len(list((out / "attempts").rglob("child.log"))) == 2
+    assert first["event"] == second["event"] == "captured"
+    assert second["cell"] == first["cell"]
+    assert second["state"] == "complete"
+    assert len(calls) == 2
+    assert [json.loads(argv[argv.index("--policy") + 1])["seed"] for argv in calls] == [42, 43]
+    receipts = list((out / "receipts").glob("*_success.json")) + list((out / "receipts").glob("*_fail.json"))
+    assert len(receipts) == 2
+    assert all(json.loads(p.read_text(encoding="utf-8"))["canonical"] is True for p in receipts)
+    assert all("evalfail" not in p.name for p in out.glob("*.mp4"))
+    assert not (out / "attempts" / first["cell"] / "03").exists()
+    assert rows[0]["label"] not in [p.stem for p in out.glob("*.mp4")]
+
+
+@pytest.mark.parametrize(("resets", "expected"), [(0, "실패 없음"), (1, "성공 없음")])
+def test_four_attempt_cap_and_missing_role(tmp_path, monkeypatch, resets, expected):
+    plan, _ = fixture(tmp_path)
+    run, calls = fake_capture(plan, [resets] * 4)
+    monkeypatch.setattr(q.subprocess, "run", run)
+    out = tmp_path / "out"
+    for _ in range(4):
+        q.run_one(plan, out=out, high_priority_markers=[])
+    summary = q._summary(out, plan["jobs"][0])
+    assert summary["state"] == "exhausted" and summary["missing"] == [expected]
+    assert len(calls) == 4
+    assert not (out / "attempts" / summary["cell"] / "05").exists()
+
+
+def test_failed_child_uses_one_attempt_and_never_publishes(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    def fail_live(argv, **_kw):
+        if "--plan-only" in argv:
+            policy = json.loads(argv[argv.index("--policy") + 1])
+            return subprocess.CompletedProcess(argv, 0, json.dumps({"spec": policy, "target_frames": 450,
+                "checkpoint_profile": {"checkpoint_sha256": plan["checkpoint_sha256"]}}), "")
+        return subprocess.CompletedProcess(argv, 9)
+    monkeypatch.setattr(q.subprocess, "run", fail_live)
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[])
+    assert result["state"] == "capture_failed" and result["ordinal"] == 1
+    assert (out / "attempts" / result["cell"] / "01" / "failure.json").is_file()
     assert not list(out.glob("*.mp4"))
 
 
-def test_own_termination_is_fail_even_if_evaluation_succeeded(tmp_path):
-    _, row = fixture(tmp_path)
-    row["role"] = row["selection_result"] = "success"
-    npz = tmp_path / "capture_feet.npz"
-    done = np.zeros(600, dtype=bool)
-    done[120] = True
-    np.savez(npz, t=np.arange(600) * .02, dt=.02, done=done, vx=np.ones(600))
-    assert q.actual_result({"resets": 1}, npz, row) == "fail"
+def test_preflight_wrong_seed_fails_before_kit_child(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    def wrong_seed(argv, **_kw):
+        assert "--plan-only" in argv
+        policy = json.loads(argv[argv.index("--policy") + 1])
+        policy["seed"] += 1
+        return subprocess.CompletedProcess(argv, 0, json.dumps({"spec": policy, "target_frames": 450,
+            "checkpoint_profile": {"checkpoint_sha256": plan["checkpoint_sha256"]}}), "")
+    monkeypatch.setattr(q.subprocess, "run", wrong_seed)
+    result = q.run_one(plan, out=tmp_path / "out", high_priority_markers=[])
+    assert result["state"] == "capture_failed" and "preflight" in result["reason"]
+
+
+def test_reset_count_mismatch_and_seed_mismatch(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path, complete=False)
+    mp4 = tmp_path / rows[0]["label"] / "review.mp4"
+    mp4.parent.mkdir()
+    make_capture(mp4, plan, rows[0], 42, 0)
+    monkeypatch.setattr(q.subprocess, "run", lambda argv, **_kw: subprocess.CompletedProcess(
+        argv, 0, '{"streams":[{"nb_read_frames":"450"}]}', ""))
+    assert q.verify_attempt(mp4, rows[0], plan, ffprobe="ffprobe", seed=42)[1] == "success"
+    with pytest.raises(ValueError, match="seed"):
+        q.verify_attempt(mp4, rows[0], plan, ffprobe="ffprobe", seed=43)
+    meta = json.loads(mp4.with_name("review.json").read_text(encoding="utf-8"))
+    meta["resets"] = 1
+    mp4.with_name("review.json").write_text(json.dumps(meta), encoding="utf-8")
     with pytest.raises(ValueError, match="reset count"):
-        q.actual_result({"resets": 0}, npz, row)
+        q.verify_attempt(mp4, rows[0], plan, ffprobe="ffprobe", seed=42)
+
+
+def test_higher_priority_yields_without_child(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    marker = tmp_path / "PRIORITY_BUSY"
+    marker.write_text("eval", encoding="utf-8")
+    monkeypatch.setattr(q.subprocess, "run", lambda *_a, **_k: (_ for _ in ()).throw(
+        AssertionError("launched despite priority")))
+    assert q.run_one(plan, out=tmp_path / "out", high_priority_markers=[marker])["state"] == "yielded_to_higher_priority"
+
+
+def test_incomplete_attempt_holds_instead_of_skipping_seed(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    out = tmp_path / "out"
+    root = out / "attempts" / q._slot(rows[0]) / "01"
+    root.mkdir(parents=True)
+    (root / "started.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(q.subprocess, "run", lambda *_a, **_k: (_ for _ in ()).throw(
+        AssertionError("incomplete attempt was silently skipped")))
+    result = q.run_one(plan, out=out, high_priority_markers=[])
+    assert result["state"] == "incomplete_attempt_hold"
+    assert result["attempts"] == 1
+
+
+@pytest.mark.parametrize(("terrain_set", "kind", "col"), [
+    ("fixed64", "boxes", 4), ("sparse50", "gaps", 40),
+])
+def test_c76_recorder_accepts_variable_seeds_without_eval_receipt(tmp_path, terrain_set, kind, col):
+    base = {"experiment": "SB", "source_profile": "C76", "c_layer_reference": True,
+            "source_root": str(tmp_path), "source_head": "a" * 40,
+            "source_recorder_sha256": "b" * 64,
+            "terrain_set": terrain_set, "fixed_terrain": True, "fixed_level": 2,
+            "physics_mode": "sparse_eval_reference", "envs": 64, "env_id": 7,
+            "kind": kind, "col": col, "selection_role": "c_layer",
+            "checkpoint_sha256": "c" * 64, "map_mode": "eval_gt",
+            "command": [1.0, 0.0, 0.0], "duration_s": 18.0}
+    if terrain_set == "sparse50":
+        base["geometry_seed"] = record_c_layer.SPARSE_GEOMETRY_SEED
+    for seed in (42, 43, 44, 45):
+        assert record_c_layer.parse_spec(json.dumps(dict(base, seed=seed)))["seed"] == seed
+    with pytest.raises(ValueError):
+        record_c_layer.parse_spec(json.dumps(dict(base, seed=43, c_layer_reference=False)))

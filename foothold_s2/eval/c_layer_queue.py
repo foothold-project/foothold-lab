@@ -1,8 +1,8 @@
 """CPU side of the D46/D48 C-layer capture queue.
 
-One invocation runs at most one clip. A caller may invoke it again after the
-current clip, so a newly arrived training or evaluation job can take the GPU.
-The recorder and its frozen source are supplied by a reviewed job manifest.
+One invocation runs at most one clip. The video outcome is its own reset count,
+independent of evaluation receipts. A reviewed variable-seed C76 recorder is
+required: existing D51 fixed64 and sparse50 profiles accept only seed 42.
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-import time
 
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 ROLES = ("success", "fail")
+MAX_ATTEMPTS = 4
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -31,14 +31,14 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def inventory(kinds: dict[str, list[str]]) -> list[tuple[str, int, str, str]]:
+def inventory(kinds: dict[str, list[str]]) -> list[tuple[str, int, str]]:
     if len(kinds.get("continuous", [])) != 7 or len(kinds.get("sparse", [])) != 5:
         raise ValueError("C layer requires seven continuous and five sparse kinds")
     names = kinds["continuous"] + kinds["sparse"]
     if len(set(names)) != 12:
         raise ValueError("terrain kind names overlap")
-    return [(kind, level, mode, role) for kind in names for level in range(6)
-            for mode in MAP_MODES for role in ROLES]
+    return [(kind, level, mode) for kind in names for level in range(6)
+            for mode in MAP_MODES]
 
 
 def _source(path: str, wanted: str) -> Path:
@@ -50,120 +50,98 @@ def _source(path: str, wanted: str) -> Path:
     return source
 
 
-def _verify_selection(row: dict) -> None:
-    """Read the evaluation's per-env NPZ, including its independent outcome."""
-    import numpy as np
-
-    path = Path(row["selection_path"])
-    if path.name != f"env_arrays_{row['map_mode']}_fwd1.0.npz":
-        raise ValueError("selection is not the matching fwd1.0 evaluation array")
-    with np.load(path, allow_pickle=False) as data:
-        required = {"env", "kind", "terrain_level", "terrain_col", "alive_end", "body_vx_integral_m"}
-        if not required.issubset(data.files):
-            raise ValueError("evaluation array lacks selection fields")
-        env = np.asarray(data["env"])
-        names = np.asarray(data["kind"]).astype(str)
-        level = np.asarray(data["terrain_level"])
-        col = np.asarray(data["terrain_col"])
-        alive = np.asarray(data["alive_end"], dtype=bool)
-        distance = np.asarray(data["body_vx_integral_m"], dtype=float)
-        if any(len(value) != len(env) for value in (names, level, col, alive, distance)):
-            raise ValueError("evaluation arrays have inconsistent env lengths")
-        if not np.array_equal(env, np.arange(len(env))) or not np.isfinite(distance).all():
-            raise ValueError("evaluation env IDs or distances are invalid")
-        threshold = row.get("selection_success_fwd_m")
-        if not isinstance(threshold, (int, float)) or not math.isfinite(threshold) or threshold <= 0:
-            raise ValueError("selection success threshold missing")
-        mask = (names == row["kind"]) & (level == row["level"])
-        mask &= (alive & (distance >= threshold)) if row["role"] == "success" else ~alive
-        candidates = np.flatnonzero(mask)
-        if len(candidates) == 0 or int(candidates[0]) != row["env_id"]:
-            raise ValueError("selected env is not the lowest matching evaluation env")
-        if row["policy"].get("col") != int(col[row["env_id"]]):
-            raise ValueError("selected terrain column differs from policy")
-
-
 def validate_plan(plan: dict) -> dict:
-    """Fail closed on missing evidence. No canonical outcome is inferred here."""
+    """Validate all 216 cells before any GPU attempt."""
     keys = inventory(plan["kinds"])
-    if len(keys) != 432:
+    markers = plan.get("priority_markers")
+    if (not isinstance(markers, dict) or set(markers) != {"training", "evaluation", "a_layer"}
+            or any(not isinstance(value, str) or not Path(value).is_absolute() for value in markers.values())):
+        raise ValueError("training, evaluation and A-layer priority markers must be absolute paths")
+    if len(keys) != 216:
         raise AssertionError("wrong C layer inventory")
     if plan.get("status") != "approved_canon":
         raise ValueError("canonical checkpoint selection is pending")
     if type(plan.get("iteration")) is not int or plan["iteration"] < 0:
         raise ValueError("canonical checkpoint iteration missing")
     _source(plan["checkpoint"], plan["checkpoint_sha256"])
-    _source(plan["recorder"], plan["recorder_sha256"])
+    recorder = _source(plan["recorder"], plan["recorder_sha256"])
+    if b"C_LAYER_SEED_V1" not in recorder.read_bytes():
+        raise ValueError("recorder lacks variable-seed C76 profile")
     rows = plan.get("jobs")
     if not isinstance(rows, list):
         raise ValueError("jobs must be a list")
     seen = set()
     for row in rows:
-        key = (row.get("kind"), row.get("level"), row.get("map_mode"), row.get("role"))
+        key = (row.get("kind"), row.get("level"), row.get("map_mode"))
         if key not in keys or key in seen:
             raise ValueError("unknown or duplicate C layer cell: " + repr(key))
         seen.add(key)
+        seeds = row.get("seeds")
+        if (not isinstance(seeds, list) or not 1 <= len(seeds) <= MAX_ATTEMPTS
+                or any(type(seed) is not int or seed < 0 for seed in seeds)
+                or len(set(seeds)) != len(seeds)):
+            raise ValueError("one to four distinct predeclared seeds required per cell")
         if type(row.get("env_id")) is not int or row["env_id"] < 0:
             raise ValueError("invalid selected env")
-        if row.get("selection_source") != "evaluation":
-            raise ValueError("selection must cite the evaluation")
-        _source(row["selection_path"], row["selection_sha256"])
         if not isinstance(row.get("policy"), dict) or row["policy"].get("map_mode") != key[2]:
             raise ValueError("policy map mode differs from cell")
-        required_policy = ("experiment", "source_profile", "source_root", "terrain_set", "seed",
-                           "checkpoint_sha256", "envs", "kind", "col", "env_id")
+        required_policy = ("experiment", "source_root", "source_head", "source_recorder_sha256",
+                           "source_profile", "terrain_set", "seed", "checkpoint_sha256",
+                           "envs", "kind", "col", "env_id", "fixed_level", "selection_role")
         if any(field not in row["policy"] for field in required_policy):
             raise ValueError("recorder policy lacks an actual source or assignment")
         if row["policy"]["checkpoint_sha256"] != plan["checkpoint_sha256"]:
             raise ValueError("recorder policy checkpoint SHA256 mismatch")
-        if row["policy"]["kind"] != row["kind"]:
-            raise ValueError("recorder policy terrain kind differs from selection")
+        if (row["policy"].get("c_layer_reference") is not True
+                or row["policy"].get("source_profile") != "C76"
+                or row["policy"].get("selection_role") != "c_layer"
+                or row["policy"]["seed"] != "{seed}"):
+            raise ValueError("C76 policy must replace seed per attempt")
+        expected_set = "fixed64" if row["kind"] in plan["kinds"]["continuous"] else "sparse50"
+        if (row["policy"].get("terrain_set") != expected_set
+                or row["policy"].get("fixed_terrain") is not True
+                or row["policy"].get("envs") != 64
+                or row["policy"].get("command") != [1.0, 0.0, 0.0]
+                or row["policy"].get("duration_s") != 18.0):
+            raise ValueError("C76 terrain set or forward recording contract differs from cell")
+        if expected_set == "sparse50" and row["policy"].get("geometry_seed") != 20261026:
+            raise ValueError("C76 sparse geometry seed differs from fixed layout")
+        if row["policy"]["kind"] != row["kind"] or row["policy"].get("fixed_level") != row["level"]:
+            raise ValueError("recorder policy terrain kind or level differs from cell")
         if row["policy"].get("env_id") != row["env_id"]:
             raise ValueError("policy env differs from selection")
         expected_label = _video_style().capture_name(plan["canon_label"], row["kind"], row["level"],
                                                      row["env_id"], plan["iteration"], segment=row["map_mode"])
         if row.get("label") != expected_label:
             raise ValueError("capture label differs from the D48 work name")
-        if row.get("selection_result") != row["role"]:
-            raise ValueError("selection result differs from requested role")
-        _verify_selection(row)
-        if row.get("capture_provenance") not in ("evaluation_in_situ", "evaluation_replay"):
-            raise ValueError("capture provenance is missing")
-        if row.get("capture_provenance") == "evaluation_in_situ":
-            _source(row["in_situ_video"], row["in_situ_video_sha256"])
-        else:
-            argv = row.get("recorder_argv")
-            if not isinstance(argv, list) or len(argv) < 3 or argv[1] != plan["recorder"]:
-                raise ValueError("replay must use the SHA-pinned D51 recorder")
-            for option, value in (("--mp4", "{mp4}"), ("--label", "{label}"),
-                                  ("--checkpoint", plan["checkpoint"]), ("--policy", "{policy}")):
-                if option not in argv or argv.index(option) + 1 == len(argv) or argv[argv.index(option) + 1] != value:
-                    raise ValueError("replay recorder argv lacks " + option)
-    return {"expected": 432, "ready": len(seen), "missing": len(keys) - len(seen),
+        argv = row.get("recorder_argv")
+        if not isinstance(argv, list) or len(argv) < 3 or argv[1] != plan["recorder"]:
+            raise ValueError("recorder argv must name the SHA-pinned C76 recorder")
+        for option, value in (("--mp4", "{mp4}"), ("--label", "{label}"),
+                              ("--checkpoint", plan["checkpoint"]), ("--policy", "{policy}")):
+            if argv.count(option) != 1 or argv.index(option) + 1 == len(argv) or argv[argv.index(option) + 1] != value:
+                raise ValueError("recorder argv lacks " + option)
+    return {"expected": 216, "ready": len(seen), "missing": len(keys) - len(seen),
             "missing_cells": [list(key) for key in keys if key not in seen]}
 
 
-def actual_result(metadata: dict, npz: Path, row: dict) -> str:
-    """Own result from this clip's physics record, never its evaluation role."""
+def actual_result(metadata: dict, npz: Path, row: dict | None = None) -> str:
+    """D48 result from this clip's reset count, never an evaluation role."""
     import numpy as np
 
     with np.load(npz, allow_pickle=False) as data:
-        if not {"t", "dt", "done", "vx"}.issubset(data.files):
+        if not {"t", "dt", "done"}.issubset(data.files):
             raise ValueError("capture NPZ lacks own-outcome fields")
-        t, done, vx = data["t"], data["done"], data["vx"]
+        t, done = data["t"], data["done"]
         dt = float(data["dt"])
-        if len(t) == 0 or len(t) != len(done) or len(t) != len(vx) or not math.isfinite(dt) or dt <= 0:
+        if len(t) == 0 or len(t) != len(done) or not math.isfinite(dt) or dt <= 0:
             raise ValueError("capture time series invalid")
-        if not np.isfinite(vx).all() or not np.allclose(t, np.arange(len(t)) * dt, atol=1e-5):
-            raise ValueError("capture time or velocity invalid")
-        traveled = float(vx.sum() * dt)
-        terminated = bool(np.any(done))
-    if int(metadata.get("resets", -1)) != int(np.count_nonzero(done)):
+        if not np.isfinite(t).all() or not np.allclose(t, np.arange(len(t)) * dt, atol=1e-5):
+            raise ValueError("capture time invalid")
+        resets = int(np.count_nonzero(done))
+    if type(metadata.get("resets")) is not int or metadata["resets"] != resets:
         raise ValueError("review reset count differs from physics NPZ")
-    threshold = row.get("own_success_fwd_m")
-    if not isinstance(threshold, (int, float)) or not math.isfinite(threshold) or threshold <= 0:
-        raise ValueError("own success threshold must cite the evaluation contract")
-    return "success" if not terminated and traveled >= threshold else "fail"
+    return "success" if resets == 0 else "fail"
 
 
 def _video_style():
@@ -171,7 +149,7 @@ def _video_style():
     return video_style
 
 
-def verify_attempt(mp4: Path, row: dict, plan: dict, *, ffprobe: str) -> tuple[dict, str]:
+def verify_attempt(mp4: Path, row: dict, plan: dict, *, ffprobe: str, seed: int | None = None) -> tuple[dict, str]:
     import numpy as np
 
     if mp4.name != "review.mp4" or mp4.parent.name != row["label"]:
@@ -179,31 +157,35 @@ def verify_attempt(mp4: Path, row: dict, plan: dict, *, ffprobe: str) -> tuple[d
     meta_path = mp4.with_name("review.json")
     npz_path = mp4.with_name("review_feet.npz")
     done_path = mp4.with_name("review.done")
-    if any(not p.is_file() or p.stat().st_size == 0 for p in (mp4, meta_path, npz_path, done_path)):
+    if any(not p.is_file() or p.stat().st_size == 0 for p in (mp4, meta_path, npz_path)):
         raise ValueError("capture artifact missing or empty")
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    done = json.loads(done_path.read_text(encoding="utf-8"))
-    if done.get("format") != "d51-capture-receipt/1" or done.get("name") != row["label"]:
-        raise ValueError("D51 capture receipt identity mismatch")
-    if done.get("checkpoint_sha256") != plan["checkpoint_sha256"] or done.get("recorder_sha256") != plan["recorder_sha256"]:
-        raise ValueError("D51 capture receipt source mismatch")
-    if (done.get("env"), done.get("kind"), done.get("level"), done.get("map_mode")) != (
-        row["env_id"], row["kind"], row["level"], row["map_mode"]
-    ):
-        raise ValueError("D51 capture receipt cell mismatch")
-    if done.get("files") != {name: sha256(mp4.with_name(name)) for name in (
-        "review.mp4", "review.json", "review_feet.npz"
-    )}:
-        raise ValueError("D51 capture receipt file SHA256 mismatch")
+    if done_path.exists():
+        done = json.loads(done_path.read_text(encoding="utf-8"))
+        if done.get("format") != "d51-capture-receipt/1" or done.get("name") != row["label"]:
+            raise ValueError("D51 capture receipt identity mismatch")
+        if done.get("checkpoint_sha256") != plan["checkpoint_sha256"] or done.get("recorder_sha256") != plan["recorder_sha256"]:
+            raise ValueError("D51 capture receipt source mismatch")
+        if (done.get("env"), done.get("kind"), done.get("level"), done.get("map_mode")) != (
+            row["env_id"], row["kind"], row["level"], row["map_mode"]
+        ):
+            raise ValueError("D51 capture receipt cell mismatch")
+        if done.get("files") != {name: sha256(mp4.with_name(name)) for name in (
+            "review.mp4", "review.json", "review_feet.npz"
+        )}:
+            raise ValueError("D51 capture receipt file SHA256 mismatch")
     _video_style().require_approved(meta, "C layer capture")
     if meta.get("checkpoint_sha256") != plan["checkpoint_sha256"] or meta.get("label") != row["label"]:
         raise ValueError("capture checkpoint or label mismatch")
+    if seed is not None and meta.get("seed") != seed:
+        raise ValueError("capture seed mismatch")
     if meta.get("map_modes", {}).get("map_mode", {}).get("requested") != row["map_mode"]:
         raise ValueError("capture policy map mode mismatch")
     chosen = meta.get("selected_environment") or {}
     if (chosen.get("env_id"), chosen.get("kind"), chosen.get("level")) != (row["env_id"], row["kind"], row["level"]):
         raise ValueError("capture selected environment mismatch")
-    if type(meta.get("frames")) is not int or meta["frames"] <= 0 or meta.get("fps") != 25:
+    if (type(meta.get("frames")) is not int or meta["frames"] != 450
+            or meta.get("fps") != 25 or meta.get("duration_s") != 18.0):
         raise ValueError("capture frame count invalid")
     with np.load(npz_path, allow_pickle=False) as data:
         if len(data["t"]) != round(float(meta["duration_s"]) / float(data["dt"])):
@@ -219,11 +201,39 @@ def verify_attempt(mp4: Path, row: dict, plan: dict, *, ffprobe: str) -> tuple[d
     return meta, actual_result(meta, npz_path, row)
 
 
+def _write(path: Path, value: dict) -> None:
+    temp = path.with_name(path.name + ".publishing")
+    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    os.replace(temp, path)
+
+
+def _slot(row: dict) -> str:
+    return f"{row['kind']}_L{row['level']}_{row['map_mode']}"
+
+
+def _summary(out: Path, row: dict) -> dict:
+    slot = _slot(row)
+    receipts = {role: out / "receipts" / (slot + "_" + role + ".json") for role in ROLES}
+    directories = list((out / "attempts" / slot).glob("[0-9][0-9]"))
+    attempts = len(directories)
+    missing = ["성공 없음" if role == "success" else "실패 없음"
+               for role in ROLES if not receipts[role].exists()]
+    incomplete = [str(path) for path in directories if not (path / "closed.json").exists()]
+    state = ("incomplete_attempt_hold" if incomplete else "complete" if not missing else
+             "exhausted" if attempts >= len(row["seeds"]) else "pending")
+    return {"cell": slot, "state": state, "attempts": attempts, "missing": missing,
+            "incomplete": incomplete,
+            "receipts": {role: str(path) for role, path in receipts.items() if path.exists()}}
+
+
 def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe") -> dict:
-    """Run one replay attempt at most. An in-situ capture needs its own recorder receipt."""
+    """Capture one seed for one cell; retain both roles and every attempt."""
     summary = validate_plan(plan)
+    if summary["missing"]:
+        raise ValueError("all 216 C-layer cells must be registered before capture")
+    high_priority_markers = [Path(value) for value in plan["priority_markers"].values()] + high_priority_markers
     if any(path.exists() for path in high_priority_markers):
-        return {"state": "yielded_to_higher_priority", **summary}
+        return {"state": "yielded_to_higher_priority"}
     out.mkdir(parents=True, exist_ok=True)
     lock = out / "c_layer.lock"
     try:
@@ -233,59 +243,81 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
     try:
         os.write(fd, str(os.getpid()).encode())
         os.close(fd)
+        (out / "receipts").mkdir(exist_ok=True)
         for row in plan["jobs"]:
-            slot = f"{row['kind']}_L{row['level']}_{row['map_mode']}_{row['role']}"
-            receipt_path = out / (slot + ".json")
-            failed_path = out / (slot + ".failed.json")
-            if receipt_path.exists():
+            cell = _summary(out, row)
+            if cell["state"] == "incomplete_attempt_hold":
+                return cell
+            if cell["state"] in ("complete", "exhausted"):
+                _write(out / "receipts" / (cell["cell"] + "_summary.json"), cell)
                 continue
             if any(path.exists() for path in high_priority_markers):
-                return {"state": "yielded_to_higher_priority", "slot": slot}
-            if row["capture_provenance"] == "evaluation_in_situ":
-                return {"state": "in_situ_receipt_not_integrated", "slot": slot}
-            attempt = out / "attempts" / slot / str(time.time_ns()) / row["label"]
+                return {"state": "yielded_to_higher_priority", "cell": cell["cell"]}
+            ordinal = cell["attempts"] + 1
+            seed = row["seeds"][ordinal - 1]
+            attempt_root = out / "attempts" / cell["cell"] / f"{ordinal:02d}"
+            if attempt_root.exists():
+                return {"state": "incomplete_attempt_hold", "attempt_dir": str(attempt_root)}
+            attempt = attempt_root / row["label"]
             attempt.mkdir(parents=True)
             mp4 = attempt / "review.mp4"
-            values = {"{mp4}": str(mp4), "{label}": row["label"], "{policy}": json.dumps(row["policy"])}
+            policy = dict(row["policy"], seed=seed)
+            values = {"{mp4}": str(mp4), "{label}": row["label"], "{policy}": json.dumps(policy)}
             argv = [values.get(token, token) for token in row["recorder_argv"]]
-            if argv.count(str(mp4)) != 1 or "--mp4" not in argv:
-                raise ValueError("recorder argv does not target the attempt MP4")
+            _write(attempt_root / "started.json", {"cell": cell["cell"], "ordinal": ordinal,
+                                                   "seed": seed, "checkpoint_sha256": plan["checkpoint_sha256"],
+                                                   "recorder_sha256": plan["recorder_sha256"]})
             try:
-                with (attempt / "child.log").open("wb") as log:
+                preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True, check=False)
+                if preflight.returncode:
+                    raise ValueError("C76 recorder plan-only exit %d: %s" %
+                                     (preflight.returncode, preflight.stderr[-500:]))
+                preview = json.loads(preflight.stdout)
+                if (preview.get("spec", {}).get("seed") != seed
+                        or preview.get("target_frames") != 450
+                        or preview.get("checkpoint_profile", {}).get("checkpoint_sha256") != plan["checkpoint_sha256"]
+                        or preview.get("spec", {}).get("map_mode") != row["map_mode"]):
+                    raise ValueError("C76 recorder preflight differs from registered attempt")
+                with (attempt_root / "child.log").open("wb") as log:
                     child = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT, check=False)
                 if child.returncode:
                     raise ValueError("recorder child exit %d" % child.returncode)
-                meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe)
+                meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
+                evidence = {"format": "foothold-c-layer-attempt/1", "cell": cell["cell"],
+                            "ordinal": ordinal, "seed": seed, "result": own_result,
+                            "files": {name: sha256(mp4.with_name(name)) for name in
+                                      ("review.mp4", "review.json", "review_feet.npz")},
+                            "frames": meta["frames"]}
+                _write(attempt_root / "attempt.json", evidence)
+                receipt_path = out / "receipts" / (cell["cell"] + "_" + own_result + ".json")
+                if not receipt_path.exists():
+                    name = _video_style().video_name(plan["canon_label"], row["kind"], row["level"],
+                                                     plan["iteration"], own_result, segment=row["map_mode"])
+                    target = out / (name + ".mp4")
+                    if target.exists():
+                        raise ValueError("final video name already exists")
+                    temporary = target.with_suffix(".publishing")
+                    shutil.copyfile(mp4, temporary)
+                    os.replace(temporary, target)
+                    _write(receipt_path, {"format": "foothold-c-layer-canonical/1", "canonical": True,
+                                          "cell": cell["cell"], "own_result": own_result, "seed": seed,
+                                          "ordinal": ordinal, "checkpoint_sha256": plan["checkpoint_sha256"],
+                                          "recorder_sha256": plan["recorder_sha256"], "video": str(target),
+                                          "video_sha256": sha256(target), "attempt_dir": str(attempt_root),
+                                          "attempt_sha256": sha256(attempt_root / "attempt.json")})
+                _write(attempt_root / "closed.json", {"state": "validated", "result": own_result})
+                final = _summary(out, row)
+                _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
+                return {**final, "event": "captured"}
             except (OSError, KeyError, ValueError) as exc:
-                failure = {"format": "foothold-c-layer-failed/1", "slot": slot,
-                           "attempt_dir": str(attempt), "reason": str(exc)}
-                failed_path.write_text(json.dumps(failure, ensure_ascii=False, indent=2), encoding="utf-8")
-                return {"state": "capture_failed", **failure}
-            failed_path.unlink(missing_ok=True)
-            style = _video_style()
-            name = style.video_name(plan["canon_label"], row["kind"], row["level"],
-                                    plan["iteration"], own_result, row["selection_result"],
-                                    segment=row["map_mode"])
-            # The separate attempt survives a publication failure; no false success receipt.
-            target = out / (name + ".mp4")
-            if target.exists():
-                raise ValueError("final video name already exists")
-            temporary = target.with_suffix(".publishing")
-            shutil.copyfile(mp4, temporary)
-            os.replace(temporary, target)
-            receipt = {"format": "foothold-c-layer-replay/1", "state": "candidate",
-                       "canonical": False, "slot": slot, "own_result": own_result,
-                       "selection_result": row["selection_result"], "selection_path": row["selection_path"],
-                       "selection_sha256": row["selection_sha256"], "checkpoint_sha256": plan["checkpoint_sha256"],
-                       "video": str(target), "video_sha256": sha256(target), "attempt_dir": str(attempt),
-                       "review_sha256": sha256(mp4.with_name("review.json")),
-                       "physics_sha256": sha256(mp4.with_name("review_feet.npz")),
-                       "frames": meta["frames"]}
-            tmp = receipt_path.with_suffix(".publishing")
-            tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
-            os.replace(tmp, receipt_path)
-            return {"state": "candidate_captured", "slot": slot, "receipt": str(receipt_path)}
-        return {"state": "listed_jobs_have_candidate_receipts", **summary}
+                failure = {"format": "foothold-c-layer-failure/1", "cell": cell["cell"],
+                           "ordinal": ordinal, "seed": seed, "reason": str(exc)}
+                _write(attempt_root / "failure.json", failure)
+                _write(attempt_root / "closed.json", {"state": "failed", "reason": str(exc)})
+                final = _summary(out, row)
+                _write(out / "receipts" / (cell["cell"] + "_summary.json"), final)
+                return {"state": "capture_failed", **failure, "cell_summary": final}
+        return {"state": "all_cells_closed", "cells": 216}
     finally:
         lock.unlink(missing_ok=True)
 
