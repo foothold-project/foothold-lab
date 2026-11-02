@@ -67,6 +67,7 @@ def validate_plan(plan: dict) -> dict:
     recorder = _source(plan["recorder"], plan["recorder_sha256"])
     if b"C_LAYER_SEED_V1" not in recorder.read_bytes():
         raise ValueError("recorder lacks variable-seed C76 profile")
+    _source(plan["composer"], plan["composer_sha256"])
     rows = plan.get("jobs")
     if not isinstance(rows, list):
         raise ValueError("jobs must be a list")
@@ -293,11 +294,36 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if child.returncode:
                     raise ValueError("recorder child exit %d" % child.returncode)
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
+                capture_files = {name: sha256(mp4.with_name(name)) for name in
+                                 ("review.mp4", "review.json", "review_feet.npz")}
+                _write(mp4.with_name("review.done"), {
+                    "format": "d51-capture-receipt/1", "name": row["label"],
+                    "checkpoint_sha256": plan["checkpoint_sha256"],
+                    "recorder_sha256": plan["recorder_sha256"],
+                    "env": row["env_id"], "kind": row["kind"], "level": row["level"],
+                    "map_mode": row["map_mode"], "files": capture_files,
+                })
+                styled = attempt_root / "styled.mp4"
+                compose_argv = [argv[0], plan["composer"], "--capture", str(attempt),
+                                "--segment", "seq", "--speed", "1x", "--out", str(styled)]
+                with (attempt_root / "compose.log").open("wb") as log:
+                    composed = subprocess.run(compose_argv, stdout=log, stderr=subprocess.STDOUT, check=False)
+                if composed.returncode:
+                    raise ValueError("C76 HUD composer exit %d" % composed.returncode)
+                styled_receipt = styled.with_suffix(".json")
+                if not styled.is_file() or not styled_receipt.is_file() or styled.stat().st_size == 0:
+                    raise ValueError("C76 HUD output or receipt missing")
+                composition = json.loads(styled_receipt.read_text(encoding="utf-8"))
+                if (composition.get("sha256") != sha256(styled)
+                        or composition.get("frames") != 450
+                        or composition.get("fps") != 25
+                        or composition.get("checkpoint_sha256") != plan["checkpoint_sha256"]
+                        or composition.get("capture") != str(attempt)):
+                    raise ValueError("C76 HUD receipt differs from validated capture")
                 evidence = {"format": "foothold-c-layer-attempt/1", "cell": cell["cell"],
                             "ordinal": ordinal, "seed": seed, "result": own_result,
-                            "files": {name: sha256(mp4.with_name(name)) for name in
-                                      ("review.mp4", "review.json", "review_feet.npz")},
-                            "frames": meta["frames"]}
+                            "files": capture_files, "frames": meta["frames"],
+                            "styled_sha256": sha256(styled), "composer_sha256": plan["composer_sha256"]}
                 _write(attempt_root / "attempt.json", evidence)
                 receipt_path = out / "receipts" / (cell["cell"] + "_" + own_result + ".json")
                 if not receipt_path.exists():
@@ -307,13 +333,14 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                     if target.exists():
                         raise ValueError("final video name already exists")
                     temporary = target.with_suffix(".publishing")
-                    shutil.copyfile(mp4, temporary)
+                    shutil.copyfile(styled, temporary)
                     os.replace(temporary, target)
                     _write(receipt_path, {"format": "foothold-c-layer-canonical/1", "canonical": True,
                                           "cell": cell["cell"], "own_result": own_result, "seed": seed,
                                           "ordinal": ordinal, "checkpoint_sha256": plan["checkpoint_sha256"],
                                           "recorder_sha256": plan["recorder_sha256"], "video": str(target),
                                           "video_sha256": sha256(target), "attempt_dir": str(attempt_root),
+                                          "composer_sha256": plan["composer_sha256"],
                                           "attempt_sha256": sha256(attempt_root / "attempt.json")})
                 _write(attempt_root / "closed.json", {"state": "validated", "result": own_result})
                 final = _summary(out, row)

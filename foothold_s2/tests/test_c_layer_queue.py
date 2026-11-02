@@ -25,8 +25,10 @@ KINDS = {
 def fixture(tmp_path: Path, *, complete: bool = True):
     checkpoint = tmp_path / "model_8000.pt"
     recorder = tmp_path / "record.py"
+    composer = tmp_path / "compose.py"
     checkpoint.write_bytes(b"checkpoint")
     recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
+    composer.write_bytes(b"# CPU composer fixture\n")
     rows = []
     cells = q.inventory(KINDS) if complete else [("boxes", 2, "eval_gt")]
     for kind, level, mode in cells:
@@ -50,7 +52,8 @@ def fixture(tmp_path: Path, *, complete: bool = True):
             "kinds": KINDS, "checkpoint": str(checkpoint), "checkpoint_sha256": q.sha256(checkpoint),
             "priority_markers": {name: str(tmp_path / (name + ".busy"))
                                  for name in ("training", "evaluation", "a_layer")},
-            "recorder": str(recorder), "recorder_sha256": q.sha256(recorder), "jobs": rows}
+            "recorder": str(recorder), "recorder_sha256": q.sha256(recorder),
+            "composer": str(composer), "composer_sha256": q.sha256(composer), "jobs": rows}
     return plan, rows
 
 
@@ -79,6 +82,15 @@ def fake_capture(plan: dict, outcomes: list[int]):
             preview = {"spec": policy, "target_frames": 450,
                        "checkpoint_profile": {"checkpoint_sha256": plan["checkpoint_sha256"]}}
             return subprocess.CompletedProcess(argv, 0, json.dumps(preview), "")
+        if argv[1] == plan["composer"]:
+            styled = Path(argv[argv.index("--out") + 1])
+            styled.write_bytes(b"composed HUD video")
+            styled.with_suffix(".json").write_text(json.dumps({
+                "sha256": q.sha256(styled), "frames": 450, "fps": 25,
+                "checkpoint_sha256": plan["checkpoint_sha256"],
+                "capture": argv[argv.index("--capture") + 1],
+            }), encoding="utf-8")
+            return subprocess.CompletedProcess(argv, 0)
         calls.append(argv)
         row = plan["jobs"][0]
         mp4 = Path(argv[argv.index("--mp4") + 1])
@@ -169,7 +181,7 @@ def test_four_technical_failures_retry_same_seed_then_measure_first_outcome(tmp_
     seen_seeds = []
 
     def fail_then_succeed(argv, **kwargs):
-        if "--plan-only" in argv or argv[0] == "ffprobe":
+        if "--plan-only" in argv or argv[0] == "ffprobe" or argv[1] == plan["composer"]:
             return good_run(argv, **kwargs)
         seen_seeds.append(json.loads(argv[argv.index("--policy") + 1])["seed"])
         if len(seen_seeds) <= 4:
@@ -190,6 +202,18 @@ def test_four_technical_failures_retry_same_seed_then_measure_first_outcome(tmp_
     assert measured["state"] == "pending" and seen_seeds == [42] * 5
     assert len(captures) == 1
     assert (out / "attempts" / measured["cell"] / "05" / "attempt.json").is_file()
+
+
+def test_canonical_video_comes_from_hud_composer_not_raw_capture(tmp_path, monkeypatch):
+    plan, _ = fixture(tmp_path)
+    run, _calls = fake_capture(plan, [0])
+    monkeypatch.setattr(q.subprocess, "run", run)
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[])
+    receipt = json.loads((out / "receipts" / (result["cell"] + "_success.json")).read_text(encoding="utf-8"))
+    assert Path(receipt["video"]).read_bytes() == b"composed HUD video"
+    assert Path(receipt["attempt_dir"], "styled.mp4").read_bytes() == b"composed HUD video"
+    assert receipt["composer_sha256"] == plan["composer_sha256"]
 
 
 def test_missing_mode_video_never_reports_all_cells_closed(tmp_path, monkeypatch):

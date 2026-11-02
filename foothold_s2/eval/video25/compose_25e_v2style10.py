@@ -123,7 +123,11 @@ def map_tile(grid32x16: np.ndarray, active: bool, cell: int = 11, scale=None) ->
     u8 = np.uint8((norm + 1.0) * 127.5)
     big = cv2.resize(u8, (16 * cell, 32 * cell), interpolation=cv2.INTER_NEAREST)
     col = cv2.applyColorMap(big, cv2.COLORMAP_TURBO)
-    return col if active else (col.astype(np.float32) * 0.45 + 30).astype(np.uint8)  # dimmed, not grey
+    if active:
+        return col
+    grey = cv2.cvtColor(col, cv2.COLOR_BGR2GRAY)
+    muted = np.uint8(grey.astype(np.float32) * 0.55 + 25)
+    return cv2.cvtColor(muted, cv2.COLOR_GRAY2BGR)
 
 
 def cell_of(local_xy) -> tuple[float, float]:
@@ -202,7 +206,7 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
     c0 = float(np.median(np.asarray(gt)[g_ok]))
     common = (c0, max(float(np.percentile(np.abs(np.asarray(gt)[g_ok] - c0), 95)), 0.01))  # same colour scale for all
     for x, (g, active) in zip(tile_xs, tiles):
-        t = map_tile(g, True, cell, common)
+        t = map_tile(g, active, cell, common)
         panel[y0:y0 + t.shape[0], x:x + t.shape[1]] = t
         cv2.rectangle(panel, (x - 1, y0 - 1), (x + t.shape[1], y0 + t.shape[0]),
                       (230, 230, 230) if active else (90, 90, 90), 1)
@@ -298,7 +302,6 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
     band = np.full((360, 1920, 3), (18, 22, 27), np.uint8)
     L, R = BOTTOM_GRAPH_X, 1880
     W = R - L
-    t = float(z["t"][row])
     commands = commands or [
         {"name": name, "start_s": i * duration_s / 4, "duration_s": duration_s / 4}
         for i, name in enumerate(WALK_SEG_NAMES if __import__("os").environ.get("COMPOSE_SEG_NAMES") == "walk" else SEG_NAMES)
@@ -331,7 +334,6 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
         base = np.array(FOOT_BGR[f], np.float32)
         grey = float(base @ np.array([0.114, 0.587, 0.299], np.float32))
         muted = tuple(int(v) for v in (grey + 0.5 * (base - grey)))
-        lit = tuple(int(min(255, v * 1.12)) for v in base)
         r0 = r1 = None
         if on[row]:
             r0 = row
@@ -767,6 +769,18 @@ def capture_frame_contract(meta: dict) -> tuple[int, float, int, list[int]]:
     return expected_frames, duration_s, fps, [int(index) for index in sample_steps]
 
 
+def heading_lateral_at(z, row: int) -> tuple[float, float]:
+    """Episode-relative yaw change (deg) and leftward displacement (m)."""
+    starts, _ends, _falls = episode_rows(z)
+    start = max(index for index in starts if index <= row)
+    yaw0 = yaw_of(z["root_quat_w"][start])
+    yaw = yaw_of(z["root_quat_w"][row])
+    heading_deg = math.degrees(math.atan2(math.sin(yaw - yaw0), math.cos(yaw - yaw0)))
+    delta = np.asarray(z["root_pos_w"][row, :2] - z["root_pos_w"][start, :2], np.float64)
+    lateral_m = -math.sin(yaw0) * float(delta[0]) + math.cos(yaw0) * float(delta[1])
+    return heading_deg, lateral_m
+
+
 def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
     """Replace the recorder's possibly stale map label with the receipt's mode."""
     h = 30
@@ -776,7 +790,11 @@ def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
              f"t={float(z['t'][row]):.2f}s | cmd vx {cmd[0]:+.2f} wz {cmd[2]:+.2f} | "
              f"actual vx {float(z['vx'][row]):+.2f} wz {float(z['wz'][row]):+.2f} | "
              f"policy map: {policy_map_header(meta)}")
-    return text(scene, [((24, 4), label, (255, 255, 255))], 16)
+    scene = text(scene, [((24, 4), label, (255, 255, 255))], 16)
+    heading_deg, lateral_m = heading_lateral_at(z, row)
+    cv2.rectangle(scene, (12, 34), (422, 61), (20, 24, 29), -1)
+    return text(scene, [((20, 38), f"Heading from start {heading_deg:+.1f}°  |  lateral drift {lateral_m:+.2f} m",
+                         (245, 245, 245))], 15)
 
 
 def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
