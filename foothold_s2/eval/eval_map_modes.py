@@ -437,7 +437,7 @@ for mode in args.modes.split(","):
             res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
         res["modes"][mode][cname] = row
         DR.collect(raw, "%s/%s" % (mode, cname), res, row,                              # 켠 모드: 발화 수 · 범위 확인 뒤 점수 행에 dr_scale · dr_fired · dr_push · dr_recovery. off: no-op
-                   arrays={"alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy, "xy": XY.cpu().numpy()})
+                   arrays={"alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy, "wz": wz, "tilt": tilt, "xy": XY.cpu().numpy(), "cmd": list(cmd)})
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
     if args.command_suite in ("extended", "ex40_b3"):

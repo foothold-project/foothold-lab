@@ -64,6 +64,7 @@ PUSH_AT_S = 2.0                                                   # 롤아웃(�
 RECOVERY_BAND_MPS = 0.1                                           # 회복 판정: 몸 좌표 속도가 밀기 전 평균의 이 반지름 안(가정)
 RECOVERY_HOLD_S = 0.2                                             # 회복 판정: 그 안에 연속으로 머무는 시간(가정)
 RECOVERY_PRE_S = 1.0                                              # 밀기 전 기준 속도 · 기준 경로를 재는 길이(가정)
+RECOVERY_BAND_RADPS = 0.2                                         # 회복 판정: 몸 yaw 속도가 명령 wz 의 이 반지름 안(가정)
 NEUTRAL = {"base_com_offset_m": 0.0, "actuator_gains": 1.0, "motor_strength_multiplier": 1.0, PUSH_SAMPLE_KEY: 0.0}
 CELL_DEFINITION = ("D94 DR 켠 평가 칸(11/01) · D125 배율 1.0(11/02): 시동 DR 둘 보존 + 런타임 DR 다섯"
                    "(base_com · actuator_gains · motor_strength · delay_s · push_velocity) 을 배율만큼 켠 W15 지도 모드 평가. "
@@ -181,32 +182,62 @@ def _push_event_record(pos_xy, yaw, dv) -> dict[str, Any]:
             "dv_xy_norm_mps_median": float(norm.median()), "dv_xy_norm_mps_max": float(norm.max())}
 
 
-def recovery_metrics(alive, dones, vx, vy, xy, dt: float, push_step: int | None, *, band_mps: float = RECOVERY_BAND_MPS,
-                     hold_s: float = RECOVERY_HOLD_S, pre_s: float = RECOVERY_PRE_S) -> dict[str, Any]:
-    """밀기 뒤 회복 지표 셋(G18 · 가정 정의 · 1 차는 기록). 배열은 평가 루프의 것 그대로: alive · dones (T, N) bool, vx · vy (T, N) 몸 좌표,
-    xy (T, N, 2) 월드 위치, step k 의 값은 k 번째 env.step 뒤 상태.
+def _first_hold(inside, hold: int):
+    """inside (T, N) bool 에서 env 마다 연속 hold step 동안 참이 되는 첫 시작 index(없으면 −1)."""
+    import numpy as np
 
-    모집단: 밀기 step 전에 한 번도 끝나지(dones) 않은 env. 밀기 전 기준은 [push_step − pre_s, push_step) 의 평균 몸 속도와 월드 평균 속도.
+    found = np.full(inside.shape[1], -1)
+    run = np.zeros(inside.shape[1], dtype=int)
+    for i in range(inside.shape[0]):
+        run = np.where(inside[i], run + 1, 0)
+        hit = (run >= hold) & (found < 0)
+        found[hit] = i - hold + 1
+    return found
+
+
+def recovery_metrics(alive, dones, vx, vy, xy, dt: float, push_step: int | None, *, wz=None, tilt=None, cmd=None,
+                     band_mps: float = RECOVERY_BAND_MPS, band_radps: float = RECOVERY_BAND_RADPS,
+                     hold_s: float = RECOVERY_HOLD_S, pre_s: float = RECOVERY_PRE_S) -> dict[str, Any]:
+    """밀기 칸 지표 넷(G18 · lead 16:30 정본 목록: 쓰러짐 · 최대 몸 기울기 · 경로 이탈 · 명령 속도 회복 시간 · 가정 정의 · 기록 전용).
+
+    배열은 평가 루프의 것 그대로: alive · dones (T, N) bool, vx · vy · wz (T, N) 몸 좌표 속도, tilt (T, N) 몸 기울기 rad,
+    xy (T, N, 2) 월드 위치, cmd = (vx, vy, wz) 명령. step k 의 값은 k 번째 env.step 뒤 상태. wz · tilt · cmd 가 없으면 그 지표는 None.
+
+    모집단: 밀기 step 전에 한 번도 끝나지(dones) 않은 env. 밀기 전 기준은 [push_step − pre_s, push_step) 의 평균.
     쓰러짐: 밀기 step 이후 롤아웃 끝까지 dones 가 한 번이라도 참(처음 쓰러진 시각의 중앙값은 밀기 뒤 경과 초).
+    최대 몸 기울기: 밀기 뒤 살아 있는 step 의 tilt 최대(env 별) 의 중앙값 · 최대, 비교용으로 밀기 전 평균 tilt.
     경로 이탈: 밀기 직전 위치에서 기준 월드 속도로 직진했을 때의 예측 위치와 실제 위치의 거리(살아 있는 step 만) 의 env 별 최대, 그 중앙값 · 최대.
-    회복 시간: 밀기 뒤 몸 속도(vx, vy) 가 기준 속도에서 band_mps 안에 hold_s 동안 연속으로 머문 첫 시각(밀기 뒤 경과 초). 못 머물면 미회복.
+    명령 속도 회복 시간: 밀기 뒤 몸 속도(vx, vy) 가 **명령** 에서 band_mps 안, wz 가 명령 wz 에서 band_radps 안에 hold_s 동안 연속으로 머문 첫 시각
+    (밀기 뒤 경과 초). 못 머물면 미회복. 대안(밀기 전 평균 속도 기준) 도 같이 적는다.
     """
     import numpy as np
 
     alive = np.asarray(alive, dtype=bool)
     dones = np.asarray(dones, dtype=bool)
     vx, vy, xy = np.asarray(vx, dtype=float), np.asarray(vy, dtype=float), np.asarray(xy, dtype=float)
+    wz = None if wz is None else np.asarray(wz, dtype=float)
+    tilt = None if tilt is None else np.asarray(tilt, dtype=float)
     T, N = alive.shape
-    definition = {"band_mps": band_mps, "hold_s": hold_s, "pre_s": pre_s, "population": "envs never done before the push step",
-                  "fell": "any done at or after the push step", "path_deviation": "max distance from straight-line extrapolation of the pre-push mean world velocity (alive steps only)",
-                  "recovery": "first time after the push when body (vx, vy) stays within band_mps of the pre-push mean for hold_s"}
-    if dones.shape != (T, N) or vx.shape != (T, N) or vy.shape != (T, N) or xy.shape != (T, N, 2):
-        raise RuntimeError("회복 지표: 배열 모양이 맞지 않는다 alive %r dones %r vx %r vy %r xy %r" % (alive.shape, dones.shape, vx.shape, vy.shape, xy.shape))
+    definition = {"band_mps": band_mps, "band_radps": band_radps, "hold_s": hold_s, "pre_s": pre_s, "decision_use": "record_only",
+                  "population": "envs never done before the push step",
+                  "fell": "any done at or after the push step",
+                  "tilt_max": "per-env max body tilt (rad) over alive steps after the push; median and max over the population",
+                  "path_deviation": "max distance from straight-line extrapolation of the pre-push mean world velocity (alive steps only)",
+                  "recovery_cmd": "first time after the push when body (vx, vy) stays within band_mps of the command and wz within band_radps for hold_s",
+                  "recovery_pre": "alternative: same test against the pre-push mean body velocity instead of the command"}
+    shapes_ok = dones.shape == (T, N) and vx.shape == (T, N) and vy.shape == (T, N) and xy.shape == (T, N, 2)
+    shapes_ok = shapes_ok and (wz is None or wz.shape == (T, N)) and (tilt is None or tilt.shape == (T, N))
+    if not shapes_ok:
+        raise RuntimeError("회복 지표: 배열 모양이 맞지 않는다 alive %r dones %r vx %r vy %r xy %r wz %r tilt %r"
+                           % (alive.shape, dones.shape, vx.shape, vy.shape, xy.shape, None if wz is None else wz.shape, None if tilt is None else tilt.shape))
+    if cmd is not None and (len(cmd) != 3 or any(not math.isfinite(float(c)) for c in cmd)):
+        raise RuntimeError("회복 지표: 명령이 (vx, vy, wz) 가 아니다: %r" % (cmd,))
     if push_step is None or not 0 < push_step < T:
         return {"defined": False, "reason": "no push inside the rollout or push at step 0 (no pre-push baseline)", "push_step": push_step, "definition": definition}
     pre0 = max(0, push_step - int(round(pre_s / dt)))
     base = ~dones[:push_step].any(0)
     n_base = int(base.sum())
+    post_alive = alive[push_step:]
     post_dones = dones[push_step:]
     fell = base & post_dones.any(0)
     first_fall = np.argmax(post_dones, axis=0)
@@ -215,30 +246,39 @@ def recovery_metrics(alive, dones, vx, vy, xy, dt: float, push_step: int | None,
     t_rel = (np.arange(push_step, T) - (push_step - 1)) * dt
     predicted = xy[push_step - 1][None] + v_pre_w[None] * t_rel[:, None, None]
     deviation = np.linalg.norm(xy[push_step:] - predicted, axis=2)
-    deviation = np.where(alive[push_step:], deviation, np.nan)
-    dev_max = np.nanmax(np.where(np.isnan(deviation).all(0)[None], 0.0, deviation), axis=0)
+    dev_max = np.where(post_alive, deviation, 0.0).max(axis=0)
     vb_pre = np.stack([vx[pre0:push_step].mean(0), vy[pre0:push_step].mean(0)], axis=1)
-    err = np.hypot(vx[push_step:] - vb_pre[:, 0][None], vy[push_step:] - vb_pre[:, 1][None])
-    inside = (err <= band_mps) & alive[push_step:]
     hold = max(1, int(round(hold_s / dt)))
-    recovered_at = np.full(N, -1)
-    run = np.zeros(N, dtype=int)
-    for i in range(inside.shape[0]):
-        run = np.where(inside[i], run + 1, 0)
-        hit = (run >= hold) & (recovered_at < 0)
-        recovered_at[hit] = i - hold + 1
-    recovered = base & (recovered_at >= 0)
-    rec_t = (recovered_at[recovered] + 1) * dt
+    err_pre = np.hypot(vx[push_step:] - vb_pre[:, 0][None], vy[push_step:] - vb_pre[:, 1][None])
+    rec_pre_at = _first_hold((err_pre <= band_mps) & post_alive, hold)
+    rec_pre = base & (rec_pre_at >= 0)
 
     def med(values):
         return float(np.median(values)) if len(values) else None
 
-    return {"defined": True, "push_step": int(push_step), "push_t_s": push_step * dt, "definition": definition,
-            "envs_in_population": n_base,
-            "fell_envs": int(fell.sum()), "fell_fraction": (float(fell.sum()) / n_base) if n_base else None, "fall_time_s_median": med(fall_t),
-            "path_deviation_m_median": med(dev_max[base]), "path_deviation_m_max": float(dev_max[base].max()) if n_base else None,
-            "recovered_envs": int(recovered.sum()), "recovered_fraction": (float(recovered.sum()) / n_base) if n_base else None,
-            "recovery_time_s_median": med(rec_t)}
+    out = {"defined": True, "push_step": int(push_step), "push_t_s": push_step * dt, "definition": definition,
+           "envs_in_population": n_base,
+           "fell_envs": int(fell.sum()), "fell_fraction": (float(fell.sum()) / n_base) if n_base else None, "fall_time_s_median": med(fall_t),
+           "tilt_max_rad_median": None, "tilt_max_rad_max": None, "tilt_pre_mean_rad": None,
+           "path_deviation_m_median": med(dev_max[base]), "path_deviation_m_max": float(dev_max[base].max()) if n_base else None,
+           "command": None if cmd is None else [float(c) for c in cmd],
+           "recovered_envs": None, "recovered_fraction": None, "recovery_time_s_median": None,
+           "recovered_vs_pre_envs": int(rec_pre.sum()), "recovered_vs_pre_fraction": (float(rec_pre.sum()) / n_base) if n_base else None,
+           "recovery_vs_pre_time_s_median": med((rec_pre_at[rec_pre] + 1) * dt)}
+    if tilt is not None:
+        tilt_max = np.where(post_alive, tilt[push_step:], 0.0).max(axis=0)
+        out.update({"tilt_max_rad_median": med(tilt_max[base]), "tilt_max_rad_max": float(tilt_max[base].max()) if n_base else None,
+                    "tilt_pre_mean_rad": float(tilt[pre0:push_step][:, base].mean()) if n_base else None})
+    if cmd is not None:
+        err_cmd = np.hypot(vx[push_step:] - float(cmd[0]), vy[push_step:] - float(cmd[1]))
+        inside = (err_cmd <= band_mps) & post_alive
+        if wz is not None:
+            inside &= np.abs(wz[push_step:] - float(cmd[2])) <= band_radps
+        rec_at = _first_hold(inside, hold)
+        rec = base & (rec_at >= 0)
+        out.update({"recovered_envs": int(rec.sum()), "recovered_fraction": (float(rec.sum()) / n_base) if n_base else None,
+                    "recovery_time_s_median": med((rec_at[rec] + 1) * dt), "recovery_uses_wz": wz is not None})
+    return out
 
 
 def sample_bounds(ranges: dict[str, Any], scale: float) -> dict[str, tuple[float, float]]:
@@ -380,8 +420,9 @@ class DRMode:
                                           "seed": "sha256(eval_seed|rollout key)", "eval_seed": self.eval_seed,
                                           "removed_interval_term": RUNTIME_INTERVAL_TERM,
                                           "training_interval_s": list(table["push_interval_s"]), "reason": PUSH_REASON},
-                        "recovery_definition": {"band_mps": RECOVERY_BAND_MPS, "hold_s": RECOVERY_HOLD_S, "pre_s": RECOVERY_PRE_S},
-                        "env_scale_before_first_reset": None, "readback": {}}
+                        "recovery_definition": {"band_mps": RECOVERY_BAND_MPS, "band_radps": RECOVERY_BAND_RADPS, "hold_s": RECOVERY_HOLD_S, "pre_s": RECOVERY_PRE_S},
+                        "decision_use": "record_only: 밀기 칸 지표는 기록 전용 · DR 유지 판정(ex41 maintenance) 에 쓰지 않는다(lead 16:30)",
+                        "env_scale_before_first_reset": None, "push_cells": {}, "readback": {}}
         return self
 
     @property
@@ -464,7 +505,8 @@ class DRMode:
         summary["push_events"] = rollout["events"]
         recovery = None
         if arrays is not None:
-            recovery = recovery_metrics(arrays["alive"], arrays["dones"], arrays["vx"], arrays["vy"], arrays["xy"], rollout["dt"], rollout["push_step"])
+            recovery = recovery_metrics(arrays["alive"], arrays["dones"], arrays["vx"], arrays["vy"], arrays["xy"], rollout["dt"], rollout["push_step"],
+                                        wz=arrays.get("wz"), tilt=arrays.get("tilt"), cmd=arrays.get("cmd"))
         summary["recovery"] = recovery
         res.setdefault("dr", self._record)["readback"][key] = summary
         push_row = None
@@ -472,6 +514,12 @@ class DRMode:
             ev = rollout["events"][0]
             push_row = {"step": ev["step"], "t_s": ev["t_s"], "seed": ev["seed"], "envs": len(ev["env_ids"]),
                         "dv_xy_norm_mps_median": ev["dv_xy_norm_mps_median"], "dv_xy_norm_mps_max": ev["dv_xy_norm_mps_max"]}
+        cell = {"scale": self.scale, "push": push_row, "fired": checked["fired"], "decision_use": "record_only"}
+        if recovery is not None and recovery.get("defined"):
+            cell.update({k: recovery.get(k) for k in ("envs_in_population", "fell_envs", "fell_fraction", "fall_time_s_median",
+                                                      "tilt_max_rad_median", "tilt_max_rad_max", "path_deviation_m_median", "path_deviation_m_max",
+                                                      "recovered_envs", "recovered_fraction", "recovery_time_s_median", "command")})
+        self._record["push_cells"][key] = cell                                              # 점수 파일의 칸별 숫자 표(lead 16:30 · 기록 전용)
         if row is not None:
             row["dr_scale"] = self.scale
             row["dr_fired"] = checked["fired"]

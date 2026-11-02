@@ -194,7 +194,7 @@ def test_eval_script_keeps_off_path_and_gates_on_path_before_kit():
     assert cmd < src.index('DR.begin(raw, "%s/%s" % (mode, cname), S, args.envs, dt)') < src.index("env.reset()", cmd)   # reset 전에 비운다
     assert src.index("DR.step(raw, k)") < src.index("obs, _r, dones, _x = env.step(a)")                      # env.step 전에 민다
     collect = src.index('DR.collect(raw, "%s/%s" % (mode, cname), res, row,')
-    assert collect < src.index('arrays={"alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy, "xy": XY.cpu().numpy()}') < src.index('print("MAPMODE", mode, cname, json.dumps(row)')
+    assert collect < src.index('arrays={"alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy, "wz": wz, "tilt": tilt, "xy": XY.cpu().numpy(), "cmd": list(cmd)}') < src.index('print("MAPMODE", mode, cname, json.dumps(row)')
     seq = src.index("for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():")
     assert seq < src.index('DR.begin(raw, "%s/seq/%s" % (mode, seq_name), S, args.envs, dt)') < src.index("env.reset()", seq)
     assert src.index('DR.step(raw, sum(seq_row["phase_steps"][:phase_index]) + step)') < src.index("obs, _reward, dones, _extra = env.step(action)")
@@ -215,7 +215,8 @@ def test_on_mode_keeps_startup_events_installs_runtime_dr_removes_interval_push_
     assert dr.record["mode"] == "on" and dr.record["scale"] == 1.0 and dr.record["table_sha256"] == table["sha256"]
     assert dr.record["push_schedule"]["removed_interval_term"] == "ex40_push" and dr.record["push_schedule"]["training_interval_s"] == [10.0, 15.0]
     assert dr.record["push_schedule"]["at_s"] == 2.0 and dr.record["push_schedule"]["eval_seed"] == 42 and dr.eval_seed == 42
-    assert dr.record["recovery_definition"] == {"band_mps": 0.1, "hold_s": 0.2, "pre_s": 1.0}
+    assert dr.record["recovery_definition"] == {"band_mps": 0.1, "band_radps": 0.2, "hold_s": 0.2, "pre_s": 1.0}
+    assert dr.record["decision_use"].startswith("record_only") and dr.record["push_cells"] == {}
     assert "같은 --eval-seed · 다른 잡음 실현" in dr.record["seed_note"]
     assert dr.record["env_scale_before_first_reset"] is None and dr.record["readback"] == {}
     raw = SimpleNamespace(scene=SimpleNamespace(), action_manager=SimpleNamespace())
@@ -324,41 +325,58 @@ def test_begin_clears_samples_and_step_pushes_exactly_once_at_two_seconds():
 
 
 def synthetic_rollout():
-    """답 아는 롤아웃: T 300 · N 4 · dt 0.02 · 밀기 step 100. env0 옆으로 0.5 m 밀렸다 1.0 s 뒤 복귀 · env1 0.4 s 뒤 쓰러짐 ·
-    env2 밀기 전에 끝남(모집단 밖) · env3 속도가 두 배가 되어 회복 안 함."""
+    """답 아는 롤아웃: T 300 · N 4 · dt 0.02 · 밀기 step 100 · 명령 (1, 0, 0). env0 옆으로 0.5 m 밀렸다 1.0 s 뒤 복귀(기울기 최대 0.3) ·
+    env1 0.4 s 뒤 쓰러짐 · env2 밀기 전에 끝남(모집단 밖) · env3 속도가 두 배가 되어 회복 안 함(기울기 0.1). wz 는 env3 만 밀기 뒤 0.5."""
     import numpy as np
 
     T, Nn, dt, p = 300, 4, 0.02, 100
     alive, dones = np.ones((T, Nn), bool), np.zeros((T, Nn), bool)
-    vx, vy, xy = np.ones((T, Nn)), np.zeros((T, Nn)), np.zeros((T, Nn, 2))
+    vx, vy, wz, tilt, xy = np.ones((T, Nn)), np.zeros((T, Nn)), np.zeros((T, Nn)), np.zeros((T, Nn)), np.zeros((T, Nn, 2))
     k = np.arange(T)
     xy[:, :, 0] = k[:, None] * dt
     vy[p:p + 50, 0] = 0.5
     xy[p:p + 50, 0, 1] = np.arange(1, 51) * 0.5 * dt
     xy[p + 50:, 0, 1] = 0.5
+    tilt[p + 10, 0] = 0.3
     dones[p + 20, 1] = True
     alive[p + 20:, 1] = False
     vx[p:, 1] = 0.0
+    tilt[p + 30:, 1] = 1.0                                                              # 죽은 뒤의 큰 값은 안 센다
     dones[50, 2] = True
     alive[50:, 2] = False
     vx[p:, 3] = 2.0
+    wz[p:, 3] = 0.5
+    tilt[p:, 3] = 0.1
     xy[p:, 3, 0] = p * dt + (k[p:] - p) * 2.0 * dt
-    return alive, dones, vx, vy, xy, dt, p
+    return {"alive": alive, "dones": dones, "vx": vx, "vy": vy, "wz": wz, "tilt": tilt, "xy": xy, "cmd": [1.0, 0.0, 0.0]}, dt, p
 
 
 def test_recovery_metrics_on_a_known_rollout():
-    alive, dones, vx, vy, xy, dt, p = synthetic_rollout()
-    out = M.recovery_metrics(alive, dones, vx, vy, xy, dt, p)
+    A, dt, p = synthetic_rollout()
+    out = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=A["cmd"])
     assert out["defined"] and out["push_step"] == 100 and out["push_t_s"] == 2.0 and out["envs_in_population"] == 3
     assert out["fell_envs"] == 1 and out["fell_fraction"] == pytest.approx(1 / 3) and out["fall_time_s_median"] == pytest.approx(0.42)
+    assert out["tilt_max_rad_median"] == pytest.approx(0.1) and out["tilt_max_rad_max"] == pytest.approx(0.3) and out["tilt_pre_mean_rad"] == 0.0
     assert out["path_deviation_m_median"] == pytest.approx(0.5) and out["path_deviation_m_max"] == pytest.approx(3.98)
+    assert out["command"] == [1.0, 0.0, 0.0] and out["recovery_uses_wz"] is True
     assert out["recovered_envs"] == 1 and out["recovered_fraction"] == pytest.approx(1 / 3) and out["recovery_time_s_median"] == pytest.approx(1.02)
-    assert out["definition"]["band_mps"] == 0.1 and out["definition"]["hold_s"] == 0.2
+    assert out["recovered_vs_pre_envs"] == 1 and out["recovery_vs_pre_time_s_median"] == pytest.approx(1.02)   # 밀기 전 평균 = 명령이라 같다
+    assert out["definition"]["band_mps"] == 0.1 and out["definition"]["band_radps"] == 0.2 and out["definition"]["hold_s"] == 0.2 and out["definition"]["decision_use"] == "record_only"
     json.dumps(out, allow_nan=False)
-    assert M.recovery_metrics(alive, dones, vx, vy, xy, dt, None)["defined"] is False
-    assert M.recovery_metrics(alive, dones, vx, vy, xy, dt, 0)["defined"] is False
+    wz_only = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=[2.0, 0.0, 0.5])
+    assert wz_only["recovered_envs"] == 1 and wz_only["recovery_time_s_median"] == pytest.approx(0.02)       # env3 만 명령 (2, 0, 0.5) 에 첫 step 부터 맞다
+    no_wz = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, cmd=[2.0, 0.0, 0.0])
+    assert no_wz["recovery_uses_wz"] is False and no_wz["recovered_envs"] == 1 and no_wz["tilt_max_rad_median"] is None
+    none_cmd = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p)
+    assert none_cmd["recovered_envs"] is None and none_cmd["recovered_vs_pre_envs"] == 1
+    assert M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, None)["defined"] is False
+    assert M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, 0)["defined"] is False
     with pytest.raises(RuntimeError, match="모양"):
-        M.recovery_metrics(alive, dones, vx, vy, xy[:, :, :1], dt, p)
+        M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"][:, :, :1], dt, p)
+    with pytest.raises(RuntimeError, match="모양"):
+        M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, tilt=A["tilt"][:10])
+    with pytest.raises(RuntimeError, match="명령"):
+        M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, cmd=[1.0, 0.0])
 
 
 def test_check_fired_scale_zero_requires_neutral_and_no_delay():
@@ -430,9 +448,13 @@ def test_collect_writes_readback_and_score_row_and_refuses_changed_scale(capsys)
     dr.readback = SimpleNamespace(scale=1.0, summary=lambda: summary(1.0, observed=2))
     dr.begin(raw, "eval_gt/fwd1.0", 300, N, 0.02)
     assert dr.step(raw, 100)
-    alive, dones, vx, vy, xy, dt, p = synthetic_rollout()
+    A, dt, p = synthetic_rollout()
     res, row = {"dr": dr.record}, {"alive_envs_at_end": 60}
-    out = dr.collect(raw, "eval_gt/fwd1.0", res, row, arrays={"alive": alive, "dones": dones, "vx": vx, "vy": vy, "xy": xy})
+    out = dr.collect(raw, "eval_gt/fwd1.0", res, row, arrays=A)
+    cell = res["dr"]["push_cells"]["eval_gt/fwd1.0"]                                      # 점수 파일의 칸별 숫자 표(기록 전용)
+    assert cell["decision_use"] == "record_only" and cell["fell_envs"] == 1 and cell["tilt_max_rad_max"] == pytest.approx(0.3)
+    assert cell["recovery_time_s_median"] == pytest.approx(1.02) and cell["command"] == [1.0, 0.0, 0.0] and cell["push"]["t_s"] == 2.0
+    assert res["dr"]["decision_use"].startswith("record_only")
     assert res["dr"]["readback"]["eval_gt/fwd1.0"] is out and out["scale"] == 1.0
     assert out["rollout"] == {"key": "eval_gt/fwd1.0", "total_steps": 300, "dt": 0.02, "push_step": 100, "push_t_s": 2.0, "expected_pushes": 1,
                               "num_envs": N, "push_seed": M.push_seed(42, "eval_gt/fwd1.0"), "pushed": 1}
