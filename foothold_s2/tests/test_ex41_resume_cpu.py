@@ -20,6 +20,7 @@ from foothold_s2.scripts.ex41_resume import (
     state_digest,
     validate_resume_manifest,
     validate_resume_state,
+    compare_resume_state,
 )
 
 
@@ -166,6 +167,18 @@ def test_cpu_save_then_fresh_process_restore_keeps_all_ex41_state(tmp_path):
     assert restored["iter"] == 10
     assert restored["completed_updates"] == 10
     assert restored["next_update"] == 11
+
+
+def test_resume_state_readback_compares_optimizer_rng_stage_dr_and_adasmpl():
+    expected=_state()
+    assert set(compare_resume_state(expected,copy.deepcopy(expected))) == {
+        "optimizer", "rng", "stage", "dr", "adasmpl"}
+    changed=copy.deepcopy(expected);changed["continuous_curriculum"]["domain_randomization"]["scale"]=0.8
+    with pytest.raises(ValueError,match="readback differs for stage"):
+        compare_resume_state(expected,changed)
+    changed=copy.deepcopy(expected);changed["optimizer_state_dict"]["state"][0]["step"]=torch.tensor(8)
+    with pytest.raises(ValueError,match="readback differs for optimizer"):
+        compare_resume_state(expected,changed)
 
 
 @pytest.mark.parametrize("key,value", [

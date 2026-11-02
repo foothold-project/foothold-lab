@@ -22,7 +22,7 @@ MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
 PHASES = ('map64', *(f'stand_{m}' for m in MODES), 'axis_v2', 'w78_v2')
 
 
-def commands(checkpoint, out, cfg):
+def commands(checkpoint, out, cfg, *, include_w78=True):
     """The EX40 measurement sizes are reused, never its stage verdict rules."""
     common = ['--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
               '--envs', str(cfg['envs'])]
@@ -35,12 +35,13 @@ def commands(checkpoint, out, cfg):
                      [*common, '--mode', mode, '--seconds', str(cfg['stand_seconds']),
                       '--skip-seconds', str(cfg['stand_skip_seconds']),
                       '--contact-n', str(cfg['stand']['contact_force_n']), '--seed', str(cfg['eval_seed'])]))
-    rows += [('axis_v2', 'foothold_s2.eval.eval_map_modes',
-              [*maps, '--axis-v2', '--fixed-level', '2', '--terrain-set', 'default',
-               '--steps', str(cfg['map_steps'])]),
-             ('w78_v2', 'foothold_s2.eval.eval_map_modes',
-              [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
-               '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
+    rows.append(('axis_v2', 'foothold_s2.eval.eval_map_modes',
+                 [*maps, '--axis-v2', '--fixed-level', '2', '--terrain-set', 'default',
+                  '--steps', str(cfg['map_steps'])]))
+    if include_w78:
+        rows.append(('w78_v2', 'foothold_s2.eval.eval_map_modes',
+                     [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
+                      '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default']))
     return [{'name': name, 'argv': [str(ISAAC_PYTHON), '-m', module, *args,
                                   '--out', str(out/name), '--headless', '--device', 'cuda:1',
                                   '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
@@ -72,7 +73,7 @@ def hidden_child(argv, folder, *, env=None, cwd=ROOT):
 
 
 def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-             priority_marker=DEFAULT_MARKER):
+             priority_marker=DEFAULT_MARKER, without_w78=False):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     if not getattr(plan, 'fixed_schedule', None):
@@ -93,7 +94,9 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     row = {'format': 'foothold-ex41-eval-bundle/1', 'state': 'running',
            'checkpoint': str(checkpoint), 'checkpoint_sha256': before,
            'schedule_sha256': plan.effective_sha256, 'parent_sha256': plan.parent_sha256,
-           'source_git_head': head, 'device': 'cuda:1', 'eval_config_sha256': sha256(eval_config), 'steps': {}}
+           'source_git_head': head, 'device': 'cuda:1', 'eval_config_sha256': sha256(eval_config),
+           'evaluation_scope': 'maintenance_26_without_w78' if without_w78 else 'full_bundle',
+           'steps': {}}
     env = dict(os.environ)
     env.pop('CUDA_VISIBLE_DEVICES', None)
     env.update(PYTHONUTF8='1', PYTHONUNBUFFERED='1', PYTHONPATH=str(ROOT),
@@ -108,7 +111,7 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
         row['gpu1_priority_marker'] = {'path': str(Path(priority_marker)), 'state': 'active',
                                        'owner': marker_owner}
         _atomic(out/'eval_receipt.json', row)
-        for phase in commands(checkpoint, out, cfg):
+        for phase in commands(checkpoint, out, cfg, include_w78=not without_w78):
             if phase['name']=='w78_v2' and not w78_available:
                 row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
@@ -120,7 +123,7 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
                 raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
         if sha256(checkpoint) != before: raise ValueError('checkpoint changed during evaluation')
         row['state'] = 'done'  # Maintenance only; CPU scorer verifies all content.
-        row['auxiliary_missing']=[name for name in ('axis_v2','w78_v2')
+        row['auxiliary_missing']=[name for name in (('axis_v2',) if without_w78 else ('axis_v2','w78_v2'))
                                   if row['steps'].get(name,{}).get('state')!='done']
     except Exception as exc:
         row.update(state='failed', reason=f'{type(exc).__name__}: {exc}')
@@ -144,11 +147,17 @@ def main(argv=None):
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--execute', action='store_true')
+    p.add_argument('--without-w78', action='store_true',
+                   help='run maintenance-26 evaluation without auxiliary W78 cells')
     a = p.parse_args(argv)
     if not a.execute:
-        print(json.dumps({'state':'dry', 'commands':commands(a.checkpoint, a.out, config(a.eval_config))}))
+        print(json.dumps({'state':'dry', 'evaluation_scope':
+                          'maintenance_26_without_w78' if a.without_w78 else 'full_bundle',
+                          'commands':commands(a.checkpoint, a.out, config(a.eval_config),
+                                              include_w78=not a.without_w78)}))
         return 0
-    result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config)
+    result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config,
+                      without_w78=a.without_w78)
     print(json.dumps(result, ensure_ascii=True))
     return 0 if result['state'] == 'done' else 5
 

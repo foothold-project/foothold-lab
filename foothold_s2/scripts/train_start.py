@@ -56,6 +56,7 @@ if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
         authorization_snapshot, build_ex41_disk_plan, load_fixed_plan, require_production_authorization,
         validate_ex41_output_directory, validate_rehearsal_request,
+        validate_rehearsal_resume_request,
         verify_m6000_parent,
     )
     from foothold_s2.scripts.ex41_resume import validate_resume_manifest
@@ -64,10 +65,22 @@ if _pre_args.ex41_table:
     if _pre_args.ex41_rehearsal_updates is not None:
         if not _pre_args.ex41_rehearsal_output:
             raise ValueError("EX-41 rehearsal requires --ex41_rehearsal_output")
-        validate_rehearsal_request(_pre_args.ex41_rehearsal_updates,
-                                   _pre_args.ex41_rehearsal_output,
-                                   _pre_args.device or "", _pre_args.headless,
-                                   _pre_args.distributed)
+        if _pre_args.resume_from:
+            rehearsal_run = validate_rehearsal_resume_request(
+                _pre_args.ex41_rehearsal_updates, _pre_args.ex41_rehearsal_output,
+                _pre_args.resume_from, _pre_args.device or "", _pre_args.headless,
+                _pre_args.distributed)
+            EX41_RESUME_PREFLIGHT = validate_resume_manifest(
+                _pre_args.resume_from, rehearsal_run / "manifest.json",
+                plan_sha256=EX41_PLAN.sha256,
+                effective_sha256=EX41_PLAN.effective_sha256,
+                parent_sha256=EX41_PLAN.parent_sha256,
+                log_dir=rehearsal_run, score_dir=_pre_args.ex41_score_dir)
+        else:
+            validate_rehearsal_request(_pre_args.ex41_rehearsal_updates,
+                                       _pre_args.ex41_rehearsal_output,
+                                       _pre_args.device or "", _pre_args.headless,
+                                       _pre_args.distributed)
     elif _pre_args.ex41_rehearsal_output:
         raise ValueError("--ex41_rehearsal_output requires --ex41_rehearsal_updates")
     if _pre_args.ex41_dry_run:
@@ -80,12 +93,12 @@ if _pre_args.ex41_table:
                      else _pre_args.ex41_log_root)
         if not disk_root:
             raise ValueError("EX-41 disk preflight requires --ex41_log_root")
-        if _pre_args.resume_from:
-            raise ValueError("EX-41 resume cannot use the fresh-start --ex41_dry_run path")
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             disk_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
             1 if _pre_args.ex41_rehearsal_updates is not None else EX41_PARENT_RECEIPT["save_interval"],
-            planned_updates=(_pre_args.ex41_rehearsal_updates if _pre_args.ex41_rehearsal_updates is not None
+            planned_updates=((max(0, _pre_args.ex41_rehearsal_updates - EX41_RESUME_PREFLIGHT["completed_updates"])
+                              if EX41_RESUME_PREFLIGHT else _pre_args.ex41_rehearsal_updates)
+                             if _pre_args.ex41_rehearsal_updates is not None
                              else 5000 + 1500))
         print(json.dumps({"state": "dry_run", "task": _pre_args.task,
             "kit_started": False, "gpu_used": False,
@@ -102,15 +115,21 @@ if _pre_args.ex41_table:
             "rehearsal_device": _pre_args.device,
             "production_launch_allowed": False}, sort_keys=True))
         raise SystemExit(0)
-    if _pre_args.ex41_rehearsal_updates is not None and _pre_args.resume_from:
-        raise ValueError("EX-41 rehearsal cannot resume an existing run")
     if not _pre_args.ex41_parent_checkpoint:
         raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
     EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
     if _pre_args.ex41_rehearsal_updates is not None:
+        if EX41_RESUME_PREFLIGHT:
+            if EX41_RESUME_PREFLIGHT["parent_sha256"] != EX41_PARENT_RECEIPT["sha256"]:
+                raise ValueError("EX-41 rehearsal resume parent SHA differs from the pinned m6000 parent")
+            rehearsal_remaining = max(
+                0, _pre_args.ex41_rehearsal_updates - EX41_RESUME_PREFLIGHT["completed_updates"])
+        else:
+            rehearsal_remaining = _pre_args.ex41_rehearsal_updates
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             _pre_args.ex41_rehearsal_output,
-            EX41_PARENT_RECEIPT["checkpoint_size_bytes"], 1, planned_updates=10)
+            EX41_PARENT_RECEIPT["checkpoint_size_bytes"], 1,
+            planned_updates=rehearsal_remaining)
         EX41_AUTHORIZATION = authorization_snapshot(EX41_PLAN)
         EX41_REHEARSAL = True
     else:
@@ -167,7 +186,7 @@ parser.add_argument("--ex41_score_dir", type=str, default=None,
 parser.add_argument("--ex41_dry_run", action="store_true",
                     help="Check EX-41 plan and parser path without starting Kit")
 parser.add_argument("--ex41_rehearsal_updates", type=int,
-                    help="Run the bounded 10-update EX-41 Kit rehearsal only")
+                    help="Fresh rehearsal: 10 updates; existing rehearsal resume: up to 2 more")
 parser.add_argument("--ex41_rehearsal_output", type=str,
                     help="New s2_lab/ex41_rehearsal_YYYYMMDD_HHMMSS output directory")
 parser.add_argument("--ex41_rehearsal_dr_08", action="store_true",
@@ -192,12 +211,20 @@ if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
         or args_cli.ex41_rehearsal_dr_08 != _pre_args.ex41_rehearsal_dr_08):
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
 if EX41_REHEARSAL:
-    from foothold_s2.scripts.ex41_startup import validate_rehearsal_request
+    from foothold_s2.scripts.ex41_startup import (
+        validate_rehearsal_request, validate_rehearsal_resume_request,
+    )
     if args_cli.max_iterations is not None:
         raise ValueError("Use --ex41_rehearsal_updates, not --max_iterations, for rehearsal")
-    validate_rehearsal_request(args_cli.ex41_rehearsal_updates,
-                               args_cli.ex41_rehearsal_output, args_cli.device,
-                               args_cli.headless, args_cli.distributed)
+    if args_cli.resume_from:
+        validate_rehearsal_resume_request(
+            args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
+            args_cli.resume_from, args_cli.device, args_cli.headless,
+            args_cli.distributed)
+    else:
+        validate_rehearsal_request(args_cli.ex41_rehearsal_updates,
+                                   args_cli.ex41_rehearsal_output, args_cli.device,
+                                   args_cli.headless, args_cli.distributed)
 
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
@@ -260,7 +287,8 @@ def main(env_cfg, agent_cfg):
         parent_checkpoint_path = os.path.abspath(args_cli.ex41_parent_checkpoint)
         resume_path = os.path.abspath(args_cli.resume_from) if args_cli.resume_from else None
         agent_cfg.resume = False
-        log_dir = os.path.abspath(args_cli.ex41_log_root) if not EX41_REHEARSAL else None
+        log_dir = (os.path.abspath(args_cli.ex41_rehearsal_output) if EX41_REHEARSAL
+                   else os.path.abspath(args_cli.ex41_log_root))
         if not EX41_REHEARSAL and resume_path is None:
             validate_ex41_output_directory(log_dir)
         if resume_path is not None and os.path.dirname(resume_path) != os.path.abspath(log_dir):
@@ -281,11 +309,17 @@ def main(env_cfg, agent_cfg):
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
     if EX41_REHEARSAL:
-        from foothold_s2.scripts.ex41_startup import validate_rehearsal_request
-
-        log_dir = str(validate_rehearsal_request(
-            args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
-            args_cli.device, args_cli.headless, args_cli.distributed))
+        from foothold_s2.scripts.ex41_startup import (
+            validate_rehearsal_request, validate_rehearsal_resume_request,
+        )
+        if resume_path:
+            log_dir = str(validate_rehearsal_resume_request(
+                args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
+                resume_path, args_cli.device, args_cli.headless, args_cli.distributed))
+        else:
+            log_dir = str(validate_rehearsal_request(
+                args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
+                args_cli.device, args_cli.headless, args_cli.distributed))
     env_cfg.log_dir = log_dir
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞(결정 8: 설정과 실행 인자로 고름)
     ex41_cfg_contract = None
@@ -322,14 +356,25 @@ def main(env_cfg, agent_cfg):
 
         if resume_path is None:
             set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
-            if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:
-                from foothold_s2.scripts.ex41_startup import run_rehearsal_dr_proof
+        else:
+            saved_scale = float(EX41_RESUME_PREFLIGHT["dr_scale"])
+            if not 0.0 <= saved_scale <= 1.0:
+                raise ValueError("EX-41 resume checkpoint DR scale is outside [0,1]")
+            ex41_dr_readback.scale = saved_scale
+            env.unwrapped._ex40_dr_scale = saved_scale
+            # Reapply the saved scale through real reset events. runner.load below
+            # restores checkpoint RNG, stage, optimizer and AdaSmpl after this probe.
+            env.reset()
+            print("EX41_REHEARSAL_RESUME_DR_BOOTSTRAP "
+                  + json.dumps({"scale": saved_scale, "reset_applied": True}, sort_keys=True), flush=True)
+        if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:
+            from foothold_s2.scripts.ex41_startup import run_rehearsal_dr_proof
 
-                ex41_rehearsal_dr_proof = run_rehearsal_dr_proof(
-                    env, ex41_dr_readback, dr_cfg["full_ranges"], log_dir,
-                    EX41_PLAN.sha256, float(dr_cfg["full_ranges"]["delay_s"][1]))
-                print("EX41_REHEARSAL_DR_PROOF "
-                      + json.dumps(ex41_rehearsal_dr_proof, sort_keys=True), flush=True)
+            ex41_rehearsal_dr_proof = run_rehearsal_dr_proof(
+                env, ex41_dr_readback, dr_cfg["full_ranges"], log_dir,
+                EX41_PLAN.sha256, float(dr_cfg["full_ranges"]["delay_s"][1]))
+            print("EX41_REHEARSAL_DR_PROOF "
+                  + json.dumps(ex41_rehearsal_dr_proof, sort_keys=True), flush=True)
         ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
     if resume_path is None and agent_cfg.resume and EX41_PLAN is None:
         resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
@@ -347,8 +392,15 @@ def main(env_cfg, agent_cfg):
 
         train_cfg = configure_ex41_train_cfg(
             train_cfg, EX41_PLAN, parent_checkpoint_path,
-            rehearsal_updates=args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None,
+            rehearsal_updates=(args_cli.ex41_rehearsal_updates
+                               if EX41_REHEARSAL and resume_path is None else None),
             disk_guard=EX41_DISK_RECEIPT)
+        if EX41_REHEARSAL and resume_path is not None:
+            # Rehearsal continuation has a separate strict preflight that
+            # permits only one or two updates beyond its latest saved model.
+            train_cfg["max_iterations"] = args_cli.ex41_rehearsal_updates
+            train_cfg["save_interval"] = 1
+            train_cfg["ex41_rehearsal"] = True
     ex41_first_observation = None
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import capture_first_observation
@@ -368,8 +420,8 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.curriculum.continuous import make_runtime
         from foothold_s2.curriculum.ex41 import apply_runtime_fields
         from foothold_s2.scripts.ex41_resume import (
-            add_resume_envelope, append_resume_segment, install_resume_checkpoint_hooks,
-            validate_resume_state,
+            add_resume_envelope, append_resume_segment,
+            validate_resume_state, compare_resume_state,
         )
 
         score_dir = os.path.abspath(
@@ -395,6 +447,7 @@ def main(env_cfg, agent_cfg):
         print("EX41_COMMAND_SLOT_READBACK " + json.dumps(slot_receipt, sort_keys=True), flush=True)
         ex41_runtime.attach(runner, command_term)
         ex41_runtime.set_stage_changed_hook(partial(apply_runtime_fields, runner))
+        resume_state_comparison = None
         if resume_path is None:
             parent_transfer = runner.load_ex41_parent()
             # EX-41 updates are local to this new run; parent m6000 stays in its receipt.
@@ -404,6 +457,10 @@ def main(env_cfg, agent_cfg):
             print(f"[INFO] EX-41 self-resume from {resume_path}")
             runner.load(resume_path, map_location="cpu")
             restored_state = runner.state_dict()
+            saved_state = torch.load(resume_path, map_location="cpu", weights_only=False)
+            resume_state_comparison = compare_resume_state(saved_state, restored_state)
+            print("EX41_RESUME_STATE_READBACK "
+                  + json.dumps(resume_state_comparison, sort_keys=True), flush=True)
             # State readback is checked before the next rollout. The original
             # saved metadata was checked against the run manifest before Kit.
             add_resume_envelope(restored_state, plan_sha256=EX41_PLAN.sha256,
@@ -437,6 +494,7 @@ def main(env_cfg, agent_cfg):
                 "terrain_levels_sha256": ex41_runtime.state_dict()["terrain_receipt"]["terrain_labels_sha256"],
                 "optimizer_restored": True,
                 "rng_restored": True,
+                "state_group_readback": resume_state_comparison,
             })
             run_manifest.write_manifest(log_dir, manifest)
         if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:
@@ -481,12 +539,13 @@ def main(env_cfg, agent_cfg):
                                          "local_update_origin": 0 if EX41_REHEARSAL else None,
                                          "first_completed_update": 1 if EX41_REHEARSAL else None,
                                          "dr_scale_proof": ex41_rehearsal_dr_proof,
-                                         "dr_scale_08": "미연결 (다음 판)" if EX41_REHEARSAL and not args_cli.ex41_rehearsal_dr_08 else None,
+                                         "dr_scale_08": "not_requested" if EX41_REHEARSAL and not args_cli.ex41_rehearsal_dr_08 else None,
                                          "shadow_loop": False if EX41_REHEARSAL else None,
-                                         "score_evaluation": "미연결" if EX41_REHEARSAL else None,
-                                         "new_process_resume_u5": "미연결" if EX41_REHEARSAL else None,
-                                         "schedule_boundary_0_8": "미연결" if EX41_REHEARSAL else None,
-                                         "score_watch_26_cells_once": "미연결" if EX41_REHEARSAL else None},
+                                         "score_evaluation": "separate_oneoff_after_resume_not_run" if EX41_REHEARSAL else None,
+                                         "new_process_resume_u5": "bounded_resume_enabled_not_run" if EX41_REHEARSAL else None,
+                                         "schedule_boundary_0_8": ("not_requested" if EX41_REHEARSAL and not args_cli.ex41_rehearsal_dr_08
+                                                                   else "forced_reset_readback" if EX41_REHEARSAL else None),
+                                         "score_watch_26_cells_once": "separate_oneoff_ready_not_run" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
                           "disk_preflight": EX41_DISK_RECEIPT,
@@ -536,11 +595,14 @@ def main(env_cfg, agent_cfg):
             "local_update_origin": runner.current_learning_iteration,
             "first_completed_update": runner.current_learning_iteration + 1,
             "save_interval": train_cfg["save_interval"],
-            "new_process_resume_u5": "미연결",
-            "schedule_boundary_0_8": "미연결",
-            "score_watch_26_cells_once": "미연결",
-            "score_evaluation": "미연결",
-            "dr_scale_08": "미연결 (다음 판)" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback",
+            "new_process_resume_u5": ("verified_state_readback" if resume_state_comparison else
+                                       "bounded_resume_enabled_not_run"),
+            "resume_state_groups": resume_state_comparison,
+            "schedule_boundary_0_8": ("not_requested" if not args_cli.ex41_rehearsal_dr_08
+                                      else "forced_reset_readback"),
+            "score_watch_26_cells_once": "separate_oneoff_ready_not_run",
+            "score_evaluation": "separate_oneoff_after_resume_not_run",
+            "dr_scale_08": "not_requested" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback",
             "shadow_loop": False,
         }, sort_keys=True), flush=True)
     if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)

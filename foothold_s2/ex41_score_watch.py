@@ -259,6 +259,31 @@ def candidates(run, plan, *, on_error=None):
     return sorted(found, key=lambda x:x[0])
 
 
+def oneoff_manifest_digest(run, checkpoint):
+    """Verify a completed, explicitly requested non-stride checkpoint."""
+    run = Path(run).resolve(strict=True)
+    cp = Path(checkpoint).resolve(strict=True)
+    match = MODEL.fullmatch(cp.name)
+    if match is None or cp.parent != run:
+        raise ValueError("one-off EX41 checkpoint must be a numbered file in the run directory")
+    iteration = int(match[1])
+    manifest = read(run / "manifest.json")
+    actual = sha256(cp)
+    resume = manifest.get("ex41_resume_checkpoints", {}).get(cp.name)
+    if (manifest.get("schema") != "foothold-manifest/1"
+            or manifest.get("checkpoints", {}).get(cp.name) != actual
+            or type(manifest.get("progress", {}).get("completed_updates")) is not int
+            or manifest["progress"]["completed_updates"] < iteration
+            or not isinstance(resume, dict)
+            or resume.get("checkpoint_sha256") != actual
+            or resume.get("completed_updates") != iteration):
+        raise ValueError("one-off EX41 checkpoint is not SHA-pinned as completed in the manifest")
+    status = read(run / "train_start_status.json")
+    if status.get("state") != "done" or status.get("iter") != manifest["progress"]["completed_updates"]:
+        raise ValueError("one-off checkpoint scoring requires a finished rehearsal run")
+    return iteration, actual
+
+
 def record_final_error(out_root,state,request,exc):
     """Persist and announce a rejected final request without touching its score."""
     try:ref=evidence(request)
@@ -351,7 +376,8 @@ def recover_published_score(score_path, cp, stage, plan, out_root):
 
 
 def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_CONFIG,
-                 execute=False, replay_root=None, w57_root=None, w78_root=None, sleep=time.sleep):
+                 execute=False, replay_root=None, w57_root=None, w78_root=None,
+                 checkpoint=None, sleep=time.sleep):
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     identity = initial_state(run, table, eval_config)
@@ -369,8 +395,14 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
             raise ValueError('prior score changed')
     pending = None
     def reject_final(request,exc):record_final_error(out_root,state,request,exc)
-    for iteration, cp, final_request in candidates(run, plan,on_error=reject_final):
-        pinned = _manifest_digest(run, iteration)
+    requested = None
+    candidate_rows = candidates(run, plan,on_error=reject_final)
+    if checkpoint is not None:
+        requested = oneoff_manifest_digest(run, checkpoint)
+        requested_path = Path(checkpoint).resolve(strict=True)
+        candidate_rows = [(requested[0], requested_path, None)]
+    for iteration, cp, final_request in candidate_rows:
+        pinned = requested[1] if requested and iteration == requested[0] else _manifest_digest(run, iteration)
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
         key = f'{iteration}_{pinned}'
@@ -410,7 +442,11 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         target = out_root/f'model_{iteration}_{pinned[:12]}'
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
-                    'stage_id':stage, 'commands':commands(cp, target/'evaluation', cfg)}
+                    'stage_id':stage,
+                    'evaluation_scope': ('maintenance_26_without_w78' if requested else
+                                         'full_bundle'),
+                    'commands':commands(cp, target/'evaluation', cfg,
+                                        include_w78=not bool(requested))}
         score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
         if score_path.is_file():
             recovered=recover_published_score(score_path,cp,stage,plan,out_root)
@@ -446,6 +482,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if execute and not interrupted:
             argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once', '--checkpoint', str(cp), '--out', str(source),
                     '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()), '--execute']
+            if requested:
+                argv.append('--without-w78')
             child = hidden_child(argv, target/'bundle_child')
         row = collect(cp, stage, source, plan, eval_config,
                       w57_path=(Path(w57_root)/f'model_{iteration}'/'axis_v2.json') if w57_root else None,
@@ -461,7 +499,9 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                 row['components']['evaluation_child'] = f'HOLD rc={child["rc"]}'
                 if row['evaluation_state'] != 'HOLD': row['partial_metrics'] = row['metrics']
                 row.update(evaluation_state='HOLD', metrics={}, maintenance_pass=False)
-        if sha256(cp) != pinned or _manifest_digest(run, iteration) != pinned:
+        final_pin = (oneoff_manifest_digest(run, cp)[1] if requested
+                     else _manifest_digest(run, iteration))
+        if sha256(cp) != pinned or final_pin != pinned:
             raise ValueError('checkpoint changed during scoring; no score published')
         if final_request:
             row['final_request_id'] = read(final_request)['request_id']
@@ -543,6 +583,8 @@ def main(argv=None):
     p.add_argument('--once', action='store_true')
     p.add_argument('--execute', action='store_true')
     p.add_argument('--replay-root', type=Path)
+    p.add_argument('--checkpoint', type=Path,
+                   help='score exactly one completed non-stride checkpoint, without W78 extras')
     p.add_argument('--w57-root', type=Path)
     p.add_argument('--w78-root', type=Path)
     a = p.parse_args(argv)
@@ -556,7 +598,8 @@ def main(argv=None):
         state = read(path) if path.exists() else initial_state(a.run_dir, a.table, a.eval_config)
         while True:
             row = process_once(a.run_dir, a.out_root, a.score_dir, a.table, state, eval_config=a.eval_config,
-                               execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root, w78_root=a.w78_root)
+                               execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root,
+                               w78_root=a.w78_root, checkpoint=a.checkpoint)
             _atomic(path, state)
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0

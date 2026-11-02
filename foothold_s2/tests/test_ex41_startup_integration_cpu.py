@@ -24,6 +24,7 @@ from foothold_s2.scripts.ex41_startup import (
     run_rehearsal_dr_proof,
     validate_rehearsal_dr_samples,
     validate_rehearsal_request,
+    validate_rehearsal_resume_request,
     verify_ex41_start_readback,
     verify_m6000_parent,
     write_ex41_start_readback,
@@ -280,6 +281,31 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
         validate_rehearsal_request(10, output, "cuda:0", True)
 
 
+def test_rehearsal_resume_accepts_only_latest_completed_same_run_model(tmp_path):
+    run = tmp_path / "s2_lab" / "ex41_rehearsal_20261103_003500"
+    run.mkdir(parents=True)
+    checkpoint = run / "model_10.pt"
+    checkpoint.write_bytes(b"known model 10")
+    (run / "manifest.json").write_text(json.dumps({
+        "progress": {"completed_updates": 10},
+        "modes": {"ex41": {"rehearsal": {"enabled": True}}},
+    }), encoding="utf-8")
+    (run / "train_start_status.json").write_text(
+        json.dumps({"state": "done", "iter": 10}), encoding="utf-8")
+
+    assert validate_rehearsal_resume_request(
+        12, run, checkpoint, "cuda:0", True) == run.resolve()
+    with pytest.raises(ValueError, match="one or two new updates"):
+        validate_rehearsal_resume_request(13, run, checkpoint, "cuda:0", True)
+    with pytest.raises(ValueError, match="headless cuda:0"):
+        validate_rehearsal_resume_request(12, run, checkpoint, "cuda:1", True)
+
+    (run / "train_start_status.json").write_text(
+        json.dumps({"state": "starting", "iter": 10}), encoding="utf-8")
+    with pytest.raises(ValueError, match="completed latest checkpoint"):
+        validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
+
+
 def _known_scale_08_dr_row(ranges):
     from foothold_s2.curriculum.ex40_dr import interpolate_range
 
@@ -365,7 +391,7 @@ def test_rehearsal_dr_proof_forces_interval_event_then_restores_half_scale(tmp_p
     assert saved["state"] == "verified" and saved["scale"] == 0.8
 
 
-def test_training_entry_keeps_dr_08_opt_in_and_marks_unconnected_rehearsal_steps():
+def test_training_entry_keeps_dr_08_opt_in_and_marks_rehearsal_followups_explicitly():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
     branch = source[source.index("if resume_path is None:"):source.index("ex41_w86_receipt = attach_runtime")]
     assert "if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:" in branch
@@ -373,10 +399,10 @@ def test_training_entry_keeps_dr_08_opt_in_and_marks_unconnected_rehearsal_steps
     for receipt_field in (
         '"local_update_origin": runner.current_learning_iteration',
         '"first_completed_update": runner.current_learning_iteration + 1',
-        '"new_process_resume_u5": "미연결"',
-        '"schedule_boundary_0_8": "미연결"',
-        '"score_watch_26_cells_once": "미연결"',
-        '"dr_scale_08": "미연결 (다음 판)" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback"',
+        '"new_process_resume_u5": ("verified_state_readback" if resume_state_comparison else',
+        '"schedule_boundary_0_8": ("not_requested" if not args_cli.ex41_rehearsal_dr_08',
+        '"score_watch_26_cells_once": "separate_oneoff_ready_not_run"',
+        '"dr_scale_08": "not_requested" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback"',
         '_pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")',
         'parser.add_argument("--ex41_rehearsal_dr_08", action="store_true"',
     ):

@@ -268,6 +268,39 @@ def state_digest(value: Any) -> str:
     return digest.hexdigest()
 
 
+def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> dict[str, Any]:
+    """Require exact state readback for the U5 continuation-critical groups."""
+    curriculum_key = "continuous_curriculum"
+    saved_curriculum = expected.get(curriculum_key)
+    loaded_curriculum = actual.get(curriculum_key)
+    if not isinstance(saved_curriculum, dict) or not isinstance(loaded_curriculum, dict):
+        raise ValueError("EX-41 resumed W72 stage state is missing")
+    groups = {
+        "optimizer": {key: expected.get(key) for key in (
+            "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
+        "rng": expected.get("rng"),
+        "stage": saved_curriculum,
+        "dr": saved_curriculum.get("domain_randomization"),
+        "adasmpl": expected.get("adasmpl"),
+    }
+    loaded_groups = {
+        "optimizer": {key: actual.get(key) for key in (
+            "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
+        "rng": actual.get("rng"),
+        "stage": loaded_curriculum,
+        "dr": loaded_curriculum.get("domain_randomization"),
+        "adasmpl": actual.get("adasmpl"),
+    }
+    result = {}
+    for name, saved in groups.items():
+        expected_sha = state_digest(saved)
+        actual_sha = state_digest(loaded_groups[name])
+        if expected_sha != actual_sha:
+            raise ValueError(f"EX-41 resume readback differs for {name}")
+        result[name] = {"state": "matched", "sha256": expected_sha}
+    return result
+
+
 def install_resume_checkpoint_hooks(runner, manifest: dict[str, Any], log_dir: str | Path, *,
                                     plan_sha256: str, effective_sha256: str,
                                     parent_sha256: str, write_manifest) -> None:

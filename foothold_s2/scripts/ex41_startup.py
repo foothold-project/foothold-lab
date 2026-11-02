@@ -366,6 +366,38 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
     return path
 
 
+def validate_rehearsal_resume_request(target_updates: int, output_dir: str | Path,
+                                      checkpoint: str | Path, device: str,
+                                      headless: bool, distributed: bool = False) -> Path:
+    """Allow at most two bounded updates in a completed rehearsal run."""
+    if type(target_updates) is not int:
+        raise ValueError("EX-41 rehearsal resume target must be an integer")
+    if device != "cuda:0" or not headless or distributed:
+        raise ValueError("EX-41 rehearsal resume requires headless cuda:0 and one process")
+    run = _require_d_drive(output_dir).resolve(strict=True)
+    if run.parent.name.lower() != "s2_lab" or not re.fullmatch(
+            r"ex41_rehearsal_[0-9]{8}_[0-9]{6}", run.name):
+        raise ValueError("EX-41 rehearsal resume path must be a named s2_lab child")
+    cp = Path(checkpoint).resolve(strict=True)
+    match = re.fullmatch(r"model_([0-9]+)\.pt", cp.name)
+    if cp.parent != run or match is None:
+        raise ValueError("EX-41 rehearsal resume checkpoint must be numbered in the same run")
+    completed = int(match[1])
+    if target_updates <= completed or target_updates > completed + 2:
+        raise ValueError("EX-41 rehearsal resume is limited to one or two new updates")
+    manifest_path = run / "manifest.json"
+    status_path = run / "train_start_status.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    status = json.loads(status_path.read_text(encoding="utf-8-sig"))
+    rehearsal = manifest.get("modes", {}).get("ex41", {}).get("rehearsal", {})
+    if (rehearsal.get("enabled") is not True
+            or manifest.get("progress", {}).get("completed_updates") != completed
+            or status.get("state") != "done"
+            or status.get("iter") != completed):
+        raise ValueError("EX-41 rehearsal resume requires the completed latest checkpoint")
+    return run
+
+
 def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,
                              rehearsal_updates: int | None = None,
                              disk_guard: dict[str, Any] | None = None) -> dict[str, Any]:

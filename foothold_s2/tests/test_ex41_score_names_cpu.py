@@ -30,7 +30,7 @@ def test_noncanonical_or_wrong_hash_score_holds_dr(tmp_path,name):
 
 def test_name_hash_and_actual_checkpoint_are_accepted(tmp_path):
     r,_=fixture(tmp_path); tick(r,751); tick(r,1001)
-    path=score(r,1000,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    path=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
     body=json.loads(path.read_text())
     assert re.fullmatch(r'score_1250_[0-9a-f]{12}\.json',path.name)
     assert path.name==f'score_1250_{body["checkpoint_sha256"][:12]}.json'
