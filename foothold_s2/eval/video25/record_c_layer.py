@@ -1145,6 +1145,14 @@ def _argv_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def configure_capture_launcher(args: argparse.Namespace) -> argparse.Namespace:
+    """Render the C-layer camera offscreen without opening an Isaac GUI."""
+    args.headless = True
+    args.enable_cameras = True
+    args.livestream = 0
+    return args
+
+
 def _source_hashes(repo: Path, experiment: str) -> dict[str, str]:
     files = ["foothold_s2/eval/record_sol23f.py", "foothold_s2/eval/adapters.py",
              "foothold_s2/eval/seq_video.py", "foothold_s2/eval/runtime.py",
@@ -1206,7 +1214,7 @@ def _capture(spec: dict[str, Any]) -> None:
     full_args = parser.parse_args()
     style_record = video_style.resolve_style(full_args, parser)
     video_style.check_label(full_args, parser)
-    full_args.enable_cameras = True
+    configure_capture_launcher(full_args)
     app = AppLauncher(full_args).app
     if app is None:
         raise RuntimeError("Kit application did not start")
@@ -1793,6 +1801,10 @@ def _capture(spec: dict[str, Any]) -> None:
             "physics": {**physics_record, "actual_readback": physics_actual_readback(raw)},
             "segments": [[name, list(command), duration] for name, command, duration in active_commands],
             "frames": frame_count, "fps": full_args.fps, "duration_s": capture_duration,
+            "capture_wall_elapsed_s": round(time.monotonic() - capture_wall_start, 3),
+            "app_launcher": {"headless": full_args.headless,
+                             "enable_cameras": full_args.enable_cameras,
+                             "livestream": full_args.livestream},
             **brightness_summary(brightness_samples), "brightness_sample_count": len(brightness_samples),
             "capture_mode": ("still_probe_not_seq_video_receipt" if full_args.still_probe_at_s is not None
                              else "sequence"),

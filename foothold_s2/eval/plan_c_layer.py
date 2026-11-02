@@ -83,7 +83,8 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
         argv = [str(python), str(recorder), "--policy", "{policy}",
                 "--checkpoint", str(checkpoint), "--label", "{label}",
                 "--scene", "rough" if terrain_set == "fixed64" else "sparse",
-                "--mp4", "{mp4}", "--device", device]
+                "--mp4", "{mp4}", "--device", device,
+                "--headless", "--enable_cameras", "--livestream", "0"]
         rows.append({"kind": kind, "level": level, "map_mode": mode,
                      "env_id": env_id, "label": label, "seeds": list(CAPTURE_SEEDS),
                      "policy": policy, "recorder_argv": argv})
