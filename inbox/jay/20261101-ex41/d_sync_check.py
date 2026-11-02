@@ -1,4 +1,4 @@
-"""D129~D154 결정이 EX-41 설계 §13 표와 그 표가 가리키는 문서에 들어갔는지 대조한다.
+"""D129~D162 결정이 EX-41 설계 §13 표와 그 표가 가리키는 문서에 들어갔는지 대조한다.
 
 사용: python -X utf8 d_sync_check.py [WORKLIST.md] [DESIGN-EX41-STAGE2-draft.md] [첫 D] [끝 D]
 - WORKLIST 의 「- D1xx 」 행(범위 안) 과 설계 §13 표의 D 행이 같은 집합이어야 한다.
@@ -15,7 +15,7 @@ here = Path(__file__).resolve().parent
 wl = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("C:/mai/wt/foothold-lab/view-latest/inbox/jay/20261028-plan/WORKLIST.md")
 design = Path(sys.argv[2]) if len(sys.argv) > 2 else here / "DESIGN-EX41-STAGE2-draft.md"
 lo = int(sys.argv[3]) if len(sys.argv) > 3 else 129
-hi = int(sys.argv[4]) if len(sys.argv) > 4 else 154
+hi = int(sys.argv[4]) if len(sys.argv) > 4 else 162
 for p in (wl, design):
     if not p.is_file():
         print("없음:", p)
@@ -47,7 +47,7 @@ for line in table.splitlines():
 ok(set(rows) == wl_ids, f"표 행 {sorted(rows)} = WORKLIST 행 (빠짐 {sorted(wl_ids - set(rows))} · 남음 {sorted(set(rows) - wl_ids)})")
 
 docs_checked = {design}
-folders = [design.parent, design.parent.parent / "20261102-ex42"]
+folders = [design.parent, design.parent.parent / "20261102-ex42", design.parent.parent / "20261101-app"]
 for d, (place, others) in sorted(rows.items()):
     if not place.startswith("없음"):
         ok(re.search(rf"\b{d}\b", body) is not None, f"{d} 설계 본문({place})")
