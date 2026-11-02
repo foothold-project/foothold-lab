@@ -372,7 +372,7 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
 def validate_rehearsal_resume_request(target_updates: int, output_dir: str | Path,
                                       checkpoint: str | Path, device: str,
                                       headless: bool, distributed: bool = False) -> Path:
-    """Allow at most two bounded updates in a completed rehearsal run."""
+    """Allow at most two updates from a done run or a proven dead failed attempt."""
     if type(target_updates) is not int:
         raise ValueError("EX-41 rehearsal resume target must be an integer")
     if device != "cuda:0" or not headless or distributed:
@@ -394,11 +394,60 @@ def validate_rehearsal_resume_request(target_updates: int, output_dir: str | Pat
     status = json.loads(status_path.read_text(encoding="utf-8-sig"))
     rehearsal = manifest.get("modes", {}).get("ex41", {}).get("rehearsal", {})
     if (rehearsal.get("enabled") is not True
-            or manifest.get("progress", {}).get("completed_updates") != completed
-            or status.get("state") != "done"
-            or status.get("iter") != completed):
+            or manifest.get("progress", {}).get("completed_updates") != completed):
         raise ValueError("EX-41 rehearsal resume requires the completed latest checkpoint")
+    state = status.get("state")
+    if state == "done":
+        if status.get("iter") != completed:
+            raise ValueError("EX-41 rehearsal done status differs from checkpoint update")
+        return run
+    if state not in ("starting", "running", "failed"):
+        raise ValueError("EX-41 rehearsal retry requires a completed or failed attempt")
+    status_iteration = status.get("iter")
+    if status_iteration is not None and status_iteration > completed:
+        raise ValueError("EX-41 failed attempt advanced beyond the latest checkpoint")
+    pid = status.get("pid")
+    if type(pid) is not int or _process_is_alive(pid):
+        raise ValueError("EX-41 failed rehearsal process is still alive or has no PID")
+    alerts_path = run / "ex41_reports" / "alerts.jsonl"
+    try:
+        alert_rows = [json.loads(line) for line in alerts_path.read_text(encoding="utf-8-sig").splitlines()
+                      if line.strip()]
+    except (OSError, ValueError) as exc:
+        raise ValueError("EX-41 failed rehearsal has no readable failure receipt") from exc
+    if not any(row.get("kind") in ("fatal_training_fault", "nonzero_process_exit")
+               and (row.get("kind") == "fatal_training_fault" or
+                    type(row.get("rc")) is int and row["rc"] != 0)
+               for row in alert_rows):
+        raise ValueError("EX-41 failed rehearsal has no nonzero failure alert")
     return run
+
+
+def _process_is_alive(pid: int) -> bool:
+    """Conservatively reject a retry while the recorded trainer PID exists."""
+    if type(pid) is not int or pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+        kernel.OpenProcess.restype = ctypes.c_void_p
+        kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+        kernel.WaitForSingleObject.restype = ctypes.c_uint32
+        kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+        handle = kernel.OpenProcess(0x00100000, 0, pid)  # SYNCHRONIZE
+        if not handle:
+            return False
+        try:
+            return kernel.WaitForSingleObject(handle, 0) == 0x00000102  # WAIT_TIMEOUT
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
 
 
 def install_end_by_warning_watch(runtime: Any, run_dir: str | Path, plan,
@@ -841,7 +890,22 @@ def run_rehearsal_dr_proof(env: Any, dr_runtime: Any, ranges: dict[str, Any],
     raw = getattr(env, "unwrapped", env)
     target = Path(output_dir) / "ex41_dr_scale_08_readback.json"
     if target.exists():
-        raise ValueError("EX-41 rehearsal DR proof output already exists")
+        try:
+            prior = json.loads(target.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError) as exc:
+            raise ValueError("EX-41 existing DR proof receipt is unreadable") from exc
+        if (prior.get("format") != "foothold-ex41-dr-scale-proof/1"
+                or prior.get("state") != "verified"
+                or prior.get("plan_sha256") != plan_sha256
+                or prior.get("scale") != 0.8
+                or prior.get("reset_forced") is not True
+                or prior.get("restored_scale") != 0.5
+                or prior.get("interval_elapsed_s") != 15.0):
+            raise ValueError("EX-41 existing DR proof receipt is not a reusable verified 0.8 proof")
+        checked = validate_rehearsal_dr_samples(prior.get("runtime_readback"), ranges, 0.8)
+        if prior.get("range_check") != json.loads(json.dumps(checked, allow_nan=False)):
+            raise ValueError("EX-41 existing DR proof range receipt differs from its readback")
+        return prior
     if getattr(raw, "_ex41_initial_dr_scale_applied", None) is None:
         raw._ex40_dr_scale = 0.5
         env.reset()

@@ -11,6 +11,7 @@ import gymnasium as gym
 import pytest
 import torch
 
+import foothold_s2.scripts.ex41_startup as ex41_startup
 from foothold_s2.curriculum.ex41_fixed import baseline_counts
 from foothold_s2.scripts.ex41_startup import (
     attach_ex41_stand_runtime_data,
@@ -307,7 +308,37 @@ def test_rehearsal_resume_accepts_only_latest_completed_same_run_model(tmp_path)
 
     (run / "train_start_status.json").write_text(
         json.dumps({"state": "starting", "iter": 10}), encoding="utf-8")
-    with pytest.raises(ValueError, match="completed latest checkpoint"):
+    with pytest.raises(ValueError, match="still alive or has no PID"):
+        validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
+
+
+def test_rehearsal_resume_retry_requires_failure_receipt_and_dead_process(tmp_path, monkeypatch):
+    run = tmp_path / "s2_lab" / "ex41_rehearsal_20261103_003600"
+    run.mkdir(parents=True)
+    checkpoint = run / "model_10.pt"
+    checkpoint.write_bytes(b"known model 10")
+    (run / "manifest.json").write_text(json.dumps({
+        "progress": {"completed_updates": 10},
+        "modes": {"ex41": {"rehearsal": {"enabled": True}}},
+    }), encoding="utf-8")
+    (run / "train_start_status.json").write_text(
+        json.dumps({"state": "failed", "iter": 10, "pid": 991234}), encoding="utf-8")
+    alerts = run / "ex41_reports" / "alerts.jsonl"
+    alerts.parent.mkdir()
+    alerts.write_text(json.dumps({"kind": "nonzero_process_exit", "rc": 1}) + "\n",
+                      encoding="utf-8")
+
+    monkeypatch.setattr(ex41_startup, "_process_is_alive", lambda pid: False)
+    assert validate_rehearsal_resume_request(
+        12, run, checkpoint, "cuda:0", True) == run.resolve()
+
+    monkeypatch.setattr(ex41_startup, "_process_is_alive", lambda pid: True)
+    with pytest.raises(ValueError, match="still alive"):
+        validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
+
+    monkeypatch.setattr(ex41_startup, "_process_is_alive", lambda pid: False)
+    alerts.write_text("", encoding="utf-8")
+    with pytest.raises(ValueError, match="failure alert"):
         validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
 
 
@@ -420,6 +451,9 @@ def test_rehearsal_dr_proof_forces_interval_event_then_restores_half_scale(tmp_p
     assert env._ex40_dr_scale == dr.scale == 0.5
     saved = json.loads((tmp_path / "ex41_dr_scale_08_readback.json").read_text(encoding="utf-8"))
     assert saved["state"] == "verified" and saved["scale"] == 0.8
+    repeated = run_rehearsal_dr_proof(env, dr, ranges, tmp_path, plan.sha256, 0.015)
+    assert repeated == json.loads(json.dumps(result, allow_nan=False))
+    assert env.resets == 3
 
 
 def test_training_entry_keeps_dr_08_opt_in_and_marks_rehearsal_followups_explicitly():

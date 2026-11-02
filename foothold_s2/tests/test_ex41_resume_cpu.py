@@ -151,6 +151,12 @@ def test_cpu_save_then_fresh_process_restore_keeps_all_ex41_state(tmp_path):
                                          effective_sha256=EFFECTIVE, parent_sha256=PARENT)
     assert preflight["completed_updates"] == 10
     assert preflight["next_update"] == 11
+    assert preflight["segment_index"] == 1
+    saved_state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    saved_readback = validate_resume_state(saved_state, plan_sha256=PLAN,
+                                           effective_sha256=EFFECTIVE,
+                                           parent_sha256=PARENT)
+    assert saved_readback["segment_index"] == 0
     code = (
         "import json,sys,torch; "
         "from foothold_s2.scripts.ex41_resume import validate_resume_state,state_digest; "
@@ -171,14 +177,35 @@ def test_cpu_save_then_fresh_process_restore_keeps_all_ex41_state(tmp_path):
 
 def test_resume_state_readback_compares_optimizer_rng_stage_dr_and_adasmpl():
     expected=_state()
-    assert set(compare_resume_state(expected,copy.deepcopy(expected))) == {
-        "optimizer", "rng", "stage", "dr", "adasmpl"}
-    changed=copy.deepcopy(expected);changed["continuous_curriculum"]["domain_randomization"]["scale"]=0.8
+    restored = copy.deepcopy(expected)
+    restored["continuous_curriculum"]["segment_index"] = 1
+    assert set(compare_resume_state(expected,restored)) == {
+        "optimizer", "rng", "stage", "dr", "adasmpl", "segment_index"}
+    changed=copy.deepcopy(restored);changed["continuous_curriculum"]["domain_randomization"]["scale"]=0.8
     with pytest.raises(ValueError,match="readback differs for stage"):
         compare_resume_state(expected,changed)
-    changed=copy.deepcopy(expected);changed["optimizer_state_dict"]["state"][0]["step"]=torch.tensor(8)
-    with pytest.raises(ValueError,match="readback differs for optimizer"):
-        compare_resume_state(expected,changed)
+
+
+def test_resume_stage_allows_only_the_explicit_next_segment_transition():
+    expected = _state()
+    expected["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": 10, "path": "D:/run/model_10.pt", "sha256": "a" * 64}
+    restored = copy.deepcopy(expected)
+    restored["continuous_curriculum"]["segment_index"] = 1
+    restored["continuous_curriculum"]["last_checkpoint"]["sha256"] = "b" * 64
+    result = compare_resume_state(expected, restored)
+    assert result["segment_index"] == {
+        "state": "advanced_one_segment", "saved": 0, "restored": 1}
+    assert result["checkpoint_reference"]["sha256"] == "b" * 64
+
+    restored["continuous_curriculum"]["segment_index"] = 2
+    with pytest.raises(ValueError, match="segment did not advance exactly once"):
+        compare_resume_state(expected, restored)
+
+    restored["continuous_curriculum"]["segment_index"] = 1
+    restored["continuous_curriculum"]["active"] = 1
+    with pytest.raises(ValueError, match="readback differs for stage"):
+        compare_resume_state(expected, restored)
 
 
 @pytest.mark.parametrize("key,value", [

@@ -460,6 +460,11 @@ def main(env_cfg, agent_cfg):
             restored_state = runner.state_dict()
             saved_state = torch.load(resume_path, map_location="cpu", weights_only=False)
             resume_state_comparison = compare_resume_state(saved_state, restored_state)
+            checkpoint_reference = resume_state_comparison.get("checkpoint_reference")
+            if checkpoint_reference is not None and (
+                    checkpoint_reference.get("path") != os.path.abspath(resume_path)
+                    or checkpoint_reference.get("sha256") != EX41_RESUME_PREFLIGHT["checkpoint_sha256"]):
+                raise ValueError("EX-41 resumed checkpoint stage reference differs from the manifest-pinned file")
             print("EX41_RESUME_STATE_READBACK "
                   + json.dumps(resume_state_comparison, sort_keys=True), flush=True)
             # State readback is checked before the next rollout. The original
@@ -663,6 +668,17 @@ if __name__ == "__main__":
         code = 0 if e.code in (None, 0) else 1
         if code:
             _record_ex41_process_alert("nonzero_process_exit", rc=code)
+            detail = {
+                "state": "failed",
+                "exit_code": code,
+                "system_exit_code": str(e.code),
+                "iter": (read_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR")) or {}).get("iter"),
+                "pid": os.getpid(),
+                "time": datetime.now().astimezone().isoformat(),
+                "traceback": traceback.format_exc(),
+            }
+            write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), detail)
+            print("EX41_NONZERO_SYSTEM_EXIT " + json.dumps(detail, sort_keys=True), flush=True)
     except BaseException as exc:
         _record_ex41_process_alert("fatal_training_fault", error=exc)
         write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})

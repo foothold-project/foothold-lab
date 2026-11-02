@@ -228,7 +228,9 @@ def validate_resume_state(state: dict[str, Any], *, plan_sha256: str,
         "iteration": iteration,
         "completed_updates": iteration,
         "next_update": iteration + 1,
-        "segment_index": curriculum["segment_index"] + 1,
+        # A saved checkpoint carries its own segment index. At runtime the
+        # loader has already advanced the live curriculum before this readback.
+        "segment_index": curriculum["segment_index"],
         "last_valid_boundary": boundary,
         "dr_scale": float(dr["scale"]),
         "fixed_clock": dict(clock),
@@ -275,11 +277,48 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> di
     loaded_curriculum = actual.get(curriculum_key)
     if not isinstance(saved_curriculum, dict) or not isinstance(loaded_curriculum, dict):
         raise ValueError("EX-41 resumed W72 stage state is missing")
+    saved_segment = saved_curriculum.get("segment_index")
+    loaded_segment = loaded_curriculum.get("segment_index")
+    if (type(saved_segment) is not int or type(loaded_segment) is not int
+            or loaded_segment != saved_segment + 1):
+        raise ValueError("EX-41 resume stage segment did not advance exactly once")
+    # Starting a new process is a new auditable segment. The loader must
+    # advance this counter; every other saved stage field remains byte-stable.
+    saved_stage = {key: value for key, value in saved_curriculum.items()
+                   if key != "segment_index"}
+    loaded_stage = {key: value for key, value in loaded_curriculum.items()
+                    if key != "segment_index"}
+    saved_checkpoint = saved_stage.get("last_checkpoint")
+    loaded_checkpoint = loaded_stage.get("last_checkpoint")
+    checkpoint_reference = None
+    if saved_checkpoint is not None or loaded_checkpoint is not None:
+        if not isinstance(saved_checkpoint, dict) or not isinstance(loaded_checkpoint, dict):
+            raise ValueError("EX-41 resume checkpoint reference is missing")
+        iteration = expected.get("iter")
+        checkpoint_sha = loaded_checkpoint.get("sha256")
+        if (saved_checkpoint.get("iteration") != iteration
+                or loaded_checkpoint.get("iteration") != iteration
+                or saved_checkpoint.get("path") != loaded_checkpoint.get("path")
+                or not isinstance(checkpoint_sha, str)
+                or len(checkpoint_sha) != 64
+                or any(ch not in "0123456789abcdef" for ch in checkpoint_sha.lower())):
+            raise ValueError("EX-41 resumed checkpoint reference differs from its saved iteration")
+        # on_resume_checkpoint replaces the payload's pre-save SHA with the
+        # actual final file SHA. The outer manifest preflight pins that SHA.
+        saved_checkpoint = {key: value for key, value in saved_checkpoint.items()
+                            if key != "sha256"}
+        loaded_checkpoint = {key: value for key, value in loaded_checkpoint.items()
+                            if key != "sha256"}
+        saved_stage["last_checkpoint"] = saved_checkpoint
+        loaded_stage["last_checkpoint"] = loaded_checkpoint
+        checkpoint_reference = {"iteration": iteration,
+                                "path": loaded_checkpoint["path"],
+                                "sha256": checkpoint_sha}
     groups = {
         "optimizer": {key: expected.get(key) for key in (
             "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
         "rng": expected.get("rng"),
-        "stage": saved_curriculum,
+        "stage": saved_stage,
         "dr": saved_curriculum.get("domain_randomization"),
         "adasmpl": expected.get("adasmpl"),
     }
@@ -287,7 +326,7 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> di
         "optimizer": {key: actual.get(key) for key in (
             "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
         "rng": actual.get("rng"),
-        "stage": loaded_curriculum,
+        "stage": loaded_stage,
         "dr": loaded_curriculum.get("domain_randomization"),
         "adasmpl": actual.get("adasmpl"),
     }
@@ -296,8 +335,21 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> di
         expected_sha = state_digest(saved)
         actual_sha = state_digest(loaded_groups[name])
         if expected_sha != actual_sha:
+            if name == "stage":
+                before = saved
+                after = loaded_groups[name]
+                differing = sorted(key for key in set(before) | set(after)
+                                   if state_digest(before.get(key)) != state_digest(after.get(key)))
+                raise ValueError(f"EX-41 resume readback differs for stage fields: {differing}")
             raise ValueError(f"EX-41 resume readback differs for {name}")
         result[name] = {"state": "matched", "sha256": expected_sha}
+    result["segment_index"] = {
+        "state": "advanced_one_segment",
+        "saved": saved_segment,
+        "restored": loaded_segment,
+    }
+    if checkpoint_reference is not None:
+        result["checkpoint_reference"] = checkpoint_reference
     return result
 
 
