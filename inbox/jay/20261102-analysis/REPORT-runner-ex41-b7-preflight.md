@@ -16,7 +16,7 @@
 
 ## 확인된 자료
 
-부모 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_7500.pt`는 SHA256 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`이다. 같은 폴더 manifest의 `checkpoints.model_7500.pt` SHA가 일치하고 `progress.completed_updates`는 7801이다. 별도 `train_start_status.json` readback은 `running`, iter 7810이었다. 두 파일의 관찰 시각은 별도이므로 차이의 원인은 추정하지 않는다. m7500 체크포인트 바이트와 manifest SHA 대조는 통과했다.
+부모 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_7500.pt`는 SHA256 `3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368`이다. 첫 manifest readback은 `progress.completed_updates=7801`, 별도 `train_start_status.json`은 `running`, iter 7810이었다. 최종 dry CLI readback은 manifest progress 7951이며, `checkpoints.model_7500.pt` SHA가 여전히 파일과 일치했다. 관찰 시점이 다르므로 진행값 차이의 원인은 추정하지 않는다.
 
 환경 고정 지시 뒤 `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe`에서 직접 API를 확인했다. `rsl-rl-lib` 3.1.2, 모듈 경로 `C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/rsl_rl/__init__.py`; PPO 생성자에 `storage` 인자가 없고 `init_storage`가 있다. 앞서 `isaac311-moects`로 실행한 CPU 결과는 새 기준에 맞지 않아 검증 근거로 사용하지 않는다.
 
@@ -30,4 +30,4 @@
 
 고정 인터페이스 `8e0dc7a8`의 factory와 runtime 구현은 현재 `NotImplementedError` placeholder이다. 따라서 EX-41 runtime, EX-41 score watcher, shadow/stage loop가 사용할 정확한 score schema는 아직 없다. EX-40 watcher를 EX-41 결과에 연결하면 잘못된 판정 경로가 되므로 연결하지 않았다. Playlist 생성기만 준비되어 있고 단계 종료 시 호출하는 연결도 runtime/score schema 뒤에 남아 있다.
 
-고정 실행 후보 `C:/mai/wt/foothold-lab/runner-ex41-b7-fixed`의 detached·clean 검사는 통과했다. 실제 train entrypoint 전체 실행, task/environment import, Kit smoke, 첫 update는 미확인이다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
+고정 실행 후보 `C:/mai/wt/foothold-lab/runner-ex41-b7-fixed`는 최종 코드 HEAD에서 detached·clean 검사와 dry CLI를 통과했다. 실제 train entrypoint 전체 실행, task/environment import, Kit smoke, 첫 update는 미확인이다. 이번 작업에서는 GPU, Kit, 학습을 시작하지 않았고 live EX-40 파일·원장·프로세스를 수정하거나 종료하지 않았다.
