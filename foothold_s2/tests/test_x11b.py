@@ -342,6 +342,7 @@ def test_m1_file_changes_detect_missing_added_and_changed(monkeypatch, tmp_path)
     other = sorted(m["files"]["imported_sha256"])[1]
 
     monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {n: s for n, s in real.items() if n != victim})
+    monkeypatch.setattr(mf, "_module_source_path", lambda _name: None)
     assert mf.file_changes(m)["missing"] == [victim]                                    # old 에만 있는 모듈 소실
 
     monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {**real, "foothold_s2.brand_new": "f" * 64})
@@ -350,6 +351,39 @@ def test_m1_file_changes_detect_missing_added_and_changed(monkeypatch, tmp_path)
 
     monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {**real, other: "0" * 64})
     assert mf.file_changes(m)["changed"] == [other]
+
+
+def test_m1_file_changes_hashes_recorded_source_when_module_is_not_imported(monkeypatch, tmp_path):
+    source = tmp_path / "ex41_transfer.py"
+    source.write_text("value = 'same source'\n", encoding="utf-8")
+    module = "foothold_s2.runners.ex41_transfer"
+    expected = mf.sha256_file(str(source))
+    manifest = {"files": {"imported_sha256": {module: expected}, "added_after_start": {}}}
+    monkeypatch.setattr(mf, "imported_files", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        mf, "_module_source_path",
+        lambda name: str(source) if name == module and source.is_file() else None,
+        raising=False,
+    )
+
+    unchanged = mf.file_changes(manifest)
+    assert unchanged == {"changed": [], "missing": [], "added": {}}
+
+    source.write_text("value = 'changed source'\n", encoding="utf-8")
+    changed = mf.file_changes(manifest)
+    assert changed["changed"] == [module] and changed["missing"] == []
+
+    source.unlink()
+    missing = mf.file_changes(manifest)
+    assert missing["missing"] == [module] and missing["changed"] == []
+
+
+def test_m1_unimported_ex41_transfer_resolves_to_real_source(monkeypatch):
+    module = "foothold_s2.runners.ex41_transfer"
+    monkeypatch.delitem(__import__("sys").modules, module, raising=False)
+    source = mf._module_source_path(module)
+    assert source is not None
+    assert os.path.samefile(source, os.path.join(REPO, "foothold_s2", "runners", "ex41_transfer.py"))
 
 
 def test_m1_runner_checks_code_at_latest_saves_too_and_missing_is_invalid(tmp_path, monkeypatch):
@@ -361,6 +395,7 @@ def test_m1_runner_checks_code_at_latest_saves_too_and_missing_is_invalid(tmp_pa
     victim = sorted(m["files"]["imported_sha256"])[0]
     real = mf.imported_files()
     monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {n: s for n, s in real.items() if n != victim})
+    monkeypatch.setattr(mf, "_module_source_path", lambda _name: None)
 
     with pytest.raises(RuntimeError, match="소비 코드가 바뀜"):
         r.learn(1)

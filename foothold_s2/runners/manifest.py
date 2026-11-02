@@ -10,6 +10,7 @@ cli 인자 · 패키지 버전 · 모드(est mask · critic · clip · z/action 
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -92,6 +93,22 @@ def imported_files(prefixes=WATCH_PREFIXES) -> dict[str, str]:
             out[name] = sha256_file(f)
 
     return out
+
+
+def _module_source_path(name: str) -> str | None:
+    """Find a recorded Python source even when this process has not imported it."""
+    module = sys.modules.get(name)
+    source = getattr(module, "__file__", None) if module is not None else None
+    if source and source.endswith(".py") and os.path.isfile(source):
+        return os.path.realpath(source)
+    try:
+        spec = importlib.util.find_spec(name)
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return None
+    source = getattr(spec, "origin", None) if spec is not None else None
+    if source and source.endswith(".py") and os.path.isfile(source):
+        return os.path.realpath(source)
+    return None
 
 
 def git_state(repo: str) -> dict:
@@ -221,9 +238,21 @@ def file_changes(manifest: dict) -> dict:
     now = imported_files()
     old = manifest["files"]["imported_sha256"]
     seen_added = manifest["files"].get("added_after_start", {})
-    changed = sorted(n for n, sha in old.items() if n in now and now[n] != sha)
-    missing = sorted(n for n in old if n not in now)
-    added = {n: sha for n, sha in now.items() if n not in old and seen_added.get(n) != sha}
+    expected = {**old, **seen_added}
+    changed, missing = [], []
+    for name, expected_sha in expected.items():
+        actual_sha = now.get(name)
+        if actual_sha is None:
+            source = _module_source_path(name)
+            if source is None:
+                missing.append(name)
+                continue
+            actual_sha = sha256_file(source)
+        if actual_sha != expected_sha:
+            changed.append(name)
+    changed.sort()
+    missing.sort()
+    added = {n: sha for n, sha in now.items() if n not in expected}
 
     return {"changed": changed, "missing": missing, "added": added}
 
