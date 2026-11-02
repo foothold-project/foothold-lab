@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 초안 (EX-42 지형 구간 · 지형 미리 넣기 · 종류별 승급 · 평가 칸 · 시작 전 측정)
-> 작성: planner · 2026-11-02 17:4x v0.1 (lead 17:1x 의뢰: 「이후 실험도 잘 준비하고 있나」 · 근거를 열고 쓸 것 · 정할 것은 표로)
+> 작성: planner · 2026-11-02 17:4x v0.1 (lead 17:1x 의뢰: 「이후 실험도 잘 준비하고 있나」 · 근거를 열고 쓸 것 · 정할 것은 표로) · 19:5x **v0.2**(lead 18:2x: analyst `D:/mai-tmp/analyst/OPINION-EX42-Q-1102.md` 반영. Q6 유지 판정 26 · 기록 39 로 정정, Q7 발 들기 「새로 켬」 삭제, Q1 · Q2 · Q4 · Q9 · Q11 · Q13 의 의견을 §13b 에 나란히. Q11 은 P7 졸업 판정 정본(`inbox/jay/20261101-ex41/P7-GRADUATION-SPEC.md` 53fda76c) 에 연결)
 > 근거: WORKLIST 122a6435 D106 · D113 · D114 · D115 · D117 · D124 · D126 · D130 · D133 · D136 · D138 · W55 · W59 · W72 · W86 / analyst `inbox/jay/20261102-analysis/PLAN-EX42-TERRAIN-GATES.md`(fb9cda8d) · `SPEC-JEPLO-PRESET.md`(f2ca807c) · `foothold_s2/terrains/jeplo_preset.py` / `inbox/jay/20261019-design/15-TERRAIN-CURRICULUM.md` v1.4 §2~8 · `14-COMMAND-GENERATOR.md` §3 · §5 / `inbox/jay/20261018-next-arch/SPEC-ame2-go2.md` §1.6 / `inbox/jay/20261012-arch-discussion/PAPERS-architecture.md` START 표(II-D3 · Fig. 6 · Table II) · AME-2 부록 A / `inbox/jay/20261026-experiments/CURRICULUM-GATES.md` v0.6c T0~T7 · 1b.6 · 1b.7 / `inbox/jay/20261101-ex41/DESIGN-EX41-STAGE2-draft.md` v0.7.3 §4 · §11 / 코드(ceadc326 · d5c14948): `terrains/columns.py` · `rough_go2_cfg.py` · `s2_layout.py` · `s2_runtime.py` · `progression.py` · `sparse_terrains.py` · `tasks/s2_env_cfg.py` · `eval/fixed_terrain.py` · `eval/map_mode_cells.py` · `eval/axis_v2_run.py:180~200` · `curriculum/ex41-fixed5000.yaml` · `curriculum/ex41.py` · `curriculum/rules.py` · `runners/start_runner.py:86~146` · `runners/map_stats.py` · `eval/eval_dr_mode.py` / Isaac Lab 2.3.2 `terrain_generator.py:240~262` / EX-40 실행 `main/EX-40-B-main_20261031_041337_26240/params/env.yaml`(num_envs 3072 · 23 열 · 8 × 8 m · use_cache false · max_init 2 · height_scanner 0.1 m × [1.6, 1.0] · depth_cam 60 × 60 · 0.1 s) / Go2 URDF `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf`(sha256 f130b1d2…) · Lite3 URDF `…/MGDP/…/all_dog/lite3/urdf/lite3.urdf`(f5e5003d…) 실측 / 웹 제원(Lite3 610 × 370 mm · Go2 700 × 310 × 400 mm, 아래 §4)
 > 요지: EX-42 는 EX-41 T0′ 졸업 저장본에서 시작하는 「지형 구간」 이다. 시작 경계에서 지형 네 묶음(15-TERRAIN 13 종 50 열 · AME-2 12 종 · JEPLO 7 종 · 지형 2 판 3 종 = 35 종) 을 **한 번에 열로 만들고** 노출은 env 재배정으로만 올린다(D114 · W86 · Isaac 은 비율 0 이면 열이 안 생김). 승급은 두 층(env 레벨 = 종류별 완료 정의 · 종류 노출 확대 = 종류별 성과 창), 평가 칸은 env 번호가 아니라 `(묶음, 종류, 레벨)` 로 찾고, 시작 전에 메모리 · 생성 시간 · 광선 비용을 새 프로세스로 잰다. START 치수의 Go2 축척은 15-TERRAIN v1.4 의 「절대 치수 재현」 결정과 부딪히므로 두 안을 숫자로 나란히 두고 팀장 결정으로 올린다(Q1). 숫자는 전부 출처 등급을 달았고, 가정값은 §13 표에 모았다.
-> 상태: v0.1 · 코드 · GPU 없음 · 두 겹 검토 전 · 정할 것 Q1~Q14 열림 · analyst PLAN v0.1 과 겹치는 자리는 「같음 · 다름」 으로 표시
+> 상태: v0.2 · 코드 · GPU 없음 · analyst 의견 1 차 반영(§13b) · 두 겹 검토 전 · 정할 것 Q1~Q13 열림(Q14 는 v0.2 에서 닫힘 후보) · analyst PLAN v0.1 과 겹치는 자리는 「같음 · 다름」 으로 표시
 
 # EX-42 지형 구간 설계 초안
 
@@ -23,14 +23,14 @@ lead 17:1x 의뢰를 내 말로: 「EX-42 지형 구간의 설계 초안 v0.1 �
 ```
 EX-41 (m6000 부모 · 5,000 회 · 23 열 연속 7 종 · L0~5)
   S2a → S2b → S2c → S2d(L5) → S2e(DR 1.0) → T0′(복원 지도)
-                                               │ 졸업 관문(§4 T0′: 복원 · 끔 생존 ≥ 정답 − 3/64 전 칸 · yaw ≤ 5° 연속 3)
+                                               │ 졸업 관문 = P7-GRADUATION-SPEC(측정 셋 n4750 · n5000 · 끝 평가 · 문턱 G1~G8 · graduation.json)
                                                ▼
 EX-42 (T0′ 졸업 저장본 · 새 지형 메시 = 네 묶음 35 종을 한 번에 열로 · 노출은 env 재배정)
   S3-0 설정 경계 ─ T1 L3(연속) ─ T2 L6(연속 + 평균대 노출) ─ F1 깃발 10 % ─ T3 L9(연속 + 틈 0.3→0.6→0.8 노출)
              ─ F2 깃발 15 % ─ T4 AME-2 · JEPLO 노출 5 % ─ F3 깃발 20 % ─ T5 듬성 레벨 ─ T6 p_map_off 0.3(이어진 지형만) ─ 지형 2 판(높은 턱 · 벽 · 기어가기, h · roll 명령)
 ```
 
-순서의 출처: CURRICULUM-GATES v0.6c T1 → T2 → F1 → T3 → F2 → T4 → F3 → T5 → T6 → T7 과 DESIGN-EX41 §11 의 D81 순서(L3 → L6 평균대 → L9 틈 0.3 → 0.6 → 0.8 → 지형 2 판). 둘은 「평균대 · 틈을 어디에 두나」 에서 다르다(GATES 는 T4 에 듬성 노출을 모으고, D81 은 T2 · T3 에 평균대 · 틈을 끼운다). 위 그림은 둘을 **병합한 안**이고 어느 쪽을 정본으로 할지는 Q7.
+순서의 출처: CURRICULUM-GATES v0.6c T1 → T2 → F1 → T3 → F2 → T4 → F3 → T5 → T6 → T7 과 DESIGN-EX41 §11 의 D81 순서(L3 → L6 평균대 → L9 틈 0.3 → 0.6 → 0.8 → 지형 2 판). 둘은 「평균대 · 틈을 어디에 두나」 에서 다르다(GATES 는 T4 에 듬성 노출을 모으고, D81 은 T2 · T3 에 평균대 · 틈을 끼운다). 위 그림은 둘을 **병합한 안**이고 어느 쪽을 정본으로 할지는 Q7. **v0.2(analyst Q7)**: 순서는 제안이고 정본은 **성과 의존관계**(부모 조건 유지 확인 → 연속 지형 확대 → 넓은 평균대 · 작은 틈 노출 → 종류별 확대) 다. T1 · T2 · T3 의 L3 · L6 · L9 는 **평가 지점**이지 「부모 L0~5 학습을 L3 부터 다시 시작」 이 아니다(학습 레벨은 부모의 성과 레벨 분포를 잇는다). 틈 0.8 은 Q1 안 A 의 상한 0.7 과 **별도 승인**이다. 깃발(F1~F3) 과 어려운 지형 노출을 **같은 경계에서 함께** 늘리지 않는다(한 경계에 축 하나).
 
 ## 2. 근거 원문 (요지 · 등급 「읽기」)
 
@@ -136,17 +136,17 @@ EX-42 (T0′ 졸업 저장본 · 새 지형 메시 = 네 묶음 35 종을 한 �
 | 깊이 U[0.2, 0.7] · 돌 높이 ±5 cm | 그대로 | 그대로(다리 길이 비 1.065 는 10 % 안) | |
 | 무작위 ±0.5 · ±0.45 × 틈 | 그대로(틈에 비례) | 그대로 | |
 
-읽는 법. 안 A 는 「같은 치수가 두 로봇에 같은 상대 난이도」 라고 주장하지 않고(15 §4 판단 보류), 결과를 축별 비율로 읽는다. 안 B 는 Go2 의 걸음 기하에 맞춘 **로봇 적응** 이라 START 수치와의 대조는 끊긴다. 두 안의 차이는 틈 길이 10 % · 폭 12~15 % 이고, 발 지름 비(0.55) 만 크게 다른데 그것은 축척에 쓰지 않았다(돌 0.11 m 는 START 수준 밖). **planner 의견**: 안 A 를 학습 열로 유지하고(결정 번복 없음 · 50 열 코드 그대로), 안 B 의 틈 0.78 · 평균대 0.155 · 빔 0.133 세 종류를 **평가 전용 칸**(노출 0 열) 으로 더해 「Go2 에 맞춘 치수에서의 성과」 를 따로 적는다. 결정은 Q1.
+읽는 법. 안 A 는 「같은 치수가 두 로봇에 같은 상대 난이도」 라고 주장하지 않고(15 §4 판단 보류), 결과를 축별 비율로 읽는다. 안 B 는 Go2 의 걸음 기하에 맞춘 **로봇 적응** 이라 START 수치와의 대조는 끊긴다. 두 안의 차이는 틈 길이 10 % · 폭 12~15 % 이고, 발 지름 비(0.55) 만 크게 다른데 그것은 축척에 쓰지 않았다(돌 0.11 m 는 START 수준 밖). **planner 의견**: 안 A 를 학습 열로 유지하고(결정 번복 없음 · 50 열 코드 그대로), 안 B 의 틈 0.78 · 평균대 0.155 · 빔 0.133 세 종류를 **평가 전용 칸**(노출 0 열) 으로 더해 「Go2 에 맞춘 치수에서의 성과」 를 따로 적는다. 결정은 Q1. **v0.2(analyst Q1 조건부 동의)**: 축척판은 **별도 이름의 민감도 평가**로 두고 「Go2 적정 치수」 라고 확정하지 않는다(몸 길이 비율이 같은 상대 난이도를 보증하지 않음). 평가 전용은 학습 노출 0 과 분리 평가 배치를 manifest 로 증명하고, A 0.7 m 와 B 0.78~0.80 m 의 성과를 한 칸에 합치지 않는다.
 
 ### 4.3 AME-2 12 종 Go2 열 후보 (SPEC-ame2 원칙 「최댓값 하나만」)
 
 | 후보 | 내용 | 장점 | 단점 |
 |---|---|---|---|
 | B-1 TRON1 열 | 논문의 작은 로봇 열 그대로(climb_up 0.48 · gap 0.6 · boxes 0.3 · consecutive 0.3 · pallets 틈 0.2) | 논문 안의 값 · 한 번에 정해짐 | TRON1 은 이족 · 키가 Go2 보다 큼 → climb_up 0.48 은 Go2 서 있는 높이 0.40 보다 높다 |
-| B-2 Go2 기하 상한 | climb_up · consecutive 최댓값 ≤ Go2 서 있는 높이 0.40(제원) 의 0.8 = 0.32 · climb_down ≤ 0.6 · gap ≤ START 0.7(또는 안 B 0.78) · 나머지 TRON1 | Go2 가 못 넘을 값을 처음부터 안 넣음 | 0.8 배는 **가정**. 실기 Go2 의 최대 단 높이는 제원에 없다(미확인) |
-| B-3 G1 코드 열 | 공식 preset 그대로 | 코드 재현 | G1 은 키 1.3 m 급 → Go2 에 턱 0.65 · 틈 1.2 는 뜻 없음 |
+| B-2 Go2 **임시 시험 범위**(v0.2 이름 바꿈, 옛 「기하 상한」) | climb_up · consecutive 를 0.40(제원) × 0.8 = 0.32 · climb_down 0.6 · gap START 0.7(또는 안 B 0.78) 부터 **낮은 레벨에서 점검할 후보** · 나머지 TRON1 | 시작 범위가 좁아 낮은 레벨부터 실측으로 넓힐 수 있음 | 0.8 배는 **가정**. 정적 몸높이만으로 동적 통과 가능 · 불가능을 보증하지 못하므로 「못 넘을 값을 안 넣음」 이라고 주장하지 않는다(analyst Q2). 실기 Go2 의 최대 단 높이는 제원에 없다(미확인) |
+| B-3 G1 코드 열 | 공식 preset 그대로 | 코드 재현 · 원본 보존 | G1 은 키 1.3 m 급이라 Go2 와 체급이 다르다(값의 뜻은 실측 전에 단정하지 않음) |
 
-planner 의견: B-2 로 시작하고 최댓값을 **표로 원장에**(SPEC-ame2 원칙). 결정은 Q2.
+planner 의견: B-2 로 시작하고 최댓값을 **표로 원장에**(SPEC-ame2 원칙). 결정은 Q2. **v0.2(analyst Q2)**: TRON1 값을 일괄 채택하지 않고 **12 종 각각** 「원본 preset 값 · Go2 후보 · 레벨별 실측」 세 칸으로 나눠 적는다. 원본 preset 이름과 변경판 이름을 manifest `families[].kind_variant` 로 보존한다.
 
 ## 5. 열 배치 manifest 와 칸 크기 (D114 · W86)
 
@@ -199,7 +199,7 @@ lookup 키는 analyst 와 같게 `(family, kind, level, geometry_seed, layout_sh
 | T4 행(CURRICULUM-GATES v0.6c) | 고정 칸 과제 ≥ 48/64 · 생존 ≥ 54/64 · 종류별 추세(D12) | **읽기**(가정 표시됨) |
 | analyst PLAN §1 | 성공 ≥ 52/64(81.25 %) · 생존 ≥ 60/64 · 같은 조건 두 창 연속 · 노출 새 10 % / 현재 70 % / 쉬움 20 %, 통과 뒤 새 20 %, 실패 시 5 % | **읽기**(가정 표시됨) |
 
-planner 의견: 문턱은 **반복 폭 실측 뒤** 결과 전에 고정(둘 다 가정). 단계 안에서는 analyst 의 노출 비율(10 / 70 / 20) 을 쓰고, 묶음을 **여는** 순간(T2 평균대 · T3 틈 · T4 AME-2 · JEPLO) 은 CURRICULUM-GATES 의 「지형 열 듬성 0 → 5 %(연속 ≥ 20 % 유지)」 대로 5 % 부터. 결정은 Q4 · Q5. 성과 창의 분모에서 정지 · 회전 명령과 `invalid`(목표 없음 · 기록 누락) 는 빼고 수를 남긴다(analyst 같음).
+planner 의견: 문턱은 **반복 폭 실측 뒤** 결과 전에 고정(둘 다 가정). 단계 안에서는 analyst 의 노출 비율(10 / 70 / 20) 을 쓰고, 묶음을 **여는** 순간(T2 평균대 · T3 틈 · T4 AME-2 · JEPLO) 은 CURRICULUM-GATES 의 「지형 열 듬성 0 → 5 %(연속 ≥ 20 % 유지)」 대로 5 % 부터. 결정은 Q4 · Q5. 성과 창의 분모에서 정지 · 회전 명령과 `invalid`(목표 없음 · 기록 누락) 는 빼고 수를 남긴다(analyst 같음). **v0.2(analyst Q4)**: 창마다 종료 에피소드 ID · 지형 seed · 방향 · 지도 모드를 기록하고, `invalid` 때문에 분모가 64 에 모자라면 그 창으로는 노출을 **확대하지 않는다**. 「칸 길이의 절반 이동」 만으로 계단 · 틈의 완료를 대신하지 않는다(마지막 지지면 도달 · 장애물 통과를 먼저 확인, analyst 완료 정의 표). 문턱은 반복 폭 실측 뒤 결과 전에 고정.
 
 ## 7. 평가 칸은 지형 종류로 (D114)
 
@@ -220,7 +220,7 @@ planner 의견: 문턱은 **반복 폭 실측 뒤** 결과 전에 고정(둘 다
 | DR 켠 · 밀기 칸(G18) | d5c14948 의 `--dr-mode on --dr-scale 1.0`: 지형 칸에서도 밀기 2.0 s · 지표 넷 · `push_cells` · 기록 전용 | 유지 판정 소비자는 `require_dr_off_document` 로 켠 문서를 거절(B2) |
 | 깃발 도달 | F1 부터 W09 기준선 뒤 고정 | W60 |
 
-끔 판 생존을 쓰는 **유지 판정 39 칸(D130 · D133)** 은 EX-42 에서도 연속 7 종 L0~2 기준 축 그대로 두고, 종류별 칸은 처음엔 기록(추세 D12) 이다(가정 · Q6).
+유지 판정은 **정답 · 끔 26 칸**이고 복원 13 칸은 기록이며 39 숫자를 모두 남긴다(D133 · **코드** `ex41-fixed5000.yaml` `include_record_only: false` · `ex41_fixed.CELLS[:26]`; v0.1 의 「39 칸 판정」 은 틀림, analyst Q6 정정). EX-42 에서도 그 26 칸은 연속 7 종 L0~2 기준 축 그대로 둔다. 종류별 칸은 **처음엔 기록**(추세 D12) 이되, 그 종류의 **노출을 확대하는 순간에는 필수 성과 관문**이다(§6 ②). EX-42 시작 때 새 부모(EX-41 졸업본)의 **같은 평가 배치 · 기준표 SHA** 를 먼저 고정한다(유지 기준선 = 졸업본 점수, EX-41 의 `maintenance_baseline` 꼴). 결정은 Q6.
 
 ## 8. 시작 전 측정 (D114: 메모리 · 생성 시간 · 광선) · 승인 뒤 새 프로세스
 
@@ -234,7 +234,7 @@ planner 의견: 문턱은 **반복 폭 실측 뒤** 결과 전에 고정(둘 다
 | M3 광선 | height_scanner · depth_cam 따로 · 합쳐서, warmup 20 뒤 100 회, CUDA event 동기화, 평균 · p50 · p95 · 최대, reset 포함 / 제외, cold / warm | 같음 | `receipt_rays.json` |
 | 중단선 | 여유 < 2 GiB 면 그 크기에서 멈추고 다음 크기를 안 띄움(analyst 2 GiB · **가정** · lead 승인 전 고정 안 함) | | |
 
-GPU1 이 비었다는 관측만으로 실행 권한이 생기지 않는다(analyst 같음 · 이 문서도 GPU 금지). 결정은 Q9(범위 · 예산).
+GPU1 이 비었다는 관측만으로 실행 권한이 생기지 않는다(analyst 같음 · 이 문서도 GPU 금지). 결정은 Q9(범위 · 예산). **v0.2(analyst Q9)**: 위 기준값 1.39 × 10⁸ /s 는 height_scanner 187 + depth_cam 3,600 만 센 것이고, analyst 읽기로는 `sensors/start_obs.py:84~99` 의 정답 지도 512 · 발 100 광선이 더 있다(**미재측** · M3 에서 센서마다 실제 활성 여부 · 주기 · lazy 호출을 같이 잰다). 측정은 기존 lead 조건(GPU1 그림자 · axis250 · stage_loop2 · 미채점 저장본)에 양보하고 **한 번 10 분 이내**를 예산에 명시한다. 총예산은 생성 실측 전 미확정. 2 GiB 는 보장값이 아니라 **후보 중단선**이다.
 
 ## 9. D115 · p_map_off 는 이어진 지형 조건
 
@@ -261,21 +261,21 @@ EX-42 는 T0′ 뒤라 **전 구간 force_gt False**(`map_input reconstruction`,
 
 | 항목 | EX-42 |
 |---|---|
-| DR | 배율 1.0 유지(EX-41 끝값) · 유지 판정 39 칸 그대로(D130 · D133) · 밀기 간격 10~15 s 학습 그대로 |
+| DR | **부모의 실제 배율을 인계**(EX-41 끝값은 1.0 이 목표지만 `ex41_fixed.py` 의 유지 상한 소진 경로에서는 1.0 미만으로 끝날 수 있음 · analyst Q11). 1.0 미만이면 추가 상승은 EX-42 안에서 따로 결정 · 유지 판정 26 칸 · 기록 39(D130 · D133) · 밀기 간격 10~15 s 학습 그대로 |
 | 평가 밀기 칸 | §7.2 의 DR 켠 칸을 지형 칸에도(기록 전용 · `push_cells`) |
-| 보상 | 기존 유지 항 그대로(D117 정정: stumble · collision · smoothness · joint_power 는 이미 켜짐). 미리 등록 0 가중 항 가운데 EX-42 시작 경계에서 여는 것은 **지형 따라 발 들기** 하나(가정 · 「한 번에 한 축」), 값은 analyst 계산 뒤 |
+| 보상 | 기존 유지 항 그대로(D117 정정: stumble · collision · smoothness · joint_power 는 이미 켜짐). **v0.2**: v0.1 의 「시작 경계에서 지형 따라 발 들기를 새로 켬」 은 **삭제**. 발 높이 비용 `swing` 은 EX-41 S2-0 부터 이미 켜져 있고(**코드** `ex41-fixed5000.yaml:98` swing −10 · D123) 서 있기 복원으로 한 번 반감될 수 있으므로(D130), EX-42 는 **부모의 실제 가중(반감 이력 포함)을 계승**하고 S3-0 에서 보상 가중을 바꾸지 않는다. D117 의 미리 등록 항은 0 가중 등록만 |
 | 명령 | 13 슬롯 몫 고정(§11 「T1 은 명령 몫을 바꾸지 않음」) · 깃발 슬롯 14 는 시작 경계에서 몫 0 으로 등록, F1 에서 10 %(D52 · W60) · h · roll 0 고정, 지형 2 판 경계에서 염 |
 
 ## 12. EX-41 → EX-42 이어짐
 
 | 항목 | 규칙 | 출처 |
 |---|---|---|
-| 부모 선택 | EX-41 **T0′ 졸업 저장본** = T0′ 관문(복원 · 끔 생존 ≥ 정답 − 3/64 전 칸 · 오차 ≤ 정답 + 0.05 · yaw250 ≤ 5°) 을 **연속 3 저장본** 통과한 마지막 것. sha256 · update 번호를 EX-42 표(yaml) 의 `parent_sha256` · `parent_update` 에 박고 preflight 가 대조(EX-41 `ex41_start_preflight.verify_parent_checkpoint` 꼴 · `REQUIRED_PARENT_UPDATE` 를 EX-42 값으로) | DESIGN-EX41 §4 · §11 · D124 · D135 |
-| T0′ 미달이면 | EX-42 를 시작하지 않는다. 연장 규칙(S2e +500 한 번 · D130) 을 다 쓴 뒤에도 미달이면 **팀장 결정**(복원 지도 소비 구간을 EX-42 첫 단계로 끌고 갈지). 기본값은 「시작 안 함」 | 가정 · Q11 |
+| 부모 선택 | EX-41 **T0′ 졸업 저장본** = `P7-GRADUATION-SPEC.md`(53fda76c) 의 판정기가 `graduation.json` 에 `graduated True` 로 적은 끝 저장본(측정 셋 n4750 · n5000 경계 · 끝 평가, 문턱 G1~G8). v0.1 의 「연속 3 저장본」 은 yaw(G5) 에만 남는다. sha256 · update 번호를 EX-42 표(yaml) 의 `parent_sha256` · `parent_update` 에 박고 preflight 가 `graduation.json` 의 `spec_sha256` 과 함께 대조(EX-41 `ex41_start_preflight.verify_parent_checkpoint` 꼴) | P7 정본 · DESIGN-EX41 §4 · §11 · D124 · D135 |
+| T0′ 미달이면 | EX-42 를 시작하지 않는다(**기본안 · analyst Q11 동의**). 먼저 같은 평가 파일에서 미달이 생존 · 추종 · yaw · 서 있기 · 복원 소비 가운데 어느 줄인지 분리한다. 보완이 필요하면 기존 지형에서 **별도 승인한** 복원 보완 구간을 둔다. S2e +500 연장은 T0′ 앞 구간이라 T0′ 미달의 자동 재시도 규칙이 아니다. DR 배율 < 1.0 으로 끝났으면 졸업이 아니라 「DR 미완 보고」 (P7 G8) | P7 §5 · Q11 |
 | 설정 표 | `foothold-ex42-curriculum/1`(EX-41 표 꼴 그대로: `start: transfer` · `promotion: fixed` · `boundary_file` · `approval_file` · `fixed_schedule`) + 단계 행에 `terrain: {policy: ex42, level_cap, exposure: {family: {kind: share}}}` 와 `terrain_manifest_sha256`. 파서(`ex41.py:121` 는 `terrain` 키 안의 꼴을 안 본다) 는 W86 에서 `exposure` 를 받게 넓힘 | **코드** `ex41-fixed5000.yaml` · `ex41.py` |
 | 단계 경계 | W72 방식(끊지 않고 경계에서만 설정 다시 읽음 · 막는 칸 목록 · 승인 줄 대조). **지형 메시는 막는 칸**(판 시작 경계 S3-0 에서만 교체 · 판 안에서는 노출 몫 · 레벨 상한만 바뀜) → §11 Q17 의 답을 「막는 칸」 으로 | W72 · DESIGN-EX41 Q17 |
 | 무인 사슬 | EX-41 과 같은 셋: `ex41_start_preflight`(읽기 전용 · 부모 sha · 인자 · 소스) → 감독기(`ex40_supervisor` 꼴: 저장본 확인 · 구간 평가 소비 · 결정 영수증 · 프로세스 안 죽임) → 점수기(`ex41_score` 꼴 · 39 칸 + 종류별 칸). 더할 것: **지형 manifest 검사**(§5.2 sha · 센서 메시 일치 · §8 영수증 존재) 를 preflight 에, 경계마다 manifest `boundary_log` 덧붙임 | **코드** 세 파일 · D135 |
-| 회차 | 미정. EX-41 과 같은 「회차 고정 · 250 점검 · 연장 한 번」 꼴을 추천(단계 7~9 개 × 500~1,000 회) → Q13 | D126 꼴 |
+| 회차 | 미정. EX-41 과 같은 「250 점검 시각 · 단계별 최대 예산 · 연장 횟수를 **사전 고정**」 꼴을 추천 → Q13. **v0.2(analyst Q13)**: 회차가 찼다는 이유로 새 지형 · 레벨 노출을 **확대하지 않는다**(노출 확대는 §6 ② 성과로만). 기준 미달이면 같은 조건 유지 · 등록된 연장 · 보고로 남기고 졸업과 구분한다. 「500~1,000 × 7~9 = 3,500~9,000 회」 는 산술 범위일 뿐 학습량의 근거가 아니다. 전환 입력 · 결정 · 설정 SHA 를 경계마다 남겨 재현 | D126 꼴 · analyst Q13 |
 | 앞 일 관문 | `worklist_gate.py W59`(11/02 17:44 실행, lead_tmp e187590b): 앞 일 W55 「끝」 이나 증거 경로 `v7/v8` 가 MISSING_PATH 라 **막음** 표시. EX-42 카드를 쓰기 전에 WORKLIST W55 상태 칸의 증거 경로를 고쳐야 한다(lead) | **실측**(도구 출력) |
 
 ## 13. 정할 것 (표)
@@ -287,15 +287,30 @@ EX-42 는 T0′ 뒤라 **전 구간 force_gt False**(`map_input reconstruction`,
 | Q3 | 칸 크기 다른 세 묶음의 배치 | (가) 8 m 재맞춤 / (나) 12 m 껍질 / (다) 독립 생성기 합침 | (다) · CPU 증명 먼저 | lead |
 | Q4 | 종류 노출 확대 문턱 | 48/64 · 54/64(T4 행) / 52/64 · 60/64 두 창(analyst) | 반복 폭 실측 뒤 고정 · 그 전엔 analyst 값을 가정으로 | lead → 팀장 |
 | Q5 | 노출 비율 | 10 / 70 / 20 → 20 / 60 / 20(analyst) / 묶음 여는 순간 5 % | 여는 순간 5 %(GATES T4) · 그 뒤 analyst 비율 | lead |
-| Q6 | 유지 판정 39 칸을 EX-42 에서도 연속 7 종 L0~2 로 둘지 | 그대로 / 종류별 칸 일부 편입 | 그대로 · 종류별 칸은 기록(추세) | 팀장 |
-| Q7 | 단계 순서의 정본 | GATES v0.6c T 행 / D81(§11) / 병합(§1 그림) | 병합(평균대 T2 · 틈 T3 · AME-2 · JEPLO T4) | 팀장 |
+| Q6 | 유지 판정 26 칸(정답 · 끔, 복원 13 은 기록 · 39 숫자 보존) 을 EX-42 에서도 연속 7 종 L0~2 로 둘지 | 그대로 / 종류별 칸 일부 편입 | 그대로 · 종류별 칸은 기록이되 노출 확대 순간엔 필수 관문 · 새 부모 기준표 SHA 먼저 고정(analyst Q6 반영) | 팀장 |
+| Q7 | 단계 순서의 정본 | GATES v0.6c T 행 / D81(§11) / 병합(§1 그림) | 병합안은 제안, 정본은 성과 의존관계(§1 v0.2) · L3/6/9 는 평가 지점 · 틈 0.8 별도 승인 · 깃발과 지형을 같은 경계에 안 묶음 | 팀장 |
 | Q8 | DESIGN-EX41 §11 의 「같은 메시 위 상한 올림」 철회 | 철회(시작 경계 메시 교체) / 유지 | 철회(D114 · W86 이 뒤에 정해짐) | lead |
 | Q9 | §8 측정 범위 · GPU1 예산 | M0 만 / M0~M3 / 4,096 포함 | M0~M3, 4,096 은 별도 | lead → 팀장 |
 | Q10 | 복원 소비 경고선 | 없음 / 0.3 / 묶음별 다르게 | 0.3 경고(기록 전용) | lead |
-| Q11 | T0′ 미달 때 | 시작 안 함 / 복원 구간을 EX-42 첫 단계로 | 시작 안 함(기본) | 팀장 |
+| Q11 | T0′ 미달 때 | 시작 안 함 / 복원 구간을 EX-42 첫 단계로 | 시작 안 함(기본, analyst 동의) · 미달 줄 분리 · 보완은 별도 승인 카드 · 판정은 P7 정본(P7-1~P7-7 은 그쪽 표) | 팀장 |
 | Q12 | crawl(천장) 의 센서 처리 | 두 번째 히트 / 마스크 / 지형 2 판까지 보류 | 보류 · 지형 2 판 카드에서 | lead |
-| Q13 | EX-42 회차 · 단계 길이 | 고정(500~1,000 × 7~9) / 성과 승급 | 고정 + 연장 한 번(D126 꼴) | 팀장 |
-| Q14 | 지형 따라 발 들기 보상의 가중 여는 시점 | S3-0 / T2(평균대) / 안 엶 | S3-0 에서 작은 값(analyst 계산) | lead |
+| Q13 | EX-42 회차 · 단계 길이 | 점검 시각 · 예산 · 연장 수 사전 고정 / 성과 승급 | 사전 고정(D126 꼴) + 노출 확대는 성과로만(회차 찼다고 안 넓힘, analyst Q13) | 팀장 |
+| Q14 | ~~지형 따라 발 들기 보상의 가중 여는 시점~~ | (v0.2 닫힘 후보) | swing 은 이미 켜져 있어(YAML :98 −10) 「새로 켬」 이 없다. 부모의 실제 가중(반감 이력 포함) 계승. lead 확인만 | lead |
+
+### 13b. analyst OPINION-EX42-Q-1102(11/02 18:05) 반영 표 (v0.2)
+
+| Q | analyst 의견 요지 | 반영 자리 | 남은 차이 |
+|---|---|---|---|
+| Q1 | 조건부 동의: A 학습 + B 평가 전용. 축척판은 별도 이름의 민감도 평가 · 「Go2 적정 치수」 확정 금지 · 학습 노출 0 과 분리 배치 검증 · A 0.7 과 B 0.78~0.80 성과 안 합침 | §4.2 끝 | 없음(팀장 결정 대기) |
+| Q2 | B-2 는 임시 시험 범위이지 기하 상한이 아님. 「못 넘을 값을 안 넣음」 · 「1.2 m 는 뜻 없음」 삭제. 12 종 각각 원본 · Go2 후보 · 레벨별 실측 분리 · 이름 보존 | §4.3 표 · 문단 | 없음 |
+| Q4 | 52/64 · 60/64 두 창은 가정 유지. 창마다 ID · seed · 방향 · 모드 기록 · invalid 로 분모 모자라면 확대 안 함 · 절반 이동으로 완료 대체 금지 | §6 끝 | 없음 |
+| Q6 | 유지 26 판정 · 복원 13 기록 · 39 보존(D133). v0.1 §7.2 · §11 · Q6 의 「39 칸 판정」 은 오기. 종류별 칸은 노출 확대 때 필수 관문. 새 부모 평가 배치 · 기준표 SHA 고정 | §7.2 · §11 DR 행 · Q6 | 없음 |
+| Q7 | 병합 순서는 제안, 성과 의존관계가 정본 · L3/6/9 는 평가 지점 · 틈 0.8 별도 승인 · 깃발과 지형 같은 경계 금지 · 발 들기 「새로 켬」 삭제(YAML :98 이미 켜짐 · 반감 이력 계승) | §1 · §11 보상 행 · Q7 · Q14 | 없음 |
+| Q9 | M0~M3 크기별 순차 동의. 187 만으로는 누락(정답 지도 512 · 발 100, `start_obs.py:84~99`) · 실제 활성 · 주기 · lazy 호출 함께 · 10 분 이내 · 기존 lead 조건에 양보 · 2 GiB 는 후보 중단선 | §8 끝 | 512 · 100 은 planner 미재측(analyst 읽기) |
+| Q11 | 기본안 동의(자동 기동 없음). 미달 줄 분리 · 보완 구간 별도 승인 · S2e +500 은 재시도 아님 · DR 끝값 1.0 전제 금지(실제 배율 인계) | §11 DR 행 · §12 두 행 · Q11 · P7 정본 §5 | 없음 |
+| Q13 | 점검 시각 · 예산 고정 동의. 회차로 노출 확대 금지 · 미달이면 유지 · 등록된 연장 · 보고 · 3,500~9,000 은 산술 범위 · 전환 SHA 기록 | §12 회차 행 · Q13 | 없음 |
+
+analyst 가 의견을 내지 않은 Q3 · Q5 · Q8 · Q10 · Q12 는 v0.1 그대로다.
 
 ## 14. 안 한 것 · 손대지 않은 것
 
@@ -303,12 +318,14 @@ EX-42 는 T0′ 뒤라 **전 구간 force_gt False**(`map_input reconstruction`,
 - START 논문 PDF · AME-2 부록 A 원문을 다시 열지 않았다(저장소 요약 문서 두 개에 의존 · 등급 「읽기」). 숫자가 갈리면 원문이 이긴다.
 - EX-40 의 GPU 메모리 · 지형 생성 시간 실측값을 찾지 못했다(미확인 · §8).
 - analyst PLAN 의 35 행 완료 정의는 검토하지 않고 가리키기만 했다(겹침 방지). 반박 검토는 lead 가 걸면 따로.
+- v0.2: analyst 의견이 가리킨 `start_obs.py:84~99`(광선 512 · 100) · `ex41_fixed.py:142~160`(DR 상한 소진) 은 다시 열지 않았다(analyst 읽기 그대로, §13b). 의견 Q3 · Q5 · Q8 · Q10 · Q12 는 없었다.
 - W59 카드(T1 L3 첫 판) 는 이 문서가 아니다. worklist_gate 가 W55 증거 경로로 막혀 있다(§12).
 
 ## 15. 근거 경로
 
 - WORKLIST: `origin/feature/verify-v2-mvp-jay:inbox/jay/20261028-plan/WORKLIST.md`(122a6435) :134 D106 · :141 D113 · :142 D114 · :143 D115 · :145 D117 · :152 D124 · :154 D126 · :158 D130 · :161 D133 · :164 D136 · :166 D138 · :233 W55 · :237 W59 · :250 W72 · :264 W86
-- analyst: `origin/feature/analyst-terrain-w86-1102-jay:inbox/jay/20261102-analysis/PLAN-EX42-TERRAIN-GATES.md` · `SPEC-JEPLO-PRESET.md` · `foothold_s2/terrains/jeplo_preset.py`(f2ca807c)
+- analyst: `origin/feature/analyst-terrain-w86-1102-jay:inbox/jay/20261102-analysis/PLAN-EX42-TERRAIN-GATES.md` · `SPEC-JEPLO-PRESET.md` · `foothold_s2/terrains/jeplo_preset.py`(f2ca807c) · 의견 `D:/mai-tmp/analyst/OPINION-EX42-Q-1102.md`(11/02 18:05 · 저장소 밖 · 요지는 §13b 에 옮김) · 그 의견이 가리킨 코드 `c63fe7d7 foothold_s2/curriculum/ex41-fixed5000.yaml:98 · 441~443` · `ex41_scoring.py:84~92` · `ex41_fixed.py:142~160` · `sensors/start_obs.py:84~99`(planner 는 YAML 441~452 · `ex41_fixed.CELLS[:26]` 만 다시 읽음, 나머지는 analyst 읽기)
+- P7 졸업 판정 정본: `inbox/jay/20261101-ex41/P7-GRADUATION-SPEC.md` · `p7_spec_check.py`(feature/fable-25a-jay 53fda76c)
 - 설계 정본: `inbox/jay/20261019-design/15-TERRAIN-CURRICULUM.md` :36~147 · `14-COMMAND-GENERATOR.md` :61~79 · :135~145 · `inbox/jay/20261018-next-arch/SPEC-ame2-go2.md` :138~156 · `inbox/jay/20261012-arch-discussion/PAPERS-architecture.md` :155~190(START) · :55~110(AME-2) · `inbox/jay/20261026-experiments/CURRICULUM-GATES.md` :60~71 · :140~147 · `inbox/jay/20261101-ex41/DESIGN-EX41-STAGE2-draft.md` :140~150 · :428~446
 - 코드(D:/mai-wt/planner-d125 d5c14948 = runner e1615b0e + D125): `foothold_s2/terrains/columns.py:11~34` · `rough_go2_cfg.py:11~43` · `s2_layout.py:1~30` · `s2_runtime.py:46` · `progression.py:13~17` · `tasks/s2_env_cfg.py:39~70` · `eval/fixed_terrain.py:13~130` · `eval/map_mode_cells.py:72` · `eval/axis_v2_run.py:180~200` · `curriculum/ex41-fixed5000.yaml:1~40 · 130~178 · 424~455` · `curriculum/ex41.py:121~130` · `curriculum/rules.py:14~29` · `runners/start_runner.py:86~146` · `runners/map_stats.py:20~105` · `ex41_start_preflight.py:18~77` · `ex40_supervisor.py:1~6` · `sensors/depth_cam_cfg.py:15~22`
 - Isaac Lab 2.3.2: `C:/isaac/IsaacLab/source/isaaclab/isaaclab/terrains/terrain_generator.py:240~262`
