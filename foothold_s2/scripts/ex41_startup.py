@@ -1,4 +1,4 @@
-"""CPU-safe EX-41 launch and score-contract helpers.
+﻿"""CPU-safe EX-41 launch and score-contract helpers.
 
 This module does not start Isaac or a simulator. The entrypoint uses these
 checks before AppLauncher and the simulator setup after authorization.
@@ -36,6 +36,9 @@ EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
 EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
 EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+EX41_PRODUCTION_PARENT = Path("C:/Users/AI-WS01/s2_lab")
+EX41_W78_VIDEO_ROOT = Path("D:/mai-tmp/ex41/w78_video")
+_EX41_PRODUCTION_ROOT = re.compile(r"ex41_main_[0-9]{8}_[0-9]{6}\Z")
 EX41_UPDATE_SECONDS_ESTIMATE = 26.3
 EX41_END_BY_BUFFER_SECONDS = 24 * 60 * 60
 
@@ -78,7 +81,7 @@ def ex41_score_watch_argv(run_dir: str | Path, score_dir: str | Path, *,
     if os.path.normcase(str(interpreter)) != os.path.normcase(str(EX41_ISAAC_PYTHON.resolve(strict=False))):
         raise ValueError("EX-41 score watcher requires the pinned isaac311 interpreter")
     return [str(interpreter), "-m", "foothold_s2.ex41_score_watch",
-            "--run-dir", str(run), "--out-root", str(run / "shadow-score-watch"),
+            "--run-dir", str(run), "--out-root", str(ex41_score_watch_output_root(run)),
             "--score-dir", str(score), "--table", str(table_path),
             "--eval-config", str(eval_path), "--execute"]
 
@@ -108,7 +111,7 @@ def launch_ex41_score_watch(run_dir: str | Path, score_dir: str | Path, *,
     argv = ex41_score_watch_argv(run_dir, score_dir, table=table,
                                  eval_config=eval_config, python=python)
     run = Path(run_dir).resolve(strict=True)
-    out = run / "shadow-score-watch"
+    out = ex41_score_watch_output_root(run)
     out.mkdir(parents=True, exist_ok=True)
     lock = out / "watch.lock"
     if lock.is_file():
@@ -198,9 +201,65 @@ def _require_d_drive(path: str | Path) -> Path:
     return root
 
 
+def ex41_output_layout_for_run(run_dir: str | Path) -> dict[str, Path] | None:
+    """Resolve D164 production paths; rehearsal and legacy runs return None.
+
+    Production run folders are <s2_lab>/ex41_main_YYYYMMDD_HHMMSS/main/<run>.
+    Score/evaluation artifacts and replay lists share <root>/eval; W78 video
+    output remains on the separately approved D: volume.
+    """
+    run = Path(run_dir).resolve()
+    if run.drive.upper() != "C:" or run.parent.name != "main":
+        return None
+    root = run.parent.parent
+    if root.parent != EX41_PRODUCTION_PARENT or not _EX41_PRODUCTION_ROOT.fullmatch(root.name):
+        return None
+    return {
+        "root": root,
+        "main_root": root / "main",
+        "run_dir": run,
+        "eval_root": root / "eval",
+        "score_dir": root / "eval" / "scores",
+        "playlist_dir": root / "eval",
+        "w78_video_root": EX41_W78_VIDEO_ROOT,
+    }
+
+
+def build_ex41_output_layout(timestamp: str, run_name: str) -> dict[str, Path]:
+    """Build the single approved production layout from explicit names."""
+    if not isinstance(timestamp, str) or not re.fullmatch(r"[0-9]{8}_[0-9]{6}", timestamp):
+        raise ValueError("EX-41 production timestamp must be YYYYMMDD_HHMMSS")
+    if (not isinstance(run_name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.+-]*", run_name)
+            or run_name in {".", ".."}):
+        raise ValueError("EX-41 run name must be one safe path component")
+    root = EX41_PRODUCTION_PARENT / f"ex41_main_{timestamp}"
+    run = root / "main" / run_name
+    return ex41_output_layout_for_run(run) or {}
+
+
+def ex41_score_watch_output_root(run_dir: str | Path) -> Path:
+    """Return ROOT/eval for the fixed production layout, isolated fallback otherwise."""
+    run = Path(run_dir).resolve()
+    layout = ex41_output_layout_for_run(run)
+    return layout["eval_root"] / "score-watch" if layout else run / "shadow-score-watch"
+
+
+def _require_ex41_run_path(path: str | Path) -> Path:
+    """Allow D rehearsal paths and only the explicit D164 C: production shape."""
+    root = Path(path)
+    if not root.is_absolute():
+        raise ValueError("EX-41 output must be an absolute path")
+    if root.drive.upper() == "D:":
+        return root
+    layout = ex41_output_layout_for_run(root)
+    if layout is None or layout["run_dir"] != root.resolve():
+        raise ValueError("EX-41 production output must match the approved s2_lab main/<run> layout")
+    return root
+
+
 def validate_ex41_output_directory(path: str | Path) -> Path:
     """Reject existing non-empty run destinations before any Kit import/start."""
-    root = _require_d_drive(path)
+    root = _require_ex41_run_path(path)
     if root.exists() and (not root.is_dir() or any(root.iterdir())):
         raise ValueError("EX-41 training output directory must be new or empty")
     return root
@@ -228,7 +287,7 @@ def build_ex41_disk_plan(output_root: str | Path, checkpoint_size_bytes: int,
                          save_interval: int, *, planned_updates: int = EX41_DISK_PLANNED_UPDATES,
                          free_bytes: int | None = None) -> dict[str, Any]:
     """Preflight output capacity from the pinned parent size and measured m6000 artifacts."""
-    root = _require_d_drive(output_root)
+    root = _require_ex41_run_path(output_root)
     if type(checkpoint_size_bytes) is not int or checkpoint_size_bytes <= 0:
         raise ValueError("EX-41 disk plan needs the measured parent checkpoint size")
     count = checkpoint_count_for_updates(planned_updates, save_interval)
@@ -265,14 +324,14 @@ def build_ex41_disk_plan(output_root: str | Path, checkpoint_size_bytes: int,
     }
     if (available < required_bytes
             or planner_check is not None and planner_check["level"] in ("block", "unknown")):
-        raise ValueError("EX-41 D: free space below preflight reserve: "
+        raise ValueError("EX-41 output free space below preflight reserve: "
                          f"available={available} required={required_bytes}")
     return receipt
 
 
 def write_ex41_disk_preflight(log_dir: str | Path, receipt: dict[str, Any]) -> Path:
-    """Persist the exact preflight receipt in the selected D: run directory."""
-    root = _require_d_drive(log_dir)
+    """Persist the exact preflight receipt in the selected run directory."""
+    root = _require_ex41_run_path(log_dir)
     if Path(receipt.get("output_root", "")).resolve() != root.resolve():
         raise ValueError("EX-41 disk preflight receipt does not match run directory")
     root.mkdir(parents=True, exist_ok=True)
@@ -286,7 +345,7 @@ def write_ex41_disk_preflight(log_dir: str | Path, receipt: dict[str, Any]) -> P
 def record_ex41_disk_snapshot(log_dir: str | Path, disk_plan: dict[str, Any],
                               completed_updates: int, *, free_bytes: int | None = None) -> dict[str, Any]:
     """Append a 250-update disk observation; below-reserve space warns but does not stop training."""
-    run_dir = _require_d_drive(log_dir)
+    run_dir = _require_ex41_run_path(log_dir)
     if Path(disk_plan.get("output_root", "")).resolve() != run_dir.resolve():
         raise ValueError("EX-41 disk snapshot path differs from preflight run directory")
     if type(completed_updates) is not int or completed_updates < 0:
@@ -1147,3 +1206,4 @@ def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
     temp.write_text(json.dumps(result, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     temp.replace(target)
     return target
+

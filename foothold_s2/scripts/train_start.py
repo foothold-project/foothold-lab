@@ -52,9 +52,11 @@ EX41_PARENT_RECEIPT = None
 EX41_DISK_RECEIPT = None
 EX41_REHEARSAL = False
 EX41_RESUME_PREFLIGHT = None
+EX41_OUTPUT_LAYOUT = None
 if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
-        authorization_snapshot, build_ex41_disk_plan, load_fixed_plan, require_production_authorization,
+        authorization_snapshot, build_ex41_disk_plan, ex41_output_layout_for_run,
+        load_fixed_plan, require_production_authorization,
         validate_ex41_output_directory, validate_rehearsal_request,
         validate_rehearsal_resume_request,
         verify_m6000_parent,
@@ -93,6 +95,14 @@ if _pre_args.ex41_table:
                      else _pre_args.ex41_log_root)
         if not disk_root:
             raise ValueError("EX-41 disk preflight requires --ex41_log_root")
+        if _pre_args.ex41_rehearsal_updates is None:
+            EX41_OUTPUT_LAYOUT = ex41_output_layout_for_run(disk_root)
+            if EX41_OUTPUT_LAYOUT is None:
+                raise ValueError("EX-41 production run must use s2_lab/ex41_main_YYYYMMDD_HHMMSS/main/<run>")
+            if (_pre_args.ex41_score_dir and
+                    os.path.normcase(os.path.abspath(_pre_args.ex41_score_dir)) !=
+                    os.path.normcase(str(EX41_OUTPUT_LAYOUT["score_dir"]))):
+                raise ValueError("EX-41 production score directory must be <ROOT>/eval/scores")
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             disk_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
             1 if _pre_args.ex41_rehearsal_updates is not None else EX41_PARENT_RECEIPT["save_interval"],
@@ -113,6 +123,8 @@ if _pre_args.ex41_table:
             "rehearsal_updates": _pre_args.ex41_rehearsal_updates,
             "rehearsal_output": _pre_args.ex41_rehearsal_output,
             "rehearsal_device": _pre_args.device,
+            "output_layout": ({key: str(value) for key, value in EX41_OUTPUT_LAYOUT.items()}
+                              if EX41_OUTPUT_LAYOUT else None),
             "production_launch_allowed": False}, sort_keys=True))
         raise SystemExit(0)
     if not _pre_args.ex41_parent_checkpoint:
@@ -134,7 +146,14 @@ if _pre_args.ex41_table:
         EX41_REHEARSAL = True
     else:
         if not _pre_args.ex41_log_root:
-            raise ValueError("EX-41 production start requires --ex41_log_root on D:")
+            raise ValueError("EX-41 production start requires --ex41_log_root in the approved main/<run> layout")
+        EX41_OUTPUT_LAYOUT = ex41_output_layout_for_run(_pre_args.ex41_log_root)
+        if EX41_OUTPUT_LAYOUT is None:
+            raise ValueError("EX-41 production run must use s2_lab/ex41_main_YYYYMMDD_HHMMSS/main/<run>")
+        if (_pre_args.ex41_score_dir and
+                os.path.normcase(os.path.abspath(_pre_args.ex41_score_dir)) !=
+                os.path.normcase(str(EX41_OUTPUT_LAYOUT["score_dir"]))):
+            raise ValueError("EX-41 production score directory must be <ROOT>/eval/scores")
         if _pre_args.resume_from:
             EX41_RESUME_PREFLIGHT = validate_resume_manifest(
                 _pre_args.resume_from,
@@ -145,6 +164,11 @@ if _pre_args.ex41_table:
                 log_dir=_pre_args.ex41_log_root,
                 score_dir=_pre_args.ex41_score_dir,
             )
+            recorded_score_dir = EX41_RESUME_PREFLIGHT.get("score_dir")
+            if (recorded_score_dir and
+                    os.path.normcase(os.path.abspath(recorded_score_dir)) !=
+                    os.path.normcase(str(EX41_OUTPUT_LAYOUT["score_dir"]))):
+                raise ValueError("EX-41 resume score directory differs from <ROOT>/eval/scores")
         else:
             validate_ex41_output_directory(_pre_args.ex41_log_root)
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
@@ -267,6 +291,7 @@ RSL_RL_PIN = "3.1.2"  # Isaac Lab setup.py 49 행 · 18 §5.1: 환경 이름 없
 
 @hydra_task_config(args_cli.task, args_cli.agent)
 def main(env_cfg, agent_cfg):
+    runtime_output_layout = None
     installed = metadata.version("rsl-rl-lib")
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
@@ -425,10 +450,20 @@ def main(env_cfg, agent_cfg):
             validate_resume_state, compare_resume_state,
         )
 
+        if not EX41_REHEARSAL:
+            runtime_output_layout = ex41_output_layout_for_run(log_dir)
+            if runtime_output_layout is None:
+                raise ValueError("EX-41 production log directory no longer matches its approved layout")
+            recorded_score_dir = (EX41_RESUME_PREFLIGHT or {}).get("score_dir")
+            if (recorded_score_dir and
+                    os.path.normcase(os.path.abspath(recorded_score_dir)) !=
+                    os.path.normcase(str(runtime_output_layout["score_dir"]))):
+                raise ValueError("EX-41 resume score directory differs from <ROOT>/eval/scores")
+            runtime_output_layout["eval_root"].mkdir(parents=True, exist_ok=True)
         score_dir = os.path.abspath(
             args_cli.ex41_score_dir
             or (EX41_RESUME_PREFLIGHT or {}).get("score_dir")
-            or os.path.join(log_dir, "scores"))
+            or (runtime_output_layout["score_dir"] if runtime_output_layout else os.path.join(log_dir, "scores")))
         resume_segment_index = (EX41_RESUME_PREFLIGHT["segment_index"]
                                 if EX41_RESUME_PREFLIGHT else 0)
         ex41_runtime = make_runtime(EX41_PLAN, env.num_envs, agent_cfg.device, log_dir,
@@ -568,6 +603,8 @@ def main(env_cfg, agent_cfg):
                                          "score_watch_26_cells_once": "separate_oneoff_ready_not_run" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
+                          "output_layout": ({key: str(value) for key, value in runtime_output_layout.items()}
+                                            if runtime_output_layout else None),
                           "disk_preflight": EX41_DISK_RECEIPT,
                           "local_update_range": [1, ex41_runtime.max_updates]}
     if resume_path is None:
