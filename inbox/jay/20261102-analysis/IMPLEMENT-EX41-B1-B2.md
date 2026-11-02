@@ -253,3 +253,12 @@ EX40 `ex40.yaml:7`은 `fixed_l02`다. m6000의 실제3072환경은 L0=1034, L1=1
 제안은 **0.2, 근거 등급은 가정**이다. 전체 환경20%가 순증으로 한 레벨 오른 정도의 계속 학습 신호를 뜻하도록 낮추자는 제안이며, 실측으로 검증된 문턱은 아니다.0.5는50% 한 레벨 순증을 요구한다. 어느 값도 절대 보행 합격선이 아니며 생존·정지·DR 조건과 함께 +500을 더 할지만 고른다. 승인 전에는 요청대로 **코드0.5를 유지**한다. EX41의 실제 승급 자료가 생기면 기록해 후속 판의 사전 기준을 정할 수 있다.
 
 확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 CPU 시험 파일 **103PASS189.74초**. 추가 전 D133·몫 변경 두 반례는2FAIL12.27초였고, 유지 중 오류 세 반례는 이미 고친 ed672e88에서3PASS였다. pyflakes·diff 검사 통과, 문서 U+2014 0개. GPU·Kit·학습·EX40 원장 변경 없음. G6 루프 실제 연결, D121 과제 변경 전후 평가, W72 추가 승인 칸, D93 히스토그램은 다른 연결과 함께 남아 있다.
+
+## 20. G15 W15 연속 칸 고침 · G16 부모 두 값 (11/02 15:1x)
+
+확인됨. 원본 고침 38ee51df를 a407377c로 가져왔다. 실제 EX-40 m2500 B1 평가 자료를 같은 설정으로 CPU 재채점하면 고침 전 HOLD(W15 sequence incomplete), 고침 뒤 PASS(문제 0)다. 지형별 by_kind의 생존 합을 읽으며 각 phase의 환경 수 합 64도 확인한다. 이전 live 점수와 원장을 바꾸지 않았다.
+
+- 재현: `recompute-ex41-g15-g16.py`, 증거: [EX41-G15-G16-replay.json](evidence/EX41-G15-G16-replay.json). 원자료 경로와 SHA 포함.
+- 부모 m6000: `adasmpl.p=1.0`, `force_gt=true`. 체크포인트의 iter=6000을 직접 읽었다. agent.yaml SHA256 `5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd`. 정본 등록은 lead 담당.
+- isaac311 CPU: ex40_scorer + ex41_scoring 22 PASS(10.32 s). GPU·Kit·학습 미실행.
+- G17 W71 감독기·retry 영수증·복원 요약·로그·CMP는 다음 작업이며 이 결과로 닫지 않는다.
