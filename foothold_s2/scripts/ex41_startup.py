@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from foothold_s2.curriculum.continuous import load_plan
-from foothold_s2.curriculum.ex41_fixed import CELLS, CASES, baseline_counts, maintenance
 from foothold_s2.curriculum import w72
 
 
@@ -136,70 +135,6 @@ def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float) -> dict[s
     if getattr(env, "_ex40_dr_scale", None) != 0.5 or dr_runtime.scale != 0.5:
         raise ValueError("EX-41 initial DR readback did not apply")
     return {"runtime_scale": dr_runtime.scale, "env_scale": env._ex40_dr_scale}
-
-
-def maintenance_counts_from_map_modes(map_modes: dict[str, Any], baseline: dict[str, int]) -> dict[str, dict[str, int]]:
-    """Convert the fixed map-mode evaluation's 39 survival cells to numbers."""
-    if not isinstance(map_modes, dict) or map_modes.get("envs") != 64:
-        raise ValueError("EX-41 maintenance source must contain 64-env map modes")
-    modes = map_modes.get("modes")
-    if not isinstance(modes, dict) or set(modes) != {"eval_gt", "probe_prop_only", "eval_pred"}:
-        raise ValueError("EX-41 maintenance source must have all three map modes")
-    if set(baseline) != set(CELLS):
-        raise ValueError("EX-41 baseline must contain exactly 39 cells")
-    out = {}
-    for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
-        cases = modes[mode]
-        if not isinstance(cases, dict) or not set(CASES) <= set(cases):
-            raise ValueError(f"EX-41 maintenance source cases incomplete: {mode}")
-        for case in CASES:
-            row = cases[case]
-            if (not isinstance(row, dict) or row.get("env_count") != 64
-                    or len(row.get("per_env", [])) != 64
-                    or type(row.get("alive_envs_at_end")) is not int
-                    or not 0 <= row["alive_envs_at_end"] <= 64):
-                raise ValueError(f"EX-41 invalid 64-env count: {mode}/{case}")
-            key = f"{mode}/{case}" + ("_record_only" if mode == "eval_pred" else "")
-            out[key] = {"passed": row["alive_envs_at_end"],
-                        "baseline_passed": baseline[key], "total": 64}
-    if set(out) != set(CELLS):
-        raise ValueError("EX-41 maintenance count output is not the exact 39-cell set")
-    return out
-
-
-def add_maintenance_counts(score: dict[str, Any], map_modes: dict[str, Any],
-                           baseline: dict[str, int], map_modes_path: str | Path) -> dict[str, Any]:
-    """Enrich an existing score draft without inventing its stage verdict."""
-    if not isinstance(score, dict) or score.get("format") != "foothold-ex41-score/1":
-        raise ValueError("EX-41 score draft format differs")
-    if (type(score.get("iteration")) is not int
-            or not isinstance(score.get("metrics"), dict)
-            or not isinstance(score.get("evidence"), list)
-            or any(type(score.get(k)) is not bool
-                   for k in ("maintenance_pass", "stage_pass", "safety_stop"))):
-        raise ValueError("EX-41 score draft fields or existing verdicts missing")
-    if (map_modes.get("checkpoint_iter") != score["iteration"]
-            or map_modes.get("checkpoint_sha256") != score.get("checkpoint_sha256")):
-        raise ValueError("EX-41 map-mode checkpoint does not match score draft")
-    checkpoint = Path(score["checkpoint_path"]).resolve(strict=True)
-    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
-    if (checkpoint.name != f"model_{score['iteration']}.pt"
-            or digest != score["checkpoint_sha256"]):
-        raise ValueError("EX-41 score checkpoint path or SHA differs")
-    counts = maintenance_counts_from_map_modes(map_modes, baseline)
-    result = dict(score)
-    metrics = dict(result.get("metrics") or {})
-    metrics["maintenance_counts"] = counts
-    result["metrics"] = metrics
-    result["maintenance_pass"] = maintenance(counts, baseline) == []
-    evidence = list(result.get("evidence") or [])
-    evidence_path = Path(map_modes_path).resolve(strict=True)
-    evidence_row = {"path": str(evidence_path),
-                    "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest()}
-    if evidence_row not in evidence:
-        evidence.append(evidence_row)
-    result["evidence"] = evidence
-    return result
 
 
 def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,

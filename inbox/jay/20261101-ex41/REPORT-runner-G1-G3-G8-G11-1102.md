@@ -42,3 +42,9 @@ G6 점수 소비는 분석 소유 `curriculum/ex41_scoring.py`의 `enrich_score_
 닫힘 상태: G3 · G6 · G8 · G14(Python 및 shell stdin 계약). G1은 시작 코드 연결과 CPU DRY까지 확인했으나 task config의 실제 import가 `pxr` 부재로 실패했고 승인된 첫 10 update Kit/GPU 예행이 미실행이라 부분 상태다. G11은 EX-41 단계 끝 3모드 평가 · W57 · 촬영 · 프레임 검사 · axis250 · shadow · 고정 경로 playlist를 묶는 loop가 없어서 열려 있다. PPO valid와 bridge는 19 PASS, skip 0이다. G14의 단계 종료 영수증 보강도 미확인으로 남긴다.
 
 정적 검사 한계: `isaac311`에 `ruff` 모듈이 없어 `python -m ruff check --select F`는 실행되지 않았다. `git diff --check`는 통과했다.
+
+## D133 후속 수정
+
+분석 고정본 08a8c99c를 통합했다. G6 점수는 `maintenance_counts` 판정26칸과 `record_counts` 기록39칸을 분리하며, runner 진입점은 D133의 `enrich_score_metrics`를 호출하고 세 모드의 stand 경로를 요구한다. 중복된 구형 39칸 점수 변환기와 그 전제 시험을 제거했다.
+
+D133 이후 전체 CPU 묶음 재실행 결과는 `138 passed in 185.34s`, skip 0이다. 대상에는 startup/preflight, 26·39 점수 계약, runtime 경계, PPO valid/bridge, no-window Git Bash가 포함된다. G1의 Kit/GPU 10-update 확인과 G11 전체 loop 연결은 여전히 미완료이며, 이번 수정으로도 완료로 표시하지 않는다.

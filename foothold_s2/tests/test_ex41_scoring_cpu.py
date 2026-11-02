@@ -57,7 +57,8 @@ def test_runner_score_entry_uses_required_three_stand_sources(actual,tmp_path):
     enrich_score_file(source,ROOT/'map64/map_modes.json',stands,TABLE,target)
     result=json.loads(target.read_text())
     assert set(result['metrics']['stand_counts'])==set(MODES)
-    assert len(result['metrics']['maintenance_counts'])==39
+    assert len(result['metrics']['maintenance_counts'])==26
+    assert len(result['metrics']['record_counts'])==39
     assert len(result['evidence'])==8
 
 
