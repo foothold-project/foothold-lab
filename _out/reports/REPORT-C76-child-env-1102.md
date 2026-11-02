@@ -13,3 +13,7 @@
 isaac311 CPU 시험: `python -m pytest foothold_s2/tests/test_c_layer_queue.py -q` 결과 22 passed. 실제 Python 자식의 환경 값과 세 subprocess 호출의 환경을 각각 확인했다. `ruff check --select F`와 pyflakes는 모두 0건이었다. Kit 촬영 성공 여부는 아직 미확인이다.
 
 실행 중인 `scripter-w75-w76` 사본과 `C:/Users/AI-WS01/s2_lab/c_layer_m6000/plan.json`은 수정하지 않았다. 기존 계획은 대기열 경로와 SHA256을 이전 코드로 고정한다. 새 코드 채택 시 lead가 별도 계획 사본의 `queue`와 `queue_sha256`을 새 고정 사본으로 다시 묶어야 한다. 이미 기록된 첫 기술 실패는 그대로 보존한다.
+
+## 낮은 위험 두 건 후속
+
+계획 검사에서 `--device cuda:0|cuda:1` 정확히 한 번과 전 칸 동일 장치를 요구한다. 기록기가 종료 코드 0을 냈더라도 child.log에 Python Traceback이 있으면 해당 시도를 기술 실패로 남기고 정본 영상은 만들지 않는다. CPU 반례는 `--device cpu`, 칸 사이 장치 혼합, rc0와 Traceback 조합이다. 후속 대기열 시험 결과는 24 passed이다.

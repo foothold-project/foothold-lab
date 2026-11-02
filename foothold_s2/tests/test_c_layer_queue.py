@@ -55,7 +55,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
                                 "map_mode": mode, "env_id": 7, "kind": kind, "col": 4},
                      "recorder_argv": ["python", str(recorder), "--policy", "{policy}",
                                        "--checkpoint", str(checkpoint), "--label", "{label}",
-                                       "--mp4", "{mp4}"]})
+                                       "--mp4", "{mp4}", "--device", "cuda:1"]})
     plan = {"status": "approved_canon", "canon_label": "EX40", "iteration": 8000,
             "kinds": KINDS, "checkpoint": str(checkpoint), "checkpoint_sha256": q.sha256(checkpoint),
             "priority_markers": {name: str(tmp_path / (name + ".busy"))
@@ -173,6 +173,35 @@ def test_recorder_preflight_capture_and_composer_receive_same_kit_env(tmp_path, 
         assert env["OMNI_KIT_ACCEPT_EULA"] == "YES"
         assert env["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
         assert "CUDA_VISIBLE_DEVICES" not in env
+
+
+def test_plan_rejects_wrong_or_mixed_cuda_device(tmp_path):
+    plan, rows = fixture(tmp_path)
+    rows[0]["recorder_argv"][-1] = "cpu"
+    with pytest.raises(ValueError, match="cuda:0 or cuda:1"):
+        q.validate_plan(plan)
+    rows[0]["recorder_argv"][-1] = "cuda:0"
+    with pytest.raises(ValueError, match="mixes recorder GPU"):
+        q.validate_plan(plan)
+
+
+def test_traceback_in_zero_exit_child_log_is_technical_failure(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    fake_run, _ = fake_capture(plan, [0])
+
+    def with_traceback(argv, **kwargs):
+        result = fake_run(argv, **kwargs)
+        if argv[1] == plan["recorder"] and "--plan-only" not in argv:
+            kwargs["stdout"].write(b"Traceback (most recent call last):\nValueError: hidden\n")
+        return result
+
+    monkeypatch.setattr(q.subprocess, "run", with_traceback)
+    out = tmp_path / "out"
+    result = q.run_one(plan, out=out, high_priority_markers=[], only_cell=q._slot(rows[0]))
+    assert result["state"] == "capture_failed"
+    assert "Traceback" in result["reason"]
+    assert not list(out.glob("*.mp4"))
+    assert q._summary(out, rows[0])["attempts"] == 0
 
 
 def test_inventory_and_seed_gate(tmp_path):

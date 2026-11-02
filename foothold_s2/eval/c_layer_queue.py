@@ -53,6 +53,11 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def child_log_has_traceback(path: Path) -> bool:
+    with path.open("rb") as stream:
+        return any(b"Traceback (most recent call last):" in line for line in stream)
+
+
 def inventory(kinds: dict[str, list[str]]) -> list[tuple[str, int, str]]:
     if len(kinds.get("continuous", [])) != 7 or len(kinds.get("sparse", [])) != 5:
         raise ValueError("C layer requires seven continuous and five sparse kinds")
@@ -98,6 +103,7 @@ def validate_plan(plan: dict) -> dict:
     if not isinstance(rows, list):
         raise ValueError("jobs must be a list")
     seen = set()
+    expected_device = None
     for row in rows:
         key = (row.get("kind"), row.get("level"), row.get("map_mode"))
         if key not in keys or key in seen:
@@ -145,6 +151,14 @@ def validate_plan(plan: dict) -> dict:
         argv = row.get("recorder_argv")
         if not isinstance(argv, list) or len(argv) < 3 or argv[1] != plan["recorder"]:
             raise ValueError("recorder argv must name the SHA-pinned C76 recorder")
+        if (argv.count("--device") != 1 or argv.index("--device") + 1 == len(argv)
+                or argv[argv.index("--device") + 1] not in ("cuda:0", "cuda:1")):
+            raise ValueError("C76 recorder requires exactly one cuda:0 or cuda:1 --device")
+        device = argv[argv.index("--device") + 1]
+        if expected_device is None:
+            expected_device = device
+        elif device != expected_device:
+            raise ValueError("C76 plan mixes recorder GPU devices")
         for option, value in (("--mp4", "{mp4}"), ("--label", "{label}"),
                               ("--checkpoint", plan["checkpoint"]), ("--policy", "{policy}")):
             if argv.count(option) != 1 or argv.index(option) + 1 == len(argv) or argv[argv.index(option) + 1] != value:
@@ -365,6 +379,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                                            check=False, env=child_env)
                 if child.returncode:
                     raise ValueError("recorder child exit %d" % child.returncode)
+                if child_log_has_traceback(attempt_root / "child.log"):
+                    raise ValueError("recorder child logged a Traceback despite exit 0")
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
                 raw_audit = audit_video(mp4, expected=450, width=1280, height=720)
                 _write(attempt_root / "raw_frame_audit.json", raw_audit)
