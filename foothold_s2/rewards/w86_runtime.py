@@ -19,6 +19,37 @@ MAX_SWING_COST_M2=4*MAX_FOOT_HEIGHT_ERROR_M**2
 MAX_BODY_YAW_RATE_RAD_S=100.  # Corruption guard, far above commanded 1.5 rad/s.
 
 
+class FatalTrainingFault(ValueError):
+    """U6: abort the current rollout; never serialize corrupt state as resumable.
+
+    The runner owns the stop/checkpoint boundary and notification transport. It
+    must preserve the last verified checkpoint, publish this receipt, and stop
+    before another optimizer update. This exception is not env quarantine.
+    """
+    def __init__(self, record, receipt_path):
+        self.record=record
+        self.receipt_path=str(receipt_path)
+        super().__init__('EX41 fatal: '+record['reason'])
+
+
+def fatal_fault(adapter, reason, *, env_ids=None, error_type=None):
+    """Persist the notification source before unwinding; no checkpoint writes."""
+    record={'format':'ex41-fatal/1','event':'fatal_training_fault','reason':reason,
+            'step':int(adapter.env.common_step_counter),'stop_requested':True,
+            'resumable_checkpoint_written':False,
+            'required_action':'preserve_last_verified_checkpoint_and_stop_before_update'}
+    if env_ids is not None: record['env_ids']=env_ids.detach().cpu().tolist()
+    if error_type is not None: record['error_type']=error_type
+    path=adapter.log_dir/'ex41_fatal.jsonl'
+    try:
+        adapter.log_dir.mkdir(parents=True,exist_ok=True)
+        with path.open('a',encoding='utf-8') as out:
+            out.write(json.dumps(record,allow_nan=False)+'\n')
+    except OSError as exc:
+        record['receipt_write_error']=type(exc).__name__
+    raise FatalTrainingFault(record,path)
+
+
 def rotate(q,v):
     """Hamilton wxyz quaternion rotation, all arguments broadcast together."""
     qv=q[...,1:].expand_as(v)
@@ -272,6 +303,11 @@ def _bad_rows(value,n,device):
     return out
 
 
+def _global_nonfinite(value,n):
+    return any(t.is_floating_point() and (not t.ndim or t.shape[0]!=n)
+               and not torch.isfinite(t).all() for t in _leaves(value))
+
+
 def _sanitize(value,bad,fill=0.):
     """Return owned transition storage; rollout tensors can alias policy std.
 
@@ -293,14 +329,20 @@ def _sanitize(value,bad,fill=0.):
 
 def quarantine_actions(runner,actions):
     a=runner.env.unwrapped._ex41_w86
+    if _global_nonfinite(actions,len(a.pending)):
+        fatal_fault(a,'global_nonfinite_action')
     bad=_bad_rows(actions,len(a.pending),a.pending.device)
     transition=getattr(runner.alg,'transition',None)
     if transition is not None:
+        if _global_nonfinite(vars(transition),len(bad)):
+            fatal_fault(a,'global_nonfinite_transition')
         for value in vars(transition).values(): bad |=_bad_rows(value,len(bad),bad.device)
     if bad.any():
         policy=getattr(runner.alg,'policy',None)
         if policy is not None and any(not torch.isfinite(p).all() for p in policy.parameters()):
-            raise ValueError('W86 cannot quarantine globally nonfinite policy parameters')
+            fatal_fault(a,'global_nonfinite_policy')
+        if bad.all():
+            fatal_fault(a,'all_env_actions_invalid')
     a.mark(bad,'nonfinite_action_or_pending_transition')
     result=actions.clone(); result[bad.to(actions.device)]=0.
     return result
@@ -308,6 +350,8 @@ def quarantine_actions(runner,actions):
 
 def quarantine_step(runner,observations,rewards,dones,extras):
     env=runner.env.unwrapped; a=env._ex41_w86; n=len(a.pending)
+    if _global_nonfinite(observations,n) or _global_nonfinite(rewards,n):
+        fatal_fault(a,'global_nonfinite_observation')
     bad=a.pending | _bad_rows(observations,n,a.pending.device) | _bad_rows(rewards,n,a.pending.device)
     extras=dict(extras)
     # Snapshot before pending is cleared. Normal termination remains valid.
@@ -321,14 +365,21 @@ def quarantine_step(runner,observations,rewards,dones,extras):
     obs_bad=_bad_rows(observations,n,bad.device)
     reset_ids=torch.unique(torch.cat([reset_ids,obs_bad.nonzero().flatten()]))
     if reset_ids.numel():
-        env._reset_idx(reset_ids); env.scene.write_data_to_sim(); env.sim.forward()
-        fresh=env.observation_manager.compute(update_history=False)
-        for key in observations.keys():
-            observations[key][reset_ids.to(observations[key].device)]=fresh[key][reset_ids].to(observations[key].device)
+        try:
+            env._reset_idx(reset_ids); env.scene.write_data_to_sim(); env.sim.forward()
+            fresh=env.observation_manager.compute(update_history=False)
+            if _global_nonfinite(fresh,n):
+                fatal_fault(a,'global_nonfinite_reset_observation',env_ids=reset_ids)
+            for key in observations.keys():
+                observations[key][reset_ids.to(observations[key].device)]=fresh[key][reset_ids].to(observations[key].device)
+        except FatalTrainingFault:
+            raise
+        except Exception as exc:
+            fatal_fault(a,'env_reset_failed',env_ids=reset_ids,error_type=type(exc).__name__)
     remaining=_bad_rows(observations,n,bad.device)
     if remaining.any():
         a.mark(remaining,'post_reset_still_invalid')
-        raise ValueError('W86 env reset failed to restore finite observations; simulator repair required')
+        fatal_fault(a,'post_reset_still_invalid',env_ids=remaining.nonzero().flatten())
     rewards=rewards.clone(); rewards[bad.to(rewards.device)]=0.
     dones=dones.clone(); dones[bad.to(dones.device)]=True
     extras=dict(extras)
