@@ -35,6 +35,29 @@ def sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def load_plan(path: str | Path, *, arm: str | None = None,
+              smoke_boundaries: tuple[int, ...] | None = None):
+    """EX-41 entry factory; legacy Plan remains the EX-40 parser.
+
+    Returns Plan for foothold-ex40-curriculum/1 or EX41Plan for
+    foothold-ex41-curriculum/1. EX41 smoke boundaries are test-only local n,
+    never physical/parent iteration 7500. Caller must record test table SHA.
+    """
+    raise NotImplementedError('EX41 interface only; not approved for execution')
+
+
+def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
+                 score_dir: str | Path | None = None,
+                 terrain_policy: dict | None = None, segment_index: int = 0):
+    """Return Runtime or EX41Runtime. Same attach/reset/checkpoint interface.
+
+    EX41 uses local completed update n (parent m7500 is recorded separately).
+    Transfer initializes n=0 without a rollout; first rollout is n=1.
+    EX41 resume preserves n and all W72 state. No live EX40 ledger is consumed.
+    """
+    raise NotImplementedError('EX41 interface only; not approved for execution')
+
+
 @dataclass(frozen=True)
 class Stage:
     id: str
