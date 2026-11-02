@@ -61,7 +61,7 @@ def validate_ranges(ranges, old=None):
 class EX41Plan(Plan):
     """Plan-compatible stages S2-0/S2a/S2b/S2c/T0_prime.
 
-    Public attributes: is_ex41=True, parent_update=7500, parent_sha256,
+    Public attributes: is_ex41=True, parent_update, parent_sha256, initial_dr_scale,
     path/sha256/effective_sha256, stages:list[Stage], heading_cfg/stand_cfg,
     domain_randomization, terrain_curriculum, gate_cfg, promotion/shadow_gate,
     boundary_path, approvals_path, stage_meta. load_plan is the public entry.
@@ -77,17 +77,23 @@ class EX41Plan(Plan):
                  'heading','domain_randomization','first_rewards','ranges','stages','automatic'}
         if not isinstance(d,dict) or set(d)!=allowed or d['format']!='foothold-ex41-curriculum/1':
             raise ValueError('EX41 unknown/missing schema field')
-        if d['start']!='transfer' or d['parent_update']!=7500 or arm!='B':
-            raise ValueError('EX41 requires D96 m7500 transfer and arm B')
+        if d['start']!='transfer' or type(d['parent_update']) is not int or d['parent_update'] not in (6000,7500) or arm!='B':
+            raise ValueError('EX41 requires registered m6000/m7500 transfer and arm B')
         for k in ('parent_sha256','baseline_env_yaml_sha256','baseline_agent_yaml_sha256'):
             if not re.fullmatch('[0-9a-f]{64}',d[k]): raise ValueError('EX41 missing SHA pin')
             setattr(self,k,d[k])
-        self.parent_update=7500; self.arm=arm; self.is_ex41=True
+        self.parent_update=d['parent_update']; self.arm=arm; self.is_ex41=True
         self.promotion=d['promotion']; self.shadow_gate=d['shadow_gate']
         if self.promotion!='gate' or self.shadow_gate is not False: raise ValueError('EX41 requires active performance gates')
         self.terrain_curriculum=d['terrain_curriculum']
         self.heading_cfg=copy.deepcopy(d['heading']); self.stand_cfg=copy.deepcopy(d['stand_penalty'])
         self.gate_cfg=d['gate']; self.automatic=d['automatic']; self.domain_randomization=d['domain_randomization']
+        dr=self.domain_randomization
+        if (not isinstance(dr,dict) or dr.get('mode') not in ('constant','boundary_ramp')
+            or type(dr.get('scale')) not in (int,float) or not math.isfinite(dr['scale'])
+            or not 0<=dr['scale']<=1 or dr.get('observation_noise')!={'mode':'fixed','multiplier':1.}):
+            raise ValueError('EX41 initial DR scale/noise invalid')
+        self.initial_dr_scale=float(dr['scale'])
         self.boundary_path=self.path.with_name(d['boundary_file']); self.approvals_path=self.path.with_name(d['approval_file'])
         self.effective_sha256=digest({'table':self.sha256,'arm':arm,'smoke':smoke_boundaries})
         rewards=d['first_rewards']
@@ -143,7 +149,8 @@ class EX41Runtime(Runtime):
         self._last_boundary=-1; self._iteration=0; self._extensions=0
         self._pair_bias={}; self._halved=set(); self._auto_disabled=False
         self._mirror_pending=False; self._auto_seen=set(); self._history=[]
-        self._level_history=[]; self._s2c_pass=False; self._ramp=(0,1.,1.,0)
+        self._level_history=[]; self._s2c_pass=False
+        self._ramp=(0,plan.initial_dr_scale,plan.initial_dr_scale,0)
         self._stage_baseline_sha=plan.parent_sha256
 
     def set_stage_changed_hook(self, callback: Callable[[Stage, dict], dict]) -> None:
@@ -180,7 +187,7 @@ class EX41Runtime(Runtime):
 
     def _initial_values(self):
         return {'ppo':{'entropy_coef':.01,'desired_kl':.01},
-                'dr':{'target_scale':1.,'ramp_updates':0},
+                'dr':{'target_scale':self.plan.initial_dr_scale,'ramp_updates':0},
                 'reward_weights':{'zero_yaw':-.5,'swing':-10.,'stumble':-2.},
                 'heading_forward_fraction':.3,'critic_mirror':False,
                 'terrain_level_cap':5,'w71_ready':False,'episode_length_s':20.}
@@ -196,14 +203,16 @@ class EX41Runtime(Runtime):
         # legacy _sync_rewards: it would reset the lin_vel_z schedule origin.
 
     def start(self,parent_sha256=None):
-        if parent_sha256!=self.plan.parent_sha256: raise ValueError('EX41 D96 parent SHA differs')
+        if parent_sha256!=self.plan.parent_sha256: raise ValueError('EX41 configured parent SHA differs')
         if self._started: return
         self._snapshot=w72.read_committed_pair(self.plan.boundary_path,self.plan.approvals_path)
         values=self._snapshot['config'].get('values')
         self._check_values(values)
+        if values['dr']!={'target_scale':self.plan.initial_dr_scale,'ramp_updates':0}:
+            raise ValueError('EX41 initial DR boundary must match configured parent scale; ramp begins at an approved boundary')
         w72.validate_change(self._initial_values(),values,self._snapshot['approvals'])
         self._config_values=copy.deepcopy(values)
-        if not self._apply(0,0,values,[],None,'D96 n0 transfer'):
+        if not self._apply(0,0,values,[],None,f'configured m{self.plan.parent_update} n0 transfer'):
             raise ValueError('EX41 initial application failed before first rollout')
         self._started=True
 
@@ -264,7 +273,7 @@ class EX41Runtime(Runtime):
         event_id=digest([n,before,after,snap.get('config_sha256'),score_sha])
         if event_id in self._applied_ids: return True
         row=dict(format='foothold-ex41-application/1',event_id=event_id,status='rejected',iteration=n,
-            parent_update=7500,stage_before=before.get('stage_id'),stage_after=after['stage_id'],
+            parent_update=self.plan.parent_update,stage_before=before.get('stage_id'),stage_after=after['stage_id'],
             config_commit=snap.get('commit'),config_sha256=snap.get('config_sha256'),
             approval_sha256=snap.get('approval_sha256'),score_sha256=score_sha,
             checkpoint_sha256=(score or {}).get('checkpoint_sha256',(self.last_checkpoint or {}).get('sha256',self.plan.parent_sha256)),
@@ -608,7 +617,7 @@ class EX41DRReadback:
     """Keep the existing physical DR events/readback; replace its n-based ramp."""
     def __init__(self,base,runtime):
         self.base=base; self.runtime=runtime
-        base.scale=1.; base.env._ex40_dr_scale=1.
+        base.scale=runtime.plan.initial_dr_scale; base.env._ex40_dr_scale=base.scale
 
     def update_start(self,update):
         b=self.base; b.update=int(update); b.schedule_update=None; b.smoke=False

@@ -125,7 +125,7 @@ class W86Runtime:
                     'env_ids':bad.nonzero().flatten().cpu().tolist()},allow_nan=False)+'\n')
 
     def _sum(self,name,x):
-        value=x.detach().sum(0)
+        value=x.detach().sum(0,dtype=torch.float64 if x.is_floating_point() else torch.int64)
         self.sums[name]=self.sums.get(name,torch.zeros_like(value))+value
 
     def refresh(self):
@@ -152,9 +152,6 @@ class W86Runtime:
         self.in_swing &=ray_valid
         touchdown &=self.in_swing
         complete=touchdown & ray_valid & moving[:,None]
-        self._sum('complete_swing_count',complete.long())
-        self._sum('complete_swing_peak_sum_m',torch.where(complete,self.peak,torch.zeros_like(self.peak)))
-        self._sum('complete_swing_time_sum_s',torch.where(complete,self.air_time,torch.zeros_like(self.air_time)))
         knee_ids=d.get('knee_ids',list(range(d['torque'].shape[1])))
         effort=d['effort_limits'][:,knee_ids]; limits=d['joint_limits']
         if not torch.isfinite(effort).all() or (effort<=0).any() or not torch.isfinite(limits).all():
@@ -169,10 +166,17 @@ class W86Runtime:
           'stumble':w86.stumble_cost(_safe(d['forces'])),
           'stumble_force_floor_1n':w86.stumble_cost(_safe(d['forces']),1.),
         }
+        overflow=torch.zeros_like(bad)
+        for value in terms.values(): overflow |=~torch.isfinite(value)
+        self.mark(overflow,'nonfinite_derived_reward')
+        bad |=overflow; ray_valid &=~bad[:,None]; complete &=~bad[:,None]
+        self._sum('complete_swing_count',complete.long())
+        self._sum('complete_swing_peak_sum_m',torch.where(complete,self.peak,torch.zeros_like(self.peak)))
+        self._sum('complete_swing_time_sum_s',torch.where(complete,self.air_time,torch.zeros_like(self.air_time)))
         for name,value in terms.items():
             terms[name]=torch.where(bad,torch.zeros_like(value),value)
             self._sum('term/'+name,terms[name])
-        fm=w86.foot_metrics(d['sole_z'],d['ground_z'][...,0],d['velocity_xy'],contact,moving)
+        fm=w86.foot_metrics(d['sole_z'],d['ground_z'][...,0],d['velocity_xy'],contact,moving & ~bad)
         for name in ('swing_frames','contact_moving_frames','drag_frames','low_swing_frames'):
             self._sum(name,fm[name])
         self._sum('invalid_ray_frames',~torch.isfinite(d['ground_z']).all(-1))
@@ -191,7 +195,7 @@ class W86Runtime:
 
     def flush(self,iteration):
         row={'format':'ex41-w86-metrics/1','iteration':int(iteration),'env_frames':self.count,
-             'feet_order':list(FEET),'feet':{},'terms':{},'quarantine_env_count':self.quarantine_count}
+             'feet_order':list(FEET),'knee_order':list(KNEES),'feet':{},'terms':{},'quarantine_env_count':self.quarantine_count}
         for name,value in self.sums.items():
             if name.startswith('term/'):
                 row['terms'][name[5:]]={'sum':float(value.cpu()),'denominator':self.count,
