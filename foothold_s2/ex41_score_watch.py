@@ -17,6 +17,7 @@ import numpy as np
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.curriculum.ex41 import digest
 from foothold_s2.curriculum.ex41_scoring import enrich_score_metrics, enrich_training_metrics
+from foothold_s2.curriculum.ex41_symmetry import map_pairs, combine
 from foothold_s2.eval.axis_v2_cells import case_specs, yaw_accumulation, finite_median
 from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 from foothold_s2.ex40_score import config, sha256
@@ -130,7 +131,7 @@ def measure_w78(path, checkpoint):
                 raise ValueError('W78 env coverage differs')
             raw = _raw_path(path.parent, row); refs.append(evidence(raw))
             summary[mode][name] = {'by_terrain_kind': row['by_terrain_kind'], 'per_env': per}
-    # Preserve signed ratios including >1. No unapproved scalar aggregation.
+    # Preserve all signed raw ratios including >1; symmetry is a separate field.
     ratios = data.get('w78_min_lr_ratio')
     expected_ratios = {f'L{level}_a{angle:03d}_{mode}_{kind}' for level in (2, 5)
                        for angle in (0, 30, 60, 90) for mode in MODES
@@ -144,8 +145,7 @@ def measure_w78(path, checkpoint):
         elif (any(type(v) not in (int, float) or not math.isfinite(v) for v in (l, r, m))
               or not math.isclose(m, min(l, r), abs_tol=1e-12)):
             raise ValueError('W78 signed movement ratio differs')
-    return {'cells': summary, 'min_lr_ratio_by_cell': ratios,
-            'scalar_observation': 'not_selected_pending_D101_cell_aggregation'}, refs
+    return {'cells': summary, 'min_lr_ratio_by_cell': ratios}, refs
 
 
 def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_path=None, w78_path=None,
@@ -184,7 +184,13 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
             row['components']['training_metrics'] = f'HOLD: {type(exc).__name__}: {exc}'
     else:
         row['components']['training_metrics'] = 'unavailable_in_EX40_replay'
-    required = ['maintenance_stand', 'w57', 'w78_v2'] + (['training_metrics'] if w86_path else [])
+    try:
+        row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(read(bundle/'map64/map_modes.json')),
+            row['metrics']['w78_v2']['min_lr_ratio_by_cell'])
+        row['components']['critic_mirror_symmetry'] = 'complete'
+    except (OSError,ValueError,TypeError,KeyError) as exc:
+        row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
+    required = ['maintenance_stand', 'w57', 'w78_v2', 'critic_mirror_symmetry'] + (['training_metrics'] if w86_path else [])
     row['evaluation_state'] = 'complete' if all(row['components'][k] == 'complete' for k in required) else 'HOLD'
     if row['evaluation_state'] == 'HOLD':
         row['partial_metrics'] = row['metrics']; row['metrics'] = {}

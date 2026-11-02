@@ -194,6 +194,7 @@ class EX41FixedRuntime(EX41Runtime):
         super().__init__(*args,**kwargs)
         self.clock=Clock(self.plan.clock_settings); self.baseline=None
         self._missing_maintenance_boundaries=0
+        self._last_mirror_observed_score=None
         cfg=self.clock.settings
         self.max_updates=cfg['duration_updates']+cfg['pause_limit_updates']+cfg['extension_updates']*cfg['maximum_extensions']
 
@@ -250,14 +251,12 @@ class EX41FixedRuntime(EX41Runtime):
         return ok
 
     def _record_mirror_observation(self,n,score):
-        """P3/D130: D101 is an observation, never an automatic PPO change.
+        """Lead 19:3x D101 interpretation: same GT pair fails two boundaries.
 
-        This legacy scalar consumer awaits a pinned D101 cell aggregation.
-        W78 raw min_lr_ratio is min(left,right) actual/commanded displacement,
-        not min/max balance and not optimizer learning rate. The score watcher
-        keeps all 48 raw cells and does not synthesize this scalar. Missing or
-        rejected evidence cannot be replaced by two older observations.
+        S is a derived signed min/max ratio, separate from 48 W78 raw minima.
+        Missing, stale, rejected, or different failing pairs cannot be joined.
         """
+        from foothold_s2.curriculum.ex41_symmetry import validate
         interval=self.clock.settings['interval_updates']
         current=(score or {}).get('iteration')
         previous=next((r for r in reversed(self._history) if current is not None
@@ -265,21 +264,32 @@ class EX41FixedRuntime(EX41Runtime):
         if previous and any(previous['iteration']<=r['iteration']<=current
                             for r in self._score_rejections.values()):
             previous=None
-        entries=[]
+        entries=[];failed=[]
         for row in (previous,score):
-            value=(row or {}).get('metrics',{}).get('w78_min_lr_ratio')
-            valid=type(value) in (int,float) and math.isfinite(value) and 0<=value<=1
-            entries.append({'iteration':(row or {}).get('iteration'),'ratio':value if valid else None,
-                            'score_sha256':(row or {}).get('_sha256')})
-        within=current is not None and 0<current<=1000
+            bundle=(row or {}).get('metrics',{}).get('critic_mirror_symmetry')
+            error=None
+            try:validate(bundle)
+            except (ValueError,TypeError,KeyError) as exc:error=str(exc)
+            pairs={} if error else bundle['modes']['eval_gt']
+            failed.append({k for k,v in pairs.items() if v['valid']
+                           and v['symmetry']<self.plan.automatic['critic_both_fail_fraction']})
+            entries.append({'iteration':(row or {}).get('iteration'),'pairs':copy.deepcopy(pairs),
+                            'error':error,'score_sha256':(row or {}).get('_sha256')})
         threshold=self.plan.automatic['critic_both_fail_fraction']
-        condition=within and all(e['ratio'] is not None and e['ratio']<threshold for e in entries)
-        self._write({'event':'critic_mirror_observation','iteration':n,
-            'definition':'D101 scalar aggregation pending; W78 raw cells use min(left,right) actual/commanded displacement',
-            'threshold':threshold,'within_first1000':within,'observations':entries,
+        fresh=current is not None and 0<n-current<=self.plan.gate_cfg['maximum_score_age']
+        new_score=current is not None and current!=getattr(self,'_last_mirror_observed_score',None)
+        matching=sorted(failed[0]&failed[1]) if fresh and new_score else []
+        if fresh:self._last_mirror_observed_score=current
+        condition=bool(matching)
+        event={'event':'critic_mirror_observation','iteration':n,
+            'definition':'S=min(left,right)/max(left,right); signed movement ratios; GT only; lead 19:3x interpretation',
+            'threshold':threshold,'fresh':fresh,'new_score':new_score,'observations':entries,
+            'matching_pair_ids':matching,
             'condition_met':bool(condition),'automatic_activation':False,
             'action':'request_manual_W72_approval' if condition else 'record_only',
-            'effective_critic_mirror':bool(self.effective['critic_mirror'])})
+            'effective_critic_mirror':bool(self.effective['critic_mirror'])}
+        self._write(event)
+        if condition:self._write({**event,'event':'critic_mirror_candidate'})
 
     def on_update_start(self,n):
         if not self._started: raise ValueError('EX41 start/load required before rollout')
@@ -320,7 +330,13 @@ class EX41FixedRuntime(EX41Runtime):
             self._write({'event':'latest_score_invalid_hold','iteration':n,
                          'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
             score=None
-        self._record_mirror_observation(n,score)
+        # P3 is an asynchronous record-only observation. The fixed DR gate
+        # above keeps its pinned freshness rule; it is not relaxed here.
+        mirror_rows=[r for r in self._history if 0<n-r['iteration']<=self.plan.gate_cfg['maximum_score_age']]
+        mirror_score=mirror_rows[-1] if mirror_rows else None
+        if mirror_score and any(mirror_score['iteration']<=r['iteration']<n
+                                for r in self._score_rejections.values()):mirror_score=None
+        self._record_mirror_observation(n,mirror_score)
         failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
         if n>=interval+1:
             self._missing_maintenance_boundaries=(self._missing_maintenance_boundaries+1 if failed is None else 0)
@@ -382,6 +398,7 @@ class EX41FixedRuntime(EX41Runtime):
         state=super().state_dict(); state['fixed_clock']=copy.deepcopy(self.clock.__dict__)
         state['maintenance_baseline_sha256']=self.plan.fixed_schedule['maintenance_baseline']['sha256']
         state['missing_maintenance_boundaries']=self._missing_maintenance_boundaries
+        state['last_mirror_observed_score']=self._last_mirror_observed_score
         return state
 
     def load_state_dict(self,state):
@@ -413,6 +430,10 @@ class EX41FixedRuntime(EX41Runtime):
             raise ValueError('EX41 fixed clock frozen DR invalid')
         missing=state.get('missing_maintenance_boundaries',0)
         if type(missing) is not int or missing<0: raise ValueError('EX41 fixed clock missing-evidence count invalid')
+        mirror_score=state.get('last_mirror_observed_score')
+        if mirror_score is not None and (type(mirror_score) is not int or not 0<mirror_score<iteration):
+            raise ValueError('EX41 mirror observation score iteration invalid')
         self.clock.__dict__.update(copy.deepcopy(clock))
         self._missing_maintenance_boundaries=missing
+        self._last_mirror_observed_score=mirror_score
         super().load_state_dict(state)

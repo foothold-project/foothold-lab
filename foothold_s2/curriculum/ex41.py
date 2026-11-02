@@ -24,6 +24,9 @@ def digest(value):
 
 def validate_metrics(metrics):
     """Reject malformed scorer input before automatic arithmetic or promotion."""
+    if 'critic_mirror_symmetry' in metrics:
+        from foothold_s2.curriculum.ex41_symmetry import validate
+        validate(metrics['critic_mirror_symmetry'])
     for name in ('gait_sync','knee_limit_delta','forward_error_delta','w78_min_lr_ratio'):
         if name in metrics and (type(metrics[name]) not in (int,float) or not math.isfinite(metrics[name])):
             raise ValueError('EX41 invalid automatic metric: '+name)
