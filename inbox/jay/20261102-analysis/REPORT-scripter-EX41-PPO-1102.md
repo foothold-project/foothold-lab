@@ -17,7 +17,7 @@
 
 ## 답을 아는 CPU 시험
 
-`CUDA_VISIBLE_DEVICES=''`, `PYTHONPATH`를 이 작업 사본으로 두고 `isaac311/python.exe -m pytest -q foothold_s2/tests/test_ex41_b345.py foothold_s2/tests/test_ex41_ppo_valid.py` 실행: **15 passed, 3 skipped**.
+`CUDA_VISIBLE_DEVICES=''`, `PYTHONPATH`를 이 작업 사본으로 두고 `isaac311/python.exe -m pytest -q foothold_s2/tests/test_ex41_b345.py foothold_s2/tests/test_ex41_ppo_valid.py` 실행: **21 passed, 3 skipped**.
 
 | 반례 | 확인 |
 |---|---|
@@ -34,11 +34,19 @@
 
 | 파일 | SHA256 |
 |---|---|
-| `foothold_s2/runners/ex41_critic_mirror.py` | `ee698d544ccca9184883421433576bfeaed40a05df77c1730274e8039e2e87f4` |
-| `foothold_s2/runners/ex41_valid_storage.py` | `029aa37fda5ae7fb1b2b664c2f2ead1fd2c0412dc6de5109072dd9c4f97fbea2` |
+| `foothold_s2/runners/ex41_critic_mirror.py` | `078cef7e6126286ad15a998b435b6f291198db07ab0a46d4c9e5eaf434f6b92e` |
+| `foothold_s2/runners/ex41_valid_storage.py` | `9d36e0a05e6c1f7f7a859de804ab2d281a11986497be607470dc0e9a144c5cd0` |
 | `foothold_s2/runners/start_runner.py` | `68d2192d993c3bb7f9dd7feea13e31b29dcda0aa90dea6b5cac57e1ff41cb0e3` |
-| `foothold_s2/tests/test_ex41_ppo_valid.py` | `dd3a61061396c795aef0e092348cf3595237561169fa6eec6fae3850dc5aa852` |
+| `foothold_s2/tests/test_ex41_ppo_valid.py` | `8ac9bd6ce4958247f485eeabd78347da5abaf45da9149269823c79c4e9deeb5b` |
 
 ## 다음 통합 확인
 
 analyst W86 모듈과 runner 시작 경로를 합친 고정본에서 실제 `ex41_w86_required=true`, `quarantine_actions`, `quarantine_step` 호출을 확인하고, 첫 Kit 갱신에서 유효 분모와 skip 수를 관찰해야 한다. 이 보고는 GPU 실행 승인이나 학습 성공 증거가 아니다.
+
+## Verifier H1 and H2 follow-up
+
+- H1 red input: two envs and two steps, final validity [false, true], invalid critic input 3e38. The installed storage produced NaN in the invalid row and its preceding valid return through 0 times Inf. The corrected path evaluates only valid final envs and places zero bootstrap values in invalid rows before GAE. The known-input regression now passes.
+- H2 red input: four envs, one valid row, two minibatches, per-minibatch advantage normalization enabled. Both mirror states previously produced NaN loss. The valid-row generator now uses the installed normalization formula for batches with at least two entries and leaves a singleton unchanged. The mirror path shares this rule. Both cases now return finite loss and finite parameters.
+- A nonfinite policy parameter before update now clears the rollout and skips all optimizer steps, with `ppo_nonfinite_parameters=1` in the result. This is checked with mirror on and off. It is a diagnostic skip, not evidence of a healthy rollout.
+- All-valid PPO with per-minibatch normalization on and off matches the installed isaac311 implementation exactly in loss and final parameters. The changed suite reports `21 passed, 3 skipped` on isaac311 with CUDA hidden. Ruff F, pyflakes, and `git diff --check` report zero errors.
+- This is CPU evidence. The integrated EX-41 Kit path remains unverified.

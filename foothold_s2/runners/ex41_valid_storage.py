@@ -11,12 +11,20 @@ import torch
 from rsl_rl.storage.rollout_storage import RolloutStorage
 
 
+def safe_minibatch_advantage(advantage: torch.Tensor) -> torch.Tensor:
+    """Keep singleton valid batches finite; match PPO for larger batches."""
+    if advantage.numel() < 2:
+        return advantage
+    return (advantage - advantage.mean()) / (advantage.std() + 1e-8)
+
+
 class ValidRolloutStorage(RolloutStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.valid = torch.ones(self.num_transitions_per_env, self.num_envs, dtype=torch.bool, device=self.device)
         self.yielded_batches = 0
         self.skipped_batches = 0
+        self.normalize_per_batch_safely = False
 
     def clear(self) -> None:
         super().clear()
@@ -50,6 +58,9 @@ class ValidRolloutStorage(RolloutStorage):
                     self.skipped_batches += 1
                     continue
                 self.yielded_batches += 1
-                yield (observations[batch_idx], actions[batch_idx], values[batch_idx], advantages[batch_idx],
+                batch_advantage = advantages[batch_idx]
+                if self.normalize_per_batch_safely:
+                    batch_advantage = safe_minibatch_advantage(batch_advantage)
+                yield (observations[batch_idx], actions[batch_idx], values[batch_idx], batch_advantage,
                        returns[batch_idx], old_log_prob[batch_idx], old_mu[batch_idx], old_sigma[batch_idx],
                        (None, None), None)

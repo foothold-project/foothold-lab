@@ -13,7 +13,7 @@ from torch import nn
 from rsl_rl.algorithms import PPO
 
 from foothold_s2.models.start_policy import CRITIC_KEY
-from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage
+from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage, safe_minibatch_advantage
 
 
 LEG_SWAP = (1, 0, 3, 2)
@@ -100,7 +100,16 @@ class CriticMirrorPPO(PPO):
             self.storage.sigma[step, bad] = 1
 
     def compute_returns(self, obs):
-        last_values = self.policy.evaluate(obs).detach()
+        last_valid = self.storage.valid[-1]
+        if bool(last_valid.all()):
+            last_values = self.policy.evaluate(obs).detach()
+        else:
+            # Never evaluate a quarantined final observation.  An extreme but
+            # finite critic input can overflow to Inf, and PPO's 0 * Inf in
+            # the terminal bootstrap would then poison earlier valid GAE.
+            last_values = torch.zeros_like(self.storage.values[-1])
+            if bool(last_valid.any()):
+                last_values[last_valid] = self.policy.evaluate(obs[last_valid]).detach()
         self.storage.compute_returns(last_values, self.gamma, self.lam, normalize_advantage=False)
         valid = self.storage.valid.unsqueeze(-1)
         if not self.normalize_advantage_per_mini_batch:
@@ -117,8 +126,28 @@ class CriticMirrorPPO(PPO):
                 self.storage.advantages.zero_()
 
     def update(self) -> dict[str, float]:
+        parameters = tuple(self.policy.parameters())
+        if not bool(torch.stack([torch.isfinite(param).all() for param in parameters]).all()):
+            skipped = float(self.num_learning_epochs * self.num_mini_batches)
+            self.storage.clear()
+            result = {"value_function": 0.0, "surrogate": 0.0, "entropy": 0.0,
+                      "ppo_skipped_batches": skipped, "ppo_nonfinite_parameters": 1.0}
+            if self.mirror_enabled:
+                result.update(value_mirror=0.0, value_combined=0.0)
+            return result
         if not self.mirror_enabled:
-            result = super().update()
+            safe_norm = self.normalize_advantage_per_mini_batch
+            if safe_norm:
+                # Installed PPO normalizes after sampling.  Move the same
+                # operation into the valid-row generator so a singleton can
+                # bypass its undefined unbiased standard deviation.
+                self.storage.normalize_per_batch_safely = True
+                self.normalize_advantage_per_mini_batch = False
+            try:
+                result = super().update()
+            finally:
+                self.storage.normalize_per_batch_safely = False
+                self.normalize_advantage_per_mini_batch = safe_norm
             actual = self.storage.yielded_batches
             expected = self.num_learning_epochs * self.num_mini_batches
             if actual:
@@ -133,7 +162,7 @@ class CriticMirrorPPO(PPO):
              hidden, masks) in batches:
             if self.normalize_advantage_per_mini_batch:
                 with torch.no_grad():
-                    advantage = (advantage - advantage.mean()) / (advantage.std() + 1e-8)
+                    advantage = safe_minibatch_advantage(advantage)
             self.policy.act(obs, masks=masks, hidden_state=hidden[0])
             logp = self.policy.get_actions_log_prob(actions)
             value = self.policy.evaluate(obs, masks=masks, hidden_state=hidden[1])

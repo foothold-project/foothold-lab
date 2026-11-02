@@ -79,12 +79,15 @@ def test_all_valid_batch_matches_installed_storage_exactly():
                 assert torch.equal(a, b)
 
 
-def test_all_valid_ppo_update_matches_installed_ppo_exactly():
+@pytest.mark.parametrize("per_batch", [False, True])
+def test_all_valid_ppo_update_matches_installed_ppo_exactly(per_batch):
     torch.manual_seed(27)
     guarded, obs = _alg()
+    guarded.normalize_advantage_per_mini_batch = per_batch
     plain_policy = copy.deepcopy(guarded.policy)
     plain = PPO(plain_policy, num_learning_epochs=1, num_mini_batches=2,
-                desired_kl=0.01, schedule="adaptive", device="cpu")
+                desired_kl=0.01, schedule="adaptive", device="cpu",
+                normalize_advantage_per_mini_batch=per_batch)
     plain.init_storage("rl", 4, 1, obs, [12])
     _fill(guarded, obs, [True] * 4)
     for name in ("rewards", "dones", "actions", "values", "actions_log_prob", "mu", "sigma"):
@@ -118,6 +121,55 @@ def test_invalid_step_is_terminal_for_previous_gae():
     alg.compute_returns(obs)
     assert alg.storage.returns[1, 0] == 0
     assert alg.storage.returns[0, 0] == 1
+
+
+def test_invalid_final_bootstrap_overflow_cannot_poison_valid_gae():
+    alg, obs = _alg(n=2)
+    alg.init_storage("rl", 2, 2, obs, [12])
+    for layer in alg.policy.critic.modules():
+        if isinstance(layer, torch.nn.Linear):
+            layer.weight.data.fill_(1.0)
+            layer.bias.data.zero_()
+    alg.act(obs)
+    alg.process_env_step(obs, torch.ones(2), torch.zeros(2), {"ex41_ppo_valid": [True, True]})
+    alg.act(obs)
+    alg.process_env_step(obs, torch.ones(2), torch.zeros(2), {"ex41_ppo_valid": [False, True]})
+    last_obs = obs.clone()
+    last_obs[CRITIC_KEY][0].fill_(3e38)
+    assert not torch.isfinite(alg.policy.evaluate(last_obs)[0]).all()
+    alg.compute_returns(last_obs)
+    assert torch.isfinite(alg.storage.returns).all()
+    assert torch.isfinite(alg.storage.advantages).all()
+    assert alg.storage.returns[1, 0] == 0
+
+
+@pytest.mark.parametrize("mirror", [False, True])
+def test_single_valid_row_per_batch_stays_finite_with_minibatch_normalization(mirror):
+    alg, obs = _alg(mirror=mirror)
+    alg.normalize_advantage_per_mini_batch = True
+    _fill(alg, obs, [True, False, False, False])
+    alg.compute_returns(obs)
+    losses = alg.update()
+    assert losses["ppo_skipped_batches"] == 1
+    assert all(torch.isfinite(torch.tensor(value)) for value in losses.values())
+    assert all(torch.isfinite(param).all() for param in alg.policy.parameters())
+
+
+@pytest.mark.parametrize("mirror", [False, True])
+def test_nonfinite_parameter_skips_optimizer(mirror):
+    alg, obs = _alg(mirror=mirror)
+    alg.normalize_advantage_per_mini_batch = True
+    _fill(alg, obs, [True, False, False, False])
+    alg.compute_returns(obs)
+    parameter = next(alg.policy.parameters())
+    parameter.data.view(-1)[0] = float("nan")
+    before = [p.detach().clone() for p in alg.policy.parameters()]
+    result = alg.update()
+    assert result["ppo_nonfinite_parameters"] == 1
+    assert result["ppo_skipped_batches"] == 2
+    assert not alg.optimizer.state
+    for old, current in zip(before, alg.policy.parameters(), strict=True):
+        assert torch.allclose(old, current, rtol=0, atol=0, equal_nan=True)
 
 
 def test_ppo_diagnostic_kl_probe_excludes_invalid_rows():
