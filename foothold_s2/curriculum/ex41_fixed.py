@@ -195,6 +195,7 @@ class EX41FixedRuntime(EX41Runtime):
         self.clock=Clock(self.plan.clock_settings); self.baseline=None
         self._missing_maintenance_boundaries=0
         self._last_mirror_observed_score=None
+        self._score_stage_history=[]
         cfg=self.clock.settings
         self.max_updates=cfg['duration_updates']+cfg['pause_limit_updates']+cfg['extension_updates']*cfg['maximum_extensions']
 
@@ -208,6 +209,16 @@ class EX41FixedRuntime(EX41Runtime):
             raise ValueError('EX41 fixed schedule requires verified W71 consumer before launch')
 
     def dr_scale(self,n): return self.clock.scale(n)
+
+    def _score_context_allowed(self,d,n):
+        expected=n-1-self.clock.settings['interval_updates']
+        # The required checkpoint may precede this boundary's stage entry.
+        # Its pinned parent/schedule/evidence still undergo the common checks.
+        if d['iteration']==expected:
+            applied=[(it,stage) for it,stage in self._score_stage_history if it<=expected]
+            if applied:return d.get('stage_id')==applied[-1][1]
+            return super()._score_context_allowed(d,n)
+        return super()._score_context_allowed(d,n)
 
     def on_checkpoint(self,iteration,checkpoint):
         final=self.finished and not self.stop_requested
@@ -248,6 +259,8 @@ class EX41FixedRuntime(EX41Runtime):
         # Fixed maintenance comparison always refers to the selected parent,
         # never a stage-entry checkpoint chosen after seeing new results.
         self._stage_baseline_sha=self.plan.parent_sha256
+        if ok and (not self._score_stage_history or self._score_stage_history[-1][1]!=self.effective['stage_id']):
+            self._score_stage_history.append((self.effective['iteration'],self.effective['stage_id']))
         return ok
 
     def _record_mirror_observation(self,n,score):
@@ -321,15 +334,20 @@ class EX41FixedRuntime(EX41Runtime):
             for d in decisions:
                 if d['path'].startswith('reward_weights.'):
                     values['reward_weights'][d['path'].split('.')[1]]=d['after']
-        # Historical rows may be retained for audit, never reused as a fresh
-        # 250-update recovery, stand-restoration or extension observation.
-        fresh=[r for r in self._history if n-interval<=r['iteration']<n]
+        # n is the next update, so completed=n-1. Lead 19:5x explicitly
+        # requires m250 at n501, not same-boundary m500 or arbitrary old PASS.
+        expected_score_iteration=n-1-interval
+        fresh=[r for r in self._history if r['iteration']==expected_score_iteration]
         score=fresh[-1] if fresh else None
-        invalid=[r['iteration'] for r in self._score_rejections.values() if n-interval<=r['iteration']<n]
+        invalid=[r['iteration'] for r in self._score_rejections.values() if expected_score_iteration<=r['iteration']<n]
         if invalid and (score is None or max(invalid)>=score['iteration']):
             self._write({'event':'latest_score_invalid_hold','iteration':n,
                          'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
             score=None
+        self._write({'event':'dr_score_clock','iteration':n,'completed_updates':n-1,
+                     'expected_score_iteration':expected_score_iteration,
+                     'selected_score_iteration':score['iteration'] if score else None,
+                     'state':'complete' if score else 'missing_evidence'})
         # P3 is an asynchronous record-only observation. The fixed DR gate
         # above keeps its pinned freshness rule; it is not relaxed here.
         mirror_rows=[r for r in self._history if 0<n-r['iteration']<=self.plan.gate_cfg['maximum_score_age']]
@@ -399,6 +417,7 @@ class EX41FixedRuntime(EX41Runtime):
         state['maintenance_baseline_sha256']=self.plan.fixed_schedule['maintenance_baseline']['sha256']
         state['missing_maintenance_boundaries']=self._missing_maintenance_boundaries
         state['last_mirror_observed_score']=self._last_mirror_observed_score
+        state['score_stage_history']=copy.deepcopy(self._score_stage_history)
         return state
 
     def load_state_dict(self,state):
@@ -436,4 +455,12 @@ class EX41FixedRuntime(EX41Runtime):
         self.clock.__dict__.update(copy.deepcopy(clock))
         self._missing_maintenance_boundaries=missing
         self._last_mirror_observed_score=mirror_score
+        history=state.get('score_stage_history',[])
+        if (not isinstance(history,list) or any(not isinstance(x,(tuple,list)) or len(x)!=2
+            or type(x[0]) is not int or not 0<=x[0]<=iteration
+            or x[1] not in {s.id for s in self.plan.stages} for x in history)
+            or any(b[0]<=a[0] for a,b in zip(history,history[1:]))
+            or history and history[-1][1]!=state.get('effective',{}).get('stage_id')):
+            raise ValueError('EX41 score stage history invalid')
+        self._score_stage_history=[tuple(x) for x in history]
         super().load_state_dict(state)

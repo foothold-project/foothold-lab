@@ -80,10 +80,10 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     dirty = subprocess.check_output(['git', 'status', '--short', '--', 'foothold_s2'], cwd=ROOT, text=True)
     if dirty.strip(): raise ValueError('EX41 evaluator source is not frozen')
     head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    # Reject an unintegrated parser before launching any GPU child.
+    # W78 is auxiliary. Lack of integration must not block map64/stand.
     parser = (ROOT/'foothold_s2/eval/eval_map_modes.py').read_text(encoding='utf-8')
-    if '--terrain-skill-v2' not in parser or not (ROOT/'foothold_s2/eval/terrain_skill_v2_run.py').is_file():
-        raise ValueError('W78 v2 parser/implementation not integrated')
+    w78_available=('--terrain-skill-v2' in parser and
+                   (ROOT/'foothold_s2/eval/terrain_skill_v2_run.py').is_file())
     out.mkdir(parents=True)
     before = sha256(checkpoint)
     row = {'format': 'foothold-ex41-eval-bundle/1', 'state': 'running',
@@ -98,12 +98,19 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     _atomic(out/'eval_receipt.json', row)
     try:
         for phase in commands(checkpoint, out, cfg):
+            if phase['name']=='w78_v2' and not w78_available:
+                row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
+                _atomic(out/'eval_receipt.json',row)
+                continue
             result = hidden_child(phase['argv'], out/'children'/phase['name'], env=env)
             row['steps'][phase['name']] = result
             _atomic(out/'eval_receipt.json', row)
-            if result['rc'] != 0: raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
+            if result['rc'] != 0 and phase['name'] not in ('axis_v2','w78_v2'):
+                raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
         if sha256(checkpoint) != before: raise ValueError('checkpoint changed during evaluation')
-        row['state'] = 'done'  # final JSON/NPZ content is checked by the CPU scorer.
+        row['state'] = 'done'  # Maintenance only; CPU scorer verifies all content.
+        row['auxiliary_missing']=[name for name in ('axis_v2','w78_v2')
+                                  if row['steps'].get(name,{}).get('state')!='done']
     except Exception as exc:
         row.update(state='failed', reason=f'{type(exc).__name__}: {exc}')
     row['seconds'] = time.monotonic()-start
@@ -123,7 +130,7 @@ def main(argv=None):
         print(json.dumps({'state':'dry', 'commands':commands(a.checkpoint, a.out, config(a.eval_config))}))
         return 0
     result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config)
-    print(json.dumps(result, ensure_ascii=False))
+    print(json.dumps(result, ensure_ascii=True))
     return 0 if result['state'] == 'done' else 5
 
 

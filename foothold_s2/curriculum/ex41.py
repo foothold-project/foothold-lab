@@ -389,6 +389,10 @@ class EX41Runtime(Runtime):
             config_commit=None,config_sha256=None,approval_sha256=None,score_sha256=None,checkpoint_sha256=None,
             decisions=[],before=copy.deepcopy(self.effective),after=copy.deepcopy(self.effective),readback={},reason=str(exc)))
 
+    def _score_context_allowed(self,d,n):
+        return (d.get('stage_id')==self.effective['stage_id']
+                and d['iteration']>=self.stage_entry_iteration)
+
     def _read_scores(self,n):
         if self.score_dir is None: return []
         rows=[]
@@ -416,10 +420,10 @@ class EX41Runtime(Runtime):
                 if it>n: continue  # not yet consumable
                 json.dumps(d,allow_nan=False)
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')
-                if d.get('stage_id')!=self.effective['stage_id']: raise ValueError('EX41 score stage differs')
+                if not self._score_context_allowed(d,n):raise ValueError('EX41 score stage/entry differs')
                 if d.get('schedule_sha256')!=self.plan.effective_sha256 or d.get('parent_sha256')!=self.plan.parent_sha256:
                     raise ValueError('EX41 score run differs')
-                if it<self.stage_entry_iteration or n-it>self.plan.gate_cfg['maximum_score_age']:
+                if n-it>self.plan.gate_cfg['maximum_score_age']:
                     raise ValueError('EX41 stale score')
                 cp=Path(d['checkpoint_path']).resolve(strict=True)
                 if cp.name!=f'model_{it}.pt' or sha256(cp)!=d['checkpoint_sha256']: raise ValueError('EX41 score checkpoint differs')

@@ -197,7 +197,9 @@ def score(r,n,passed=True,metrics=None,folder=None,checkpoint_variant=''):
     cp=cp_root/f'model_{n}.pt'
     cp.write_bytes((f'known-cpu-checkpoint-{n}'+('-'+checkpoint_variant if checkpoint_variant else '')).encode())
     raw=root/f'raw_{n}.json'; raw.write_text('{}')
-    row=dict(format='foothold-ex41-score/1',iteration=n,stage_id=r.effective['stage_id'],
+    history=[(it,stage) for it,stage in getattr(r,'_score_stage_history',[]) if it<=n]
+    actual_stage=history[-1][1] if history else r.effective['stage_id']
+    row=dict(format='foothold-ex41-score/1',iteration=n,stage_id=actual_stage,
         schedule_sha256=r.plan.effective_sha256,parent_sha256=r.plan.parent_sha256,
         checkpoint_path=str(cp),checkpoint_sha256=sha256(cp),created_at=datetime.now(timezone.utc).isoformat(),
         maintenance_pass=True,stage_pass=passed,safety_stop=False,metrics={'stand_min_passed':64} if metrics is None else metrics,

@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import sys
 import time
+import uuid
 
 import numpy as np
 
@@ -48,7 +49,9 @@ def immutable(path, row):
         if path.read_bytes() != data: raise ValueError(f'immutable receipt conflict: {path}')
         return
     # Publish a complete JSON, not a partially visible runtime score.
-    temp = path.with_suffix('.pending')
+    # A dead publisher may leave an old .pending. Preserve it, but never reuse
+    # its pathname or let it block a subsequent complete atomic publication.
+    temp = path.with_name(path.name+'.pending.'+uuid.uuid4().hex)
     with temp.open('xb') as f:
         f.write(data); f.flush(); os.fsync(f.fileno())
     if path.exists(): raise ValueError(f'concurrent publisher: {path}')
@@ -172,6 +175,7 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
         ('w78_v2', w78_path or bundle/'w78_v2/terrain_skill_v2.json', lambda p:measure_w78(p, checkpoint))):
         try:
             metrics, refs = function(path)
+            json.dumps(metrics,allow_nan=False)  # Auxiliary NaN cannot poison the maintenance row.
             row['metrics'][label] = metrics; row['evidence'].extend(refs)
             row['components'][label] = 'complete'
         except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
@@ -190,8 +194,12 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
         row['components']['critic_mirror_symmetry'] = 'complete'
     except (OSError,ValueError,TypeError,KeyError) as exc:
         row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
-    required = ['maintenance_stand', 'w57', 'w78_v2', 'critic_mirror_symmetry'] + (['training_metrics'] if w86_path else [])
-    row['evaluation_state'] = 'complete' if all(row['components'][k] == 'complete' for k in required) else 'HOLD'
+    # Lead 19:5x: map64 + three stand modes alone produce maintenance 26 and
+    # record 39. Missing auxiliary W57/W78/U10 is not a maintenance HOLD.
+    row['evaluation_scope'] = 'maintenance_26_and_stand_only; graduation_not_judged'
+    row['auxiliary_missing'] = [k for k,v in row['components'].items()
+                                if k!='maintenance_stand' and v!='complete']
+    row['evaluation_state'] = 'complete' if row['components']['maintenance_stand']=='complete' else 'HOLD'
     if row['evaluation_state'] == 'HOLD':
         row['partial_metrics'] = row['metrics']; row['metrics'] = {}
         row['maintenance_pass'] = False  # reader rejects missing stand, creates latest-invalid tombstone.
@@ -242,6 +250,77 @@ def candidates(run, plan):
     return sorted(found, key=lambda x:x[0])
 
 
+def final_link_valid(request, previous, ref):
+    """Verify a separate late-request link without rewriting a score/attempt."""
+    if ref is None:return False
+    path=Path(ref['path'])
+    if sha256(path)!=ref.get('sha256'):raise ValueError('final link receipt SHA differs')
+    link=read(path);req=read(request)
+    if (link.get('format')!='foothold-ex41-final-score-link/1'
+        or link.get('request_id')!=req['request_id'] or link.get('graduated') is not False
+        or link.get('checkpoint')!=req['checkpoint']
+        or link.get('attempt_digest')!=digest(previous)
+        or link.get('score')!={'path':previous['score_path'],'sha256':previous['score_sha256']}
+        or link.get('request')!=evidence(request)):
+        raise ValueError('final link identity differs')
+    for key in ('score','attempt'):
+        if evidence(link[key]['path'])!=link[key]:raise ValueError('final link source SHA differs')
+    return True
+
+
+def link_final_request(out_root,request,previous):
+    req=read(request);cp=req['checkpoint'];sha=cp['sha256'];iteration=cp['iteration']
+    if (previous.get('iteration')!=iteration or previous.get('checkpoint_sha256')!=sha
+        or previous.get('stage_id')!='T0_prime'
+        or sha256(Path(cp['path']))!=sha):
+        raise ValueError('final link checkpoint/stage differs from scored attempt')
+    candidates=list(out_root.glob(f'model_{iteration}_{sha[:12]}*/attempt.json'))
+    candidates+=list((out_root/'recoveries').glob(f'recovered_{iteration}_{sha[:12]}_*.json'))
+    attempts=[p for p in candidates if p.is_file() and read(p)==previous]
+    if len(attempts)!=1:raise ValueError('final link original attempt receipt missing or ambiguous')
+    row={'format':'foothold-ex41-final-score-link/1','request_id':req['request_id'],
+         'checkpoint':cp,'request':evidence(request),'attempt':evidence(attempts[0]),
+         'attempt_digest':digest(previous),'score':{'path':previous['score_path'],'sha256':previous['score_sha256']},
+         'evaluation_state':previous['state'],'graduated':False}
+    path=out_root/'final_links'/f'final_{iteration}_{sha[:12]}_{req["request_id"]}.json'
+    immutable(path,row)
+    ref=evidence(path);final_link_valid(request,previous,ref)
+    return ref
+
+
+def recover_published_score(score_path, cp, stage, plan, out_root):
+    """A published score is the commit point; never recollect or overwrite it.
+
+    Recovery validates the immutable collection link and all evidence. Its new
+    receipt preserves the original unfinished attempt as crash evidence.
+    """
+    row=read(score_path);iteration=int(cp.stem.split('_')[-1]);pinned=sha256(cp)
+    if (row.get('format')!='foothold-ex41-score/1' or row.get('iteration')!=iteration
+        or row.get('checkpoint_sha256')!=pinned or row.get('stage_id')!=stage
+        or row.get('parent_sha256')!=plan.parent_sha256
+        or row.get('baseline_checkpoint_sha256')!=plan.parent_sha256
+        or row.get('schedule_sha256')!=plan.effective_sha256
+        or row.get('evaluation_state') not in ('complete','HOLD')
+        or not isinstance(row.get('evidence'),list) or not row['evidence']):
+        raise ValueError('published recovery score identity invalid')
+    collections=[]
+    for ref in row['evidence']:
+        if evidence(ref['path'])!=ref:raise ValueError('published recovery evidence SHA differs')
+        if Path(ref['path']).name=='collection.json':collections.append(ref)
+    if len(collections)!=1:raise ValueError('published recovery collection link missing')
+    collected=read(collections[0]['path']);original=dict(row)
+    original['evidence']=[e for e in row['evidence'] if e!=collections[0]]
+    if original!=collected:raise ValueError('published recovery collection differs')
+    receipt={'format':'foothold-ex41-score-attempt/1','state':row['evaluation_state'],
+        'iteration':iteration,'checkpoint_sha256':pinned,'stage_id':stage,
+        'score_path':str(score_path),'score_sha256':sha256(score_path),
+        'final_request_id':row.get('final_request_id'),'mode':'recovery',
+        'reason':'published score recovered without recollection or source overwrite'}
+    dest=out_root/'recoveries'/f'recovered_{iteration}_{pinned[:12]}_{receipt["score_sha256"][:12]}.json'
+    immutable(dest,receipt)
+    return receipt
+
+
 def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_CONFIG,
                  execute=False, replay_root=None, w57_root=None, w78_root=None, sleep=time.sleep):
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
@@ -265,7 +344,20 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
         key = f'{iteration}_{pinned}'
-        if key in state['done']: continue
+        if key in state['done']:
+            previous=state['done'][key]
+            if final_request:
+                request_id=read(final_request)['request_id']
+                if previous.get('final_request_id')!=request_id:
+                    ref=state.get('final_links',{}).get(request_id)
+                    if not final_link_valid(final_request,previous,ref):
+                        if not execute and replay_root is None:
+                            return {'state':'dry','action':'link_final_request','iteration':iteration,'request_id':request_id}
+                        ref=link_final_request(out_root,final_request,previous)
+                        state.setdefault('final_links',{})[request_id]=ref
+                        return {'state':'final_request_linked','iteration':iteration,'request_id':request_id,
+                                'link_path':ref['path'],'link_sha256':ref['sha256']}
+            continue
         if final_request is None and any(r['iteration']==iteration and r['checkpoint_sha256']!=pinned
                                          for r in state['done'].values()):
             raise ValueError('completed non-final checkpoint changed')
@@ -280,6 +372,11 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
                     'stage_id':stage, 'commands':commands(cp, target/'evaluation', cfg)}
+        score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
+        if score_path.is_file():
+            recovered=recover_published_score(score_path,cp,stage,plan,out_root)
+            state['done'][key]=recovered
+            return {**recovered,'recovered_from_score':True}
         interrupted = target.exists()
         if interrupted:
             saved = target/'attempt.json'
@@ -296,6 +393,11 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                 if (r.get('checkpoint_sha256')==pinned and Path(r.get('score_path','')).is_file()
                     and sha256(Path(r['score_path']))==r.get('score_sha256')):
                     state['done'][key]=r;return {**r,'recovered_from_receipt':True}
+        # More than one interrupted directory is possible after repeated deaths.
+        # Preserve all of them and use a new receipt directory for the HOLD.
+        base=target;index=0
+        while target.exists():
+            index+=1;target=base.with_name(base.name+f'_{index:03d}')
         target.mkdir(parents=True)
         source = (Path(replay_root)/f'model_{iteration}_{pinned[:12]}') if replay_root else target/'evaluation'
         receipt = {'format':'foothold-ex41-score-attempt/1', 'state':'running', 'iteration':iteration,
@@ -328,7 +430,6 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         # Error receipts are immutable evidence, even with no valid measurement.
         immutable(target/'collection.json', row)
         row['evidence'].append(evidence(target/'collection.json'))
-        score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
         immutable(score_path, row)
         receipt.update(state=row['evaluation_state'], stage_id=stage,
                        score_path=str(score_path), score_sha256=sha256(score_path),
@@ -355,12 +456,38 @@ def completion(run, plan, state):
         result=state['done'].get(f'{iteration}_{pinned}')
         if result is None:return {'state':'waiting_for_remaining_scores','iteration':iteration}
         if request and result.get('final_request_id')!=read(request)['request_id']:
-            return {'state':'waiting_for_final_request_score','iteration':iteration}
+            ref=state.get('final_links',{}).get(read(request)['request_id'])
+            if not final_link_valid(request,result,ref):
+                return {'state':'waiting_for_final_request_score','iteration':iteration}
     if training['state']=='done' and not any(request for _,_,request in saved):
         return {'state':'waiting_for_final_checkpoint_request'}
     holds=sum(row['state']=='HOLD' for row in state['done'].values())
     return {'state':'complete_with_hold' if holds or training['state']!='done' else 'complete',
             'hold_count':holds,'training_state':training['state'],'graduated':False}
+
+
+def acquire_watch_lock(lock):
+    """Reclaim only a demonstrably dead watcher, preserving its lock evidence.
+
+    A live/reused PID or unknown owner stays blocked. Never kill a process.
+    The caller's out-root is dedicated to this watcher.
+    """
+    import psutil
+    if lock.exists():
+        original=lock.read_bytes();owner=json.loads(original)
+        pid=owner.get('pid')
+        if type(pid) is not int or pid<=0 or psutil.pid_exists(pid):
+            raise ValueError('watch lock has a live or unknown owner')
+        for path in lock.parent.glob('model_*/bundle_child/child.json'):
+            child=read(path)
+            if child.get('state')=='running' and psutil.pid_exists(child.get('pid',pid)):
+                raise ValueError('previous watcher child is still alive; no overlapping evaluation')
+        if lock.read_bytes()!=original:raise ValueError('watch lock changed during dead-owner check')
+        archived=lock.with_name('watch.lock.dead.'+uuid.uuid4().hex)
+        if archived.parent.resolve()!=lock.parent.resolve():raise ValueError('lock archive escaped output')
+        lock.rename(archived)
+    with lock.open('x',encoding='utf-8') as f:
+        json.dump({'pid':os.getpid(),'started_at':datetime.now(timezone.utc).isoformat()},f)
 
 
 def main(argv=None):
@@ -378,8 +505,7 @@ def main(argv=None):
     a.out_root.mkdir(parents=True, exist_ok=True)
     lock = a.out_root/'watch.lock'; owned = False
     try:
-        with lock.open('x', encoding='utf-8') as f:
-            json.dump({'pid':os.getpid(),'started_at':datetime.now(timezone.utc).isoformat()}, f)
+        acquire_watch_lock(lock)
         owned = True
         path = a.out_root/'watch_state.json'
         state = read(path) if path.exists() else initial_state(a.run_dir, a.table, a.eval_config)
@@ -387,8 +513,8 @@ def main(argv=None):
             row = process_once(a.run_dir, a.out_root, a.score_dir, a.table, state, eval_config=a.eval_config,
                                execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root, w78_root=a.w78_root)
             _atomic(path, state)
-            print(json.dumps(row, ensure_ascii=False, allow_nan=False), flush=True)
-            if a.once or not a.execute: return 5 if row['state']=='HOLD' else 0
+            print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
+            if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0
             end=completion(a.run_dir,load_plan(a.table,arm='B'),state)
             if end['state'] in ('complete','complete_with_hold'):
                 _atomic(a.out_root/'watch_completion.json',end)
