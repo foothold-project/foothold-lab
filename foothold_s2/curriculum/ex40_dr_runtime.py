@@ -86,20 +86,28 @@ def reset_base_com(env, env_ids, asset_cfg, target_range):
     from isaaclab.envs.mdp import events
 
     asset = env.scene[asset_cfg.name]
-    rows = _ids_cpu(env_ids, env.scene.num_envs)
+    rows_cpu = _ids_cpu(env_ids, env.scene.num_envs)
+    device = torch.device(env.device)
+    rows = rows_cpu.to(device=device)
     baseline = getattr(env, "_ex40_dr_com_baseline", None)
-    current = asset.root_physx_view.get_coms().clone()
+    # Isaac Lab's PhysX view COM API is CPU-backed. Keep the persisted EX-41
+    # baseline on the env device, and cross the CPU boundary only at get/set.
+    current = asset.root_physx_view.get_coms().to(device=device).clone()
     if baseline is None:
         baseline = current.clone()
-        env._ex40_dr_com_baseline = baseline
+    else:
+        baseline = baseline.to(device=device)
+    env._ex40_dr_com_baseline = baseline
     current[rows] = baseline[rows]
-    asset.root_physx_view.set_coms(current, rows)
+    asset.root_physx_view.set_coms(current.to(device="cpu"), rows_cpu)
     scale = float(getattr(env, "_ex40_dr_scale", 0.0))
     com_range = {axis: _scaled_interval(tuple(target_range[axis]), scale, 0.0)
                  for axis in ("x", "y", "z")}
-    events.randomize_rigid_body_com(env, rows, com_range, asset_cfg)
-    readback = asset.root_physx_view.get_coms()[rows, asset_cfg.body_ids, :3]
-    _record(env, "base_com_offset_m", readback - baseline[rows, asset_cfg.body_ids, :3], len(rows))
+    events.randomize_rigid_body_com(env, rows_cpu, com_range, asset_cfg)
+    readback = asset.root_physx_view.get_coms()[rows_cpu, asset_cfg.body_ids, :3]
+    baseline_cpu = baseline.to(device="cpu")
+    _record(env, "base_com_offset_m",
+            readback - baseline_cpu[rows_cpu, asset_cfg.body_ids, :3], len(rows_cpu))
 
 
 def reset_actuator_gains(env, env_ids, asset_cfg, target_range):

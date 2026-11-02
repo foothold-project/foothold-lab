@@ -433,6 +433,57 @@ def test_resume_dr_reset_guard_normalizes_actual_event_env_before_consumers():
         assert raw._ex41_dr_device_guard["action_delay"]["to_device"] == "cuda:0"
 
 
+def test_reset_base_com_restores_env_device_baseline_through_cpu_physx_contract(monkeypatch):
+    from types import ModuleType
+    from torch._subclasses.fake_tensor import FakeTensorMode
+
+    from foothold_s2.curriculum import ex40_dr_runtime
+
+    calls = {}
+
+    class PhysXView:
+        def get_coms(self):
+            return torch.zeros((2, 1, 7), device="cpu")
+
+        def set_coms(self, coms, env_ids):
+            calls["set_device"] = str(coms.device)
+            calls["set_env_ids_device"] = str(env_ids.device)
+
+    class Scene(dict):
+        num_envs = 2
+
+    def randomize_rigid_body_com(env, env_ids, com_range, asset_cfg):
+        calls["event_env_ids_device"] = str(env_ids.device)
+        calls["event_scale"] = env._ex40_dr_scale
+
+    isaaclab = ModuleType("isaaclab")
+    isaaclab_envs = ModuleType("isaaclab.envs")
+    isaaclab_mdp = ModuleType("isaaclab.envs.mdp")
+    isaaclab_mdp.events = SimpleNamespace(randomize_rigid_body_com=randomize_rigid_body_com)
+    monkeypatch.setitem(sys.modules, "isaaclab", isaaclab)
+    monkeypatch.setitem(sys.modules, "isaaclab.envs", isaaclab_envs)
+    monkeypatch.setitem(sys.modules, "isaaclab.envs.mdp", isaaclab_mdp)
+    monkeypatch.setattr(ex40_dr_runtime, "_record", lambda *args, **kwargs: None)
+
+    mode = FakeTensorMode(allow_non_fake_inputs=True)
+    with mode:
+        raw = SimpleNamespace(
+            device=torch.device("cuda:0"),
+            scene=Scene(robot=SimpleNamespace(root_physx_view=PhysXView())),
+            _ex40_dr_scale=0.8,
+            _ex40_dr_com_baseline=torch.ones((2, 1, 7), device="cuda:0"),
+        )
+        cfg = SimpleNamespace(name="robot", body_ids=slice(None))
+        ex40_dr_runtime.reset_base_com(
+            raw, torch.tensor([1], dtype=torch.long), cfg,
+            {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "z": (-0.05, 0.05)},
+        )
+
+    assert raw._ex40_dr_com_baseline.device == torch.device("cuda:0")
+    assert calls == {"set_device": "cpu", "set_env_ids_device": "cpu",
+                     "event_env_ids_device": "cpu", "event_scale": 0.8}
+
+
 def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
     plan = load_fixed_plan(TABLE)
     started = datetime(2026, 11, 3, tzinfo=timezone.utc)
