@@ -69,3 +69,5 @@ EX-40 그림자 채점 31개 중 마지막 PASS 는 m1250. m1500~m8000 은 전�
 낮음: 촬영 검정 프레임은 「첫 프레임」 이 아니라 env_step 0~186 에서 발생, 모두 cuda:1 · 2차에서 살아남(원인 미확인, 촬영 장치 분리 기록 · runner) · stage_loop done 조건에 W57 영수증 없음(runner, G11) · shoot_d51 · compose_d51 이 git 에 없음(??) → W75 이름으로 저장소에(scripter).
 
 사실 확인: EX-40 T0 는 복원 지도를 실제로 썼다(use_gt_frac 7501 1.0 → 7600 0.115 → 8000 0.102, 7501~8000 평균 0.151, 약 85~89 % 복원).
+
+G16 닫힘(15:2x): CANON-REGISTRY 에 EX-40_m6000 등록 48846e53. SHA(저장본 · env · agent · 기준 점수) lead 실측, force_gt true · AdaSmpl p 1.0(checkpoint 상태), 기준 점수 HOLD 와 W57 칸 없음 명시, current.ex41_parent · c_layer_canon 지정. (JSON 다시 쓰며 들여쓰기만 바뀜, 기존 3 항목 내용 동일)
