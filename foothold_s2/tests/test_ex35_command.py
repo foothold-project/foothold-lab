@@ -254,14 +254,14 @@ def test_old_launch_contract_is_unchanged_fresh_and_without_extension():
         with pytest.raises(ValueError, match="1501"):
             validate_launch(_args(max_iterations=bad))                                              # 새로 시작하는 판은 1501 고정
     with pytest.raises(ValueError, match="1501"):
-        validate_launch(_args(max_iterations=2001, smoke_updates=2, resume_from="x.pt"))            # smoke 2 도 고정
+        validate_launch(_args(max_iterations=2001, smoke_updates=2, resume_from="x.pt"), verify_parent=False)            # smoke 2 도 고정
     with pytest.raises(ValueError, match="1501"):
-        validate_launch(_args(variant="B", task=TASKS["B"], max_iterations=2001, resume_from="x.pt"))   # B 는 건드리지 않음
+        validate_launch(_args(variant="B", task=TASKS["B"], max_iterations=2001, resume_from="x.pt"), verify_parent=False)   # B 는 건드리지 않음
 
 
 def test_sb_resume_accepts_a_larger_total_and_records_the_budget_from_the_parent_iteration():
     a = _args(max_iterations=2001, resume_from="m1500.pt")
-    validate_launch(a)
+    validate_launch(a, verify_parent=False)
 
     assert is_extended_resume(a) and budget_iterations(a) == 2001 and budget_iterations(_args()) == 1501 and budget_iterations(_args(smoke_updates=10)) == 10
     assert resume_budget(2001, 1500) == {"parent_completed_update": 1500, "max_iterations": 2001, "remaining": 500}
@@ -272,13 +272,13 @@ def test_sb_resume_accepts_a_larger_total_and_records_the_budget_from_the_parent
     with pytest.raises(ValueError, match="남은"):
         resume_budget(4000, 1500)
     with pytest.raises(ValueError, match="1501"):
-        validate_launch(_args(max_iterations=3002, resume_from="m.pt"))
+        validate_launch(_args(max_iterations=3002, resume_from="m.pt"), verify_parent=False)
     with pytest.raises(ValueError, match="1501"):
-        validate_launch(_args(max_iterations=1000, resume_from="m.pt"))
+        validate_launch(_args(max_iterations=1000, resume_from="m.pt"), verify_parent=False)
 
 
 def test_command_mode_and_scatter_are_sb_only_and_s2a_needs_a_parent():
-    validate_launch(_args(command_mode="s2a", clock_scatter="on", max_iterations=2001, resume_from="m1500.pt"))
+    validate_launch(_args(command_mode="s2a", clock_scatter="on", max_iterations=2001, resume_from="m1500.pt"), verify_parent=False)
     validate_launch(_args(command_mode="start", clock_scatter="off"))
 
     with pytest.raises(ValueError, match="SB variant only"):
@@ -305,11 +305,11 @@ def test_common_script_applies_the_command_settings_before_gym_make_and_records_
 def test_treatment_without_an_extended_resume_is_refused_instead_of_ending_as_done_with_zero_updates():
     for kw in (dict(command_mode="s2a"), dict(clock_scatter="on"), dict(command_mode="s2a", clock_scatter="on")):
         with pytest.raises(ValueError, match="0 updates"):
-            validate_launch(_args(resume_from="m1500.pt", **kw))                                       # 2001 을 빠뜨린 이어 가기(1501)
+            validate_launch(_args(resume_from="m1500.pt", **kw), verify_parent=False)                                       # 2001 을 빠뜨린 이어 가기(1501)
         with pytest.raises(ValueError, match="0 updates"):
             validate_launch(_args(**kw))                                                               # 새로 시작
-    validate_launch(_args(resume_from="m1500.pt", max_iterations=2001, command_mode="s2a", clock_scatter="on"))
-    validate_launch(_args(resume_from="smoke10.pt", smoke_updates=2, max_iterations=None, command_mode="s2a", clock_scatter="on"))    # 짧은 Kit smoke 2 는 허용
+    validate_launch(_args(resume_from="m1500.pt", max_iterations=2001, command_mode="s2a", clock_scatter="on"), verify_parent=False)
+    validate_launch(_args(resume_from="smoke10.pt", smoke_updates=2, max_iterations=None, command_mode="s2a", clock_scatter="on"), verify_parent=False)    # 짧은 Kit smoke 2 는 허용
     validate_launch(_args(command_mode="start", clock_scatter="off"))                                  # 처치 없음은 기존 그대로
 
 

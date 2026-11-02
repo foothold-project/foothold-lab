@@ -1,0 +1,454 @@
+# Approved 11/02 14:0x. m6000 +5000 nominal; DR pause <=1000; one +500 extension.
+# Parent baseline SHA is verified at start. Old ex41.yaml is historical, not this launch.
+format: foothold-ex41-curriculum/1
+start: transfer
+parent_update: 6000
+parent_sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5
+baseline_env_yaml_sha256: f2e7b7651fe0d7ee4a63141f2d432f52d8067ea336aa90d5661685c759c52a82
+baseline_agent_yaml_sha256: 5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd
+promotion: fixed
+shadow_gate: true
+terrain_curriculum: fixed_l02
+boundary_file: ex41-fixed5000-boundary.yaml
+approval_file: ex41-fixed5000-approvals.yaml
+gate:
+  minimum_exposure_updates: 500
+  separated_checkpoints: 250
+  maximum_score_age: 500
+stand_penalty:
+  gap_weight: -0.2
+  load_weight: -0.1
+  load_fraction: 0.05
+  ramp_s: 0.5
+heading:
+  forward_fraction: 0.3
+  spin_target_fraction: 0.3
+  gain: 0.5
+  forward_wz_limit: 0.5
+  target_wz_limit: 1.5
+domain_randomization:
+  mode: boundary_ramp
+  scale: 0.5
+  observation_noise:
+    mode: fixed
+    multiplier: 1.0
+  preserved_startup:
+    friction_static_dynamic:
+    - 0.2
+    - 1.2
+    base_mass_add_kg:
+    - -1.0
+    - 3.0
+  full_ranges:
+    base_com:
+      x:
+      - -0.05
+      - 0.05
+      y:
+      - -0.05
+      - 0.05
+      z:
+      - -0.05
+      - 0.05
+    actuator_gains:
+      stiffness_scale:
+      - 0.9
+      - 1.1
+      damping_scale:
+      - 0.9
+      - 1.1
+    motor_strength:
+    - 0.9
+    - 1.1
+    delay_s:
+    - 0.0
+    - 0.015
+    push_velocity:
+      x:
+      - -1.0
+      - 1.0
+      y:
+      - -1.0
+      - 1.0
+      z:
+      - 0.0
+      - 0.0
+      roll:
+      - 0.0
+      - 0.0
+      pitch:
+      - 0.0
+      - 0.0
+      yaw:
+      - 0.0
+      - 0.0
+  push_interval_s:
+  - 10.0
+  - 15.0
+first_rewards:
+  track_ang_vel: 1.0
+  track_lin_vel: 2.0
+  joint_acc: -1.0e-07
+  hip_pos_penalty: -0.05
+  thigh_calf_pos_l1: -0.01
+  four_foot_contact_at_stop: 0.1
+  stand_gap: -0.2
+  stand_load: -0.1
+  zero_yaw: -0.5
+  swing: -10.0
+  stumble: -2.0
+  knee_effort_margin: 0.0
+  joint_limit_margin: 0.0
+  feet_air_time: 0.0
+  foot_slip: 0.0
+ranges:
+  forward_vx:
+  - 0.1
+  - 1.5
+  walk_vx:
+  - 0.3
+  - 0.8
+  walk_wz_abs:
+  - 0.2
+  - 1.0
+  spin_wz_abs:
+  - 0.3
+  - 1.5
+  reverse_vx:
+  - -1.3
+  - -0.2
+  side_vy_abs:
+  - 0.2
+  - 0.6
+  diag_vx_abs:
+  - 0.3
+  - 0.6
+  diag_vy_abs:
+  - 0.2
+  - 0.5
+stages:
+- id: S2a
+  start:
+    fixed_update: 0
+  duration:
+    minimum_updates: 750
+    maximum_updates: 750
+  shares:
+    forward: 0.23
+    walk_left: 0.075
+    walk_right: 0.075
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.06
+    side_right: 0.06
+    diag_fwd_left: 0.015
+    diag_fwd_right: 0.015
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: true
+  terrain:
+    policy: fixed_l02
+    level_cap: 2
+- id: S2b
+  start:
+    fixed_update: 751
+  duration:
+    minimum_updates: 1000
+    maximum_updates: 1000
+  shares:
+    forward: 0.23
+    walk_left: 0.075
+    walk_right: 0.075
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.06
+    side_right: 0.06
+    diag_fwd_left: 0.015
+    diag_fwd_right: 0.015
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: true
+  terrain:
+    policy: fixed_l02
+    level_cap: 2
+- id: S2c
+  start:
+    fixed_update: 1751
+  duration:
+    minimum_updates: 1000
+    maximum_updates: 1000
+  shares:
+    forward: 0.23
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: true
+  terrain:
+    policy: fixed_l02
+    level_cap: 2
+- id: S2d
+  start:
+    fixed_update: 2751
+  duration:
+    minimum_updates: 1250
+    maximum_updates: 1250
+  shares:
+    forward: 0.23
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: true
+  terrain:
+    policy: performance
+    level_cap: 5
+- id: S2e
+  start:
+    fixed_update: 4001
+  duration:
+    minimum_updates: 500
+    maximum_updates: 500
+  shares:
+    forward: 0.23
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: true
+  terrain:
+    policy: performance
+    level_cap: 5
+- id: T0_prime
+  start:
+    fixed_update: 4501
+  duration:
+    minimum_updates: 500
+    maximum_updates: 500
+  shares:
+    forward: 0.23
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx:
+    - 0.1
+    - 1.5
+    walk_vx:
+    - 0.3
+    - 0.8
+    walk_wz_abs:
+    - 0.2
+    - 1.0
+    spin_wz_abs:
+    - 0.3
+    - 1.5
+    reverse_vx:
+    - -1.3
+    - -0.2
+    side_vy_abs:
+    - 0.2
+    - 0.6
+    diag_vx_abs:
+    - 0.3
+    - 0.6
+    diag_vy_abs:
+    - 0.2
+    - 0.5
+  force_gt: false
+  terrain:
+    policy: performance
+    level_cap: 5
+automatic:
+  interval_updates: 250
+  pair_step: 0.01
+  pair_limit: 0.02
+  pair_survival_noise: 0.046875
+  pair_error_noise: 0.03
+  gait_sync_floor: 0.79
+  knee_limit_increase: 0.1
+  forward_error_increase: 0.05
+  stand_min_passed: 61
+  yaw_limit_deg: 5.0
+  critic_both_fail_fraction: 0.8
+  extension_level_delta: 0.5
+  required_consecutive: 2
+  yaw_consecutive: 3
+  weight_halvings_max: 1
+  provenance: lead-team-1102-1400-fixed5000-stand-only-extension
+fixed_schedule:
+  # D133 11/02 15:0x: judge GT/proprio 26; preserve all 39 numeric records.
+  include_record_only: false
+  dr_stage_end_scales: [0.5, 0.65, 0.8, 1.0, 1.0, 1.0]
+  duration_updates: 5000
+  pause_limit_updates: 1000
+  recovery_boundaries: 2
+  extension_updates: 500
+  maximum_extensions: 1
+  maintenance_drop_count: 3
+  interval_updates: 250
+  maintenance_baseline:
+    path: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
+    sha256: a1457a3d9ff780bac2804f0949875e305559fa761dc609be09c33ee9a19b85a6

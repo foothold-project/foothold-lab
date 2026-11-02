@@ -19,7 +19,7 @@ STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="${3:-$ROOT/logs/turn_probe_${STAMP}}"
 mkdir -p "$OUT"
 git rev-parse HEAD > "$OUT/git_head.txt"
-sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
+sha256sum "$CK" </dev/null > "$OUT/checkpoint_sha256.txt"
 "$ENV/python.exe" -m foothold_s2.eval.turn_probe --task "$TASK" --map-mode "$MODE" --checkpoint "$CK" --out "$OUT" --envs "$ENVS" $GAITS ${CASES:+--cases "$CASES"} $FIXED --headless --device "$DEV" > "$OUT/run.log" 2>&1
 echo "rc=$?" > "$OUT/rc.txt"
 grep -q "TURNPROBE_DONE" "$OUT/run.log" || echo "DONE 줄 없음(Isaac 은 예외 뒤에도 0 을 낼 수 있다)" >> "$OUT/rc.txt"

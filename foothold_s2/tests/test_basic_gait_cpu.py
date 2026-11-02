@@ -1,0 +1,159 @@
+"""기본 보행 준비판의 10만 표본, 명령 계약, 기존 선택값 불변 CPU 시험."""
+
+from types import SimpleNamespace
+
+import pytest
+import torch
+
+from foothold_s2.commands import mixed_core as mc
+from foothold_s2.runners.contracts import basic_gait_contract_bad, contract_bad_fn
+from foothold_s2.runners.reward_split import RewardSplit, split_stats
+from foothold_s2.sol23f_contract import TASKS, command_settings, validate_launch
+
+
+def _args(**changes):
+    data = dict(variant="SB", task=TASKS["SB"], agent="rsl_rl_cfg_entry_point",
+                distributed=False, map_input="reconstruction", max_wall_s=3600,
+                end_by="2099-01-01T00:00:00+00:00", num_envs=3072, seed=42,
+                max_iterations=1501, force_gt=False, smoke_updates=None,
+                resume_from=None, p_map_off=0.1, command_mode="basic_gait",
+                clock_scatter="on", basic_new_share=None,
+                basic_log_root="C:/Users/AI-WS01/s2_lab/basic_gait_runs", basic_stage="main",
+                run_name="EX-36B-basic-share30")
+    data.update(changes)
+    return SimpleNamespace(**data)
+
+
+@pytest.mark.parametrize("share", [0.30, 0.15])
+def test_100k_real_sampler_ratios_ranges_and_contract(share):
+    params = mc.CommandParams(basic_mode=True, basic_new_share=share)
+    out = mc.resample_free_modes(mc.make_generator(42), 100_000, params, 0)
+    expected = mc.basic_shares(share)
+    assert len(mc.BASIC_SLOTS) == len(expected) == 9
+    assert sum(expected) == pytest.approx(1.0)
+    for i, want in enumerate(expected):
+        actual = float((out["slot"] == i).float().mean())
+        assert actual == pytest.approx(want, abs=0.005), (mc.BASIC_SLOTS[i], actual, want)
+    c = out["cmd"]
+    assert c.shape == (100_000, 3) and not basic_gait_contract_bad(c).any()
+    assert (c[out["slot"] == 6, 0] < 0).all()
+    assert (c[out["slot"] == 7, 1] > 0).all()
+    assert (c[out["slot"] == 8, 1] < 0).all()
+    assert out["stand"].sum() == (out["slot"] == 5).sum()
+    assert out["spin"].sum() == ((out["slot"] == 3) | (out["slot"] == 4)).sum()
+    assert int(mc.new_task_mask(c, params).sum()) > 0
+
+
+def test_contract_rejects_known_invalid_commands_and_preserves_old_modes():
+    good = torch.tensor([[0, 0, 0], [-0.2, 0, 0], [0, 0.5, 0],
+                         [0.3, 0, 0.2], [0, 0, -1.2]])
+    bad = torch.tensor([[-0.1, 0, 0], [0, 0.6, 0], [-0.3, 0, 0.2],
+                        [0.5, 0.2, 0], [0, 0, 1.3], [float("nan"), 0, 0]])
+    assert not basic_gait_contract_bad(good).any()
+    assert basic_gait_contract_bad(bad).all()
+    assert contract_bad_fn("basic_gait_v1") is basic_gait_contract_bad
+    assert command_settings(_args(command_mode="start", clock_scatter="off")) == {
+        "command_mode": "start", "command_contract": "start", "clock_scatter": False}
+    assert command_settings(_args(command_mode="s2a")) == {
+        "command_mode": "s2a", "command_contract": "walkturn_v1", "clock_scatter": True}
+    a = mc.resample_free_modes(mc.make_generator(4), 100, mc.CommandParams(start_mode=True), 0)["cmd"]
+    b = mc.resample_start(mc.make_generator(4), 100, mc.CommandParams(start_mode=True))["cmd"]
+    assert torch.equal(a, b)
+
+
+def test_new_mode_validation_and_parameterized_share():
+    validate_launch(_args(), verify_parent=False)
+    validate_launch(_args(basic_new_share=0.15), verify_parent=False)
+    validate_launch(_args(smoke_updates=10, basic_stage="smoke"), verify_parent=False)
+    settings = command_settings(_args(basic_new_share=0.15))
+    assert settings["command_contract"] == "basic_gait_v1"
+    assert settings["basic_shares"]["forward"] == pytest.approx(0.55)
+    assert settings["basic_shares"]["reverse"] == pytest.approx(0.05)
+    for bad in (-0.01, float("nan"), 0.71):
+        with pytest.raises(ValueError, match="basic_new_share"):
+            validate_launch(_args(basic_new_share=bad), verify_parent=False)
+    with pytest.raises(ValueError, match="requires"):
+        validate_launch(_args(command_mode="start", basic_new_share=0.15), verify_parent=False)
+    with pytest.raises(ValueError, match="SB variant only"):
+        validate_launch(_args(variant="B", task=TASKS["B"]), verify_parent=False)
+    with pytest.raises(ValueError, match="basic-log-root"):
+        validate_launch(_args(basic_log_root=None), verify_parent=False)
+    with pytest.raises(ValueError, match="smoke stage"):
+        validate_launch(_args(basic_stage="smoke"), verify_parent=False)
+
+
+def test_reward_split_uses_pre_reset_body_vy_and_six_basic_groups():
+    commands = torch.tensor([[0.5, 0, 0], [0.5, 0, 0.3], [0, 0, -1],
+                             [0, 0, 0], [-0.5, 0, 0], [0, -0.4, 0]])
+    body = commands.clone()
+    rewards = torch.arange(1, 7, dtype=torch.float32).reshape(6, 1)
+    robot = SimpleNamespace(data=SimpleNamespace(root_lin_vel_b=torch.column_stack(
+        [body[:, 0], body[:, 1], torch.zeros(6)]), root_ang_vel_b=torch.column_stack(
+        [torch.zeros(6), torch.zeros(6), body[:, 2]])))
+    term = SimpleNamespace(vel_command_b=commands.clone())
+    rm = SimpleNamespace(active_terms=["track_lin_vel"], _step_reward=rewards.clone())
+    rm.compute = lambda: rewards.sum(-1)
+    env = SimpleNamespace(scene={"robot": robot}, command_manager=SimpleNamespace(get_term=lambda _: term),
+                          reward_manager=rm, reset_buf=torch.zeros(6, dtype=torch.bool))
+    record = RewardSplit(basic_mode=True)
+    record.attach(env)
+    rm.compute()
+    robot.data.root_lin_vel_b.zero_()
+    term.vel_command_b.zero_()
+    record.add()
+    out = record.summary()
+    groups = out["by_basic_group"]
+    assert list(groups) == ["forward", "walkturn", "spin", "stand", "reverse", "side"]
+    assert [groups[k]["env_steps"] for k in groups] == [1] * 6
+    assert groups["reverse"]["following_env_steps"] == 1
+    assert groups["side"]["following_env_steps"] == 1
+    assert groups["side"]["reward_terms_mean"]["track_lin_vel"] == pytest.approx(6.0)
+    assert out["frac_moving"] == pytest.approx(5 / 6)
+    assert out["frac_no_move_command"] == pytest.approx(1 / 6)
+    old = split_stats(rewards[None], ["track_lin_vel"], body[:, 0][None], body[:, 2][None], commands[None])
+    assert old["frac_moving"] < out["frac_moving"] and "by_basic_group" not in old
+
+
+def test_basic_reward_split_rejects_missing_y_velocity():
+    with pytest.raises(ValueError, match="body vy"):
+        split_stats(torch.ones(1, 1, 1), ["r"], torch.zeros(1, 1), torch.zeros(1, 1),
+                    torch.tensor([[[0., 0.5, 0.]]]), basic_mode=True)
+
+
+def test_basic_following_requires_walkturn_yaw_sign_and_stand_both_speeds():
+    cmd = torch.tensor([[[0.5, 0, 0.3], [0.5, 0, -0.3],
+                         [0, 0, 0], [0, 0, 0], [0, 0, 0]]])
+    vx = torch.tensor([[0.5, 0.5, 0.0, 0.06, 0.0]])
+    vy = torch.zeros_like(vx)
+    wz = torch.tensor([[-0.3, 0.3, 0.0, 0.0, 0.11]])
+    out = split_stats(torch.ones(1, 5, 1), ["track_lin_vel"], vx, wz, cmd,
+                      vy=vy, basic_mode=True)
+    # Both turning commands have opposite actual yaw; neither is full following.
+    assert out["by_basic_group"]["walkturn"]["following_env_steps"] == 0
+    # Only the motionless stand sample follows, not the translating or rotating one.
+    assert out["by_basic_group"]["stand"]["following_env_steps"] == 1
+    wz[0, 0] = 0.3
+    wz[0, 1] = -0.3
+    fixed = split_stats(torch.ones(1, 5, 1), ["track_lin_vel"], vx, wz, cmd,
+                        vy=vy, basic_mode=True)
+    assert fixed["by_basic_group"]["walkturn"]["following_env_steps"] == 2
+
+
+def test_l02_rebase_updates_labels_and_both_origins_without_changing_types():
+    from foothold_s2.commands.basic_levels import place_l02
+
+    origins = torch.arange(10 * 3 * 3, dtype=torch.float32).reshape(10, 3, 3)
+    levels = torch.tensor([0, 2, 3, 9], dtype=torch.long)
+    types = torch.tensor([0, 1, 2, 1], dtype=torch.long)
+    terrain = SimpleNamespace(terrain_origins=origins, terrain_levels=levels,
+                              terrain_types=types, env_origins=torch.zeros(4, 3))
+    scene = SimpleNamespace(terrain=terrain, env_origins=torch.zeros(4, 3))
+    row = place_l02(SimpleNamespace(scene=scene))
+    assert row["old_above_l2"] == 2 and row["new_counts"] == [3, 0, 1]
+    assert levels.tolist() == [0, 2, 0, 0] and types.tolist() == [0, 1, 2, 1]
+    assert torch.equal(terrain.env_origins, origins[levels, types])
+    assert torch.equal(scene.env_origins, terrain.env_origins)
+    assert place_l02(SimpleNamespace(scene=scene))["labels_sha256"] == row["labels_sha256"]
+    levels[0] = 10
+    with pytest.raises(ValueError, match="outside"):
+        place_l02(SimpleNamespace(scene=scene))

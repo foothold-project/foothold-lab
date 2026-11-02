@@ -46,7 +46,7 @@ def test_wrong_parent_sha_is_refused(tmp_path):
     f = tmp_path / "model_1500.pt"
     f.write_bytes(b"not the parent")
 
-    with pytest.raises(ValueError, match="부모 SHA-256"):
+    with pytest.raises(ValueError, match="부모 SHA-256|허용표"):
         L.receipt("main", L.build_args("main", "cuda:0", str(f), END), str(f))
 
 

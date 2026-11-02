@@ -70,7 +70,13 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.exposure = mc.ExposureLog()
-        self.slot_counts = torch.zeros(len(mc.WT_SLOTS), dtype=torch.long, device=dev)      # S2a 슬롯별 재추출 수(update 마다 runner 가 꺼냄)
+        self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None or self.params.curriculum_mode else
+                           mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS)
+        self.slot_counts = torch.zeros(len(self.slot_names), dtype=torch.long, device=dev)
+        # Read-only Kit smoke evidence for the latest sampled slot of each env.
+        self.slot_current = torch.full((n,), -1, dtype=torch.long, device=dev)
+        self.ex39_first_forward_heading_wz_max = None
+        self.ex39_first_forward_heading_wz_detail = None
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
@@ -127,6 +133,8 @@ class MixedVelocityCommand(CommandTerm):
         self.goals[env_ids] = 0
         self.excluded_steps[env_ids] = 0.0
         self.ep_steps[env_ids] = 0.0
+        if hasattr(self, "stop_elapsed_s"):
+            self.stop_elapsed_s[env_ids] = 0.0
 
         if self.cfg.dynamic_flags and self.cfg.force_flag_provider is not None:
             forced = self.cfg.force_flag_provider(self._env.scene.terrain, env_ids)
@@ -149,6 +157,9 @@ class MixedVelocityCommand(CommandTerm):
     def reset(self, env_ids=None):
         """에피소드 처음: 기록과 깃발을 새 출발점으로 비운 뒤 재추출 (Isaac 은 이 시점에 spawn 이 이미 정해져 있다)."""
         ids = torch.arange(self.num_envs, device=self.device) if env_ids is None             else torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
+        runtime = getattr(self, "stage_runtime", None)
+        if runtime is not None:
+            runtime.on_reset(ids)
         self._reset_episode_state(ids)
 
         extras = super().reset(env_ids)
@@ -180,14 +191,14 @@ class MixedVelocityCommand(CommandTerm):
         self.scatter_receipt = mc.scatter_receipt(self.time_left, period)
 
     def take_slot_counts(self):
-        """이번 update 동안의 S2a 슬롯 재추출 수와 비율(없거나 S2a 가 아니면 None)."""
-        if not self.params.walkturn_mode:
+        """이번 update 동안 선택한 명령 모드의 슬롯 재추출 수와 비율."""
+        if not (self.params.walkturn_mode or self.params.basic_mode):
             return None
         c = self.slot_counts.cpu().tolist()
         self.slot_counts.zero_()
         total = sum(c)
 
-        return None if total == 0 else {"counts": dict(zip(mc.WT_SLOTS, c)), "frac": {k: v / total for k, v in zip(mc.WT_SLOTS, c)}}
+        return None if total == 0 else {"counts": dict(zip(self.slot_names, c)), "frac": {k: v / total for k, v in zip(self.slot_names, c)}}
 
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
@@ -195,22 +206,42 @@ class MixedVelocityCommand(CommandTerm):
         free = env_ids[~self.is_flag_env[env_ids]]
 
         if len(free) > 0:
-            out = mc.resample_free_modes(self.gen, len(free), self.params, self.iteration,
-                                         self.range_curriculum.vmax_x, self.range_curriculum.vmax_y)
-            self.vel_command_b[free] = out["cmd"].to(self.device)
-            self.stand[free] = out["stand"].to(self.device)
-            self.spin[free] = out["spin"].to(self.device)
-            self.heading[free] = out["heading"].to(self.device)
-            self.psi_star[free] = out["psi_star"].to(self.device)
-            self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
-            if "slot" in out:
-                self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(mc.WT_SLOTS))
-
-            if self.cfg.fixed_cmd is not None:
-                self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
-                self.stand[free] = False
-                self.spin[free] = False
-                self.heading[free] = False
+            runtime = getattr(self, "stage_runtime", None)
+            groups = ([(free[self.stage_runtime.env_stage[free] == i], i)
+                       for i in range(len(runtime.plan.stages))] if runtime is not None else [(free, None)])
+            for group, index in groups:
+                if len(group) == 0:
+                    continue
+                was_stand = self.stand[group].clone() if runtime is not None else None
+                out = (mc.resample_stage(self.gen, len(group), runtime.plan.stages[index], self._yaw(group))
+                       if runtime is not None else
+                       mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
+                                              self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
+                                              yaw=self._yaw(group)))
+                self.vel_command_b[group] = out["cmd"].to(self.device)
+                self.stand[group] = out["stand"].to(self.device)
+                if not hasattr(self, "stop_elapsed_s"):
+                    self.stop_elapsed_s = torch.zeros(self.num_envs, device=self.device)
+                if runtime is None:
+                    self.stop_elapsed_s[group] = 0.0
+                else:
+                    self.stop_elapsed_s[group] = mc.stop_elapsed_after_resample(
+                        was_stand, self.stand[group], self.stop_elapsed_s[group])
+                self.spin[group] = out["spin"].to(self.device)
+                self.heading[group] = out["heading"].to(self.device)
+                self.psi_star[group] = out["psi_star"].to(self.device)
+                self.new_task.on_resample(group, out["cmd"].to(self.device), self.params)
+                if "slot" in out:
+                    self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
+                    self.slot_current[group] = out["slot"].to(self.device)
+                if self.cfg.fixed_cmd is not None:
+                    self.vel_command_b[group] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
+                    self.stand[group] = False
+                    self.spin[group] = False
+                    self.heading[group] = False
+                if runtime is not None:
+                    runtime.record_command_sample(group, self.vel_command_b[group],
+                                                  self.slot_current[group], self.heading[group])
 
         flag = env_ids[self.is_flag_env[env_ids]]
 
@@ -228,8 +259,34 @@ class MixedVelocityCommand(CommandTerm):
         dt = self._env.step_dt
 
         free = ~self.is_flag_env
-        self.vel_command_b[free] = mc.apply_heading(self.vel_command_b, self.heading, self.stand,
-                                                    self.psi_star, yaw, self.params)[free]
+        runtime = getattr(self, "stage_runtime", None)
+        if runtime is not None:
+            applied = mc.apply_stage_heading(self.vel_command_b, self.heading, self.stand,
+                                             self.psi_star, yaw, self.slot_current,
+                                             runtime.env_stage, runtime.plan.stages)
+        else:
+            applied = mc.apply_heading(self.vel_command_b, self.heading, self.stand,
+                                       self.psi_star, yaw, self.params)
+        self.vel_command_b[free] = applied[free]
+        if runtime is not None:
+            self.stop_elapsed_s = torch.where(self.stand, self.stop_elapsed_s + dt,
+                                              torch.zeros_like(self.stop_elapsed_s))
+        if self.params.ex39_arm == "B" and self.ex39_first_forward_heading_wz_max is None:
+            first_forward = (self.slot_current == 0) & self.heading & free
+            if first_forward.any():
+                expected = mc.heading_wz(self.psi_star[first_forward], yaw[first_forward],
+                                         self.params.heading_stiffness, self.params.wz_max)
+                observed = self.vel_command_b[first_forward, 2]
+                self.ex39_first_forward_heading_wz_max = float(
+                    observed.abs().max().item())
+                self.ex39_first_forward_heading_wz_detail = {
+                    "env_count": int(first_forward.sum().item()),
+                    "observed_abs_max": self.ex39_first_forward_heading_wz_max,
+                    "expected_abs_max": float(expected.abs().max().item()),
+                    "error_abs_max": float((observed - expected).abs().max().item()),
+                    "heading_error_abs_max": float(mc.wrap_to_pi(
+                        self.psi_star[first_forward] - yaw[first_forward]).abs().max().item()),
+                }
 
         if len(self.flag_ids) > 0:
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params)

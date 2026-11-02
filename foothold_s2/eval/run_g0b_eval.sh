@@ -13,7 +13,7 @@ GAITS="${FORWARD_GAITS_FLAG---forward-gaits}"
 mkdir -p "$OUT"
 git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
 git -C "$ROOT" status --short > "$OUT/git_status.txt"
-sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
+sha256sum "$CK" </dev/null > "$OUT/checkpoint_sha256.txt"
 MODULE=foothold_s2.eval.turn_probe DEVICE="$DEV" bash "$KIT" "$OUT/turn16" \
   --task "$TASK" --checkpoint "$CK" --envs 16 --map-mode none --fixed-terrain --cases all $GAITS < /dev/null
 echo "turn16 rc=$?" > "$OUT/rc.txt"

@@ -56,7 +56,7 @@ import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
+from foothold_s2.eval import adapters, map_mode_cells, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
 CASES = P.select_cases(args.cases)                                        # 잘못된 --cases 는 환경을 만들기 전에 거절
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
@@ -87,6 +87,7 @@ dev = raw.device
 robot = raw.scene["robot"]
 sensor = raw.scene["contact_forces"]
 term = raw.command_manager.get_term("base_velocity")
+map_mode_cells.disable_heading_for_fixed_eval(term)
 dt = raw.step_dt
 sub_dt = raw.physics_dt
 N = raw.num_envs
@@ -163,7 +164,9 @@ def run_segment(cmd, seconds, policy, obs, record):
 
     for _ in range(int(round(seconds / dt))):
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+        map_mode_cells.assert_heading_off_for_fixed_eval(term)
         obs, _r, dones, _x = env.step(policy(obs))
+        map_mode_cells.assert_heading_off_for_fixed_eval(term)
         policy.reset(dones)
         for _s in range(raw.cfg.decimation):
             alive_hist.append(alive.clone())

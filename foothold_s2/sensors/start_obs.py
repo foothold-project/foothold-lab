@@ -73,6 +73,28 @@ class ContactsGroup(ObsGroup):
     contacts = ObsTerm(func=feet_contact, params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=list(FEET))})
 
 
+def zero_pose_command(env):
+    """D93 first-stage command: [height delta (m), body roll (rad)]."""
+    return torch.zeros((env.num_envs, 2), device=env.device, dtype=torch.float32)
+
+
+@configclass
+class PoseCommandGroup(ObsGroup):
+    pose_cmd = ObsTerm(func=zero_pose_command)
+
+    def __post_init__(self):
+        self.enable_corruption = False
+        self.concatenate_terms = True
+
+
+def apply_ex41_pose_observation(env_cfg) -> None:
+    """Attach the separate EX-41 pose group before gym.make, leaving policy45 intact."""
+    obs = env_cfg.observations
+    if getattr(obs, "pose_cmd", None) is not None:
+        raise ValueError("EX-41 pose_cmd observation group already exists")
+    obs.pose_cmd = PoseCommandGroup()
+
+
 def apply_start_perception(env_cfg, robot_base: str = "{ENV_REGEX_NS}/Robot/base") -> None:
     """env cfg 에 D435i · 정답 지도 · 발 지도 센서와 runner 관측 묶음 다섯을 더한다. policy 묶음(45)은 건드리지 않는다.
 

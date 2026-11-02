@@ -1,0 +1,158 @@
+format: foothold-ex40-curriculum/1
+start: scratch
+baseline_env_yaml_sha256: 4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b5d12639901
+baseline_agent_yaml_sha256: 213b82acc0a8d937de3f85171619e7d20c55612b37033bdeb05c6adff3c06308
+promotion: fixed
+shadow_gate: true
+terrain_curriculum: fixed_l02
+gate: {minimum_exposure_updates: 500, separated_checkpoints: 250}
+stand_penalty: {gap_weight: -0.2, load_weight: -0.1, load_fraction: 0.05, ramp_s: 0.5}
+heading: {forward_fraction: 0.5, spin_target_fraction: 0.3, gain: 0.5, forward_wz_limit: 0.5, target_wz_limit: 1.5}
+domain_randomization:
+  range_source: C:/mai/wt/foothold-lab/analyst-ame2/_out/reports/DR-RANGES-EX40-1030.md
+  length_D: 1500
+  runtime_adapter_status: verified
+  observation_noise: {mode: fixed, multiplier: 1.0}
+  delay_max_s: 0.015
+  preserved_startup:
+    friction_static_dynamic: [0.2, 1.2]
+    base_mass_add_kg: [-1.0, 3.0]
+  full_ranges:
+    base_com: {x: [-0.05, 0.05], y: [-0.05, 0.05], z: [-0.05, 0.05]}
+    actuator_gains: {stiffness_scale: [0.9, 1.1], damping_scale: [0.9, 1.1]}
+    motor_strength: [0.9, 1.1]
+    delay_s: [0.0, 0.015]
+    push_velocity:
+      x: [-1.0, 1.0]
+      y: [-1.0, 1.0]
+      z: [0.0, 0.0]
+      roll: [0.0, 0.0]
+      pitch: [0.0, 0.0]
+      yaw: [0.0, 0.0]
+  push_interval_s: [10.0, 15.0]
+stages:
+  - id: B0
+    start: {fixed_update: 0}
+    adds:
+      command_slots: [forward, spin_left, spin_right, stand]
+      rewards: {track_ang_vel: 1.0, track_lin_vel: 2.0, joint_acc: -0.0000001, hip_pos_penalty: -0.05, thigh_calf_pos_l1: -0.01, four_foot_contact_at_stop: 0.1, stand_gap: -0.2, stand_load: -0.1}
+    # S-B10 START: 80% forward, 20% spin. Existing stand share 10% is
+    # inserted from the W55 B1 design, leaving 72% forward and 18% spin.
+    shares: {forward: 0.72, spin_left: 0.09, spin_right: 0.09, stand: 0.10}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.5, 1.2]
+      reverse_vx: [-0.8, -0.2]
+      side_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+  - id: B1
+    start: {fixed_update: 1501}
+    adds:
+      command_slots: [walk_left, walk_right, reverse, side_left, side_right]
+    shares: {forward: 0.40, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.10, side_left: 0.05, side_right: 0.05}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.5, 1.2]
+      reverse_vx: [-0.8, -0.2]
+      side_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+  - id: B2
+    start: {fixed_update: 3001}
+    adds:
+      command_slots: [diag_fwd_left, diag_fwd_right, diag_back_left, diag_back_right]
+    shares: {forward: 0.30, walk_left: 0.05, walk_right: 0.05, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 0.5]
+      spin_wz_abs: [0.5, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null  # EX-39 결과 뒤 lead 결정. 본 실행에서 별도 명시가 필요하다.
+    force_gt: true
+  - id: B3a
+    start: {fixed_update: 4501}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.5, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+  - id: B3b
+    start: {fixed_update: 5001}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.3, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+  - id: B3c
+    start: {fixed_update: 5501}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+    low_forward_fraction: 0.20
+  - id: D
+    start: {fixed_update: 6001}
+    adds: {}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: true
+    low_forward_fraction: 0.20
+  - id: T0
+    start: {fixed_update: 7501}
+    adds: {map_source: reconstruction}
+    shares: {forward: 0.25, walk_left: 0.075, walk_right: 0.075, spin_left: 0.10, spin_right: 0.10, stand: 0.10, reverse: 0.12, side_left: 0.06, side_right: 0.06, diag_fwd_left: 0.015, diag_fwd_right: 0.015, diag_back_left: 0.015, diag_back_right: 0.015}
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 0.8]
+      walk_wz_abs: [0.2, 1.0]
+      spin_wz_abs: [0.3, 1.5]
+      reverse_vx: [-1.0, -0.2]
+      side_vy_abs: [0.2, 0.6]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    heading_arm: null
+    force_gt: false
+    low_forward_fraction: 0.20

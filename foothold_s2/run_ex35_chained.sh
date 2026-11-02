@@ -39,6 +39,7 @@ for A in "${ARGS[@]}"; do
   case "$A" in ""|*[[:space:]]*|*$'\r'*) echo "거절: argv 에 CR · 공백 · 빈 값 (${A@Q})"; exit 5;; esac
 done
 printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
+PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json" || exit 5
 
 # ---- 사전 점검 (학습을 띄우기 전에 전부) ----
 [ "$EVAL_DEV" != "$DEV" ] || refuse "평가 장치가 학습 장치와 같다 ($DEV)"

@@ -10,6 +10,7 @@ cli 인자 · 패키지 버전 · 모드(est mask · critic · clip · z/action 
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -81,17 +82,44 @@ def state_sha(obj) -> str:
     return h.hexdigest()
 
 
-def imported_files(prefixes=WATCH_PREFIXES) -> dict[str, str]:
-    """sys.modules 중 소비 코드의 파일 -> SHA."""
-    out = {}
+def imported_snapshot(prefixes=WATCH_PREFIXES) -> tuple[dict[str, str], dict[str, str]]:
+    """Return loaded project sources as module -> SHA and module -> canonical path."""
+    hashes, paths = {}, {}
 
     for name, mod in list(sys.modules.items()):
         f = getattr(mod, "__file__", None)
 
         if f and name.split(".")[0] in prefixes and os.path.isfile(f) and f.endswith(".py"):
-            out[name] = sha256_file(f)
+            hashes[name] = sha256_file(f)
+            paths[name] = os.path.normcase(os.path.realpath(f))
 
-    return out
+    return hashes, paths
+
+
+def imported_files(prefixes=WATCH_PREFIXES) -> dict[str, str]:
+    """Return loaded project Python sources as module -> SHA."""
+    return imported_snapshot(prefixes)[0]
+
+
+def imported_source_paths(prefixes=WATCH_PREFIXES) -> dict[str, str]:
+    """Return loaded project Python sources as module -> canonical path."""
+    return imported_snapshot(prefixes)[1]
+
+
+def _module_source_path(name: str) -> str | None:
+    """Find a recorded Python source even when this process has not imported it."""
+    module = sys.modules.get(name)
+    source = getattr(module, "__file__", None) if module is not None else None
+    if source and source.endswith(".py") and os.path.isfile(source):
+        return os.path.realpath(source)
+    try:
+        spec = importlib.util.find_spec(name)
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return None
+    source = getattr(spec, "origin", None) if spec is not None else None
+    if source and source.endswith(".py") and os.path.isfile(source):
+        return os.path.realpath(source)
+    return None
 
 
 def git_state(repo: str) -> dict:
@@ -173,12 +201,13 @@ def build_manifest(*, repo, log_dir, run_name, cli_args, modes, runner=None, env
     for item in hydra_list:                                   # "agent.perception.est_mode=zero" -> {"agent.perception.est_mode": "zero"}
         k, _, v = str(item).partition("=")
         hydra_overrides[k.strip()] = v.strip()
+    source_hashes, source_paths = imported_snapshot()
     m = {"schema": "foothold-manifest/1",
          "run": {"name": run_name, "log_dir": log_dir, "started_at": time.strftime("%Y-%m-%d %H:%M:%S"), "pid": os.getpid(), "cli_args": clean_args,
              "hydra_overrides": hydra_overrides},
          "record_contract": RECORD_CONTRACT,
          "git": gs, "packages": package_versions(), "python": sys.version.split()[0], "modes": dict(modes),
-         "files": {"imported_sha256": imported_files()},
+         "files": {"imported_sha256": source_hashes, "imported_paths": source_paths},
          "yaml": {"env": yaml_flat(env_yaml) if env_yaml else {}, "agent": yaml_flat(agent_yaml) if agent_yaml else {}},
          "progress": {"completed_updates": 0, "total_env_steps": 0}, "checkpoints": {}}
 
@@ -217,15 +246,34 @@ def update_progress(log_dir: str, manifest: dict, completed_updates: int, total_
 
 
 def file_changes(manifest: dict) -> dict:
-    """시작 때 기록한 소비 파일과 지금을 견준다: changed(SHA 다름) · missing(사라짐 또는 더는 import 안 됨 · 디스크에서 사라진 파일) · added(시작 뒤 새로 import 된 소비 파일 -> SHA)."""
-    now = imported_files()
+    """Compare recorded source paths and SHA values with one current module snapshot."""
+    now, now_paths = imported_snapshot()
     old = manifest["files"]["imported_sha256"]
     seen_added = manifest["files"].get("added_after_start", {})
-    changed = sorted(n for n, sha in old.items() if n in now and now[n] != sha)
-    missing = sorted(n for n in old if n not in now)
-    added = {n: sha for n, sha in now.items() if n not in old and seen_added.get(n) != sha}
+    expected = {**old, **seen_added}
+    expected_paths = {**manifest["files"].get("imported_paths", {}),
+                      **manifest["files"].get("added_after_start_paths", {})}
+    changed, missing = [], []
+    for name, expected_sha in expected.items():
+        actual_sha = now.get(name)
+        source = now_paths.get(name) or _module_source_path(name)
+        if source is None or name not in expected_paths:
+            missing.append(name)
+            continue
+        source = os.path.normcase(os.path.realpath(source))
+        if source != os.path.normcase(os.path.realpath(expected_paths[name])):
+            changed.append(name)
+            continue
+        if actual_sha is None:
+            actual_sha = sha256_file(source)
+        if actual_sha != expected_sha:
+            changed.append(name)
+    changed.sort()
+    missing.sort()
+    added = {n: sha for n, sha in now.items() if n not in expected}
+    added_paths = {n: now_paths[n] for n in added if n in now_paths}
 
-    return {"changed": changed, "missing": missing, "added": added}
+    return {"changed": changed, "missing": missing, "added": added, "added_paths": added_paths}
 
 
 def changed_files(manifest: dict) -> list[str]:

@@ -22,7 +22,8 @@ def gaussian_kl(mu0, std0, mu1, std1):
 
 def command_branch(cmd: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
     """명령 (…,3) 을 가지 번호로: 0 walk(vx>0) · 1 spin(vx=0 이고 wz != 0) · 2 stand(셋 모두 0)."""
-    walk = cmd[..., 0].abs() > eps
+    # Side and diagonal EX-39 commands are locomotion, not stand.
+    walk = (cmd[..., :2].abs() > eps).any(dim=-1)
     spin = (~walk) & (cmd[..., 2].abs() > eps)
 
     return torch.where(walk, torch.zeros_like(walk, dtype=torch.long), torch.where(spin, torch.ones_like(walk, dtype=torch.long), torch.full_like(walk, 2, dtype=torch.long)))

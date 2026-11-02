@@ -22,9 +22,14 @@ critic 입력 664 는 이 runner 가 [policy, base_vel, contacts, gt_map, gt_fee
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import random
+import re
+import subprocess
 import time
+import warnings
+from pathlib import Path
 from collections import deque
 
 import numpy as np
@@ -41,7 +46,7 @@ from foothold_s2.commands import mixed_core as mc
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
-from foothold_s2.runners.contracts import contract_bad_fn
+from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
@@ -54,6 +59,7 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
 PERCEPTION_DEFAULTS = {
+    "fast_gt_only": False,
     "learning_rate": 5e-4,
     "weight_decay": 0.0,
     "num_learning_epochs": 5,
@@ -94,6 +100,19 @@ def _nan_to_none(x):
     return x
 
 
+def curriculum_finished(runtime) -> bool:
+    """Return the state-machine terminal flag consumed by the training loop."""
+    return bool(getattr(runtime, "finished", False))
+
+
+def curriculum_update_number(runtime, loop_iteration: int) -> int:
+    """Map the zero-based PPO loop index to the runtime's completed-update n."""
+    if type(loop_iteration) is not int or loop_iteration < 0:
+        raise ValueError("training loop iteration must be a nonnegative integer")
+    plan = getattr(runtime, "plan", None)
+    return loop_iteration + 1 if getattr(plan, "is_ex41", False) else loop_iteration
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -102,6 +121,21 @@ class StartRunner(OnPolicyRunner):
         torch.backends.cudnn.allow_tf32 = False
         torch.backends.cuda.matmul.allow_tf32 = False
         self.cfg = train_cfg
+        # D93: opt in only.  The old 45-wide proprioceptive observation and
+        # its 10-step perception history remain byte-for-byte unchanged.
+        self.ex41_pose_commands = train_cfg.get("ex41_pose_commands", False)
+        if not isinstance(self.ex41_pose_commands, bool):
+            raise ValueError("ex41_pose_commands must be bool")
+        self.ex41_w86_required = train_cfg.get("ex41_w86_required", False)
+        if not isinstance(self.ex41_w86_required, bool) or (self.ex41_w86_required and not self.ex41_pose_commands):
+            raise ValueError("ex41_w86_required needs EX-41 pose commands and a bool setting")
+        self.ex41_critic_mirror = train_cfg.get("ex41_critic_mirror", False)
+        if not isinstance(self.ex41_critic_mirror, bool) or (self.ex41_critic_mirror and not self.ex41_pose_commands):
+            raise ValueError("ex41_critic_mirror requires ex41_pose_commands and a bool setting")
+        self.ex41_mirror_approval = train_cfg.get("ex41_mirror_approval")
+        self.ex41_mirror_hold_reason = None
+        if self.ex41_critic_mirror and not self._valid_ex41_mirror_approval(self.ex41_mirror_approval):
+            raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
         self.alg_cfg = train_cfg["algorithm"]
         self.policy_cfg = train_cfg["policy"]
         self.device = device
@@ -113,6 +147,8 @@ class StartRunner(OnPolicyRunner):
         pcfg = dict(PERCEPTION_DEFAULTS)
         pcfg.update(train_cfg.get("perception", {}))
         self.pcfg = pcfg
+        if pcfg["fast_gt_only"] and (not pcfg.get("force_gt") or pcfg.get("map_input") != "reconstruction" or pcfg.get("log_kl")):
+            raise ValueError("fast_gt_only requires force_gt, reconstruction map, and disabled replay KL probe")
         if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
             raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
         p_off = float(pcfg["p_map_off"])
@@ -146,6 +182,7 @@ class StartRunner(OnPolicyRunner):
         self.manifest_dir = None
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)),
+                          fast_gt_only=bool(pcfg["fast_gt_only"]),
                           depth_delay_ticks=pcfg.get("depth_delay_ticks", 1))
         ).to(device)
         self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
@@ -159,9 +196,9 @@ class StartRunner(OnPolicyRunner):
         template = self._ppo_obs(raw, torch.zeros(raw.batch_size[0], 51, device=device))
         self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
         self.alg = self._construct_algorithm(template)
-        self.replay = PerceptionReplay(
+        self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
             self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
-        )
+        ))
         self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
         self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
 
@@ -174,6 +211,7 @@ class StartRunner(OnPolicyRunner):
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
         self._resumed = False
+        self.ex41_parent_transfer = None
         self.memory_marks: dict[str, int] = {}
         self.memory_log: list[dict] = []  # iteration 마다 단계별 peak (18 §5.2 측정)
         self.iter_log: list[dict] = []
@@ -195,6 +233,22 @@ class StartRunner(OnPolicyRunner):
                 raise KeyError("critic_mode=clean52 인데 env 관측에 (N, 52) 'critic' 묶음이 없다")
         if "gt_map" not in raw.keys() or raw["gt_map"][0].numel() != 512:
             raise ValueError("'gt_map' 은 512 칸(32 x 16)이어야 한다")
+        if self.ex41_pose_commands:
+            self._pose_command(raw)
+
+    @staticmethod
+    def _pose_command(raw: TensorDict) -> torch.Tensor:
+        """D93 order: [body height delta in metres, body roll in radians].
+
+        EX-41's first stage fixes both to zero.  The check is repeated for every
+        rollout observation, including after reset, before the policy sees it.
+        """
+        if "pose_cmd" not in raw.keys() or tuple(raw["pose_cmd"].shape) != (raw.batch_size[0], 2):
+            raise ValueError("EX-41 pose_cmd must have shape (N,2)")
+        pose = raw["pose_cmd"]
+        if not torch.isfinite(pose).all() or torch.count_nonzero(pose):
+            raise ValueError("EX-41 D93 pose_cmd must be finite and zero in this stage")
+        return pose
 
     @staticmethod
     def _split(raw: TensorDict):
@@ -235,9 +289,14 @@ class StartRunner(OnPolicyRunner):
             critic = torch.cat([raw["critic"].reshape(n, 52), gmap.reshape(n, -1), gfeet], -1)
         else:
             critic = torch.cat([o, vel, con, gmap.reshape(n, -1), gfeet], -1)
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            pose = self._pose_command(raw)
+            actor = torch.cat([actor, pose], -1)
+            critic = torch.cat([critic, pose], -1)
         return TensorDict(
             {
-                ACTOR_KEY: torch.cat([o, est_in], -1),
+                ACTOR_KEY: actor,
                 CRITIC_KEY: critic,
             },
             batch_size=[n],
@@ -246,12 +305,102 @@ class StartRunner(OnPolicyRunner):
 
     def _construct_algorithm(self, obs: TensorDict) -> PPO:
         self.policy_cfg.pop("class_name", None)
-        policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions, **self.policy_cfg).to(self.device)
+        policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
+                                  pose_command_dim=2 if self.ex41_pose_commands else 0, **self.policy_cfg).to(self.device)
         alg_cfg = dict(self.alg_cfg)
         alg_cfg.pop("class_name", None)
-        alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+        if self.ex41_pose_commands:
+            from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+            if self.ex41_critic_mirror:
+                self._assert_ex41_joint_order()
+            alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+            alg.mirror_enabled = self.ex41_critic_mirror
+        else:
+            alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         return alg
+
+    def _assert_ex41_joint_order(self) -> None:
+        from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
+
+        base = getattr(self.env, "unwrapped", self.env)
+        try:
+            joint_names = base.scene["robot"].joint_names
+        except (AttributeError, KeyError, TypeError) as exc:
+            raise ValueError("EX-41 critic mirror needs env robot.joint_names") from exc
+        assert_joint_order(joint_names)
+
+    @staticmethod
+    def _valid_ex41_mirror_approval(receipt: dict | None) -> bool:
+        if not isinstance(receipt, dict) or receipt.get("status") != "APPROVED" or receipt.get("gate") != "W72":
+            return False
+        sha = receipt.get("approval_sha256")
+        cfg_sha = receipt.get("config_sha256")
+        decisions = receipt.get("decision_ids")
+        shape_ok = (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) is not None
+                and receipt.get("approval_id") == sha
+                and isinstance(cfg_sha, str) and re.fullmatch(r"[0-9a-f]{64}", cfg_sha) is not None
+                and isinstance(receipt.get("config_commit"), str)
+                and re.fullmatch(r"[0-9a-f]{40}", receipt["config_commit"]) is not None
+                and isinstance(decisions, list) and bool(decisions)
+                and all(isinstance(item, str) and bool(item) for item in decisions))
+        if not shape_ok:
+            return False
+        try:
+            files = [Path(receipt[key]).resolve(strict=True) for key in ("boundary_file", "approval_file")]
+            root_text = subprocess.check_output(["git", "-C", str(files[0].parent), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            root = Path(root_text.decode().strip()).resolve(strict=True)
+            if any(root not in path.parents for path in files):
+                return False
+            for path, expected in zip(files, (cfg_sha, sha), strict=True):
+                rel = path.relative_to(root).as_posix()
+                committed = subprocess.check_output(["git", "-C", str(root), "show", f"{receipt['config_commit']}:{rel}"], stderr=subprocess.DEVNULL)
+                if hashlib.sha256(committed).hexdigest() != expected or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                    return False
+        except (OSError, ValueError, KeyError, subprocess.CalledProcessError):
+            return False
+        return True
+
+    def set_ex41_critic_mirror(self, enabled: bool, approval: dict | None = None) -> None:
+        """Called only after analyst's W72 stage gate has validated a receipt."""
+        if not self.ex41_pose_commands or not isinstance(enabled, bool):
+            raise ValueError("EX-41 critic mirror transition needs the pose runner and bool value")
+        if enabled and not self._valid_ex41_mirror_approval(approval):
+            self.ex41_critic_mirror = False
+            self.ex41_mirror_approval = None
+            self.alg.mirror_enabled = False
+            raise ValueError("EX-41 W72 HOLD: committed approval files or SHA256 differ; critic mirror is off")
+        if enabled:
+            try:
+                self._assert_ex41_joint_order()
+            except ValueError:
+                self.ex41_critic_mirror = False
+                self.ex41_mirror_approval = None
+                self.alg.mirror_enabled = False
+                raise
+        self.ex41_critic_mirror = enabled
+        self.ex41_mirror_approval = approval if enabled else None
+        self.alg.mirror_enabled = enabled
+
+    def _hold_ex41_mirror_resume(self, checkpoint: str, iteration: int, reason: str) -> None:
+        """Keep a valid policy resume running with the optional mirror off."""
+        self.ex41_critic_mirror = False
+        self.ex41_mirror_approval = None
+        self.alg.mirror_enabled = False
+        self.ex41_mirror_hold_reason = reason
+        warnings.warn(reason, RuntimeWarning, stacklevel=2)
+        if self.log_dir is None:
+            return
+        row = {"event": "resume_hold", "iteration": iteration, "checkpoint": checkpoint,
+               "mirror_enabled": False, "reason": reason, "time": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        try:
+            os.makedirs(self.log_dir, exist_ok=True)
+            with open(os.path.join(self.log_dir, "ex41_mirror_events.jsonl"), "a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+        except OSError as exc:
+            warnings.warn(f"EX-41 W72 ledger write failed: {exc}", RuntimeWarning, stacklevel=2)
 
     # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
     def _cuda(self) -> bool:
@@ -303,7 +452,9 @@ class StartRunner(OnPolicyRunner):
         src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
         learn_iters = 0
         act_stats = None
-        rs_rec = RewardSplit() if self.pcfg["log_reward_split"] else None
+        rs_rec = (RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39", "basic_gait_ex40"),
+                              ex39_mode=self.pcfg["contract"] in ("basic_gait_ex39", "basic_gait_ex40"))
+                  if self.pcfg["log_reward_split"] else None)
         if rs_rec is not None:
             rs_rec.attach(getattr(self.env, "unwrapped", self.env))
         if self.pcfg["log_action_stats"]:
@@ -313,19 +464,68 @@ class StartRunner(OnPolicyRunner):
             self.broadcast_all()
 
         # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
-        start_iter = self.current_learning_iteration + (1 if self._resumed else 0)
+        active_curriculum = getattr(self, "continuous_curriculum", None)
+        ex41_local_index = getattr(getattr(active_curriculum, "plan", None), "is_ex41", False)
+        start_iter = self.current_learning_iteration + (1 if self._resumed and not ex41_local_index else 0)
         self.current_learning_iteration = start_iter
         tot_iter = start_iter + num_learning_iterations
         trace = getattr(self, "training_trace", None)
-        for it in range(start_iter, tot_iter):
+        for loop_it in range(start_iter, tot_iter):
+            continuous = getattr(self, "continuous_curriculum", None)
+            it = curriculum_update_number(continuous, loop_it) if continuous is not None else loop_it
+            curriculum_it = it
+            if continuous is not None:
+                ex41_plan = getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                stage_before = (getattr(continuous, "effective", {}).get("stage_id")
+                                if ex41_plan else None)
+                continuous.on_update_start(curriculum_it)
+                stage_after = (getattr(continuous, "effective", {}).get("stage_id")
+                               if ex41_plan else None)
+                if (ex41_plan and stage_before and stage_after
+                        and stage_before != stage_after
+                        and self.log_dir is not None and not self.disable_logs):
+                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+
+                    try:
+                        request = publish_stage_end_request(
+                            self.log_dir, continuous, stage_name=stage_before,
+                            next_stage=stage_after, boundary_iteration=curriculum_it)
+                    except Exception as exc:
+                        request = {"state": "held", "reason": f"{type(exc).__name__}: {exc}",
+                                   "stage_name": stage_before, "next_stage": stage_after,
+                                   "boundary_iteration": curriculum_it}
+                    continuous._write({"event": "w78_video_request", **request})
+                    print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
+                if (getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                        and self.log_dir is not None and not self.disable_logs):
+                    from foothold_s2.ex41_ops import deliver_pending_alerts, record_boundary
+
+                    record_boundary(continuous, self.log_dir, curriculum_it,
+                                    deliver=deliver_pending_alerts)
+                # Runtime state transitions happen at update boundaries. Stop
+                # before collecting another rollout after the terminal update.
+                if curriculum_finished(continuous):
+                    break
+            ex40_dr_runtime = getattr(self, "ex40_dr_runtime", None)
+            if ex40_dr_runtime is not None:
+                ex40_dr_runtime.update_start(it)
+            if getattr(self, "basic_lin_vel_z_schedule", False):
+                from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
+
+                basic_lin_vel_z_weight = set_lin_vel_z_weight(
+                    self.env, it, getattr(self, "basic_lin_vel_z_start_iteration", 0))
+            else:
+                basic_lin_vel_z_weight = None
             if trace is not None:
                 trace.begin_update(it)
             start = time.time()
             self._phase_start()
-            self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
+            if self.replay is not None:
+                self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
-            contract_fn = contract_bad_fn(self.pcfg["contract"])                  # None | start | walkturn_v1 (모르는 이름은 거절)
+            contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
+                           if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
             contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
@@ -335,22 +535,54 @@ class StartRunner(OnPolicyRunner):
                     inp = self.perception.ingest(self.pstate, o, depth)
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
-                    self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
+                    if self.replay is not None:
+                        self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
                     _off = self.pstate.map_off.bool()
                     _gt = self.pstate.use_gt.bool()
                     src_steps += torch.stack([(_gt & ~_off).sum(), (~_gt & ~_off).sum(), _off.sum()]).float()
                     actions = self.alg.act(ppo_obs)
+                    w86_attached = (self.ex41_pose_commands and
+                                    getattr(getattr(self.env, "unwrapped", self.env), "_ex41_w86", None) is not None)
+                    if self.ex41_w86_required and not w86_attached:
+                        raise ValueError("EX-41 W86 runtime is not attached before rollout")
+                    if w86_attached:
+                        # W86 quarantines a bad env before its action reaches physics.
+                        from foothold_s2.rewards.w86_runtime import quarantine_actions
+
+                        actions = quarantine_actions(self, actions)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
-                        bad_now = contract_fn(consumed)
+                        if continuous is not None:
+                            from foothold_s2.curriculum.continuous import command_bad
+
+                            term = self._command_term()
+                            bad_now = command_bad(consumed, term.slot_current.to(self.device),
+                                                  term.heading.to(self.device),
+                                                  continuous.env_stage.to(self.device), continuous.plan)
+                        elif self.pcfg["contract"] == "basic_gait_ex39":
+                            heading = self._command_term().heading.detach().clone().to(self.device)
+                            bad_now = command_sample_bad(self.pcfg["contract"], consumed, heading)
+                        else:
+                            bad_now = contract_fn(consumed)
                         contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
                         contract_bad |= bad_now
                     if trace is not None:
                         trace.pre_step(actions)
                     prev_xy = self._robot_xy_for_off()                        # M-T6: env.step 이 끝난 에피소드를 reset 해 버리기 전 위치(끝난 에피소드가 놓였던 칸을 알려고)
+                    if continuous is not None:
+                        continuous.record_pre_step()
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
+                    if w86_attached:
+                        from foothold_s2.rewards.w86_runtime import quarantine_step
+
+                        raw, rewards, dones, extras = quarantine_step(self, raw, rewards, dones, extras)
+                    elif self.ex41_pose_commands:
+                        extras = dict(extras)
+                        extras["ex41_ppo_valid"] = torch.ones(n, dtype=torch.bool, device=self.device)
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if continuous is not None:
+                        continuous.record_post_step(dones)
                     if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
                         lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
                         self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta, extras.get("time_outs"), self.pstate.use_gt)
@@ -362,7 +594,8 @@ class StartRunner(OnPolicyRunner):
                         act_stats.add(actions, dones, phys_probe(getattr(self.env, "unwrapped", self.env)) if (step_k % 8 == 0) else None)
                     if self.pcfg["stop_on_nonfinite"]:
                         self._check_finite(it, rewards=rewards, actions=actions)
-                    self.replay.add_post(raw["policy"], dones)
+                    if self.replay is not None:
+                        self.replay.add_post(raw["policy"], dones)
                     # 정규화 통계는 이번 스텝의 actor 입력으로 갱신한다(설치는 다음 관측: 한 스텝 어긋날 뿐 같은 흐름)
                     self.alg.process_env_step(ppo_obs, rewards, dones, extras)
                     if "episode" in extras:
@@ -381,6 +614,8 @@ class StartRunner(OnPolicyRunner):
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
                                                self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
+                    if done_ids.numel() and getattr(self, "continuous_curriculum", None) is not None:
+                        self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
                 self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()
@@ -402,7 +637,8 @@ class StartRunner(OnPolicyRunner):
             # ③ 지각
             self._phase_start()
             klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
-            ploss = self.update_perception()
+            ploss = ({"fast_gt_only": 1.0}
+                     if self.pcfg["fast_gt_only"] else self.update_perception())
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
                 self._check_params_finite(it)
@@ -410,6 +646,8 @@ class StartRunner(OnPolicyRunner):
                 kl_info["phi"] = self._kl_phi_after(klf)
             self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
+            if basic_lin_vel_z_weight is not None:
+                loss_dict["basic_reward/lin_vel_z_weight"] = basic_lin_vel_z_weight
             for name, res in kl_info.items():
                 loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
             split = rs_rec.summary() if rs_rec is not None else None
@@ -418,6 +656,8 @@ class StartRunner(OnPolicyRunner):
                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
             nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+            if ex40_dr_runtime is not None:
+                extra["ex40_dr"] = ex40_dr_runtime.summary()
             if nt_stats is not None:
                 extra["new_task_mark"] = nt_stats
             slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
@@ -426,7 +666,11 @@ class StartRunner(OnPolicyRunner):
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None) and self.log_dir is not None and not self.disable_logs:
+            sensor_evidence = getattr(getattr(self.env, "unwrapped", self.env),
+                                      "_ex40_stand_evidence", None)
+            if sensor_evidence is not None:
+                extra["ex40_stand_sensor"] = sensor_evidence.summary()
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -440,6 +684,8 @@ class StartRunner(OnPolicyRunner):
                 self._map_switch_log(it, loss_dict)
             learn_time = time.time() - start
             self.current_learning_iteration = it
+            if continuous is not None:
+                continuous.flush_consumption(curriculum_it)
             steps = self.num_steps_per_env * n * self.gpu_world_size
             self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
                                   "steps_per_s": steps / (collection_time + learn_time)})
@@ -447,19 +693,46 @@ class StartRunner(OnPolicyRunner):
             if self.log_dir is not None and not self.disable_logs:
                 self.log(locals())
                 if it % self.save_interval == 0:
-                    self.save(os.path.join(self.log_dir, f"model_{it}.pt"))
+                    checkpoint_path = os.path.join(self.log_dir, f"model_{it}.pt")
+                    self.save(checkpoint_path)
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
+                    if continuous is not None:
+                        continuous.on_checkpoint(curriculum_it, checkpoint_path)
+                disk_guard = self.cfg.get("ex41_disk_guard")
+                if disk_guard is not None and it % 250 == 0:
+                    from foothold_s2.scripts.ex41_startup import record_ex41_disk_snapshot
+
+                    record_ex41_disk_snapshot(self.log_dir, disk_guard, it)
                 if it % self.pcfg["latest_interval"] == 0:
                     self._check_code(it)
                     self.save_latest()
-                if it == start_iter or it % self.pcfg["status_interval"] == 0:
+                if loop_it == start_iter or it % self.pcfg["status_interval"] == 0:
                     self._write_running_status(it, tot_iter, rewbuffer, lenbuffer, collection_time + learn_time, steps)
             ep_infos.clear()
-            if it == start_iter and not self.disable_logs and self.log_dir is not None:
+            if loop_it == start_iter and not self.disable_logs and self.log_dir is not None:
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
-            self.save(os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt"))
+            checkpoint_path = os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt")
+            self.save(checkpoint_path)
             self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
+            if getattr(self, "continuous_curriculum", None) is not None:
+                final_runtime = self.continuous_curriculum
+                final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+                if (getattr(getattr(final_runtime, "plan", None), "is_ex41", False)
+                        and getattr(final_runtime, "finished", False)):
+                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+
+                    stage_name = getattr(final_runtime, "effective", {}).get("stage_id")
+                    try:
+                        request = publish_stage_end_request(
+                            self.log_dir, final_runtime, stage_name=stage_name,
+                            next_stage=None, boundary_iteration=self.current_learning_iteration)
+                    except Exception as exc:
+                        request = {"state": "held", "reason": f"{type(exc).__name__}: {exc}",
+                                   "stage_name": stage_name, "next_stage": None,
+                                   "boundary_iteration": self.current_learning_iteration}
+                    final_runtime._write({"event": "w78_video_request", **request})
+                    print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
             self.save_latest()
         self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
 
@@ -597,6 +870,7 @@ class StartRunner(OnPolicyRunner):
             self._invalid(it, "실행 중 소비 코드가 바뀜: 변경 " + ",".join(ch["changed"][:8]) + " 소실 " + ",".join(ch["missing"][:8]))
         if ch["added"]:
             self.manifest["files"].setdefault("added_after_start", {}).update(ch["added"])
+            self.manifest["files"].setdefault("added_after_start_paths", {}).update(ch["added_paths"])
 
     def _manifest_checkpoint(self, it: int, name: str, num_envs: int) -> None:
         if self.manifest is None:
@@ -615,6 +889,10 @@ class StartRunner(OnPolicyRunner):
         sel = self._kl_select()
         sub = self.alg.storage.observations[:, sel]
         sub = sub.reshape(sub.batch_size[0] * sub.batch_size[1]).clone()
+        if self.ex41_pose_commands:
+            sub = sub[self.alg.storage.valid[:, sel].reshape(-1)]
+            if sub.batch_size[0] == 0:
+                return None
         mu, std = kl_probe.policy_dist(self.alg.policy, sub)
         return {"obs": sub, "mu": mu, "std": std}
 
@@ -639,7 +917,14 @@ class StartRunner(OnPolicyRunner):
         est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
         o = snap["batch"]["obs"]
         T, K = o.shape[0], o.shape[1]
-        td = TensorDict({ACTOR_KEY: torch.cat([o, est_in], -1).reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            # D93 fixes both pose-command columns to zero for this stage.
+            # PerceptionReplay intentionally stores the base observation only,
+            # so reproduce the checked pose suffix for the actor KL probe.
+            pose = torch.zeros(T, K, 2, dtype=actor.dtype, device=actor.device)
+            actor = torch.cat([actor, pose], -1)
+        td = TensorDict({ACTOR_KEY: actor.reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
         return kl_probe.policy_dist(self.alg.policy, td)
 
     def _kl_phi_after(self, snap: dict) -> dict:
@@ -748,6 +1033,10 @@ class StartRunner(OnPolicyRunner):
         rc = getattr(self._command_term(), "range_curriculum", None)
         if rc is not None:
             out["range_curriculum"] = {k: (list(v) if isinstance(v, list) else v) for k, v in vars(rc).items()}
+        command = self._command_term()
+        from foothold_s2.runners.command_rng import save_command_rng
+
+        save_command_rng(command, out)
         hook = getattr(u, "foothold_state_dict", None)
         if callable(hook):
             out["env_hook"] = hook()
@@ -774,6 +1063,9 @@ class StartRunner(OnPolicyRunner):
         if rc is not None and "range_curriculum" in sd:
             for k, v in sd["range_curriculum"].items():
                 setattr(rc, k, v)
+        from foothold_s2.runners.command_rng import restore_command_rng
+
+        restore_command_rng(self._command_term(), sd)
         if "env_hook" in sd:
             hook = getattr(u, "foothold_load_state_dict", None)
             if not callable(hook):
@@ -789,15 +1081,22 @@ class StartRunner(OnPolicyRunner):
 
     @staticmethod
     def set_rng_state(s: dict) -> None:
-        torch.set_rng_state(s["torch"])
+        # torch.load(map_location=self.device) can move the global CPU RNG
+        # ByteTensor onto CUDA; torch.set_rng_state only accepts a CPU tensor.
+        torch.set_rng_state(s["torch"].cpu())
         np.random.set_state(s["numpy"])
         random.setstate(s["python"])
         if "cuda" in s and torch.cuda.is_available():
-            torch.cuda.set_rng_state_all(s["cuda"])
+            torch.cuda.set_rng_state_all([state.cpu() for state in s["cuda"]])
 
     def state_dict(self, infos: dict | None = None) -> dict:
         return {
             "format": CKPT_FORMAT,
+            "ex41_pose_commands": self.ex41_pose_commands,
+            "ex41_critic_mirror": self.ex41_critic_mirror,
+            "ex41_mirror_approval": self.ex41_mirror_approval,
+            "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
+            "ex41_parent_transfer": self.ex41_parent_transfer,
             "model_state_dict": self.alg.policy.state_dict(),  # 정책 + 관측 정규화 통계(EmpiricalNormalization 버퍼)
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
@@ -811,6 +1110,8 @@ class StartRunner(OnPolicyRunner):
             "rng": self.rng_state(),
             "map_switch": self.map_switch_state(),
             "infos": infos,
+            "continuous_curriculum": (self.continuous_curriculum.state_dict()
+                                      if getattr(self, "continuous_curriculum", None) is not None else None),
         }
 
     def map_switch_state(self) -> dict:
@@ -974,6 +1275,8 @@ class StartRunner(OnPolicyRunner):
         sd = torch.load(path, weights_only=False, map_location=map_location)
         if sd.get("format") != CKPT_FORMAT:
             raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
+        if bool(sd.get("ex41_pose_commands", False)) != self.ex41_pose_commands or bool(sd.get("ex41_critic_mirror", False)) != self.ex41_critic_mirror:
+            raise ValueError("EX-41 pose/mirror settings differ from the checkpoint; use explicit parent transplant for EX-40")
         saved = sd.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
@@ -990,8 +1293,84 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        self.ex41_parent_transfer = sd.get("ex41_parent_transfer")
+        self.ex41_mirror_hold_reason = sd.get("ex41_mirror_hold_reason")
+        if self.ex41_critic_mirror:
+            approval = sd.get("ex41_mirror_approval")
+            if not self._valid_ex41_mirror_approval(approval):
+                self._hold_ex41_mirror_resume(
+                    path, int(sd["iter"]), "EX-41 W72 HOLD: checkpoint mirror approval file missing or SHA256 changed"
+                )
+            else:
+                self.ex41_mirror_approval = approval
+                self.alg.mirror_enabled = True
+        continuous = getattr(self, "continuous_curriculum", None)
+        if continuous is not None:
+            saved_stage = sd.get("continuous_curriculum")
+            if saved_stage is None:
+                if int(sd["iter"]) != continuous.plan.parent_update:
+                    raise ValueError("W55 stage state missing from a non-parent checkpoint")
+            else:
+                continuous.load_state_dict(saved_stage)
+            continuous.on_resume_checkpoint(path, int(sd["iter"]))
         self._resumed = True
         return sd["infos"]
+
+    def load_ex41_parent(self) -> dict:
+        """D93 one-time EX-40 transplant.  Never restore old physical env/stage.
+
+        EX-41's own later checkpoints must use ``load`` instead.  The caller
+        creates the new EX-41 stage state; this method leaves it untouched.
+        """
+        from foothold_s2.runners.ex41_transfer import optimizer_state, policy_state
+
+        if not self.ex41_pose_commands or self._resumed:
+            raise ValueError("EX-41 parent transplant requires a fresh 98/666 runner")
+        parent_cfg = self.cfg.get("ex41_parent")
+        if not isinstance(parent_cfg, dict) or set(parent_cfg) != {"path", "sha256", "iteration"}:
+            raise ValueError("EX-41 parent needs configured path, sha256, and iteration")
+        path, expected_sha256, expected_iteration = (parent_cfg[key] for key in ("path", "sha256", "iteration"))
+        if (not isinstance(path, str) or not Path(path).is_absolute()
+                or not isinstance(expected_sha256, str)
+                or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
+                or type(expected_iteration) is not int or expected_iteration <= 0):
+            raise ValueError("EX-41 parent configuration has invalid path, sha256, or iteration")
+        if Path(path).name != f"model_{expected_iteration}.pt":
+            raise ValueError("EX-41 parent filename differs from configured iteration")
+        with open(path, "rb") as fh:
+            actual_sha256 = hashlib.file_digest(fh, "sha256").hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise ValueError("EX-41 parent checkpoint SHA256 mismatch")
+        sd = torch.load(path, weights_only=False, map_location=self.device)
+        if (sd.get("format") != CKPT_FORMAT or int(sd.get("iter", -1)) != expected_iteration
+                or sd.get("ex41_pose_commands")):
+            raise ValueError("EX-41 parent does not match the configured EX-40 START checkpoint")
+        saved = sd.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"EX-41 parent perception mode {key} differs")
+        target_policy = self.alg.policy
+        names = [name for name, _ in target_policy.named_parameters()]
+        target_policy.load_state_dict(policy_state(sd["model_state_dict"], target_policy.state_dict()))
+        self.perception.load_state_dict(sd["perception_state_dict"])
+        self.adasmpl.load_state_dict(sd["adasmpl"])
+        self.alg.optimizer.load_state_dict(optimizer_state(
+            sd["optimizer_state_dict"], self.alg.optimizer.state_dict(), names, names))
+        self.alg.learning_rate = sd["ppo_learning_rate"]
+        self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+        self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self.set_rng_state(sd["rng"])
+        self.current_learning_iteration = int(sd["iter"])
+        self.ex41_parent_transfer = {
+            "parent_path": os.path.abspath(path), "parent_sha256": actual_sha256,
+            "parent_iteration": expected_iteration,
+            "preserved": ["policy", "policy_adam_moments_and_step", "policy_learning_rate",
+                          "perception", "perception_adam", "adasmpl", "map_switch", "rng"],
+            "new": ["pose_command_zero_columns", "pose_command_zero_moments", "physical_env_reset",
+                    "episode_history_reset", "ex41_curriculum_state"],
+        }
+        self._resumed = True
+        return dict(self.ex41_parent_transfer)
 
     def train_mode(self) -> None:
         super().train_mode()

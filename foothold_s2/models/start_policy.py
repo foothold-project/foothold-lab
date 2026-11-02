@@ -21,11 +21,14 @@ OBS_GROUPS = {"policy": [ACTOR_KEY], "critic": [CRITIC_KEY]}
 
 class StartActorCritic(ActorCritic):
     def __init__(self, obs, obs_groups, num_actions, **kwargs) -> None:
+        pose_command_dim = kwargs.pop("pose_command_dim", 0)
+        if pose_command_dim not in (0, 2):
+            raise ValueError("pose_command_dim must be 0 or 2")
         kwargs.setdefault("actor_hidden_dims", [512, 256, 128])  # 선행 Table V 353 행 · Isaac Lab Go2 cfg
         kwargs.setdefault("critic_hidden_dims", [512, 256, 128])
         kwargs.setdefault("activation", "elu")
         super().__init__(obs, obs_groups, num_actions, **kwargs)
         a = sum(obs[g].shape[-1] for g in obs_groups["policy"])
         c = sum(obs[g].shape[-1] for g in obs_groups["critic"])
-        if a != ACTOR_IN or c != CRITIC_IN:
-            raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN} · {CRITIC_IN} 과 다르다")
+        if a != ACTOR_IN + pose_command_dim or c != CRITIC_IN + pose_command_dim:
+            raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN + pose_command_dim} · {CRITIC_IN + pose_command_dim} 과 다르다")

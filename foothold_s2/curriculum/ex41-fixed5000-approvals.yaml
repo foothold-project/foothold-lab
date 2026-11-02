@@ -1,0 +1,20 @@
+format: foothold-ex41-approvals/1
+fields:
+  reward_weights.swing:
+    decision_id: D123
+    bounds:
+    - -20.0
+    - -2.0
+  reward_weights.stumble:
+    decision_id: D123
+    bounds:
+    - -3.0
+    - -1.0
+  reward_weights.zero_yaw:
+    decision_id: D97-lower-once
+    bounds:
+    - -0.5
+    - -0.25
+automatic:
+  stand_restore: lead-1102-1400-stand-swing-half-once
+  extension: D110-one-extension

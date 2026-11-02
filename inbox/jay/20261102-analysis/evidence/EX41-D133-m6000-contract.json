@@ -1,0 +1,386 @@
+{
+  "purpose": "CPU D133 contract replay, not live score",
+  "table_sha256": "da3ee91a490115f33ed5fd188dc69de2328c0e8cde35d9b44c0790d6d7544d8d",
+  "effective_schedule_sha256": "8f3e784b9bbbbe90f9246e6fff89819bd640fa7c5ded3607515cc656bab4cd18",
+  "baseline_score_sha256": "a1457a3d9ff780bac2804f0949875e305559fa761dc609be09c33ee9a19b85a6",
+  "metrics": {
+    "record_counts": {
+      "eval_gt/fwd0.5": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_gt/fwd1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/spin+1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/spin-1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/back0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/back1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/side+0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/side-0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-fwd+side+": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-fwd+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-back+side+": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_gt/diag-back+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/stop": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/fwd0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/fwd1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/spin+1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/spin-1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/back0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/back1.0": {
+        "passed": 60,
+        "baseline_passed": 60,
+        "total": 64
+      },
+      "probe_prop_only/side+0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/side-0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-fwd+side+": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-fwd+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-back+side+": {
+        "passed": 62,
+        "baseline_passed": 62,
+        "total": 64
+      },
+      "probe_prop_only/diag-back+side-": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "probe_prop_only/stop": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/fwd0.5_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/fwd1.0_record_only": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_pred/spin+1.2_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/spin-1.2_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/back0.5_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/back1.0_record_only": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_pred/side+0.5_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/side-0.5_record_only": {
+        "passed": 62,
+        "baseline_passed": 62,
+        "total": 64
+      },
+      "eval_pred/diag-fwd+side+_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/diag-fwd+side-_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/diag-back+side+_record_only": {
+        "passed": 62,
+        "baseline_passed": 62,
+        "total": 64
+      },
+      "eval_pred/diag-back+side-_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_pred/stop_record_only": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      }
+    },
+    "stand_counts": {
+      "eval_gt": {
+        "passed": 64,
+        "total": 64
+      },
+      "probe_prop_only": {
+        "passed": 64,
+        "total": 64
+      },
+      "eval_pred": {
+        "passed": 64,
+        "total": 64
+      }
+    },
+    "stand_min_passed": 64,
+    "maintenance_counts": {
+      "eval_gt/fwd0.5": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_gt/fwd1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/spin+1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/spin-1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/back0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/back1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/side+0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/side-0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-fwd+side+": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-fwd+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/diag-back+side+": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "eval_gt/diag-back+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "eval_gt/stop": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/fwd0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/fwd1.0": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/spin+1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/spin-1.2": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/back0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/back1.0": {
+        "passed": 60,
+        "baseline_passed": 60,
+        "total": 64
+      },
+      "probe_prop_only/side+0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/side-0.5": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-fwd+side+": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-fwd+side-": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      },
+      "probe_prop_only/diag-back+side+": {
+        "passed": 62,
+        "baseline_passed": 62,
+        "total": 64
+      },
+      "probe_prop_only/diag-back+side-": {
+        "passed": 63,
+        "baseline_passed": 63,
+        "total": 64
+      },
+      "probe_prop_only/stop": {
+        "passed": 64,
+        "baseline_passed": 64,
+        "total": 64
+      }
+    }
+  },
+  "evidence": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\map64\\map_modes.json",
+      "sha256": "5a7d71a881a5795d883eef2e503b21a0a8403778c692213379ff4dc704876a1c"
+    },
+    {
+      "path": "C:\\mai\\wt\\foothold-lab\\analyst-ex41-b12-1102\\foothold_s2\\curriculum\\ex40_score_config.json",
+      "sha256": "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_gt\\stand.json",
+      "sha256": "976a74836b2964cd36958e69e6720c4976cb836f64045b74845aeca5c7317955"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_gt\\stand_raw.npz",
+      "sha256": "a531f6d8ed1cfedc648d45789f5fafa15eb94f142a701795b5282da647c9206c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_probe_prop_only\\stand.json",
+      "sha256": "35064d8e90058d4202fca362b04a7e2e0ad12844f33d0f3306ec1321a225855f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_probe_prop_only\\stand_raw.npz",
+      "sha256": "e8f82b46684c3c471843d897143a146555c17bb694fcd413752fd30bbfc35e91"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_pred\\stand.json",
+      "sha256": "628d196fac046e4bb43503bd50bf7d43635f2d7a85b337ffbbf35220dbaab48a"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_pred\\stand_raw.npz",
+      "sha256": "3d51223106bf37028ed633718f3de70c3ba40e7a3376fd4d32acdc914ff00113"
+    }
+  ]
+}

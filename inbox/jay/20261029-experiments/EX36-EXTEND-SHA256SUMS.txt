@@ -1,0 +1,13 @@
+# EX-36 extend preparation SHA256
+# Classification: code and research evidence
+# Author: scripter, 2026-10-29
+# Basis: SHA256 of the listed committed candidates
+# Status: CPU-prepared; no GPU or Kit execution
+3f025286008555809dab41285b058d63e540bc675862d94cd313a4034d32e27a  foothold_s2/basic_gait_extend_parent.py
+77170e5c30e5976bea0e30edecf987107ea715078201422d4f70fd1889e281cf  foothold_s2/basic_gait_extend_launch.py
+fc6b6ebad4b5fbed8625d8dd38fb6681f4b18cfa40843f1b58c6855ee357d5ab  foothold_s2/basic_gait_extend_eval.py
+3aad50e1cd927195f467870f8a60b1f1161bd6fdcbcbc49e1b054cd324ea180f  foothold_s2/run_basic_gait_extend.sh
+64a756ced55bf534d24ac46fb59a492033e7ef5ce213618e2baa63daeaadb713  foothold_s2/sol23f_contract.py
+895d48d681fca3e052c69e4531d8149e5e395bf305505f8a1cfe9896fdbf5e68  foothold_s2/scripts/train_sol23f_common.py
+69ca9d775e54b9b6b05069aaf47c115a0fb413df3ab04824459516b7c5e86afe  foothold_s2/tests/test_basic_gait_extend_cpu.py
+49d743e0482a8b53ef66fa543697e04db3c3294d6a635c198b84090ca2f02404  inbox/jay/20261029-experiments/REPORT-ex36-extend-prep.md
