@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import sys
 import pytest
 
 from foothold_s2.eval import w78_video_consumer as consumer
+from foothold_s2.eval.c_layer_queue import recorder_child_env
 from foothold_s2.eval.video25 import record_c_layer
 
 
@@ -40,6 +42,7 @@ def clean_ex41_source(tmp_path: Path) -> Path:
         "foothold_s2/eval/record_sol23f.py": "# fixed recorder fixture\n",
         "foothold_s2/eval/ex41_w78_video_request.py": "# request fixture\n",
         "foothold_s2/eval/terrain_skill_v2_run.py": "# W78 terrain fixture\n",
+        "foothold_s2/eval/ex41_eval_loader.py": "SOURCE = 'fixed_ex41_loader'\n",
         "foothold_s2/scripts/ex41_startup.py": "# EX41 startup fixture\n",
         "foothold_s2/sb_tasks.py": "# FootholdS2-Go2-S2-SB-v0\n",
         "foothold_s2/eval/adapters.py": (
@@ -126,6 +129,29 @@ def test_recorder_argv_uses_one_exact_combination(tmp_path):
     assert spec["start_angle_deg"] == 90 and spec["map_mode"] == "probe_prop_only"
     assert argv[argv.index("--label") + 1].endswith("l5_a090_probe_prop_only_stairs_fwd-1x")
     assert argv[argv.index("--mp4") + 1].endswith("review.mp4")
+    assert argv[argv.index("--device") + 1] == "cuda:1"
+
+
+def test_w78_capture_keeps_physical_gpu_one_when_training_masks_gpu_zero(tmp_path):
+    parent = {**os.environ, "CUDA_VISIBLE_DEVICES": "0", "CUDA_DEVICE_ORDER": "FASTEST_FIRST"}
+    child = recorder_child_env(sys.executable, parent)
+    assert child["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+    assert "CUDA_VISIBLE_DEVICES" not in child
+    assert parent["CUDA_VISIBLE_DEVICES"] == "0"
+
+
+def test_w78_source_requires_shared_pose_loader(tmp_path):
+    root = clean_ex41_source(tmp_path)
+    loader = root / "foothold_s2/eval/ex41_eval_loader.py"
+    loader.unlink()
+    subprocess.run(["git", "-C", str(root), "add", "-u"], check=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.name=CPU test",
+                    "-c", "user.email=cpu@example.invalid", "commit", "-qm", "remove loader"],
+                   check=True)
+    recorder = Path(record_c_layer.__file__)
+    composer = recorder.with_name("compose_25e_v2style10.py")
+    with pytest.raises(ValueError, match="required module"):
+        consumer.validate_sources(root, recorder, composer)
 
 
 def test_clean_ex41_recorder_plan_only(tmp_path):
@@ -152,10 +178,12 @@ def test_w78_imports_pinned_ex41_package(tmp_path):
               "from foothold_s2.eval.video25.record_c_layer import bind_w78_source_package; "
               "import foothold_s2.eval.video_rule; "
               "bind_w78_source_package(Path(sys.argv[1])); "
-              "from foothold_s2.eval import adapters; "
-              "print(adapters.SOURCE, adapters.__file__)")
+              "from foothold_s2.eval import adapters, ex41_eval_loader; "
+              "print(adapters.SOURCE, adapters.__file__, "
+              "ex41_eval_loader.SOURCE, ex41_eval_loader.__file__)")
     result = subprocess.run([sys.executable, "-c", script, str(root)],
                             capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
     assert "fixed_ex41" in result.stdout
     assert str((root / "foothold_s2/eval/adapters.py").resolve()) in result.stdout
+    assert str((root / "foothold_s2/eval/ex41_eval_loader.py").resolve()) in result.stdout

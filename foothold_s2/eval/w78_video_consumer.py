@@ -94,6 +94,7 @@ def validate_sources(source_root: Path, recorder: Path, composer: Path) -> dict:
         raise ValueError("EX41 source has uncommitted tracked changes")
     required = ("foothold_s2/eval/ex41_w78_video_request.py",
                 "foothold_s2/eval/terrain_skill_v2_run.py",
+                "foothold_s2/eval/ex41_eval_loader.py",
                 "foothold_s2/scripts/ex41_startup.py",
                 "foothold_s2/eval/adapters.py",
                 "foothold_s2/eval/record_sol23f.py")

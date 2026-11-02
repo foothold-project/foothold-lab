@@ -123,3 +123,8 @@ def test_production_eval_entrypoints_use_shared_loader_before_gym_make():
 
     probe = (root / "turn_probe.py").read_text(encoding="utf-8")
     assert "verify_ex41_pose_observation(obs)" in probe
+
+    recorder = (root / "video25" / "record_c_layer.py").read_text(encoding="utf-8")
+    assert recorder.index("load_checkpoint_for_eval(") < recorder.index("gym.make(")
+    assert "checkpoint_state=ex41_checkpoint_state" in recorder
+    assert "verify_ex41_pose_observation(obs)" in recorder

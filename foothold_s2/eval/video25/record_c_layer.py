@@ -83,7 +83,8 @@ def bind_w78_source_package(root: Path) -> dict[str, str]:
         package.__path__ = [str(path)] + [entry for entry in package.__path__
                                           if Path(entry).resolve() != path.resolve()]
     for name in ("foothold_s2.sb_tasks", "foothold_s2.eval.adapters",
-                 "foothold_s2.eval.terrain_skill_v2_run"):
+                 "foothold_s2.eval.terrain_skill_v2_run",
+                 "foothold_s2.eval.ex41_eval_loader"):
         loaded = sys.modules.get(name)
         if loaded is not None and not Path(loaded.__file__).resolve().is_relative_to(root.resolve()):
             raise RuntimeError("EX41 source module was imported from another worktree: " + name)
@@ -953,6 +954,7 @@ def validate_source_root(root: Path, experiment: str | None = None,
         if source_profile == W78_VIDEO_PROFILE:
             for relative in ("foothold_s2/scripts/ex41_startup.py",
                              "foothold_s2/eval/terrain_skill_v2_run.py",
+                             "foothold_s2/eval/ex41_eval_loader.py",
                              "foothold_s2/eval/ex41_w78_video_request.py"):
                 if not (root / relative).is_file():
                     raise ValueError("EX41 W78 source lacks " + relative)
@@ -1329,6 +1331,9 @@ def _capture(spec: dict[str, Any]) -> None:
         env_cfg = load_cfg_from_registry(task_id, "env_cfg_entry_point")
         agent_cfg = load_cfg_from_registry(task_id, "rsl_rl_cfg_entry_point")
         ex41_preparation = None
+        ex41_checkpoint_state = None
+        ex41_checkpoint_preparation = None
+        ex41_pose_readback = None
         if w78_video_ref(spec):
             from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
             ex41_plan, ex41_preparation = prepare_ex41_environment(env_cfg)
@@ -1401,6 +1406,12 @@ def _capture(spec: dict[str, Any]) -> None:
         command_cfg.fixed_cmd = capture_commands(spec)[0][1] if sparse_capture else COMMANDS[0][1]
         command_cfg.resampling_time_range = (LONG_COMMAND_RESAMPLE_S, LONG_COMMAND_RESAMPLE_S)
 
+        if w78_video_ref(spec):
+            from foothold_s2.eval.ex41_eval_loader import load_checkpoint_for_eval
+
+            ex41_checkpoint_state, ex41_checkpoint_preparation = load_checkpoint_for_eval(
+                env_cfg, full_args.checkpoint)
+
         gym_env = gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
         raw = gym_env.unwrapped
         lighting_record = lighting_profile_settings(
@@ -1426,13 +1437,18 @@ def _capture(spec: dict[str, Any]) -> None:
         if w78_video_ref(spec):
             train_cfg = dict(agent_cfg.to_dict())
             train_cfg["ex41_pose_commands"] = True
-            runner, saved = adapters.load_s2_runner(env, train_cfg, full_args.checkpoint, device)
+            runner, saved = adapters.load_s2_runner(
+                env, train_cfg, full_args.checkpoint, device,
+                checkpoint_state=ex41_checkpoint_state)
             if saved.get("ex41_pose_commands") is not True:
                 raise RuntimeError("EX41 W78 checkpoint lacks pose-command architecture")
             policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean",
                                        map_mode=spec["map_mode"])
             policy_nn = policy
             obs = env.get_observations()
+            from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+
+            ex41_pose_readback = verify_ex41_pose_observation(obs)
         else:
             env, policy, policy_nn, obs = adapter.load_policy(built, full_args.checkpoint)
         runner = policy.runner
@@ -1875,6 +1891,7 @@ def _capture(spec: dict[str, Any]) -> None:
         if w78_video_ref(spec):
             for relative in ("foothold_s2/scripts/ex41_startup.py",
                              "foothold_s2/eval/terrain_skill_v2_run.py",
+                             "foothold_s2/eval/ex41_eval_loader.py",
                              "foothold_s2/eval/ex41_w78_video_request.py",
                              "foothold_s2/eval/fixed_terrain.py",
                              "foothold_s2/curriculum/ex41-fixed5000.yaml"):
@@ -1902,7 +1919,9 @@ def _capture(spec: dict[str, Any]) -> None:
             "w78_video": ({"request_id": spec["request_id"], "combination_id": spec["combination_id"],
                             "local_iteration": spec["local_iteration"], "stage_name": spec["stage_name"],
                             "start_angle_deg": spec["start_angle_deg"],
-                            "ex41_environment_preparation": ex41_preparation} if w78_video_ref(spec) else None),
+                            "ex41_environment_preparation": ex41_preparation,
+                            "ex41_checkpoint_preparation": ex41_checkpoint_preparation,
+                            "ex41_pose_readback": ex41_pose_readback} if w78_video_ref(spec) else None),
             "selected_environment": ({"env_id": capture_env_id, "kind": spec["kind"],
                                       "level": ((task_selection.get("selected_tile") or {}).get("level") if sparse_capture else None), "col": spec["col"],
                                       "selection_role": spec["selection_role"]} if sparse_capture else None),
