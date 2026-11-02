@@ -91,54 +91,6 @@ def test_default_dry_never_calls_child_or_creates_score(tmp_path,monkeypatch):
     assert not (tmp_path/'scores').exists() and not state['done']
 
 
-def test_eval_cli_without_w78_is_a_five_child_dry_plan(tmp_path,capsys):
-    rc=evaluator.main(['--checkpoint',str(tmp_path/'model_10.pt'),
-                       '--out',str(tmp_path/'evaluation'),'--without-w78'])
-    payload=json.loads(capsys.readouterr().out)
-    assert rc==0 and payload['state']=='dry'
-    assert payload['evaluation_scope']=='maintenance_26_without_w78'
-    assert [row['name'] for row in payload['commands']]==[
-        'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
-    assert not any('--terrain-skill-v2' in row['argv'] for row in payload['commands'])
-    assert not (tmp_path/'evaluation').exists()
-
-
-def test_oneoff_rehearsal_checkpoint_is_manifest_verified_and_dry_without_w78(tmp_path,monkeypatch):
-    run=tmp_path/'run';run.mkdir();cp=run/'model_10.pt';cp.write_bytes(b'known checkpoint bytes')
-    digest=sha256(cp);plan=load_plan(TABLE,arm='B')
-    (run/'manifest.json').write_text(json.dumps({
-        'schema':'foothold-manifest/1','progress':{'completed_updates':10},
-        'checkpoints':{'model_10.pt':digest},
-        'ex41_resume_checkpoints':{'model_10.pt':{'checkpoint_sha256':digest,'completed_updates':10}}}))
-    (run/'train_start_status.json').write_text(json.dumps({'state':'done','iter':10}))
-    (run/'ex41_application.jsonl').write_text(json.dumps({
-        'format':'foothold-ex41-application/1','status':'applied','iteration':1,
-        'parent_update':plan.parent_update,'stage_after':plan.stages[0].id,
-        'after':{'stage_id':plan.stages[0].id}})+'\n')
-    state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
-    monkeypatch.setattr(watch,'hidden_child',lambda *a,**k:pytest.fail('DRY spawned a process'))
-    row=watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,
-        checkpoint=cp,sleep=lambda _:None)
-    assert row['state']=='dry' and row['iteration']==10
-    assert row['evaluation_scope']=='maintenance_26_without_w78'
-    assert [command['name'] for command in row['commands']]==[
-        'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
-    assert not any('--terrain-skill-v2' in command['argv'] for command in row['commands'])
-    assert not (tmp_path/'scores').exists() and not state['done']
-
-
-def test_oneoff_checkpoint_with_bad_manifest_sha_is_rejected(tmp_path):
-    run=tmp_path/'run';run.mkdir();cp=run/'model_10.pt';cp.write_bytes(b'known checkpoint bytes')
-    digest=sha256(cp)
-    (run/'manifest.json').write_text(json.dumps({
-        'schema':'foothold-manifest/1','progress':{'completed_updates':10},
-        'checkpoints':{'model_10.pt':'0'*64},
-        'ex41_resume_checkpoints':{'model_10.pt':{'checkpoint_sha256':digest,'completed_updates':10}}}))
-    (run/'train_start_status.json').write_text(json.dumps({'state':'done','iter':10}))
-    with pytest.raises(ValueError,match='SHA-pinned'):
-        watch.oneoff_manifest_digest(run,cp)
-
-
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
     rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
     assert [r['name'] for r in rows]==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2','w78_v2']

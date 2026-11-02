@@ -1,0 +1,21 @@
+{
+  "task": "D125 B2 maintenance consumers",
+  "base_commit": "481e2215f5b48225d9b7e7a53ef8c6ba419d92ea",
+  "dependency_commit": "d5c14948",
+  "dependency_blob": "cf3abb08e54238a9499cf0477c7224b50a622b73",
+  "python": "C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe",
+  "gpu_used": false,
+  "results": [
+    {
+      "path": "D:\\mai-tmp\\analyst\\d125-b2-red-1749.log",
+      "sha256": "f9304222c1f57025c9b1afc3d986aad677cb0a54a01de597258719b6001a1df7",
+      "summary": "18 failed in 4.08s"
+    },
+    {
+      "path": "D:\\mai-tmp\\analyst\\d125-b2-green-1751.log",
+      "sha256": "c1eac9b7c07a1821ab61962e569a1b4b0f784bc09b3686ed479961f1992a150e",
+      "summary": "81 passed in 19.41s"
+    }
+  ],
+  "log_encoding": "utf-16"
+}

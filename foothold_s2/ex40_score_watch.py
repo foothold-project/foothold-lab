@@ -146,8 +146,8 @@ def _child(checkpoint: Path, out: Path, stage: str, arm: str,
             "--checkpoint", str(checkpoint), "--out", str(out), "--stage", stage,
             "--arm", arm, "--config", str(cfg_path), "--table", str(table),
             "--device", "cuda:1"]
-    rc = subprocess.run(argv, cwd=ROOT, stdin=subprocess.DEVNULL,
-                        check=False, creationflags=flags).returncode
+    rc = subprocess.run(argv, cwd=ROOT, check=False, creationflags=flags,
+                        stdin=subprocess.DEVNULL).returncode
     receipt = out / "eval_receipt.json"
     row = json.loads(receipt.read_text(encoding="utf-8-sig")) if receipt.is_file() else {}
     return {"rc": rc, "seconds": time.monotonic() - started, "receipt": row}
@@ -383,6 +383,9 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
                 for name, digest in existing["current"]["source_sha256"].items():
                     if sha256(Path(score["sources"][name])) != digest:
                         raise ValueError(f"stage report source changed: {name}")
+                for item in existing['current'].get('reconstruction', {}).get('cases', {}).values():
+                    if sha256(Path(item['path'])) != item['sha256']:
+                        raise ValueError('stage report reconstruction array changed')
             else:
                 source_run = Path(ledger.get("run_dir") or run)
                 previous_ledger = by_update.get(previous.get("checkpoint_iteration")) if previous else None
@@ -425,9 +428,8 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
                 if sender is None:
                     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
                     attempt = subprocess.run([sys.executable, str(telegram_sender), str(text_path)],
-                                             stdin=subprocess.DEVNULL, capture_output=True,
-                                             text=True, timeout=90,
-                                             creationflags=flags, check=False)
+                                             capture_output=True, text=True, timeout=90,
+                                             creationflags=flags, check=False, stdin=subprocess.DEVNULL)
                     accepted = attempt.returncode == 0 and attempt.stdout.split(maxsplit=1)[:1] == ["0"]
                 else:
                     accepted = bool(sender(telegram_sender, text_path))

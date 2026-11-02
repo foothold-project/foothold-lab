@@ -1,4 +1,4 @@
-﻿> 분류: 계획
+> 분류: 계획
 > 작성: 오흥재 · 2026-11-02
 > 근거: D80·D89·D93·D96·D101·D110·D116·D117, lead 11/02 구현 분담과 가중 결정
 > 요지: EX-40 코드를 보존하며 EX-41 설정·경계 적용·보상과 env 단위 무효 처리를 연결한다.
@@ -217,7 +217,7 @@ enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
 
 확인됨: m6000의 `score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json`이 부모 유지 기준의 원본이다. extended13명령×3모드로 **39/39 숫자 일치, 차이0**. 정지 세 모드는64/64·64/64·64/64로 부모표와 일치했다. `map64_b3`는 walk·작은 spin·저속의9명령으로 별도 과제이며 유지39칸을 대신하면 거절한다. 이 선택은 새 기준 선택이 아니라 SHA고정 부모표의 실제 출처 대조다.
 
-읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), SHA256 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
+읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), 현재 SHA256 `1bc9501670b98d188ed4f08c634820c2c51d97493bd6ba024e34f93397f71f32`다. §22에서 설정 파일만 저장소 상대 경로로 바꿨으며 이전 SHA는 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 실측 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
 
 검증 기록: isaac311·CUDA 숨김으로 fixed/runtime/boundary/review_regressions/scoring 다섯 시험 파일 **96PASS170.29초**, pyflakes·git diff 검사 통과. 실제 reader의 NaN·체크포인트 SHA·원자료 SHA·정지 숫자 누락·깨진 JSON·잘못된 회차 반례와 오류 상태 저장·재개 뒤 새 점수 두 개의 회복을 확인했다. G5·G7의 runtime 고침과 G6 helper/원자료 대조를 닫을 수 있어도, G6 전체는 runner 진입점이 이 함수를 실제 호출하는 통합본을 확인해야 닫는다. 낮은 항목 D121 과제 변경 평가 연결·W72 추가 승인 칸·D93 히스토그램은 이 커밋에서 닫았다고 하지 않는다. 후속 교차검증의 명령 몫2차 S2c 이동과 m6000 lin_vel_z 실측은 이 묶음 다음 작업이다.
 
@@ -236,7 +236,7 @@ enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
 
 시작 표 원바이트 SHA256은 `da3ee91a490115f33ed5fd188dc69de2328c0e8cde35d9b44c0790d6d7544d8d`, 일반 실행 `effective_sha256`은 `8f3e784b9bbbbe90f9246e6fff89819bd640fa7c5ded3607515cc656bab4cd18`이다. smoke는 별도 계획 SHA를 가진다. W71 미확인 표식은 여전히 false이므로 이 파일만으로 본기동 가능한 상태라는 뜻은 아니다.
 
-[D133 m6000 재계산](evidence/EX41-D133-m6000-contract.json)의 SHA256은 `e5e620cae36db2a4ef61d1e504a9f2231a07f8fc7b4177fb60237f587ea97c14`다. 이 파일은 실행 점수가 아니라 CPU 대조 자료다. 원자료와 기존 부모표는 바꾸지 않았다. runner는 §18의 `enrich_score_metrics` 반환값을 그대로 써야 한다. 이 helper가 판정·기록 dict를 둘 다 만든다.
+[D133 m6000 재계산](evidence/EX41-D133-m6000-contract.json)의 현재 SHA256은 `b938ef93c4a323a97dfa63fefd06cebf6c89d7362901e39f513bf00fce5e8e3e`다. §21 L2에서 설정 파일 경로만 저장소 상대 경로로 고쳤다. 이전 판 SHA는 `e5e620cae36db2a4ef61d1e504a9f2231a07f8fc7b4177fb60237f587ea97c14`이며 숫자는 같다. 이 파일은 실행 점수가 아니라 CPU 대조 자료다. 원자료와 기존 부모표는 바꾸지 않았다. runner는 §18의 `enrich_score_metrics` 반환값을 그대로 써야 한다. 이 helper가 판정·기록 dict를 둘 다 만든다.
 
 ### m6000 lin_vel_z: 초기 설정과 실제 실행 값의 구분
 
@@ -253,3 +253,66 @@ EX40 `ex40.yaml:7`은 `fixed_l02`다. m6000의 실제3072환경은 L0=1034, L1=1
 제안은 **0.2, 근거 등급은 가정**이다. 전체 환경20%가 순증으로 한 레벨 오른 정도의 계속 학습 신호를 뜻하도록 낮추자는 제안이며, 실측으로 검증된 문턱은 아니다.0.5는50% 한 레벨 순증을 요구한다. 어느 값도 절대 보행 합격선이 아니며 생존·정지·DR 조건과 함께 +500을 더 할지만 고른다. 승인 전에는 요청대로 **코드0.5를 유지**한다. EX41의 실제 승급 자료가 생기면 기록해 후속 판의 사전 기준을 정할 수 있다.
 
 확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 CPU 시험 파일 **103PASS189.74초**. 추가 전 D133·몫 변경 두 반례는2FAIL12.27초였고, 유지 중 오류 세 반례는 이미 고친 ed672e88에서3PASS였다. pyflakes·diff 검사 통과, 문서 U+2014 0개. GPU·Kit·학습·EX40 원장 변경 없음. G6 루프 실제 연결, D121 과제 변경 전후 평가, W72 추가 승인 칸, D93 히스토그램은 다른 연결과 함께 남아 있다.
+
+## 20. G15 W15 연속 칸 고침 · G16 부모 두 값 (11/02 15:1x)
+
+확인됨. 원본 고침 38ee51df를 a407377c로 가져왔다. 실제 EX-40 m2500 B1 평가 자료를 같은 설정으로 CPU 재채점하면 고침 전 HOLD(W15 sequence incomplete), 고침 뒤 PASS(문제 0)다. 지형별 by_kind의 생존 합을 읽으며 각 phase의 환경 수 합 64도 확인한다. 이전 live 점수와 원장을 바꾸지 않았다.
+
+- 재현: `recompute-ex41-g15-g16.py`, 증거: [EX41-G15-G16-replay.json](evidence/EX41-G15-G16-replay.json). 원자료 경로와 SHA 포함.
+- 부모 m6000: `adasmpl.p=1.0`, `force_gt=true`. 체크포인트의 iter=6000을 직접 읽었다. agent.yaml SHA256 `5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd`. 정본 등록은 lead 담당.
+- isaac311 CPU: ex40_scorer + ex41_scoring 22 PASS(10.32 s). GPU·Kit·학습 미실행.
+- G17 W71 감독기·retry 영수증·복원 요약·로그·CMP는 다음 작업이며 이 결과로 닫지 않는다.
+
+## 21. L1~L3 검토 후속 (11/02 15:2x 의뢰)
+
+G15는 §20의 실제 자료로 확인했다. G17의 코드 준비는 75df4e87이며 [W71 보고](IMPLEMENT-W71-G15-G17-1102.md)에 남겼다. EX-41 루프의 소비 연결은 runner 몫이며 아직 미확인이다. 이번 절은 이어서 요청한 낮은 항목 세 개만 다룬다.
+
+| 항목 | 고침 | 답을 아는 입력 |
+|---|---|---|
+| L1 단계별 명령 몫 | `ex41_fixed.validate_plan`에서 S2a·S2b의 첫 몫, S2c 이후의 둘째 몫을 승인값과 대조한다 | 합계 1을 보존해도 여섯 단계 각각의 몫 변경을 거절. 특히 둘째 몫을 n751로 앞당긴 YAML은 load_plan에서 거절 |
+| L2 기록의 설정 경로 | D133 증거 JSON의 설정 경로를 `foothold_s2/curriculum/ex40_score_config.json`으로 바꿈 | 저장소 루트 기준으로 다시 열어 SHA가 기록과 같은지 확인. 외부 실측 원자료 경로와 모든 숫자는 보존 |
+| L3 거절 점수의 회차 | `score_N_*.json`/`score_N.json` 파일명과 본문 iteration을 먼저 대조. 오류 본문이 과거·미래 회차를 주장해도 파일명 회차로 부정 증거를 남김 | score_1250 본문을 0·750·1400으로 바꾸고 n1200 PASS를 함께 둬도 n1251 DR 유지. 기존 거절 snapshot에 iteration=0이 남아 있어도 1250으로 바로잡음. 정상 미래 점수는 제때 소비 |
+
+수정 전 반례 재현은 HEAD 75df4e87의 두 함수를 AST로 읽어 시험 프로세스 안에서만 원래 함수로 교체했다. 6개 몫 변경·3개 회차 변경·1개 절대 경로 반례 **10 FAIL, 7.48초**. 실제 코드 사본·원장·학습 프로세스를 바꾸지 않았다.
+
+첫 전체 회귀는 **113 PASS, 1 FAIL, 216.77초**였다. 실패는 새 시험이 정상 점수 소비 확인에 복구 전용 `last_score_iteration`을 사용한 시험 코드 오류였다. 실제 소비 이력 `_history`로 고쳤다. 이전 거절 snapshot 회차의 재확인 시험도 추가했다. 최종 결과는 아래에 적는다.
+
+경로만 바꾼 D133 증거 SHA는 `b938ef93c4a323a97dfa63fefd06cebf6c89d7362901e39f513bf00fce5e8e3e`다. YAML·계획 SHA·생존 문턱·학습 조건은 바꾸지 않았다. GPU·Kit·EX-40 실행 사본·루프·원장 변경 없음.
+
+최종 확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 파일 **115 PASS, 198.30초**. pyflakes·git diff --check 통과. G17 후속 CMP·stdin 검토는 [W71 보고](IMPLEMENT-W71-G15-G17-1102.md)의 후속 절로 분리한다.
+
+## 22. 35fbdce5 후속 · 원래 W57 경로와 L2/L3 잔여 (11/02 16:0x)
+
+L2는 D133 파일뿐 아니라 앞선 `EX41-m6000-score-contract.json`의 설정 근거 경로도 상대 경로로 고쳤다. 두 증거 파일 모두 저장소 루트에서 실제 설정 SHA를 확인하도록 시험을 확장했다. 숫자는 불변이다.
+
+L3는 `score_N.json` 또는 `score_N_<영숫자·밑줄·하이픈>.json` 전체 이름과 일치해야 JSON을 읽는다. `other.json`, `score_1250.invalid.json`, `score_-1.json`에 정상 본문을 넣어도 거절한다. 거절된 이름의 본문 iteration은 시점 근거로 쓰지 않는다. 중복 점수 시험은 정식 이름 `score_500_a.json`·`score_500_b.json`으로 바꿔, 이름 거절만으로 중복 검사가 통과하는 시험이 되지 않게 했다.
+
+수정 전 알려진 반례: 원래 score_watch→숨김 평가 Python→Git Bash에서 바깥 rc0·Bash rc0이지만 sha256sum rc1(`Bad file descriptor`). 파일명 세 반례와 L2의 앞선 증거 파일도 실패하여 **5 FAIL·1 PASS, 12.01초**였다. stdin 누락 세 곳과 이 두 잔여 고침은 한 고정본으로 인도한다. runner 소유 eval_once·chain/runner.py는 수정하지 않았다.
+
+확인됨: 수정 뒤 첫 회귀는 C: 임시 공간 부족(`Errno 28`)으로 143 PASS·1 FAIL·30 ERROR(162.93초)에서 끝났다. 전체 통과로 세지 않았다. 파일 삭제 없이 D:의 새 임시 폴더로 시험 위치만 바꿔 같은 일곱 파일을 다시 실행한 결과 **174 PASS, 190.77초**다. 명령 대상·JUnit·로그 SHA는 [CPU 근거](evidence/EX41-W71-original-path-cpu.json)에 기록했다. pyflakes·git diff --check 통과. EX-41 통합 연결과 GPU/Kit 검증은 이 CPU 결과의 범위 밖이며 `w71_ready=false`를 유지한다.
+
+## 23. 점수 파일명 정본 형식 (11/02 16:4x 후속)
+
+lead가 acb35d7f의 두 겹 검토 막음 0과 W71 코드 쪽 종결을 전달했다. 이 절은 남은 낮은 항목인 점수 파일명만 좁힌다. EX-41 루프 소비는 runner G11이며 `w71_ready=false`는 바꾸지 않는다.
+
+소비 형식은 `score_<N>_<sha12>.json`이다. N은 ASCII 비음수 정수 표기이며 0 이외 앞자리 0을 허용하지 않는다. sha12는 소문자 ASCII hex 12자리이고 본문 `checkpoint_sha256` 64자리의 앞 12자와 같아야 한다. 본문의 회차 일치, 실제 체크포인트 파일 SHA 대조는 그대로 유지한다. 이름과 본문 SHA를 함께 거짓 값으로 바꿔도 실제 파일 SHA 검사에서 거절한다.
+
+실제 JSON reader 반례는 해시 없는 이름, copy 접미사, 앞자리 0, 전각 숫자, 길이 오류, 다른 해시, 대문자 해시다. 수정 전 **8 FAIL·3 PASS, 20.07초**였다. 정상 이름의 소비와 이름·본문만 함께 바꾼 거짓 해시의 거절도 같은 묶음에서 확인했다.
+
+기존 시험 고정물도 정본 이름을 생성한다. 중복 회차 반례는 같은 회차의 서로 다른 CPU 체크포인트 두 개를 별도 폴더에 만들고, 각각 실제 해시 이름을 쓰도록 고쳤다. `duplicate conflicting score`까지 확인하므로 파일명 오류만으로 중복 시험이 통과하지 않는다. JSON 최상위 목록 반례도 정식 이름으로 바꿔 `must be an object` 오류를 직접 확인한다. 실제 m6000 재집계의 출력 이름도 같은 형식으로 맞춘다.
+
+작업·임시·산출은 D:에만 작성했다. 독립 작업 사본은 `D:/mai-wt/foothold-lab/analyst-ex41-score-name-1102`, 브랜치는 `feature/analyst-ex41-score-name-1102-jay`다. 이 사본의 Git 메타데이터도 D:에 있고 원래 C: 저장소의 커밋 객체만 읽는다. GPU·Kit·학습·라이브 사본·원장은 변경하지 않았다. 통합 때 runner가 점수 생산 호출의 출력 이름도 이 계약으로 만드는지 확인해야 한다.
+
+첫 고침 뒤 여섯 파일 **130 PASS, 173.00초**였다. 이후 소비 순서 대조에서 이미 읽은 본문을 다른 SHA12 이름으로 복사하면 `seen_scores`가 이름 대조 전에 건너뛰는 반례 **1 FAIL, 3.69초**를 추가 확인했다. 이름·회차·본문 SHA 대조를 마친 뒤에만 같은 본문 재읽기를 생략하도록 옮겼다. 아래 최종 시험은 이 순서 고침까지 포함한다.
+
+최종 확인됨: 파일명 시험 전체·runtime·review_regressions와 fixed의 최신 오류·이전 PASS·재개·미래 점수·파일명 시점 반례를 다시 실행해 **73 PASS, 98.47초**다. 앞 130개와 겹치므로 합산하지 않는다. 네 차례 JUnit 경로·SHA·시험 이름은 [CPU 근거](evidence/EX41-score-filename-cpu.json)에 남겼다. pyflakes·git diff --check 통과. 실행 설정·학습 조건·판정 문턱 변경 없음.
+
+## 24. D125 B2 · DR 켠 자료의 유지 판정 유입 차단 (11/02 17:5x 의뢰)
+
+확인됨: `ex40_score._map_rows`와 `ex41_scoring.enrich_score_metrics` 입구에 planner d5c14948의 `require_dr_off_document`를 연결했다. 최상위 `dr` 키(값 None 포함), 빠지거나 바뀐 `dr_off`, 점수 행의 `dr_scale`·`dr_fired`·`dr_push`·`dr_recovery`를 거절한다. 시퀀스 행도 확인한다. EX-40은 검사 오류를 `EvidenceHold`로 바꿔 공개 `judge` 결과를 HOLD로 남긴다. EX-41은 숫자 계산 전에 RuntimeError로 거절하며 점수 초안을 변경하지 않는다.
+
+현재 가지에는 검사 모듈이 없어서 `foothold_s2/eval/eval_dr_mode.py`를 d5c14948의 파일 그대로 가져왔다. Git blob `cf3abb08e54238a9499cf0477c7224b50a622b73` 일치를 확인했다. 별도 검사식을 만들지 않았고 planner의 평가 실행기는 가져오거나 고치지 않았다. 통합 시 이 모듈 의존성도 함께 들어가야 한다.
+
+답을 아는 정상 자료는 원래 평가기가 기록하는 `dr_off=[physics_material, add_base_mass]`를 포함한다. 이 정상 자료는 PASS다. 각 소비자에서 위반 아홉 가지를 넣은 수정 전 반례는 **18 FAIL, 4.08초**였다. EX-41 반례는 뒤쪽 계산을 막는 spy를 두어 EX-40의 공통 검사만으로 입구 시험이 통과하지 않게 했다. 수정 후 반례·EX-40 scorer·EX-41 scoring·W57 retry·W71 다섯 파일 **81 PASS, 19.41초**. 실제 m6000 원자료의 39칸 기록·26칸 유지·서 있기 64/64 재집계 시험도 포함된다. 원자료는 읽기만 했다.
+
+근거: [CPU 결과와 로그 해시](evidence/EX41-D125-B2-cpu.json). pyflakes와 `git diff --check` 통과. D: 사본·임시·산출만 사용했다. 학습 설정·문턱·GPU·Kit·EX-40 고정본·라이브 루프·원장은 변경하지 않았다. 독립 검토와 runner 통합은 대기다. runner가 enrichment 입구를 실제로 호출하는지는 통합판에서 확인해야 하며, 이 CPU 통과를 기동 승인으로 쓰지 않는다.

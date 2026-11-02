@@ -13,5 +13,5 @@ def test_maintenance_consumer_rejects_dr_enabled_map_modes():
          "modes": {"eval_gt": {"fwd1.0": {"dr_scale": 0.5}}}},
     )
     for document in documents:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             maintenance_counts_from_map_modes(document, {})

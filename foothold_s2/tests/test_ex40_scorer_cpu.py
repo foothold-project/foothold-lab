@@ -59,7 +59,10 @@ def _evidence(out: Path, checkpoint: Path, *, missing_stand=False):
                                            "wz_abs_error_mean_alive_radps": .05} for i in range(64)],
                               "body_vx_integral_median_m": command[0] * 6,
                               "yaw_follow_median": 1.0}
-    sequence = {name: {"phases": [{"env_count": 64, "alive_at_end": 64}
+    # same shape eval_map_modes writes: survival only per terrain kind (map_mode_cells.py:168)
+    sequence = {name: {"phases": [{"env_count": 64,
+                                   "by_kind": {"pyramid_stairs": {"env_count": 40, "alive_at_end": 40},
+                                               "hf_pyramid_slope": {"env_count": 24, "alive_at_end": 24}}}
                                      for _ in range(count)]}
                 for name, count in (("spin_left_to_right", 2),
                                     ("spin_right_to_left", 2), ("stop_and_restart", 4))}
@@ -67,6 +70,7 @@ def _evidence(out: Path, checkpoint: Path, *, missing_stand=False):
                "checkpoint_iter": int(checkpoint.stem.split("_")[-1]),
                "envs": 64, "steps": cfg["map_steps"], "eval_seed": cfg["eval_seed"],
                "command_suite": "extended",
+               "dr_off": ["physics_material", "add_base_mass"],
                "commands": commands("extended"), "fixed_terrain": {"rows": 10},
                "terrain_tiles": [{"env": i} for i in range(64)],
                "modes": command_rows,
@@ -606,3 +610,15 @@ def test_d74_stage_report_from_w15_w57_stand_dr_and_delivery(tmp_path, monkeypat
     bad["checkpoint_sha256"] = "0" * 64
     with pytest.raises(ValueError, match="checkpoint"):
         build_stage_report(bad, saved[0], run)
+
+
+def test_sequence_phase_alive_reads_terrain_kinds():
+    from foothold_s2.ex40_score import _sequence_phase_alive
+    ok = {"env_count": 64, "by_kind": {"a": {"env_count": 40, "alive_at_end": 38},
+                                       "b": {"env_count": 24, "alive_at_end": 24}}}
+    assert _sequence_phase_alive(ok) == 62
+    assert _sequence_phase_alive({"env_count": 64, "alive_at_end": 64}) is None      # old fixture shape
+    short = copy.deepcopy(ok); short["by_kind"].pop("b")
+    assert _sequence_phase_alive(short) is None                                      # kinds do not cover 64 envs
+    bad = copy.deepcopy(ok); bad["by_kind"]["a"]["alive_at_end"] = 41
+    assert _sequence_phase_alive(bad) is None                                        # more survivors than envs

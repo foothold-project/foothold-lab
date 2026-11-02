@@ -83,7 +83,9 @@ def test_entrypoint_checks_capacity_before_applauncher_and_uses_exact_run_folder
         encoding="utf-8")
     assert source.index("validate_ex41_output_directory(_pre_args.ex41_log_root)") < source.index(
         "app_launcher = AppLauncher(args_cli)")
-    assert 'log_dir = os.path.abspath(args_cli.ex41_log_root)' in source
+    assert ('log_dir = (os.path.abspath(args_cli.ex41_rehearsal_output) if EX41_REHEARSAL'
+            in source)
+    assert 'else os.path.abspath(args_cli.ex41_log_root))' in source
     assert "build_ex41_disk_plan(" in source
     assert "disk_guard=EX41_DISK_RECEIPT" in source
     assert "write_ex41_disk_preflight(log_dir, EX41_DISK_RECEIPT)" in source

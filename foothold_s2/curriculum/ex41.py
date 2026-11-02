@@ -825,7 +825,9 @@ def terrain_distribution(env):
          'actual_unchanged','requested_actual_mismatch'),counts.detach().cpu().tolist()))
     if counts is not None:progress.update(available=True,scope='since_process_start',
         policy=copy.deepcopy(getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})))
+    from foothold_s2.rewards.stair_start_hist import snapshot
     return {'columns':columns,'by_terrain':per_kind,'mean_level':float(levels.float().mean()),
+            'stair_start_angle_hist':snapshot(env),
             'promotion_readback':progress,
             'labels_sha256':hashlib.sha256(levels.numpy().tobytes()+types.numpy().tobytes()).hexdigest()}
 

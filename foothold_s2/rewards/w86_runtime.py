@@ -326,6 +326,12 @@ def attach_runtime(env,plan,log_dir):
     if not getattr(plan,'is_ex41',False) or hasattr(env,'_ex41_w86'):
         raise ValueError('W86 attach requires EX41 and must happen once')
     adapter=W86Runtime(env,log_dir); env._ex41_w86=adapter
+    from foothold_s2.rewards.stair_start_hist import snapshot
+    adapter.log_dir.mkdir(parents=True,exist_ok=True)
+    with (adapter.log_dir/'ex41_stair_start.jsonl').open('a',encoding='utf-8') as out:
+        out.write(json.dumps({'event':'stair_start_angle_hist','initialization_index':0,
+            'iteration':None,'iteration_note':'adapter_attach_before_restored_training_iteration_is_known',
+            'stair_start_angle_hist':snapshot(env)},allow_nan=False)+'\n')
     return adapter
 
 
@@ -339,6 +345,13 @@ def invalid_env(env):
 
 
 def reset_runtime(env,env_ids):
+    from foothold_s2.rewards.stair_start_hist import record_reset
+    try:
+        record_reset(env,env_ids)
+    except (AttributeError, KeyError, ValueError, IndexError) as exc:
+        # P4 is record-only. Preserve a visible missing-evidence reason without
+        # changing reset/quarantine behavior when diagnostic metadata is absent.
+        env._ex41_stair_hist_error=type(exc).__name__+': '+str(exc)
     a=getattr(env,'_ex41_w86',None)
     if a is not None: a.on_reset(env_ids if env_ids is not None else slice(None))
 

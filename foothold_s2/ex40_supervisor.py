@@ -40,6 +40,19 @@ def _atomic_json(path: Path, value: dict) -> None:
         raise
 
 
+def _training_child(args: list[str], log_root: Path):
+    """Training output is text, never the supervisor's JSON decision receipt."""
+    log_root.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix="train-segment-", suffix=".log", dir=log_root)
+    with os.fdopen(fd, "wb") as stream:
+        child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
+            cwd=Path(__file__).resolve().parents[1], stdin=subprocess.DEVNULL,
+            stdout=stream, stderr=subprocess.STDOUT)
+    _atomic_json(Path(name).with_suffix(".process.json"), {
+        "pid": child.pid, "log": str(Path(name).resolve()), "kind": "training-text-log"})
+    return child
+
+
 def transition(*, run: Path, rc: int | None, shell_finished: bool,
                process_alive: bool | None, score_state: str,
                ledger: dict | None = None, arm: str = "B") -> tuple[dict, dict]:
@@ -81,21 +94,21 @@ def transition(*, run: Path, rc: int | None, shell_finished: bool,
         if failed and consecutive_failure_action(attempts[:index], True) == "stop_after_three_failures":
             ledger["terminal"] = {"state": "stopped_after_three_failures"}
             return {"action": "stop_after_three_failures", "source": decision}, ledger
-        if score_state not in ("consumed", "held"):
+        if score_state != "consumed":
             return {"action": "wait_for_segment_evaluation", "source": decision,
                     "reason": "same segment checkpoint has not been consumed"}, ledger
         return {"action": "resume_from_verified_checkpoint", "source": decision,
-                "failed_attempt": failed, "evaluation_hold": score_state == "held"}, ledger
+                "failed_attempt": failed}, ledger
     attempts.append(row)
     ledger["attempts"] = attempts
     if failed and consecutive_failure_action(attempts[:-1], True) == "stop_after_three_failures":
         ledger["terminal"] = {"state": "stopped_after_three_failures"}
         return {"action": "stop_after_three_failures", "source": decision}, ledger
-    if score_state not in ("consumed", "held"):
+    if score_state != "consumed":
         return {"action": "wait_for_segment_evaluation", "source": decision,
                 "reason": "new segment checkpoint has not been consumed"}, ledger
     return {"action": "resume_from_verified_checkpoint", "source": decision,
-            "failed_attempt": failed, "evaluation_hold": score_state == "held"}, ledger
+            "failed_attempt": failed}, ledger
 
 
 def _run_dir_for_pid(log_root: Path, pid: int) -> Path:
@@ -225,7 +238,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
             if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
             verified_sha = {}
-            verified_holds = set()
+            held_updates = []
             for scored_update in expected_updates:
                 row = state.get("done", {}).get(str(scored_update))
                 if row is None:
@@ -241,7 +254,9 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 slot_state = _verified_score_slot(scored_update, run, ledger_rows, row,
                                                   cfg, Plan(table, arm=arm), boundaries, _stage,
                                                   _manifest_digest)
-                if slot_state not in ("verified", "held"):
+                if slot_state == "held":
+                    held_updates.append(scored_update)
+                elif slot_state != "verified":
                     return slot_state
                 source_row = ledger_rows.get(scored_update)
                 if source_row is None:
@@ -256,11 +271,13 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 if scored_update in current_checkpoints and current_digest is None:
                     return "pending"
                 verified_sha[scored_update] = source_digest
-                if slot_state == "held":
-                    verified_holds.add(scored_update)
-                if slot_state == "held" and scored_update == target_update:
-                    return "held"
             else:
+                # A recorded HOLD remains unresolved but must not prevent the
+                # watcher from scoring later checkpoints. Missing slots above
+                # reach the child invocation; only a fully attempted backlog
+                # returns here. Never convert a HOLD into consumed/PASS.
+                if held_updates:
+                    return "pending"
                 reports = stage_reports(run, out_root, config, table, arm,
                     telegram_sender=telegram_sender,
                     lab_feed=lab_feed or out_root / "lab_feed.json", sender=sender)
@@ -268,22 +285,14 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 published = reports.get("published")
                 if type(published) is not int or published < 0:
                     return "unknown"
-                if reports.get("first_hold") is not None:
+                if published < len(required_reports):
                     return "pending"
-                # A verified evaluation HOLD has complete evidence, but it is
-                # intentionally not publishable as a stage comparison. Continue
-                # scoring later checkpoints while retaining that report gap.
-                first_missing = reports.get("first_pending")
-                deferred = (target_update != cfg["final_checkpoint_update"]
-                            and first_missing in (set(required_reports) & verified_holds))
-                reports_required_now = ([n for n in required_reports if n < first_missing]
-                                        if deferred else required_reports)
-                if published < len(reports_required_now):
+                if reports.get("first_hold") is not None:
                     return "pending"
                 effective_lab_feed = lab_feed or out_root / "lab_feed.json"
                 if any(not _stage_report_delivery_ok(out_root, n, boundaries[n],
                            verified_sha.get(n), telegram_sender, effective_lab_feed)
-                       for n in reports_required_now):
+                       for n in required_reports):
                     return "pending"
                 if target_update == cfg["final_checkpoint_update"]:
                     finished = completion(run, out_root, config, table, arm, state)
@@ -301,8 +310,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
         else:
             cmd.extend(("--telegram-sender", str(telegram_sender)))
         proc = subprocess.run(cmd, cwd=Path(__file__).resolve().parents[1],
-                              stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
-                              capture_output=True, check=False)
+                              text=True, encoding="utf-8", capture_output=True, check=False)
         if proc.returncode:
             return "pending"
         try:
@@ -319,10 +327,9 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                          stage_for, manifest_digest) -> str:
     """Validate a stride slot from its recorded source segment, even after resume."""
     ledger = ledger_rows.get(update)
-    verdict = saved.get("state")
     if ledger is None:
         return "pending"
-    if verdict not in ("PASS", "FAIL", "HOLD"):
+    if saved.get("state") not in ("PASS", "FAIL", "HOLD"):
         return "unknown"
     source_run = Path(ledger.get("run_dir") or current_run)
     checkpoint = Path(ledger.get("checkpoint_path") or source_run / f"model_{update}.pt")
@@ -345,8 +352,10 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                 or update in boundaries and boundaries[update] != stage
                 or score.get("checkpoint_iteration") != update
                 or score.get("checkpoint_sha256") != pinned
-                or score.get("from") != stage or score.get("verdict") != verdict):
+                or score.get("from") != stage or score.get("verdict") != saved.get("state")):
             return "unknown"
+        if saved.get("state") == "HOLD":
+            return "held"
         stage_cfg = cfg["stages"][stage]
         phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
         if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
@@ -365,7 +374,7 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
             return "pending"
     except (OSError, ValueError, KeyError, TypeError):
         return "pending"
-    return "held" if verdict == "HOLD" else "verified"
+    return "verified"
 
 
 def _stage_report_delivery_ok(out_root: Path, update: int, stage: str,
@@ -419,9 +428,7 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
     if poll_seconds < 0:
         raise ValueError("supervisor poll interval cannot be negative")
     for _ in range(max_segments):
-        child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
-                                 cwd=Path(__file__).resolve().parents[1],
-                                 stdin=subprocess.DEVNULL)
+        child = _training_child(args, launch_receipt.parent)
         run = None
         last_consumed = None
         watch_events = score_out / "supervisor_score_events.jsonl"
@@ -441,7 +448,7 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
                     _record_watch_event(watch_events, pid=child.pid, run=run,
                         checkpoint=visible, score_state=score_state_live,
                         progress=_watch_progress(score_out))
-                    if score_state_live in ("consumed", "held"):
+                    if score_state_live == "consumed":
                         last_consumed = visible
             if rc is not None:
                 break
@@ -490,8 +497,7 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
             "--arm", arm, "--device", device, "--end-by", end_by,
             "--log-root", str(log_root), "--score-dir", str(score_dir),
             "--resume-spec", str(spec_path)], cwd=Path(__file__).resolve().parents[1],
-            stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
-            capture_output=True, check=False)
+            text=True, encoding="utf-8", capture_output=True, check=False)
         if gate.returncode:
             return {"action": "resume_prepared_but_launch_guard_closed",
                     "checkpoint": source.get("checkpoint"),
@@ -549,6 +555,7 @@ def main(argv: list[str] | None = None) -> int:
             ledger_path=args.ledger.resolve(),
             telegram_sender=args.telegram_sender.resolve(strict=True) if args.telegram_sender else None,
             lab_feed=args.lab_feed.resolve() if args.lab_feed else None)
+        _atomic_json(args.score_out.resolve() / "supervisor_result.json", result)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 0 if result.get("action") in ("complete", "resume_prepared_but_launch_guard_closed") else 5
     ledger = json.loads(args.ledger.read_text(encoding="utf-8-sig")) if args.ledger.is_file() else None
