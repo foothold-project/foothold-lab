@@ -63,6 +63,27 @@ def test_resume_preserves_boundary_state_and_never_repeats_receipt(tmp_path,monk
     assert b.boundary_receipt()==r.boundary_receipt()
 
 
+def test_resume_changed_mirror_approval_stays_off_and_records_rejection(tmp_path,monkeypatch):
+    r,_=runtime(tmp_path/'a',monkeypatch); r.on_update_start(1)
+    values=copy.deepcopy(r._config_values); values['critic_mirror']=True
+    assert r._apply(1,251,values,[],None,'known enabled mirror')
+    state=r.state_dict()
+    b=make_runtime(load_plan(TABLE,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    calls=[]
+    def hook(stage,e):
+        calls.append(e['critic_mirror'])
+        if e['critic_mirror']: raise ValueError('W72 actual approval bytes changed after save')
+        return e
+    b.set_stage_changed_hook(hook)
+    b.load_state_dict(state)
+    assert calls==[True,False]
+    assert b.effective['critic_mirror'] is False
+    assert b.boundary_receipt()['status']=='rejected'
+    assert b.boundary_receipt()['reason'].startswith('resume_mirror_rejected_off')
+    b.on_update_start(2)
+    assert not b.stop_requested
+
+
 def test_failed_application_rolls_back(tmp_path,monkeypatch):
     r,_=runtime(tmp_path,monkeypatch)
     calls=[]
@@ -75,6 +96,18 @@ def test_failed_application_rolls_back(tmp_path,monkeypatch):
     assert calls==['S2a','S2-0']
     assert r.plan.stages[r.active].id=='S2-0'
     assert r.boundary_receipt()['status']=='rejected'
+
+
+def test_wrong_consumed_readback_is_rejected_before_command_version(tmp_path,monkeypatch):
+    r,_=runtime(tmp_path,monkeypatch)
+    def hook(stage,e):
+        out=copy.deepcopy(e)
+        if stage.id=='S2a': out['ppo']['entropy_coef']=.09
+        return out
+    r.set_stage_changed_hook(hook); r.on_update_start(1)
+    assert r.effective['stage_id']=='S2-0'
+    assert r.boundary_receipt()['status']=='rejected'
+    assert 'readback differs' in r.boundary_receipt()['reason']
 
 
 def test_mirror_authorization_matches_shared_fixture(tmp_path,monkeypatch):
@@ -117,6 +150,28 @@ def test_changed_approval_after_snapshot_rolls_back_mirror_off(tmp_path,monkeypa
     assert r.boundary_receipt()['status']=='rejected'
     assert r.boundary_receipt()['rollback_error'] and not r.boundary_receipt()['after']['critic_mirror']
     assert not r.stop_requested
+
+
+def test_real_stage_hook_catches_setter_valueerror_and_keeps_learning(tmp_path,monkeypatch):
+    from functools import partial
+    from foothold_s2.curriculum.ex41 import apply_runtime_fields
+    r,_=runtime(tmp_path,monkeypatch)
+    env=SimpleNamespace(scene=SimpleNamespace(terrain=SimpleNamespace(
+        terrain_origins=torch.zeros(10,2,3),terrain_levels=torch.tensor([0,1,2,0]))),
+        cfg=SimpleNamespace(episode_length_s=20.))
+    runner=SimpleNamespace(env=SimpleNamespace(unwrapped=env),alg=SimpleNamespace(
+        entropy_coef=.01,desired_kl=.01,mirror_enabled=False),ex41_critic_mirror=False,continuous_curriculum=r)
+    def setter(enabled,approval=None):
+        runner.ex41_critic_mirror=False; runner.alg.mirror_enabled=False
+        if enabled: raise ValueError('EX-41 W72 HOLD: changed actual approval')
+    runner.set_ex41_critic_mirror=setter
+    r.set_stage_changed_hook(partial(apply_runtime_fields,runner))
+    values=copy.deepcopy(r._config_values); values['critic_mirror']=True
+    assert not r._apply(1,501,values,[dict(path='critic_mirror',before=False,after=True,decision_id='D101')],None,'boundary_config')
+    assert not r.effective['critic_mirror'] and not runner.ex41_critic_mirror
+    assert r.boundary_receipt()['status']=='rejected' and 'W72 HOLD' in r.boundary_receipt()['reason']
+    r.on_update_start(1)
+    assert r.effective['stage_id']=='S2a' and not r.stop_requested
 
 
 def test_capped_performance_term_and_spin_neutral():
@@ -201,6 +256,15 @@ def test_stale_or_absent_score_does_not_stop_s2a(tmp_path,monkeypatch):
     score(r,250); r.on_update_start(1001)
     assert not r._history and not r.finished and not r.stop_requested
     assert r.effective['stage_id']=='S2a'
+
+
+def test_invalid_automatic_metric_is_rejected_and_training_continues(tmp_path,monkeypatch):
+    r,_=runtime(tmp_path,monkeypatch); r.on_update_start(1)
+    score(r,250,metrics={'gait_sync':'bad'}); r.on_update_start(251)
+    assert not r._history and not r.stop_requested
+    score(r,500,metrics={'pairs':{'side':{'left':[100,.1],'right':[64,.1]}}})
+    r.on_update_start(501)
+    assert not r._history and r.effective['stage_id']=='S2a'
 
 
 def test_delayed_scores_adjust_only_once_per_boundary(tmp_path,monkeypatch):
