@@ -1,0 +1,9 @@
+{
+  "schema": "foothold-gpu-jobs-v2",
+  "sources": {"ex41_p1_marker": "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"},
+  "jobs": [
+    {"id": "ex41-eval", "priority": 1, "gpu": 1, "owner_session": "runner", "preemptible": false, "state": "marker", "output_path": "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"},
+    {"id": "c-layer", "priority": 4, "gpu": 1, "owner_session": "scripter", "preemptible": true, "state": "waiting", "output_path": "D:/mai-tmp/c_layer_m6000/out"},
+    {"id": "w78-video", "priority": 4, "gpu": 1, "owner_session": "runner", "preemptible": true, "state": "waiting", "output_path": "D:/mai-tmp/ex41/w78_video"}
+  ]
+}

@@ -42,6 +42,12 @@ def _json(path: Path) -> dict:
     return value
 
 
+import importlib.util as _vs_u
+_vs_s = _vs_u.spec_from_file_location("video_style", __import__("pathlib").Path(__file__).resolve().parent / "video_style.py")
+video_style = _vs_u.module_from_spec(_vs_s)
+_vs_s.loader.exec_module(video_style)
+
+
 def validate_attempt(mp4: Path, *, checkpoint: Path, label: str, scene: str,
                      expected_frames: int, ffprobe: str, ffmpeg: str) -> dict:
     """Check files produced by one recorder invocation in its empty attempt folder."""
@@ -52,6 +58,10 @@ def validate_attempt(mp4: Path, *, checkpoint: Path, label: str, scene: str,
             raise CaptureError("missing_or_empty:" + path.name)
 
     data = _json(json_path)
+    try:
+        video_style.require_approved(data, "review.json")   # W49: 승인 화풍(style_id)이 아닌 촬영은 실패
+    except ValueError as exc:
+        raise CaptureError("style_not_approved:" + str(exc)[:120])
     if Path(data.get("checkpoint", "")).resolve() != checkpoint.resolve():
         raise CaptureError("json_checkpoint_mismatch")
     if data.get("label") != label or data.get("scene") != scene:

@@ -43,7 +43,8 @@ segments = [["a", [0.5, 0, 0], 3.0], ["b", [1.0, 0, 0], 3.0],
             ["c", [0, 0, 1.2], 3.0], ["d", [0, 0, -1.2], 3.0]]
 data = {"checkpoint": a.checkpoint if mode != "wrong_json" else "old-checkpoint.pt",
         "label": a.label, "scene": a.scene, "frames": 300,
-        "min_mean_brightness": 20.0, "segments": segments, "resets": 0}
+        "min_mean_brightness": 20.0, "segments": segments, "resets": 0,
+        "style": {"style_id": "L4_sat125_7c55e74e"}}   # W49: 승인 화풍 영수증이 아니면 seq_video 가 거절한다
 mp4.with_suffix(".json").write_text(json.dumps(data), encoding="utf-8")
 n = 600
 np.savez(mp4.with_name(mp4.stem + "_feet.npz"), t=np.arange(n)*.02,
