@@ -619,15 +619,28 @@ class EX41Runtime(Runtime):
         self.last_checkpoint={'iteration':iteration,'path':str(p),'sha256':sha256(p)}
 
     def flush_consumption(self,iteration):
+        # Count before the inherited writer clears its actual env-step counters.
+        steps=self._step_counts.detach().cpu()
+        totals=steps.sum(dim=(1,2)); total=int(totals.sum()); current=int(totals[self.active])
+        self._write({'event':'config_consumption','iteration':iteration,
+            'active_version':self.active,'env_steps':total,'current_command_env_steps':current,
+            'old_command_env_steps':total-current,'current_command_fraction':current/total if total else None,
+            'current_env_count':int((self.env_stage==self.active).sum()),
+            'old_env_count':int((self.env_stage!=self.active).sum()),
+            'global_effective_sha256':digest(self.effective),'dr_scale':self.dr_scale(iteration),
+            'scope':'command versions change on reset; global fields apply at boundary; map usage in actual_consumption',
+            'versions':[{'version':i,'stage_id':s.id,'command_config_sha256':digest(asdict(s)),
+                'slot_env_steps':steps[i].sum(-1).tolist(),'env_steps':int(totals[i])}
+                for i,s in enumerate(self.plan.stages) if int(totals[i]) or i==self.active]})
         super().flush_consumption(iteration)
         if self.runner is not None:
             w86=getattr(self.runner.env.unwrapped,'_ex41_w86',None)
             if w86 is not None:
                 # One owner for the rollout interval; includes zero-weight diagnostics.
                 w86.flush(iteration)
-        if self.runner is not None and iteration%50==0:
+        if self.runner is not None and (iteration%50==0 or iteration==self._last_boundary):
             row=terrain_distribution(self.runner.env.unwrapped)
-            self._level_history.append((iteration,row['mean_level']))
+            if iteration%50==0:self._level_history.append((iteration,row['mean_level']))
             self._write({'event':'terrain_distribution','iteration':iteration,**row})
 
     def state_dict(self):
@@ -779,7 +792,12 @@ def terrain_distribution(env):
     cumulative=[]; total=0.
     for p in proportions: total+=p/sum(proportions); cumulative.append(total)
     columns=[names[next(j for j,c in enumerate(cumulative) if i/cfg.num_cols+.001<c)] for i in range(cfg.num_cols)]
-    levels=terrain.terrain_levels.detach().cpu().long(); types=terrain.terrain_types.detach().cpu().long()
+    raw_levels=terrain.terrain_levels.detach().cpu(); raw_types=terrain.terrain_types.detach().cpu()
+    if (not torch.isfinite(raw_levels).all() or not torch.isfinite(raw_types).all()
+        or (raw_levels!=raw_levels.long()).any() or (raw_types!=raw_types.long()).any()
+        or (raw_levels<0).any() or (raw_levels>=cfg.num_rows).any()):
+        raise ValueError('EX41 terrain label outside integer row range')
+    levels=raw_levels.long(); types=raw_types.long()
     if levels.shape!=types.shape or (types<0).any() or (types>=len(columns)).any(): raise ValueError('EX41 terrain label mismatch')
     per_kind={}
     for name in names:
