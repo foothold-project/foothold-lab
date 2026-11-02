@@ -502,6 +502,6 @@ W59 카드를 쓸 때는 WORKLIST 규칙 7 대로 `python _out/tools/worklist_ga
 | D151 | 회전 16 env 진단은 단계 끝 7 저장본 · EX-42 때 W57 칸 | 없음(§5.8 기준 축은 W15 · W57 그대로) | U18-TURN-SIX-CASES-VS-W57.md · DESIGN-EX42-TERRAIN-draft.md · QA-EXPLAINERS.md | 반영 |
 | D152 | C층 headless | §2 | 없음 | 반영 |
 | D153 | DR 판단은 직전 경계 점수 · 미도착이면 유지 | §5.9 | QA-EXPLAINERS.md | 반영 |
-| D154 | W78 없어도 26 칸 유효 | §5.8 | P7-GRADUATION-SPEC.md · QA-EXPLAINERS.md | 반영 |
+| D154 | W78 없어도 26 칸 유효(복원 13 칸은 늘 기록 · D160) | §5.8 | P7-GRADUATION-SPEC.md · QA-EXPLAINERS.md | 반영 |
 
 안 한 것: 등록부 · 감사 · RULES-HUB · CURRICULUM-GATES 는 lead 문서라 손대지 않았다(U18-2 · P4-3 가 그 자리). D141 의 코드 줄 번호는 WORKLIST 문장 그대로 옮긴 것이고 planner 가 다시 열지 않았다(읽기).

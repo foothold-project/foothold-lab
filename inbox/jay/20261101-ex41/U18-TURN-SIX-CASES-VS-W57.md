@@ -42,7 +42,7 @@
 
 | 경우(16 env, turn_probe) | 지금 잣대에 있는 자리 | 통계가 같은가 | EX-41 에서 판정에 쓰나 | 상태 |
 |---|---|---|---|---|
-| 좌 독립 `indep_left` · 우 독립 `indep_right`(wz ±1.2 · 8 s) | W15 `spin+1.2` · `spin-1.2`(64 env · 6 s · 생존 · 추종 오차) + W57 goal 30 · 60 · 90°(wz 1.0 · 목표 정지 · 접촉 좌우 · 대각 간격) | 아니다(Q · C 16 env 평균 → 생존 · 오차 · 정지 오차 · 접촉 간격 중앙값) | W15 는 판정(26 칸) · W57 은 기록 | **대체됨**(정의는 다름) |
+| 좌 독립 `indep_left` · 우 독립 `indep_right`(wz ±1.2 · 8 s) | W15 `spin+1.2` · `spin-1.2`(64 env · 6 s · 생존 · 추종 오차) + W57 goal 30 · 60 · 90°(wz 1.0 · 목표 정지 · 접촉 좌우 · 대각 간격) | 아니다(Q · C 16 env 평균 → 생존 · 오차 · 정지 오차 · 접촉 간격 중앙값) | W15 는 판정(26 칸, 복원 13 칸은 늘 기록 · D160) · W57 은 기록 | **대체됨**(정의는 다름) |
 | 좌 → 우 `left_then_right` · 우 → 좌 `right_then_left` | W15 연속 칸 `spin_left_to_right` · `spin_right_to_left`(64 env · 38ee51df · 11/01 00:14 부터) | 아니다 | **기록만**(`CELLS` 13 × 3 밖) | 부분(측정 있음 · 판정 없음) |
 | 전진 → 좌 `fwd_then_left` · 전진 → 우 `fwd_then_right` | 없음. W57 fwd0.5 · fwd1.0 은 전진 중 yaw 누적(heading 끔) 이고 회전 전환이 없다. `sequences` 에도 없다 | - | - | **빠짐** |
 | 걸으며 돌기 `walk_turn_left` · `walk_turn_right`(0.5 + ±0.5) | 없음. W15 13 명령에 vx + wz 동시 칸 없음. CURRICULUM-GATES 374 행 「16 env 걸으며 돌기 기준선 미측(A5)」 그대로 | - | - | **빠짐** |
