@@ -1145,12 +1145,14 @@ def _argv_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def configure_capture_launcher(args: argparse.Namespace) -> argparse.Namespace:
+def configure_capture_launcher(args: argparse.Namespace) -> dict[str, bool | int]:
     """Render the C-layer camera offscreen without opening an Isaac GUI."""
     args.headless = True
     args.enable_cameras = True
     args.livestream = 0
-    return args
+    # AppLauncher consumes and removes livestream from this Namespace.
+    return {"headless": args.headless, "enable_cameras": args.enable_cameras,
+            "livestream": args.livestream}
 
 
 def _source_hashes(repo: Path, experiment: str) -> dict[str, str]:
@@ -1214,7 +1216,7 @@ def _capture(spec: dict[str, Any]) -> None:
     full_args = parser.parse_args()
     style_record = video_style.resolve_style(full_args, parser)
     video_style.check_label(full_args, parser)
-    configure_capture_launcher(full_args)
+    launcher_request = configure_capture_launcher(full_args)
     app = AppLauncher(full_args).app
     if app is None:
         raise RuntimeError("Kit application did not start")
@@ -1802,9 +1804,7 @@ def _capture(spec: dict[str, Any]) -> None:
             "segments": [[name, list(command), duration] for name, command, duration in active_commands],
             "frames": frame_count, "fps": full_args.fps, "duration_s": capture_duration,
             "capture_wall_elapsed_s": round(time.monotonic() - capture_wall_start, 3),
-            "app_launcher": {"headless": full_args.headless,
-                             "enable_cameras": full_args.enable_cameras,
-                             "livestream": full_args.livestream},
+            "app_launcher": launcher_request,
             **brightness_summary(brightness_samples), "brightness_sample_count": len(brightness_samples),
             "capture_mode": ("still_probe_not_seq_video_receipt" if full_args.still_probe_at_s is not None
                              else "sequence"),
