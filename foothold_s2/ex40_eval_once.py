@@ -30,7 +30,7 @@ MODES = ("eval_gt", "probe_prop_only", "eval_pred")
 def _run(argv: list[str], env: dict, *, cwd: Path) -> int:
     flags = (getattr(subprocess, "CREATE_NO_WINDOW", 0)
              | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
-    return subprocess.run(argv, cwd=cwd, env=env, check=False,
+    return subprocess.run(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, check=False,
                           creationflags=flags).returncode
 
 

@@ -30,3 +30,13 @@
 ## 남은 조건
 
 G1의 Kit 예행과 G11 전체 단계 loop는 lead 승인 및 EX-41에 맞는 평가·녹화·검수 명령 연결 후 별도 검증이 필요하다. G11은 코드 실행에 필요한 캡처·검사 계약이 확인되기 전에는 기존 EX-40 도구를 호출하지 않는다.
+
+## 추가 통합: G6 점수 계약과 G14 no-window stdin
+
+최신 gap 정본 f6a94173의 G14를 확인했다. `ex40_eval_once._run`은 `subprocess.DEVNULL`을 stdin으로 넘기며, `foothold_s2` 안의 모든 Git Bash `sha256sum` 호출은 `</dev/null`로 stdin을 닫는다. 실제 Git Bash 하위 프로세스를 `CREATE_NO_WINDOW` 플래그로 시작해 알려진 파일의 SHA 출력이 rc 0인지 확인했다. CPU 시험 2개가 통과했다. 낮은 우선순위인 단계 종료 영수증의 W57 · 촬영 장치 필드 보강은 미수행이다.
+
+G6 점수 소비는 분석 소유 `curriculum/ex41_scoring.py`의 `enrich_score_metrics(draft, map_modes_path, stand_paths, plan)`를 runner `enrich_score_file`과 `ex41_score` CLI에 연결했다. 세 `stand.json` 경로(`eval_gt`, `probe_prop_only`, `eval_pred`)가 모두 필수이며 누락은 거절한다. 실제 m6000 map64와 세 stand 입력에서 39칸, 세 stand 수, 근거 SHA가 생성되는 것을 확인했다. 이 시험을 포함한 score CPU 시험은 9 PASS다.
+
+통합 범위 CPU 묶음은 고정 `isaac311`에서 **127 PASS, skip 0, 164.10초**였다. 포함 파일은 EX-41 preflight · fixed/runtime · regression · startup integration · PPO valid/bridge · scoring, G14 no-window 시험이다. 별도 안전 DRY 실행은 `kit_started=false`, `gpu_used=false`, `parent_update=6000`, `initial_dr_scale=0.5`, `w71_ready=false`, `production_launch_allowed=false`를 반환했다.
+
+닫힘 상태: G3 · G6 · G8 · G14(Python 및 shell stdin 계약). G1은 시작 코드 연결과 CPU DRY까지 확인했으나 task config의 실제 import가 `pxr` 부재로 실패했고 승인된 첫 10 update Kit/GPU 예행이 미실행이라 부분 상태다. G11은 EX-41 단계 끝 3모드 평가 · W57 · 촬영 · 프레임 검사 · axis250 · shadow · 고정 경로 playlist를 묶는 loop가 없어서 열려 있다. PPO valid와 bridge는 19 PASS, skip 0이다. G14의 단계 종료 영수증 보강도 미확인으로 남긴다.

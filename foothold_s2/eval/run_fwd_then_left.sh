@@ -16,7 +16,7 @@ for TAG in b1500 b50_m1510 b50_m1550 a50_m1550; do
   OUT="$TOP/$TAG"
   mkdir -p "$OUT"
   git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
-  sha256sum "${CK[$TAG]}" > "$OUT/checkpoint_sha256.txt"
+  sha256sum "${CK[$TAG]}" </dev/null > "$OUT/checkpoint_sha256.txt"
   MODULE=foothold_s2.eval.turn_probe DEVICE="$DEV" bash "$ROOT/foothold_s2/eval/run_kit.sh" "$OUT" \
     --task FootholdS2-Go2-S2-23f-B-v0 --checkpoint "${CK[$TAG]}" --envs 16 --map-mode eval_pred --fixed-terrain --cases fwd_then_left < /dev/null
   echo "rc=$?" > "$OUT/rc.txt"

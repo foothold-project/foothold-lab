@@ -22,7 +22,7 @@ if [ -n "$DIRTY" ]; then
   echo "거절: foothold_s2 에 커밋 안 된 변경이 있다(평가 출처가 섞인다):" | tee "$OUT/REFUSED_DIRTY.txt"; echo "$DIRTY" | tee -a "$OUT/REFUSED_DIRTY.txt"
   exit 3
 fi
-sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
+sha256sum "$CK" </dev/null > "$OUT/checkpoint_sha256.txt"
 : > "$OUT/rc.txt"
 for LV in $LEVELS; do
   MODULE=foothold_s2.eval.eval_map_modes DEVICE="$DEV" bash "$KIT" "$OUT/L$LV" \

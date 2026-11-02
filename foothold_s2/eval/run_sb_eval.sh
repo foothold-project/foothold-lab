@@ -21,7 +21,7 @@ LEVEL_FLAG=""
 mkdir -p "$OUT"
 git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
 git -C "$ROOT" status --short > "$OUT/git_status.txt"
-sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
+sha256sum "$CK" </dev/null > "$OUT/checkpoint_sha256.txt"
 : > "$OUT/rc.txt"
 for MODE in $MODES; do
   MODULE=foothold_s2.eval.turn_probe DEVICE="$DEV" bash "$KIT" "$OUT/turn16_$MODE" \

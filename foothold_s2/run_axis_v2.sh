@@ -25,7 +25,7 @@ export CONDA_PREFIX="$ENV" PYTHONPATH="$ROOT" OMNI_KIT_ACCEPT_EULA=YES
 export CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONUNBUFFERED=1 KMP_DUPLICATE_LIB_OK=TRUE PYTHONUTF8=1
 mkdir -p "$OUT"
 git rev-parse HEAD > "$OUT/git_head.txt"
-sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
+sha256sum "$CK" </dev/null > "$OUT/checkpoint_sha256.txt"
 rc=0
 "$ENV/python.exe" -m foothold_s2.eval.eval_map_modes \
     --task FootholdS2-Go2-S2-SB-v0 --checkpoint "$CK" --out "$OUT" \
@@ -39,5 +39,5 @@ printf 'child_rc=%s\n' "$rc" > "$OUT/rc.txt"
     echo "W57 receipt missing or child failed" >&2
     exit 5
 }
-sha256sum "$OUT/axis_v2.json" > "$OUT/result_sha256.txt"
+sha256sum "$OUT/axis_v2.json" </dev/null > "$OUT/result_sha256.txt"
 echo "W57 output: $OUT/axis_v2.json"

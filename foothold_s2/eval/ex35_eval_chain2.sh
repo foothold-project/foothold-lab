@@ -65,7 +65,7 @@ run_stage() {   # $1=N $2=stage -> 0 이면 성공
   mkdir -p "$o"
   case "$st" in
     core)
-      [ -f "$o/checkpoint_sha256.txt" ] || sha256sum "$ck" > "$o/checkpoint_sha256.txt"
+      [ -f "$o/checkpoint_sha256.txt" ] || sha256sum "$ck" </dev/null > "$o/checkpoint_sha256.txt"
       MODES="eval_gt probe_prop_only" bash "$ROOT/foothold_s2/eval/run_sb_eval.sh" "$DEV" "$ck" "$o" < /dev/null; rc=$?
       grep -q "없음" "$o/rc.txt" 2>/dev/null && bad=1
       grep -E "rc=[1-9]" "$o/rc.txt" > /dev/null 2>&1 && bad=1
@@ -100,16 +100,16 @@ record_receipts() {   # $1=N
   local o="$OUTTOP/m$1" f
   {
     for f in foothold_s2/eval/ex35_gate.py foothold_s2/eval/judge_gate.py foothold_s2/eval/judge_stats.py foothold_s2/eval/ex35_eval_chain2.sh foothold_s2/eval/turn_probe.py foothold_s2/eval/turn_probe_plan.py foothold_s2/eval/run_sb_eval.sh foothold_s2/eval/eval_map_modes.py; do
-      sha256sum "$ROOT/$f" | sed "s#$ROOT/##"
+      sha256sum "$ROOT/$f" </dev/null | sed "s#$ROOT/##"
     done
     echo "head $(git -C "$ROOT" rev-parse HEAD)"
     echo "dirty $(git -C "$ROOT" status --short foothold_s2 | wc -l)"
-    [ -f "$o/ex35_verdict.json" ] && sha256sum "$o/ex35_verdict.json" | sed "s#.*/m$1/#verdict #"
+    [ -f "$o/ex35_verdict.json" ] && sha256sum "$o/ex35_verdict.json" </dev/null | sed "s#.*/m$1/#verdict #"
   } > "$o/judge_code_sha256.txt"
   : > "$o/inputs_list.txt"
   for f in map64/map_modes.json map64_eval_pred/map_modes.json hardlevel/L6/map_modes.json hardlevel/L9/map_modes.json \
            turn16_eval_gt/probe_result.json turn16_probe_prop_only/probe_result.json turn16_eval_pred/probe_result.json ex35_verdict.json; do
-    if [ -f "$o/$f" ]; then sha256sum "$o/$f" | sed "s#$o/##" >> "$o/inputs_list.txt"; else echo "MISSING $f" >> "$o/inputs_list.txt"; fi
+    if [ -f "$o/$f" ]; then sha256sum "$o/$f" </dev/null | sed "s#$o/##" >> "$o/inputs_list.txt"; else echo "MISSING $f" >> "$o/inputs_list.txt"; fi
   done
   for d in turn16_eval_gt turn16_probe_prop_only turn16_eval_pred; do
     for c in indep_left indep_right fwd_then_left fwd_then_right left_then_right right_then_left walk_turn_left walk_turn_right fwd0.5 fwd1.0; do
