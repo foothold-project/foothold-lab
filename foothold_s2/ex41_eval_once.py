@@ -71,6 +71,17 @@ def hidden_child(argv, folder, *, env=None, cwd=ROOT):
     return row
 
 
+def prepare_phase_output(argv):
+    """Create a fresh evaluator output directory before its Kit process starts."""
+    try:
+        output_index = argv.index('--out') + 1
+        output = Path(argv[output_index])
+    except (ValueError, IndexError) as exc:
+        raise ValueError('EX41 evaluator command must provide --out <directory>') from exc
+    output.mkdir(parents=True, exist_ok=False)
+    return output
+
+
 def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
@@ -103,6 +114,7 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
                 row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
                 continue
+            prepare_phase_output(phase['argv'])
             result = hidden_child(phase['argv'], out/'children'/phase['name'], env=env)
             row['steps'][phase['name']] = result
             _atomic(out/'eval_receipt.json', row)

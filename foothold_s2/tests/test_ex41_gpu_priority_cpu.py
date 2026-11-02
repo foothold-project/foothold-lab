@@ -85,9 +85,10 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
     monkeypatch.setattr(ex41_eval_once.subprocess, "check_output",
                         lambda *_args, **_kwargs: "" if "--short" in _args[0] else "head")
     monkeypatch.setattr(ex41_eval_once, "commands", lambda *_args: [
-        {"name": "map64", "argv": ["known-child"]}])
+        {"name": "map64", "argv": ["known-child", "--out", str(out / "map64")]}])
 
     def fake_child(*_args, **_kwargs):
+        assert (out / "map64").is_dir()
         row = json.loads(marker.read_text(encoding="utf-8"))
         observed.append(row)
         return {"rc": child_rc, "state": "done" if child_rc == 0 else "failed"}
