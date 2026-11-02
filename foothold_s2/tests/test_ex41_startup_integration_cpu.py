@@ -180,7 +180,7 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
         validate_rehearsal_request(10, output, "cuda:0", True)
 
 
-def test_initial_dr_is_seeded_before_each_existing_reset_event():
+def test_initial_dr_is_seeded_once_and_later_stage_scale_survives_resets():
     calls = []
     def event(env, env_ids=None):
         calls.append((env._ex40_dr_scale, env_ids))
@@ -195,6 +195,15 @@ def test_initial_dr_is_seeded_before_each_existing_reset_event():
     assert receipt["before_first_reset"] is True
     assert len(calls) == 3 and all(scale == 0.5 for scale, _ in calls)
     assert env._ex41_initial_dr_scale_applied == 0.5
+
+    # A later W72 stage may raise scale; the next reset must not put it back
+    # to the startup value before any of the existing DR consumers run.
+    env._ex40_dr_scale = 1.0
+    calls.clear()
+    for name in receipt["reset_terms"]:
+        getattr(cfg.events, name).func(env, env_ids=[1])
+    assert len(calls) == 3 and all(scale == 1.0 for scale, _ in calls)
+    assert env._ex40_dr_scale == 1.0
 
 
 def test_existing_dr_runtime_readback_is_set_to_half_before_rollout():
@@ -235,6 +244,14 @@ def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path):
     assert write_ex41_start_readback(run, receipt).is_file()
 
     env.unwrapped._ex41_initial_dr_scale_applied = 0.25
+    with pytest.raises(ValueError, match="first-reset DR readback"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+    env.unwrapped._ex41_initial_dr_scale_applied = 0.5
+    env.unwrapped._ex40_dr_scale = 0.25
+    with pytest.raises(ValueError, match="first-reset DR readback"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+    env.unwrapped._ex40_dr_scale = 0.5
+    runtime.scale = 0.25
     with pytest.raises(ValueError, match="first-reset DR readback"):
         verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
 

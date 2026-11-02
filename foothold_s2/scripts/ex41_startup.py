@@ -441,8 +441,11 @@ def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
             raise ValueError(f"EX-41 reset DR consumer missing: {name}")
 
         def seeded(env, *args, _func=func, **kwargs):
-            env._ex40_dr_scale = 0.5
-            env._ex41_initial_dr_scale_applied = 0.5
+            # Seed only at the first reset. Stage progression owns subsequent
+            # scale changes, and later environment resets must preserve them.
+            if getattr(env, "_ex41_initial_dr_scale_applied", None) is None:
+                env._ex40_dr_scale = 0.5
+                env._ex41_initial_dr_scale_applied = 0.5
             return _func(env, *args, **kwargs)
 
         term.func = seeded
