@@ -475,7 +475,27 @@ class StartRunner(OnPolicyRunner):
             it = curriculum_update_number(continuous, loop_it) if continuous is not None else loop_it
             curriculum_it = it
             if continuous is not None:
+                ex41_plan = getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                stage_before = (getattr(continuous, "effective", {}).get("stage_id")
+                                if ex41_plan else None)
                 continuous.on_update_start(curriculum_it)
+                stage_after = (getattr(continuous, "effective", {}).get("stage_id")
+                               if ex41_plan else None)
+                if (ex41_plan and stage_before and stage_after
+                        and stage_before != stage_after
+                        and self.log_dir is not None and not self.disable_logs):
+                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+
+                    try:
+                        request = publish_stage_end_request(
+                            self.log_dir, continuous, stage_name=stage_before,
+                            next_stage=stage_after, boundary_iteration=curriculum_it)
+                    except Exception as exc:
+                        request = {"state": "held", "reason": f"{type(exc).__name__}: {exc}",
+                                   "stage_name": stage_before, "next_stage": stage_after,
+                                   "boundary_iteration": curriculum_it}
+                    continuous._write({"event": "w78_video_request", **request})
+                    print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
                 if (getattr(getattr(continuous, "plan", None), "is_ex41", False)
                         and self.log_dir is not None and not self.disable_logs):
                     from foothold_s2.ex41_ops import deliver_pending_alerts, record_boundary
@@ -696,7 +716,23 @@ class StartRunner(OnPolicyRunner):
             self.save(checkpoint_path)
             self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
             if getattr(self, "continuous_curriculum", None) is not None:
-                self.continuous_curriculum.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+                final_runtime = self.continuous_curriculum
+                final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+                if (getattr(getattr(final_runtime, "plan", None), "is_ex41", False)
+                        and getattr(final_runtime, "finished", False)):
+                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+
+                    stage_name = getattr(final_runtime, "effective", {}).get("stage_id")
+                    try:
+                        request = publish_stage_end_request(
+                            self.log_dir, final_runtime, stage_name=stage_name,
+                            next_stage=None, boundary_iteration=self.current_learning_iteration)
+                    except Exception as exc:
+                        request = {"state": "held", "reason": f"{type(exc).__name__}: {exc}",
+                                   "stage_name": stage_name, "next_stage": None,
+                                   "boundary_iteration": self.current_learning_iteration}
+                    final_runtime._write({"event": "w78_video_request", **request})
+                    print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
             self.save_latest()
         self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
 
