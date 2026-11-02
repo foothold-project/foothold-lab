@@ -227,7 +227,7 @@ from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
 from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
-from foothold_s2.runners.status import write_status  # noqa: E402
+from foothold_s2.runners.status import read_status, write_status  # noqa: E402
 
 STATE = {"log_dir": None}  # 예외 때 상태 파일을 어디에 쓸지(main 이 정한다)
 
@@ -511,6 +511,22 @@ def main(env_cfg, agent_cfg):
     print("TRAIN_START_STATUS done", flush=True)
 
 
+def _record_ex41_process_alert(kind: str, *, rc: int | None = None,
+                               error: BaseException | None = None) -> None:
+    if EX41_PLAN is None:
+        return
+    log_dir = STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR")
+    if not log_dir:
+        return
+    status = read_status(str(log_dir)) or {}
+    update = next((status.get(key) for key in ("completed_updates", "iter", "iteration")
+                   if type(status.get(key)) is int), 0)
+    details = {"rc": rc} if rc is not None else {"fault_type": type(error).__name__}
+    from foothold_s2.ex41_ops import record_failure_alert
+
+    record_failure_alert(log_dir, kind, update, details, deliver=True)
+
+
 if __name__ == "__main__":
     # 실행 규칙 (10/20 start_gate 실측: app.close() 가 결과 기록 뒤 멈춘다):
     # 체크포인트 · 상태 파일을 쓴 뒤 env.close() · app.close() 를 부르지 않고 os._exit 로 끝낸다.
@@ -521,7 +537,10 @@ if __name__ == "__main__":
         main()
     except SystemExit as e:  # hydra 가 정상 끝에 SystemExit(0) 을 낼 수 있다
         code = 0 if e.code in (None, 0) else 1
-    except BaseException:
+        if code:
+            _record_ex41_process_alert("nonzero_process_exit", rc=code)
+    except BaseException as exc:
+        _record_ex41_process_alert("fatal_training_fault", error=exc)
         write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})
         code = 1
     sys.stdout.flush()

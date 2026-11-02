@@ -478,9 +478,10 @@ class StartRunner(OnPolicyRunner):
                 continuous.on_update_start(curriculum_it)
                 if (getattr(getattr(continuous, "plan", None), "is_ex41", False)
                         and self.log_dir is not None and not self.disable_logs):
-                    from foothold_s2.ex41_ops import record_boundary
+                    from foothold_s2.ex41_ops import deliver_pending_alerts, record_boundary
 
-                    record_boundary(continuous, self.log_dir, curriculum_it)
+                    record_boundary(continuous, self.log_dir, curriculum_it,
+                                    deliver=deliver_pending_alerts)
                 # Runtime state transitions happen at update boundaries. Stop
                 # before collecting another rollout after the terminal update.
                 if curriculum_finished(continuous):
