@@ -111,3 +111,15 @@ lead가61deb654 독립 재검에서 막음0·78개 재현을 보고했다. 추�
 확인됨: 큰 yaw1e6·거절 뒤 점수 재사용 반례2개는 수정 전2FAIL, 고친 뒤 관련6파일 **80PASS64.78초**. Git 파일 생성/대조가 늘어 시험 시간이 길어졌다. pyflakes·diff check 오류0. PPO 소비와 새 일정은 §13의 미확인 범위 그대로다. 이번 추가 고침도 GPU·실험 원장·EX40 실행 사본을 바꾸지 않았다.
 
 W86는 유한 입력도 제곱 비용에서 overflow가 날 수 있음을 답 아는 큰 torque 입력으로 재현(수정 전1실패). 파생 비용의 비유한 행도 env 단위 quarantine하고 집계는 float64로 올렸다. 기록이 마지막 flush에서 NaN 때문에 터지는 경로를 막았다. CPU 정상 env와 유효 집계 보존 확인. 전역 오류·Kit 한계는 위 절 그대로다. DR의 요청 배율과 실제 env별 물리 분포는 다르며, reset/interval 이벤트로 차츰 소비되므로 readback을 함께 확인해야 한다.
+
+## 15. 실제 PPO 소비 연결에서 발견한 공유 std 오염 · 11/02 13:57
+
+확인됨: scripter 고정본 `36f6cddf4eb7e34ba21a7c6a0aa95f34dbfc34bd`를 별도 읽기 사본 `C:/mai/wt/foothold-lab/analyst-ex41-consumer-36f6cddf`에 두고 실제 isaac311 PPO와 연결했다. `transition.action_sigma`가 정책 std의 expanded view여서, W86가 불량 행을1로 채우면 정책 전체 std가0.46에서1로 바뀌었다. dict·TensorDict 원본 보존2개와 실제 PPO 연결4개, **수정 전6FAIL8.91초**로 재현했다. 앞의 생산자 단위 통과는 이 통합 안전을 입증하지 못했다.
+
+고침: `_sanitize`는 원본을 수정하지 않고 별도 tensor 저장공간을 반환하며 transition 필드를 그 복사본으로 교체한다. 중첩 dict와 TensorDict의 형식·batch_size를 보존한다. 코드 공유나 실행 EX40 수정 없이 analyst 소유 `w86_runtime.py`만 고쳤다.
+
+확인됨: W86 runtime·비용·PPO bridge **35PASS6.90초**, 경고0, pyflakes·diff check 오류0. bridge는 거울 끔/켬과 일부/전부 격리 네 조합에서 pending을 비우기 전 bool[4] mask 전달, 정상 std0.46 보존, 정상 행 GAE/advantage, 손실·adaptive learning rate·갱신 뒤 parameter 동등성을 확인한다. 전부 격리면 optimizer 갱신0이다. 원본 observation도 보존한다. 시험 명령: `EX41_PPO_CONSUMER_ROOT`를 위 고정 사본으로 두고 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_w86_runtime_cpu.py foothold_s2/tests/test_w86_preparation.py foothold_s2/tests/test_ex41_ppo_bridge.py -q`.
+
+소비자 자체 시험도 별도 확인했다:16PASS2SKIP14.80초 후, 실제 m6000/m7500 경로·SHA·coordinate_metadata 환경변수로 누락된 부모 두 시험을 다시 실행해2PASS7.45초. 이 소비자와의 CPU 계약 확인이며, 전체 StartRunner·Kit·GPU·지각 replay/phi 손실의 격리까지 검증했다는 뜻이 아니다. 시작 설정 `ex41_w86_required=true`와 실행 진입점 연결은 runner 통합본에서 확인해야 한다. scripter 후속68cffa0f는 fixture/test만 바뀌었고 실행 파일 diff0이다.
+
+14:0x 확정 5000회·부모m6000·DR.5 시작·유지/재개 일정은 다음 별도 구현 단위다. 이 std 수정 커밋의 옛 일정 YAML로 본기동하지 않는다.
