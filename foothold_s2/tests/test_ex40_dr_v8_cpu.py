@@ -77,18 +77,18 @@ def test_range_interpolation_fixed_noise_and_startup_values_untouched():
     assert validate_full_ranges(fixture_ranges)["push_velocity"] == push
     assert DR_ITEMS == tuple(doc["domain_randomization"]["full_ranges"])
     smoke_config = require_smoke_ready(TABLE)
-    assert smoke_config.runtime_adapter_status == "implementation_in_progress"
+    assert smoke_config.runtime_adapter_status == "verified"
     with pytest.raises(ValueError, match="runtime adapter is not verified"):
-        DRConfig.from_mapping(cfg, require_launchable=True)
+        DRConfig.from_mapping(dict(cfg,runtime_adapter_status='implementation_in_progress'), require_launchable=True)
 
 
 def test_empty_ranges_refuse_launch_and_filled_fixture_is_valid(tmp_path):
     doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
     cfg = doc["domain_randomization"]
-    assert cfg["runtime_adapter_status"] == "implementation_in_progress"
+    assert cfg["runtime_adapter_status"] == "verified"
     assert cfg["observation_noise"] == {"mode": "fixed", "multiplier": 1.0}
     with pytest.raises(ValueError, match="runtime adapter is not verified"):
-        DRConfig.from_mapping(cfg, require_launchable=True)
+        DRConfig.from_mapping(dict(cfg,runtime_adapter_status='implementation_in_progress'), require_launchable=True)
     assert set(validate_full_ranges(_synthetic_ranges())) == set(DR_ITEMS)
 
     table = tmp_path / "ex40-v8-fixture.yaml"
@@ -99,10 +99,13 @@ def test_empty_ranges_refuse_launch_and_filled_fixture_is_valid(tmp_path):
     assert DRConfig.from_mapping(yaml.safe_load(table.read_text(encoding="utf-8"))["domain_randomization"],
                                  require_launchable=True).length_d == 1500
 
+    doc['domain_randomization']['runtime_adapter_status']='implementation_in_progress'
+    unverified=tmp_path/'unverified.yaml'
+    unverified.write_text(yaml.safe_dump(doc),encoding='utf-8')
     with pytest.raises(SystemExit):
         main(["--arm", "B", "--device", "cuda:0", "--end-by", "2026-11-05T12:00:00+09:00",
               "--log-root", str(tmp_path / "logs"), "--score-dir", str(tmp_path / "scores"),
-              "--table", str(TABLE), "--print-args"])
+              "--table", str(unverified), "--print-args"])
 
 
 def test_resume_scale_round_trip_and_rejects_different_plan():
@@ -570,7 +573,7 @@ def test_d76_push_range_is_set_while_other_ranges_keep_launch_blocked(tmp_path):
     assert cfg["push_interval_s"] == [10.0, 15.0]
     assert require_smoke_ready(TABLE).full_ranges == cfg["full_ranges"]
     with pytest.raises(ValueError, match="runtime adapter is not verified"):
-        DRConfig.from_mapping(cfg, require_launchable=True)
+        DRConfig.from_mapping(dict(cfg,runtime_adapter_status='implementation_in_progress'), require_launchable=True)
     broken = dict(cfg, full_ranges=dict(cfg["full_ranges"], motor_strength=None))
     broken_doc = yaml.safe_load(Path(TABLE).read_text(encoding="utf-8"))
     broken_doc["domain_randomization"] = broken

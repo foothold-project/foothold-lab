@@ -48,6 +48,23 @@ W86 생산부는 `FatalTrainingFault(ValueError)`와 `ex41_fatal.jsonl`을 제�
 
 W53에서 막힌 `basic_gait_bundle.validate_settings(... feet_regulation_weight=...)`는 별개의 지면 기준 어댑터다. 0이나 음의 가중을 넘겨도 기존 거절이 유지된다. **그 어댑터가 검증됐다고 쓰지 않는다.** 현재 foot_slip는 접촉력 크기 >1 N인 발 링크의 세계 XY 속도 제곱 합이다. 지면 법선에 투영한 접선 속도나 접촉점의 회전 속도까지 포함한 참 미끄럼량은 아니다. 경사면·움직이는 바닥 해석에는 한계가 있으며, 이에 대한 새 보상 연결은 이번 범위에 없다. 실제 Kit 계측은 미확인이다.
 
+## U17 · 제외된 8 FAIL의 처분
+
+직접 재현: 지정된 `test_ex40_dr_v8_cpu.py`·`test_ex40_launch_smoke_cpu.py`·`test_ex40_v7_continue_cpu.py`는 8 FAIL·26 PASS(12.81초). **원자료를 재기 전까지 단순한 옛 시험이라고 가정하지 않았다.** 실패별 처분은 다음과 같다.
+
+| 실패 시험 | 확인한 차이 | 처분 |
+|---|---|---|
+| dr_v8: range_interpolation | 실제 설정은 verified, 시험은 implementation_in_progress 기대 | 실제 verified 확인 + 별도 미검증 입력 거절 유지 |
+| dr_v8: empty_ranges | 위와 같은 상태 기대, main 거절에 정본을 사용 | D: 시험용 미검증 YAML을 명시해서 거절 검증 |
+| dr_v8: d76_push_range | 완성된 범위인데 미검증 거절 기대 | 완성 범위는 읽고 상태만 바꾼 반례로 거절 |
+| launch_smoke: official_smoke | 11/1 기한이 지나 실패 | CPU 영수증용 유효 기한 생성, 과거 기한 거절 시험 추가 |
+| launch_smoke: official_main | 실제 verified 정본을 미검증으로 기대 | 미검증 YAML을 명시, 시작 전 거절 유지 |
+| launch_smoke: official_resume | 실제 verified라 파일을 읽음 | 미검증 YAML에서 spec 읽기 전 거절 확인 |
+| v7_continue: resume_cli | 정해둔 일정이 현재 시각의 여유 검사를 못 넘음 | 시험 안 계약 시계만 10/28로 고정 |
+| v7_continue: resume_preparation | 위와 같음 | 같은 고정 시계로 계약 확인 |
+
+수정 뒤 세 파일 **35 PASS(15.23초)**. 구현·정본 YAML·학습 프로세스는 변경하지 않았다. 미검증 설정 거절·지난 기한 거절·비실행 CPU 영수증 검사를 남겼으며 skip/xfail로 가리지 않았다. 원자료 `D:/mai-tmp/analyst/u17-existing-1844.{log,xml}`와 `u17-fixed-1847.{log,xml}`. 이 결과는 세 파일 범위이며 저장소 전체 또는 Kit 통과가 아니다.
+
 ## 남은 항목
 
 U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.

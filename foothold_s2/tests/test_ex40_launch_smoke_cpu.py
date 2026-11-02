@@ -7,6 +7,9 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from datetime import datetime,timedelta,timezone
+import yaml
+from foothold_s2.ex40_launch import TABLE
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,7 +19,7 @@ def _launch(tmp_path: Path, *extra: str) -> subprocess.CompletedProcess[str]:
     args = [
         sys.executable, "-m", "foothold_s2.ex40_launch",
         "--arm", "B", "--device", "cuda:0",
-        "--end-by", "2026-11-01T00:00:00+09:00",
+        "--end-by", (datetime.now(timezone.utc)+timedelta(days=10)).isoformat(),
         "--log-root", str(tmp_path / "logs"),
         "--score-dir", str(tmp_path / "scores"),
         *extra,
@@ -42,15 +45,28 @@ def test_official_smoke_cli_emits_bounded_cpu_receipt(tmp_path: Path) -> None:
 
 
 def test_official_main_cli_still_refuses_unverified_adapter(tmp_path: Path) -> None:
-    result = _launch(tmp_path)
+    result = _launch(tmp_path,"--table",str(_unverified_table(tmp_path)))
     assert result.returncode == 2
     assert "runtime adapter is not verified" in result.stderr
     assert not (tmp_path / "logs").exists()
 
 
 def test_official_resume_cli_still_refuses_before_reading_spec(tmp_path: Path) -> None:
-    result = _launch(tmp_path, "--resume-spec", str(tmp_path / "missing-resume.json"))
+    result = _launch(tmp_path, "--resume-spec", str(tmp_path / "missing-resume.json"),
+                     "--table",str(_unverified_table(tmp_path)))
     assert result.returncode == 2
     assert "runtime adapter is not verified" in result.stderr
     assert "missing-resume.json" not in result.stderr
+
+
+def _unverified_table(tmp_path):
+    doc=yaml.safe_load(TABLE.read_text(encoding='utf-8'))
+    doc['domain_randomization']['runtime_adapter_status']='implementation_in_progress'
+    path=tmp_path/'unverified.yaml';path.write_text(yaml.safe_dump(doc),encoding='utf-8')
+    return path
+
+
+def test_expired_deadline_remains_rejected(tmp_path):
+    result=_launch(tmp_path,'--smoke','--end-by','2000-01-01T00:00:00+00:00')
+    assert result.returncode!=0 and 'deadline has passed' in result.stderr
     assert not (tmp_path / "logs").exists()

@@ -242,7 +242,10 @@ def test_latest_malformed_checkpoint_records_reason_and_falls_back(tmp_path):
     assert "cannot be loaded" in row["rejected_candidates"][0]["reason"]
 
 
-def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path):
+def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path,monkeypatch):
+    from foothold_s2 import sol23f_contract
+    from datetime import datetime,timezone
+    monkeypatch.setattr(sol23f_contract,'time',NS(time=lambda:datetime(2026,10,28,tzinfo=timezone.utc).timestamp()))
     _, checkpoint, digest, _, _ = _known_checkpoint(tmp_path)
     parent = {"checkpoint": str(checkpoint), "checkpoint_sha256": digest}
     original_args = build_args(arm="B", device="cuda:0", end_by="2026-11-05T12:00:00+09:00",
@@ -259,7 +262,10 @@ def test_resume_cli_is_prepared_with_sha_deadline_and_no_execution(tmp_path):
         validate_deadline("2026-11-01T00:00:00+09:00", "2026-11-01T23:59:00+09:00")
 
 
-def test_resume_preparation_reuses_source_contract_and_records_segment(tmp_path):
+def test_resume_preparation_reuses_source_contract_and_records_segment(tmp_path,monkeypatch):
+    from foothold_s2 import sol23f_contract
+    from datetime import datetime,timezone
+    monkeypatch.setattr(sol23f_contract,'time',NS(time=lambda:datetime(2026,10,28,tzinfo=timezone.utc).timestamp()))
     _, checkpoint, digest, _, _ = _known_checkpoint(tmp_path)
     log_root = tmp_path / "logs"
     score_dir = tmp_path / "scores"
