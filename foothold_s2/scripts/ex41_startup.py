@@ -1,4 +1,4 @@
-﻿"""CPU-safe EX-41 launch and score-contract helpers.
+"""CPU-safe EX-41 launch and score-contract helpers.
 
 This module does not start Isaac or a simulator. The entrypoint uses these
 checks before AppLauncher and the simulator setup after authorization.
@@ -1206,4 +1206,3 @@ def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
     temp.write_text(json.dumps(result, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     temp.replace(target)
     return target
-
