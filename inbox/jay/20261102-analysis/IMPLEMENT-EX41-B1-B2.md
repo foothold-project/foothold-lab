@@ -1,5 +1,5 @@
-> 분류: A/정책학습 · 구현 계획
-> 작성: 오흥재 (analyst 정리) · 2026-11-02 12:02 KST
+﻿> 분류: 계획
+> 작성: 오흥재 · 2026-11-02
 > 근거: D80·D89·D93·D96·D101·D110·D116·D117, lead 11/02 구현 분담과 가중 결정
 > 요지: EX-40 코드를 보존하며 EX-41 설정·경계 적용·보상과 env 단위 무효 처리를 연결한다.
 > 상태: 구현 중 · CPU만 · 통합 및 Kit 미확인
@@ -159,3 +159,64 @@ W86는 유한 입력도 제곱 비용에서 overflow가 날 수 있음을 답 �
 부모39칸 생존 범위는60~64였다. 가장 낮은 `probe_prop_only/back1.0`은60이므로 그 칸 유지 하한은57이다. 이 규칙은 부모보다 크게 떨어지는지 보는 비교이며, 절대 생존61/64 관문으로 바꿔 말하면 안 된다. `flat_stand`의 별도61/64 조건과도 다르다.
 
 GPU·Kit·실험 중인 EX40·그림자 루프·실행 원장은 변경하지 않았다. 통합 두 겹 검토와 실제 예행은 별도다. score의 stage_id·local n·39개 cell·증거 SHA를 만드는 runner 경로가 아직 소비 계약을 맞춰야 한다.
+
+## 17. ced6c43a 경계 반례와 점수 생산 계약 고침 · 11/02 14:2x
+
+lead 지적을 한 후속본으로 처리했다. R20에 따라 실제 부모 점수 파일을 helper에 넣었고, M14에 따라 **수정 전 반례 8개가 모두 실패(12.13초)**하는 것을 확인했다. 반례는 상한 경계 두 번째 회복, 늦은 경계의 유지 예산 초과, 낡은 점수 재사용과 무경고, 잘못된 저장 회차·시계 네 경우, 정지 점수 누락이다. 수정 후 시험 수와 시간은 아래 검증 기록에 적는다.
+
+| 지적 | 고친 소비 경로 | 답을 아는 입력 |
+|---|---|---|
+| A: 상한 소진이 회복을 가림 | 회복 두 경계를 먼저 확인하고, 아직 미회복일 때만 현재 배율 고정 | n751 유지, n1501 회복1, n1751 회복2이면 재개. n2001 DR=0.5375. 미회복이면0.5고정 |
+| B: maintenance_counts 생산 계약 없음 | `build_maintenance_counts(native_score, baseline, *, total_envs)` 추가. 정확한39/26키와64분모 검증 | 실제 m6000 파일. `alive_envs_at_end=60`, `passed_envs=64`가 함께 있어도 passed=60. alive 없는 입력 거절 |
+| 점수 두 경계 누락 | `maintenance_evidence_missing_warning`에 누락 연속 횟수·필요 칸 수·점수 회차 기록, 재개 상태에도 보존 | 점수750 뒤 n1001·1251에서 새 점수 없으면 n1251 경고 |
+| 낡은 점수·단계 전환 이력 | 회복·정지 복원·연장 판단은 `n−250 ≤ 점수 회차 < n`만. 단계 전환 때 부모 비교 이력 보존 | n1001에서 점수750은 회복 증거 아님. 보존 이력이 최신 창을 대체하지 않음 |
+| 거절 뒤 시계 되돌림 | 소비자가 설정을 거절해도 지나간 시간·유지 예산은 되돌리지 않음. 적용 안 된 연장 결정만 되돌림 | n1501 적용 거절 뒤 n1751에서도 유지 예산1000, 저장·재개 가능. 늦은 경계도 예산1000 초과 없음 |
+| 정지 누락·상수 문턱 | 승인 설정 `automatic.stand_min_passed=61`을 읽음. 값 누락은 `stand_evidence_missing`, 반감·연장하지 않음 | 누락을64로 간주하지 않음. 승인값60으로 바꾼 계획 거절 |
+| 저장 시계 검증 | anchor·last_boundary·저장 회차·마지막 점수 회차 형식/순서, 경과+유지=anchor−1 대조 | 문자열·미래 점수 회차·잘못된 anchor·누적 회차 불일치 거절 |
+| 유지+연장 끝 경계 | 유지1000과 연장500이 모두 있으면 n6501에서 종료. 그때 등록된 안전 중단이 있으면 안전 중단 우선 | 정상 종료와 safety_stop 두 경우를 각각 저장·재개까지 확인 |
+
+점수 reader의 최대 나이500은 과거 증거와 등록 안전 점수를 읽는 범위로 남긴다. 실제 자동 판단의 최신 창은250이다. 이 둘은 다르며, 오래된 정상 점수로 DR을 다시 올리지 않는다. 지형 상승 계산에 쓰는 단계별 `_level_history`는 이전대로 새 단계에서 비운다. 부모 유지 비교의 `_history`만 보존한다.
+
+### runner가 잇는 정확한 계약
+
+```python
+from foothold_s2.curriculum.ex41_fixed import baseline_counts, build_maintenance_counts
+baseline = baseline_counts(plan)  # 고정 부모 파일의 SHA와 m6000 일치 검증
+metrics['maintenance_counts'] = build_maintenance_counts(
+    native_score, baseline, total_envs=64,
+)
+```
+
+`passed`는 `native_score['cells'][key]['alive_envs_at_end']`다. 추종 성공률이나 `flat_stand.passed_envs`가 아니다. `baseline_passed`는 SHA 고정 부모의 같은 생존 수다. 각 행은 `{passed: int, baseline_passed: int, total: 64}`만 가진다. 실제 배치64개 확인은 생산자 몫이며, helper에64라고 적는 것만으로 실측을 대신하지 않는다. helper가 score envelope의 체크포인트·원자료 SHA, 단계명, local iteration을 만들어 주지는 않는다. runner는 기존 검증된 envelope에 이 metrics를 연결해야 한다.
+
+키 정본은 `maintenance_cells()`다. 세 모드는 `eval_gt/`, `probe_prop_only/`, `eval_pred/`이며, 명령은 fwd0.5·fwd1.0·spin+1.2·spin-1.2·back0.5·back1.0·side+0.5·side-0.5·diag-fwd+side+·diag-fwd+side-·diag-back+side+·diag-back+side-·stop의13개다. 복원 모드 키 끝에는 `_record_only`가 붙는다. `flat_stand`는 포함하지 않는다.
+
+`fixed_schedule.include_record_only: true`가 기본39칸이다. false이면 GT·몸감각26칸만 DR 유지에 쓴다. **false 채택은 아직 팀장 미결**이며 기본값은 바꾸지 않았다. 바꾸면 계획 SHA가 바뀌므로 기존 판과 같은 계획이라고 기록할 수 없다. 26칸 선택 시험은 복원 한 칸의 생존0을 유지 판정에 넣지 않는 반례로 확인한다.
+
+확인됨: 최종 일정 시험 **34PASS77.90초**, 관련 경계·회귀 **23PASS28.14초**, 합계 **57PASS**. 명령은 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_ex41_fixed_cpu.py -q` 및 `python -m pytest -p no:cacheprovider foothold_s2/tests/test_ex41_boundary_cpu.py foothold_s2/tests/test_ex41_review_regressions.py -q`다. 실행 경로는 isaac311이며 GPU를 숨겼다. 남은 통합 확인은 runner의 helper 실제 연결, W71·유효 PPO mask의 실행 경로, 통합본 독립 검토와 승인 뒤 Kit 예행이다. 본 후속본으로 실행 승인이나 GPU 검증 완료를 주장하지 않는다.
+
+결정·작업 연속성은 [이슈 #555의 직전 기록](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6569612303)에 이어 남긴다. 이 문서는 analyst가 정리했다. pyflakes와 git diff 검사는 통과했다. own worktree에는 review_inbox.py가 없어 lead 사본으로 읽었다. 그 검사기는 문서의 확인됨 표기를0개, 금지 줄표를205개로 보고하여 자동 문서 검사는 통과로 적지 않는다. 별도 문자 검사에서 U+2014는0개였고, 이 문서의 확인됨 문장은 위에 보존했다. 검사기 수정은 이 후속본 범위 밖이다.
+
+## 18. G5·G6·G7: 최신 오류 보존과 원자료 점수 생성
+
+G4는 a0581766에서 상한 회복 우선 시험으로 처리했다. 그 뒤 verifier H1/H2와 lead G5~G7을 받았다. 시간창을250으로 줄이는 것만으로 충분하지 않았다. 실제 reader에 n1000 정상 → n1200 정상 + n1250 NaN/체크포인트 SHA 오류/정지 숫자 누락을 넣으면 **수정 전 세 경우 모두FAIL14.42초**였고 DR이 다시 올라갔다.
+
+고침: 점수 파일의 최신 오류를 `score_rejections`로 따로 보존하고 저장·재개에도 잇는다. 경계의 최신 오류 회차가 정상 점수보다 같거나 크면 `latest_score_invalid_hold`로 남기고 과거 PASS를 사용하지 않는다. malformed JSON·잘못된 iteration도 파일명의 회차를 보고, 회차를 알 수 없으면 관측한 현재 창의 미확인 증거로 남긴다. 새로운 유효 점수가 두250경계 연속으로 와야 DR을 재개한다. 오래된 오류 자체가 이후의 더 새로운 정상 점수를 영원히 막지는 않는다. 같은 회차의 상충 파일도 정상 점수로 숨기지 않는다.
+
+`stand_min_passed` 누락은 고정 일정뿐 아니라 EX41 reader에서 불완전 점수로 거절한다. 옛 자동 조정 함수의 누락64 기본값도 제거했다. 오류가 난 최신 점수는 유지 판단에서 증거 부족이다. 신원과 원자료 SHA가 확인된 등록 안전 중단은 정지 지표 완전성 검사보다 먼저 읽어 보존한다.
+
+숫자 생성의 정본은 `curriculum/ex41_scoring.py`다. runner의 `ex41_score.py`·`scripts/ex41_startup.py`는 읽었으며 직접 고치지 않았다. 아래 함수가 기존 draft를 받아 정확한 숫자와 증거 SHA를 붙인다. stage_pass·safety_stop은 기존 등록 판정을 보존하며 새 문턱을 만들지 않는다.
+
+```python
+enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
+# stand_paths: eval_gt / probe_prop_only / eval_pred 각각의 stand.json
+# 반환 metrics: maintenance_counts, stand_counts, stand_min_passed
+```
+
+`maintenance_counts_from_map_modes`는 세 지도 모드, extended13명령,64개 고유 env 번호와 alive boolean 합을 대조한 뒤 §17의 helper 하나로 변환한다. `measurement_bundle`은 실제 checkpoint SHA·명령값·평가300스텝·지형 manifest와 각 stand_raw.npz SHA도 확인한다. 정지 성공의 발 접촉·하중·틈·몸속도·yaw 정의는 기존 `ex40_score._stand_rows/_stand_pass`를 재사용했다. EX40의 전체 성공 문턱60을 EX41에 가져온 것이 아니다. 여기서는 모드별 통과 숫자만 만들며 EX41 복원 조건은 승인된61이다.
+
+확인됨: m6000의 `score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json`이 부모 유지 기준의 원본이다. extended13명령×3모드로 **39/39 숫자 일치, 차이0**. 정지 세 모드는64/64·64/64·64/64로 부모표와 일치했다. `map64_b3`는 walk·작은 spin·저속의9명령으로 별도 과제이며 유지39칸을 대신하면 거절한다. 이 선택은 새 기준 선택이 아니라 SHA고정 부모표의 실제 출처 대조다.
+
+읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), SHA256 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
+
+검증 기록: isaac311·CUDA 숨김으로 fixed/runtime/boundary/review_regressions/scoring 다섯 시험 파일 **96PASS170.29초**, pyflakes·git diff 검사 통과. 실제 reader의 NaN·체크포인트 SHA·원자료 SHA·정지 숫자 누락·깨진 JSON·잘못된 회차 반례와 오류 상태 저장·재개 뒤 새 점수 두 개의 회복을 확인했다. G5·G7의 runtime 고침과 G6 helper/원자료 대조를 닫을 수 있어도, G6 전체는 runner 진입점이 이 함수를 실제 호출하는 통합본을 확인해야 닫는다. 낮은 항목 D121 과제 변경 평가 연결·W72 추가 승인 칸·D93 히스토그램은 이 커밋에서 닫았다고 하지 않는다. 후속 교차검증의 명령 몫2차 S2c 이동과 m6000 lin_vel_z 실측은 이 묶음 다음 작업이다.

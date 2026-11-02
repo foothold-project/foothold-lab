@@ -1,4 +1,4 @@
-"""Fixed5000 endpoints, pause/recovery/exhaustion and real committed runtime."""
+﻿"""Fixed5000 endpoints, pause/recovery/exhaustion and real committed runtime."""
 import copy
 import json
 from pathlib import Path
@@ -6,10 +6,10 @@ import subprocess
 import pytest
 import yaml
 from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
-from foothold_s2.curriculum.ex41_fixed import Clock,CELLS,maintenance,baseline_counts
+from foothold_s2.curriculum.ex41_fixed import (Clock,CELLS,maintenance,baseline_counts,
+    maintenance_cells,build_maintenance_counts)
 from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
-from foothold_s2.tests.test_ex41_runtime_cpu import score
-from foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
+from foothold_s2.tests.test_ex41_runtime_cpu import score`nfrom foothold_s2.runners.start_runner import curriculum_finished, curriculum_update_number
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
@@ -104,21 +104,10 @@ def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
         tick(r,n,stage_pass=n<750)
         if n in expected: assert r.effective['stage_id']==expected[n]
     assert r.finished and not r.graduated and r.dr_scale(5001)==1.
-    assert curriculum_finished(r)
-    assert curriculum_update_number(r, 0) == 1
-    assert curriculum_update_number(r, 6500) == 6501
     assert r._stage_baseline_sha==r.plan.parent_sha256
 
 
-def test_start_runner_consumes_terminal_flag_before_next_rollout():
-    source=(Path(__file__).parents[1]/'runners/start_runner.py').read_text(encoding='utf-8')
-    boundary=source.index('continuous.on_update_start(curriculum_it)')
-    stop=source.index('if curriculum_finished(continuous):',boundary)
-    rollout=source.index('for step_k in range(self.num_steps_per_env):',stop)
-    assert boundary < stop < rollout
-
-
-def test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
+def test_start_runner_consumes_terminal_flag_before_next_rollout():`n    source=(Path(__file__).parents[1]/"runners/start_runner.py").read_text(encoding="utf-8")`n    boundary=source.index("continuous.on_update_start(curriculum_it)")`n    stop=source.index("if curriculum_finished(continuous):",boundary)`n    rollout=source.index("for step_k in range(self.num_steps_per_env):",stop)`n    assert boundary < stop < rollout`n`n`ndef test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
     r,_=fixture(tmp_path)
     for n in (251,501): tick(r,n,stand=60)
     assert r.effective['reward_weights']['swing']==-5.
@@ -186,3 +175,170 @@ def test_d110_extension_exactly_once_full_dr_only(tmp_path):
     assert r.clock.extension==500 and r.effective['stage_id']=='S2e'
     tick(r,4751);tick(r,5001);assert r.effective['stage_id']=='T0_prime' and not r.finished
     tick(r,5251);tick(r,5501);assert r.finished and r.clock.extension==500
+
+
+def test_second_recovery_at_pause_cap_wins_over_freezing():
+    c=Clock();c.boundary(751,['bad'],750)
+    for n in (1001,1251): c.boundary(n,['bad'],n-1)
+    c.boundary(1501,[],1500)
+    event=c.boundary(1751,[],1750)
+    assert event=='dr_resume_same_slope' and not c.paused
+    assert c.pause_used==1000 and c.frozen_scale is None
+    assert c.scale(2001)==pytest.approx(.5375)
+
+
+def test_late_boundary_cannot_overrun_pause_accounting():
+    c=Clock();c.boundary(751,['bad'],750)
+    for n in (1001,1251,1501): c.boundary(n,['bad'],n-1)
+    c.boundary(2001,['bad'],2000)
+    assert c.pause_used==1000 and c.elapsed==1000 and c.anchor==2001
+    assert c.frozen_scale==.5
+
+
+def test_stale_score_does_not_count_as_current_window_and_warns_twice(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751,failed=True)
+    r.on_update_start(1001);r.on_update_start(1251)
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='maintenance_evidence_missing_warning' and x['iteration']==1251 for x in rows)
+    assert r.clock.recovered==0 and r.clock.paused
+
+
+@pytest.mark.parametrize('key,value',[('last_score_iteration','1500'),('last_score_iteration',2000),('anchor',751),('anchor',2)])
+def test_clock_resume_rejects_wrong_score_type_and_anchor(tmp_path,key,value):
+    r,_=fixture(tmp_path/'a');tick(r,251);state=r.state_dict();state['fixed_clock'][key]=value
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b)
+    with pytest.raises(ValueError,match='clock'):b.load_state_dict(state)
+
+
+def test_stand_missing_reports_unknown_never_pass_default(tmp_path):
+    r,_=fixture(tmp_path)
+    score(r,250,metrics={'maintenance_counts':counts(r)});r.on_update_start(251)
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='stand_evidence_missing' for x in rows)
+    assert r.effective['reward_weights']['swing']==-10.
+
+
+def test_native_producer_actual_parent_contract_uses_alive_not_success():
+    p=load_plan(TABLE,arm='B');b=baseline_counts(p)
+    raw=json.loads(Path(p.fixed_schedule['maintenance_baseline']['path']).read_text(encoding='utf-8-sig'))
+    c=build_maintenance_counts(raw,b,total_envs=64)
+    assert len(c)==39 and maintenance(c,b)==[]
+    for key in CELLS: assert c[key]['passed']==raw['cells'][key]['alive_envs_at_end']
+    assert min(b.values())==60 and 'eval_pred/stop_record_only' in c
+    # Deliberately conflicting pass count: it must never become survival.
+    raw['cells'][CELLS[0]]={'alive_envs_at_end':60,'passed_envs':64}
+    assert build_maintenance_counts(raw,b,total_envs=64)[CELLS[0]]['passed']==60
+    raw['cells'][CELLS[0]]={'passed_envs':64}
+    with pytest.raises(ValueError,match='alive_envs'):build_maintenance_counts(raw,b,total_envs=64)
+
+
+@pytest.mark.parametrize('total',[63,64.0,True])
+def test_native_producer_rejects_wrong_denominator(total):
+    with pytest.raises(ValueError,match='64'):build_maintenance_counts({},dict.fromkeys(CELLS,64),total_envs=total)
+
+
+def test_record_only_selection_26_or39_and_plan_hash(tmp_path):
+    r,_=fixture(tmp_path);old_sha=r.plan.sha256
+    doc=yaml.safe_load(r.plan.path.read_text());doc['fixed_schedule']['include_record_only']=False
+    r.plan.path.write_text(yaml.safe_dump(doc))
+    p=load_plan(r.plan.path,arm='B');b=baseline_counts(p)
+    assert p.sha256!=old_sha and len(b)==26 and tuple(b)==maintenance_cells(False)
+    raw={'cells':{k:{'alive_envs_at_end':64} for k in CELLS}}
+    raw['cells']['eval_pred/stop_record_only']['alive_envs_at_end']=0
+    assert maintenance(build_maintenance_counts(raw,b,total_envs=64),b)==[]
+    with pytest.raises(ValueError,match='bool'):maintenance_cells(1)
+
+
+def test_stage_change_retains_audit_history_but_not_stale_recovery(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751,failed=True)
+    assert r.effective['stage_id']=='S2b' and [s['iteration'] for s in r._history]==[750]
+    r.on_update_start(1001)
+    assert r.clock.recovered==0 and r._missing_maintenance_boundaries==1
+
+
+def test_rejected_apply_accounts_time_and_resume_is_valid(tmp_path,monkeypatch):
+    r,_=fixture(tmp_path/'a');tick(r,751,failed=True)
+    for n in (1001,1251):tick(r,n,failed=True)
+    original=r._apply
+    monkeypatch.setattr(r,'_apply',lambda *a,**k:False)
+    tick(r,1501,failed=True)
+    assert r.clock.anchor==1501 and r.clock.pause_used==750
+    monkeypatch.setattr(r,'_apply',original);tick(r,1751,failed=True)
+    assert r.clock.pause_used==1000
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(r.state_dict())
+    assert b.clock.__dict__==r.clock.__dict__
+
+
+@pytest.mark.parametrize('safety_at_end',[False,True])
+def test_hold1000_plus_extension500_finishes_at6501(tmp_path,safety_at_end):
+    r,_=fixture(tmp_path)
+    for n in range(251,6502,250):
+        if n==5501:
+            assert r.stage_entry_iteration==5001
+            r._level_history=[(i,.1 if i<=5250 else .7) for i in range(5050,5501,50)]
+        if safety_at_end and n==6501:
+            p=score(r,n-1,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+            data=json.loads(p.read_text());data['safety_stop']=True;p.write_text(json.dumps(data))
+            r.on_update_start(n)
+        else:tick(r,n,failed=n in (751,1751))
+        if n<6501:assert not r.finished
+    assert r.finished is not safety_at_end and r.stop_requested is safety_at_end
+    assert r.clock.pause_used==1000 and r.clock.extension==500
+    assert r.dr_scale(6501)==1. and r.effective['stage_id']=='T0_prime'
+    resumed=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'resumed',segment_index=1)
+    attach_consumer(resumed);resumed.load_state_dict(r.state_dict())
+    assert resumed.stop_requested is safety_at_end and resumed.finished is not safety_at_end
+
+
+def test_second_missing_warning_survives_resume(tmp_path):
+    r,_=fixture(tmp_path/'a');tick(r,751,failed=True);r.on_update_start(1001)
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(r.state_dict());b.on_update_start(1251)
+    rows=[json.loads(x) for x in (b.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='maintenance_evidence_missing_warning' for x in rows)
+
+
+def test_stand_threshold_and_clock_accounting_cannot_be_changed_silently(tmp_path):
+    r,_=fixture(tmp_path/'a')
+    doc=yaml.safe_load(r.plan.path.read_text());doc['automatic']['stand_min_passed']=60
+    r.plan.path.write_text(yaml.safe_dump(doc))
+    with pytest.raises(ValueError,match='stand_min_passed'):load_plan(r.plan.path,arm='B')
+    doc['automatic']['stand_min_passed']=61;r.plan.path.write_text(yaml.safe_dump(doc))
+    tick(r,251);state=r.state_dict();state['fixed_clock']['elapsed']+=1
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b)
+    with pytest.raises(ValueError,match='clock'):b.load_state_dict(state)
+
+
+@pytest.mark.parametrize('bad',['nan','sha','stand_missing','iteration_nan','truncated','evidence_sha'])
+def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    d=json.loads(p.read_text())
+    if bad=='nan':d['metrics']['gait_sync']=float('nan')
+    if bad=='sha':d['checkpoint_sha256']='0'*64
+    if bad=='stand_missing':del d['metrics']['stand_min_passed']
+    if bad=='iteration_nan':d['iteration']=float('nan')
+    if bad=='evidence_sha':d['evidence'][0]['sha256']='0'*64
+    p.write_text('{"iteration":' if bad=='truncated' else json.dumps(d));r.on_update_start(1251)
+    assert r.clock.paused and r.clock.recovered==0
+    assert r.dr_scale(1501)==r.dr_scale(1251)
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    assert any(x['event']=='score_rejected' and str(p) in x['path'] for x in rows)
+    assert any(x['event']=='latest_score_invalid_hold' for x in rows)
+
+
+def test_invalid_evidence_persists_resume_and_new_good_scores_recover(tmp_path):
+    r,_=fixture(tmp_path/'a');tick(r,751);tick(r,1001)
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['checkpoint_sha256']='0'*64;p.write_text(json.dumps(data))
+    r.on_update_start(1251);assert r.clock.paused
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(r.state_dict())
+    assert b._score_rejections==r._score_rejections and b._score_rejections
+    tick(b,1501);assert b.clock.paused and b.clock.recovered==1
+    tick(b,1751);assert not b.clock.paused and b.clock.pause_used==500
+

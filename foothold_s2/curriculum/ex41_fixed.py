@@ -176,6 +176,11 @@ class EX41FixedRuntime(EX41Runtime):
                     values['reward_weights'][d['path'].split('.')[1]]=d['after']
         fresh=[r for r in self._history if n-r['iteration']<=self.plan.gate_cfg['maximum_score_age']]
         score=fresh[-1] if fresh else None
+        invalid=[r['iteration'] for r in self._score_rejections.values() if n-250<=r['iteration']<n]
+        if invalid and (score is None or max(invalid)>=score['iteration']):
+            self._write({'event':'latest_score_invalid_hold','iteration':n,
+                         'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
+            score=None
         failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
         before=copy.deepcopy(self.clock.__dict__)
         event=self.clock.boundary(n,failed,score['iteration'] if score else None)
