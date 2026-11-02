@@ -13,7 +13,8 @@ class Robot:
         state = torch.zeros(2, 13)
         state[:, :3] = torch.tensor([[1.0, 2.0, 0.4], [4.0, 5.0, 0.5]])
         state[:, 3] = 1
-        self.data = SimpleNamespace(root_state_w=state, root_quat_w=state[:, 3:7].clone())
+        self.data = SimpleNamespace(root_state_w=state, root_quat_w=state[:, 3:7].clone(),
+                                    root_pos_w=state[:, :3].clone())
         self.velocity_written = None
 
     def write_root_pose_to_sim(self, pose):
@@ -123,6 +124,7 @@ def test_real_case_loop_command_boundary_observation_feet_and_reset(sign, reset_
     target = torch.full((2,), float(sign))
     spec = {"kind": "goal_turn_stop", "command": (0.0, 0.0, float(sign))}
     receipt = R.execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, 6)
+    assert receipt["root_xy"].shape == (6, 2, 2)
     assert receipt["reached_step"].tolist() == [1, 1]
     assert receipt["cmd_pre"][0, 0, 2].item() == pytest.approx(sign)
     assert torch.equal(receipt["cmd_pre"][1:4], torch.zeros(3, 2, 3))

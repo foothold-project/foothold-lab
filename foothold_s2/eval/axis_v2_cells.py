@@ -48,6 +48,11 @@ def goal_stop_dynamic(start_yaw, target_yaw, yaw, alive, reached_step, stop_step
     drift = error.copy()
     duration = np.zeros(yaw.shape[1])
     stationary = duration.copy() if velocities else None
+    wz_mean_signed = np.full(yaw.shape[1], np.nan) if velocities else None
+    wz_mean_abs = wz_mean_signed.copy() if velocities else None
+    wz_max_abs = wz_mean_signed.copy() if velocities else None
+    heading_signed = np.full(yaw.shape[1], np.nan)
+    heading_absolute = heading_signed.copy()
     complete = np.zeros(yaw.shape[1], bool)
     for i, first in enumerate(reached_step):
         if first < 0 or first >= len(yaw):
@@ -60,13 +65,67 @@ def goal_stop_dynamic(start_yaw, target_yaw, yaw, alive, reached_step, stop_step
             x, y, z = (v[int(first):end, i] for v in velocities)
             stationary[i] = float((mask & (np.hypot(x, y) < STOP_LINEAR_MPS)
                                    & (np.abs(z) < STOP_YAW_RADPS)).sum() * dt)
+            kept_wz = z[mask]
+            if len(kept_wz):
+                wz_mean_signed[i] = float(kept_wz.mean())
+                wz_mean_abs[i] = float(np.abs(kept_wz).mean())
+                wz_max_abs[i] = float(np.abs(kept_wz).max())
         if complete[i]:
             error[i] = abs(wrap(target_yaw[i] - yaw[end - 1, i]))
             before = start_yaw[i] if first == 0 else yaw[int(first) - 1, i]
             drift[i] = wrap(yaw[end - 1, i] - before)
+            heading_sequence = np.r_[before, yaw[int(first):end, i]]
+            heading_steps = wrap(np.diff(heading_sequence))
+            heading_signed[i] = heading_steps.sum()
+            heading_absolute[i] = np.abs(heading_steps).sum()
     return {"reached_step": reached_step, "stop_complete": complete,
             "stop_end_error_rad": error, "stop_yaw_drift_rad": drift,
-            "stop_alive_duration_s": duration, "stop_stationary_duration_s": stationary}
+            "stop_alive_duration_s": duration, "stop_stationary_duration_s": stationary,
+            "stop_wz_mean_signed_radps": wz_mean_signed,
+            "stop_wz_mean_abs_radps": wz_mean_abs,
+            "stop_wz_max_abs_radps": wz_max_abs,
+            "stop_heading_flow_signed_rad": heading_signed,
+            "stop_heading_flow_absolute_rad": heading_absolute}
+
+
+def reverse_stop_lateral_deviation(xy_at_entry, yaw_at_entry, xy, alive,
+                                   stop_entry_step, stop_steps):
+    """Measure lateral drift after a caller-identified reverse-to-stop transition.
+
+    xy_at_entry/yaw_at_entry are the state immediately before the first stop
+    command. The metric is a signed displacement projected onto that body's
+    left axis, plus the largest absolute projected displacement in the window.
+    This helper does not choose commands or thresholds; the evaluation protocol
+    must provide the transition indices.
+    """
+    origin = np.asarray(xy_at_entry, dtype=float)
+    heading = np.asarray(yaw_at_entry, dtype=float)
+    xy, alive = np.asarray(xy, dtype=float), np.asarray(alive, dtype=bool)
+    first = np.asarray(stop_entry_step)
+    if (xy.ndim != 3 or xy.shape[2] != 2 or alive.shape != xy.shape[:2]
+            or origin.shape != (xy.shape[1], 2) or heading.shape != (xy.shape[1],)
+            or first.shape != (xy.shape[1],) or stop_steps < 1
+            or not np.isfinite(origin).all() or not np.isfinite(heading).all()
+            or not np.isfinite(xy).all()):
+        raise ValueError("reverse-stop lateral receipt shapes or values differ")
+    signed = np.full(xy.shape[1], np.nan)
+    maximum = signed.copy()
+    complete = np.zeros(xy.shape[1], dtype=bool)
+    for env, start in enumerate(first):
+        if type(start.item()) is not int or start < 0 or start >= len(xy):
+            continue
+        end = min(int(start) + stop_steps, len(xy))
+        mask = alive[int(start):end, env]
+        complete[env] = end - int(start) == stop_steps and bool(mask.all())
+        if not complete[env]:
+            continue
+        delta = xy[int(start):end, env] - origin[env]
+        left = np.array([-math.sin(heading[env]), math.cos(heading[env])])
+        lateral = delta @ left
+        signed[env] = float(lateral[-1])
+        maximum[env] = float(np.abs(lateral).max())
+    return {"complete": complete, "signed_lateral_deviation_m": signed,
+            "max_abs_lateral_deviation_m": maximum}
 
 
 def wrap(angle):

@@ -69,6 +69,7 @@ def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target,
     reached = torch.full((n,), -1, dtype=torch.int64, device=raw.device)
     yaw = torch.zeros(steps, n, device=raw.device)
     vx, vy, wz = torch.zeros_like(yaw), torch.zeros_like(yaw), torch.zeros_like(yaw)
+    root_xy = torch.zeros(steps, n, 2, device=raw.device)
     valid = torch.zeros(steps, n, dtype=torch.bool, device=raw.device)
     contact = torch.zeros(steps, n, 4, dtype=torch.bool, device=raw.device)
     done_rows = torch.zeros_like(valid)
@@ -112,8 +113,9 @@ def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target,
         vx[step] = data.root_lin_vel_b[:, 0]
         vy[step] = data.root_lin_vel_b[:, 1]
         wz[step] = data.root_ang_vel_b[:, 2]
+        root_xy[step] = data.root_pos_w[:, :2]
         contact[step] = torch.linalg.vector_norm(sensor.data.net_forces_w[:, feet], dim=-1) > cells.CONTACT_N
-    return {"yaw": yaw, "vx": vx, "vy": vy, "wz": wz, "valid": valid,
+    return {"yaw": yaw, "vx": vx, "vy": vy, "wz": wz, "root_xy": root_xy, "valid": valid,
             "contact": contact, "done": done_rows, "cmd_pre": cmd_pre, "cmd_post": cmd_post,
             "heading_pre": heading_pre, "stand_pre": stand_pre, "reached_step": reached,
             "stop_steps": stop_steps}
@@ -147,6 +149,11 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "foot_order": cells.FOOT_NAMES, "foot_contact_threshold_n": cells.CONTACT_N,
               "cases": cells.case_specs(), "modes": {}, "terrain_tiles": None,
               "measurement_note": "alive samples exclude post-reset state; goal offsets use reset body yaw; complete stop windows only; no pass threshold"}
+    result["reverse_stop_lateral_metric"] = {
+        "status": "not_exercised_by_current_cases",
+        "reason": "W57 currently has no reverse-to-stop command case; no command schedule was inferred",
+        "available_raw_fields": ["root_xy", "yaw", "cmd_pre", "cmd_post", "alive"],
+    }
 
     for mode in args.modes.split(","):
         if mode not in ("eval_gt", "eval_pred", "probe_prop_only", "none"):
@@ -228,7 +235,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                 if goal_stats is not None:
                     row.update({key: _finite(goal_stats[key][i]) for key in
                                 ("stop_end_error_rad", "stop_yaw_drift_rad", "stop_alive_duration_s",
-                                 "stop_stationary_duration_s")})
+                                 "stop_stationary_duration_s", "stop_wz_mean_signed_radps",
+                                 "stop_wz_mean_abs_radps", "stop_wz_max_abs_radps",
+                                 "stop_heading_flow_signed_rad", "stop_heading_flow_absolute_rad")})
                     row["goal_reached_step"] = int(reached[i]) if reached[i] >= 0 else None
                     row["stop_complete"] = bool(goal_stats["stop_complete"][i])
                     row["fall_before_goal"] = bool(not al[-1, i] and reached[i] < 0)
@@ -244,6 +253,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                                      [r["yaw_absolute_accum_rad"] for r in selected])}
             filename = f"axis_v2_{mode}_{spec['name']}.npz"
             np.savez_compressed(out_dir / filename, yaw=y, vx=x, vy=side, wz=turn, alive=al,
+                                root_xy=samples["root_xy"].cpu().numpy(),
                                 contact=feet_on, done=samples["done"].cpu().numpy(),
                                 cmd_pre=samples["cmd_pre"].cpu().numpy(),
                                 cmd_post=samples["cmd_post"].cpu().numpy(),
@@ -264,6 +274,11 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                 "goal_reached_envs": int((reached >= 0).sum()) if goal_stats else None,
                 "stop_complete_envs": int(goal_stats["stop_complete"].sum()) if goal_stats else None,
                 "stop_stationary_duration_median_s": cells.finite_median(goal_stats["stop_stationary_duration_s"]) if goal_stats else None,
+                "stop_wz_mean_signed_median_radps": cells.finite_median(goal_stats["stop_wz_mean_signed_radps"]) if goal_stats else None,
+                "stop_wz_mean_abs_median_radps": cells.finite_median(goal_stats["stop_wz_mean_abs_radps"]) if goal_stats else None,
+                "stop_wz_max_abs_median_radps": cells.finite_median(goal_stats["stop_wz_max_abs_radps"]) if goal_stats else None,
+                "stop_heading_flow_signed_median_rad": cells.finite_median(goal_stats["stop_heading_flow_signed_rad"]) if goal_stats else None,
+                "stop_heading_flow_absolute_median_rad": cells.finite_median(goal_stats["stop_heading_flow_absolute_rad"]) if goal_stats else None,
                 "contact_left_right_gap_median": cells.finite_median(symmetry["left_right_gap"]),
                 "contact_diagonal_gap_median": cells.finite_median(symmetry["diagonal_gap"]),
                 "by_terrain_kind": by_kind,

@@ -76,6 +76,41 @@ def test_dynamic_goal_stop_requires_complete_fixed_length_window():
     assert np.isnan(out["stop_end_error_rad"][1])
     assert out["stop_yaw_drift_rad"][0] == pytest.approx(.04)
     assert out["stop_alive_duration_s"].tolist() == pytest.approx([.04, .02])
+    assert out["stop_wz_mean_signed_radps"][0] == pytest.approx(0.0)
+    assert out["stop_wz_mean_abs_radps"][0] == pytest.approx(0.0)
+    assert out["stop_wz_max_abs_radps"][0] == pytest.approx(0.0)
+    assert out["stop_heading_flow_signed_rad"][0] == pytest.approx(.04)
+    assert out["stop_heading_flow_absolute_rad"][0] == pytest.approx(.04)
+
+
+def test_dynamic_stop_records_angular_velocity_and_cumulative_heading_flow():
+    yaw = np.array([[0.0], [0.1], [0.2], [0.35]])
+    alive = np.ones_like(yaw, dtype=bool)
+    wz = np.array([[0.1], [0.2], [-0.3], [0.4]])
+    out = A.goal_stop_dynamic(np.zeros(1), np.ones(1), yaw, alive,
+                              np.array([1]), 2, .02, vx=np.zeros_like(yaw),
+                              vy=np.zeros_like(yaw), wz=wz)
+    assert out["stop_wz_mean_signed_radps"][0] == pytest.approx(-.05)
+    assert out["stop_wz_mean_abs_radps"][0] == pytest.approx(.25)
+    assert out["stop_wz_max_abs_radps"][0] == pytest.approx(.3)
+    assert out["stop_heading_flow_signed_rad"][0] == pytest.approx(.2)
+    assert out["stop_heading_flow_absolute_rad"][0] == pytest.approx(.2)
+
+
+def test_reverse_stop_lateral_deviation_uses_stop_entry_heading_and_keeps_incomplete_null():
+    xy = np.array([[[0.0, 0.0]], [[1.0, 0.0]], [[1.2, 0.0]], [[1.4, 0.0]]])
+    alive = np.array([[1], [1], [1], [1]], bool)
+    out = A.reverse_stop_lateral_deviation(
+        np.array([[1.0, 0.0]]), np.array([np.pi / 2]), xy, alive,
+        np.array([2]), 2)
+    assert out["complete"].tolist() == [True]
+    assert out["signed_lateral_deviation_m"][0] == pytest.approx(-.4)
+    assert out["max_abs_lateral_deviation_m"][0] == pytest.approx(.4)
+    incomplete = A.reverse_stop_lateral_deviation(
+        np.array([[1.0, 0.0]]), np.array([np.pi / 2]), xy,
+        np.array([[1], [1], [1], [0]], bool), np.array([2]), 2)
+    assert incomplete["complete"].tolist() == [False]
+    assert np.isnan(incomplete["signed_lateral_deviation_m"][0])
 
 
 def test_early_completed_stop_is_alive_at_its_window_end_not_last_global_step():
