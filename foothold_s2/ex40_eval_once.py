@@ -46,10 +46,11 @@ def evaluate(checkpoint: Path, out: Path, *, stage: str, arm: str,
     if stage not in [item.id for item in plan.stages] or device != cfg["device"]:
         raise ValueError("EX-40 evaluation stage or GPU differs from configuration")
     if subprocess.check_output(["git", "status", "--short", "--", "foothold_s2"],
-                               cwd=ROOT, text=True).strip():
+                               cwd=ROOT, stdin=subprocess.DEVNULL, text=True).strip():
         raise ValueError("EX-40 evaluation source is not frozen")
     source_head = subprocess.check_output(["git", "rev-parse", "HEAD"],
-                                          cwd=ROOT, text=True).strip()
+                                          cwd=ROOT, stdin=subprocess.DEVNULL,
+                                          text=True).strip()
     before = sha256(checkpoint)
     out.mkdir(parents=True)
     env = os.environ.copy()

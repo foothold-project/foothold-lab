@@ -301,7 +301,8 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
         else:
             cmd.extend(("--telegram-sender", str(telegram_sender)))
         proc = subprocess.run(cmd, cwd=Path(__file__).resolve().parents[1],
-                              text=True, encoding="utf-8", capture_output=True, check=False)
+                              stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
+                              capture_output=True, check=False)
         if proc.returncode:
             return "pending"
         try:
@@ -419,7 +420,8 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
         raise ValueError("supervisor poll interval cannot be negative")
     for _ in range(max_segments):
         child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
-                                 cwd=Path(__file__).resolve().parents[1])
+                                 cwd=Path(__file__).resolve().parents[1],
+                                 stdin=subprocess.DEVNULL)
         run = None
         last_consumed = None
         watch_events = score_out / "supervisor_score_events.jsonl"
@@ -488,7 +490,8 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
             "--arm", arm, "--device", device, "--end-by", end_by,
             "--log-root", str(log_root), "--score-dir", str(score_dir),
             "--resume-spec", str(spec_path)], cwd=Path(__file__).resolve().parents[1],
-            text=True, encoding="utf-8", capture_output=True, check=False)
+            stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
+            capture_output=True, check=False)
         if gate.returncode:
             return {"action": "resume_prepared_but_launch_guard_closed",
                     "checkpoint": source.get("checkpoint"),
