@@ -113,6 +113,9 @@ class StartRunner(OnPolicyRunner):
         self.ex41_pose_commands = train_cfg.get("ex41_pose_commands", False)
         if not isinstance(self.ex41_pose_commands, bool):
             raise ValueError("ex41_pose_commands must be bool")
+        self.ex41_w86_required = train_cfg.get("ex41_w86_required", False)
+        if not isinstance(self.ex41_w86_required, bool) or (self.ex41_w86_required and not self.ex41_pose_commands):
+            raise ValueError("ex41_w86_required needs EX-41 pose commands and a bool setting")
         self.ex41_critic_mirror = train_cfg.get("ex41_critic_mirror", False)
         if not isinstance(self.ex41_critic_mirror, bool) or (self.ex41_critic_mirror and not self.ex41_pose_commands):
             raise ValueError("ex41_critic_mirror requires ex41_pose_commands and a bool setting")
@@ -492,6 +495,15 @@ class StartRunner(OnPolicyRunner):
                     _gt = self.pstate.use_gt.bool()
                     src_steps += torch.stack([(_gt & ~_off).sum(), (~_gt & ~_off).sum(), _off.sum()]).float()
                     actions = self.alg.act(ppo_obs)
+                    w86_attached = (self.ex41_pose_commands and
+                                    getattr(getattr(self.env, "unwrapped", self.env), "_ex41_w86", None) is not None)
+                    if self.ex41_w86_required and not w86_attached:
+                        raise ValueError("EX-41 W86 runtime is not attached before rollout")
+                    if w86_attached:
+                        # W86 quarantines a bad env before its action reaches physics.
+                        from foothold_s2.rewards.w86_runtime import quarantine_actions
+
+                        actions = quarantine_actions(self, actions)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
                         if continuous is not None:
@@ -514,6 +526,13 @@ class StartRunner(OnPolicyRunner):
                     if continuous is not None:
                         continuous.record_pre_step()
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
+                    if w86_attached:
+                        from foothold_s2.rewards.w86_runtime import quarantine_step
+
+                        raw, rewards, dones, extras = quarantine_step(self, raw, rewards, dones, extras)
+                    elif self.ex41_pose_commands:
+                        extras = dict(extras)
+                        extras["ex41_ppo_valid"] = torch.ones(n, dtype=torch.bool, device=self.device)
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
                     if continuous is not None:
                         continuous.record_post_step(dones)
@@ -801,6 +820,10 @@ class StartRunner(OnPolicyRunner):
         sel = self._kl_select()
         sub = self.alg.storage.observations[:, sel]
         sub = sub.reshape(sub.batch_size[0] * sub.batch_size[1]).clone()
+        if self.ex41_pose_commands:
+            sub = sub[self.alg.storage.valid[:, sel].reshape(-1)]
+            if sub.batch_size[0] == 0:
+                return None
         mu, std = kl_probe.policy_dist(self.alg.policy, sub)
         return {"obs": sub, "mu": mu, "std": std}
 

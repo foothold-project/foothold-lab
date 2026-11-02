@@ -13,6 +13,7 @@ from torch import nn
 from rsl_rl.algorithms import PPO
 
 from foothold_s2.models.start_policy import CRITIC_KEY
+from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage
 
 
 LEG_SWAP = (1, 0, 3, 2)
@@ -73,9 +74,57 @@ class CriticMirrorPPO(PPO):
 
     mirror_enabled = False
 
+    def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
+        self.storage = ValidRolloutStorage(training_type, num_envs, num_transitions_per_env,
+                                           obs, actions_shape, self.device)
+
+    def process_env_step(self, obs, rewards, dones, extras):
+        valid = extras.get("ex41_ppo_valid")
+        if valid is None:
+            raise ValueError("EX-41 PPO validity mask missing from quarantine step")
+        valid = torch.as_tensor(valid, device=self.storage.valid.device, dtype=torch.bool).flatten()
+        if valid.shape != (self.storage.num_envs,):
+            raise ValueError("EX-41 PPO validity mask shape differs from env count")
+        step = self.storage.step
+        self.storage.valid[step].copy_(valid)
+        super().process_env_step(obs, rewards, dones, extras)
+        if not bool(valid.all()):
+            # A quarantined transition is a terminal boundary.  This also
+            # prevents its next-state value from entering the previous GAE.
+            bad = ~valid
+            self.storage.rewards[step, bad] = 0
+            self.storage.values[step, bad] = 0
+            self.storage.dones[step, bad] = 1
+            self.storage.actions_log_prob[step, bad] = 0
+            self.storage.mu[step, bad] = 0
+            self.storage.sigma[step, bad] = 1
+
+    def compute_returns(self, obs):
+        last_values = self.policy.evaluate(obs).detach()
+        self.storage.compute_returns(last_values, self.gamma, self.lam, normalize_advantage=False)
+        valid = self.storage.valid.unsqueeze(-1)
+        if not self.normalize_advantage_per_mini_batch:
+            # Preserve the installed normalization path when all rows are valid.
+            if bool(valid.all()):
+                advantage = self.storage.advantages
+                self.storage.advantages = (advantage - advantage.mean()) / (advantage.std() + 1e-8)
+            elif bool(valid.any()):
+                advantage = self.storage.advantages[valid]
+                mean = advantage.mean()
+                std = advantage.std() if advantage.numel() > 1 else advantage.new_zeros(())
+                self.storage.advantages = torch.where(valid, (self.storage.advantages - mean) / (std + 1e-8), 0)
+            else:
+                self.storage.advantages.zero_()
+
     def update(self) -> dict[str, float]:
         if not self.mirror_enabled:
-            return super().update()
+            result = super().update()
+            actual = self.storage.yielded_batches
+            expected = self.num_learning_epochs * self.num_mini_batches
+            if actual:
+                result = {key: value * expected / actual for key, value in result.items()}
+            result["ppo_skipped_batches"] = float(self.storage.skipped_batches)
+            return result
         if self.symmetry or self.rnd or self.policy.is_recurrent or self.is_multi_gpu:
             raise ValueError("EX-41 critic mirror supports single-GPU feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = 0.0
@@ -133,8 +182,11 @@ class CriticMirrorPPO(PPO):
             total_combined += float(combined_value.detach())
             total_s += float(surrogate.detach())
             total_e += float(entropy.mean().detach())
-        count = self.num_learning_epochs * self.num_mini_batches
+        count = self.storage.yielded_batches
+        skipped = self.storage.skipped_batches
         self.storage.clear()
+        count = max(count, 1)
         return {"value_function": total_v / count, "value_mirror": total_m / count,
                 "value_combined": total_combined / count,
-                "surrogate": total_s / count, "entropy": total_e / count}
+                "surrogate": total_s / count, "entropy": total_e / count,
+                "ppo_skipped_batches": float(skipped)}
