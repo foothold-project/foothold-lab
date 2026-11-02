@@ -217,7 +217,7 @@ def test_two_real_files_promote_at_500_and_missing_w71_holds(tmp_path,monkeypatc
 
 def test_same_checkpoint_conflict_is_not_two_passes(tmp_path,monkeypatch):
     r,_=runtime(tmp_path,monkeypatch); r.on_update_start(1)
-    score(r,500,folder='a.json'); score(r,500,folder='b.json')
+    score(r,500,folder='score_500_a.json'); score(r,500,folder='score_500_b.json')
     r.on_update_start(501)
     assert r.effective['stage_id']=='S2a' and not r._history
 

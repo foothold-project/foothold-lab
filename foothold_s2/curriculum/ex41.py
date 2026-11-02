@@ -391,10 +391,11 @@ class EX41Runtime(Runtime):
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
             h=None; it=None
-            match=re.match(r'^score_(\d+)(?:_|\.)',p.name)
+            match=re.fullmatch(r'score_(\d+)(?:_[A-Za-z0-9_-]+)?\.json',p.name)
             named_iteration=int(match[1]) if match else None
             try:
                 h=sha256(p)
+                if match is None: raise ValueError('EX41 score filename outside producer contract')
                 if h in self.seen_scores and str(p) not in self._score_rejections: continue
                 d=json.loads(p.read_text(encoding='utf-8-sig'))
                 if not isinstance(d,dict): raise ValueError('EX41 score must be an object')

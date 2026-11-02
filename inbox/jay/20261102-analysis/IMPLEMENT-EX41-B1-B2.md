@@ -217,7 +217,7 @@ enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
 
 확인됨: m6000의 `score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json`이 부모 유지 기준의 원본이다. extended13명령×3모드로 **39/39 숫자 일치, 차이0**. 정지 세 모드는64/64·64/64·64/64로 부모표와 일치했다. `map64_b3`는 walk·작은 spin·저속의9명령으로 별도 과제이며 유지39칸을 대신하면 거절한다. 이 선택은 새 기준 선택이 아니라 SHA고정 부모표의 실제 출처 대조다.
 
-읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), SHA256 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
+읽기 전용 재계산 산출은 [부모 숫자 계약 JSON](evidence/EX41-m6000-score-contract.json), 현재 SHA256 `1bc9501670b98d188ed4f08c634820c2c51d97493bd6ba024e34f93397f71f32`다. §22에서 설정 파일만 저장소 상대 경로로 바꿨으며 이전 SHA는 `ddd06c8eaa542ad81bf088d858d229e3a539d0a7e87ed09bc49761145a586e25`다. 이 파일은 실행 원장이나 살아 있는 EX41 점수가 아니다. 실측 원자료 경로·SHA와 칸별 숫자를 보존한 CPU 대조 자료다. 시험은 별도 임시 폴더에 score/1 파일을 생성하고 되읽어39칸·정지 숫자를 확인한다.
 
 검증 기록: isaac311·CUDA 숨김으로 fixed/runtime/boundary/review_regressions/scoring 다섯 시험 파일 **96PASS170.29초**, pyflakes·git diff 검사 통과. 실제 reader의 NaN·체크포인트 SHA·원자료 SHA·정지 숫자 누락·깨진 JSON·잘못된 회차 반례와 오류 상태 저장·재개 뒤 새 점수 두 개의 회복을 확인했다. G5·G7의 runtime 고침과 G6 helper/원자료 대조를 닫을 수 있어도, G6 전체는 runner 진입점이 이 함수를 실제 호출하는 통합본을 확인해야 닫는다. 낮은 항목 D121 과제 변경 평가 연결·W72 추가 승인 칸·D93 히스토그램은 이 커밋에서 닫았다고 하지 않는다. 후속 교차검증의 명령 몫2차 S2c 이동과 m6000 lin_vel_z 실측은 이 묶음 다음 작업이다.
 
@@ -280,3 +280,13 @@ G15는 §20의 실제 자료로 확인했다. G17의 코드 준비는 75df4e87�
 경로만 바꾼 D133 증거 SHA는 `b938ef93c4a323a97dfa63fefd06cebf6c89d7362901e39f513bf00fce5e8e3e`다. YAML·계획 SHA·생존 문턱·학습 조건은 바꾸지 않았다. GPU·Kit·EX-40 실행 사본·루프·원장 변경 없음.
 
 최종 확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 파일 **115 PASS, 198.30초**. pyflakes·git diff --check 통과. G17 후속 CMP·stdin 검토는 [W71 보고](IMPLEMENT-W71-G15-G17-1102.md)의 후속 절로 분리한다.
+
+## 22. 35fbdce5 후속 · 원래 W57 경로와 L2/L3 잔여 (11/02 16:0x)
+
+L2는 D133 파일뿐 아니라 앞선 `EX41-m6000-score-contract.json`의 설정 근거 경로도 상대 경로로 고쳤다. 두 증거 파일 모두 저장소 루트에서 실제 설정 SHA를 확인하도록 시험을 확장했다. 숫자는 불변이다.
+
+L3는 `score_N.json` 또는 `score_N_<영숫자·밑줄·하이픈>.json` 전체 이름과 일치해야 JSON을 읽는다. `other.json`, `score_1250.invalid.json`, `score_-1.json`에 정상 본문을 넣어도 거절한다. 거절된 이름의 본문 iteration은 시점 근거로 쓰지 않는다. 중복 점수 시험은 정식 이름 `score_500_a.json`·`score_500_b.json`으로 바꿔, 이름 거절만으로 중복 검사가 통과하는 시험이 되지 않게 했다.
+
+수정 전 알려진 반례: 원래 score_watch→숨김 평가 Python→Git Bash에서 바깥 rc0·Bash rc0이지만 sha256sum rc1(`Bad file descriptor`). 파일명 세 반례와 L2의 앞선 증거 파일도 실패하여 **5 FAIL·1 PASS, 12.01초**였다. stdin 누락 세 곳과 이 두 잔여 고침은 한 고정본으로 인도한다. runner 소유 eval_once·chain/runner.py는 수정하지 않았다.
+
+확인됨: 수정 뒤 첫 회귀는 C: 임시 공간 부족(`Errno 28`)으로 143 PASS·1 FAIL·30 ERROR(162.93초)에서 끝났다. 전체 통과로 세지 않았다. 파일 삭제 없이 D:의 새 임시 폴더로 시험 위치만 바꿔 같은 일곱 파일을 다시 실행한 결과 **174 PASS, 190.77초**다. 명령 대상·JUnit·로그 SHA는 [CPU 근거](evidence/EX41-W71-original-path-cpu.json)에 기록했다. pyflakes·git diff --check 통과. EX-41 통합 연결과 GPU/Kit 검증은 이 CPU 결과의 범위 밖이며 `w71_ready=false`를 유지한다.

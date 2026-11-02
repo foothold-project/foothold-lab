@@ -123,6 +123,61 @@ rc=retry._child(Path(sys.argv[3]),Path(sys.argv[4])/'axis_v2','cuda:1',{'map_ste
     assert 'Bad file descriptor' in (tmp_path/'omit/retry_stderr.log').read_text()
 
 
+@pytest.mark.skipif(sys.platform!='win32',reason='Windows score-watch V1 path')
+def test_score_watch_hidden_eval_parent_hash_checks_real_result(tmp_path,monkeypatch):
+    # Replace the Kit program only. Preserve _child's real launch kwargs so
+    # this covers score_watch -> hidden eval parent -> hidden Git Bash.
+    cp=tmp_path/'model_1.pt';cp.write_bytes(b'known score watch checkpoint')
+    stub=tmp_path/'cpu_eval_once.py'
+    stub.write_text('''import json,subprocess,sys
+from pathlib import Path
+cp,out=Path(sys.argv[1]),Path(sys.argv[2]);out.mkdir(parents=True)
+flags=subprocess.CREATE_NO_WINDOW|subprocess.CREATE_NEW_PROCESS_GROUP
+result=subprocess.run(['C:/Program Files/Git/bin/bash.exe','-c',
+    'sha256sum "$1"; echo sha_rc=$?', '--',str(cp)],
+    creationflags=flags,capture_output=True,text=True)
+lines=result.stdout.splitlines()
+row={'bash_rc':result.returncode,'sha_rc':int(next(x for x in lines if x.startswith('sha_rc=')).split('=')[1]),
+     'stdout':result.stdout,'stderr':result.stderr}
+(out/'eval_receipt.json').write_text(json.dumps(row))
+''',encoding='utf-8')
+    real_run=subprocess.run
+    def cpu_child(argv,**kwargs):
+        assert argv[1:3]==['-m','foothold_s2.ex40_eval_once']
+        return real_run([sys.executable,str(stub),str(cp),str(tmp_path/'eval')],**kwargs)
+    monkeypatch.setattr(watch.subprocess,'run',cpu_child)
+    row=watch._child(cp,tmp_path/'eval','B0','B',Path('unused-cfg'),Path('unused-table'))
+    assert row['rc']==0 and row['receipt']['bash_rc']==0
+    assert row['receipt']['sha_rc']==0,row['receipt']
+    assert row['receipt']['stdout'].lstrip('\\').split()[0]==sha256(cp)
+
+
+def test_both_report_sender_paths_supply_devnull_without_external_send(tmp_path,monkeypatch):
+    from foothold_s2 import ex40_stage_publish as publish
+    score_path=tmp_path/'score.json'
+    row={'checkpoint_iteration':500,'checkpoint_sha256':'a'*64,'from':'B0','verdict':'PASS'}
+    score_path.write_text(json.dumps(row))
+    monkeypatch.setattr(watch,'config',lambda _: {})
+    monkeypatch.setattr(watch,'Plan',lambda *_,**__:None)
+    monkeypatch.setattr(watch,'stage_end_updates',lambda *_:{500:'B0'})
+    monkeypatch.setattr(watch,'_ledger_rows',lambda _:[{'checkpoint_iteration':500,'stage':'B0',
+        'verdict':'PASS','score_path':str(score_path),'score_sha256':sha256(score_path)}])
+    monkeypatch.setattr(watch,'build_stage_report',lambda *_,**__:{**row,
+        'gains':[],'losses':[],'unchanged':[],'current':{'source_sha256':{}}})
+    monkeypatch.setattr(watch,'stage_markdown',lambda _:'CPU report')
+    sender=tmp_path/'cpu_sender.py';sender.write_text("import sys; assert sys.stdin.read()==''; print('0 CPU only')")
+    original=subprocess.run;calls=[]
+    def checked(argv,**kwargs):
+        assert kwargs['stdin']==subprocess.DEVNULL
+        calls.append(argv)
+        return original(argv,**kwargs)
+    monkeypatch.setattr(watch.subprocess,'run',checked)
+    result=watch.stage_reports(tmp_path,tmp_path/'out',Path('unused'),Path('unused'),'B',telegram_sender=sender)
+    assert result['state']=='done' and result['published']==1
+    assert publish._send(score_path,sender)
+    assert len(calls)==2
+
+
 def test_training_text_log_is_separate_from_decision(tmp_path, monkeypatch):
     def spawn(argv, **kwargs):
         assert kwargs['stdin'] == supervisor.subprocess.DEVNULL

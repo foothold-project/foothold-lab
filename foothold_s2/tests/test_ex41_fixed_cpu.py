@@ -438,6 +438,16 @@ def test_old_rejection_snapshot_cannot_override_named_iteration(tmp_path):
     assert r.clock.paused and r.clock.recovered==0
 
 
+@pytest.mark.parametrize('filename',['other.json','score_1250.invalid.json','score_-1.json'])
+def test_score_filename_outside_producer_contract_is_rejected(tmp_path,filename):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,folder=filename,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    r.on_update_start(1251)
+    assert 'filename' in r._score_rejections[str(p)]['reason']
+    assert r.clock.paused and r.clock.recovered==0
+
+
 def test_transferred_lin_vel_z_keeps_actual_parent_zero_at_each_boundary(tmp_path):
     from types import SimpleNamespace
     from foothold_s2.rewards.basic_gait_bundle import scheduled_lin_vel_z_weight

@@ -207,7 +207,7 @@ def _send(text_path: Path, telegram_sender: Path) -> bool:
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     attempt = subprocess.run([sys.executable, str(telegram_sender), str(text_path)],
                              capture_output=True, text=True, timeout=90,
-                             creationflags=flags, check=False)
+                             creationflags=flags, check=False, stdin=subprocess.DEVNULL)
     return attempt.returncode == 0 and attempt.stdout.split(maxsplit=1)[:1] == ["0"]
 
 

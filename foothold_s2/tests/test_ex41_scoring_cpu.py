@@ -67,10 +67,11 @@ def test_missing_stand_mode_is_error_not64(actual):
         measurement_bundle(ROOT/'map64/map_modes.json',bad,native['checkpoint'],baseline_counts(plan))
 
 
-def test_archived_config_evidence_is_repo_relative_and_hash_matches():
+@pytest.mark.parametrize('name',['EX41-D133-m6000-contract.json','EX41-m6000-score-contract.json'])
+def test_archived_config_evidence_is_repo_relative_and_hash_matches(name):
     from foothold_s2.curriculum.continuous import sha256
     repo=Path(__file__).resolve().parents[2]
-    archive=repo/'inbox/jay/20261102-analysis/evidence/EX41-D133-m6000-contract.json'
+    archive=repo/'inbox/jay/20261102-analysis/evidence'/name
     evidence=json.loads(archive.read_text(encoding='utf-8'))['evidence']
     records=[r for r in evidence if Path(r['path']).name=='ex40_score_config.json']
     assert len(records)==1

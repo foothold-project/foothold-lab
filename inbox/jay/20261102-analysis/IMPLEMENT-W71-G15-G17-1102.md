@@ -52,3 +52,13 @@ NPZ 복사와 기존 보고의 배열 해시 재확인까지 반영한 뒤 W71·
 - **A5 시험 범위 정정**: 위의 59 PASS는 명시한 다섯 파일만의 결과다. `test_ex40_dr_v8_cpu.py`, `test_ex40_launch_smoke_cpu.py`, `test_ex40_v7_continue_cpu.py`는 포함하지 않았다. 독립 검토가 이 제외 범위에서 기존 8 FAIL을 보고했다(lead 16:0x 전달). 이 회차에서 해당 8건을 직접 재실행한 결과는 없으며, 59 PASS를 전체 저장소 회귀나 통합 기동 통과로 읽으면 안 된다.
 
 **후속 실측**: 같은 다섯 파일 79 PASS(50.20 s), 이어서 추가한 단계 보고서의 두 저장본 일치 시험 1 PASS(2.81 s). V1 손자의 실제 결과는 stdin 누락 rc1·`Bad file descriptor`, DEVNULL rc0·기대 SHA 일치다. L1~L3 별도 115 PASS는 [구현 기록 §21](IMPLEMENT-EX41-B1-B2.md)에 있다. pyflakes·diff 검사 통과. GPU·Kit·실행 중 프로세스·라이브 원장 변경 없음. H1·A3·A4·A5 후속 검토와 runner G11 연결 증거를 기다리며 `w71_ready=false`를 유지한다.
+
+## 원래 W57 경로 잔여 고침 (35fbdce5 후속 · 11/02 16:0x)
+
+앞 A3는 retry 경로의 확인이었다. 원래 `ex40_score_watch._child`에는 stdin 지정이 없어 eval_once를 V1 형태로 띄웠다. `score_watch`의 평가 자식·보고 발송과 `ex40_stage_publish._send` 세 곳에 `stdin=DEVNULL`을 추가했다. runner 소유 eval_once와 chain/runner.py는 건드리지 않았다.
+
+새 시험은 **실제 score_watch._child의 인자·숨김 플래그를 그대로 사용**한다. Kit 프로그램만 CPU 평가 자식으로 바꾸고, 그 자식이 실제 Git Bash sha256sum을 stdin 지정 없이 호출한다. 수정 전 바깥 Python rc0·Bash rc0인데 `sha_rc=1`과 `Bad file descriptor`였다. Bash 뒤 echo가 rc0을 만들 수 있으므로 실행기 성공 대신 실제 해시와 sha_rc를 검사한다. 따라서 앞 retry 시험만 통과한 것으로 원래 경로까지 해결됐다고 읽으면 안 된다. 실제 EX40 실패 당시 핸들 상태를 확인하지 않았다는 기존 한계는 유지한다.
+
+두 보고 발송 경로도 실제 CPU 자식의 stdin 읽기와 subprocess 인자를 확인한다. 임시 자식은 stdout에 CPU 성공 표식만 쓰며 외부 메시지를 보내지 않는다. 점수 파일명·남은 설정 근거 경로는 [구현 기록 §22](IMPLEMENT-EX41-B1-B2.md)에 함께 기록했다.
+
+확인됨: 수정 전 다섯 반례 실패 뒤, 영향받는 일곱 시험 파일 최종 **174 PASS, 190.77초**. [CPU 근거 JSON](evidence/EX41-W71-original-path-cpu.json)에 전체 파일 목록과 JUnit·로그 SHA를 적었다. 중간 C: 공간 부족 때문에 끝나지 못한 실행(143 PASS·1 FAIL·30 ERROR)도 별도 보존했다. D:의 새 임시 폴더에서 재실행했으며 기존 파일 삭제나 실행 중 사본·원장 변경은 없다. 기존 제외 범위의 8 FAIL을 고쳤다는 뜻이 아니며 G17 전체는 runner G11 연결·통합 검증 전까지 미완료다.
