@@ -1,0 +1,3382 @@
+{
+  "source_commit": "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+  "checkpoint": {
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_7500.pt",
+    "sha256": "3a2cd2902c77b069ef1072d08e8254deadf663b56a9c95be704b07db52db2368",
+    "iter": 7500,
+    "ppo_learning_rate": 0.00038443359375000017,
+    "ppo_optimizer_lr": [
+      0.00038443359375000017
+    ],
+    "perception_optimizer_lr": [
+      0.0005
+    ],
+    "std_min_mean_max": [
+      0.37866586446762085,
+      0.4619525969028473,
+      0.5450708270072937
+    ],
+    "adasmpl": {
+      "p": 1.0,
+      "count": 0.0,
+      "sum": 0.0,
+      "sumsq": 0.0,
+      "force_gt": true
+    },
+    "curriculum_scalars": {
+      "format": "foothold-w55-state/1",
+      "plan_sha256": "66a519b28f5597ff41cec09f286d4cdd66af5d3877ecb1580005ca5a13a70585",
+      "effective_sha256": "b80b73ae7b077b586ea0c19fe999adccffec56e54bc50dcae8f40e96fa1a47f8",
+      "active": 6,
+      "segment_index": 0,
+      "stage_entry_iteration": 6001,
+      "b1_entry_iteration": 1501
+    },
+    "first_layer_shapes": {
+      "model_state_dict": {
+        "actor.0.weight": [
+          512,
+          96
+        ],
+        "actor.0.bias": [
+          512
+        ],
+        "critic.0.weight": [
+          512,
+          664
+        ],
+        "critic.0.bias": [
+          512
+        ]
+      },
+      "perception_state_dict": {
+        "ie.prop_mlp.0.weight": [
+          256,
+          450
+        ],
+        "ie.prop_mlp.0.bias": [
+          256
+        ],
+        "ie.dec_o.4.weight": [
+          45,
+          128
+        ],
+        "ie.dec_o.4.bias": [
+          45
+        ]
+      }
+    }
+  },
+  "saved_config_sha256": {
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\params\\agent.yaml": "5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd",
+    "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\params\\env.yaml": "f2e7b7651fe0d7ee4a63141f2d432f52d8067ea336aa90d5661685c759c52a82"
+  },
+  "dr_schedule": {
+    "1500": {
+      "scale": 0.0,
+      "delay": {
+        "max_seconds": 0.0,
+        "max_substeps": 0,
+        "quantized_max_seconds": 0.0,
+        "physics_dt_seconds": 0.005
+      }
+    },
+    "1501": {
+      "scale": 0.0,
+      "delay": {
+        "max_seconds": 0.0,
+        "max_substeps": 0,
+        "quantized_max_seconds": 0.0,
+        "physics_dt_seconds": 0.005
+      }
+    },
+    "6000": {
+      "scale": 0.5,
+      "delay": {
+        "max_seconds": 0.0075,
+        "max_substeps": 1,
+        "quantized_max_seconds": 0.005,
+        "physics_dt_seconds": 0.005
+      }
+    },
+    "6001": {
+      "scale": 1.0,
+      "delay": {
+        "max_seconds": 0.015,
+        "max_substeps": 3,
+        "quantized_max_seconds": 0.015,
+        "physics_dt_seconds": 0.005
+      }
+    },
+    "7500": {
+      "scale": 1.0,
+      "delay": {
+        "max_seconds": 0.015,
+        "max_substeps": 3,
+        "quantized_max_seconds": 0.015,
+        "physics_dt_seconds": 0.005
+      }
+    }
+  },
+  "curve_event_file": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\events.out.tfevents.1793387639.AI-WS01.26240.0",
+  "curve_tags": [
+    "Train/mean_reward",
+    "Train/mean_episode_length",
+    "Loss/learning_rate",
+    "Policy/mean_noise_std",
+    "Loss/value_function",
+    "Loss/entropy",
+    "Loss/kl_probe/ppo_mean",
+    "Episode_Reward/track_lin_vel",
+    "Episode_Reward/track_ang_vel"
+  ],
+  "curves": {
+    "5950": {
+      "Train/mean_reward": {
+        "at_update": 45.499168395996094,
+        "trailing50_mean": 45.585468521118166,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 1000.0,
+        "trailing50_mean": 990.651201171875,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 9.999999747378752e-06,
+        "trailing50_mean": 9.41957037866814e-05,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.44670629501342773,
+        "trailing50_mean": 0.44929313123226167,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.008053857833147049,
+        "trailing50_mean": 0.014945247564464808,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.141979217529297,
+        "trailing50_mean": 7.200493431091308,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.0060283951461315155,
+        "trailing50_mean": 0.027076995223760603,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.8572757244110107,
+        "trailing50_mean": 1.8416607880592346,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8817605376243591,
+        "trailing50_mean": 0.8729272520542145,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04601545181421934,
+        "n": 50
+      }
+    },
+    "6000": {
+      "Train/mean_reward": {
+        "at_update": 46.103267669677734,
+        "trailing50_mean": 45.943954162597656,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 1000.0,
+        "trailing50_mean": 990.6357971191406,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.00017085937724914402,
+        "trailing50_mean": 0.00013889531226595863,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.4464634358882904,
+        "trailing50_mean": 0.44221766412258146,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.021065346896648407,
+        "trailing50_mean": 0.01348147375509143,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.1175947189331055,
+        "trailing50_mean": 7.009487085342407,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.013955598697066307,
+        "trailing50_mean": 0.015289048664271832,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.8461202383041382,
+        "trailing50_mean": 1.8359391474723816,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8775817155838013,
+        "trailing50_mean": 0.8723606204986573,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04637735440839353,
+        "n": 50
+      }
+    },
+    "6001": {
+      "Train/mean_reward": {
+        "at_update": 46.33930206298828,
+        "trailing50_mean": 45.967551193237306,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 994.260009765625,
+        "trailing50_mean": 990.7811975097657,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 9.999999747378752e-06,
+        "trailing50_mean": 0.00013681718723091763,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.44708529114723206,
+        "trailing50_mean": 0.4422464472055435,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.03313692286610603,
+        "trailing50_mean": 0.013958870060741901,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.136911869049072,
+        "trailing50_mean": 7.009718284606934,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.0070928409695625305,
+        "trailing50_mean": 0.015244219731539489,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.8410851955413818,
+        "trailing50_mean": 1.8365163016319275,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8760928511619568,
+        "trailing50_mean": 0.8726092875003815,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04639439650636511,
+        "n": 50
+      }
+    },
+    "6100": {
+      "Train/mean_reward": {
+        "at_update": 40.64809036254883,
+        "trailing50_mean": 40.775274658203124,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 984.1400146484375,
+        "trailing50_mean": 983.7593969726563,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.0002562890585977584,
+        "trailing50_mean": 0.00016163867214345374,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.47721734642982483,
+        "trailing50_mean": 0.47837077260017397,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.03209587559103966,
+        "trailing50_mean": 0.025331147126853467,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 8.00329875946045,
+        "trailing50_mean": 8.028706512451173,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.014994139783084393,
+        "trailing50_mean": 0.01797236194834113,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.7596960067749023,
+        "trailing50_mean": 1.7612174487113952,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8409967422485352,
+        "trailing50_mean": 0.840510516166687,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04144705539399191,
+        "n": 50
+      }
+    },
+    "6500": {
+      "Train/mean_reward": {
+        "at_update": 41.94441223144531,
+        "trailing50_mean": 42.37799201965332,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 992.530029296875,
+        "trailing50_mean": 993.0979992675781,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.00038443360244855285,
+        "trailing50_mean": 0.00028220273583428934,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.46055868268013,
+        "trailing50_mean": 0.45864383816719057,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.016380010172724724,
+        "trailing50_mean": 0.016116447430104017,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.60999870300293,
+        "trailing50_mean": 7.566291875839234,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.01994653046131134,
+        "trailing50_mean": 0.015918441358953716,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.7754502296447754,
+        "trailing50_mean": 1.7900298786163331,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8539692759513855,
+        "trailing50_mean": 0.8519358110427856,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04267195072579199,
+        "n": 50
+      }
+    },
+    "7000": {
+      "Train/mean_reward": {
+        "at_update": 43.003089904785156,
+        "trailing50_mean": 42.75946197509766,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 1000.0,
+        "trailing50_mean": 992.3343933105468,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.00038443360244855285,
+        "trailing50_mean": 0.0002316289074224187,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.4572049677371979,
+        "trailing50_mean": 0.4546062088012695,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.016178833320736885,
+        "trailing50_mean": 0.016603078115731477,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.550807952880859,
+        "trailing50_mean": 7.482310876846314,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.01745597831904888,
+        "trailing50_mean": 0.014051544200628995,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.8078807592391968,
+        "trailing50_mean": 1.7950663113594054,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8610455393791199,
+        "trailing50_mean": 0.8571600437164306,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04308903001316993,
+        "n": 50
+      }
+    },
+    "7250": {
+      "Train/mean_reward": {
+        "at_update": 43.325958251953125,
+        "trailing50_mean": 43.47308364868164,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 992.75,
+        "trailing50_mean": 995.5369995117187,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.0002562890585977584,
+        "trailing50_mean": 0.0002569640639558202,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.44290852546691895,
+        "trailing50_mean": 0.441210156083107,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.01592697761952877,
+        "trailing50_mean": 0.014284420274198056,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.151756763458252,
+        "trailing50_mean": 7.121215314865112,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.013060572557151318,
+        "trailing50_mean": 0.014991956017911433,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.7866538763046265,
+        "trailing50_mean": 1.8057694768905639,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.8555948734283447,
+        "trailing50_mean": 0.860166449546814,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.043668243311616756,
+        "n": 50
+      }
+    },
+    "7500": {
+      "Train/mean_reward": {
+        "at_update": 42.244537353515625,
+        "trailing50_mean": 42.68315048217774,
+        "n": 50
+      },
+      "Train/mean_episode_length": {
+        "at_update": 985.47998046875,
+        "trailing50_mean": 988.1457971191406,
+        "n": 50
+      },
+      "Loss/learning_rate": {
+        "at_update": 0.00038443360244855285,
+        "trailing50_mean": 0.00022119882989500185,
+        "n": 50
+      },
+      "Policy/mean_noise_std": {
+        "at_update": 0.4619526267051697,
+        "trailing50_mean": 0.458495911359787,
+        "n": 50
+      },
+      "Loss/value_function": {
+        "at_update": 0.015932442620396614,
+        "trailing50_mean": 0.017937087286263705,
+        "n": 50
+      },
+      "Loss/entropy": {
+        "at_update": 7.674472332000732,
+        "trailing50_mean": 7.578339586257934,
+        "n": 50
+      },
+      "Loss/kl_probe/ppo_mean": {
+        "at_update": 0.016164710745215416,
+        "trailing50_mean": 0.016689812857657672,
+        "n": 50
+      },
+      "Episode_Reward/track_lin_vel": {
+        "at_update": 1.7845628261566162,
+        "trailing50_mean": 1.7907199668884277,
+        "n": 50
+      },
+      "Episode_Reward/track_ang_vel": {
+        "at_update": 0.848800539970398,
+        "trailing50_mean": 0.8516364991664886,
+        "n": 50
+      },
+      "reward_div_episode_length": {
+        "trailing50_mean": 0.04319437599174354,
+        "n": 50
+      }
+    }
+  },
+  "scores": {
+    "5500": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_5500_6d71a991b4cf.json",
+      "sha256": "b9304d01d3d3c04f41894b1c90995697f9f8fed12efa36a53c111e612c132b8e",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_5500_6d71a991b4cf\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5500_6d71a991b4cf\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5500_6d71a991b4cf\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5500_6d71a991b4cf\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5500_6d71a991b4cf\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.051743922755122185
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07669882476329803
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08618210628628731
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08459420502185822
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0808853916823864
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1785726547241211
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.12698692828416824
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.11569882556796074
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05843844451010227,
+            "vy_abs_error_mean_alive_mps": 0.09560546278953552
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05058657377958298,
+            "vy_abs_error_mean_alive_mps": 0.06740694493055344
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06966699287295341,
+            "vy_abs_error_mean_alive_mps": 0.11388638243079185
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08237049728631973,
+            "vy_abs_error_mean_alive_mps": 0.10695123672485352
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0485973060131073
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07597831636667252
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.0867738202214241
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08368347957730293
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08264154195785522
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.18326421827077866
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.14031822979450226
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.10266047716140747
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0511451568454504,
+            "vy_abs_error_mean_alive_mps": 0.10511870682239532
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.048576224595308304,
+            "vy_abs_error_mean_alive_mps": 0.06264684721827507
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08329759910702705,
+            "vy_abs_error_mean_alive_mps": 0.13208822160959244
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08982783928513527,
+            "vy_abs_error_mean_alive_mps": 0.08995689451694489
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 60
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 58
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "5750": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_5750_66703482678c.json",
+      "sha256": "5d1ecb4ab7e554c3e7471c56a120038711a82ef00b309826f4dc14f706162279",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_5750_66703482678c\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5750_66703482678c\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5750_66703482678c\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5750_66703482678c\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_5750_66703482678c\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.04410397261381149
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07157424837350845
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08463919162750244
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08793185651302338
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11647995561361313
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1701127141714096
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.09916137531399727
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1321031078696251
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05262525752186775,
+            "vy_abs_error_mean_alive_mps": 0.08065915107727051
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05437959171831608,
+            "vy_abs_error_mean_alive_mps": 0.11730323731899261
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07783647254109383,
+            "vy_abs_error_mean_alive_mps": 0.08932546898722649
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09963592514395714,
+            "vy_abs_error_mean_alive_mps": 0.11893728002905846
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.04725843854248524
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0752350240945816
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08539743721485138
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08932551741600037
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11050093919038773
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15524447709321976
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.08446783199906349
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.12809476256370544
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05486777797341347,
+            "vy_abs_error_mean_alive_mps": 0.0693494938313961
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05603205971419811,
+            "vy_abs_error_mean_alive_mps": 0.10825017839670181
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07644475251436234,
+            "vy_abs_error_mean_alive_mps": 0.07877880707383156
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09344252571463585,
+            "vy_abs_error_mean_alive_mps": 0.12078237533569336
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 61
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "6000": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_6000_d5e9ec400f33.json",
+      "sha256": "a1457a3d9ff780bac2804f0949875e305559fa761dc609be09c33ee9a19b85a6",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_6000_d5e9ec400f33\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.04592675343155861
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0881415568292141
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08836838230490685
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08386708423495293
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.10363339260220528
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14866381138563156
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.0833415538072586
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.11225235089659691
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05296730622649193,
+            "vy_abs_error_mean_alive_mps": 0.11313275620341301
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.058862630277872086,
+            "vy_abs_error_mean_alive_mps": 0.07824481651186943
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06865592300891876,
+            "vy_abs_error_mean_alive_mps": 0.06057438626885414
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09882602468132973,
+            "vy_abs_error_mean_alive_mps": 0.11418367177248001
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.047013746574521065
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09268269315361977
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.0875975713133812
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08751345798373222
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11114362627267838
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 60,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15073303133249283
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.09120946377515793
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.10043521225452423
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05360855907201767,
+            "vy_abs_error_mean_alive_mps": 0.11384443938732147
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05647284537553787,
+            "vy_abs_error_mean_alive_mps": 0.07316883280873299
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0712173618376255,
+            "vy_abs_error_mean_alive_mps": 0.0597046185284853
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11039441451430321,
+            "vy_abs_error_mean_alive_mps": 0.106055598706007
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "6250": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_6250_3910a5f6383c.json",
+      "sha256": "c7cce1919e3d96cd776682bed063b5b63e1388b2f514311ccc9909294c8c9209",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/diag-back+side+",
+            "reason": "vy_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/side+0.5",
+            "reason": "vy_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/diag-back+side+",
+            "reason": "vy_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_6250_3910a5f6383c\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6250_3910a5f6383c\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6250_3910a5f6383c\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6250_3910a5f6383c\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6250_3910a5f6383c\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05699647590517998
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08756732195615768
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08916635438799858
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08875609561800957
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12747958302497864
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.17145688086748123
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1429133117198944
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.11465491726994514
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05483338423073292,
+            "vy_abs_error_mean_alive_mps": 0.08362967148423195
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07650499790906906,
+            "vy_abs_error_mean_alive_mps": 0.05959220044314861
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11911303177475929,
+            "vy_abs_error_mean_alive_mps": 0.1657443642616272
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14821214973926544,
+            "vy_abs_error_mean_alive_mps": 0.10055101662874222
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0528839286416769
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08930051326751709
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08983635902404785
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08876721933484077
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14180295169353485
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.17501603811979294
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1522282361984253
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.10486318543553352
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05333969183266163,
+            "vy_abs_error_mean_alive_mps": 0.08553913980722427
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07573660090565681,
+            "vy_abs_error_mean_alive_mps": 0.06203327514231205
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.13574087619781494,
+            "vy_abs_error_mean_alive_mps": 0.19271905720233917
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14456823468208313,
+            "vy_abs_error_mean_alive_mps": 0.07992535829544067
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 60
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 61
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 60
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "6500": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_6500_56b8d5dbb280.json",
+      "sha256": "f0d3418257bc404399aabd368b08deaafc88ac0b2a97bf17eb1e001872b87bf7",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/side-0.5",
+            "reason": "vy_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/side-0.5",
+            "reason": "vy_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_6500_56b8d5dbb280\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6500_56b8d5dbb280\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6500_56b8d5dbb280\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6500_56b8d5dbb280\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6500_56b8d5dbb280\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05375099554657936
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09336196258664131
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08362798020243645
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08771204948425293
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12259138748049736
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1831582561135292
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.09478150680661201
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.16499390453100204
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0680265948176384,
+            "vy_abs_error_mean_alive_mps": 0.10128552094101906
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05853141099214554,
+            "vy_abs_error_mean_alive_mps": 0.10911748930811882
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12616650760173798,
+            "vy_abs_error_mean_alive_mps": 0.11295033246278763
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12053663656115532,
+            "vy_abs_error_mean_alive_mps": 0.12368493899703026
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05184544436633587
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09684684500098228
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08358737453818321
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08790913224220276
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1271572858095169
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.18996871262788773
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.09397449344396591
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1746540665626526
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0641777329146862,
+            "vy_abs_error_mean_alive_mps": 0.10136571153998375
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.060284385457634926,
+            "vy_abs_error_mean_alive_mps": 0.12340116873383522
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14378205686807632,
+            "vy_abs_error_mean_alive_mps": 0.1296968311071396
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12065434455871582,
+            "vy_abs_error_mean_alive_mps": 0.11064792424440384
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 61
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "6750": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_6750_fa64470ff8a7.json",
+      "sha256": "e6da85b2450693587458c5983258ccbf2b9afba4afc42cc7431bb6326e3b8769",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/side+0.5",
+            "reason": "survival_below_60_of_64"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_6750_fa64470ff8a7\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6750_fa64470ff8a7\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6750_fa64470ff8a7\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6750_fa64470ff8a7\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6750_fa64470ff8a7\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.059294043108820915
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08397132158279419
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09783081710338593
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08789476752281189
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08620261773467064
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12796510756015778
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.13103550672531128
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.0783647894859314
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0940217673778534,
+            "vy_abs_error_mean_alive_mps": 0.10351349785923958
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06146704964339733,
+            "vy_abs_error_mean_alive_mps": 0.07164577767252922
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07295554876327515,
+            "vy_abs_error_mean_alive_mps": 0.14358415454626083
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07330793514847755,
+            "vy_abs_error_mean_alive_mps": 0.06313220411539078
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.055688733235001564
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08514634147286415
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09634893387556076
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08898220211267471
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09239127486944199
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1279275342822075
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 58,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.12695830315351486
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.07369072735309601
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08801165223121643,
+            "vy_abs_error_mean_alive_mps": 0.10671764239668846
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05945696868002415,
+            "vy_abs_error_mean_alive_mps": 0.06272368133068085
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08075950667262077,
+            "vy_abs_error_mean_alive_mps": 0.1264742910861969
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 60,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0704060010612011,
+            "vy_abs_error_mean_alive_mps": 0.05634848214685917
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 59
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 61
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "7000": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_7000_a1a0d0c1c8c9.json",
+      "sha256": "c635e662126e4e89482cd29f306d4bd67cb3f8cf96587a30c081f5e277bb06d4",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back0.5",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_7000_a1a0d0c1c8c9\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7000_a1a0d0c1c8c9\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7000_a1a0d0c1c8c9\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7000_a1a0d0c1c8c9\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7000_a1a0d0c1c8c9\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.057721251621842384
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07699987292289734
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08596902713179588
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.10754987597465515
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.13482047617435455
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.23873639851808548
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.08163953199982643
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.07310915365815163
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05689139850437641,
+            "vy_abs_error_mean_alive_mps": 0.07530983164906502
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.061552442610263824,
+            "vy_abs_error_mean_alive_mps": 0.07528753578662872
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14555007964372635,
+            "vy_abs_error_mean_alive_mps": 0.10306024178862572
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08711497113108635,
+            "vy_abs_error_mean_alive_mps": 0.07115322723984718
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06473380327224731
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07918377965688705
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08568581938743591
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.10849624127149582
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15412774682044983
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.25699082016944885
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.0712929330766201
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.08275100216269493
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0614361185580492,
+            "vy_abs_error_mean_alive_mps": 0.07274000346660614
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.07524612918496132,
+            "vy_abs_error_mean_alive_mps": 0.07444847002625465
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.14289965480566025,
+            "vy_abs_error_mean_alive_mps": 0.0740608237683773
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09606323391199112,
+            "vy_abs_error_mean_alive_mps": 0.06813560798764229
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "7250": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_7250_0151a6a2cf8d.json",
+      "sha256": "bb2a5b81271b4960815d3a90353e914584bdb2694554655308d248066a5bdae5",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back0.5",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back0.5",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/diag-back+side+",
+            "reason": "survival_below_60_of_64"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_7250_0151a6a2cf8d\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7250_0151a6a2cf8d\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7250_0151a6a2cf8d\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7250_0151a6a2cf8d\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7250_0151a6a2cf8d\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05139587260782719
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0792941302061081
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09077878296375275
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09710481762886047
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.16137614846229553
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.19472073763608932
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.07953829690814018
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1121184416115284
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.0575480405241251,
+            "vy_abs_error_mean_alive_mps": 0.08918674662709236
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06750140339136124,
+            "vy_abs_error_mean_alive_mps": 0.12233736738562584
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.12021591514348984,
+            "vy_abs_error_mean_alive_mps": 0.07230985909700394
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.10228876397013664,
+            "vy_abs_error_mean_alive_mps": 0.08241468667984009
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.048252981156110764
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08284497261047363
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.0883108377456665
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09466998651623726
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15346916764974594
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.18099012225866318
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.07051539793610573
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.1174287497997284
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.060553351417183876,
+            "vy_abs_error_mean_alive_mps": 0.08216113969683647
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08035105094313622,
+            "vy_abs_error_mean_alive_mps": 0.12141863256692886
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 57,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09925409033894539,
+            "vy_abs_error_mean_alive_mps": 0.06552965566515923
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 60,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09112459048628807,
+            "vy_abs_error_mean_alive_mps": 0.08338192477822304
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 61
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 58
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    },
+    "7500": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\scores-b\\score_7500_3a2cd2902c77.json",
+      "sha256": "4c96b75b2f9ea48088fa3a1f4569b66339e988b886cf0e04cd39ba05a2f3cdc9",
+      "verdict": "HOLD",
+      "reasons": {
+        "problems": [
+          {
+            "kind": "FAIL",
+            "cell": "eval_gt/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/back1.0",
+            "reason": "vx_abs_error_mean_alive_mps_above_tracking_limit"
+          },
+          {
+            "kind": "FAIL",
+            "cell": "probe_prop_only/diag-back+side+",
+            "reason": "survival_below_60_of_64"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evidence",
+            "reason": "invalid evaluation evidence: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\AI-WS01\\\\s2_lab\\\\ex40_main_20261031_041313\\\\score-watch-b\\\\model_7500_3a2cd2902c77\\\\axis_v2\\\\axis_v2.json'"
+          },
+          {
+            "kind": "HOLD",
+            "cell": "evaluation_child",
+            "reason": "evaluation_failed_or_completion_receipt_missing: RuntimeError: EX-40 W57 phase failed with rc=1"
+          }
+        ]
+      },
+      "sources": {
+        "map64": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7500_3a2cd2902c77\\map64\\map_modes.json",
+        "stand_eval_gt": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7500_3a2cd2902c77\\stand_eval_gt\\stand.json",
+        "stand_probe_prop_only": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7500_3a2cd2902c77\\stand_probe_prop_only\\stand.json",
+        "stand_eval_pred": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_7500_3a2cd2902c77\\stand_eval_pred\\stand.json"
+      },
+      "judged_modes": [
+        "eval_gt",
+        "probe_prop_only"
+      ],
+      "cells": {
+        "eval_gt/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05940297245979309
+          }
+        },
+        "eval_gt/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.08371182158589363
+          }
+        },
+        "eval_gt/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09373759478330612
+          }
+        },
+        "eval_gt/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08881150186061859
+          }
+        },
+        "eval_gt/back0.5": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1007319912314415
+          }
+        },
+        "eval_gt/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15004191547632217
+          }
+        },
+        "eval_gt/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.12672311067581177
+          }
+        },
+        "eval_gt/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.07785694673657417
+          }
+        },
+        "eval_gt/diag-fwd+side+": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.06292849779129028,
+            "vy_abs_error_mean_alive_mps": 0.09762702137231827
+          }
+        },
+        "eval_gt/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05598061345517635,
+            "vy_abs_error_mean_alive_mps": 0.061946358531713486
+          }
+        },
+        "eval_gt/diag-back+side+": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11529876291751862,
+            "vy_abs_error_mean_alive_mps": 0.10390036925673485
+          }
+        },
+        "eval_gt/diag-back+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.1077728271484375,
+            "vy_abs_error_mean_alive_mps": 0.06462007388472557
+          }
+        },
+        "eval_gt/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "eval_gt/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "probe_prop_only/fwd0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05812695622444153
+          }
+        },
+        "probe_prop_only/fwd1.0": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.09054425731301308
+          }
+        },
+        "probe_prop_only/spin+1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.09283630549907684
+          }
+        },
+        "probe_prop_only/spin-1.2": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "wz_abs_error_mean_alive_radps": 0.08791198208928108
+          }
+        },
+        "probe_prop_only/back0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.10548960417509079
+          }
+        },
+        "probe_prop_only/back1.0": {
+          "alive_envs_at_end": 63,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.15979523211717606
+          }
+        },
+        "probe_prop_only/side+0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.10759453848004341
+          }
+        },
+        "probe_prop_only/side-0.5": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vy_abs_error_mean_alive_mps": 0.09266334027051926
+          }
+        },
+        "probe_prop_only/diag-fwd+side+": {
+          "alive_envs_at_end": 62,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.061803366988897324,
+            "vy_abs_error_mean_alive_mps": 0.0949290469288826
+          }
+        },
+        "probe_prop_only/diag-fwd+side-": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.05630987696349621,
+            "vy_abs_error_mean_alive_mps": 0.07246585935354233
+          }
+        },
+        "probe_prop_only/diag-back+side+": {
+          "alive_envs_at_end": 59,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.11204589903354645,
+            "vy_abs_error_mean_alive_mps": 0.09343663603067398
+          }
+        },
+        "probe_prop_only/diag-back+side-": {
+          "alive_envs_at_end": 61,
+          "tracking_medians": {
+            "vx_abs_error_mean_alive_mps": 0.10915622487664223,
+            "vy_abs_error_mean_alive_mps": 0.06354910880327225
+          }
+        },
+        "probe_prop_only/stop": {
+          "alive_envs_at_end": 64,
+          "tracking_medians": {}
+        },
+        "probe_prop_only/flat_stand": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/flat_stand_record_only": {
+          "passed_envs": 64,
+          "envs": 64
+        },
+        "eval_pred/fwd0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/fwd1.0_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin+1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/spin-1.2_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/back1.0_record_only": {
+          "alive_envs_at_end": 63
+        },
+        "eval_pred/side+0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/side-0.5_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-fwd+side+_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/diag-fwd+side-_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side+_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_pred/diag-back+side-_record_only": {
+          "alive_envs_at_end": 62
+        },
+        "eval_pred/stop_record_only": {
+          "alive_envs_at_end": 64
+        },
+        "eval_gt/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "eval_gt/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_left_to_right_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/spin_right_to_left_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64
+          ]
+        },
+        "probe_prop_only/stop_and_restart_diagnostic_only": {
+          "alive_by_phase": [
+            64,
+            64,
+            64,
+            64
+          ]
+        }
+      }
+    }
+  },
+  "yaw": [
+    {
+      "update": 5750,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_5750\\axis_v2.json",
+      "sha256": "0f16307ef866fc4fdaee1a628eabd97732b7dfbb842ba9c53ee223a7c3c55d83",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": -0.5507796244806582,
+          "fwd1.0": 3.870606730943696
+        },
+        "probe_prop_only": {
+          "fwd0.5": -3.9230079422560338,
+          "fwd1.0": 2.112806321622139
+        },
+        "eval_pred": {
+          "fwd0.5": -0.7178443440318776,
+          "fwd1.0": 3.7492889109059293
+        }
+      }
+    },
+    {
+      "update": 6250,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_6250\\axis_v2.json",
+      "sha256": "97171c52f97f654696c7236491dcef995da0a3908f0ab14e41a341a0063306d2",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": -2.3840963128131683,
+          "fwd1.0": -2.1806787651782025
+        },
+        "probe_prop_only": {
+          "fwd0.5": -3.7905500836819765,
+          "fwd1.0": -5.1305241292551695
+        },
+        "eval_pred": {
+          "fwd0.5": -2.169319306814825,
+          "fwd1.0": -1.8466577553288375
+        }
+      }
+    },
+    {
+      "update": 6500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_6500\\axis_v2.json",
+      "sha256": "38575f4bbead3cc5a473f7a5b86a253ee57bc92767d1ad86ded4dc9ddaef2ee6",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": 3.0070488387060585,
+          "fwd1.0": 5.209223062975937
+        },
+        "probe_prop_only": {
+          "fwd0.5": 3.3310798431206337,
+          "fwd1.0": 3.171530039203721
+        },
+        "eval_pred": {
+          "fwd0.5": 4.316542951664658,
+          "fwd1.0": 6.134557454935401
+        }
+      }
+    },
+    {
+      "update": 6750,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_6750\\axis_v2.json",
+      "sha256": "775cd06ed0ad2ef0868ef3c9212aaaa3fb97f7b0b980a22c58173f95cbea4363",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": 0.813639454688599,
+          "fwd1.0": 8.226088591066597
+        },
+        "probe_prop_only": {
+          "fwd0.5": 0.33235700501282045,
+          "fwd1.0": 8.583983673386095
+        },
+        "eval_pred": {
+          "fwd0.5": 1.004049760822922,
+          "fwd1.0": 8.53023349971268
+        }
+      }
+    },
+    {
+      "update": 7000,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_7000\\axis_v2.json",
+      "sha256": "726c6497663be72f3c610b7444557ac876addbb2e39f5049d4a74806b507883a",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": 10.187391071614098,
+          "fwd1.0": 13.306434949027679
+        },
+        "probe_prop_only": {
+          "fwd0.5": 14.466969039490648,
+          "fwd1.0": 14.202220775662747
+        },
+        "eval_pred": {
+          "fwd0.5": 10.681311078801693,
+          "fwd1.0": 12.97634513993248
+        }
+      }
+    },
+    {
+      "update": 7250,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\axis250\\model_7250\\axis_v2.json",
+      "sha256": "629adadb11099dc58cadfd9d0a9af56deb281ff0a1cf78d4aa6ceb526bfa419c",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": -5.370236234922525,
+          "fwd1.0": -7.820115807179379
+        },
+        "probe_prop_only": {
+          "fwd0.5": -4.188621192473136,
+          "fwd1.0": -8.175593002532693
+        },
+        "eval_pred": {
+          "fwd0.5": -4.766003549997348,
+          "fwd1.0": -7.37926316819161
+        }
+      }
+    },
+    {
+      "update": 6000,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_separate_20261031\\w57_retry_model_6000_m6000-20261101_234716\\axis_v2\\axis_v2.json",
+      "sha256": "e714e629c3f2382f193097b1b9a2fe27af63a755fd66780902d5ae1b39c717cd",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": 0.6998382578324315,
+          "fwd1.0": -0.9370835979923551
+        },
+        "probe_prop_only": {
+          "fwd0.5": 0.2261543936082922,
+          "fwd1.0": -2.8694102816465468
+        },
+        "eval_pred": {
+          "fwd0.5": 1.1335877135267987,
+          "fwd1.0": 0.04531147495386459
+        }
+      }
+    },
+    {
+      "update": 7500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_w57_retry_separate_20261031\\w57_retry_model_7500_m7500-20261102_103626\\axis_v2\\axis_v2.json",
+      "sha256": "ed21d5ac23eadfddbf323a29f4782221a1405f3f80eb912ae770cf32cc2a01d9",
+      "values_deg": {
+        "eval_gt": {
+          "fwd0.5": -4.476058604635721,
+          "fwd1.0": -5.518956773910383
+        },
+        "probe_prop_only": {
+          "fwd0.5": -4.70305375184216,
+          "fwd1.0": -6.139499950573551
+        },
+        "eval_pred": {
+          "fwd0.5": -4.329417858250133,
+          "fwd1.0": -6.018451282677766
+        }
+      }
+    }
+  ],
+  "known_input_checks": {
+    "ex41_stage_ids_rejected_by_ex40_parser": {
+      "caught": true,
+      "message": "D74 EX-40 needs B0, B1, B2, B3a, B3b, B3c, D, T0 in order"
+    },
+    "new_reward_at_n0_rejected_by_exact_FIRST_REWARDS": {
+      "caught": true,
+      "message": "D70 B0 reward terms incomplete"
+    },
+    "shares": {
+      "S2a": 100.0,
+      "S2b": 100.0
+    }
+  },
+  "limits": "Single run, serially dependent checkpoints; no DR-only counterfactual. No GPU or Kit used."
+}
