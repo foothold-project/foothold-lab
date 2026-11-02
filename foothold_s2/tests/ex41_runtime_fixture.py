@@ -11,6 +11,18 @@ from foothold_s2.curriculum.ex41 import apply_runtime_fields
 TABLE=Path(__file__).parents[1]/'curriculum/ex41.yaml'
 
 
+def commit_inputs(runtime,snapshot):
+    """Publish modified CPU boundary files through the same Git reader."""
+    for path,key in [(runtime.plan.boundary_path,'config'),(runtime.plan.approvals_path,'approvals')]:
+        path.write_text(yaml.safe_dump(snapshot[key]),encoding='utf-8',newline='\n')
+    root=runtime.plan.boundary_path.parent
+    def git(*args):
+        return subprocess.check_output(['git','-C',str(root),*args],stderr=subprocess.PIPE)
+    git('add','--',runtime.plan.boundary_path.name,runtime.plan.approvals_path.name)
+    git('-c','user.name=CPU fixture','-c','user.email=cpu@example.invalid','-c','commit.gpgsign=false',
+        'commit','-qm','CPU changed boundary evidence')
+
+
 def attach_consumer(runtime):
     terrain=SimpleNamespace(terrain_origins=torch.zeros(10,2,3),terrain_levels=torch.tensor([0,1,2,0]))
     env=SimpleNamespace(scene=SimpleNamespace(terrain=terrain),cfg=SimpleNamespace(episode_length_s=20.))

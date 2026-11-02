@@ -4,30 +4,19 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 import torch
-import yaml
 import json
 from datetime import datetime,timezone
 from foothold_s2.curriculum.continuous import sha256
 from foothold_s2.curriculum.continuous import load_plan, make_runtime
 from foothold_s2.curriculum import w72
-from foothold_s2.tests.ex41_runtime_fixture import real_runtime, attach_consumer
+from foothold_s2.tests.ex41_runtime_fixture import real_runtime, attach_consumer, commit_inputs
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41.yaml'
 
 
-def snapshot():
-    return dict(commit='a'*40,config_sha256='b'*64,approval_sha256='c'*64,
-                config=yaml.safe_load(TABLE.with_name('ex41-boundary.yaml').read_text()),
-                approvals=yaml.safe_load(TABLE.with_name('ex41-approvals.yaml').read_text()))
-
-
-def runtime(tmp_path,monkeypatch):
-    snap=snapshot()
-    monkeypatch.setattr(w72,'read_committed_pair',lambda *a: copy.deepcopy(snap))
-    p=load_plan(TABLE,arm='B'); r=make_runtime(p,4,'cpu',tmp_path)
-    r.set_stage_changed_hook(lambda s,e: copy.deepcopy(e))
-    r.start(p.parent_sha256)
-    return r,snap
+def runtime(tmp_path,monkeypatch,**kwargs):
+    r,_=real_runtime(tmp_path,**kwargs)
+    return r,w72.read_committed_pair(r.plan.boundary_path,r.plan.approvals_path)
 
 
 def test_n0_to_first_rollout_preserves_dr_and_episode_command_version(tmp_path,monkeypatch):
@@ -47,6 +36,7 @@ def test_rejected_boundary_keeps_previous_and_no_callback(tmp_path,monkeypatch):
     r,snap=runtime(tmp_path,monkeypatch); r.on_update_start(1)
     calls=[]; r.set_stage_changed_hook(lambda s,e: calls.append(e) or e)
     snap['config']['values']['ppo']['clip_param']=.1
+    commit_inputs(r,snap)
     before=copy.deepcopy(r.effective)
     r.on_update_start(251)
     assert not calls
@@ -71,7 +61,7 @@ def test_resume_changed_mirror_approval_stays_off_and_records_rejection(tmp_path
     values=copy.deepcopy(r._config_values); values['critic_mirror']=True
     assert r._apply(1,251,values,[],None,'known enabled mirror')
     state=r.state_dict()
-    b=make_runtime(load_plan(TABLE,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
     calls=[]
     def hook(stage,e):
         calls.append(e['critic_mirror'])
@@ -117,7 +107,9 @@ def test_mirror_authorization_matches_shared_fixture(tmp_path,monkeypatch):
     r,_=runtime(tmp_path,monkeypatch)
     fixture=json.loads((Path(__file__).parent/'fixtures/ex41_authorization.json').read_text())
     fixture.update(boundary_file=str(r.plan.boundary_path.resolve()),
-                   approval_file=str(r.plan.approvals_path.resolve()))
+                   approval_file=str(r.plan.approvals_path.resolve()),
+                   config_commit=r._snapshot['commit'],config_sha256=r._snapshot['config_sha256'],
+                   approval_sha256=r._snapshot['approval_sha256'],approval_id=r._snapshot['approval_sha256'])
     values=copy.deepcopy(r._config_values); values['critic_mirror']=True
     assert r._apply(1,501,values,[dict(path='critic_mirror',before=False,after=True,decision_id='D101')],None,'boundary_config')
     assert r.effective['authorization']==fixture
@@ -241,7 +233,7 @@ def test_bad_score_never_promotes(tmp_path,monkeypatch,mutate):
 
 
 def test_s2c_extension_once_then_cap_transition_without_false_graduation(tmp_path,monkeypatch):
-    r,_=runtime(tmp_path,monkeypatch)
+    r,_=runtime(tmp_path,monkeypatch,w71=True)
     r._apply(3,1001,r._config_values,[],None,'cpu edge setup')
     r._level_history=[(n,1. if n<=1250 else 1.5) for n in range(1050,1501,50)]
     score(r,1500,False,{'stand_min_passed':61})
@@ -308,8 +300,7 @@ def test_parent_and_initial_dr_are_configuration_not_hardcoded(tmp_path,monkeypa
 
 
 def test_initial_boundary_cannot_silently_jump_parent_dr(tmp_path,monkeypatch):
-    doc=yaml.safe_load(TABLE.read_text()); doc['parent_update']=6000; doc['domain_randomization']['scale']=.5
-    table=tmp_path/'candidate.yaml'; table.write_text(yaml.safe_dump(doc),encoding='utf-8')
-    monkeypatch.setattr(w72,'read_committed_pair',lambda *a:snapshot())  # initial target1 differs
-    p=load_plan(table,arm='B'); r=make_runtime(p,4,'cpu',tmp_path/'run'); r.set_stage_changed_hook(lambda s,e:e)
+    r,snap=runtime(tmp_path,monkeypatch,parent=6000)
+    snap['config']['values']['dr']['target_scale']=1.; commit_inputs(r,snap)
+    p=r.plan; r=make_runtime(p,4,'cpu',tmp_path/'retry'); attach_consumer(r)
     with pytest.raises(ValueError,match='initial DR'): r.start(p.parent_sha256)

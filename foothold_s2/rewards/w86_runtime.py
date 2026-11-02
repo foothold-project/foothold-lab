@@ -16,6 +16,7 @@ KNEES=('FL_calf_joint','FR_calf_joint','RL_calf_joint','RR_calf_joint')
 # Terrain-relative distances keep valid high world elevations unaffected.
 MAX_FOOT_HEIGHT_ERROR_M=5.
 MAX_SWING_COST_M2=4*MAX_FOOT_HEIGHT_ERROR_M**2
+MAX_BODY_YAW_RATE_RAD_S=100.  # Corruption guard, far above commanded 1.5 rad/s.
 
 
 def rotate(q,v):
@@ -140,6 +141,9 @@ class W86Runtime:
         for name in ('sole_z','velocity_xy','forces','command','yaw','joint_pos','torque'):
             x=d[name]; bad |= ~torch.isfinite(x).reshape(n,-1).all(-1)
         self.mark(bad,'nonfinite_physical_state')
+        huge_yaw=d['yaw'].abs()>MAX_BODY_YAW_RATE_RAD_S
+        self.mark(huge_yaw,'body_yaw_rate_out_of_bounds')
+        bad |=huge_yaw
         # Invalid rays are missing terrain evidence, not a zero-height surface.
         target,ray_valid=w86.swing_target(d['ground_z'][...,0],d['ground_z'])
         huge=((d['sole_z']-target).abs()>MAX_FOOT_HEIGHT_ERROR_M) & ray_valid

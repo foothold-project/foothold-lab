@@ -9,7 +9,7 @@ import yaml
 from foothold_s2.curriculum import ex41, w72
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.tests.test_ex41_runtime_cpu import runtime, score, TABLE
-from foothold_s2.tests.ex41_runtime_fixture import real_runtime
+from foothold_s2.tests.ex41_runtime_fixture import real_runtime, commit_inputs
 from foothold_s2.tests.test_w86_runtime_cpu import sample
 from foothold_s2.rewards import w86_runtime as wr
 
@@ -36,6 +36,7 @@ def test_safety_score_survives_locked_config_error(tmp_path,monkeypatch):
     r,snap=runtime(tmp_path,monkeypatch); r.on_update_start(1)
     f=score(r,250); data=json.loads(f.read_text()); data['safety_stop']=True
     f.write_text(json.dumps(data)); snap['config']['values']['ppo']['clip_param']=.1
+    commit_inputs(r,snap)
     r.on_update_start(251)
     assert r.stop_requested
     assert r.effective['stage_id']=='S2a'
@@ -147,3 +148,24 @@ def test_valid_mask_keeps_normal_done_and_remembers_action_fault(tmp_path):
     actions=torch.zeros(3,12); actions[2,0]=float('nan'); wr.quarantine_actions(runner,actions)
     *_,extra=wr.quarantine_step(runner,obs,torch.ones(3),done,{})
     assert extra['ex41_ppo_valid'].tolist()==[True,True,False] and not a.pending.any()
+
+
+def test_rejected_boundary_score_adjusts_once_after_repair(tmp_path,monkeypatch):
+    r,snap=runtime(tmp_path,monkeypatch); r.on_update_start(1)
+    score(r,250,False,{'pairs':{'side':{'left':[55,.2],'right':[64,.1]}}})
+    snap['config']['values']['ppo']['clip_param']=.1; commit_inputs(r,snap)
+    r.on_update_start(251)
+    assert not r._pair_bias and len(r._history)==1
+    del snap['config']['values']['ppo']['clip_param']; commit_inputs(r,snap)
+    r.on_update_start(501)
+    assert r._pair_bias['side_left|side_right']==pytest.approx(.01)
+    r.on_update_start(751)
+    assert r._pair_bias['side_left|side_right']==pytest.approx(.01)
+
+
+def test_huge_finite_yaw_is_quarantined(tmp_path):
+    env=SimpleNamespace(num_envs=3,device='cpu',step_dt=.02,common_step_counter=1)
+    data=sample(); data['yaw'][1]=1e6
+    a=wr.W86Runtime(env,tmp_path,source=lambda:data)
+    assert a.refresh()['bad'].tolist()==[False,True,False]
+    assert a.cache['terms']['zero_yaw'][1]==0
