@@ -457,6 +457,11 @@ def main(env_cfg, agent_cfg):
         else:
             print(f"[INFO] EX-41 self-resume from {resume_path}")
             runner.load(resume_path, map_location="cpu")
+            from foothold_s2.scripts.ex41_startup import normalize_ex41_dr_baselines
+
+            dr_device_receipt = normalize_ex41_dr_baselines(env)
+            print("EX41_RESUME_DR_DEVICE_READBACK "
+                  + json.dumps(dr_device_receipt, sort_keys=True), flush=True)
             restored_state = runner.state_dict()
             saved_state = torch.load(resume_path, map_location="cpu", weights_only=False)
             resume_state_comparison = compare_resume_state(saved_state, restored_state)
@@ -501,6 +506,7 @@ def main(env_cfg, agent_cfg):
                 "optimizer_restored": True,
                 "rng_restored": True,
                 "state_group_readback": resume_state_comparison,
+                "dr_baseline_device_readback": dr_device_receipt,
             })
             run_manifest.write_manifest(log_dir, manifest)
         if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:

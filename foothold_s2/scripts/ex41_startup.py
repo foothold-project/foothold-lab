@@ -695,6 +695,46 @@ def attach_ex41_stand_runtime_data(env: Any) -> dict[str, Any]:
             "mass_max_kg": float(total.max().item()), "source": "root_physx_view.get_masses"}
 
 
+def normalize_ex41_dr_baselines(env: Any) -> dict[str, Any]:
+    """Move CPU-mapped checkpoint DR baselines onto the live environment device."""
+    import torch
+
+    raw = getattr(env, "unwrapped", env)
+    scene = getattr(raw, "scene", None)
+    device = getattr(raw, "device", None)
+    if device is None:
+        device = getattr(scene, "device", None)
+    if device is None:
+        raise ValueError("EX-41 resumed DR baseline target device is unavailable")
+    device = torch.device(device)
+
+    def move(value: Any) -> tuple[Any, dict[str, str]]:
+        if value is None:
+            return None, {"state": "absent"}
+        tensor = torch.as_tensor(value)
+        source = str(tensor.device)
+        moved = tensor.to(device=device).clone()
+        return moved, {"state": "normalized", "from_device": source,
+                       "to_device": str(moved.device)}
+
+    com, com_receipt = move(getattr(raw, "_ex40_dr_com_baseline", None))
+    if com is not None:
+        raw._ex40_dr_com_baseline = com
+    motor_receipt: dict[str, Any] = {}
+    motor_baselines = getattr(raw, "_ex40_dr_motor_baselines", None)
+    if motor_baselines is not None:
+        moved_motor: dict[str, dict[str, Any]] = {}
+        for group, values in motor_baselines.items():
+            if not isinstance(values, dict):
+                raise ValueError(f"EX-41 resumed motor baseline group is invalid: {group}")
+            moved_motor[group] = {}
+            for name, value in values.items():
+                moved_motor[group][name], motor_receipt[f"{group}.{name}"] = move(value)
+        raw._ex40_dr_motor_baselines = moved_motor
+    return {"device": str(device), "com_baseline": com_receipt,
+            "motor_baselines": motor_receipt}
+
+
 def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     """Install EX-41-only pose observations, terrain, DR consumers, and W86 before gym.make."""
     from foothold_s2.rewards.basic_gait_bundle import (

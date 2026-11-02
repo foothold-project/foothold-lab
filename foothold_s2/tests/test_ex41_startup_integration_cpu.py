@@ -342,6 +342,34 @@ def test_rehearsal_resume_retry_requires_failure_receipt_and_dead_process(tmp_pa
         validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
 
 
+def test_resume_dr_baselines_move_from_cpu_checkpoint_to_environment_device():
+    from torch._subclasses.fake_tensor import FakeTensorMode
+
+    mode = FakeTensorMode(allow_non_fake_inputs=True)
+    with mode:
+        raw = SimpleNamespace(
+            device=torch.device("cuda:0"),
+            _ex40_dr_com_baseline=torch.arange(21, dtype=torch.float32).reshape(1, 3, 7),
+            _ex40_dr_motor_baselines={"legs": {
+                "stiffness": torch.ones((1, 12), dtype=torch.float32),
+                "damping": torch.full((1, 12), 2.0, dtype=torch.float32),
+            }},
+        )
+        com_cpu = raw._ex40_dr_com_baseline
+        motors_cpu = raw._ex40_dr_motor_baselines["legs"]["stiffness"]
+        receipt = ex41_startup.normalize_ex41_dr_baselines(raw)
+
+        assert raw._ex40_dr_com_baseline.device == torch.device("cuda:0")
+        assert raw._ex40_dr_com_baseline.shape == com_cpu.shape
+        assert raw._ex40_dr_motor_baselines["legs"]["stiffness"].device == torch.device("cuda:0")
+        assert raw._ex40_dr_motor_baselines["legs"]["damping"].device == torch.device("cuda:0")
+        assert com_cpu.device == torch.device("cpu")
+        assert motors_cpu.device == torch.device("cpu")
+        assert receipt["device"] == "cuda:0"
+        assert receipt["com_baseline"]["from_device"] == "cpu"
+        assert receipt["com_baseline"]["to_device"] == "cuda:0"
+
+
 def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
     plan = load_fixed_plan(TABLE)
     started = datetime(2026, 11, 3, tzinfo=timezone.utc)
@@ -461,6 +489,9 @@ def test_training_entry_keeps_dr_08_opt_in_and_marks_rehearsal_followups_explici
     branch = source[source.index("if resume_path is None:"):source.index("ex41_w86_receipt = attach_runtime")]
     assert "if EX41_REHEARSAL and args_cli.ex41_rehearsal_dr_08:" in branch
     assert "run_rehearsal_dr_proof(" in branch
+    resume = source[source.index("runner.load(resume_path, map_location=\"cpu\")"):]
+    assert resume.index("normalize_ex41_dr_baselines(env)") < resume.index("restored_state = runner.state_dict()")
+    assert '"dr_baseline_device_readback": dr_device_receipt' in resume
     for receipt_field in (
         '"local_update_origin": runner.current_learning_iteration',
         '"first_completed_update": runner.current_learning_iteration + 1',
