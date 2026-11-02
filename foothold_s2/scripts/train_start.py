@@ -372,6 +372,16 @@ def main(env_cfg, agent_cfg):
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import (
+            verify_ex41_start_readback, write_ex41_start_readback,
+        )
+
+        ex41_start_receipt = verify_ex41_start_readback(
+            log_dir, EX41_PLAN, EX41_PARENT_RECEIPT, manifest, env, ex41_dr_readback)
+        start_receipt_path = write_ex41_start_readback(log_dir, ex41_start_receipt)
+        print("EX41_START_READBACK " + json.dumps(ex41_start_receipt, sort_keys=True), flush=True)
+        print(f"EX41_START_READBACK_FILE {start_receipt_path}", flush=True)
     if EX41_REHEARSAL:
         print("EX41_REHEARSAL_READBACK " + json.dumps({
             "output": log_dir,

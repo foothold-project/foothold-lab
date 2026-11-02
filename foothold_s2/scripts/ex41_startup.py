@@ -283,6 +283,73 @@ def verify_m6000_parent(plan, parent_path: str | Path) -> dict[str, Any]:
             "agent_yaml_sha256": plan.baseline_agent_yaml_sha256}
 
 
+def verify_ex41_start_readback(log_dir: str | Path, plan, parent_receipt: dict[str, Any],
+                               manifest: dict[str, Any], env: Any,
+                               dr_runtime: Any) -> dict[str, Any]:
+    """Read back persisted start inputs and live DR before the first learn call."""
+    root = _require_d_drive(log_dir).resolve(strict=True)
+    manifest_path = root / "manifest.json"
+    env_path = root / "params" / "env.yaml"
+    agent_path = root / "params" / "agent.yaml"
+    if not all(path.is_file() for path in (manifest_path, env_path, agent_path)):
+        raise ValueError("EX-41 U21 readback files are incomplete")
+    saved = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    expected_modes = manifest.get("modes", {}).get("ex41", {})
+    actual_modes = saved.get("modes", {}).get("ex41", {})
+    if actual_modes != expected_modes:
+        raise ValueError("EX-41 U21 manifest readback differs from in-memory manifest")
+    if (actual_modes.get("plan_sha256") != plan.sha256
+            or actual_modes.get("effective_sha256") != plan.effective_sha256):
+        raise ValueError("EX-41 U21 plan SHA readback differs")
+    parent = actual_modes.get("parent")
+    if (not isinstance(parent, dict)
+            or parent.get("sha256") != plan.parent_sha256
+            or parent.get("sha256") != parent_receipt.get("sha256")
+            or parent.get("checkpoint") != parent_receipt.get("checkpoint")):
+        raise ValueError("EX-41 U21 parent readback differs")
+    if hashlib.sha256(Path(parent["checkpoint"]).read_bytes()).hexdigest() != parent["sha256"]:
+        raise ValueError("EX-41 U21 parent checkpoint SHA changed")
+    from foothold_s2.runners.manifest import yaml_flat
+
+    for key, path in (("env", env_path), ("agent", agent_path)):
+        if saved.get("yaml", {}).get(key) != yaml_flat(str(path)):
+            raise ValueError(f"EX-41 U21 persisted {key}.yaml differs from manifest")
+    initial_contract = actual_modes.get("initial_dr_contract", {})
+    if (initial_contract.get("scale") != 0.5
+            or initial_contract.get("before_first_reset") is not True):
+        raise ValueError("EX-41 U21 initial DR contract is not 0.5 before first reset")
+    raw_env = getattr(env, "unwrapped", env)
+    applied = getattr(raw_env, "_ex41_initial_dr_scale_applied", None)
+    env_scale = getattr(raw_env, "_ex40_dr_scale", None)
+    runtime_scale = getattr(dr_runtime, "scale", None)
+    if (applied != 0.5 or env_scale != 0.5 or runtime_scale != 0.5):
+        raise ValueError("EX-41 U21 first-reset DR readback is not 0.5")
+    return {
+        "format": "foothold-ex41-start-readback/1",
+        "status": "verified",
+        "plan_sha256": plan.sha256,
+        "effective_sha256": plan.effective_sha256,
+        "parent_checkpoint": parent["checkpoint"],
+        "parent_sha256": parent["sha256"],
+        "env_yaml_sha256": hashlib.sha256(env_path.read_bytes()).hexdigest(),
+        "agent_yaml_sha256": hashlib.sha256(agent_path.read_bytes()).hexdigest(),
+        "first_reset_dr_scale": applied,
+        "runtime_dr_scale": runtime_scale,
+    }
+
+
+def write_ex41_start_readback(log_dir: str | Path, receipt: dict[str, Any]) -> Path:
+    """Atomically persist the verified, user-readable U21 readback receipt."""
+    root = _require_d_drive(log_dir).resolve(strict=True)
+    if receipt.get("format") != "foothold-ex41-start-readback/1" or receipt.get("status") != "verified":
+        raise ValueError("EX-41 U21 readback receipt is not verified")
+    target = root / "ex41_start_readback.json"
+    temp = target.with_name(target.name + ".tmp")
+    temp.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    temp.replace(target)
+    return target
+
+
 def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     """Install EX-41-only pose observations, terrain, DR consumers, and W86 before gym.make."""
     from foothold_s2.curriculum.ex41 import prepare_terrain_cfg

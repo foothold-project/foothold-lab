@@ -20,6 +20,8 @@ from foothold_s2.scripts.ex41_startup import (
     require_production_authorization,
     set_live_initial_dr_scale,
     validate_rehearsal_request,
+    verify_ex41_start_readback,
+    write_ex41_start_readback,
 )
 
 
@@ -199,3 +201,77 @@ def test_existing_dr_runtime_readback_is_set_to_half_before_rollout():
     runtime, env = SimpleNamespace(scale=0.), SimpleNamespace(_ex40_dr_scale=0.)
     assert set_live_initial_dr_scale(runtime, env, 0.5) == {
         "runtime_scale": 0.5, "env_scale": 0.5}
+
+
+def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path):
+    from foothold_s2.runners.manifest import yaml_flat
+
+    run = tmp_path / "u21"
+    params = run / "params"
+    params.mkdir(parents=True)
+    parent = run / "model_6000.pt"
+    parent.write_bytes(b"pinned parent bytes")
+    plan = SimpleNamespace(sha256="a" * 64, effective_sha256="b" * 64,
+                           parent_sha256=__import__("hashlib").sha256(parent.read_bytes()).hexdigest())
+    env_yaml = params / "env.yaml"
+    agent_yaml = params / "agent.yaml"
+    env_yaml.write_text("scene:\n  num_envs: 2\n", encoding="utf-8")
+    agent_yaml.write_text("max_iterations: 6501\n", encoding="utf-8")
+    parent_receipt = {"checkpoint": str(parent.resolve()), "sha256": plan.parent_sha256}
+    modes = {"ex41": {"plan_sha256": plan.sha256,
+                       "effective_sha256": plan.effective_sha256,
+                       "parent": parent_receipt,
+                       "initial_dr_contract": {"scale": 0.5, "before_first_reset": True}}}
+    manifest = {"modes": modes,
+                "yaml": {"env": yaml_flat(str(env_yaml)), "agent": yaml_flat(str(agent_yaml))}}
+    (run / "manifest.json").write_text(__import__("json").dumps(manifest), encoding="utf-8")
+    env = SimpleNamespace(unwrapped=SimpleNamespace(_ex41_initial_dr_scale_applied=0.5,
+                                                    _ex40_dr_scale=0.5))
+    runtime = SimpleNamespace(scale=0.5)
+
+    receipt = verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+    assert receipt["status"] == "verified"
+    assert receipt["first_reset_dr_scale"] == 0.5
+    assert write_ex41_start_readback(run, receipt).is_file()
+
+    env.unwrapped._ex41_initial_dr_scale_applied = 0.25
+    with pytest.raises(ValueError, match="first-reset DR readback"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+
+
+def test_u21_rejects_disk_manifest_yaml_and_parent_sha_mismatch(tmp_path):
+    import hashlib
+    import json
+    from foothold_s2.runners.manifest import yaml_flat
+
+    run = tmp_path / "u21_bad"
+    params = run / "params"
+    params.mkdir(parents=True)
+    parent = run / "model_6000.pt"
+    parent.write_bytes(b"pinned parent bytes")
+    plan = SimpleNamespace(sha256="a" * 64, effective_sha256="b" * 64,
+                           parent_sha256=hashlib.sha256(parent.read_bytes()).hexdigest())
+    env_yaml = params / "env.yaml"
+    agent_yaml = params / "agent.yaml"
+    env_yaml.write_text("scene:\n  num_envs: 2\n", encoding="utf-8")
+    agent_yaml.write_text("max_iterations: 6501\n", encoding="utf-8")
+    parent_receipt = {"checkpoint": str(parent.resolve()), "sha256": plan.parent_sha256}
+    modes = {"ex41": {"plan_sha256": plan.sha256,
+                       "effective_sha256": plan.effective_sha256,
+                       "parent": parent_receipt,
+                       "initial_dr_contract": {"scale": 0.5, "before_first_reset": True}}}
+    manifest = {"modes": modes,
+                "yaml": {"env": yaml_flat(str(env_yaml)), "agent": yaml_flat(str(agent_yaml))}}
+    disk = run / "manifest.json"
+    disk.write_text(json.dumps(manifest), encoding="utf-8")
+    env = SimpleNamespace(unwrapped=SimpleNamespace(_ex41_initial_dr_scale_applied=0.5,
+                                                    _ex40_dr_scale=0.5))
+    runtime = SimpleNamespace(scale=0.5)
+
+    env_yaml.write_text("scene:\n  num_envs: 3\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="persisted env.yaml"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+    env_yaml.write_text("scene:\n  num_envs: 2\n", encoding="utf-8")
+    parent.write_bytes(b"changed parent")
+    with pytest.raises(ValueError, match="parent checkpoint SHA changed"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
