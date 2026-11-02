@@ -95,6 +95,13 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
             "composer": str(composer), "composer_sha256": queue.sha256(composer),
             "queue": str(Path(queue.__file__).resolve()),
             "queue_sha256": queue.sha256(Path(queue.__file__).resolve()),
+            "runtime_sources_sha256": {
+                str(path): queue.sha256(path) for path in (
+                    recorder.parent / "overlay_25e.py",
+                    *(Path(queue.__file__).parent / name for name in
+                      ("c_layer_segmentation.py", "c_layer_frame_audit.py", "video_rule.py")),
+                )
+            },
             "playlist_dir": str(playlist_dir.resolve()), "jobs": rows}
     if queue.validate_plan(plan)["ready"] != 216:
         raise AssertionError("C76 plan is not complete")

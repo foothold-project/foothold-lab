@@ -39,3 +39,16 @@ def test_missing_identity_map_is_hold():
     with pytest.raises(ValueError, match="idToLabels"):
         robot_pixel_evidence({"data": np.ones((20, 30), dtype=np.int32), "info": {}},
                              selected_env=0, env_count=2, height=20, width=30)
+
+
+def test_fixed64_counts_selected_and_hidden_ids_in_one_frame():
+    labels = {str(env + 100): f"/World/envs/env_{env}/Robot/base" for env in range(64)}
+    pixels = np.zeros((10, 10), dtype=np.int32)
+    pixels.flat[:81] = 123
+    pixels.flat[81] = 124
+    evidence = robot_pixel_evidence(
+        {"data": pixels, "info": {"idToLabels": labels}},
+        selected_env=23, env_count=64, height=10, width=10,
+    )
+    assert evidence["selected_robot_pixels"] == 81
+    assert evidence["other_robot_pixels"] == 1

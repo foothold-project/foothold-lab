@@ -102,6 +102,16 @@ def validate_plan(plan: dict) -> dict:
     queue_source = _source(plan["queue"], plan["queue_sha256"])
     if queue_source.resolve() != Path(__file__).resolve():
         raise ValueError("video_rule_hold: plan points to another queue revision")
+    runtime_sources = plan.get("runtime_sources_sha256")
+    expected_sources = {
+        str(recorder.parent / "overlay_25e.py"),
+        *(str(Path(__file__).parent / name) for name in
+          ("c_layer_segmentation.py", "c_layer_frame_audit.py", "video_rule.py")),
+    }
+    if not isinstance(runtime_sources, dict) or set(runtime_sources) != expected_sources:
+        raise ValueError("video_rule_hold: runtime source inventory differs")
+    for path, wanted in runtime_sources.items():
+        _source(path, wanted)
     playlist_dir = Path(plan["playlist_dir"])
     if not playlist_dir.is_absolute() or playlist_dir.name != "_playlists":
         raise ValueError("C76 playlists must use the shared _playlists directory")

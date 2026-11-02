@@ -31,6 +31,7 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
     source_file.write_text("# source\n", encoding="utf-8")
     recorder = tmp_path / "record_c_layer.py"
     recorder.write_text("# C_LAYER_SEED_V1\n", encoding="utf-8")
+    (tmp_path / "overlay_25e.py").write_text("# fixed overlay\n", encoding="utf-8")
     composer = tmp_path / "compose.py"
     composer.write_text('VIDEO_RULE_VERSION = "v3.1-D137"\n', encoding="utf-8")
     monkeypatch.setattr(planner, "_head", lambda _root: "a" * 40)

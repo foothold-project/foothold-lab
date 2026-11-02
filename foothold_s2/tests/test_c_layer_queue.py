@@ -42,6 +42,8 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     checkpoint.write_bytes(b"checkpoint")
     recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
     composer.write_bytes(b'VIDEO_RULE_VERSION = "v3.1-D137"\n')
+    overlay = tmp_path / "overlay_25e.py"
+    overlay.write_bytes(b"# fixed overlay\n")
     rows = []
     cells = q.inventory(KINDS) if complete else [("boxes", 2, "eval_gt")]
     for kind, level, mode in cells:
@@ -71,6 +73,13 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     plan["playlist_dir"] = str(tmp_path / "_playlists")
     plan["queue"] = str(Path(q.__file__).resolve())
     plan["queue_sha256"] = q.sha256(Path(q.__file__).resolve())
+    plan["runtime_sources_sha256"] = {
+        str(path): q.sha256(path) for path in (
+            overlay,
+            *(Path(q.__file__).parent / name for name in
+              ("c_layer_segmentation.py", "c_layer_frame_audit.py", "video_rule.py")),
+        )
+    }
     return plan, rows
 
 
@@ -254,6 +263,20 @@ def test_old_composer_and_missing_robot_visibility_are_held(tmp_path):
     composer.write_text('VIDEO_RULE_VERSION = "v2"\n', encoding="utf-8")
     plan["composer_sha256"] = q.sha256(composer)
     with pytest.raises(ValueError, match="older video rule"):
+        q.validate_plan(plan)
+
+
+def test_changed_segmentation_or_overlay_source_holds_before_capture(tmp_path):
+    plan, _rows = fixture(tmp_path)
+    assert q.validate_plan(plan)["ready"] == 216
+    overlay = tmp_path / "overlay_25e.py"
+    overlay.write_bytes(b"# changed while plan was pending\n")
+    with pytest.raises(ValueError, match="SHA256 mismatch"):
+        q.validate_plan(plan)
+    plan["runtime_sources_sha256"][str(overlay)] = q.sha256(overlay)
+    assert q.validate_plan(plan)["ready"] == 216
+    plan["runtime_sources_sha256"].pop(str(overlay))
+    with pytest.raises(ValueError, match="runtime source inventory"):
         q.validate_plan(plan)
 
 

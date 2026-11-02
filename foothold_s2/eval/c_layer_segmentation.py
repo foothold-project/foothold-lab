@@ -31,8 +31,19 @@ def robot_pixel_evidence(packet: dict, *, selected_env: int, env_count: int,
             robot_ids[env].add(int(raw_id))
     if not robot_ids[selected_env]:
         raise ValueError("C76 selected robot instance IDs missing")
-    counts = {str(env): int(np.isin(pixels, list(ids)).sum()) if ids else 0
-              for env, ids in robot_ids.items()}
+    id_to_env = {}
+    for env, ids in robot_ids.items():
+        for instance_id in ids:
+            if instance_id in id_to_env:
+                raise ValueError("C76 robot instance ID belongs to multiple environments")
+            id_to_env[instance_id] = env
+    counts = {str(env): 0 for env in range(env_count)}
+    # One image scan, rather than 64 full-frame scans for a fixed64 capture.
+    values, frequencies = np.unique(pixels, return_counts=True)
+    for instance_id, count in zip(values, frequencies):
+        env = id_to_env.get(int(instance_id))
+        if env is not None:
+            counts[str(env)] += int(count)
     return {"selected_env_id": selected_env, "selected_robot_pixels": counts[str(selected_env)],
             "other_robot_pixels": sum(count for env, count in counts.items() if int(env) != selected_env),
             "robot_pixels_by_env": counts, "source": "instance_id_segmentation_fast"}
