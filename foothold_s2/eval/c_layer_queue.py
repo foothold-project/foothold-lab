@@ -25,6 +25,26 @@ MAX_ATTEMPTS = 4
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
+def recorder_child_env(python_executable: str, parent: dict[str, str] | None = None) -> dict[str, str]:
+    """Match seq_video.sh's Kit environment for every recorder subprocess."""
+    env = dict(os.environ if parent is None else parent)
+    executable = Path(python_executable)
+    if not executable.is_absolute():
+        found = shutil.which(python_executable, path=env.get("PATH"))
+        if found is None:
+            raise ValueError("recorder Python executable not found")
+        executable = Path(found)
+    prefix = str(executable.parent)
+    library = [prefix, *(str(executable.parent / part) for part in
+                         ("Library/mingw-w64/bin", "Library/usr/bin", "Library/bin", "Scripts", "bin"))]
+    env["PATH"] = os.pathsep.join([*library, env.get("PATH", "")])
+    env.update({"CONDA_PREFIX": prefix, "OMNI_KIT_ACCEPT_EULA": "YES",
+                "CUDA_DEVICE_ORDER": "PCI_BUS_ID", "PYTHONUNBUFFERED": "1",
+                "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1"})
+    env.pop("CUDA_VISIBLE_DEVICES", None)
+    return env
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -323,13 +343,14 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
             policy = dict(row["policy"], seed=seed)
             values = {"{mp4}": str(mp4), "{label}": row["label"], "{policy}": json.dumps(policy)}
             argv = [values.get(token, token) for token in row["recorder_argv"]]
+            child_env = recorder_child_env(argv[0])
             _write(attempt_root / "started.json", {"cell": cell["cell"], "ordinal": ordinal,
                                                    "seed": seed, "checkpoint_sha256": plan["checkpoint_sha256"],
                                                    "recorder_sha256": plan["recorder_sha256"]})
             try:
                 preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
                                            encoding="utf-8", errors="replace", check=False,
-                                           env={**os.environ, "PYTHONUTF8": "1"})
+                                           env=child_env)
                 if preflight.returncode:
                     raise ValueError("C76 recorder plan-only exit %d: %s" %
                                      (preflight.returncode, preflight.stderr[-500:]))
@@ -340,7 +361,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                         or preview.get("spec", {}).get("map_mode") != row["map_mode"]):
                     raise ValueError("C76 recorder preflight differs from registered attempt")
                 with (attempt_root / "child.log").open("wb") as log:
-                    child = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT, check=False)
+                    child = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT,
+                                           check=False, env=child_env)
                 if child.returncode:
                     raise ValueError("recorder child exit %d" % child.returncode)
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
@@ -361,7 +383,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 compose_argv = [argv[0], plan["composer"], "--capture", str(attempt),
                                 "--segment", "seq", "--speed", "1x", "--out", str(styled)]
                 with (attempt_root / "compose.log").open("wb") as log:
-                    composed = subprocess.run(compose_argv, stdout=log, stderr=subprocess.STDOUT, check=False)
+                    composed = subprocess.run(compose_argv, stdout=log, stderr=subprocess.STDOUT,
+                                              check=False, env=child_env)
                 if composed.returncode:
                     raise ValueError("C76 HUD composer exit %d" % composed.returncode)
                 styled_receipt = styled.with_suffix(".json")

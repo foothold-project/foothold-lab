@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
+import sys
 from types import SimpleNamespace
 
 import numpy as np
@@ -108,6 +110,69 @@ def fake_capture(plan: dict, outcomes: list[int]):
         return subprocess.CompletedProcess(argv, 0)
 
     return run, calls
+
+
+def test_recorder_child_env_matches_seq_video_block(tmp_path):
+    python = tmp_path / "isaac311" / "python.exe"
+    parent = {"PATH": "original-path", "CUDA_VISIBLE_DEVICES": "0",
+              "OMNI_KIT_ACCEPT_EULA": "NO"}
+    child = q.recorder_child_env(str(python), parent)
+    prefix = str(python.parent)
+    expected_paths = [prefix, *(str(python.parent / part) for part in
+                                ("Library/mingw-w64/bin", "Library/usr/bin",
+                                 "Library/bin", "Scripts", "bin"))]
+    assert child["PATH"] == os.pathsep.join([*expected_paths, "original-path"])
+    assert {key: child[key] for key in ("CONDA_PREFIX", "OMNI_KIT_ACCEPT_EULA",
+                                         "CUDA_DEVICE_ORDER", "PYTHONUNBUFFERED",
+                                         "KMP_DUPLICATE_LIB_OK", "PYTHONUTF8")} == {
+        "CONDA_PREFIX": prefix, "OMNI_KIT_ACCEPT_EULA": "YES",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID", "PYTHONUNBUFFERED": "1",
+        "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1"}
+    assert "CUDA_VISIBLE_DEVICES" not in child
+    assert parent["CUDA_VISIBLE_DEVICES"] == "0"
+
+
+def test_real_python_child_observes_kit_env_without_visible_device():
+    child_env = q.recorder_child_env(sys.executable,
+                                    {**os.environ, "CUDA_VISIBLE_DEVICES": "0"})
+    keys = ("CONDA_PREFIX", "OMNI_KIT_ACCEPT_EULA", "CUDA_DEVICE_ORDER",
+            "PYTHONUNBUFFERED", "KMP_DUPLICATE_LIB_OK", "CUDA_VISIBLE_DEVICES")
+    script = "import json,os;print(json.dumps({k:os.environ.get(k) for k in " + repr(keys) + "}))"
+    completed = subprocess.run([sys.executable, "-c", script], env=child_env,
+                               capture_output=True, text=True, check=True)
+    observed = json.loads(completed.stdout)
+    assert observed == {"CONDA_PREFIX": str(Path(sys.executable).parent),
+                        "OMNI_KIT_ACCEPT_EULA": "YES", "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+                        "PYTHONUNBUFFERED": "1", "KMP_DUPLICATE_LIB_OK": "TRUE",
+                        "CUDA_VISIBLE_DEVICES": None}
+
+
+def test_recorder_preflight_capture_and_composer_receive_same_kit_env(tmp_path, monkeypatch):
+    plan, rows = fixture(tmp_path)
+    python = tmp_path / "isaac311" / "python.exe"
+    rows[0]["recorder_argv"][0] = str(python)
+    real_fake, _ = fake_capture(plan, [0])
+    seen = []
+
+    def capture_run(argv, **kwargs):
+        if argv[0] == str(python):
+            seen.append((argv, kwargs.get("env")))
+        return real_fake(argv, **kwargs)
+
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
+    monkeypatch.setattr(q.subprocess, "run", capture_run)
+    result = q.run_one(plan, out=tmp_path / "out", high_priority_markers=[],
+                       only_cell=q._slot(rows[0]))
+    assert result["event"] == "captured"
+    assert len(seen) == 3
+    assert "--plan-only" in seen[0][0]
+    assert "--plan-only" not in seen[1][0]
+    assert seen[2][0][1] == plan["composer"]
+    for _, env in seen:
+        assert env["CONDA_PREFIX"] == str(python.parent)
+        assert env["OMNI_KIT_ACCEPT_EULA"] == "YES"
+        assert env["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+        assert "CUDA_VISIBLE_DEVICES" not in env
 
 
 def test_inventory_and_seed_gate(tmp_path):
