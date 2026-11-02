@@ -65,6 +65,14 @@ W53에서 막힌 `basic_gait_bundle.validate_settings(... feet_regulation_weight
 
 수정 뒤 세 파일 **35 PASS(15.23초)**. 구현·정본 YAML·학습 프로세스는 변경하지 않았다. 미검증 설정 거절·지난 기한 거절·비실행 CPU 영수증 검사를 남겼으며 skip/xfail로 가리지 않았다. 원자료 `D:/mai-tmp/analyst/u17-existing-1844.{log,xml}`와 `u17-fixed-1847.{log,xml}`. 이 결과는 세 파일 범위이며 저장소 전체 또는 Kit 통과가 아니다.
 
+## P3 · 거울 관측 조건과 수동 승인
+
+lead18:5x 결정에 맞춰 fixed5000은 경계마다 `critic_mirror_observation`을 기록한다. `w78_min_lr_ratio`는 학습률이 아니라 **좌·우 이동 비율의 min/max**다. 구간2 첫1000회 안에 250회 간격의 서로 다른 유효 점수 두 개가 0.8 미만인지, 각 점수 회차·SHA·비율을 함께 남긴다. 누락·NaN·뒤늦게 무효 처리된 이전 점수·최신 점수 오류를 조건 충족으로 세지 않는다. 조건 충족은 승인 요청 이벤트이며 **자동으로 거울을 켜지 않는다**.
+
+실제 켬은 boundary 값 변경과 `approvals.fields.critic_mirror`의 승인 항목을 같은 Git snapshot에 넣은 뒤 W72가 검증하는 기존 경로만 쓴다. 이번 변경에는 실제 승인 항목을 넣지 않았다. CPU 입력에서 승인 없는 true 요청은 거절되고, 시험 전용 승인 파일을 커밋한 뒤의 요청만 실제 stage hook/setter를 통과했다. 전달 형식은 gate/status/approval_id·두 파일 경로/해시·commit·decision_ids다. runner de02cb43의 `set_ex41_critic_mirror(enabled, approval=None)`와 `apply_runtime_fields`를 직접 읽어 호출 계약을 대조했다. 통합 setter 전체 실행은 runner/scripter 확인 대상이며 이 시험은 실제 Git 승인 소비를 가진 CPU 장면이다.
+
+실측: 이벤트 누락 반례4 FAIL·수동 승인1 PASS → 최종 P3+fixed runtime **68 PASS(130.07초)**. `D:/mai-tmp/analyst/p3-final-1857.log`. 단계·DR·PPO 자동 규칙·실행판 YAML은 바꾸지 않았다.
+
 ## 남은 항목
 
 U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.

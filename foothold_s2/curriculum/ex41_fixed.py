@@ -222,6 +222,36 @@ class EX41FixedRuntime(EX41Runtime):
         self._stage_baseline_sha=self.plan.parent_sha256
         return ok
 
+    def _record_mirror_observation(self,n,score):
+        """P3/D130: D101 is an observation, never an automatic PPO change.
+
+        w78_min_lr_ratio means min(left,right)/max(left,right) movement ratio,
+        not optimizer learning rate. Missing or rejected current evidence
+        cannot be replaced by two older passing observations.
+        """
+        interval=self.clock.settings['interval_updates']
+        current=(score or {}).get('iteration')
+        previous=next((r for r in reversed(self._history) if current is not None
+                       and r['iteration']==current-interval),None)
+        if previous and any(previous['iteration']<=r['iteration']<=current
+                            for r in self._score_rejections.values()):
+            previous=None
+        entries=[]
+        for row in (previous,score):
+            value=(row or {}).get('metrics',{}).get('w78_min_lr_ratio')
+            valid=type(value) in (int,float) and math.isfinite(value) and 0<=value<=1
+            entries.append({'iteration':(row or {}).get('iteration'),'ratio':value if valid else None,
+                            'score_sha256':(row or {}).get('_sha256')})
+        within=current is not None and 0<current<=1000
+        threshold=self.plan.automatic['critic_both_fail_fraction']
+        condition=within and all(e['ratio'] is not None and e['ratio']<threshold for e in entries)
+        self._write({'event':'critic_mirror_observation','iteration':n,
+            'definition':'min(left,right)/max(left,right) movement ratio; not learning rate',
+            'threshold':threshold,'within_first1000':within,'observations':entries,
+            'condition_met':bool(condition),'automatic_activation':False,
+            'action':'request_manual_W72_approval' if condition else 'record_only',
+            'effective_critic_mirror':bool(self.effective['critic_mirror'])})
+
     def on_update_start(self,n):
         if not self._started: raise ValueError('EX41 start/load required before rollout')
         if type(n) is not int or n<0: raise ValueError('EX41 local n invalid')
@@ -261,6 +291,7 @@ class EX41FixedRuntime(EX41Runtime):
             self._write({'event':'latest_score_invalid_hold','iteration':n,
                          'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
             score=None
+        self._record_mirror_observation(n,score)
         failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
         if n>=interval+1:
             self._missing_maintenance_boundaries=(self._missing_maintenance_boundaries+1 if failed is None else 0)
