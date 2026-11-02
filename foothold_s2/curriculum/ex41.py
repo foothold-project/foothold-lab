@@ -75,6 +75,8 @@ class EX41Plan(Plan):
         allowed={'format','start','parent_update','parent_sha256','baseline_env_yaml_sha256','baseline_agent_yaml_sha256',
                  'promotion','shadow_gate','terrain_curriculum','boundary_file','approval_file','gate','stand_penalty',
                  'heading','domain_randomization','first_rewards','ranges','stages','automatic'}
+        self.fixed_schedule=d.get('fixed_schedule') if isinstance(d,dict) else None
+        if self.fixed_schedule is not None: allowed.add('fixed_schedule')
         if not isinstance(d,dict) or set(d)!=allowed or d['format']!='foothold-ex41-curriculum/1':
             raise ValueError('EX41 unknown/missing schema field')
         if d['start']!='transfer' or type(d['parent_update']) is not int or d['parent_update'] not in (6000,7500) or arm!='B':
@@ -84,7 +86,10 @@ class EX41Plan(Plan):
             setattr(self,k,d[k])
         self.parent_update=d['parent_update']; self.arm=arm; self.is_ex41=True
         self.promotion=d['promotion']; self.shadow_gate=d['shadow_gate']
-        if self.promotion!='gate' or self.shadow_gate is not False: raise ValueError('EX41 requires active performance gates')
+        if self.fixed_schedule is None:
+            if self.promotion!='gate' or self.shadow_gate is not False: raise ValueError('EX41 requires active performance gates')
+        elif self.promotion!='fixed' or self.shadow_gate is not True or self.parent_update!=6000:
+            raise ValueError('EX41 fixed5000 requires fixed stages, shadow performance and m6000')
         self.terrain_curriculum=d['terrain_curriculum']
         self.heading_cfg=copy.deepcopy(d['heading']); self.stand_cfg=copy.deepcopy(d['stand_penalty'])
         self.gate_cfg=d['gate']; self.automatic=d['automatic']; self.domain_randomization=d['domain_randomization']
@@ -107,9 +112,10 @@ class EX41Plan(Plan):
             raise ValueError('EX41 initial weights outside lead decision')
         if any(rewards[k]!=0 for k in ('knee_effort_margin','joint_limit_margin','feet_air_time','foot_slip')):
             raise ValueError('EX41 preregistered terms must start at zero')
-        if [r.get('id') for r in d['stages']]!=list(STAGE_IDS): raise ValueError('EX41 stage order differs')
-        if smoke_boundaries is not None and (len(smoke_boundaries)!=4 or list(smoke_boundaries)!=sorted(set(smoke_boundaries)) or smoke_boundaries[0]<1):
-            raise ValueError('EX41 smoke needs four positive increasing boundaries')
+        expected=('S2a','S2b','S2c','S2d','S2e','T0_prime') if self.fixed_schedule else STAGE_IDS
+        if [r.get('id') for r in d['stages']]!=list(expected): raise ValueError('EX41 stage order differs')
+        if smoke_boundaries is not None and (len(smoke_boundaries)!=len(expected)-1 or list(smoke_boundaries)!=sorted(set(smoke_boundaries)) or smoke_boundaries[0]<1):
+            raise ValueError('EX41 smoke needs one increasing boundary per stage transition')
         self.stages=[]; self.stage_meta={}; prev=None
         for i,row in enumerate(d['stages']):
             if set(row)!={'id','start','duration','shares','ranges','force_gt','terrain'}: raise ValueError('EX41 stage unknown/missing field')
@@ -119,13 +125,16 @@ class EX41Plan(Plan):
             n=int(row['start']['fixed_update']) if smoke_boundaries is None or i==0 else smoke_boundaries[i-1]
             duration=copy.deepcopy(row['duration'])
             if smoke_boundaries is not None and i>0:
-                span=(smoke_boundaries[i]-n) if i<4 else 2
+                span=(smoke_boundaries[i]-n) if i<len(expected)-1 else 2
                 duration.update(minimum_updates=span,maximum_updates=span)
             self.stage_meta[sid]={**duration,'terrain':copy.deepcopy(row['terrain'])}
             adds={'rewards':rewards,'command_slots':list(EX39_SLOTS)} if i==0 else ({'map_source':'reconstruction'} if is_t0 else {})
             self.stages.append(Stage(sid,n,copy.deepcopy(row['shares']),{k:tuple(v) for k,v in row['ranges'].items()},
                                      dict(rewards),row['force_gt'],.20,arm,dict(self.heading_cfg),adds))
         self.smoke_boundaries=smoke_boundaries
+        if self.fixed_schedule:
+            from foothold_s2.curriculum.ex41_fixed import validate_plan
+            validate_plan(self,d)
 
 
 class EX41Runtime(Runtime):
