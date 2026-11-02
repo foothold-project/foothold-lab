@@ -29,7 +29,7 @@ def pair(left,right):
     value=None;reason='missing_side'
     if left is not None and right is not None:
         denominator=max(left,right)
-        reason='nonpositive_denominator'
+        reason='both_nonpositive'
         if denominator>0:
             value=min(left,right)/denominator
             reason=None if math.isfinite(value) else 'nonfinite_quotient'
@@ -75,17 +75,20 @@ def map_pairs(doc):
     return result
 
 
-def combine(map_rows,w78_raw):
+def combine(map_rows,w78_raw=None):
     result={'schema':SCHEMA,'decision_mode':'eval_gt',
             'interpretation':'lead 2026-11-02 19:3x; S=min(left,right)/max(left,right)',
-            'modes':{m:dict(map_rows[m]) for m in MODES}}
+            'modes':{m:dict(map_rows[m]) for m in MODES},
+            'missing_pairs':{m:[] for m in MODES}}
     for mode in MODES:
         for level in (2,5):
             for angle in (0,30,60,90):
                 for kind in STAIR_KINDS:
                     source=f'L{level}_a{angle:03d}_{mode}_{kind}'
-                    raw=w78_raw[source]
-                    result['modes'][mode][f'w78/L{level}_a{angle:03d}_{kind}']={
+                    key=f'w78/L{level}_a{angle:03d}_{kind}'
+                    raw=w78_raw[source] if w78_raw is not None else {'left':None,'right':None}
+                    if w78_raw is None:result['missing_pairs'][mode].append(key)
+                    result['modes'][mode][key]={
                         **pair(raw['left'],raw['right']),'source_cell':source,
                         'aggregation':'W78_movement_ratio_median_by_terrain_kind',
                         'unit':'projected_displacement_ratio'}

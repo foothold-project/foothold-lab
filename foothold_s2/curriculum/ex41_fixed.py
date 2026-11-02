@@ -302,6 +302,13 @@ class EX41FixedRuntime(EX41Runtime):
             'action':'request_manual_W72_approval' if condition else 'record_only',
             'effective_critic_mirror':bool(self.effective['critic_mirror'])}
         self._write(event)
+        nonpositive=sorted(k for k,v in entries[-1]['pairs'].items()
+                           if v['reason']=='both_nonpositive')
+        if fresh and new_score and nonpositive:
+            self._write({'event':'critic_mirror_both_nonpositive','iteration':n,
+                         'score_iteration':current,'pair_ids':nonpositive,
+                         'pairs':{k:copy.deepcopy(entries[-1]['pairs'][k]) for k in nonpositive},
+                         'action':'report_no_defined_symmetry','automatic_activation':False})
         if condition:self._write({**event,'event':'critic_mirror_candidate'})
 
     def on_update_start(self,n):
@@ -339,8 +346,8 @@ class EX41FixedRuntime(EX41Runtime):
         expected_score_iteration=n-1-interval
         fresh=[r for r in self._history if r['iteration']==expected_score_iteration]
         score=fresh[-1] if fresh else None
-        invalid=[r['iteration'] for r in self._score_rejections.values() if expected_score_iteration<=r['iteration']<n]
-        if invalid and (score is None or max(invalid)>=score['iteration']):
+        invalid=[r['iteration'] for r in self._score_rejections.values() if r['iteration']==expected_score_iteration]
+        if invalid:
             self._write({'event':'latest_score_invalid_hold','iteration':n,
                          'invalid_iteration':max(invalid),'older_pass_not_used':score['iteration'] if score else None})
             score=None

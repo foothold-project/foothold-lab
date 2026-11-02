@@ -17,7 +17,7 @@ def test_signed_unclipped_symmetry(left,right,value):
 
 
 def test_real_map_pairs_recomputed_with_full_planned_time():
-    doc=json.loads((ROOT/'map64/map_modes.json').read_text())
+    doc=json.loads((ROOT/'map64/map_modes.json').read_text(encoding='utf-8'))
     rows=sym.map_pairs(doc)
     for mode in sym.MODES:
         assert len(rows[mode])==4

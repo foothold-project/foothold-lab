@@ -332,10 +332,11 @@ def test_stand_threshold_and_clock_accounting_cannot_be_changed_silently(tmp_pat
 
 
 @pytest.mark.parametrize('bad',['nan','sha','stand_missing','iteration_nan','truncated','evidence_sha'])
-def test_latest_invalid_json_cannot_be_hidden_by_older_pass(tmp_path,bad):
+def test_expected_invalid_json_cannot_be_hidden_by_other_pass(tmp_path,bad):
     r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
     score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
-    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    # n1251 consumes exactly m1000; a valid m1200 cannot replace it.
+    p=score(r,1000,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
     d=json.loads(p.read_text())
     if bad=='nan':d['metrics']['gait_sync']=float('nan')
     if bad=='sha':d['checkpoint_sha256']='0'*64
