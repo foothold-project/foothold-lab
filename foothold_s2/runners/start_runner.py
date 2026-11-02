@@ -672,6 +672,11 @@ class StartRunner(OnPolicyRunner):
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
                     if continuous is not None:
                         continuous.on_checkpoint(curriculum_it, checkpoint_path)
+                disk_guard = self.cfg.get("ex41_disk_guard")
+                if disk_guard is not None and it % 250 == 0:
+                    from foothold_s2.scripts.ex41_startup import record_ex41_disk_snapshot
+
+                    record_ex41_disk_snapshot(self.log_dir, disk_guard, it)
                 if it % self.pcfg["latest_interval"] == 0:
                     self._check_code(it)
                     self.save_latest()

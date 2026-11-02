@@ -36,6 +36,7 @@ _pre.add_argument("--task")
 _pre.add_argument("--ex41_table")
 _pre.add_argument("--ex41_parent_checkpoint")
 _pre.add_argument("--ex41_score_dir")
+_pre.add_argument("--ex41_log_root")
 _pre.add_argument("--ex41_dry_run", action="store_true")
 _pre.add_argument("--ex41_rehearsal_updates", type=int)
 _pre.add_argument("--ex41_rehearsal_output")
@@ -46,11 +47,12 @@ _pre_args, _pre_unknown = _pre.parse_known_args()
 EX41_PLAN = None
 EX41_AUTHORIZATION = None
 EX41_PARENT_RECEIPT = None
+EX41_DISK_RECEIPT = None
 EX41_REHEARSAL = False
 if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
-        authorization_snapshot, load_fixed_plan, require_production_authorization,
-        validate_rehearsal_request,
+        authorization_snapshot, build_ex41_disk_plan, load_fixed_plan, require_production_authorization,
+        validate_ex41_output_directory, validate_rehearsal_request,
         verify_m6000_parent,
     )
 
@@ -67,10 +69,18 @@ if _pre_args.ex41_table:
     if _pre_args.ex41_dry_run:
         _snapshot = authorization_snapshot(EX41_PLAN)
         _w71_ready = _snapshot["config"]["values"].get("w71_ready") is True
-        if _pre_args.ex41_rehearsal_updates is not None:
-            if not _pre_args.ex41_parent_checkpoint:
-                raise ValueError("EX-41 rehearsal requires the pinned m6000 parent checkpoint")
-            EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
+        if not _pre_args.ex41_parent_checkpoint:
+            raise ValueError("EX-41 disk preflight requires the pinned m6000 parent checkpoint")
+        EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
+        disk_root = (_pre_args.ex41_rehearsal_output if _pre_args.ex41_rehearsal_updates is not None
+                     else _pre_args.ex41_log_root)
+        if not disk_root:
+            raise ValueError("EX-41 disk preflight requires --ex41_log_root")
+        EX41_DISK_RECEIPT = build_ex41_disk_plan(
+            disk_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
+            1 if _pre_args.ex41_rehearsal_updates is not None else EX41_PARENT_RECEIPT["save_interval"],
+            planned_updates=(_pre_args.ex41_rehearsal_updates if _pre_args.ex41_rehearsal_updates is not None
+                             else 5000 + 1500))
         print(json.dumps({"state": "dry_run", "task": _pre_args.task,
             "kit_started": False, "gpu_used": False,
             "task_config_import": "not_run_Kit_bootstrap_not_authorized",
@@ -78,6 +88,7 @@ if _pre_args.ex41_table:
             "parent_update": EX41_PLAN.parent_update,
             "parent_sha256": EX41_PLAN.parent_sha256,
             "parent_receipt": EX41_PARENT_RECEIPT,
+            "disk_preflight": EX41_DISK_RECEIPT,
             "initial_dr_scale": EX41_PLAN.initial_dr_scale,
             "w71_ready": _w71_ready,
             "rehearsal_updates": _pre_args.ex41_rehearsal_updates,
@@ -89,12 +100,22 @@ if _pre_args.ex41_table:
         raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
     EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
     if _pre_args.ex41_rehearsal_updates is not None:
+        EX41_DISK_RECEIPT = build_ex41_disk_plan(
+            _pre_args.ex41_rehearsal_output,
+            EX41_PARENT_RECEIPT["checkpoint_size_bytes"], 1, planned_updates=10)
         EX41_AUTHORIZATION = authorization_snapshot(EX41_PLAN)
         EX41_REHEARSAL = True
     else:
+        if not _pre_args.ex41_log_root:
+            raise ValueError("EX-41 production start requires --ex41_log_root on D:")
+        validate_ex41_output_directory(_pre_args.ex41_log_root)
+        EX41_DISK_RECEIPT = build_ex41_disk_plan(
+            _pre_args.ex41_log_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
+            EX41_PARENT_RECEIPT["save_interval"])
         EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
 elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run
-      or _pre_args.ex41_rehearsal_updates is not None or _pre_args.ex41_rehearsal_output):
+      or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None
+      or _pre_args.ex41_rehearsal_output):
     raise ValueError("EX-41 options require --ex41_table")
 
 from isaaclab.app import AppLauncher  # noqa: E402
@@ -118,6 +139,8 @@ parser.add_argument("--ex41_table", type=str, default=None,
                     help="EX-41 fixed5000 plan; production start requires committed W71 readiness")
 parser.add_argument("--ex41_parent_checkpoint", type=str, default=None,
                     help="Explicit EX-41 m6000 parent checkpoint")
+parser.add_argument("--ex41_log_root", type=str, default=None,
+                    help="Required D: root for EX-41 training logs and checkpoints")
 parser.add_argument("--ex41_score_dir", type=str, default=None,
                     help="Directory consumed by EX-41 numeric score receipts")
 parser.add_argument("--ex41_dry_run", action="store_true",
@@ -135,6 +158,8 @@ sys.argv = [sys.argv[0]] + hydra_args
 
 if args_cli.ex41_table != _pre_args.ex41_table:
     raise ValueError("EX-41 preflight and runtime parser disagree on plan path")
+if args_cli.ex41_log_root != _pre_args.ex41_log_root:
+    raise ValueError("EX-41 preflight and runtime parser disagree on log root")
 if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
         or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output):
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
@@ -208,10 +233,9 @@ def main(env_cfg, agent_cfg):
         parent_checkpoint_path = os.path.abspath(args_cli.ex41_parent_checkpoint)
         resume_path = None
         agent_cfg.resume = False
-        log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        if agent_cfg.run_name:
-            log_dir += f"_{agent_cfg.run_name}_EX41"
-        log_dir = os.path.join(log_root, log_dir)
+        log_dir = os.path.abspath(args_cli.ex41_log_root) if not EX41_REHEARSAL else None
+        if not EX41_REHEARSAL:
+            validate_ex41_output_directory(log_dir)
     elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
@@ -242,6 +266,10 @@ def main(env_cfg, agent_cfg):
                            "resume_from": resume_path, "seed": agent_cfg.seed,
                            "ex41_rehearsal": EX41_REHEARSAL,
                            "max_updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None})
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import write_ex41_disk_preflight
+
+        write_ex41_disk_preflight(log_dir, EX41_DISK_RECEIPT)
 
     env = gym.make(args_cli.task, cfg=env_cfg)
     ex41_w86_receipt = None
@@ -273,7 +301,8 @@ def main(env_cfg, agent_cfg):
 
         train_cfg = configure_ex41_train_cfg(
             train_cfg, EX41_PLAN, parent_checkpoint_path,
-            rehearsal_updates=args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None)
+            rehearsal_updates=args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None,
+            disk_guard=EX41_DISK_RECEIPT)
     ex41_first_observation = None
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import capture_first_observation
@@ -337,6 +366,7 @@ def main(env_cfg, agent_cfg):
                                          "score_evaluation": "not_run" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
+                          "disk_preflight": EX41_DISK_RECEIPT,
                           "local_update_range": [1, ex41_runtime.max_updates]}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))

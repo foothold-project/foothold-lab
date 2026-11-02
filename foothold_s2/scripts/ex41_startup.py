@@ -7,13 +7,174 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
+import shutil
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.curriculum import w72
+from tools.wt_guard import disk_guard as wt_disk_guard
+
+
+EX41_DISK_PLANNED_UPDATES = 5000 + 1500
+EX41_DISK_MARGIN_BYTES = 50_000_000_000
+EX41_DISK_REFERENCE_UPDATES = 8001
+EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
+EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
+EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
+
+
+def checkpoint_count_for_updates(planned_updates: int, save_interval: int) -> int:
+    """Count periodic model_N files plus a distinct final file for StartRunner."""
+    if (type(planned_updates) is not int or planned_updates <= 0
+            or type(save_interval) is not int or save_interval <= 0):
+        raise ValueError("EX-41 disk plan needs positive integer updates and save_interval")
+    periodic = planned_updates // save_interval
+    final_is_periodic = planned_updates % save_interval == 0
+    return periodic + int(not final_is_periodic)
+
+
+def _require_d_drive(path: str | Path) -> Path:
+    root = Path(path)
+    if not root.is_absolute() or root.drive.upper() != "D:":
+        raise ValueError(f"EX-41 training output must be an absolute D: path: {root}")
+    return root
+
+
+def validate_ex41_output_directory(path: str | Path) -> Path:
+    """Reject existing non-empty run destinations before any Kit import/start."""
+    root = _require_d_drive(path)
+    if root.exists() and (not root.is_dir() or any(root.iterdir())):
+        raise ValueError("EX-41 training output directory must be new or empty")
+    return root
+
+
+def _free_bytes_for_path(path: Path) -> int:
+    probe = path
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    return int(shutil.disk_usage(probe).free)
+
+
+def _planner_disk_level(path: Path, required_bytes: int, *, usage_fn=shutil.disk_usage) -> dict[str, Any]:
+    """Use planner's shared threshold checker on the destination volume."""
+    block_gb = required_bytes / wt_disk_guard.GB
+    config = wt_disk_guard.wt_config.load(
+        {"HOME": "D:/mai-tmp/runner"}, user_file=None, default_file=None)
+    rows = wt_disk_guard.check(
+        [str(Path(path.anchor))], warn_gb=block_gb + 1e-9,
+        block_gb=block_gb, config=config, usage_fn=usage_fn)
+    return rows[0]
+
+
+def build_ex41_disk_plan(output_root: str | Path, checkpoint_size_bytes: int,
+                         save_interval: int, *, planned_updates: int = EX41_DISK_PLANNED_UPDATES,
+                         free_bytes: int | None = None) -> dict[str, Any]:
+    """Preflight output capacity from the pinned parent size and measured m6000 artifacts."""
+    root = _require_d_drive(output_root)
+    if type(checkpoint_size_bytes) is not int or checkpoint_size_bytes <= 0:
+        raise ValueError("EX-41 disk plan needs the measured parent checkpoint size")
+    count = checkpoint_count_for_updates(planned_updates, save_interval)
+    records_bytes = math.ceil(EX41_DISK_REFERENCE_LOG_BYTES * planned_updates
+                              / EX41_DISK_REFERENCE_UPDATES)
+    video_bytes = EX41_DISK_REFERENCE_RAW_VIDEO_BYTES + EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES
+    records_video_bytes = records_bytes + video_bytes
+    checkpoint_bytes = count * checkpoint_size_bytes
+    required_bytes = checkpoint_bytes + records_video_bytes + EX41_DISK_MARGIN_BYTES
+    available = _free_bytes_for_path(root) if free_bytes is None else int(free_bytes)
+    planner_check = None if free_bytes is not None else _planner_disk_level(root, required_bytes)
+    receipt = {
+        "format": "foothold-ex41-disk-guard/1",
+        "output_root": str(root),
+        "planned_updates": planned_updates,
+        "update_basis": [5000, 1500],
+        "save_interval": save_interval,
+        "checkpoint_count": count,
+        "checkpoint_size_bytes": checkpoint_size_bytes,
+        "checkpoint_reserve_bytes": checkpoint_bytes,
+        "record_video_reserve_bytes": records_video_bytes,
+        "record_video_basis": {
+            "reference_updates": EX41_DISK_REFERENCE_UPDATES,
+            "run_non_checkpoint_bytes": EX41_DISK_REFERENCE_LOG_BYTES,
+            "raw_video_bytes": EX41_DISK_REFERENCE_RAW_VIDEO_BYTES,
+            "final_video_bytes": EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES,
+            "scaled_run_non_checkpoint_bytes": records_bytes,
+            "video_estimate_bytes": video_bytes,
+        },
+        "margin_bytes": EX41_DISK_MARGIN_BYTES,
+        "required_free_bytes": required_bytes,
+        "available_free_bytes": available,
+        "planner_disk_guard": ("injected_cpu_fixture" if planner_check is None else planner_check),
+    }
+    if (available < required_bytes
+            or planner_check is not None and planner_check["level"] in ("block", "unknown")):
+        raise ValueError("EX-41 D: free space below preflight reserve: "
+                         f"available={available} required={required_bytes}")
+    return receipt
+
+
+def write_ex41_disk_preflight(log_dir: str | Path, receipt: dict[str, Any]) -> Path:
+    """Persist the exact preflight receipt in the selected D: run directory."""
+    root = _require_d_drive(log_dir)
+    if Path(receipt.get("output_root", "")).resolve() != root.resolve():
+        raise ValueError("EX-41 disk preflight receipt does not match run directory")
+    root.mkdir(parents=True, exist_ok=True)
+    target = root / "ex41_disk_preflight.json"
+    temporary = target.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(target)
+    return target
+
+
+def record_ex41_disk_snapshot(log_dir: str | Path, disk_plan: dict[str, Any],
+                              completed_updates: int, *, free_bytes: int | None = None) -> dict[str, Any]:
+    """Append a 250-update disk observation; below-reserve space warns but does not stop training."""
+    run_dir = _require_d_drive(log_dir)
+    if Path(disk_plan.get("output_root", "")).resolve() != run_dir.resolve():
+        raise ValueError("EX-41 disk snapshot path differs from preflight run directory")
+    if type(completed_updates) is not int or completed_updates < 0:
+        raise ValueError("EX-41 disk snapshot update count must be a non-negative integer")
+    if completed_updates == 0 or completed_updates % 250:
+        raise ValueError("EX-41 disk snapshots are only valid at positive 250-update boundaries")
+    interval = disk_plan["save_interval"]
+    available = _free_bytes_for_path(run_dir) if free_bytes is None else int(free_bytes)
+    remaining_updates = max(0, disk_plan["planned_updates"] - completed_updates)
+    saved_periodic = min(disk_plan["checkpoint_count"], math.ceil(completed_updates / interval))
+    remaining_checkpoints = max(0, disk_plan["checkpoint_count"] - saved_periodic)
+    records_video_remaining = math.ceil(
+        disk_plan["record_video_reserve_bytes"] * remaining_updates / disk_plan["planned_updates"]
+    )
+    required = (remaining_checkpoints * disk_plan["checkpoint_size_bytes"]
+                + records_video_remaining + disk_plan["margin_bytes"])
+    planner_check = _planner_disk_level(run_dir, required) if free_bytes is None else None
+    row = {
+        "event": ("disk_space_warning" if available < required
+                  or planner_check is not None and planner_check["level"] in ("block", "unknown")
+                  else "disk_space_snapshot"),
+        "completed_updates": completed_updates,
+        "path": str(run_dir),
+        "available_free_bytes": available,
+        "remaining_checkpoint_count": remaining_checkpoints,
+        "checkpoint_size_bytes": disk_plan["checkpoint_size_bytes"],
+        "record_video_remaining_bytes": records_video_remaining,
+        "margin_bytes": disk_plan["margin_bytes"],
+        "required_free_bytes": required,
+        "planner_disk_guard": "injected_cpu_fixture" if planner_check is None else planner_check,
+    }
+    event_path = run_dir / "ex41_disk_guard.jsonl"
+    with event_path.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(row, sort_keys=True) + "\n")
+    if available < required:
+        warnings.warn("EX-41 disk reserve below threshold at update "
+                      f"{completed_updates}: available={available} required={required}",
+                      RuntimeWarning, stacklevel=2)
+    return row
 
 
 def load_fixed_plan(path: str | Path):
@@ -47,6 +208,7 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
     path = Path(output_dir)
     if not path.is_absolute() or path.parent.name.lower() != "s2_lab":
         raise ValueError("EX-41 rehearsal output must be an absolute s2_lab child")
+    _require_d_drive(path)
     if not re.fullmatch(r"ex41_rehearsal_[0-9]{8}_[0-9]{6}", path.name):
         raise ValueError("EX-41 rehearsal output must use ex41_rehearsal_YYYYMMDD_HHMMSS")
     if device != "cuda:0" or not headless or distributed:
@@ -57,7 +219,8 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
 
 
 def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,
-                             rehearsal_updates: int | None = None) -> dict[str, Any]:
+                             rehearsal_updates: int | None = None,
+                             disk_guard: dict[str, Any] | None = None) -> dict[str, Any]:
     """Set mandatory transfer flags and the parent reference in a fresh cfg."""
     cfg = dict(train_cfg)
     cfg["ex41_pose_commands"] = True
@@ -77,6 +240,12 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
         cfg["max_iterations"] = rehearsal_updates
         cfg["save_interval"] = 1
         cfg["ex41_rehearsal"] = True
+    if disk_guard is not None:
+        if (not isinstance(disk_guard, dict)
+                or disk_guard.get("format") != "foothold-ex41-disk-guard/1"
+                or disk_guard.get("output_root") is None):
+            raise ValueError("EX-41 disk guard receipt is invalid")
+        cfg["ex41_disk_guard"] = dict(disk_guard)
     if cfg.get("ex41_w86_required") is not True:
         raise ValueError("EX-41 requires W86")
     return cfg
@@ -102,8 +271,14 @@ def verify_m6000_parent(plan, parent_path: str | Path) -> dict[str, Any]:
         raise ValueError("EX-41 parent env.yaml SHA differs from fixed plan")
     if hashlib.sha256(agent_path.read_bytes()).hexdigest() != plan.baseline_agent_yaml_sha256:
         raise ValueError("EX-41 parent agent.yaml SHA differs from fixed plan")
+    agent = yaml.safe_load(agent_path.read_text(encoding="utf-8-sig"))
+    save_interval = agent.get("save_interval") if isinstance(agent, dict) else None
+    if type(save_interval) is not int or save_interval <= 0:
+        raise ValueError("EX-41 parent agent.yaml save_interval is missing or invalid")
     return {"checkpoint": str(checkpoint), "sha256": digest,
             "completed_updates": manifest["progress"]["completed_updates"],
+            "checkpoint_size_bytes": checkpoint.stat().st_size,
+            "save_interval": save_interval,
             "env_yaml_sha256": plan.baseline_env_yaml_sha256,
             "agent_yaml_sha256": plan.baseline_agent_yaml_sha256}
 
