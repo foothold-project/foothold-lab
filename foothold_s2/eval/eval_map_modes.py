@@ -21,6 +21,7 @@ import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
 from foothold_s2.eval import map_mode_cells as _command_cells
+from foothold_s2.eval import eval_dr_mode  # D94 · D125 DR 켠 평가 모드(인자 · Kit 전 검증 · 켠 모드 설치)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
@@ -37,6 +38,7 @@ parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
+eval_dr_mode.add_arguments(parser)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 parser_sparse = args.terrain_set == "sparse50"
@@ -58,6 +60,9 @@ if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.
     parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
 if args.axis_v2 and args.steps < 4:
     parser.error("--axis-v2 requires at least four steps")
+_dr_error = eval_dr_mode.validate_args(args)
+if _dr_error:
+    parser.error(_dr_error)                                                           # DR 켠 모드의 잘못된 인자는 Kit 기동 전 거절
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -88,20 +93,22 @@ if args.ex39_heading_smoke_guard:
     cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
     cmd_cfg.seed = 42
 dr_off = []
+if args.dr_mode == "off":                                                              # 현행 그대로: 시동 DR 둘 끔 · 지연 0. on 이면 아무것도 지우지 않는다
 
-for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"):
-    if getattr(env_cfg.events, name, None) is not None:
-        setattr(env_cfg.events, name, None)
-        dr_off.append(name)
+    for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"):
+        if getattr(env_cfg.events, name, None) is not None:
+            setattr(env_cfg.events, name, None)
+            dr_off.append(name)
 
-if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
-    env_cfg.actions.joint_pos.max_delay_s = 0.0
-    dr_off.append("action_delay")
+    if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
+        env_cfg.actions.joint_pos.max_delay_s = 0.0
+        dr_off.append("action_delay")
 
 START_OFFSET_MAX_M = 0.5
 EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다
-if sorted(dr_off) != sorted(EXPECTED_DR_OFF):
+if args.dr_mode == "off" and sorted(dr_off) != sorted(EXPECTED_DR_OFF):
     raise RuntimeError("꺼진 DR 목록 %r 이 기대 %r 와 다르다" % (dr_off, EXPECTED_DR_OFF))
+DR = eval_dr_mode.DRMode.from_args(args, env_cfg)                                    # on: 시동 DR 보존 + 런타임 DR 다섯 설치(학습과 같은 install_runtime_events). off: no-op
 
 curriculum_off = []
 
@@ -122,7 +129,9 @@ if parser_sparse:                                                               
     sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
     env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
                                                               seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
-env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
+_made = gym.make(args.task, cfg=env_cfg)
+DR.after_make(_made.unwrapped)                                                        # 켠 모드: 첫 reset(아래 wrapper) 전에 env._ex40_dr_scale 고정. off: no-op
+env = RslRlVecEnvWrapper(_made, clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
 dev = raw.device
 robot = raw.scene["robot"]
@@ -204,6 +213,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
 res["policy_dt_s"] = float(dt)
+if DR.record is not None:
+    res["dr"] = DR.record                                                              # 켠 모드만. off 출력은 현행과 같은 키
 if args.ex39_heading_smoke_guard:
     res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
                                         "forced_heading_before_disable": True,
@@ -424,6 +435,7 @@ for mode in args.modes.split(","):
             res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
+        DR.collect(raw, "%s/%s" % (mode, cname), res)                                  # 켠 모드: reset 표본 · 지연 상한 확인 뒤 기록
 
     if args.command_suite in ("extended", "ex40_b3"):
         res.setdefault("sequences", {})[mode] = {}
@@ -483,6 +495,7 @@ for mode in args.modes.split(","):
             seq_row["gt_used"] = counts["gt"]
             seq_row["policy_steps_x_envs"] = counts["total"]
             res["sequences"][mode][seq_name] = seq_row
+            DR.collect(raw, "%s/seq/%s" % (mode, seq_name), res)
             print("MAPMODE_SEQUENCE", mode, seq_name, json.dumps({
                 "alive_at_end": [p["by_kind"] for p in seq_row["phases"]],
                 "gt_used": counts["gt"]}), flush=True)
