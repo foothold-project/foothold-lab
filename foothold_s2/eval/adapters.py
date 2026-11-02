@@ -482,6 +482,9 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
           if checkpoint_state is None else checkpoint_state)
     if not isinstance(sd, dict):
         raise ValueError("S2 evaluation checkpoint must be a mapping")
+    pose_commands = sd.get("ex41_pose_commands", False)
+    if not isinstance(pose_commands, bool):
+        raise ValueError("checkpoint ex41_pose_commands must be bool")
     saved = sd.get("perception_cfg") or {}
     pc = dict(train_cfg.get("perception", {}) or {})
     pc["map_input"] = saved.get("map_input", "none")
@@ -508,6 +511,10 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
 
     cfg = dict(train_cfg)
     cfg["perception"] = pc
+    # The EX-41 loader attaches the zero-valued pose_cmd observation group
+    # before gym.make.  StartRunner must also append those two columns to its
+    # actor and critic inputs, matching the 98/666 checkpoint tensors.
+    cfg["ex41_pose_commands"] = pose_commands
     runner = StartRunner(env, cfg, log_dir=None, device=device)
     runner.alg.policy.load_state_dict(sd["model_state_dict"])
     runner.perception.load_state_dict(sd["perception_state_dict"])

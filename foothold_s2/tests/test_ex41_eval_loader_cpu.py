@@ -94,6 +94,42 @@ def test_pose_contract_mismatch_fails_before_environment_creation(
         load_checkpoint_for_eval(_cfg(), checkpoint)
 
 
+@pytest.mark.parametrize("pose_commands", [True, False])
+def test_s2_evaluation_runner_matches_checkpoint_pose_input_contract(monkeypatch, pose_commands):
+    from foothold_s2.eval.adapters import load_s2_runner
+    import foothold_s2.runners.start_runner as start_runner_module
+
+    captured = {}
+
+    class _Stateful:
+        def load_state_dict(self, _state):
+            pass
+
+        def eval(self):
+            pass
+
+    class _Runner:
+        def __init__(self, _env, cfg, log_dir=None, device="cpu"):
+            captured["cfg"] = cfg
+            self.alg = SimpleNamespace(policy=_Stateful())
+            self.perception = _Stateful()
+
+    monkeypatch.setattr(start_runner_module, "StartRunner", _Runner)
+    state = {
+        "ex41_pose_commands": pose_commands,
+        "perception_cfg": {"map_input": "reconstruction", "force_gt": False},
+        "model_state_dict": {},
+        "perception_state_dict": {},
+    }
+
+    load_s2_runner(
+        env=object(), train_cfg={"policy": {}, "algorithm": {}}, checkpoint="unused.pt",
+        device="cpu", checkpoint_state=state,
+    )
+
+    assert captured["cfg"]["ex41_pose_commands"] is pose_commands
+
+
 def test_first_real_pose_observation_must_be_exactly_two_zero_columns():
     good = {"pose_cmd": torch.zeros((4, 2))}
     assert verify_ex41_pose_observation(good)["zero_by_column"] == [True, True]
