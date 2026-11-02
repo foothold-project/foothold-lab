@@ -252,9 +252,11 @@ class EX41FixedRuntime(EX41Runtime):
     def _record_mirror_observation(self,n,score):
         """P3/D130: D101 is an observation, never an automatic PPO change.
 
-        w78_min_lr_ratio means min(left,right)/max(left,right) movement ratio,
-        not optimizer learning rate. Missing or rejected current evidence
-        cannot be replaced by two older passing observations.
+        This legacy scalar consumer awaits a pinned D101 cell aggregation.
+        W78 raw min_lr_ratio is min(left,right) actual/commanded displacement,
+        not min/max balance and not optimizer learning rate. The score watcher
+        keeps all 48 raw cells and does not synthesize this scalar. Missing or
+        rejected evidence cannot be replaced by two older observations.
         """
         interval=self.clock.settings['interval_updates']
         current=(score or {}).get('iteration')
@@ -273,7 +275,7 @@ class EX41FixedRuntime(EX41Runtime):
         threshold=self.plan.automatic['critic_both_fail_fraction']
         condition=within and all(e['ratio'] is not None and e['ratio']<threshold for e in entries)
         self._write({'event':'critic_mirror_observation','iteration':n,
-            'definition':'min(left,right)/max(left,right) movement ratio; not learning rate',
+            'definition':'D101 scalar aggregation pending; W78 raw cells use min(left,right) actual/commanded displacement',
             'threshold':threshold,'within_first1000':within,'observations':entries,
             'condition_met':bool(condition),'automatic_activation':False,
             'action':'request_manual_W72_approval' if condition else 'record_only',

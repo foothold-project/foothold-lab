@@ -67,7 +67,9 @@ W53에서 막힌 `basic_gait_bundle.validate_settings(... feet_regulation_weight
 
 ## P3 · 거울 관측 조건과 수동 승인
 
-lead18:5x 결정에 맞춰 fixed5000은 경계마다 `critic_mirror_observation`을 기록한다. `w78_min_lr_ratio`는 학습률이 아니라 **좌·우 이동 비율의 min/max**다. 구간2 첫1000회 안에 250회 간격의 서로 다른 유효 점수 두 개가 0.8 미만인지, 각 점수 회차·SHA·비율을 함께 남긴다. 누락·NaN·뒤늦게 무효 처리된 이전 점수·최신 점수 오류를 조건 충족으로 세지 않는다. 조건 충족은 승인 요청 이벤트이며 **자동으로 거울을 켜지 않는다**.
+lead18:5x 결정에 맞춰 fixed5000은 경계마다 `critic_mirror_observation`을 기록한다. **19:28 정정: 앞 판의 좌·우 min/max 설명은 틀렸다.** W78 v2 03d5078d의 원값 `min_lr_ratio`는 좌·우 각각의 실제/명령 이동비율 중 작은 값이며 음수와 1 초과도 가능하다. 48개 조건을 P3용 단일 값으로 집계할 범위와 식, D101의 「양방향 80%」 해석은 아직 미확정이다. 채점기 9521dc11은 48개 원값을 보존하며 해당 단일 값을 임의 생산하지 않는다. 따라서 현재 이벤트는 P3 측정 완료 또는 조건 판정 완료가 아니다.
+
+이전 CPU 시험은 단일 값이 주어졌을 때 구간2 첫1000회 안의 250회 간격 두 점수, 누락·NaN·최신 오류 배제, 수동 승인만으로 켜지는 경로를 확인했다. 그 시험으로 W78 원값 집계식까지 검증했다고 읽으면 안 된다. 정의 오류는 lead에 보고했다. 단일 집계식 확정 뒤 소비 계약을 고쳐야 하며 **자동으로 거울을 켜지 않는다**.
 
 실제 켬은 boundary 값 변경과 `approvals.fields.critic_mirror`의 승인 항목을 같은 Git snapshot에 넣은 뒤 W72가 검증하는 기존 경로만 쓴다. 이번 변경에는 실제 승인 항목을 넣지 않았다. CPU 입력에서 승인 없는 true 요청은 거절되고, 시험 전용 승인 파일을 커밋한 뒤의 요청만 실제 stage hook/setter를 통과했다. 전달 형식은 gate/status/approval_id·두 파일 경로/해시·commit·decision_ids다. runner de02cb43의 `set_ex41_critic_mirror(enabled, approval=None)`와 `apply_runtime_fields`를 직접 읽어 호출 계약을 대조했다. 통합 setter 전체 실행은 runner/scripter 확인 대상이며 이 시험은 실제 Git 승인 소비를 가진 CPU 장면이다.
 
