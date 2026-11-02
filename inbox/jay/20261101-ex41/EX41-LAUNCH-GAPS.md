@@ -75,3 +75,5 @@ G16 닫힘(15:2x): CANON-REGISTRY 에 EX-40_m6000 등록 48846e53. SHA(저장본
 15:2x 닫힘: analyst 08a8c99c 두 겹 검토(verifier VERIFY-EX41-08a8c99c 막음 0 · 독립 막음 0, CPU 55 · 101) → G4 · G5 · G7 · D133 닫힘, G6 소비 쪽 닫힘(생산 루프 G11 runner 남음). C1~C6 scripter 519a430f, verifier 재검토 중. C층 첫 한 편 1차는 대기열이 Isaac EULA 환경 변수를 안 넣어 7초 만에 실패(기술 실패로 정상 기록) → scripter 수정 중, lead 가 표준 env 로 2차 촬영 중.
 
 15:3x 닫힘: G15(analyst a407377c · a0f82867) 두 겹 막음 0(verifier VERIFY-EX41-G15-a0f82867 · 독립). 실제 m2500 HOLD→PASS 재현, 돌연변이 14 개 모두 HOLD. 낮음: ex41_scoring 은 고친 judge 를 쓰지 않음(EX-41 판정은 ex41 런타임 쪽). W71 75df4e87 · D125 e5a908a2 두 겹 검토 중. C층 C4 막음(전 프레임 검사 반례 셋) scripter 처리 중.
+
+정정(15:5x): G14 「W57 rc=1 의 정체」 는 단정이 아니라 유력 가설이다. 재현 조건은 숨은 부모 python 이 표준 핸들 없이 뜰 때뿐(C:/Users/AI-WS01/.claude/jobs/2fb71c60/tmp/stdin_repro/ V1). EX-40 의 실제 띄움 방식과 로그 직접 증거(Bad file descriptor 문자열)는 score-watch-b · retry 폴더에서 찾지 못함(stderr 미보존). 고침(stdin=DEVNULL 전수)은 어느 경우든 무해하므로 그대로 진행.
