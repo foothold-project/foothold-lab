@@ -1,8 +1,8 @@
 ﻿> 분류: A/정책학습 · 학습 · 보상 · 관측
 > 작성: 오흥재 (runner 반영) · 2026-11-02
-> 근거: lead G2/G1/U5 지시 · 939ef8f3 · ex41-fixed5000.yaml · isaac311 CPU · HEAD 04646dda
-> 요지: pose_cmd 결선, bounded rehearsal DRY, U5 이어 학습 예행 계획
-> 상태: CPU 확인 · U5 이어 학습 경로 미검증 · Kit/GPU 미실행
+> 근거: lead G2/G1/U5 지시 · 939ef8f3 · ex41-fixed5000.yaml · isaac311 CPU · HEAD 후속
+> 요지: pose_cmd 결선, bounded rehearsal DRY, EX-41 동일 run 저장본 이어 학습
+> 상태: CPU 직렬화/manifest 계약 통과 · 실제 Kit 재개 미확인 · Kit/GPU 미실행
 
 # EX-41 pose 관측 결선과 bounded rehearsal 준비
 
@@ -42,15 +42,28 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m foothold_s2.scripts.train
 
 실행 시 예상 readback 표식은 `EX41_FIRST_OBSERVATION`과 `EX41_REHEARSAL_READBACK`이다. 여기에는 첫 pose_cmd 열별 0, 첫 관측 차원, DR scale 0.5, W86 항목·발 순서, update 10, save interval 1을 출력한다. 실제 Kit에서의 readback은 미확인이다.
 
-## U5 이어 학습 예행 계획
+## U5 동일 run 이어 학습 경로
 
-팀장 승인 뒤의 예행 순서는 다음과 같다. 이 절은 실행 계획이며, 현재 이어 학습 경로를 검증했다는 뜻이 아니다.
+EX-41 저장본 재개는 `--ex41_table`, 고정 m6000 `--ex41_parent_checkpoint`, 기존 run 의 `--ex41_log_root`, 같은 run 의 numbered `--resume_from`을 함께 준다. 새 run 출력 폴더를 만들지 않는다. preflight 는 Kit 전에 기존 manifest 와 선택 checkpoint SHA, 진행 update, plan/effective SHA, 고정 부모 SHA와 continuation receipt를 확인한다. 불일치하거나 새 continuation receipt가 없는 이전 저장본은 거절한다. W71 생산 허가는 기존 관문을 그대로 통과해야 하므로 이 경로가 W71 차단을 우회하지 않는다.
 
-1. 위의 새 출력 폴더에서 10 update를 실행하고, update 10 체크포인트와 manifest SHA가 일치하는지 확인한다. 저장본과 함께 plan/effective SHA, 부모 m6000 SHA, W72 snapshot, 단계·DR 상태, optimizer와 RNG 상태의 증거를 같은 run 폴더에 보존한다.
-2. 실행이 정상 완료된 뒤 프로세스가 끝났음을 확인한다. 프로세스를 강제 종료하지 않는다. 이 단계의 종료는 승인된 예행 프로세스에만 적용한다.
-3. 같은 run 폴더와 update 10 체크포인트를 지정해 새 프로세스로 이어 학습한다. 새 run이나 부모 m6000 전이로 대체하지 않는다. 이어 학습 진입은 아직 구현·검증되지 않았으므로, 현재 고정본에서는 `--resume_from`이 EX-41 parent transfer와 충돌한다고 거절된다. 따라서 아래 2단계 명령은 이어 학습 CLI 계약이 고정되고 CPU 반례 시험이 통과한 뒤에만 확정한다.
-4. 재개 전후 manifest와 체크포인트를 대조한다. 재개 입력 SHA, plan/effective SHA, 부모 SHA가 동일하고, 다음 update가 11이며, policy·optimizer·perception·AdaSmpl·환경/RNG·map-switch·continuous/W72 상태와 DR 배율이 저장본에서 이어졌음을 확인한다. 하나라도 빠지거나 회차가 0/1로 초기화되면 U5 실패로 기록한다.
+EX-41 루프는 zero-based PPO loop index 를 update `n=loop_index+1`로 바꾼 뒤 저장한다. 따라서 `model_10.pt`는 `iter=10`, `completed_updates=10`이며 다음 update 는 11이다. 이어 시작할 때 runner 의 저장 회차를 10으로 두어 loop index 10에서 update 11이 시작되게 한다. 일반 runner의 manifest 갱신은 `iter+1`을 쓰므로 EX-41 저장 후 `progress.completed_updates`를 실제 one-based update 회차로 맞춘다. 이 불일치가 있으면 resume preflight가 거절한다.
 
-첫 실행의 현재 사전검증 명령은 위 코드 블록이다. 이어 학습 명령은 고정된 인자 계약이 없으므로 추측해 적지 않는다. GPU 예행 승인을 받더라도 10 update 저장 후 같은 run 재개 CLI가 구현·CPU 검증되기 전에는 2단계 실행을 보류한다. 지금은 이 계획만 준비했으며 학습, 프로세스 종료, 이어 학습은 실행하지 않았다.
+preflight는 Kit 앞에서 checkpoint 파일 SHA와 manifest/continuation receipt를 확인한 다음 checkpoint payload를 CPU로 열어 저장된 plan/effective/parent SHA, W72 상태, optimizer, AdaSmpl, DR, fixed clock, terrain과 command/RNG 상태를 검증한다. receipt의 회차·W72 경계·DR·시계도 실제 checkpoint 값과 대조한다. 이어 환경에서 `runner.load`를 수행한 뒤 저장된 update·segment와 live DR을 다시 확인한다. 재개는 기존 `agent.yaml`, `env.yaml`, checkpoint map을 다시 만들거나 덮지 않으며 같은 run manifest에 시도/readback을 추가한다.
+
+StartRunner checkpoint 는 optimizer 와 perception optimizer, AdaSmpl, policy/perception, RNG, env terrain levels/types, command RNG, W72 snapshot/last boundary, DR runtime 및 fixed schedule `elapsed/pause_used/recovered/extension`을 가진다. 추가 `ex41_resume` envelope 는 plan/effective/parent SHA, completed/next update, W72 boundary/snapshot과 fixed clock을 적는다. runner restore 뒤에는 상태 구조, plan/parent SHA, update/segment, live DR scale를 다음 rollout 전에 다시 대조한다.
+
+같은 run 을 재개할 때의 CLI 형식:
+
+```powershell
+C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m foothold_s2.scripts.train_start --task FootholdS2-Go2-S2-SB-v0 --ex41_table foothold_s2/curriculum/ex41-fixed5000.yaml --ex41_parent_checkpoint <고정 model_6000.pt> --ex41_log_root <기존 D:/s2_lab run 폴더> --resume_from <같은 run 폴더/model_N.pt> --device cuda:0 --headless
+```
+
+## U5 CPU 시험 결과
+
+`foothold_s2/tests/test_ex41_resume_cpu.py` 는 CPU에서 실제 EX-41 저장 구조를 닮은 checkpoint를 저장하고 새 Python 프로세스에서 읽어 필드 전체 안정 digest가 같은지 확인한다. checkpoint 내부 plan/parent SHA 불일치, manifest progress 앞섬/뒤처짐, receipt와 payload 불일치, optimizer/RNG/command RNG/terrain/W72/fixed-clock 상태 누락을 거절한다. 마지막 실행은 `18 passed`였다. EX-41 시작·디스크·preflight 관련 CPU 검사는 아래 기록대로 별도 실행한다. ruff는 isaac311 환경에 설치되지 않아 실행하지 못했다.
+
+이 시험은 torch checkpoint serialization·새 프로세스 readback 과 runner hook 계약 시험이다. 실제 Isaac 환경에서 StartRunner의 optimizer/env restore, 첫 다음 rollout, W72/DR의 Kit readback 은 미확인이다. 실제 Kit/GPU 재현은 lead 승인 뒤 수행해야 한다. 학습, 평가, Kit, GPU 및 실행 프로세스는 이 작업에서 시작하지 않았다.
 
 점수 연결은 아직 없다. 기존 `foothold_s2.ex41_score`는 score draft, 64-env map_modes와 세 mode의 stand 자료를 요구하며, 10 update rehearsal에 대한 draft/evaluation producer를 이 코드가 만들지 않는다. 임의 판정이나 score를 만들지 않았고 W71 loop 연결 완료로 표시하지 않았다.
+
+관련 EX-41 시작 preflight · startup integration · disk guard 시험 결과: 29 passed in 6.89s. 최종 U5 시험 재실행 결과: 18 passed in 6.15s. 총 47개 통과, 실패 0, skip 0. 두 실행은 isaac311 CPU만 사용했고 pytest 임시 경로는 D:/mai-tmp/runner/ex41-u5 였다.

@@ -40,6 +40,7 @@ _pre.add_argument("--ex41_log_root")
 _pre.add_argument("--ex41_dry_run", action="store_true")
 _pre.add_argument("--ex41_rehearsal_updates", type=int)
 _pre.add_argument("--ex41_rehearsal_output")
+_pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
@@ -49,12 +50,14 @@ EX41_AUTHORIZATION = None
 EX41_PARENT_RECEIPT = None
 EX41_DISK_RECEIPT = None
 EX41_REHEARSAL = False
+EX41_RESUME_PREFLIGHT = None
 if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
         authorization_snapshot, build_ex41_disk_plan, load_fixed_plan, require_production_authorization,
         validate_ex41_output_directory, validate_rehearsal_request,
         verify_m6000_parent,
     )
+    from foothold_s2.scripts.ex41_resume import validate_resume_manifest
 
     EX41_PLAN = load_fixed_plan(_pre_args.ex41_table)
     if _pre_args.ex41_rehearsal_updates is not None:
@@ -76,6 +79,8 @@ if _pre_args.ex41_table:
                      else _pre_args.ex41_log_root)
         if not disk_root:
             raise ValueError("EX-41 disk preflight requires --ex41_log_root")
+        if _pre_args.resume_from:
+            raise ValueError("EX-41 resume cannot use the fresh-start --ex41_dry_run path")
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             disk_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
             1 if _pre_args.ex41_rehearsal_updates is not None else EX41_PARENT_RECEIPT["save_interval"],
@@ -96,6 +101,8 @@ if _pre_args.ex41_table:
             "rehearsal_device": _pre_args.device,
             "production_launch_allowed": False}, sort_keys=True))
         raise SystemExit(0)
+    if _pre_args.ex41_rehearsal_updates is not None and _pre_args.resume_from:
+        raise ValueError("EX-41 rehearsal cannot resume an existing run")
     if not _pre_args.ex41_parent_checkpoint:
         raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
     EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
@@ -108,13 +115,26 @@ if _pre_args.ex41_table:
     else:
         if not _pre_args.ex41_log_root:
             raise ValueError("EX-41 production start requires --ex41_log_root on D:")
-        validate_ex41_output_directory(_pre_args.ex41_log_root)
+        if _pre_args.resume_from:
+            EX41_RESUME_PREFLIGHT = validate_resume_manifest(
+                _pre_args.resume_from,
+                os.path.join(os.path.dirname(os.path.abspath(_pre_args.resume_from)), "manifest.json"),
+                plan_sha256=EX41_PLAN.sha256,
+                effective_sha256=EX41_PLAN.effective_sha256,
+                parent_sha256=EX41_PARENT_RECEIPT["sha256"],
+                log_dir=_pre_args.ex41_log_root,
+                score_dir=_pre_args.ex41_score_dir,
+            )
+        else:
+            validate_ex41_output_directory(_pre_args.ex41_log_root)
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             _pre_args.ex41_log_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
-            EX41_PARENT_RECEIPT["save_interval"])
+            EX41_PARENT_RECEIPT["save_interval"],
+            planned_updates=(max(0, 6500 - EX41_RESUME_PREFLIGHT["completed_updates"])
+                             if EX41_RESUME_PREFLIGHT else 6500))
         EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
 elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run
-      or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None
+      or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None or _pre_args.resume_from
       or _pre_args.ex41_rehearsal_output):
     raise ValueError("EX-41 options require --ex41_table")
 
@@ -160,6 +180,10 @@ if args_cli.ex41_table != _pre_args.ex41_table:
     raise ValueError("EX-41 preflight and runtime parser disagree on plan path")
 if args_cli.ex41_log_root != _pre_args.ex41_log_root:
     raise ValueError("EX-41 preflight and runtime parser disagree on log root")
+if args_cli.ex41_score_dir != _pre_args.ex41_score_dir:
+    raise ValueError("EX-41 preflight and runtime parser disagree on score directory")
+if args_cli.resume_from != _pre_args.resume_from:
+    raise ValueError("EX-41 preflight and runtime parser disagree on resume checkpoint")
 if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
         or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output):
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
@@ -227,15 +251,19 @@ def main(env_cfg, agent_cfg):
         agent_cfg.seed = seed
 
     log_root = os.path.abspath(os.path.join("logs", "rsl_rl", agent_cfg.experiment_name))
+    manifest = None
     if EX41_PLAN is not None:
-        if args_cli.resume_from:
-            raise ValueError("EX-41 parent transfer uses --ex41_parent_checkpoint, not --resume_from")
         parent_checkpoint_path = os.path.abspath(args_cli.ex41_parent_checkpoint)
-        resume_path = None
+        resume_path = os.path.abspath(args_cli.resume_from) if args_cli.resume_from else None
         agent_cfg.resume = False
         log_dir = os.path.abspath(args_cli.ex41_log_root) if not EX41_REHEARSAL else None
-        if not EX41_REHEARSAL:
+        if not EX41_REHEARSAL and resume_path is None:
             validate_ex41_output_directory(log_dir)
+        if resume_path is not None and os.path.dirname(resume_path) != os.path.abspath(log_dir):
+            raise ValueError("EX-41 resume checkpoint and --ex41_log_root must name the same run")
+        if resume_path is not None:
+            with open(os.path.join(log_dir, "manifest.json"), encoding="utf-8-sig") as stream:
+                manifest = json.load(stream)
     elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
@@ -266,7 +294,7 @@ def main(env_cfg, agent_cfg):
                            "resume_from": resume_path, "seed": agent_cfg.seed,
                            "ex41_rehearsal": EX41_REHEARSAL,
                            "max_updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None})
-    if EX41_PLAN is not None:
+    if EX41_PLAN is not None and resume_path is None:
         from foothold_s2.scripts.ex41_startup import write_ex41_disk_preflight
 
         write_ex41_disk_preflight(log_dir, EX41_DISK_RECEIPT)
@@ -283,7 +311,8 @@ def main(env_cfg, agent_cfg):
             EX41_PLAN.sha256)
         from foothold_s2.scripts.ex41_startup import set_live_initial_dr_scale
 
-        set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
+        if resume_path is None:
+            set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
         ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
     if resume_path is None and agent_cfg.resume and EX41_PLAN is None:
         resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
@@ -316,28 +345,79 @@ def main(env_cfg, agent_cfg):
         runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
+    parent_transfer = None
     if EX41_PLAN is not None:
         from functools import partial
         from foothold_s2.curriculum.continuous import make_runtime
         from foothold_s2.curriculum.ex41 import apply_runtime_fields
+        from foothold_s2.scripts.ex41_resume import (
+            add_resume_envelope, append_resume_segment, install_resume_checkpoint_hooks,
+            validate_resume_state,
+        )
 
-        parent_transfer = runner.load_ex41_parent()
-        # EX-41 updates are local to this new run; parent m6000 stays in its receipt.
-        runner.current_learning_iteration = 0
-        score_dir = os.path.abspath(args_cli.ex41_score_dir or os.path.join(log_dir, "scores"))
+        score_dir = os.path.abspath(
+            args_cli.ex41_score_dir
+            or (EX41_RESUME_PREFLIGHT or {}).get("score_dir")
+            or os.path.join(log_dir, "scores"))
+        resume_segment_index = (EX41_RESUME_PREFLIGHT["segment_index"]
+                                if EX41_RESUME_PREFLIGHT else 0)
         ex41_runtime = make_runtime(EX41_PLAN, env.num_envs, agent_cfg.device, log_dir,
-                                    score_dir=score_dir)
+                                    score_dir=score_dir, segment_index=resume_segment_index)
         command_term = env.unwrapped.command_manager.get_term("base_velocity")
         ex41_runtime.attach(runner, command_term)
         ex41_runtime.set_stage_changed_hook(partial(apply_runtime_fields, runner))
-        ex41_runtime.start(EX41_PLAN.parent_sha256)
+        if resume_path is None:
+            parent_transfer = runner.load_ex41_parent()
+            # EX-41 updates are local to this new run; parent m6000 stays in its receipt.
+            runner.current_learning_iteration = 0
+            ex41_runtime.start(EX41_PLAN.parent_sha256)
+        else:
+            print(f"[INFO] EX-41 self-resume from {resume_path}")
+            runner.load(resume_path, map_location="cpu")
+            restored_state = runner.state_dict()
+            # State readback is checked before the next rollout. The original
+            # saved metadata was checked against the run manifest before Kit.
+            add_resume_envelope(restored_state, plan_sha256=EX41_PLAN.sha256,
+                                effective_sha256=EX41_PLAN.effective_sha256,
+                                parent_sha256=EX41_PARENT_RECEIPT["sha256"])
+            restored = validate_resume_state(
+                restored_state, plan_sha256=EX41_PLAN.sha256,
+                effective_sha256=EX41_PLAN.effective_sha256,
+                parent_sha256=EX41_PARENT_RECEIPT["sha256"])
+            if (restored["iteration"] != EX41_RESUME_PREFLIGHT["iteration"]
+                    or restored["segment_index"] != EX41_RESUME_PREFLIGHT["segment_index"]):
+                raise ValueError("EX-41 restored checkpoint iteration/segment differs from preflight")
+            if restored["dr_scale"] != float(env.unwrapped._ex40_dr_scale):
+                raise ValueError("EX-41 restored DR scale differs from the live runtime readback")
+            parent_transfer = runner.ex41_parent_transfer
+            # EX-41 maps the zero-based PPO loop index to one-based update n.
+            # Keep the saved n as the loop index so the next update is n + 1.
+            runner.current_learning_iteration = restored["iteration"]
+            row = append_resume_segment(
+                manifest, EX41_RESUME_PREFLIGHT, process_id=os.getpid(),
+                started_at=datetime.now().astimezone().isoformat())
+            manifest.setdefault("resume_readbacks", []).append({
+                "segment_index": row["segment_index"],
+                "checkpoint_sha256": EX41_RESUME_PREFLIGHT["checkpoint_sha256"],
+                "completed_updates": restored["completed_updates"],
+                "next_update": restored["next_update"],
+                "w72_last_valid_boundary": restored["last_valid_boundary"],
+                "fixed_clock": restored["fixed_clock"],
+                "adasmpl_p": float(runner.adasmpl.p),
+                "dr_scale": restored["dr_scale"],
+                "terrain_levels_sha256": ex41_runtime.state_dict()["terrain_receipt"]["terrain_labels_sha256"],
+                "optimizer_restored": True,
+                "rng_restored": True,
+            })
+            run_manifest.write_manifest(log_dir, manifest)
         if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:
             raise ValueError("EX-41 requires attached W86 runtime before learning")
     elif resume_path:
         print(f"[INFO] START 체크포인트에서 이어 감: {resume_path}")
         runner.load(resume_path)
-    dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
-    dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
+    if resume_path is None:
+        dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
+        dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
     # SONNET-X11: 실행 시작 manifest(소비 파일 SHA · dirty diff · YAML · 인자 · 모드 · 초기 상태 SHA). 소비 코드가 실행 중 바뀌면 체크포인트 저장 때 멈춘다.
     modes = {"est_mode": runner.pcfg["est_mode"], "oracle_vel_noise": runner.pcfg["oracle_vel_noise"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt": bool(runner.pcfg.get("force_gt", False)),
              "clip_actions": agent_cfg.clip_actions, "z_rollout": "sample" if runner.perception.cfg.sample_latent_in_rollout else "mean", "action_rollout": "sample",
@@ -368,20 +448,33 @@ def main(env_cfg, agent_cfg):
                           "score_dir": score_dir,
                           "disk_preflight": EX41_DISK_RECEIPT,
                           "local_update_range": [1, ex41_runtime.max_updates]}
-    manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
-                                           runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
-    run_manifest.write_manifest(log_dir, manifest)
+    if resume_path is None:
+        manifest = run_manifest.build_manifest(
+            repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name,
+            cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
+            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"),
+            agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
+        run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
+    if EX41_PLAN is not None:
+        from foothold_s2.scripts.ex41_resume import install_resume_checkpoint_hooks
+
+        install_resume_checkpoint_hooks(
+            runner, manifest, log_dir, plan_sha256=EX41_PLAN.sha256,
+            effective_sha256=EX41_PLAN.effective_sha256,
+            parent_sha256=EX41_PARENT_RECEIPT["sha256"],
+            write_manifest=run_manifest.write_manifest)
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import (
             verify_ex41_start_readback, write_ex41_start_readback,
         )
 
-        ex41_start_receipt = verify_ex41_start_readback(
-            log_dir, EX41_PLAN, EX41_PARENT_RECEIPT, manifest, env, ex41_dr_readback)
-        start_receipt_path = write_ex41_start_readback(log_dir, ex41_start_receipt)
-        print("EX41_START_READBACK " + json.dumps(ex41_start_receipt, sort_keys=True), flush=True)
-        print(f"EX41_START_READBACK_FILE {start_receipt_path}", flush=True)
+        if resume_path is None:
+            ex41_start_receipt = verify_ex41_start_readback(
+                log_dir, EX41_PLAN, EX41_PARENT_RECEIPT, manifest, env, ex41_dr_readback)
+            start_receipt_path = write_ex41_start_readback(log_dir, ex41_start_receipt)
+            print("EX41_START_READBACK " + json.dumps(ex41_start_receipt, sort_keys=True), flush=True)
+            print(f"EX41_START_READBACK_FILE {start_receipt_path}", flush=True)
     if EX41_REHEARSAL:
         print("EX41_REHEARSAL_READBACK " + json.dumps({
             "output": log_dir,
@@ -405,8 +498,11 @@ def main(env_cfg, agent_cfg):
         MapStatsRecorder(runner, log_dir).attach()
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
-    remaining = (ex41_runtime.max_updates + 1 if ex41_runtime is not None
-                 and ex41_runtime.max_updates is not None else agent_cfg.max_iterations - done)
+    if ex41_runtime is not None and ex41_runtime.max_updates is not None:
+        completed = EX41_RESUME_PREFLIGHT["completed_updates"] if EX41_RESUME_PREFLIGHT else 0
+        remaining = max(0, ex41_runtime.max_updates - completed)
+    else:
+        remaining = agent_cfg.max_iterations - done
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return
