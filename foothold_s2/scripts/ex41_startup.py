@@ -501,8 +501,6 @@ def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,
         medians = {}
         measured = {}
         for axis, field in axes:
-            if float(command[axis]) == 0.0:
-                continue
             values = []
             for env_row in per_env:
                 if (not isinstance(env_row, dict) or type(env_row.get("samples_alive")) is not int

@@ -41,8 +41,12 @@ def test_ex41_boundary_uses_exact_score_250_and_records_dr_hold(tmp_path):
                           paused=True, extension=500)
     runtime._history.append(_score(500))
     report = record_boundary(runtime, tmp_path, 501)
-    assert report["checkpoint_iteration"] == 500
-    assert report["score_iteration"] == report["score_expected_iteration"] == 250
+    assert report["format"] == "foothold-ex41-progress/2"
+    assert report["boundary_update"] == 500
+    assert report["score_checkpoint_update"] == report["score_expected_update"] == 250
+    assert report["score_checkpoint_sha256"] == "a" * 64
+    assert report["score_document_sha256"] == "b" * 64
+    assert report["boundary_update"] != report["score_checkpoint_update"]
     assert len(report["maintenance_counts"]) == 39
     assert report["dr_hold"] is True and report["extension_updates"] == 500
     assert json.loads((tmp_path / "ex41_reports/update_00500.json").read_text()) == report
@@ -51,8 +55,11 @@ def test_ex41_boundary_uses_exact_score_250_and_records_dr_hold(tmp_path):
 def test_ex41_boundary_keeps_dr_when_exact_reference_score_is_missing(tmp_path):
     runtime = FakeRuntime(_score(750))
     report = record_boundary(runtime, tmp_path, 751)
-    assert report["score_expected_iteration"] == 500
-    assert report["score_iteration"] is None
+    assert report["boundary_update"] == 750
+    assert report["score_expected_update"] == 500
+    assert report["score_checkpoint_update"] is None
+    assert report["score_checkpoint_sha256"] is None
+    assert report["score_document_sha256"] is None
     assert report["score_state"] == "tool_hold"
     assert report["dr_scale"] == 0.5
     assert report["finished"] is False

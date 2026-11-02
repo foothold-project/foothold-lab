@@ -217,12 +217,13 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
     ]
     clock = getattr(runtime, "clock", None)
     report = {
-        "format": "foothold-ex41-progress/1", "event_id": event_id,
-        "checkpoint_iteration": completed,
-        "checkpoint_sha256": (score or {}).get("checkpoint_sha256"),
-        "score_iteration": (score or {}).get("iteration"),
-        "score_expected_iteration": completed - 250,
-        "score_sha256": (score or {}).get("_sha256"),
+        "format": "foothold-ex41-progress/2", "event_id": event_id,
+        "boundary_update": completed,
+        "boundary_receipt_update": receipt.get("iteration"),
+        "score_checkpoint_update": (score or {}).get("iteration"),
+        "score_checkpoint_sha256": (score or {}).get("checkpoint_sha256"),
+        "score_document_sha256": (score or {}).get("_sha256"),
+        "score_expected_update": completed - 250,
         "score_state": hold_kind,
         "score_rejections": rejected_scores,
         "maintenance_counts": counts if isinstance(counts, dict) and len(counts) == 39 else None,
@@ -261,7 +262,7 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         consecutive = 1
         previous_kind = None
         for row in reversed(prior):
-            if row.get("checkpoint_iteration", 0) != completed - 250 * consecutive:
+            if row.get("boundary_update", 0) != completed - 250 * consecutive:
                 break
             if row.get("score_state") not in ("tool_hold", "performance_hold"):
                 break

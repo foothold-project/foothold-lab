@@ -77,7 +77,15 @@ def test_runner_score_entry_uses_required_three_stand_sources(actual,tmp_path):
     assert pred['fwd0.5']['measured_envs']['vx_abs_error_mean_alive_mps']==64
     assert pred['fwd0.5']['tracking_medians']['vx_abs_error_mean_alive_mps']==pytest.approx(0.04734360799193382)
     assert pred['spin+1.2']['tracking_medians']['wz_abs_error_mean_alive_radps']==pytest.approx(0.08733033016324043)
-    assert pred['stop']['tracking_medians']=={}
+    assert pred['stop']['gt_used']==0
+    assert pred['stop']['measured_envs']=={
+        'vx_abs_error_mean_alive_mps':64,
+        'vy_abs_error_mean_alive_mps':64,
+        'wz_abs_error_mean_alive_radps':64,
+    }
+    assert pred['stop']['tracking_medians']['vx_abs_error_mean_alive_mps']==pytest.approx(0.014773474540561438)
+    assert pred['stop']['tracking_medians']['vy_abs_error_mean_alive_mps']==pytest.approx(0.014624898321926594)
+    assert pred['stop']['tracking_medians']['wz_abs_error_mean_alive_radps']==pytest.approx(0.06938964873552322)
 
 
 def test_runner_score_entry_rejects_missing_stand_path(actual,tmp_path):
