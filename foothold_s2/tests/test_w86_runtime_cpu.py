@@ -114,11 +114,12 @@ def test_physical_source_ray_geometry_rotation_and_names():
         root_quat_w=q,root_pos_w=torch.tensor([[1.,2.,3.3]]),root_state_w=torch.zeros(1,13),
         body_state_w=torch.zeros(1,4,13),joint_pos=torch.zeros(1,12),joint_vel=torch.zeros(1,12),
         applied_torque=torch.zeros(1,12),body_lin_vel_w=torch.zeros(1,4,3),root_ang_vel_b=torch.zeros(1,3),
-        joint_effort_limits=torch.ones(1,12)*20,soft_joint_pos_limits=torch.tensor([[[-1.,1.]]*12]))
+        joint_effort_limits=torch.ones(1,12)*1e9,soft_joint_pos_limits=torch.tensor([[[-1.,1.]]*12]))
     env=SimpleNamespace(num_envs=1,device='cpu',action_manager=SimpleNamespace(action=torch.zeros(1,12)),
         command_manager=SimpleNamespace(get_command=lambda n:torch.tensor([[.5,0.,0.]]),
                                         get_term=lambda n:SimpleNamespace(heading=torch.zeros(1,dtype=torch.bool))))
-    s=wr.PhysicalSource.__new__(wr.PhysicalSource); s.env=env; s.robot=SimpleNamespace(data=d)
+    s=wr.PhysicalSource.__new__(wr.PhysicalSource); s.env=env; s.robot=SimpleNamespace(data=d,
+        actuators={'motor':SimpleNamespace(joint_indices=slice(None),effort_limit=torch.ones(1,12)*45.43)})
     s.sensor=SimpleNamespace(data=SimpleNamespace(net_forces_w=torch.zeros(1,4,3)))
     s.feet=list(range(4)); s.force_ids=list(range(4)); s.knees=[8,9,10,11]; s.mesh=object(); s.link_names=wr.FEET
     seen={}
@@ -127,6 +128,7 @@ def test_physical_source_ray_geometry_rotation_and_names():
         out=starts.clone(); out[...,2]=3.
         return out,None,None,None
     s.cast=cast; r=s()
+    torch.testing.assert_close(r['effort_limits'],torch.ones(1,12)*45.43)
     assert r['all_link_names']==wr.FEET and r['all_forces'].shape==(1,4,3)
     assert seen['starts'].shape==(1,4,3,3)
     torch.testing.assert_close(seen['starts'][0,0,1]-seen['starts'][0,0,0],torch.tensor([0.,.05,0.]),atol=1e-6,rtol=0)

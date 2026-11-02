@@ -87,6 +87,33 @@ def _indices(find,names):
     return ids
 
 
+def actuator_effort_limits(robot):
+    """Read live motor clipping limits in robot joint order, not PhysX's 1e9.
+
+    Isaac Lab ActuatorBase.effort_limit is [env, group_joint]. For explicit
+    motors effort_limit_sim/joint_effort_limits may deliberately be 1e9.
+    This is the motor's effort ceiling, not its velocity-dependent envelope.
+    """
+    reference=robot.data.joint_effort_limits
+    if reference.ndim!=2: raise ValueError('W86 joint effort shape differs')
+    n,j=reference.shape
+    result=torch.empty_like(reference); seen=set()
+    for actuator in robot.actuators.values():
+        indices=actuator.joint_indices
+        ids=list(range(j))[indices] if isinstance(indices,slice) else [int(i) for i in indices]
+        if not ids or len(set(ids))!=len(ids) or any(i<0 or i>=j or i in seen for i in ids):
+            raise ValueError('W86 actuator joint mapping overlaps or is invalid')
+        limits=actuator.effort_limit
+        if not isinstance(limits,torch.Tensor) or limits.shape!=(n,len(ids)):
+            raise ValueError('W86 actuator effort shape differs')
+        limits=limits.to(device=reference.device,dtype=reference.dtype)
+        if not torch.isfinite(limits).all() or (limits<=0).any():
+            raise ValueError('W86 actuator effort limits invalid')
+        result[:,ids]=limits; seen.update(ids)
+    if seen!=set(range(j)): raise ValueError('W86 actuator effort coverage incomplete')
+    return result
+
+
 class PhysicalSource:
     def __init__(self,env):
         self.env=env; self.robot=env.scene['robot']; self.sensor=env.scene.sensors['contact_forces']
@@ -132,7 +159,7 @@ class PhysicalSource:
             physical_valid &= torch.isfinite(x).flatten(1).all(-1)
         return dict(sole_z=sole,velocity_xy=d.body_lin_vel_w[:,f,:2],ground_z=ground,
             forces=forces,command=command,heading=term.heading,yaw=d.root_ang_vel_b[:,2],
-            joint_pos=d.joint_pos,torque=d.applied_torque,effort_limits=d.joint_effort_limits,
+            joint_pos=d.joint_pos,torque=d.applied_torque,effort_limits=actuator_effort_limits(self.robot),
             joint_limits=d.soft_joint_pos_limits,physical_valid=physical_valid,knee_ids=self.knees,
             all_link_names=self.link_names,all_forces=self.sensor.data.net_forces_w)
 
@@ -245,6 +272,9 @@ class W86Runtime:
         self._sum('swing_height_sum_m',torch.where(fm['swing_frames'].bool(),fm['height_m'],torch.zeros_like(gap)))
         self._sum('knee_limit_frames',(_safe(d['torque'])[:,knee_ids].abs()/effort>=.9) & ~bad[:,None])
         self._sum('knee_valid_frames',(~bad[:,None]).expand(-1,4))
+        self._sum('knee_abs_torque_sum_nm',torch.where(~bad[:,None],_safe(d['torque'])[:,knee_ids].abs(),0.))
+        self._sum('knee_effort_limit_sum_nm',torch.where(~bad[:,None],effort,0.))
+        self._sum('knee_detail_valid_frames',(~bad[:,None]).expand(-1,4))
         if 'all_forces' in d:
             force=torch.linalg.vector_norm(_safe(d['all_forces']).double(),dim=-1)
             valid=(~bad[:,None]).expand_as(force)
@@ -266,6 +296,7 @@ class W86Runtime:
 
     def flush(self,iteration):
         row={'format':'ex41-w86-metrics/1','iteration':int(iteration),'env_frames':self.count,
+             'control_dt_s':float(self.env.step_dt),
              'feet_order':list(FEET),'knee_order':list(KNEES),'feet':{},'terms':{},'quarantine_env_count':self.quarantine_count}
         for name,value in self.sums.items():
             if name.startswith('links/'):continue
@@ -275,12 +306,19 @@ class W86Runtime:
             else: row['feet'][name]=value.cpu().tolist()
         near=self.sums.get('knee_limit_frames',torch.zeros(4,dtype=torch.int64))
         valid=self.sums.get('knee_valid_frames',torch.zeros(4,dtype=torch.int64))
-        row['knee_effort']={'definition':'abs(applied_torque)/joint_effort_limit >= threshold_fraction',
+        row['knee_effort']={'definition':'abs(applied_torque)/actuator.effort_limit >= threshold_fraction',
+                           'limit_source':'actuator.effort_limit; not PhysX effort_limit_sim; not velocity envelope',
                            'threshold_fraction':.9,'record_only':True,'joints':{}}
         for i,name in enumerate(KNEES):
             numerator,denominator=int(near[i]),int(valid[i])
             row['knee_effort']['joints'][name]={'near_limit_frames':numerator,'valid_frames':denominator,
                 'ratio':numerator/denominator if denominator else None}
+            # Old resumed recorder state can lack these new sums. Do not divide
+            # new detail samples by the older accumulated count or invent zero.
+            detail=int(self.sums.get('knee_detail_valid_frames',torch.zeros(4,dtype=torch.int64))[i])
+            row['knee_effort']['joints'][name].update(detail_valid_frames=detail,
+                mean_abs_applied_torque_nm=float(self.sums['knee_abs_torque_sum_nm'][i])/detail if detail else None,
+                mean_effort_limit_nm=float(self.sums['knee_effort_limit_sum_nm'][i])/detail if detail else None)
         row['all_link_contact']={'status':'unavailable','reason':'source_has_no_all_link_forces'}
         if self.link_names is not None and 'links/valid_frames' in self.sums:
             links={}
