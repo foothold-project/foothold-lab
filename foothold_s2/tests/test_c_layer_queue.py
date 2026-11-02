@@ -61,6 +61,8 @@ def fixture(tmp_path: Path, *, complete: bool = True):
             "recorder": str(recorder), "recorder_sha256": q.sha256(recorder),
             "composer": str(composer), "composer_sha256": q.sha256(composer), "jobs": rows}
     plan["playlist_dir"] = str(tmp_path / "_playlists")
+    plan["queue"] = str(Path(q.__file__).resolve())
+    plan["queue_sha256"] = q.sha256(Path(q.__file__).resolve())
     return plan, rows
 
 

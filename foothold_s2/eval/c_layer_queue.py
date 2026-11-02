@@ -70,6 +70,7 @@ def validate_plan(plan: dict) -> dict:
     if b"C_LAYER_SEED_V1" not in recorder.read_bytes():
         raise ValueError("recorder lacks variable-seed C76 profile")
     _source(plan["composer"], plan["composer_sha256"])
+    _source(plan["queue"], plan["queue_sha256"])
     playlist_dir = Path(plan["playlist_dir"])
     if not playlist_dir.is_absolute() or playlist_dir.name != "_playlists":
         raise ValueError("C76 playlists must use the shared _playlists directory")
@@ -326,7 +327,9 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                                                    "seed": seed, "checkpoint_sha256": plan["checkpoint_sha256"],
                                                    "recorder_sha256": plan["recorder_sha256"]})
             try:
-                preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True, check=False)
+                preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
+                                           encoding="utf-8", errors="replace", check=False,
+                                           env={**os.environ, "PYTHONUTF8": "1"})
                 if preflight.returncode:
                     raise ValueError("C76 recorder plan-only exit %d: %s" %
                                      (preflight.returncode, preflight.stderr[-500:]))

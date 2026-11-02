@@ -93,6 +93,8 @@ def build_plan(*, checkpoint: Path, source_root: Path, recorder: Path, composer:
                 key: str(value.resolve()) for key, value in priority_markers.items()},
             "recorder": str(recorder), "recorder_sha256": queue.sha256(recorder),
             "composer": str(composer), "composer_sha256": queue.sha256(composer),
+            "queue": str(Path(queue.__file__).resolve()),
+            "queue_sha256": queue.sha256(Path(queue.__file__).resolve()),
             "playlist_dir": str(playlist_dir.resolve()), "jobs": rows}
     if queue.validate_plan(plan)["ready"] != 216:
         raise AssertionError("C76 plan is not complete")
