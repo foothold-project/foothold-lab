@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 from foothold_s2.curriculum import w72
 from foothold_s2.curriculum.continuous import sha256
-from foothold_s2.curriculum.ex41 import EX41Runtime
+from foothold_s2.curriculum.ex41 import EX41Runtime,digest
 
 DURATIONS=(750,1000,1000,1250,500,500)  # approved schema guard, not the elapsed clock
 CASES=('fwd0.5','fwd1.0','spin+1.2','spin-1.2','back0.5','back1.0',
@@ -207,6 +207,33 @@ class EX41FixedRuntime(EX41Runtime):
             raise ValueError('EX41 fixed schedule requires verified W71 consumer before launch')
 
     def dr_scale(self,n): return self.clock.scale(n)
+
+    def on_checkpoint(self,iteration,checkpoint):
+        final=self.finished and not self.stop_requested
+        if final and (iteration!=self._iteration-1 or self.effective['stage_id']!='T0_prime'):
+            raise ValueError('EX41 final evaluation requires last completed T0 checkpoint')
+        super().on_checkpoint(iteration,checkpoint)
+        if not final:return
+        # The runner saves once more after learning exits. That final saved
+        # state, not a same-number earlier periodic save, is the source.
+        row={'format':'foothold-ex41-final-eval-request/1','status':'pending',
+             'training_finished':True,'graduated':False,'checkpoint':copy.deepcopy(self.last_checkpoint),
+             'stage_id':self.effective['stage_id'],'parent_sha256':self.plan.parent_sha256,
+             'schedule_sha256':self.plan.effective_sha256,'plan_sha256':self.plan.sha256,
+             'dr_scale':self.dr_scale(self._iteration),'full_dr_reached':self.dr_scale(self._iteration)==1.,
+             'consumer_contract':'evaluate exact final SHA after training exit; link request_id; never infer graduation from finish',
+             'graduation_spec_status':'separate approved spec and final evidence required'}
+        row['request_id']=digest(row)
+        folder=self.log_dir/'final_eval_requests';folder.mkdir(parents=True,exist_ok=True)
+        path=folder/f'final_{iteration}_{row["checkpoint"]["sha256"][:12]}.json'
+        data=(json.dumps(row,sort_keys=True,ensure_ascii=False,allow_nan=False)+'\n').encode('utf-8')
+        try:
+            with path.open('xb') as out:out.write(data)
+        except FileExistsError:
+            if path.read_bytes()!=data:raise ValueError('EX41 final request conflicts with existing evidence')
+            return
+        self._write({'event':'final_evaluation_pending','iteration':iteration,'request_path':str(path),
+                     'request_id':row['request_id'],'checkpoint_sha256':row['checkpoint']['sha256'],'graduated':False})
 
     def _effective(self,pos,n,values):
         result=super()._effective(pos,n,values)

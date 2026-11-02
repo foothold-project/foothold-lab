@@ -73,6 +73,10 @@ lead18:5x 결정에 맞춰 fixed5000은 경계마다 `critic_mirror_observation`
 
 실측: 이벤트 누락 반례4 FAIL·수동 승인1 PASS → 최종 P3+fixed runtime **68 PASS(130.07초)**. `D:/mai-tmp/analyst/p3-final-1857.log`. 단계·DR·PPO 자동 규칙·실행판 YAML은 바꾸지 않았다.
 
+## P7 · 마지막 저장본 평가 요청 생산
+
+fixed5000 종료는 졸업 판정과 구별한다. 마지막 T0′ 저장 직후 실제 파일 SHA로 `final_eval_requests/final_<N>_<sha12>.json`을 만들며, `graduated=false`를 유지한다. 같은 요청의 재호출은 한 파일이고 다른 회차는 거절한다. CPU 2 PASS(6.42초), `D:/mai-tmp/analyst/p7-green-1902.log`. 아직 runner의 최종 평가 소비·planner의 졸업식 확정은 남아 있다. T0′ 500회와 250회 간격 평가에서 세 저장본 연속 판독의 대상 범위는 planner에 확인 요청했다. 마지막 저장을 일반 주기 저장과 같은 SHA라고 가정하지 않는다.
+
 ## 남은 항목
 
-U10 무릎 한계 비율·점수 칸, U12 실제 소비·분포, U15 모든 링크 접촉, U16 foot_slip/W53, U17 기존8실패 처분, P3 승인 거울 경로, P7 최종 T0′·졸업, P8 실제 지형 승급. P3는 자동 거울 끔 결정을 유지하며 수동 승인 경로와 관찰 후보를 구분한다. P7 문턱은 planner 정본 확인 뒤 연결한다.
+U6 소비자 종료 처리·U10 채점기 연결·P7 졸업식과 최종 평가 소비·P8 실제 지형 승급 확인·G11/P5 새 EX41 그림자 채점기. U12/U15/U16/U17/P3의 위 CPU 결과를 실제 통합 Kit 결과로 확대하지 않는다. P7 문턱은 planner 정본 확인 뒤 연결한다.
