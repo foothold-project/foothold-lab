@@ -382,6 +382,9 @@ def stage_reports(run: Path, out_root: Path, cfg_path: Path, table: Path, arm: s
                 for name, digest in existing["current"]["source_sha256"].items():
                     if sha256(Path(score["sources"][name])) != digest:
                         raise ValueError(f"stage report source changed: {name}")
+                for item in existing['current'].get('reconstruction', {}).get('cases', {}).values():
+                    if sha256(Path(item['path'])) != item['sha256']:
+                        raise ValueError('stage report reconstruction array changed')
             else:
                 source_run = Path(ledger.get("run_dir") or run)
                 previous_ledger = by_update.get(previous.get("checkpoint_iteration")) if previous else None

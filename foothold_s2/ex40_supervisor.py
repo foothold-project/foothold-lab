@@ -40,6 +40,19 @@ def _atomic_json(path: Path, value: dict) -> None:
         raise
 
 
+def _training_child(args: list[str], log_root: Path):
+    """Training output is text, never the supervisor's JSON decision receipt."""
+    log_root.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix="train-segment-", suffix=".log", dir=log_root)
+    with os.fdopen(fd, "wb") as stream:
+        child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
+            cwd=Path(__file__).resolve().parents[1], stdin=subprocess.DEVNULL,
+            stdout=stream, stderr=subprocess.STDOUT)
+    _atomic_json(Path(name).with_suffix(".process.json"), {
+        "pid": child.pid, "log": str(Path(name).resolve()), "kind": "training-text-log"})
+    return child
+
+
 def transition(*, run: Path, rc: int | None, shell_finished: bool,
                process_alive: bool | None, score_state: str,
                ledger: dict | None = None, arm: str = "B") -> tuple[dict, dict]:
@@ -225,6 +238,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
             if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
             verified_sha = {}
+            held_updates = []
             for scored_update in expected_updates:
                 row = state.get("done", {}).get(str(scored_update))
                 if row is None:
@@ -240,7 +254,9 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 slot_state = _verified_score_slot(scored_update, run, ledger_rows, row,
                                                   cfg, Plan(table, arm=arm), boundaries, _stage,
                                                   _manifest_digest)
-                if slot_state != "verified":
+                if slot_state == "held":
+                    held_updates.append(scored_update)
+                elif slot_state != "verified":
                     return slot_state
                 source_row = ledger_rows.get(scored_update)
                 if source_row is None:
@@ -256,6 +272,12 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                     return "pending"
                 verified_sha[scored_update] = source_digest
             else:
+                # A recorded HOLD remains unresolved but must not prevent the
+                # watcher from scoring later checkpoints. Missing slots above
+                # reach the child invocation; only a fully attempted backlog
+                # returns here. Never convert a HOLD into consumed/PASS.
+                if held_updates:
+                    return "pending"
                 reports = stage_reports(run, out_root, config, table, arm,
                     telegram_sender=telegram_sender,
                     lab_feed=lab_feed or out_root / "lab_feed.json", sender=sender)
@@ -305,9 +327,9 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                          stage_for, manifest_digest) -> str:
     """Validate a stride slot from its recorded source segment, even after resume."""
     ledger = ledger_rows.get(update)
-    if ledger is None or saved.get("state") == "HOLD":
+    if ledger is None:
         return "pending"
-    if saved.get("state") not in ("PASS", "FAIL"):
+    if saved.get("state") not in ("PASS", "FAIL", "HOLD"):
         return "unknown"
     source_run = Path(ledger.get("run_dir") or current_run)
     checkpoint = Path(ledger.get("checkpoint_path") or source_run / f"model_{update}.pt")
@@ -332,6 +354,8 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                 or score.get("checkpoint_sha256") != pinned
                 or score.get("from") != stage or score.get("verdict") != saved.get("state")):
             return "unknown"
+        if saved.get("state") == "HOLD":
+            return "held"
         stage_cfg = cfg["stages"][stage]
         phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
         if stage_cfg.get("relative_commands") or stage_cfg.get("judge_walk_half"):
@@ -404,8 +428,7 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
     if poll_seconds < 0:
         raise ValueError("supervisor poll interval cannot be negative")
     for _ in range(max_segments):
-        child = subprocess.Popen([sys.executable, "foothold_s2/scripts/train_sb.py", *args],
-                                 cwd=Path(__file__).resolve().parents[1])
+        child = _training_child(args, launch_receipt.parent)
         run = None
         last_consumed = None
         watch_events = score_out / "supervisor_score_events.jsonl"
@@ -532,6 +555,7 @@ def main(argv: list[str] | None = None) -> int:
             ledger_path=args.ledger.resolve(),
             telegram_sender=args.telegram_sender.resolve(strict=True) if args.telegram_sender else None,
             lab_feed=args.lab_feed.resolve() if args.lab_feed else None)
+        _atomic_json(args.score_out.resolve() / "supervisor_result.json", result)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 0 if result.get("action") in ("complete", "resume_prepared_but_launch_guard_closed") else 5
     ledger = json.loads(args.ledger.read_text(encoding="utf-8-sig")) if args.ledger.is_file() else None

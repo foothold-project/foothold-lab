@@ -254,13 +254,21 @@ def judge(checkpoint: Path, stage: str, evidence_dir: Path, config_path: Path,
                 for name in cfg["axis_goal"]["cases"]:
                     case = axis["modes"][mode][name]
                     complete = case.get("stop_complete_envs")
-                    error = _finite(case.get("stop_end_error_median_rad"), "goal stop error")
                     if type(complete) is not int or not 0 <= complete <= 64:
                         raise EvidenceHold("W57 goal stop completion missing")
+                    if "stop_end_error_median_rad" not in case:
+                        raise EvidenceHold("W57 goal stop error missing")
+                    raw_error = case.get("stop_end_error_median_rad")
+                    if complete == 0:
+                        if raw_error is not None:
+                            raise EvidenceHold("W57 zero completions has an unexpected stop error")
+                        error = None
+                    else:
+                        error = _finite(raw_error, "goal stop error")
                     cells[f"{mode}/{name}"] = {"stop_complete_envs": complete,
                                                "stop_end_error_median_rad": error}
                     if stage_cfg["axis_goal"] and (complete < cfg["axis_goal"]["complete_envs_min"]
-                            or error > cfg["axis_goal"]["stop_end_error_median_rad_max"]):
+                            or (error is not None and error > cfg["axis_goal"]["stop_end_error_median_rad_max"])):
                         problems.append({"kind": "FAIL", "cell": f"{mode}/{name}",
                                          "reason": "goal_stop_threshold"})
         relative_names = set(stage_cfg.get("relative_commands", []))

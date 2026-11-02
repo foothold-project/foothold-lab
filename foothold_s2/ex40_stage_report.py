@@ -95,7 +95,10 @@ def snapshot(score: dict) -> dict:
             for field, value in w57[f"{mode}/{name}"].items():
                 if value is not None:
                     _number(value, field)
-    return {"w15": w15, "w57": w57, "stand": stand, "source_sha256": source_sha}
+    from foothold_s2.ex40_artifacts import reconstruction_summary
+    reconstruction = reconstruction_summary(Path(score['sources']['map64']), score['checkpoint_sha256'])
+    return {"w15": w15, "w57": w57, "stand": stand, "source_sha256": source_sha,
+            "reconstruction": reconstruction}
 
 
 def dr_readback(run: Path, update: int) -> dict:
@@ -149,6 +152,10 @@ def build(current_score: dict, previous_score: dict | None, run: Path, *,
     previous = snapshot(previous_score) if previous_score is not None else None
     gains, losses, unchanged = _delta(current, previous)
     update = current_score["checkpoint_iteration"]
+    from foothold_s2.ex40_artifacts import cmp_link
+    request = current_score.get('cmp_request')
+    cmp = (cmp_link(request, Path(current_score['cmp_receipt']) if current_score.get('cmp_receipt') else None)
+           if request else {'state': 'pending', 'reason': 'CMP request not connected'})
     return {"format": "foothold-ex40-stage-report/1", "stage": current_score["from"],
             "checkpoint_iteration": update, "checkpoint_sha256": current_score["checkpoint_sha256"],
             "previous_stage": previous_score["from"] if previous_score else None,
@@ -156,7 +163,7 @@ def build(current_score: dict, previous_score: dict | None, run: Path, *,
             "current": current, "previous": previous, "dr_current": dr_readback(run, update),
             "dr_previous": (dr_readback(previous_run or run, previous_score["checkpoint_iteration"])
                             if previous_score else None),
-            "gains": gains, "losses": losses, "unchanged": unchanged,
+            "gains": gains, "losses": losses, "unchanged": unchanged, "cmp": cmp,
             "caution": "생존 ±3/64 이내는 차이 없음. 연속값 반복 폭은 미측정이므로 판정하지 않음."}
 
 
@@ -175,6 +182,20 @@ def markdown(row: dict) -> str:
                   for item in row[key]] or ["- 생존 차이가 반복 폭 ±3/64를 넘는 칸 없음"]
         lines.append("")
     current, previous = row["current"], row["previous"]
+    recon = current.get('reconstruction', {})
+    lines += ['## 복원 지도 오차 · CMP 연결', '',
+              f"복원 오차: {recon.get('state', '미측정')} · {len(recon.get('cases', {}))}칸 · "
+              f"누락 {len(recon.get('missing', {}))}칸. cm 단위, 정답 -1 포화 제외와 포함을 분리.",
+              f"CMP: {row.get('cmp', {}).get('state', 'pending')} · " +
+              str(row.get('cmp', {}).get('reason', row.get('cmp', {}).get('receipt', '미연결'))), '',
+              '| 모드/명령 | 레벨 | 지형 | 유효 env | 포화 제외 평균 cm | 포화 포함 평균 cm |',
+              '|---|---:|---|---:|---:|---:|']
+    for name, source in recon.get('cases', {}).items():
+        for level, kinds in source['by_level_kind'].items():
+            for kind, stats in kinds.items():
+                lines.append(f"| {name} | {level} | {kind} | {stats['inrange_envs']} | "
+                             f"{stats['a_mean_of_mean_cm']} | {stats['b_mean_of_mean_cm']} |")
+    lines.append('')
     lines += ["## W15 13×3", "", "| 칸 | 생존 전→후 | 생존 변화 | vx/vy/wz 오차 전→후 |",
               "|---|---:|---:|---|"]
     for name, after in current["w15"].items():
