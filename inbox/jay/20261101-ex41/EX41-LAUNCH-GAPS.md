@@ -54,3 +54,18 @@ C층 606c9daf 막음 6 (scripter): C1 기술 실패가 시드 4회 한도를 소
 진행: runner G3 · G8 코드 · CPU 연결 보고(14:4x), analyst a0581766(G4~G7) 두 겹 검토 중.
 
 G13 (14:5x, planner 확인): D125 DR 켠 평가 칸 배율 1.0 이 코드 · 인자 · 시험 모두 없음(eval_map_modes.py:91-104 가 DR 이벤트 삭제). 담당 planner(worktree planner-d125-1102), 기본 끔 출력 바이트 동일 + 배율 0/1.0 답 아는 시험. Q26 ② 는 코드(유지 때 단계 경계도 밈)를 정본으로, 설계 v0.7.2.
+
+## 15:1x 추가 (세 번째 감사: EX-40 교훈 · 계보 · 흐름)
+
+EX-40 그림자 채점 31개 중 마지막 PASS 는 m1250. m1500~m8000 은 전부 HOLD, retry 로 살린 저장본 0. 원인 둘 다 EX-41 에서 그대로 재발한다(재발하면 증거 없음 → DR 0.5 고정).
+
+| 번호 | 내용 | 근거 | 담당 | 닫는 조건 |
+|---|---|---|---|---|
+| G14 | W57 rc=1 의 정체: 창 없는 하위 프로세스(CREATE_NO_WINDOW)에서 Git Bash sha256sum 이 stdin 없이 「Bad file descriptor」 로 죽음. 본 평가 · retry 모두 영수증 0 바이트. axis_v2.json 자료는 남아 있음 | run_axis_v2.sh:28,42 · ex40_eval_once.py:30-34(stdin 없음) · lead 확인 | runner | stdin=DEVNULL(또는 </dev/null) · 같은 방식 .sh 전수 · 창 없는 실제 하위 프로세스로 rc 0 재현 시험 |
+| G15 | W15 연속 칸 incomplete 수정 38ee51df 가 EX-41 가지에 없음(fix/ex40-score-w15-seq-1101 · lead/w78-terrain-skill-1101 에만). ex41_scoring.py:11 이 옛 ex40_score 를 import | ex40_score.py:221-228 · M79 | analyst | 병합 + 실제 EX-40 평가 출력으로 PASS 재현 |
+| G16 | 정본 계보: CANON-REGISTRY 에 EX-39 · EX-40 0건, m6000 미등록. 빠진 것: agent.yaml SHA · 평가기 HEAD 둘(38ee51df · 5c160641) · W57 retry 결과 경로 · 기준 점수 판정 HOLD(W57 칸 없음) · 단계 B3c · force_gt=true(복원 지도로 학습한 적 없음) · AdaSmpl p · 부모 없음(처음부터) | CANON-REGISTRY.json | lead (+ analyst 숫자) | 등록 커밋 + 값마다 실측 |
+| G17 | W71(D78 「EX-40 끝나면 고칠 것」) 미착수: supervisor HOLD 뒤 미호출 · W57 사슬 rc1(=G14) · retry 영수증 · 복원 지도 요약 · 로그 이름 · CMP | WORKLIST W71 | analyst | 항목별 닫힘 |
+
+낮음: 촬영 검정 프레임은 「첫 프레임」 이 아니라 env_step 0~186 에서 발생, 모두 cuda:1 · 2차에서 살아남(원인 미확인, 촬영 장치 분리 기록 · runner) · stage_loop done 조건에 W57 영수증 없음(runner, G11) · shoot_d51 · compose_d51 이 git 에 없음(??) → W75 이름으로 저장소에(scripter).
+
+사실 확인: EX-40 T0 는 복원 지도를 실제로 썼다(use_gt_frac 7501 1.0 → 7600 0.115 → 8000 0.102, 7501~8000 평균 0.151, 약 85~89 % 복원).
