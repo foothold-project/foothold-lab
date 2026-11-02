@@ -41,7 +41,6 @@ SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
 VIDEO_RULE_VERSION = "v3.2-D140"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
-AIR_FOOT_FILL_BGR = (35, 35, 35)
 AIR_FOOT_EDGE_BGR = (105, 105, 105)
 CMD_BGR, ACT_BGR = (51, 230, 26), (255, 89, 38)  # green command, blue actual (scene arrows)
 X0, RES = -0.475, 0.05  # map cell centre of row 0 in base frame (start_obs.py: x -0.475..1.075, y -0.375..0.375)
@@ -249,10 +248,11 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
             r, c = cell_of(lxy)
             q = (int(x + (c + 0.5) * cell), int(y0 + (r + 0.5) * cell))
             contact = bool(z["foot_contact"][row, f])
-            cv2.circle(panel, q, 6, FOOT_BGR[f] if contact else AIR_FOOT_FILL_BGR,
-                       -1, cv2.LINE_AA)
-            cv2.circle(panel, q, 6, (255, 255, 255) if contact else AIR_FOOT_EDGE_BGR,
-                       1, cv2.LINE_AA)
+            if contact:
+                cv2.circle(panel, q, 6, FOOT_BGR[f], -1, cv2.LINE_AA)
+                cv2.circle(panel, q, 6, (255, 255, 255), 1, cv2.LINE_AA)
+            else:
+                cv2.circle(panel, q, 6, AIR_FOOT_EDGE_BGR, 1, cv2.LINE_AA)
     lab = [((24, 455), "Attention: 128 cells, fixed 0.00..0.30", (200, 200, 200)),
            ((24, 530), f"Mean | Reconstructed - GT |  =  {float(err[row]) if err is not None else float('nan'):.1f} cm   (lower is better, 0 = perfect)", (200, 200, 200)),
            ((24, 490), f"Map colour range: {c0 - common[1]:+.3f}..{c0 + common[1]:+.3f} m (centre {c0:+.3f}, span ±{common[1] * 100:.1f} cm)", (190, 190, 190))]
@@ -937,7 +937,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
            "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256"),
            "map_panel": {"min_color_span_cm": MAP_MIN_SPAN_M * 100,
                          "attention_tokens": 128, "attention_fixed_range": [0.0, ATTENTION_MAX],
-                         "feet_markers": "airborne-black-gray-all-three-map-panels"},
+                         "feet_markers": "airborne-hollow-black-gray-all-three-map-panels"},
            "push_overlay": ({"source": str(push_events), "source_sha256": sha256(push_events),
                              "rollout_key": push_rollout_key, "env_id": push_env_id,
                              "meaning": push_overlay["meaning"]} if push_overlay is not None else None)}

@@ -67,11 +67,17 @@ def test_airborne_foot_uses_same_black_gray_in_all_three_map_panels():
         z, {"map_modes": {"map_mode": {"requested": "eval_pred"}}},
         0, np.zeros(128, dtype=np.float32),
     )
+    no_feet = {**z, "foot_pos_w": np.full((1, 4, 3), 99.0, dtype=np.float32)}
+    background = compose.draw_map_panel(
+        no_feet, {"map_modes": {"map_mode": {"requested": "eval_pred"}}},
+        0, np.zeros(128, dtype=np.float32),
+    )
     for tile_x in (compose.map_tile_x(x, 11) for x in compose.MAP_TILE_XS):
         row, col = compose.cell_of((0.25, 0.1))
         x = int(tile_x + (col + 0.5) * 11)
         y = int(compose.MAP_TILE_Y + (row + 0.5) * 11)
-        assert tuple(panel[y, x]) == compose.AIR_FOOT_FILL_BGR
+        assert np.array_equal(panel[y, x], background[y, x])  # hollow, no filled dot
+        assert not np.array_equal(panel[y, x + 6], background[y, x + 6])
         row, col = compose.cell_of((-0.25, -0.1))
         x = int(tile_x + (col + 0.5) * 11)
         y = int(compose.MAP_TILE_Y + (row + 0.5) * 11)
