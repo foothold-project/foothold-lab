@@ -41,7 +41,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     composer = tmp_path / "compose.py"
     checkpoint.write_bytes(b"checkpoint")
     recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
-    composer.write_bytes(b'VIDEO_RULE_VERSION = "v3-D137"\n')
+    composer.write_bytes(b'VIDEO_RULE_VERSION = "v3.1-D137"\n')
     rows = []
     cells = q.inventory(KINDS) if complete else [("boxes", 2, "eval_gt")]
     for kind, level, mode in cells:

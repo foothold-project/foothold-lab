@@ -24,7 +24,7 @@ TRAIL_STEPS = 75
 ATTN_TOPK = 16
 MAP_X, MAP_Y = 32, 16
 LEGEND = ("green arrow/arc = command  blue = actual  |  white dots = GT map  orange = reconstructed map  "
-          "(grey = not used by policy)  |  cyan = foot scan  |  red = attention top16  |  trail = last 1.5 s")
+          "(grey = not used by policy)  |  red = attention top16  |  trail = last 1.5 s")
 
 
 def adjust_saturation(color: tuple[float, float, float], multiplier: float) -> tuple[float, float, float]:
@@ -236,11 +236,6 @@ class SceneOverlay:
                 mp.append(torch.cat(sticks) + torch.tensor([0.0, 0.0, 0.006], device=dev))
                 mi.append(torch.full((6 * int(bad.sum()),), 5, device=dev))
             info["recon_err_cells_over_2cm"] = int(bad.sum())
-        for i in range(4):
-            fh = sensors[f"foot_scan_{i}"].data.ray_hits_w[self.env_index].detach()
-            fv = torch.isfinite(fh).all(dim=1)
-            mp.append(fh[fv] + torch.tensor([0.0, 0.0, 0.004], device=dev))
-            mi.append(torch.full((int(fv.sum()),), 4, device=dev))
         self.maps.visualize(torch.cat(mp), marker_indices=torch.cat(mi))
 
         w = self.attn_store.get("w")

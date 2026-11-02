@@ -38,7 +38,7 @@ from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
-VIDEO_RULE_VERSION = "v3-D137"
+VIDEO_RULE_VERSION = "v3.1-D137"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 CMD_BGR, ACT_BGR = (51, 230, 26), (255, 89, 38)  # green command, blue actual (scene arrows)
@@ -220,7 +220,9 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
     y0 = MAP_TILE_Y
     cell = 11
     tile_xs = tuple(map_tile_x(x, cell) for x in xs)
-    tiles = ((gt, use_gt), (pred, not use_gt), (chosen, True))
+    # D137 changes the colour range, not the v2 GT and reconstruction colours.
+    # Only the policy input panel is muted beneath the attention heatmap.
+    tiles = ((gt, True), (pred, True), (chosen, False))
     g_ok = np.isfinite(np.asarray(gt, np.float32))
     c0 = float(np.median(np.asarray(gt)[g_ok]))
     common = (c0, max(float(np.percentile(np.abs(np.asarray(gt)[g_ok] - c0), 95)), MAP_MIN_SPAN_M))  # same colour scale for all
@@ -816,13 +818,15 @@ def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
 
 
 def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
-    x0, y0, w, h = 1280 - 260, 34, 252, 14 + LEGEND_ROW * len(SCENE_KEY)
+    scene_key = list(SCENE_KEY)
+    if (meta or {}).get("overlay_25e", {}).get("scene_foot_scan_visible") is False:
+        scene_key = [item for item in scene_key if item[2] != "Foot scan (20 cm)"]
+    x0, y0, w, h = 1280 - 260, 34, 252, 14 + LEGEND_ROW * len(scene_key)
     roi = scene[y0:y0 + h, x0:x0 + w].astype(np.float32)
     scene[y0:y0 + h, x0:x0 + w] = (roi * 0.35 + 10).astype(np.uint8)
     mode = (meta or {}).get("map_modes", {}).get("map_mode", {}).get("requested")
     unused_map = mode in ("none", "probe_prop_only")
     grey = (145, 148, 153)
-    scene_key = list(SCENE_KEY)
     if unused_map:
         scene_key[:3] = [
             (kind, grey, label) for kind, _, label in SCENE_KEY[:3]

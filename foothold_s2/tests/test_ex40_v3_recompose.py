@@ -46,5 +46,5 @@ def test_existing_video_requires_v3_composer_and_source_sha(tmp_path):
 def test_partial_stage_is_hold_without_playlist(tmp_path):
     result = batch.publish_playlists([], playlist_root=tmp_path / "_playlists",
                                      expected_by_model={"ex40_m6000": 2}, composer_sha="a" * 64)
-    assert result == {"ex40_m6000": "HOLD: missing valid v3 videos"}
+    assert result == {"ex40_m6000": "HOLD: missing valid v3.1 videos"}
     assert not (tmp_path / "_playlists").exists()

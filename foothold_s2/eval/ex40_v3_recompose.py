@@ -134,7 +134,7 @@ def publish_playlists(rows: list[dict], *, playlist_root: Path,
     for model, expected in expected_by_model.items():
         selected = [row for row in rows if row["model_dir"] == model]
         if len(selected) != expected:
-            result[model] = "HOLD: missing valid v3 videos"
+            result[model] = "HOLD: missing valid v3.1 videos"
             continue
         for row in selected:
             verify_composite(Path(row["capture"]), Path(row["video"]), composer_sha)
