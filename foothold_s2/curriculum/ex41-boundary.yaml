@@ -1,0 +1,11 @@
+format: foothold-ex41-boundary/1
+revision: 1
+values:
+  ppo: {entropy_coef: 0.01, desired_kl: 0.01}
+  dr: {target_scale: 1.0, ramp_updates: 0}
+  reward_weights: {zero_yaw: -0.5, swing: -10.0, stumble: -2.0}
+  heading_forward_fraction: 0.3
+  critic_mirror: false
+  terrain_level_cap: 5
+  w71_ready: false  # Runner integration evidence must authorize true before S2c.
+  episode_length_s: 20.0

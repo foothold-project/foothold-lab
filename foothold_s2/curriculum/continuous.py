@@ -43,7 +43,11 @@ def load_plan(path: str | Path, *, arm: str | None = None,
     foothold-ex41-curriculum/1. EX41 smoke boundaries are test-only local n,
     never physical/parent iteration 7500. Caller must record test table SHA.
     """
-    raise NotImplementedError('EX41 interface only; not approved for execution')
+    doc = yaml.safe_load(Path(path).read_text(encoding='utf-8-sig'))
+    if isinstance(doc, dict) and doc.get('format') == 'foothold-ex41-curriculum/1':
+        from foothold_s2.curriculum.ex41 import EX41Plan
+        return EX41Plan(path, arm=arm, smoke_boundaries=smoke_boundaries)
+    return Plan(path, arm=arm, smoke_boundaries=smoke_boundaries)
 
 
 def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
@@ -55,7 +59,10 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
     Transfer initializes n=0 without a rollout; first rollout is n=1.
     EX41 resume preserves n and all W72 state. No live EX40 ledger is consumed.
     """
-    raise NotImplementedError('EX41 interface only; not approved for execution')
+    if getattr(plan, 'is_ex41', False):
+        from foothold_s2.curriculum.ex41 import EX41Runtime
+        return EX41Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
+    return Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
 
 
 @dataclass(frozen=True)
@@ -210,6 +217,9 @@ class Plan:
 
 def apply_terrain_policy(env_cfg, plan: Plan) -> dict:
     """Apply the named terrain-level policy to the actual training config."""
+    if getattr(plan, 'is_ex41', False):
+        from .ex41 import prepare_terrain_cfg
+        return prepare_terrain_cfg(env_cfg, plan)
     terrain_cfg = env_cfg.scene.terrain
     curriculum = env_cfg.curriculum
     if plan.terrain_curriculum == "fixed_l02":
