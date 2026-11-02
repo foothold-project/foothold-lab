@@ -918,6 +918,99 @@ def test_final_checkpoint_sha_mismatch_cannot_be_consumed(tmp_path, monkeypatch)
     assert result == "unknown"
 
 
+def test_verified_hold_at_prior_checkpoint_does_not_block_next_score(tmp_path, monkeypatch):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+
+    run, watch, scores, _digest = _supervisor_slot_history(
+        tmp_path, include_prior_5250=True, target_update=1750)
+    state_path = watch / "watch_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    ledger_path = watch / "score_ledger.jsonl"
+    ledger = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    old_row = next(row for row in ledger if row["checkpoint_iteration"] == 1500)
+    old_row["verdict"] = "HOLD"
+    state["done"]["1500"]["state"] = "HOLD"
+    score_path = Path(old_row["score_path"])
+    score = json.loads(score_path.read_text(encoding="utf-8"))
+    score["verdict"] = "HOLD"
+    score_path.write_text(json.dumps(score), encoding="utf-8")
+    old_row["score_sha256"] = hashlib.sha256(score_path.read_bytes()).hexdigest()
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    ledger_path.write_text("".join(json.dumps(row) + "\n" for row in ledger), encoding="utf-8")
+
+    held = ex40_supervisor._score_until_checkpoint(
+        run, watch, scores, ex40_score_watch.DEFAULT_CONFIG,
+        ex40_score_watch.DEFAULT_TABLE, "B", 1500,
+        ex40_score_watch._manifest_digest(run, 1500), max_calls=1)
+    result = ex40_supervisor._score_until_checkpoint(
+        run, watch, scores, ex40_score_watch.DEFAULT_CONFIG,
+        ex40_score_watch.DEFAULT_TABLE, "B", 1750,
+        ex40_score_watch._manifest_digest(run, 1750), max_calls=1)
+
+    assert held == "held"
+    assert result == "consumed"
+    assert json.loads(state_path.read_text(encoding="utf-8"))["done"]["1500"]["state"] == "HOLD"
+    assert json.loads(score_path.read_text(encoding="utf-8"))["verdict"] == "HOLD"
+
+
+def test_failed_evaluation_hold_is_not_a_consumed_score(tmp_path):
+    from foothold_s2 import ex40_score_watch, ex40_supervisor
+
+    run, watch, _scores, _digest = _supervisor_slot_history(
+        tmp_path, include_prior_5250=True, target_update=1500)
+    state_path = watch / "watch_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    ledger_path = watch / "score_ledger.jsonl"
+    ledger = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    row = next(item for item in ledger if item["checkpoint_iteration"] == 1500)
+    row["verdict"] = "HOLD"
+    state["done"]["1500"]["state"] = "HOLD"
+    score_path = Path(row["score_path"])
+    score = json.loads(score_path.read_text(encoding="utf-8"))
+    score["verdict"] = "HOLD"
+    score_path.write_text(json.dumps(score), encoding="utf-8")
+    row["score_sha256"] = hashlib.sha256(score_path.read_bytes()).hexdigest()
+    receipt_path = Path(score["evaluation_receipt"])
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["state"] = "failed"
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    ledger_path.write_text("".join(json.dumps(item) + "\n" for item in ledger), encoding="utf-8")
+
+    cfg = ex40_score_watch.config(ex40_score_watch.DEFAULT_CONFIG)
+    plan = Plan(ex40_score_watch.DEFAULT_TABLE, arm="B")
+    result = ex40_supervisor._verified_score_slot(
+        1500, run, {item["checkpoint_iteration"]: item for item in ledger},
+        state["done"]["1500"], cfg, plan,
+        ex40_score_watch.stage_end_updates(plan, cfg),
+        ex40_score_watch._stage, ex40_score_watch._manifest_digest)
+
+    assert result == "pending"
+
+
+def test_transition_records_held_checkpoint_sha_and_does_not_complete_final(tmp_path):
+    from foothold_s2 import ex40_supervisor
+
+    (tmp_path / "segment").mkdir()
+    run, _, _, _, _ = _known_checkpoint(tmp_path / "segment")
+    (run / "train_start_status.json").write_text(
+        '{"state":"failed","iter":5500}', encoding="utf-8")
+    action, ledger = transition(run=run, rc=1, shell_finished=True,
+        process_alive=False, score_state="held")
+    assert action["action"] == "resume_from_verified_checkpoint"
+    assert action["evaluation_hold"] is True
+    assert ledger["attempts"][-1]["state"] == "failed"
+    assert ledger["attempts"][-1]["checkpoint_sha256"]
+    assert ledger["attempts"][-1]["evaluation_state"] == "held"
+
+    (run / "train_start_status.json").write_text(
+        '{"state":"done","iter":8000}', encoding="utf-8")
+    final, final_ledger = ex40_supervisor.transition(run=run, rc=0,
+        shell_finished=True, process_alive=False, score_state="held", ledger=ledger)
+    assert final["action"] == "wait_for_segment_evaluation"
+    assert not final_ledger.get("terminal")
+
+
 def test_supervised_execution_copy_calls_watchdog_without_touching_original():
     copy_script = Path(__file__).resolve().parents[1] / "run_ex40_b11.sh"
     original = copy_script.with_name("run_ex40.sh")

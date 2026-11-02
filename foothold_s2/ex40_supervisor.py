@@ -81,21 +81,21 @@ def transition(*, run: Path, rc: int | None, shell_finished: bool,
         if failed and consecutive_failure_action(attempts[:index], True) == "stop_after_three_failures":
             ledger["terminal"] = {"state": "stopped_after_three_failures"}
             return {"action": "stop_after_three_failures", "source": decision}, ledger
-        if score_state != "consumed":
+        if score_state not in ("consumed", "held"):
             return {"action": "wait_for_segment_evaluation", "source": decision,
                     "reason": "same segment checkpoint has not been consumed"}, ledger
         return {"action": "resume_from_verified_checkpoint", "source": decision,
-                "failed_attempt": failed}, ledger
+                "failed_attempt": failed, "evaluation_hold": score_state == "held"}, ledger
     attempts.append(row)
     ledger["attempts"] = attempts
     if failed and consecutive_failure_action(attempts[:-1], True) == "stop_after_three_failures":
         ledger["terminal"] = {"state": "stopped_after_three_failures"}
         return {"action": "stop_after_three_failures", "source": decision}, ledger
-    if score_state != "consumed":
+    if score_state not in ("consumed", "held"):
         return {"action": "wait_for_segment_evaluation", "source": decision,
                 "reason": "new segment checkpoint has not been consumed"}, ledger
     return {"action": "resume_from_verified_checkpoint", "source": decision,
-            "failed_attempt": failed}, ledger
+            "failed_attempt": failed, "evaluation_hold": score_state == "held"}, ledger
 
 
 def _run_dir_for_pid(log_root: Path, pid: int) -> Path:
@@ -225,6 +225,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
             if state.get("format") != "foothold-ex40-score-watch/1" or state.get("arm") != arm:
                 return "unknown"
             verified_sha = {}
+            verified_holds = set()
             for scored_update in expected_updates:
                 row = state.get("done", {}).get(str(scored_update))
                 if row is None:
@@ -240,7 +241,7 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 slot_state = _verified_score_slot(scored_update, run, ledger_rows, row,
                                                   cfg, Plan(table, arm=arm), boundaries, _stage,
                                                   _manifest_digest)
-                if slot_state != "verified":
+                if slot_state not in ("verified", "held"):
                     return slot_state
                 source_row = ledger_rows.get(scored_update)
                 if source_row is None:
@@ -255,6 +256,10 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 if scored_update in current_checkpoints and current_digest is None:
                     return "pending"
                 verified_sha[scored_update] = source_digest
+                if slot_state == "held":
+                    verified_holds.add(scored_update)
+                if slot_state == "held" and scored_update == target_update:
+                    return "held"
             else:
                 reports = stage_reports(run, out_root, config, table, arm,
                     telegram_sender=telegram_sender,
@@ -263,14 +268,22 @@ def _score_until_checkpoint(run: Path, out_root: Path, score_dir: Path,
                 published = reports.get("published")
                 if type(published) is not int or published < 0:
                     return "unknown"
-                if published < len(required_reports):
-                    return "pending"
                 if reports.get("first_hold") is not None:
+                    return "pending"
+                # A verified evaluation HOLD has complete evidence, but it is
+                # intentionally not publishable as a stage comparison. Continue
+                # scoring later checkpoints while retaining that report gap.
+                first_missing = reports.get("first_pending")
+                deferred = (target_update != cfg["final_checkpoint_update"]
+                            and first_missing in (set(required_reports) & verified_holds))
+                reports_required_now = ([n for n in required_reports if n < first_missing]
+                                        if deferred else required_reports)
+                if published < len(reports_required_now):
                     return "pending"
                 effective_lab_feed = lab_feed or out_root / "lab_feed.json"
                 if any(not _stage_report_delivery_ok(out_root, n, boundaries[n],
                            verified_sha.get(n), telegram_sender, effective_lab_feed)
-                       for n in required_reports):
+                       for n in reports_required_now):
                     return "pending"
                 if target_update == cfg["final_checkpoint_update"]:
                     finished = completion(run, out_root, config, table, arm, state)
@@ -305,9 +318,10 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                          stage_for, manifest_digest) -> str:
     """Validate a stride slot from its recorded source segment, even after resume."""
     ledger = ledger_rows.get(update)
-    if ledger is None or saved.get("state") == "HOLD":
+    verdict = saved.get("state")
+    if ledger is None:
         return "pending"
-    if saved.get("state") not in ("PASS", "FAIL"):
+    if verdict not in ("PASS", "FAIL", "HOLD"):
         return "unknown"
     source_run = Path(ledger.get("run_dir") or current_run)
     checkpoint = Path(ledger.get("checkpoint_path") or source_run / f"model_{update}.pt")
@@ -330,7 +344,7 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
                 or update in boundaries and boundaries[update] != stage
                 or score.get("checkpoint_iteration") != update
                 or score.get("checkpoint_sha256") != pinned
-                or score.get("from") != stage or score.get("verdict") != saved.get("state")):
+                or score.get("from") != stage or score.get("verdict") != verdict):
             return "unknown"
         stage_cfg = cfg["stages"][stage]
         phases = {"map64", "stand_eval_gt", "stand_probe_prop_only", "stand_eval_pred"}
@@ -350,7 +364,7 @@ def _verified_score_slot(update: int, current_run: Path, ledger_rows: dict,
             return "pending"
     except (OSError, ValueError, KeyError, TypeError):
         return "pending"
-    return "verified"
+    return "held" if verdict == "HOLD" else "verified"
 
 
 def _stage_report_delivery_ok(out_root: Path, update: int, stage: str,
@@ -425,7 +439,7 @@ def supervise(*, initial_args: list[str], launch_receipt: Path, log_root: Path,
                     _record_watch_event(watch_events, pid=child.pid, run=run,
                         checkpoint=visible, score_state=score_state_live,
                         progress=_watch_progress(score_out))
-                    if score_state_live == "consumed":
+                    if score_state_live in ("consumed", "held"):
                         last_consumed = visible
             if rc is not None:
                 break
