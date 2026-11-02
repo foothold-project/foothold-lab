@@ -382,7 +382,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if child_log_has_traceback(attempt_root / "child.log"):
                     raise ValueError("recorder child logged a Traceback despite exit 0")
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
-                raw_audit = audit_video(mp4, expected=450, width=1280, height=720)
+                raw_audit = audit_video(mp4, expected=450, width=1280, height=720,
+                                        screen_evidence=meta.get("camera_screen_projection"))
                 _write(attempt_root / "raw_frame_audit.json", raw_audit)
                 if not raw_audit["pass"]:
                     raise ValueError("C76 raw full-frame audit failed")
@@ -413,7 +414,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                         or composition.get("checkpoint_sha256") != plan["checkpoint_sha256"]
                         or composition.get("capture") != str(attempt)):
                     raise ValueError("C76 HUD receipt differs from validated capture")
-                styled_audit = audit_video(styled, expected=450, width=1920, height=1080)
+                styled_audit = audit_video(styled, expected=450, width=1920, height=1080,
+                                           screen_evidence=meta.get("camera_screen_projection"))
                 _write(attempt_root / "styled_frame_audit.json", styled_audit)
                 if not styled_audit["pass"]:
                     raise ValueError("C76 styled full-frame audit failed")

@@ -1193,6 +1193,7 @@ def _capture(spec: dict[str, Any]) -> None:
     import torch
     import av
     from PIL import Image, ImageDraw, ImageFont
+    from foothold_s2.eval.c_layer_frame_audit import project_world_point
 
     import importlib
     preload_kit_dependencies(importlib.import_module, lambda: None)
@@ -1480,6 +1481,7 @@ def _capture(spec: dict[str, Any]) -> None:
         overlay = SceneOverlay(raw, robot, foot_robot_ids, perception, env_index=capture_env_id,
                                saturation_multiplier=full_args.overlay_saturation)
         overlay_info: list[dict[str, Any]] = []
+        camera_screen_projection: list[dict[str, Any]] = []
         step_dt = float(raw.step_dt)
         active_commands = capture_commands(spec) if sparse_capture else (WALK_TURN_COMMANDS if spec.get("command_profile") == "walk_turn" else COMMANDS)
         capture_duration = float(spec["duration_s"]) if sparse_capture else 12.0
@@ -1547,8 +1549,29 @@ def _capture(spec: dict[str, Any]) -> None:
                 if target_marker_op is not None:
                     update_target_marker(target_marker_op, robot_pos,
                                          target_marker_record["height_above_root_m"])
-                raw.sim.set_camera_view(eye=(robot_pos[0] - 0.6, robot_pos[1] - 1.6, robot_pos[2] + 0.85),
-                                        target=(robot_pos[0] + 0.25, robot_pos[1], robot_pos[2] - 0.05))
+                camera_eye = (float(robot_pos[0] - 0.6), float(robot_pos[1] - 1.6), float(robot_pos[2] + 0.85))
+                camera_target = (float(robot_pos[0] + 0.25), float(robot_pos[1]), float(robot_pos[2] - 0.05))
+                raw.sim.set_camera_view(eye=camera_eye, target=camera_target)
+                import omni.usd
+                from pxr import UsdGeom
+
+                camera_prim = omni.usd.get_context().get_stage().GetPrimAtPath("/OmniverseKit_Persp")
+                if not camera_prim.IsValid() or not camera_prim.IsA(UsdGeom.Camera):
+                    raise RuntimeError("C76 viewport camera prim unavailable for body projection")
+                camera = UsdGeom.Camera(camera_prim)
+                focal_mm = float(camera.GetFocalLengthAttr().Get())
+                aperture_mm = float(camera.GetHorizontalApertureAttr().Get())
+                projected = project_world_point(robot_pos, camera_eye, camera_target,
+                                                width=full_args.width, height=full_args.height,
+                                                focal_length_mm=focal_mm, horizontal_aperture_mm=aperture_mm)
+                in_frame = 0 <= projected[0] < full_args.width and 0 <= projected[1] < full_args.height
+                camera_screen_projection.append({"physics_tick": k, "root_center_px": projected,
+                                                 "root_in_frame": bool(in_frame),
+                                                 "focal_length_mm": focal_mm,
+                                                 "horizontal_aperture_mm": aperture_mm,
+                                                 "camera_eye_w": camera_eye, "camera_target_w": camera_target})
+                if not in_frame:
+                    raise RuntimeError("C76 robot root projects outside recorded viewport")
                 oi = overlay.draw(command, map_snapshot)
                 overlay_info.append({"physics_tick": k, **oi})
                 frame, retry_checks = render_frame_guarded(raw, robot, command_term, sensor,
@@ -1731,6 +1754,7 @@ def _capture(spec: dict[str, Any]) -> None:
                                       "selection_role": spec["selection_role"]} if sparse_capture else None),
             "render_visibility": render_visibility_record
             if sparse_capture else {"enabled": False, "reason": "single-environment capture"},
+            "camera_screen_projection": camera_screen_projection,
             "target_robot_marker": target_marker_record,
             "capture_start": start_record,
             "segment_observations": segment_observations,

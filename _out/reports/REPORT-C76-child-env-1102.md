@@ -20,8 +20,15 @@ isaac311 CPU 시험: `python -m pytest foothold_s2/tests/test_c_layer_queue.py -
 
 ## C4 화면 감사 후속
 
-검사 결과에 매 프레임 흰 Go2 몸 후보의 화면 bbox와 후보 수를 남긴다. 회색·흰 지형 전체의 흰 픽셀 비율만으로 로봇 가시성을 주장하지 않으며, 몸 후보가 없는 프레임은 실패한다. 이는 RGB의 형태 기반 화면 후보이고 semantic segmentation 증명은 아니다. 첫 Kit 촬영의 실제 화면을 사람이 확인해야 한다.
+검사 결과에 매 프레임 흰 Go2 몸 후보의 화면 bbox와 후보 수를 남긴다. 944cc6b0 판의 후보만으로 로봇 가시성을 주장할 수 없다는 verifier 지적을 받아, 기록기가 매 프레임 실제 root 위치와 viewport camera eye/target · USD focal length/horizontal aperture로 root 화면 좌표를 계산해 `review.json`에 남기도록 했다. 대기열 감사는 이 좌표가 화면 안에 있고 영상 속 흰 몸 후보와 겹치는지 확인한다. 투영 기록이 없거나 프레임 수가 다르면 실패한다. 이는 투영 위치와 영상 후보를 결합한 검사이고 semantic segmentation 증명은 아니다. 첫 Kit 촬영의 실제 화면을 사람이 확인해야 한다.
 
 밝기만 1단계 번갈아 변하는 정지 영상은 그레이 영상 차분의 공간 표준편차와 25프레임 연속 조건으로 거절한다. styled 1920×1080의 아래 360행은 장면과 분리해 전 프레임 밝기를 검사한다. verifier의 로봇 없는 흰 지형 · 밝기 흔들림 · 검은 아래 띠 반례를 CPU 시험에 넣었다. 기존 A층 원본 375프레임 한 편(`C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/video_a/parent_m1500/EX34-SB10-pyramid_stairs_L1_env23-m1500-fwd_back_probe_prop_only-1x/review.mp4`, SHA256 580bfa2e277b65a875c6e39203aa0d11818ef33181e090570618c50b67f1afe5)은 후보 375/375 · 저변동 연속 0 · 감사 PASS였다. 이는 C층 첫 Kit 편의 품질 결과가 아니다.
 
-관련 C층 CPU 시험 35 passed, ruff F · pyflakes 0건. 첫 실제 Kit 편의 raw와 styled 영수증 검사는 lead가 새 고정본으로 실행한 뒤 확인한다.
+아래 띠와 밝기 흔들림의 기존 반례, 투영 기록 없음 · 투영 좌표와 흰 후보 불일치의 새 반례를 포함한 C층 CPU 시험은 36 passed, ruff F 0건이다. 한 번은 C: 임시 파일에서 공간 부족으로 시험이 중단되어, 소유한 CPU 시험의 임시 경로만 D:/mai-temp/scripter-c76으로 바꾸고 캐시 없이 다시 실행했다. 원자료와 학습 산출물은 지우지 않았다. 첫 실제 Kit 편의 raw와 styled 영수증 검사는 lead가 새 고정본으로 실행한 뒤 확인한다.
+
+| 변경 파일 | SHA256 |
+|---|---|
+| `foothold_s2/eval/c_layer_frame_audit.py` | `e41551635190eb35aab080146dad2ffee5ee98b8d104c7c07813a546621d2b18` |
+| `foothold_s2/eval/c_layer_queue.py` | `3c0cbba14663762d4bdee8de2fa765792fd10cbfb6130a611570f1fbcab8e4dc` |
+| `foothold_s2/eval/video25/record_c_layer.py` | `1550cb68edf5f8696a76666d0dfd39f2eb2c6a39d71a152f9e33e7439e02adfd` |
+| `foothold_s2/tests/test_c_layer_frame_audit.py` | `a72b21baf01a6291a905b93eb046009ef4e43ff8492cbc6b67ff6e0e427ec918` |

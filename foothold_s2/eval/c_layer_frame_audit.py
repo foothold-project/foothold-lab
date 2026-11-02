@@ -1,7 +1,7 @@
 """Decode every C-layer frame and retain screen-region evidence for review.
 
-The white Go2 component is an image-based screen candidate, not semantic
-segmentation. A human still checks the first Kit clip before bulk publishing.
+The image candidate must overlap the recorder's projected body position.
+A human still checks the first Kit clip before bulk publishing.
 """
 from __future__ import annotations
 
@@ -11,7 +11,37 @@ import cv2
 import numpy as np
 
 
-def inspect_frames(frames, *, expected: int, width: int, height: int) -> dict:
+def project_world_point(point, eye, target, *, width: int, height: int,
+                        focal_length_mm: float, horizontal_aperture_mm: float) -> list[float]:
+    """Project a recorded world point through the viewport camera pinhole."""
+    point, eye, target = (np.asarray(value, dtype=np.float64) for value in (point, eye, target))
+    if any(value.shape != (3,) or not np.isfinite(value).all() for value in (point, eye, target)):
+        raise ValueError("C76 camera pose or point invalid")
+    if (not np.isfinite(focal_length_mm) or not np.isfinite(horizontal_aperture_mm)
+            or focal_length_mm <= 0 or horizontal_aperture_mm <= 0):
+        raise ValueError("C76 camera intrinsics invalid")
+    forward = target - eye
+    forward_norm = np.linalg.norm(forward)
+    if forward_norm <= 0:
+        raise ValueError("C76 camera eye and target coincide")
+    forward /= forward_norm
+    right = np.cross(forward, [0.0, 0.0, 1.0])
+    right_norm = np.linalg.norm(right)
+    if right_norm <= 0:
+        raise ValueError("C76 camera forward parallels world up")
+    right /= right_norm
+    up = np.cross(right, forward)
+    delta = point - eye
+    depth = float(delta @ forward)
+    if depth <= 0 or not np.isfinite(depth):
+        raise ValueError("C76 body lies behind camera")
+    focal_px = width * focal_length_mm / horizontal_aperture_mm
+    return [float(width / 2 + focal_px * (delta @ right) / depth),
+            float(height / 2 - focal_px * (delta @ up) / depth)]
+
+
+def inspect_frames(frames, *, expected: int, width: int, height: int,
+                   screen_evidence: list[dict] | None = None) -> dict:
     count = 0
     min_mean = min_std = min_center_white = min_panel_mean = min_bottom_mean = float("inf")
     max_same_run = same_run = 0
@@ -19,12 +49,23 @@ def inspect_frames(frames, *, expected: int, width: int, height: int) -> dict:
     screen_boxes = []
     previous = None
     issues = []
+    if not isinstance(screen_evidence, list) or len(screen_evidence) != expected:
+        issues.append("camera_screen_projection_missing_or_short")
     for frame in frames:
         count += 1
         if frame is None or frame.shape != (height, width, 3):
             issues.append(f"frame_{count}_shape")
             continue
         styled = width == 1920 and height == 1080
+        camera = screen_evidence[count - 1] if isinstance(screen_evidence, list) and count <= len(screen_evidence) else None
+        pixel = camera.get("root_center_px") if isinstance(camera, dict) else None
+        if (not isinstance(pixel, list) or len(pixel) != 2
+                or not all(isinstance(value, (int, float)) and np.isfinite(value) for value in pixel)
+                or not (0 <= pixel[0] < 1280 if styled else 0 <= pixel[0] < width)
+                or not (0 <= pixel[1] < 720 if styled else 0 <= pixel[1] < height)
+                or camera.get("root_in_frame") is not True):
+            issues.append(f"frame_{count}_robot_projection_invalid")
+            pixel = None
         scene_bottom = 700 if styled else int(height * .94)
         scene = frame[int(height * .08):scene_bottom, :int(width * 2 / 3)]
         # The recorder's header and the composer panel must not hide a dark scene.
@@ -70,6 +111,11 @@ def inspect_frames(frames, *, expected: int, width: int, height: int) -> dict:
         if candidates:
             _, x, y, bw, bh = max(candidates)
             screen_boxes.append([x, y + int(height * .08), bw, bh])
+            if pixel is not None:
+                margin = .08 * (1280 if styled else width)
+                if not (x - margin <= pixel[0] <= x + bw + margin
+                        and y + int(height * .08) - margin <= pixel[1] <= y + int(height * .08) + bh + margin):
+                    issues.append(f"frame_{count}_robot_candidate_not_at_projection")
         else:
             screen_boxes.append(None)
             issues.append(f"frame_{count}_robot_screen_candidate_missing")
@@ -103,7 +149,8 @@ def inspect_frames(frames, *, expected: int, width: int, height: int) -> dict:
             "issue_count": len(issues), "pass": not issues}
 
 
-def audit_video(path: Path, *, expected: int, width: int, height: int) -> dict:
+def audit_video(path: Path, *, expected: int, width: int, height: int,
+                screen_evidence: list[dict] | None = None) -> dict:
     capture = cv2.VideoCapture(str(path))
     if not capture.isOpened():
         raise ValueError("C76 video cannot be decoded: " + str(path))
@@ -114,6 +161,7 @@ def audit_video(path: Path, *, expected: int, width: int, height: int) -> dict:
                 if not okay:
                     break
                 yield frame
-        return inspect_frames(frames(), expected=expected, width=width, height=height)
+        return inspect_frames(frames(), expected=expected, width=width, height=height,
+                              screen_evidence=screen_evidence)
     finally:
         capture.release()
