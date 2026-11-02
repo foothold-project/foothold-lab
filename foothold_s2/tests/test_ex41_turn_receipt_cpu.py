@@ -1,6 +1,8 @@
 """W91 known-answer inputs plus read-only replay of historical EX35 arrays."""
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -132,3 +134,40 @@ def test_historical_ex35_raw_replay():
                 c=[float((force[e][:,list(R.S.FEET)]>1).all(-1)[a[e]].mean()) for e in range(16) if k[e]]
                 assert row['rows'][case]['Q']==pytest.approx(np.mean(q))
                 assert row['rows'][case]['C']==pytest.approx(np.mean(c))
+
+
+@pytest.mark.parametrize('scenario', ['truncated_npz', 'invalid_stage', 'receipt_conflict'])
+def test_cli_corrupt_data_is_rc2_but_bad_request_or_conflict_is_not(bundle, scenario):
+    """Verifier truncated_cli.py: remove ZIP end record, preserve damaged input."""
+    root, checkpoint = bundle
+    output = root / 'cli-receipt.json'
+    stage = 'S2a'
+    broken = root / 'turn16_eval_gt/arrays_indep_left.npz'
+    damaged_bytes = None
+    if scenario == 'truncated_npz':
+        damaged_bytes = broken.read_bytes()[:-22]
+        broken.write_bytes(damaged_bytes)
+    elif scenario == 'invalid_stage':
+        stage = 'unknown-stage'
+    else:
+        output.write_text('{"preserve":"existing receipt"}', encoding='utf-8')
+    args = [sys.executable, '-m', 'foothold_s2.eval.ex41_turn_receipt',
+            '--root', str(root), '--checkpoint', str(checkpoint), '--iteration', '750',
+            '--stage', stage, '--out', str(output)]
+    child = subprocess.run(args, cwd=Path(__file__).resolve().parents[2],
+                           stdin=subprocess.DEVNULL, capture_output=True, timeout=60)
+    (root / 'cli.stderr.txt').write_bytes(child.stderr)
+    if scenario == 'truncated_npz':
+        assert child.returncode == 2, child.stderr.decode('utf-8', errors='replace')
+        doc = json.loads(output.read_text(encoding='utf-8'))
+        assert doc['status'] == 'INCOMPLETE'
+        assert set(doc['errors']) == {'eval_gt'}
+        assert doc['errors']['eval_gt'].startswith('BadZipFile:')
+        assert set(doc['modes']) == {'probe_prop_only', 'eval_pred'}
+        assert doc['record_only'] and doc['decision'] is None
+        assert broken.read_bytes() == damaged_bytes
+    elif scenario == 'invalid_stage':
+        assert child.returncode == 1 and not output.exists()
+    else:
+        assert child.returncode == 1
+        assert output.read_text(encoding='utf-8') == '{"preserve":"existing receipt"}'

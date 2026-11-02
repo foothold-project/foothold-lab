@@ -2,7 +2,7 @@
 > 작성: analyst · 2026-11-02
 > 근거: 팀장 D151 · 11fdb8e4 · e6144734 U18 · turn_probe 원자료
 > 요지: 단계 끝 16 env 세 모드 30칸의 기록 전용 영수증과 CPU 검산 계약
-> 상태: CPU 15 PASS · 제거 변이 2개 검출 · GPU 사슬은 runner 담당, 통합 Kit 미확인
+> 상태: H1 손상 ZIP 고침 뒤 CPU 18 PASS · GPU 사슬은 runner 담당, 통합 Kit 미확인
 
 # EX-41 W91 영수증 계약
 
@@ -58,3 +58,11 @@ python -m foothold_s2.eval.ex41_turn_receipt --root <root> --checkpoint <actual_
 | 복원 | .558955 · .493846 · 13 | 1.053051 · .448594 · 16 |
 
 옛 출력에는 `run_identity`가 없으므로 물리 GPU1 실행 증거로 쓰지 않는다. 최신 호출의 UUID 대조·기동 시간·관측 차원은 runner의 통합 점검 사항이다. `Q`를 단순히 「추종비」라고 적은 U18 원문은 단위가 다르므로 여기서는 `Q`와 `follow_ratio`를 분리했다.
+
+## H1 잘린 NPZ 후속 · 11/02 21:02
+
+verifier `D:/mai-tmp/verifier/7a2a1283/truncated_cli.py`와 같이 NPZ 끝 22바이트를 자른 입력으로 실제 CLI를 실행했다. 수정 전 **1 FAIL(2.60s)**: `BadZipFile`이 모드별 예외 처리 밖으로 나가 rc1, 영수증 없음. `D:/mai-tmp/analyst/w91-h1-before.log`에 재현을 남겼다.
+
+`BadZipFile`만 모드별 자료 오류 수집 목록에 추가했다. 수정 뒤 실제 CLI는 **rc2 · INCOMPLETE 영수증**, `errors.eval_gt=BadZipFile...`를 남기고 나머지 두 모드는 정상 수집한다. 손상 원파일은 바꾸지 않는다. 잘못된 단계명은 rc1·영수증 없음, 기존 영수증 내용 충돌은 rc1·원 영수증 보존으로 구분한다.
+
+전체 W91 **18 PASS(40.04s)**, `D:/mai-tmp/analyst/w91-h1-after.log`. 이 회귀는 subprocess CLI 층에서 rc·영수증 JSON·정상 두 모드·원본 보존을 검사한다. 확인한 손상은 ZIP 끝 기록 제거이며 모든 가능한 압축 손상 형식을 검증했다고 주장하지 않는다. P4-2·GPU·실행 사슬은 수정하지 않았다.

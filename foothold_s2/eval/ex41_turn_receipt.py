@@ -10,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+from zipfile import BadZipFile
 
 import numpy as np
 
@@ -128,7 +129,7 @@ def collect(root, *, checkpoint, iteration, stage):
             row = read_mode(folder, mode=mode, checkpoint_sha256=digest, iteration=iteration)
             row['sources'].extend(evidence(folder / name) for name in ('rc.txt', 'run.log'))
             out['modes'][mode] = row
-        except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, BadZipFile) as exc:
             out['errors'][mode] = type(exc).__name__ + ': ' + str(exc)
     if not out['errors']:
         out['status'] = 'COMPLETE'
