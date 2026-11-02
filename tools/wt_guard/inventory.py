@@ -31,10 +31,16 @@ GB = 1_000_000_000
 GIT_TIMEOUT_S = 180
 
 
+_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0) if wt_config.IS_WINDOWS else 0
+
+
 def git(args: Sequence[str], cwd: str | Path, timeout: int = GIT_TIMEOUT_S) -> tuple[int, str]:
+    """git 을 묻지 않게(stdin 닫음 · 터미널 프롬프트 끔 · Windows 는 창 없이) 부른다."""
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_OPTIONAL_LOCKS="0")
     try:
         cp = subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True,
-                            encoding="utf-8", errors="replace", timeout=timeout)
+                            encoding="utf-8", errors="replace", timeout=timeout,
+                            stdin=subprocess.DEVNULL, env=env, creationflags=_NO_WINDOW)
         return cp.returncode, cp.stdout.strip()
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 255, f"{type(exc).__name__}: {exc}"
@@ -129,18 +135,26 @@ def iso(ts: float | None) -> str | None:
     return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(wt_config.KST).isoformat(timespec="seconds")
 
 
-def created_at(path: Path) -> float | None:
-    """사본이 생긴 시각: .git 항목의 생성 시각. Windows 는 st_ctime 이 생성 시각. Linux 는 st_birthtime 이 있을 때만."""
+def created_at(path: Path) -> tuple[float | None, str]:
+    """사본이 생긴 시각과 출처. .git 항목의 생성 시각(Windows st_ctime · birthtime 있는 파일 시스템),
+    없으면 HEAD reflog 의 첫 항목 시각(worktree add · clone 때 적힘)."""
     try:
         st = (path / ".git").stat()
     except OSError:
-        return None
-    bt = getattr(st, "st_birthtime", None)
-    if bt:
-        return float(bt)
-    if wt_config.IS_WINDOWS:
-        return float(st.st_ctime)
-    return None
+        st = None
+    if st is not None:
+        bt = getattr(st, "st_birthtime", None)
+        if bt:
+            return float(bt), "birthtime"
+        if wt_config.IS_WINDOWS:
+            return float(st.st_ctime), "ctime"
+    rc, out = git(["log", "-g", "--format=%ct", "HEAD"], path)
+    if rc == 0 and out.strip():
+        try:
+            return float(out.strip().splitlines()[-1]), "reflog"
+        except ValueError:
+            pass
+    return None, "unknown"
 
 
 def git_activity(path: Path) -> float | None:
@@ -161,18 +175,20 @@ def describe(path: str, cfg: wt_config.Config, *, now: datetime, with_size: bool
              main_toplevel: str | None = None, wt: dict | None = None) -> dict:
     p = Path(path)
     row: dict = {
-        "path": path.replace("\\", "/"), "exists": p.is_dir(), "is_main": False,
+        "path": path.replace("\\", "/"), "real_path": None, "exists": p.is_dir(), "is_main": False,
         "branch": None, "head": None, "detached": None, "prunable": bool(wt and wt.get("prunable")),
         "upstream": None, "remote_branch_exists": None, "pushed": None,
-        "uncommitted": None, "untracked": None,
+        "uncommitted": None, "untracked": None, "ignored": None,
         "files": None, "size_bytes": None, "size_gb": None,
-        "last_write": None, "last_git_activity": None, "created_at": None,
+        "last_write": None, "last_git_activity": None, "created_at": None, "created_at_source": None,
         "outside_root": None, "new_outside": None, "archive_candidate": None, "notes": [],
     }
     if not row["exists"]:
         row["notes"].append("폴더 없음(prunable)")
         return row
-    row["is_main"] = bool(main_toplevel) and wt_config.norm_path(path) == wt_config.norm_path(main_toplevel)
+    row["real_path"] = os.path.realpath(path).replace("\\", "/")
+    row["is_main"] = bool(main_toplevel) and wt_config.norm_path(row["real_path"]) == wt_config.norm_path(
+        os.path.realpath(main_toplevel))
     rc, head = git(["rev-parse", "--short", "HEAD"], p)
     row["head"] = head if rc == 0 else None
     rc, br = git(["symbolic-ref", "--short", "-q", "HEAD"], p)
@@ -185,11 +201,12 @@ def describe(path: str, cfg: wt_config.Config, *, now: datetime, with_size: bool
         row["remote_branch_exists"] = rc == 0
     rc, contains = git(["branch", "-r", "--contains", "HEAD", "--format=%(refname:short)"], p)
     row["pushed"] = (rc == 0 and bool(contains.strip()))
-    rc, st = git(["--no-optional-locks", "status", "--porcelain", "--untracked-files=normal"], p)
+    rc, st = git(["--no-optional-locks", "status", "--porcelain", "--untracked-files=normal", "--ignored=matching"], p)
     if rc == 0:
         lines = [ln for ln in st.splitlines() if ln.strip()]
         row["untracked"] = sum(1 for ln in lines if ln.startswith("??"))
-        row["uncommitted"] = len(lines) - row["untracked"]
+        row["ignored"] = sum(1 for ln in lines if ln.startswith("!!"))  # 무시된 산출물도 센다(보관 후보 오판 방지)
+        row["uncommitted"] = len(lines) - row["untracked"] - row["ignored"]
     else:
         row["notes"].append(f"git status 실패: {st[:80]}")
     if with_size:
@@ -198,7 +215,9 @@ def describe(path: str, cfg: wt_config.Config, *, now: datetime, with_size: bool
         row["last_write"] = iso(latest)
     act = git_activity(p)
     row["last_git_activity"] = iso(act)
-    row["created_at"] = iso(created_at(p))
+    created, source = created_at(p)
+    row["created_at"] = iso(created)
+    row["created_at_source"] = source
     classify(row, cfg, now=now)
     return row
 
@@ -210,7 +229,8 @@ def classify(row: dict, cfg: wt_config.Config, *, now: datetime) -> dict:
         row["new_outside"] = False
         row["archive_candidate"] = False
         return row
-    row["outside_root"] = not wt_config.is_under(row["path"], cfg.wt_root)
+    root_real = os.path.realpath(cfg.wt_root) if os.path.isdir(cfg.wt_root) else cfg.wt_root
+    row["outside_root"] = not wt_config.is_under(row.get("real_path") or row["path"], root_real)
     created = row.get("created_at")
     if not row["outside_root"]:
         row["new_outside"] = False
@@ -218,10 +238,10 @@ def classify(row: dict, cfg: wt_config.Config, *, now: datetime) -> dict:
         row["new_outside"] = None
     else:
         row["new_outside"] = wt_config.parse_when(created) >= cfg.new_since
-    last = row.get("last_write") or row.get("last_git_activity")
     stamps = [s for s in (row.get("last_write"), row.get("last_git_activity")) if s]
     last = max(stamps) if stamps else None
-    clean = row.get("uncommitted") == 0 and row.get("untracked") == 0
+    # 깨끗 = 변경 0 · 미추적 0 · 무시된 산출물 0 (무시 파일이 있으면 사람이 보고 보관)
+    clean = row.get("uncommitted") == 0 and row.get("untracked") == 0 and (row.get("ignored") or 0) == 0
     pushed = row.get("pushed") is True
     idle = last is not None and (now - wt_config.parse_when(last)) >= timedelta(days=cfg.idle_days)
     row["archive_candidate"] = bool(clean and pushed and idle)
@@ -247,7 +267,7 @@ def summarize(rows: Sequence[dict], disks: Sequence[dict], cfg: wt_config.Config
     new_out = [r for r in outside if r["new_outside"]]
     new_unknown = [r for r in outside if r["new_outside"] is None]
     arch = [r for r in present if r["archive_candidate"]]
-    dirty = [r for r in present if (r["uncommitted"] or 0) + (r["untracked"] or 0) > 0]
+    dirty = [r for r in present if (r["uncommitted"] or 0) + (r["untracked"] or 0) + (r["ignored"] or 0) > 0]
     sized = [r for r in present if r["size_bytes"] is not None]
     size_txt = f"{sum(r['size_bytes'] for r in sized) / GB:.0f} GB" if sized else "크기 미측"
     names = ", ".join(Path(r["path"]).name for r in new_out[:5])
@@ -263,18 +283,18 @@ def summarize(rows: Sequence[dict], disks: Sequence[dict], cfg: wt_config.Config
 
 
 def table(rows: Sequence[dict]) -> str:
-    hdr = "| 사본 | 브랜치 | 크기 GB | 마지막 쓰기 | 미커밋/미추적 | push | 뿌리 밖 | 새 | 보관 후보 |"
+    hdr = "| 사본 | 브랜치 | 크기 GB | 마지막 쓰기 | 미커밋/미추적/무시 | push | 뿌리 밖 | 새 | 보관 후보 |"
     sep = "|---|---|---|---|---|---|---|---|---|"
     out = [hdr, sep]
     for r in rows:
         if not r["exists"]:
             out.append(f"| {r['path']} | (폴더 없음) | | | | | | | |")
             continue
-        out.append("| {p} | {b} | {s} | {w} | {u}/{t} | {ps} | {o} | {n} | {a} |".format(
+        out.append("| {p} | {b} | {s} | {w} | {u}/{t}/{i} | {ps} | {o} | {n} | {a} |".format(
             p=r["path"], b=r["branch"] or f"(detached {r['head']})",
             s="" if r["size_gb"] is None else f"{r['size_gb']:.2f}",
             w=(r["last_write"] or r["last_git_activity"] or "")[:16],
-            u=r["uncommitted"], t=r["untracked"], ps={True: "예", False: "아니오", None: "?"}[r["pushed"]],
+            u=r["uncommitted"], t=r["untracked"], i=r["ignored"], ps={True: "예", False: "아니오", None: "?"}[r["pushed"]],
             o="예" if r["outside_root"] else "", n={True: "예", False: "", None: "?"}[r["new_outside"]],
             a="예" if r["archive_candidate"] else ""))
     return "\n".join(out)

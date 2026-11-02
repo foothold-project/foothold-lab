@@ -30,6 +30,36 @@ GIT = shutil.which("git")
 ZERO = "0" * 40
 
 
+def _tmp_dir_for_tests() -> str | None:
+    """가짜 저장소는 D138 임시 뿌리(D:/mai-tmp 또는 /data/mai-tmp) 아래에 둔다. 없으면 TMP 를 따른다."""
+    explicit = os.environ.get("MAI_WT_GUARD_TEST_TMP")
+    if explicit:
+        Path(explicit).mkdir(parents=True, exist_ok=True)
+        return explicit
+    root = Path(wt_config.BUILTIN["MAI_TMP_ROOT"])
+    if root.is_dir():
+        d = root / "wt_guard-tests"
+        d.mkdir(parents=True, exist_ok=True)
+        return str(d)
+    return None
+
+
+FAKE_ORCA = r'''#!/bin/sh
+# 가짜 orca: run-list 는 고정 JSON(최근 갱신 run 이 둘째), send 는 인자를 기록하고 ORCA_STUB_RC 로 끝난다.
+log="$ORCA_STUB_LOG"
+case "$*" in
+  *run-list*)
+    printf '%s\n' '{"ok": true, "result": {"runs": [{"id": "run_old111111", "updated_at": "2026-10-27T18:16:36Z"}, {"id": "run_new222222", "updated_at": "2026-11-02T10:00:00Z"}, {"id": "run_mid333333", "updated_at": "2026-10-30T00:00:00Z"}]}}'
+    exit 0 ;;
+  *send*)
+    printf '%s\n' "$*" >> "$log"
+    [ "${ORCA_STUB_RC:-0}" = 0 ] || { echo "stub send failed"; exit "$ORCA_STUB_RC"; }
+    echo "Sent msg_stub"; exit 0 ;;
+  *) echo "unknown" >&2; exit 9 ;;
+esac
+'''
+
+
 def run(cmd, cwd=None, env=None, check=True):
     cp = subprocess.run(cmd, cwd=str(cwd) if cwd else None, env=env, capture_output=True,
                         text=True, encoding="utf-8", errors="replace")
@@ -51,10 +81,12 @@ def clean_env(**extra):
 @unittest.skipUnless(BASH and GIT, "bash 와 git 이 필요")
 class HookFixture(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="wt_guard_")
+        self.temp = tempfile.TemporaryDirectory(prefix="wt_guard_", dir=_tmp_dir_for_tests())
         self.addCleanup(self.temp.cleanup)
         t = Path(self.temp.name).resolve()
         self.t = t
+        self.fail_log = t / "home" / ".mai" / "wt_guard" / "notify-failures.log"
+        (t / "home").mkdir()
         self.origin = t / "origin.git"
         self.main = t / "main"
         self.dside = t / "dside"
@@ -78,7 +110,26 @@ class HookFixture(unittest.TestCase):
         self.user_cfg.write_text(
             f"MAI_WT_ROOT={self.dside.as_posix()}\nMAI_WT_ALERT_DIR={self.alerts.as_posix()}\n"
             f"MAI_WT_NOTIFY_CMD={self.stub.as_posix()}\n", encoding="utf-8", newline="\n")
-        self.env = clean_env(MAI_WT_GUARD_CONFIG=str(self.user_cfg), MAI_ROLE="tester")
+        # HOME 을 임시 폴더로: 실패 기록(~/.mai/wt_guard/notify-failures.log) · 설치가 만드는 설정이 진짜 HOME 에 안 닿게
+        self.env = clean_env(MAI_WT_GUARD_CONFIG=str(self.user_cfg), MAI_ROLE="tester",
+                             HOME=(t / "home").as_posix(), USERPROFILE=str(t / "home"))
+
+    def orca_env(self, cfg_lines: str, rc: int = 0):
+        """가짜 orca 를 PATH 앞에 두고 MAI_WT_NOTIFY_CMD 없는 설정으로 환경을 만든다."""
+        bindir = self.t / "bin"
+        bindir.mkdir(exist_ok=True)
+        orca = bindir / "orca"
+        orca.write_text(FAKE_ORCA, encoding="utf-8", newline="\n")
+        orca.chmod(0o755)
+        cfg = self.t / "wt_guard-orca.env"
+        cfg.write_text(f"MAI_WT_ROOT={self.dside.as_posix()}\nMAI_WT_ALERT_DIR={self.alerts.as_posix()}\n" + cfg_lines,
+                       encoding="utf-8", newline="\n")
+        env = dict(self.env)
+        env["MAI_WT_GUARD_CONFIG"] = str(cfg)
+        env["PATH"] = str(bindir) + os.pathsep + env["PATH"]  # Windows 꼴로 두어야 git 이 띄운 sh 의 PATH 로 바뀐다
+        env["ORCA_STUB_LOG"] = (self.t / "orca.log").as_posix()
+        env["ORCA_STUB_RC"] = str(rc)
+        return env
 
     def install(self, extra_args=()):
         return run([BASH, str(HERE / "install.sh"), "--repo", str(self.main), *extra_args], env=self.env)
@@ -103,7 +154,9 @@ class HookFixture(unittest.TestCase):
         files = self.alert_files()
         self.assertEqual(len(files), 1, cp.stderr)
         doc = json.loads(files[0].read_text(encoding="utf-8"))
-        self.assertEqual(doc["schema"], "wt-guard-alert/1")
+        self.assertEqual(doc["schema"], "wt-guard-alert/2")
+        self.assertEqual(doc["notify_run_source"], "notify_cmd")
+        self.assertEqual(wt_config.norm_path(doc["config_source"]), wt_config.norm_path(self.user_cfg))
         self.assertEqual(doc["prev_head"], ZERO)
         self.assertEqual(doc["role"], "tester")
         self.assertEqual(wt_config.norm_path(doc["worktree"]), wt_config.norm_path(self.cside / "wt-c"))
@@ -166,31 +219,133 @@ class HookFixture(unittest.TestCase):
         self.assertTrue((self.cside / "wt-c" / ".git").exists())
         doc = json.loads(self.alert_files()[0].read_text(encoding="utf-8"))
         self.assertEqual(doc["notify"], "failed")
+        self.assertIn("알림 실패", cp.stderr)
+        log = self.fail_log.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(log), 1)
+        self.assertIn("\tfailed\t", log[0])
+
+    # ---- run 해석 (가짜 orca) ----
+    def test_run_resolved_from_run_list_when_config_has_no_run(self):
+        self.install()
+        env = self.orca_env("")  # MAI_WT_NOTIFY_RUN 없음 → run-list 의 가장 최근 갱신 run
+        cp = self.add_worktree(self.cside / "wt-c", "b-c", env=env)
+        doc = json.loads(self.alert_files()[0].read_text(encoding="utf-8"))
+        self.assertEqual(doc["notify"], "sent", cp.stderr)
+        self.assertEqual(doc["notify_run"], "run_new222222")
+        self.assertEqual(doc["notify_run_source"], "run-list-latest-updated")
+        self.assertEqual(doc["notify_to"], "run:run_new222222")
+        self.assertTrue((self.t / "orca.log").exists(), "가짜 orca 가 불리지 않았다(진짜 orca 가 잡힘)")
+        sent = (self.t / "orca.log").read_text(encoding="utf-8")
+        self.assertIn("--run run_new222222", sent)
+        self.assertIn("--to run:run_new222222", sent)
+        self.assertFalse(self.fail_log.exists())
+
+    def test_run_from_config_beats_run_list_and_send_failure_is_logged(self):
+        self.install()
+        env = self.orca_env("MAI_WT_NOTIFY_RUN=run_cfg444444\nMAI_WT_NOTIFY_TO=run:run_cfg444444\n", rc=3)
+        cp = self.add_worktree(self.cside / "wt-c", "b-c", env=env)
+        self.assertEqual(cp.returncode, 0)
+        doc = json.loads(self.alert_files()[0].read_text(encoding="utf-8"))
+        self.assertEqual(doc["notify_run"], "run_cfg444444")
+        self.assertEqual(doc["notify_run_source"], "config")
+        self.assertTrue((self.t / "orca.log").exists(), "가짜 orca 가 불리지 않았다(진짜 orca 가 잡힘)")
+        self.assertEqual(doc["notify"], "failed")
+        self.assertIn("stub send failed", doc["notify_detail"])
+        log = self.fail_log.read_text(encoding="utf-8")
+        self.assertIn("\tfailed\tconfig\trun_cfg444444\t", log)
+
+    def test_no_orca_and_no_cmd_is_recorded_not_silent(self):
+        self.install()
+        cfg = self.t / "wt_guard-none.env"
+        cfg.write_text(f"MAI_WT_ROOT={self.dside.as_posix()}\nMAI_WT_ALERT_DIR={self.alerts.as_posix()}\n",
+                       encoding="utf-8", newline="\n")
+        env = dict(self.env)
+        env["MAI_WT_GUARD_CONFIG"] = str(cfg)
+        env["PATH"] = (self.t / "emptybin").as_posix()  # orca 없음
+        (self.t / "emptybin").mkdir()
+        # git · bash · 기본 도구는 절대 경로로 부르지 않으므로 PATH 에 git 폴더만 남긴다
+        for exe in (GIT, BASH):
+            env["PATH"] = str(Path(exe).parent) + os.pathsep + env["PATH"]
+        if wt_config.IS_WINDOWS:
+            env["PATH"] = str(Path(GIT).parent.parent / "usr" / "bin") + os.pathsep + env["PATH"]
+        cp = self.add_worktree(self.cside / "wt-c", "b-c", env=env)
+        doc = json.loads(self.alert_files()[0].read_text(encoding="utf-8"))
+        self.assertEqual(doc["notify"], "no_orca", cp.stderr)
+        self.assertIn("\tno_orca\t", self.fail_log.read_text(encoding="utf-8"))
+
+    def test_hook_reads_no_config_from_inside_the_new_copy(self):
+        """새 사본 안에 tools/wt_guard/wt_guard.default.env 가 있어도 훅은 그것을 읽지 않는다(사본 밖 설정만)."""
+        self.install()
+        (self.main / "tools" / "wt_guard").mkdir(parents=True)
+        (self.main / "tools" / "wt_guard" / "wt_guard.default.env").write_text(
+            f"MAI_WT_ROOT={self.cside.as_posix()}\n", encoding="utf-8", newline="\n")  # 사본 안 파일은 cside 를 뿌리라고 주장
+        run(["git", "add", "tools"], cwd=self.main)
+        run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "cfg"], cwd=self.main)
+        cp = self.add_worktree(self.cside / "wt-c", "b-c")
+        self.assertIn("wt_guard 경고", cp.stderr)  # 사본 밖 설정(dside) 이 이긴다
+        self.assertEqual(len(self.alert_files()), 1)
 
     # ---- 설치 ----
-    def test_install_appends_to_existing_hook_without_overwriting_and_is_idempotent(self):
+    def _existing_hook_case(self, body: str, shebang: str = "#!/bin/sh"):
+        """기존 훅(본문 body)에 끼워 넣고, 기존 훅과 wt_guard 가 둘 다 도는지 돌려준다."""
         hooks = self.hooks_dir()
         hooks.mkdir(parents=True, exist_ok=True)
         witness = self.t / "existing.log"
         existing = hooks / "post-checkout"
-        existing.write_text("#!/bin/sh\necho EXISTING \"$1\" >> \"" + witness.as_posix() + "\"\n",
-                            encoding="utf-8", newline="\n")
+        existing.write_text(shebang + "\n" + body.replace("WITNESS", witness.as_posix()), encoding="utf-8", newline="\n")
         existing.chmod(0o755)
         out1 = self.install().stdout
-        self.assertIn("이어 붙임", out1)
+        self.assertIn("앞에 끼워 넣음", out1)
         text = existing.read_text(encoding="utf-8")
-        self.assertTrue(text.startswith("#!/bin/sh\necho EXISTING"), text)
+        self.assertTrue(text.startswith(shebang + "\n# wt_guard"), text)
         self.assertEqual(text.count("wt_guard-post-checkout"), 1)
+        self.assertIn("(원래 첫 줄) " + shebang, text)
         self.assertTrue(list(hooks.glob("post-checkout.before-wt_guard-*")))
+        self.add_worktree(self.cside / "wt-c", "b-c")
+        return witness, existing
+
+    def test_install_prepends_to_existing_hook_without_overwriting_and_is_idempotent(self):
+        witness, existing = self._existing_hook_case('echo EXISTING "$1" >> "WITNESS"\n')
         out2 = self.install().stdout
-        self.assertIn("이미 이어 붙어 있음", out2)
+        self.assertIn("이미 끼워 넣어져 있음", out2)
         self.assertEqual(existing.read_text(encoding="utf-8").count("wt_guard-post-checkout"), 1)
         check = self.install(["--check"]).stdout
         self.assertIn("status=installed", check)
-        # 둘 다 돈다: 기존 훅의 증인 파일 + wt_guard 경보
-        self.add_worktree(self.cside / "wt-c", "b-c")
+        self.assertIn("user_config=", check)
         self.assertIn("EXISTING " + ZERO, witness.read_text(encoding="utf-8"))
         self.assertEqual(len(self.alert_files()), 1)
+
+    def test_existing_hook_ending_with_exit_0_still_runs_wt_guard(self):
+        """lead 검토 (2) 반례: 끝에 덧붙였다면 exit 0 뒤라 영영 안 불린다. 앞에 끼워 넣어 둘 다 돈다."""
+        witness, _ = self._existing_hook_case('echo EXISTING "$1" >> "WITNESS"\nexit 0\necho NEVER >> "WITNESS"\n')
+        log = witness.read_text(encoding="utf-8")
+        self.assertIn("EXISTING " + ZERO, log)
+        self.assertNotIn("NEVER", log)
+        self.assertEqual(len(self.alert_files()), 1)
+
+    def test_existing_hook_using_exec_still_runs_wt_guard(self):
+        witness, _ = self._existing_hook_case('exec sh -c \'echo EXISTING "$0" >> "WITNESS"\' "$1"\n')
+        self.assertIn("EXISTING " + ZERO, witness.read_text(encoding="utf-8"))
+        self.assertEqual(len(self.alert_files()), 1)
+
+    def test_existing_bash_hook_keeps_its_shebang(self):
+        witness, existing = self._existing_hook_case('echo EXISTING "$1" >> "WITNESS"\nexit 0\n', shebang="#!/bin/bash")
+        self.assertTrue(existing.read_text(encoding="utf-8").startswith("#!/bin/bash\n"))
+        self.assertIn("EXISTING " + ZERO, witness.read_text(encoding="utf-8"))
+        self.assertEqual(len(self.alert_files()), 1)
+
+    def test_install_seeds_user_config_outside_copy_only_when_missing(self):
+        cfg = self.t / "home" / ".mai" / "wt_guard.env"
+        env = dict(self.env)
+        env.pop("MAI_WT_GUARD_CONFIG")
+        out = run([BASH, str(HERE / "install.sh"), "--repo", str(self.main)], env=env).stdout
+        self.assertIn("사본 밖 설정 만듦", out)
+        self.assertTrue(cfg.is_file())
+        self.assertIn("MAI_WT_ROOT_WINDOWS=D:/mai-wt", cfg.read_text(encoding="utf-8"))
+        cfg.write_text("MAI_WT_ROOT=Z:/keep\n", encoding="utf-8")
+        out = run([BASH, str(HERE / "install.sh"), "--repo", str(self.main)], env=env).stdout
+        self.assertIn("사본 밖 설정 있음", out)
+        self.assertEqual(cfg.read_text(encoding="utf-8"), "MAI_WT_ROOT=Z:/keep\n")  # 덮어쓰지 않음
 
     def test_install_refuses_non_sh_hook(self):
         hooks = self.hooks_dir()
@@ -227,6 +382,22 @@ class HookFixture(unittest.TestCase):
         self.assertFalse(d["outside_root"])
         self.assertEqual(c["untracked"], 1)
         self.assertEqual(d["uncommitted"], 0)
+        self.assertEqual(d["ignored"], 0)
+        self.assertIn(c["created_at_source"], ("ctime", "birthtime", "reflog"))
+        # 무시된 산출물이 있으면 보관 후보가 아니다(깨끗 · push 됨 · 오래됐어도)
+        (self.dside / "wt-d" / ".gitignore").write_text("_out/\n", encoding="utf-8")
+        run(["git", "add", ".gitignore"], cwd=self.dside / "wt-d")
+        run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "ignore"], cwd=self.dside / "wt-d")
+        run(["git", "push", "-q", "origin", "b-d"], cwd=self.dside / "wt-d", env=self.env)
+        (self.dside / "wt-d" / "_out").mkdir()
+        (self.dside / "wt-d" / "_out" / "big.bin").write_bytes(b"x" * 10)
+        d2 = inventory.describe(str(self.dside / "wt-d"), cfg, now=now + timedelta(days=30), with_size=False)
+        self.assertEqual((d2["uncommitted"], d2["untracked"], d2["ignored"]), (0, 0, 1))
+        self.assertTrue(d2["pushed"])
+        self.assertFalse(d2["archive_candidate"])
+        shutil.rmtree(self.dside / "wt-d" / "_out")
+        d3 = inventory.describe(str(self.dside / "wt-d"), cfg, now=now + timedelta(days=30), with_size=False)
+        self.assertTrue(d3["archive_candidate"])
         self.assertTrue(d["pushed"])
         self.assertTrue(d["remote_branch_exists"])
         self.assertFalse(c["remote_branch_exists"])
@@ -271,7 +442,7 @@ class ClassifyPure(unittest.TestCase):
     def row(self, **kw):
         base = {"path": "D:/mai-wt/foothold-lab/x", "is_main": False, "created_at": "2026-11-02T18:00:00+09:00",
                 "last_write": "2026-10-20T10:00:00+09:00", "last_git_activity": None,
-                "uncommitted": 0, "untracked": 0, "pushed": True}
+                "uncommitted": 0, "untracked": 0, "ignored": 0, "pushed": True}
         base.update(kw)
         return base
 
@@ -280,6 +451,7 @@ class ClassifyPure(unittest.TestCase):
         cfg = self.cfg()
         self.assertTrue(inventory.classify(self.row(), cfg, now=now)["archive_candidate"])
         self.assertFalse(inventory.classify(self.row(untracked=1), cfg, now=now)["archive_candidate"])
+        self.assertFalse(inventory.classify(self.row(ignored=1), cfg, now=now)["archive_candidate"])
         self.assertFalse(inventory.classify(self.row(pushed=False), cfg, now=now)["archive_candidate"])
         self.assertFalse(inventory.classify(self.row(last_write="2026-10-30T10:00:00+09:00"), cfg, now=now)
                          ["archive_candidate"])

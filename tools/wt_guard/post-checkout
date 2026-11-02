@@ -6,9 +6,11 @@
 # checkout 자체는 막지 않는다(항상 종료 코드 0). 보통 checkout(이전 HEAD 가 0 이 아님)에서는 아무것도 안 한다.
 # Git for Windows 의 bash 와 Linux bash 공통.
 #
-# 설정 우선순위: 환경 변수 > ~/.mai/wt_guard.env(또는 $MAI_WT_GUARD_CONFIG)
-#              > <사본>/tools/wt_guard/wt_guard.default.env > 내장값.
-# 시험용 고리: MAI_WT_NOTIFY=0(안 알림) · MAI_WT_NOTIFY_CMD=<실행 파일>(orca 대신 "<제목>" "<본문>" 두 인자로 부름).
+# 설정은 **사본 밖**에서만 읽는다(lead 11/02 19:5x 검토 (1)): 환경 변수 > ~/.mai/wt_guard.env(또는 $MAI_WT_GUARD_CONFIG) > 내장값.
+# 새 사본 안의 파일은 읽지 않는다(그 파일이 없는 가지로 만든 사본에서도 같은 설정으로 알리게).
+# 알림 run 은 MAI_WT_NOTIFY_RUN 이 비어 있으면 `orca orchestration run-list --json` 에서 가장 최근 갱신된 run 으로 해석한다.
+# 알림 실패 · 미해석은 경보 파일과 ~/.mai/wt_guard/notify-failures.log 에 남긴다.
+# 시험용 고리: MAI_WT_NOTIFY=0(안 알림) · MAI_WT_NOTIFY_CMD=<실행 파일>(orca 대신 "<제목>" "<본문>" 두 인자로 부름) · PATH 의 가짜 orca.
 set -u
 
 prev_head="${1:-}"
@@ -27,10 +29,13 @@ esac
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 [ -n "$top" ] || exit 0
 
+HOME_DIR="${HOME:-${USERPROFILE:-/nonexistent}}"
+USER_CFG="${MAI_WT_GUARD_CONFIG:-$HOME_DIR/.mai/wt_guard.env}"
+
 # KEY=VALUE 파일에서 아직 없는 변수만 채운다(환경 변수가 가장 세다).
 load_if_unset() {
   local f="$1" line key val
-  [ -f "$f" ] || return 0
+  [ -f "$f" ] || return 1
   while IFS= read -r line || [ -n "$line" ]; do
     line="${line%$'\r'}"
     case "$line" in ''|'#'*) continue ;; esac
@@ -41,9 +46,10 @@ load_if_unset() {
       export "$key=$val"
     fi
   done < "$f"
+  return 0
 }
-load_if_unset "${MAI_WT_GUARD_CONFIG:-${HOME:-/nonexistent}/.mai/wt_guard.env}"
-load_if_unset "$top/tools/wt_guard/wt_guard.default.env"
+cfg_source=builtin
+load_if_unset "$USER_CFG" && cfg_source="$USER_CFG"
 
 # pick VAR 내장값 : VAR 이 있으면 그것, 없으면 VAR_WINDOWS / VAR_LINUX, 그것도 없으면 내장값
 pick() {
@@ -62,9 +68,14 @@ else
   ALERT_DIR="$(pick MAI_WT_ALERT_DIR /data/mai-tmp/wt_guard/alerts)"
 fi
 
-# 경로 정규화: Windows 는 역슬래시 → 슬래시, 소문자(대소문자 안 가리는 파일 시스템). 끝 슬래시 제거.
+# 경로 정규화: 실제 경로(링크 풀기) → Windows 는 역슬래시 → 슬래시, 소문자. 끝 슬래시 제거.
 norm() {
-  local p="$1"
+  local p="$1" r
+  if [ -e "$p" ]; then
+    if command -v realpath >/dev/null 2>&1; then r="$(realpath "$p" 2>/dev/null)" && p="$r"
+    elif command -v readlink >/dev/null 2>&1; then r="$(readlink -f "$p" 2>/dev/null)" && p="$r"
+    fi
+  fi
   if [ "$WT_OS" = windows ]; then
     if command -v cygpath >/dev/null 2>&1; then
       p="$(cygpath -m "$p" 2>/dev/null || printf '%s' "$p")"
@@ -97,52 +108,93 @@ say ""
 say "################################################################################"
 say "#  wt_guard 경고 (D138): 작업 사본이 허용 자리 밖에 생겼습니다"
 say "#  사본: $top"
-say "#  허용 뿌리: $WT_ROOT   (MAI_WT_ROOT · ~/.mai/wt_guard.env 로 바꿀 수 있음)"
+say "#  허용 뿌리: $WT_ROOT   (MAI_WT_ROOT · $USER_CFG 로 바꿀 수 있음 · 지금 설정 출처: $cfg_source)"
 say "#  규칙: 새 작업 사본은 $WT_ROOT/<저장소>/<이름> 에만 (RULES-HUB 2절 D138)"
 say "#  조치: git worktree remove <이 사본> 뒤 $WT_ROOT 아래에 다시 만들거나, 이미 쓰는 사본을 계속 쓰세요"
 say "################################################################################"
 say ""
 
 if ! mkdir -p "$ALERT_DIR" 2>/dev/null || [ ! -w "$ALERT_DIR" ]; then
-  ALERT_DIR="${HOME:-.}/.mai/wt_guard/alerts"
+  ALERT_DIR="$HOME_DIR/.mai/wt_guard/alerts"
   mkdir -p "$ALERT_DIR" 2>/dev/null || ALERT_DIR="."
 fi
 alert="$ALERT_DIR/wt-outside-$ts-$$.json"
+fail_log="$HOME_DIR/.mai/wt_guard/notify-failures.log"
 
 subject="[wt_guard] 허용 자리 밖 사본 생성 경고 · $role · $top"
 body="새 작업 사본 $top 이(가) MAI_WT_ROOT=$WT_ROOT 밖에 생겼습니다(D138). 기기 $host · 역할 $role · 시각 $ts · 경보 파일 $alert"
 
+# run 해석: 설정값 > run-list 의 가장 최근 갱신 run. 어떻게 골랐는지 남긴다.
+resolve_run() {
+  local out py
+  run="${MAI_WT_NOTIFY_RUN:-}"; run_source=config
+  if [ -n "$run" ]; then return 0; fi
+  run_source=unresolved
+  command -v orca >/dev/null 2>&1 || return 1
+  out="$(MSYS_NO_PATHCONV=1 $tmo orca orchestration run-list --json 2>/dev/null)" || return 1
+  py=""
+  # python 을 먼저(Windows 의 python3 는 스토어 가짜일 수 있음). 실제로 json 을 import 하는 것만 쓴다.
+  for c in python python3; do
+    command -v "$c" >/dev/null 2>&1 || continue
+    "$c" -I -c 'import json' >/dev/null 2>&1 && { py="$c"; break; }
+  done
+  if [ -n "$py" ]; then
+    run="$(printf '%s' "$out" | "$py" -I -c 'import json,sys
+d=json.load(sys.stdin); runs=(d.get("result") or {}).get("runs") or []
+runs=[r for r in runs if isinstance(r,dict) and str(r.get("id","")).startswith("run_")]
+runs.sort(key=lambda r:str(r.get("updated_at") or r.get("created_at") or ""))
+print(runs[-1]["id"] if runs else "")' 2>/dev/null)"
+    [ -n "$run" ] && run_source=run-list-latest-updated
+  else
+    run="$(printf '%s' "$out" | tr -d ' \r' | grep -o '"id":"run_[A-Za-z0-9]*"' | head -1 | sed 's/.*"run_/run_/; s/"$//')"
+    [ -n "$run" ] && run_source=run-list-first-listed
+  fi
+  [ -n "$run" ]
+}
+
 notify_status=skipped
+notify_detail=""
+run=""; run_source=none; to=""
+tmo=""
+command -v timeout >/dev/null 2>&1 && tmo="timeout 30"
 if [ "${MAI_WT_NOTIFY:-1}" != 0 ]; then
-  tmo=""
-  command -v timeout >/dev/null 2>&1 && tmo="timeout 30"
   if [ -n "${MAI_WT_NOTIFY_CMD:-}" ]; then
-    if $tmo "$MAI_WT_NOTIFY_CMD" "$subject" "$body" >/dev/null 2>&1; then notify_status=sent; else notify_status=failed; fi
+    run_source=notify_cmd
+    if out="$($tmo "$MAI_WT_NOTIFY_CMD" "$subject" "$body" 2>&1)"; then notify_status=sent; else notify_status=failed; notify_detail="$out"; fi
   elif command -v orca >/dev/null 2>&1; then
-    run="${MAI_WT_NOTIFY_RUN:-}"
-    to="${MAI_WT_NOTIFY_TO:-}"
-    if [ -n "$run" ] && [ -n "$to" ]; then
-      if MSYS_NO_PATHCONV=1 $tmo orca orchestration send --run "$run" --to "$to" --type status \
-           --subject "$subject" --body "$body" >/dev/null 2>&1; then
+    if resolve_run; then
+      to="${MAI_WT_NOTIFY_TO:-run:$run}"
+      if out="$(MSYS_NO_PATHCONV=1 $tmo orca orchestration send --run "$run" --to "$to" --type status \
+                 --subject "$subject" --body "$body" 2>&1)"; then
         notify_status=sent
       else
-        notify_status=failed
+        notify_status=failed; notify_detail="$out"
       fi
     else
-      notify_status=no_run_id
+      notify_status=no_run_id; notify_detail="MAI_WT_NOTIFY_RUN 비어 있고 run-list 해석 실패"
     fi
   else
     notify_status=no_orca
   fi
 fi
 
-json_escape() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+json_escape() { printf '%s' "$1" | tr -d '\n\r' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 {
-  printf '{"schema":"wt-guard-alert/1","at":"%s","role":"%s","host":"%s","os":"%s",' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(json_escape "$role")" "$(json_escape "$host")" "$WT_OS"
-  printf '"worktree":"%s","wt_root":"%s","prev_head":"%s","new_head":"%s","branch_flag":"%s","notify":"%s"}\n' \
-    "$(json_escape "$top")" "$(json_escape "$WT_ROOT")" "$prev_head" "$new_head" "$branch_flag" "$notify_status"
+  printf '{"schema":"wt-guard-alert/2","at":"%s","role":"%s","host":"%s","os":"%s","config_source":"%s",' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(json_escape "$role")" "$(json_escape "$host")" "$WT_OS" "$(json_escape "$cfg_source")"
+  printf '"worktree":"%s","wt_root":"%s","prev_head":"%s","new_head":"%s","branch_flag":"%s",' \
+    "$(json_escape "$top")" "$(json_escape "$WT_ROOT")" "$prev_head" "$new_head" "$branch_flag"
+  printf '"notify":"%s","notify_run":"%s","notify_run_source":"%s","notify_to":"%s","notify_detail":"%s"}\n' \
+    "$notify_status" "$(json_escape "$run")" "$run_source" "$(json_escape "$to")" "$(json_escape "${notify_detail:0:400}")"
 } > "$alert" 2>/dev/null || say "wt_guard: 경보 파일을 쓰지 못했습니다 ($alert)"
 
-say "wt_guard: 경보 파일 $alert · lead 알림 $notify_status"
+case "$notify_status" in
+  sent|skipped) ;;
+  *)
+    mkdir -p "$(dirname "$fail_log")" 2>/dev/null
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$notify_status" "$run_source" "$run" "$top" "$(printf '%s' "$notify_detail" | tr -d '\n\r' | cut -c1-300)" >> "$fail_log" 2>/dev/null
+    say "wt_guard: lead 알림 실패($notify_status) · 기록 $fail_log · 사람이 직접 알려야 합니다" ;;
+esac
+
+say "wt_guard: 경보 파일 $alert · lead 알림 $notify_status(run $run_source${run:+ $run})"
 exit 0
