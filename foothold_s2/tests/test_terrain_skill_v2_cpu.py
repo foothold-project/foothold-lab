@@ -44,6 +44,20 @@ def test_request_accepts_exact_grid_and_rejects_nonempty_output(tmp_path):
         v2.validate_request(cfg)
 
 
+def test_request_allows_only_fresh_w86_attach_receipt(tmp_path):
+    cfg = request(tmp_path)
+    output = Path(cfg.out)
+    output.mkdir()
+    runtime = output / "ex41_w86"
+    runtime.mkdir()
+    (runtime / "ex41_stair_start.jsonl").write_text("{}", encoding="utf-8")
+    cfg.ex41_w86_attachment = {"attached": True}
+    v2.validate_request(cfg)
+    (runtime / "stale.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="stale or unexpected W86"):
+        v2.validate_request(cfg)
+
+
 def test_ex41_environment_preparation_loads_fixed_plan_and_records_observation_contract(monkeypatch):
     from foothold_s2.scripts import ex41_startup
 

@@ -72,8 +72,20 @@ def validate_request(args) -> None:
     if not checkpoint.is_file():
         raise ValueError(f"W78 v2 checkpoint absent: {checkpoint}")
     output = Path(args.out)
-    if output.exists() and (not output.is_dir() or any(output.iterdir())):
-        raise ValueError("W78 v2 needs a fresh empty output directory")
+    if output.exists():
+        if not output.is_dir():
+            raise ValueError("W78 v2 needs a fresh empty output directory")
+        existing = list(output.iterdir())
+        attachment = getattr(args, "ex41_w86_attachment", None)
+        if existing and (not isinstance(attachment, dict) or attachment.get("attached") is not True
+                         or len(existing) != 1 or existing[0].name != "ex41_w86"
+                         or not existing[0].is_dir()):
+            raise ValueError("W78 v2 needs a fresh empty output directory or an isolated W86 attach receipt")
+        if existing:
+            runtime_files = list(existing[0].iterdir())
+            if (len(runtime_files) != 1 or runtime_files[0].name != "ex41_stair_start.jsonl"
+                    or not runtime_files[0].is_file()):
+                raise ValueError("W78 v2 output contains stale or unexpected W86 files")
 
 
 def yaw_quaternion(degrees: int, *, device, dtype) -> torch.Tensor:
