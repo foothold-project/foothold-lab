@@ -1,0 +1,176 @@
+"""Fixed5000 endpoints, pause/recovery/exhaustion and real committed runtime."""
+import copy
+import json
+from pathlib import Path
+import subprocess
+import pytest
+import yaml
+from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
+from foothold_s2.curriculum.ex41_fixed import Clock,CELLS,maintenance,baseline_counts
+from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
+from foothold_s2.tests.test_ex41_runtime_cpu import score
+
+TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
+
+
+def fixture(tmp,smoke=None):
+    repo=tmp/'repo'; repo.mkdir(parents=True)
+    doc=yaml.safe_load(TABLE.read_text())
+    baseline={'checkpoint_iteration':6000,'checkpoint_sha256':doc['parent_sha256'],
+              'cells':{k:{'alive_envs_at_end':64} for k in CELLS}}
+    bp=repo/'baseline.json'; bp.write_text(json.dumps(baseline))
+    doc['fixed_schedule']['maintenance_baseline']={'path':str(bp),'sha256':sha256(bp)}
+    (repo/TABLE.name).write_text(yaml.safe_dump(doc))
+    boundary=yaml.safe_load(TABLE.with_name(doc['boundary_file']).read_text())
+    boundary['values']['w71_ready']=True
+    approvals=yaml.safe_load(TABLE.with_name(doc['approval_file']).read_text())
+    approvals['fields']['w71_ready']={'decision_id':'CPU-exact-consumer','choices':[False,True]}
+    for name,data in ((doc['boundary_file'],boundary),(doc['approval_file'],approvals)):
+        (repo/name).write_text(yaml.safe_dump(data),encoding='utf-8',newline='\n')
+    def git(*a): return subprocess.check_output(['git','-C',str(repo),*a],stderr=subprocess.PIPE)
+    git('init','-q');git('config','core.autocrlf','false');git('add','--','.')
+    git('-c','user.name=CPU','-c','user.email=cpu@example.invalid','-c','commit.gpgsign=false','commit','-qm','fixed fixture')
+    plan=load_plan(repo/TABLE.name,arm='B',smoke_boundaries=smoke)
+    r=make_runtime(plan,4,'cpu',tmp/'run'); consumer=attach_consumer(r);r.start(plan.parent_sha256)
+    return r,consumer
+
+
+def counts(r,passed=64):
+    return {k:{'passed':passed,'baseline_passed':v,'total':64} for k,v in r.baseline.items()}
+
+
+def tick(r,n,*,failed=False,stand=64,stage_pass=False):
+    c=counts(r)
+    if failed: c[CELLS[-1]]['passed']=60
+    score(r,n-1,passed=stage_pass,metrics={'maintenance_counts':c,'stand_min_passed':stand})
+    r.on_update_start(n)
+
+
+def test_actual_parent_baseline_has_all39_pinned_cells():
+    p=load_plan(TABLE,arm='B');b=baseline_counts(p)
+    assert len(b)==39 and p.parent_update==6000 and p.initial_dr_scale==.5
+    assert p.fixed_schedule['duration_updates']==5000
+    assert [s.id for s in p.stages]==['S2a','S2b','S2c','S2d','S2e','T0_prime']
+
+
+def test_nominal_clock_endpoints_and_slopes():
+    c=Clock()
+    for n,expected in [(1,.5),(750,.5),(751,.5),(1751,.65),(2751,.8),(4001,1.),(5001,1.)]:
+        assert c.scale(n)==pytest.approx(expected)
+    assert c.scale(1751)-c.scale(1750)==pytest.approx(.15/1000)
+    assert c.scale(4001)-c.scale(4000)==pytest.approx(.2/1250)
+
+
+def test_any_cell_fails_exact_minus3_passes_and_missing_is_unknown():
+    b={k:64 for k in CELLS};c={k:{'passed':61,'baseline_passed':64,'total':64} for k in CELLS}
+    assert maintenance(c,b)==[]
+    c[CELLS[-1]]['passed']=60;assert maintenance(c,b)==[CELLS[-1]]
+    c.pop(CELLS[0]); assert maintenance(c,b) is None
+    c={k:{'passed':64,'baseline_passed':63,'total':64} for k in CELLS}
+    assert maintenance(c,b) is None
+
+
+def test_pause_two_distinct_adjacent_recoveries_resume_same_slope():
+    c=Clock();c.boundary(751,[],750)
+    c.boundary(1001,['bad'],1000); scale=c.scale(1001)
+    assert c.paused and c.scale(1251)==scale
+    c.boundary(1251,[],1250);assert c.paused
+    c.boundary(1501,[],1500);assert not c.paused and c.pause_used==500
+    assert c.scale(1501)==scale
+    assert c.scale(1751)-scale==pytest.approx(.15/4)
+    assert c.position(1751)==1  # Stage end delayed by same 500 updates.
+
+
+def test_reused_or_gapped_evidence_cannot_fake500_recovery():
+    c=Clock();c.boundary(751,['bad'],750)
+    c.boundary(1001,[],1000);c.boundary(1251,[],1000)
+    assert c.paused and c.recovered==1
+    c.boundary(1501,[],1500);assert c.paused
+
+
+def test_pause_budget_freezes_dr_but_schedule_finishes():
+    c=Clock();c.boundary(751,['bad'],750)
+    for n in (1001,1251,1501,1751): event=c.boundary(n,['bad'],n-1)
+    assert c.pause_used==1000 and not c.paused and c.frozen_scale==.5
+    assert event=='dr_pause_budget_exhausted_frozen_report'
+    assert c.scale(6001)==.5 and c.time(6001)==5000 and c.position(6001)==5
+
+
+def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
+    r,_=fixture(tmp_path);r.on_update_start(1)
+    expected={751:'S2b',1751:'S2c',2751:'S2d',4001:'S2e',4501:'T0_prime'}
+    for n in range(251,5002,250):
+        tick(r,n,stage_pass=n<750)
+        if n in expected: assert r.effective['stage_id']==expected[n]
+    assert r.finished and not r.graduated and r.dr_scale(5001)==1.
+    assert r._stage_baseline_sha==r.plan.parent_sha256
+
+
+def test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
+    r,_=fixture(tmp_path)
+    for n in (251,501): tick(r,n,stand=60)
+    assert r.effective['reward_weights']['swing']==-5.
+    assert r.effective['reward_weights']['zero_yaw']==-.5 and r.effective['reward_weights']['stumble']==-2.
+    assert not r._pair_bias and not r._mirror_pending
+
+
+def test_runtime_pause_and_resume_state_exact(tmp_path):
+    r,_=fixture(tmp_path/'a'); tick(r,751,failed=True);tick(r,1001)
+    state=r.state_dict()
+    p=load_plan(r.plan.path,arm='B');b=make_runtime(p,4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b);b.load_state_dict(state)
+    assert b.clock.__dict__==r.clock.__dict__
+    for runtime in (r,b): tick(runtime,1251)
+    assert b.clock.__dict__==r.clock.__dict__ and b.dr_scale(1501)==r.dr_scale(1501)
+    assert not b.clock.paused and b.clock.pause_used==500
+
+
+def test_fixed_smoke_five_boundaries_all_six_stages(tmp_path):
+    r,_=fixture(tmp_path,smoke=(2,4,6,8,10))
+    for n,name in zip((2,4,6,8,10),('S2b','S2c','S2d','S2e','T0_prime')):
+        r.on_update_start(n);assert r.effective['stage_id']==name
+    r.on_update_start(12);assert r.finished and not r.graduated
+
+
+def test_invalid_config_does_not_hide_safety_score(tmp_path):
+    r,_=fixture(tmp_path);r.on_update_start(1)
+    p=score(r,250,metrics={'maintenance_counts':counts(r)})
+    d=json.loads(p.read_text());d['safety_stop']=True;p.write_text(json.dumps(d))
+    snap=copy.deepcopy(r._snapshot);snap['config']['values']['ppo']['clip_param']=.1
+    commit_inputs(r,snap);r.on_update_start(251)
+    assert r.stop_requested
+
+
+def test_invalid_manual_config_cannot_hide_dr_hold_or_stop_fixed_schedule(tmp_path):
+    r,_=fixture(tmp_path)
+    snap=copy.deepcopy(r._snapshot);snap['config']['values']['ppo']['clip_param']=.1
+    commit_inputs(r,snap);tick(r,751,failed=True)
+    assert r.clock.paused and r.dr_scale(1001)==.5 and not r.stop_requested
+    assert r.effective['stage_id']=='S2b' and 'clip_param' not in r.effective['ppo']
+    rows=[json.loads(line) for line in (r.log_dir/'ex41_application.jsonl').read_text().splitlines()]
+    assert any(row['status']=='rejected' for row in rows)
+
+
+def test_full_runtime_exhaustion_finishes_without_fake_full_dr(tmp_path):
+    r,_=fixture(tmp_path)
+    for n in range(251,6002,250): tick(r,n,failed=True)
+    assert r.finished and not r.stop_requested and r.clock.pause_used==1000
+    assert r.effective['stage_id']=='T0_prime' and r.dr_scale(6001)==.5
+    assert not r.clock.extension
+
+
+def test_corrupted_saved_clock_rejected(tmp_path):
+    r,_=fixture(tmp_path/'a');state=r.state_dict();state['fixed_clock']['frozen_scale']=float('nan')
+    b=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'b',segment_index=1)
+    attach_consumer(b)
+    with pytest.raises(ValueError,match='clock frozen'): b.load_state_dict(state)
+
+
+def test_d110_extension_exactly_once_full_dr_only(tmp_path):
+    r,_=fixture(tmp_path)
+    for n in range(251,4502,250):
+        if n==4501: r._level_history=[(i,.1 if i<=4250 else .7) for i in range(4050,4501,50)]
+        tick(r,n)
+    assert r.clock.extension==500 and r.effective['stage_id']=='S2e'
+    tick(r,4751);tick(r,5001);assert r.effective['stage_id']=='T0_prime' and not r.finished
+    tick(r,5251);tick(r,5501);assert r.finished and r.clock.extension==500

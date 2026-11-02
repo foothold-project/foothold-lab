@@ -60,6 +60,9 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
     EX41 resume preserves n and all W72 state. No live EX40 ledger is consumed.
     """
     if getattr(plan, 'is_ex41', False):
+        if getattr(plan, 'fixed_schedule', None):
+            from foothold_s2.curriculum.ex41_fixed import EX41FixedRuntime
+            return EX41FixedRuntime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
         from foothold_s2.curriculum.ex41 import EX41Runtime
         return EX41Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
     return Runtime(plan, env_count, device, log_dir, score_dir, terrain_policy, segment_index)
