@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import subprocess
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -269,11 +270,27 @@ def test_c76_recorder_accepts_variable_seeds_without_eval_receipt(tmp_path, terr
             "terrain_set": terrain_set, "fixed_terrain": True, "fixed_level": 2,
             "physics_mode": "sparse_eval_reference", "envs": 64, "env_id": 7,
             "kind": kind, "col": col, "selection_role": "c_layer",
+            "geometry_seed": record_c_layer.C_LAYER_GEOMETRY_SEED,
             "checkpoint_sha256": "c" * 64, "map_mode": "eval_gt",
             "command": [1.0, 0.0, 0.0], "duration_s": 18.0}
-    if terrain_set == "sparse50":
-        base["geometry_seed"] = record_c_layer.SPARSE_GEOMETRY_SEED
     for seed in (42, 43, 44, 45):
         assert record_c_layer.parse_spec(json.dumps(dict(base, seed=seed)))["seed"] == seed
     with pytest.raises(ValueError):
         record_c_layer.parse_spec(json.dumps(dict(base, seed=43, c_layer_reference=False)))
+
+
+def test_c76_continuous_mesh_seed_stays_fixed_across_capture_seeds(tmp_path):
+    plan, rows = fixture(tmp_path)
+    row = next(row for row in rows if row["kind"] == "boxes" and row["map_mode"] == "eval_gt")
+    for capture_seed in (42, 43, 44, 45):
+        spec = record_c_layer.parse_spec(json.dumps(dict(row["policy"], seed=capture_seed)))
+        generator = SimpleNamespace(seed=None)
+        env_cfg = SimpleNamespace(scene=SimpleNamespace(terrain=SimpleNamespace(terrain_generator=generator)))
+        assert record_c_layer.pin_c_layer_geometry_seed(env_cfg, spec) == 20261026
+        assert generator.seed == 20261026 and spec["seed"] == capture_seed
+    bad = dict(row["policy"], seed=43, geometry_seed=43)
+    with pytest.raises(ValueError, match="geometry seed"):
+        record_c_layer.parse_spec(json.dumps(bad))
+    row["policy"]["geometry_seed"] = 43
+    with pytest.raises(ValueError, match="geometry seed"):
+        q.validate_plan(plan)

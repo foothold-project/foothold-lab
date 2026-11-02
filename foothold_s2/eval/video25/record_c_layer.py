@@ -45,6 +45,7 @@ TOPDOWN_KINDS = {
 B_REVIEW_TERRAIN_TYPES = {"pyramid_stairs", "boxes", "hf_pyramid_slope", "balance_beams"}
 CAPTURE_EXPERIMENTS = ("B", "TD", "G0B", "SB")
 SPARSE_GEOMETRY_SEED = 20261026
+C_LAYER_GEOMETRY_SEED = SPARSE_GEOMETRY_SEED  # Keep fixed64 mesh stable while reset seed varies.
 SPARSE_EVAL_SEED = 42
 SPARSE_ENV_COUNT = 64
 SPARSE_COMMAND = ("fwd1.0", (1.0, 0.0, 0.0), 18.0)
@@ -224,6 +225,19 @@ def configure_topdown_evaluation(env_cfg: Any, augmentation: Any) -> None:
     env_cfg.scene.terrain.terrain_generator.curriculum = True
     env_cfg.curriculum.terrain_levels = None
     augmentation.enabled = False
+
+
+def pin_c_layer_geometry_seed(env_cfg: Any, spec: dict[str, Any]) -> int:
+    """Pin the continuous fixed64 generator independently of the capture reset seed."""
+    if not c_layer_ref(spec) or spec.get("terrain_set") != W03_FIXED_LEVEL_KINDS:
+        raise ValueError("C76 fixed64 geometry pin requires the fixed64 profile")
+    if spec.get("geometry_seed") != C_LAYER_GEOMETRY_SEED:
+        raise ValueError("C76 fixed64 geometry seed differs from canonical layout")
+    generator = env_cfg.scene.terrain.terrain_generator
+    if generator is None:
+        raise ValueError("C76 fixed64 terrain generator is missing")
+    generator.seed = C_LAYER_GEOMETRY_SEED
+    return generator.seed
 
 
 def preload_kit_dependencies(import_module: Any, load_kit: Any) -> Any:
@@ -415,6 +429,8 @@ def parse_spec(value: str) -> dict[str, Any]:
         command, duration = spec.get("command"), spec.get("duration_s")
         if command != [1.0, 0.0, 0.0] or duration != 18.0:
             raise ValueError("C76 command must be fwd1.0 for 18 seconds")
+        if spec.get("geometry_seed") != C_LAYER_GEOMETRY_SEED:
+            raise ValueError("C76 geometry seed must be fixed independently of capture seed")
     if "commands" in spec or "sequence" in spec:
         raise ValueError("a commands list is not accepted: W15 sets are chosen with w15_reference=true and w15_set (names from W15_SETS)")
     if w15_ref(spec):
@@ -1241,6 +1257,8 @@ def _capture(spec: dict[str, Any]) -> None:
                 sparse_columns.FULL_COLS, seed=sparse_geometry_hash.SPARSE_GEOMETRY_SEED)
             if not fixed64_capture and sparse_geometry_hash.SPARSE_GEOMETRY_SEED != spec["geometry_seed"]:
                 raise RuntimeError("sparse terrain geometry seed changed from the eval reference")
+            if fixed64_capture:
+                pin_c_layer_geometry_seed(env_cfg, spec)
             physics_record = configure_sparse_evaluation_config(env_cfg, None if fixed64_capture else generator, n_envs(spec))
             start_record = ({"yaw_override_rad": None, "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)", "reset_ranges_preserved": True}
                             if fixed64_capture else {"yaw_override_rad": 0.0, "source": "sparse evaluation reset and quaternion override", "reset_ranges_preserved": True})

@@ -87,7 +87,8 @@ def validate_plan(plan: dict) -> dict:
             raise ValueError("policy map mode differs from cell")
         required_policy = ("experiment", "source_root", "source_head", "source_recorder_sha256",
                            "source_profile", "terrain_set", "seed", "checkpoint_sha256",
-                           "envs", "kind", "col", "env_id", "fixed_level", "selection_role")
+                           "envs", "kind", "col", "env_id", "fixed_level", "selection_role",
+                           "geometry_seed")
         if any(field not in row["policy"] for field in required_policy):
             raise ValueError("recorder policy lacks an actual source or assignment")
         if row["policy"]["checkpoint_sha256"] != plan["checkpoint_sha256"]:
@@ -104,8 +105,8 @@ def validate_plan(plan: dict) -> dict:
                 or row["policy"].get("command") != [1.0, 0.0, 0.0]
                 or row["policy"].get("duration_s") != 18.0):
             raise ValueError("C76 terrain set or forward recording contract differs from cell")
-        if expected_set == "sparse50" and row["policy"].get("geometry_seed") != 20261026:
-            raise ValueError("C76 sparse geometry seed differs from fixed layout")
+        if row["policy"].get("geometry_seed") != 20261026:
+            raise ValueError("C76 geometry seed differs from fixed layout")
         if row["policy"]["kind"] != row["kind"] or row["policy"].get("fixed_level") != row["level"]:
             raise ValueError("recorder policy terrain kind or level differs from cell")
         if row["policy"].get("env_id") != row["env_id"]:
