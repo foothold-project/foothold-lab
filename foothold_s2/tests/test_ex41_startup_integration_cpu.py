@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import ast
+import json
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,8 +20,11 @@ from foothold_s2.scripts.ex41_startup import (
     prepare_ex41_env_cfg,
     require_production_authorization,
     set_live_initial_dr_scale,
+    run_rehearsal_dr_proof,
+    validate_rehearsal_dr_samples,
     validate_rehearsal_request,
     verify_ex41_start_readback,
+    verify_m6000_parent,
     write_ex41_start_readback,
 )
 
@@ -156,6 +160,34 @@ def test_train_cfg_requires_pose_and_w86_with_pinned_parent(tmp_path):
                                   "sha256": plan.parent_sha256, "iteration": 6000}
 
 
+def test_parent_receipt_distinguishes_checkpoint_iteration_from_manifest_progress(tmp_path):
+    import hashlib
+
+    run = tmp_path / "run"
+    params = run / "params"
+    params.mkdir(parents=True)
+    checkpoint = run / "model_6000.pt"
+    checkpoint.write_bytes(b"m6000 bytes")
+    env_path, agent_path = params / "env.yaml", params / "agent.yaml"
+    env_path.write_text("scene: {num_envs: 3072}\n", encoding="utf-8")
+    agent_path.write_text("save_interval: 50\n", encoding="utf-8")
+    checkpoint_sha = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    env_sha = hashlib.sha256(env_path.read_bytes()).hexdigest()
+    agent_sha = hashlib.sha256(agent_path.read_bytes()).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({
+        "checkpoints": {checkpoint.name: checkpoint_sha},
+        "progress": {"completed_updates": 8001},
+    }), encoding="utf-8")
+    plan = SimpleNamespace(parent_update=6000, parent_sha256=checkpoint_sha,
+                           baseline_env_yaml_sha256=env_sha,
+                           baseline_agent_yaml_sha256=agent_sha)
+
+    receipt = verify_m6000_parent(plan, checkpoint)
+    assert receipt["parent_checkpoint_update"] == 6000
+    assert receipt["manifest_completed_updates"] == 8001
+    assert receipt["sha256"] == checkpoint_sha
+
+
 def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
     plan = load_fixed_plan(TABLE)
     parent = tmp_path / "model_6000.pt"
@@ -178,6 +210,106 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
     (output / "unexpected.txt").write_text("must reject", encoding="utf-8")
     with pytest.raises(ValueError, match="new or empty"):
         validate_rehearsal_request(10, output, "cuda:0", True)
+
+
+def _known_scale_08_dr_row(ranges):
+    from foothold_s2.curriculum.ex40_dr import interpolate_range
+
+    def stat(bounds):
+        low, high = bounds
+        return {"count": 64, "min": low, "max": high,
+                "mean": (low + high) / 2, "target_envs": 64}
+
+    com_bounds = [interpolate_range((0.0, 0.0), ranges["base_com"][axis], 0.8)
+                  for axis in ("x", "y", "z")]
+    gain_bounds = [interpolate_range((1.0, 1.0), ranges["actuator_gains"][name], 0.8)
+                   for name in ("stiffness_scale", "damping_scale")]
+    motor_bounds = interpolate_range((1.0, 1.0), ranges["motor_strength"], 0.8)
+    push_bounds = [interpolate_range((0.0, 0.0), pair, 0.8)
+                   for pair in ranges["push_velocity"].values()]
+    actual = {
+        "base_com_offset_m": stat((min(x[0] for x in com_bounds), max(x[1] for x in com_bounds))),
+        "actuator_gains": stat((min(x[0] for x in gain_bounds), max(x[1] for x in gain_bounds))),
+        "motor_strength_multiplier": stat(motor_bounds),
+        "motor_effort_limit": stat((0.1, 1.0)),
+        "motor_saturation_effort": stat((0.1, 1.0)),
+        "push_velocity_delta": stat((min(x[0] for x in push_bounds), max(x[1] for x in push_bounds))),
+    }
+    allowed_delay = int((ranges["delay_s"][1] * 0.8) / 0.005)
+    return {"scale": 0.8, "actual_samples": actual,
+            "delay_readback": {"reset_sample_count": 64,
+                               "configured_max_seconds": ranges["delay_s"][1] * 0.8,
+                               "observed_max_substeps": allowed_delay,
+                               "max_allowed_substeps": allowed_delay}}
+
+
+def test_rehearsal_dr_proof_requires_actual_scale_08_sample_ranges_and_delay():
+    plan = load_fixed_plan(TABLE)
+    row = _known_scale_08_dr_row(plan.domain_randomization["full_ranges"])
+    checked = validate_rehearsal_dr_samples(row, plan.domain_randomization["full_ranges"])
+    assert checked["scale"] == 0.8
+    assert all(value == 64 for value in checked["sample_counts"].values())
+    row["actual_samples"]["motor_strength_multiplier"]["max"] += 0.01
+    with pytest.raises(ValueError, match="outside scale 0.8 range"):
+        validate_rehearsal_dr_samples(row, plan.domain_randomization["full_ranges"])
+
+
+def test_rehearsal_dr_proof_forces_interval_event_then_restores_half_scale(tmp_path):
+    plan = load_fixed_plan(TABLE)
+    ranges = plan.domain_randomization["full_ranges"]
+
+    class Events:
+        def __init__(self):
+            self.calls = []
+
+        def apply(self, mode, **kwargs):
+            self.calls.append((mode, kwargs))
+
+    class Env:
+        def __init__(self):
+            self._ex41_initial_dr_scale_applied = None
+            self.event_manager = Events()
+            self.resets = 0
+            self.device = "cpu"
+            self.unwrapped = self
+
+        def reset(self):
+            self.resets += 1
+            if self._ex41_initial_dr_scale_applied is None:
+                self._ex41_initial_dr_scale_applied = 0.5
+
+    class Readback:
+        def __init__(self, env):
+            self.env = env
+            self.scale = 0.5
+
+        def summary(self):
+            return _known_scale_08_dr_row(ranges) | {"scale": self.scale}
+
+    env = Env()
+    dr = Readback(env)
+    result = run_rehearsal_dr_proof(env, dr, ranges, tmp_path, plan.sha256, 0.015)
+    assert result["state"] == "verified"
+    assert env.resets == 3
+    assert env.event_manager.calls == [("interval", {"dt": 15.0})]
+    assert env._ex40_dr_scale == dr.scale == 0.5
+    saved = json.loads((tmp_path / "ex41_dr_scale_08_readback.json").read_text(encoding="utf-8"))
+    assert saved["state"] == "verified" and saved["scale"] == 0.8
+
+
+def test_training_entry_runs_dr_08_proof_only_for_bounded_rehearsal():
+    source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    branch = source[source.index("if resume_path is None:"):source.index("ex41_w86_receipt = attach_runtime")]
+    assert "if EX41_REHEARSAL:" in branch
+    assert "run_rehearsal_dr_proof(" in branch
+    for receipt_field in (
+        '"local_update_origin": runner.current_learning_iteration',
+        '"first_completed_update": runner.current_learning_iteration + 1',
+        '"new_process_resume_u5": "미연결"',
+        '"schedule_boundary_0_8": "미연결; forced reset readback is separate"',
+        '"score_watch_26_cells_once": "미연결"',
+    ):
+        assert receipt_field in source
 
 
 def test_initial_dr_is_seeded_once_and_later_stage_scale_survives_resets():

@@ -397,6 +397,8 @@ def verify_m6000_parent(plan, parent_path: str | Path) -> dict[str, Any]:
     if type(save_interval) is not int or save_interval <= 0:
         raise ValueError("EX-41 parent agent.yaml save_interval is missing or invalid")
     return {"checkpoint": str(checkpoint), "sha256": digest,
+            "parent_checkpoint_update": plan.parent_update,
+            "manifest_completed_updates": manifest["progress"]["completed_updates"],
             "completed_updates": manifest["progress"]["completed_updates"],
             "checkpoint_size_bytes": checkpoint.stat().st_size,
             "save_interval": save_interval,
@@ -583,6 +585,116 @@ def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float) -> dict[s
     if getattr(env, "_ex40_dr_scale", None) != 0.5 or dr_runtime.scale != 0.5:
         raise ValueError("EX-41 initial DR readback did not apply")
     return {"runtime_scale": dr_runtime.scale, "env_scale": env._ex40_dr_scale}
+
+
+def validate_rehearsal_dr_samples(row: dict[str, Any], ranges: dict[str, Any],
+                                  scale: float = 0.8) -> dict[str, Any]:
+    """Check actual EX-40 event/action readback against one EX-41 rehearsal scale."""
+    from foothold_s2.curriculum.ex40_dr import interpolate_range
+
+    if type(scale) not in (int, float) or not math.isclose(float(scale), 0.8, abs_tol=1e-12):
+        raise ValueError("EX-41 DR proof is fixed to scale 0.8")
+    actual = row.get("actual_samples") if isinstance(row, dict) else None
+    required = ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
+                "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")
+    if not isinstance(actual, dict):
+        raise ValueError("EX-41 DR proof actual reset/event samples are missing")
+    for name in required:
+        stats = actual.get(name)
+        if (not isinstance(stats, dict) or type(stats.get("count")) is not int
+                or stats["count"] <= 0):
+            raise ValueError(f"EX-41 DR proof sample is missing: {name}")
+        for field in ("min", "max", "mean"):
+            if (type(stats.get(field)) not in (int, float)
+                    or not math.isfinite(float(stats[field]))):
+                raise ValueError(f"EX-41 DR proof sample is nonfinite: {name}.{field}")
+
+    def bounds(target, neutral):
+        return interpolate_range((neutral, neutral), tuple(target), float(scale))
+
+    expected = {
+        "base_com_offset_m": (
+            min(bounds(ranges["base_com"][axis], 0.0)[0] for axis in ("x", "y", "z")),
+            max(bounds(ranges["base_com"][axis], 0.0)[1] for axis in ("x", "y", "z"))),
+        "actuator_gains": (
+            min(bounds(ranges["actuator_gains"][key], 1.0)[0]
+                for key in ("stiffness_scale", "damping_scale")),
+            max(bounds(ranges["actuator_gains"][key], 1.0)[1]
+                for key in ("stiffness_scale", "damping_scale"))),
+        "motor_strength_multiplier": bounds(ranges["motor_strength"], 1.0),
+        "push_velocity_delta": (
+            min(bounds(pair, 0.0)[0] for pair in ranges["push_velocity"].values()),
+            max(bounds(pair, 0.0)[1] for pair in ranges["push_velocity"].values())),
+    }
+    for name, (low, high) in expected.items():
+        got = actual[name]
+        if got["min"] < low - 1e-6 or got["max"] > high + 1e-6:
+            raise ValueError(f"EX-41 DR proof sample outside scale 0.8 range: {name}")
+    delay = row.get("delay_readback")
+    if (not isinstance(delay, dict) or type(delay.get("reset_sample_count")) is not int
+            or delay["reset_sample_count"] <= 0
+            or not math.isclose(float(delay.get("configured_max_seconds", -1)),
+                                float(ranges["delay_s"][1]) * float(scale), abs_tol=1e-12)
+            or (delay.get("observed_max_substeps") or 0) > delay.get("max_allowed_substeps", -1)):
+        raise ValueError("EX-41 DR proof delayed-action readback outside scale 0.8 range")
+    if not math.isclose(float(row.get("scale", -1)), float(scale), abs_tol=1e-12):
+        raise ValueError("EX-41 DR proof runtime scale readback differs")
+    return {"scale": float(scale), "sample_bounds": expected,
+            "sample_counts": {name: actual[name]["count"] for name in required},
+            "delay_readback": delay}
+
+
+def run_rehearsal_dr_proof(env: Any, dr_runtime: Any, ranges: dict[str, Any],
+                           output_dir: str | Path, plan_sha256: str,
+                           delay_max_s: float) -> dict[str, Any]:
+    """Use real reset and interval event consumers at 0.8, then restore 0.5."""
+    if not math.isclose(float(delay_max_s), float(ranges["delay_s"][1]), abs_tol=1e-12):
+        raise ValueError("EX-41 rehearsal delay cap differs from the pinned DR range")
+    raw = getattr(env, "unwrapped", env)
+    target = Path(output_dir) / "ex41_dr_scale_08_readback.json"
+    if target.exists():
+        raise ValueError("EX-41 rehearsal DR proof output already exists")
+    if getattr(raw, "_ex41_initial_dr_scale_applied", None) is None:
+        raw._ex40_dr_scale = 0.5
+        env.reset()
+    if getattr(raw, "_ex41_initial_dr_scale_applied", None) != 0.5:
+        raise ValueError("EX-41 rehearsal first-reset scale is not 0.5")
+
+    dr_runtime.scale = 0.8
+    raw._ex40_dr_scale = 0.8
+    raw._ex40_dr_samples = {}
+    try:
+        env.reset()
+        # The installed manager consumes interval events only after dt passes.
+        # Advancing one configured maximum interval forces the real push term.
+        raw.event_manager.apply("interval", dt=15.0)
+        row = dr_runtime.summary()
+        checked = validate_rehearsal_dr_samples(row, ranges, 0.8)
+        receipt = {"format": "foothold-ex41-dr-scale-proof/1", "state": "verified",
+                   "plan_sha256": plan_sha256, "scale": 0.8,
+                   "reset_forced": True, "interval_elapsed_s": 15.0,
+                   "runtime_readback": row, "range_check": checked,
+                   "restored_scale": 0.5}
+    except Exception as exc:
+        receipt = {"format": "foothold-ex41-dr-scale-proof/1", "state": "failed",
+                   "plan_sha256": plan_sha256, "scale": 0.8,
+                   "reset_forced": True, "interval_elapsed_s": 15.0,
+                   "error": f"{type(exc).__name__}: {exc}"}
+        raise
+    finally:
+        dr_runtime.scale = 0.5
+        raw._ex40_dr_scale = 0.5
+        raw._ex40_dr_samples = {}
+        env.reset()
+        if dr_runtime.scale != 0.5 or raw._ex40_dr_scale != 0.5:
+            raise RuntimeError("EX-41 rehearsal failed to restore initial DR scale 0.5")
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            temp = target.with_name(target.name + ".tmp")
+            temp.write_text(json.dumps(receipt, sort_keys=True, indent=2,
+                                       allow_nan=False) + "\n", encoding="utf-8")
+            os.replace(temp, target)
+    return receipt
 
 
 def enrich_score_file(score_path: str | Path, map_modes_path: str | Path,

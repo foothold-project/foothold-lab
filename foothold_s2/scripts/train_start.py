@@ -302,6 +302,7 @@ def main(env_cfg, agent_cfg):
     env = gym.make(args_cli.task, cfg=env_cfg)
     ex41_w86_receipt = None
     ex41_dr_readback = None
+    ex41_rehearsal_dr_proof = None
     if EX41_PLAN is not None:
         from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
         from foothold_s2.rewards.w86_runtime import attach_runtime
@@ -313,6 +314,14 @@ def main(env_cfg, agent_cfg):
 
         if resume_path is None:
             set_live_initial_dr_scale(ex41_dr_readback, env.unwrapped, EX41_PLAN.initial_dr_scale)
+            if EX41_REHEARSAL:
+                from foothold_s2.scripts.ex41_startup import run_rehearsal_dr_proof
+
+                ex41_rehearsal_dr_proof = run_rehearsal_dr_proof(
+                    env, ex41_dr_readback, dr_cfg["full_ranges"], log_dir,
+                    EX41_PLAN.sha256, float(dr_cfg["full_ranges"]["delay_s"][1]))
+                print("EX41_REHEARSAL_DR_PROOF "
+                      + json.dumps(ex41_rehearsal_dr_proof, sort_keys=True), flush=True)
         ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
     if resume_path is None and agent_cfg.resume and EX41_PLAN is None:
         resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
@@ -449,8 +458,14 @@ def main(env_cfg, agent_cfg):
                            "first_observation": ex41_first_observation,
                            "rehearsal": {"enabled": EX41_REHEARSAL,
                                          "updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None,
+                                         "local_update_origin": 0 if EX41_REHEARSAL else None,
+                                         "first_completed_update": 1 if EX41_REHEARSAL else None,
+                                         "dr_scale_proof": ex41_rehearsal_dr_proof,
                                          "shadow_loop": False if EX41_REHEARSAL else None,
-                                         "score_evaluation": "not_run" if EX41_REHEARSAL else None},
+                                         "score_evaluation": "미연결" if EX41_REHEARSAL else None,
+                                         "new_process_resume_u5": "미연결" if EX41_REHEARSAL else None,
+                                         "schedule_boundary_0_8": "미연결; forced reset readback is separate" if EX41_REHEARSAL else None,
+                                         "score_watch_26_cells_once": "미연결" if EX41_REHEARSAL else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
                           "disk_preflight": EX41_DISK_RECEIPT,
@@ -485,18 +500,25 @@ def main(env_cfg, agent_cfg):
     if EX41_REHEARSAL:
         print("EX41_REHEARSAL_READBACK " + json.dumps({
             "output": log_dir,
-            "parent_update": EX41_PARENT_RECEIPT["completed_updates"],
+            "parent_checkpoint_update": EX41_PARENT_RECEIPT["parent_checkpoint_update"],
+            "parent_manifest_completed_updates": EX41_PARENT_RECEIPT["manifest_completed_updates"],
             "parent_sha256": EX41_PARENT_RECEIPT["sha256"],
             "initial_dr_scale": {"configured": EX41_PLAN.initial_dr_scale,
                                  "runtime": ex41_dr_readback.scale,
                                  "env": env.unwrapped._ex40_dr_scale,
                                  "first_reset_term_wrapped": ex41_cfg_contract["initial_dr"]["before_first_reset"]},
             "observations": ex41_first_observation,
+            "dr_scale_proof": ex41_rehearsal_dr_proof,
             "w86_items": list(ex41_cfg_contract["w86"]["weights"]),
             "w86_feet": ex41_cfg_contract["w86"]["feet"],
             "updates": args_cli.ex41_rehearsal_updates,
+            "local_update_origin": runner.current_learning_iteration,
+            "first_completed_update": runner.current_learning_iteration + 1,
             "save_interval": train_cfg["save_interval"],
-            "score_evaluation": "not_run",
+            "new_process_resume_u5": "미연결",
+            "schedule_boundary_0_8": "미연결; forced reset readback is separate",
+            "score_watch_26_cells_once": "미연결",
+            "score_evaluation": "미연결",
             "shadow_loop": False,
         }, sort_keys=True), flush=True)
     if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)
