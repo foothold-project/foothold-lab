@@ -12,6 +12,7 @@ import time
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic
+from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, publish_marker, clear_marker
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / 'foothold_s2/curriculum/ex40_score_config.json'
@@ -70,11 +71,14 @@ def hidden_child(argv, folder, *, env=None, cwd=ROOT):
     return row
 
 
-def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
+def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
+             priority_marker=DEFAULT_MARKER):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
-    if not getattr(plan, 'fixed_schedule', None) or out.exists():
-        raise ValueError('EX41 fixed plan and fresh evaluation output required')
+    if not getattr(plan, 'fixed_schedule', None):
+        raise ValueError('EX41 fixed plan required')
+    if out.exists():
+        raise ValueError('EX41 evaluation output must be fresh')
     if Path(sys.executable).resolve() != ISAAC_PYTHON.resolve():
         raise ValueError('EX41 evaluation requires isaac311 Python')
     dirty = subprocess.check_output(['git', 'status', '--short', '--', 'foothold_s2'], cwd=ROOT, text=True)
@@ -96,7 +100,14 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
                CUDA_DEVICE_ORDER='PCI_BUS_ID', KMP_DUPLICATE_LIB_OK='TRUE', OMNI_KIT_ACCEPT_EULA='YES')
     start = time.monotonic()
     _atomic(out/'eval_receipt.json', row)
+    marker_owner = None
     try:
+        iteration = int(checkpoint.stem.split('_')[-1])
+        marker_owner = publish_marker(priority_marker, job='ex41_evaluation_bundle',
+                                      iteration=iteration)
+        row['gpu1_priority_marker'] = {'path': str(Path(priority_marker)), 'state': 'active',
+                                       'owner': marker_owner}
+        _atomic(out/'eval_receipt.json', row)
         for phase in commands(checkpoint, out, cfg):
             if phase['name']=='w78_v2' and not w78_available:
                 row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
@@ -113,6 +124,14 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
                                   if row['steps'].get(name,{}).get('state')!='done']
     except Exception as exc:
         row.update(state='failed', reason=f'{type(exc).__name__}: {exc}')
+    finally:
+        if marker_owner is not None:
+            cleared = clear_marker(priority_marker, marker_owner)
+            row['gpu1_priority_marker'] = {
+                'path': str(Path(priority_marker)),
+                'state': 'cleared' if cleared else 'clear_unconfirmed',
+                'owner': marker_owner,
+            }
     row['seconds'] = time.monotonic()-start
     _atomic(out/'eval_receipt.json', row)
     return row
