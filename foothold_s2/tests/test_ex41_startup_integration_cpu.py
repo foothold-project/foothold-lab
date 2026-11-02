@@ -104,8 +104,8 @@ def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
     assert source.rfind("if not EX41_REHEARSAL:", 0, end_by) > source.rfind("if EX41_PLAN is not None:", 0, end_by)
     assert '"end_by_watch": ex41_end_by_receipt' in source
     assert source.index("prepare_ex41_env_cfg(env_cfg, EX41_PLAN)") < source.index("gym.make(")
-    assert "apply_ex41_pose_observation(env_cfg)" in (
-        REPO / "foothold_s2/scripts/ex41_startup.py").read_text(encoding="utf-8")
+    startup_source = (REPO / "foothold_s2/scripts/ex41_startup.py").read_text(encoding="utf-8")
+    assert "prepare_pose_env_cfg(env_cfg)" in startup_source
 
 
 def test_ex41_env_preparation_calls_pose_producer_and_records_contract(monkeypatch):
@@ -131,12 +131,20 @@ def test_ex41_env_preparation_calls_pose_producer_and_records_contract(monkeypat
     monkeypatch.setitem(sys.modules, "foothold_s2.rewards.w86_runtime", SimpleNamespace(
         prepare_env_cfg=lambda cfg, plan: {"weights": ["swing"]}))
 
+    def zero_pose_command(_env):
+        return None
+
     def attach_pose(cfg):
         called.append(cfg)
-        cfg.observations.pose_cmd = object()
+        cfg.observations.pose_cmd = SimpleNamespace(
+            pose_cmd=SimpleNamespace(func=zero_pose_command),
+            enable_corruption=False,
+            concatenate_terms=True,
+        )
 
     monkeypatch.setitem(sys.modules, "foothold_s2.sensors.start_obs", SimpleNamespace(
-        apply_ex41_pose_observation=attach_pose))
+        apply_ex41_pose_observation=attach_pose,
+        zero_pose_command=zero_pose_command))
     terms = {name: SimpleNamespace(func=lambda env, *args, **kwargs: None)
              for name in ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")}
     cfg = SimpleNamespace(observations=SimpleNamespace(), events=SimpleNamespace(**terms))
@@ -157,7 +165,8 @@ def test_ex41_env_preparation_calls_pose_producer_and_records_contract(monkeypat
         "group": "pose_cmd", "shape_per_env": [2],
         "columns": ["height_delta_m", "body_roll_rad"],
         "configured_value": [0.0, 0.0],
-        "producer": "foothold_s2.sensors.start_obs.zero_pose_command"}
+        "producer": "foothold_s2.sensors.start_obs.zero_pose_command",
+        "applied": True}
     assert receipt["reward_contract"]["first_stage_weights"] == rewards
 
 

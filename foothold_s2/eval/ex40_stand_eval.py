@@ -42,7 +42,7 @@ from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 
 import foothold_s2.sb_tasks  # noqa: E402,F401
-from foothold_s2.eval import adapters, map_mode_cells  # noqa: E402
+from foothold_s2.eval import adapters, ex41_eval_loader, map_mode_cells  # noqa: E402
 from foothold_s2.robots.go2_kinematics import FOOT_RADIUS_M  # noqa: E402
 
 _KIT_PRELOAD = (h5py, tensordict, rsl_rl.runners, isaaclab_tasks,
@@ -125,6 +125,8 @@ def main():
     env = None
     try:
         env_cfg, agent_cfg = _configure()
+        checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(
+            env_cfg, args.checkpoint)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
         robot, sensor = raw.scene["robot"], raw.scene["contact_forces"]
@@ -136,9 +138,13 @@ def main():
             raise RuntimeError("stance duration does not align with policy steps")
         torch.manual_seed(args.seed)
         obs, _ = env.reset()
+        if checkpoint_preparation["checkpoint_pose_commands"]:
+            ex41_eval_loader.verify_ex41_pose_observation(obs)
         map_mode_cells.disable_heading_for_fixed_eval(term)
         term.vel_command_b[:, :3] = 0.0
-        runner, _ = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
+        runner, _ = adapters.load_s2_runner(
+            env, agent_cfg.to_dict(), args.checkpoint, args.device,
+            checkpoint_state=checkpoint_state)
         policy = adapters.S2Policy(runner, args.envs, z_mode="mean", act_mode="mean", map_mode=args.mode)
         if args.mode == "eval_gt" and not bool(policy.pstate.use_gt.all()):
             raise RuntimeError("stance GT map was not selected")
@@ -175,6 +181,7 @@ def main():
         np.savez_compressed(args.out / "stand_raw.npz", **arrays)
         result = {"format": "foothold-ex40-stand/1", "checkpoint": str(args.checkpoint),
                   "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
+                  "ex41_checkpoint_preparation": checkpoint_preparation,
                   "mode": args.mode, "envs": args.envs, "seconds": args.seconds,
                   "skip_seconds": args.skip_seconds, "dt": dt, "feet": FEET,
                   "contact_force_n": args.contact_n,

@@ -470,7 +470,7 @@ class S2Policy:
         return self(obs)
 
 
-def load_s2_runner(env, train_cfg, checkpoint, device, expect=None):
+def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoint_state=None):
     """평가 경계: 체크포인트의 est_mode · critic_mode · map_input · force_gt 를 복원한다.
     `expect` ({"est_mode": ..., "critic_mode": ...})가 저장값과 다르면 거부한다(훈련 CLI override 를 사람이 기억하는 방식에 기대지 않는다).
     옛 체크포인트에 칸이 없으면 그때의 동작(learned · legacy · none · force_gt=False)으로 본다. 돌려주는 값: (runner, 체크포인트 dict)."""
@@ -478,7 +478,10 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None):
 
     from foothold_s2.runners.start_runner import MODE_DEFAULTS, StartRunner
 
-    sd = torch.load(checkpoint, weights_only=False, map_location=device)
+    sd = (torch.load(checkpoint, weights_only=False, map_location=device)
+          if checkpoint_state is None else checkpoint_state)
+    if not isinstance(sd, dict):
+        raise ValueError("S2 evaluation checkpoint must be a mapping")
     saved = sd.get("perception_cfg") or {}
     pc = dict(train_cfg.get("perception", {}) or {})
     pc["map_input"] = saved.get("map_input", "none")
@@ -537,7 +540,11 @@ class S2Adapter(S1Adapter):
     def load_policy(self, built, checkpoint):
         agent_cfg = built["agent_cfg"]
         env = built.get("env") or self.wrap(built)
-        runner, sd = load_s2_runner(env, agent_cfg.to_dict(), checkpoint, agent_cfg.device, expect=getattr(self, "expect_modes", None))
+        runner, sd = load_s2_runner(
+            env, agent_cfg.to_dict(), checkpoint, agent_cfg.device,
+            expect=getattr(self, "expect_modes", None),
+            checkpoint_state=built.get("checkpoint_state"),
+        )
         policy = S2Policy(runner, env.num_envs, map_mode=getattr(self, "map_mode", None))
         obs = env.get_observations()
         self.checks["policy_class"] = type(runner.alg.policy).__name__

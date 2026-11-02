@@ -313,6 +313,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "run_identity": run_identity, "envs": n, "dt_s": dt, "eval_seed": args.eval_seed,
               "levels": LEVELS, "start_angles_deg": ANGLES_DEG, "modes": {},
               "ex41_environment_preparation": getattr(args, "ex41_env_preparation", None),
+              "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
                                "focus_kinds": list(kinds)} for name, (phases, kinds) in V2_CASES.items()},
@@ -324,7 +325,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
         for level in LEVELS:
             for angle in ANGLES_DEG:
                 for mode in REQUIRED_MODES:
-                    runner, saved = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
+                    runner, saved = adapters.load_s2_runner(
+                        env, agent_cfg.to_dict(), args.checkpoint, args.device,
+                        checkpoint_state=getattr(args, "ex41_checkpoint_state", None))
                     result.setdefault("checkpoint_iter", int(saved.get("iter", -1)))
                     if runner.pcfg.get("map_input") == "none":
                         raise RuntimeError("W78 v2 cannot use a map_input none checkpoint")
@@ -335,6 +338,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                         env.reset()
                         fixed = fixed_terrain.apply(raw, level)
                         env.reset()
+                        if getattr(args, "ex41_checkpoint_preparation", {}).get("checkpoint_pose_commands"):
+                            from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+                            verify_ex41_pose_observation(env.get_observations())
                         actual = raw.scene.terrain
                         tiles = map_mode_cells.terrain_rows(actual.terrain_levels.cpu().numpy(),
                                                             actual.terrain_types.cpu().numpy(), terrain_names)

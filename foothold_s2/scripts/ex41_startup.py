@@ -829,7 +829,7 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     from foothold_s2.curriculum.ex41 import prepare_terrain_cfg
     from foothold_s2.curriculum.ex40_dr_runtime import install_runtime_events
     from foothold_s2.rewards.w86_runtime import prepare_env_cfg
-    from foothold_s2.sensors.start_obs import apply_ex41_pose_observation
+    from foothold_s2.eval.ex41_eval_loader import prepare_ex41_env_cfg as prepare_pose_env_cfg
 
     dr = plan.domain_randomization
     ranges = dr["full_ranges"]
@@ -840,11 +840,7 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     apply_settings(env_cfg, reward_settings)
     ex39_reward_receipt = apply_ex39_settings(env_cfg)
     apply_ex40_stand_settings(env_cfg, plan.stand_cfg)
-    apply_ex41_pose_observation(env_cfg)
-    pose_receipt = {"group": "pose_cmd", "shape_per_env": [2],
-                    "columns": ["height_delta_m", "body_roll_rad"],
-                    "configured_value": [0.0, 0.0],
-                    "producer": "foothold_s2.sensors.start_obs.zero_pose_command"}
+    pose_receipt = prepare_pose_env_cfg(env_cfg)
     event_receipt = install_runtime_events(
         env_cfg, ranges, tuple(dr["push_interval_s"]),
         delay_max_s=float(ranges["delay_s"][1]))
