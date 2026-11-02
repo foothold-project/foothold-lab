@@ -1,5 +1,7 @@
 """CURRICULUM-GATES 의 「EX-42 지형 커리큘럼 정본 (D163)」 절을 대조한다.
 단계 ID 열 개(E0 · E1 · E1F · E2 · E3 · E4 · E5 · M · E6a · E6b) · 단계마다 열두 행 · YAML 칸 표 · 예시 YAML(합 1.0 · 망각 방지 하한).
+v0.10 부터: 축 계약(axis_id · allowed_diff_paths · donor) · §E.3.1 유지 항 표 · §E.6 반영 표 · 옛 문구(B1~B5 이전) 없음.
+형식 검사 통과는 실행 정합성이 아니다.
 
 사용: python -X utf8 ex42_canon_check.py [CURRICULUM-GATES.md]
 종료 0 = 전부 · 1 = 어긋남(어느 칸).
@@ -19,12 +21,18 @@ def ok(cond, label):
 
 STAGES = ["E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"]
 ROWS = ["지형 종류", "레벨", "치수", "env 몫", "바꾸는 축 하나", "유지 칸", "망각 방지 몫", "승급 문턱", "최대 회차", "연장", "평가 칸", "영상"]
+def cells(line):
+    """표 한 줄의 칸 목록. 이스케이프한 세로줄(\|) 은 칸 안 글자다."""
+    return re.split(r"(?<!\)\|", line.strip())[1:-1]
+
+AXES = ("terrain_mesh_swap", "terrain_level_cap", "command_allocation", "terrain_exposure", "terrain_kind_level_cap", "map_off_probability", "posture_height", "posture_roll")
 
 m0 = re.search(r"^## EX-42 지형 커리큘럼 정본 \(D163.*?$", text, re.M)
 m1 = re.search(r"^## v0\.6c 이전 원문 보존", text, re.M)
 if not (m0 and m1 and m1.start() > m0.start()):
     print("MISS 정본 절 머리 · 끝 없음"); sys.exit(1)
 sec = text[m0.start(): m1.start()]
+v010 = "### E.6 " in sec
 ok("D163" in sec and "D158" in sec and "D159" in sec and "D160" in sec, "머리에 D163 · D158 · D159 · D160")
 
 # E.1
@@ -51,9 +59,14 @@ for kw in ("정지 10 · 후진 14 · 옆 7 + 7", "52", "60", "3/64", "0.03", "s
     ok(kw in e3 or kw in sec, f"E.3 「{kw}」")
 e4 = re.search(r"^### E\.4 .*?(?=^### E\.5 )", sec, re.M | re.S).group(0)
 ok("| 칸 이름(YAML 경로) | 자료형 | 단위 | 기본값 |" in e4, "E.4 표 머리(칸 이름 · 자료형 · 단위 · 기본값)")
-for key in ("`format`", "`env.num_envs`", "`stages[].boundary.kind`", "`stages[].boundary.changed_axis`", "`stages[].terrain.exposure.<family>.<kind>.share`",
-            "`stages[].terrain.floors.continuous_share_min`", "`promotion.window_episodes`", "`maintenance.judge_cells`", "`maintenance.on_fail.hold_exposure`",
-            "`forgetting_watch.compare_to`", "`eval.every_updates`", "`video.per_kind_success`", "`boundary_file`"):
+keys = ["`format`", "`env.num_envs`", "`stages[].boundary.kind`", "`stages[].terrain.exposure.<family>.<kind>.share`",
+        "`stages[].terrain.floors.continuous_share_min`", "`promotion.window_episodes`", "`maintenance.judge_cells`", "`maintenance.on_fail.hold_exposure`",
+        "`forgetting_watch.compare_to`", "`eval.every_updates`", "`video.per_kind_success`", "`boundary_file`"]
+keys += (["`stages[].boundary.axis_id`", "`stages[].boundary.allowed_diff_paths`", "`stages[].boundary.donor`", "`stages[].rewards.height.weight`",
+          "`stages[].terrain.preset.<family>`", "`stages[].terrain.kind_task.<kind>.command_set`", "`promotion.completion`", "`promotion.denominator`",
+          "`maintenance.anchor`", "`maintenance.items[]`", "`maintenance.calibration.receipt`", "`maintenance.recovery.windows`",
+          "`maintenance.learned_cells.min_episodes`", "`eval.sparse_off_role`", "`logging.map_mode`"] if v010 else ["`stages[].boundary.changed_axis`"])
+for key in keys:
     ok(key in e4, f"E.4 칸 {key}")
 ym = re.search(r"```yaml\n(.*?)```", e4, re.S)
 ok(ym is not None, "E.4 예시 YAML 블록")
@@ -67,13 +80,53 @@ if ym:
         ok(sh["stand"] >= 0.10 and sh["reverse"] >= 0.14 and sh["side_left"] >= 0.07 and sh["side_right"] >= 0.07, "예시 망각 방지 하한(정지 · 후진 · 옆)")
         ex = sum(k["share"] for fam in st["terrain"]["exposure"].values() for k in fam.values())
         ok(abs((1 - ex) - 0.95) < 1e-9, f"예시 연속 몫 1 − Σexposure = 0.95 ({1-ex:.2f})")
-        ok(st["boundary"]["kind"] in ("S", "L+", "C", "K", "D", "M") and st["boundary"]["changed_axis"].startswith("terrain.exposure"), "예시 boundary 축 하나")
+        bd = st["boundary"]
+        ok(bd["kind"] in ("S", "L+", "C", "K", "D", "M"), "예시 boundary.kind")
+        if v010:
+            ok(bd["axis_id"] in AXES, f"예시 axis_id 등록된 이름 {bd.get('axis_id')}")
+            adp = bd["allowed_diff_paths"]
+            ok(isinstance(adp, list) and len(adp) >= 1 and all(isinstance(p, str) and p.startswith("terrain.exposure") for p in adp), "예시 allowed_diff_paths 목록(exposure 경로)")
+            ok(abs(sum(bd["donor"].values()) + ex) < 1e-9, f"예시 donor 합 = −Δshare ({sum(bd['donor'].values()):+.2f})")
+            mt = y["maintenance"]
+            ok(mt["anchor"] == "pre_drop_anchor" and mt["recovery"]["windows"] == 2 and mt["learned_cells"]["min_episodes"] == 32 and bool(mt["calibration"]["receipt"]), "예시 anchor · 회복 2 창 · learned_cells 32 · calibration 영수증")
+            ok(set(st["terrain"]["preset"]) == {"A", "B", "C", "continuous"} and st["terrain"]["preset"]["A"] == "start_go2_v1", "예시 terrain.preset 네 묶음 · A = start_go2_v1")
+            ok(list(st["terrain"]["kind_task"].values())[0]["command_set"] == ["forward_1.0", "flag"], "예시 kind_task command_set [forward_1.0, flag]")
+            ok(y["eval"]["sparse_off_role"] == "record" and y["logging"]["map_mode"] == "assigned+consumed+eval", "예시 sparse OFF 기록 · 지도 모드 기록 셋")
+        else:
+            ok(bd["changed_axis"].startswith("terrain.exposure"), "예시 boundary 축 하나")
         ok(y["maintenance"]["judge_cells"] == 26 and y["maintenance"]["record_cells"] == 13 and y["maintenance"]["on_fail"]["stop_training"] is False, "예시 26 · 13 · stop_training false")
         ok(y["promotion"]["success_min"] == 52 and y["promotion"]["survival_min"] == 60 and y["env"]["num_envs"] == 3072, "예시 52 · 60 · 3072")
     except ImportError:
         ok(False, "pyyaml 없음(예시 YAML 미검사)")
     except Exception as e:
         ok(False, f"예시 YAML 파싱 · 값 오류 {type(e).__name__}: {e}")
+
+# v0.10 analyst 재검 B1~B5
+if v010:
+    pre = sec[: sec.index("### E.6 ")]
+    for old in ("듬성은 깃발 열 없음", "복원 지도 입력 100 %", "0.133", "analyst PLAN 표", "changed_axis", "0.44 → 0.18", "두 줄 → 한 줄 폭 0.155", "레벨 식 **미정**"):
+        ok(old not in pre, f"옛 문구 없음(E.6 앞): {old}")
+    for kw in ("start_go2_v1", "0.554", "0.166", "`start_sheet.py:156`", "한 줄",                      # B1
+               "axis_id", "allowed_diff_paths", "donor", "posture_height", "posture_roll", "경계 셋",       # B2
+               "sparse_terrains.py:113~135", "command_set", "last_support_0.5s", "world_frame=True", "policy 실패",  # B3
+               "정답 강제 해제", "False 는 PRED 전용이 아니다", "옆좌 · 옆우", "learned_cells", "forced_PRED",  # B4
+               "skill_maintenance", "promotion_ready", "pre_drop_anchor", "parent_eval", "calibration.json", "64 → 61 → 58 → 55"):  # B5
+        ok(kw in sec, f"B1~B5 「{kw}」")
+    exit_sent = "START 네 종 L5 이상 · AME-2 · JEPLO 쉬운 종류 L3 이상 · 연속 L9 · 깃발 15 % · 유지표 통과(각각 두 창)"
+    ok(exit_sent in e1.group(0) and exit_sent in blocks.get("E3", ""), "E3 exit 한 문장이 E.1 과 E.2 에 같게")
+    e31 = re.search(r"^#### E\.3\.1 .*?(?=^### E\.4 )", sec, re.M | re.S)
+    ok(e31 is not None, "§E.3.1 유지 항 표")
+    if e31:
+        hdr = [l for l in e31.group(0).splitlines() if l.startswith("| 항 |")]
+        ok(len(hdr) == 1 and "comparator" in hdr[0] and "role" in hdr[0] and "on_missing" in hdr[0], "E.3.1 머리(comparator · role · on_missing)")
+        items = [l for l in e31.group(0).splitlines() if l.startswith("| ") and not l.startswith("| 항 |") and not l.startswith("|---")]
+        ok(len(items) == 10 and all(len(cells(l)) == 6 for l in items), f"E.3.1 유지 항 10 행 × 6 칸(\| 는 칸 안 글자) ({len(items)})")
+        ok(sum("judge" in l for l in items) >= 4 and sum("record" in l for l in items) >= 4, "E.3.1 judge · record 역할 둘 다")
+        ok("2.5065" in e31.group(0) and "5.1106" in e31.group(0) and "실측" in e31.group(0), "E.3.1 투영 거리 재계산(실측)")
+    e6 = sec[sec.index("### E.6 "):]
+    rows6 = [l for l in e6.splitlines() if re.match(r"\| (B[1-5] |§[34] )", l)]
+    ok(len(rows6) == 7 and all(len(cells(l)) == 5 for l in rows6), f"E.6 반영 표 7 행 × 5 칸 ({len(rows6)})")
+    ok(all(len(cells(l)[2].strip()) >= 10 for l in rows6), "E.6 「고친 자리」 칸 비지 않음")
 
 ok(chr(0x2014) not in sec, "em dash 없음(정본 절)")
 for n, line in enumerate(sec.splitlines(), 1):
