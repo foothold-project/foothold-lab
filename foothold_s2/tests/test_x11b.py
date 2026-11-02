@@ -337,19 +337,23 @@ def _manifest_for(tmp_path, tag, mode="learned", hydra=(), device="cuda:0", extr
 
 def test_m1_file_changes_detect_missing_added_and_changed(monkeypatch, tmp_path):
     m = _manifest_for(tmp_path, "a")
-    real = mf.imported_files()
+    real, real_paths = mf.imported_snapshot()
     victim = sorted(m["files"]["imported_sha256"])[0]
     other = sorted(m["files"]["imported_sha256"])[1]
 
-    monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {n: s for n, s in real.items() if n != victim})
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *a, **k: (
+        {n: s for n, s in real.items() if n != victim},
+        {n: p for n, p in real_paths.items() if n != victim},
+    ))
     monkeypatch.setattr(mf, "_module_source_path", lambda _name: None)
     assert mf.file_changes(m)["missing"] == [victim]                                    # old 에만 있는 모듈 소실
 
-    monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {**real, "foothold_s2.brand_new": "f" * 64})
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *a, **k: (
+        {**real, "foothold_s2.brand_new": "f" * 64}, real_paths))
     ch = mf.file_changes(m)
     assert list(ch["added"]) == ["foothold_s2.brand_new"] and ch["changed"] == [] and ch["missing"] == []
 
-    monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {**real, other: "0" * 64})
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *a, **k: ({**real, other: "0" * 64}, real_paths))
     assert mf.file_changes(m)["changed"] == [other]
 
 
@@ -358,22 +362,37 @@ def test_m1_file_changes_hashes_recorded_source_when_module_is_not_imported(monk
     source.write_text("value = 'same source'\n", encoding="utf-8")
     module = "foothold_s2.runners.ex41_transfer"
     expected = mf.sha256_file(str(source))
-    manifest = {"files": {"imported_sha256": {module: expected}, "added_after_start": {}}}
-    monkeypatch.setattr(mf, "imported_files", lambda *args, **kwargs: {})
+    source_path = os.path.normcase(os.path.realpath(source))
+    manifest = {"files": {"imported_sha256": {module: expected}, "imported_paths": {module: source_path},
+                           "added_after_start": {}}}
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *args, **kwargs: ({}, {}))
+    current_source = [source]
     monkeypatch.setattr(
         mf, "_module_source_path",
-        lambda name: str(source) if name == module and source.is_file() else None,
+        lambda name: str(current_source[0]) if name == module and current_source[0].is_file() else None,
         raising=False,
     )
 
     unchanged = mf.file_changes(manifest)
-    assert unchanged == {"changed": [], "missing": [], "added": {}}
+    assert unchanged == {"changed": [], "missing": [], "added": {}, "added_paths": {}}
+
+    legacy = {"files": {"imported_sha256": {module: expected}, "added_after_start": {}}}
+    assert mf.file_changes(legacy)["missing"] == [module]
 
     source.write_text("value = 'changed source'\n", encoding="utf-8")
     changed = mf.file_changes(manifest)
     assert changed["changed"] == [module] and changed["missing"] == []
 
-    source.unlink()
+    moved = tmp_path / "relocated" / "ex41_transfer.py"
+    moved.parent.mkdir()
+    source.write_text("value = 'same source'\n", encoding="utf-8")
+    moved.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    current_source[0] = moved
+    moved_same_sha = mf.file_changes(manifest)
+    assert mf.sha256_file(str(moved)) == expected
+    assert moved_same_sha["changed"] == [module] and moved_same_sha["missing"] == []
+
+    moved.unlink()
     missing = mf.file_changes(manifest)
     assert missing["missing"] == [module] and missing["changed"] == []
 
@@ -393,8 +412,11 @@ def test_m1_runner_checks_code_at_latest_saves_too_and_missing_is_invalid(tmp_pa
     m = mf.build_manifest(repo=REPO, log_dir=str(tmp_path), run_name="t", cli_args={}, modes={}, runner=r)
     r.attach_manifest(str(tmp_path), m)
     victim = sorted(m["files"]["imported_sha256"])[0]
-    real = mf.imported_files()
-    monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {n: s for n, s in real.items() if n != victim})
+    real, real_paths = mf.imported_snapshot()
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *a, **k: (
+        {n: s for n, s in real.items() if n != victim},
+        {n: p for n, p in real_paths.items() if n != victim},
+    ))
     monkeypatch.setattr(mf, "_module_source_path", lambda _name: None)
 
     with pytest.raises(RuntimeError, match="소비 코드가 바뀜"):
@@ -407,11 +429,19 @@ def test_m1_added_files_are_noted_not_fatal(tmp_path, monkeypatch):
     r = _runner(log_dir=str(tmp_path))
     m = mf.build_manifest(repo=REPO, log_dir=str(tmp_path), run_name="t", cli_args={}, modes={}, runner=r)
     r.attach_manifest(str(tmp_path), m)
-    real = mf.imported_files()
-    monkeypatch.setattr(mf, "imported_files", lambda *a, **k: {**real, "foothold_s2.lazy_mod": "a" * 64})
+    real, real_paths = mf.imported_snapshot()
+    lazy_source = tmp_path / "lazy_mod.py"
+    lazy_source.write_text("value = 1\n", encoding="utf-8")
+    lazy_name = "foothold_s2.lazy_mod"
+    lazy_sha = mf.sha256_file(str(lazy_source))
+    monkeypatch.setattr(mf, "imported_snapshot", lambda *a, **k: (
+        {**real, lazy_name: lazy_sha},
+        {**real_paths, lazy_name: os.path.normcase(os.path.realpath(lazy_source))},
+    ))
     r._check_code(0)
 
-    assert m["files"]["added_after_start"] == {"foothold_s2.lazy_mod": "a" * 64}
+    assert m["files"]["added_after_start"] == {lazy_name: lazy_sha}
+    assert m["files"]["added_after_start_paths"] == {lazy_name: os.path.normcase(os.path.realpath(lazy_source))}
 
 
 def test_m2_hydra_overrides_are_compared_by_key(tmp_path):

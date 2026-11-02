@@ -870,6 +870,7 @@ class StartRunner(OnPolicyRunner):
             self._invalid(it, "실행 중 소비 코드가 바뀜: 변경 " + ",".join(ch["changed"][:8]) + " 소실 " + ",".join(ch["missing"][:8]))
         if ch["added"]:
             self.manifest["files"].setdefault("added_after_start", {}).update(ch["added"])
+            self.manifest["files"].setdefault("added_after_start_paths", {}).update(ch["added_paths"])
 
     def _manifest_checkpoint(self, it: int, name: str, num_envs: int) -> None:
         if self.manifest is None:

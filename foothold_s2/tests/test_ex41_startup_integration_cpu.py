@@ -60,8 +60,10 @@ def test_real_fixed_plan_has_pinned_m6000_dr_half_and_26_maintenance_cells():
     assert plan.fixed_schedule["duration_updates"] == 5000
 
 
-def test_current_production_boundary_refuses_unverified_w71():
+def test_current_production_boundary_refuses_unverified_w71(monkeypatch):
     plan = load_fixed_plan(TABLE)
+    monkeypatch.setattr(ex41_startup, "authorization_snapshot",
+                        lambda _plan: {"config": {"values": {"w71_ready": False}}})
     with pytest.raises(ValueError, match="W71 consumer is not verified"):
         require_production_authorization(plan)
 
