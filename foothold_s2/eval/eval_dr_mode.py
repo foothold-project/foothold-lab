@@ -30,6 +30,11 @@
 한 번 env 전부에 닿았는지 · 표본이 배율만큼의 범위 안인지 · 지연 상한이 배율과 맞는지 확인해 어긋나면 RuntimeError 로 멈춘다
 (「켠 줄 알았는데 꺼진 채」 방지). 표본은 롤아웃마다 비운다(B3): ``begin`` 이 reset 전에 비우고 ``collect`` 가 그 롤아웃의 것만 읽는다.
 
+소비자 계약(lead 17:5x B2): 유지 판정 소비자(ex41_startup.maintenance_counts_from_map_modes · ex40_score._map_rows) 는 dr 블록 ·
+dr_off 를 보지 않으므로, DR 켠 map_modes.json 이 들어가면 그 생존 수가 39 칸 유지 판정이 된다. ``require_dr_off_document`` 가 json 을
+읽은 직후 「dr 키 없음 · dr_off == EXPECTED_DR_OFF · 점수 행에 dr_* 키 없음」 을 확인하고 어긋나면 RuntimeError 를 낸다. 소비자 파일은
+runner · analyst 소유라 연결은 lead 가 전달하고, 이 모듈은 helper 와 깨뜨리는 시험만 둔다.
+
 같은 시드 · 다른 잡음 실현(B5): 켠 판은 끔 판과 같은 ``--eval-seed`` 로 돌지만 DR 이 난수를 더 소비하므로 reset 자세 · 명령
 잡음의 실현은 끔 판과 다르다. 「같은 시드」 는 재현 조건이지 「같은 궤적에서 DR 만 더한 것」 이 아니다.
 
@@ -55,6 +60,8 @@ from foothold_s2.curriculum.ex40_dr import validate_full_ranges
 
 DEFAULT_TABLE = Path(__file__).resolve().parents[1] / "curriculum" / "ex41-fixed5000.yaml"
 STARTUP_EVENTS = ("physics_material", "add_base_mass")           # B env 에 실제 있는 시동 DR(eval 의 EXPECTED_DR_OFF 와 같은 둘)
+EXPECTED_DR_OFF = list(STARTUP_EVENTS)                          # 끔 판 map_modes.json 의 dr_off 기대값. eval_map_modes 의 리터럴 EXPECTED_DR_OFF 와 같아야 한다(시험이 ast 로 대조)
+DR_ROW_KEYS = ("dr_scale", "dr_fired", "dr_push", "dr_recovery")  # 켠 모드가 점수 행에 더하는 키. 끔 판 소비자는 이 키가 있으면 거절한다
 RUNTIME_RESET_TERMS = ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")
 RUNTIME_INTERVAL_TERM = "ex40_push"                               # 학습의 interval 밀기. 켠 모드는 설치 뒤 떼고 가운데 step 밀기로 바꾼다
 RESET_SAMPLE_KEYS = ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier")
@@ -118,6 +125,35 @@ def load_table(path: str | Path) -> dict[str, Any]:
     return {"path": str(p), "sha256": hashlib.sha256(raw).hexdigest(), "full_ranges": ranges,
             "push_interval_s": (float(interval[0]), float(interval[1])),
             "delay_max_s": float(ranges["delay_s"][1])}
+
+
+def require_dr_off_document(doc: Any, *, where: str = "map_modes.json") -> dict[str, Any]:
+    """끔 판 소비자 계약(lead 17:5x B2): map_modes.json 을 읽은 직후 부른다. DR 켠 판의 문서는 RuntimeError.
+
+    유지 판정 소비자(ex41_startup.maintenance_counts_from_map_modes · ex40_score._map_rows) 가 읽는 생존 수는 끔 판의 것이어야 한다.
+    거절: dict 가 아님 · ``dr`` 키 있음 · ``dr_off`` 가 EXPECTED_DR_OFF(순서 무관) 와 다름 · 점수 행(modes · sequences) 에 DR_ROW_KEYS 가 있음.
+    통과하면 같은 doc 을 돌려준다(소비자가 ``data = require_dr_off_document(json.loads(...))`` 로 끼울 수 있게).
+    """
+    if not isinstance(doc, dict):
+        raise RuntimeError("%s: 문서가 dict 가 아니다: %s" % (where, type(doc).__name__))
+    if "dr" in doc:
+        raise RuntimeError("%s: DR 켠 평가 출력(dr 블록 · 배율 %r) 은 유지 판정에 쓸 수 없다" % (where, (doc.get("dr") or {}).get("scale") if isinstance(doc.get("dr"), dict) else None))
+    dr_off = doc.get("dr_off")
+    if not isinstance(dr_off, list) or sorted(str(x) for x in dr_off) != sorted(EXPECTED_DR_OFF):
+        raise RuntimeError("%s: 꺼진 DR 목록 %r 이 기대 %r 와 다르다(끔 판이 아니거나 DR 이름이 바뀌었다)" % (where, dr_off, EXPECTED_DR_OFF))
+    modes = doc.get("modes")
+    if not isinstance(modes, dict):
+        raise RuntimeError("%s: modes 가 없다" % where)
+    rows = [(("modes", mode, name), row) for mode, cells in modes.items() if isinstance(cells, dict) for name, row in cells.items()]
+    seqs = doc.get("sequences")
+    if isinstance(seqs, dict):
+        rows += [(("sequences", mode, name), row) for mode, cells in seqs.items() if isinstance(cells, dict) for name, row in cells.items()]
+    elif isinstance(seqs, list):
+        rows += [(("sequences", i), row) for i, row in enumerate(seqs)]
+    for path, row in rows:
+        if isinstance(row, dict) and any(k in row for k in DR_ROW_KEYS):
+            raise RuntimeError("%s: 점수 행 %r 에 DR 켠 키 %r 가 있다" % (where, path, [k for k in DR_ROW_KEYS if k in row]))
+    return doc
 
 
 def push_schedule(total_steps: int, dt: float) -> dict[str, Any]:
@@ -224,7 +260,12 @@ def recovery_metrics(alive, dones, vx, vy, xy, dt: float, push_step: int | None,
                   "tilt_max": "per-env max body tilt (rad) over alive steps after the push; median and max over the population",
                   "path_deviation": "max distance from straight-line extrapolation of the pre-push mean world velocity (alive steps only)",
                   "recovery_cmd": "first time after the push when body (vx, vy) stays within band_mps of the command and wz within band_radps for hold_s",
-                  "recovery_pre": "alternative: same test against the pre-push mean body velocity instead of the command"}
+                  "recovery_pre": "alternative: same test against the pre-push mean body velocity instead of the command",
+                  "path_deviation_note": ("straight-line extrapolation only: under a turning command (wz != 0) the commanded arc itself "
+                                          "counts as deviation; compare path_deviation only between cells of the same command"),
+                  "band_note": ("band_mps %.3g m/s is an assumption (evaluator stall threshold 0.05 m/s x 2); a command whose |(vx, vy)| "
+                                "<= band_mps is inside the band while standing still, so recovery_cmd says little for stop and low-speed "
+                                "commands; the test is against the command, not against the off-mode run" % band_mps)}
     shapes_ok = dones.shape == (T, N) and vx.shape == (T, N) and vy.shape == (T, N) and xy.shape == (T, N, 2)
     shapes_ok = shapes_ok and (wz is None or wz.shape == (T, N)) and (tilt is None or tilt.shape == (T, N))
     if not shapes_ok:
@@ -232,6 +273,8 @@ def recovery_metrics(alive, dones, vx, vy, xy, dt: float, push_step: int | None,
                            % (alive.shape, dones.shape, vx.shape, vy.shape, xy.shape, None if wz is None else wz.shape, None if tilt is None else tilt.shape))
     if cmd is not None and (len(cmd) != 3 or any(not math.isfinite(float(c)) for c in cmd)):
         raise RuntimeError("회복 지표: 명령이 (vx, vy, wz) 가 아니다: %r" % (cmd,))
+    definition["command_turns"] = None if cmd is None else bool(float(cmd[2]) != 0.0)                 # 참이면 경로 이탈에 명령 원호가 섞인다
+    definition["command_speed_above_band"] = None if cmd is None else bool(math.hypot(float(cmd[0]), float(cmd[1])) > band_mps)
     if push_step is None or not 0 < push_step < T:
         return {"defined": False, "reason": "no push inside the rollout or push at step 0 (no pre-push baseline)", "push_step": push_step, "definition": definition}
     pre0 = max(0, push_step - int(round(pre_s / dt)))
@@ -341,6 +384,8 @@ def check_fired(summary: dict[str, Any], scale: float, ranges: dict[str, Any], d
             raise RuntimeError("밀기 표본이 env 전부 × 횟수와 다르다: %r (기대 env %d · 표본 %d)"
                                % (push, pushes * num_envs, pushes * num_envs * PUSH_RECORD_DIMS))
         _within(push, PUSH_SAMPLE_KEY, bounds[PUSH_SAMPLE_KEY], scale)
+        if scale > 0.0 and max(abs(float(push["min"])), abs(float(push["max"]))) <= 1e-9:
+            raise RuntimeError("배율 %.3f > 0 인데 밀기 표본이 전부 0 이다(밀기가 root 속도에 닿지 않았다): %r" % (scale, push))
         fired["push"] = push["target_envs"]
     else:
         if isinstance(push, dict) and push.get("count"):
@@ -478,6 +523,9 @@ class DRMode:
         event = self.pusher(raw, self.table["full_ranges"]["push_velocity"], self._rollout["push_seed"])
         if not isinstance(event, dict) or len(event.get("env_ids", [])) != self._rollout["num_envs"]:
             raise RuntimeError("DR 켠 평가: 밀기 기록이 env 전부를 담지 않았다: %r" % (type(event),))
+        if self.scale > 0.0 and not float(event.get("dv_xy_norm_mps_median", 0.0)) > 0.0:
+            raise RuntimeError("DR 켠 평가: 배율 %.3f > 0 인데 밀기 Δv 크기 중앙값이 0 이다(env 절반 이상이 안 밀렸다): %r"
+                               % (self.scale, event.get("dv_xy_norm_mps_median")))
         self._rollout["pushed"] += 1
         self._rollout["events"].append({"step": int(step_index), "t_s": step_index * self._rollout["dt"],
                                         "seed": self._rollout["push_seed"], "scale": self.scale, **event})

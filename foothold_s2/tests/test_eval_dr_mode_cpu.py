@@ -340,7 +340,9 @@ def synthetic_rollout():
     tilt[p + 10, 0] = 0.3
     dones[p + 20, 1] = True
     alive[p + 20:, 1] = False
-    vx[p:, 1] = 0.0
+    vx[p:p + 20, 1] = 0.0
+    vx[p + 20:, 1] = 1.0                                                                # 죽은 뒤 속도가 명령과 같다: alive 를 안 가리면 「회복」 으로 센다(M6)
+    xy[p + 20:, 1, 0] += 10.0                                                           # 죽은 뒤 위치가 10 m 튄다: alive 를 안 가리면 경로 이탈 최대가 10 이 된다(M6)
     tilt[p + 30:, 1] = 1.0                                                              # 죽은 뒤의 큰 값은 안 센다
     dones[50, 2] = True
     alive[50:, 2] = False
@@ -361,6 +363,10 @@ def test_recovery_metrics_on_a_known_rollout():
     assert out["command"] == [1.0, 0.0, 0.0] and out["recovery_uses_wz"] is True
     assert out["recovered_envs"] == 1 and out["recovered_fraction"] == pytest.approx(1 / 3) and out["recovery_time_s_median"] == pytest.approx(1.02)
     assert out["recovered_vs_pre_envs"] == 1 and out["recovery_vs_pre_time_s_median"] == pytest.approx(1.02)   # 밀기 전 평균 = 명령이라 같다
+    assert out["definition"]["command_turns"] is False and out["definition"]["command_speed_above_band"] is True
+    assert "arc" in out["definition"]["path_deviation_note"] and "0.1" in out["definition"]["band_note"]
+    turning = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=[0.0, 0.0, 0.5])
+    assert turning["definition"]["command_turns"] is True and turning["definition"]["command_speed_above_band"] is False
     assert out["definition"]["band_mps"] == 0.1 and out["definition"]["band_radps"] == 0.2 and out["definition"]["hold_s"] == 0.2 and out["definition"]["decision_use"] == "record_only"
     json.dumps(out, allow_nan=False)
     wz_only = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=[2.0, 0.0, 0.5])
@@ -377,6 +383,100 @@ def test_recovery_metrics_on_a_known_rollout():
         M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, tilt=A["tilt"][:10])
     with pytest.raises(RuntimeError, match="명령"):
         M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, cmd=[1.0, 0.0])
+
+
+def test_recovery_metrics_alive_mask_changes_the_answer_when_dropped():
+    """돌연변이 M6(alive 가림 제거) 를 잡는다: 가림을 빼면 죽은 env1 이 회복 2 · 경로 이탈 최대 10 으로 바뀐다."""
+    import numpy as np
+
+    A, dt, p = synthetic_rollout()
+    masked = M.recovery_metrics(A["alive"], A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=A["cmd"])
+    unmasked = M.recovery_metrics(np.ones_like(A["alive"]), A["dones"], A["vx"], A["vy"], A["xy"], dt, p, wz=A["wz"], tilt=A["tilt"], cmd=A["cmd"])
+    assert masked["recovered_envs"] == 1 and masked["path_deviation_m_max"] == pytest.approx(3.98) and masked["tilt_max_rad_max"] == pytest.approx(0.3)
+    assert unmasked["recovered_envs"] == 2 and unmasked["recovered_vs_pre_envs"] == 2
+    assert unmasked["path_deviation_m_max"] == pytest.approx(10.0, abs=0.5) and unmasked["tilt_max_rad_max"] == pytest.approx(1.0)
+
+
+def test_positive_scale_refuses_a_push_that_moved_nothing():
+    import torch
+
+    dr, raw, _, _ = on_mode(1.0)
+    dr.pusher = lambda raw, target_range, seed: M._push_event_record(torch.zeros(N, 2), torch.zeros(N), torch.zeros(N, 6, dtype=torch.float64))
+    dr.begin(raw, "eval_gt/fwd1.0", 300, N, 0.02)
+    with pytest.raises(RuntimeError, match="중앙값이 0"):
+        dr.step(raw, 100)
+    dr0, raw0, _, _ = on_mode(0.0)                                                        # 배율 0 은 Δv 0 이 정상
+    dr0.pusher = lambda raw, target_range, seed: M._push_event_record(torch.zeros(N, 2), torch.zeros(N), torch.zeros(N, 6, dtype=torch.float64))
+    dr0.begin(raw0, "eval_gt/fwd1.0", 300, N, 0.02)
+    assert dr0.step(raw0, 100) is True
+    r = ranges()
+    with pytest.raises(RuntimeError, match="전부 0"):
+        M.check_fired(summary(1.0, observed=3, push=(0.0, 0.0)), 1.0, r, 0.015, num_envs=N, pushes=1)
+    with pytest.raises(RuntimeError, match="전부 0"):
+        M.check_fired(summary(0.5, observed=1, push=(0.0, 0.0)), 0.5, r, 0.015, num_envs=N, pushes=1)
+    M.check_fired(summary(0.0, observed=0, push=(0.0, 0.0)), 0.0, r, 0.015, num_envs=N, pushes=1)       # 배율 0 은 통과
+
+
+def _off_document(**over):
+    doc = {"dr_off": ["physics_material", "add_base_mass"], "envs": N,
+           "modes": {m: {c: {"alive_envs_at_end": 64, "command": [1.0, 0.0, 0.0]} for c in ("fwd1.0", "side+0.5")} for m in ("eval_gt", "probe_prop_only", "eval_pred")},
+           "sequences": {"eval_gt": {"w78v2": {"alive_envs_at_end": 60}}}}
+    doc.update(over)
+    return doc
+
+
+def test_consumer_contract_accepts_off_documents_and_rejects_dr_on_ones():
+    """lead 17:5x B2: 유지 판정 소비자가 json 을 읽은 직후 부르는 계약. 끔 판은 통과, 켠 판 · 바뀐 dr_off · dr_* 행은 거절."""
+    doc = _off_document()
+    assert M.require_dr_off_document(doc) is doc
+    assert M.require_dr_off_document(_off_document(dr_off=["add_base_mass", "physics_material"])) is not None      # 순서 무관
+    with pytest.raises(RuntimeError, match="dict 가 아니다"):
+        M.require_dr_off_document([doc])
+    with pytest.raises(RuntimeError, match="DR 켠 평가 출력"):
+        M.require_dr_off_document(_off_document(dr={"mode": "on", "scale": 1.0, "push_cells": {}}))
+    with pytest.raises(RuntimeError, match="DR 켠 평가 출력"):
+        M.require_dr_off_document(_off_document(dr=None))                                 # 키가 있기만 해도 거절
+    for bad in (None, [], ["physics_material"], ["physics_material", "add_base_mass", "action_delay"], "physics_material,add_base_mass"):
+        with pytest.raises(RuntimeError, match="꺼진 DR 목록"):
+            M.require_dr_off_document(_off_document(dr_off=bad))
+    with pytest.raises(RuntimeError, match="modes 가 없다"):
+        M.require_dr_off_document({"dr_off": list(M.EXPECTED_DR_OFF)})
+    for key in M.DR_ROW_KEYS:
+        tainted = _off_document()
+        tainted["modes"]["eval_pred"]["side+0.5"][key] = 1.0
+        with pytest.raises(RuntimeError, match="DR 켠 키"):
+            M.require_dr_off_document(tainted, where="score_6000/map_modes.json")
+    tainted = _off_document()
+    tainted["sequences"]["eval_gt"]["w78v2"]["dr_recovery"] = None
+    with pytest.raises(RuntimeError, match="sequences"):
+        M.require_dr_off_document(tainted)
+    tainted = _off_document(sequences=[{"alive_envs_at_end": 60, "dr_scale": 1.0}])            # 목록 꼴 시퀀스도 본다
+    with pytest.raises(RuntimeError, match="DR 켠 키"):
+        M.require_dr_off_document(tainted)
+
+
+def test_consumer_contract_rejects_the_document_an_on_run_actually_writes():
+    """켠 모드의 collect 가 실제로 적은 res 를 넣어 거절되는지 본다(가짜 문서가 아니라 생산자 출력)."""
+    dr, raw, _, _ = on_mode(1.0)
+    dr.readback = SimpleNamespace(summary=lambda: summary(1.0, observed=3))
+    res = _off_document(dr_off=["physics_material", "add_base_mass"])
+    dr.begin(raw, "eval_gt/fwd1.0", 300, N, 0.02)
+    dr.step(raw, 100)
+    dr.collect(raw, "eval_gt/fwd1.0", res, res["modes"]["eval_gt"]["fwd1.0"])
+    with pytest.raises(RuntimeError, match="DR 켠 평가 출력"):
+        M.require_dr_off_document(res)
+    del res["dr"]
+    with pytest.raises(RuntimeError, match="DR 켠 키"):                                   # dr 블록을 지워도 점수 행의 키로 잡힌다
+        M.require_dr_off_document(res)
+
+
+def test_expected_dr_off_matches_the_eval_script_literal_and_source_hash_lists_this_module():
+    src = EVAL.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    literal = next(ast.literal_eval(node.value) for node in ast.walk(tree)
+                   if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "EXPECTED_DR_OFF" for t in node.targets))
+    assert sorted(literal) == sorted(M.EXPECTED_DR_OFF) == ["add_base_mass", "physics_material"]
+    assert "for m in (sys.modules[__name__], _ft, _sp, adapters, eval_dr_mode)}" in src         # lead 17:5x: SOURCE_SHA256 에 eval_dr_mode.py
 
 
 def test_check_fired_scale_zero_requires_neutral_and_no_delay():
@@ -491,3 +591,4 @@ def test_real_m6000_off_output_has_the_literal_dr_off_list_and_no_dr_keys():
     assert doc["dr_off"] == ["physics_material", "add_base_mass"] and "dr" not in doc
     rows = [row for mode in doc["modes"].values() for row in mode.values()]
     assert rows and all(not any(k in row for k in ("dr_scale", "dr_fired", "dr_push", "dr_recovery")) for row in rows)   # 끔 점수 행은 그대로
+    assert M.require_dr_off_document(doc) is doc                                       # 유지 판정 소비자 계약을 실측 끔 문서가 통과한다

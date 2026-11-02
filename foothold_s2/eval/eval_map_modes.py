@@ -146,7 +146,7 @@ sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(arg
 CMDS = map_mode_cells.commands(args.command_suite)
 S = args.steps
 import foothold_s2.eval.fixed_terrain as _ft, foothold_s2.terrains.sparse_terrains as _sp                      # 실제 읽은 파일의 해시(출처 섞임 확인용)
-SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters)}
+SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters, eval_dr_mode)}
 if parser_sparse:
     from foothold_s2.eval import kind_stats as _ks
     SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
