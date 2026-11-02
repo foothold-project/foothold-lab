@@ -65,3 +65,15 @@ def test_missing_stand_mode_is_error_not64(actual):
     plan,native,stands=actual;bad=copy.copy(stands);bad.pop('eval_pred')
     with pytest.raises(ValueError,match='three modes'):
         measurement_bundle(ROOT/'map64/map_modes.json',bad,native['checkpoint'],baseline_counts(plan))
+
+
+def test_archived_config_evidence_is_repo_relative_and_hash_matches():
+    from foothold_s2.curriculum.continuous import sha256
+    repo=Path(__file__).resolve().parents[2]
+    archive=repo/'inbox/jay/20261102-analysis/evidence/EX41-D133-m6000-contract.json'
+    evidence=json.loads(archive.read_text(encoding='utf-8'))['evidence']
+    records=[r for r in evidence if Path(r['path']).name=='ex40_score_config.json']
+    assert len(records)==1
+    row=records[0]
+    assert row['path']=='foothold_s2/curriculum/ex40_score_config.json'
+    assert sha256(repo/row['path'])==row['sha256']

@@ -236,7 +236,7 @@ enrich_score_metrics(draft, map_modes_path, stand_paths, plan)
 
 시작 표 원바이트 SHA256은 `da3ee91a490115f33ed5fd188dc69de2328c0e8cde35d9b44c0790d6d7544d8d`, 일반 실행 `effective_sha256`은 `8f3e784b9bbbbe90f9246e6fff89819bd640fa7c5ded3607515cc656bab4cd18`이다. smoke는 별도 계획 SHA를 가진다. W71 미확인 표식은 여전히 false이므로 이 파일만으로 본기동 가능한 상태라는 뜻은 아니다.
 
-[D133 m6000 재계산](evidence/EX41-D133-m6000-contract.json)의 SHA256은 `e5e620cae36db2a4ef61d1e504a9f2231a07f8fc7b4177fb60237f587ea97c14`다. 이 파일은 실행 점수가 아니라 CPU 대조 자료다. 원자료와 기존 부모표는 바꾸지 않았다. runner는 §18의 `enrich_score_metrics` 반환값을 그대로 써야 한다. 이 helper가 판정·기록 dict를 둘 다 만든다.
+[D133 m6000 재계산](evidence/EX41-D133-m6000-contract.json)의 현재 SHA256은 `b938ef93c4a323a97dfa63fefd06cebf6c89d7362901e39f513bf00fce5e8e3e`다. §21 L2에서 설정 파일 경로만 저장소 상대 경로로 고쳤다. 이전 판 SHA는 `e5e620cae36db2a4ef61d1e504a9f2231a07f8fc7b4177fb60237f587ea97c14`이며 숫자는 같다. 이 파일은 실행 점수가 아니라 CPU 대조 자료다. 원자료와 기존 부모표는 바꾸지 않았다. runner는 §18의 `enrich_score_metrics` 반환값을 그대로 써야 한다. 이 helper가 판정·기록 dict를 둘 다 만든다.
 
 ### m6000 lin_vel_z: 초기 설정과 실제 실행 값의 구분
 
@@ -262,3 +262,21 @@ EX40 `ex40.yaml:7`은 `fixed_l02`다. m6000의 실제3072환경은 L0=1034, L1=1
 - 부모 m6000: `adasmpl.p=1.0`, `force_gt=true`. 체크포인트의 iter=6000을 직접 읽었다. agent.yaml SHA256 `5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd`. 정본 등록은 lead 담당.
 - isaac311 CPU: ex40_scorer + ex41_scoring 22 PASS(10.32 s). GPU·Kit·학습 미실행.
 - G17 W71 감독기·retry 영수증·복원 요약·로그·CMP는 다음 작업이며 이 결과로 닫지 않는다.
+
+## 21. L1~L3 검토 후속 (11/02 15:2x 의뢰)
+
+G15는 §20의 실제 자료로 확인했다. G17의 코드 준비는 75df4e87이며 [W71 보고](IMPLEMENT-W71-G15-G17-1102.md)에 남겼다. EX-41 루프의 소비 연결은 runner 몫이며 아직 미확인이다. 이번 절은 이어서 요청한 낮은 항목 세 개만 다룬다.
+
+| 항목 | 고침 | 답을 아는 입력 |
+|---|---|---|
+| L1 단계별 명령 몫 | `ex41_fixed.validate_plan`에서 S2a·S2b의 첫 몫, S2c 이후의 둘째 몫을 승인값과 대조한다 | 합계 1을 보존해도 여섯 단계 각각의 몫 변경을 거절. 특히 둘째 몫을 n751로 앞당긴 YAML은 load_plan에서 거절 |
+| L2 기록의 설정 경로 | D133 증거 JSON의 설정 경로를 `foothold_s2/curriculum/ex40_score_config.json`으로 바꿈 | 저장소 루트 기준으로 다시 열어 SHA가 기록과 같은지 확인. 외부 실측 원자료 경로와 모든 숫자는 보존 |
+| L3 거절 점수의 회차 | `score_N_*.json`/`score_N.json` 파일명과 본문 iteration을 먼저 대조. 오류 본문이 과거·미래 회차를 주장해도 파일명 회차로 부정 증거를 남김 | score_1250 본문을 0·750·1400으로 바꾸고 n1200 PASS를 함께 둬도 n1251 DR 유지. 기존 거절 snapshot에 iteration=0이 남아 있어도 1250으로 바로잡음. 정상 미래 점수는 제때 소비 |
+
+수정 전 반례 재현은 HEAD 75df4e87의 두 함수를 AST로 읽어 시험 프로세스 안에서만 원래 함수로 교체했다. 6개 몫 변경·3개 회차 변경·1개 절대 경로 반례 **10 FAIL, 7.48초**. 실제 코드 사본·원장·학습 프로세스를 바꾸지 않았다.
+
+첫 전체 회귀는 **113 PASS, 1 FAIL, 216.77초**였다. 실패는 새 시험이 정상 점수 소비 확인에 복구 전용 `last_score_iteration`을 사용한 시험 코드 오류였다. 실제 소비 이력 `_history`로 고쳤다. 이전 거절 snapshot 회차의 재확인 시험도 추가했다. 최종 결과는 아래에 적는다.
+
+경로만 바꾼 D133 증거 SHA는 `b938ef93c4a323a97dfa63fefd06cebf6c89d7362901e39f513bf00fce5e8e3e`다. YAML·계획 SHA·생존 문턱·학습 조건은 바꾸지 않았다. GPU·Kit·EX-40 실행 사본·루프·원장 변경 없음.
+
+최종 확인됨: fixed/runtime/boundary/review_regressions/scoring 다섯 파일 **115 PASS, 198.30초**. pyflakes·git diff --check 통과. G17 후속 CMP·stdin 검토는 [W71 보고](IMPLEMENT-W71-G15-G17-1102.md)의 후속 절로 분리한다.

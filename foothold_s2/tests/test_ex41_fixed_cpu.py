@@ -388,6 +388,56 @@ def test_second_share_change_at_s2c_not_dr_start(tmp_path):
     assert r.effective['shares']['side_left']==.07
 
 
+@pytest.mark.parametrize('stage_index',range(6))
+def test_load_plan_rejects_unapproved_stage_shares(tmp_path,stage_index):
+    doc=yaml.safe_load(TABLE.read_text())
+    if stage_index==1:
+        # The formerly accepted n751 regression: restore second mix too early.
+        doc['stages'][1]['shares']=copy.deepcopy(doc['stages'][2]['shares'])
+    else:
+        shares=doc['stages'][stage_index]['shares']
+        shares['forward']-=.01
+        shares['reverse']+=.01
+    path=tmp_path/'bad-plan.yaml';path.write_text(yaml.safe_dump(doc))
+    with pytest.raises(ValueError,match='approved shares'):
+        load_plan(path,arm='B')
+
+
+@pytest.mark.parametrize('body_iteration',[0,750,1400])
+def test_rejected_score_uses_filename_not_untrusted_body_time(tmp_path,body_iteration):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['iteration']=body_iteration
+    p.write_text(json.dumps(data));r.on_update_start(1251)
+    assert r._score_rejections[str(p)]['iteration']==1250
+    assert 'filename iteration' in r._score_rejections[str(p)]['reason']
+    assert r.clock.paused and r.clock.recovered==0
+    assert r.dr_scale(1501)==r.dr_scale(1251)
+
+
+def test_valid_future_named_score_waits_until_consumable(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1500,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    r.on_update_start(1251)
+    assert str(p) not in r._score_rejections and not r.clock.paused
+    r.on_update_start(1501)
+    assert r._history[-1]['iteration']==1500 and not r.clock.paused
+
+
+def test_old_rejection_snapshot_cannot_override_named_iteration(tmp_path):
+    r,_=fixture(tmp_path);tick(r,751);tick(r,1001)
+    score(r,1200,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    p=score(r,1250,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
+    data=json.loads(p.read_text());data['iteration']=0;p.write_text(json.dumps(data))
+    # Old snapshots used the invalid body time. Re-read must repair this entry.
+    r._score_rejections[str(p)]={'iteration':0,'sha256':sha256(p),'reason':'old rejection'}
+    r.on_update_start(1251)
+    assert r._score_rejections[str(p)]['iteration']==1250
+    assert r.clock.paused and r.clock.recovered==0
+
+
 def test_transferred_lin_vel_z_keeps_actual_parent_zero_at_each_boundary(tmp_path):
     from types import SimpleNamespace
     from foothold_s2.rewards.basic_gait_bundle import scheduled_lin_vel_z_weight

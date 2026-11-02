@@ -1,11 +1,13 @@
 """W71 failure paths, known answers; no simulator or live run writes."""
 import copy
 import json
+import subprocess
 from pathlib import Path
 import sys
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from foothold_s2 import ex40_supervisor as supervisor
 from foothold_s2 import ex40_score_watch as watch
@@ -84,6 +86,43 @@ def test_hidden_retry_cpu_child_has_stdin_and_separate_logs(tmp_path, monkeypatc
     assert json.loads((tmp_path/'retry_command.json').read_text())['stdin'] == 'DEVNULL'
 
 
+@pytest.mark.skipif(sys.platform!='win32',reason='Windows hidden-process inheritance contract')
+def test_hidden_python_to_git_bash_hash_detects_missing_devnull(tmp_path):
+    from foothold_s2.ex40_eval_once import BASH, ROOT
+    assert BASH.is_file(), 'Git Bash is required for the real two-stage Windows test'
+    cp=tmp_path/'model_1.pt';cp.write_bytes(b'known CPU checkpoint for hidden hash')
+    script=tmp_path/'hash.sh'
+    script.write_text('#!/bin/bash\nsha256sum "$1"\n',encoding='utf-8',newline='\n')
+    parent=tmp_path/'parent.py'
+    parent.write_text('''import json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from foothold_s2 import ex40_w57_retry as retry
+retry.AXIS=Path(sys.argv[2])
+original=retry.subprocess.run
+if sys.argv[5]=='omit':
+    def without_stdin(*args,**kwargs):
+        kwargs.pop('stdin',None)
+        return original(*args,**kwargs)
+    retry.subprocess.run=without_stdin
+rc=retry._child(Path(sys.argv[3]),Path(sys.argv[4])/'axis_v2','cuda:1',{'map_steps':1})
+(Path(sys.argv[4])/'parent_result.json').write_text(json.dumps({'rc':rc}))
+''',encoding='utf-8')
+    flags=subprocess.CREATE_NO_WINDOW|subprocess.CREATE_NEW_PROCESS_GROUP
+    results={}
+    for mode in ('omit','fixed'):
+        out=tmp_path/mode;out.mkdir()
+        # V1: no std handle arguments at all. Redirecting even stdout would
+        # reintroduce pytest's valid stdin handle and hide the regression.
+        proc=subprocess.run([sys.executable,str(parent),str(ROOT),str(script),str(cp),str(out),mode],
+                            cwd=ROOT,creationflags=flags,close_fds=True,check=False)
+        assert proc.returncode==0
+        results[mode]=json.loads((out/'parent_result.json').read_text())['rc']
+    assert results=={'omit':1,'fixed':0}
+    assert (tmp_path/'fixed/retry_stdout.log').read_text().lstrip('\\').split()[0]==sha256(cp)
+    assert 'Bad file descriptor' in (tmp_path/'omit/retry_stderr.log').read_text()
+
+
 def test_training_text_log_is_separate_from_decision(tmp_path, monkeypatch):
     def spawn(argv, **kwargs):
         assert kwargs['stdin'] == supervisor.subprocess.DEVNULL
@@ -94,6 +133,30 @@ def test_training_text_log_is_separate_from_decision(tmp_path, monkeypatch):
     receipt = json.loads(next(tmp_path.glob('*.process.json')).read_text())
     assert Path(receipt['log']).read_bytes() == b'known training stdout\n'
     assert not (tmp_path/'supervisor_result.json').exists()
+
+
+def test_retry_uses_checkpoint_preflight_and_records_failed_hash(tmp_path,monkeypatch):
+    checkpoint,prior=_original(tmp_path)
+    calls=[]
+    real_hash=retry_mod.hash_checkpoint
+    def measured_hash(path,receipt):
+        calls.append((path,receipt))
+        return real_hash(path,receipt)
+    monkeypatch.setattr(retry_mod,'hash_checkpoint',measured_hash)
+    row=retry_mod.retry(prior,checkpoint,tmp_path/'retry','hashed',runner=lambda *_:1)
+    receipt=json.loads(Path(row['evaluation_receipt']).read_text())
+    proof=receipt['checkpoint_preflight']
+    assert len(calls)==1 and proof['checkpoint_sha256']==sha256(checkpoint)
+    assert sha256(Path(proof['path']))==proof['sha256']
+    assert Path(proof['path']).read_text().startswith(sha256(checkpoint))
+    monkeypatch.setattr(retry_mod,'hash_checkpoint',lambda *_:(_ for _ in ()).throw(OSError('known hash failure')))
+    started=[]
+    failed=retry_mod.retry(prior,checkpoint,tmp_path/'retry','hash-failed',runner=lambda *_:started.append(True))
+    receipt=json.loads(Path(failed['evaluation_receipt']).read_text())
+    assert not started and receipt['state']=='failed'
+    assert receipt['steps']['axis_v2']['rc']==-1
+    assert 'known hash failure' in receipt['steps']['axis_v2']['error']
+    assert receipt['checkpoint_preflight']['sha256'] is None
 
 
 def test_reconstruction_summary_known_cm_and_missing(tmp_path):
@@ -118,15 +181,25 @@ def test_reconstruction_summary_known_cm_and_missing(tmp_path):
     assert reconstruction_summary(path,'a'*64)['state'] == 'incomplete'
 
 
-def test_cmp_requires_exact_files_hash_and_all_frames(tmp_path):
+def _cmp_fixture(tmp_path):
     video=tmp_path/'CMP-test.mp4'; video.write_bytes(b'known video bytes, not rendered')
-    request={'request_sha256':'a'*64, 'checkpoint_sha256':'b'*64, 'comparison_sha256':'c'*64,
-             'expected_files':[video.name]}
+    current=tmp_path/'model_2000.pt';current.write_bytes(b'known current checkpoint')
+    parent=tmp_path/'model_1500.pt';parent.write_bytes(b'known comparison checkpoint')
+    payload={'format':'foothold-cmp-request/1','checkpoint_path':str(current),
+             'checkpoint_sha256':sha256(current),'comparison_path':str(parent),
+             'comparison_sha256':sha256(parent),'expected_files':[video.name]}
+    request_path=tmp_path/'request.json';request_path.write_text(json.dumps(payload))
+    request={**payload,'request_path':str(request_path),'request_sha256':sha256(request_path)}
     item={'path':str(video),'sha256':sha256(video), 'frame_review':{
           'video_sha256':sha256(video),'frames':100,'checked_frames':100,'expected_frames':100,'issues':[]}}
     receipt={**request, 'format':'foothold-cmp-delivery/1', 'state':'done', 'files':{video.name:item}}
     path=tmp_path/'cmp.json'
     path.write_text(json.dumps(receipt))
+    return request,receipt,path,video
+
+
+def test_cmp_requires_exact_files_hash_and_all_frames(tmp_path):
+    request,receipt,path,video=_cmp_fixture(tmp_path)
     assert cmp_link(request,path)['state'] == 'linked'
     for bad in ({**receipt,'files':{}},{**receipt,'checkpoint_sha256':'d'*64}):
         path.write_text(json.dumps(bad)); assert cmp_link(request,path)['state'] == 'pending'
@@ -135,3 +208,34 @@ def test_cmp_requires_exact_files_hash_and_all_frames(tmp_path):
     path.write_text(json.dumps(receipt)); video.write_bytes(b'changed')
     assert cmp_link(request,path)['state'] == 'pending'
     assert cmp_link(request,None)['state'] == 'pending'
+
+
+@pytest.mark.parametrize('key',['request_sha256','checkpoint_sha256','comparison_sha256'])
+@pytest.mark.parametrize('value',[None,'','bad','z'*64,'0'*64])
+def test_cmp_equal_invalid_or_forged_identities_never_link(tmp_path,key,value):
+    request,receipt,path,_=_cmp_fixture(tmp_path)
+    request[key]=value;receipt[key]=value
+    path.write_text(json.dumps(receipt))
+    assert cmp_link(request,path)['state']=='pending'
+
+
+@pytest.mark.parametrize('key',['request_path','checkpoint_path','comparison_path'])
+def test_cmp_rechecks_real_request_and_checkpoint_bytes(tmp_path,key):
+    request,receipt,path,_=_cmp_fixture(tmp_path)
+    Path(request[key]).write_bytes(b'changed actual source bytes')
+    assert cmp_link(request,path)['state']=='pending'
+
+
+def test_cmp_stage_report_uses_the_same_current_and_parent(tmp_path,monkeypatch):
+    from foothold_s2 import ex40_stage_report as report
+    request,_,path,_=_cmp_fixture(tmp_path)
+    monkeypatch.setattr(report,'snapshot',lambda _:{'w15':{},'w57':{}})
+    monkeypatch.setattr(report,'dr_readback',lambda *_:{})
+    current={'from':'B1','checkpoint_iteration':2000,'checkpoint_sha256':request['checkpoint_sha256'],
+             'cmp_request':request,'cmp_receipt':str(path)}
+    previous={'from':'B0','checkpoint_iteration':1500,'checkpoint_sha256':request['comparison_sha256']}
+    assert report.build(current,previous,tmp_path)['cmp']['state']=='linked'
+    for side in ('current','previous'):
+        a,b=copy.deepcopy(current),copy.deepcopy(previous)
+        (a if side=='current' else b)['checkpoint_sha256']='0'*64
+        assert report.build(a,b,tmp_path)['cmp']['state']=='pending'

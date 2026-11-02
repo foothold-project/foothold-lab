@@ -391,6 +391,8 @@ class EX41Runtime(Runtime):
         rows=[]
         for p in sorted(self.score_dir.glob('*.json')):
             h=None; it=None
+            match=re.match(r'^score_(\d+)(?:_|\.)',p.name)
+            named_iteration=int(match[1]) if match else None
             try:
                 h=sha256(p)
                 if h in self.seen_scores and str(p) not in self._score_rejections: continue
@@ -398,6 +400,8 @@ class EX41Runtime(Runtime):
                 if not isinstance(d,dict): raise ValueError('EX41 score must be an object')
                 it=d.get('iteration')
                 if type(it) is not int or it<0: raise ValueError('EX41 score iteration invalid')
+                if named_iteration is not None and named_iteration!=it:
+                    raise ValueError('EX41 filename iteration differs from score iteration')
                 if it>n: continue  # not yet consumable
                 json.dumps(d,allow_nan=False)
                 if d.get('format')!='foothold-ex41-score/1': raise ValueError('EX41 score format differs')
@@ -430,10 +434,12 @@ class EX41Runtime(Runtime):
                 self._write({'event':'score_rejected','path':str(p),'sha256':h,'reason':str(exc)})
                 # Keep negative evidence: removing a bad latest row must not
                 # promote an older PASS to the latest observation.
-                match=re.match(r'^score_(\d+)(?:_|\.)',p.name)
-                observed=(it if type(it) is int and it>=0 else int(match[1]) if match else max(0,n-1))
+                # An invalid JSON body is not an authority for its observation
+                # time. Use the producer filename; unnamed failures use now.
+                observed=(named_iteration if named_iteration is not None else max(0,n-1))
                 previous=self._score_rejections.get(str(p))
-                if previous and previous['sha256']==h: observed=previous['iteration']
+                if named_iteration is None and previous and previous['sha256']==h:
+                    observed=previous['iteration']
                 self._score_rejections[str(p)]={'iteration':observed,'sha256':h,'reason':str(exc)}
                 if h is not None: self.seen_scores.add(h)
         # A conflict at the same checkpoint invalidates all versions, not just

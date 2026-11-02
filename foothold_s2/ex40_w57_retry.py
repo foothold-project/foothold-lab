@@ -18,6 +18,7 @@ import subprocess
 
 from foothold_s2.ex40_eval_once import BASH, AXIS, DEFAULT_CONFIG, DEFAULT_TABLE, ROOT
 from foothold_s2.ex40_score import config, judge, sha256
+from foothold_s2.eval.w57_checkpoint_hash import hash_checkpoint
 
 
 ATTEMPT = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\Z")
@@ -137,7 +138,12 @@ def _retry_locked(prior_dir: Path, checkpoint: Path, retry_root: Path, attempt_i
             raise ValueError(f"copied evidence changed: {name}")
     cfg = config(cfg_path)
     error = None
+    hash_receipt=out/'checkpoint_sha256.txt'
+    preflight_sha=None
     try:
+        preflight_sha=hash_checkpoint(checkpoint,hash_receipt)
+        if preflight_sha!=prior['checkpoint_sha256']:
+            raise ValueError('retry checkpoint preflight differs from original')
         rc = runner(checkpoint, out / "axis_v2", prior["device"], cfg)
     except (OSError, RuntimeError, ValueError) as exc:
         rc, error = -1, f"{type(exc).__name__}: {exc}"
@@ -164,6 +170,8 @@ def _retry_locked(prior_dir: Path, checkpoint: Path, retry_root: Path, attempt_i
                          "error": error}
     receipt = {**prior, "state": "done" if rc == 0 and axis_sha else "failed",
                "steps": steps, "retry_attempt_id": attempt_id,
+               "checkpoint_preflight": {"checkpoint_sha256":preflight_sha,
+                   "path":str(hash_receipt),"sha256":sha256(hash_receipt) if hash_receipt.is_file() else None},
                "prior_evaluation_receipt": str(prior_dir / "eval_receipt.json"),
                "prior_source_sha256": source_hashes}
     _save(out / "eval_receipt.json", receipt)

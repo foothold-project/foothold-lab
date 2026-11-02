@@ -67,6 +67,13 @@ def validate_plan(plan,doc):
         or tuple(r['duration']['minimum_updates'] for r in doc['stages'])!=DURATIONS
         or tuple(r['start']['fixed_update'] for r in doc['stages'])!=(0,751,1751,2751,4001,4501)):
         raise ValueError('EX41 fixed stage lengths/start points differ')
+    early={'forward':.23,'walk_left':.075,'walk_right':.075,'spin_left':.09,'spin_right':.09,
+           'stand':.10,'reverse':.14,'side_left':.06,'side_right':.06,
+           'diag_fwd_left':.015,'diag_fwd_right':.015,'diag_back_left':.025,'diag_back_right':.025}
+    later={**early,'walk_left':.06,'walk_right':.06,'side_left':.07,'side_right':.07,
+           'diag_fwd_left':.02,'diag_fwd_right':.02}
+    if any(stage['shares']!=(early if i<2 else later) for i,stage in enumerate(doc['stages'])):
+        raise ValueError('EX41 approved shares change at S2c n1751 only')
     b=cfg['maintenance_baseline']
     if not isinstance(b,dict) or set(b)!={'path','sha256'} or not isinstance(b['path'],str) or len(b['sha256'])!=64:
         raise ValueError('EX41 pinned maintenance baseline required')

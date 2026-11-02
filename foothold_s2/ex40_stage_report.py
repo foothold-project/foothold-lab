@@ -156,6 +156,9 @@ def build(current_score: dict, previous_score: dict | None, run: Path, *,
     request = current_score.get('cmp_request')
     cmp = (cmp_link(request, Path(current_score['cmp_receipt']) if current_score.get('cmp_receipt') else None)
            if request else {'state': 'pending', 'reason': 'CMP request not connected'})
+    if cmp['state']=='linked' and (request['checkpoint_sha256']!=current_score['checkpoint_sha256']
+            or (previous_score is not None and request['comparison_sha256']!=previous_score['checkpoint_sha256'])):
+        cmp={'state':'pending','reason':'CMP checkpoints differ from stage report'}
     return {"format": "foothold-ex40-stage-report/1", "stage": current_score["from"],
             "checkpoint_iteration": update, "checkpoint_sha256": current_score["checkpoint_sha256"],
             "previous_stage": previous_score["from"] if previous_score else None,
