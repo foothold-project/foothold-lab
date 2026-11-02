@@ -7,6 +7,7 @@ from foothold_s2.ex41_ops import (
     _notification_text,
     deliver_pending_alerts,
     record_boundary,
+    record_deadline_alert,
     record_failure_alert,
 )
 
@@ -25,6 +26,27 @@ class FakeRuntime:
 
     def dr_scale(self, _update):
         return 0.5
+
+
+def test_end_by_alert_uses_existing_receipts_and_deduplicated_delivery(tmp_path):
+    row = record_deadline_alert(tmp_path, 250, {
+        "end_by": "2026-11-06T00:00:00+00:00",
+        "action": "warning_only", "training_stop_on_deadline": False,
+    }, deliver=False)
+    delivered = []
+    first = deliver_pending_alerts(
+        tmp_path,
+        orchestration_sender=lambda subject, body: delivered.append(("orca", subject)) or True,
+        telegram_sender=lambda body: delivered.append(("telegram", body)) or True)
+    second = deliver_pending_alerts(
+        tmp_path,
+        orchestration_sender=lambda *_: delivered.append(("orca_duplicate",)) or True,
+        telegram_sender=lambda *_: delivered.append(("telegram_duplicate",)) or True)
+    assert row["kind"] == "end_by_warning"
+    assert first[0]["channels"]["orchestration"]["state"] == "sent"
+    assert first[0]["channels"]["telegram"]["state"] == "sent"
+    assert second[0]["channels"]["orchestration"]["state"] == "sent"
+    assert len(delivered) == 2
 
 
 def _score(update=250):

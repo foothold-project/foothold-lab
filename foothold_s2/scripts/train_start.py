@@ -414,6 +414,7 @@ def main(env_cfg, agent_cfg):
         runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
+    ex41_end_by_receipt = None
     parent_transfer = None
     if EX41_PLAN is not None:
         from functools import partial
@@ -506,6 +507,11 @@ def main(env_cfg, agent_cfg):
             eval_config=os.path.join(REPO, "foothold_s2", "curriculum",
                                      "ex40_score_config.json"),
             enabled=not EX41_REHEARSAL)
+        if not EX41_REHEARSAL:
+            from foothold_s2.scripts.ex41_startup import install_end_by_warning_watch
+
+            ex41_end_by_receipt = install_end_by_warning_watch(
+                ex41_runtime, log_dir, EX41_PLAN)
     elif resume_path:
         print(f"[INFO] START 체크포인트에서 이어 감: {resume_path}")
         runner.load(resume_path)
@@ -558,6 +564,10 @@ def main(env_cfg, agent_cfg):
             agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
         run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
+    if EX41_PLAN is not None and ex41_end_by_receipt is not None:
+        manifest.setdefault("modes", {}).setdefault("ex41", {})[
+            "end_by_watch"] = ex41_end_by_receipt
+        run_manifest.write_manifest(log_dir, manifest)
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_resume import install_resume_checkpoint_hooks
 
@@ -602,6 +612,7 @@ def main(env_cfg, agent_cfg):
                                       else "forced_reset_readback"),
             "score_watch_26_cells_once": "separate_oneoff_ready_not_run",
             "score_evaluation": "separate_oneoff_after_resume_not_run",
+            "end_by_watch": ex41_end_by_receipt,
             "dr_scale_08": "not_requested" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback",
             "shadow_loop": False,
         }, sort_keys=True), flush=True)

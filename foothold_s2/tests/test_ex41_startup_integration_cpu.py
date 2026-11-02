@@ -3,6 +3,7 @@
 import ast
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,7 @@ from foothold_s2.scripts.ex41_startup import (
     capture_first_observation,
     configure_ex41_train_cfg,
     first_observation_readback,
+    install_end_by_warning_watch,
     install_initial_dr_scale,
     load_fixed_plan,
     prepare_ex41_env_cfg,
@@ -95,6 +97,9 @@ def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
     assert "ex41_runtime.start(EX41_PLAN.parent_sha256)" in source
     assert "runner.load_ex41_parent()" in source
     assert "runner.ex41_w86_required" in source
+    end_by = source.index("install_end_by_warning_watch(")
+    assert source.rfind("if not EX41_REHEARSAL:", 0, end_by) > source.rfind("if EX41_PLAN is not None:", 0, end_by)
+    assert '"end_by_watch": ex41_end_by_receipt' in source
     assert source.index("prepare_ex41_env_cfg(env_cfg, EX41_PLAN)") < source.index("gym.make(")
     assert "apply_ex41_pose_observation(env_cfg)" in (
         REPO / "foothold_s2/scripts/ex41_startup.py").read_text(encoding="utf-8")
@@ -304,6 +309,32 @@ def test_rehearsal_resume_accepts_only_latest_completed_same_run_model(tmp_path)
         json.dumps({"state": "starting", "iter": 10}), encoding="utf-8")
     with pytest.raises(ValueError, match="completed latest checkpoint"):
         validate_rehearsal_resume_request(12, run, checkpoint, "cuda:0", True)
+
+
+def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
+    plan = load_fixed_plan(TABLE)
+    started = datetime(2026, 11, 3, tzinfo=timezone.utc)
+    events = []
+    runtime = SimpleNamespace(
+        clock=SimpleNamespace(elapsed=0, pause_used=0, extension=0, extension_decided=False),
+        on_update_start=lambda update: events.append(("update", update)) or "continue",
+        _write=lambda row: events.append(("event", row)),
+    )
+    receipt = install_end_by_warning_watch(
+        runtime, tmp_path, plan, now=started,
+        clock_now=lambda: datetime.fromisoformat(receipt["end_by"]) + timedelta(seconds=1),
+        seconds_per_update=26.3, deliver=False)
+    expected_end = started + timedelta(seconds=5000 * 26.3)
+    expected_deadline = expected_end + timedelta(seconds=(1000 + 500) * 26.3 + 86400)
+    assert datetime.fromisoformat(receipt["expected_end_at"]) == expected_end
+    assert datetime.fromisoformat(receipt["end_by"]) == expected_deadline
+    assert receipt["action"] == "warning_only" and receipt["training_stop_on_deadline"] is False
+    assert runtime.on_update_start(251) == "continue"
+    assert runtime.on_update_start(501) == "continue"
+    assert [row[1]["event"] for row in events if row[0] == "event"] == ["end_by_warning"]
+    alert = json.loads((tmp_path / "ex41_reports/alerts.jsonl").read_text().splitlines()[0])
+    assert alert["kind"] == "end_by_warning" and alert["training_stop_on_deadline"] is False
+    assert json.loads((tmp_path / "ex41_reports/end_by_watch.json").read_text())["action"] == "warning_only"
 
 
 def _known_scale_08_dr_row(ranges):

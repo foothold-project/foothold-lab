@@ -16,6 +16,7 @@ import sys
 import time
 import uuid
 import warnings
+from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
@@ -35,6 +36,8 @@ EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
 EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
 EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+EX41_UPDATE_SECONDS_ESTIMATE = 26.3
+EX41_END_BY_BUFFER_SECONDS = 24 * 60 * 60
 
 
 def configure_ex41_command_slots(command_term: Any) -> dict[str, Any]:
@@ -396,6 +399,87 @@ def validate_rehearsal_resume_request(target_updates: int, output_dir: str | Pat
             or status.get("iter") != completed):
         raise ValueError("EX-41 rehearsal resume requires the completed latest checkpoint")
     return run
+
+
+def install_end_by_warning_watch(runtime: Any, run_dir: str | Path, plan,
+                                 *, now: datetime | None = None,
+                                 clock_now=None,
+                                 seconds_per_update: float = EX41_UPDATE_SECONDS_ESTIMATE,
+                                 deliver=None) -> dict[str, Any]:
+    """Record an estimated END_BY and warn at update boundaries without stopping training."""
+    if not math.isfinite(seconds_per_update) or seconds_per_update <= 0:
+        raise ValueError("EX-41 END_BY needs a positive measured update-time estimate")
+    schedule = getattr(plan, "fixed_schedule", None)
+    if not isinstance(schedule, dict):
+        raise ValueError("EX-41 END_BY requires the fixed schedule")
+    started = now or datetime.now(timezone.utc)
+    if started.tzinfo is None:
+        raise ValueError("EX-41 END_BY start time must include a timezone")
+    clock = runtime.clock
+    duration = int(schedule["duration_updates"])
+    pause_limit = int(schedule["pause_limit_updates"])
+    extension_total = int(schedule["extension_updates"]) * int(schedule["maximum_extensions"])
+    elapsed = int(getattr(clock, "elapsed", 0))
+    pause_used = int(getattr(clock, "pause_used", 0))
+    extension_used = int(getattr(clock, "extension", 0))
+    extension_decided = bool(getattr(clock, "extension_decided", False))
+    expected_updates = max(0, duration - elapsed)
+    max_extension_updates = max(0, pause_limit - pause_used)
+    if not extension_decided:
+        max_extension_updates += extension_total
+    else:
+        max_extension_updates += max(0, extension_used)
+    expected_end = started + timedelta(seconds=expected_updates * seconds_per_update)
+    end_by = expected_end + timedelta(
+        seconds=max_extension_updates * seconds_per_update + EX41_END_BY_BUFFER_SECONDS)
+    receipt = {
+        "format": "foothold-ex41-end-by-watch/1",
+        "started_at": started.isoformat(),
+        "expected_end_at": expected_end.isoformat(),
+        "end_by": end_by.isoformat(),
+        "action": "warning_only",
+        "training_stop_on_deadline": False,
+        "poll_interval_updates": int(schedule["interval_updates"]),
+        "expected_updates": expected_updates,
+        "maximum_extension_updates": max_extension_updates,
+        "seconds_per_update": seconds_per_update,
+        "estimate_basis": "lead-reported 3072-env rehearsal, maximum of 10 measured updates: 26.3 s/update",
+        "buffer_seconds": EX41_END_BY_BUFFER_SECONDS,
+    }
+    report_dir = Path(run_dir) / "ex41_reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    target = report_dir / "end_by_watch.json"
+    temp = target.with_name(target.name + ".tmp")
+    temp.write_text(json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8")
+    os.replace(temp, target)
+
+    original = runtime.on_update_start
+    warned = False
+    current_time = clock_now or (lambda: datetime.now(timezone.utc))
+
+    def check_at_boundary(next_update: int):
+        nonlocal warned
+        result = original(next_update)
+        completed = next_update - 1
+        if (not warned and completed > 0
+                and completed % int(schedule["interval_updates"]) == 0
+                and current_time() >= end_by):
+            from foothold_s2.ex41_ops import record_deadline_alert
+
+            alert = record_deadline_alert(
+                run_dir, completed,
+                {"end_by": end_by.isoformat(), "action": "warning_only",
+                 "training_stop_on_deadline": False}, deliver=deliver)
+            runtime._write({"event": "end_by_warning", "iteration": completed,
+                            "event_id": alert["event_id"], "end_by": end_by.isoformat(),
+                            "action": "warning_only"})
+            print("EX41_END_BY_WARNING " + json.dumps(alert, sort_keys=True), flush=True)
+            warned = True
+        return result
+
+    runtime.on_update_start = check_at_boundary
+    return receipt
 
 
 def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,

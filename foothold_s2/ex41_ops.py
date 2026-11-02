@@ -178,6 +178,23 @@ def record_failure_alert(run_dir: str | Path, kind: str, update: int,
                         if r.get("event_id") == event_id), {"event_id": event_id})
 
 
+def record_deadline_alert(run_dir: str | Path, update: int,
+                          details: dict[str, Any], *, deliver: bool = True) -> dict[str, Any]:
+    """Publish one durable warning when the estimated END_BY is exceeded."""
+    if type(update) is not int or update < 0:
+        raise ValueError("END_BY warning update must be a nonnegative integer")
+    if details.get("action") != "warning_only" or details.get("training_stop_on_deadline") is not False:
+        raise ValueError("END_BY warning must explicitly preserve healthy training")
+    event_id = hashlib.sha256(json.dumps(
+        ["end_by_warning", update, details], sort_keys=True, allow_nan=False).encode()).hexdigest()
+    row = _alert(Path(run_dir) / "ex41_reports" / "alerts.jsonl", event_id,
+                 "end_by_warning", update, details)
+    if deliver:
+        deliver_pending_alerts(run_dir)
+    return row or next((r for r in _jsonl(Path(run_dir) / "ex41_reports" / "alerts.jsonl")
+                        if r.get("event_id") == event_id), {"event_id": event_id})
+
+
 def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=None) -> dict | None:
     """Write a 250-update or stage-end report after the runtime boundary hook.
 
