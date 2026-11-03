@@ -42,7 +42,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     composer = tmp_path / "compose.py"
     checkpoint.write_bytes(b"checkpoint")
     recorder.write_bytes(b"# C_LAYER_SEED_V1\n")
-    composer.write_bytes(b'VIDEO_RULE_VERSION = "v3.2-D140"\n')
+    composer.write_bytes(b'VIDEO_RULE_VERSION = "v3.3-D167"\n')
     overlay = tmp_path / "overlay_25e.py"
     overlay.write_bytes(b"# fixed overlay\n")
     rows = []

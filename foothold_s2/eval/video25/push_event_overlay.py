@@ -46,23 +46,25 @@ def load_overlay(path: Path, capture_sha256: str, rollout_key: str, env_id: int)
             "meaning": "world XY delta-v; recovery interval is evaluation population median"}
 
 
-def draw_push_overlay(scene, overlay: dict, time_s: float, *, panel_x0: int, panel_x1: int):
+def draw_push_overlay(scene, overlay: dict, time_s: float, *, legend_rect: tuple[int, int, int, int]):
     """Draw only after an event; never substitute a missing recovery endpoint."""
     events = [row for row in overlay["events"] if row["t_s"] <= time_s]
     if not events:
         return scene
     event = events[-1]
-    if not (0 <= panel_x0 < panel_x1 <= scene.shape[1]):
-        raise ValueError("invalid terrain/speed panel bounds")
-    center_x, center_y = (panel_x0 + panel_x1) // 2, 119
-    radius = min((panel_x1 - panel_x0) // 2 - 12, 25 + int(event["magnitude_mps"] * 35))
+    x0, y0, width, height = legend_rect
+    x1, y1 = x0 + width, y0 + height
+    if not (0 <= x0 < x1 <= scene.shape[1] and 0 <= y0 < y1 <= scene.shape[0]):
+        raise ValueError("invalid scene legend bounds")
+    center_x, center_y = x0 + width // 2, y0 + 79
+    radius = min(width // 2 - 12, 24, 25 + int(event["magnitude_mps"] * 35))
     theta = math.atan2(event["dy"], event["dx"])
     tip = (center_x + int(radius * math.cos(theta)), center_y - int(radius * math.sin(theta)))
-    cv2.rectangle(scene, (panel_x0, 45), (panel_x1 - 1, 190), (20, 24, 30), -1)
+    cv2.rectangle(scene, (x0, y0), (x1 - 1, y1 - 1), (20, 24, 30), -1)
     cv2.arrowedLine(scene, (center_x, center_y), tip, (0, 210, 255), 4, cv2.LINE_AA, tipLength=.24)
-    cv2.putText(scene, "PUSH world XY", (panel_x0 + 8, 67),
+    cv2.putText(scene, "PUSH world XY", (x0 + 8, y0 + 21),
                 cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
-    cv2.putText(scene, f"{event['magnitude_mps']:.2f} m/s", (panel_x0 + 8, 87),
+    cv2.putText(scene, f"{event['magnitude_mps']:.2f} m/s", (x0 + 8, y0 + 39),
                 cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
     median = overlay["recovery_time_s_median"]
     if median is None:
@@ -71,9 +73,9 @@ def draw_push_overlay(scene, overlay: dict, time_s: float, *, panel_x0: int, pan
         label = "recovery window"
     else:
         label = "median elapsed"
-    cv2.putText(scene, label, (panel_x0 + 8, 168), cv2.FONT_HERSHEY_SIMPLEX, .41,
+    cv2.putText(scene, label, (x0 + 8, y1 - 25), cv2.FONT_HERSHEY_SIMPLEX, .41,
                 (255, 255, 255), 1, cv2.LINE_AA)
     if median is not None:
-        cv2.putText(scene, f"median {median:.2f} s", (panel_x0 + 8, 185),
+        cv2.putText(scene, f"median {median:.2f} s", (x0 + 8, y1 - 8),
                     cv2.FONT_HERSHEY_SIMPLEX, .37, (255, 255, 255), 1, cv2.LINE_AA)
     return scene

@@ -38,7 +38,7 @@ from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
-VIDEO_RULE_VERSION = "v3.2-D140"
+VIDEO_RULE_VERSION = "v3.3-D167"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 AIR_FOOT_EDGE_BGR = (105, 105, 105)
@@ -400,8 +400,9 @@ SCENE_KEY = (("dot", (77, 255, 51), "GT height map"), ("grid", (255, 153, 64), "
 
 
 LEGEND_ROW, LEGEND_FONT = 17, 12  # v8: smaller legend so the gauge panel starts higher
-GAUGE_Y0 = 34 + 14 + LEGEND_ROW * 8 + 8  # legend top + legend height (8 rows) + the same 8 px gap as the column
 GAUGE_X0, GAUGE_X1 = 1280 - 196, 1280 - 8  # shared left edge and exclusive right edge of the terrain/speed column
+LEGEND_RECT = (GAUGE_X0, 34, GAUGE_X1 - GAUGE_X0, 14 + LEGEND_ROW * len(SCENE_KEY))
+GAUGE_Y0 = LEGEND_RECT[1] + LEGEND_RECT[3] + 8
 FALL_HOLD_ROWS = 50  # after a fall the panel keeps the fallen state for 1 s (50 Hz rows) before following the reset
 
 
@@ -829,7 +830,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
     scene_key = list(SCENE_KEY)
     if (meta or {}).get("overlay_25e", {}).get("scene_foot_scan_visible") is False:
         scene_key = [item for item in scene_key if item[2] != "Foot scan (20 cm)"]
-    x0, y0, w, h = 1280 - 260, 34, 252, 14 + LEGEND_ROW * len(scene_key)
+    x0, y0, w, h = LEGEND_RECT
     roi = scene[y0:y0 + h, x0:x0 + w].astype(np.float32)
     scene[y0:y0 + h, x0:x0 + w] = (roi * 0.35 + 10).astype(np.uint8)
     mode = (meta or {}).get("map_modes", {}).get("map_mode", {}).get("requested")
@@ -855,7 +856,16 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
             cv2.arrowedLine(scene, (cx - 10, cy), (cx + 10, cy), bgr, 2, cv2.LINE_AA, tipLength=0.4)
         else:
             cv2.line(scene, (cx - 10, cy + 3), (cx + 10, cy - 3), bgr, 1, cv2.LINE_AA)
+        label = {
+            "GT height map": "GT height", "Reconstructed map": "Recon map",
+            "Recon. error > 2 cm": "Error >2 cm", "Foot scan (20 cm)": "Foot scan 20 cm",
+            "Attention 128 cells (0~0.30)": "Attention 128 (0~.30)",
+            "Foot trail 1.5 s": "Foot trail 1.5s",
+        }.get(label, label)
         items.append(((cx + 18, cy - 8), label, grey if unused_map and k < 3 else (235, 235, 235)))
+    font = ImageFont.truetype(str(FONT), LEGEND_FONT) if FONT.is_file() else ImageFont.load_default()
+    if any(x + font.getlength(label) > x0 + w - 8 for (x, _), label, _ in items):
+        raise ValueError("scene legend label exceeds the gauge column at 12 px")
     return text(scene, items, LEGEND_FONT)
 
 
@@ -919,7 +929,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         scene = scene_gauges(scene, z, row, meta)
         scene = question_strip(scene)
         if push_overlay is not None:
-            scene = draw_push_overlay(scene, push_overlay, float(z["t"][row]), panel_x0=GAUGE_X0, panel_x1=GAUGE_X1)
+            scene = draw_push_overlay(scene, push_overlay, float(z["t"][row]), legend_rect=LEGEND_RECT)
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
         wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
     wr.release()

@@ -33,7 +33,7 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
     recorder.write_text("# C_LAYER_SEED_V1\n", encoding="utf-8")
     (tmp_path / "overlay_25e.py").write_text("# fixed overlay\n", encoding="utf-8")
     composer = tmp_path / "compose.py"
-    composer.write_text('VIDEO_RULE_VERSION = "v3.2-D140"\n', encoding="utf-8")
+    composer.write_text('VIDEO_RULE_VERSION = "v3.3-D167"\n', encoding="utf-8")
     monkeypatch.setattr(planner, "_head", lambda _root: "a" * 40)
     actual_sha = queue.sha256
     monkeypatch.setattr(queue, "sha256", lambda path: "d5e9ec40" + "a" * 56

@@ -1,12 +1,17 @@
 """G18 known-input overlay contract without Kit or video encoding."""
 
 import json
+import hashlib
+from pathlib import Path
 
 import numpy as np
 import pytest
+import cv2
 
 from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_overlay
 from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
+from foothold_s2.eval.video25 import push_event_overlay as push_overlay_module
+from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 
 
 def fixture(tmp_path):
@@ -26,15 +31,16 @@ def test_world_xy_direction_magnitude_and_time(tmp_path):
     assert event["events"] == [{"t_s": 2.0, "dx": 0.0, "dy": 2.0,
                                  "magnitude_mps": 2.0}]
     before = np.zeros((720, 1280, 3), np.uint8)
-    bounds = {"panel_x0": composer.GAUGE_X0, "panel_x1": composer.GAUGE_X1}
+    bounds = {"legend_rect": composer.LEGEND_RECT}
     assert np.array_equal(draw_push_overlay(before.copy(), event, 1.99, **bounds), before)
     during = draw_push_overlay(before.copy(), event, 2.5, **bounds)
-    assert during[45:191, composer.GAUGE_X0:composer.GAUGE_X1].sum() > 0
+    x0, y0, width, height = composer.LEGEND_RECT
+    assert during[y0:y0 + height, x0:x0 + width].sum() > 0
     after = draw_push_overlay(before.copy(), event, 4.0, **bounds)
     assert not np.array_equal(after, during)
 
 
-def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(tmp_path):
+def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(tmp_path, monkeypatch):
     event = load_overlay(fixture(tmp_path), "a" * 64, "forward", 7)
     blank = np.zeros((720, 1280, 3), np.uint8)
     speed_panel = composer.speed_tag(blank.copy(), "1x", "seq")
@@ -42,16 +48,76 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
     expected_edges = (int(speed_pixels.min()), int(speed_pixels.max()) + 1)
     assert expected_edges == (composer.GAUGE_X0, composer.GAUGE_X1)
 
-    def check_edges(left, right):
-        frame = draw_push_overlay(blank.copy(), event, 2.5, panel_x0=left, panel_x1=right)
-        pixels = np.flatnonzero(frame[50].any(axis=1))
-        assert (int(pixels.min()), int(pixels.max()) + 1) == expected_edges
-        assert not frame[45:191, :composer.GAUGE_X0].any()
-        assert not frame[45:191, composer.GAUGE_X1:].any()
+    def check_rect(rect):
+        frame = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=rect)
+        x0, y0, width, height = rect
+        pixels = np.argwhere(frame.any(axis=2))
+        assert (int(pixels[:, 1].min()), int(pixels[:, 0].min()),
+                int(pixels[:, 1].max()) + 1, int(pixels[:, 0].max()) + 1) == (
+                    expected_edges[0], composer.LEGEND_RECT[1],
+                    expected_edges[1], composer.GAUGE_Y0 - 8)
+        return frame
 
-    check_edges(composer.GAUGE_X0, composer.GAUGE_X1)
+    legend = composer.scene_legend(blank.copy(), {"overlay_25e": {}})
+    lx, ly, lw, lh = composer.LEGEND_RECT
+    legend_pixels = np.argwhere(legend.any(axis=2))
+    assert (int(legend_pixels[:, 1].min()), int(legend_pixels[:, 0].min()),
+            int(legend_pixels[:, 1].max()) + 1, int(legend_pixels[:, 0].max()) + 1) == (
+                lx, ly, lx + lw, ly + lh)
+    assert (lx, lx + lw) == expected_edges
+    assert ly + lh + 8 == composer.GAUGE_Y0
+    frame = check_rect(composer.LEGEND_RECT)
+    arrow = np.argwhere((frame[:, :, 0] < 100) & (frame[:, :, 1] > 150) & (frame[:, :, 2] > 180))
+    white = (frame[:, :, 0] > 180) & (frame[:, :, 1] > 180) & (frame[:, :, 2] > 180)
+    upper = np.argwhere(white[:ly + 50])
+    lower = np.argwhere(white[ly + 110:ly + lh])
+    assert len(arrow) and len(upper) and len(lower)
+    arrow_y = (int(arrow[:, 0].min()), int(arrow[:, 0].max()) + 1)
+    upper_y = (int(upper[:, 0].min()), int(upper[:, 0].max()) + 1)
+    lower_y = (int(lower[:, 0].min()) + ly + 110, int(lower[:, 0].max()) + ly + 111)
+    def separated(arrow_bounds):
+        return upper_y[1] <= arrow_bounds[0] and arrow_bounds[1] <= lower_y[0]
+
+    assert separated(arrow_y)
+
     with pytest.raises(AssertionError):
-        check_edges(composer.GAUGE_X0 - 5, composer.GAUGE_X1)
+        check_rect((lx - 5, ly, lw + 5, lh))
+    original_arrow = cv2.arrowedLine
+
+    def arrow_into_footer(image, start, tip, color, thickness, line_type, *, tipLength):
+        return original_arrow(image, start, (tip[0], lower_y[0] + 8),
+                              color, thickness, line_type, tipLength=tipLength)
+
+    monkeypatch.setattr(push_overlay_module.cv2, "arrowedLine", arrow_into_footer)
+    mutated = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=composer.LEGEND_RECT)
+    mutated_arrow = np.argwhere((mutated[:, :, 0] < 100) & (mutated[:, :, 1] > 150)
+                                & (mutated[:, :, 2] > 180))
+    assert not separated((int(mutated_arrow[:, 0].min()), int(mutated_arrow[:, 0].max()) + 1))
+
+
+@pytest.mark.parametrize("mode,scan_visible", [("eval_gt", True), ("eval_pred", False),
+                                               ("probe_prop_only", False)])
+def test_legend_fixed_bounds_in_all_map_modes(mode, scan_visible):
+    blank = np.zeros((720, 1280, 3), np.uint8)
+    before = list(composer.OVERFLOW)
+    image = composer.scene_legend(blank, {"map_modes": {"map_mode": {"requested": mode}},
+                                           "overlay_25e": {"scene_foot_scan_visible": scan_visible}})
+    x0, y0, width, height = composer.LEGEND_RECT
+    assert image[y0:y0 + height, x0:x0 + width].any()
+    assert not image[y0:y0 + height, :x0].any()
+    assert not image[y0:y0 + height, x0 + width:].any()
+    assert before == composer.OVERFLOW
+
+
+def test_v33_receipt_accepts_current_composer_and_rejects_old_rule():
+    source = Path(composer.__file__)
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    assert composer_version(source) == VIDEO_RULE_VERSION == "v3.3-D167"
+    require_video_rule({"video_rule_version": VIDEO_RULE_VERSION,
+                        "composer_sha256": digest}, composer_sha256=digest)
+    with pytest.raises(ValueError, match="video_rule_hold"):
+        require_video_rule({"video_rule_version": "v3.2-D140",
+                            "composer_sha256": digest}, composer_sha256=digest)
 
 
 @pytest.mark.parametrize("sha,key,env", [("b" * 64, "forward", 7),
