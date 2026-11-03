@@ -2,7 +2,8 @@
 > 작성: planner (Claude Fable 5.1) · 2026-11-02 20:5x v0.1 (lead 20:4x 대기열 (3): 「W89 앱 조건표 초안, m6000 기준 · ONNX 는 scripter 가 뒤에 · 각 값에 m6000 env.yaml/agent.yaml 줄 번호」) · 21:3x v0.2(lead 21:2x 가 전한 팀장 묶음 (A) + lead 20:4x W89-1~3: D108 정본 · m6000 명령 파일 값 · 맨 위 값 표 · 지도 모드 셋 · Unitree 공식 한계 대조표 · 관절 순서 경고 칸 · ONNX 받아 쓰는 법)
 > 근거: EX-40 실행 폴더 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/`(`params/env.yaml` · `params/agent.yaml` · `model_6000.pt` · `training_trace/coordinate_metadata.json`, 전부 직접 읽음) · 코드 `foothold_s2`(analyst c6fff190 사본, 읽기 전용: `models/start_perception.py` · `models/start_policy.py` · `runners/start_runner.py` · `sensors/start_obs.py` · `sensors/depth_cam_cfg.py` · `sensors/depth_aug.py` · `commands/mixed_command.py` · `curriculum/ex40.yaml` · `robots/go2_params.py` · `deploy/{export.py,obs.py,sdk_joints.py,record_isaac.py,params/deploy.yaml}`) · WORKLIST 11fdb8e4 D103(131 행) · D144(172 행) · W89(283 행) · `inbox/jay/20261101-app/APP-INTEGRATION-NOTES.md` §3 · §5 · `QA-EXPLAINERS.md` 「AME-2 앱 대조 확인」
 > 요지: 앱(foothold-app) 과 실기 노드가 m6000 정책을 그대로 돌리려면 맞춰야 하는 조건을 한 표로 모았다. 정책은 actor MLP 하나가 아니라 **지각(TR-Net · I-E 추정기, GRU 둘) + actor** 이고 actor 입력 96 = 몸감각 45 + 추정 51(**z 16 · v 3 · zf 16 · zb 16 순서**) 이다. 50 Hz · Kp 25 · Kd 0.5 · 행동 = 기본 자세 + 0.25 × a · 기본 자세 hip ±0.1 / 앞 thigh 0.8 · 뒤 1.0 / calf −1.5 · Isaac 관절 순서 hip 4 → thigh 4 → calf 4(FL FR RL RR, **이 run 의 training_trace 기록으로 확정**) · 토크 한계 hip · thigh 23.5 / calf 45.43 N·m(DCMotor 곡선) · 명령 (vx, vy, wz) 학습 표집 범위는 **B3c 표**(전진 0.1~1.5 · 후진 −1.0~−0.2 · 옆 0.2~0.6 · 제자리 회전 0.3~1.5 · 걸으며 회전 0.2~1.0) · 지도 32 × 16 · 5 cm · 중심 x +0.3 · 깊이 60 × 60 · 10 Hz · 1 프레임 지연 · (d − 0.2)/2.8. 저장소의 `deploy/` 묶음(export.py · deploy.yaml) 은 **S1-blind(495 입력) 용**이라 m6000 에는 못 쓰고, APP-INTEGRATION-NOTES §5 의 명령 범위 표는 B0 값이라 B3c 로 갱신해야 한다(어긋남 둘). 넘기는 것은 D144 대로 팀장 결정 뒤. **v0.2**: 명령 상한의 정본은 **D108**(모델별 명령 범위 파일 · 우리 학습 범위가 기준 · 전진 1.5 · 후진 1.3 · 옆 0.5 · 회전 1.2 · 앱 가속 제한) 이고 m6000 의 파일 값은 학습 범위 안으로 **전진 1.5 · 후진 1.0 · 옆 0.5 · 제자리 회전 1.2**(§3.5). 지도 모드는 인터페이스에 셋 다 두되 실기는 복원 · 끔, 시뮬 트윈은 정답도(§3.6). Kp · Kd · 토크 · 주기 · 행동 배율은 §0a 맨 위 표. Unitree 공식 한계 대조표(§3.2a) 와 관절 순서 경고 칸(§0b), AME-2 실험 팀원용 「ONNX 받아 쓰는 법」(§5a) 을 더했다.
-> 상태: v0.2.1(D162 번호 반영 11/02 22:0x) · 코드 · GPU · ONNX 내보내기 없음(조건표만) · W89-1 · W89-2 닫힘(lead 20:4x · 팀장 11/02 21:1x 요지) · W89-3 공식 값 대조표 들어감(실기 SDK 가 실제로 거는 값은 **미확인**) · W89-4 팀장 대기 · 시험 `app_contract_check.py`(기계 블록 §9 대 env.yaml · agent.yaml · ex40.yaml · 기록 파일 대조 + 「m6000 파일 값 = min(D108, B3c)」 규칙)
+> v0.3 (lead · 2026-11-03 15:3x · 팀장 15:2x 「앱 최신판을 보고 이 문서를 갱신」): 앱 foothold-app dev `d9b6f382`(2026-11-03 05:32Z) 를 gh 로 읽어 대조했다(§10). 고친 것: §0b 관절 순서(앱 두 adapter 모두 우리와 같은 hip4 → thigh4 → calf4 · v0.2 의 「AME-2 adapter 는 다리 단위」 는 틀림) · §0a 명령 상한 행(앱에 m6000 범위 줄 없음 · 앱 1.5 m/s 표는 Unitree Sport Move 용) · §5a 입출력 이름(제안 이름 → scripter 가 실제 내보낸 `w89_export/contract.json` 이름 · ONNX 파일 둘) · 앱 ONNX 실행기는 상태 없는 입력만 다뤄 m6000 은 지금 앱에서 못 돈다(§10).
+> 상태: v0.3(v0.2.1 의 D162 번호 반영 11/02 22:0x 은 그대로) · ONNX 는 scripter 가 내보냄(34982e13 · `D:/mai-tmp/scripter/w89_export/`) · 앱 m6000 adapter 없음 · v0.2 당시: 코드 · GPU · ONNX 내보내기 없음(조건표만) · W89-1 · W89-2 닫힘(lead 20:4x · 팀장 11/02 21:1x 요지) · W89-3 공식 값 대조표 들어감(실기 SDK 가 실제로 거는 값은 **미확인**) · W89-4 팀장 대기 · 시험 `app_contract_check.py`(기계 블록 §9 대 env.yaml · agent.yaml · ex40.yaml · 기록 파일 대조 + 「m6000 파일 값 = min(D108, B3c)」 규칙)
 
 # m6000 정책을 앱 · 실기에 넘길 때 맞출 조건표 (W89 · D144)
 
@@ -16,17 +17,18 @@
 | **제어 주기** | **50 Hz** (20 ms) = 물리 dt 0.005 s × decimation 4. 깊이 카메라는 10 Hz | 정책 한 번 = 관절 목표 한 번. 20 ms 를 넘기면 학습 조건이 아니다 | `env.yaml:21` · `:84` · `depth_cam update_period 0.1` | 설정 |
 | **행동 배율** | 관절 목표각(rad, Isaac 순서) = **기본 관절각 + 0.25 × a**, a 는 먼저 ±17 로 자름 | 정책 출력 12 개를 각도로 바꾸는 식. 목표 속도 0 · 앞먹임 토크 0 | `env.yaml:1583`(scale) · `:1586`(use_default_offset) · `agent.yaml:11`(clip 17) | 설정 |
 | **기본 관절각** | hip **+0.1**(왼쪽) · **−0.1**(오른쪽) · thigh 앞 **0.8** · 뒤 **1.0** · calf **−1.5** rad | 위 식의 기준 자세. 관측 `joint_pos_rel` 도 여기서 뺀 값 | `env.yaml:306~311` | 설정 |
-| **명령 상한(m6000 파일 값)** | 전진 **1.5** · 후진 **1.0** · 옆 **0.5** · 제자리 회전 **1.2** m/s · rad/s (정본 D108 안에서 학습 범위로 자름, §3.5) | 앱이 이 모델에 보낼 수 있는 최대 | WORKLIST D108 · `ex40.yaml:116~121` | 결정 · 설정 |
+| **명령 상한(m6000 파일 값)** | 전진 **1.5** · 후진 **1.0** · 옆 **0.5** · 제자리 회전 **1.2** m/s · rad/s (정본 D108 안에서 학습 범위로 자름, §3.5) | 앱이 이 모델에 보낼 수 있는 최대. **v0.3: 앱에는 아직 m6000 줄이 없다.** 앱의 모델별 범위 정본은 `apps/agent/foothold_agent/policy_ranges.py:54~56` `POLICY_RANGES` 이고 지금 `foothold-v2` 한 줄(vx 0.4~1.5 · vy 0 · wz ±1)뿐이며 형식이 전진 전용(`requires_forward_motion=True`)이라 후진 · 옆 · 제자리 회전 칸을 넓혀야 한다. 앱의 ±1.5 m/s 실기 표(`apps/contracts/server_drive.py:2~4`)는 Unitree Sport Move 용이라 이 값과 섞지 않는다 | WORKLIST D108 · `ex40.yaml:116~121` · 앱 @d9b6f382 | 결정 · 설정 · 코드 |
 | **관측 45 · 출력 12** | 몸 각속도 3 · 중력 방향 3 · 명령 3 · 관절각 − 기본 12 · 관절 속도 12 · 직전 행동 12. 배율 1 · 자르기 없음 | 순서가 하나라도 밀리면 걷지 못한다(§3.4) | `env.yaml:1247~1323` | 설정 |
 
 ## 0b. ⚠ 경고 칸: 관절 순서 (크게 · 팀장 지시로 따로 둠)
 
-**우리 정책의 관절 벡터 12 는 「관절 종류 단위」 다: hip 4 개 → thigh 4 개 → calf 4 개, 다리는 FL FR RL RR 순.** 이것은 이 run 의 `training_trace/coordinate_metadata.json` `joint_names`(source "training") 로 **확정**된 값이다. 앱의 AME-2 adapter(`ame2-adapter.js`) 는 「다리 단위」 FL(hip thigh calf) → FR → RL → RR 로 적혀 있다고 QA-EXPLAINERS 「AME-2 앱 대조 확인」 43 행이 `ame2-adapter.js:3-9` 를 들어 적고(**읽기** · 앱 코드는 이 문서에서 열지 않음), 앱 foothold-v2 adapter 는 Isaac 순서와 같다고 lead 메모 48 행이 적는다(**읽기**). **AME-2 쪽 adapter 를 복사해 우리 모델에 쓰면 hip 자리에 thigh 값이 들어가고 로봇은 첫 스텝에 접히거나 튄다.** SDK(LowCmd · LowState) 의 모터 순서는 또 다르다(FR FL RR RL, 다리 단위).
+**우리 정책의 관절 벡터 12 는 「관절 종류 단위」 다: hip 4 개 → thigh 4 개 → calf 4 개, 다리는 FL FR RL RR 순.** 이것은 이 run 의 `training_trace/coordinate_metadata.json` `joint_names`(source "training") 로 **확정**된 값이다. **v0.3 정정:** 앱의 두 adapter 도 같은 순서다. AME-2 adapter `mobile/sim/ame2-adapter.js:3~9`(@d9b6f382, 저장본 joint_names 로 확인했다고 적힘 · lead 가 analyst 사본 135a8469 같은 줄을 직접 읽음) 와 foothold-v2 `policy-adapters.js:4~5` 모두 hip4 → thigh4 → calf4 · FL FR RL RR 이다. v0.2 의 「AME-2 adapter 는 다리 단위」 는 QA-EXPLAINERS 43 행의 모호한 문장을 잘못 읽은 것이었다. 다리 단위 순서는 앱 MuJoCo 내부 `MJ_J`(`sim.js:9`) 뿐이고 이름으로 다시 맞춘다(`sim.js:31~33`). **순서 위험은 SDK(LowCmd · LowState) 쪽에 남는다: 모터 순서가 FR FL RR RL 다리 단위다.**
 
 | 순서 이름 | 벡터 index 0 → 11 | 기본 관절각을 이 순서로 적으면(시험 벡터) |
 |---|---|---|
 | **Isaac = 우리 정책 입출력** | FL_hip FR_hip RL_hip RR_hip · FL_thigh FR_thigh RL_thigh RR_thigh · FL_calf FR_calf RL_calf RR_calf | `[0.1, −0.1, 0.1, −0.1, 0.8, 0.8, 1.0, 1.0, −1.5, −1.5, −1.5, −1.5]` |
-| 앱 AME-2 adapter 가정(읽기) | FL(hip thigh calf) · FR(…) · RL(…) · RR(…) | `[0.1, 0.8, −1.5, −0.1, 0.8, −1.5, 0.1, 1.0, −1.5, −0.1, 1.0, −1.5]` |
+| 앱 두 adapter (v0.3 확인) | Isaac 과 같음 | 위와 같음 |
+| 앱 MuJoCo 내부 `MJ_J`(이름으로 재배열) | FL(hip thigh calf) · FR(…) · RL(…) · RR(…) | `[0.1, 0.8, −1.5, −0.1, 0.8, −1.5, 0.1, 1.0, −1.5, −0.1, 1.0, −1.5]` |
 | Unitree SDK 모터 0~11 | FR(hip thigh calf) · FL(…) · RR(…) · RL(…) | `[−0.1, 0.8, −1.5, 0.1, 0.8, −1.5, −0.1, 1.0, −1.5, 0.1, 1.0, −1.5]` |
 
 - Isaac ↔ SDK 순열은 `deploy/sdk_joints.py` 의 `joint_ids_map [1, 5, 9, 0, 4, 8, 3, 7, 11, 2, 6, 10]`(SDK i 번 모터 = Isaac 그 index) 이다(**코드**). 앱 adapter 순서에서 Isaac 으로는 `[0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11]` 로 모은다(**계산**).
@@ -226,7 +228,9 @@ ONNX 파일은 아직 없다(scripter 가 내보냄 · D107 · 시점은 **EX-41
 
 **6) 시뮬 트윈에서 정답 지도 모드(`map_mode` 2).** 앱 MuJoCo 에서 몸 중심 앞 +0.3 m 를 중심으로 x −0.475 ~ +1.075 · y ±0.375 의 32 × 16 격자(5 cm) 에 **yaw 만 정렬**한 수직 광선을 **몸 위 20 m 에서 아래로** 쏴 높이를 구하고, 몸 높이 기준 상대값으로 `gt_map` 512 를 만든다(ordering yx · 미검출 −1, `env.yaml:570~600`). 광선 시작 높이가 낮으면 높은 단이 빠진다(APP-INTEGRATION-NOTES §4 12 항).
 
-**7) 하지 말 것.** AME-2 adapter 의 관절 순서 · 관측 49 열 · 목표 입력을 재사용하지 않는다(우리 모델은 45 + 지각이고 명령은 속도 3). S1 `deploy/export.py`(495 입력) 로 내보낸 파일을 이 문서의 입력으로 부르지 않는다(§4 ③).
+**v0.3 · 실제로 내보낸 이름(위 1)의 제안 이름을 대신함).** scripter 34982e13 이 내보낸 묶음 `D:/mai-tmp/scripter/w89_export/`: 파일 둘 `ex40_m6000_map_on.onnx`(sha 81c7e079…) · `ex40_m6000_map_off.onnx`(sha 5d1b7bf3…), 입력 9 = `obs45 · hist · depth2 · h_prop · h_terr · depth_tick · first_after_reset · use_gt · gt_map`, 출력 4 = `action · h_prop_next · h_terr_next · recon_map`. 지도 모드는 입력 `map_mode` 가 아니라 **파일 선택(on/off) + `use_gt`**(on 에서 false = 복원, true = 진단용 정답). 행동 자르기 ±17 과 기본 + 0.25 × a 는 ONNX 밖. 앱 실행기(`mobile/sim/policy-onnx.js:21~35` @d9b6f382)는 모든 입력을 float32 로 만들고 `contract.action` 출력 하나만 돌려준다: **상태 출력(h_*_next)을 되먹이는 경로가 없어 m6000 은 지금 앱에서 못 돈다.** 플래그 입력도 float32 [1] 로 맞춰야 한다.
+
+**7) 하지 말 것.** AME-2 adapter 의 관측 49 열 · 목표 입력 · 지도(29×13×3)를 재사용하지 않는다(관절 순서는 같다, §0b v0.3)(우리 모델은 45 + 지각이고 명령은 속도 3). S1 `deploy/export.py`(495 입력) 로 내보낸 파일을 이 문서의 입력으로 부르지 않는다(§4 ③).
 
 ## 6. 결정 물음
 
@@ -271,3 +275,25 @@ ONNX 파일은 아직 없다(scripter 가 내보냄 · D107 · 시점은 **EX-41
  "app_caps_m6000": {"forward_vx": 1.5, "reverse_vx_abs": 1.0, "side_vy_abs": 0.5, "spin_wz_abs": 1.2, "walk_wz_abs": 1.0},
  "model_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5"}
 ```
+
+## 10. 앱 최신판 대조 (v0.3 · foothold-app dev `d9b6f382` 2026-11-03 05:32Z · main `6f16be74` 는 AME-2 · ONNX 이전 판이라 dev 기준)
+
+lead 가 gh 로 직접 다시 본 줄: `policy_ranges.py:40~56` · `policy-onnx.js:8~36` · `ame2-adapter.js:1~12`(analyst 사본 135a8469). 나머지는 lead 하위 조사(gh 읽기)이고 줄 번호는 @d9b6f382.
+
+| 이 문서 자리 | v0.2 값 | 앱 최신 | 판정 | 받는 쪽이 할 일 |
+|---|---|---|---|---|
+| §0b 관절 순서 | AME-2 adapter 다리 단위 | 두 adapter 모두 hip4 → thigh4 → calf4 (`ame2-adapter.js:3~9` · `policy-adapters.js:4~5` · `docs/spec/11-POLICY-ADAPTER.md:255~277`) | 문서가 틀림 → v0.3 고침 | 없음(SDK 쪽 순열만 주의) |
+| §0a · §3.5 · §9 명령 범위 파일(D108) | `m6000.ranges.json` 같은 파일 | `POLICY_RANGES` 에 `foothold-v2` 한 줄(vx 0.4~1.5 · vy 0 · wz ±1), 형식이 전진 전용 | 앱에 없음 | `VelocityRange` 를 후진 하한 · 옆 · 제자리 회전 칸까지 넓히고 m6000 줄(전진 1.5 · 후진 1.0 · 옆 0.5 · 제자리 1.2 · 걸으며 회전 1.0)을 더함 |
+| §3.5 앱 실기 표 | (없음) | 서버 실기 ±1.5 m/s · 회전 ±0.5 (`server_drive.py:2~4` · `serverdrive.tsx:19~23`) · 폰 quantize (0,0,0)·(0.6,0,0)·(0.6,0,±0.5) (`safety/core.py:90~103`) | 앱이 바뀜 · Unitree Sport Move 용 | RL 정책 범위와 섞지 않음 |
+| §3.5 가속 제한 | 수치 미정 | `main.js` · `sim.js` · `safety/core.py` 에 시간 가속 제한 없음(그 파일 범위에서만 확인) | 앱에 없음 | 계단식 명령이 그대로 들어감 · 값은 D108 대로 팀장 결정 대기 |
+| 조이스틱 | (없음) | foothold-v2 `joystickScale [1, 0.5, 1]` · `inRange` (`policy-adapters.js:28~29`) | 문서에 없음 | m6000 adapter `command` 에 kind `body_velocity` · axes · trainingRanges · joystickScale · 옆 · 후진 · 회전 허용 inRange 선언 |
+| §3.6 지도 모드 셋 | 인터페이스 셋 | 높이 입력은 adapter 마다 고정(foothold-v2 187 칸 · AME-2 29×13×3) · 모드 전환 · 깊이 입력 없음 | 앱에 없음 | 정답 32×16 은 `makeTerrainSampler` 공유로 새로, 복원 · 끔은 깊이 60×60 생성부터 |
+| START / m6000 adapter | D144 뒤 | `policy-adapters.js:2` 「START remains undefined」 · 등록 둘(foothold-v2 · ame2-demo) | 아직 없음 | 이 문서가 spec 11 §3 START 열의 입력 |
+| §0a 50 Hz | 0.005 × 4 | `timing {physicsDt .005, decimation 4, policyDt .02}` · 20 ms 넘긴 추론은 버리고 물리를 멈춤 | 같음 | 없음 |
+| §0a · §3.2 토크 | calf 45.43 / 15.7 | foothold-v2 설정은 12 관절 모두 23.5 / 30 (`policy-adapters.js:26` · `sim.js:17~22`), 관절별 곡선은 `action.torque` 함수가 있을 때만 | 앱이 다름 | m6000 adapter 는 calf 를 `action.torque` 로 따로. foothold-v2 설정을 복사하면 calf 가 23.5 로 잘림 |
+| §0a · §3.3 행동 자르기 ±17 | ±17 | 앱 공통에는 목표각 자르기(AME-2 `targetClip`)뿐 | 앱에 없음 | adapter 에서 a 를 ±17 로 자름 |
+| §3.3 지연 | 0~15 ms DR | foothold-v2 지연 없음 · AME-2 만 0~4 물리 스텝 | 선택 | 배포 기본 0 |
+| §5a ONNX | contract.json · 제안 이름 | 앱에 contract.json 소비자 없음 · adapter `onnx {file, sha256, inputs[{name,dims}], outputs[{name,dims,type}], action}` 로 받음 · float32 만 · 출력 하나만(`policy-onnx.js:8~36`) · 자산은 `FH_POLICY_ONNX_SRC` 에 두고 커밋 안 함 · parity 1e−4 · f32 JS 되돌림 경로 요구(spec 11:384~416) | 문서가 앱과 안 맞음 · **상태 되먹임 불가** | 앱 실행기에 상태 입출력 되먹임을 더하거나(현민), m6000 을 상태 없는 그래프로 바꿀 수 없으므로 실행기 확장이 먼저. f32 JS 되돌림(GRU · transformer)은 팀장 · 현민 결정 |
+| 새 앱 문서 | (없음) | `docs/AME2-PROVENANCE.md` · `mobile/scripts/ame2-training-contract.md` · `docs/POLICY-PROVENANCE.md` · `docs/spec/11-POLICY-ADAPTER.md` v0.9(§9 AME-2 · §10 새 모델 절차) · `docs/spec/DRIVE-MODES-VALIDATION.md` | 앱이 바뀜 | §8 근거에 더함 |
+
+**정할 것(팀장 · 현민):** (1) 앱 ONNX 실행기에 GRU 상태 되먹임을 넣을지(넣지 않으면 m6000 은 앱에서 못 돈다) (2) spec 11 의 「f32 JS 되돌림 경로」 요건을 m6000 에 그대로 걸지 (3) 명령 가속 제한 값(D108).
