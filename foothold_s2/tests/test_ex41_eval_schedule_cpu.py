@@ -140,6 +140,30 @@ def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp
     (output/'terrain_skill_v2.json').write_text(json.dumps(result),encoding='utf-8')
     assert auxiliary_phase_status(PERIODIC_W78_PHASE,output)['state']=='HOLD'
 
+    full_cases = watch.W78_CASES
+    full = {'schema':'foothold-terrain-skill-v2/1','state':'done',
+            'case_selection':list(full_cases),'modes':{}}
+    expected_full = {f'L{level}_a{angle:03d}_{case}'
+                     for level in (2,5) for angle in (0,30,60,90) for case in full_cases}
+    for mode in ('eval_gt','probe_prop_only','eval_pred'):
+        full['modes'][mode] = {key:{} for key in expected_full}
+    (output/'terrain_skill_v2.json').write_text(json.dumps(full),encoding='utf-8')
+    assert auxiliary_phase_status('w78_v2',output)['state']=='done'
+
+    # A complete periodic side-only receipt must never satisfy the full-stage
+    # W78 contract, even if its process exited successfully.
+    full['case_selection'] = list(cases)
+    for mode in ('eval_gt','probe_prop_only','eval_pred'):
+        full['modes'][mode] = {
+            f'L{level}_a{angle:03d}_{case}':{}
+            for level in (2,5) for angle in (0,30,60,90) for case in cases}
+    (output/'terrain_skill_v2.json').write_text(json.dumps(full),encoding='utf-8')
+    status = auxiliary_phase_status('w78_v2',output)
+    assert status['state']=='HOLD' and 'full W78 coverage differs' in status['reason']
+    full['case_selection'] = [{}]
+    (output/'terrain_skill_v2.json').write_text(json.dumps(full),encoding='utf-8')
+    assert auxiliary_phase_status('w78_v2',output)['state']=='HOLD'
+
 
 def _fake_run(tmp_path: Path, iteration: int):
     run = tmp_path / 'run'

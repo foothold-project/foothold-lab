@@ -25,6 +25,9 @@ PERIODIC_W78_PHASE = 'w78_v2_sides'
 PERIODIC_PHASES = (*CORE_PHASES, PERIODIC_W78_PHASE)
 PHASES = (*CORE_PHASES, *AUXILIARY_PHASES)
 PERIODIC_W78_CASES = 'stairs_side_left,stairs_side_right'
+FULL_W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back',
+                  'stairs_fwd_turn_return', 'stairs_fwd_back_return', 'slope_fwd1.0',
+                  'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
 
 
 def commands(checkpoint, out, cfg, *, scope='all'):
@@ -144,14 +147,22 @@ def auxiliary_phase_status(name, output):
     if name in ('w78_v2', PERIODIC_W78_PHASE) and result.get('state') != 'done':
         return {'state': 'HOLD', 'reason': f'{result_name} state is not done',
                 'result_path': str(result_path)}
-    if name == PERIODIC_W78_PHASE:
-        expected = {'stairs_side_left', 'stairs_side_right'}
-        if (set(result.get('case_selection', ())) != expected
-                or any(set(result.get('modes', {}).get(mode, {})) != {
-                    f'L{level}_a{angle:03d}_{case}' for level in (2, 5)
-                    for angle in (0, 30, 60, 90) for case in expected}
-                       for mode in MODES)):
-            return {'state': 'HOLD', 'reason': 'periodic W78 side-case coverage differs',
+    if name in ('w78_v2', PERIODIC_W78_PHASE):
+        cases = (set(FULL_W78_CASES) if name == 'w78_v2'
+                 else {'stairs_side_left', 'stairs_side_right'})
+        selection = result.get('case_selection')
+        modes = result.get('modes')
+        expected_keys = {f'L{level}_a{angle:03d}_{case}' for level in (2, 5)
+                         for angle in (0, 30, 60, 90) for case in cases}
+        selection_ok = (isinstance(selection, list) and len(selection) == len(cases)
+                        and all(isinstance(value, str) for value in selection)
+                        and set(selection) == cases)
+        modes_ok = (isinstance(modes, dict)
+                    and all(isinstance(modes.get(mode), dict)
+                            and set(modes[mode]) == expected_keys for mode in MODES))
+        if not (selection_ok and modes_ok):
+            coverage = 'full W78' if name == 'w78_v2' else 'periodic W78 side-case'
+            return {'state': 'HOLD', 'reason': f'{coverage} coverage differs',
                     'result_path': str(result_path)}
     return {'state': 'done', 'result_path': str(result_path)}
 

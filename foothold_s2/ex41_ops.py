@@ -226,6 +226,36 @@ def record_deadline_alert(run_dir: str | Path, update: int,
                         if r.get("event_id") == event_id), {"event_id": event_id})
 
 
+def run_nonfatal_reporting(run_dir: str | Path, update: int, phase: str, callback):
+    """Run an observational/reporting callback without failing training.
+
+    Training-state transitions and checkpoint writes must not use this helper.
+    It is only for reports, alerts, and auxiliary request publication.
+    """
+    try:
+        return callback()
+    except Exception as exc:  # noqa: BLE001
+        error_type = type(exc).__name__
+        event_id = hashlib.sha256(json.dumps(
+            ["nonfatal_reporting_failure", int(update), str(phase), error_type],
+            ensure_ascii=True, separators=(",", ":")).encode()).hexdigest()
+        row = {"event": "EX41_NONFATAL_REPORTING_FAILURE", "iteration": int(update),
+               "phase": str(phase), "error_type": error_type, "event_id": event_id}
+        try:
+            _alert(Path(run_dir) / "ex41_reports" / "alerts.jsonl", event_id,
+                   "nonfatal_reporting_failure", int(update),
+                   {"phase": str(phase), "error_type": error_type,
+                    "training_continues": True})
+            deliver_pending_alerts(run_dir)
+        except Exception:
+            pass
+        try:
+            print(json.dumps(row, ensure_ascii=True, sort_keys=True), flush=True)
+        except Exception:
+            pass
+        return None
+
+
 def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=None) -> dict | None:
     """Write a 250-update or stage-end report after the runtime boundary hook.
 
@@ -346,8 +376,11 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
                          if type(value) in (int, float) and value < threshold)
             previous_row = next((item for item in reversed(prior)
                                  if item.get('boundary_update') == completed - 250), None)
-            previous_low = set(previous_row.get('p3_low_pair_ids', [])) if previous_row else set()
+            previous_ids = (previous_row.get('p3_low_pair_ids')
+                            if isinstance(previous_row, dict) else None)
+            previous_low = set(previous_ids) if isinstance(previous_ids, list) else set()
             consecutive = bool(previous_row and previous_row.get('p3_state') == 'complete'
+                               and isinstance(previous_ids, list)
                                and previous_row.get('score_checkpoint_update') == report['score_expected_update'] - 250)
             matched = sorted(previous_low.intersection(low)) if consecutive else []
             if matched:

@@ -9,6 +9,7 @@ from foothold_s2.ex41_ops import (
     record_boundary,
     record_deadline_alert,
     record_failure_alert,
+    run_nonfatal_reporting,
 )
 
 
@@ -133,6 +134,51 @@ def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_d
     assert '250-update numeric report' in sent['orca'][0][0]
     assert 'P3 eval_gt S' in sent['telegram'][0]
     assert '/64' in sent['telegram'][0]
+
+
+def test_missing_p3_then_complete_p3_boundary_is_a_hold_not_a_type_error(tmp_path):
+    first = _score(250)
+    first['metrics']['critic_mirror_symmetry'] = None
+    report1 = record_boundary(FakeRuntime(first), tmp_path, 501)
+    assert report1['p3_state'] == 'missing'
+    assert report1['p3_low_pair_ids'] is None
+
+    second = _score(500)
+    second['metrics']['critic_mirror_symmetry'] = _p3(.7)
+    report2 = record_boundary(FakeRuntime(second), tmp_path, 751)
+    assert report2['p3_state'] == 'complete'
+    assert report2['p3_low_pair_ids']
+    alerts = [json.loads(line) for line in
+              (tmp_path / 'ex41_reports/alerts.jsonl').read_text().splitlines()]
+    repeated = [row for row in alerts
+                if row['kind'] == 'two_consecutive_p3_boundaries_below_threshold']
+    assert repeated == []
+
+
+def test_reporting_failure_is_alerted_but_guard_removed_counterexample_raises(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(ex41_ops, 'deliver_pending_alerts', lambda *_args, **_kwargs: [])
+    runtime = FakeRuntime(_score(), {"status": "applied", "iteration": 251,
+                                     "stage_before": "S2a", "stage_after": "S2a"})
+    monkeypatch.setattr(ex41_ops, '_score_snapshot',
+                        lambda *_args: (_ for _ in ()).throw(RuntimeError('report writer failed')))
+    def broken_report():
+        return record_boundary(runtime, tmp_path, 251)
+
+    # Mutation counterexample: without the loop's reporting guard the same
+    # observational failure escapes into the training loop.
+    import pytest
+    with pytest.raises(RuntimeError, match='report writer failed'):
+        broken_report()
+
+    assert run_nonfatal_reporting(tmp_path, 500, 'record_boundary', broken_report) is None
+    out = json.loads(capsys.readouterr().out)
+    assert out['event'] == 'EX41_NONFATAL_REPORTING_FAILURE'
+    assert out['phase'] == 'record_boundary'
+    assert out['error_type'] == 'RuntimeError'
+    alerts = [json.loads(line) for line in
+              (tmp_path / 'ex41_reports/alerts.jsonl').read_text().splitlines()]
+    assert alerts[-1]['kind'] == 'nonfatal_reporting_failure'
+    assert alerts[-1]['training_continues'] is True
 
 
 def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path):
