@@ -2,9 +2,23 @@
 > 작성: 오흥재 (lead 세션) · 2026-11-03 15:2x v0.1 · 16:1x v0.2 · 16:3x v0.3 (문서 셋으로 나눔 · 저장소 배치 · 가리키는 파일)
 > 근거: m6000 앱 조건표 `APP-POLICY-CONTRACT-m6000.md` v0.2 양식 · m6000 ONNX 묶음 `D:/mai-tmp/scripter/w89_export/contract.json` · 석헌 실험 읽기 `inbox/jay/20261018-next-arch/REPORT-seokheon-ame2.md` · 로컬 원자료 `D:/mai-data/ame2/raw/ame2_spd/` (env.yaml · agent.yaml · observations.py · AME2_models.py) · 앱 사본 `analyst-1102/_out/1102/app/mobile/sim/ame2-adapter.js` (135a8469) · 앱 dev d9b6f382 (gh 읽기)
 > 요지: 석헌 님(또는 석헌 님의 에이전트)이 아래 「지시문」 하나만 보고 AME-2 저장본에서 ONNX · contract.json · 조건표 · 같은 출력 확인 기록을 뽑아 lab 저장소 `inbox/lim/` 에 PR 로 올리면, 현민 님이 그대로 앱에 붙일 수 있게 한다. AME-2 는 우리 START_oh2l2 와 명령 · 관측 · 지도 · 신경망 · 상태가 모두 달라서 m6000 문서를 그대로 베끼면 안 된다(§3)
-> 상태: v0.1 · 사실 대부분은 원자료 · 코드 읽기, 저장본(.pt) 은 로컬에 없어 열어 보지 못함 · §4 미확인 7 건 · 무게 파일 공개 저장소 업로드는 팀장 결정 대기(§5)
+> 상태: v0.3.1 · 석헌 님이 아래 지시문으로 묶음 PR(lab #569) · start-demo 묶음이 같은 꼴의 실례(`inbox/jay/20261103-policy-handoff/start-demo/`)
 
 # AME-2 정책을 앱에 넘기는 지시문
+
+## 공통 규칙 (이 문서만 보고 일할 수 있게 같은 내용을 세 문서에 모두 둔다 · 2026-11-03 19:3x 판)
+
+**이름(D170).** 모드 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 이름 `nvidia-demo`(앱의 옛 `foothold-v2`) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 이름 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` · `go2-oh2l2`. ONNX 파일 = 이름 + `.onnx`(start 는 `_map_on` · `_map_off` 둘). 묶음 format = 이름 + `-onnx/1`, 입출력이 바뀌면 `/1` 을 올린다.
+
+**진행 순서.** ① lead 가 start-demo 묶음 · 석헌 님이 ame2-demo 묶음을 PR ② 팀장이 PR 검증 · 머지 ③ 현민 님이 앱에 적용. 현민 님은 ①을 기다리지 않고 앱 구조부터 만든다(값은 앱 문서에 있다).
+
+**묶음 폴더(ONNX 도 lab 에 올린다).** `inbox/<올린 사람>/20261103-policy-handoff/<이름>/` 에 `<이름>.onnx` · `CONTRACT.md` · `contract.json`(입출력 이름 · dims · type · 실측 순서 · 각 ONNX sha256, 앱 adapter `onnx` 꼴은 `app_onnx` 칸) · `parity.json` · `test_vectors_flat20.json` 과 `.npz` · `SHA256SUMS` · `.gitattributes`(`* -text`, 바이트 그대로). 한 파일 100 MB 아래. 앱 저장소에는 ONNX 를 커밋하지 않고 이 폴더에서 복사해 sha256 을 맞춰 쓴다.
+
+**정해진 것(다시 묻지 않는다).** ONNX 하나를 웹 시뮬과 실기가 함께 쓴다 · **앱 ONNX 실행기는 상태 출력(GRU)을 다음 호출 입력으로 되먹이고 입력 자료형(bool 포함)을 계약대로 만든다**(현민 님 몫, 앱 문서 §2-3 · §3-2) · start 는 f32 JS 신경망을 만들지 않는다 · 모드별 값은 통째로 갈아 끼우고 공통 기본값을 쓰지 않는다 · 지도 함수는 모드마다 따로 · ONNX 는 lab 공개 저장소에 올린다.
+
+**아직 정하지 않은 것.** 명령 가속 제한 값(D108) 하나.
+
+**올리는 법.** main 에서 브랜치 → 자기 `inbox/<이름>/` 아래만 커밋 → PR → 팀장 머지. `docs/` 는 건드리지 않는다. 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
 
 ## 0. 흐름 한 줄
 
@@ -71,7 +85,7 @@
 
 [5단계 · 올리기]
 - foothold-project/foothold-lab 을 받아 main 에서 브랜치 inbox-lim-ame2-export 를 만든다.
-- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 같은 폴더 README.md 「저장소 배치」). 다른 폴더(docs/ 등)는 건드리지 않는다.
+- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 아래 「공통 규칙 · 묶음 폴더」 · 실례 start-demo/). 다른 폴더(docs/ 등)는 건드리지 않는다.
 - ONNX 파일도 같은 폴더에 커밋한다(팀장 11/03 17:0x · 한 파일 100 MB 아래인지 확인). .pt 저장본은 올리지 않고 RunPod 경로와 sha256 을 contract.json 의 checkpoint 칸에 적는다.
 - PR 제목 「AME-2 teacher m<ITER> 앱 전달 묶음」, 본문에 체크포인트 sha · parity 최대 차이 · 미확인 목록.
 - 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
@@ -131,6 +145,6 @@
 6. 원본(as_jit) 출력과 앱 ONNX 를 맞춰 본 적이 있는지. 앱 ONNX(`ame2_actor.onnx` sha 398acb0c…)는 **재구성 actor** 로 내보낸 것이라(앱 `mobile/scripts/ame2-training-contract.md:35` · `ame2_export.py`) 이 지시문 3단계로 원본과 맞춰야 한다.
 7. 가상 바닥 · 무반사 처리(앱의 0.7 m 고정 대체값)를 학습과 맞춰도 되는지.
 
-## 5. 팀장 결정 필요
+## 5. 팀장 결정 (끝남)
 
 - ~~ONNX 를 공개 lab 에 올릴지~~ **답: 올린다**(팀장 11/03 17:0x). AME-2 공개 코드는 GPL-3 라 그것을 고친 내보내기 스크립트를 함께 올리면 그 스크립트는 GPL-3 로 둔다.
