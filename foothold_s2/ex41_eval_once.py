@@ -20,7 +20,7 @@ DEFAULT_TABLE = ROOT / 'foothold_s2/curriculum/ex41-fixed5000.yaml'
 ISAAC_PYTHON = Path('C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe')
 MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
 CORE_PHASES = ('map64', *(f'stand_{m}' for m in MODES))
-AUXILIARY_PHASES = ('axis_v2', 'w78_v2')
+AUXILIARY_PHASES = ('axis_v2', 'w78_v2', 'push_ladder')
 PERIODIC_W78_PHASE = 'w78_v2_sides'
 PERIODIC_PHASES = (*CORE_PHASES, PERIODIC_W78_PHASE)
 PHASES = (*CORE_PHASES, *AUXILIARY_PHASES)
@@ -53,6 +53,9 @@ def commands(checkpoint, out, cfg, *, scope='all'):
              ('w78_v2', 'foothold_s2.eval.eval_map_modes',
               [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
                '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
+    rows.append(('push_ladder', 'foothold_s2.eval.ex41_push_ladder_bundle',
+                 ['--checkpoint', str(checkpoint), '--device', 'cuda:1', '--task', 'FootholdS2-Go2-S2-SB-v0',
+                  '--seed', str(cfg['eval_seed'])]))
     selected = {'core': CORE_PHASES, 'periodic': PERIODIC_PHASES,
                 'auxiliary': AUXILIARY_PHASES,
                 'all': PHASES}.get(scope)
@@ -120,6 +123,8 @@ def auxiliary_phase_status(name, output):
                    'foothold-terrain-skill-v2/1'),
         PERIODIC_W78_PHASE: ('terrain_skill_v2.json', 'terrain_skill_v2.error.json',
                              'foothold-terrain-skill-v2/1'),
+        'push_ladder': ('push_ladder_bundle.json', 'push_ladder_bundle.error.json',
+                        'foothold-ex41-push-ladder-bundle/1'),
     }
     if name not in contracts:
         return {'state': 'done'}
@@ -147,6 +152,14 @@ def auxiliary_phase_status(name, output):
     if name in ('w78_v2', PERIODIC_W78_PHASE) and result.get('state') != 'done':
         return {'state': 'HOLD', 'reason': f'{result_name} state is not done',
                 'result_path': str(result_path)}
+    if name == 'push_ladder':
+        children = result.get('children')
+        expected = 12
+        if (result.get('state') != 'done' or result.get('expected_children') != expected
+                or not isinstance(children, list) or len(children) != expected
+                or any(not isinstance(child, dict) or child.get('state') != 'done' for child in children)):
+            return {'state': 'HOLD', 'reason': 'push ladder bundle is incomplete',
+                    'result_path': str(result_path)}
     if name in ('w78_v2', PERIODIC_W78_PHASE):
         cases = (set(FULL_W78_CASES) if name == 'w78_v2'
                  else {'stairs_side_left', 'stairs_side_right'})
@@ -170,7 +183,7 @@ def auxiliary_phase_status(name, output):
 def reconcile_child_result(name, child, output):
     """A zero process exit cannot override a durable auxiliary HOLD receipt."""
     result = dict(child)
-    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2', PERIODIC_W78_PHASE):
+    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2', PERIODIC_W78_PHASE, 'push_ladder'):
         artifact = auxiliary_phase_status(name, output)
         if artifact['state'] != 'done':
             result.update(state='HOLD', process_rc=result['rc'], rc=5,

@@ -40,6 +40,11 @@ parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L
 parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
 parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
 parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
+parser.add_argument("--push-ladder", action="store_true", help="Fixed-velocity EX-41 push ladder")
+parser.add_argument("--push-ladder-terrain", choices=("flat", "random_rough", "pyramid_stairs"))
+parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "probe_prop_only"))
+parser.add_argument("--push-ladder-command", choices=("walk_0.5", "stand"), default="walk_0.5")
+parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -72,6 +77,20 @@ if args.terrain_skill_v2:
         validate_request(args)
     except ValueError as exc:
         parser.error(str(exc))
+if args.push_ladder:
+    if (args.terrain_skill or args.terrain_skill_v2 or args.axis_v2 or args.ex39_heading_smoke_guard
+            or not args.fixed_terrain or args.fixed_level != 0 or args.terrain_set != "default"
+            or not args.push_ladder_terrain or not args.push_ladder_map_mode):
+        parser.error("--push-ladder requires one terrain/map mode, fixed L0, and no other suite")
+    if args.push_ladder_command == "stand" and args.push_ladder_terrain != "flat":
+        parser.error("supplementary stand ladder is flat only")
+    if args.push_ladder_command == "stand" and args.push_ladder_directions != "cardinal":
+        parser.error("supplementary stand ladder uses cardinal directions")
+    expected_envs = 6 * (8 if args.push_ladder_directions == "full" else 4) * 64
+    if args.envs != expected_envs or args.steps != 350 or args.modes != args.push_ladder_map_mode:
+        parser.error(f"push ladder requires --envs {expected_envs} --steps 350 --modes {args.push_ladder_map_mode}")
+elif args.push_ladder_terrain or args.push_ladder_map_mode:
+    parser.error("push-ladder selectors require --push-ladder")
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -139,6 +158,12 @@ if parser_sparse:                                                               
     sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
     env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
                                                               seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
+if args.push_ladder:
+    from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
+
+    configure_single_terrain(env_cfg, args.push_ladder_terrain, seed=args.eval_seed)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
 checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(env_cfg, args.checkpoint)
 args.ex41_checkpoint_state = checkpoint_state
 args.ex41_checkpoint_preparation = checkpoint_preparation
@@ -239,6 +264,15 @@ terrain_gen = raw.scene.terrain.cfg.terrain_generator
 terrain_props = {name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}
 terrain_names = columns.column_types(terrain_props, int(terrain_gen.num_cols))
 res["terrain_columns"] = terrain_names
+
+if args.push_ladder:
+    from foothold_s2.eval.ex41_push_ladder import run_isaac_cell
+
+    args.push_ladder_out = os.path.join(args.out, "push_ladder.json")
+    result = run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters,
+                            fixed_terrain, terrain_names, checkpoint_state)
+    print("EX41_PUSH_LADDER_DONE", json.dumps(result["summary"], ensure_ascii=False, allow_nan=False), flush=True)
+    os._exit(0)
 
 if args.axis_v2:
     from foothold_s2.eval.axis_v2_run import run_suite

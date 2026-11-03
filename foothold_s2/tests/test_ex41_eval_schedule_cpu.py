@@ -98,12 +98,13 @@ def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_pat
     auxiliary = commands(cp, tmp_path / 'aux', cfg, scope='auxiliary')
     assert [row['name'] for row in core] == [
         'map64', 'stand_eval_gt', 'stand_probe_prop_only', 'stand_eval_pred', 'w78_v2_sides']
-    assert [row['name'] for row in auxiliary] == ['axis_v2', 'w78_v2']
-    assert '--terrain-skill-v2' in auxiliary[-1]['argv']
+    assert [row['name'] for row in auxiliary] == ['axis_v2', 'w78_v2', 'push_ladder']
+    assert '--terrain-skill-v2' in auxiliary[1]['argv']
+    assert auxiliary[2]['argv'][2] == 'foothold_s2.eval.ex41_push_ladder_bundle'
     side_args = core[-1]['argv']
     assert '--terrain-skill-v2' in side_args
     assert side_args[side_args.index('--terrain-skill-v2-cases') + 1] == 'stairs_side_left,stairs_side_right'
-    assert '--terrain-skill-v2-cases' not in auxiliary[-1]['argv']
+    assert '--terrain-skill-v2-cases' not in auxiliary[1]['argv']
     assert len(core) == 5 and all(row['argv'][row['argv'].index('--device') + 1] == 'cuda:1'
                                   for row in core)
 
@@ -150,8 +151,6 @@ def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp
     (output/'terrain_skill_v2.json').write_text(json.dumps(full),encoding='utf-8')
     assert auxiliary_phase_status('w78_v2',output)['state']=='done'
 
-    # A complete periodic side-only receipt must never satisfy the full-stage
-    # W78 contract, even if its process exited successfully.
     full['case_selection'] = list(cases)
     for mode in ('eval_gt','probe_prop_only','eval_pred'):
         full['modes'][mode] = {
@@ -164,6 +163,19 @@ def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp
     (output/'terrain_skill_v2.json').write_text(json.dumps(full),encoding='utf-8')
     assert auxiliary_phase_status('w78_v2',output)['state']=='HOLD'
 
+
+def test_stage_end_push_ladder_requires_all_12_children(tmp_path):
+    from foothold_s2.ex41_eval_once import auxiliary_phase_status
+
+    output = tmp_path / 'push_ladder'; output.mkdir()
+    children = [{'state':'done'} for _ in range(12)]
+    doc = {'schema':'foothold-ex41-push-ladder-bundle/1','state':'done',
+           'expected_children':12,'children':children}
+    (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
+    assert auxiliary_phase_status('push_ladder',output)['state']=='done'
+    doc['children'].pop()
+    (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
+    assert auxiliary_phase_status('push_ladder',output)['state']=='HOLD'
 
 def _fake_run(tmp_path: Path, iteration: int):
     run = tmp_path / 'run'

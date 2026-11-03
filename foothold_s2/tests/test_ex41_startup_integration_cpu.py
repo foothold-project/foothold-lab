@@ -56,6 +56,45 @@ def test_ex41_task_registration_and_config_entrypoint_source():
     assert source.index("import foothold_s2.sb_tasks") < source.index("@hydra_task_config")
 
 
+def _assert_gpu0_marker_lifecycle(source: str) -> None:
+    tree = ast.parse(source)
+    main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+    claim_line = next(node.lineno for node in ast.walk(main)
+                      if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                      and node.func.id == "_claim_ex41_gpu0_busy_marker")
+    gym_line = next(node.lineno for node in ast.walk(main)
+                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and isinstance(node.func.value, ast.Name) and node.func.value.id == "gym"
+                    and node.func.attr == "make")
+    assert claim_line < gym_line, "GPU0 busy marker must be claimed before env creation"
+    entry = next(node for node in tree.body if isinstance(node, ast.If)
+                 and isinstance(node.test, ast.Compare)
+                 and isinstance(node.test.left, ast.Name) and node.test.left.id == "__name__")
+    try_node = next(node for node in entry.body if isinstance(node, ast.Try))
+    assert try_node.finalbody and any(
+        isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Name)
+        and node.value.func.id == "_clear_ex41_gpu0_busy_marker"
+        for final_node in try_node.finalbody for node in ast.walk(final_node)
+    ), "GPU0 busy marker must clear in process finally"
+
+
+def test_ex41_gpu0_marker_wraps_shared_production_rehearsal_and_smoke_path():
+    source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    _assert_gpu0_marker_lifecycle(source)
+    claim = source.index("_claim_ex41_gpu0_busy_marker(log_dir, start_iteration)")
+    assert claim < source.index("env = gym.make(args_cli.task, cfg=env_cfg)")
+    helper = source[source.index("def _claim_ex41_gpu0_busy_marker"):source.index("def _clear_ex41_gpu0_busy_marker")]
+    assert "EX41_PLAN is None" in helper and "args_cli.device" in helper
+
+
+def test_ex41_gpu0_marker_lifecycle_test_detects_removed_claim_mutation():
+    source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    mutated = source.replace("    _claim_ex41_gpu0_busy_marker(log_dir, start_iteration)\n", "", 1)
+    with pytest.raises(StopIteration):
+        _assert_gpu0_marker_lifecycle(mutated)
+
+
 def test_real_fixed_plan_has_pinned_m6000_dr_half_and_26_maintenance_cells():
     plan = load_fixed_plan(TABLE)
     baseline = baseline_counts(plan)

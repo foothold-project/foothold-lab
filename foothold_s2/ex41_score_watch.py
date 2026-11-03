@@ -532,8 +532,8 @@ def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
 
 
 def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_path,
-                                plan, eval_config=DEFAULT_CONFIG):
-    """Create a separate W57/W78 and P3 record from a stage-end checkpoint."""
+                                plan, eval_config=DEFAULT_CONFIG, push_ladder_path=None):
+    """Create separate W57/W78, fixed-push, and P3 records from a stage-end checkpoint."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     row = {'format': 'foothold-ex41-stage-end-auxiliary/1',
            'iteration': int(checkpoint.stem.split('_')[-1]),
@@ -551,6 +551,32 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             row['components'][name] = 'complete'
         except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
             row['components'][name] = f'HOLD: {type(exc).__name__}: {exc}'
+            row['state'] = 'HOLD'
+    if push_ladder_path is not None:
+        try:
+            push_path = Path(push_ladder_path)
+            push = read(push_path)
+            if push.get('schema') != 'foothold-ex41-push-ladder-bundle/1' or push.get('state') != 'done':
+                raise ValueError('push ladder bundle is not complete')
+            if push.get('checkpoint_sha256') != row['checkpoint_sha256']:
+                raise ValueError('push ladder checkpoint SHA differs from stage checkpoint')
+            children = push.get('children')
+            if not isinstance(children, list) or len(children) != 12 or any(c.get('state') != 'done' for c in children):
+                raise ValueError('push ladder must contain all 12 walk and stand cells')
+            row['metrics']['push_ladder'] = {
+                'command': 'walk_0.5 for flat/random_rough/pyramid_stairs; supplementary stand on flat',
+                'maximum_tolerated_by_condition': [
+                    {'terrain': c['terrain'], 'map_mode': c['map_mode'], 'command': c['command'],
+                     'maximum_tolerated_mps': c['summary']['maximum_tolerated_mps'],
+                     'magnitudes': c['summary']['magnitudes']}
+                    for c in children],
+                'bundle_sha256': sha256(push_path),
+                'elapsed_s': push.get('elapsed_s'),
+            }
+            row['evidence'].append(evidence(push_path))
+            row['components']['push_ladder'] = 'complete'
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            row['components']['push_ladder'] = f'HOLD: {type(exc).__name__}: {exc}'
             row['state'] = 'HOLD'
     try:
         map_path = Path(core_bundle) / 'map64/map_modes.json'
@@ -674,6 +700,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         aux_bundle = aux_out
         w57_path = aux_bundle / 'axis_v2/axis_v2.json'
         w78_path = aux_bundle / 'w78_v2/terrain_skill_v2.json'
+        push_ladder_path = aux_bundle / 'push_ladder/push_ladder_bundle.json'
     else:
         if replay_root is not None:
             aux_bundle = Path(replay_root) / f'model_{iteration}_{pinned[:12]}'
@@ -683,9 +710,10 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                     if w57_root else aux_bundle / 'axis_v2/axis_v2.json')
         w78_path = (resolve_auxiliary_path(w78_root, iteration, 'terrain_skill_v2.json')
                     if w78_root else aux_bundle / 'w78_v2/terrain_skill_v2.json')
+        push_ladder_path = aux_bundle / 'push_ladder/push_ladder_bundle.json'
 
     row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
-                                      w78_path, plan, eval_config)
+                                      w78_path, plan, eval_config, push_ladder_path)
     row['evaluation_bundle'] = str(aux_bundle.resolve())
     immutable(sidecar, row)
     aux_state[key] = evidence(sidecar)

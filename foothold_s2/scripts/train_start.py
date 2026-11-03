@@ -353,6 +353,57 @@ from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
 from foothold_s2.runners.status import read_status, write_status  # noqa: E402
 
 STATE = {"log_dir": None}  # 예외 때 상태 파일을 어디에 쓸지(main 이 정한다)
+EX41_GPU0_BUSY_OWNERS = None
+
+
+def _claim_ex41_gpu0_busy_marker(log_dir: str, iteration: int) -> None:
+    """Yield GPU0 C-layer jobs before any EX-41 environment is created."""
+    global EX41_GPU0_BUSY_OWNERS
+    if EX41_PLAN is None or str(args_cli.device) != "cuda:0":
+        return
+    from foothold_s2.eval.ex41_gpu_priority import publish_gpu0_busy_markers
+
+    EX41_GPU0_BUSY_OWNERS = publish_gpu0_busy_markers(
+        job="EX-41-training", iteration=max(0, int(iteration)), run=os.path.abspath(log_dir))
+    receipt = {"state": "claimed", "owners": EX41_GPU0_BUSY_OWNERS,
+               "run": os.path.abspath(log_dir), "pid": os.getpid()}
+    try:
+        path = os.path.join(log_dir, "ex41_reports", "gpu0_priority_markers.json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as stream:
+            json.dump(receipt, stream, ensure_ascii=False, sort_keys=True, allow_nan=False)
+            stream.write("\n")
+    except OSError as exc:
+        print(f"EX41_GPU0_MARKER_RECEIPT_WARN {type(exc).__name__}: {exc}", flush=True)
+    print("EX41_GPU0_MARKER_CLAIMED " + json.dumps(receipt, ensure_ascii=False, sort_keys=True), flush=True)
+
+
+def _clear_ex41_gpu0_busy_marker() -> None:
+    global EX41_GPU0_BUSY_OWNERS
+    owners = EX41_GPU0_BUSY_OWNERS
+    if not owners:
+        return
+    EX41_GPU0_BUSY_OWNERS = None
+    from foothold_s2.eval.ex41_gpu_priority import clear_gpu0_busy_markers
+
+    try:
+        outcomes = clear_gpu0_busy_markers(owners)
+    except BaseException as exc:
+        print(f"EX41_GPU0_MARKER_CLEAR_WARN {type(exc).__name__}: {exc}", flush=True)
+        return
+    log_dir = STATE.get("log_dir")
+    receipt = {"state": "cleared" if all(row["state"] == "cleared" for row in outcomes) else "HOLD",
+               "owners": owners, "clear": outcomes, "run": log_dir, "pid": os.getpid()}
+    if log_dir:
+        try:
+            path = os.path.join(log_dir, "ex41_reports", "gpu0_priority_markers.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as stream:
+                json.dump(receipt, stream, ensure_ascii=False, sort_keys=True, allow_nan=False)
+                stream.write("\n")
+        except OSError as exc:
+            print(f"EX41_GPU0_MARKER_RECEIPT_WARN {type(exc).__name__}: {exc}", flush=True)
+    print("EX41_GPU0_MARKER_CLEARED " + json.dumps(receipt, ensure_ascii=False, sort_keys=True), flush=True)
 
 RSL_RL_PIN = "3.1.2"  # Isaac Lab setup.py 49 행 · 18 §5.1: 환경 이름 없이 버전을 추정하지 않는다
 
@@ -438,6 +489,10 @@ def main(env_cfg, agent_cfg):
 
         write_ex41_disk_preflight(log_dir, EX41_DISK_RECEIPT)
 
+    # Production, rehearsal and startup smoke share this exact path. The C-layer
+    # shard checks these markers at cell boundaries and yields before GPU0 work.
+    start_iteration = (EX41_RESUME_PREFLIGHT or {}).get("completed_updates", 0)
+    _claim_ex41_gpu0_busy_marker(log_dir, start_iteration)
     env = gym.make(args_cli.task, cfg=env_cfg)
     ex41_w86_receipt = None
     ex41_dr_readback = None
@@ -835,5 +890,7 @@ if __name__ == "__main__":
         _record_ex41_process_alert("fatal_training_fault", error=exc)
         write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})
         code = 1
+    finally:
+        _clear_ex41_gpu0_busy_marker()
     sys.stdout.flush()
     os._exit(code)

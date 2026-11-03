@@ -9,13 +9,68 @@ import psutil
 import pytest
 
 from foothold_s2.eval.ex41_gpu_priority import (
-    DEFAULT_MARKER, clear_marker, gpu1_priority, publish_marker,
+    DEFAULT_MARKER, clear_marker, gpu0_priority,
+    gpu1_priority, publish_marker,
 )
 from foothold_s2 import ex41_eval_once
 
 
 def test_default_marker_uses_d138_gpu_path():
     assert DEFAULT_MARKER == Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
+
+
+def test_gpu0_training_markers_claim_both_c_layer_and_gpu_jobs_paths(tmp_path, monkeypatch):
+    from foothold_s2.eval import ex41_gpu_priority as priority
+
+    markers = (tmp_path / "c-layer" / "TRAINING_BUSY",
+               tmp_path / "gpu" / "TRAINING_BUSY_GPU0")
+    monkeypatch.setattr(priority, "DEFAULT_GPU0_MARKERS", markers)
+    eval_marker = tmp_path / "gpu" / "PRIORITY_BUSY_GPU0"
+    monkeypatch.setattr(priority, "DEFAULT_GPU0_EVAL_MARKER", eval_marker)
+    monkeypatch.setattr(priority, "_process_created_at", lambda pid: 123.0)
+    with gpu0_priority(job="EX-41-training", iteration=6000, run="C:/known/run") as owners:
+        assert [Path(item["path"]) for item in owners] == [eval_marker, *markers]
+        for marker in (eval_marker, *markers):
+            row = json.loads(marker.read_text(encoding="utf-8"))
+            assert row["job"] == "EX-41-training"
+            assert row["pid"] > 0
+            assert row["process_created_at"] == 123.0
+            assert row["iteration"] == 6000
+            assert row["run"] == "C:/known/run"
+    assert all(not marker.exists() for marker in (eval_marker, *markers))
+
+
+def test_gpu0_marker_partial_claim_rolls_back_our_first_marker(tmp_path, monkeypatch):
+    from foothold_s2.eval import ex41_gpu_priority as priority
+
+    first = tmp_path / "first" / "TRAINING_BUSY"
+    occupied = tmp_path / "occupied" / "TRAINING_BUSY"
+    occupied.parent.mkdir(parents=True)
+    foreign = publish_marker(occupied, job="foreign", iteration=1,
+                             pid=psutil.Process().pid,
+                             process_created_at=psutil.Process().create_time())
+    monkeypatch.setattr(priority, "DEFAULT_GPU0_MARKERS", (first, occupied))
+    monkeypatch.setattr(priority, "_process_created_at", lambda _pid: psutil.Process().create_time())
+    with pytest.raises(RuntimeError, match="already owned"):
+        priority.publish_gpu0_busy_markers(job="EX-41-training:test-run", iteration=0)
+    assert not first.exists()
+    assert json.loads(occupied.read_text(encoding="utf-8")) == foreign
+
+
+def test_gpu0_priority_clears_owned_markers_after_exception(tmp_path, monkeypatch):
+    from foothold_s2.eval import ex41_gpu_priority as priority
+
+    markers = (tmp_path / "c-layer" / "TRAINING_BUSY",
+               tmp_path / "gpu" / "TRAINING_BUSY_GPU0")
+    eval_marker = tmp_path / "gpu" / "PRIORITY_BUSY_GPU0"
+    monkeypatch.setattr(priority, "DEFAULT_GPU0_MARKERS", markers)
+    monkeypatch.setattr(priority, "DEFAULT_GPU0_EVAL_MARKER", eval_marker)
+    monkeypatch.setattr(priority, "_process_created_at", lambda _pid: 456.0)
+    with pytest.raises(RuntimeError, match="known failure"):
+        with gpu0_priority(job="push-ladder", iteration=6000):
+            assert all(path.is_file() for path in (eval_marker, *markers))
+            raise RuntimeError("known failure")
+    assert all(not path.exists() for path in (eval_marker, *markers))
 
 
 def test_marker_writes_exact_contract_and_clears_only_owner(tmp_path):

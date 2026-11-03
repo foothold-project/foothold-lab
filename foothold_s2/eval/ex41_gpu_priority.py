@@ -9,6 +9,33 @@ from pathlib import Path
 import uuid
 
 DEFAULT_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
+DEFAULT_GPU0_MARKERS = (
+    Path("C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY"),
+    Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0"),
+)
+DEFAULT_GPU0_EVAL_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0")
+
+
+def publish_gpu0_busy_markers(*, job: str, iteration: int, run: str | None = None) -> list[dict]:
+    """Claim the production/C-layer and D-drive shard GPU0 busy markers."""
+    owners: list[dict] = []
+    try:
+        for marker in DEFAULT_GPU0_MARKERS:
+            owners.append({"path": str(marker),
+                           "owner": publish_marker(marker, job=job, iteration=iteration, run=run)})
+    except Exception:
+        clear_gpu0_busy_markers(owners)
+        raise
+    return owners
+
+
+def clear_gpu0_busy_markers(owners: list[dict] | None) -> list[dict]:
+    outcomes = []
+    for item in reversed(owners or []):
+        marker = Path(item["path"])
+        cleared = clear_marker(marker, item["owner"])
+        outcomes.append({"path": str(marker), "state": "cleared" if cleared else "HOLD"})
+    return list(reversed(outcomes))
 
 
 def _process_created_at(pid: int) -> float:
@@ -53,7 +80,7 @@ def _pid_is_live(row: dict) -> bool:
 def publish_marker(path: str | Path = DEFAULT_MARKER, *, job: str,
                    iteration: int, pid: int | None = None,
                    process_created_at: float | None = None,
-                   started_at: str | None = None) -> dict:
+                   started_at: str | None = None, run: str | None = None) -> dict:
     """Atomically claim the marker, refusing a live or unreadable owner."""
     if not isinstance(job, str) or not job.strip():
         raise ValueError("GPU1 marker job is required")
@@ -75,6 +102,8 @@ def publish_marker(path: str | Path = DEFAULT_MARKER, *, job: str,
         "started_at": started_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "iteration": iteration,
     }
+    if run is not None:
+        row["run"] = str(run)
     marker.parent.mkdir(parents=True, exist_ok=True)
     temp = marker.with_name(marker.name + ".pending." + uuid.uuid4().hex)
     data = (json.dumps(row, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
@@ -114,3 +143,17 @@ def gpu1_priority(path: str | Path = DEFAULT_MARKER, *, job: str, iteration: int
         yield owner
     finally:
         clear_marker(path, owner)
+
+
+@contextmanager
+def gpu0_priority(*, job: str, iteration: int, run: str | None = None):
+    """Publish a P1 GPU0 receipt plus both C-layer yield markers."""
+    owners = []
+    try:
+        eval_owner = publish_marker(DEFAULT_GPU0_EVAL_MARKER, job=job,
+                                    iteration=iteration, run=run)
+        owners.append({"path": str(DEFAULT_GPU0_EVAL_MARKER), "owner": eval_owner})
+        owners.extend(publish_gpu0_busy_markers(job=job, iteration=iteration, run=run))
+        yield owners
+    finally:
+        clear_gpu0_busy_markers(owners)
