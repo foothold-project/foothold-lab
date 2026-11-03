@@ -25,7 +25,7 @@
 | `nvidia` | `nvidia-demo` (앱의 지금 `foothold-v2`) | `nvidia-foothold-v2` | (앱 기존 `policy_v2.onnx` · f32) | NVIDIA 기반으로 학습한 예전 v2 정책. 지금은 앱의 JS MLP 계산이 원본 actor 와 맞는지만 확인 |
 | `start` | `start-demo` (저장본 m6000) | `start-oh2l2` | `start-demo-onnx/1` | 우리 START 계열 |
 | `ame2` | `ame2-demo` (저장본 m14999) | `ame2-oh2l2` | `ame2-demo-onnx/1` | 석헌 님 AME-2 계열 |
-| `go2` | (새로) | `go2-oh2l2` | 정책 없음 | SDK 로 받은 실기 Go2 움직임(관절 · 자세)을 시뮬 화면에 그리기만. 실기는 순정 Go2 Sport 모드 |
+| `go2` | (새로) | `go2-demo` | 정책 없음 | SDK 로 받은 실기 Go2 움직임(관절 · 자세)을 시뮬 화면에 그리기만. 실기는 순정 Go2 Sport 모드 |
 
 - ONNX 파일 이름 = 이름 + `.onnx` (start 는 `_map_on` · `_map_off` 둘). 앱 adapter id 도 같은 이름. 어느 저장본인지는 contract.json 의 `checkpoint` · `checkpoint_sha256` 에 적는다.
 - 최종 모델은 최종 이름으로 ONNX 를 새로 받는다. 입출력 이름 · 모양이 바뀌면 format 끝 `/1` 을 올린다.

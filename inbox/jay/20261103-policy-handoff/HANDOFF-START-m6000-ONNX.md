@@ -10,7 +10,7 @@
 
 ## 공통 규칙 (이 문서만 보고 일할 수 있게 같은 내용을 세 문서에 모두 둔다 · 2026-11-03 19:3x 판)
 
-**이름(D170).** 모드 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 이름 `nvidia-demo`(앱의 옛 `foothold-v2`) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 이름 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` · `go2-oh2l2`. ONNX 파일 = 이름 + `.onnx`(start 는 `_map_on` · `_map_off` 둘). 묶음 format = 이름 + `-onnx/1`, 입출력이 바뀌면 `/1` 을 올린다.
+**이름(D170 · go2 지금 이름 D175).** 모드 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 이름 `nvidia-demo`(앱의 옛 `foothold-v2`) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-demo`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 이름 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` · `go2-oh2l2`. ONNX 파일 = 이름 + `.onnx`(start 는 `_map_on` · `_map_off` 둘). 묶음 format = 이름 + `-onnx/1`, 입출력이 바뀌면 `/1` 을 올린다.
 
 **진행 순서.** ① lead 가 start-demo 묶음 · 석헌 님이 ame2-demo 묶음을 PR ② 팀장이 PR 검증 · 머지 ③ 현민 님이 앱에 적용. 현민 님은 ①을 기다리지 않고 앱 구조부터 만든다(값은 앱 문서에 있다).
 
