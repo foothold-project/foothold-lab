@@ -32,3 +32,5 @@
 2026-11-03 20:42 KST에 고정 소스 `D:/mai-wt/foothold-lab/c76q`의 `a5fb48f0`으로 숨은 큐 PID 79828을 시작했다. 실행 영수증은 `D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/loop_process.json`이며, 원장과 예외 출력은 같은 폴더의 `gpu1_remainder_loop.jsonl` · `loop.stderr.log`다. 독립 정지 표식 `OPERATOR_STOP`은 칸 경계에서만 읽는다. 이 기록은 기동 증거이지 81칸 완료 증거가 아니다.
 
 첫 칸의 네 시드는 모두 450프레임 검사 통과 후 영상 속 정책 실패였다. 네 시드 소진 뒤 같은 칸을 재조회하는 큐 결함을 발견해 20:56 KST에 자체 `OPERATOR_STOP`으로 칸 경계에서 종료했다. EX-41 학습은 중단하거나 수정하지 않았다. 네 검증된 실패 뒤 다음 칸으로 넘어가는 반례를 추가했고 CPU 시험은 7 passed다. 후속 고정 사본과 재기동 영수증은 별도로 남긴다.
+
+20:59 KST에 고친 고정 소스 `D:/mai-wt/foothold-lab/c76r2`의 `a1ab32f7`으로 큐 PID 61176을 시작했다. `loop_process.json`은 현재 판, `loop_process_v1.json`은 이전 판을 보존한다. 재시작 직후 실제 시도 폴더 `stepping_stones_low_L2_eval_pred`가 생겨 소진 칸 건너뛰기가 사용자에게 닿는 촬영 층에서 확인됐다. 이 시점의 완료 영상 수는 135편이며 잔여 81칸의 최종 결과는 진행 중이다.
