@@ -95,6 +95,14 @@ def recorder_argv(args, mode: str, source: dict, attempt: Path) -> tuple[list[st
     return argv, label
 
 
+def source_child_env(python: Path, source_root: Path) -> dict[str, str]:
+    """A direct script child must see its pinned package before Kit imports."""
+    env = recorder_child_env(str(python))
+    current = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = str(source_root) + (os.pathsep + current if current else "")
+    return env
+
+
 def push_signature(meta: dict) -> tuple:
     push = meta.get("a_push_video") or {}
     events = push.get("push_events") or []
@@ -149,7 +157,7 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
     atomic_json(dr_path, {"capture_receipt_sha256": sha256(capture / "review.done"),
                           "dr": meta["dr"]})
     styled = attempt / "styled.mp4"
-    child_env = recorder_child_env(str(args.python))
+    child_env = source_child_env(args.python, args.source_root)
     command = [str(args.python), str(args.composer), "--capture", str(capture),
                "--segment", "seq", "--speed", "1x", "--out", str(styled),
                "--push-events", str(dr_path), "--push-rollout-key", spec["push_group_id"],
@@ -238,7 +246,7 @@ def run_one(args) -> dict:
             if p1_state()["blocks"] or args.training_marker.exists():
                 return {"state": "yielded_to_training_or_evaluation", "completed": completed}
             argv, label = recorder_argv(args, mode, source, attempts)
-            child_env = recorder_child_env(str(args.python))
+            child_env = source_child_env(args.python, args.source_root)
             preview = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
                                      encoding="utf-8", errors="replace", env=child_env, check=False)
             if preview.returncode:

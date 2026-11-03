@@ -114,3 +114,10 @@ def test_push_signature_needs_event_and_recovery():
     row["a_push_video"]["dr_recovery"] = {"defined": False}
     with pytest.raises(ValueError, match="recovery"):
         video.push_signature(row)
+
+
+def test_direct_child_gets_pinned_package_path(tmp_path):
+    env = video.source_child_env(Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe"), tmp_path)
+    assert env["PYTHONPATH"].split(";")[0] == str(tmp_path)
+    assert env["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+    assert "CUDA_VISIBLE_DEVICES" not in env
