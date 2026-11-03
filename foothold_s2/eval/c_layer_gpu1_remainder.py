@@ -242,6 +242,7 @@ def run_next(manifest_path: Path, wanted_sha256: str) -> dict:
     admitted = gate(plan)
     if not admitted["admit_next_unit"]:
         return {"state": "yielded_to_ex41_p1", "gate": admitted}
+    rows = {slot(row): row for row in plan["jobs"]}
     for cell in manifest["remaining_cells"]:
         if checked_success(out, cell, plan) is not None:
             continue
@@ -249,6 +250,12 @@ def run_next(manifest_path: Path, wanted_sha256: str) -> dict:
         if incomplete:
             return {"state": "incomplete_attempt_hold", "cell": cell}
         if failures >= MAX_TECHNICAL_FAILURES:
+            continue
+        attempt_root = out / "attempts" / cell
+        attempted = (sum(path.is_dir() and path.name.isdecimal()
+                         for path in attempt_root.iterdir()) if attempt_root.exists() else 0)
+        if attempted >= len(rows[cell]["seeds"]):
+            # Four validated policy failures are an exhausted cell, not a new run.
             continue
         status_path = Path(manifest["training_status"])
         before = train_sample(status_path)

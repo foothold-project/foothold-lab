@@ -23,10 +23,12 @@
 
 ## 답을 아는 CPU 시험
 
-`C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_c_layer_gpu1_remainder.py -q -p no:cacheprovider --basetemp D:/mai-tmp/scripter/pytest_c_layer_remainder`: 6 passed. 27→81 차집합, P1 선점, 29.7초 경계, 오래된 학습 상태 거절, P1 대기 뒤 재개, 초과 시 정지를 확인했다.
+`C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_c_layer_gpu1_remainder.py -q -p no:cacheprovider --basetemp D:/mai-tmp/scripter/pytest_c_layer_remainder`: 7 passed. 27→81 차집합, P1 선점, 29.7초 경계, 오래된 학습 상태 거절, P1 대기 뒤 재개, 초과 시 정지, 네 번 실패 뒤 다음 칸 이동을 확인했다.
 
 ## 실행과 한계
 
 한 번에 한 칸만 실행하며 `D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/gpu1_remainder_loop.jsonl`에 상태를 쓴다. 성공을 얻지 못한 칸은 네 시드 뒤 미충족으로 남는다. 기술 실패가 세 번이면 해당 칸을 보류하고 다른 칸으로 간다. 예전 실패 영상은 정본 재생 목록에 넣지 않는다. 새 성공본만 450프레임 검사와 v3.4 영수증을 거쳐 공유 재생 목록에 더한다. 81칸의 최종 성공 수는 아직 미확인이다.
 
 2026-11-03 20:42 KST에 고정 소스 `D:/mai-wt/foothold-lab/c76q`의 `a5fb48f0`으로 숨은 큐 PID 79828을 시작했다. 실행 영수증은 `D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/loop_process.json`이며, 원장과 예외 출력은 같은 폴더의 `gpu1_remainder_loop.jsonl` · `loop.stderr.log`다. 독립 정지 표식 `OPERATOR_STOP`은 칸 경계에서만 읽는다. 이 기록은 기동 증거이지 81칸 완료 증거가 아니다.
+
+첫 칸의 네 시드는 모두 450프레임 검사 통과 후 영상 속 정책 실패였다. 네 시드 소진 뒤 같은 칸을 재조회하는 큐 결함을 발견해 20:56 KST에 자체 `OPERATOR_STOP`으로 칸 경계에서 종료했다. EX-41 학습은 중단하거나 수정하지 않았다. 네 검증된 실패 뒤 다음 칸으로 넘어가는 반례를 추가했고 CPU 시험은 7 passed다. 후속 고정 사본과 재기동 영수증은 별도로 남긴다.

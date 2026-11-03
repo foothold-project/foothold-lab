@@ -71,3 +71,21 @@ def test_own_queue_stops_after_first_over_10_percent(tmp_path: Path) -> None:
                                      sleep=lambda _: (_ for _ in ()).throw(AssertionError("slept")))
     assert result["state"] == "ex41_slowdown_hold"
     assert not (tmp_path / "gpu1_remainder.lock").exists()
+
+
+def test_four_policy_failures_skip_to_next_cell(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    for ordinal in range(1, 5):
+        attempt = out / "attempts" / "gaps_L0_eval_gt" / f"{ordinal:02d}"
+        attempt.mkdir(parents=True)
+        (attempt / "closed.json").write_text('{"state":"validated","result":"fail"}')
+    manifest = {"new_out": str(out), "training_status": str(tmp_path / "status.json"),
+                "remaining_cells": ["gaps_L0_eval_gt", "boxes_L0_eval_gt"]}
+    plan = {"jobs": [{"kind": kind, "level": 0, "map_mode": "eval_gt",
+                      "seeds": [42, 43, 44, 45]} for kind in ("gaps", "boxes")]}
+    with patch.object(moved, "load_manifest", return_value=(manifest, plan)), \
+         patch.object(moved, "gate", return_value={"admit_next_unit": True}), \
+         patch.object(moved, "checked_success", return_value=None), \
+         patch.object(moved, "train_sample", return_value=None):
+        result = moved.run_next(tmp_path / "manifest.json", "ignored")
+    assert result == {"state": "training_status_hold", "cell": "boxes_L0_eval_gt"}
