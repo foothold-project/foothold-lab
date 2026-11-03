@@ -1326,7 +1326,9 @@ def _capture(spec: dict[str, Any]) -> None:
     import av
     from PIL import Image, ImageDraw, ImageFont
     from foothold_s2.eval.c_layer_frame_audit import project_world_point
-    from foothold_s2.eval.c_layer_segmentation import robot_pixel_evidence, require_single_visible_robot
+    from foothold_s2.eval.c_layer_segmentation import (
+        packet_diagnostic, robot_pixel_evidence, require_single_visible_robot,
+    )
 
     import importlib
     preload_kit_dependencies(importlib.import_module, lambda: None)
@@ -1801,10 +1803,20 @@ def _capture(spec: dict[str, Any]) -> None:
                 frame, retry_checks = render_frame_guarded(raw, robot, command_term, sensor,
                                                            env_index=capture_env_id)
                 if instance_annotator is not None:
-                    mask_row = robot_pixel_evidence(
-                        instance_annotator.get_data(), selected_env=capture_env_id,
-                        env_count=n_envs(spec), height=full_args.height, width=full_args.width)
-                    require_single_visible_robot(mask_row)
+                    mask_packet = instance_annotator.get_data()
+                    try:
+                        mask_row = robot_pixel_evidence(
+                            mask_packet, selected_env=capture_env_id,
+                            env_count=n_envs(spec), height=full_args.height, width=full_args.width)
+                        require_single_visible_robot(mask_row)
+                    except ValueError as exc:
+                        diagnostic = packet_diagnostic(mask_packet, selected_env=capture_env_id)
+                        diagnostic.update({"error": str(exc), "env_id": capture_env_id,
+                                           "visibility": render_visibility_record})
+                        diagnostic_path = Path(full_args.mp4).with_name("segmentation_failure.json")
+                        diagnostic_path.write_text(json.dumps(diagnostic, indent=2), encoding="utf-8")
+                        Image.fromarray(frame).save(diagnostic_path.with_name("segmentation_failure_rgb.png"))
+                        raise
                     instance_evidence.append(mask_row)
                 render_retry_checks.extend({"physics_tick": k, **check} for check in retry_checks)
                 if frame.shape[:2] != (full_args.height, full_args.width):

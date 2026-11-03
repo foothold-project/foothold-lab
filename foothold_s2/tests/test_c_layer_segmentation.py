@@ -4,7 +4,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foothold_s2.eval.c_layer_segmentation import robot_pixel_evidence, require_single_visible_robot
+from foothold_s2.eval.c_layer_segmentation import (
+    packet_diagnostic, robot_pixel_evidence, require_single_visible_robot,
+)
 
 
 def packet(subject_pixels: int, other_pixels: int = 0):
@@ -39,6 +41,16 @@ def test_missing_identity_map_is_hold():
     with pytest.raises(ValueError, match="idToLabels"):
         robot_pixel_evidence({"data": np.ones((20, 30), dtype=np.int32), "info": {}},
                              selected_env=0, env_count=2, height=20, width=30)
+
+
+def test_failed_gpu_packet_diagnostic_distinguishes_missing_label_from_missing_pixels():
+    with_label = packet(0)
+    row = packet_diagnostic(with_label, selected_env=0)
+    assert row["selected_label_count"] == 1 and row["mask_unique_ids"] == 1
+    no_label = {"data": with_label["data"], "info": {"idToLabels": {
+        "99": "/World/ground/terrain/mesh"}}}
+    row = packet_diagnostic(no_label, selected_env=0)
+    assert row["selected_label_count"] == 0 and row["robot_label_count"] == 0
 
 
 def test_fixed64_counts_selected_and_hidden_ids_in_one_frame():

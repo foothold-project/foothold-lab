@@ -6,6 +6,24 @@ import re
 import numpy as np
 
 
+def packet_diagnostic(packet: dict, *, selected_env: int) -> dict:
+    """Bounded evidence when a renderer omits the selected robot instance."""
+    labels = packet.get("info", {}).get("idToLabels", {}) if isinstance(packet, dict) else {}
+    labels = labels if isinstance(labels, dict) else {}
+    paths = [label.get("primPath", "") if isinstance(label, dict) else label
+             for label in labels.values()]
+    robot_paths = [str(path) for path in paths if isinstance(path, str)
+                   and re.search(r"/World/envs/env_\d+/Robot(?:/|$)", path)]
+    selected = [path for path in robot_paths
+                if re.search(rf"/World/envs/env_{selected_env}/Robot(?:/|$)", path)]
+    data = np.asarray(packet.get("data")) if isinstance(packet, dict) else np.asarray([])
+    return {"label_count": len(labels), "robot_label_count": len(robot_paths),
+            "selected_label_count": len(selected), "robot_path_sample": robot_paths[:8],
+            "selected_path_sample": selected[:8], "mask_shape": list(data.shape),
+            "mask_dtype": str(data.dtype), "mask_unique_ids": int(np.unique(data).size)
+            if data.size and data.dtype.kind in "iu" else None}
+
+
 def robot_pixel_evidence(packet: dict, *, selected_env: int, env_count: int,
                          height: int, width: int) -> dict:
     """Fail closed if the renderer cannot identify each robot prim path."""
