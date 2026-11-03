@@ -401,6 +401,7 @@ SCENE_KEY = (("dot", (77, 255, 51), "GT height map"), ("grid", (255, 153, 64), "
 
 LEGEND_ROW, LEGEND_FONT = 17, 12  # v8: smaller legend so the gauge panel starts higher
 GAUGE_Y0 = 34 + 14 + LEGEND_ROW * 8 + 8  # legend top + legend height (8 rows) + the same 8 px gap as the column
+GAUGE_X0, GAUGE_X1 = 1280 - 196, 1280 - 8  # shared left edge and exclusive right edge of the terrain/speed column
 FALL_HOLD_ROWS = 50  # after a fall the panel keeps the fallen state for 1 s (50 Hz rows) before following the reset
 
 
@@ -552,7 +553,7 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
     Path: the current episode only, grey = whole episode, blue = walked so far, white arrow = body heading.
     Episodes: a fall freezes the panel for 1 s, then the panel follows the reset episode and counts the falls.
     """
-    X0_, X1_, Y0_, Y1_ = 1280 - 196, 1280 - 8, GAUGE_Y0, 682
+    X0_, X1_, Y0_, Y1_ = GAUGE_X0, GAUGE_X1, GAUGE_Y0, 682
     roi = scene[Y0_:Y1_, X0_:X1_].astype(np.float32)
     scene[Y0_:Y1_, X0_:X1_] = (roi * 0.35 + 10).astype(np.uint8)
     PAD = 10
@@ -766,8 +767,8 @@ def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np
 def speed_tag(scene: np.ndarray, speed: str, segment: str) -> np.ndarray:
     label = {"025x": "x0.25", "05x": "x0.5", "1x": "x1", "2x": "x2"}[speed]
     seg = {"fwd": "forward", "spin_left": "turn left", "spin_right": "turn right", "seq": "full sequence"}[segment]
-    cv2.rectangle(scene, (1280 - 196, 690), (1280 - 8, 714), (20, 20, 20), -1)
-    return text(scene, [((1280 - 188, 692), f"{seg}   speed {label}", (255, 255, 255))], 15)
+    cv2.rectangle(scene, (GAUGE_X0, 690), (GAUGE_X1 - 1, 714), (20, 20, 20), -1)
+    return text(scene, [((GAUGE_X0 + 8, 692), f"{seg}   speed {label}", (255, 255, 255))], 15)
 
 
 def policy_map_header(meta: dict) -> str:
@@ -911,12 +912,14 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         prev_row = row
         scene = cv2.resize(frame, (1280, 720)) if frame.shape[:2] != (720, 1280) else frame
         scene = receipt_header(scene, meta, z, row, push_video=push_overlay is not None)
-        scene = scene_legend(scene, meta)
+        push_active = push_overlay is not None and any(event["t_s"] <= float(z["t"][row]) for event in push_overlay["events"])
+        if not push_active:
+            scene = scene_legend(scene, meta)
         scene = speed_tag(scene, speed, segment)
         scene = scene_gauges(scene, z, row, meta)
         scene = question_strip(scene)
         if push_overlay is not None:
-            scene = draw_push_overlay(scene, push_overlay, float(z["t"][row]))
+            scene = draw_push_overlay(scene, push_overlay, float(z["t"][row]), panel_x0=GAUGE_X0, panel_x1=GAUGE_X1)
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
         wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
     wr.release()

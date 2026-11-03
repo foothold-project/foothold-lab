@@ -46,27 +46,34 @@ def load_overlay(path: Path, capture_sha256: str, rollout_key: str, env_id: int)
             "meaning": "world XY delta-v; recovery interval is evaluation population median"}
 
 
-def draw_push_overlay(scene, overlay: dict, time_s: float):
+def draw_push_overlay(scene, overlay: dict, time_s: float, *, panel_x0: int, panel_x1: int):
     """Draw only after an event; never substitute a missing recovery endpoint."""
     events = [row for row in overlay["events"] if row["t_s"] <= time_s]
     if not events:
         return scene
     event = events[-1]
-    x0, y0 = 1130, 112
-    radius = min(75, 25 + int(event["magnitude_mps"] * 35))
+    if not (0 <= panel_x0 < panel_x1 <= scene.shape[1]):
+        raise ValueError("invalid terrain/speed panel bounds")
+    center_x, center_y = (panel_x0 + panel_x1) // 2, 119
+    radius = min((panel_x1 - panel_x0) // 2 - 12, 25 + int(event["magnitude_mps"] * 35))
     theta = math.atan2(event["dy"], event["dx"])
-    tip = (x0 + int(radius * math.cos(theta)), y0 - int(radius * math.sin(theta)))
-    cv2.rectangle(scene, (1015, 45), (1270, 190), (20, 24, 30), -1)
-    cv2.arrowedLine(scene, (x0, y0), tip, (0, 210, 255), 4, cv2.LINE_AA, tipLength=.24)
-    cv2.putText(scene, f"PUSH world XY {event['magnitude_mps']:.2f} m/s", (1020, 68),
-                cv2.FONT_HERSHEY_SIMPLEX, .46, (255, 255, 255), 1, cv2.LINE_AA)
+    tip = (center_x + int(radius * math.cos(theta)), center_y - int(radius * math.sin(theta)))
+    cv2.rectangle(scene, (panel_x0, 45), (panel_x1 - 1, 190), (20, 24, 30), -1)
+    cv2.arrowedLine(scene, (center_x, center_y), tip, (0, 210, 255), 4, cv2.LINE_AA, tipLength=.24)
+    cv2.putText(scene, "PUSH world XY", (panel_x0 + 8, 67),
+                cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.putText(scene, f"{event['magnitude_mps']:.2f} m/s", (panel_x0 + 8, 87),
+                cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
     median = overlay["recovery_time_s_median"]
     if median is None:
         label = "recovery unmeasured"
     elif time_s <= event["t_s"] + median:
-        label = "recovery window (population median)"
+        label = "recovery window"
     else:
-        label = "population median elapsed"
-    cv2.putText(scene, label, (1020, 178), cv2.FONT_HERSHEY_SIMPLEX, .42,
+        label = "median elapsed"
+    cv2.putText(scene, label, (panel_x0 + 8, 168), cv2.FONT_HERSHEY_SIMPLEX, .41,
                 (255, 255, 255), 1, cv2.LINE_AA)
+    if median is not None:
+        cv2.putText(scene, f"median {median:.2f} s", (panel_x0 + 8, 185),
+                    cv2.FONT_HERSHEY_SIMPLEX, .37, (255, 255, 255), 1, cv2.LINE_AA)
     return scene
