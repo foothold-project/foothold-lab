@@ -20,6 +20,11 @@ fields:
     choices:
     - false
     - true
+  critic_mirror:
+    decision_id: D174
+    choices:
+    - false
+    - true
 automatic:
   stand_restore: lead-1102-1400-stand-swing-half-once
   extension: D110-one-extension
