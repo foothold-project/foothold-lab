@@ -30,6 +30,7 @@ def test_bundle_child_cli_records_fixed_l0_single_mode_and_actual_device():
 
 def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
     import foothold_s2.eval.ex41_push_ladder_bundle as bundle
+    from foothold_s2.eval.ex41_gpu_priority import GPU0_UUID
 
     checkpoint = tmp_path / "model_6000.pt"
     checkpoint.write_bytes(b"known checkpoint")
@@ -44,7 +45,7 @@ def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
         returncode = 1
 
     monkeypatch.setattr(bundle, "gpu0_priority", fake_priority)
-    admission = {"state": "idle", "gpu_uuid": bundle.GPU0_UUID, "checks": 2}
+    admission = {"state": "idle", "gpu_uuid": GPU0_UUID, "checks": 2}
     monkeypatch.setattr(bundle, "wait_for_gpu0_python_idle", lambda: admission)
     monkeypatch.setattr(bundle.subprocess, "run", lambda *_a, **_k: Result())
     output = tmp_path / "out"
@@ -60,12 +61,12 @@ def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
 
 
 def test_gpu0_admission_waits_for_other_python_without_signaling_it(monkeypatch):
-    import foothold_s2.eval.ex41_push_ladder_bundle as bundle
+    from foothold_s2.eval import ex41_gpu_priority as priority
     import psutil
 
     own_python = __import__("os").getpid()
     outputs = iter([
-        f"GPU-{bundle.GPU0_UUID}, {own_python}, python.exe\n",
+        f"GPU-{priority.GPU0_UUID}, {own_python}, python.exe\n",
         "",
     ])
 
@@ -75,10 +76,34 @@ def test_gpu0_admission_waits_for_other_python_without_signaling_it(monkeypatch)
         def __init__(self, stdout):
             self.stdout = stdout
 
-    monkeypatch.setattr(bundle.subprocess, "run", lambda *_a, **_k: Query(next(outputs)))
-    monkeypatch.setattr(bundle.os, "getpid", lambda: own_python + 1)
-    monkeypatch.setattr(bundle.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(priority.subprocess, "run", lambda *_a, **_k: Query(next(outputs)))
+    monkeypatch.setattr(priority.os, "getpid", lambda: own_python + 1)
+    monkeypatch.setattr(priority.time, "sleep", lambda _seconds: None)
     monkeypatch.setattr(psutil, "process_iter", lambda **_kwargs: [])
-    receipt = bundle.wait_for_gpu0_python_idle(timeout_seconds=1, poll_seconds=0)
+    receipt = priority.wait_for_gpu0_python_idle(timeout_seconds=1, poll_seconds=0)
+    assert receipt["state"] == "idle"
+    assert receipt["checks"] == 2
+
+
+def test_gpu0_admission_waits_for_c_layer_unit_even_when_nvidia_smi_is_empty(monkeypatch):
+    from foothold_s2.eval import ex41_gpu_priority as priority
+    import psutil
+
+    class Query:
+        returncode = 0
+        stdout = ""
+
+    class Process:
+        def __init__(self, pid, command):
+            self.info = {"pid": pid, "name": "python.exe", "cmdline": command.split()}
+
+    batches = iter([
+        [Process(23456, "python D:/mai-tmp/c_layer_visibility_fix_v1/c_layer_shard.py --gpu 0")],
+        [],
+    ])
+    monkeypatch.setattr(priority.subprocess, "run", lambda *_a, **_k: Query())
+    monkeypatch.setattr(psutil, "process_iter", lambda **_kwargs: next(batches))
+    monkeypatch.setattr(priority.time, "sleep", lambda _seconds: None)
+    receipt = priority.wait_for_gpu0_python_idle(timeout_seconds=1, poll_seconds=0)
     assert receipt["state"] == "idle"
     assert receipt["checks"] == 2

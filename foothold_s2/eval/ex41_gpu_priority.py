@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import subprocess
+import time
 import uuid
 
 DEFAULT_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
@@ -14,6 +16,72 @@ DEFAULT_GPU0_MARKERS = (
     Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0"),
 )
 DEFAULT_GPU0_EVAL_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0")
+GPU0_UUID = "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+
+
+def wait_for_gpu0_python_idle(*, timeout_seconds: float = 1800, poll_seconds: float = 5) -> dict:
+    """Wait read-only for GPU0 Python/Kit work and active C-layer units to yield."""
+    import psutil
+
+    start = time.monotonic()
+    checks = 0
+    last_busy = []
+    while time.monotonic() - start <= timeout_seconds:
+        checks += 1
+        result = subprocess.run(
+            ["nvidia-smi", "--query-compute-apps=gpu_uuid,pid,process_name", "--format=csv,noheader"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=20, check=False)
+        if result.returncode != 0:
+            raise RuntimeError(f"GPU0 admission query failed rc={result.returncode}")
+        busy = []
+        for raw in result.stdout.splitlines():
+            fields = [field.strip() for field in raw.split(",", 2)]
+            if len(fields) != 3 or fields[0].casefold().removeprefix("gpu-") != GPU0_UUID:
+                continue
+            try:
+                pid = int(fields[1])
+            except ValueError:
+                busy.append({"pid": None, "process_name": fields[2], "state": "unknown_pid"})
+                continue
+            if pid == os.getpid():
+                continue
+            try:
+                process = psutil.Process(pid)
+                name = process.name()
+                command = " ".join(process.cmdline())
+            except (psutil.AccessDenied, psutil.NoSuchProcess, OSError) as exc:
+                busy.append({"pid": pid, "process_name": fields[2],
+                             "state": f"unknown:{type(exc).__name__}"})
+                continue
+            if "python" in name.casefold() or "kit" in name.casefold() or "isaac" in command.casefold():
+                busy.append({"pid": pid, "process_name": name, "command": command[:500], "state": "busy"})
+        known_pids = {row.get("pid") for row in busy}
+        # Some Isaac child processes are briefly absent from nvidia-smi while
+        # initializing or between Kit stages; their scheduler unit still owns GPU0.
+        for process in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+            try:
+                info = process.info
+                pid = int(info["pid"])
+                command = " ".join(info.get("cmdline") or [])
+            except (psutil.AccessDenied, psutil.NoSuchProcess, OSError, TypeError, ValueError):
+                continue
+            low = command.casefold()
+            if pid == os.getpid() or pid in known_pids:
+                continue
+            if ("c_layer_shard.py" in low and "--gpu 0" in low) or (
+                    "record_c_layer.py" in low and "--device cuda:0" in low):
+                busy.append({"pid": pid, "process_name": info.get("name"),
+                             "command": command[:500], "state": "c_layer_unit_active"})
+        last_busy = busy
+        if not busy:
+            return {"state": "idle", "gpu_uuid": GPU0_UUID, "checks": checks,
+                    "waited_seconds": time.monotonic() - start,
+                    "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    "last_busy": last_busy}
+        time.sleep(poll_seconds)
+    raise TimeoutError(json.dumps({"state": "HOLD", "gpu_uuid": GPU0_UUID,
+                                   "checks": checks, "last_busy": last_busy}, ensure_ascii=False))
 
 
 def publish_gpu0_busy_markers(*, job: str, iteration: int, run: str | None = None) -> list[dict]:

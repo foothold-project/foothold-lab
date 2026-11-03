@@ -361,12 +361,16 @@ def _claim_ex41_gpu0_busy_marker(log_dir: str, iteration: int) -> None:
     global EX41_GPU0_BUSY_OWNERS
     if EX41_PLAN is None or str(args_cli.device) != "cuda:0":
         return
-    from foothold_s2.eval.ex41_gpu_priority import publish_gpu0_busy_markers
+    from foothold_s2.eval.ex41_gpu_priority import (
+        publish_gpu0_busy_markers, wait_for_gpu0_python_idle,
+    )
 
     EX41_GPU0_BUSY_OWNERS = publish_gpu0_busy_markers(
         job="EX-41-training", iteration=max(0, int(iteration)), run=os.path.abspath(log_dir))
+    admission = wait_for_gpu0_python_idle()
     receipt = {"state": "claimed", "owners": EX41_GPU0_BUSY_OWNERS,
-               "run": os.path.abspath(log_dir), "pid": os.getpid()}
+               "run": os.path.abspath(log_dir), "pid": os.getpid(),
+               "gpu0_admission": admission}
     try:
         path = os.path.join(log_dir, "ex41_reports", "gpu0_priority_markers.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)

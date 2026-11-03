@@ -86,6 +86,7 @@ def test_ex41_gpu0_marker_wraps_shared_production_rehearsal_and_smoke_path():
     assert claim < source.index("env = gym.make(args_cli.task, cfg=env_cfg)")
     helper = source[source.index("def _claim_ex41_gpu0_busy_marker"):source.index("def _clear_ex41_gpu0_busy_marker")]
     assert "EX41_PLAN is None" in helper and "args_cli.device" in helper
+    assert "wait_for_gpu0_python_idle()" in helper
 
 
 def test_ex41_gpu0_marker_lifecycle_test_detects_removed_claim_mutation():
