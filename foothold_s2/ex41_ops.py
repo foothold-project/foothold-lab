@@ -79,6 +79,29 @@ def _notification_text(row: dict[str, Any]) -> tuple[str, str]:
                 f"Stage-end W57/W78 report has P3 state {p3_state}; P3 metrics {metrics_state}. "
                 f"Checkpoint SHA: {row.get('checkpoint_sha256', 'unknown')}. "
                 f"Report: {row.get('report_path', 'see run ex41_reports')}. Event {event_id}.")
+    if kind == "periodic_250_numeric_report":
+        cells = row.get('numeric_cells')
+        if isinstance(cells, list):
+            cell_text = "; ".join(
+                f"{item.get('cell')}={item.get('passed')}/{item.get('baseline_passed')}"
+                f"({item.get('delta')})/{item.get('total')}"
+                for item in cells)
+        else:
+            cell_text = "39-cell table unavailable"
+        pairs = row.get('p3_s_eval_gt')
+        if isinstance(pairs, dict):
+            p3_text = "; ".join(f"{key}={value}" for key, value in pairs.items())
+        else:
+            p3_text = "P3 S unavailable"
+        return (f"EX-41 250-update numeric report m{iteration}",
+                f"state={row.get('report_state')}; cells: {cell_text}; P3 eval_gt S: {p3_text}; "
+                f"DR={row.get('dr_scale')}; training={json.dumps(row.get('training_metrics'), ensure_ascii=False, separators=(',', ':'))}; "
+                f"checkpoint={row.get('score_checkpoint_update')} SHA={row.get('score_checkpoint_sha256')}; "
+                f"report={row.get('report_path')}; event={event_id}")
+    if kind == "two_consecutive_p3_boundaries_below_threshold":
+        return (f"EX-41 P3 repeated low boundary m{iteration}",
+                f"P3 pairs below threshold at two adjacent scored checkpoints: {row.get('matching_pair_ids')}. "
+                f"No automatic activation; stage-end review/approval only. Event {event_id}.")
     subject = f"EX-41 alert {kind} m{iteration}"
     body = (f"EX-41 {kind} at update {iteration}. Review required. "
             f"Event {event_id}. Details are in the run's ex41_reports/alerts.jsonl.")
@@ -252,6 +275,7 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         "score_state": hold_kind,
         "score_rejections": rejected_scores,
         "maintenance_counts": counts if isinstance(counts, dict) and len(counts) == 39 else None,
+        "p3_symmetry": metrics.get("critic_mirror_symmetry") if isinstance(metrics, dict) else None,
         "stage_before": receipt.get("stage_before"), "stage_after": receipt.get("stage_after"),
         "boundary_status": receipt.get("status", "no_boundary_receipt"),
         "boundary_iteration": receipt.get("iteration"),
@@ -265,6 +289,23 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         "graduated": bool(getattr(runtime, "graduated", False)),
         "requires_review": bool(getattr(runtime, "finished", False)),
     }
+    p3_pairs = None
+    p3_state = 'missing'
+    if at_250:
+        p3 = report['p3_symmetry']
+        try:
+            from foothold_s2.curriculum.ex41_symmetry import validate
+            validate(p3)
+            p3_pairs = {key: row['symmetry'] for key, row in p3['modes']['eval_gt'].items()}
+            p3_state = 'complete' if all(type(value) in (int, float) for value in p3_pairs.values()) else 'partial'
+        except (ImportError, ValueError, TypeError, KeyError):
+            pass
+        threshold = getattr(getattr(runtime, 'plan', None), 'automatic', {}).get(
+            'critic_both_fail_fraction', .8)
+        report['p3_state'] = p3_state
+        report['p3_low_pair_ids'] = (sorted(key for key, value in p3_pairs.items()
+                                             if type(value) in (int, float) and value < threshold)
+                                     if p3_state == 'complete' else None)
     report_path.write_text(json.dumps(report, ensure_ascii=False, sort_keys=True,
                                       indent=2, allow_nan=False) + "\n", encoding="utf-8")
     progress = run / "ex41_reports" / "progress.jsonl"
@@ -274,6 +315,54 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         stream.flush()
 
     alert_path = run / "ex41_reports" / "alerts.jsonl"
+    if at_250:
+        threshold = getattr(getattr(runtime, 'plan', None), 'automatic', {}).get(
+            'critic_both_fail_fraction', .8)
+        table = report['maintenance_counts']
+        numeric_cells = ([{'cell':key, 'passed':value['passed'],
+                           'baseline_passed':value['baseline_passed'],
+                           'delta':value['passed'] - value['baseline_passed'],
+                           'total':value['total']}
+                          for key, value in sorted(table.items())]
+                         if isinstance(table, dict) and len(table) == 39 else None)
+        training_metrics = metrics.get('training_knee_effort') if isinstance(metrics, dict) else None
+        has_dr_scale = type(report['dr_scale']) in (int, float)
+        report_state = ('complete' if numeric_cells is not None and p3_state == 'complete'
+                        and has_dr_scale and isinstance(training_metrics, dict) else 'incomplete')
+        report_event = hashlib.sha256(json.dumps(
+            ['periodic-250-numeric-report', completed, report['score_checkpoint_sha256'], report_state],
+            sort_keys=True, allow_nan=False).encode()).hexdigest()
+        _alert(alert_path, report_event, 'periodic_250_numeric_report', completed, {
+            'report_state': report_state, 'numeric_cells': numeric_cells,
+            'p3_state': p3_state, 'p3_s_eval_gt': p3_pairs,
+            'dr_scale': report['dr_scale'],
+            'training_metrics': training_metrics,
+            'score_checkpoint_update': report['score_checkpoint_update'],
+            'score_checkpoint_sha256': report['score_checkpoint_sha256'],
+            'report_path': str(report_path), 'automatic_activation': False,
+            'approval_at_stage_end_only': True})
+        if report_state == 'complete' and p3_pairs is not None:
+            low = sorted(key for key, value in p3_pairs.items()
+                         if type(value) in (int, float) and value < threshold)
+            previous_row = next((item for item in reversed(prior)
+                                 if item.get('boundary_update') == completed - 250), None)
+            previous_low = set(previous_row.get('p3_low_pair_ids', [])) if previous_row else set()
+            consecutive = bool(previous_row and previous_row.get('p3_state') == 'complete'
+                               and previous_row.get('score_checkpoint_update') == report['score_expected_update'] - 250)
+            matched = sorted(previous_low.intersection(low)) if consecutive else []
+            if matched:
+                event_id = hashlib.sha256(json.dumps(
+                    ['two-consecutive-p3-boundaries', completed, matched,
+                     previous_row.get('score_checkpoint_sha256'), report['score_checkpoint_sha256']],
+                    sort_keys=True, allow_nan=False).encode()).hexdigest()
+                _alert(alert_path, event_id, 'two_consecutive_p3_boundaries_below_threshold', completed, {
+                    'matching_pair_ids': matched, 'threshold': threshold,
+                    'previous_boundary_update': previous_row['boundary_update'],
+                    'previous_checkpoint_update': previous_row['score_checkpoint_update'],
+                    'previous_checkpoint_sha256': previous_row['score_checkpoint_sha256'],
+                    'checkpoint_update': report['score_checkpoint_update'],
+                    'checkpoint_sha256': report['score_checkpoint_sha256'],
+                    'automatic_activation': False, 'approval_at_stage_end_only': True})
     if rejected:
         reason = str(receipt.get("reason", "boundary rejected"))
         _alert(alert_path, f"boundary-rejected:{completed}:{event_id}",

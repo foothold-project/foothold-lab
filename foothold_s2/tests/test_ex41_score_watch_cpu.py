@@ -1,6 +1,7 @@
 """Actual EX40 outputs replayed through EX41; no invented evaluation success."""
 import json
 from pathlib import Path
+from copy import deepcopy
 import shutil
 import sys
 
@@ -113,7 +114,10 @@ def test_default_dry_never_calls_child_or_creates_score(tmp_path,monkeypatch):
     run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
     monkeypatch.setattr(watch,'hidden_child',lambda *a,**k:pytest.fail('DRY spawned a process'))
     row=watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,sleep=lambda _:None)
-    assert row['state']=='dry' and len(row['commands'])==4
+    assert row['state']=='dry' and len(row['commands'])==5
+    assert row['commands'][-1]['name']=='w78_v2_sides'
+    side_args=row['commands'][-1]['argv']
+    assert side_args[side_args.index('--terrain-skill-v2-cases')+1]=='stairs_side_left,stairs_side_right'
     assert row['auxiliary_due'] is False and row['auxiliary_commands']==[]
     assert not (tmp_path/'scores').exists() and not state['done']
 
@@ -436,3 +440,24 @@ def test_w78_producer_to_p3_metric_no_hand_inserted_runtime_scalar(tmp_path):
     bad=watch.collect(cp,'S2a',folder,plan,w78_path=path)
     assert bad['evaluation_state']=='complete' and len(bad['metrics']['maintenance_counts'])==26
     assert 'w78_v2' in bad['auxiliary_missing'] and 'critic_mirror_symmetry' in bad['auxiliary_missing']
+
+    # D166 periodic receipt: only the exact side pair is accepted, while its
+    # derived S is combined with all 39 core counts and the complete map64 set.
+    sides=deepcopy(data)
+    selected=set(watch.W78_PERIODIC_SIDE_CASES)
+    sides['case_selection']=list(watch.W78_PERIODIC_SIDE_CASES)
+    sides['modes']={mode:{key:row for key,row in cases.items()
+                          if row['case'] in selected}
+                    for mode,cases in sides['modes'].items()}
+    partial=tmp_path/'terrain_skill_v2_sides.json'
+    partial.write_text(json.dumps(sides),encoding='utf-8')
+    side_metrics,side_refs=watch.measure_w78(partial,cp,
+                                              selected_cases=watch.W78_PERIODIC_SIDE_CASES)
+    assert len(side_metrics['min_lr_ratio_by_cell'])==48 and len(side_refs)==49
+    periodic=watch.collect(cp,'S2a',folder,plan,periodic_w78_path=partial,
+                           include_auxiliary=False)
+    assert periodic['evaluation_state']=='complete'
+    assert periodic['evaluation_scope']=='maintenance_39_and_periodic_w78_sides; graduation_not_judged'
+    assert len(periodic['metrics']['record_counts'])==39
+    assert periodic['components']['critic_mirror_symmetry']=='complete'
+    assert periodic['metrics']['critic_mirror_symmetry']['modes']['eval_gt']['w78/L2_a000_pyramid_stairs']['symmetry']==.5

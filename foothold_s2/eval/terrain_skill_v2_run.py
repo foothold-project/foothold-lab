@@ -25,6 +25,18 @@ V2_CASES = {**CASES, STOP_BACK_CASE: (
     [((0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0),
      ((-0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0)],
     ("pyramid_stairs", "pyramid_stairs_inv"))}
+PERIODIC_SIDE_CASES = ("stairs_side_left", "stairs_side_right")
+
+
+def select_v2_cases(value=None):
+    """Select the full W78 suite or its approved periodic side pair."""
+    if value in (None, "", "all"):
+        return dict(V2_CASES)
+    names = tuple(part.strip() for part in value.split(","))
+    if (names != PERIODIC_SIDE_CASES
+            or any(name not in V2_CASES for name in names)):
+        raise ValueError("W78 v2 case selector accepts only all or stairs_side_left,stairs_side_right")
+    return {name: V2_CASES[name] for name in names}
 
 
 def _write_result_json(path, record, *, attempts=8, retry_delay_s=0.25):
@@ -89,6 +101,7 @@ def validate_request(args) -> None:
         raise ValueError("W78 v2 needs positive envs and nonnegative eval seed")
     _int_set(args.terrain_levels, label="levels", required=LEVELS)
     _int_set(args.stair_start_angles_deg, label="angles", required=ANGLES_DEG)
+    select_v2_cases(getattr(args, "terrain_skill_v2_cases", None))
     require_all_modes(args.modes, where="W78 v2")
     checkpoint = Path(args.checkpoint)
     if not checkpoint.is_file():
@@ -326,13 +339,14 @@ def _sha_for_optional(path: Path) -> str | None:
     return sha256_file(str(path)) if path.is_file() else None
 
 
-def expected_combinations() -> set[tuple[int, int, str, str]]:
+def expected_combinations(cases=None) -> set[tuple[int, int, str, str]]:
+    selected = V2_CASES if cases is None else cases
     return {(level, angle, mode, name) for level in LEVELS for angle in ANGLES_DEG
-            for mode in REQUIRED_MODES for name in V2_CASES}
+            for mode in REQUIRED_MODES for name in selected}
 
 
-def require_complete(completed: set[tuple[int, int, str, str]]) -> None:
-    expected = expected_combinations()
+def require_complete(completed: set[tuple[int, int, str, str]], cases=None) -> None:
+    expected = expected_combinations(cases)
     if completed != expected:
         missing = expected - completed
         extra = completed - expected
@@ -343,6 +357,7 @@ def require_complete(completed: set[tuple[int, int, str, str]]) -> None:
 def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               terrain_names, dr_off, curriculum_off, run_identity):
     validate_request(args)
+    selected_cases = select_v2_cases(getattr(args, "terrain_skill_v2_cases", None))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     final = out / "terrain_skill_v2.json"
@@ -368,10 +383,11 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
               "ex41_runtime_attachment": getattr(args, "ex41_runtime_attachment", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
+              "case_selection": list(selected_cases),
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
-                               "focus_kinds": list(kinds)} for name, (phases, kinds) in V2_CASES.items()},
+                                "focus_kinds": list(kinds)} for name, (phases, kinds) in selected_cases.items()},
               "measurement_note": "descriptive only; terminated samples excluded; no pass threshold"}
-    expected_keys = expected_combinations()
+    expected_keys = expected_combinations(selected_cases)
     completed: set[tuple[int, int, str, str]] = set()
     assignment_sha: dict[tuple[int, int], str] = {}
     try:
@@ -385,7 +401,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                     if runner.pcfg.get("map_input") == "none":
                         raise RuntimeError("W78 v2 cannot use a map_input none checkpoint")
                     mode_rows = result["modes"].setdefault(mode, {})
-                    for name, (phases, kinds) in V2_CASES.items():
+                    for name, (phases, kinds) in selected_cases.items():
                         key = (level, angle, mode, name)
                         torch.manual_seed(args.eval_seed)
                         env.reset()
@@ -428,7 +444,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                         completed.add(key)
                         _write_result_json(partial, result)
                         print("TERRAIN_SKILL_V2_CASE", *key, flush=True)
-        require_complete(completed)
+        require_complete(completed, selected_cases)
         result["w78_min_lr_ratio"] = {}
         for level in LEVELS:
             for angle in ANGLES_DEG:

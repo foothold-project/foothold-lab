@@ -37,6 +37,7 @@ parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
 parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
 parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
+parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
 parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
 parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")

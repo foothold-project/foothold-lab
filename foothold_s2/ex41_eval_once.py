@@ -19,9 +19,12 @@ DEFAULT_CONFIG = ROOT / 'foothold_s2/curriculum/ex40_score_config.json'
 DEFAULT_TABLE = ROOT / 'foothold_s2/curriculum/ex41-fixed5000.yaml'
 ISAAC_PYTHON = Path('C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe')
 MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
-PHASES = ('map64', *(f'stand_{m}' for m in MODES), 'axis_v2', 'w78_v2')
 CORE_PHASES = ('map64', *(f'stand_{m}' for m in MODES))
 AUXILIARY_PHASES = ('axis_v2', 'w78_v2')
+PERIODIC_W78_PHASE = 'w78_v2_sides'
+PERIODIC_PHASES = (*CORE_PHASES, PERIODIC_W78_PHASE)
+PHASES = (*CORE_PHASES, *AUXILIARY_PHASES)
+PERIODIC_W78_CASES = 'stairs_side_left,stairs_side_right'
 
 
 def commands(checkpoint, out, cfg, *, scope='all'):
@@ -40,10 +43,15 @@ def commands(checkpoint, out, cfg, *, scope='all'):
     rows += [('axis_v2', 'foothold_s2.eval.eval_map_modes',
               [*maps, '--axis-v2', '--fixed-level', '2', '--terrain-set', 'default',
                '--steps', str(cfg['map_steps'])]),
+             (PERIODIC_W78_PHASE, 'foothold_s2.eval.eval_map_modes',
+              [*maps, '--terrain-skill-v2', '--terrain-skill-v2-cases', PERIODIC_W78_CASES,
+               '--terrain-levels', '2,5', '--stair-start-angles-deg', '0,30,60,90',
+               '--terrain-set', 'default']),
              ('w78_v2', 'foothold_s2.eval.eval_map_modes',
               [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
                '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
-    selected = {'core': CORE_PHASES, 'auxiliary': AUXILIARY_PHASES,
+    selected = {'core': CORE_PHASES, 'periodic': PERIODIC_PHASES,
+                'auxiliary': AUXILIARY_PHASES,
                 'all': PHASES}.get(scope)
     if selected is None:
         raise ValueError(f'unknown EX41 evaluation scope: {scope}')
@@ -107,6 +115,8 @@ def auxiliary_phase_status(name, output):
         'axis_v2': ('axis_v2.json', 'axis_v2.error.json', 'foothold-axis-v2/1'),
         'w78_v2': ('terrain_skill_v2.json', 'terrain_skill_v2.error.json',
                    'foothold-terrain-skill-v2/1'),
+        PERIODIC_W78_PHASE: ('terrain_skill_v2.json', 'terrain_skill_v2.error.json',
+                             'foothold-terrain-skill-v2/1'),
     }
     if name not in contracts:
         return {'state': 'done'}
@@ -131,16 +141,25 @@ def auxiliary_phase_status(name, output):
     if result.get('schema') != schema:
         return {'state': 'HOLD', 'reason': f'{result_name} schema differs',
                 'result_path': str(result_path)}
-    if name == 'w78_v2' and result.get('state') != 'done':
+    if name in ('w78_v2', PERIODIC_W78_PHASE) and result.get('state') != 'done':
         return {'state': 'HOLD', 'reason': f'{result_name} state is not done',
                 'result_path': str(result_path)}
+    if name == PERIODIC_W78_PHASE:
+        expected = {'stairs_side_left', 'stairs_side_right'}
+        if (set(result.get('case_selection', ())) != expected
+                or any(set(result.get('modes', {}).get(mode, {})) != {
+                    f'L{level}_a{angle:03d}_{case}' for level in (2, 5)
+                    for angle in (0, 30, 60, 90) for case in expected}
+                       for mode in MODES)):
+            return {'state': 'HOLD', 'reason': 'periodic W78 side-case coverage differs',
+                    'result_path': str(result_path)}
     return {'state': 'done', 'result_path': str(result_path)}
 
 
 def reconcile_child_result(name, child, output):
     """A zero process exit cannot override a durable auxiliary HOLD receipt."""
     result = dict(child)
-    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2'):
+    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2', PERIODIC_W78_PHASE):
         artifact = auxiliary_phase_status(name, output)
         if artifact['state'] != 'done':
             result.update(state='HOLD', process_rc=result['rc'], rc=5,
@@ -155,6 +174,9 @@ def bundle_terminal_status(steps, *, scope='all'):
                          if steps.get(name, {}).get('state') != 'done']
     if scope == 'auxiliary':
         missing = auxiliary_missing
+    elif scope == 'periodic':
+        missing = [name for name in PERIODIC_PHASES
+                   if steps.get(name, {}).get('state') != 'done']
     elif scope in ('core', 'all'):
         # Auxiliary failures are diagnostic and never block the 26-cell score.
         missing = core_missing
@@ -194,8 +216,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     _atomic(out/'eval_receipt.json', row)
     try:
         for phase in commands(checkpoint, out, cfg, scope=scope):
-            if phase['name']=='w78_v2' and not w78_available:
-                row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
+            if phase['name'] in ('w78_v2', PERIODIC_W78_PHASE) and not w78_available:
+                row['steps'][phase['name']]={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
                 continue
             prepare_phase_output(phase['argv'])
@@ -203,7 +225,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
             result = reconcile_child_result(phase['name'], result, out/phase['name'])
             row['steps'][phase['name']] = result
             _atomic(out/'eval_receipt.json', row)
-            if result['rc'] != 0 and phase['name'] in CORE_PHASES:
+            if result['rc'] != 0 and (phase['name'] in CORE_PHASES
+                                      or scope == 'periodic' and phase['name'] == PERIODIC_W78_PHASE):
                 raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
         if sha256(checkpoint) != before: raise ValueError('checkpoint changed during evaluation')
         row.update(bundle_terminal_status(row['steps'], scope=scope))
@@ -240,7 +263,7 @@ def main(argv=None):
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--priority-marker', type=Path)
-    p.add_argument('--scope', choices=('core', 'auxiliary', 'all'), default='all')
+    p.add_argument('--scope', choices=('core', 'periodic', 'auxiliary', 'all'), default='all')
     p.add_argument('--execute', action='store_true')
     a = p.parse_args(argv)
     if not a.execute:

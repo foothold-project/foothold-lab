@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 
 from foothold_s2 import ex41_score_watch as watch
-from foothold_s2.ex41_eval_once import commands
+from foothold_s2.ex41_eval_once import (
+    PERIODIC_W78_PHASE, auxiliary_phase_status, bundle_terminal_status, commands,
+)
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.ex40_score import sha256
 
@@ -64,15 +66,15 @@ def test_actual_clock_receipts_move_auxiliary_to_recovered_stage_end(tmp_path):
     hold_ends = watch.stage_end_updates(plan, hold_run)
     assert 1750 not in hold_ends and 2250 in hold_ends and 5000 in hold_ends
     assert 5500 in hold_ends
-    assert watch.due_evaluation_scopes(1750, plan, hold_run) == ('core',)
-    assert watch.due_evaluation_scopes(2250, plan, hold_run) == ('core', 'auxiliary')
+    assert watch.due_evaluation_scopes(1750, plan, hold_run) == ('periodic',)
+    assert watch.due_evaluation_scopes(2250, plan, hold_run) == ('periodic', 'auxiliary')
 
     extension_run = tmp_path / 'extension_run';extension_run.mkdir()
     _clock_log(extension_run, plan, extension=True)
     extension_ends = watch.stage_end_updates(plan, extension_run)
     assert 5000 in extension_ends and 5500 in extension_ends
-    assert watch.due_evaluation_scopes(5000, plan, extension_run) == ('core', 'auxiliary')
-    assert watch.due_evaluation_scopes(5500, plan, extension_run) == ('core', 'auxiliary')
+    assert watch.due_evaluation_scopes(5000, plan, extension_run) == ('periodic', 'auxiliary')
+    assert watch.due_evaluation_scopes(5500, plan, extension_run) == ('periodic', 'auxiliary')
 
 
 def test_stage_end_requires_runtime_clock_evidence(tmp_path):
@@ -88,17 +90,55 @@ def test_stage_end_requires_runtime_clock_evidence(tmp_path):
         watch.stage_end_updates(plan, run)
 
 
-def test_scope_commands_keep_w78_out_of_250_core_and_include_it_at_stage_end(tmp_path):
+def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_path):
     cfg = watch.config(watch.DEFAULT_CONFIG)
     cp = tmp_path / 'model_250.pt'
     cp.write_bytes(b'known checkpoint bytes')
-    core = commands(cp, tmp_path / 'core', cfg, scope='core')
+    core = commands(cp, tmp_path / 'core', cfg, scope='periodic')
     auxiliary = commands(cp, tmp_path / 'aux', cfg, scope='auxiliary')
     assert [row['name'] for row in core] == [
-        'map64', 'stand_eval_gt', 'stand_probe_prop_only', 'stand_eval_pred']
+        'map64', 'stand_eval_gt', 'stand_probe_prop_only', 'stand_eval_pred', 'w78_v2_sides']
     assert [row['name'] for row in auxiliary] == ['axis_v2', 'w78_v2']
     assert '--terrain-skill-v2' in auxiliary[-1]['argv']
-    assert all('--terrain-skill-v2' not in row['argv'] for row in core)
+    side_args = core[-1]['argv']
+    assert '--terrain-skill-v2' in side_args
+    assert side_args[side_args.index('--terrain-skill-v2-cases') + 1] == 'stairs_side_left,stairs_side_right'
+    assert '--terrain-skill-v2-cases' not in auxiliary[-1]['argv']
+    assert len(core) == 5 and all(row['argv'][row['argv'].index('--device') + 1] == 'cuda:1'
+                                  for row in core)
+
+
+def test_measured_periodic_side_cost_fits_one_250_update_training_interval():
+    plan = load_plan(TABLE, arm='B')
+    # core 18m13s plus GPU0 side W78 measurement 25m13s; 250 updates at 27s/update.
+    rows = watch.stage_interval_loads(plan, train_seconds_per_update=27,
+                                      core_seconds=1093, periodic_side_seconds=1513,
+                                      auxiliary_seconds=9480)
+    assert all(row['periodic_seconds'] == row['core_checkpoints'] * 2606 for row in rows)
+    assert 1093 + 1513 < 60 * 60
+    assert [row['queue_growth_seconds'] for row in rows] == [0, 0, 0, 0, 1192, 2384]
+
+
+def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp_path):
+    output=tmp_path/'w78';output.mkdir()
+    cases=('stairs_side_left','stairs_side_right')
+    result={'schema':'foothold-terrain-skill-v2/1','state':'done',
+            'case_selection':list(cases),'modes':{}}
+    for mode in ('eval_gt','probe_prop_only','eval_pred'):
+        result['modes'][mode]={
+            f'L{level}_a{angle:03d}_{case}':{}
+            for level in (2,5) for angle in (0,30,60,90) for case in cases}
+    (output/'terrain_skill_v2.json').write_text(json.dumps(result),encoding='utf-8')
+    assert auxiliary_phase_status(PERIODIC_W78_PHASE,output)['state']=='done'
+    steps={name:{'state':'done'} for name in (
+        'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred')}
+    steps[PERIODIC_W78_PHASE]={'state':'done'}
+    periodic=bundle_terminal_status(steps,scope='periodic')
+    assert periodic['state']=='done' and periodic['auxiliary_missing']==[]
+    assert bundle_terminal_status(steps,scope='auxiliary')['state']=='HOLD'
+    del result['modes']['eval_pred']['L5_a090_stairs_side_right']
+    (output/'terrain_skill_v2.json').write_text(json.dumps(result),encoding='utf-8')
+    assert auxiliary_phase_status(PERIODIC_W78_PHASE,output)['state']=='HOLD'
 
 
 def _fake_run(tmp_path: Path, iteration: int):
@@ -157,7 +197,7 @@ def test_core_score_is_published_before_stage_end_auxiliary_dispatch(
     result = watch.process_once(run, out, scores, TABLE, state, execute=True,
                                 sleep=lambda _seconds:None)
     assert result['state'] == 'complete'
-    assert launched == (['core', 'auxiliary'] if auxiliary_due else ['core'])
+    assert launched == (['periodic', 'auxiliary'] if auxiliary_due else ['periodic'])
     if auxiliary_due:
         aux_path = out / f'model_{iteration}_{sha256(cp)[:12]}' / 'stage_end_auxiliary.json'
         assert json.loads(aux_path.read_text(encoding='utf-8'))['state'] == 'HOLD'

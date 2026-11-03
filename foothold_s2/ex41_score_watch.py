@@ -29,6 +29,7 @@ MODEL = re.compile(r'model_(0|[1-9][0-9]*)\.pt\Z')
 W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back',
              'stairs_fwd_turn_return', 'stairs_fwd_back_return', 'slope_fwd1.0',
              'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
+W78_PERIODIC_SIDE_CASES = ('stairs_side_left', 'stairs_side_right')
 
 
 def read(path):
@@ -163,7 +164,7 @@ def measure_w57(path, checkpoint, cfg):
     return metrics, refs
 
 
-def measure_w78(path, checkpoint):
+def measure_w78(path, checkpoint, *, selected_cases=None):
     path = Path(path); data = read(path)
     require_dr_off_document(data, where=str(path))
     if (data.get('schema') != 'foothold-terrain-skill-v2/1' or data.get('state') != 'done'
@@ -172,11 +173,18 @@ def measure_w78(path, checkpoint):
         or data.get('envs') != 64 or set(data.get('modes', {})) != set(MODES)
         or data.get('levels') != [2, 5] or data.get('start_angles_deg') != [0, 30, 60, 90]):
         raise ValueError('W78 v2 checkpoint/conditions/complete state differ')
+    cases = W78_CASES if selected_cases is None else tuple(selected_cases)
+    if cases not in (W78_CASES, W78_PERIODIC_SIDE_CASES):
+        raise ValueError('W78 case selection is not full or the approved periodic side pair')
     expected = {f'L{level}_a{angle:03d}_{name}' for level in (2, 5)
-                for angle in (0, 30, 60, 90) for name in W78_CASES}
+                for angle in (0, 30, 60, 90) for name in cases}
+    if data.get('case_selection') is not None and tuple(data['case_selection']) != cases:
+        raise ValueError('W78 case-selection receipt differs')
     refs = [evidence(path)]; assignments = {}; summary = {}
     for mode in MODES:
-        if set(data['modes'][mode]) != expected: raise ValueError('W78 v2 requires 240 combinations')
+        if set(data['modes'][mode]) != expected:
+            expected_total = 240 if cases == W78_CASES else 48
+            raise ValueError(f'W78 v2 requires {expected_total} combinations per mode')
         summary[mode] = {}
         for name, row in data['modes'][mode].items():
             key = (row['level'], row['stair_start_angle_deg'])
@@ -208,6 +216,7 @@ def measure_w78(path, checkpoint):
 
 
 def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_path=None, w78_path=None,
+            periodic_w78_path=None,
             w86_path=None, snapshot_dir=None, include_auxiliary=True):
     """Replay actual evaluation files. Each missing component stays explicit."""
     checkpoint, bundle = Path(checkpoint).resolve(strict=True), Path(bundle)
@@ -255,6 +264,24 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
     else:
         row['components']['w57'] = 'deferred_until_stage_end'
         row['components']['w78_v2'] = 'deferred_until_stage_end'
+    if periodic_w78_path is not None:
+        try:
+            metrics, refs = measure_w78(periodic_w78_path, checkpoint,
+                                        selected_cases=W78_PERIODIC_SIDE_CASES)
+            json.dumps(metrics, allow_nan=False)
+            row['metrics']['w78_v2_periodic_sides'] = metrics
+            row['evidence'].extend(refs)
+            row['components']['w78_v2_periodic_sides'] = 'complete'
+            map_doc = read(bundle/'map64/map_modes.json')
+            require_dr_off_document(map_doc)
+            row['metrics']['critic_mirror_symmetry'] = combine(
+                map_pairs(map_doc), metrics.get('min_lr_ratio_by_cell'))
+            row['components']['critic_mirror_symmetry'] = 'complete'
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            row['components']['w78_v2_periodic_sides'] = f'HOLD: {type(exc).__name__}: {exc}'
+            row['components']['critic_mirror_symmetry'] = 'HOLD: periodic W78 symmetry evidence unavailable'
+    elif not include_auxiliary:
+        row['components']['w78_v2_periodic_sides'] = 'missing_periodic_result'
     if w86_path is not None:
         try:
             row = enrich_training_metrics(row, w86_path, snapshot_dir=snapshot_dir)
@@ -272,15 +299,21 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
             row['components']['critic_mirror_symmetry'] = 'complete' if w78 is not None else 'partial_missing_w78'
         except (OSError,ValueError,RuntimeError,TypeError,KeyError) as exc:
             row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
-    else:
+    elif periodic_w78_path is None:
         row['components']['critic_mirror_symmetry'] = 'deferred_until_stage_end_w78'
     # Lead 19:5x: map64 + three stand modes alone produce maintenance 26 and
     # record 39. Missing auxiliary W57/W78/U10 is not a maintenance HOLD.
-    row['evaluation_scope'] = 'maintenance_26_and_stand_only; graduation_not_judged'
+    row['evaluation_scope'] = ('maintenance_39_and_periodic_w78_sides; graduation_not_judged'
+                               if periodic_w78_path is not None else
+                               'maintenance_26_and_stand_only; graduation_not_judged')
     row['auxiliary_missing'] = [k for k,v in row['components'].items()
                                 if k!='maintenance_stand' and v!='complete'
-                                and not str(v).startswith('deferred_until_stage_end')]
-    row['evaluation_state'] = 'complete' if row['components']['maintenance_stand']=='complete' else 'HOLD'
+                                and not str(v).startswith('deferred_until_stage_end')
+                                and v != 'missing_periodic_result']
+    required_complete = row['components']['maintenance_stand'] == 'complete'
+    if periodic_w78_path is not None:
+        required_complete = required_complete and row['components'].get('w78_v2_periodic_sides') == 'complete'
+    row['evaluation_state'] = 'complete' if required_complete else 'HOLD'
     if row['evaluation_state'] == 'HOLD':
         row['partial_metrics'] = row['metrics']; row['metrics'] = {}
         row['maintenance_pass'] = False  # reader rejects missing stand, creates latest-invalid tombstone.
@@ -461,20 +494,20 @@ def stage_end_updates(plan, run_dir):
 
 
 def due_evaluation_scopes(iteration, plan, run_dir):
-    """Core maintenance runs every 250; W57/W78 are scheduled at stage ends."""
+    """Periodic 39-cell plus side-W78 runs every 250; full axes/W78 stay at stage ends."""
     if type(iteration) is not int or iteration < 1 or iteration % 250:
         return ()
-    scopes = ['core']
+    scopes = ['periodic']
     if iteration in stage_end_updates(plan, run_dir):
         scopes.append('auxiliary')
     return tuple(scopes)
 
 
 def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
-                         auxiliary_seconds, checkpoint_stride=250):
+                         auxiliary_seconds, periodic_side_seconds=0, checkpoint_stride=250):
     """Estimate stage-local GPU1 demand and nonnegative backlog growth."""
     if (checkpoint_stride <= 0 or train_seconds_per_update <= 0 or core_seconds < 0
-            or auxiliary_seconds < 0):
+            or auxiliary_seconds < 0 or periodic_side_seconds < 0):
         raise ValueError('EX41 schedule time inputs must be positive/nonnegative')
     ends = nominal_stage_end_updates(plan)
     rows = []
@@ -483,11 +516,15 @@ def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
     for stage, end in zip(plan.stages, ends):
         span = end - prior_end
         checkpoints = end // checkpoint_stride - prior_end // checkpoint_stride
-        eval_seconds = checkpoints * core_seconds + auxiliary_seconds
+        periodic_seconds = checkpoints * (core_seconds + periodic_side_seconds)
+        eval_seconds = periodic_seconds + auxiliary_seconds
         train_seconds = span * train_seconds_per_update
         pending = max(0.0, pending + eval_seconds - train_seconds)
         rows.append({'stage': stage.id, 'end_update': end, 'updates': span,
-                     'core_checkpoints': checkpoints, 'auxiliary_runs': 1,
+                     'core_checkpoints': checkpoints, 'periodic_side_runs': checkpoints,
+                     'auxiliary_runs': 1,
+                     'periodic_side_seconds_per_checkpoint': periodic_side_seconds,
+                     'periodic_seconds': periodic_seconds,
                      'evaluation_seconds': eval_seconds, 'training_seconds': train_seconds,
                      'queue_growth_seconds': pending})
         prior_end = end
@@ -823,7 +860,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
                     'stage_id':stage, 'auxiliary_due':stage_end,
-                    'commands':commands(cp, target/'evaluation', cfg, scope='core'),
+                    'commands':commands(cp, target/'evaluation', cfg, scope='periodic'),
                     'auxiliary_commands':(commands(cp, target/'stage_end_auxiliary_eval', cfg,
                                                     scope='auxiliary') if stage_end else [])}
         score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
@@ -869,9 +906,12 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if execute and not interrupted:
             argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once', '--checkpoint', str(cp), '--out', str(source),
                     '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()),
-                    '--scope', 'core', '--execute']
+                    '--scope', 'periodic', '--execute']
             child = hidden_child(argv, target/'bundle_child')
+        periodic_w78 = (source/'w78_v2_sides/terrain_skill_v2.json'
+                        if execute and replay_root is None else None)
         row = collect(cp, stage, source, plan, eval_config,
+                      periodic_w78_path=periodic_w78,
                       w86_path=run/'ex41_w86.jsonl' if execute else None,
                       snapshot_dir=target/'training', include_auxiliary=False)
         if interrupted:

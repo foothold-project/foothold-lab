@@ -20,6 +20,7 @@ class FakeRuntime:
         self.finished = False
         self.graduated = False
         self.clock = type("Clock", (), {"paused": paused, "extension": extension})()
+        self.plan = SimpleNamespace(automatic={'critic_both_fail_fraction': .8})
 
     def boundary_receipt(self):
         return self._receipt
@@ -54,7 +55,20 @@ def _score(update=250):
               for i in range(39)}
     return {"iteration": update, "checkpoint_sha256": "a" * 64, "_sha256": "b" * 64,
             "metrics": {"record_counts": counts, "maintenance_counts": {},
+                        "training_knee_effort": {'left': .1, 'right': .2},
                         "stand_min_passed": 64}}
+
+
+def _p3(symmetry):
+    from foothold_s2.curriculum.ex41_symmetry import MAP_PAIRS, MODES, pair, combine
+    map_rows = {mode: {f'map64/{name}': pair(symmetry if name == 'side' else 1., 1.)
+                       for name in MAP_PAIRS} for mode in MODES}
+    w78 = {f'L{level}_a{angle:03d}_{mode}_{kind}': {
+        'left': symmetry if kind == 'pyramid_stairs' else 1., 'right': 1.,
+        'min_lr_ratio': symmetry if kind == 'pyramid_stairs' else 1.}
+        for level in (2, 5) for angle in (0, 30, 60, 90) for mode in MODES
+        for kind in ('pyramid_stairs', 'pyramid_stairs_inv')}
+    return combine(map_rows, w78)
 
 
 def test_ex41_boundary_uses_exact_score_250_and_records_dr_hold(tmp_path):
@@ -87,6 +101,40 @@ def test_ex41_boundary_keeps_dr_when_exact_reference_score_is_missing(tmp_path):
     assert report["finished"] is False
 
 
+def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_delivered(tmp_path):
+    sent = {'orca': [], 'telegram': []}
+    def deliver(run):
+        return deliver_pending_alerts(
+            run,
+            orchestration_sender=lambda subject, body: sent['orca'].append((subject, body)) or True,
+            telegram_sender=lambda body: sent['telegram'].append(body) or True)
+
+    first = _score(250)
+    first['metrics']['critic_mirror_symmetry'] = _p3(.7)
+    # Boundary m500 observes the exact m250 score, one score lag behind.
+    report1 = record_boundary(FakeRuntime(first), tmp_path, 501, deliver=deliver)
+    assert report1['p3_state'] == 'complete'
+    assert report1['score_checkpoint_update'] == 250
+    assert len(report1['maintenance_counts']) == 39
+    assert report1['p3_low_pair_ids']
+
+    second = _score(500)
+    second['metrics']['critic_mirror_symmetry'] = _p3(.75)
+    report2 = record_boundary(FakeRuntime(second), tmp_path, 751, deliver=deliver)
+    assert report2['p3_state'] == 'complete'
+    assert report2['score_checkpoint_update'] == 500
+    alerts = [json.loads(line) for line in (tmp_path/'ex41_reports/alerts.jsonl').read_text().splitlines()]
+    numeric = [row for row in alerts if row['kind'] == 'periodic_250_numeric_report']
+    repeated = [row for row in alerts if row['kind'] == 'two_consecutive_p3_boundaries_below_threshold']
+    assert len(numeric) == 2 and all(len(row['numeric_cells']) == 39 for row in numeric)
+    assert len(repeated) == 1 and repeated[0]['matching_pair_ids']
+    assert repeated[0]['automatic_activation'] is False
+    assert len(sent['orca']) == len(sent['telegram']) == 3
+    assert '250-update numeric report' in sent['orca'][0][0]
+    assert 'P3 eval_gt S' in sent['telegram'][0]
+    assert '/64' in sent['telegram'][0]
+
+
 def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path):
     delivered = {"orchestration": [], "telegram": []}
     def deliver(run):
@@ -102,11 +150,11 @@ def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path):
     assert report["score_state"] == "tool_hold"
     alert_path = tmp_path / "ex41_reports/alerts.jsonl"
     alerts = [json.loads(line) for line in alert_path.read_text().splitlines()]
-    assert len(alerts) == 1
-    assert alerts[0]["kind"] == "two_consecutive_holds"
+    assert len([row for row in alerts if row['kind'] == 'two_consecutive_holds']) == 1
+    assert len([row for row in alerts if row['kind'] == 'periodic_250_numeric_report']) == 2
     record_boundary(second, tmp_path, 501)
-    assert len(alert_path.read_text().splitlines()) == 1
-    assert len(delivered["orchestration"]) == len(delivered["telegram"]) == 1
+    assert len(alert_path.read_text().splitlines()) == 3
+    assert len(delivered["orchestration"]) == len(delivered["telegram"]) == 3
 
 
 def test_rejected_boundary_and_automatic_change_have_local_alert_receipts(tmp_path):
