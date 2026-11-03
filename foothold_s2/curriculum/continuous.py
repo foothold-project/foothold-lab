@@ -51,6 +51,9 @@ def load_plan(path: str | Path, *, arm: str | None = None,
     never physical/parent iteration 7500. Caller must record test table SHA.
     """
     doc = yaml.safe_load(Path(path).read_text(encoding='utf-8-sig'))
+    if isinstance(doc, dict) and doc.get('format') == 'foothold-ex42-curriculum/1':
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        return EX42Plan.load(path)
     if isinstance(doc, dict) and doc.get('format') == 'foothold-ex41-curriculum/1':
         from foothold_s2.curriculum.ex41 import EX41Plan
         return EX41Plan(path, arm=arm, smoke_boundaries=smoke_boundaries)
@@ -67,6 +70,8 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
     Transfer initializes n=0 without a rollout; first rollout is n=1.
     EX41 resume preserves n and all W72 state. No live EX40 ledger is consumed.
     """
+    if getattr(plan, 'is_ex42', False):
+        raise ValueError('EX-42 training runtime is not launchable from preparation-only plan')
     if getattr(plan, 'is_ex41', False):
         if getattr(plan, 'fixed_schedule', None):
             from foothold_s2.curriculum.ex41_fixed import EX41FixedRuntime

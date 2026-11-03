@@ -1,0 +1,10 @@
+format: foothold-ex42-approvals/1
+status: blocked
+production_launch_allowed: false
+automatic_launch_allowed: false
+requirements:
+  - ex41_graduation_receipt
+  - explicit_lead_approval
+  - resolved_assumptions
+  - terrain_manifest_with_measurements
+fields: {}

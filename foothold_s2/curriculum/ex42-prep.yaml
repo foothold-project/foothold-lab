@@ -1,0 +1,75 @@
+format: foothold-ex42-curriculum/1
+status: preparation_only
+design:
+  canonical_path: inbox/jay/20261026-experiments/CURRICULUM-GATES.md
+  canonical_section: EX-42 지형 커리큘럼 정본 (D163)
+  canonical_commit: a7407329
+  canonical_version: v0.14
+  design_draft: inbox/jay/20261102-ex42/DESIGN-EX42-TERRAIN-draft.md
+  design_draft_version: v0.4.6
+launch:
+  automatic: false
+  require_ex41_graduation: true
+  require_explicit_lead_approval: true
+  require_resolved_assumptions: true
+environment:
+  num_envs: 3072
+  task_id: FootholdS2-Go2-S2-SB-v0
+  training_presets:
+    A: start_go2_v1
+    B: ame2_go2_mix_v1
+    C: jeplo_preset_v1
+    D: null
+    continuous: rough_go2_cfg
+  evaluation:
+    terrain_size: larger_than_training
+    scale_multiplier: null
+    status: unresolved_calibration
+  preparation_measurements:
+    required: [peak_memory_gib, generation_seconds, ray_count_per_second]
+    values: null
+  terrain_manifest:
+    path: terrain_manifest.json
+    status: not_generated
+stages:
+  - {id: E0, name: parent_and_mesh_check, minimum_updates: 250, maximum_updates: 250, extension_updates: 0, boundary_axes: [terrain_mesh_swap], enabled: true}
+  - {id: E1, name: continuous_terrain_and_commands, minimum_updates: 1000, maximum_updates: 2000, extension_updates: 500, boundary_axes: [terrain_level_cap], enabled: true}
+  - {id: E1F, name: flag_contract, minimum_updates: 750, maximum_updates: 1250, extension_updates: 500, boundary_axes: [command_allocation], enabled: true}
+  - {id: E2, name: one_easy_new_terrain_kind, minimum_updates: 1500, maximum_updates: 2500, extension_updates: 500, boundary_axes: [terrain_exposure], enabled: true, kind_choice: unresolved}
+  - {id: E3, name: kind_dimensions_and_irregularity, minimum_updates: 3000, maximum_updates: 5000, extension_updates: 1000, boundary_axes: [terrain_kind_level_cap, terrain_exposure, terrain_level_cap, command_allocation], enabled: true}
+  - {id: E4, name: difficult_terrain_kinds, minimum_updates: 2000, maximum_updates: 4000, extension_updates: 1000, boundary_axes: [terrain_exposure, terrain_kind_level_cap, command_allocation], enabled: true}
+  - {id: E5, name: mixed_and_direction_generalization, minimum_updates: 1500, maximum_updates: 2500, extension_updates: 500, boundary_axes: [terrain_exposure, command_allocation], enabled: true}
+  - {id: M, name: map_off_continuous_branch, minimum_updates: 500, maximum_updates: 1000, extension_updates: 500, boundary_axes: [map_off_probability], enabled: false}
+  - {id: E6a, name: posture_command_activation, minimum_updates: 1000, maximum_updates: 1500, extension_updates: 500, boundary_axes: [posture_height, posture_roll], enabled: true}
+  - {id: E6b, name: terrain_family_d, minimum_updates: 2000, maximum_updates: 4000, extension_updates: 1000, boundary_axes: [terrain_exposure, terrain_kind_level_cap], enabled: true}
+evaluation:
+  judge_cells: 26
+  record_only_cells: 13
+  total_cells: 39
+  kind_cells: exposed_plus_L0
+  promotion: {window_episodes: 64, windows: 2, success_min: 52, survival_min: 60, hold_if_invalid: true}
+  directions: [forward, reverse, side_left, side_right, spin_left, spin_right, stand, flag]
+  map_modes: [gt, pred, off]
+  fixed_levels: [3, 6, 9]
+  first_evaluation_update: 250
+  interval_updates: 250
+  policy_failure_in_denominator: true
+  sparse_off_role: record
+terrain_manifest_contract:
+  kind_count_by_family: {A: 13, B: 12, C: 7, D: 3, continuous: 7}
+  required_measurements: [peak_memory_gib, generation_seconds, ray_count_per_second]
+  each_kind_fields: [family, kind, preset_id, original_dimensions_m, training_dimensions_m, evaluation_dimensions_m, geometry_sha256]
+  evaluation_must_be_larger: true
+assumptions_pending_lead:
+  minimum_valid_envs: {value: 48, class: assumption, approved: false}
+  error_rise_vx_vy_mps: {value: 0.03, class: assumption, approved: false}
+  error_rise_wz_radps: {value: 0.05, class: assumption, approved: false}
+  conditional_command_share_denominator: {value: null, class: assumption, approved: false}
+  record_to_judge_promotions: {value: [], class: undecided, approved: false}
+  sparse_reverse_completion: {value: null, class: undecided, approved: false}
+  side_completion: {value: null, class: undecided, approved: false}
+  stairs_dimensions_w48: {value: null, class: undecided, approved: false}
+  evaluation_scale_multiplier: {value: null, class: calibration, approved: false}
+  q4_two_window_range: {value: null, class: calibration, approved: false}
+boundary_file: ex42-boundary.yaml
+approval_file: ex42-approvals.yaml
