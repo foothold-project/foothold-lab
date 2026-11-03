@@ -9,6 +9,7 @@ from statistics import median
 from typing import Any
 
 MAGNITUDES_MPS = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
+PUSH250_MAGNITUDES_MPS = (1.0, 1.5, 2.0)
 DIRECTIONS_DEG = (0, 45, 90, 135, 180, 225, 270, 315)
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 TERRAIN_CASES = ("flat", "random_rough", "pyramid_stairs")
@@ -38,11 +39,23 @@ def build_case_grid(*, terrain: str | None = None, map_mode: str | None = None,
             for angle in directions]
 
 
-def fixed_target_range(magnitude_mps: float, direction_deg: int) -> dict[str, tuple[float, float]]:
+def build_push250_case_grid(*, terrain: str | None = None) -> list[dict[str, Any]]:
+    """Return the D171 250-update GT walking push cells, 64 envs per cell."""
+    if terrain is not None and terrain not in TERRAIN_CASES:
+        raise ValueError(f"unsupported terrain: {terrain}")
+    terrains = (terrain,) if terrain else TERRAIN_CASES
+    return [{"terrain": name, "level": 0, "map_mode": "eval_gt", "command": "walk_1.0",
+             "magnitude_mps": magnitude, "direction_deg": angle, "envs": ENVS_PER_CASE}
+            for name in terrains for magnitude in PUSH250_MAGNITUDES_MPS
+            for angle in DIRECTIONS_DEG]
+
+
+def fixed_target_range(magnitude_mps: float, direction_deg: int, *,
+                       magnitudes: tuple[float, ...] = MAGNITUDES_MPS) -> dict[str, tuple[float, float]]:
     magnitude = float(magnitude_mps)
     angle = int(direction_deg)
-    if not math.isfinite(magnitude) or magnitude not in MAGNITUDES_MPS:
-        raise ValueError("magnitude must be one of the six registered m/s levels")
+    if not math.isfinite(magnitude) or magnitude not in magnitudes:
+        raise ValueError("magnitude is not registered for this push profile")
     if angle not in DIRECTIONS_DEG:
         raise ValueError("direction must be one of the eight registered 45-degree headings")
     radians = math.radians(angle)
@@ -53,17 +66,18 @@ def fixed_target_range(magnitude_mps: float, direction_deg: int) -> dict[str, tu
 
 
 def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
-                     command: str = "walk_0.5", directions: tuple[int, ...] = DIRECTIONS_DEG) -> dict[str, Any]:
+                     command: str = "walk_0.5", directions: tuple[int, ...] = DIRECTIONS_DEG,
+                     magnitudes: tuple[float, ...] = MAGNITUDES_MPS) -> dict[str, Any]:
     if terrain not in TERRAIN_CASES or map_mode not in MAP_MODES:
         raise ValueError("summary identity has an unsupported terrain or map mode")
     if command not in COMMANDS or not directions or not set(directions) <= set(DIRECTIONS_DEG):
         raise ValueError("summary command or direction selection is invalid")
-    expected = {(m, d) for m in MAGNITUDES_MPS for d in directions}
+    expected = {(m, d) for m in magnitudes for d in directions}
     found: dict[tuple[float, int], dict[str, Any]] = {}
     for row in rows:
         key = (row.get("magnitude_mps"), row.get("direction_deg"))
         if key in found or key not in expected:
-            raise ValueError("ladder must contain 48 unique cells")
+            raise ValueError(f"ladder must contain {len(expected)} unique cells")
         if row.get("terrain") != terrain or row.get("map_mode") != map_mode:
             raise ValueError("cell identity differs from summary identity")
         if row.get("command") != command:
@@ -83,14 +97,14 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
             raise ValueError("recovery_times_s must contain finite nonnegative values or null")
         found[key] = row
     if set(found) != expected:
-        raise ValueError("ladder must contain 48 unique cells")
+        raise ValueError(f"ladder must contain {len(expected)} unique cells")
 
     def recovered_median(values):
         samples = [float(value) for value in values if value is not None]
         return median(samples) if samples else None
 
     by_magnitude = {}
-    for magnitude in MAGNITUDES_MPS:
+    for magnitude in magnitudes:
         cell_rows = [found[(magnitude, angle)] for angle in directions]
         survivors = sum(row["survivors_after_5s"] for row in cell_rows)
         samples = len(directions) * ENVS_PER_CASE
@@ -114,11 +128,11 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
             "worst_direction_survival_fraction": worst_direction,
             "fall_fraction": (samples - survivors) / samples,
             "recovery_time_s_median": median(recovery) if recovery else None,
-            "recovery_time_definition": "median of recovered per-env recovery times across all eight directions",
+            "recovery_time_definition": f"median of recovered per-env recovery times across {len(directions)} registered directions",
             "max_tilt_rad": max(float(row["max_tilt_rad"]) for row in cell_rows),
             "directions": direction_rows,
         }
-    tolerated = [m for m in MAGNITUDES_MPS
+    tolerated = [m for m in magnitudes
                  if by_magnitude[f"{m:.1f}"]["survival_fraction"] >= SURVIVAL_THRESHOLD]
     return {
         "terrain": terrain,
@@ -129,11 +143,47 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
         "maximum_tolerated_mps": max(tolerated) if tolerated else None,
         "maximum_tolerated_definition": f"highest registered magnitude with pooled {len(directions)}-direction survival fraction >= 0.90",
         "maximum_tolerated_worst_direction_mps": max(
-            (m for m in MAGNITUDES_MPS
+            (m for m in magnitudes
              if by_magnitude[f"{m:.1f}"]["worst_direction_survival_fraction"] >= SURVIVAL_THRESHOLD),
             default=None),
         "worst_direction_definition": "minimum survival fraction among the registered push directions",
         "magnitudes": by_magnitude,
+    }
+
+
+def summarize_push250(rows: list[dict[str, Any]], *, terrain: str,
+                      directions: tuple[int, ...] = DIRECTIONS_DEG) -> dict[str, Any]:
+    """Summarize D171: 1.5 m/s uses the worst direction; 1.0 and 2.0 are record-only."""
+    base = summarize_ladder(rows, terrain=terrain, map_mode="eval_gt", command="walk_1.0",
+                            directions=directions, magnitudes=PUSH250_MAGNITUDES_MPS)
+    criterion = base["magnitudes"]["1.5"]
+    return {
+        "profile": "D171_push250",
+        "terrain": terrain,
+        "level": 0,
+        "map_mode": "eval_gt",
+        "command": "walk_1.0",
+        "directions_deg": list(directions),
+        "envs_per_magnitude_direction": ENVS_PER_CASE,
+        "d171_1_5_worst_direction": {
+            "survival_fraction": criterion["worst_direction_survival_fraction"],
+            "threshold_fraction": SURVIVAL_THRESHOLD,
+            "passed": criterion["worst_direction_survival_fraction"] >= SURVIVAL_THRESHOLD,
+            "direction_survival": {key: value["survival_fraction"]
+                                   for key, value in criterion["directions"].items()},
+        },
+        "record_only_magnitudes": {
+            key: {
+                "survival_fraction": value["survival_fraction"],
+                "worst_direction_survival_fraction": value["worst_direction_survival_fraction"],
+                "directions": value["directions"],
+                "recovery_time_s_median": value["recovery_time_s_median"],
+                "max_tilt_rad": value["max_tilt_rad"],
+            }
+            for key, value in base["magnitudes"].items() if key in ("1.0", "2.0")
+        },
+        "measured_magnitudes": base["magnitudes"],
+        "survival_threshold": SURVIVAL_THRESHOLD,
     }
 
 
@@ -167,9 +217,16 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
     mode = args.push_ladder_map_mode
     terrain = args.push_ladder_terrain
     command_name = args.push_ladder_command
+    profile = getattr(args, "push_ladder_profile", "full")
+    magnitudes = PUSH250_MAGNITUDES_MPS if profile == "push250" else MAGNITUDES_MPS
+    if profile not in ("full", "push250"):
+        raise ValueError("unsupported push ladder profile")
+    if profile == "push250" and (mode != "eval_gt" or command_name != "walk_1.0"
+                                  or args.push_ladder_directions != "full"):
+        raise ValueError("push250 requires eval_gt, walk_1.0 and the full eight-direction circle")
     directions = (CARDINAL_DIRECTIONS_DEG if args.push_ladder_directions == "cardinal"
                   else DIRECTIONS_DEG)
-    expected_envs = len(MAGNITUDES_MPS) * len(directions) * ENVS_PER_CASE
+    expected_envs = len(magnitudes) * len(directions) * ENVS_PER_CASE
     if args.envs != expected_envs:
         raise ValueError(f"push ladder requires {expected_envs} envs for {len(directions)} directions x 64 envs")
     terrain_record = fixed_terrain.apply(raw, 0)
@@ -228,7 +285,7 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
     root_velocity = asset.root_physx_view.get_root_velocities()
     env_groups = []
     group_id = 0
-    for magnitude in MAGNITUDES_MPS:
+    for magnitude in magnitudes:
         for angle in directions:
             env_ids = torch.arange(group_id * ENVS_PER_CASE, (group_id + 1) * ENVS_PER_CASE,
                                    dtype=torch.long, device=raw.device)
@@ -240,7 +297,7 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
         action = policy(obs)
         if step == push_step:
             for magnitude, angle, env_ids in env_groups:
-                target_range = fixed_target_range(magnitude, angle)
+                target_range = fixed_target_range(magnitude, angle, magnitudes=magnitudes)
                 before = root_velocity[env_ids].clone()
                 interval_push(raw, env_ids, asset_cfg, target_range)
                 after = root_velocity[env_ids].clone()
@@ -329,7 +386,8 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
         "decimation": int(round(dt / float(raw.physics_dt))),
         "push_at_s": PUSH_AT_S, "push_step": push_step,
         "follow_after_push_s": FOLLOW_S, "total_steps": total_steps,
-        "directions_deg": list(directions), "magnitudes_mps": list(MAGNITUDES_MPS),
+        "directions_deg": list(directions), "magnitudes_mps": list(magnitudes),
+        "profile": profile,
         "recovery_definition": {"linear_band_mps": RECOVERY_BAND_MPS,
                                 "yaw_band_radps": RECOVERY_BAND_RADPS,
                                 "hold_s": RECOVERY_HOLD_S,
@@ -339,18 +397,20 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
         "policy_gt_samples": counts,
         "cells": cells,
     }
-    result["summary"] = summarize_ladder(
-        cells, terrain=terrain, map_mode=mode, command=command_name, directions=directions)
+    result["summary"] = (summarize_push250(cells, terrain=terrain, directions=directions)
+                         if profile == "push250" else summarize_ladder(
+                             cells, terrain=terrain, map_mode=mode, command=command_name,
+                             directions=directions, magnitudes=magnitudes))
     out = Path(args.push_ladder_out)
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(out.with_suffix(".npz"), vx=vx_np, vy=vy_np, wz=wz_np,
                         tilt_rad=tilt_np, xy_world_m=xy_np,
                         alive=alive_np, dones=dones_np,
                         env_group=np.repeat(np.arange(len(env_groups)), ENVS_PER_CASE),
-                        magnitude_mps=np.repeat(np.asarray(MAGNITUDES_MPS, dtype=np.float32),
+                        magnitude_mps=np.repeat(np.asarray(magnitudes, dtype=np.float32),
                                                 len(directions) * ENVS_PER_CASE),
         direction_deg=np.repeat(np.tile(np.asarray(directions, dtype=np.int16),
-                                                       len(MAGNITUDES_MPS)), ENVS_PER_CASE))
+                                                       len(magnitudes)), ENVS_PER_CASE))
     result["arrays"] = {"path": str(out.with_suffix(".npz")),
                          "sha256": __import__("hashlib").sha256(out.with_suffix(".npz").read_bytes()).hexdigest()}
     out.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")

@@ -41,6 +41,8 @@ parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 case
 parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
 parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
 parser.add_argument("--push-ladder", action="store_true", help="Fixed-velocity EX-41 push ladder")
+parser.add_argument("--push-ladder-profile", choices=("full", "push250"), default="full",
+                    help="push250: D171 GT-only walking check with 1.0/1.5/2.0 m/s at 64 envs per direction cell")
 parser.add_argument("--push-ladder-terrain", choices=("flat", "random_rough", "pyramid_stairs"))
 parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "probe_prop_only"))
 parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
@@ -86,9 +88,14 @@ if args.push_ladder:
         parser.error("supplementary stand ladder is flat only")
     if args.push_ladder_command == "stand" and args.push_ladder_directions != "cardinal":
         parser.error("supplementary stand ladder uses cardinal directions")
-    expected_envs = 6 * (8 if args.push_ladder_directions == "full" else 4) * 64
+    profile_magnitudes = (3 if args.push_ladder_profile == "push250" else 6)
+    expected_envs = profile_magnitudes * (8 if args.push_ladder_directions == "full" else 4) * 64
     if args.envs != expected_envs or args.steps != 350 or args.modes != args.push_ladder_map_mode:
         parser.error(f"push ladder requires --envs {expected_envs} --steps 350 --modes {args.push_ladder_map_mode}")
+    if args.push_ladder_profile == "push250" and (
+            args.push_ladder_map_mode != "eval_gt" or args.push_ladder_command != "walk_1.0"
+            or args.push_ladder_directions != "full" or args.push_ladder_terrain is None):
+        parser.error("push250 requires one terrain, eval_gt, walk_1.0 and eight fixed directions")
 elif args.push_ladder_terrain or args.push_ladder_map_mode:
     parser.error("push-ladder selectors require --push-ladder")
 app = AppLauncher(args).app
