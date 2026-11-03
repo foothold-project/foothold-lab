@@ -270,7 +270,8 @@ def state_digest(value: Any) -> str:
     return digest.hexdigest()
 
 
-def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> dict[str, Any]:
+def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any], *,
+                         save_interval: int = 50) -> dict[str, Any]:
     """Require exact state readback for the U5 continuation-critical groups."""
     curriculum_key = "continuous_curriculum"
     saved_curriculum = expected.get(curriculum_key)
@@ -292,28 +293,79 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any]) -> di
     loaded_checkpoint = loaded_stage.get("last_checkpoint")
     checkpoint_reference = None
     if saved_checkpoint is not None or loaded_checkpoint is not None:
-        if not isinstance(saved_checkpoint, dict) or not isinstance(loaded_checkpoint, dict):
-            raise ValueError("EX-41 resume checkpoint reference is missing")
         iteration = expected.get("iter")
-        checkpoint_sha = loaded_checkpoint.get("sha256")
-        if (saved_checkpoint.get("iteration") != iteration
-                or loaded_checkpoint.get("iteration") != iteration
-                or saved_checkpoint.get("path") != loaded_checkpoint.get("path")
-                or not isinstance(checkpoint_sha, str)
-                or len(checkpoint_sha) != 64
-                or any(ch not in "0123456789abcdef" for ch in checkpoint_sha.lower())):
-            raise ValueError("EX-41 resumed checkpoint reference differs from its saved iteration")
-        # on_resume_checkpoint replaces the payload's pre-save SHA with the
-        # actual final file SHA. The outer manifest preflight pins that SHA.
-        saved_checkpoint = {key: value for key, value in saved_checkpoint.items()
-                            if key != "sha256"}
-        loaded_checkpoint = {key: value for key, value in loaded_checkpoint.items()
-                            if key != "sha256"}
-        saved_stage["last_checkpoint"] = saved_checkpoint
-        loaded_stage["last_checkpoint"] = loaded_checkpoint
-        checkpoint_reference = {"iteration": iteration,
-                                "path": loaded_checkpoint["path"],
-                                "sha256": checkpoint_sha}
+        if type(iteration) is not int or type(save_interval) is not int or save_interval <= 0:
+            raise ValueError("EX-41 resume checkpoint iteration/save interval is invalid")
+        previous_iteration = iteration - save_interval
+
+        def validate_reference(reference: dict[str, Any] | None, label: str) -> dict[str, Any] | None:
+            if reference is None:
+                return None
+            if not isinstance(reference, dict):
+                raise ValueError(f"EX-41 {label} checkpoint reference is malformed")
+            sha = reference.get("sha256")
+            ref_iteration = reference.get("iteration")
+            ref_path = reference.get("path")
+            if (type(ref_iteration) is not int or ref_iteration > iteration
+                    or not isinstance(ref_path, str) or not ref_path
+                    or not isinstance(sha, str) or len(sha) != 64
+                    or any(ch not in "0123456789abcdef" for ch in sha.lower())):
+                raise ValueError(f"EX-41 {label} checkpoint reference is malformed")
+            if ref_iteration != previous_iteration:
+                raise ValueError(
+                    f"EX-41 {label} checkpoint reference must be model_{previous_iteration}.pt or None")
+            if Path(ref_path).name != f"model_{ref_iteration}.pt":
+                raise ValueError(f"EX-41 {label} checkpoint path differs from its saved iteration")
+            return {key: value for key, value in reference.items() if key != "sha256"}
+
+        saved_reference = validate_reference(saved_checkpoint, "saved")
+        loaded_sha = loaded_checkpoint.get("sha256") if isinstance(loaded_checkpoint, dict) else None
+        loaded_base = None
+        loaded_is_resume_target = False
+        if loaded_checkpoint is not None:
+            if not isinstance(loaded_checkpoint, dict):
+                raise ValueError("EX-41 resumed checkpoint reference is missing")
+            loaded_sha = loaded_checkpoint.get("sha256")
+            loaded_iteration = loaded_checkpoint.get("iteration")
+            loaded_path = loaded_checkpoint.get("path")
+            if (not isinstance(loaded_sha, str) or len(loaded_sha) != 64
+                    or any(ch not in "0123456789abcdef" for ch in loaded_sha.lower())
+                    or type(loaded_iteration) is not int
+                    or not isinstance(loaded_path, str) or not loaded_path):
+                raise ValueError("EX-41 resumed checkpoint reference is malformed")
+            loaded_base = {key: value for key, value in loaded_checkpoint.items()
+                           if key != "sha256"}
+            if loaded_base == saved_reference:
+                # Some restore callers compare before the resume hook updates
+                # last_checkpoint; this remains a valid unchanged predecessor.
+                pass
+            elif (loaded_iteration == iteration
+                  and Path(loaded_path).name == f"model_{iteration}.pt"):
+                # ContinuousFixed.on_resume_checkpoint intentionally advances
+                # the reference from the save-before-current predecessor to
+                # the actual model_N file that starts this resumed process.
+                if (saved_reference is not None
+                        and set(saved_reference) != set(loaded_base)):
+                    raise ValueError("EX-41 resumed checkpoint reference metadata differs")
+                if saved_reference is not None and any(
+                        saved_reference[key] != loaded_base[key]
+                        for key in set(saved_reference) - {"iteration", "path"}):
+                    raise ValueError("EX-41 resumed checkpoint reference metadata differs")
+                loaded_is_resume_target = True
+            else:
+                raise ValueError("EX-41 resumed checkpoint reference differs from its saved iteration")
+        elif saved_reference is not None:
+            raise ValueError("EX-41 resume checkpoint reference is missing after restore")
+
+        # The serialized pointer is the prior save (or absent); on resume the
+        # live pointer is replaced with model_N by on_resume_checkpoint. Validate
+        # those forms above, then compare the remaining stage state exactly.
+        saved_stage["last_checkpoint"] = None
+        loaded_stage["last_checkpoint"] = None
+        if loaded_is_resume_target:
+            checkpoint_reference = {"iteration": iteration,
+                                    "path": loaded_checkpoint["path"],
+                                    "sha256": loaded_sha}
     groups = {
         "optimizer": {key: expected.get(key) for key in (
             "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},

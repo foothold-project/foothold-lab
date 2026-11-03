@@ -21,6 +21,7 @@ from foothold_s2.scripts.ex41_resume import (
     validate_resume_manifest,
     validate_resume_state,
     compare_resume_state,
+    sha256_file,
 )
 
 
@@ -189,23 +190,93 @@ def test_resume_state_readback_compares_optimizer_rng_stage_dr_and_adasmpl():
 def test_resume_stage_allows_only_the_explicit_next_segment_transition():
     expected = _state()
     expected["continuous_curriculum"]["last_checkpoint"] = {
-        "iteration": 10, "path": "D:/run/model_10.pt", "sha256": "a" * 64}
+        "iteration": 5, "path": "D:/run/model_5.pt", "sha256": "a" * 64}
     restored = copy.deepcopy(expected)
     restored["continuous_curriculum"]["segment_index"] = 1
-    restored["continuous_curriculum"]["last_checkpoint"]["sha256"] = "b" * 64
-    result = compare_resume_state(expected, restored)
+    restored["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": 10, "path": "D:/run/model_10.pt", "sha256": "b" * 64}
+    result = compare_resume_state(expected, restored, save_interval=5)
     assert result["segment_index"] == {
         "state": "advanced_one_segment", "saved": 0, "restored": 1}
-    assert result["checkpoint_reference"]["sha256"] == "b" * 64
+    assert result["checkpoint_reference"] == {
+        "iteration": 10, "path": "D:/run/model_10.pt", "sha256": "b" * 64}
+
+    unchanged = copy.deepcopy(expected)
+    unchanged["continuous_curriculum"]["segment_index"] = 1
+    unchanged_result = compare_resume_state(expected, unchanged, save_interval=5)
+    assert "checkpoint_reference" not in unchanged_result
 
     restored["continuous_curriculum"]["segment_index"] = 2
     with pytest.raises(ValueError, match="segment did not advance exactly once"):
-        compare_resume_state(expected, restored)
+        compare_resume_state(expected, restored, save_interval=5)
 
     restored["continuous_curriculum"]["segment_index"] = 1
     restored["continuous_curriculum"]["active"] = 1
     with pytest.raises(ValueError, match="readback differs for stage"):
-        compare_resume_state(expected, restored)
+        compare_resume_state(expected, restored, save_interval=5)
+
+    wrong_target = copy.deepcopy(restored)
+    wrong_target["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": 9, "path": "D:/run/model_9.pt", "sha256": "c" * 64}
+    with pytest.raises(ValueError, match="differs from its saved iteration"):
+        compare_resume_state(expected, wrong_target, save_interval=5)
+
+    wrong_saved = copy.deepcopy(expected)
+    wrong_saved["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": 6, "path": "D:/run/model_6.pt", "sha256": "a" * 64}
+    with pytest.raises(ValueError, match="must be model_5.pt or None"):
+        compare_resume_state(wrong_saved, restored, save_interval=5)
+
+
+_ACTUAL_MODEL650 = os.environ.get("EX41_RESUME_MODEL_650_PATH")
+@pytest.mark.skipif(not _ACTUAL_MODEL650 or not Path(_ACTUAL_MODEL650).is_file(),
+                    reason="requires the saved real EX-41 model_650.pt evidence file")
+def test_actual_model650_save_before_reference_and_resume_hook_contract():
+    checkpoint = Path(_ACTUAL_MODEL650).resolve(strict=True)
+    saved = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    iteration = int(saved["iter"])
+    assert iteration == 650
+    saved_ref = saved["continuous_curriculum"]["last_checkpoint"]
+    assert saved_ref["iteration"] == iteration - 50
+    assert Path(saved_ref["path"]).name == f"model_{iteration - 50}.pt"
+
+    unchanged = copy.deepcopy(saved)
+    unchanged["continuous_curriculum"]["segment_index"] += 1
+    assert "checkpoint_reference" not in compare_resume_state(
+        saved, unchanged, save_interval=50)
+
+    # This is the exact transition performed by ContinuousFixed.on_resume_checkpoint.
+    restored = copy.deepcopy(saved)
+    restored["continuous_curriculum"]["segment_index"] += 1
+    restored["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": iteration,
+        "path": str(checkpoint),
+        "sha256": sha256_file(checkpoint),
+    }
+    result = compare_resume_state(saved, restored, save_interval=50)
+    assert result["checkpoint_reference"] == {
+        "iteration": iteration,
+        "path": str(checkpoint),
+        "sha256": sha256_file(checkpoint),
+    }
+
+    wrong_iteration = copy.deepcopy(restored)
+    wrong_iteration["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": iteration - 1,
+        "path": str(checkpoint.with_name(f"model_{iteration - 1}.pt")),
+        "sha256": "f" * 64,
+    }
+    with pytest.raises(ValueError, match="differs from its saved iteration"):
+        compare_resume_state(saved, wrong_iteration, save_interval=50)
+
+    wrong_saved = copy.deepcopy(saved)
+    wrong_saved["continuous_curriculum"]["last_checkpoint"] = {
+        "iteration": iteration - 51,
+        "path": str(checkpoint.with_name(f"model_{iteration - 51}.pt")),
+        "sha256": "a" * 64,
+    }
+    with pytest.raises(ValueError, match=f"must be model_{iteration - 50}.pt or None"):
+        compare_resume_state(wrong_saved, restored, save_interval=50)
 
 
 @pytest.mark.parametrize("key,value", [

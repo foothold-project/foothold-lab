@@ -707,7 +707,8 @@ def main(env_cfg, agent_cfg):
                   + json.dumps(dr_device_receipt, sort_keys=True), flush=True)
             restored_state = runner.state_dict()
             saved_state = torch.load(resume_path, map_location="cpu", weights_only=False)
-            resume_state_comparison = compare_resume_state(saved_state, restored_state)
+            resume_state_comparison = compare_resume_state(
+                saved_state, restored_state, save_interval=int(train_cfg["save_interval"]))
             checkpoint_reference = resume_state_comparison.get("checkpoint_reference")
             if checkpoint_reference is not None and (
                     checkpoint_reference.get("path") != os.path.abspath(resume_path)
