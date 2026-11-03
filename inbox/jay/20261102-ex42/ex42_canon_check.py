@@ -1,6 +1,7 @@
 """CURRICULUM-GATES 의 「EX-42 지형 커리큘럼 정본 (D163)」 절을 대조한다.
 단계 ID 열 개(E0 · E1 · E1F · E2 · E3 · E4 · E5 · M · E6a · E6b) · 단계마다 열두 행 · YAML 칸 표 · 예시 YAML(합 1.0 · 망각 방지 하한).
 v0.10 부터: 축 계약(axis_id · allowed_diff_paths · donor) · §E.3.1 유지 항 표 · §E.6 반영 표 · 옛 문구(B1~B5 이전) 없음.
+v0.15 부터: D176 ①~⑨ 원문 · §E.7 반영 표 · §E.8 논문 대조표(물리 표시) · §E.9 점프 과제 · 발 끌림 행(유지 항 11) · E.4 새 칸(donation · paper_cells · start_variants · global_command_floor · threshold_rule) · 옛 문구(배율 미정 · max(가정값, 측정 폭)) 없음.
 형식 검사 통과는 실행 정합성이 아니다.
 
 사용: python -X utf8 ex42_canon_check.py [CURRICULUM-GATES.md]
@@ -33,6 +34,7 @@ if not (m0 and m1 and m1.start() > m0.start()):
     print("MISS 정본 절 머리 · 끝 없음"); sys.exit(1)
 sec = text[m0.start(): m1.start()]
 v010 = "### E.6 " in sec
+v015 = "| v0.15 D176" in sec
 ok("D163" in sec and "D158" in sec and "D159" in sec and "D160" in sec, "머리에 D163 · D158 · D159 · D160")
 
 # E.1
@@ -89,7 +91,10 @@ if ym:
             ok(abs(sum(bd["donor"].values()) + ex) < 1e-9, f"예시 donor 합 = −Δshare ({sum(bd['donor'].values()):+.2f})")
             mt = y["maintenance"]
             ok(mt["anchor"] == "pre_drop_anchor" and mt["recovery"]["windows"] == 2 and mt["learned_cells"]["min_episodes"] == 32 and bool(mt["calibration"]["receipt"]), "예시 anchor · 회복 2 창 · learned_cells 32 · calibration 영수증")
-            ok(set(st["terrain"]["preset"]) == {"A", "B", "C", "continuous"} and st["terrain"]["preset"]["A"] == "start_go2_v1", "예시 terrain.preset 네 묶음 · A = start_go2_v1")
+            if v015:
+                ok(set(st["terrain"]["preset"]) == {"A", "B", "C", "E", "continuous"} and st["terrain"]["preset"]["A"] == "start_go2_v2" and st["terrain"]["preset"]["E"] == "paper_ext_v1", "예시 terrain.preset 다섯 묶음 · A = start_go2_v2 · E = paper_ext_v1")
+            else:
+                ok(set(st["terrain"]["preset"]) == {"A", "B", "C", "continuous"} and st["terrain"]["preset"]["A"] == "start_go2_v1", "예시 terrain.preset 네 묶음 · A = start_go2_v1")
             ok(list(st["terrain"]["kind_task"].values())[0]["command_set"] == ["forward_1.0", "flag"], "예시 kind_task command_set [forward_1.0, flag]")
             ok(y["eval"]["sparse_off_role"] == "record" and y["logging"]["map_mode"] == "assigned+consumed+eval", "예시 sparse OFF 기록 · 지도 모드 기록 셋")
             if "| v0.10 재확인(" in sec:   # v0.11
@@ -126,7 +131,8 @@ if v010:
         hdr = [l for l in e31.group(0).splitlines() if l.startswith("| 항 |")]
         ok(len(hdr) == 1 and "comparator" in hdr[0] and "role" in hdr[0] and "on_missing" in hdr[0], "E.3.1 머리(comparator · role · on_missing)")
         items = [l for l in e31.group(0).splitlines() if l.startswith("| ") and not l.startswith("| 항 |") and not l.startswith("|---")]
-        ok(len(items) == 10 and all(len(cells(l)) == 6 for l in items), f"E.3.1 유지 항 10 행 × 6 칸(이스케이프 세로줄은 칸 안 글자) ({len(items)})")
+        n_items = 11 if v015 else 10
+        ok(len(items) == n_items and all(len(cells(l)) == 6 for l in items), f"E.3.1 유지 항 {n_items} 행 × 6 칸(이스케이프 세로줄은 칸 안 글자) ({len(items)})")
         ok(sum("judge" in l for l in items) >= 4 and sum("record" in l for l in items) >= 4, "E.3.1 judge · record 역할 둘 다")
         ok("2.5065" in e31.group(0) and "5.1106" in e31.group(0) and "실측" in e31.group(0), "E.3.1 투영 거리 재계산(실측)")
     e6 = sec[sec.index("### E.6 "):]
@@ -169,6 +175,54 @@ if v010:
             ph = [l for l in e31.group(0).splitlines() if l.startswith("| 보행 접촉 위상")]
             ok(len(ph) == 1 and "`R_env` ≈ 0" in cells(ph[0])[2] and "임의 0° 금지" in cells(ph[0])[2], "B5 env 간 undefined 보존(R_env ≈ 0 · 임의 0° 금지)")
         ok(any(l.startswith("| v0.13 재확인") and "막음 0" in l for l in e6.splitlines()), "E.6 v0.13 재확인 행(막음 0)")
+    if v015:   # v0.15 · D176 · analyst ADVICE · 논문 대조표 · 점프 과제
+        for old in ("배율 **미정**", "max(가정값, 측정 폭)", "추가 HOLD 는 팀장 결정", "생존 ≥ 60/64 만(**가정**", "(48 · **가정** · 3/4)", "A: start_go2_v1 ·"):
+            ok(old not in sec, f"옛 문구 없음(v0.15): {old}")
+        e7 = re.search(r"^### E\.7 .*?(?=^### E\.8 )", sec, re.M | re.S)
+        e8 = re.search(r"^### E\.8 .*?(?=^### E\.9 )", sec, re.M | re.S)
+        e9 = re.search(r"^### E\.9 .*", sec, re.M | re.S)
+        ok(e7 is not None and e8 is not None and e9 is not None, "§E.7 · §E.8 · §E.9 있음")
+        if e7:
+            for kw in ("> D176 EX-42 미결 칸 승인", "① 판정 유효 표본 하한 48", "② 유지 허용 폭 생존 -3/64", "③ E0 · E1 기록", "④ 명령 몫 공여는 가장 약한 칸에서", "⑤ 듬성 지형 후진 · 옆 성공은", "⑥ W48 계단 0.16 m · 계단참 1.2 m · 회전 6 초 ±1.2 rad/s", "⑦ 부모 대비 누적 하락 경보, 두 경계 연속이면", "⑧ 평가 전용 지형 길이 1.15 · 폭 0.85 배", "⑨ 지형 종류별 갈라 가기 허용"):
+                ok(kw in e7.group(0), f"E.7 D176 원문 「{kw[:24]}」")
+            r7 = [l for l in e7.group(0).splitlines() if re.match(r"\| [①-⑨] ", l)]
+            ok(len(r7) == 9 and all(len(cells(l)) == 3 for l in r7), f"E.7 D176 반영 표 9 행 × 3 칸 ({len(r7)})")
+            ra = [l for l in e7.group(0).splitlines() if l.startswith("| ADVICE §")]
+            ok(len(ra) == 3 and all(len(cells(l)) == 4 for l in ra), f"E.7 analyst 조언 반영 표 3 행 × 4 칸 ({len(ra)})")
+        if e8:
+            r8 = [l for l in e8.group(0).splitlines() if l.startswith("| ") and not l.startswith("| 과제 칸") and not l.startswith("|---")]
+            ok(len(r8) >= 14 and all(len(cells(l)) == 6 for l in r8), f"E.8 대조표 14 행 이상 × 6 칸 ({len(r8)})")
+            ok(sum("**물리 표시**" in cells(l)[5] for l in r8) >= 5, "E.8 물리 표시 칸 5 이상(틈 · 턱 · 내리기 · 연속 상자 · crawl)")
+            for kw in ("0.0886 ~ 0.3892", "정적 한 다리 수직 폭 ≤ 0.30", "0.70 = 35.0°", "0.23 → 0.30", "0.531 → **0.09**", "`eval_stairs_010`", "slope_threshold 0.75", "[0.2, 1.2]"):
+                ok(kw in e8.group(0), f"E.8 「{kw}」")
+        if e9:
+            for kw in ("0.75", "1.00", "점프", "팀장 판단 칸", "EX42-LEAD-TASKS-TABLE.md"):
+                ok(kw in e9.group(0), f"E.9 「{kw}」")
+        for key in ("`maintenance.threshold_rule`", "`maintenance.parent_alarm.consecutive_hold`", "`maintenance.judge_from_stage.projection_distance`", "`maintenance.donation.window_boundaries`", "`eval.paper_cells.slope_deg`", "`eval.start_variants`", "`stages[].terrain.floors.global_command_floor.reverse`"):
+            ok(key in e4, f"E.4 칸 {key}")
+        if e31:
+            dr = [l for l in e31.group(0).splitlines() if l.startswith("| 발 끌림")]
+            pj = [l for l in e31.group(0).splitlines() if l.startswith("| 방향별 투영 거리")]
+            ok(len(dr) == 1 and "judge(E2 경계부터 · D176 ③)" in cells(dr[0])[4], "E.3.1 발 끌림 행 · E2 부터 judge")
+            ok(len(pj) == 1 and "judge(E2 경계부터 · D176 ③)" in cells(pj[0])[4], "E.3.1 투영 거리 행 · E2 부터 judge")
+            pa = [l for l in e31.group(0).splitlines() if l.startswith("| 부모 대비 누적 하락")]
+            ok(len(pa) == 1 and "두 경계 연속" in cells(pa[0])[5], "E.3.1 부모 행 · 두 경계 연속 HOLD")
+        ok("max(가정값, 반복 폭 × 2)" in sec and "(48 · 결정 D176 ①)" in sec, "E.3.1 문턱 식 D176 ② · 48 결정 D176 ①")
+        ok("실효 하한 = max(20 %, 5/14, 3/7) = **42.9 %**" in sec, "E.3 명령 몫 행 D176 ④ 실효 연속 하한 42.9 %")
+        ok("`cross_dir_half_flat`" in e4 and "cross_dir_half_flat" in blocks.get("E5", ""), "E5 · E.4 듬성 후진 · 옆 완료 이름")
+        if ym:
+            try:
+                mt = y["maintenance"]
+                ok(mt["parent_alarm"]["consecutive_hold"] == 2 and mt["threshold_rule"] == "max_assumption_2x_repeat" and mt["judge_from_stage"] == {"projection_distance": "E2", "foot_drag": "E2"}, "예시 parent_alarm 2 · threshold_rule · judge_from_stage E2")
+                dn = mt["donation"]
+                ok(dn["window_boundaries"] == 4 and dn["survival_min"] == 60 and dn["main_axis_error_max"] == 0.15 and dn["max_fraction"] == 0.25 and dn["e0_floor_frac"] == 0.5 and dn["wait_boundaries"] == 2, "예시 donation 4 · 60 · 0.15 · 0.25 · 0.50 · 2")
+                fl = st["terrain"]["floors"]
+                ok(fl["continuous_share_min"] == 0.43 and fl["global_command_floor"] == {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}, "예시 floors 0.43 · 전체 하한 0.05 · 0.03 · 0.03")
+                pc = y["eval"]["paper_cells"]
+                ok(pc["slope_deg"] == [30, 35, 45] and pc["stairs_m"] == [0.15, 0.20, 0.25] and pc["stairs_reverse_m"] == [0.10, 0.15, 0.20] and pc["landing"]["step"] == 0.16 and y["eval"]["start_variants"][0] == "start_go2_v2", "예시 paper_cells · start_variants")
+            except Exception as e:
+                ok(False, f"예시 YAML v0.15 값 오류 {type(e).__name__}: {e}")
+        ok(any(l.startswith("| v0.15 D176") for l in e6.splitlines()), "E.6 v0.15 행")
 
 ok(chr(0x2014) not in sec, "em dash 없음(정본 절)")
 for n, line in enumerate(sec.splitlines(), 1):
