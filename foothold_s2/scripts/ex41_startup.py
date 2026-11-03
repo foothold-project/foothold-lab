@@ -126,8 +126,22 @@ def launch_ex41_score_watch(run_dir: str | Path, score_dir: str | Path, *,
                 return {"state": "already_running", "pid": pid, "lock": str(lock)}
         except (OSError, ValueError, ImportError):
             return {"state": "blocked_unreadable_lock", "lock": str(lock)}
-    if (out / "watch_completion.json").is_file():
-        return {"state": "already_complete", "completion": str(out / "watch_completion.json")}
+    completion_path = out / "watch_completion.json"
+    if completion_path.is_file():
+        try:
+            completion = json.loads(completion_path.read_text(encoding="utf-8"))
+            training_status = json.loads((run / "train_start_status.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {"state": "blocked_unreadable_completion", "completion": str(completion_path)}
+        # A previous watcher can finish with HOLD when training dies. On a
+        # later self-resume, allow a fresh watcher to continue the same durable
+        # watch_state, but only after the trainer has positively returned to
+        # running. A completed healthy run remains terminal.
+        resumable = (completion.get("state") == "complete_with_hold"
+                     and completion.get("training_state") in ("failed", "error", "stopped", "stopped_saved")
+                     and training_status.get("state") == "running")
+        if not resumable:
+            return {"state": "already_complete", "completion": str(completion_path)}
 
     env = dict(os.environ)
     repo = Path(__file__).resolve().parents[2]
@@ -142,7 +156,8 @@ def launch_ex41_score_watch(run_dir: str | Path, score_dir: str | Path, *,
     row = {"format": "foothold-ex41-score-watch-launch/1", "state": "running",
            "pid": int(child.pid), "started_unix": time.time(), "argv": argv,
            "cwd": str(repo), "stdout": str(stdout_path), "stderr": str(stderr_path),
-           "trigger": "first_completed_update", "trigger_update": trigger_update}
+           "trigger": "first_completed_update", "trigger_update": trigger_update,
+           "resumed_after_incomplete_completion": completion_path.is_file()}
     receipt = out / "launches" / f"launch_{row['started_unix']:.6f}_{child.pid}.json"
     _write_score_watch_receipt(receipt, row)
     return row | {"receipt": str(receipt)}

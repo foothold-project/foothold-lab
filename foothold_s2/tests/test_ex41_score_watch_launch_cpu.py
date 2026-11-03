@@ -132,3 +132,52 @@ def test_live_or_unknown_watcher_lock_does_not_start_another_child(tmp_path):
     )
     assert blocked["state"] == "blocked_unknown_lock_owner"
     assert calls == []
+
+
+def test_resume_restarts_watch_after_prior_incomplete_completion(tmp_path):
+    run, score, table, eval_config = inputs(tmp_path)
+    out = startup.ex41_score_watch_output_root(run)
+    out.mkdir(parents=True)
+    (out / "watch_completion.json").write_text(json.dumps({
+        "state": "complete_with_hold", "training_state": "failed", "hold_count": 0,
+    }), encoding="utf-8")
+    (run / "train_start_status.json").write_text(json.dumps({"state": "running", "iter": 651}),
+                                                   encoding="utf-8")
+    observed = {}
+
+    class Child:
+        pid = 43211
+
+    def fake_popen(argv, **kwargs):
+        observed["argv"] = argv
+        return Child()
+
+    resumed = startup.launch_ex41_score_watch(
+        run, score, table=table, eval_config=eval_config,
+        python=startup.EX41_ISAAC_PYTHON, trigger_update=651, popen=fake_popen,
+    )
+    assert resumed["state"] == "running"
+    assert resumed["resumed_after_incomplete_completion"] is True
+    assert resumed["trigger_update"] == 651
+    assert observed["argv"][-1] == "--execute"
+
+
+def test_live_watcher_wins_over_resume_restart(tmp_path):
+    run, score, table, eval_config = inputs(tmp_path)
+    out = startup.ex41_score_watch_output_root(run)
+    out.mkdir(parents=True)
+    (out / "watch_completion.json").write_text(json.dumps({
+        "state": "complete_with_hold", "training_state": "failed", "hold_count": 0,
+    }), encoding="utf-8")
+    (run / "train_start_status.json").write_text(json.dumps({"state": "running", "iter": 651}),
+                                                   encoding="utf-8")
+    (out / "watch.lock").write_text(json.dumps({"pid": os.getpid()}), encoding="utf-8")
+
+    def forbidden_popen(*args, **kwargs):
+        raise AssertionError("a live watcher must not be duplicated")
+
+    result = startup.launch_ex41_score_watch(
+        run, score, table=table, eval_config=eval_config,
+        python=startup.EX41_ISAAC_PYTHON, trigger_update=651, popen=forbidden_popen,
+    )
+    assert result["state"] == "already_running"
