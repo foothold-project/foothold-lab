@@ -1,9 +1,9 @@
-# EX-41 A층 밀기 영상 준비와 model_10 한 편 확인
+# EX-41 A층 밀기 영상 준비와 model_10 지도 모드 셋 확인
 > 분류: A/평가 · 일반화 벤치마크 · 지표
 > 작성: 오흥재 (scripter 반영) · 2026-11-03
 > 근거: 팀장 11/03 13:0x 지시 · eval_dr_mode.py · model_10 실제 Kit 기록
-> 요지: DR 켬 밀기와 회복 원자료를 A층 영상에 묶고 복원 지도 모드 한 편을 확인함
-> 상태: 코드 완료 · 지도 모드 셋 중 eval_pred Kit 확인, 나머지 두 모드 Kit 미확인
+> 요지: DR 켬 밀기와 회복 원자료를 A층 영상에 묶고 지도 모드 셋을 같은 조건에서 확인함
+> 상태: 코드 완료 · eval_gt, eval_pred, probe_prop_only Kit 확인 · model_10 기능 시험
 
 ## 구현
 
@@ -30,4 +30,20 @@
 
 - 구현 고정 커밋: `4c5134f25e26c4c02b73e34c0f021824e1da5c33`. 촬영 당시 HEAD는 `e835e32872a3cf2c85ff7af71befc501d4f8ad8f`였다. 이후 변경은 소비기의 세 모드 출처 HEAD 일치와 실제 밀기 벡터 허용차 `1e-5` 비교뿐이며 촬영기 SHA는 동일하다.
 - 촬영기 SHA256 `32f01c060631b640e3297747f725840459cac4d3d941aec6e2783498097b9471`, 최종 소비기 SHA256 `54433dc7b1f386c81fbf735abb10dbe164ebb54b868a0220676799818dad1e1d`, 합성기 SHA256 `e0af53c859b037e423960f5ccedb32c4f669aef3713bc648a118d546ae6c2b99`.
-- 이번 실제 Kit 검증은 `eval_pred` 한 편이다. `eval_gt`와 `probe_prop_only`의 실제 촬영 및 세 모드 간 실측 밀기 동등성은 미확인이다. model_10은 기능 시험 저장본이며 본학습 성능 판정에 쓰지 않는다.
+- 위 표는 첫 Kit 확인 이력이다. 아래 지도 모드 셋 대조가 후속 완료 결과다. model_10은 기능 시험 저장본이며 본학습 성능 판정에 쓰지 않는다.
+
+## 후속: 같은 밀기 세 지도 모드
+
+GPU1의 runner P1 평가가 끝난 뒤 정답 지도와 지도 끔을 각각 Kit에서 촬영했다. 복원 지도의 원본 150프레임은 앞선 Kit 촬영에서 그대로 가져오고, 상태 표시줄이 파란 화살표를 가리지 않도록 바꾼 합성기만 CPU에서 다시 적용했다. 따라서 추가 Kit 촬영은 요청한 두 편이며 세 최종 영상은 같은 합성기 SHA를 가진다. 상태 표시줄 위치 수정은 커밋 `5fe372c37d8ce3a81a91a6f8e7d7d348c5c7138f`이다.
+
+세 편 모두 model_10 SHA `d9d4411c500107391c7e01baab86fb3fdf365d4d8e89869b219c6f78dfb2afcf`, `pyramid_stairs` L0 · env0, 평가 시드 42, 밀기 시드 42, 밀기 그룹 `a76fc9efcb873ba962e43f875fd1b1256d95cf739015e93d7a0f6b4fcc96ccb7`이다. 촬영기 SHA `32f01c060631b640e3297747f725840459cac4d3d941aec6e2783498097b9471`가 세 편에서 같고, 실제 64 env 밀기 벡터도 절대 오차 `1e-5 m/s` 이내로 일치했다. 밀기는 물리 step 100, 영상 시각 2.0초였다.
+
+| 정책 지도 | 최종 영상 | 회복 env/64 · 중앙값 | GT 지도 소비 | 150프레임 전수 검사 | 파란 화살표 상단 최소 y · 화면 위 잘림 |
+|---|---|---:|---:|---|---|
+| `eval_gt` | `D:/mai-tmp/scripter/ex41_a_push_model10_three_modes/attempts/a76fc9efcb873ba962e43f875fd1b1256d95cf739015e93d7a0f6b4fcc96ccb7/eval_gt/styled.mp4` | 63/64 · 1.16초 | 300/300 | 원본 PASS · 합성 PASS | 32 px · 0프레임 |
+| `eval_pred` | `D:/mai-tmp/scripter/ex41_a_push_model10_three_modes/eval_pred_recomposed/styled.mp4` | 59/64 · 1.08초 | 0/300 | 원본 PASS · 재합성 PASS | 32 px · 0프레임 |
+| `probe_prop_only` | `D:/mai-tmp/scripter/ex41_a_push_model10_three_modes/attempts/a76fc9efcb873ba962e43f875fd1b1256d95cf739015e93d7a0f6b4fcc96ccb7/probe_prop_only/styled.mp4` | 62/64 · 1.15초 | 0/300 | 원본 PASS · 합성 PASS | 32 px · 0프레임 |
+
+화살표 검사는 합성 영상 150프레임의 좌상단에서 파란 표식의 최상단 픽셀을 세었고, y<30인 프레임은 없었다. 상태 표시줄은 A층 영상에서만 y=120 아래로 내려 파란 화살표와 겹치지 않는다. 각 모드의 2.48초 프레임도 직접 보아 로봇 · 밀기 HUD · 지도 선택 · 아래 시간 띠가 표시되는 것을 확인했다. 정답 지도와 지도 끔의 프레임은 `D:/mai-tmp/scripter/ex41_a_push_model10_three_modes/{eval_gt,probe_prop_only}_frame_062.png`, 복원 지도는 `eval_pred_recomposed/frame12.png`에 보존했다.
+
+수치 정본은 `D:/mai-tmp/scripter/ex41_a_push_model10_three_modes/three_mode_summary.json`이다. 세 영상 SHA256은 차례로 `7c2b474332dc57e4efef4cb1caa7129c78cd701caf526e91936644c563aaab2d`, `ed02452d2925450546e36502771c7911b7b4b6bd13bef9c07d86b84a57b5e001`, `39646f5e50896cba16e5fc4309491a78852b66063e6cba7b77749f46b8063a71`이다. CPU 지정 회귀는 isaac311에서 23 passed였다. 본학습 저장본 성능과 A층 촬영 주기는 여전히 미확정이다.
