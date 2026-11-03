@@ -1143,6 +1143,12 @@ def frame_steps(step_count: int, frame_count: int = 300) -> list[int]:
     return indices
 
 
+def dr_done_and_alive(alive, dones):
+    """The rsl_rl wrapper may return integer dones; DR metrics need bool masks."""
+    done_mask = dones.to(dtype=alive.dtype)
+    return done_mask, alive & ~done_mask
+
+
 def step_contract(dt: float, duration_s: float = 12.0, fps: int = 25,
                   commands: Any = None) -> dict[str, Any]:
     active_commands = tuple(COMMANDS if commands is None else commands)
@@ -1845,9 +1851,9 @@ def _capture(spec: dict[str, Any]) -> None:
                     map_rows.append({"t": k * step_dt, **map_snapshot})
                 obs, _reward, dones, _extras = env.step(actions)
                 if dr_arrays is not None:
-                    dr_alive &= ~dones
+                    done_mask, dr_alive = dr_done_and_alive(dr_alive, dones)
                     dr_arrays["alive"].append(dr_alive.detach().cpu().numpy().copy())
-                    dr_arrays["dones"].append(dones.detach().cpu().numpy().copy())
+                    dr_arrays["dones"].append(done_mask.detach().cpu().numpy().copy())
                     dr_arrays["vx"].append(robot.data.root_lin_vel_b[:, 0].detach().cpu().numpy().copy())
                     dr_arrays["vy"].append(robot.data.root_lin_vel_b[:, 1].detach().cpu().numpy().copy())
                     dr_arrays["wz"].append(robot.data.root_ang_vel_b[:, 2].detach().cpu().numpy().copy())

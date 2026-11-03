@@ -121,3 +121,12 @@ def test_direct_child_gets_pinned_package_path(tmp_path):
     assert env["PYTHONPATH"].split(";")[0] == str(tmp_path)
     assert env["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
     assert "CUDA_VISIBLE_DEVICES" not in env
+
+
+def test_integer_done_mask_keeps_other_env_alive():
+    import torch
+    done, alive = recorder.dr_done_and_alive(torch.tensor([True, True, False]),
+                                             torch.tensor([0, 1, 0], dtype=torch.int64))
+    assert done.dtype is torch.bool
+    assert done.tolist() == [False, True, False]
+    assert alive.tolist() == [True, False, False]
