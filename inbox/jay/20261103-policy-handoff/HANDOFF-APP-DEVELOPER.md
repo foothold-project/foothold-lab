@@ -99,7 +99,7 @@ export const POLICY_MODES = Object.freeze({
 
 - 출력을 이름으로 여러 개 돌려준다(`action` 만이 아니라).
 - `onnx.state` 에 적힌 짝대로 출력을 다음 호출의 입력으로 되먹인다(start 의 GRU 둘). 리셋 때 0.
-- 플래그 입력(depth_tick · first_after_reset · use_gt)도 float32 [1] 로 만든다.
+- 입력은 contract.json 에 적힌 자료형대로 만든다. **start 의 플래그 셋(depth_tick · first_after_reset · use_gt)은 ONNX 에서 bool [1]** 이고 나머지는 float32 다(묶음 실측 · ORT Web 은 `new ort.Tensor('bool', [true], [1])` 로 받는다). 지금 실행기처럼 모두 float32 로 만들면 start 는 첫 호출에서 형식 오류가 난다.
 - start 는 지도 모드에 따라 파일 둘 중 하나를 연다(on/off). 모드 안에서 지도 모드를 바꾸면 세션을 바꾸고 상태를 0 으로.
 
 ### 2-4. 모델별 범위 표 (`apps/agent/foothold_agent/policy_ranges.py`)
