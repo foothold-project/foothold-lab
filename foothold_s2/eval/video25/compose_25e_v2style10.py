@@ -936,10 +936,13 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         if push_active:
             arrow_geometry = push_arrow_geometry(
                 push_event, z["root_pos_w"][row], z["root_quat_w"][row], camera_rows[fi],
-                scene_width=scene.shape[1], scene_height=scene.shape[0], legend_rect=LEGEND_RECT)
+                scene_width=scene.shape[1], scene_height=scene.shape[0], legend_rect=LEGEND_RECT,
+                rendered_robot_bbox_xyxy=meta["robot_instance_evidence"][fi].get(
+                    "selected_robot_bbox_xyxy"))
             push_geometry_rows.append({"event_t_s": push_event["t_s"], "frame": fi,
                                        "angle_diff_deg": arrow_geometry["angle_diff_deg"],
                                        "body_start_ok": arrow_geometry["body_start_ok"],
+                                       "rendered_start_ok": arrow_geometry["rendered_start_ok"],
                                        "length_m": arrow_geometry["length_m"],
                                        "screen_width_fraction": arrow_geometry["screen_width_fraction"]})
             scene = draw_push_scene_arrow(scene, arrow_geometry,
@@ -992,7 +995,9 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
                                  "max_screen_width_fraction": max(row["screen_width_fraction"]
                                                                   for row in push_geometry_rows),
                                  "all_starts_inside_body_box": all(row["body_start_ok"]
-                                                                   for row in push_geometry_rows)}}
+                                                                   for row in push_geometry_rows),
+                                 "all_starts_inside_rendered_robot": all(
+                                     row["rendered_start_ok"] for row in push_geometry_rows)}}
                             if push_overlay is not None else None)}
     out.with_suffix(".json").write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return rec

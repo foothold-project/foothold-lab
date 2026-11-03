@@ -156,10 +156,12 @@ def test_world_push_arrow_uses_recorded_camera_only_inside_recovery(tmp_path):
     blank = np.zeros((720, 1280, 3), np.uint8)
     geometry = push_arrow_geometry(event["events"][0], root, [1, 0, 0, 0], camera,
                                    scene_width=1280, scene_height=720,
-                                   legend_rect=composer.LEGEND_RECT)
+                                   legend_rect=composer.LEGEND_RECT,
+                                   rendered_robot_bbox_xyxy=[0, 0, 1280, 720])
     assert geometry["length_m"] == .5
     assert geometry["angle_diff_deg"] < 10
     assert geometry["body_start_ok"]
+    assert geometry["rendered_start_ok"]
     assert geometry["screen_width_fraction"] <= .15
     during = draw_push_scene_arrow(blank.copy(), geometry, flash=True)
     red = (during[:, :, 2] > 190) & (during[:, :, 1] < 110) & (during[:, :, 0] < 110)
@@ -169,7 +171,8 @@ def test_world_push_arrow_uses_recorded_camera_only_inside_recovery(tmp_path):
     with pytest.raises(ValueError, match="camera pose"):
         push_arrow_geometry(event["events"][0], root, [1, 0, 0, 0], None,
                             scene_width=1280, scene_height=720,
-                            legend_rect=composer.LEGEND_RECT)
+                            legend_rect=composer.LEGEND_RECT,
+                            rendered_robot_bbox_xyxy=[0, 0, 1280, 720])
 
 
 def test_arrow_wrong_direction_and_oversize_fail_closed(monkeypatch):
@@ -186,14 +189,22 @@ def test_arrow_wrong_direction_and_oversize_fail_closed(monkeypatch):
     with pytest.raises(ValueError, match="geometry FAIL"):
         push_arrow_geometry(event, root, [1, 0, 0, 0], camera,
                             scene_width=1280, scene_height=720,
-                            legend_rect=composer.LEGEND_RECT)
+                            legend_rect=composer.LEGEND_RECT,
+                            rendered_robot_bbox_xyxy=[0, 0, 1280, 720])
     monkeypatch.setattr(push_overlay_module, "box_arrow_points", original)
     old_eye, old_target = follow_camera_pose(root, push_video=False)
     camera["camera_eye_w"], camera["camera_target_w"] = old_eye, old_target
     with pytest.raises(ValueError, match="geometry FAIL"):
         push_arrow_geometry(event, root, [1, 0, 0, 0], camera,
                             scene_width=1280, scene_height=720,
-                            legend_rect=composer.LEGEND_RECT)
+                            legend_rect=composer.LEGEND_RECT,
+                            rendered_robot_bbox_xyxy=[0, 0, 1280, 720])
+    camera["camera_eye_w"], camera["camera_target_w"] = eye, target
+    with pytest.raises(ValueError, match="geometry FAIL"):
+        push_arrow_geometry(event, root, [1, 0, 0, 0], camera,
+                            scene_width=1280, scene_height=720,
+                            legend_rect=composer.LEGEND_RECT,
+                            rendered_robot_bbox_xyxy=[0, 0, 10, 10])
 
 
 @pytest.mark.parametrize("sha,key,env", [("b" * 64, "forward", 7),

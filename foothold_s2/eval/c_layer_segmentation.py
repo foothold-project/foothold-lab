@@ -62,9 +62,14 @@ def robot_pixel_evidence(packet: dict, *, selected_env: int, env_count: int,
         env = id_to_env.get(int(instance_id))
         if env is not None:
             counts[str(env)] += int(count)
+    selected_mask = np.isin(pixels, list(robot_ids[selected_env]))
+    ys, xs = np.where(selected_mask)
+    selected_bbox = ([int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+                     if xs.size else None)
     return {"selected_env_id": selected_env, "selected_robot_pixels": counts[str(selected_env)],
             "other_robot_pixels": sum(count for env, count in counts.items() if int(env) != selected_env),
-            "robot_pixels_by_env": counts, "source": "instance_id_segmentation_fast"}
+            "robot_pixels_by_env": counts, "selected_robot_bbox_xyxy": selected_bbox,
+            "source": "instance_id_segmentation_fast"}
 
 
 def require_single_visible_robot(evidence: dict, *, min_selected_pixels: int = 80) -> None:

@@ -62,7 +62,8 @@ def _body_box(root: np.ndarray, quat_wxyz, camera: dict, projection: dict) -> tu
 
 def push_arrow_geometry(event: dict, root_pos_w, root_quat_w, camera: dict, *,
                         scene_width: int, scene_height: int,
-                        legend_rect: tuple[int, int, int, int]) -> dict:
+                        legend_rect: tuple[int, int, int, int],
+                        rendered_robot_bbox_xyxy) -> dict:
     """One 3D world vector, projected once for both arrows and audited before drawing."""
     if not isinstance(camera, dict):
         raise ValueError("push arrow needs the recorded camera pose")
@@ -85,11 +86,19 @@ def push_arrow_geometry(event: dict, root_pos_w, root_quat_w, camera: dict, *,
     pixel_length = float(np.linalg.norm(delta))
     body_box = _body_box(root, root_quat_w, camera, projection)
     body_start_ok = body_box[0] <= start[0] <= body_box[2] and body_box[1] <= start[1] <= body_box[3]
+    visible_box = np.asarray(rendered_robot_bbox_xyxy)
+    if (visible_box.shape != (4,) or not np.isfinite(visible_box).all()
+            or not (0 <= visible_box[0] < visible_box[2] <= scene_width
+                    and 0 <= visible_box[1] < visible_box[3] <= scene_height)):
+        raise ValueError("push rendered robot screen box missing")
+    rendered_start_ok = (visible_box[0] <= start[0] < visible_box[2]
+                         and visible_box[1] <= start[1] < visible_box[3])
     box_start, box_tip = box_arrow_points(legend_rect, delta)
     box_delta = np.asarray(box_tip, dtype=np.float64) - box_start
     cos_angle = float(delta @ box_delta / (pixel_length * np.linalg.norm(box_delta)))
     angle_diff_deg = math.degrees(math.acos(float(np.clip(cos_angle, -1.0, 1.0))))
-    if (not body_start_ok or not np.isfinite(pixel_length) or pixel_length < 1
+    if (not body_start_ok or not rendered_start_ok
+            or not np.isfinite(pixel_length) or pixel_length < 1
             or pixel_length > 0.15 * scene_width or angle_diff_deg >= 10
             or not (0 <= start[0] < scene_width and 0 <= start[1] < scene_height)
             or not (0 <= tip[0] < scene_width and 0 <= tip[1] < scene_height)):
@@ -98,6 +107,8 @@ def push_arrow_geometry(event: dict, root_pos_w, root_quat_w, camera: dict, *,
             "scene_tip": tuple(int(round(value)) for value in tip),
             "box_start": box_start, "box_tip": box_tip,
             "body_screen_box_xyxy": body_box, "body_start_ok": bool(body_start_ok),
+            "rendered_robot_bbox_xyxy": visible_box.tolist(),
+            "rendered_start_ok": bool(rendered_start_ok),
             "length_m": length_m, "length_px": pixel_length,
             "screen_width_fraction": pixel_length / scene_width,
             "angle_diff_deg": angle_diff_deg}

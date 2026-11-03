@@ -35,6 +35,7 @@ def test_other_robot_is_detected_and_subject_alone_passes():
     single = robot_pixel_evidence(packet(100), selected_env=0, env_count=2,
                                   height=20, width=30)
     require_single_visible_robot(single)
+    assert single["selected_robot_bbox_xyxy"] == [0, 0, 30, 4]
 
 
 def test_missing_identity_map_is_hold():
@@ -64,3 +65,4 @@ def test_fixed64_counts_selected_and_hidden_ids_in_one_frame():
     )
     assert evidence["selected_robot_pixels"] == 81
     assert evidence["other_robot_pixels"] == 1
+    assert evidence["selected_robot_bbox_xyxy"] == [0, 0, 10, 9]

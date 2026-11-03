@@ -188,6 +188,7 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
     if (arrow_audit.get("pass") is not True or arrow_audit.get("frames", 0) <= 0
             or arrow_audit.get("events") != [event[0] for event in DEMO_PUSHES]
             or arrow_audit.get("all_starts_inside_body_box") is not True
+            or arrow_audit.get("all_starts_inside_rendered_robot") is not True
             or not 0 <= arrow_audit.get("max_angle_diff_deg", float("inf")) < 10
             or not 0 < arrow_audit.get("max_screen_width_fraction", float("inf")) <= .15):
         raise ValueError("A push scene and legend arrow geometry FAIL")
