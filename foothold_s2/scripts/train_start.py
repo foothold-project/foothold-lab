@@ -193,6 +193,46 @@ if _pre_args.ex41_table:
         if not _pre_args.ex41_parent_checkpoint:
             raise ValueError("EX-41 disk preflight requires the pinned m6000 parent checkpoint")
         EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
+        resume_preflight = EX41_RESUME_PREFLIGHT
+        resume_state_readback = None
+        if (_pre_args.resume_from and resume_preflight is None
+                and _pre_args.ex41_rehearsal_updates is None):
+            if not _pre_args.ex41_log_root:
+                raise ValueError("EX-41 resume preflight requires the existing --ex41_log_root")
+            resume_preflight = validate_resume_manifest(
+                _pre_args.resume_from,
+                os.path.join(os.path.dirname(os.path.abspath(_pre_args.resume_from)), "manifest.json"),
+                plan_sha256=EX41_PLAN.sha256,
+                effective_sha256=EX41_PLAN.effective_sha256,
+                parent_sha256=EX41_PARENT_RECEIPT["sha256"],
+                log_dir=_pre_args.ex41_log_root,
+                score_dir=_pre_args.ex41_score_dir,
+            )
+        if resume_preflight:
+            if resume_preflight["parent_sha256"] != EX41_PARENT_RECEIPT["sha256"]:
+                raise ValueError("EX-41 resume checkpoint parent SHA differs from the pinned m6000 parent")
+            saved_state = torch.load(_pre_args.resume_from, map_location="cpu", weights_only=False)
+            saved_curriculum = saved_state["continuous_curriculum"]
+            saved_snapshot = saved_curriculum["snapshot"]
+            saved_approvals = saved_snapshot.get("approvals", {}).get("fields", {})
+            current_snapshot = authorization_snapshot(EX41_PLAN)
+            resume_state_readback = {
+                "completed_updates": resume_preflight["completed_updates"],
+                "next_update": resume_preflight["next_update"],
+                "w72_last_valid_boundary": resume_preflight["last_valid_boundary"],
+                "w72_segment_index": resume_preflight["segment_index"],
+                "w72_fixed_clock": resume_preflight["fixed_clock"],
+                "w72_saved_snapshot_commit": saved_snapshot.get("commit"),
+                "w72_saved_config_sha256": saved_snapshot.get("config_sha256"),
+                "w72_saved_approval_sha256": saved_snapshot.get("approval_sha256"),
+                "w72_snapshot_matches_current": saved_snapshot == current_snapshot,
+                "dr_scale": resume_preflight["dr_scale"],
+                "critic_mirror": saved_state.get("ex41_critic_mirror"),
+                "critic_mirror_approval": saved_state.get("ex41_mirror_approval"),
+                "mirror_pending": saved_curriculum.get("mirror_pending"),
+                "last_mirror_observed_score": saved_curriculum.get("last_mirror_observed_score"),
+                "d174_critic_mirror_approval": saved_approvals.get("critic_mirror"),
+            }
         disk_root = (_pre_args.ex41_rehearsal_output if _pre_args.ex41_rehearsal_updates is not None
                      else _pre_args.ex41_log_root)
         if not disk_root:
@@ -234,6 +274,8 @@ if _pre_args.ex41_table:
                                       if _pre_args.ex41_startup_smoke_updates is not None else None),
             "startup_smoke_device": (_pre_args.device
                                       if _pre_args.ex41_startup_smoke_updates is not None else None),
+            "resume_preflight": resume_preflight,
+            "resume_state_readback": resume_state_readback,
             "output_layout": ({key: str(value) for key, value in EX41_OUTPUT_LAYOUT.items()}
                               if EX41_OUTPUT_LAYOUT else None),
             "production_launch_allowed": EX41_LAUNCH_DECISION["production_launch_allowed"],

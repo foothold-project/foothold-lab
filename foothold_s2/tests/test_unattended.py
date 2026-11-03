@@ -3,8 +3,11 @@
 가짜 env 로 runner 배선만 본다. 실제 Isaac 의 「띄움 · 첫 증거 · 끝」 은 학습 승인 뒤 첫 실행에서.
 """
 
+import ctypes
 import json
 import os
+import sys
+import threading
 
 import torch
 
@@ -89,6 +92,79 @@ def test_write_status_failed_keeps_old_file(tmp_path, monkeypatch):
         pass
     monkeypatch.setattr(os, "replace", real)
     assert read_status(str(tmp_path))["iter"] == 5  # 반쯤 쓰인 파일이 아니라 이전 온전한 파일
+
+
+def _hold_windows_file_without_delete_sharing(path):
+    """Open a real Windows handle that allows readers but blocks replacement."""
+    if sys.platform != "win32":
+        raise RuntimeError("this test requires Windows file sharing semantics")
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32,
+                                   ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32,
+                                   ctypes.c_void_p]
+    kernel.CreateFileW.restype = ctypes.c_void_p
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel.CloseHandle.restype = ctypes.c_int
+    handle = kernel.CreateFileW(str(path), 0x80000000, 0x00000001 | 0x00000002,
+                                None, 3, 0x00000080, None)
+    if handle == ctypes.c_void_p(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    return kernel, handle
+
+
+def test_write_status_retries_real_windows_sharing_lock(tmp_path, monkeypatch):
+    """A reader handle without FILE_SHARE_DELETE transiently blocks os.replace."""
+    if sys.platform != "win32":
+        import pytest
+        pytest.skip("Windows replacement sharing semantics")
+    from foothold_s2.runners import status as status_module
+
+    write_status(str(tmp_path), {"state": "running", "iter": 5})
+    target = tmp_path / NAME
+    kernel, handle = _hold_windows_file_without_delete_sharing(target)
+    real_replace = os.replace
+    failed = []
+
+    def counted_replace(source, destination):
+        try:
+            return real_replace(source, destination)
+        except PermissionError:
+            failed.append(True)
+            raise
+
+    monkeypatch.setattr(status_module.os, "replace", counted_replace)
+    timer = threading.Timer(0.22, lambda: kernel.CloseHandle(handle))
+    timer.start()
+    try:
+        result = write_status(str(tmp_path), {"state": "running", "iter": 6})
+        timer.join(timeout=2)
+        assert result == str(target)
+        assert failed, "os.replace must have hit the real sharing lock before release"
+        assert read_status(str(tmp_path))["iter"] == 6
+        assert not [name for name in os.listdir(tmp_path) if name.endswith(f".tmp{os.getpid()}")]
+    finally:
+        timer.join(timeout=2)
+        # CloseHandle returns false if the timer already closed it.
+        kernel.CloseHandle(handle)
+
+
+def test_training_continues_when_status_destination_stays_locked(tmp_path, capsys):
+    """Persistent monitor lock loses only the optional status write, not a CPU update."""
+    if sys.platform != "win32":
+        import pytest
+        pytest.skip("Windows replacement sharing semantics")
+    runner, env = _runner(tmp_path)
+    write_status(str(tmp_path), {"state": "running", "iter": 5})
+    kernel, handle = _hold_windows_file_without_delete_sharing(tmp_path / NAME)
+    try:
+        runner.learn(1)
+        assert runner.current_learning_iteration >= 0
+        assert env.common_step_counter > 0
+        warning_lines = [line for line in capsys.readouterr().out.splitlines()
+                         if line.startswith("EX41_STATUS_WRITE_WARN ")]
+        assert len(warning_lines) == 1
+    finally:
+        kernel.CloseHandle(handle)
 
 
 def test_latest_pt_written_and_atomic(tmp_path):

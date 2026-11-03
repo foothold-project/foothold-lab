@@ -18,6 +18,7 @@ import os
 import time
 
 NAME = "train_start_status.json"
+REPLACE_RETRY_DELAYS = (0.05, 0.1, 0.2, 0.4, 0.8)
 
 
 def write_status(log_dir: str | None, payload: dict) -> str:
@@ -31,7 +32,23 @@ def write_status(log_dir: str | None, payload: dict) -> str:
         json.dump(body, f, ensure_ascii=False, indent=1, default=str)
         f.flush()
         os.fsync(f.fileno())
-    os.replace(tmp, path)
+    for attempt in range(len(REPLACE_RETRY_DELAYS) + 1):
+        try:
+            os.replace(tmp, path)
+            break
+        except PermissionError as exc:
+            if attempt < len(REPLACE_RETRY_DELAYS):
+                time.sleep(REPLACE_RETRY_DELAYS[attempt])
+                continue
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            print(
+                f"EX41_STATUS_WRITE_WARN PermissionError: skipped locked status file {path} "
+                f"after {attempt + 1} replace attempts ({exc})",
+                flush=True,
+            )
     return path
 
 
