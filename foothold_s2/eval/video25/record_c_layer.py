@@ -54,6 +54,21 @@ SPARSE_ENV_COUNT = 64
 SPARSE_COMMAND = ("fwd1.0", (1.0, 0.0, 0.0), 18.0)
 
 
+def follow_camera_pose(robot_pos, *, push_video: bool = False):
+    """Keep the A-layer world arrow under 15% of the 1280 px scene width.
+
+    The push-only camera backs away along the existing sightline. Terrain,
+    physics, policy and command sampling are unchanged.
+    """
+    import numpy as np
+    root = np.asarray(robot_pos, dtype=np.float64)
+    eye = root + [-0.6, -1.6, 0.85]
+    target = root + [0.25, 0.0, -0.05]
+    if push_video:
+        eye = target + 1.45 * (eye - target)
+    return tuple(float(value) for value in eye), tuple(float(value) for value in target)
+
+
 def fall_ref(spec) -> bool:
     return spec.get("fall_reference") is True
 
@@ -1777,8 +1792,8 @@ def _capture(spec: dict[str, Any]) -> None:
                 if target_marker_op is not None:
                     update_target_marker(target_marker_op, robot_pos,
                                          target_marker_record["height_above_root_m"])
-                camera_eye = (float(robot_pos[0] - 0.6), float(robot_pos[1] - 1.6), float(robot_pos[2] + 0.85))
-                camera_target = (float(robot_pos[0] + 0.25), float(robot_pos[1]), float(robot_pos[2] - 0.05))
+                camera_eye, camera_target = follow_camera_pose(
+                    robot_pos, push_video=a_push_video_ref(spec))
                 raw.sim.set_camera_view(eye=camera_eye, target=camera_target)
                 import omni.usd
                 from pxr import UsdGeom

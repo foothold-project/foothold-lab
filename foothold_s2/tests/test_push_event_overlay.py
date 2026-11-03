@@ -9,10 +9,12 @@ import pytest
 import cv2
 
 from foothold_s2.eval.video25.push_event_overlay import (
-    active_push_event, box_arrow_points, draw_push_overlay, draw_push_scene_arrow, load_overlay,
+    active_push_event, box_arrow_points, draw_push_overlay, draw_push_scene_arrow,
+    load_overlay, push_arrow_geometry,
 )
 from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
 from foothold_s2.eval.video25 import push_event_overlay as push_overlay_module
+from foothold_s2.eval.video25.record_c_layer import follow_camera_pose
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 
 
@@ -28,6 +30,11 @@ def fixture(tmp_path):
     return path
 
 
+def legend_geometry():
+    start, tip = box_arrow_points(composer.LEGEND_RECT, (2, -1))
+    return {"box_start": start, "box_tip": tip}
+
+
 def test_world_xy_direction_magnitude_and_time(tmp_path):
     event = load_overlay(fixture(tmp_path), "a" * 64, "forward", 7)
     assert event["events"] == [{"t_s": 2.0, "dx": 0.0, "dy": 2.0,
@@ -35,7 +42,8 @@ def test_world_xy_direction_magnitude_and_time(tmp_path):
     before = np.zeros((720, 1280, 3), np.uint8)
     bounds = {"legend_rect": composer.LEGEND_RECT}
     assert np.array_equal(draw_push_overlay(before.copy(), event, 1.99, **bounds), before)
-    during = draw_push_overlay(before.copy(), event, 2.5, **bounds)
+    during = draw_push_overlay(before.copy(), event, 2.5, **bounds,
+                               geometry=legend_geometry())
     x0, y0, width, height = composer.LEGEND_RECT
     assert during[y0:y0 + height, x0:x0 + width].sum() > 0
     after = draw_push_overlay(before.copy(), event, 4.0, **bounds)
@@ -63,7 +71,8 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
     assert expected_edges == (composer.GAUGE_X0, composer.GAUGE_X1)
 
     def check_rect(rect):
-        frame = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=rect)
+        frame = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=rect,
+                                  geometry=legend_geometry())
         x0, y0, width, height = rect
         pixels = np.argwhere(frame.any(axis=2))
         assert (int(pixels[:, 1].min()), int(pixels[:, 0].min()),
@@ -81,7 +90,7 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
     assert (lx, lx + lw) == expected_edges
     assert ly + lh + 8 == composer.GAUGE_Y0
     frame = check_rect(composer.LEGEND_RECT)
-    start, tip = box_arrow_points(composer.LEGEND_RECT, event["events"][0])
+    start, tip = box_arrow_points(composer.LEGEND_RECT, (2, -1))
     assert ((start[0] + tip[0]) / 2, (start[1] + tip[1]) / 2) == (
         lx + lw // 2, ly + lh // 2)
     arrow = np.argwhere((frame[:, :, 0] < 100) & (frame[:, :, 1] > 150) & (frame[:, :, 2] > 180))
@@ -106,7 +115,8 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
                               color, thickness, line_type, tipLength=tipLength)
 
     monkeypatch.setattr(push_overlay_module.cv2, "arrowedLine", arrow_into_footer)
-    mutated = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=composer.LEGEND_RECT)
+    mutated = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=composer.LEGEND_RECT,
+                                geometry=legend_geometry())
     mutated_arrow = np.argwhere((mutated[:, :, 0] < 100) & (mutated[:, :, 1] > 150)
                                 & (mutated[:, :, 2] > 180))
     assert not separated((int(mutated_arrow[:, 0].min()), int(mutated_arrow[:, 0].max()) + 1))
@@ -139,20 +149,51 @@ def test_v34_receipt_accepts_current_composer_and_rejects_old_rule():
 
 def test_world_push_arrow_uses_recorded_camera_only_inside_recovery(tmp_path):
     event = load_overlay(fixture(tmp_path), "a" * 64, "forward", 7)
-    camera = {"camera_eye_w": [-38.575643, -88.300874, 1.429598],
-              "camera_target_w": [-37.725643, -86.700874, 0.529598],
-              "focal_length_mm": 18.147562, "horizontal_aperture_mm": 20.955}
     root = np.array([-37.975643, -86.700874, 0.579598])
+    eye, target = follow_camera_pose(root, push_video=True)
+    camera = {"camera_eye_w": eye, "camera_target_w": target,
+              "focal_length_mm": 18.147562, "horizontal_aperture_mm": 20.955}
     blank = np.zeros((720, 1280, 3), np.uint8)
-    assert np.array_equal(draw_push_scene_arrow(blank.copy(), event, 1.99, root, camera), blank)
-    during = draw_push_scene_arrow(blank.copy(), event, 2.5, root, camera)
+    geometry = push_arrow_geometry(event["events"][0], root, [1, 0, 0, 0], camera,
+                                   scene_width=1280, scene_height=720,
+                                   legend_rect=composer.LEGEND_RECT)
+    assert geometry["length_m"] == .5
+    assert geometry["angle_diff_deg"] < 10
+    assert geometry["body_start_ok"]
+    assert geometry["screen_width_fraction"] <= .15
+    during = draw_push_scene_arrow(blank.copy(), geometry, flash=True)
     red = (during[:, :, 2] > 190) & (during[:, :, 1] < 110) & (during[:, :, 0] < 110)
     assert red.sum() > 50
-    assert np.where(red)[0].min() < 300
-    assert np.where(red)[0].max() < 400  # known robot body centre is y=364
-    assert np.array_equal(draw_push_scene_arrow(blank.copy(), event, 4.0, root, camera), blank)
+    sx, sy = geometry["scene_start"]
+    assert red[max(0, sy-12):sy+13, max(0, sx-12):sx+13].sum() > 0
     with pytest.raises(ValueError, match="camera pose"):
-        draw_push_scene_arrow(blank.copy(), event, 2.5, root, None)
+        push_arrow_geometry(event["events"][0], root, [1, 0, 0, 0], None,
+                            scene_width=1280, scene_height=720,
+                            legend_rect=composer.LEGEND_RECT)
+
+
+def test_arrow_wrong_direction_and_oversize_fail_closed(monkeypatch):
+    root = np.array([-37.975643, -86.700874, 0.579598])
+    eye, target = follow_camera_pose(root, push_video=True)
+    camera = {"camera_eye_w": eye, "camera_target_w": target,
+              "focal_length_mm": 18.147562, "horizontal_aperture_mm": 20.955}
+    event = {"t_s": 2.0, "dx": 2.0, "dy": 0.0}
+    original = push_overlay_module.box_arrow_points
+    def reversed_box(rect, delta):
+        start, tip = original(rect, delta)
+        return tip, start
+    monkeypatch.setattr(push_overlay_module, "box_arrow_points", reversed_box)
+    with pytest.raises(ValueError, match="geometry FAIL"):
+        push_arrow_geometry(event, root, [1, 0, 0, 0], camera,
+                            scene_width=1280, scene_height=720,
+                            legend_rect=composer.LEGEND_RECT)
+    monkeypatch.setattr(push_overlay_module, "box_arrow_points", original)
+    old_eye, old_target = follow_camera_pose(root, push_video=False)
+    camera["camera_eye_w"], camera["camera_target_w"] = old_eye, old_target
+    with pytest.raises(ValueError, match="geometry FAIL"):
+        push_arrow_geometry(event, root, [1, 0, 0, 0], camera,
+                            scene_width=1280, scene_height=720,
+                            legend_rect=composer.LEGEND_RECT)
 
 
 @pytest.mark.parametrize("sha,key,env", [("b" * 64, "forward", 7),

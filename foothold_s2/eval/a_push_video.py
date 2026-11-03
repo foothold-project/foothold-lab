@@ -184,6 +184,13 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
             or composition.get("checkpoint_sha256") != source["checkpoint_sha256"]
             or composition.get("push_overlay", {}).get("rollout_key") != spec["push_group_id"]):
         raise ValueError("A push styled receipt or overlay differs")
+    arrow_audit = composition.get("push_overlay", {}).get("arrow_geometry_audit") or {}
+    if (arrow_audit.get("pass") is not True or arrow_audit.get("frames", 0) <= 0
+            or arrow_audit.get("events") != [event[0] for event in DEMO_PUSHES]
+            or arrow_audit.get("all_starts_inside_body_box") is not True
+            or not 0 <= arrow_audit.get("max_angle_diff_deg", float("inf")) < 10
+            or not 0 < arrow_audit.get("max_screen_width_fraction", float("inf")) <= .15):
+        raise ValueError("A push scene and legend arrow geometry FAIL")
     styled_audit = audit_video(styled, expected=150, width=1920, height=1080,
                                screen_evidence=meta.get("camera_screen_projection"),
                                robot_instance_evidence=mask, composite_receipt=receipt_path,
