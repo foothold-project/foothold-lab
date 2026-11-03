@@ -1,8 +1,8 @@
 > 분류: B/앱 · ame2-demo 앱 전달 묶음 보완 (lab PR #574 의 빠진 두 칸)
-> 작성: 오흥재 (lead 세션) · 2026-11-03 21:2x
+> 작성: 오흥재 · lead 세션 · 2026-11-03 21:2x
 > 근거: 석헌 님 묶음 `inbox/lim/20261103-policy-handoff/ame2-demo/` (PR #574 head 94e448ea) · `ame2-demo.onnx` sha256 830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6 · `test_vectors_flat20.npz` sha256 da327ac823601ac36974c3eed0bc2c2acc697e0ddd1965bae29669936b9adde7 · 꼴은 `../start-demo/` 와 `../HANDOFF-APP-DEVELOPER.md` §2-5a
 > 요지: 지시문(HANDOFF-AME2-WORKER.md · 공통 규칙 「묶음 폴더」)이 요구했지만 PR #574 에 없던 `test_vectors_flat20.json` 과 `app_onnx` 칸을 석헌 님 npz · ONNX 에서 기계적으로 만들어 보탠다. ONNX 와 정답 값은 바꾸지 않았다
-> 상태: 팀장 결정(lead 쪽에서 채움) · PR #574 와 함께 머지 대기
+> 상태: 팀장 결정(lead 쪽에서 채움) · PR #574 는 main 에 머지됨(002607e6) · 이 보완은 lab PR #576
 
 # ame2-demo 앱 보완 파일
 

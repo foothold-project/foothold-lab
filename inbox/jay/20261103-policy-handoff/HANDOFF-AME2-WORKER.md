@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · AME-2 작업자 전달 지시문 (AME-2 teacher → 앱 묶음)
-> 작성: 오흥재 (lead 세션) · 2026-11-03 15:2x v0.1 · 16:1x v0.2 · 16:3x v0.3 (문서 셋으로 나눔 · 저장소 배치 · 가리키는 파일)
+> 작성: 오흥재 · lead 세션 · 2026-11-03 15:2x v0.1 · 16:1x v0.2 · 16:3x v0.3 (문서 셋으로 나눔 · 저장소 배치 · 가리키는 파일)
 > 근거: m6000 앱 조건표 `APP-POLICY-CONTRACT-m6000.md` v0.2 양식 · m6000 ONNX 묶음 `D:/mai-tmp/scripter/w89_export/contract.json` · 석헌 실험 읽기 `inbox/jay/20261018-next-arch/REPORT-seokheon-ame2.md` · 로컬 원자료 `D:/mai-data/ame2/raw/ame2_spd/` (env.yaml · agent.yaml · observations.py · AME2_models.py) · 앱 사본 `analyst-1102/_out/1102/app/mobile/sim/ame2-adapter.js` (135a8469) · 앱 dev d9b6f382 (gh 읽기)
 > 요지: 석헌 님(또는 석헌 님의 에이전트)이 아래 「지시문」 하나만 보고 AME-2 저장본에서 ONNX · contract.json · 조건표 · 같은 출력 확인 기록을 뽑아 lab 저장소 `inbox/lim/` 에 PR 로 올리면, 현민 님이 그대로 앱에 붙일 수 있게 한다. AME-2 는 우리 START_oh2l2 와 명령 · 관측 · 지도 · 신경망 · 상태가 모두 달라서 m6000 문서를 그대로 베끼면 안 된다(§3)
-> 상태: v0.3.1 · 석헌 님이 아래 지시문으로 묶음 PR(lab #569) · start-demo 묶음이 같은 꼴의 실례(`inbox/jay/20261103-policy-handoff/start-demo/`)
+> 상태: v0.3.2 · 묶음 lab main 머지(PR #574 · 002607e6) · 빠진 json 시험 벡터 · app_onnx 는 lead 가 `ame2-demo-app/` 로 보완 · 출력 이름은 action · gaze_r · start-demo 묶음이 같은 꼴의 실례(`inbox/jay/20261103-policy-handoff/start-demo/`)
 
 # AME-2 정책을 앱에 넘기는 지시문
 
