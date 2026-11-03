@@ -109,10 +109,45 @@ export const POLICY_MODES = Object.freeze({
 ### 2-5. 확인 (답을 아는 입력으로 먼저)
 
 1. 순서: 기본 자세로 세우면 `관절각 − 기본` 12 가 전부 |값| < 0.05. a 에 0 을 넣으면 목표각 = §1.1 벡터.
-2. 같은 출력: 묶음의 `test_vectors_flat20.npz` 를 앱 실행기에 넣어 `action` 최대 차이 1e-4 이하(start 는 상태 되먹임까지 20 스텝 이어서).
+2. 같은 출력: 묶음의 시험 벡터(아래 §2-5a)를 앱 실행기에 넣어 `action` 최대 차이 1e-4 이하. start 는 상태 되먹임까지 20 스텝 이어서.
 3. 정지: 명령 0 으로 30 초 서 있기.
 4. 토크: start 모드에서 calf 토크가 23.5 에서 잘리지 않는지(로그로).
 5. 지도: 서 있는 평지에서 start 지도 값은 모든 칸이 약 −0.3(= 바닥 − 몸 높이), ame2 z 채널은 0 근처(+0.27 상수 때문). 두 값이 이렇게 다르게 나오면 지도 함수가 모드별로 맞게 나뉜 것이다.
+
+### 2-5a. 시험 벡터 받는 꼴 (start-demo · ame2-demo 공통)
+
+묶음마다 같은 내용을 두 꼴로 준다: `test_vectors_flat20.json`(앱 · Node · 브라우저용) · `test_vectors_flat20.npz`(파이썬용). 평지에서 실제 학습 환경을 20 스텝 돌리며 기록한 것이다.
+
+```json
+{
+  "format": "<이름>-test-vectors/1",          // 예 start-demo-test-vectors/1
+  "model": "start-demo", "checkpoint_sha256": "d5e9ec40...",
+  "onnx": {"start-demo_map_on.onnx": "81c7e079..."},  // 어느 파일 · sha 로 만든 답인지
+  "map_mode": "reconstruction",                // start: reconstruction · off · gt 셋을 각각 한 벌씩, ame2: gt
+  "steps": 20, "tolerance": 1e-4, "state_feedback": true,   // ame2 는 false
+  "inputs":   [ {"obs45": [...], "hist": [...], "...": [...]}, ... 20 개 ],   // ONNX 입력 이름 그대로, 펼친 float32 배열
+  "expected": [ {"action": [...], "h_prop_next": [...], "h_terr_next": [...]}, ... 20 개 ]
+}
+```
+
+앱 시험(이름 제안 `mobile/scripts/policy-vector-selftest.mjs`, Node ORT 와 브라우저 ORT 둘 다):
+
+```js
+const tv = JSON.parse(await readFile(path));
+let state = null;
+for (let k = 0; k < tv.steps; k++) {
+  const feed = { ...tv.inputs[k] };
+  if (tv.state_feedback && k > 0) Object.assign(feed, state);   // 기록된 h 가 아니라 **앱이 앞 스텝에서 받은 h** 를 넣는다
+  const out = await infer(feed);                                 // 앱 실행기 그대로
+  const err = maxAbs(out.action, tv.expected[k].action);
+  if (err > tv.tolerance) throw new Error(`step ${k} action ${err}`);
+  if (tv.state_feedback) state = { h_prop: out.h_prop_next, h_terr: out.h_terr_next };
+}
+```
+
+- 첫 스텝은 기록된 입력 그대로(상태 0 · first_after_reset 1). 둘째부터 상태를 앱이 되먹여 20 스텝 모두 통과해야 실행기의 상태 되먹임이 맞다.
+- 실패하면 몇 번째 스텝 · 어느 출력에서 벗어났는지가 원인을 알려 준다(첫 스텝 실패 = 입력 이름 · 순서 · 모양, 둘째부터 실패 = 상태 되먹임).
+- 시험 벡터의 `onnx` sha 와 앱이 연 ONNX 의 sha 가 다르면 시험하지 않는다.
 
 ### 2-6. 하지 않는 것
 

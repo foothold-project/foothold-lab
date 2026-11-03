@@ -67,11 +67,11 @@
 - contract.json: m6000 묶음(format "start-demo-onnx/1")과 같은 꼴로 format "ame2-demo-onnx/1", checkpoint · sha256 · source · inputs/outputs(이름 · 모양 · dtype · 뜻) · actor_input_order · command_type "goal_pose_xy_sincos" · state "stateless" · action 식(바깥에서 할 일) · joint_names · default_joint_pos · kp/kd · control_hz · action_delay · map spec · artifacts(path · sha256 · bytes) 를 넣는다.
 - CONTRACT.md: m6000 조건표와 같은 절 순서(0a 맨 위 값 표 · 0b 관절 순서 경고 · 1 저장본 · 2 ONNX 에 든 것 · 3 조건표 · 5a 받아 쓰는 법 · 9 기계 블록)로, 값마다 파일:줄과 등급(설정/코드/실측/가정).
 - parity.json: 3단계 결과(스텝 수 · 최대 차이 · 통과 여부).
-- 3단계 npz 중 평지 20 스텝 짜리 하나(test_vectors_flat20.npz) · 앱이 자기 구현을 맞춰 보는 데 쓴다.
+- 3단계 기록 중 평지 20 스텝을 test_vectors_flat20.json 과 .npz 두 꼴로(꼴은 HANDOFF-APP-DEVELOPER.md §2-5a, format "ame2-demo-test-vectors/1", state_feedback false) · 앱이 자기 구현을 맞춰 보는 데 쓴다.
 
 [5단계 · 올리기]
 - foothold-project/foothold-lab 을 받아 main 에서 브랜치 inbox-lim-ame2-export 를 만든다.
-- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 같은 폴더 README.md 「저장소 배치」). 다른 폴더(docs/ 등)는 건드리지 않는다.
+- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 같은 폴더 README.md 「저장소 배치」). 다른 폴더(docs/ 등)는 건드리지 않는다.
 - ONNX 파일도 같은 폴더에 커밋한다(팀장 11/03 17:0x · 한 파일 100 MB 아래인지 확인). .pt 저장본은 올리지 않고 RunPod 경로와 sha256 을 contract.json 의 checkpoint 칸에 적는다.
 - PR 제목 「AME-2 teacher m<ITER> 앱 전달 묶음」, 본문에 체크포인트 sha · parity 최대 차이 · 미확인 목록.
 - 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
@@ -90,7 +90,7 @@
 | `contract.json` | 입출력 이름 · 모양 · 식 · sha | `w89_export/contract.json` |
 | `CONTRACT.md` | 사람이 읽는 조건표(같은 절 순서) | `APP-POLICY-CONTRACT-m6000.md` |
 | `parity.json` | PyTorch 대 ONNX 최대 차이 | `w89_export/comparison.json` |
-| `test_vectors_flat20.npz` | 앱이 맞춰 볼 입력 · 정답 출력 | (m6000 은 Isaac 기록 토막) |
+| `test_vectors_flat20.json` · `.npz` | 앱이 맞춰 볼 입력 · 정답 출력(꼴은 앱 문서 §2-5a) | start-demo 도 같은 꼴 |
 
 ## 2a. 앱 쪽
 
