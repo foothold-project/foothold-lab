@@ -2,11 +2,25 @@
 > 작성: 오흥재 (lead 세션) · 2026-11-03 16:3x v0.1 · 19:1x v0.2 (앱 dev 20f3d066 파일 단위 전수 대조 반영 · §3 새 절)
 > 근거: m6000 조건표 정본 `inbox/jay/20261101-app/APP-POLICY-CONTRACT-m6000.md` v0.3.1 (lead 가지 dc81513c) · AME-2 학습 설정 `ame2_spd/.../params/env.yaml` · `agent.yaml` · foothold-app dev `20f3d066`(2026-11-03 09:19Z, mobile/sim 은 6740de88 과 같음) (`mobile/sim/policy-adapters.js` · `ame2-adapter.js` · `policy-onnx.js` · `docs/spec/11-POLICY-ADAPTER.md`)
 > 요지: 앱에 「모드」 넷(nvidia · start · ame2 · go2)을 두고, 모드를 고르면 그 정책의 값 전부(관측 · 명령 · 지도 · 토크 · 자르기 · 상태 · ONNX)가 함께 바뀌게 한다. 사람이 주는 명령과 화면 상한은 하나로 통일하고, 정책에 넣기 직전에 모드가 바꾼다. 아래 §1 이 답(값)이고 §2 가 만들 것이다
-> 상태: v0.1 · start 모드 값은 m6000 묶음 기준(아직 앱에 넘기지 않음) · ame2 모드는 앱에 이미 있는 값을 정본 값과 맞춰 적음 · 명령 가속 제한 값은 미정
+> 상태: v0.2.1 · start-demo 묶음 전달됨(lab PR #571 · `inbox/jay/20261103-policy-handoff/start-demo/`) · ame2-demo 묶음은 석헌 님 PR 대기(lab #569) · 앱 작업 이슈 foothold-app#259
 
 # 앱 개발 준수 사항 · 정책 모드 넷
 
-이 문서 하나만 보고 앱 코드를 짤 수 있게 썼다. 이름 규칙과 저장소 배치는 같은 폴더 `README.md`.
+이 문서 하나만 보고 앱 코드를 짤 수 있게 썼다. 이름 · 진행 순서 · 묶음 폴더 · 정해진 것은 바로 아래 「공통 규칙」.
+
+## 공통 규칙 (이 문서만 보고 일할 수 있게 같은 내용을 세 문서에 모두 둔다 · 2026-11-03 19:3x 판)
+
+**이름(D170).** 모드 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 이름 `nvidia-demo`(앱의 옛 `foothold-v2`) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 이름 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` · `go2-oh2l2`. ONNX 파일 = 이름 + `.onnx`(start 는 `_map_on` · `_map_off` 둘). 묶음 format = 이름 + `-onnx/1`, 입출력이 바뀌면 `/1` 을 올린다.
+
+**진행 순서.** ① lead 가 start-demo 묶음 · 석헌 님이 ame2-demo 묶음을 PR ② 팀장이 PR 검증 · 머지 ③ 현민 님이 앱에 적용. 현민 님은 ①을 기다리지 않고 앱 구조부터 만든다(값은 앱 문서에 있다).
+
+**묶음 폴더(ONNX 도 lab 에 올린다).** `inbox/<올린 사람>/20261103-policy-handoff/<이름>/` 에 `<이름>.onnx` · `CONTRACT.md` · `contract.json`(입출력 이름 · dims · type · 실측 순서 · 각 ONNX sha256, 앱 adapter `onnx` 꼴은 `app_onnx` 칸) · `parity.json` · `test_vectors_flat20.json` 과 `.npz` · `SHA256SUMS` · `.gitattributes`(`* -text`, 바이트 그대로). 한 파일 100 MB 아래. 앱 저장소에는 ONNX 를 커밋하지 않고 이 폴더에서 복사해 sha256 을 맞춰 쓴다.
+
+**정해진 것(다시 묻지 않는다).** ONNX 하나를 웹 시뮬과 실기가 함께 쓴다 · **앱 ONNX 실행기는 상태 출력(GRU)을 다음 호출 입력으로 되먹이고 입력 자료형(bool 포함)을 계약대로 만든다**(현민 님 몫, 앱 문서 §2-3 · §3-2) · start 는 f32 JS 신경망을 만들지 않는다 · 모드별 값은 통째로 갈아 끼우고 공통 기본값을 쓰지 않는다 · 지도 함수는 모드마다 따로 · ONNX 는 lab 공개 저장소에 올린다.
+
+**아직 정하지 않은 것.** 명령 가속 제한 값(D108) 하나.
+
+**올리는 법.** main 에서 브랜치 → 자기 `inbox/<이름>/` 아래만 커밋 → PR → 팀장 머지. `docs/` 는 건드리지 않는다. 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
 
 ## 0. 지금 앱 상태와 바뀌는 점
 
@@ -235,4 +249,3 @@ id · 메뉴 이름만 바꾼다. f32 와 원본 대조는 spec 11:98 에 「130
 - 가속 제한 값(팀장, D108).
 - ame2 1 m 목표에서 실제 속도: 앱 시뮬에서 재서 모드 상한 표에 적기(현민).
 - ONNX 추론 속도: 나중에 따로 논의(팀장 16:3x). 그때까지는 지금 Worker 구조 그대로.
-- start 묶음 전달 시점: 팀장 결정(D144).

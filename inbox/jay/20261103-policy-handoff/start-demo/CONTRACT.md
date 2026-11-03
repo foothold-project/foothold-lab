@@ -1,3 +1,5 @@
+> **최신 결정 (2026-11-03 19:3x · 이 문서의 아래 내용보다 우선):** ① 앱 ONNX 실행기는 GRU 상태 출력(h_prop_next · h_terr_next)을 다음 호출의 h_prop · h_terr 로 **되먹이기로 정했다**(현민 님이 넣음 · 앱 문서 §2-3 · §3-2). ② start 는 f32 JS 신경망을 만들지 않는다(ONNX 만). ③ 플래그 셋(depth_tick · first_after_reset · use_gt)은 bool [1] · `gt_map` 은 [1,32,16]. ④ 이 묶음은 전달 완료(lab PR #571 · D144 닫힘). ⑤ 이름은 start-demo(최종 start-oh2l2). ⑥ 아직 정하지 않은 것은 명령 가속 제한 값 하나. ⑦ 앱 쪽 파일별 할 일은 `../HANDOFF-APP-DEVELOPER.md` §3. 아래 §6 · §10 의 「결정 물음 · 정할 것」 은 이 결정으로 닫혔다.
+
 > 분류: A/정책학습 · 앱 전달 조건표 초안 (W89 · D144 · m6000 기준)
 > 작성: planner (Claude Fable 5.1) · 2026-11-02 20:5x v0.1 (lead 20:4x 대기열 (3): 「W89 앱 조건표 초안, m6000 기준 · ONNX 는 scripter 가 뒤에 · 각 값에 m6000 env.yaml/agent.yaml 줄 번호」) · 21:3x v0.2(lead 21:2x 가 전한 팀장 묶음 (A) + lead 20:4x W89-1~3: D108 정본 · m6000 명령 파일 값 · 맨 위 값 표 · 지도 모드 셋 · Unitree 공식 한계 대조표 · 관절 순서 경고 칸 · ONNX 받아 쓰는 법)
 > 근거: EX-40 실행 폴더 `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/`(`params/env.yaml` · `params/agent.yaml` · `model_6000.pt` · `training_trace/coordinate_metadata.json`, 전부 직접 읽음) · 코드 `foothold_s2`(analyst c6fff190 사본, 읽기 전용: `models/start_perception.py` · `models/start_policy.py` · `runners/start_runner.py` · `sensors/start_obs.py` · `sensors/depth_cam_cfg.py` · `sensors/depth_aug.py` · `commands/mixed_command.py` · `curriculum/ex40.yaml` · `robots/go2_params.py` · `deploy/{export.py,obs.py,sdk_joints.py,record_isaac.py,params/deploy.yaml}`) · WORKLIST 11fdb8e4 D103(131 행) · D144(172 행) · W89(283 행) · `inbox/jay/20261101-app/APP-INTEGRATION-NOTES.md` §3 · §5 · `QA-EXPLAINERS.md` 「AME-2 앱 대조 확인」
@@ -239,7 +241,7 @@ ONNX 파일은 아직 없다(scripter 가 내보냄 · D107). 아래는 **그 �
 | W89-1 | APP-INTEGRATION-NOTES §5 명령 범위 갱신 | **닫힘**(lead 20:4x: B0 → B3c 실제 값 · 팀장 D108 정본): §5 표를 D108 · B3c · m6000 파일 값 · EX-41 네 열로 바꿈(이 커밋) | lead · 팀장 |
 | W89-2 | 넘기는 지도 모드 | **닫힘**(팀장 11/02 21:1x 요지): 인터페이스는 셋, 실기는 복원 · 끔, 시뮬 트윈은 정답도(§3.6) | 팀장 |
 | W89-3 | 실기 한계(관절 각 · 토크 · 속도) 공식 값 · IMU 축 · 카메라 장착 | 공식 제품면 · 공식 GitHub 두 파일로 대조표 §3.2a. calf 토크 · 속도는 두 공식 파일이 다르고 실기 SDK 가 거는 값은 **미확인** → 실기 담당(11/9 전후) 이 LowState 로 잰다. IMU 축 · 카메라 장착은 그대로 미확인 | lead → 실기 담당 |
-| W89-4 | 넘기는 시점 | D144 대로 팀장 결정 뒤(지금 안 넘김) | 팀장 |
+| W89-4 | 넘기는 시점 | **닫힘**: 11/03 lab PR #571 로 전달 | 팀장 |
 
 ## 7. 안 한 것 · 미확인
 
@@ -296,4 +298,4 @@ lead 가 gh 로 직접 다시 본 줄: `policy_ranges.py:40~56` · `policy-onnx.
 | §5a ONNX | contract.json · 제안 이름 | 앱에 contract.json 소비자 없음 · adapter `onnx {file, sha256, inputs[{name,dims}], outputs[{name,dims,type}], action}` 로 받음 · float32 만 · 출력 하나만(`policy-onnx.js:8~36`) · 자산은 `FH_POLICY_ONNX_SRC` 에 두고 커밋 안 함 · parity 1e−4 · f32 JS 되돌림 경로 요구(spec 11:384~416) | 문서가 앱과 안 맞음 · **상태 되먹임 불가** | 앱 실행기에 상태 입출력 되먹임을 더하거나(현민), m6000 을 상태 없는 그래프로 바꿀 수 없으므로 실행기 확장이 먼저. f32 JS 되돌림(GRU · transformer)은 팀장 · 현민 결정 |
 | 새 앱 문서 | (없음) | `docs/AME2-PROVENANCE.md` · `mobile/scripts/ame2-training-contract.md` · `docs/POLICY-PROVENANCE.md` · `docs/spec/11-POLICY-ADAPTER.md` v0.9(§9 AME-2 · §10 새 모델 절차) · `docs/spec/DRIVE-MODES-VALIDATION.md` | 앱이 바뀜 | §8 근거에 더함 |
 
-**정할 것(팀장 · 현민):** (1) 앱 ONNX 실행기에 GRU 상태 되먹임을 넣을지(넣지 않으면 m6000 은 앱에서 못 돈다) (2) spec 11 의 「f32 JS 되돌림 경로」 요건을 m6000 에 그대로 걸지 (3) 명령 가속 제한 값(D108).
+**정한 것(11/03):** (1) 앱 ONNX 실행기에 GRU 상태 되먹임을 **넣는다**(현민 님) (2) spec 11 의 「f32 JS 되돌림 경로」 요건은 start 에 **걸지 않는다**(ONNX 만, parity 로 대신) (3) 명령 가속 제한 값(D108) 은 **아직 미정**.
