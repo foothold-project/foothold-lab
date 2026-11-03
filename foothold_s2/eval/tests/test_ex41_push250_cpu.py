@@ -16,6 +16,7 @@ from foothold_s2.eval.ex41_push250_watch import (
     build_child_argv,
     checkpoint_for_update,
     output_path_for_global_iteration,
+    wait_for_checkpoint_target,
 )
 
 
@@ -80,6 +81,39 @@ def test_checkpoint_requires_completed_update_manifest_score_and_sha(tmp_path):
     score["checkpoint_sha256"] = "0" * 64
     (score_dir / f"score_500_{digest[:12]}.json").write_text(json.dumps(score), encoding="utf-8")
     assert checkpoint_for_update(run_dir, score_dir, 500) is None
+
+
+def test_checkpoint_wait_survives_failed_and_completed_training_states_until_resume(tmp_path):
+    statuses = iter((
+        {"state": "failed", "iter": 700},
+        {"state": "complete", "iter": 700},
+        {"state": "running", "iter": 701},
+    ))
+    state_rows = []
+    probes = {"count": 0}
+    ready = {"local_iteration": 750, "sha256": "a" * 64}
+
+    def checkpoint_reader(run_dir, score_dir, local_iteration):
+        probes["count"] += 1
+        return ready if probes["count"] == 4 else None
+
+    result = wait_for_checkpoint_target(
+        tmp_path / "run", tmp_path / "scores", 750,
+        state_path=tmp_path / "watcher_state.json",
+        checkpoint_reader=checkpoint_reader,
+        status_reader=lambda: next(statuses),
+        state_writer=lambda path, row: state_rows.append(row),
+        sleep=lambda seconds: None,
+    )
+
+    assert result == ready
+    assert probes["count"] == 4
+    assert [row["state"] for row in state_rows] == [
+        "waiting_for_training_resume", "waiting_for_training_resume",
+        "waiting_for_score_and_stable_checkpoint",
+    ]
+    assert state_rows[0]["trainer_state"] == "failed"
+    assert state_rows[1]["trainer_state"] == "complete"
 
 
 def test_output_iteration_uses_global_m6000_parent_offset(tmp_path):

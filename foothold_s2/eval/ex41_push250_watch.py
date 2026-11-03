@@ -360,6 +360,32 @@ def wait_until_gpu1_idle(*, marker: Path = DEFAULT_MARKER, poll_seconds: float =
     raise TimeoutError("GPU1 did not become idle before the push250 admission timeout")
 
 
+def wait_for_checkpoint_target(run_dir: Path, score_dir: Path, local_iteration: int, *,
+                               state_path: Path, poll_seconds: float = 10.0,
+                               checkpoint_reader=checkpoint_for_update,
+                               status_reader=None, state_writer=_atomic_json, sleep=time.sleep) -> dict[str, Any]:
+    """Wait across trainer failures and resumes; only stable checkpoint+score releases the target."""
+    run_dir, score_dir = Path(run_dir), Path(score_dir)
+    status_reader = status_reader or (lambda: _read_json(run_dir / "train_start_status.json") or {})
+    state_path = Path(state_path)
+    while True:
+        ready = checkpoint_reader(run_dir, score_dir, local_iteration)
+        if ready:
+            return ready
+        status = status_reader()
+        trainer_state = status.get("state", "unknown")
+        waiting_state = ("waiting_for_training_resume"
+                         if trainer_state in ("failed", "error", "stopped", "complete", "done")
+                         else "waiting_for_score_and_stable_checkpoint")
+        state_writer(state_path, {
+            "state": waiting_state,
+            "next_local_iteration": local_iteration,
+            "trainer_state": trainer_state,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        sleep(poll_seconds)
+
+
 def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: int = 500,
          interval: int = 250, parent_iteration: int = 6000, poll_seconds: float = 10,
          marker: Path = DEFAULT_MARKER, python: Path = DEFAULT_PYTHON,
@@ -370,22 +396,11 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
     worktree = Path(worktree or Path(__file__).resolve().parents[2])
     state_path = out_dir / "watcher_state.json"
     out_dir.mkdir(parents=True, exist_ok=True)
-    targets = range(first_local_update, 1_000_000_001, interval)
-    for local_iteration in targets:
-        while True:
-            ready = checkpoint_for_update(run_dir, score_dir, local_iteration)
-            if ready:
-                break
-            status = _read_json(run_dir / "train_start_status.json") or {}
-            if status.get("state") in ("failed", "error", "stopped", "complete", "done"):
-                _atomic_json(state_path, {"state": "stopped_before_target", "next_local_iteration": local_iteration,
-                                          "trainer_state": status.get("state"), "updated_at": datetime.now(timezone.utc).isoformat()})
-                return 0
-            _atomic_json(state_path, {"state": "waiting_for_score_and_stable_checkpoint",
-                                      "next_local_iteration": local_iteration,
-                                      "last_manifest": _read_json(run_dir / "manifest.json"),
-                                      "updated_at": datetime.now(timezone.utc).isoformat()})
-            time.sleep(poll_seconds)
+    local_iteration = first_local_update
+    while True:
+        ready = wait_for_checkpoint_target(
+            run_dir, score_dir, local_iteration, state_path=state_path,
+            poll_seconds=poll_seconds, state_writer=_atomic_json)
         global_iteration = parent_iteration + local_iteration
         destination = output_path_for_global_iteration(out_dir, global_iteration)
         if destination.exists():
@@ -414,7 +429,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
                                   "updated_at": datetime.now(timezone.utc).isoformat()})
         if result["state"] != "done":
             return 6
-    return 0
+        local_iteration += interval
 
 
 def main(argv: list[str] | None = None) -> int:
