@@ -60,6 +60,17 @@ def test_tolerance_uses_pooled_64_envs_per_direction_and_90_percent_threshold():
     assert result["threshold_fraction"] == 0.9
 
 
+def test_recovery_median_ignores_null_envs_and_keeps_all_null_direction_empty():
+    rows = _rows()
+    rows[0] = {**rows[0], "recovery_times_s": [None, 0.5]}
+    rows[1] = {**rows[1], "recovery_times_s": [None, None]}
+
+    result = summarize_ladder(rows, terrain="flat", map_mode="eval_gt")
+    directions = result["magnitudes"]["0.5"]["directions"]
+    assert directions["0"]["recovery_time_s_median"] == pytest.approx(0.5)
+    assert directions["45"]["recovery_time_s_median"] is None
+
+
 def test_incomplete_or_duplicate_direction_is_rejected():
     rows = _rows()
     with pytest.raises(ValueError, match="48 unique cells"):

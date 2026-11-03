@@ -82,6 +82,10 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
     if set(found) != expected:
         raise ValueError("ladder must contain 48 unique cells")
 
+    def recovered_median(values):
+        samples = [float(value) for value in values if value is not None]
+        return median(samples) if samples else None
+
     by_magnitude = {}
     for magnitude in MAGNITUDES_MPS:
         cell_rows = [found[(magnitude, angle)] for angle in directions]
@@ -94,8 +98,8 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
                 "envs": ENVS_PER_CASE,
                 "survival_fraction": found[(magnitude, angle)]["survivors_after_5s"] / ENVS_PER_CASE,
                 "max_tilt_rad": float(found[(magnitude, angle)]["max_tilt_rad"]),
-                "recovery_time_s_median": (median(found[(magnitude, angle)]["recovery_times_s"])
-                                            if found[(magnitude, angle)]["recovery_times_s"] else None),
+                "recovery_time_s_median": recovered_median(
+                    found[(magnitude, angle)]["recovery_times_s"]),
             }
             for angle in directions
         }
