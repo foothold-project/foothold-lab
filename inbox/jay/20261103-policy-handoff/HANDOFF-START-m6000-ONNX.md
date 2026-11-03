@@ -18,7 +18,7 @@
 
 **정해진 것(다시 묻지 않는다).** ONNX 하나를 웹 시뮬과 실기가 함께 쓴다 · **앱 ONNX 실행기는 상태 출력(GRU)을 다음 호출 입력으로 되먹이고 입력 자료형(bool 포함)을 계약대로 만든다**(현민 님 몫, 앱 문서 §2-3 · §3-2) · start 는 f32 JS 신경망을 만들지 않는다 · 모드별 값은 통째로 갈아 끼우고 공통 기본값을 쓰지 않는다 · 지도 함수는 모드마다 따로 · ONNX 는 lab 공개 저장소에 올린다.
 
-**아직 정하지 않은 것.** 명령 가속 제한 값(D108) 하나.
+**미확인:** 명령 가속 제한 값(D108) · 정해질 때까지 지금 앱 동작 유지(가속 제한 없음).
 
 **올리는 법.** main 에서 브랜치 → 자기 `inbox/<이름>/` 아래만 커밋 → PR → 팀장 머지. `docs/` 는 건드리지 않는다. 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
 
@@ -29,7 +29,7 @@
 | 저장본 | `C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_6000.pt` · sha256 `d5e9ec40…` | 실측 |
 | 이름 | `start-demo` (최종 `start-oh2l2`) · format `start-demo-onnx/1` | D169 |
 | ONNX | `start-demo_map_on.onnx` 5,808,798 B sha `81c7e079…` · `start-demo_map_off.onnx` 5,818,629 B sha `5d1b7bf3…` | 실측(16:13 원본과 같음) |
-| 입력 9 | `obs45[1,45] · hist[1,10,45] · depth2[1,2,60,60] · h_prop[1,128] · h_terr[1,128] · depth_tick[1] · first_after_reset[1] · use_gt[1] · gt_map[1,512]` | contract.json |
+| 입력 9 | `obs45[1,45] · hist[1,10,45] · depth2[1,2,60,60] · h_prop[1,128] · h_terr[1,128] · depth_tick[1] · first_after_reset[1] · use_gt[1] · gt_map[1,32,16]` (플래그 셋은 bool) | contract.json |
 | 출력 4 | `action[1,12] · h_prop_next[1,128] · h_terr_next[1,128] · recon_map[1,32,16]` | contract.json |
 | ONNX 밖에서 할 일 | a 를 ±17 로 자르고 목표각 = 기본 + 0.25 × a · 이력 10 × 45 · 깊이 두 프레임 지연 · GRU 상태 되먹임 | contract.json `action` · `state` |
 | 같은 출력 확인 | ONNX checker 두 그래프 PASS(287 · 352 node) · ORT CPU 대 PyTorch 최대 차이: action 5.0e-6 · h 2.4e-6 · recon 4.0e-6(첫 스텝 · 이어진 스텝 · 깊이 틱 없음 · 정답 지도 · 끔) | `comparison.json` · **합성 입력** |
@@ -68,5 +68,6 @@ inbox/jay/20261103-policy-handoff/start-demo/
 
 ## 5. 미확인
 
-- 실제 카메라 · IMU · 관절 스트림 정렬, ORT Web · Jetson 실행, 실기 안전 제어, 추론 속도(scripter 보고서 26 행).
-- 실기 calf 토크 · 속도 한계(공식 파일 둘이 다름, 조건표 §3.2a).
+- 미확인: 실기 카메라 · IMU · 관절 스트림 정렬, Jetson 실행, 실기 안전 제어 · 정해질 때까지 start 는 웹 시뮬 전용.
+- 미확인: 브라우저 ORT Web 출력 · 추론 시간(20 ms 기한) · 정해질 때까지 앱 시험(`HANDOFF-APP-DEVELOPER.md` §2-4)이 잰다.
+- 미확인: 실기 calf 토크 · 속도 한계(공식 파일 둘이 다름, 조건표 §3.2a) · 정해질 때까지 학습 값(45.43 N·m · 15.7 rad/s)을 넘지 않게 자른다.
