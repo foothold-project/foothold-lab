@@ -284,9 +284,11 @@ def run_next(manifest_path: Path, wanted_sha256: str) -> dict:
             continue
         attempt_root = out / "attempts" / cell
         attempted = (sum(path.is_dir() and path.name.isdecimal()
+                         and (path / "closed.json").is_file()
+                         and read_json(path / "closed.json").get("state") == "validated"
                          for path in attempt_root.iterdir()) if attempt_root.exists() else 0)
         if attempted >= len(rows[cell]["seeds"]):
-            # Four validated policy failures are an exhausted cell, not a new run.
+            # Technical failures do not consume the declared policy seed budget.
             continue
         status_path = Path(manifest["training_status"])
         before = train_sample(status_path)

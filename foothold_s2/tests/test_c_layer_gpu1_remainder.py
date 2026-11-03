@@ -128,3 +128,39 @@ def test_four_policy_failures_skip_to_next_cell(tmp_path: Path) -> None:
          patch.object(moved, "train_sample", return_value=None):
         result = moved.run_next(tmp_path / "manifest.json", "ignored")
     assert result == {"state": "training_status_hold", "cell": "boxes_L0_eval_gt"}
+
+
+def test_two_policy_failures_exhaust_without_third_seed(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    for ordinal in (1, 2):
+        attempt = out / "attempts" / "gaps_L0_eval_gt" / f"{ordinal:02d}"
+        attempt.mkdir(parents=True)
+        (attempt / "closed.json").write_text('{"state":"validated","result":"fail"}')
+    manifest = {"new_out": str(out), "training_status": str(tmp_path / "status.json"),
+                "remaining_cells": ["gaps_L0_eval_gt", "boxes_L0_eval_gt"]}
+    plan = {"jobs": [{"kind": kind, "level": 0, "map_mode": "eval_gt",
+                     "seeds": [42, 43]} for kind in ("gaps", "boxes")]}
+    with patch.object(moved, "load_manifest", return_value=(manifest, plan)), \
+         patch.object(moved, "gate", return_value={"admit_next_unit": True}), \
+         patch.object(moved, "checked_success", return_value=None), \
+         patch.object(moved, "train_sample", return_value=None):
+        result = moved.run_next(tmp_path / "manifest.json", "ignored")
+    assert result == {"state": "training_status_hold", "cell": "boxes_L0_eval_gt"}
+
+
+def test_technical_failure_does_not_spend_policy_seed(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    attempt = out / "attempts" / "gaps_L0_eval_gt" / "01"
+    attempt.mkdir(parents=True)
+    (attempt / "closed.json").write_text('{"state":"failed"}')
+    (attempt / "failure.json").write_text('{}')
+    manifest = {"new_out": str(out), "training_status": str(tmp_path / "status.json"),
+                "remaining_cells": ["gaps_L0_eval_gt"]}
+    plan = {"jobs": [{"kind": "gaps", "level": 0, "map_mode": "eval_gt",
+                     "seeds": [42, 43]}]}
+    with patch.object(moved, "load_manifest", return_value=(manifest, plan)), \
+         patch.object(moved, "gate", return_value={"admit_next_unit": True}), \
+         patch.object(moved, "checked_success", return_value=None), \
+         patch.object(moved, "train_sample", return_value=None):
+        result = moved.run_next(tmp_path / "manifest.json", "ignored")
+    assert result == {"state": "training_status_hold", "cell": "gaps_L0_eval_gt"}
