@@ -8,7 +8,9 @@ import numpy as np
 import pytest
 import cv2
 
-from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_overlay
+from foothold_s2.eval.video25.push_event_overlay import (
+    active_push_event, box_arrow_points, draw_push_overlay, draw_push_scene_arrow, load_overlay,
+)
 from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
 from foothold_s2.eval.video25 import push_event_overlay as push_overlay_module
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
@@ -37,7 +39,19 @@ def test_world_xy_direction_magnitude_and_time(tmp_path):
     x0, y0, width, height = composer.LEGEND_RECT
     assert during[y0:y0 + height, x0:x0 + width].sum() > 0
     after = draw_push_overlay(before.copy(), event, 4.0, **bounds)
-    assert not np.array_equal(after, during)
+    assert np.array_equal(after, before)
+    assert active_push_event(event, 3.5) is not None
+    assert active_push_event(event, 3.51) is None
+
+
+def test_missing_recovery_uses_one_point_five_seconds(tmp_path):
+    path = fixture(tmp_path)
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    del doc["dr"]["readback"]["forward"]["recovery"]
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    event = load_overlay(path, "a" * 64, "forward", 7)
+    assert active_push_event(event, 3.5) is not None
+    assert active_push_event(event, 3.51) is None
 
 
 def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(tmp_path, monkeypatch):
@@ -67,6 +81,9 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
     assert (lx, lx + lw) == expected_edges
     assert ly + lh + 8 == composer.GAUGE_Y0
     frame = check_rect(composer.LEGEND_RECT)
+    start, tip = box_arrow_points(composer.LEGEND_RECT, event["events"][0])
+    assert ((start[0] + tip[0]) / 2, (start[1] + tip[1]) / 2) == (
+        lx + lw // 2, ly + lh // 2)
     arrow = np.argwhere((frame[:, :, 0] < 100) & (frame[:, :, 1] > 150) & (frame[:, :, 2] > 180))
     white = (frame[:, :, 0] > 180) & (frame[:, :, 1] > 180) & (frame[:, :, 2] > 180)
     upper = np.argwhere(white[:ly + 50])
@@ -109,15 +126,32 @@ def test_legend_fixed_bounds_in_all_map_modes(mode, scan_visible):
     assert before == composer.OVERFLOW
 
 
-def test_v33_receipt_accepts_current_composer_and_rejects_old_rule():
+def test_v34_receipt_accepts_current_composer_and_rejects_old_rule():
     source = Path(composer.__file__)
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    assert composer_version(source) == VIDEO_RULE_VERSION == "v3.3-D167"
+    assert composer_version(source) == VIDEO_RULE_VERSION == "v3.4-D168"
     require_video_rule({"video_rule_version": VIDEO_RULE_VERSION,
                         "composer_sha256": digest}, composer_sha256=digest)
     with pytest.raises(ValueError, match="video_rule_hold"):
-        require_video_rule({"video_rule_version": "v3.2-D140",
+        require_video_rule({"video_rule_version": "v3.3-D167",
                             "composer_sha256": digest}, composer_sha256=digest)
+
+
+def test_world_push_arrow_uses_recorded_camera_only_inside_recovery(tmp_path):
+    event = load_overlay(fixture(tmp_path), "a" * 64, "forward", 7)
+    camera = {"camera_eye_w": [-38.575643, -88.300874, 1.429598],
+              "camera_target_w": [-37.725643, -86.700874, 0.529598],
+              "focal_length_mm": 18.147562, "horizontal_aperture_mm": 20.955}
+    root = np.array([-37.975643, -86.700874, 0.579598])
+    blank = np.zeros((720, 1280, 3), np.uint8)
+    assert np.array_equal(draw_push_scene_arrow(blank.copy(), event, 1.99, root, camera), blank)
+    during = draw_push_scene_arrow(blank.copy(), event, 2.5, root, camera)
+    red = (during[:, :, 2] > 190) & (during[:, :, 1] < 110) & (during[:, :, 0] < 110)
+    assert red.sum() > 50
+    assert np.where(red)[0].max() < 300  # above this known robot body centre at y=364
+    assert np.array_equal(draw_push_scene_arrow(blank.copy(), event, 4.0, root, camera), blank)
+    with pytest.raises(ValueError, match="camera pose"):
+        draw_push_scene_arrow(blank.copy(), event, 2.5, root, None)
 
 
 @pytest.mark.parametrize("sha,key,env", [("b" * 64, "forward", 7),

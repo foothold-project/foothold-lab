@@ -34,11 +34,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from foothold_s2.eval import flag_eval as FE  # noqa: E402  (W04: 깃발 거리 · 방향 · 판정 성분은 평가 코드와 같은 함수)
-from foothold_s2.eval.video25.push_event_overlay import draw_push_overlay, load_overlay  # noqa: E402
+from foothold_s2.eval.video25.push_event_overlay import (  # noqa: E402
+    RECOVERY_FALLBACK_S, active_push_event, draw_push_overlay, draw_push_scene_arrow, load_overlay,
+)
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
-VIDEO_RULE_VERSION = "v3.3-D167"
+VIDEO_RULE_VERSION = "v3.4-D168"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 AIR_FOOT_EDGE_BGR = (105, 105, 105)
@@ -888,6 +890,9 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
     expected_capture_frames, duration_s, fps, steps = capture_frame_contract(meta)
     if push_overlay is not None and any(event["t_s"] >= duration_s for event in push_overlay["events"]):
         raise ValueError("push event lies outside filmed duration")
+    camera_rows = meta.get("camera_screen_projection") if push_overlay is not None else None
+    if push_overlay is not None and (not isinstance(camera_rows, list) or len(camera_rows) != expected_capture_frames):
+        raise ValueError("push video needs a recorded follow camera pose for every frame")
     attn = meta.get("overlay_25e", {}).get("attention_rows_per_step") or [None] * len(z["t"])
     cmd = np.asarray(z["command"], np.float32)
     err = recon_error_series(z)
@@ -922,7 +927,10 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         prev_row = row
         scene = cv2.resize(frame, (1280, 720)) if frame.shape[:2] != (720, 1280) else frame
         scene = receipt_header(scene, meta, z, row, push_video=push_overlay is not None)
-        push_active = push_overlay is not None and any(event["t_s"] <= float(z["t"][row]) for event in push_overlay["events"])
+        push_active = push_overlay is not None and active_push_event(push_overlay, float(z["t"][row])) is not None
+        if push_active:
+            scene = draw_push_scene_arrow(scene, push_overlay, float(z["t"][row]),
+                                          z["root_pos_w"][row], camera_rows[fi])
         if not push_active:
             scene = scene_legend(scene, meta)
         scene = speed_tag(scene, speed, segment)
@@ -956,7 +964,10 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
                          "feet_markers": "airborne-hollow-black-gray-all-three-map-panels"},
            "push_overlay": ({"source": str(push_events), "source_sha256": sha256(push_events),
                              "rollout_key": push_rollout_key, "env_id": push_env_id,
-                             "meaning": push_overlay["meaning"]} if push_overlay is not None else None)}
+                             "meaning": push_overlay["meaning"],
+                             "recovery_fallback_s": RECOVERY_FALLBACK_S,
+                             "scene_arrow": "world-xy-delta-v-projected-from-root-plus-0.35m"}
+                            if push_overlay is not None else None)}
     out.with_suffix(".json").write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return rec
 
