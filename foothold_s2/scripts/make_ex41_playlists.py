@@ -29,7 +29,11 @@ def _atomic_write(path: Path, content: str) -> None:
         raise
 
 
-def create_playlists(video_root: str | Path, output_dir: str | Path) -> list[Path]:
+DEFAULT_OUTPUT_DIR = Path("C:/Users/AI-WS01/s2_lab/_playlists")
+
+
+def create_playlists(video_root: str | Path, output_dir: str | Path = DEFAULT_OUTPUT_DIR,
+                     mirror_dir: str | Path | None = None) -> list[Path]:
     root = Path(video_root).resolve(strict=True)
     output = Path(output_dir).resolve()
     if not root.is_dir():
@@ -51,17 +55,24 @@ def create_playlists(video_root: str | Path, output_dir: str | Path) -> list[Pat
             for video in selected:
                 lines.extend((f"#EXTINF:-1,{video.stem}", os.path.normpath(str(video.resolve()))))
             destination = output / f"EX-41-m{update:05d}-{tag}.m3u8"
-            _atomic_write(destination, "\n".join(lines) + "\n")
+            content = "\n".join(lines) + "\n"
+            _atomic_write(destination, content)
             created.append(destination)
+            if mirror_dir is not None:
+                mirror = Path(mirror_dir).resolve() / destination.name
+                _atomic_write(mirror, content)
+                created.append(mirror)
     return created
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--video-root", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--mirror-dir", type=Path,
+                        help="Optional run-local eval/ copy of each canonical playlist")
     args = parser.parse_args(argv)
-    for path in create_playlists(args.video_root, args.output_dir):
+    for path in create_playlists(args.video_root, args.output_dir, args.mirror_dir):
         print(path)
     return 0
 

@@ -56,7 +56,8 @@ def test_d164_production_output_layout_is_exact_and_replay_scores_share_eval(tmp
     assert layout["root"].as_posix() == "C:/Users/AI-WS01/s2_lab/ex41_main_20261103_235959"
     assert layout["run_dir"].as_posix() == "C:/Users/AI-WS01/s2_lab/ex41_main_20261103_235959/main/ex41-b-main"
     assert layout["score_dir"] == layout["eval_root"] / "scores"
-    assert layout["playlist_dir"] == layout["eval_root"]
+    assert layout["playlist_dir"].as_posix() == "C:/Users/AI-WS01/s2_lab/_playlists"
+    assert layout["playlist_mirror_dir"] == layout["eval_root"]
     assert layout["w78_video_root"].as_posix() == "D:/mai-tmp/ex41/w78_video"
     assert ex41_output_layout_for_run(layout["run_dir"]) == layout
     assert ex41_score_watch_output_root(layout["run_dir"]) == layout["eval_root"] / "score-watch"

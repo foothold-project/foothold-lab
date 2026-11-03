@@ -42,6 +42,62 @@ def evidence(path):
     return {'path': str(path), 'sha256': sha256(path)}
 
 
+def eval_pred_map_error_record_only(map_modes_path):
+    """Summarize existing eval_pred map-error NPZ rows for display only.
+
+    This metric is deliberately not used by maintenance, stage, safety, or
+    graduation decisions. Values come from the evaluator's saved per-env
+    map_err_* arrays and each source NPZ is returned as evidence.
+    """
+    source = Path(map_modes_path).resolve(strict=True)
+    data = read(source)
+    env_arrays = data.get('env_arrays')
+    cases = data.get('modes', {}).get('eval_pred')
+    if not isinstance(env_arrays, dict) or not isinstance(cases, dict) or not cases:
+        raise ValueError('eval_pred map-error source index is missing')
+    summary, refs = {}, []
+
+    def finite_summary(values):
+        values = np.asarray(values, dtype=np.float64).reshape(-1)
+        values = values[np.isfinite(values)]
+        if not values.size:
+            return {'finite_envs': 0, 'mean_cm': None, 'median_cm': None}
+        return {'finite_envs': int(values.size), 'mean_cm': float(values.mean()),
+                'median_cm': float(np.median(values))}
+
+    for case in sorted(cases):
+        rel = env_arrays.get(f'eval_pred/{case}')
+        if not isinstance(rel, str) or Path(rel).name != rel or not rel.endswith('.npz'):
+            raise ValueError(f'eval_pred map-error NPZ reference is invalid: {case}')
+        path = source.parent / rel
+        refs.append(evidence(path))
+        with np.load(path, allow_pickle=False) as raw:
+            required = {'env', 'alive_end', 'map_err_inrange_mean_cm',
+                        'map_err_all_mean_cm', 'map_err_inrange_steps'}
+            if not required.issubset(raw.files):
+                raise ValueError(f'eval_pred map-error fields are missing: {case}')
+            env = np.asarray(raw['env'])
+            alive = np.asarray(raw['alive_end'], dtype=bool)
+            inrange = np.asarray(raw['map_err_inrange_mean_cm'], dtype=np.float64)
+            all_cells = np.asarray(raw['map_err_all_mean_cm'], dtype=np.float64)
+            steps = np.asarray(raw['map_err_inrange_steps'])
+            if (env.ndim != 1 or alive.shape != env.shape or inrange.shape != env.shape
+                    or all_cells.shape != env.shape or steps.shape != env.shape
+                    or len(set(int(v) for v in env.tolist())) != env.size):
+                raise ValueError(f'eval_pred map-error per-env rows are malformed: {case}')
+            summary[case] = {
+                'envs': int(env.size),
+                'alive_at_end': int(alive.sum()),
+                'inrange_mean_cm': finite_summary(inrange),
+                'all_cells_mean_cm': finite_summary(all_cells),
+                'inrange_step_count': int(np.asarray(steps, dtype=np.int64).sum()),
+            }
+    return {'format': 'ex41-eval-pred-map-error-record-only/1',
+            'decision_use': 'none_record_only',
+            'definition': 'per-env mean step error in centimeters from map64 env_arrays; summaries are mean and median across finite env rows',
+            'cases': summary}, refs
+
+
 def immutable(path, row):
     path.parent.mkdir(parents=True, exist_ok=True)
     data = (json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)+'\n').encode('utf-8')
@@ -167,6 +223,18 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
     try:
         stands = {m:bundle/f'stand_{m}'/'stand.json' for m in MODES}
         row = enrich_score_metrics(row, bundle/'map64/map_modes.json', stands, plan, score_config_path=eval_config)
+        try:
+            map_error, map_error_refs = eval_pred_map_error_record_only(
+                bundle/'map64/map_modes.json')
+            row['metrics']['eval_pred_map_error_record_only'] = map_error
+            row['evidence'].extend(ref for ref in map_error_refs if ref not in row['evidence'])
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            row['metrics']['eval_pred_map_error_record_only'] = {
+                'format': 'ex41-eval-pred-map-error-record-only/1',
+                'decision_use': 'none_record_only',
+                'state': 'unavailable',
+                'reason': f'{type(exc).__name__}: {exc}',
+            }
         row['components']['maintenance_stand'] = 'complete'
     except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
         row['components']['maintenance_stand'] = f'HOLD: {type(exc).__name__}: {exc}'

@@ -52,6 +52,32 @@ def test_real_m6000_maintenance_complete_without_w78(tmp_path):
     for key,value in recorded.items(): assert value['passed']==expected['cells'][key]['alive_envs_at_end']
 
 
+def test_eval_pred_map_error_is_recorded_with_npz_hash_and_no_decision_effect(tmp_path):
+    folder=tmp_path/'map64';folder.mkdir()
+    raw=folder/'env_arrays_eval_pred_fwd1.0.npz'
+    np.savez(raw,env=np.arange(3),alive_end=np.array([True,True,False]),
+             map_err_inrange_mean_cm=np.array([2.0,4.0,np.nan],dtype=np.float32),
+             map_err_all_mean_cm=np.array([8.0,10.0,99.0],dtype=np.float32),
+             map_err_inrange_steps=np.array([20,10,0],dtype=np.int32))
+    source=folder/'map_modes.json'
+    source.write_text(json.dumps({'env_arrays':{'eval_pred/fwd1.0':raw.name},
+                                  'modes':{'eval_pred':{'fwd1.0':{}}}}),encoding='utf-8')
+    got,refs=watch.eval_pred_map_error_record_only(source)
+    cell=got['cases']['fwd1.0']
+    assert got['decision_use']=='none_record_only'
+    assert cell['inrange_mean_cm']=={'finite_envs':2,'mean_cm':3.0,'median_cm':3.0}
+    assert cell['all_cells_mean_cm']=={'finite_envs':3,'mean_cm':39.0,'median_cm':10.0}
+    assert cell['inrange_step_count']==30 and len(refs)==1 and refs[0]['sha256']==sha256(raw)
+
+
+def test_eval_pred_map_error_record_only_rejects_missing_npz(tmp_path):
+    source=tmp_path/'map_modes.json'
+    source.write_text(json.dumps({'env_arrays':{'eval_pred/fwd1.0':'absent.npz'},
+                                  'modes':{'eval_pred':{'fwd1.0':{}}}}),encoding='utf-8')
+    with pytest.raises(OSError):
+        watch.eval_pred_map_error_record_only(source)
+
+
 def replay_run(tmp):
     run=tmp/'run';run.mkdir()
     pins={}

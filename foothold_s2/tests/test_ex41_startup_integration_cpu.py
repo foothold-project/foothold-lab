@@ -32,6 +32,7 @@ from foothold_s2.scripts.ex41_startup import (
     validate_rehearsal_dr_samples,
     validate_rehearsal_request,
     validate_rehearsal_resume_request,
+    validate_startup_smoke_request,
     verify_ex41_start_readback,
     verify_m6000_parent,
     write_ex41_start_readback,
@@ -138,7 +139,7 @@ def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
     assert "runner.load_ex41_parent()" in source
     assert "runner.ex41_w86_required" in source
     end_by = source.index("install_end_by_warning_watch(")
-    assert source.rfind("if not EX41_REHEARSAL:", 0, end_by) > source.rfind("if EX41_PLAN is not None:", 0, end_by)
+    assert source.rfind("if not (EX41_REHEARSAL or EX41_STARTUP_SMOKE):", 0, end_by) > source.rfind("if EX41_PLAN is not None:", 0, end_by)
     assert '"end_by_watch": ex41_end_by_receipt' in source
     assert source.index("prepare_ex41_env_cfg(env_cfg, EX41_PLAN)") < source.index("gym.make(")
     startup_source = (REPO / "foothold_s2/scripts/ex41_startup.py").read_text(encoding="utf-8")
@@ -333,6 +334,36 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
     (output / "unexpected.txt").write_text("must reject", encoding="utf-8")
     with pytest.raises(ValueError, match="new or empty"):
         validate_rehearsal_request(10, output, "cuda:0", True)
+
+
+def test_production_path_smoke_is_bounded_but_keeps_production_authorization_false(tmp_path):
+    plan = load_fixed_plan(TABLE)
+    parent = tmp_path / "model_6000.pt"
+    parent.write_bytes(b"known parent")
+    params = tmp_path / "params"
+    params.mkdir()
+    (params / "agent.yaml").write_text("perception:\n  p_map_off: 0.1\n", encoding="utf-8")
+    configured = configure_ex41_train_cfg(
+        {"ex41_w86_required": True, "save_interval": 100}, plan, parent,
+        startup_smoke_updates=10)
+    assert configured["max_iterations"] == 10
+    assert configured["save_interval"] == 10
+    assert configured["ex41_startup_smoke"] is True
+    assert "ex41_rehearsal" not in configured
+
+    output = Path("C:/Users/AI-WS01/s2_lab/ex41_smoke_20261103_235959")
+    assert validate_startup_smoke_request(10, output, "cuda:0", True) == output
+    assert ex41_startup._require_ex41_run_path(output) == output
+    with pytest.raises(ValueError, match="exactly 10"):
+        validate_startup_smoke_request(11, output, "cuda:0", True)
+    with pytest.raises(ValueError, match="headless cuda:0"):
+        validate_startup_smoke_request(10, output, "cuda:1", True)
+    with pytest.raises(ValueError, match="C:/Users/AI-WS01/s2_lab"):
+        validate_startup_smoke_request(10, "C:/Users/AI-WS01/s2_lab/ex41_main_20261103_235959/main/run",
+                                       "cuda:0", True)
+    status = production_launch_status(plan, lead_approved=False, snapshot={"config":{"values":{"w71_ready":True}}})
+    assert status["production_launch_allowed"] is False
+    assert status["reason"] == "lead_approval_switch_missing"
 
 
 def test_rehearsal_resume_accepts_only_latest_completed_same_run_model(tmp_path):
@@ -767,8 +798,14 @@ def test_ex41_command_slot_counter_expands_and_preserves_existing_counts():
     assert receipt["preserved_counts"] == 60
 
 
-def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path):
+def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path, monkeypatch):
+    import foothold_s2.scripts.ex41_startup as startup
     from foothold_s2.runners.manifest import yaml_flat
+
+    def reject_legacy_drive_guard(_path):
+        raise AssertionError("U21 must share the approved output path validator")
+
+    monkeypatch.setattr(startup, "_require_d_drive", reject_legacy_drive_guard)
 
     run = tmp_path / "u21"
     params = run / "params"
@@ -809,6 +846,14 @@ def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path):
     runtime.scale = 0.25
     with pytest.raises(ValueError, match="first-reset DR readback"):
         verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+
+
+def test_ex41_shared_output_validator_accepts_d164_c_main_shape():
+    from pathlib import Path
+    from foothold_s2.scripts.ex41_startup import _require_ex41_run_path
+
+    run = Path("C:/Users/AI-WS01/s2_lab/ex41_main_20990101_000000/main/EX41-cpu-contract")
+    assert _require_ex41_run_path(run) == run.resolve()
 
 
 def test_u21_rejects_disk_manifest_yaml_and_parent_sha_mismatch(tmp_path):

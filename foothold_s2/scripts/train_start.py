@@ -44,6 +44,7 @@ _pre.add_argument("--ex41-production-launch-approved", action="store_true",
 _pre.add_argument("--ex41_rehearsal_updates", type=int)
 _pre.add_argument("--ex41_rehearsal_output")
 _pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")
+_pre.add_argument("--ex41_startup_smoke_updates", type=int)
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--headless", action="store_true")
@@ -54,6 +55,7 @@ EX41_AUTHORIZATION = None
 EX41_PARENT_RECEIPT = None
 EX41_DISK_RECEIPT = None
 EX41_REHEARSAL = False
+EX41_STARTUP_SMOKE = False
 EX41_RESUME_PREFLIGHT = None
 EX41_OUTPUT_LAYOUT = None
 EX41_LAUNCH_DECISION = None
@@ -66,11 +68,22 @@ if _pre_args.ex41_table:
         validate_ex41_output_directory, validate_rehearsal_request,
         validate_output_with_launch_receipt,
         validate_rehearsal_resume_request,
+        validate_startup_smoke_request,
         verify_m6000_parent,
     )
     from foothold_s2.scripts.ex41_resume import validate_resume_manifest
 
     EX41_PLAN = load_fixed_plan(_pre_args.ex41_table)
+    if _pre_args.ex41_startup_smoke_updates is not None:
+        if (_pre_args.ex41_rehearsal_updates is not None or _pre_args.ex41_rehearsal_output
+                or _pre_args.ex41_rehearsal_dr_08 or _pre_args.resume_from
+                or _pre_args.ex41_production_launch_approved or _pre_args.ex41_score_dir):
+            raise ValueError("EX-41 startup smoke cannot combine with rehearsal, resume, approval, or score output")
+        if not _pre_args.ex41_log_root:
+            raise ValueError("EX-41 startup smoke requires --ex41_log_root")
+        validate_startup_smoke_request(
+            _pre_args.ex41_startup_smoke_updates, _pre_args.ex41_log_root,
+            _pre_args.device or "", _pre_args.headless, _pre_args.distributed)
     if _pre_args.ex41_rehearsal_updates is not None:
         if _pre_args.ex41_production_launch_approved:
             raise ValueError("EX-41 production approval switch is not valid for rehearsal")
@@ -107,7 +120,8 @@ if _pre_args.ex41_table:
                      else _pre_args.ex41_log_root)
         if not disk_root:
             raise ValueError("EX-41 disk preflight requires --ex41_log_root")
-        if _pre_args.ex41_rehearsal_updates is None:
+        if (_pre_args.ex41_rehearsal_updates is None
+                and _pre_args.ex41_startup_smoke_updates is None):
             EX41_OUTPUT_LAYOUT = ex41_output_layout_for_run(disk_root)
             if EX41_OUTPUT_LAYOUT is None:
                 raise ValueError("EX-41 production run must use s2_lab/ex41_main_YYYYMMDD_HHMMSS/main/<run>")
@@ -117,11 +131,13 @@ if _pre_args.ex41_table:
                 raise ValueError("EX-41 production score directory must be <ROOT>/eval/scores")
         EX41_DISK_RECEIPT = build_ex41_disk_plan(
             disk_root, EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
-            1 if _pre_args.ex41_rehearsal_updates is not None else EX41_PARENT_RECEIPT["save_interval"],
+            1 if _pre_args.ex41_rehearsal_updates is not None else
+            _pre_args.ex41_startup_smoke_updates or EX41_PARENT_RECEIPT["save_interval"],
             planned_updates=((max(0, _pre_args.ex41_rehearsal_updates - EX41_RESUME_PREFLIGHT["completed_updates"])
                               if EX41_RESUME_PREFLIGHT else _pre_args.ex41_rehearsal_updates)
                              if _pre_args.ex41_rehearsal_updates is not None
-                             else 5000 + 1500))
+                             else (_pre_args.ex41_startup_smoke_updates
+                                   if _pre_args.ex41_startup_smoke_updates is not None else 5000 + 1500)))
         print(json.dumps({"state": "dry_run", "task": _pre_args.task,
             "kit_started": False, "gpu_used": False,
             "task_config_import": "not_run_Kit_bootstrap_not_authorized",
@@ -134,7 +150,13 @@ if _pre_args.ex41_table:
             "w71_ready": _w71_ready,
             "rehearsal_updates": _pre_args.ex41_rehearsal_updates,
             "rehearsal_output": _pre_args.ex41_rehearsal_output,
-            "rehearsal_device": _pre_args.device,
+            "rehearsal_device": (_pre_args.device
+                                  if _pre_args.ex41_rehearsal_updates is not None else None),
+            "startup_smoke_updates": _pre_args.ex41_startup_smoke_updates,
+            "startup_smoke_output": (_pre_args.ex41_log_root
+                                      if _pre_args.ex41_startup_smoke_updates is not None else None),
+            "startup_smoke_device": (_pre_args.device
+                                      if _pre_args.ex41_startup_smoke_updates is not None else None),
             "output_layout": ({key: str(value) for key, value in EX41_OUTPUT_LAYOUT.items()}
                               if EX41_OUTPUT_LAYOUT else None),
             "production_launch_allowed": EX41_LAUNCH_DECISION["production_launch_allowed"],
@@ -157,6 +179,16 @@ if _pre_args.ex41_table:
             planned_updates=rehearsal_remaining)
         EX41_AUTHORIZATION = authorization_snapshot(EX41_PLAN)
         EX41_REHEARSAL = True
+    elif _pre_args.ex41_startup_smoke_updates is not None:
+        EX41_DISK_RECEIPT = build_ex41_disk_plan(
+            _pre_args.ex41_log_root,
+            EX41_PARENT_RECEIPT["checkpoint_size_bytes"],
+            _pre_args.ex41_startup_smoke_updates,
+            planned_updates=_pre_args.ex41_startup_smoke_updates)
+        EX41_AUTHORIZATION = authorization_snapshot(EX41_PLAN)
+        EX41_LAUNCH_DECISION = production_launch_status(
+            EX41_PLAN, lead_approved=False, snapshot=EX41_AUTHORIZATION)
+        EX41_STARTUP_SMOKE = True
     else:
         if not _pre_args.ex41_log_root:
             raise ValueError("EX-41 production start requires --ex41_log_root in the approved main/<run> layout")
@@ -197,7 +229,8 @@ if _pre_args.ex41_table:
             _pre_args.ex41_log_root, EX41_PLAN, EX41_PARENT_RECEIPT,
             EX41_LAUNCH_DECISION)
 elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run
-      or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None or _pre_args.resume_from
+      or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None
+      or _pre_args.ex41_startup_smoke_updates is not None or _pre_args.resume_from
       or _pre_args.ex41_rehearsal_output or _pre_args.ex41_production_launch_approved):
     raise ValueError("EX-41 options require --ex41_table")
 
@@ -236,6 +269,8 @@ parser.add_argument("--ex41_rehearsal_output", type=str,
                     help="New s2_lab/ex41_rehearsal_YYYYMMDD_HHMMSS output directory")
 parser.add_argument("--ex41_rehearsal_dr_08", action="store_true",
                     help="Force the optional 0.8 reset/readback proof during rehearsal")
+parser.add_argument("--ex41_startup_smoke_updates", type=int,
+                    help="Bound the normal EX-41 startup path to exactly 10 updates with production authorization false")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -257,6 +292,8 @@ if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
         or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output
         or args_cli.ex41_rehearsal_dr_08 != _pre_args.ex41_rehearsal_dr_08):
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
+if args_cli.ex41_startup_smoke_updates != _pre_args.ex41_startup_smoke_updates:
+    raise ValueError("EX-41 startup smoke preflight and runtime parser disagree")
 if EX41_REHEARSAL:
     from foothold_s2.scripts.ex41_startup import (
         validate_rehearsal_request, validate_rehearsal_resume_request,
@@ -271,6 +308,14 @@ if EX41_REHEARSAL:
     else:
         validate_rehearsal_request(args_cli.ex41_rehearsal_updates,
                                    args_cli.ex41_rehearsal_output, args_cli.device,
+                                   args_cli.headless, args_cli.distributed)
+if EX41_STARTUP_SMOKE:
+    from foothold_s2.scripts.ex41_startup import validate_startup_smoke_request
+
+    if args_cli.max_iterations is not None or args_cli.resume_from:
+        raise ValueError("EX-41 startup smoke cannot use --max_iterations or resume")
+    validate_startup_smoke_request(args_cli.ex41_startup_smoke_updates,
+                                   args_cli.ex41_log_root, args_cli.device,
                                    args_cli.headless, args_cli.distributed)
 
 app_launcher = AppLauncher(args_cli)
@@ -337,7 +382,7 @@ def main(env_cfg, agent_cfg):
         agent_cfg.resume = False
         log_dir = (os.path.abspath(args_cli.ex41_rehearsal_output) if EX41_REHEARSAL
                    else os.path.abspath(args_cli.ex41_log_root))
-        if not EX41_REHEARSAL and resume_path is None:
+        if not (EX41_REHEARSAL or EX41_STARTUP_SMOKE) and resume_path is None:
             if EX41_LAUNCH_RECEIPT:
                 validate_output_with_launch_receipt(log_dir, EX41_LAUNCH_RECEIPT)
             else:
@@ -386,7 +431,8 @@ def main(env_cfg, agent_cfg):
                                EX41_LAUNCH_DECISION and EX41_LAUNCH_DECISION.get("production_launch_allowed")),
                            "production_launch_receipt": (str(EX41_LAUNCH_RECEIPT)
                                if EX41_LAUNCH_RECEIPT else None),
-                           "max_updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None})
+                            "max_updates": (args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else
+                                            args_cli.ex41_startup_smoke_updates if EX41_STARTUP_SMOKE else None)})
     if EX41_PLAN is not None and resume_path is None:
         from foothold_s2.scripts.ex41_startup import write_ex41_disk_preflight
 
@@ -449,7 +495,9 @@ def main(env_cfg, agent_cfg):
             train_cfg, EX41_PLAN, parent_checkpoint_path,
             rehearsal_updates=(args_cli.ex41_rehearsal_updates
                                if EX41_REHEARSAL and resume_path is None else None),
-            disk_guard=EX41_DISK_RECEIPT)
+            disk_guard=EX41_DISK_RECEIPT,
+            startup_smoke_updates=(args_cli.ex41_startup_smoke_updates
+                                   if EX41_STARTUP_SMOKE else None))
         if EX41_REHEARSAL and resume_path is not None:
             # Rehearsal continuation has a separate strict preflight that
             # permits only one or two updates beyond its latest saved model.
@@ -480,7 +528,7 @@ def main(env_cfg, agent_cfg):
             validate_resume_state, compare_resume_state,
         )
 
-        if not EX41_REHEARSAL:
+        if not (EX41_REHEARSAL or EX41_STARTUP_SMOKE):
             runtime_output_layout = ex41_output_layout_for_run(log_dir)
             if runtime_output_layout is None:
                 raise ValueError("EX-41 production log directory no longer matches its approved layout")
@@ -498,11 +546,13 @@ def main(env_cfg, agent_cfg):
                                 if EX41_RESUME_PREFLIGHT else 0)
         ex41_runtime = make_runtime(EX41_PLAN, env.num_envs, agent_cfg.device, log_dir,
                                     score_dir=score_dir, segment_index=resume_segment_index,
-                                    allow_w71_unverified=EX41_REHEARSAL)
+                                     allow_w71_unverified=(EX41_REHEARSAL or EX41_STARTUP_SMOKE))
         if EX41_REHEARSAL:
             # A rehearsal is bounded by its explicit CLI request, not by the
             # production fixed-schedule horizon stored in the plan.
             ex41_runtime.max_updates = args_cli.ex41_rehearsal_updates
+        elif EX41_STARTUP_SMOKE:
+            ex41_runtime.max_updates = args_cli.ex41_startup_smoke_updates
         if ex41_dr_readback is None:
             raise ValueError("EX-41 DR readback runtime was not created before runner attachment")
         runner.ex40_dr_runtime = ex41_dr_readback
@@ -585,8 +635,8 @@ def main(env_cfg, agent_cfg):
             runner, log_dir, score_dir, table=os.path.abspath(args_cli.ex41_table),
             eval_config=os.path.join(REPO, "foothold_s2", "curriculum",
                                      "ex40_score_config.json"),
-            enabled=not EX41_REHEARSAL)
-        if not EX41_REHEARSAL:
+            enabled=not (EX41_REHEARSAL or EX41_STARTUP_SMOKE))
+        if not (EX41_REHEARSAL or EX41_STARTUP_SMOKE):
             from foothold_s2.scripts.ex41_startup import install_end_by_warning_watch
 
             ex41_end_by_receipt = install_end_by_warning_watch(
@@ -635,6 +685,9 @@ def main(env_cfg, agent_cfg):
                                          "schedule_boundary_0_8": ("not_requested" if EX41_REHEARSAL and not args_cli.ex41_rehearsal_dr_08
                                                                    else "forced_reset_readback" if EX41_REHEARSAL else None),
                                          "score_watch_26_cells_once": "separate_oneoff_ready_not_run" if EX41_REHEARSAL else None},
+                          "startup_smoke": {"enabled": EX41_STARTUP_SMOKE,
+                                            "updates": args_cli.ex41_startup_smoke_updates if EX41_STARTUP_SMOKE else None,
+                                            "production_launch_allowed": False if EX41_STARTUP_SMOKE else None},
                           "w86_attached": ex41_w86_receipt is not None,
                           "score_dir": score_dir,
                           "output_layout": ({key: str(value) for key, value in runtime_output_layout.items()}
@@ -705,6 +758,20 @@ def main(env_cfg, agent_cfg):
             "end_by_watch": ex41_end_by_receipt,
             "dr_scale_08": "not_requested" if not args_cli.ex41_rehearsal_dr_08 else "forced_reset_readback",
             "shadow_loop": False,
+        }, sort_keys=True), flush=True)
+    if EX41_STARTUP_SMOKE:
+        print("EX41_STARTUP_SMOKE_READBACK " + json.dumps({
+            "output": log_dir,
+            "updates": args_cli.ex41_startup_smoke_updates,
+            "production_launch_allowed": False,
+            "production_launch_receipt": None,
+            "parent_sha256": EX41_PARENT_RECEIPT["sha256"],
+            "initial_dr_scale": {"configured": EX41_PLAN.initial_dr_scale,
+                                 "runtime": ex41_dr_readback.scale,
+                                 "env": env.unwrapped._ex40_dr_scale,
+                                 "first_reset_term_wrapped": ex41_cfg_contract["initial_dr"]["before_first_reset"]},
+            "observations": ex41_first_observation,
+            "save_interval": train_cfg["save_interval"],
         }, sort_keys=True), flush=True)
     if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)
         from foothold_s2.runners.map_stats import MapStatsRecorder

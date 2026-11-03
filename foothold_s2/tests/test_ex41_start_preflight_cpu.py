@@ -125,15 +125,19 @@ class Ex41PreflightTests(unittest.TestCase):
             (run / "case-fail.mp4").write_bytes(b"fail")
             (root / "not-an-ex41-run").mkdir()
             out = Path(tmp) / "playlists"
-            paths = create_playlists(root, out)
+            mirror = Path(tmp) / "eval-copy"
+            paths = create_playlists(root, out, mirror)
             self.assertEqual({p.name for p in paths}, {
                 "EX-41-m07500-all.m3u8", "EX-41-m07500-fail.m3u8"})
+            self.assertEqual(len(paths), 4)
             all_rows = paths[0].read_text(encoding="utf-8")
             fail_rows = (out / "EX-41-m07500-fail.m3u8").read_text(encoding="utf-8")
             self.assertIn("case-ok.mp4", all_rows)
             self.assertIn("case-fail.mp4", all_rows)
             self.assertIn("case-fail.mp4", fail_rows)
             self.assertNotIn("case-ok.mp4", fail_rows)
+            self.assertEqual((mirror / "EX-41-m07500-all.m3u8").read_bytes(),
+                             (out / "EX-41-m07500-all.m3u8").read_bytes())
 
 
 if __name__ == "__main__":

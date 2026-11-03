@@ -37,6 +37,7 @@ EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
 EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
 EX41_PRODUCTION_PARENT = Path("C:/Users/AI-WS01/s2_lab")
+EX41_PLAYLIST_ROOT = EX41_PRODUCTION_PARENT / "_playlists"
 EX41_W78_VIDEO_ROOT = Path("D:/mai-tmp/ex41/w78_video")
 _EX41_PRODUCTION_ROOT = re.compile(r"ex41_main_[0-9]{8}_[0-9]{6}\Z")
 EX41_UPDATE_SECONDS_ESTIMATE = 26.3
@@ -220,7 +221,8 @@ def ex41_output_layout_for_run(run_dir: str | Path) -> dict[str, Path] | None:
         "run_dir": run,
         "eval_root": root / "eval",
         "score_dir": root / "eval" / "scores",
-        "playlist_dir": root / "eval",
+        "playlist_dir": EX41_PLAYLIST_ROOT,
+        "playlist_mirror_dir": root / "eval",
         "w78_video_root": EX41_W78_VIDEO_ROOT,
     }
 
@@ -245,15 +247,19 @@ def ex41_score_watch_output_root(run_dir: str | Path) -> Path:
 
 
 def _require_ex41_run_path(path: str | Path) -> Path:
-    """Allow D rehearsal paths and only the explicit D164 C: production shape."""
+    """Allow D: rehearsal paths and the two explicit C: EX-41 run layouts."""
     root = Path(path)
     if not root.is_absolute():
         raise ValueError("EX-41 output must be an absolute path")
     if root.drive.upper() == "D:":
         return root
+    if (root.drive.upper() == "C:"
+            and root.parent == EX41_PRODUCTION_PARENT
+            and re.fullmatch(r"ex41_smoke_[0-9]{8}_[0-9]{6}", root.name)):
+        return root
     layout = ex41_output_layout_for_run(root)
     if layout is None or layout["run_dir"] != root.resolve():
-        raise ValueError("EX-41 production output must match the approved s2_lab main/<run> layout")
+        raise ValueError("EX-41 output must match an approved s2_lab D: rehearsal, C: smoke, or main/<run> layout")
     return root
 
 
@@ -483,6 +489,22 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
     return path
 
 
+def validate_startup_smoke_request(updates: int, output_dir: str | Path,
+                                   device: str, headless: bool,
+                                   distributed: bool = False) -> Path:
+    """Allow a 10-update bounded smoke through the production startup path, without authorization."""
+    if type(updates) is not int or updates != 10:
+        raise ValueError("EX-41 startup smoke is fixed to exactly 10 updates")
+    path = Path(output_dir)
+    if (not path.is_absolute() or path.drive.upper() != "C:"
+            or path.parent != EX41_PRODUCTION_PARENT
+            or not re.fullmatch(r"ex41_smoke_[0-9]{8}_[0-9]{6}", path.name)):
+        raise ValueError("EX-41 startup smoke output must be C:/Users/AI-WS01/s2_lab/ex41_smoke_YYYYMMDD_HHMMSS")
+    if device != "cuda:0" or not headless or distributed:
+        raise ValueError("EX-41 startup smoke requires headless cuda:0 and one process")
+    return validate_ex41_output_directory(path)
+
+
 def validate_rehearsal_resume_request(target_updates: int, output_dir: str | Path,
                                       checkpoint: str | Path, device: str,
                                       headless: bool, distributed: bool = False) -> Path:
@@ -647,7 +669,8 @@ def install_end_by_warning_watch(runtime: Any, run_dir: str | Path, plan,
 
 def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,
                              rehearsal_updates: int | None = None,
-                             disk_guard: dict[str, Any] | None = None) -> dict[str, Any]:
+                             disk_guard: dict[str, Any] | None = None,
+                             startup_smoke_updates: int | None = None) -> dict[str, Any]:
     """Set mandatory transfer flags and the parent reference in a fresh cfg."""
     cfg = dict(train_cfg)
     parent_agent_path = Path(parent_path).resolve(strict=True).parent / "params" / "agent.yaml"
@@ -668,7 +691,15 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
         "sha256": plan.parent_sha256,
         "iteration": plan.parent_update,
     }
-    if rehearsal_updates is None:
+    if rehearsal_updates is not None and startup_smoke_updates is not None:
+        raise ValueError("EX-41 rehearsal and startup smoke limits are mutually exclusive")
+    if startup_smoke_updates is not None:
+        if type(startup_smoke_updates) is not int or startup_smoke_updates != 10:
+            raise ValueError("EX-41 startup smoke is fixed to exactly 10 updates")
+        cfg["max_iterations"] = startup_smoke_updates
+        cfg["save_interval"] = startup_smoke_updates
+        cfg["ex41_startup_smoke"] = True
+    elif rehearsal_updates is None:
         # The runner uses zero-based iteration indices; one extra loop entry is
         # needed to observe the runtime's terminal completed-update boundary.
         cfg["max_iterations"] = 6501
@@ -727,7 +758,7 @@ def verify_ex41_start_readback(log_dir: str | Path, plan, parent_receipt: dict[s
                                manifest: dict[str, Any], env: Any,
                                dr_runtime: Any) -> dict[str, Any]:
     """Read back persisted start inputs and live DR before the first learn call."""
-    root = _require_d_drive(log_dir).resolve(strict=True)
+    root = _require_ex41_run_path(log_dir).resolve(strict=True)
     manifest_path = root / "manifest.json"
     env_path = root / "params" / "env.yaml"
     agent_path = root / "params" / "agent.yaml"
@@ -780,7 +811,7 @@ def verify_ex41_start_readback(log_dir: str | Path, plan, parent_receipt: dict[s
 
 def write_ex41_start_readback(log_dir: str | Path, receipt: dict[str, Any]) -> Path:
     """Atomically persist the verified, user-readable U21 readback receipt."""
-    root = _require_d_drive(log_dir).resolve(strict=True)
+    root = _require_ex41_run_path(log_dir).resolve(strict=True)
     if receipt.get("format") != "foothold-ex41-start-readback/1" or receipt.get("status") != "verified":
         raise ValueError("EX-41 U21 readback receipt is not verified")
     target = root / "ex41_start_readback.json"
