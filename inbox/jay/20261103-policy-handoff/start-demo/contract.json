@@ -102,5 +102,130 @@
     "off": "test_vectors_flat20_off.json",
     "gt": "test_vectors_flat20_gt.json"
   },
-  "default_test_vectors": "test_vectors_flat20.json"
+  "default_test_vectors": "test_vectors_flat20.json",
+  "app_onnx": {
+    "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측)",
+    "inputs": [
+      {
+        "name": "obs45",
+        "dims": [
+          1,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "hist",
+        "dims": [
+          1,
+          10,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth2",
+        "dims": [
+          1,
+          2,
+          60,
+          60
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth_tick",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "first_after_reset",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "use_gt",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "gt_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "action",
+        "dims": [
+          1,
+          12
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "recon_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "action": "action",
+    "state": [
+      {
+        "out": "h_prop_next",
+        "in": "h_prop"
+      },
+      {
+        "out": "h_terr_next",
+        "in": "h_terr"
+      }
+    ],
+    "depth_delay": "10 Hz frames; depth2 = the two most recent frames delivered one frame (0.1 s) late; depth_tick true on the step a new frame arrives (every 5 steps)"
+  }
 }
