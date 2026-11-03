@@ -93,7 +93,8 @@ def recorder_argv(args, mode: str, source: dict, attempt: Path) -> tuple[list[st
     argv = [str(args.python), str(args.recorder), "--checkpoint", str(args.checkpoint),
             "--policy", json.dumps(spec, ensure_ascii=False, separators=(",", ":")),
             "--label", label, "--scene", "rough", "--mp4", str(attempt / label / "review.mp4"),
-            "--device", "cuda:1", "--width", "1280", "--height", "720", "--fps", "25"]
+            "--device", "cuda:1", "--width", "1280", "--height", "720", "--fps", "25",
+            "--headless", "--enable_cameras", "--livestream", "0"]
     return argv, label
 
 
