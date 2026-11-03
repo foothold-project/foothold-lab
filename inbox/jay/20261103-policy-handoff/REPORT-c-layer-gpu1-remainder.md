@@ -5,7 +5,7 @@
 > 근거: D131 · D48 · D138 · EX-41 P1 우선순위 · 원자료 영수증
 > 요지: GPU0 몫의 남은 81칸을 GPU1 P4 큐로 옮기고 EX-41 학습 지연을 칸 경계에서 검사한다.
 > 상태: 실행 중 · 성공본 전체 완료 미확인
-> 판: v1.0
+> 판: v1.1
 
 ## 확인한 입력과 관문
 
@@ -19,6 +19,8 @@
 
 `stepping_stones_low_L1_eval_pred`의 첫 시드에서 450프레임 촬영 및 v3.4 검사가 끝났다. 영상 속 정책 결과는 실패라 성공 영수증이 없고, 기술 실패는 0건이다. 촬영과 합성 중 EX-41 갱신 9회의 wall time은 26.04~27.37초이며 29.7초 초과는 0회다. 실패 촬영은 보존하고 다음 시드로 진행한다.
 
+두 번째 시드도 450프레임 v3.4 검사 후 정책 실패로 판정됐다. 이 시도 중 EX-41 갱신 10회는 26.39~28.78초였고 관문 초과는 0회다. 성공 영상이 없으므로 재생 목록은 135편 그대로다.
+
 ## 답을 아는 CPU 시험
 
 `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/test_c_layer_gpu1_remainder.py -q -p no:cacheprovider --basetemp D:/mai-tmp/scripter/pytest_c_layer_remainder`: 6 passed. 27→81 차집합, P1 선점, 29.7초 경계, 오래된 학습 상태 거절, P1 대기 뒤 재개, 초과 시 정지를 확인했다.
@@ -26,3 +28,5 @@
 ## 실행과 한계
 
 한 번에 한 칸만 실행하며 `D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/gpu1_remainder_loop.jsonl`에 상태를 쓴다. 성공을 얻지 못한 칸은 네 시드 뒤 미충족으로 남는다. 기술 실패가 세 번이면 해당 칸을 보류하고 다른 칸으로 간다. 예전 실패 영상은 정본 재생 목록에 넣지 않는다. 새 성공본만 450프레임 검사와 v3.4 영수증을 거쳐 공유 재생 목록에 더한다. 81칸의 최종 성공 수는 아직 미확인이다.
+
+2026-11-03 20:42 KST에 고정 소스 `D:/mai-wt/foothold-lab/c76q`의 `a5fb48f0`으로 숨은 큐 PID 79828을 시작했다. 실행 영수증은 `D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/loop_process.json`이며, 원장과 예외 출력은 같은 폴더의 `gpu1_remainder_loop.jsonl` · `loop.stderr.log`다. 독립 정지 표식 `OPERATOR_STOP`은 칸 경계에서만 읽는다. 이 기록은 기동 증거이지 81칸 완료 증거가 아니다.
