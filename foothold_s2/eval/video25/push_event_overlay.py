@@ -17,6 +17,7 @@ from foothold_s2.eval.c_layer_frame_audit import project_world_point
 
 
 RECOVERY_FALLBACK_S = 1.5
+PUSH_ARROW_VISIBLE_S = 0.4
 
 
 def active_push_event(overlay: dict, time_s: float) -> dict | None:
@@ -25,6 +26,14 @@ def active_push_event(overlay: dict, time_s: float) -> dict | None:
         median = event.get("recovery_time_s_median", overlay["recovery_time_s_median"])
         duration = RECOVERY_FALLBACK_S if median is None else median
         if event["t_s"] <= time_s <= event["t_s"] + duration:
+            return event
+    return None
+
+
+def active_push_arrow_event(overlay: dict, time_s: float) -> dict | None:
+    """The physical force arrow appears only at application, not through recovery."""
+    for event in reversed(overlay["events"]):
+        if event["t_s"] <= time_s < event["t_s"] + PUSH_ARROW_VISIBLE_S:
             return event
     return None
 
@@ -162,17 +171,23 @@ def draw_push_overlay(scene, overlay: dict, time_s: float, *, legend_rect: tuple
     """Draw only after an event; never substitute a missing recovery endpoint."""
     event = active_push_event(overlay, time_s)
     if event is None:
+        if geometry is not None:
+            raise ValueError("push legend arrow outside force application window")
         return scene
     x0, y0, width, height = legend_rect
     x1, y1 = x0 + width, y0 + height
     if not (0 <= x0 < x1 <= scene.shape[1] and 0 <= y0 < y1 <= scene.shape[0]):
         raise ValueError("invalid scene legend bounds")
-    if geometry is None:
-        raise ValueError("push legend requires the projected world arrow")
-    start, tip = geometry["box_start"], geometry["box_tip"]
     cv2.rectangle(scene, (x0, y0), (x1 - 1, y1 - 1), (85, 90, 165), -1)
     cv2.rectangle(scene, (x0 + 1, y0 + 1), (x1 - 2, y1 - 2), (40, 55, 235), 1, cv2.LINE_8)
-    cv2.arrowedLine(scene, start, tip, (0, 210, 255), 4, cv2.LINE_AA, tipLength=.24)
+    arrow_event = active_push_arrow_event(overlay, time_s)
+    if arrow_event is not None:
+        if geometry is None:
+            raise ValueError("push legend requires the projected world arrow")
+        start, tip = geometry["box_start"], geometry["box_tip"]
+        cv2.arrowedLine(scene, start, tip, (0, 210, 255), 4, cv2.LINE_AA, tipLength=.24)
+    elif geometry is not None:
+        raise ValueError("push legend arrow outside force application window")
     cv2.putText(scene, "PUSH world XY", (x0 + 8, y0 + 21),
                 cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
     cv2.putText(scene, f"{event['magnitude_mps']:.2f} m/s", (x0 + 8, y0 + 39),

@@ -187,6 +187,8 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
     arrow_audit = composition.get("push_overlay", {}).get("arrow_geometry_audit") or {}
     if (arrow_audit.get("pass") is not True or arrow_audit.get("frames", 0) <= 0
             or arrow_audit.get("events") != [event[0] for event in DEMO_PUSHES]
+            or composition.get("push_overlay", {}).get("arrow_visible_s") != .4
+            or arrow_audit.get("outside_application_frames") != 0
             or arrow_audit.get("all_starts_inside_body_box") is not True
             or arrow_audit.get("all_starts_inside_rendered_robot") is not True
             or not 0 <= arrow_audit.get("max_angle_diff_deg", float("inf")) < 10

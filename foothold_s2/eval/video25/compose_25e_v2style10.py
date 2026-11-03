@@ -35,8 +35,9 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from foothold_s2.eval import flag_eval as FE  # noqa: E402  (W04: 깃발 거리 · 방향 · 판정 성분은 평가 코드와 같은 함수)
 from foothold_s2.eval.video25.push_event_overlay import (  # noqa: E402
-    RECOVERY_FALLBACK_S, active_push_event, draw_push_overlay, draw_push_scene_arrow,
-    load_overlay, push_arrow_geometry,
+    RECOVERY_FALLBACK_S, PUSH_ARROW_VISIBLE_S, active_push_arrow_event,
+    active_push_event, draw_push_overlay, draw_push_scene_arrow, load_overlay,
+    push_arrow_geometry,
 )
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
@@ -917,6 +918,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
     last = idx[0] - 1
     prev_row, lit_from = None, None
     push_geometry_rows = []
+    push_arrow_timing = []
     for fi in idx:
         while last < fi:
             ok, frame = cap.read()
@@ -931,22 +933,29 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         scene = receipt_header(scene, meta, z, row, push_video=push_overlay is not None)
         now_s = float(z["t"][row])
         push_event = active_push_event(push_overlay, now_s) if push_overlay is not None else None
+        arrow_event = active_push_arrow_event(push_overlay, now_s) if push_overlay is not None else None
         push_active = push_event is not None
         arrow_geometry = None
-        if push_active:
+        if arrow_event is not None:
             arrow_geometry = push_arrow_geometry(
-                push_event, z["root_pos_w"][row], z["root_quat_w"][row], camera_rows[fi],
+                arrow_event, z["root_pos_w"][row], z["root_quat_w"][row], camera_rows[fi],
                 scene_width=scene.shape[1], scene_height=scene.shape[0], legend_rect=LEGEND_RECT,
                 rendered_robot_bbox_xyxy=meta["robot_instance_evidence"][fi].get(
                     "selected_robot_bbox_xyxy"))
-            push_geometry_rows.append({"event_t_s": push_event["t_s"], "frame": fi,
+            push_geometry_rows.append({"event_t_s": arrow_event["t_s"], "frame": fi,
                                        "angle_diff_deg": arrow_geometry["angle_diff_deg"],
                                        "body_start_ok": arrow_geometry["body_start_ok"],
                                        "rendered_start_ok": arrow_geometry["rendered_start_ok"],
                                        "length_m": arrow_geometry["length_m"],
                                        "screen_width_fraction": arrow_geometry["screen_width_fraction"]})
             scene = draw_push_scene_arrow(scene, arrow_geometry,
-                                          flash=now_s - push_event["t_s"] <= 0.16)
+                                          flash=now_s - arrow_event["t_s"] <= 0.16)
+        if push_overlay is not None:
+            push_arrow_timing.append({"frame": fi, "time_s": now_s,
+                                      "scene_arrow": arrow_geometry is not None,
+                                      "expected_arrow": any(
+                                          event["t_s"] <= now_s < event["t_s"] + PUSH_ARROW_VISIBLE_S
+                                          for event in push_overlay["events"])})
         if not push_active:
             scene = scene_legend(scene, meta)
         scene = speed_tag(scene, speed, segment)
@@ -973,6 +982,8 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
         event_times = {event["t_s"] for event in push_overlay["events"]}
         if {row["event_t_s"] for row in push_geometry_rows} != event_times:
             raise ValueError("push arrow geometry audit lacks an event")
+        if any(row["scene_arrow"] != row["expected_arrow"] for row in push_arrow_timing):
+            raise ValueError("push arrow visible outside force application window")
     rec = {"output": str(out), "sha256": sha256(out), "frames": n, "expected": len(idx), "segment": segment,
            "video_rule_version": VIDEO_RULE_VERSION,
            "composer_sha256": sha256(Path(__file__).resolve()),
@@ -987,10 +998,14 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
                              "rollout_key": push_rollout_key, "env_id": push_env_id,
                              "meaning": push_overlay["meaning"],
                              "recovery_fallback_s": RECOVERY_FALLBACK_S,
+                             "arrow_visible_s": PUSH_ARROW_VISIBLE_S,
                              "scene_arrow": "world-xy-delta-v-projected-from-body-root-0.25m-per-mps",
                              "arrow_geometry_audit": {
                                  "pass": True, "frames": len(push_geometry_rows),
                                  "events": sorted({row["event_t_s"] for row in push_geometry_rows}),
+                                 "outside_application_frames": sum(
+                                     row["scene_arrow"] and not row["expected_arrow"]
+                                     for row in push_arrow_timing),
                                  "max_angle_diff_deg": max(row["angle_diff_deg"] for row in push_geometry_rows),
                                  "max_screen_width_fraction": max(row["screen_width_fraction"]
                                                                   for row in push_geometry_rows),

@@ -9,7 +9,8 @@ import pytest
 import cv2
 
 from foothold_s2.eval.video25.push_event_overlay import (
-    active_push_event, box_arrow_points, draw_push_overlay, draw_push_scene_arrow,
+    PUSH_ARROW_VISIBLE_S, active_push_arrow_event, active_push_event,
+    box_arrow_points, draw_push_overlay, draw_push_scene_arrow,
     load_overlay, push_arrow_geometry,
 )
 from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
@@ -42,7 +43,7 @@ def test_world_xy_direction_magnitude_and_time(tmp_path):
     before = np.zeros((720, 1280, 3), np.uint8)
     bounds = {"legend_rect": composer.LEGEND_RECT}
     assert np.array_equal(draw_push_overlay(before.copy(), event, 1.99, **bounds), before)
-    during = draw_push_overlay(before.copy(), event, 2.5, **bounds,
+    during = draw_push_overlay(before.copy(), event, 2.2, **bounds,
                                geometry=legend_geometry())
     x0, y0, width, height = composer.LEGEND_RECT
     assert during[y0:y0 + height, x0:x0 + width].sum() > 0
@@ -50,6 +51,18 @@ def test_world_xy_direction_magnitude_and_time(tmp_path):
     assert np.array_equal(after, before)
     assert active_push_event(event, 3.5) is not None
     assert active_push_event(event, 3.51) is None
+    assert active_push_arrow_event(event, 2.0) is not None
+    assert active_push_arrow_event(event, 2.39) is not None
+    assert active_push_arrow_event(event, 2.4) is None
+    assert PUSH_ARROW_VISIBLE_S == .4
+    recovery_only = draw_push_overlay(before.copy(), event, 2.5, **bounds)
+    assert recovery_only[y0:y0 + height, x0:x0 + width].any()
+    yellow = ((recovery_only[:, :, 0] < 100) & (recovery_only[:, :, 1] > 150)
+              & (recovery_only[:, :, 2] > 180))
+    assert not yellow.any()
+    with pytest.raises(ValueError, match="outside force application"):
+        draw_push_overlay(before.copy(), event, 2.5, **bounds,
+                          geometry=legend_geometry())
 
 
 def test_missing_recovery_uses_one_point_five_seconds(tmp_path):
@@ -71,7 +84,7 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
     assert expected_edges == (composer.GAUGE_X0, composer.GAUGE_X1)
 
     def check_rect(rect):
-        frame = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=rect,
+        frame = draw_push_overlay(blank.copy(), event, 2.2, legend_rect=rect,
                                   geometry=legend_geometry())
         x0, y0, width, height = rect
         pixels = np.argwhere(frame.any(axis=2))
@@ -115,7 +128,7 @@ def test_push_box_pixel_edges_equal_terrain_speed_panel_and_mutation_is_caught(t
                               color, thickness, line_type, tipLength=tipLength)
 
     monkeypatch.setattr(push_overlay_module.cv2, "arrowedLine", arrow_into_footer)
-    mutated = draw_push_overlay(blank.copy(), event, 2.5, legend_rect=composer.LEGEND_RECT,
+    mutated = draw_push_overlay(blank.copy(), event, 2.2, legend_rect=composer.LEGEND_RECT,
                                 geometry=legend_geometry())
     mutated_arrow = np.argwhere((mutated[:, :, 0] < 100) & (mutated[:, :, 1] > 150)
                                 & (mutated[:, :, 2] > 180))
