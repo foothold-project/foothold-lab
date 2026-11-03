@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -95,7 +96,9 @@ def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_pat
     cp = tmp_path / 'model_250.pt'
     cp.write_bytes(b'known checkpoint bytes')
     core = commands(cp, tmp_path / 'core', cfg, scope='periodic')
-    auxiliary = commands(cp, tmp_path / 'aux', cfg, scope='auxiliary')
+    # No live GPU0 training marker means a standalone ladder can use GPU0.
+    auxiliary = commands(cp, tmp_path / 'aux', cfg, scope='auxiliary',
+                         gpu0_training_markers=[])
     assert [row['name'] for row in core] == [
         'map64', 'stand_eval_gt', 'stand_probe_prop_only', 'stand_eval_pred', 'w78_v2_sides']
     assert [row['name'] for row in auxiliary] == [
@@ -114,6 +117,108 @@ def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_pat
     assert '--terrain-skill-v2-cases' not in auxiliary[1]['argv']
     assert len(core) == 5 and all(row['argv'][row['argv'].index('--device') + 1] == 'cuda:1'
                                   for row in core)
+
+
+def test_live_gpu0_training_routes_stage_end_children_to_gpu1_and_they_finish(
+        tmp_path, monkeypatch):
+    """Stage-end bundle starts and finishes real CPU children under a live GPU0 owner."""
+    import psutil
+    from foothold_s2.eval import ex41_gpu_priority as priority
+    from foothold_s2 import ex41_eval_once
+
+    marker = tmp_path / 'TRAINING_BUSY_GPU0'
+    owner = psutil.Process()
+    priority.publish_marker(marker, job='fake-live-training', iteration=1000,
+                            pid=owner.pid, process_created_at=owner.create_time())
+    marker_state = priority.gpu0_training_marker_state([marker])
+    assert marker_state['active'] is True
+    assert marker_state['markers'][0]['state'] == 'live'
+
+    checkpoint = tmp_path / 'model_1000.pt'
+    checkpoint.write_bytes(b'known CPU fixture checkpoint')
+    eval_config = tmp_path / 'eval.json'
+    eval_config.write_text('{}', encoding='utf-8')
+    p1_marker = tmp_path / 'PRIORITY_BUSY_GPU1'
+    cfg = {'envs': 64, 'eval_seed': 42, 'map_steps': 2,
+           'stand_seconds': 1, 'stand_skip_seconds': 0,
+           'stand': {'contact_force_n': 1}}
+
+    class Plan:
+        fixed_schedule = True
+        parent_sha256 = 'p' * 64
+        effective_sha256 = 's' * 64
+
+    monkeypatch.setattr(ex41_eval_once, 'load_plan', lambda *_args, **_kwargs: Plan())
+    monkeypatch.setattr(ex41_eval_once, 'config', lambda *_args: cfg)
+    monkeypatch.setattr(ex41_eval_once, 'ISAAC_PYTHON', Path(sys.executable))
+    monkeypatch.setattr(ex41_eval_once.subprocess, 'check_output',
+                        lambda argv, **_kwargs: '' if 'status' in argv else 'cpu-test-head')
+    # This test exercises scheduling and process routing, not evaluator receipt schemas.
+    monkeypatch.setattr(ex41_eval_once, 'reconcile_child_result',
+                        lambda name, child, _output: {**child, 'name': name})
+
+    # Exercise the production hidden-child launcher, but replace Kit entrypoints
+    # with CPU-only children that prove the GPU0 owner and GPU1 P1 claim stay live.
+    child_code = (
+        'import json, os, pathlib, psutil, sys, time; '
+        'marker=pathlib.Path(sys.argv[1]); p1=pathlib.Path(sys.argv[2]); '
+        'out=pathlib.Path(sys.argv[3]); '
+        'owner=json.loads(marker.read_text()); '
+        'p1_owner=json.loads(p1.read_text()); '
+        'alive=psutil.pid_exists(owner["pid"]); p1_live=psutil.pid_exists(p1_owner["pid"]); '
+        'out.write_text(json.dumps({"state":"started","device":sys.argv[4],"gpu0_owner_live":alive,"gpu1_p1_live":p1_live})); '
+        'time.sleep(0.05); '
+        'out.write_text(json.dumps({"state":"finished","device":sys.argv[4],"gpu0_owner_live":psutil.pid_exists(owner["pid"]),"gpu1_p1_live":psutil.pid_exists(p1_owner["pid"])})); '
+        'print("child_started", sys.argv[4]); print("child_finished", sys.argv[4])'
+    )
+    real_hidden_child = ex41_eval_once.hidden_child
+    observed = []
+
+    def cpu_child(argv, folder, *, env=None, cwd=ex41_eval_once.ROOT):
+        argv = list(argv)
+        device = argv[argv.index('--device') + 1]
+        phase = argv[argv.index('-m') + 1]
+        training_marker = None
+        if phase == 'foothold_s2.eval.a_push_video':
+            training_marker = Path(argv[argv.index('--training-marker') + 1])
+            assert training_marker == priority.DEFAULT_GPU1_TRAINING_MARKER
+            assert training_marker != marker
+        else:
+            assert phase != 'foothold_s2.eval.ex41_push_ladder_bundle' or device == 'cuda:1'
+        receipt_path = tmp_path / f'{phase.rsplit(".", 1)[-1]}.receipt.json'
+        result = real_hidden_child(
+            [sys.executable, '-c', child_code, str(marker), str(p1_marker),
+             str(receipt_path), device], folder, env=env, cwd=tmp_path)
+        observed.append({'phase': phase, 'device': device,
+                         'training_marker': str(training_marker) if training_marker else None,
+                         'result': result,
+                         'receipt': json.loads(receipt_path.read_text(encoding='utf-8')),
+                         'stdout': (Path(folder) / 'stdout.log').read_text(encoding='utf-8')})
+        return result
+
+    monkeypatch.setattr(ex41_eval_once, 'hidden_child', cpu_child)
+    row = ex41_eval_once.evaluate(
+        checkpoint, tmp_path / 'stage-end-bundle', eval_config=eval_config,
+        priority_marker=p1_marker, scope='auxiliary', gpu0_training_markers=[marker])
+    assert row['state'] == 'done' and row['rc'] == 0
+    assert row['stage_end_push_ladder_device'] == 'cuda:1'
+    assert [entry['phase'] for entry in observed] == [
+        'foothold_s2.eval.eval_map_modes', 'foothold_s2.eval.eval_map_modes',
+        'foothold_s2.eval.ex41_push_ladder_bundle', 'foothold_s2.eval.a_push_video']
+    ladder = next(entry for entry in observed
+                  if entry['phase'] == 'foothold_s2.eval.ex41_push_ladder_bundle')
+    video = next(entry for entry in observed if entry['phase'] == 'foothold_s2.eval.a_push_video')
+    assert ladder['device'] == video['device'] == 'cuda:1'
+    assert video['training_marker'] == str(priority.DEFAULT_GPU1_TRAINING_MARKER)
+    assert all(entry['result']['state'] == 'done' and entry['result']['rc'] == 0
+               for entry in observed)
+    assert all(entry['receipt'] == {'state': 'finished', 'device': 'cuda:1',
+                                    'gpu0_owner_live': True, 'gpu1_p1_live': True}
+               for entry in observed)
+    assert all('child_started cuda:1' in entry['stdout']
+               and 'child_finished cuda:1' in entry['stdout'] for entry in observed)
+    assert priority.gpu0_training_marker_state([marker])['active'] is True
+    assert not p1_marker.exists()
 
 
 def test_measured_periodic_side_cost_fits_one_250_update_training_interval():

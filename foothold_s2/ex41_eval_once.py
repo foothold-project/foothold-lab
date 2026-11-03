@@ -30,8 +30,16 @@ FULL_W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs
                   'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
 
 
-def commands(checkpoint, out, cfg, *, scope='all'):
+def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
+             gpu0_training_active=None):
     """The EX40 measurement sizes are reused, never its stage verdict rules."""
+    from foothold_s2.eval.ex41_gpu_priority import (
+        DEFAULT_GPU1_TRAINING_MARKER, gpu0_training_marker_state,
+    )
+
+    active = (gpu0_training_marker_state(gpu0_training_markers)['active']
+              if gpu0_training_active is None else bool(gpu0_training_active))
+    push_ladder_device = 'cuda:1' if active else 'cuda:0'
     common = ['--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
               '--envs', str(cfg['envs'])]
     maps = [*common, '--modes', ','.join(MODES), '--fixed-terrain',
@@ -66,7 +74,9 @@ def commands(checkpoint, out, cfg, *, scope='all'):
         '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
         '--c-layer-lock', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/out/c_layer.lock',
         '--a-layer-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/A_LAYER_BUSY',
-        '--training-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY',
+        # This is the target GPU's training marker. GPU0 training does not
+        # yield a GPU1 capture; GPU1 training and the GPU1 P1 board still do.
+        '--training-marker', str(DEFAULT_GPU1_TRAINING_MARKER),
         '--iteration', str(iteration), '--seed', str(cfg['eval_seed']),
         '--push-seed', str(cfg['eval_seed']), '--cadence', 'stage_end',
     ]))
@@ -76,10 +86,10 @@ def commands(checkpoint, out, cfg, *, scope='all'):
     if selected is None:
         raise ValueError(f'unknown EX41 evaluation scope: {scope}')
     rows = [row for row in rows if row[0] in selected]
-    return [{'name': name, 'device': ('cuda:0' if name == 'push_ladder' else 'cuda:1'),
+    return [{'name': name, 'device': (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
              'argv': [str(ISAAC_PYTHON), '-m', module, *args,
                       '--out', str(out/name), '--headless', '--device',
-                      ('cuda:0' if name == 'push_ladder' else 'cuda:1'),
+                      (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
                       '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
             for name, module, args in rows]
 
@@ -245,7 +255,7 @@ def bundle_terminal_status(steps, *, scope='all'):
 
 
 def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-                     scope='all', gpu1_owner=None):
+                     scope='all', gpu1_owner=None, gpu0_training_markers=None):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     if not getattr(plan, 'fixed_schedule', None) or out.exists():
@@ -266,6 +276,10 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
            'schedule_sha256': plan.effective_sha256, 'parent_sha256': plan.parent_sha256,
            'source_git_head': head, 'device': 'cuda:1', 'scope': scope,
            'eval_config_sha256': sha256(eval_config), 'steps': {}}
+    from foothold_s2.eval.ex41_gpu_priority import gpu0_training_marker_state
+    gpu0_state = gpu0_training_marker_state(gpu0_training_markers)
+    row['gpu0_training_marker_state'] = gpu0_state
+    row['stage_end_push_ladder_device'] = 'cuda:1' if gpu0_state['active'] else 'cuda:0'
     env = dict(os.environ)
     env.pop('CUDA_VISIBLE_DEVICES', None)
     env.update(PYTHONUTF8='1', PYTHONUNBUFFERED='1', PYTHONPATH=str(ROOT),
@@ -276,7 +290,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     start = time.monotonic()
     _atomic(out/'eval_receipt.json', row)
     try:
-        for phase in commands(checkpoint, out, cfg, scope=scope):
+        for phase in commands(checkpoint, out, cfg, scope=scope,
+                              gpu0_training_active=gpu0_state['active']):
             if phase['name'] in ('w78_v2', PERIODIC_W78_PHASE) and not w78_available:
                 row['steps'][phase['name']]={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
@@ -299,7 +314,7 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
 
 
 def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-             priority_marker=None, scope='all'):
+             priority_marker=None, scope='all', gpu0_training_markers=None):
     """Run the bundle while publishing GPU1 priority to the shared job board."""
     from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, gpu1_priority
 
@@ -309,7 +324,8 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     marker_path = DEFAULT_MARKER if priority_marker is None else Path(priority_marker)
     with gpu1_priority(marker_path, job='ex41_evaluation_bundle', iteration=iteration) as owner:
         row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
-                               scope=scope, gpu1_owner=owner)
+                               scope=scope, gpu1_owner=owner,
+                               gpu0_training_markers=gpu0_training_markers)
     row['gpu1_priority_marker'] = {
         'path': str(marker_path), 'state': 'cleared', 'owner': owner,
     }
@@ -324,15 +340,19 @@ def main(argv=None):
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--priority-marker', type=Path)
+    p.add_argument('--gpu0-training-marker', type=Path, action='append', default=None,
+                   help='Optional GPU0 training marker path override, repeatable')
     p.add_argument('--scope', choices=('core', 'periodic', 'auxiliary', 'all'), default='all')
     p.add_argument('--execute', action='store_true')
     a = p.parse_args(argv)
     if not a.execute:
         print(json.dumps({'state':'dry', 'scope':a.scope,
-                          'commands':commands(a.checkpoint, a.out, config(a.eval_config), scope=a.scope)}))
+                          'commands':commands(a.checkpoint, a.out, config(a.eval_config), scope=a.scope,
+                                              gpu0_training_markers=a.gpu0_training_marker)}))
         return 0
     result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config,
-                      priority_marker=a.priority_marker, scope=a.scope)
+                      priority_marker=a.priority_marker, scope=a.scope,
+                      gpu0_training_markers=a.gpu0_training_marker)
     print(json.dumps(result, ensure_ascii=True))
     return 0 if result['state'] == 'done' else 5
 

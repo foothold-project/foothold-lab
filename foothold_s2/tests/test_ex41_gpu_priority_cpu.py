@@ -139,7 +139,7 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
                                                                     "stand": {"contact_force_n": 1}})
     monkeypatch.setattr(ex41_eval_once.subprocess, "check_output",
                         lambda *_args, **_kwargs: "" if "--short" in _args[0] else "head")
-    def known_commands(_checkpoint, root, _cfg, *, scope="all"):
+    def known_commands(_checkpoint, root, _cfg, *, scope="all", **_kwargs):
         assert scope == "core"
         return [{"name": name, "argv": ["known-child", "--out", str(root / name)]}
                 for name in ex41_eval_once.CORE_PHASES]

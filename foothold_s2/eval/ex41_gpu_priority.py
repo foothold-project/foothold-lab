@@ -15,6 +15,7 @@ DEFAULT_GPU0_MARKERS = (
     Path("C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY"),
     Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0"),
 )
+DEFAULT_GPU1_TRAINING_MARKER = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU1")
 DEFAULT_GPU0_EVAL_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0")
 GPU0_UUID = "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
 
@@ -143,6 +144,30 @@ def _pid_is_live(row: dict) -> bool:
             return False
         raise RuntimeError("cannot establish existing GPU1 marker liveness") from exc
     return abs(actual - float(row["process_created_at"])) <= 0.1
+
+
+def gpu0_training_marker_state(markers=None) -> dict:
+    """Report whether a GPU0 marker has a live owner; unreadable markers block conservatively."""
+    rows = []
+    for raw_path in DEFAULT_GPU0_MARKERS if markers is None else markers:
+        path = Path(raw_path)
+        if not path.exists():
+            rows.append({"path": str(path), "state": "absent"})
+            continue
+        try:
+            owner = _read_owner(path)
+            if owner is None:
+                rows.append({"path": str(path), "state": "absent"})
+                continue
+            live = _pid_is_live(owner)
+            rows.append({"path": str(path), "state": "live" if live else "stale",
+                         "pid": owner["pid"], "process_created_at": owner["process_created_at"],
+                         "job": owner.get("job")})
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            rows.append({"path": str(path), "state": "unknown_blocks",
+                         "reason": f"{type(exc).__name__}: {exc}"})
+    active = any(row["state"] in ("live", "unknown_blocks") for row in rows)
+    return {"active": active, "markers": rows}
 
 
 def publish_marker(path: str | Path = DEFAULT_MARKER, *, job: str,
