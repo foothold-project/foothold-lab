@@ -267,60 +267,107 @@ class EX41FixedRuntime(EX41Runtime):
     def _record_mirror_observation(self,n,score):
         """Compare two verified stage-end P3 sidecars, never core score fields."""
         from foothold_s2.curriculum.ex41_symmetry import validate
-        entries=[];failed=[]
+        entries=[];failed=[];candidates=[];unknown_invalid=[]
         index=self.log_dir/'ex41_reports'/'stage_end_auxiliary.jsonl'
-        reports=[]
+        stage_ids=[stage.id for stage in self.plan.stages]
         if index.is_file():
             try:
                 index_lines=index.read_text(encoding='utf-8-sig').splitlines()
             except OSError as exc:
                 index_lines=[]
-                self._write({'event':'stage_end_p3_index_unreadable','iteration':n,
-                             'error':type(exc).__name__,'training_continues':True})
+                unknown_invalid.append(f'index_unreadable:{type(exc).__name__}')
             for line_number,line in enumerate(index_lines,1):
                 if not line.strip():continue
+                link=None;iteration=None;stage_id=None;reason=None;p3=None
                 try:
                     link=json.loads(line)
-                    if link.get('format')!='foothold-ex41-stage-end-report/1':continue
-                    if (type(link.get('iteration')) is not int or link['iteration']<1
-                        or not isinstance(link.get('checkpoint_sha256'),str)):continue
-                    sidecar=Path(link.get('sidecar',{}).get('path',''))
-                    if not sidecar.is_file():continue
-                    if sha256(sidecar)!=link.get('sidecar',{}).get('sha256'):continue
-                    doc=json.loads(sidecar.read_text(encoding='utf-8-sig'))
-                    p3=doc.get('p3_symmetry_report')
-                    if (doc.get('iteration')!=link.get('iteration')
-                        or doc.get('checkpoint_sha256')!=link.get('checkpoint_sha256')
-                        or not isinstance(p3,dict)
-                        or p3.get('checkpoint_iteration')!=link.get('iteration')
-                        or p3.get('checkpoint_sha256')!=link.get('checkpoint_sha256')):continue
-                    reports.append((link,p3))
-                except (OSError,ValueError,TypeError,KeyError) as exc:
-                    self._write({'event':'stage_end_p3_receipt_invalid','iteration':n,
-                                 'index_line':line_number,'error':type(exc).__name__,
-                                 'training_continues':True})
-        reports=sorted({row[0]['iteration']:row for row in reports}.values(),
-                       key=lambda row:row[0]['iteration'])
-        selected=reports[-2:]
-        for link,p3 in selected:
-            bundle=p3.get('metrics')
-            error=None
-            try:validate(bundle)
-            except (ValueError,TypeError,KeyError) as exc:error=str(exc)
-            pairs={} if error else bundle['modes']['eval_gt']
+                    if not isinstance(link,dict):
+                        raise ValueError('index_row_not_object')
+                    iteration=link.get('iteration');stage_id=link.get('stage_id')
+                    if link.get('format')!='foothold-ex41-stage-end-report/1':
+                        reason='index_format_mismatch'
+                    elif type(iteration) is not int or iteration<1:
+                        reason='iteration_invalid'
+                    elif stage_id not in stage_ids:
+                        reason='clock_stage_id_invalid'
+                    elif not isinstance(link.get('checkpoint_sha256'),str) or len(link['checkpoint_sha256'])!=64:
+                        reason='checkpoint_sha_invalid'
+                    else:
+                        ref=link.get('sidecar')
+                        if not isinstance(ref,dict) or not isinstance(ref.get('path'),str):
+                            reason='sidecar_reference_invalid'
+                        else:
+                            sidecar=Path(ref['path'])
+                            if not sidecar.is_file():
+                                reason='sidecar_missing'
+                            elif not isinstance(ref.get('sha256'),str) or sha256(sidecar)!=ref.get('sha256'):
+                                reason='sidecar_sha256_mismatch'
+                            else:
+                                doc=json.loads(sidecar.read_text(encoding='utf-8-sig'))
+                                if not isinstance(doc,dict):
+                                    reason='sidecar_not_object'
+                                    doc={}
+                                p3=doc.get('p3_symmetry_report')
+                                expected_event=digest(['ex41-stage-end-report',iteration,
+                                                       link['checkpoint_sha256'],ref['sha256']])
+                                if (reason or link.get('event_id')!=expected_event
+                                    or doc.get('format')!='foothold-ex41-stage-end-auxiliary/1'
+                                    or doc.get('iteration')!=iteration
+                                    or doc.get('stage_id')!=stage_id
+                                    or doc.get('checkpoint_sha256')!=link['checkpoint_sha256']
+                                    or doc.get('state')!='complete'
+                                    or not isinstance(p3,dict)
+                                    or p3.get('format')!='foothold-ex41-p3-stage-end/1'
+                                    or p3.get('state')!='complete'
+                                    or p3.get('checkpoint_iteration')!=iteration
+                                    or p3.get('checkpoint_sha256')!=link['checkpoint_sha256']):
+                                    reason=reason or 'sidecar_identity_mismatch'
+                                else:
+                                    try:validate(p3.get('metrics'))
+                                    except (ValueError,TypeError,KeyError):reason='p3_metrics_invalid'
+                except (OSError,ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
+                    reason=reason or f'receipt_invalid:{type(exc).__name__}'
+                if isinstance(link,dict) and (type(iteration) is int and iteration>0
+                                               and stage_id in stage_ids):
+                    candidates.append({'iteration':iteration,'stage_id':stage_id,
+                                       'link':link,'p3':p3,'reason':reason,
+                                       'index_line':line_number})
+                elif reason:
+                    unknown_invalid.append(f'line_{line_number}:{reason}')
+        candidates.sort(key=lambda row:(row['iteration'],stage_ids.index(row['stage_id']),
+                                        row['index_line']))
+        selected=candidates[-2:]
+        for row in selected:
+            p3=row['p3'];bundle=p3.get('metrics') if p3 else None
+            pairs=bundle['modes']['eval_gt'] if bundle and not row['reason'] else {}
             failed.append({k for k,v in pairs.items() if v['valid']
                            and v['symmetry']<self.plan.automatic['critic_both_fail_fraction']})
-            entries.append({'iteration':link.get('iteration'),'stage_id':link.get('stage_id'),
-                            'pairs':copy.deepcopy(pairs),'error':error,
-                            'sidecar_sha256':link.get('sidecar',{}).get('sha256'),
-                            'checkpoint_sha256':link.get('checkpoint_sha256')})
+            entries.append({'iteration':row['iteration'],'stage_id':row['stage_id'],
+                            'pairs':copy.deepcopy(pairs),'error':row['reason'],
+                            'sidecar_sha256':row['link'].get('sidecar',{}).get('sha256'),
+                            'checkpoint_sha256':row['link'].get('checkpoint_sha256')})
         threshold=self.plan.automatic['critic_both_fail_fraction']
-        current=entries[-1]['iteration'] if entries else None
+        current=entries[-1]['iteration'] if entries and not entries[-1]['error'] else None
         new_score=current is not None and current!=getattr(self,'_last_mirror_observed_score',None)
         # Stage-end W78 can finish after several core intervals. Its immutable
         # checkpoint identity, not core-score age, defines freshness.
-        fresh=bool(new_score)
-        matching=sorted(failed[0]&failed[1]) if fresh and new_score and len(failed)==2 else []
+        hold_reason=None
+        if unknown_invalid:
+            hold_reason='stage_end_index_invalid:'+unknown_invalid[-1]
+        elif selected and selected[-1]['reason']:
+            hold_reason='latest_stage_end_invalid:'+selected[-1]['reason']
+        elif len(selected)>=2 and selected[-2]['reason']:
+            hold_reason='previous_stage_end_invalid:'+selected[-2]['reason']
+        elif len(selected)>=2:
+            previous_stage=stage_ids.index(selected[-2]['stage_id'])
+            latest_stage=stage_ids.index(selected[-1]['stage_id'])
+            if (latest_stage!=previous_stage+1
+                    or selected[-1]['iteration']<=selected[-2]['iteration']):
+                hold_reason='stage_end_records_not_adjacent'
+        elif selected:
+            hold_reason='awaiting_adjacent_stage_end_record'
+        fresh=bool(new_score and hold_reason is None)
+        matching=sorted(failed[0]&failed[1]) if fresh and len(failed)==2 else []
         if fresh:self._last_mirror_observed_score=current
         condition=bool(matching)
         event={'event':'critic_mirror_observation','iteration':n,
@@ -329,8 +376,18 @@ class EX41FixedRuntime(EX41Runtime):
             'matching_pair_ids':matching,
             'condition_met':bool(condition),'automatic_activation':False,
             'action':'request_manual_W72_approval' if condition else 'record_only',
-            'effective_critic_mirror':bool(self.effective['critic_mirror'])}
+            'effective_critic_mirror':bool(self.effective['critic_mirror']),
+            'hold_reason':hold_reason}
         self._write(event)
+        if hold_reason and hold_reason not in ('awaiting_adjacent_stage_end_record',):
+            from foothold_s2.ex41_ops import _alert
+            latest=selected[-1] if selected else {}
+            alert_id=digest(['p3-stage-end-observation-hold',latest.get('iteration'),
+                             latest.get('stage_id'),hold_reason])
+            _alert(self.log_dir/'ex41_reports'/'alerts.jsonl',alert_id,
+                   'p3_stage_end_observation_hold',n,
+                   {'reason':hold_reason,'latest_stage_end_iteration':latest.get('iteration'),
+                    'latest_stage_id':latest.get('stage_id'),'training_continues':True})
         nonpositive=sorted(k for k,v in (entries[-1]['pairs'] if entries else {}).items()
                            if v['reason']=='both_nonpositive')
         if fresh and new_score and nonpositive:

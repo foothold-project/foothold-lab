@@ -10,6 +10,9 @@ from foothold_s2.tests.test_ex41_symmetry_cpu import known_bundle
 from foothold_s2.curriculum.ex41_symmetry import pair
 from foothold_s2 import ex41_score_watch
 
+STAGE_BY_END = {750:'S2a',1750:'S2b',2750:'S2c',4000:'S2d',4500:'S2e',
+                5000:'T0_prime',5500:'T0_prime'}
+
 
 def measured(r,n,ratio):
     bundle=known_bundle()
@@ -27,13 +30,14 @@ def _stage_end_report(run_dir, root, iteration, ratio, *, valid=True):
     if not valid:bundle['modes']['eval_gt']['map64/side']['symmetry']=None
     cp_sha=f'{iteration:064x}'
     row={'format':'foothold-ex41-stage-end-auxiliary/1','iteration':iteration,
-         'checkpoint_sha256':cp_sha,'stage_id':f'S{iteration}','state':'complete',
+         'checkpoint_sha256':cp_sha,'stage_id':STAGE_BY_END[iteration],'state':'complete',
          'p3_symmetry_report':{'format':'foothold-ex41-p3-stage-end/1','state':'complete',
              'checkpoint_iteration':iteration,'checkpoint_sha256':cp_sha,'source':'stage_end_w78',
              'metrics':bundle}}
     sidecar=root/f'stage_end_auxiliary_{iteration}.json'
     sidecar.write_text(json.dumps(row,allow_nan=False),encoding='utf-8')
     ex41_score_watch._publish_stage_end_report(run_dir,sidecar,deliver=False)
+    return sidecar
 
 
 @pytest.mark.parametrize('ratios,expected',[( (.79,.7),True),((.8,.7),False),((.79,.85),False)])
@@ -112,7 +116,47 @@ def test_different_bad_pairs_or_record_only_mode_do_not_trigger(tmp_path):
     rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
     event=[x for x in rows if x['event']=='critic_mirror_observation'][-1]
     assert not event['condition_met'] and not event['matching_pair_ids']
+    assert event['hold_reason']=='latest_stage_end_invalid:p3_metrics_invalid'
     assert not r.effective['critic_mirror'] and not consumer.ex41_critic_mirror
+
+
+def test_latest_2750_sidecar_sha_mismatch_holds_instead_of_falling_back(tmp_path):
+    r,consumer=fixture(tmp_path);r.on_update_start(1)
+    root=tmp_path/'sidecars';root.mkdir()
+    _stage_end_report(r.log_dir,root,750,.5)
+    _stage_end_report(r.log_dir,root,1750,.5)
+    latest=_stage_end_report(r.log_dir,root,2750,.5)
+    latest.write_text(latest.read_text(encoding='utf-8')+' ',encoding='utf-8')
+
+    r._record_mirror_observation(3001,None)
+
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    event=[x for x in rows if x['event']=='critic_mirror_observation'][-1]
+    assert event['condition_met'] is False
+    assert event['hold_reason']=='latest_stage_end_invalid:sidecar_sha256_mismatch'
+    assert event['observations'][-1]['iteration']==2750
+    alert=json.loads((r.log_dir/'ex41_reports'/'alerts.jsonl').read_text().splitlines()[-1])
+    assert alert['kind']=='p3_stage_end_observation_hold'
+    assert alert['reason']==event['hold_reason']
+    assert not consumer.ex41_critic_mirror
+
+
+def test_missing_s2b_blocks_nonadjacent_s2a_s2c_comparison(tmp_path):
+    r,consumer=fixture(tmp_path);r.on_update_start(1)
+    root=tmp_path/'sidecars';root.mkdir()
+    _stage_end_report(r.log_dir,root,750,.5)
+    _stage_end_report(r.log_dir,root,2750,.5)
+
+    r._record_mirror_observation(3001,None)
+
+    rows=[json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text().splitlines()]
+    event=[x for x in rows if x['event']=='critic_mirror_observation'][-1]
+    assert event['condition_met'] is False
+    assert event['hold_reason']=='stage_end_records_not_adjacent'
+    alert=json.loads((r.log_dir/'ex41_reports'/'alerts.jsonl').read_text().splitlines()[-1])
+    assert alert['kind']=='p3_stage_end_observation_hold'
+    assert alert['reason']==event['hold_reason']
+    assert not consumer.ex41_critic_mirror
 
 
 def test_latest_nan_pair_rejected_by_actual_json_reader(tmp_path):

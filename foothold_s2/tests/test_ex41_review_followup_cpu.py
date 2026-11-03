@@ -31,30 +31,33 @@ def test_real_map_p3_survives_absent_w78_and_marks_exact_missing_pairs(tmp_path)
 @pytest.mark.parametrize('left,right', [(0., 0.), (-.2, -.7), (0., -.4)])
 def test_both_nonpositive_preserved_and_reported_without_mirror_activation(tmp_path, left, right):
     r, consumer = fixture(tmp_path)
+    r.on_update_start(1)
+    first_rows = {m: {'map64/'+k: sym.pair(1., 1.) for k in sym.MAP_PAIRS} for m in sym.MODES}
+    first_bundle = sym.combine(first_rows, None)
     map_rows = {m: {'map64/'+k: sym.pair(1., 1.) for k in sym.MAP_PAIRS} for m in sym.MODES}
     map_rows['eval_gt']['map64/side'] = sym.pair(left, right)
     assert map_rows['eval_gt']['map64/side']['reason'] == 'both_nonpositive'
     bundle = sym.combine(map_rows, None)
-    score(r, 250, metrics={'maintenance_counts': counts(r), 'stand_min_passed': 64,
-                           'critic_mirror_symmetry': bundle})
-    checkpoint_sha = 'a' * 64
-    sidecar = tmp_path/'stage_end_auxiliary.json'
-    sidecar.write_text(json.dumps({
-        'format': 'foothold-ex41-stage-end-auxiliary/1',
-        'iteration': 250, 'checkpoint_sha256': checkpoint_sha,
-        'stage_id': 'S2a', 'state': 'complete',
-        'p3_symmetry_report': {
-            'format': 'foothold-ex41-p3-stage-end/1', 'state': 'complete',
-            'checkpoint_iteration': 250, 'checkpoint_sha256': checkpoint_sha,
-            'source': 'stage_end_w78', 'metrics': bundle,
-        },
-    }), encoding='utf-8')
-    watch._publish_stage_end_report(r.log_dir, sidecar, deliver=False)
-    r.on_update_start(251)
+    root = tmp_path/'sidecars'; root.mkdir()
+    for iteration, stage_id, metrics in ((750, 'S2a', first_bundle), (1750, 'S2b', bundle)):
+        checkpoint_sha = f'{iteration:064x}'
+        sidecar = root/f'stage_end_auxiliary_{iteration}.json'
+        sidecar.write_text(json.dumps({
+            'format': 'foothold-ex41-stage-end-auxiliary/1',
+            'iteration': iteration, 'checkpoint_sha256': checkpoint_sha,
+            'stage_id': stage_id, 'state': 'complete',
+            'p3_symmetry_report': {
+                'format': 'foothold-ex41-p3-stage-end/1', 'state': 'complete',
+                'checkpoint_iteration': iteration, 'checkpoint_sha256': checkpoint_sha,
+                'source': 'stage_end_w78', 'metrics': metrics,
+            },
+        }), encoding='utf-8')
+        watch._publish_stage_end_report(r.log_dir, sidecar, deliver=False)
+    r._record_mirror_observation(2001, None)
     events = [json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text(encoding='utf-8').splitlines()]
     event = next(x for x in events if x['event'] == 'critic_mirror_both_nonpositive')
-    assert event['pair_ids'] == ['map64/side'] and event['score_iteration'] == 250
-    observation = next(x for x in events if x['event'] == 'critic_mirror_observation')
+    assert event['pair_ids'] == ['map64/side'] and event['score_iteration'] == 1750
+    observation = [x for x in events if x['event'] == 'critic_mirror_observation'][-1]
     pair = observation['observations'][-1]['pairs']['map64/side']
     assert pair['left'] == left and pair['right'] == right and pair['symmetry'] is None
     assert not observation['condition_met'] and not consumer.ex41_critic_mirror
