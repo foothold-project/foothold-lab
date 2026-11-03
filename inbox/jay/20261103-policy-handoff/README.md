@@ -40,7 +40,7 @@
 ## 저장소 배치 (ONNX 도 lab 에 올린다 · 팀장 11/03 17:0x)
 
 ```
-inbox/<올린 사람>/20261103-policy-handoff/<이름>/      예 inbox/lim/20261103-policy-handoff/ame2-demo/
+inbox/jay/20261103-policy-handoff/<이름>-app/        앱이 보는 폴더 둘: start-demo-app/ · ame2-demo-app/
   <이름>.onnx            ONNX (start-demo 는 start-demo_map_on.onnx · start-demo_map_off.onnx)
   CONTRACT.md            사람이 읽는 조건표 (값마다 파일:줄 · 등급)
   contract.json          앱이 옮겨 적는 기계 계약 (입출력 이름 · 모양 · 식 · 값 · checkpoint · 각 ONNX 의 sha256 · bytes)
@@ -49,8 +49,10 @@ inbox/<올린 사람>/20261103-policy-handoff/<이름>/      예 inbox/lim/20261
   SHA256SUMS             이 폴더 모든 파일의 sha256
 ```
 
+- 앱은 `start-demo-app/` · `ame2-demo-app/` 둘만 본다. ame2 는 석헌 님 제출 폴더 `inbox/lim/20261103-policy-handoff/ame2-demo/` (참고 · 제출 기록) 의 파일을 그대로 복사하고 lead 보완(json 시험 벡터 · app_onnx.json)을 더했다.
+- 나중 판 이름: 학습 완료 판은 `start-oh2l2-app/` · `ame2-oh2l2-app/` 로 같은 꼴의 폴더를 새로 만든다(D170 최종 이름 + `-app`).
 - 문서 · 계약 · 확인 기록이 모두 ONNX 의 sha256 을 가리키므로, 앱은 받은 ONNX 의 sha256 이 contract.json · SHA256SUMS 와 같을 때만 쓴다.
 - 한 파일 100 MB 를 넘으면 GitHub 가 거절한다(ONNX 는 수 MB 라 괜찮다 · .pt 는 올리지 않는다).
-- 앱 저장소에는 ONNX 를 커밋하지 않고, lab 의 이 폴더에서 앱 자산 폴더(`FH_POLICY_ONNX_SRC`)로 복사한다(앱 spec 11:410~416).
+- 앱 저장소에는 ONNX 를 커밋하지 않고, lab 의 이 폴더에서 앱 자산 폴더(`FH_POLICY_ONNX_SRC`)로 복사한다(앱 spec 11:321,387,422-423).
 
 올리는 법(AGENTS 규칙): main 에서 브랜치 `inbox-<이름>-<무엇>` → 자기 `inbox/<이름>/` 아래만 커밋 → PR → 팀장 머지. `docs/` 는 건드리지 않는다. 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.

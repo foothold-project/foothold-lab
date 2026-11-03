@@ -1,21 +1,21 @@
 > 분류: B/앱 · 앱 개발 준수 사항 (정책 모드 넷 · start-demo · ame2-demo 적용)
 > 작성: 오흥재 · lead 세션 · 2026-11-03 16:3x v0.1 · 19:1x v0.2 · 21:5x v0.3 (단일 문서로 정리 · 최종 결정만 · 모드별 명령 표)
-> 근거: start-demo 묶음 `inbox/jay/20261103-policy-handoff/start-demo/` (lab PR #571) · ame2-demo 묶음 `inbox/lim/20261103-policy-handoff/ame2-demo/` (lab PR #574, 머지 002607e6) · 보완 `inbox/jay/20261103-policy-handoff/ame2-demo-app/` · m6000 조건표 `start-demo/CONTRACT.md` §3.5 (명령 범위 · D108) · foothold-app dev `1fbe6f6c`(2026-11-03 12:38Z) 를 받아 줄 번호를 다시 잼
+> 근거: 앱용 묶음 `inbox/jay/20261103-policy-handoff/start-demo-app/` (lab PR #571) · `inbox/jay/20261103-policy-handoff/ame2-demo-app/` (석헌 님 PR #574 묶음 + lead 보완 #576) · m6000 조건표 `start-demo-app/CONTRACT.md` §3.5 (명령 범위 · D108) · foothold-app dev `1fbe6f6c`(2026-11-03 12:38Z) 를 받아 줄 번호를 다시 잼
 > 요지: 현민 님이 이 문서 하나만 보고 start-demo · ame2-demo 를 앱에 붙인다. 파일 자리 · sha · 입출력 · 상태 되먹임 · 시험 벡터 확인법 · 앱 파일별 할 일 · 모드마다 명령이 학습 범위대로 정책에 들어가는지 · JS f32 되돌림 규칙 · 끝 확인 목록을 모두 여기에 둔다. 최종 결정만 적고, 재지 않은 것은 「미확인」 으로만 적는다
 > 상태: v0.3 · 두 묶음 lab main 에 있음 · 앱 작업 이슈 foothold-app#259
 
 # 앱 개발 준수 사항 · 정책 모드 넷
 
-이 문서 하나로 일한다. 다른 문서(CONTRACT.md 등)는 값의 근거를 보고 싶을 때만 연다. 이 문서와 다른 문서가 다르면 이 문서가 맞다. 석헌 님 묶음의 `inbox/lim/20261103-policy-handoff/ame2-demo/CONTRACT.md` §7 「추가 확인 · 남은 한계」 는 참고이고, 결정은 이 문서다.
+이 문서 하나로 일한다. 다른 문서(CONTRACT.md 등)는 값의 근거를 보고 싶을 때만 연다. 이 문서와 다른 문서가 다르면 이 문서가 맞다. `ame2-demo-app/CONTRACT.md` §7 「추가 확인 · 남은 한계」 는 참고이고, 결정은 이 문서다. 앱은 폴더 `start-demo-app/` · `ame2-demo-app/` 둘만 본다. 원본 제출: `inbox/lim/20261103-policy-handoff/ame2-demo/` (석헌 님 PR #574, 참고).
 
 ## 0. 결정된 것 (다시 묻지 않는다)
 
-- **모드 넷과 이름(D170).** 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 id `nvidia-demo`(앱의 `foothold-v2` 를 이름만 바꿈) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 모델이 오면 id 만 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` 로 바꾸고 키는 그대로 둔다.
+- **모드 넷과 이름(D170).** 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 id `nvidia-demo`(앱의 `foothold-v2` 를 이름만 바꿈) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 모델이 오면 id 만 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` 로 바꾸고 키는 그대로 둔다. 나중 판 이름: 학습 완료 판은 `start-oh2l2-app/` · `ame2-oh2l2-app/` 로 같은 꼴의 폴더를 새로 만든다(D170 최종 이름 + `-app`).
 - **ONNX 가 기본 계산이다.** 같은 ONNX 하나를 웹 시뮬과 실기가 함께 쓴다. ONNX 파일은 앱 저장소에 커밋하지 않고 lab 묶음 폴더에서 복사해 sha256 이 맞을 때만 쓴다.
 - **JS f32 되돌림은 ONNX 가 안 될 때의 대비로 남겨도 된다**(팀장 11/03 21:4x). 단 ① 기본은 ONNX ② 되돌림이 켜지면 화면에 늘 보이게 표시(§2-6). start 는 f32 가 없으므로 되돌림 없이 ONNX 만 쓴다.
 - **ONNX 실행기는 상태 출력(start 의 GRU 둘)을 다음 호출 입력으로 되먹이고, 입력 자료형(bool 포함)을 계약대로 만든다.**
 - **모드별 값은 통째로 갈아 끼운다.** 한 모드 값을 다른 모드의 기본값으로 쓰지 않는다(예: 토크 23.5). 지도 함수도 모드마다 따로.
-- **명령은 모드마다 학습 범위 안으로 정책에 들어가야 한다**(팀장 11/03 21:4x). 모드 상한과 앱 · 조직 설정이 그 범위를 깎지 않게 한다(§1.5).
+- **명령은 모드마다 학습 범위 안으로 정책에 들어가야 한다**(팀장 11/03 21:4x). 모드 상한과 앱 · 조직 설정이 그 범위를 깎지 않게 한다(§1.5). 예외는 nvidia 하나: 옆 막대 0.5 를 그대로 두어 학습하지 않은 동작이 잘 안 되는 것을 보여 준다.
 - **가속 제한(D108):** 미확인: 명령 가속 제한 값(D108) · 정해질 때까지 지금 앱 동작 유지(가속 제한 없음). 학습도 명령을 계단식으로 바꿨다.
 - **서버 쪽 범위 표 `policy_ranges.py` 는 이번 일에서 손대지 않는다.** 브라우저 MuJoCo 시뮬만 고친다(그 파일은 런타임에서 읽는 곳이 없다).
 
@@ -25,13 +25,13 @@
 
 | 모드 | 자리 | 파일 | sha256 |
 |---|---|---|---|
-| start | `inbox/jay/20261103-policy-handoff/start-demo/` | `start-demo_map_on.onnx`(정답 · 복원) | `81c7e079516058ee6243f6edd11efa8f0da239c6cc86fbca791bda5bcd82f110` |
+| start | `inbox/jay/20261103-policy-handoff/start-demo-app/` | `start-demo_map_on.onnx`(정답 · 복원) | `81c7e079516058ee6243f6edd11efa8f0da239c6cc86fbca791bda5bcd82f110` |
 | | | `start-demo_map_off.onnx`(끔) | `5d1b7bf39aa0d9fb8ae33bf33dad82902165d53679ccd7ec5df727a0b70fe037` |
 | | | 시험 벡터 `test_vectors_flat20_reconstruction.json` · `_gt.json` · `_off.json` | `215ac522…` · `9f39abe1…` · `6cdb87af…` (전부 폴더 `SHA256SUMS`) |
 | | | 앱 계약 꼴: `contract.json` 의 `app_onnx` 칸 | contract.json `427ccdb3…` |
-| ame2 | `inbox/lim/20261103-policy-handoff/ame2-demo/` | `ame2-demo.onnx` | `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6` |
-| | `inbox/jay/20261103-policy-handoff/ame2-demo-app/` | 시험 벡터 `test_vectors_flat20.json` | `95bb7ab1be2d7414b495a4e79df8a3a311b703123c4588355621397fb74c7077` |
-| | | 앱 계약 꼴: `app_onnx.json` | 폴더 `SHA256SUMS` |
+| ame2 | `inbox/jay/20261103-policy-handoff/ame2-demo-app/` | `ame2-demo.onnx` | `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6` |
+| | | 시험 벡터 `test_vectors_flat20.json` (같은 내용 `.npz`) | `95bb7ab1be2d7414b495a4e79df8a3a311b703123c4588355621397fb74c7077` |
+| | | 앱 계약 꼴: `app_onnx.json` · 조건표 `CONTRACT.md` · `contract.json` · `parity.json` | 폴더 `SHA256SUMS` |
 
 받은 뒤 각 폴더에서 `sha256sum -c SHA256SUMS` 가 전부 OK 여야 쓴다. 폴더마다 `.gitattributes` 가 `* -text` 라 Windows 에서 받아도 sha 가 같다.
 
@@ -62,7 +62,7 @@
 
 ### 1.4 ONNX 입출력 (앱 계약에 그대로 넣는다)
 
-**start** (`start-demo/contract.json` 의 `app_onnx` 칸을 그대로 쓴다. 입력 순서 = ONNX `session.inputNames` 실측 순서)
+**start** (`start-demo-app/contract.json` 의 `app_onnx` 칸을 그대로 쓴다. 입력 순서 = ONNX `session.inputNames` 실측 순서)
 
 | 입력 | 모양 | 자료형 | 넣는 값 |
 |---|---|---|---|
@@ -103,11 +103,11 @@ ame2 는 상태가 없다(되먹임 없음).
 
 | 모드 | 정책 입력 칸 | 학습 범위 (근거) | 모드 상한 (이 안에서 정책에 넣는다) | 사람 입력 → 정책 입력 | 지금 앱에서 깎이는 곳 | 고칠 것 |
 |---|---|---|---|---|---|---|
-| **start · 정답** | `obs45[6:9]` = (vx, vy, wz) 몸 틀 m/s · rad/s. 이력 `hist` 10 스텝에도 들어가 명령을 바꾸면 10 스텝 동안 섞인다 | m6000 학습 표집(`ex40.yaml:116-123`): 전진 0.1~1.5 · 후진 −1.0~−0.2 · 옆 abs 0.2~0.6 · 제자리 회전 abs 0.3~1.5 · 걸으며 회전 abs wz 0.2~1.0 와 vx 0.3~0.8 · 대각 abs vx 0.3~0.6 와 abs vy 0.2~0.5 | 전진 **1.5** · 후진 **1.0** · 옆 **0.5** · 제자리 회전 **1.2** · 걸으며 회전 **1.0** (D108 상한과 학습 범위 중 작은 쪽, `start-demo/CONTRACT.md` §3.5) | 손 조종: 막대 × 모드 상한을 (vx, vy, wz) 로 그대로. 찍은 점 가기: runner 가 `[vx, 0, wz]` (vx = `sim_runner_vx`, wz = clamp(1.5 × 방향 오차, ±runner 상한), 방향 오차 0.4 rad 이상이면 vx 0 으로 제자리 회전, `scenario.js:72-93`) | ① 앞뒤가 한 축이라 후진도 전진 상한까지 나감(`manual-settings.js:14,20`) ② 조직 설정이 옆 0.3 · 회전 0.5 로 깎음 ③ `settings.js:16` 이 회전 상한을 0~1 범위로 검사해 1.2 를 기본 0.6 으로 갈아 끼움(runner 상한) ④ `scenario.js:50-51` runner 상한 vx 0.1~1.5 · wz 0.1~1 | ① 모드 상한을 방향별 다섯 칸(전진 · 후진 · 옆 · 제자리 회전 · 걸으며 회전)으로 두고 `manualAxis` 가 방향에 맞는 상한을 곱한다 ② 조직 설정 범위를 `sim_max_vy` 0~0.5 · `sim_max_wz` 0~1.2 로 넓히고 기본값도 0.5 · 1.2 로(`models.py:424-425,450-451` · `manual-settings.js:3` · `phone.ts:125` · `settings.tsx:93-94` · `apps/contracts/ts/index.ts:922-923,940` 함께) ③ `settings.js:16` 회전 상한 검사를 모드 상한 기준으로(1.2 가 0.6 으로 바뀌지 않게) ④ start 의 runner vx 는 걸으며 회전 학습 칸 안(0.3~0.8), wz 는 1.0 이하로 |
+| **start · 정답** | `obs45[6:9]` = (vx, vy, wz) 몸 틀 m/s · rad/s. 이력 `hist` 10 스텝에도 들어가 명령을 바꾸면 10 스텝 동안 섞인다 | m6000 학습 표집(`ex40.yaml:116-123`): 전진 0.1~1.5 · 후진 −1.0~−0.2 · 옆 abs 0.2~0.6 · 제자리 회전 abs 0.3~1.5 · 걸으며 회전 abs wz 0.2~1.0 와 vx 0.3~0.8 · 대각 abs vx 0.3~0.6 와 abs vy 0.2~0.5 | 전진 **1.5** · 후진 **1.0** · 옆 **0.5** · 제자리 회전 **1.2** · 걸으며 회전 **1.0** (D108 상한과 학습 범위 중 작은 쪽, `start-demo-app/CONTRACT.md` §3.5) | 손 조종: 막대 × 모드 상한을 (vx, vy, wz) 로 그대로. 찍은 점 가기: runner 가 `[vx, 0, wz]` (vx = `sim_runner_vx`, wz = clamp(1.5 × 방향 오차, ±runner 상한), 방향 오차 0.4 rad 이상이면 vx 0 으로 제자리 회전, `scenario.js:72-93`) | ① 앞뒤가 한 축이라 후진도 전진 상한까지 나감(`manual-settings.js:14,20`) ② 조직 설정이 옆 0.3 · 회전 0.5 로 깎음 ③ `settings.js:16` 이 회전 상한을 0~1 범위로 검사해 1.2 를 기본 0.6 으로 갈아 끼움(runner 상한) ④ `scenario.js:50-51` runner 상한 vx 0.1~1.5 · wz 0.1~1 | ① 모드 상한을 방향별 다섯 칸(전진 · 후진 · 옆 · 제자리 회전 · 걸으며 회전)으로 두고 `manualAxis` 가 방향에 맞는 상한을 곱한다 ② 조직 설정 범위를 `sim_max_vy` 0~0.5 · `sim_max_wz` 0~1.2 로 넓히고 기본값도 0.5 · 1.2 로(`models.py:424-425,450-451` · `manual-settings.js:3` · `phone.ts:125` · `settings.tsx:93-94` · `apps/contracts/ts/index.ts:922-923,940` 함께) ③ `settings.js:16` 회전 상한 검사를 모드 상한 기준으로(1.2 가 0.6 으로 바뀌지 않게) ④ start 의 runner 명령은 학습 표집 그대로 두 경우로: 회전이 작을 때(|wz| < 0.2) vx 0.1~1.5, 걸으며 회전일 때(|wz| 0.2~1.0) vx 0.3~0.8 (`ex40.yaml:117-118` 학습 칸 · 이 조합 밖은 학습 안 한 명령). 목표 근처 감속은 앱 몫 |
 | **start · 복원** | 같음 | 같음 (지도 모드는 명령 범위를 바꾸지 않는다) | 같음 | 같음 | 같음 | 같음 |
 | **start · 끔** | 같음 (`_map_off` 파일도 obs45 칸 같음) | 같음 | 같음 | 같음 | 같음 | 같음 |
-| **ame2** | `prop[45:49]` = [x, y, sin e, cos e]. (x, y) = 목표 위치 − 몸 위치를 몸 yaw 로만 돌린 것(x 앞 · y 왼쪽), e = 목표 방향 − 몸 방향. 2 m 넘으면 2 m 로 줄이고 e 를 U(−π, π) 로 매 스텝 다시 뽑음(`ame2-adapter.js:26-31`) | 학습 목표: 거리 2 m 안 · 재표집 16.01 s · 목표 방향(월드) ±π/3 · 몸 시작 yaw ±π · 목표 원뿔 45° (`ame2-demo/contract.json` command 칸) · 이동 보상 속도 상한 1.2 m/s(`--move2goal_vmax 1.2`) | 목표 거리 2 m 안. 속도는 정책이 정함(1 m 앞 목표를 매 스텝 다시 주면 평지 평균 1.08 m/s · Isaac 실측, PR #574) | 손 조종: 왼 막대 앞 · 옆을 길이 1 이하로 맞춘 몸 틀 목표(1 m 안쪽), 오른 막대는 방향을 rad/s 로 적분하고 오차를 ±π/3 로 자름(`ame2-adapter.js:55-62` · `main.js:663-665`). 찍은 점 가기: 월드 목표 · 경유점을 매 스텝 몸 틀로 다시 바꾸고 2 m 바로 아래로 자름, 방향은 지정 yaw 또는 경로 방향(`ame2-adapter.js:67-79` `ame2WorldGoal` · `scenario.js:86-92`) | 조직 속도 상한이 ame2 의 막대 비율에도 곱해져 옆 목표가 0.3 m, 방향 변화가 0.5 rad/s 로 깎임(`manual-settings.js:14`, ame2 `joystickScale [1,1,1]` `ame2-adapter.js:90`). 뒤쪽 · 옆쪽 목표는 학습 원뿔 밖이지만 자르지 않고 테두리 색만(`ame2-adapter.js:53,90`) | ame2 모드에는 조직 속도 상한을 곱하지 않는다(ame2 막대 값은 속도가 아니라 「1 m 목표의 비율 · 방향 변화 rad/s」). `manualSettings` 를 `command.kind === 'nearby_goal'` 일 때 조직 상한 없이 부른다 |
-| **nvidia** | `obs[9:12]` = (vx, vy, wz) (`policy-adapters.js:53`) | vx 0.4~1.5 · vy 0 · wz ±1 (`policy-adapters.js:28` `trainingRanges`) | 학습 범위 그대로 | 막대 × `joystickScale [1.5, 0.5, 1]` (`policy-adapters.js:29`) | 옆 축 상한이 0.5 라 학습에 없던 옆걸음 명령이 들어감 | `joystickScale` 옆 칸을 0 으로(학습 vy 0) |
+| **ame2** | `prop[45:49]` = [x, y, sin e, cos e]. (x, y) = 목표 위치 − 몸 위치를 몸 yaw 로만 돌린 것(x 앞 · y 왼쪽), e = 목표 방향 − 몸 방향. 2 m 넘으면 2 m 로 줄이고 e 를 U(−π, π) 로 매 스텝 다시 뽑음(`ame2-adapter.js:26-31`) | 학습 목표: 거리 2 m 안 · 재표집 16.01 s · 목표 방향(월드) ±π/3 · 몸 시작 yaw ±π · 목표 원뿔 45° (`ame2-demo-app/contract.json` command 칸) · 이동 보상 속도 상한 1.2 m/s(`--move2goal_vmax 1.2`) | 목표 거리 2 m 안. 속도는 정책이 정함(1 m 앞 목표를 매 스텝 다시 주면 평지 평균 1.08 m/s · Isaac 실측, PR #574) | 손 조종: 왼 막대 앞 · 옆을 길이 1 이하로 맞춘 몸 틀 목표(1 m 안쪽), 오른 막대는 방향을 rad/s 로 적분하고 오차를 ±π/3 로 자름(`ame2-adapter.js:55-62` · `main.js:663-665`). 찍은 점 가기: 월드 목표 · 경유점을 매 스텝 몸 틀로 다시 바꾸고 2 m 바로 아래로 자름, 방향은 지정 yaw 또는 경로 방향(`ame2-adapter.js:67-79` `ame2WorldGoal` · `scenario.js:86-92`) | 조직 속도 상한이 ame2 의 막대 비율에도 곱해져 옆 목표가 0.3 m, 방향 변화가 0.5 rad/s 로 깎임(`manual-settings.js:14`, ame2 `joystickScale [1,1,1]` `ame2-adapter.js:90`). 뒤쪽 · 옆쪽 목표는 학습 원뿔 밖이지만 자르지 않고 테두리 색만(`ame2-adapter.js:53,90`) | ame2 모드에는 조직 속도 상한을 곱하지 않는다(ame2 막대 값은 속도가 아니라 「1 m 목표의 비율 · 방향 변화 rad/s」). `manualSettings` 를 `command.kind === 'nearby_goal'` 일 때 조직 상한 없이 부른다 |
+| **nvidia** | `obs[9:12]` = (vx, vy, wz) (`policy-adapters.js:53`) | vx 0.4~1.5 · vy 0 · wz ±1 (`policy-adapters.js:28` `trainingRanges`) | 학습 범위 그대로 | 막대 × `joystickScale [1.5, 0.5, 1]` (`policy-adapters.js:29`) | 옆 축 상한 0.5 로 학습에 없던 옆걸음 명령이 들어감 | 그대로 둔다(옆 0.5 · start 와 같은 설정). 학습하지 않은 동작은 잘 안 된다는 것을 보여 주는 것이 목적이다 |
 | **go2** | 정책 없음 | 해당 없음 | 실기 Sport 명령 표 vx 0~1.5 · vy 0 · wz ±0.5 (`apps/agent/foothold_agent/phone/protocol.py:121-124` `LIMITS`) | 기존 서버 실기 경로 그대로 | 해당 없음 | 없음 |
 
 ## 2. 만들 것
@@ -173,9 +173,9 @@ export const POLICY_MODES = Object.freeze({
 
 | 묶음 | 파일 | map_mode | state_feedback | expected 칸 |
 |---|---|---|---|---|
-| start | `start-demo/test_vectors_flat20_reconstruction.json` (`test_vectors_flat20.json` 과 같은 파일) | reconstruction | true | `action` · `h_prop_next` · `h_terr_next` · `recon_map` |
-| start | `start-demo/test_vectors_flat20_gt.json` | gt | true | 같음 |
-| start | `start-demo/test_vectors_flat20_off.json` | off (`_map_off` 파일) | true | 같음 |
+| start | `start-demo-app/test_vectors_flat20_reconstruction.json` (`test_vectors_flat20.json` 과 같은 파일) | reconstruction | true | `action` · `h_prop_next` · `h_terr_next` · `recon_map` |
+| start | `start-demo-app/test_vectors_flat20_gt.json` | gt | true | 같음 |
+| start | `start-demo-app/test_vectors_flat20_off.json` | off (`_map_off` 파일) | true | 같음 |
 | ame2 | `ame2-demo-app/test_vectors_flat20.json` | gt | false | `action` · `gaze_r` |
 
 앱 시험(새 파일 `mobile/scripts/policy-vector-selftest.mjs`, Node ORT 와 브라우저 ORT 둘 다, 네 파일 모두):
@@ -203,7 +203,7 @@ for (let k = 0; k < tv.steps; k++) {
 2. 정지: 명령 0 으로 30 초 서 있기(세 정책).
 3. 토크: start 모드에서 calf 토크가 23.5 에서 잘리지 않는지(로그).
 4. 지도: 서 있는 평지에서 start 지도 값은 모든 칸이 약 −0.3, ame2 z 채널은 0 근처(+0.27 상수).
-5. 명령: 막대 · 키를 끝까지 밀었을 때 정책에 들어간 값이 start 전진 1.5 · 후진 −1.0 · 옆 ±0.5 · 제자리 회전 ±1.2 이고, 조직 설정을 기본값으로 둔 웹 시뮬(`?from=web`)에서도 같다. ame2 는 옆 끝까지 밀면 `prop[46]` 이 ±1 근처(0.3 아님). nvidia 는 옆 0.
+5. 명령: 막대 · 키를 끝까지 밀었을 때 정책에 들어간 값이 start 전진 1.5 · 후진 −1.0 · 옆 ±0.5 · 제자리 회전 ±1.2 이고, 조직 설정을 기본값으로 둔 웹 시뮬(`?from=web`)에서도 같다. ame2 는 옆 끝까지 밀면 `prop[46]` 이 ±1 근처(0.3 아님). nvidia 는 옆 0.5(학습 밖이라 테두리 색).
 
 ### 2-6. JS f32 되돌림 규칙
 
@@ -272,7 +272,7 @@ for (let k = 0; k < tv.steps; k++) {
 | 할 일 | 자리 |
 |---|---|
 | ONNX 계약 바꾸기 (꼭) | `policy-adapters.js:168-171` 계약이 출력 `offsets`(int64) · `gaze_logits` 를 요구하고 `policy-onnx.js:10-12` 가 없으면 「ONNX 입출력 이름 불일치」 로 거절한다. outputs 를 `[{name:'action',dims:[1,12]},{name:'gaze_r',dims:[1,2]}]` 로(`ame2-demo-app/app_onnx.json` 그대로) · 진단 표시는 `gaze_r` 에서 ox = clamp(round(r0 × 17), 0, 17) · oy = clamp(round(r1 × 3), 0, 3) |
-| 파일 · sha 바꾸기 (꼭) | `policy-adapters.js:168` `ame2_actor.onnx`(sha `398acb0c…`) → `ame2-demo.onnx`(sha `830595df…`). `ame2-onnx.js:4` 가 이 sha 를 읽고 `policy-onnx.js:78` 이 받은 파일 sha 를 대조 · `sync-web.mjs:33,35,46` 파일 이름 · `deploy/prepare_sim.py:12-21` `AME2_SHA` · `ONNX_SHA` |
+| 파일 · sha 바꾸기 (꼭) | `policy-adapters.js:168` `ame2_actor.onnx`(sha `398acb0c…`) → `ame2-demo.onnx`(sha `830595df…`). `ame2-onnx.js:4` 가 이 sha 를 읽고 `policy-onnx.js:78` 이 받은 파일 sha 를 대조 · `sync-web.mjs:33,35,46` 파일 이름 · `deploy/prepare_sim.py:12-21` `AME2_SHA` · `ONNX_SHA`. 파일은 `ame2-demo-app/` 에서 복사 |
 | 시험 벡터 | §2-4 ame2 파일 · action 최대 차 1e-4 이하 |
 | f32 되돌림 | 유지(§2-6). 사용 판정 `main.js:170-177` 을 ONNX 파일 존재로 바꾸고, f32 는 되돌림 준비 여부로만 |
 | 행동 지연 0 | 앱은 리셋마다 0~4 를 무작위로 뽑는다(`ame2-adapter.js:41`, `main.js:242` 가 `ame2DelaySteps` 를 안 넘김) → `ame2DelaySteps: 0` |
@@ -280,7 +280,7 @@ for (let k = 0; k < tv.steps; k++) {
 
 ### 3-5. nvidia 모드
 
-id · 메뉴 이름을 `nvidia-demo` 로 바꾸고, `joystickScale` 옆 칸을 0 으로(§1.5). f32 와 원본 대조는 spec 11:98 「130 입력 최대 차 0」 으로 이미 통과했으니 spec 11:209 P2 「진행 중」 상태를 닫는다.
+id · 메뉴 이름을 `nvidia-demo` 로 바꾼다. 명령 설정(`joystickScale [1.5, 0.5, 1]`)은 그대로 둔다(§1.5). f32 와 원본 대조는 spec 11:98 「130 입력 최대 차 0」 으로 이미 통과했으니 spec 11:209 P2 「진행 중」 상태를 닫는다.
 
 ### 3-6. go2 모드
 
@@ -297,7 +297,7 @@ id · 메뉴 이름을 `nvidia-demo` 로 바꾸고, `joystickScale` 옆 칸을 0
 - [ ] ame2 시험 벡터 20 스텝 통과 (Node · 브라우저) · f32 로도 돌려 최대 차 기록
 - [ ] ame2 계약 출력 `action` · `gaze_r`, 파일 · sha `ame2-demo.onnx` · `830595df…`
 - [ ] 엔진 기본 ONNX · 되돌림이 켜지면 화면에 늘 표시 · start 는 ONNX 실패 때 잠금 + 사유
-- [ ] §1.5 명령 표대로: start 끝 값 전진 1.5 · 후진 −1.0 · 옆 ±0.5 · 회전 ±1.2 가 `?from=web` 에서도 그대로, ame2 옆 목표가 0.3 으로 깎이지 않음, nvidia 옆 0
+- [ ] §1.5 명령 표대로: start 끝 값 전진 1.5 · 후진 −1.0 · 옆 ±0.5 · 회전 ±1.2 가 `?from=web` 에서도 그대로, ame2 옆 목표가 0.3 으로 깎이지 않음, nvidia 옆 0.5 그대로
 - [ ] §2-5 순서 · 정지 30 초 · start calf 토크 · 지도 평지 값
 - [ ] ame2 `ame2DelaySteps: 0`
 - [ ] `deploy/prepare_sim.py` 허용 목록 · `sync-web.mjs` 자산 복사 · 시험 함께

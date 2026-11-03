@@ -2,7 +2,7 @@
 > 작성: 오흥재 · lead 세션 · 2026-11-03 15:2x v0.1 · 16:1x v0.2 · 16:3x v0.3 (문서 셋으로 나눔 · 저장소 배치 · 가리키는 파일)
 > 근거: m6000 앱 조건표 `APP-POLICY-CONTRACT-m6000.md` v0.2 양식 · m6000 ONNX 묶음 `D:/mai-tmp/scripter/w89_export/contract.json` · 석헌 실험 읽기 `inbox/jay/20261018-next-arch/REPORT-seokheon-ame2.md` · 로컬 원자료 `D:/mai-data/ame2/raw/ame2_spd/` (env.yaml · agent.yaml · observations.py · AME2_models.py) · 앱 사본 `analyst-1102/_out/1102/app/mobile/sim/ame2-adapter.js` (135a8469) · 앱 dev d9b6f382 (gh 읽기)
 > 요지: 석헌 님(또는 석헌 님의 에이전트)이 아래 「지시문」 하나만 보고 AME-2 저장본에서 ONNX · contract.json · 조건표 · 같은 출력 확인 기록을 뽑아 lab 저장소 `inbox/lim/` 에 PR 로 올리면, 현민 님이 그대로 앱에 붙일 수 있게 한다. AME-2 는 우리 START_oh2l2 와 명령 · 관측 · 지도 · 신경망 · 상태가 모두 달라서 m6000 문서를 그대로 베끼면 안 된다(§3)
-> 상태: v0.3.2 · 묶음 lab main 머지(PR #574 · 002607e6) · 빠진 json 시험 벡터 · app_onnx 는 lead 가 `ame2-demo-app/` 로 보완 · 출력 이름은 action · gaze_r · start-demo 묶음이 같은 꼴의 실례(`inbox/jay/20261103-policy-handoff/start-demo/`)
+> 상태: v0.3.2 · 묶음 lab main 머지(PR #574 · 002607e6) · 빠진 json 시험 벡터 · app_onnx 는 lead 가 `ame2-demo-app/` 로 보완 · 출력 이름은 action · gaze_r · start-demo 묶음이 같은 꼴의 실례(`inbox/jay/20261103-policy-handoff/start-demo-app/`) · 앱용 사본은 `inbox/jay/20261103-policy-handoff/ame2-demo-app/`(lab 의 이 폴더는 제출 기록으로 그대로)
 
 # AME-2 정책을 앱에 넘기는 지시문
 
@@ -85,7 +85,7 @@
 
 [5단계 · 올리기]
 - foothold-project/foothold-lab 을 받아 main 에서 브랜치 inbox-lim-ame2-export 를 만든다.
-- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 아래 「공통 규칙 · 묶음 폴더」 · 실례 start-demo/). 다른 폴더(docs/ 등)는 건드리지 않는다.
+- inbox/lim/20261103-policy-handoff/ame2-demo/ 아래에 CONTRACT.md · contract.json · parity.json · test_vectors_flat20.json · test_vectors_flat20.npz · SHA256SUMS 을 커밋한다(꼴은 아래 「공통 규칙 · 묶음 폴더」 · 실례 start-demo-app/). 다른 폴더(docs/ 등)는 건드리지 않는다.
 - ONNX 파일도 같은 폴더에 커밋한다(팀장 11/03 17:0x · 한 파일 100 MB 아래인지 확인). .pt 저장본은 올리지 않고 RunPod 경로와 sha256 을 contract.json 의 checkpoint 칸에 적는다.
 - PR 제목 「AME-2 teacher m<ITER> 앱 전달 묶음」, 본문에 체크포인트 sha · parity 최대 차이 · 미확인 목록.
 - 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.

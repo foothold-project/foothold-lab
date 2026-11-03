@@ -57,7 +57,7 @@
 ## 4. 저장소에 놓을 꼴 (README 배치 그대로)
 
 ```
-inbox/jay/20261103-policy-handoff/start-demo/
+inbox/jay/20261103-policy-handoff/start-demo-app/
   CONTRACT.md            ← inbox/jay/20261101-app/APP-POLICY-CONTRACT-m6000.md v0.3.1 사본(정본은 그대로 두고 가리킴)
   contract.json          ← D:/mai-tmp/lead/start-demo-onnx/contract.json
   parity.json            ← comparison.json + 3 의 1 결과
