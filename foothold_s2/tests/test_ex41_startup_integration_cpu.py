@@ -23,6 +23,10 @@ from foothold_s2.scripts.ex41_startup import (
     load_fixed_plan,
     prepare_ex41_env_cfg,
     require_production_authorization,
+    production_launch_status,
+    require_production_launch,
+    write_production_launch_receipt,
+    validate_output_with_launch_receipt,
     set_live_initial_dr_scale,
     run_rehearsal_dr_proof,
     validate_rehearsal_dr_samples,
@@ -68,6 +72,35 @@ def test_current_production_boundary_refuses_unverified_w71(monkeypatch):
         require_production_authorization(plan)
 
 
+def test_production_launch_requires_w71_and_one_explicit_lead_switch(tmp_path, monkeypatch):
+    plan = load_fixed_plan(TABLE)
+    snapshot = {"config":{"values":{"w71_ready":False}}}
+    monkeypatch.setattr(ex41_startup, "authorization_snapshot", lambda _plan: snapshot)
+    denied = production_launch_status(plan, lead_approved=False)
+    assert denied["production_launch_allowed"] is False
+    assert denied["reason"] == "lead_approval_switch_missing"
+    with pytest.raises(ValueError, match="lead_approval_switch_missing"):
+        require_production_launch(plan, lead_approved=False)
+    with pytest.raises(ValueError, match="w71_not_ready"):
+        require_production_launch(plan, lead_approved=True)
+
+    snapshot["config"]["values"]["w71_ready"] = True
+    allowed = production_launch_status(plan, lead_approved=True)
+    assert allowed["production_launch_allowed"] is True
+    assert allowed["w71_ready"] is True
+    monkeypatch.setattr(ex41_startup, "_require_ex41_run_path", lambda path: Path(path))
+    receipt_path = write_production_launch_receipt(
+        tmp_path / "run", plan, {"sha256":plan.parent_sha256}, allowed)
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert receipt["production_launch_allowed"] is True
+    assert receipt["lead_approval_switch"] is True and receipt["w71_ready"] is True
+    assert receipt["kit_started"] is False
+    assert validate_output_with_launch_receipt(tmp_path / "run", receipt_path) == (tmp_path / "run").resolve()
+    (tmp_path / "run" / "unexpected.txt").write_text("not an authorized pre-Kit artifact")
+    with pytest.raises(ValueError, match="unexpected pre-Kit files"):
+        validate_output_with_launch_receipt(tmp_path / "run", receipt_path)
+
+
 def test_fixed_runtime_only_allows_unverified_w71_in_bounded_rehearsal(tmp_path):
     from foothold_s2.curriculum.continuous import make_runtime
 
@@ -89,6 +122,10 @@ def test_entrypoint_authorization_precedes_app_import_and_wires_consumers():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
     assert source.index("require_production_authorization(EX41_PLAN)") < source.index(
         "from isaaclab.app import AppLauncher")
+    assert "--ex41-production-launch-approved" in source
+    assert source.index("require_production_launch(") < source.index(
+        "from isaaclab.app import AppLauncher")
+    assert "write_production_launch_receipt(" in source
     assert "prepare_ex41_env_cfg(env_cfg, EX41_PLAN)" in source
     assert "attach_runtime(env.unwrapped, EX41_PLAN, log_dir)" in source
     assert "configure_ex41_command_slots(command_term)" in source

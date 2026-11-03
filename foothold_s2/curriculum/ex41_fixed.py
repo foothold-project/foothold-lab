@@ -265,45 +265,73 @@ class EX41FixedRuntime(EX41Runtime):
         return ok
 
     def _record_mirror_observation(self,n,score):
-        """Lead 19:3x D101 interpretation: same GT pair fails two boundaries.
-
-        S is a derived signed min/max ratio, separate from 48 W78 raw minima.
-        Missing, stale, rejected, or different failing pairs cannot be joined.
-        """
+        """Compare two verified stage-end P3 sidecars, never core score fields."""
         from foothold_s2.curriculum.ex41_symmetry import validate
-        interval=self.clock.settings['interval_updates']
-        current=(score or {}).get('iteration')
-        previous=next((r for r in reversed(self._history) if current is not None
-                       and r['iteration']==current-interval),None)
-        if previous and any(previous['iteration']<=r['iteration']<=current
-                            for r in self._score_rejections.values()):
-            previous=None
         entries=[];failed=[]
-        for row in (previous,score):
-            bundle=(row or {}).get('metrics',{}).get('critic_mirror_symmetry')
+        index=self.log_dir/'ex41_reports'/'stage_end_auxiliary.jsonl'
+        reports=[]
+        if index.is_file():
+            try:
+                index_lines=index.read_text(encoding='utf-8-sig').splitlines()
+            except OSError as exc:
+                index_lines=[]
+                self._write({'event':'stage_end_p3_index_unreadable','iteration':n,
+                             'error':type(exc).__name__,'training_continues':True})
+            for line_number,line in enumerate(index_lines,1):
+                if not line.strip():continue
+                try:
+                    link=json.loads(line)
+                    if link.get('format')!='foothold-ex41-stage-end-report/1':continue
+                    if (type(link.get('iteration')) is not int or link['iteration']<1
+                        or not isinstance(link.get('checkpoint_sha256'),str)):continue
+                    sidecar=Path(link.get('sidecar',{}).get('path',''))
+                    if not sidecar.is_file():continue
+                    if sha256(sidecar)!=link.get('sidecar',{}).get('sha256'):continue
+                    doc=json.loads(sidecar.read_text(encoding='utf-8-sig'))
+                    p3=doc.get('p3_symmetry_report')
+                    if (doc.get('iteration')!=link.get('iteration')
+                        or doc.get('checkpoint_sha256')!=link.get('checkpoint_sha256')
+                        or not isinstance(p3,dict)
+                        or p3.get('checkpoint_iteration')!=link.get('iteration')
+                        or p3.get('checkpoint_sha256')!=link.get('checkpoint_sha256')):continue
+                    reports.append((link,p3))
+                except (OSError,ValueError,TypeError,KeyError) as exc:
+                    self._write({'event':'stage_end_p3_receipt_invalid','iteration':n,
+                                 'index_line':line_number,'error':type(exc).__name__,
+                                 'training_continues':True})
+        reports=sorted({row[0]['iteration']:row for row in reports}.values(),
+                       key=lambda row:row[0]['iteration'])
+        selected=reports[-2:]
+        for link,p3 in selected:
+            bundle=p3.get('metrics')
             error=None
             try:validate(bundle)
             except (ValueError,TypeError,KeyError) as exc:error=str(exc)
             pairs={} if error else bundle['modes']['eval_gt']
             failed.append({k for k,v in pairs.items() if v['valid']
                            and v['symmetry']<self.plan.automatic['critic_both_fail_fraction']})
-            entries.append({'iteration':(row or {}).get('iteration'),'pairs':copy.deepcopy(pairs),
-                            'error':error,'score_sha256':(row or {}).get('_sha256')})
+            entries.append({'iteration':link.get('iteration'),'stage_id':link.get('stage_id'),
+                            'pairs':copy.deepcopy(pairs),'error':error,
+                            'sidecar_sha256':link.get('sidecar',{}).get('sha256'),
+                            'checkpoint_sha256':link.get('checkpoint_sha256')})
         threshold=self.plan.automatic['critic_both_fail_fraction']
-        fresh=current is not None and 0<n-current<=self.plan.gate_cfg['maximum_score_age']
+        current=entries[-1]['iteration'] if entries else None
         new_score=current is not None and current!=getattr(self,'_last_mirror_observed_score',None)
-        matching=sorted(failed[0]&failed[1]) if fresh and new_score else []
+        # Stage-end W78 can finish after several core intervals. Its immutable
+        # checkpoint identity, not core-score age, defines freshness.
+        fresh=bool(new_score)
+        matching=sorted(failed[0]&failed[1]) if fresh and new_score and len(failed)==2 else []
         if fresh:self._last_mirror_observed_score=current
         condition=bool(matching)
         event={'event':'critic_mirror_observation','iteration':n,
-            'definition':'S=min(left,right)/max(left,right); signed movement ratios; GT only; lead 19:3x interpretation',
+            'definition':'S=min(left,right)/max(left,right); signed movement ratios; GT only; consecutive verified stage-end sidecars',
             'threshold':threshold,'fresh':fresh,'new_score':new_score,'observations':entries,
             'matching_pair_ids':matching,
             'condition_met':bool(condition),'automatic_activation':False,
             'action':'request_manual_W72_approval' if condition else 'record_only',
             'effective_critic_mirror':bool(self.effective['critic_mirror'])}
         self._write(event)
-        nonpositive=sorted(k for k,v in entries[-1]['pairs'].items()
+        nonpositive=sorted(k for k,v in (entries[-1]['pairs'] if entries else {}).items()
                            if v['reason']=='both_nonpositive')
         if fresh and new_score and nonpositive:
             self._write({'event':'critic_mirror_both_nonpositive','iteration':n,

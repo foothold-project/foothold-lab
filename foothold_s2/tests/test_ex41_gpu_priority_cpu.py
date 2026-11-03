@@ -84,11 +84,17 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
                                                                     "stand": {"contact_force_n": 1}})
     monkeypatch.setattr(ex41_eval_once.subprocess, "check_output",
                         lambda *_args, **_kwargs: "" if "--short" in _args[0] else "head")
-    monkeypatch.setattr(ex41_eval_once, "commands", lambda *_args: [
-        {"name": "map64", "argv": ["known-child", "--out", str(out / "map64")]}])
+    def known_commands(_checkpoint, root, _cfg, *, scope="all"):
+        assert scope == "core"
+        return [{"name": name, "argv": ["known-child", "--out", str(root / name)]}
+                for name in ex41_eval_once.CORE_PHASES]
 
-    def fake_child(*_args, **_kwargs):
-        assert (out / "map64").is_dir()
+    monkeypatch.setattr(ex41_eval_once, "commands", known_commands)
+
+    def fake_child(argv, *_args, **_kwargs):
+        argv = list(argv)
+        output = Path(argv[argv.index("--out") + 1])
+        assert output.is_dir()
         row = json.loads(marker.read_text(encoding="utf-8"))
         observed.append(row)
         return {"rc": child_rc, "state": "done" if child_rc == 0 else "failed"}
@@ -97,7 +103,7 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
     assert Plan.fixed_schedule is True
     assert not out.exists()
     row = ex41_eval_once.evaluate(checkpoint, out, eval_config=cfg_path,
-                                  priority_marker=marker)
+                                  priority_marker=marker, scope="core")
     assert observed and observed[0]["job"] == "ex41_evaluation_bundle"
     assert observed[0]["iteration"] == 500
     assert row["state"] == expected_state

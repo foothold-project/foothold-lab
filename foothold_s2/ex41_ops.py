@@ -71,6 +71,14 @@ def _notification_text(row: dict[str, Any]) -> tuple[str, str]:
     if kind == "notification_test":
         return ("EX-41 notification path test",
                 f"Test only, no training incident. Event {event_id}.")
+    if kind == "stage_end_auxiliary_report":
+        p3_state = row.get("p3_state", "unknown")
+        metrics = row.get("p3_metrics")
+        metrics_state = "recorded" if isinstance(metrics, dict) else "missing"
+        return (f"EX-41 stage-end report {row.get('stage_id', 'unknown')} m{iteration}",
+                f"Stage-end W57/W78 report has P3 state {p3_state}; P3 metrics {metrics_state}. "
+                f"Checkpoint SHA: {row.get('checkpoint_sha256', 'unknown')}. "
+                f"Report: {row.get('report_path', 'see run ex41_reports')}. Event {event_id}.")
     subject = f"EX-41 alert {kind} m{iteration}"
     body = (f"EX-41 {kind} at update {iteration}. Review required. "
             f"Event {event_id}. Details are in the run's ex41_reports/alerts.jsonl.")

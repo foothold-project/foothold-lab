@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -38,6 +39,8 @@ _pre.add_argument("--ex41_parent_checkpoint")
 _pre.add_argument("--ex41_score_dir")
 _pre.add_argument("--ex41_log_root")
 _pre.add_argument("--ex41_dry_run", action="store_true")
+_pre.add_argument("--ex41-production-launch-approved", action="store_true",
+                  help="Lead-only explicit approval switch for a production launch")
 _pre.add_argument("--ex41_rehearsal_updates", type=int)
 _pre.add_argument("--ex41_rehearsal_output")
 _pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")
@@ -53,11 +56,15 @@ EX41_DISK_RECEIPT = None
 EX41_REHEARSAL = False
 EX41_RESUME_PREFLIGHT = None
 EX41_OUTPUT_LAYOUT = None
+EX41_LAUNCH_DECISION = None
+EX41_LAUNCH_RECEIPT = None
 if _pre_args.ex41_table:
     from foothold_s2.scripts.ex41_startup import (
         authorization_snapshot, build_ex41_disk_plan, ex41_output_layout_for_run,
-        load_fixed_plan, require_production_authorization,
+        load_fixed_plan, require_production_authorization, production_launch_status,
+        require_production_launch, write_production_launch_receipt,
         validate_ex41_output_directory, validate_rehearsal_request,
+        validate_output_with_launch_receipt,
         validate_rehearsal_resume_request,
         verify_m6000_parent,
     )
@@ -65,6 +72,8 @@ if _pre_args.ex41_table:
 
     EX41_PLAN = load_fixed_plan(_pre_args.ex41_table)
     if _pre_args.ex41_rehearsal_updates is not None:
+        if _pre_args.ex41_production_launch_approved:
+            raise ValueError("EX-41 production approval switch is not valid for rehearsal")
         if not _pre_args.ex41_rehearsal_output:
             raise ValueError("EX-41 rehearsal requires --ex41_rehearsal_output")
         if _pre_args.resume_from:
@@ -88,6 +97,9 @@ if _pre_args.ex41_table:
     if _pre_args.ex41_dry_run:
         _snapshot = authorization_snapshot(EX41_PLAN)
         _w71_ready = _snapshot["config"]["values"].get("w71_ready") is True
+        EX41_LAUNCH_DECISION = production_launch_status(
+            EX41_PLAN, lead_approved=_pre_args.ex41_production_launch_approved,
+            snapshot=_snapshot)
         if not _pre_args.ex41_parent_checkpoint:
             raise ValueError("EX-41 disk preflight requires the pinned m6000 parent checkpoint")
         EX41_PARENT_RECEIPT = verify_m6000_parent(EX41_PLAN, _pre_args.ex41_parent_checkpoint)
@@ -125,7 +137,8 @@ if _pre_args.ex41_table:
             "rehearsal_device": _pre_args.device,
             "output_layout": ({key: str(value) for key, value in EX41_OUTPUT_LAYOUT.items()}
                               if EX41_OUTPUT_LAYOUT else None),
-            "production_launch_allowed": False}, sort_keys=True))
+            "production_launch_allowed": EX41_LAUNCH_DECISION["production_launch_allowed"],
+            "production_launch_decision": EX41_LAUNCH_DECISION}, sort_keys=True))
         raise SystemExit(0)
     if not _pre_args.ex41_parent_checkpoint:
         raise ValueError("EX-41 production start requires --ex41_parent_checkpoint model_6000.pt")
@@ -177,9 +190,15 @@ if _pre_args.ex41_table:
             planned_updates=(max(0, 6500 - EX41_RESUME_PREFLIGHT["completed_updates"])
                              if EX41_RESUME_PREFLIGHT else 6500))
         EX41_AUTHORIZATION = require_production_authorization(EX41_PLAN)
+        EX41_LAUNCH_DECISION = require_production_launch(
+            EX41_PLAN, lead_approved=_pre_args.ex41_production_launch_approved,
+            snapshot=EX41_AUTHORIZATION)
+        EX41_LAUNCH_RECEIPT = write_production_launch_receipt(
+            _pre_args.ex41_log_root, EX41_PLAN, EX41_PARENT_RECEIPT,
+            EX41_LAUNCH_DECISION)
 elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.ex41_dry_run
       or _pre_args.ex41_log_root or _pre_args.ex41_rehearsal_updates is not None or _pre_args.resume_from
-      or _pre_args.ex41_rehearsal_output):
+      or _pre_args.ex41_rehearsal_output or _pre_args.ex41_production_launch_approved):
     raise ValueError("EX-41 options require --ex41_table")
 
 from isaaclab.app import AppLauncher  # noqa: E402
@@ -209,6 +228,8 @@ parser.add_argument("--ex41_score_dir", type=str, default=None,
                     help="Directory consumed by EX-41 numeric score receipts")
 parser.add_argument("--ex41_dry_run", action="store_true",
                     help="Check EX-41 plan and parser path without starting Kit")
+parser.add_argument("--ex41-production-launch-approved", action="store_true",
+                    help="Lead-only explicit approval switch for a production launch")
 parser.add_argument("--ex41_rehearsal_updates", type=int,
                     help="Fresh rehearsal: 10 updates; existing rehearsal resume: up to 2 more")
 parser.add_argument("--ex41_rehearsal_output", type=str,
@@ -230,6 +251,8 @@ if args_cli.ex41_score_dir != _pre_args.ex41_score_dir:
     raise ValueError("EX-41 preflight and runtime parser disagree on score directory")
 if args_cli.resume_from != _pre_args.resume_from:
     raise ValueError("EX-41 preflight and runtime parser disagree on resume checkpoint")
+if args_cli.ex41_production_launch_approved != _pre_args.ex41_production_launch_approved:
+    raise ValueError("EX-41 preflight and runtime parser disagree on production approval")
 if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
         or args_cli.ex41_rehearsal_output != _pre_args.ex41_rehearsal_output
         or args_cli.ex41_rehearsal_dr_08 != _pre_args.ex41_rehearsal_dr_08):
@@ -315,7 +338,10 @@ def main(env_cfg, agent_cfg):
         log_dir = (os.path.abspath(args_cli.ex41_rehearsal_output) if EX41_REHEARSAL
                    else os.path.abspath(args_cli.ex41_log_root))
         if not EX41_REHEARSAL and resume_path is None:
-            validate_ex41_output_directory(log_dir)
+            if EX41_LAUNCH_RECEIPT:
+                validate_output_with_launch_receipt(log_dir, EX41_LAUNCH_RECEIPT)
+            else:
+                validate_ex41_output_directory(log_dir)
         if resume_path is not None and os.path.dirname(resume_path) != os.path.abspath(log_dir):
             raise ValueError("EX-41 resume checkpoint and --ex41_log_root must name the same run")
         if resume_path is not None:
@@ -356,6 +382,10 @@ def main(env_cfg, agent_cfg):
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
                            "ex41_rehearsal": EX41_REHEARSAL,
+                           "production_launch_allowed": bool(
+                               EX41_LAUNCH_DECISION and EX41_LAUNCH_DECISION.get("production_launch_allowed")),
+                           "production_launch_receipt": (str(EX41_LAUNCH_RECEIPT)
+                               if EX41_LAUNCH_RECEIPT else None),
                            "max_updates": args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else None})
     if EX41_PLAN is not None and resume_path is None:
         from foothold_s2.scripts.ex41_startup import write_ex41_disk_preflight
@@ -581,6 +611,10 @@ def main(env_cfg, agent_cfg):
                           "parent": EX41_PARENT_RECEIPT,
                           "transfer": parent_transfer,
                           "w71_authorization": EX41_AUTHORIZATION,
+                          "production_launch_decision": EX41_LAUNCH_DECISION,
+                          "production_launch_receipt": ({"path":str(EX41_LAUNCH_RECEIPT),
+                              "sha256":hashlib.sha256(EX41_LAUNCH_RECEIPT.read_bytes()).hexdigest()}
+                              if EX41_LAUNCH_RECEIPT else None),
                           "initial_dr_scale": EX41_PLAN.initial_dr_scale,
                           "initial_dr_contract": ex41_cfg_contract["initial_dr"],
                           "initial_dr_readback": {"runtime_scale": ex41_dr_readback.scale,
@@ -635,6 +669,11 @@ def main(env_cfg, agent_cfg):
         if resume_path is None:
             ex41_start_receipt = verify_ex41_start_readback(
                 log_dir, EX41_PLAN, EX41_PARENT_RECEIPT, manifest, env, ex41_dr_readback)
+            ex41_start_receipt["production_launch"] = {
+                "allowed": bool(EX41_LAUNCH_DECISION and EX41_LAUNCH_DECISION.get("production_launch_allowed")),
+                "receipt_path": str(EX41_LAUNCH_RECEIPT) if EX41_LAUNCH_RECEIPT else None,
+                "receipt_sha256": (hashlib.sha256(EX41_LAUNCH_RECEIPT.read_bytes()).hexdigest()
+                                   if EX41_LAUNCH_RECEIPT else None)}
             start_receipt_path = write_ex41_start_readback(log_dir, ex41_start_receipt)
             print("EX41_START_READBACK " + json.dumps(ex41_start_receipt, sort_keys=True), flush=True)
             print(f"EX41_START_READBACK_FILE {start_receipt_path}", flush=True)

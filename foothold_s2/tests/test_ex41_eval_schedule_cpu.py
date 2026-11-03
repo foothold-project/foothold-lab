@@ -14,12 +14,9 @@ from foothold_s2.ex40_score import sha256
 TABLE = watch.DEFAULT_TABLE
 
 
-def test_fixed_plan_stage_ends_drive_auxiliary_scope_and_measured_queue_load():
+def test_nominal_plan_lengths_are_only_capacity_estimates():
     plan = load_plan(TABLE, arm='B')
-    assert watch.stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 5000)
-    assert watch.due_evaluation_scopes(250, plan) == ('core',)
-    assert watch.due_evaluation_scopes(500, plan) == ('core',)
-    assert watch.due_evaluation_scopes(750, plan) == ('core', 'auxiliary')
+    assert watch.nominal_stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 5000)
     assert [row['end_update'] for row in watch.stage_interval_loads(
         plan, train_seconds_per_update=27, core_seconds=1093,
         auxiliary_seconds=9480)] == [750, 1750, 2750, 4000, 4500, 5000]
@@ -29,6 +26,66 @@ def test_fixed_plan_stage_ends_drive_auxiliary_scope_and_measured_queue_load():
     assert all(row['queue_growth_seconds'] == 0 for row in loads)
     assert loads[-2]['evaluation_seconds'] == 11666
     assert loads[-2]['training_seconds'] == 13500
+
+
+def _clock_log(run, plan, *, hold=False, extension=False):
+    from foothold_s2.curriculum.ex41_fixed import Clock
+
+    clock = Clock(plan.clock_settings)
+    rows = []
+    boundaries = list(range(1, 6502, 250))
+    if hold:
+        # The verifier's actual sequence: hold at 1001, recover at 1251/1501.
+        boundaries = sorted(set(boundaries + [1001, 1251, 1501]))
+    for n in boundaries:
+        if n > 6001: break
+        failed = True if hold and n == 1001 else False
+        score_iteration = n - 1 - 250
+        clock.boundary(n, failed, score_iteration if score_iteration > 0 else None)
+        if extension and n == 4501:
+            clock.extension = 500
+            clock.extension_decided = True
+        stage = plan.stages[clock.position(n)].id
+        rows.append({'event': 'schedule_continue', 'iteration': n,
+                     'schedule_clock': clock.__dict__.copy(), 'stage': stage})
+        if (stage == plan.stages[-1].id and
+                clock.time(n) >= clock.settings['duration_updates'] + clock.extension):
+            rows.append({'event': 'fixed_schedule_finished', 'iteration': n,
+                         'graduated': False})
+            break
+    (run / 'stage_log.jsonl').write_text(
+        ''.join(json.dumps(row, sort_keys=True) + '\n' for row in rows), encoding='utf-8')
+
+
+def test_actual_clock_receipts_move_auxiliary_to_recovered_stage_end(tmp_path):
+    plan = load_plan(TABLE, arm='B')
+    hold_run = tmp_path / 'hold_run';hold_run.mkdir()
+    _clock_log(hold_run, plan, hold=True)
+    hold_ends = watch.stage_end_updates(plan, hold_run)
+    assert 1750 not in hold_ends and 2250 in hold_ends and 5000 in hold_ends
+    assert 5500 in hold_ends
+    assert watch.due_evaluation_scopes(1750, plan, hold_run) == ('core',)
+    assert watch.due_evaluation_scopes(2250, plan, hold_run) == ('core', 'auxiliary')
+
+    extension_run = tmp_path / 'extension_run';extension_run.mkdir()
+    _clock_log(extension_run, plan, extension=True)
+    extension_ends = watch.stage_end_updates(plan, extension_run)
+    assert 5000 in extension_ends and 5500 in extension_ends
+    assert watch.due_evaluation_scopes(5000, plan, extension_run) == ('core', 'auxiliary')
+    assert watch.due_evaluation_scopes(5500, plan, extension_run) == ('core', 'auxiliary')
+
+
+def test_stage_end_requires_runtime_clock_evidence(tmp_path):
+    plan = load_plan(TABLE, arm='B')
+    run = tmp_path / 'run'
+    run.mkdir()
+    assert watch.stage_end_updates(plan, run) == ()
+    (run / 'stage_log.jsonl').write_text(
+        json.dumps({'event': 'schedule_continue', 'iteration': 751,
+                    'schedule_clock': {'elapsed': 750}, 'stage': plan.stages[1].id}) + '\n',
+        encoding='utf-8')
+    with pytest.raises(ValueError, match='runtime Clock receipt lacks'):
+        watch.stage_end_updates(plan, run)
 
 
 def test_scope_commands_keep_w78_out_of_250_core_and_include_it_at_stage_end(tmp_path):
@@ -66,6 +123,7 @@ def _fake_run(tmp_path: Path, iteration: int):
 def test_core_score_is_published_before_stage_end_auxiliary_dispatch(
         tmp_path, monkeypatch, iteration, auxiliary_due):
     run, cp, plan = _fake_run(tmp_path, iteration)
+    _clock_log(run, plan)
     out, scores = tmp_path / 'out', tmp_path / 'scores'
     state = watch.initial_state(run, TABLE, watch.DEFAULT_CONFIG)
     monkeypatch.setattr(watch, '_stable', lambda path, _seconds, _sleep: sha256(path))

@@ -409,6 +409,61 @@ def require_production_authorization(plan) -> dict[str, Any]:
     return snapshot
 
 
+def production_launch_status(plan, *, lead_approved: bool, snapshot=None) -> dict[str, Any]:
+    """A single explicit lead CLI switch plus W71 readiness gates production."""
+    if type(lead_approved) is not bool:
+        raise ValueError("EX-41 lead production approval switch must be boolean")
+    snapshot = authorization_snapshot(plan) if snapshot is None else snapshot
+    values = snapshot.get("config", {}).get("values", {})
+    w71_ready = values.get("w71_ready") is True
+    return {"lead_approval_switch": lead_approved, "w71_ready": w71_ready,
+            "production_launch_allowed": bool(lead_approved and w71_ready),
+            "reason": ("approved" if lead_approved and w71_ready else
+                       "lead_approval_switch_missing" if not lead_approved else "w71_not_ready")}
+
+
+def require_production_launch(plan, *, lead_approved: bool, snapshot=None) -> dict[str, Any]:
+    status = production_launch_status(plan, lead_approved=lead_approved, snapshot=snapshot)
+    if not status["production_launch_allowed"]:
+        raise ValueError("EX-41 production launch blocked: " + status["reason"])
+    return status
+
+
+def write_production_launch_receipt(log_dir: str | Path, plan, parent: dict[str, Any],
+                                    status: dict[str, Any]) -> Path:
+    """Persist the approved pre-Kit launch decision for the actual run."""
+    root = _require_ex41_run_path(log_dir)
+    if status.get("production_launch_allowed") is not True or status.get("lead_approval_switch") is not True:
+        raise ValueError("EX-41 production launch receipt requires explicit lead approval")
+    if status.get("w71_ready") is not True:
+        raise ValueError("EX-41 production launch receipt requires W71 readiness")
+    if parent.get("sha256") != plan.parent_sha256:
+        raise ValueError("EX-41 production launch receipt parent differs from pinned m6000")
+    root.mkdir(parents=True, exist_ok=True)
+    receipt = {"format":"foothold-ex41-production-launch/1", "state":"authorized_pre_Kit",
+               "production_launch_allowed":True, "kit_started":False,
+               "lead_approval_switch":True, "w71_ready":True,
+               "plan_sha256":plan.sha256, "effective_sha256":plan.effective_sha256,
+               "parent_sha256":parent.get("sha256"),
+               "created_at":datetime.now(timezone.utc).isoformat()}
+    path = root / f"ex41_production_launch_{uuid.uuid4().hex}.json"
+    path.write_text(json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8")
+    return path
+
+
+def validate_output_with_launch_receipt(log_dir: str | Path, receipt_path: str | Path) -> Path:
+    """Repeat the pre-Kit empty-root guard while allowing only its own receipt."""
+    root = _require_ex41_run_path(log_dir).resolve(strict=True)
+    receipt = Path(receipt_path).resolve(strict=True)
+    if receipt.parent != root or not receipt.name.startswith("ex41_production_launch_"):
+        raise ValueError("EX-41 launch receipt is outside the approved run root")
+    children = {path.resolve() for path in root.iterdir()}
+    if children != {receipt}:
+        raise ValueError("EX-41 production output contains unexpected pre-Kit files")
+    return root
+
+
 def validate_rehearsal_request(updates: int, output_dir: str | Path,
                                device: str, headless: bool,
                                distributed: bool = False) -> Path:

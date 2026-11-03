@@ -37,6 +37,19 @@ def test_both_nonpositive_preserved_and_reported_without_mirror_activation(tmp_p
     bundle = sym.combine(map_rows, None)
     score(r, 250, metrics={'maintenance_counts': counts(r), 'stand_min_passed': 64,
                            'critic_mirror_symmetry': bundle})
+    checkpoint_sha = 'a' * 64
+    sidecar = tmp_path/'stage_end_auxiliary.json'
+    sidecar.write_text(json.dumps({
+        'format': 'foothold-ex41-stage-end-auxiliary/1',
+        'iteration': 250, 'checkpoint_sha256': checkpoint_sha,
+        'stage_id': 'S2a', 'state': 'complete',
+        'p3_symmetry_report': {
+            'format': 'foothold-ex41-p3-stage-end/1', 'state': 'complete',
+            'checkpoint_iteration': 250, 'checkpoint_sha256': checkpoint_sha,
+            'source': 'stage_end_w78', 'metrics': bundle,
+        },
+    }), encoding='utf-8')
+    watch._publish_stage_end_report(r.log_dir, sidecar, deliver=False)
     r.on_update_start(251)
     events = [json.loads(x) for x in (r.log_dir/'stage_log.jsonl').read_text(encoding='utf-8').splitlines()]
     event = next(x for x in events if x['event'] == 'critic_mirror_both_nonpositive')

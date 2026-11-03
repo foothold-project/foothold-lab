@@ -293,10 +293,9 @@ def candidates(run, plan, *, on_error=None):
     return sorted(found, key=lambda x:x[0])
 
 
-def stage_end_updates(plan):
-    """Return local update counts at the ends of the pinned EX41 stages."""
-    if not getattr(plan, 'fixed_schedule', None):
-        return ()
+def nominal_stage_end_updates(plan):
+    """Return configured stage-end estimates for capacity planning only."""
+    if not getattr(plan, 'fixed_schedule', None): return ()
     completed = 0
     ends = []
     for stage in plan.stages:
@@ -308,12 +307,97 @@ def stage_end_updates(plan):
     return tuple(ends)
 
 
-def due_evaluation_scopes(iteration, plan):
+def _runtime_clock_stage_ends(run_dir, plan):
+    """Read actual stage transitions from the fixed runtime's Clock receipts."""
+    run_dir = Path(run_dir)
+    path = run_dir / 'stage_log.jsonl'
+    if not path.is_file(): return ()
+    from foothold_s2.curriculum.ex41_fixed import Clock
+
+    expected_settings = json.loads(json.dumps(plan.clock_settings, sort_keys=True))
+    stage_ids = [stage.id for stage in plan.stages]
+    rows = []
+    text = path.read_text(encoding='utf-8-sig')
+    lines = text.splitlines()
+    if text and not text.endswith('\n'): lines = lines[:-1]
+    for line in lines:
+        if not line.strip(): continue
+        row = json.loads(line)
+        if row.get('event') == 'fixed_schedule_finished':
+            rows.append(row)
+        elif isinstance(row.get('schedule_clock'), dict) and row.get('stage') in stage_ids:
+            rows.append(row)
+
+    def clock_for(row):
+        snapshot = row.get('schedule_clock')
+        if not isinstance(snapshot, dict):
+            raise ValueError('EX41 runtime Clock receipt settings missing or differ')
+        recorded_settings = snapshot.get('settings')
+        if recorded_settings is not None and recorded_settings != expected_settings:
+            raise ValueError('EX41 runtime Clock receipt settings missing or differ')
+        clock = Clock(plan.clock_settings)
+        state_fields = ('anchor', 'elapsed', 'paused', 'pause_used', 'recovered',
+                        'last_score_iteration', 'frozen_scale', 'extension',
+                        'extension_decided')
+        for key in state_fields:
+            if key not in snapshot: raise ValueError(f'EX41 runtime Clock receipt lacks {key}')
+            setattr(clock, key, snapshot[key])
+        if (type(clock.anchor) is not int or type(clock.elapsed) is not int
+                or type(clock.paused) is not bool or type(clock.pause_used) is not int
+                or type(clock.recovered) is not int or type(clock.extension) is not int
+                or clock.elapsed < 0 or clock.pause_used < 0 or clock.recovered < 0
+                or clock.extension not in (0, clock.settings['extension_updates'])):
+            raise ValueError('EX41 runtime Clock receipt state invalid')
+        return clock
+
+    ends = []
+    prior_stage = None
+    clock_rows = {}
+    for row in rows:
+        iteration = row.get('iteration')
+        if type(iteration) is not int or iteration < 1: continue
+        if row.get('event') == 'fixed_schedule_finished':
+            if row.get('graduated') is not False: raise ValueError('EX41 finish receipt claims graduation')
+            finished = clock_rows.get(iteration)
+            if finished is None: raise ValueError('EX41 finish receipt lacks same-update Clock state')
+            clock, stage = finished
+            if (stage != stage_ids[-1] or clock.position(iteration) != len(stage_ids)-1
+                    or clock.time(iteration) < clock.settings['duration_updates'] + clock.extension):
+                raise ValueError('EX41 finish receipt differs from actual Clock completion')
+            ends.append(iteration - 1)
+            continue
+        clock = clock_for(row)
+        if clock.anchor != iteration:
+            raise ValueError('EX41 runtime Clock anchor differs from boundary update')
+        position = clock.position(iteration)
+        if stage_ids[position] != row['stage']:
+            raise ValueError('EX41 runtime stage differs from actual Clock position')
+        clock_rows[iteration] = (clock, row['stage'])
+        if prior_stage is not None and row['stage'] != prior_stage:
+            old_index, new_index = stage_ids.index(prior_stage), stage_ids.index(row['stage'])
+            if new_index != old_index + 1:
+                raise ValueError('EX41 runtime stage transition skipped or regressed')
+            ends.append(iteration - 1)
+        prior_stage = row['stage']
+    return tuple(dict.fromkeys(ends))
+
+
+def stage_end_updates(plan, run_dir):
+    """Return observed checkpoint updates at actual Clock-driven stage ends.
+
+    Nominal YAML lengths are never a scheduling fallback. A stage end becomes
+    eligible only after the runtime publishes the Clock transition receipt.
+    """
+    if not getattr(plan, 'fixed_schedule', None): return ()
+    return _runtime_clock_stage_ends(run_dir, plan)
+
+
+def due_evaluation_scopes(iteration, plan, run_dir):
     """Core maintenance runs every 250; W57/W78 are scheduled at stage ends."""
     if type(iteration) is not int or iteration < 1 or iteration % 250:
         return ()
     scopes = ['core']
-    if iteration in stage_end_updates(plan):
+    if iteration in stage_end_updates(plan, run_dir):
         scopes.append('auxiliary')
     return tuple(scopes)
 
@@ -324,7 +408,7 @@ def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
     if (checkpoint_stride <= 0 or train_seconds_per_update <= 0 or core_seconds < 0
             or auxiliary_seconds < 0):
         raise ValueError('EX41 schedule time inputs must be positive/nonnegative')
-    ends = stage_end_updates(plan)
+    ends = nominal_stage_end_updates(plan)
     rows = []
     prior_end = 0
     pending = 0.0
@@ -389,10 +473,52 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
     return row
 
 
+def _publish_stage_end_report(run_dir, sidecar, *, deliver=False):
+    """Index the P3 sidecar in the training run and alert through existing channels."""
+    from foothold_s2.ex41_ops import _alert, deliver_pending_alerts
+
+    run_dir, sidecar = Path(run_dir), Path(sidecar)
+    row = read(sidecar)
+    if row.get('format') != 'foothold-ex41-stage-end-auxiliary/1':
+        raise ValueError('stage-end report sidecar format differs')
+    iteration, checkpoint_sha = row.get('iteration'), row.get('checkpoint_sha256')
+    if type(iteration) is not int or not isinstance(checkpoint_sha, str) or len(checkpoint_sha) != 64:
+        raise ValueError('stage-end report checkpoint identity invalid')
+    p3 = row.get('p3_symmetry_report')
+    if not isinstance(p3, dict) or p3.get('checkpoint_iteration') != iteration or p3.get('checkpoint_sha256') != checkpoint_sha:
+        raise ValueError('stage-end P3 report identity differs')
+    sidecar_ref = evidence(sidecar)
+    event_id = digest(['ex41-stage-end-report', iteration, checkpoint_sha, sidecar_ref['sha256']])
+    report = {'format':'foothold-ex41-stage-end-report/1', 'event_id':event_id,
+              'iteration':iteration, 'stage_id':row.get('stage_id'),
+              'checkpoint_sha256':checkpoint_sha, 'sidecar':sidecar_ref,
+              'state':row.get('state'), 'p3_symmetry_report':p3}
+    report_dir = run_dir / 'ex41_reports'
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f'stage_end_auxiliary_{iteration}_{checkpoint_sha[:12]}.json'
+    immutable(report_path, report)
+    index_path = report_dir / 'stage_end_auxiliary.jsonl'
+    index_rows = []
+    if index_path.is_file():
+        for line in index_path.read_text(encoding='utf-8-sig').splitlines():
+            if line.strip(): index_rows.append(json.loads(line))
+    if not any(existing.get('event_id') == event_id for existing in index_rows):
+        with index_path.open('a', encoding='utf-8', newline='\n') as stream:
+            stream.write(json.dumps(report, ensure_ascii=False, sort_keys=True, allow_nan=False) + '\n')
+            stream.flush(); os.fsync(stream.fileno())
+    _alert(report_dir / 'alerts.jsonl', event_id, 'stage_end_auxiliary_report', iteration,
+           {'stage_id':row.get('stage_id'), 'checkpoint_sha256':checkpoint_sha,
+            'report_path':str(report_path.resolve()), 'report_sha256':sha256(report_path),
+            'p3_state':p3.get('state'), 'p3_metrics':p3.get('metrics'),
+            'delivery':'existing_orchestration_and_telegram_channels'})
+    if deliver: deliver_pending_alerts(run_dir)
+    return report
+
+
 def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, state, *,
                                  eval_config=DEFAULT_CONFIG, execute=False,
                                  replay_root=None, w57_root=None, w78_root=None,
-                                 table=DEFAULT_TABLE):
+                                 table=DEFAULT_TABLE, deliver_reports=False):
     """Publish W57/W78 after core score publication, without changing that score."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     iteration = int(checkpoint.stem.split('_')[-1])
@@ -409,6 +535,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         if key in aux_state and aux_state[key] != ref:
             raise ValueError('stage-end auxiliary sidecar SHA differs')
         aux_state[key] = ref
+        _publish_stage_end_report(checkpoint.parent, sidecar, deliver=deliver_reports)
         return prior
 
     if execute:
@@ -431,8 +558,13 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                    'components':{'evaluation_child':f"HOLD rc={child.get('rc')}"},
                    'metrics':{}, 'evidence':[evidence(child_dir/'child.json')],
                    'p3_symmetry_source':'stage_end_w78'}
+            row['p3_symmetry_report'] = {
+                'format':'foothold-ex41-p3-stage-end/1', 'state':'HOLD: auxiliary evaluation child failed',
+                'checkpoint_iteration':iteration, 'checkpoint_sha256':pinned,
+                'source':'stage_end_w78', 'metrics':None}
             immutable(sidecar, row)
             aux_state[key] = evidence(sidecar)
+            _publish_stage_end_report(checkpoint.parent, sidecar, deliver=deliver_reports)
             return row
         aux_bundle = aux_out
         w57_path = aux_bundle / 'axis_v2/axis_v2.json'
@@ -452,6 +584,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
     row['evaluation_bundle'] = str(aux_bundle.resolve())
     immutable(sidecar, row)
     aux_state[key] = evidence(sidecar)
+    _publish_stage_end_report(checkpoint.parent, sidecar, deliver=deliver_reports)
     return row
 
 
@@ -547,7 +680,8 @@ def recover_published_score(score_path, cp, stage, plan, out_root):
 
 
 def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_CONFIG,
-                 execute=False, replay_root=None, w57_root=None, w78_root=None, sleep=time.sleep):
+                 execute=False, replay_root=None, w57_root=None, w78_root=None,
+                 deliver_reports=False, sleep=time.sleep):
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     identity = initial_state(run, table, eval_config)
@@ -569,7 +703,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     pending = None
     def reject_final(request,exc):record_final_error(out_root,state,request,exc)
     for iteration, cp, final_request in candidates(run, plan,on_error=reject_final):
-        stage_end = 'auxiliary' in due_evaluation_scopes(iteration, plan)
+        stage_end = 'auxiliary' in due_evaluation_scopes(iteration, plan, run)
         pinned = _manifest_digest(run, iteration)
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
@@ -599,7 +733,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                     cp, previous.get('stage_id') or stage_at(run, iteration, plan),
                     core_bundle, target, plan, state, eval_config=eval_config,
                     execute=execute, replay_root=replay_root,
-                    w57_root=w57_root, w78_root=w78_root, table=table)
+                    w57_root=w57_root, w78_root=w78_root, table=table,
+                    deliver_reports=deliver_reports)
             continue
         if final_request is None and any(r['iteration']==iteration and r['checkpoint_sha256']!=pinned
                                          for r in state['done'].values()):
@@ -633,7 +768,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                 _publish_stage_end_auxiliary(
                     cp, stage, core_bundle, target, plan, state,
                     eval_config=eval_config, execute=execute, replay_root=replay_root,
-                    w57_root=w57_root, w78_root=w78_root, table=table)
+                    w57_root=w57_root, w78_root=w78_root, table=table,
+                    deliver_reports=deliver_reports)
             return {**recovered,'recovered_from_score':True}
         interrupted = target.exists()
         if interrupted:
@@ -701,7 +837,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
             _publish_stage_end_auxiliary(
                 cp, stage, source, target, plan, state, eval_config=eval_config,
                 execute=execute, replay_root=replay_root,
-                w57_root=w57_root, w78_root=w78_root, table=table)
+                w57_root=w57_root, w78_root=w78_root, table=table,
+                deliver_reports=deliver_reports)
         return receipt
     return pending or {'state':'idle'}
 
@@ -781,7 +918,8 @@ def main(argv=None):
         state = read(path) if path.exists() else initial_state(a.run_dir, a.table, a.eval_config)
         while True:
             row = process_once(a.run_dir, a.out_root, a.score_dir, a.table, state, eval_config=a.eval_config,
-                               execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root, w78_root=a.w78_root)
+                               execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root,
+                               w78_root=a.w78_root, deliver_reports=a.execute)
             _atomic(path, state)
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0
