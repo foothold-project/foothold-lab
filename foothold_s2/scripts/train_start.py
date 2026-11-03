@@ -752,6 +752,11 @@ def main(env_cfg, agent_cfg):
                 "state_group_readback": resume_state_comparison,
                 "dr_baseline_device_readback": dr_device_receipt,
             })
+            # The original run's code snapshot describes the first process,
+            # not this continuation. Keep it on this segment for audit and
+            # make the imported sources of this resume the active guard set.
+            row["files"] = run_manifest.rebase_files_for_resume(
+                manifest, captured_at=row["started_at"])
             run_manifest.write_manifest(log_dir, manifest)
         if not runner.ex41_w86_required or getattr(env.unwrapped, "_ex41_w86", None) is None:
             raise ValueError("EX-41 requires attached W86 runtime before learning")

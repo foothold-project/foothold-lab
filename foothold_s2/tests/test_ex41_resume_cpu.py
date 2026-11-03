@@ -23,6 +23,8 @@ from foothold_s2.scripts.ex41_resume import (
     compare_resume_state,
     sha256_file,
 )
+from foothold_s2.runners import manifest as run_manifest
+from foothold_s2.runners.start_runner import StartRunner
 
 
 PLAN = "a" * 64
@@ -417,3 +419,51 @@ def test_train_start_connects_preflight_restore_and_same_run_manifest_preservati
     assert "install_resume_checkpoint_hooks(" in source
     assert "if resume_path is None:\n        dump_yaml" in source
     assert "EX-41 parent transfer uses --ex41_parent_checkpoint, not --resume_from" not in source
+
+
+def test_resume_rebases_active_code_and_next_checkpoint_still_checks_changes(tmp_path, monkeypatch):
+    module = "foothold_s2.scripts.ex41_startup"
+    source = tmp_path / "ex41_startup.py"
+    source.write_text("first process source\n", encoding="utf-8")
+    first_sha = hashlib.sha256(source.read_bytes()).hexdigest()
+    source.write_text("resume process source\n", encoding="utf-8")
+    resume_sha = hashlib.sha256(source.read_bytes()).hexdigest()
+    manifest = {"files": {"imported_sha256": {module: first_sha},
+                          "imported_paths": {module: str(source.resolve())}},
+                "resume_segments": [{"segment_index": 2}]}
+    monkeypatch.setattr(run_manifest, "imported_snapshot",
+                        lambda: ({module: resume_sha}, {module: str(source.resolve())}))
+
+    audit_files = run_manifest.rebase_files_for_resume(manifest, captured_at="2026-11-04T02:09:00+09:00")
+    manifest["resume_segments"][-1]["files"] = audit_files
+    assert audit_files["previous"]["imported_sha256"][module] == first_sha
+    assert audit_files["active"]["imported_sha256"][module] == resume_sha
+    assert run_manifest.file_changes(manifest) == {
+        "changed": [], "missing": [], "added": {}, "added_paths": {},
+    }
+
+    class Harness:
+        def __init__(self):
+            self.manifest = manifest
+
+        def _invalid(self, iteration, reason):
+            raise RuntimeError(f"invalid at {iteration}: {reason}")
+
+    # This is the same guard called by StartRunner before each checkpoint.
+    StartRunner._check_code(Harness(), 700)
+    source.write_text("modified after resume\n", encoding="utf-8")
+    changed_sha = hashlib.sha256(source.read_bytes()).hexdigest()
+    monkeypatch.setattr(run_manifest, "imported_snapshot",
+                        lambda: ({module: changed_sha}, {module: str(source.resolve())}))
+    with pytest.raises(RuntimeError, match="소비 코드가 바뀜"):
+        StartRunner._check_code(Harness(), 750)
+
+
+def test_resume_code_rebase_is_persisted_before_runner_manifest_attachment():
+    source = (Path(__file__).resolve().parents[1] / "scripts/train_start.py").read_text(encoding="utf-8")
+    resume_start = source.index("row = append_resume_segment(")
+    rebase = source.index("run_manifest.rebase_files_for_resume(", resume_start)
+    persist = source.index("run_manifest.write_manifest(log_dir, manifest)", rebase)
+    attach = source.index("runner.attach_manifest(log_dir, manifest)", persist)
+    learn = source.index("runner.learn(num_learning_iterations=remaining", attach)
+    assert resume_start < rebase < persist < attach < learn

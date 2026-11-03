@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 import time
+from copy import deepcopy
 
 SECRET = re.compile(r"key|token|secret|password", re.I)
 WATCH_PREFIXES = ("foothold_s2", "rsl_rl", "isaaclab_rl")        # 실제 import 된 소비 코드(Isaac Lab 본체는 버전으로만 기록)
@@ -274,6 +275,17 @@ def file_changes(manifest: dict) -> dict:
     added_paths = {n: now_paths[n] for n in added if n in now_paths}
 
     return {"changed": changed, "missing": missing, "added": added, "added_paths": added_paths}
+
+
+def rebase_files_for_resume(manifest: dict, *, captured_at: str) -> dict:
+    """Pin the code actually imported by a resume process, preserving the old baseline."""
+    previous = deepcopy(manifest.get("files") or {})
+    hashes, paths = imported_snapshot()
+    if not hashes or set(hashes) != set(paths):
+        raise ValueError("resume code baseline is empty or lacks source paths")
+    active = {"imported_sha256": hashes, "imported_paths": paths}
+    manifest["files"] = active
+    return {"captured_at": captured_at, "previous": previous, "active": deepcopy(active)}
 
 
 def changed_files(manifest: dict) -> list[str]:
