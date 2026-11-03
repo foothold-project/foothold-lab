@@ -35,7 +35,7 @@
 | # | 할 일 | 왜 | 담당 |
 |---|---|---|---|
 | 1 | 실제 학습 기록 입력으로 같은 출력: m6000 을 Isaac 에서 20 스텝 돌려 obs45 · hist · depth2 · h · action 을 기록하고 ONNX 에 그대로 넣어 action 1e-4 이하 | 지금 확인은 합성 입력이라 실제 입력 정렬(깊이 지연 · 이력 순서)을 못 본다 | runner 또는 scripter |
-| 2 | `test_vectors_flat20.npz` (위 1 의 평지 20 스텝) | 앱이 상태 되먹임까지 맞춰 볼 답 | 같음 |
+| 2 | `test_vectors_flat20.json` · `.npz` (위 1 의 평지 20 스텝, 지도 모드 셋 각각 · 꼴은 앱 문서 §2-5a · format `start-demo-test-vectors/1`) | 앱이 상태 되먹임까지 맞춰 볼 답 | 같음 |
 | 3 | ORT Web(브라우저 WASM)에서 같은 입력 → 같은 출력 | 앱이 쓰는 실행기 | 현민 님 또는 scripter |
 | 4 | `SHA256SUMS` · `CONTRACT.md`(= 조건표 정본 사본) · ONNX 두 파일을 같은 폴더에 | README 배치 | lead |
 | 5 | 팀장 검증 뒤 현민 님에게 전달(README 진행 순서) | D144 | **팀장** |
@@ -47,7 +47,7 @@ inbox/jay/20261103-policy-handoff/start-demo/
   CONTRACT.md            ← inbox/jay/20261101-app/APP-POLICY-CONTRACT-m6000.md v0.3.1 사본(정본은 그대로 두고 가리킴)
   contract.json          ← D:/mai-tmp/lead/start-demo-onnx/contract.json
   parity.json            ← comparison.json + 3 의 1 결과
-  test_vectors_flat20.npz
+  test_vectors_flat20.json · test_vectors_flat20.npz
   SHA256SUMS
   start-demo_map_on.onnx · start-demo_map_off.onnx
 ```

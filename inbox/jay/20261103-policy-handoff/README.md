@@ -45,7 +45,7 @@ inbox/<올린 사람>/20261103-policy-handoff/<이름>/      예 inbox/lim/20261
   CONTRACT.md            사람이 읽는 조건표 (값마다 파일:줄 · 등급)
   contract.json          앱이 옮겨 적는 기계 계약 (입출력 이름 · 모양 · 식 · 값 · checkpoint · 각 ONNX 의 sha256 · bytes)
   parity.json            원본 대 ONNX 같은 출력 확인 (스텝 수 · 최대 차이 · 통과)
-  test_vectors_flat20.npz  앱이 자기 구현을 맞춰 볼 입력과 정답 출력
+  test_vectors_flat20.json  앱이 자기 구현을 맞춰 볼 입력과 정답 출력 (같은 내용 .npz 도, 꼴은 앱 문서 §2-5a)
   SHA256SUMS             이 폴더 모든 파일의 sha256
 ```
 
