@@ -71,6 +71,17 @@ def hidden_child(argv, folder, *, env=None, cwd=ROOT):
     return row
 
 
+def completed_process_receipt(result, *, seconds):
+    """Return receipt fields available from subprocess.run's CompletedProcess.
+
+    CompletedProcess exposes returncode, stdout and stderr, but not the child
+    PID. Callers that need a PID must use Popen and record it before waiting.
+    """
+    rc = result.returncode
+    return {'rc': int(rc), 'seconds': float(seconds),
+            'state': 'done' if rc == 0 else 'failed'}
+
+
 def prepare_phase_output(argv):
     """Create a fresh evaluator output directory before its Kit process starts."""
     try:
