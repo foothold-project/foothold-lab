@@ -1,0 +1,56 @@
+> 분류: A/정책학습 · 정책 → 앱 전달 묶음 안내 (색인)
+> 작성: 오흥재 (lead 세션) · 2026-11-03 16:3x v0.1
+> 근거: 이 폴더의 문서 셋 · WORKLIST D107 · D108 · D144 · D162 · D169 · foothold-app dev `6740de88` (2026-11-03 07:19Z)
+> 요지: 정책을 앱에 넘기는 일을 문서 셋으로 나눴다. 사람마다 자기 문서 하나만 읽으면 되고, 세 문서는 같은 이름 규칙과 같은 저장소 배치를 쓴다
+> 상태: v0.2 · 팀장 확인(17:0x) 반영 · lab 에 올리고 Discord 공지
+
+# 정책 → 앱 전달 묶음
+
+| 문서 | 누가 읽나 | 무엇을 하게 되나 |
+|---|---|---|
+| [HANDOFF-APP-DEVELOPER.md](HANDOFF-APP-DEVELOPER.md) | 오현민 (앱) | 앱에 「모드」 넷(nvidia · start · ame2 · go2)을 두고, 모드마다 값을 통째로 갈아 끼우는 구조를 만든다. 답(값)을 먼저 준다 |
+| [HANDOFF-AME2-WORKER.md](HANDOFF-AME2-WORKER.md) | 임석헌 (AME-2) | 지시문 하나로 AME-2 저장본에서 ONNX · contract.json · 확인 기록을 뽑아 올린다 |
+| [HANDOFF-START-m6000-ONNX.md](HANDOFF-START-m6000-ONNX.md) | 오흥재 · lead (START) | m6000 ONNX 묶음이 무엇이고 어디까지 확인됐는지, 앱에 넘기기 전에 남은 것 |
+
+## 지금 사실 (2026-11-03 16:3x)
+
+- 앱(foothold-app dev `6740de88`)에 들어 있는 정책은 **둘**: `foothold-v2`(기본, 예전 v2 정책) · `ame2-demo`(석헌 님 AME-2 teacher m14999). 둘 다 ONNX 를 기본으로 돌리고(ORT Web WASM · Worker), 실패하면 예전 f32 JS 계산으로 되돌린다(앱 `docs/spec/11-POLICY-ADAPTER.md:332~382`).
+- **START(우리 m6000) 는 아직 앱에 넘기지 않았다.** 앱에도 없다(`mobile/sim/policy-adapters.js:2` 「START remains undefined」). ONNX 묶음만 준비돼 있다.
+- 앱의 시뮬 전진 상한은 오늘 1.5 m/s 로 올라갔다(앱 커밋 `280a02c0`).
+
+## 이름 규칙 (팀장 11/03 17:0x · D169 를 대체) · 네 문서 공통
+
+| 모드 · 코드 키 | 지금 이름(데모) | 최종 이름 | 묶음 format | 무엇 |
+|---|---|---|---|---|
+| `nvidia` | `nvidia-demo` (앱의 지금 `foothold-v2`) | `nvidia-foothold-v2` | (앱 기존 `policy_v2.onnx` · f32) | NVIDIA 기반으로 학습한 예전 v2 정책. 지금은 앱의 JS MLP 계산이 원본 actor 와 맞는지만 확인 |
+| `start` | `start-demo` (저장본 m6000) | `start-oh2l2` | `start-demo-onnx/1` | 우리 START 계열 |
+| `ame2` | `ame2-demo` (저장본 m14999) | `ame2-oh2l2` | `ame2-demo-onnx/1` | 석헌 님 AME-2 계열 |
+| `go2` | (새로) | `go2-oh2l2` | 정책 없음 | SDK 로 받은 실기 Go2 움직임(관절 · 자세)을 시뮬 화면에 그리기만. 실기는 순정 Go2 Sport 모드 |
+
+- ONNX 파일 이름 = 이름 + `.onnx` (start 는 `_map_on` · `_map_off` 둘). 앱 adapter id 도 같은 이름. 어느 저장본인지는 contract.json 의 `checkpoint` · `checkpoint_sha256` 에 적는다.
+- 최종 모델은 최종 이름으로 ONNX 를 새로 받는다. 입출력 이름 · 모양이 바뀌면 format 끝 `/1` 을 올린다.
+
+## 진행 순서 (팀장 11/03 17:0x)
+
+1. 석헌 님이 `HANDOFF-AME2-WORKER.md` 지시문으로 ame2-demo 묶음을 만들어 PR.
+2. lead 가 start-demo 묶음을 같은 꼴로 마무리(`HANDOFF-START-m6000-ONNX.md` §3).
+3. **팀장이 두 PR 을 검증**한 뒤 현민 님에게 전달.
+4. 현민 님이 `HANDOFF-APP-DEVELOPER.md` 대로 앱에 적용. 앱 구조(모드 등록부 · 실행기)는 1~3 을 기다리지 않고 먼저 만든다(값은 앱 문서 §1 에 이미 있다).
+
+## 저장소 배치 (ONNX 도 lab 에 올린다 · 팀장 11/03 17:0x)
+
+```
+inbox/<올린 사람>/20261103-policy-handoff/<이름>/      예 inbox/lim/20261103-policy-handoff/ame2-demo/
+  <이름>.onnx            ONNX (start-demo 는 start-demo_map_on.onnx · start-demo_map_off.onnx)
+  CONTRACT.md            사람이 읽는 조건표 (값마다 파일:줄 · 등급)
+  contract.json          앱이 옮겨 적는 기계 계약 (입출력 이름 · 모양 · 식 · 값 · checkpoint · 각 ONNX 의 sha256 · bytes)
+  parity.json            원본 대 ONNX 같은 출력 확인 (스텝 수 · 최대 차이 · 통과)
+  test_vectors_flat20.npz  앱이 자기 구현을 맞춰 볼 입력과 정답 출력
+  SHA256SUMS             이 폴더 모든 파일의 sha256
+```
+
+- 문서 · 계약 · 확인 기록이 모두 ONNX 의 sha256 을 가리키므로, 앱은 받은 ONNX 의 sha256 이 contract.json · SHA256SUMS 와 같을 때만 쓴다.
+- 한 파일 100 MB 를 넘으면 GitHub 가 거절한다(ONNX 는 수 MB 라 괜찮다 · .pt 는 올리지 않는다).
+- 앱 저장소에는 ONNX 를 커밋하지 않고, lab 의 이 폴더에서 앱 자산 폴더(`FH_POLICY_ONNX_SRC`)로 복사한다(앱 spec 11:410~416).
+
+올리는 법(AGENTS 규칙): main 에서 브랜치 `inbox-<이름>-<무엇>` → 자기 `inbox/<이름>/` 아래만 커밋 → PR → 팀장 머지. `docs/` 는 건드리지 않는다. 문장에 em dash(가로로 긴 줄표)를 쓰지 않는다.
