@@ -1466,6 +1466,12 @@ def _capture(spec: dict[str, Any]) -> None:
 
         gym_env = gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
         raw = gym_env.unwrapped
+        if w78_video_ref(spec) or a_push_video_ref(spec):
+            from foothold_s2.rewards.w86_runtime import attach_runtime
+
+            # EX-41 env_cfg registers W86 reward and termination terms. The
+            # runtime must exist before the first reset/step, as in training.
+            attach_runtime(raw, ex41_plan, Path(full_args.mp4).parent / "w86_metrics")
         if dr_mode is not None:
             dr_mode.after_make(raw)
         lighting_record = lighting_profile_settings(
