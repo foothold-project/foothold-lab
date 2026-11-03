@@ -98,9 +98,16 @@ def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_pat
     auxiliary = commands(cp, tmp_path / 'aux', cfg, scope='auxiliary')
     assert [row['name'] for row in core] == [
         'map64', 'stand_eval_gt', 'stand_probe_prop_only', 'stand_eval_pred', 'w78_v2_sides']
-    assert [row['name'] for row in auxiliary] == ['axis_v2', 'w78_v2', 'push_ladder']
+    assert [row['name'] for row in auxiliary] == [
+        'axis_v2', 'w78_v2', 'push_ladder', 'a_push_video']
     assert '--terrain-skill-v2' in auxiliary[1]['argv']
     assert auxiliary[2]['argv'][2] == 'foothold_s2.eval.ex41_push_ladder_bundle'
+    assert auxiliary[2]['device'] == 'cuda:0'
+    assert auxiliary[2]['argv'][auxiliary[2]['argv'].index('--device') + 1] == 'cuda:0'
+    assert auxiliary[3]['argv'][2] == 'foothold_s2.eval.a_push_video'
+    assert auxiliary[3]['device'] == 'cuda:1'
+    assert '--cadence' in auxiliary[3]['argv']
+    assert auxiliary[3]['argv'][auxiliary[3]['argv'].index('--cadence') + 1] == 'stage_end'
     side_args = core[-1]['argv']
     assert '--terrain-skill-v2' in side_args
     assert side_args[side_args.index('--terrain-skill-v2-cases') + 1] == 'stairs_side_left,stairs_side_right'
@@ -176,6 +183,31 @@ def test_stage_end_push_ladder_requires_all_12_children(tmp_path):
     doc['children'].pop()
     (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
     assert auxiliary_phase_status('push_ladder',output)['state']=='HOLD'
+
+
+def test_stage_end_a_push_video_requires_all_three_d168_map_mode_receipts(tmp_path, monkeypatch):
+    from foothold_s2.eval import a_push_video
+    from foothold_s2.ex41_eval_once import auxiliary_phase_status, reconcile_child_result
+
+    output = tmp_path / 'a_push_video'
+    output.mkdir()
+    modes = a_push_video.MODES
+    for mode in modes:
+        (output / f'{mode}.json').write_text(json.dumps({
+            'schema': 'foothold-ex41-a-push-video/1',
+            'video_rule_version': 'v3.4-D168',
+            'map_mode': mode,
+        }), encoding='utf-8')
+    monkeypatch.setattr(a_push_video, 'compare_mode_receipts', lambda _path: {
+        'state': 'complete', 'group_id': 'known-group', 'modes': list(modes)})
+    assert auxiliary_phase_status('a_push_video', output)['state'] == 'done'
+    child = {'rc': 0, 'state': 'done'}
+    assert reconcile_child_result('a_push_video', child, output)['state'] == 'done'
+
+    (output / f'{modes[-1]}.json').unlink()
+    held = reconcile_child_result('a_push_video', child, output)
+    assert held['state'] == 'HOLD' and held['rc'] == 5
+    assert 'receipt' in held['reason']
 
 def _fake_run(tmp_path: Path, iteration: int):
     run = tmp_path / 'run'

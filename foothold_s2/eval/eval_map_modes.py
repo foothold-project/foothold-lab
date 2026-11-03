@@ -243,7 +243,22 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
         ser = {nm: np.asarray(map_err[i], dtype=np.float32) for i, nm in enumerate(_me.SERIES)}                    # (S,N) 다섯 계열
         extra = dict(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
+        row["restoration_error_record_only"] = _me.record_only_summary(
+            extra["map_err_all_mean_cm"], extra["map_err_all_cellmax_cm"],
+            source=f"env_arrays_{mode}_{cname}.npz:map_err_all_*_cm",
+        )
         res["env_array_basis"] = dict(res.get("env_array_basis") or {}, map_err=_me.DEFINITION)
+    else:
+        row["restoration_error_record_only"] = {
+            "schema": "foothold-map-error-record-only/1",
+            "decision_use": "none_record_only",
+            "source": f"env_arrays_{mode}_{cname}.npz",
+            "state": "unavailable",
+            "reason": "checkpoint has no reconstructed map output",
+            "mean_of_env_step_means_cm": None,
+            "maximum_env_step_cellmax_cm": None,
+            "valid_envs": 0,
+        }
 
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,

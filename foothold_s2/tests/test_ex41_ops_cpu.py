@@ -102,6 +102,39 @@ def test_ex41_boundary_keeps_dr_when_exact_reference_score_is_missing(tmp_path):
     assert report["finished"] is False
 
 
+def test_boundary_records_exact_use_gt_fraction_and_t0_prime_display_flag(tmp_path):
+    runtime = FakeRuntime(_score(250))
+    runtime.clock.position = lambda update: 0
+    runtime.plan.stages = [SimpleNamespace(id="T0_prime")]
+    (tmp_path / "train_extra.jsonl").write_text(
+        json.dumps({"it": 499, "use_gt_frac": 0.99}) + "\n"
+        + json.dumps({"it": 500, "use_gt_frac": 0.29}) + "\n",
+        encoding="utf-8")
+    report = record_boundary(runtime, tmp_path, 501)
+    assert report["use_gt_frac"] == 0.29
+    assert report["use_gt_frac_source"] == "train_extra.jsonl:it=500"
+    assert report["stage_for_completed_update"] == "T0_prime"
+    assert report["use_gt_frac_t0_prime_threshold"] == 0.3
+    assert report["use_gt_frac_t0_prime_le_0p3"] is True
+    alerts = [json.loads(line) for line in
+              (tmp_path / "ex41_reports/alerts.jsonl").read_text().splitlines()]
+    numeric = next(row for row in alerts if row["kind"] == "periodic_250_numeric_report")
+    assert numeric["use_gt_frac"] == 0.29
+    assert numeric["use_gt_frac_t0_prime_le_0p3"] is True
+
+
+def test_boundary_does_not_fallback_to_stale_use_gt_fraction(tmp_path):
+    runtime = FakeRuntime(_score(250))
+    runtime.clock.position = lambda update: 0
+    runtime.plan.stages = [SimpleNamespace(id="T0_prime")]
+    (tmp_path / "train_extra.jsonl").write_text(
+        json.dumps({"it": 499, "use_gt_frac": 0.1}) + "\n", encoding="utf-8")
+    report = record_boundary(runtime, tmp_path, 501)
+    assert report["use_gt_frac"] is None
+    assert report["use_gt_frac_source"] is None
+    assert report["use_gt_frac_t0_prime_le_0p3"] is None
+
+
 def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_delivered(tmp_path):
     sent = {'orca': [], 'telegram': []}
     def deliver(run):

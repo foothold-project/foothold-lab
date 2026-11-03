@@ -150,15 +150,42 @@ def main():
             raise RuntimeError("stance GT map was not selected")
         if args.mode != "eval_gt" and bool(policy.pstate.use_gt.any()):
             raise RuntimeError("stance GT map leaked into non-GT mode")
+        from foothold_s2.eval import map_error as map_error_metrics
+
+        map_error_last = {"e": None, "rebuild_maxdiff": 0.0}
+        original_advance = runner.perception._advance
+
+        def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map,
+                           *map_off, _original=original_advance):
+            result = _original(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map,
+                               *map_off)
+            try:
+                rel = (raw.scene.sensors["gt_map_scan"].data.ray_hits_w[..., 2]
+                       - robot.data.root_pos_w[:, 2:3])
+            except Exception as exc:  # noqa: BLE001
+                rel = None
+                map_error_last["rel_error"] = repr(exc)
+            map_error_metrics.record(map_error_last, result, gt_map, rel)
+            return result
+
+        runner.perception._advance = tapped_advance
         alive = np.ones(args.envs, dtype=bool)
         rows = {key: [] for key in ("force_z", "gap", "speed", "yaw_speed", "alive", "mass_kg")}
+        map_error_rows = {name: [] for name in map_error_metrics.SERIES}
         origins = _cpu(raw.scene.env_origins[:, 2])
         if not np.allclose(origins, 0.0, atol=1e-6):
             raise RuntimeError("flat stance terrain is not z=0")
         for _ in range(steps):
             term.vel_command_b[:, :3] = 0.0
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
+            map_error_last["e"] = None
             action = policy(obs)
+            errors = map_error_last["e"]
+            for index, name in enumerate(map_error_metrics.SERIES):
+                if errors is None:
+                    map_error_rows[name].append(np.full(args.envs, np.nan, dtype=np.float32))
+                else:
+                    map_error_rows[name].append(_cpu(errors[index]).astype(np.float32, copy=False))
             obs, _, done, _ = env.step(action)
             alive &= ~_cpu(done.bool())
             data = robot.data
@@ -170,6 +197,7 @@ def main():
             rows["mass_kg"].append(_cpu(robot.root_physx_view.get_masses()).sum(axis=1))
             policy.reset(done)
         arrays = {key: np.stack(value) for key, value in rows.items()}
+        map_error_series = {name: np.stack(value) for name, value in map_error_rows.items()}
         valid = arrays["alive"][skip:]
         for key in ("force_z", "gap", "speed", "yaw_speed", "mass_kg"):
             values = arrays[key][skip:]
@@ -177,8 +205,17 @@ def main():
             if not np.isfinite(values[masked]).all():
                 raise RuntimeError(f"stance {key} contains nonfinite valid samples")
         per_env = _summarize(**arrays, skip=skip, contact_n=args.contact_n)
+        map_error_aggregate = map_error_metrics.env_aggregate(map_error_series, arrays["alive"])
+        map_error_summary = map_error_metrics.record_only_summary(
+            map_error_aggregate["map_err_all_mean_cm"],
+            map_error_aggregate["map_err_all_cellmax_cm"],
+            source="stand_raw.npz:map_err_all_*_cm",
+        )
         args.out.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(args.out / "stand_raw.npz", **arrays)
+        np.savez_compressed(args.out / "stand_raw.npz", **arrays,
+                            **{"map_err_series_" + name: values
+                               for name, values in map_error_series.items()},
+                            **{name: value for name, value in map_error_aggregate.items()})
         result = {"format": "foothold-ex40-stand/1", "checkpoint": str(args.checkpoint),
                   "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
                   "ex41_checkpoint_preparation": checkpoint_preparation,
@@ -190,6 +227,9 @@ def main():
                                  "policy_noise": "off", "seed": args.seed,
                                  "gap_definition": "foot center z minus collision radius, not ray hit"},
                   "per_env": per_env,
+                  "restoration_error_record_only": map_error_summary,
+                  "map_error_rebuild_maxdiff_m": map_error_last.get("rebuild_maxdiff"),
+                  "map_error_rel_error": map_error_last.get("rel_error"),
                   "raw_sha256": hashlib.sha256((args.out / "stand_raw.npz").read_bytes()).hexdigest()}
         (args.out / "stand.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")

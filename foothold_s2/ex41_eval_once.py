@@ -20,7 +20,7 @@ DEFAULT_TABLE = ROOT / 'foothold_s2/curriculum/ex41-fixed5000.yaml'
 ISAAC_PYTHON = Path('C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe')
 MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
 CORE_PHASES = ('map64', *(f'stand_{m}' for m in MODES))
-AUXILIARY_PHASES = ('axis_v2', 'w78_v2', 'push_ladder')
+AUXILIARY_PHASES = ('axis_v2', 'w78_v2', 'push_ladder', 'a_push_video')
 PERIODIC_W78_PHASE = 'w78_v2_sides'
 PERIODIC_PHASES = (*CORE_PHASES, PERIODIC_W78_PHASE)
 PHASES = (*CORE_PHASES, *AUXILIARY_PHASES)
@@ -53,18 +53,34 @@ def commands(checkpoint, out, cfg, *, scope='all'):
              ('w78_v2', 'foothold_s2.eval.eval_map_modes',
               [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
                '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
+    iteration_match = re.fullmatch(r'model_(\d+)\.pt', Path(checkpoint).name)
+    iteration = int(iteration_match.group(1)) if iteration_match else 0
     rows.append(('push_ladder', 'foothold_s2.eval.ex41_push_ladder_bundle',
-                 ['--checkpoint', str(checkpoint), '--device', 'cuda:1', '--task', 'FootholdS2-Go2-S2-SB-v0',
-                  '--seed', str(cfg['eval_seed'])]))
+                 ['--checkpoint', str(checkpoint), '--checkpoint-iteration', str(iteration),
+                  '--task', 'FootholdS2-Go2-S2-SB-v0', '--seed', str(cfg['eval_seed'])]))
+    rows.append(('a_push_video', 'foothold_s2.eval.a_push_video', [
+        '--source-root', str(ROOT), '--checkpoint', str(checkpoint),
+        '--recorder', str(ROOT / 'foothold_s2/eval/record_sol23f.py'),
+        '--composer', str(ROOT / 'foothold_s2/eval/video25/compose_25e_v2style10.py'),
+        '--python', str(ISAAC_PYTHON),
+        '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
+        '--c-layer-lock', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/out/c_layer.lock',
+        '--a-layer-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/A_LAYER_BUSY',
+        '--training-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY',
+        '--iteration', str(iteration), '--seed', str(cfg['eval_seed']),
+        '--push-seed', str(cfg['eval_seed']), '--cadence', 'stage_end',
+    ]))
     selected = {'core': CORE_PHASES, 'periodic': PERIODIC_PHASES,
                 'auxiliary': AUXILIARY_PHASES,
                 'all': PHASES}.get(scope)
     if selected is None:
         raise ValueError(f'unknown EX41 evaluation scope: {scope}')
     rows = [row for row in rows if row[0] in selected]
-    return [{'name': name, 'argv': [str(ISAAC_PYTHON), '-m', module, *args,
-                                  '--out', str(out/name), '--headless', '--device', 'cuda:1',
-                                  '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
+    return [{'name': name, 'device': ('cuda:0' if name == 'push_ladder' else 'cuda:1'),
+             'argv': [str(ISAAC_PYTHON), '-m', module, *args,
+                      '--out', str(out/name), '--headless', '--device',
+                      ('cuda:0' if name == 'push_ladder' else 'cuda:1'),
+                      '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
             for name, module, args in rows]
 
 
@@ -126,6 +142,23 @@ def auxiliary_phase_status(name, output):
         'push_ladder': ('push_ladder_bundle.json', 'push_ladder_bundle.error.json',
                         'foothold-ex41-push-ladder-bundle/1'),
     }
+    if name == 'a_push_video':
+        try:
+            from foothold_s2.eval.a_push_video import MODES as A_PUSH_MODES, compare_mode_receipts
+            rows = [json.loads((output / f'{mode}.json').read_text(encoding='utf-8-sig'))
+                    for mode in A_PUSH_MODES]
+            if any(row.get('schema') != 'foothold-ex41-a-push-video/1'
+                   or row.get('video_rule_version') != 'v3.4-D168'
+                   for row in rows):
+                raise ValueError('A-layer receipt schema or D168 video rule differs')
+            comparison = compare_mode_receipts(output)
+            if comparison.get('state') != 'complete' or len(comparison.get('modes', [])) != 3:
+                raise ValueError('A-layer map-mode receipts are incomplete or incompatible')
+            return {'state': 'done', 'result_path': str(output), 'modes': comparison['modes'],
+                    'group_id': comparison['group_id']}
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            return {'state': 'HOLD', 'reason': f'A-layer video receipts invalid: {exc}',
+                    'result_path': str(output)}
     if name not in contracts:
         return {'state': 'done'}
     result_name, error_name, schema = contracts[name]
@@ -183,7 +216,8 @@ def auxiliary_phase_status(name, output):
 def reconcile_child_result(name, child, output):
     """A zero process exit cannot override a durable auxiliary HOLD receipt."""
     result = dict(child)
-    if result.get('rc') == 0 and name in ('axis_v2', 'w78_v2', PERIODIC_W78_PHASE, 'push_ladder'):
+    if result.get('rc') == 0 and name in (
+            'axis_v2', 'w78_v2', PERIODIC_W78_PHASE, 'push_ladder', 'a_push_video'):
         artifact = auxiliary_phase_status(name, output)
         if artifact['state'] != 'done':
             result.update(state='HOLD', process_rc=result['rc'], rc=5,
@@ -211,7 +245,7 @@ def bundle_terminal_status(steps, *, scope='all'):
 
 
 def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-                     scope='all'):
+                     scope='all', gpu1_owner=None):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     if not getattr(plan, 'fixed_schedule', None) or out.exists():
@@ -236,6 +270,9 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     env.pop('CUDA_VISIBLE_DEVICES', None)
     env.update(PYTHONUTF8='1', PYTHONUNBUFFERED='1', PYTHONPATH=str(ROOT),
                CUDA_DEVICE_ORDER='PCI_BUS_ID', KMP_DUPLICATE_LIB_OK='TRUE', OMNI_KIT_ACCEPT_EULA='YES')
+    if gpu1_owner is not None:
+        env['EX41_PARENT_EVAL_PID'] = str(gpu1_owner['pid'])
+        env['EX41_PARENT_EVAL_CREATED_AT'] = str(gpu1_owner['process_created_at'])
     start = time.monotonic()
     _atomic(out/'eval_receipt.json', row)
     try:
@@ -272,7 +309,7 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     marker_path = DEFAULT_MARKER if priority_marker is None else Path(priority_marker)
     with gpu1_priority(marker_path, job='ex41_evaluation_bundle', iteration=iteration) as owner:
         row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
-                               scope=scope)
+                               scope=scope, gpu1_owner=owner)
     row['gpu1_priority_marker'] = {
         'path': str(marker_path), 'state': 'cleared', 'owner': owner,
     }

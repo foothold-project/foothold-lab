@@ -101,6 +101,28 @@ def env_aggregate(series: dict, alive) -> dict:
     return out
 
 
+def record_only_summary(env_mean_cm, env_cellmax_cm, *, source: str) -> dict:
+    """Summarize reconstructed-map error for display; never a pass/fail score."""
+    mean_values = np.asarray(env_mean_cm, dtype=np.float64).reshape(-1)
+    max_values = np.asarray(env_cellmax_cm, dtype=np.float64).reshape(-1)
+    if mean_values.shape != max_values.shape:
+        raise ValueError("map-error summary mean/max environment counts differ")
+    valid = np.isfinite(mean_values) & np.isfinite(max_values)
+    valid_mean = mean_values[valid]
+    valid_max = max_values[valid]
+    if not source or not isinstance(source, str):
+        raise ValueError("map-error record-only source is required")
+    return {
+        "schema": "foothold-map-error-record-only/1",
+        "decision_use": "none_record_only",
+        "source": source,
+        "state": "measured" if valid_mean.size and valid_max.size else "unavailable",
+        "mean_of_env_step_means_cm": float(valid_mean.mean()) if valid_mean.size else None,
+        "maximum_env_step_cellmax_cm": float(valid_max.max()) if valid_max.size else None,
+        "valid_envs": int(valid.sum()),
+    }
+
+
 # ---------------- 종류 x 레벨 묶음 x 모드 집계 (저장된 npz 에서) ----------------
 LEVEL_GROUPS = {"L0~2": (0, 1, 2), "L3": (3,), "L6": (6,), "L9": (9,)}
 

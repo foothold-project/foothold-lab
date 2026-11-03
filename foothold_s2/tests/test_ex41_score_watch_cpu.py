@@ -154,16 +154,21 @@ def test_zero_exit_with_w78_hold_error_makes_bundle_hold_and_nonzero(tmp_path):
     steps['w78_v2'] = result
     terminal = evaluator.bundle_terminal_status(steps)
     assert result['process_rc'] == 0 and result['state'] == 'HOLD' and result['rc'] != 0
-    assert terminal == {'state':'done', 'rc':0, 'auxiliary_missing':['axis_v2','w78_v2']}
+    assert terminal == {'state':'done', 'rc':0,
+                        'auxiliary_missing':['axis_v2','w78_v2','push_ladder','a_push_video']}
 
 
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
     rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
-    assert [r['name'] for r in rows]==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2','w78_v2']
+    assert [r['name'] for r in rows]==[
+        'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
+        'axis_v2','w78_v2','push_ladder','a_push_video']
     for r in rows:
-        a=r['argv'];assert a[a.index('--device')+1]=='cuda:1'
+        a=r['argv'];assert a[a.index('--device')+1]==r['device']
         assert not Path(a[a.index('--out')+1]).exists()
-    assert '--terrain-skill-v2' in rows[-1]['argv'] and '--axis-v2' in rows[-2]['argv']
+    assert rows[-2]['device'] == 'cuda:0'
+    assert '--axis-v2' in rows[4]['argv']
+    assert '--a-layer-marker' in rows[-1]['argv']
     assert '--fixed-level' not in rows[-1]['argv']
 
 
@@ -363,8 +368,10 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
         return {'rc':7,'state':'failed'} if folder.name=='axis_v2' else {'rc':0,'state':'done'}
     monkeypatch.setattr(evaluator,'hidden_child',spy)
     row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation')
-    assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
-    assert row['state']=='done' and row['rc']==0 and row['auxiliary_missing']==['axis_v2','w78_v2']
+    assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
+                      'axis_v2','push_ladder','a_push_video']
+    assert row['state']=='done' and row['rc']==0 and row['auxiliary_missing']==[
+        'axis_v2','w78_v2','push_ladder','a_push_video']
 
 
 def test_stage_receipt_at_next_update_does_not_relabel_previous_checkpoint(tmp_path):
@@ -378,6 +385,47 @@ def test_stage_receipt_at_next_update_does_not_relabel_previous_checkpoint(tmp_p
     row['parent_update']=5999
     (run/'ex41_application.jsonl').write_text(json.dumps(row)+'\n')
     with pytest.raises(ValueError,match='identity'):watch.stage_at(run,250,plan)
+
+
+def test_stage_end_auxiliary_receipt_records_a_push_videos_and_holds_missing_receipts(
+        tmp_path, monkeypatch):
+    from foothold_s2.eval import a_push_video
+
+    checkpoint = tmp_path / 'model_6000.pt'
+    checkpoint.write_bytes(b'known EX41 stage checkpoint')
+    video_dir = tmp_path / 'a_push_video'
+    video_dir.mkdir()
+    modes = a_push_video.MODES
+    monkeypatch.setattr(a_push_video, 'compare_mode_receipts', lambda _path: {
+        'state': 'complete', 'group_id': 'known-stage-group', 'modes': list(modes)})
+    for mode in modes:
+        video_path = video_dir / f'{mode}.mp4'
+        video_path.write_bytes(f'known {mode} video'.encode())
+        (video_dir / f'{mode}.json').write_text(json.dumps({
+            'schema': 'foothold-ex41-a-push-video/1',
+            'map_mode': mode,
+            'iteration': 6000,
+            'checkpoint_sha256': watch.sha256(checkpoint),
+            'cadence': 'stage_end',
+            'video_rule_version': 'v3.4-D168',
+            'outcome': 'captured',
+            'video': str(video_path),
+            'video_sha256': watch.sha256(video_path),
+        }), encoding='utf-8')
+
+    plan = watch.load_plan(watch.DEFAULT_TABLE, arm='B')
+    missing = watch.stage_end_auxiliary_receipt(
+        checkpoint, 'B0', tmp_path / 'missing-core', tmp_path / 'missing-w57',
+        tmp_path / 'missing-w78', plan)
+    assert missing['components']['a_push_video'].startswith('HOLD:')
+
+    recorded = watch.stage_end_auxiliary_receipt(
+        checkpoint, 'B0', tmp_path / 'missing-core', tmp_path / 'missing-w57',
+        tmp_path / 'missing-w78', plan, a_push_video_path=video_dir)
+    assert recorded['components']['a_push_video'] == 'complete'
+    assert recorded['metrics']['a_push_video']['decision_use'] == 'record_only'
+    assert recorded['metrics']['a_push_video']['video_rule_version'] == 'v3.4-D168'
+    assert set(recorded['metrics']['a_push_video']['map_modes']) == set(modes)
 
 
 def test_dead_watcher_lock_archived_but_live_owner_never_reclaimed(tmp_path):

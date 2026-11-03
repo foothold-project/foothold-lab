@@ -25,6 +25,7 @@ from typing import Any
 # and live training code are unchanged.
 C_LAYER_PROFILE = "C76"
 W78_VIDEO_PROFILE = "EX41-W78"
+A_PUSH_VIDEO_PROFILE = "EX41-A-PUSH"
 
 
 WALK_TURN_COMMANDS = (
@@ -62,11 +63,15 @@ def w15_ref(spec) -> bool:
 
 
 def c_layer_ref(spec) -> bool:
-    return spec.get("c_layer_reference") is True or w78_video_ref(spec)
+    return spec.get("c_layer_reference") is True or w78_video_ref(spec) or a_push_video_ref(spec)
 
 
 def w78_video_ref(spec) -> bool:
     return spec.get("w78_video_reference") is True
+
+
+def a_push_video_ref(spec) -> bool:
+    return spec.get("a_push_video_reference") is True
 
 
 def bind_w78_source_package(root: Path) -> dict[str, str]:
@@ -445,6 +450,8 @@ def parse_spec(value: str) -> dict[str, Any]:
         raise ValueError("experiment must be B, TD, G0B, or SB")
     if w78_video_ref(spec):
         return parse_w78_video_spec(spec)
+    if a_push_video_ref(spec):
+        return parse_a_push_video_spec(spec)
     source_profile = spec.get("source_profile")
     if source_profile not in (None, EX35_SOURCE_PROFILE, W03_PROFILE, W15_PROFILE, C_LAYER_PROFILE):
         raise ValueError("source_profile must be omitted, EX-35, W03, W15 or C76")
@@ -624,6 +631,38 @@ def parse_w78_video_spec(spec: dict[str, Any]) -> dict[str, Any]:
     if (type(spec.get("local_iteration")) is not int or spec["local_iteration"] < 1
             or not isinstance(spec.get("stage_name"), str) or not spec["stage_name"]):
         raise ValueError("EX41 W78 iteration or stage is invalid")
+    return spec
+
+
+def parse_a_push_video_spec(spec: dict[str, Any]) -> dict[str, Any]:
+    """An A-layer DR-on clip keeps the EX-41 policy and the fixed64 tile."""
+    if (spec.get("experiment") != "SB" or spec.get("source_profile") != A_PUSH_VIDEO_PROFILE
+            or spec.get("terrain_set") != "fixed64" or spec.get("fixed_terrain") is not True
+            or spec.get("envs") != 64 or type(spec.get("env_id")) is not int
+            or not 0 <= spec["env_id"] < 64 or spec.get("selection_role") != "a_push_video"
+            or spec.get("geometry_seed") != C_LAYER_GEOMETRY_SEED
+            or spec.get("physics_mode") != "sparse_eval_reference"
+            or spec.get("command") != [1.0, 0.0, 0.0]
+            or spec.get("duration_s") != 6.0 or spec.get("z_mode") != "mean"
+            or spec.get("act_mode") != "mean" or spec.get("hide_others") is not True
+            or spec.get("map_mode") not in MAP_MODES_BY_EXPERIMENT["SB"]):
+        raise ValueError("EX41 A push video requires fixed64, 64 env, fwd1.0 for 6 s and a map mode")
+    for key in ("source_recorder_sha256", "checkpoint_sha256", "parent_sha256"):
+        if not isinstance(spec.get(key), str) or re.fullmatch(r"[0-9a-f]{64}", spec[key]) is None:
+            raise ValueError("EX41 A push video needs " + key)
+    if not isinstance(spec.get("source_head"), str) or re.fullmatch(r"[0-9a-f]{40}", spec["source_head"]) is None:
+        raise ValueError("EX41 A push video needs source_head")
+    if (type(spec.get("seed")) is not int or type(spec.get("push_seed")) is not int
+            or type(spec.get("fixed_level")) is not int or not 0 <= spec["fixed_level"] <= 9
+            or not isinstance(spec.get("kind"), str) or type(spec.get("col")) is not int
+            or not isinstance(spec.get("push_group_id"), str) or not spec["push_group_id"]
+            or spec.get("dr_scale") != 1.0):
+        raise ValueError("EX41 A push video tile, seeds, group or DR scale invalid")
+    source = Path(spec["source_root"])
+    if _git_value(source, "rev-parse", "HEAD") != spec["source_head"]:
+        raise ValueError("EX41 A push source HEAD differs")
+    if _sha(source / "foothold_s2/eval/record_sol23f.py") != spec["source_recorder_sha256"]:
+        raise ValueError("EX41 A push source recorder SHA differs")
     return spec
 
 
@@ -857,19 +896,20 @@ def validate_sparse_reference(spec: dict[str, Any]) -> dict[str, Any]:
             "reference_arrays": str(arrays_path.resolve())}
 
 
-def configure_sparse_evaluation_config(env_cfg: Any, generator: Any, num_envs: int = SPARSE_ENV_COUNT) -> dict[str, Any]:
+def configure_sparse_evaluation_config(env_cfg: Any, generator: Any, num_envs: int = SPARSE_ENV_COUNT,
+                                       *, preserve_dr: bool = False) -> dict[str, Any]:
     """Apply the same 64-env sparse eval switches without changing reset/start ranges."""
     env_cfg.scene.num_envs = int(num_envs)
     if generator is not None:
         env_cfg.scene.terrain.terrain_generator = generator
     dr_off = []
-    for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass",
-                 "base_com", "push_robot", "base_external_force_torque"):
+    for name in (() if preserve_dr else ("actuator_gains", "motor_strength", "physics_material", "add_base_mass",
+                                         "base_com", "push_robot", "base_external_force_torque")):
         if getattr(env_cfg.events, name, None) is not None:
             setattr(env_cfg.events, name, None)
             dr_off.append(name)
     action_delay = getattr(getattr(env_cfg, "actions", None), "joint_pos", None)
-    if action_delay is not None and hasattr(action_delay, "max_delay_s"):
+    if not preserve_dr and action_delay is not None and hasattr(action_delay, "max_delay_s"):
         action_delay.max_delay_s = 0.0
         dr_off.append("action_delay")
     curriculum_off = []
@@ -944,14 +984,14 @@ def validate_source_root(root: Path, experiment: str | None = None,
             if actual != digest:
                 raise ValueError("EX-35 pinned source SHA mismatch: " + relative)
             checked[relative] = actual
-    elif source_profile in (C_LAYER_PROFILE, W78_VIDEO_PROFILE):
+    elif source_profile in (C_LAYER_PROFILE, W78_VIDEO_PROFILE, A_PUSH_VIDEO_PROFILE):
         if experiment != "SB" or not source.is_file():
             raise ValueError("C76 needs an S-B source root with record_sol23f.py")
         head = _git_value(root, "rev-parse", "HEAD")
         tracked = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--"], capture_output=True, check=False)
         if not head or tracked.returncode:
             raise ValueError("C76 source root must have a clean pinned commit")
-        if source_profile == W78_VIDEO_PROFILE:
+        if source_profile in (W78_VIDEO_PROFILE, A_PUSH_VIDEO_PROFILE):
             for relative in ("foothold_s2/scripts/ex41_startup.py",
                              "foothold_s2/eval/terrain_skill_v2_run.py",
                              "foothold_s2/eval/ex41_eval_loader.py",
@@ -982,7 +1022,7 @@ def validate_source_root(root: Path, experiment: str | None = None,
 def validate_checkpoint_profile(spec: dict[str, Any], checkpoint: Path) -> dict[str, str] | None:
     if spec.get("source_profile") is None:
         return None
-    if spec["source_profile"] in (C_LAYER_PROFILE, W78_VIDEO_PROFILE):
+    if spec["source_profile"] in (C_LAYER_PROFILE, W78_VIDEO_PROFILE, A_PUSH_VIDEO_PROFILE):
         root = Path(spec["source_root"])
         source = root / "foothold_s2/eval/record_sol23f.py"
         if (_git_value(root, "rev-parse", "HEAD") != spec.get("source_head")
@@ -1101,6 +1141,12 @@ def frame_steps(step_count: int, frame_count: int = 300) -> list[int]:
     if len(set(indices)) != frame_count:
         raise ValueError("physics step rate cannot provide the requested distinct video frames")
     return indices
+
+
+def dr_done_and_alive(alive, dones):
+    """The rsl_rl wrapper may return integer dones; DR metrics need bool masks."""
+    done_mask = dones.to(dtype=alive.dtype)
+    return done_mask, alive & ~done_mask
 
 
 def step_contract(dt: float, duration_s: float = 12.0, fps: int = 25,
@@ -1280,7 +1326,9 @@ def _capture(spec: dict[str, Any]) -> None:
     import av
     from PIL import Image, ImageDraw, ImageFont
     from foothold_s2.eval.c_layer_frame_audit import project_world_point
-    from foothold_s2.eval.c_layer_segmentation import robot_pixel_evidence, require_single_visible_robot
+    from foothold_s2.eval.c_layer_segmentation import (
+        packet_diagnostic, robot_pixel_evidence, require_single_visible_robot,
+    )
 
     import importlib
     preload_kit_dependencies(importlib.import_module, lambda: None)
@@ -1305,7 +1353,7 @@ def _capture(spec: dict[str, Any]) -> None:
     sys.path.insert(0, str(eval_root))
     if eval_root != repo:
         sys.path.insert(1, str(repo))
-    if w78_video_ref(spec):
+    if w78_video_ref(spec) or a_push_video_ref(spec):
         bind_w78_source_package(repo)
     env = None
     container = None
@@ -1334,11 +1382,11 @@ def _capture(spec: dict[str, Any]) -> None:
         ex41_checkpoint_state = None
         ex41_checkpoint_preparation = None
         ex41_pose_readback = None
-        if w78_video_ref(spec):
+        if w78_video_ref(spec) or a_push_video_ref(spec):
             from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
             ex41_plan, ex41_preparation = prepare_ex41_environment(env_cfg)
             if ex41_plan.parent_sha256 != spec["parent_sha256"]:
-                raise RuntimeError("EX41 W78 fixed plan parent SHA differs")
+                raise RuntimeError("EX41 fixed plan parent SHA differs")
         seed, device = spec["seed"], full_args.device
         env_cfg.seed = seed
         env_cfg.scene.num_envs = n_envs(spec) if sparse_capture else 1
@@ -1358,7 +1406,9 @@ def _capture(spec: dict[str, Any]) -> None:
                 raise RuntimeError("sparse terrain geometry seed changed from the eval reference")
             if fixed64_capture:
                 pin_c_layer_geometry_seed(env_cfg, spec)
-            physics_record = configure_sparse_evaluation_config(env_cfg, None if fixed64_capture else generator, n_envs(spec))
+            physics_record = configure_sparse_evaluation_config(
+                env_cfg, None if fixed64_capture else generator, n_envs(spec),
+                preserve_dr=a_push_video_ref(spec))
             start_record = ({"yaw_override_rad": None, "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)", "reset_ranges_preserved": True}
                             if fixed64_capture else {"yaw_override_rad": 0.0, "source": "sparse evaluation reset and quaternion override", "reset_ranges_preserved": True})
             task_selection = {"terrain_set": "sparse50", "fixed_terrain": True,
@@ -1406,7 +1456,17 @@ def _capture(spec: dict[str, Any]) -> None:
         command_cfg.fixed_cmd = capture_commands(spec)[0][1] if sparse_capture else COMMANDS[0][1]
         command_cfg.resampling_time_range = (LONG_COMMAND_RESAMPLE_S, LONG_COMMAND_RESAMPLE_S)
 
-        if w78_video_ref(spec):
+        dr_mode = None
+        if a_push_video_ref(spec):
+            from types import SimpleNamespace
+            from foothold_s2.eval.eval_dr_mode import DRMode
+
+            dr_mode = DRMode.from_args(SimpleNamespace(
+                dr_mode="on", dr_scale=spec["dr_scale"],
+                dr_table=str(Path(repo) / "foothold_s2/curriculum/ex41-fixed5000.yaml"),
+                eval_seed=spec["push_seed"], axis_v2=False), env_cfg)
+
+        if w78_video_ref(spec) or a_push_video_ref(spec):
             from foothold_s2.eval.ex41_eval_loader import load_checkpoint_for_eval
 
             ex41_checkpoint_state, ex41_checkpoint_preparation = load_checkpoint_for_eval(
@@ -1414,6 +1474,16 @@ def _capture(spec: dict[str, Any]) -> None:
 
         gym_env = gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
         raw = gym_env.unwrapped
+        if w78_video_ref(spec) or a_push_video_ref(spec):
+            from foothold_s2.scripts.ex41_startup import attach_ex41_stand_runtime_data
+            from foothold_s2.rewards.w86_runtime import attach_runtime
+
+            # EX-41 env_cfg registers W86 reward and termination terms. The
+            # runtime must exist before the first reset/step, as in training.
+            attach_ex41_stand_runtime_data(gym_env)
+            attach_runtime(raw, ex41_plan, Path(full_args.mp4).parent / "w86_metrics")
+        if dr_mode is not None:
+            dr_mode.after_make(raw)
         lighting_record = lighting_profile_settings(
             full_args.lighting_profile, intensity=full_args.directional_light_intensity,
             angle_deg=full_args.directional_light_angle_deg,
@@ -1434,14 +1504,14 @@ def _capture(spec: dict[str, Any]) -> None:
             adapter.map_mode = spec["map_mode"]
         built = {"gym_env": gym_env, "raw": raw, "env_cfg": env_cfg, "agent_cfg": agent_cfg,
                  "env": env}
-        if w78_video_ref(spec):
+        if w78_video_ref(spec) or a_push_video_ref(spec):
             train_cfg = dict(agent_cfg.to_dict())
             train_cfg["ex41_pose_commands"] = True
             runner, saved = adapters.load_s2_runner(
                 env, train_cfg, full_args.checkpoint, device,
                 checkpoint_state=ex41_checkpoint_state)
             if saved.get("ex41_pose_commands") is not True:
-                raise RuntimeError("EX41 W78 checkpoint lacks pose-command architecture")
+                raise RuntimeError("EX41 checkpoint lacks pose-command architecture")
             policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean",
                                        map_mode=spec["map_mode"])
             policy_nn = policy
@@ -1480,6 +1550,10 @@ def _capture(spec: dict[str, Any]) -> None:
         if sparse_capture:
             from foothold_s2.eval import fixed_terrain as sparse_fixed_terrain
             torch.manual_seed(spec["seed"] if c_layer_ref(spec) else SPARSE_EVAL_SEED)
+            if dr_mode is not None:
+                dr_mode.begin(raw, spec["push_group_id"],
+                              int(round(spec["duration_s"] / float(raw.step_dt))),
+                              env.num_envs, float(raw.step_dt))
             env.reset()
             if turn16_capture:
                 from foothold_s2.eval import probe_tiles
@@ -1502,14 +1576,14 @@ def _capture(spec: dict[str, Any]) -> None:
                 _cols = raw.scene.terrain.terrain_types.cpu().numpy()
                 if int(_cols[spec["env_id"]]) != spec["col"] or int(raw.scene.terrain.terrain_levels[spec["env_id"]].item()) != int(_lv[spec["env_id"]]):
                     raise RuntimeError("selected env does not have the reference fixed64 cell")
-                if w78_video_ref(spec):
+                if w78_video_ref(spec) or a_push_video_ref(spec):
                     from foothold_s2.terrains import columns
                     generator = raw.cfg.scene.terrain.terrain_generator
                     names = columns.column_types(
                         {name: float(cfg.proportion) for name, cfg in generator.sub_terrains.items()},
                         int(generator.num_cols))
                     if names[spec["col"]] != spec["kind"]:
-                        raise RuntimeError("EX41 W78 selected column is not pyramid_stairs")
+                        raise RuntimeError("EX41 video selected column kind differs")
                 tile = {"env": spec["env_id"], "kind": spec["kind"], "level": int(_lv[spec["env_id"]]), "col": spec["col"]}
             else:
                 sparse_assignment = sparse_fixed_terrain.apply_sparse(raw, spec["fixed_level"])
@@ -1537,7 +1611,7 @@ def _capture(spec: dict[str, Any]) -> None:
                 start_record["yaw_readback_max_abs_rad"] = set_start_yaw(robot, spec["start_angle_deg"])
             sparse_command_term = raw.command_manager.get_term("base_velocity")
             pin_segment_command(command_cfg, sparse_command_term, capture_commands(spec)[0][1])
-            if w78_video_ref(spec):
+            if w78_video_ref(spec) or a_push_video_ref(spec):
                 from foothold_s2.eval.map_mode_cells import disable_heading_for_fixed_eval
                 disable_heading_for_fixed_eval(sparse_command_term)
             sparse_reference = ({"rule": "EX41 W78 own video reset outcome" if w78_video_ref(spec) else "C76 video reset outcome, no evaluation selection",
@@ -1637,6 +1711,9 @@ def _capture(spec: dict[str, Any]) -> None:
         else:
             contract = step_contract(step_dt, capture_duration, full_args.fps, active_commands)
         step_count, frame_indices = contract["physics_steps"], set(contract["video_sample_step_indices"])
+        dr_arrays = ({key: [] for key in ("alive", "dones", "vx", "vy", "wz", "tilt", "xy")}
+                     if dr_mode is not None else None)
+        dr_alive = torch.ones(env.num_envs, dtype=torch.bool, device=raw.device) if dr_mode is not None else None
         if len(frame_indices) != contract["video_frames"]:
             raise RuntimeError("capture frame contract is not distinct")
         output = Path(full_args.mp4).resolve()
@@ -1726,10 +1803,20 @@ def _capture(spec: dict[str, Any]) -> None:
                 frame, retry_checks = render_frame_guarded(raw, robot, command_term, sensor,
                                                            env_index=capture_env_id)
                 if instance_annotator is not None:
-                    mask_row = robot_pixel_evidence(
-                        instance_annotator.get_data(), selected_env=capture_env_id,
-                        env_count=n_envs(spec), height=full_args.height, width=full_args.width)
-                    require_single_visible_robot(mask_row)
+                    mask_packet = instance_annotator.get_data()
+                    try:
+                        mask_row = robot_pixel_evidence(
+                            mask_packet, selected_env=capture_env_id,
+                            env_count=n_envs(spec), height=full_args.height, width=full_args.width)
+                        require_single_visible_robot(mask_row)
+                    except ValueError as exc:
+                        diagnostic = packet_diagnostic(mask_packet, selected_env=capture_env_id)
+                        diagnostic.update({"error": str(exc), "env_id": capture_env_id,
+                                           "visibility": render_visibility_record})
+                        diagnostic_path = Path(full_args.mp4).with_name("segmentation_failure.json")
+                        diagnostic_path.write_text(json.dumps(diagnostic, indent=2), encoding="utf-8")
+                        Image.fromarray(frame).save(diagnostic_path.with_name("segmentation_failure_rgb.png"))
+                        raise
                     instance_evidence.append(mask_row)
                 render_retry_checks.extend({"physics_tick": k, **check} for check in retry_checks)
                 if frame.shape[:2] != (full_args.height, full_args.width):
@@ -1766,6 +1853,8 @@ def _capture(spec: dict[str, Any]) -> None:
             joint_pos = robot.data.joint_pos[capture_env_id].detach().cpu().numpy().copy()
 
             with torch.inference_mode():
+                if dr_mode is not None:
+                    dr_mode.step(raw, k)
                 actions = policy(obs)
                 policy_action = actions[capture_env_id].detach().cpu().numpy().copy()
                 if map_snapshot:
@@ -1773,6 +1862,16 @@ def _capture(spec: dict[str, Any]) -> None:
                         raise RuntimeError("pred mode consumed GT map on a policy tick")
                     map_rows.append({"t": k * step_dt, **map_snapshot})
                 obs, _reward, dones, _extras = env.step(actions)
+                if dr_arrays is not None:
+                    done_mask, dr_alive = dr_done_and_alive(dr_alive, dones)
+                    dr_arrays["alive"].append(dr_alive.detach().cpu().numpy().copy())
+                    dr_arrays["dones"].append(done_mask.detach().cpu().numpy().copy())
+                    dr_arrays["vx"].append(robot.data.root_lin_vel_b[:, 0].detach().cpu().numpy().copy())
+                    dr_arrays["vy"].append(robot.data.root_lin_vel_b[:, 1].detach().cpu().numpy().copy())
+                    dr_arrays["wz"].append(robot.data.root_ang_vel_b[:, 2].detach().cpu().numpy().copy())
+                    dr_arrays["xy"].append(robot.data.root_pos_w[:, :2].detach().cpu().numpy().copy())
+                    gravity_z = robot.data.projected_gravity_b[:, 2].clamp(-1.0, 1.0)
+                    dr_arrays["tilt"].append(torch.acos(-gravity_z).detach().cpu().numpy().copy())
                 done = bool(dones[capture_env_id].item())
                 terms = dict(termination_snapshot)
                 timed_out = bool(getattr(raw, "reset_time_outs", torch.zeros_like(dones))[capture_env_id].item())
@@ -1817,6 +1916,14 @@ def _capture(spec: dict[str, Any]) -> None:
             data["map_first_after_reset"].append(bool(map_rows[-1]["first_after_reset"]) if map_rows else False)
         if frame_count != contract["video_frames"]:
             raise RuntimeError(f"frame count {frame_count} != {contract['video_frames']}")
+        dr_result = {}
+        dr_summary = None
+        if dr_mode is not None:
+            dr_summary = dr_mode.collect(raw, spec["push_group_id"], dr_result,
+                                         arrays={**{key: np.stack(value) for key, value in dr_arrays.items()},
+                                                 "cmd": tuple(spec["command"])})
+            if not dr_summary["recovery"]["defined"] or not dr_summary["push_events"]:
+                raise RuntimeError("A-layer push capture lacks recovery or push evidence")
         if spec["map_mode"] in ("pred", "eval_pred", "probe_prop_only", "none") and any(row["use_gt"] for row in map_rows):
             raise RuntimeError("selected map-disabled mode must have zero GT use")
         if spec["map_mode"] == "eval_gt" and map_rows and not all(row["use_gt"] for row in map_rows):
@@ -1888,7 +1995,7 @@ def _capture(spec: dict[str, Any]) -> None:
                          "map_samples": len(map_rows),
                          "gt_use_expected_zero": spec["map_mode"] in ("pred", "eval_pred", "probe_prop_only", "none")}
         source_hashes = _source_hashes(repo, spec["experiment"])
-        if w78_video_ref(spec):
+        if w78_video_ref(spec) or a_push_video_ref(spec):
             for relative in ("foothold_s2/scripts/ex41_startup.py",
                              "foothold_s2/eval/terrain_skill_v2_run.py",
                              "foothold_s2/eval/ex41_eval_loader.py",
@@ -1922,6 +2029,15 @@ def _capture(spec: dict[str, Any]) -> None:
                             "ex41_environment_preparation": ex41_preparation,
                             "ex41_checkpoint_preparation": ex41_checkpoint_preparation,
                             "ex41_pose_readback": ex41_pose_readback} if w78_video_ref(spec) else None),
+            "a_push_video": ({"push_group_id": spec["push_group_id"],
+                              "push_seed": spec["push_seed"], "dr_scale": spec["dr_scale"],
+                              "dr_recovery": dr_summary["recovery"],
+                              "push_events": dr_summary["push_events"],
+                              "ex41_environment_preparation": ex41_preparation,
+                              "ex41_checkpoint_preparation": ex41_checkpoint_preparation,
+                              "ex41_pose_readback": ex41_pose_readback}
+                             if a_push_video_ref(spec) else None),
+            "dr": dr_result.get("dr"),
             "selected_environment": ({"env_id": capture_env_id, "kind": spec["kind"],
                                       "level": ((task_selection.get("selected_tile") or {}).get("level") if sparse_capture else None), "col": spec["col"],
                                       "selection_role": spec["selection_role"]} if sparse_capture else None),

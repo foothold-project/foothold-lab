@@ -99,6 +99,59 @@ def eval_pred_map_error_record_only(map_modes_path):
             'cases': summary}, refs
 
 
+def map64_stand_error_record_only(map_modes_path, stand_paths):
+    """Collect persisted map error summaries for map64 and stance, without verdict use."""
+    map_path = Path(map_modes_path).resolve(strict=True)
+    map_doc = read(map_path)
+    env_arrays = map_doc.get('env_arrays')
+    modes = map_doc.get('modes')
+    if not isinstance(env_arrays, dict) or not isinstance(modes, dict):
+        raise ValueError('map64 record-only map error inputs are missing')
+    refs = [evidence(map_path)]
+
+    def require_summary(value, source):
+        if (not isinstance(value, dict)
+                or value.get('schema') != 'foothold-map-error-record-only/1'
+                or value.get('decision_use') != 'none_record_only'
+                or value.get('state') not in ('measured', 'unavailable')):
+            raise ValueError(f'record-only map error summary invalid: {source}')
+        if value['state'] == 'measured':
+            for key in ('mean_of_env_step_means_cm', 'maximum_env_step_cellmax_cm'):
+                number = value.get(key)
+                if type(number) not in (int, float) or not math.isfinite(number):
+                    raise ValueError(f'record-only map error value invalid: {source}/{key}')
+        return value
+
+    map_summary = {}
+    for mode, cases in modes.items():
+        if not isinstance(cases, dict):
+            raise ValueError(f'map64 mode rows malformed: {mode}')
+        map_summary[mode] = {}
+        for case, row in cases.items():
+            source = f'env_arrays_{mode}_{case}'
+            map_summary[mode][case] = require_summary(
+                row.get('restoration_error_record_only'), source)
+            rel = env_arrays.get(f'{mode}/{case}')
+            if isinstance(rel, str) and Path(rel).name == rel and rel.endswith('.npz'):
+                refs.append(evidence(map_path.parent / rel))
+            elif map_summary[mode][case]['state'] == 'measured':
+                raise ValueError(f'map64 record-only source NPZ is missing: {source}')
+
+    stand_summary = {}
+    for mode, path in sorted(stand_paths.items()):
+        path = Path(path).resolve(strict=True)
+        doc = read(path)
+        stand_summary[mode] = require_summary(
+            doc.get('restoration_error_record_only'), str(path))
+        raw = path.parent / 'stand_raw.npz'
+        if stand_summary[mode]['state'] == 'measured':
+            refs.append(evidence(raw))
+    return ({'format': 'ex41-map64-stand-map-error-record-only/1',
+             'decision_use': 'none_record_only',
+             'definition': 'mean of per-environment step means and maximum per-environment cell maximum, centimeters',
+             'map64': map_summary, 'stand': stand_summary}, refs)
+
+
 def immutable(path, row):
     path.parent.mkdir(parents=True, exist_ok=True)
     data = (json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)+'\n').encode('utf-8')
@@ -232,6 +285,17 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
     try:
         stands = {m:bundle/f'stand_{m}'/'stand.json' for m in MODES}
         row = enrich_score_metrics(row, bundle/'map64/map_modes.json', stands, plan, score_config_path=eval_config)
+        try:
+            map_stand_error, map_stand_refs = map64_stand_error_record_only(
+                bundle/'map64/map_modes.json', stands)
+            row['metrics']['map64_stand_map_error_record_only'] = map_stand_error
+            row['evidence'].extend(ref for ref in map_stand_refs if ref not in row['evidence'])
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            row['metrics']['map64_stand_map_error_record_only'] = {
+                'format': 'ex41-map64-stand-map-error-record-only/1',
+                'decision_use': 'none_record_only', 'state': 'unavailable',
+                'reason': f'{type(exc).__name__}: {exc}',
+            }
         try:
             map_error, map_error_refs = eval_pred_map_error_record_only(
                 bundle/'map64/map_modes.json')
@@ -532,8 +596,9 @@ def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
 
 
 def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_path,
-                                plan, eval_config=DEFAULT_CONFIG, push_ladder_path=None):
-    """Create separate W57/W78, fixed-push, and P3 records from a stage-end checkpoint."""
+                                plan, eval_config=DEFAULT_CONFIG, push_ladder_path=None,
+                                a_push_video_path=None):
+    """Create W57/W78, fixed-push, A-layer video, and P3 stage-end records."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     row = {'format': 'foothold-ex41-stage-end-auxiliary/1',
            'iteration': int(checkpoint.stem.split('_')[-1]),
@@ -578,6 +643,38 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
         except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
             row['components']['push_ladder'] = f'HOLD: {type(exc).__name__}: {exc}'
             row['state'] = 'HOLD'
+    try:
+        from foothold_s2.eval.a_push_video import MODES as A_PUSH_MODES, compare_mode_receipts
+        video_dir = Path(a_push_video_path) if a_push_video_path is not None else None
+        if video_dir is None:
+            raise ValueError('stage-end A-layer video receipt path is missing')
+        video_status = compare_mode_receipts(video_dir)
+        if video_status.get('state') != 'complete' or set(video_status.get('modes', [])) != set(A_PUSH_MODES):
+            raise ValueError('all three A-layer map-mode videos are required')
+        video_rows = {mode: read(video_dir / f'{mode}.json') for mode in A_PUSH_MODES}
+        for mode, video in video_rows.items():
+            if (video.get('schema') != 'foothold-ex41-a-push-video/1'
+                    or video.get('map_mode') != mode
+                    or video.get('iteration') != row['iteration']
+                    or video.get('checkpoint_sha256') != row['checkpoint_sha256']
+                    or video.get('cadence') != 'stage_end'
+                    or video.get('video_rule_version') != 'v3.4-D168'):
+                raise ValueError(f'A-layer {mode} receipt identity or D168 rule differs')
+            row['evidence'].append(evidence(video_dir / f'{mode}.json'))
+            video_path = Path(video['video'])
+            row['evidence'].append(evidence(video_path))
+        row['metrics']['a_push_video'] = {
+            'decision_use': 'record_only',
+            'video_rule_version': 'v3.4-D168',
+            'group_id': video_status['group_id'],
+            'map_modes': {mode: {'outcome': video_rows[mode].get('outcome'),
+                                 'video_sha256': video_rows[mode].get('video_sha256')}
+                          for mode in A_PUSH_MODES},
+        }
+        row['components']['a_push_video'] = 'complete'
+    except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+        row['components']['a_push_video'] = f'HOLD: {type(exc).__name__}: {exc}'
+        row['state'] = 'HOLD'
     try:
         map_path = Path(core_bundle) / 'map64/map_modes.json'
         map_doc = read(map_path)
@@ -701,6 +798,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         w57_path = aux_bundle / 'axis_v2/axis_v2.json'
         w78_path = aux_bundle / 'w78_v2/terrain_skill_v2.json'
         push_ladder_path = aux_bundle / 'push_ladder/push_ladder_bundle.json'
+        a_push_video_path = aux_bundle / 'a_push_video'
     else:
         if replay_root is not None:
             aux_bundle = Path(replay_root) / f'model_{iteration}_{pinned[:12]}'
@@ -711,9 +809,11 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         w78_path = (resolve_auxiliary_path(w78_root, iteration, 'terrain_skill_v2.json')
                     if w78_root else aux_bundle / 'w78_v2/terrain_skill_v2.json')
         push_ladder_path = aux_bundle / 'push_ladder/push_ladder_bundle.json'
+        a_push_video_path = aux_bundle / 'a_push_video'
 
     row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
-                                      w78_path, plan, eval_config, push_ladder_path)
+                                      w78_path, plan, eval_config, push_ladder_path,
+                                      a_push_video_path)
     row['evaluation_bundle'] = str(aux_bundle.resolve())
     immutable(sidecar, row)
     aux_state[key] = evidence(sidecar)

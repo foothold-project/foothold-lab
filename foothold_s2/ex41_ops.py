@@ -21,6 +21,23 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _read_update_use_gt_frac(run: Path, update: int) -> tuple[float | None, str | None]:
+    """Read the exact training-update fraction, with no stale-row fallback."""
+    path = run / "train_extra.jsonl"
+    if not path.is_file():
+        return None, None
+    matches = []
+    for row in _jsonl(path):
+        if row.get("it") == update:
+            value = row.get("use_gt_frac")
+            if type(value) not in (int, float) or not 0.0 <= float(value) <= 1.0:
+                return None, None
+            matches.append(float(value))
+    if not matches or any(value != matches[0] for value in matches):
+        return None, None
+    return matches[-1], f"train_extra.jsonl:it={update}"
+
+
 def _score_snapshot(runtime, completed_update: int) -> tuple[dict | None, str]:
     expected_iteration = completed_update - 250
     rows = [row for row in getattr(runtime, "_history", [])
@@ -93,9 +110,12 @@ def _notification_text(row: dict[str, Any]) -> tuple[str, str]:
             p3_text = "; ".join(f"{key}={value}" for key, value in pairs.items())
         else:
             p3_text = "P3 S unavailable"
+        gt_flag = row.get('use_gt_frac_t0_prime_le_0p3')
+        gt_text = (f"use_gt_frac={row.get('use_gt_frac')} "
+                   f"(T0' <= 0.3 flag={gt_flag})")
         return (f"EX-41 250-update numeric report m{iteration}",
                 f"state={row.get('report_state')}; cells: {cell_text}; P3 eval_gt S: {p3_text}; "
-                f"DR={row.get('dr_scale')}; training={json.dumps(row.get('training_metrics'), ensure_ascii=False, separators=(',', ':'))}; "
+                f"DR={row.get('dr_scale')}; {gt_text}; training={json.dumps(row.get('training_metrics'), ensure_ascii=False, separators=(',', ':'))}; "
                 f"checkpoint={row.get('score_checkpoint_update')} SHA={row.get('score_checkpoint_sha256')}; "
                 f"report={row.get('report_path')}; event={event_id}")
     if kind == "two_consecutive_p3_boundaries_below_threshold":
@@ -294,6 +314,17 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         if isinstance(value, dict) and completed - 250 < value.get("iteration", -1) <= completed
     ]
     clock = getattr(runtime, "clock", None)
+    use_gt_frac, use_gt_source = _read_update_use_gt_frac(run, completed)
+    stage_for_completed = None
+    if clock is not None and callable(getattr(clock, "position", None)):
+        try:
+            stage_index = clock.position(completed)
+            stages = getattr(getattr(runtime, "plan", None), "stages", ())
+            if 0 <= stage_index < len(stages):
+                stage_for_completed = stages[stage_index].id
+        except (IndexError, TypeError, ValueError):
+            stage_for_completed = None
+    is_t0_prime = stage_for_completed == "T0_prime"
     report = {
         "format": "foothold-ex41-progress/2", "event_id": event_id,
         "boundary_update": completed,
@@ -315,6 +346,12 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
         "dr_hold": bool(getattr(clock, "paused", False)),
         "extension_updates": getattr(clock, "extension", None),
         "stand_min_passed": metrics.get("stand_min_passed") if isinstance(metrics, dict) else None,
+        "stage_for_completed_update": stage_for_completed,
+        "use_gt_frac": use_gt_frac,
+        "use_gt_frac_source": use_gt_source,
+        "use_gt_frac_t0_prime_threshold": 0.3,
+        "use_gt_frac_t0_prime_le_0p3": (use_gt_frac <= 0.3
+                                         if is_t0_prime and use_gt_frac is not None else None),
         "finished": bool(getattr(runtime, "finished", False)),
         "graduated": bool(getattr(runtime, "graduated", False)),
         "requires_review": bool(getattr(runtime, "finished", False)),
@@ -367,6 +404,9 @@ def record_boundary(runtime, run_dir: str | Path, next_update: int, *, deliver=N
             'p3_state': p3_state, 'p3_s_eval_gt': p3_pairs,
             'dr_scale': report['dr_scale'],
             'training_metrics': training_metrics,
+            'use_gt_frac': report['use_gt_frac'],
+            'use_gt_frac_source': report['use_gt_frac_source'],
+            'use_gt_frac_t0_prime_le_0p3': report['use_gt_frac_t0_prime_le_0p3'],
             'score_checkpoint_update': report['score_checkpoint_update'],
             'score_checkpoint_sha256': report['score_checkpoint_sha256'],
             'report_path': str(report_path), 'automatic_activation': False,

@@ -660,6 +660,9 @@ class StartRunner(OnPolicyRunner):
                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
             nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+            if (continuous is not None
+                    and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
+                extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env
             if ex40_dr_runtime is not None:
                 extra["ex40_dr"] = ex40_dr_runtime.summary()
             if nt_stats is not None:
@@ -674,7 +677,7 @@ class StartRunner(OnPolicyRunner):
                                       "_ex40_stand_evidence", None)
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None) and self.log_dir is not None and not self.disable_logs:
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
