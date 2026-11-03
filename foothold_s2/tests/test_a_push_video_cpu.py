@@ -4,9 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from foothold_s2.eval import a_push_video as video
+from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
 from foothold_s2.eval.video25 import record_c_layer as recorder
 
 
@@ -22,6 +24,19 @@ def source(tmp_path: Path) -> dict:
     return {"source_root": str(tmp_path), "source_head": "a" * 40,
             "source_recorder_sha256": "b" * 64, "checkpoint_sha256": "c" * 64,
             "capture_recorder_sha256": "d" * 64, "composer_sha256": "e" * 64}
+
+
+def test_a_push_heading_label_leaves_top_blue_arrow_visible(monkeypatch):
+    monkeypatch.setattr(composer, "heading_lateral_at", lambda z, row: (0.0, 0.0))
+    scene = np.full((720, 1280, 3), 120, dtype=np.uint8)
+    scene[40:55, 350:400] = (240, 30, 20)  # blue velocity arrow in BGR
+    z = {"command": np.array([[1.0, 0.0, 0.0]]), "t": np.array([0.0]),
+         "vx": np.array([1.0]), "wz": np.array([0.0])}
+    meta = {"label": "a push", "scene": "rough", "map_modes": {"map_mode": {"requested": "eval_pred"}}}
+    push = composer.receipt_header(scene.copy(), meta, z, 0, push_video=True)
+    regular = composer.receipt_header(scene.copy(), meta, z, 0, push_video=False)
+    assert tuple(push[50, 380]) == (240, 30, 20)
+    assert tuple(regular[50, 380]) == (20, 24, 29)
 
 
 def test_three_modes_share_tile_seed_push_and_checkpoint(tmp_path, monkeypatch):

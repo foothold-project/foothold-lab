@@ -805,7 +805,8 @@ def heading_lateral_at(z, row: int) -> tuple[float, float]:
     return heading_deg, lateral_m
 
 
-def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
+def receipt_header(scene: np.ndarray, meta: dict, z, row: int,
+                   *, push_video: bool = False) -> np.ndarray:
     """Replace the recorder's possibly stale map label with the receipt's mode."""
     h = 30
     cv2.rectangle(scene, (0, 0), (scene.shape[1] - 1, h), (12, 15, 19), -1)
@@ -816,8 +817,10 @@ def receipt_header(scene: np.ndarray, meta: dict, z, row: int) -> np.ndarray:
              f"policy map: {policy_map_header(meta)}")
     scene = text(scene, [((24, 4), label, (255, 255, 255))], 16)
     heading_deg, lateral_m = heading_lateral_at(z, row)
-    cv2.rectangle(scene, (12, 34), (422, 61), (20, 24, 29), -1)
-    return text(scene, [((20, 38), f"Heading from start {heading_deg:+.1f}°  |  lateral drift {lateral_m:+.2f} m",
+    # The A-layer velocity arrow is just below the title. Keep its tip visible.
+    heading_y = 120 if push_video else 34
+    cv2.rectangle(scene, (12, heading_y), (422, heading_y + 27), (20, 24, 29), -1)
+    return text(scene, [((20, heading_y + 4), f"Heading from start {heading_deg:+.1f}°  |  lateral drift {lateral_m:+.2f} m",
                          (245, 245, 245))], 15)
 
 
@@ -907,7 +910,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
             lit_from = prev_row
         prev_row = row
         scene = cv2.resize(frame, (1280, 720)) if frame.shape[:2] != (720, 1280) else frame
-        scene = receipt_header(scene, meta, z, row)
+        scene = receipt_header(scene, meta, z, row, push_video=push_overlay is not None)
         scene = scene_legend(scene, meta)
         scene = speed_tag(scene, speed, segment)
         scene = scene_gauges(scene, z, row, meta)
