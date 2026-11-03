@@ -20,9 +20,11 @@ DEFAULT_TABLE = ROOT / 'foothold_s2/curriculum/ex41-fixed5000.yaml'
 ISAAC_PYTHON = Path('C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe')
 MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
 PHASES = ('map64', *(f'stand_{m}' for m in MODES), 'axis_v2', 'w78_v2')
+CORE_PHASES = ('map64', *(f'stand_{m}' for m in MODES))
+AUXILIARY_PHASES = ('axis_v2', 'w78_v2')
 
 
-def commands(checkpoint, out, cfg):
+def commands(checkpoint, out, cfg, *, scope='all'):
     """The EX40 measurement sizes are reused, never its stage verdict rules."""
     common = ['--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
               '--envs', str(cfg['envs'])]
@@ -41,6 +43,11 @@ def commands(checkpoint, out, cfg):
              ('w78_v2', 'foothold_s2.eval.eval_map_modes',
               [*maps, '--terrain-skill-v2', '--terrain-levels', '2,5',
                '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
+    selected = {'core': CORE_PHASES, 'auxiliary': AUXILIARY_PHASES,
+                'all': PHASES}.get(scope)
+    if selected is None:
+        raise ValueError(f'unknown EX41 evaluation scope: {scope}')
+    rows = [row for row in rows if row[0] in selected]
     return [{'name': name, 'argv': [str(ISAAC_PYTHON), '-m', module, *args,
                                   '--out', str(out/name), '--headless', '--device', 'cuda:1',
                                   '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
@@ -141,14 +148,24 @@ def reconcile_child_result(name, child, output):
     return result
 
 
-def bundle_terminal_status(steps):
-    missing = [name for name in ('axis_v2', 'w78_v2')
-               if steps.get(name, {}).get('state') != 'done']
+def bundle_terminal_status(steps, *, scope='all'):
+    core_missing = [name for name in CORE_PHASES
+                    if steps.get(name, {}).get('state') != 'done']
+    auxiliary_missing = [name for name in AUXILIARY_PHASES
+                         if steps.get(name, {}).get('state') != 'done']
+    if scope == 'auxiliary':
+        missing = auxiliary_missing
+    elif scope in ('core', 'all'):
+        # Auxiliary failures are diagnostic and never block the 26-cell score.
+        missing = core_missing
+    else:
+        raise ValueError(f'unknown EX41 evaluation scope: {scope}')
     return {'state': 'HOLD' if missing else 'done', 'rc': 5 if missing else 0,
-            'auxiliary_missing': missing}
+            'auxiliary_missing': auxiliary_missing if scope == 'all' else []}
 
 
-def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
+def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
+                     scope='all'):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     if not getattr(plan, 'fixed_schedule', None) or out.exists():
@@ -167,7 +184,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     row = {'format': 'foothold-ex41-eval-bundle/1', 'state': 'running',
            'checkpoint': str(checkpoint), 'checkpoint_sha256': before,
            'schedule_sha256': plan.effective_sha256, 'parent_sha256': plan.parent_sha256,
-           'source_git_head': head, 'device': 'cuda:1', 'eval_config_sha256': sha256(eval_config), 'steps': {}}
+           'source_git_head': head, 'device': 'cuda:1', 'scope': scope,
+           'eval_config_sha256': sha256(eval_config), 'steps': {}}
     env = dict(os.environ)
     env.pop('CUDA_VISIBLE_DEVICES', None)
     env.update(PYTHONUTF8='1', PYTHONUNBUFFERED='1', PYTHONPATH=str(ROOT),
@@ -175,7 +193,7 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     start = time.monotonic()
     _atomic(out/'eval_receipt.json', row)
     try:
-        for phase in commands(checkpoint, out, cfg):
+        for phase in commands(checkpoint, out, cfg, scope=scope):
             if phase['name']=='w78_v2' and not w78_available:
                 row['steps']['w78_v2']={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
@@ -185,10 +203,10 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
             result = reconcile_child_result(phase['name'], result, out/phase['name'])
             row['steps'][phase['name']] = result
             _atomic(out/'eval_receipt.json', row)
-            if result['rc'] != 0 and phase['name'] not in ('axis_v2','w78_v2'):
+            if result['rc'] != 0 and phase['name'] in CORE_PHASES:
                 raise RuntimeError(f"EX41 {phase['name']} rc={result['rc']}")
         if sha256(checkpoint) != before: raise ValueError('checkpoint changed during evaluation')
-        row.update(bundle_terminal_status(row['steps']))
+        row.update(bundle_terminal_status(row['steps'], scope=scope))
     except Exception as exc:
         row.update(state='failed', rc=1, reason=f'{type(exc).__name__}: {exc}')
     row['seconds'] = time.monotonic()-start
@@ -197,7 +215,7 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
 
 
 def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-             priority_marker=None):
+             priority_marker=None, scope='all'):
     """Run the bundle while publishing GPU1 priority to the shared job board."""
     from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, gpu1_priority
 
@@ -206,7 +224,8 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
     iteration = int(match.group(1)) if match else 0
     marker_path = DEFAULT_MARKER if priority_marker is None else Path(priority_marker)
     with gpu1_priority(marker_path, job='ex41_evaluation_bundle', iteration=iteration) as owner:
-        row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config)
+        row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
+                               scope=scope)
     row['gpu1_priority_marker'] = {
         'path': str(marker_path), 'state': 'cleared', 'owner': owner,
     }
@@ -221,13 +240,15 @@ def main(argv=None):
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--priority-marker', type=Path)
+    p.add_argument('--scope', choices=('core', 'auxiliary', 'all'), default='all')
     p.add_argument('--execute', action='store_true')
     a = p.parse_args(argv)
     if not a.execute:
-        print(json.dumps({'state':'dry', 'commands':commands(a.checkpoint, a.out, config(a.eval_config))}))
+        print(json.dumps({'state':'dry', 'scope':a.scope,
+                          'commands':commands(a.checkpoint, a.out, config(a.eval_config), scope=a.scope)}))
         return 0
     result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config,
-                      priority_marker=a.priority_marker)
+                      priority_marker=a.priority_marker, scope=a.scope)
     print(json.dumps(result, ensure_ascii=True))
     return 0 if result['state'] == 'done' else 5
 

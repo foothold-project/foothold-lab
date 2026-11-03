@@ -152,7 +152,7 @@ def measure_w78(path, checkpoint):
 
 
 def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_path=None, w78_path=None,
-            w86_path=None, snapshot_dir=None):
+            w86_path=None, snapshot_dir=None, include_auxiliary=True):
     """Replay actual evaluation files. Each missing component stays explicit."""
     checkpoint, bundle = Path(checkpoint).resolve(strict=True), Path(bundle)
     cfg = config(eval_config)
@@ -170,19 +170,23 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
         row['components']['maintenance_stand'] = 'complete'
     except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
         row['components']['maintenance_stand'] = f'HOLD: {type(exc).__name__}: {exc}'
-    for label, path, function in (
-        ('w57', w57_path or bundle/'axis_v2/axis_v2.json', lambda p:measure_w57(p, checkpoint, cfg)),
-        ('w78_v2', w78_path or bundle/'w78_v2/terrain_skill_v2.json', lambda p:measure_w78(p, checkpoint))):
-        if auxiliary_pending_during_bundle(bundle, path):
-            row['components'][label] = 'pending: evaluation bundle has not published the auxiliary result yet'
-            continue
-        try:
-            metrics, refs = function(path)
-            json.dumps(metrics,allow_nan=False)  # Auxiliary NaN cannot poison the maintenance row.
-            row['metrics'][label] = metrics; row['evidence'].extend(refs)
-            row['components'][label] = 'complete'
-        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
-            row['components'][label] = f'HOLD: {type(exc).__name__}: {exc}'
+    if include_auxiliary:
+        for label, path, function in (
+            ('w57', w57_path or bundle/'axis_v2/axis_v2.json', lambda p:measure_w57(p, checkpoint, cfg)),
+            ('w78_v2', w78_path or bundle/'w78_v2/terrain_skill_v2.json', lambda p:measure_w78(p, checkpoint))):
+            if auxiliary_pending_during_bundle(bundle, path):
+                row['components'][label] = 'pending: evaluation bundle has not published the auxiliary result yet'
+                continue
+            try:
+                metrics, refs = function(path)
+                json.dumps(metrics,allow_nan=False)  # Auxiliary NaN cannot poison the maintenance row.
+                row['metrics'][label] = metrics; row['evidence'].extend(refs)
+                row['components'][label] = 'complete'
+            except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+                row['components'][label] = f'HOLD: {type(exc).__name__}: {exc}'
+    else:
+        row['components']['w57'] = 'deferred_until_stage_end'
+        row['components']['w78_v2'] = 'deferred_until_stage_end'
     if w86_path is not None:
         try:
             row = enrich_training_metrics(row, w86_path, snapshot_dir=snapshot_dir)
@@ -191,19 +195,23 @@ def collect(checkpoint, stage, bundle, plan, eval_config=DEFAULT_CONFIG, *, w57_
             row['components']['training_metrics'] = f'HOLD: {type(exc).__name__}: {exc}'
     else:
         row['components']['training_metrics'] = 'unavailable_in_EX40_replay'
-    try:
-        map_doc=read(bundle/'map64/map_modes.json')
-        require_dr_off_document(map_doc)
-        w78=row['metrics'].get('w78_v2',{}).get('min_lr_ratio_by_cell')
-        row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(map_doc),w78)
-        row['components']['critic_mirror_symmetry'] = 'complete' if w78 is not None else 'partial_missing_w78'
-    except (OSError,ValueError,RuntimeError,TypeError,KeyError) as exc:
-        row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
+    if include_auxiliary:
+        try:
+            map_doc=read(bundle/'map64/map_modes.json')
+            require_dr_off_document(map_doc)
+            w78=row['metrics'].get('w78_v2',{}).get('min_lr_ratio_by_cell')
+            row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(map_doc),w78)
+            row['components']['critic_mirror_symmetry'] = 'complete' if w78 is not None else 'partial_missing_w78'
+        except (OSError,ValueError,RuntimeError,TypeError,KeyError) as exc:
+            row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
+    else:
+        row['components']['critic_mirror_symmetry'] = 'deferred_until_stage_end_w78'
     # Lead 19:5x: map64 + three stand modes alone produce maintenance 26 and
     # record 39. Missing auxiliary W57/W78/U10 is not a maintenance HOLD.
     row['evaluation_scope'] = 'maintenance_26_and_stand_only; graduation_not_judged'
     row['auxiliary_missing'] = [k for k,v in row['components'].items()
-                                if k!='maintenance_stand' and v!='complete']
+                                if k!='maintenance_stand' and v!='complete'
+                                and not str(v).startswith('deferred_until_stage_end')]
     row['evaluation_state'] = 'complete' if row['components']['maintenance_stand']=='complete' else 'HOLD'
     if row['evaluation_state'] == 'HOLD':
         row['partial_metrics'] = row['metrics']; row['metrics'] = {}
@@ -255,7 +263,8 @@ def stage_at(run, iteration, plan):
 
 def initial_state(run, table, eval_config):
     return {'format':'foothold-ex41-score-watch/1', 'run_dir':str(Path(run).resolve()),
-            'table_sha256':sha256(table), 'eval_config_sha256':sha256(eval_config), 'done':{}}
+            'table_sha256':sha256(table), 'eval_config_sha256':sha256(eval_config),
+            'done':{}, 'stage_end_auxiliary':{}}
 
 
 def candidates(run, plan, *, on_error=None):
@@ -282,6 +291,168 @@ def candidates(run, plan, *, on_error=None):
         found = [x for x in found if x[0] != cp['iteration']]
         found.append((cp['iteration'], p, path))
     return sorted(found, key=lambda x:x[0])
+
+
+def stage_end_updates(plan):
+    """Return local update counts at the ends of the pinned EX41 stages."""
+    if not getattr(plan, 'fixed_schedule', None):
+        return ()
+    completed = 0
+    ends = []
+    for stage in plan.stages:
+        duration = plan.stage_meta[stage.id].get('maximum_updates')
+        if type(duration) is not int or duration <= 0:
+            raise ValueError(f'EX41 fixed stage duration is invalid: {stage.id}')
+        completed += duration
+        ends.append(completed)
+    return tuple(ends)
+
+
+def due_evaluation_scopes(iteration, plan):
+    """Core maintenance runs every 250; W57/W78 are scheduled at stage ends."""
+    if type(iteration) is not int or iteration < 1 or iteration % 250:
+        return ()
+    scopes = ['core']
+    if iteration in stage_end_updates(plan):
+        scopes.append('auxiliary')
+    return tuple(scopes)
+
+
+def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
+                         auxiliary_seconds, checkpoint_stride=250):
+    """Estimate stage-local GPU1 demand and nonnegative backlog growth."""
+    if (checkpoint_stride <= 0 or train_seconds_per_update <= 0 or core_seconds < 0
+            or auxiliary_seconds < 0):
+        raise ValueError('EX41 schedule time inputs must be positive/nonnegative')
+    ends = stage_end_updates(plan)
+    rows = []
+    prior_end = 0
+    pending = 0.0
+    for stage, end in zip(plan.stages, ends):
+        span = end - prior_end
+        checkpoints = end // checkpoint_stride - prior_end // checkpoint_stride
+        eval_seconds = checkpoints * core_seconds + auxiliary_seconds
+        train_seconds = span * train_seconds_per_update
+        pending = max(0.0, pending + eval_seconds - train_seconds)
+        rows.append({'stage': stage.id, 'end_update': end, 'updates': span,
+                     'core_checkpoints': checkpoints, 'auxiliary_runs': 1,
+                     'evaluation_seconds': eval_seconds, 'training_seconds': train_seconds,
+                     'queue_growth_seconds': pending})
+        prior_end = end
+    return rows
+
+
+def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_path,
+                                plan, eval_config=DEFAULT_CONFIG):
+    """Create a separate W57/W78 and P3 record from a stage-end checkpoint."""
+    checkpoint = Path(checkpoint).resolve(strict=True)
+    row = {'format': 'foothold-ex41-stage-end-auxiliary/1',
+           'iteration': int(checkpoint.stem.split('_')[-1]),
+           'checkpoint_sha256': sha256(checkpoint), 'stage_id': stage,
+           'state': 'complete', 'components': {}, 'metrics': {}, 'evidence': []}
+    cfg = config(eval_config)
+    for name, path, measure in (
+        ('w57', w57_path, lambda p: measure_w57(p, checkpoint, cfg)),
+        ('w78_v2', w78_path, lambda p: measure_w78(p, checkpoint))):
+        try:
+            metrics, refs = measure(path)
+            json.dumps(metrics, allow_nan=False)
+            row['metrics'][name] = metrics
+            row['evidence'].extend(refs)
+            row['components'][name] = 'complete'
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            row['components'][name] = f'HOLD: {type(exc).__name__}: {exc}'
+            row['state'] = 'HOLD'
+    try:
+        map_path = Path(core_bundle) / 'map64/map_modes.json'
+        map_doc = read(map_path)
+        require_dr_off_document(map_doc)
+        ratios = row['metrics'].get('w78_v2', {}).get('min_lr_ratio_by_cell')
+        if ratios is None:
+            raise ValueError('stage-end W78 result unavailable for P3 symmetry')
+        row['metrics']['critic_mirror_symmetry'] = combine(map_pairs(map_doc), ratios)
+        row['components']['critic_mirror_symmetry'] = 'complete'
+        row['evidence'].append(evidence(map_path))
+    except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+        row['components']['critic_mirror_symmetry'] = f'HOLD: {type(exc).__name__}: {exc}'
+        row['state'] = 'HOLD'
+    row['p3_symmetry_source'] = 'stage_end_w78'
+    row['p3_symmetry_report'] = {
+        'format':'foothold-ex41-p3-stage-end/1',
+        'state':row['components']['critic_mirror_symmetry'],
+        'checkpoint_iteration':row['iteration'],
+        'checkpoint_sha256':row['checkpoint_sha256'],
+        'source':'stage_end_w78',
+        'metrics':row['metrics'].get('critic_mirror_symmetry'),
+    }
+    json.dumps(row, allow_nan=False)
+    return row
+
+
+def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, state, *,
+                                 eval_config=DEFAULT_CONFIG, execute=False,
+                                 replay_root=None, w57_root=None, w78_root=None,
+                                 table=DEFAULT_TABLE):
+    """Publish W57/W78 after core score publication, without changing that score."""
+    checkpoint = Path(checkpoint).resolve(strict=True)
+    iteration = int(checkpoint.stem.split('_')[-1])
+    pinned = sha256(checkpoint)
+    key = f'{iteration}_{pinned}'
+    aux_state = state.setdefault('stage_end_auxiliary', {})
+    target = Path(target)
+    sidecar = target / 'stage_end_auxiliary.json'
+    if sidecar.is_file():
+        prior = read(sidecar)
+        if prior.get('iteration') != iteration or prior.get('checkpoint_sha256') != pinned:
+            raise ValueError('stage-end auxiliary sidecar identity differs')
+        ref = evidence(sidecar)
+        if key in aux_state and aux_state[key] != ref:
+            raise ValueError('stage-end auxiliary sidecar SHA differs')
+        aux_state[key] = ref
+        return prior
+
+    if execute:
+        aux_out = target / 'stage_end_auxiliary_eval'
+        suffix = 0
+        while aux_out.exists():
+            suffix += 1
+            aux_out = target / f'stage_end_auxiliary_eval_{suffix:03d}'
+        child_dir = target / f'stage_end_auxiliary_child_{suffix:03d}'
+        argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once',
+                '--checkpoint', str(checkpoint), '--out', str(aux_out),
+                '--table', str(Path(table).resolve()),
+                '--eval-config', str(Path(eval_config).resolve()),
+                '--scope', 'auxiliary', '--execute']
+        child = hidden_child(argv, child_dir)
+        if child.get('rc') != 0:
+            row = {'format':'foothold-ex41-stage-end-auxiliary/1',
+                   'iteration':iteration, 'checkpoint_sha256':pinned,
+                   'stage_id':stage, 'state':'HOLD',
+                   'components':{'evaluation_child':f"HOLD rc={child.get('rc')}"},
+                   'metrics':{}, 'evidence':[evidence(child_dir/'child.json')],
+                   'p3_symmetry_source':'stage_end_w78'}
+            immutable(sidecar, row)
+            aux_state[key] = evidence(sidecar)
+            return row
+        aux_bundle = aux_out
+        w57_path = aux_bundle / 'axis_v2/axis_v2.json'
+        w78_path = aux_bundle / 'w78_v2/terrain_skill_v2.json'
+    else:
+        if replay_root is not None:
+            aux_bundle = Path(replay_root) / f'model_{iteration}_{pinned[:12]}'
+        else:
+            aux_bundle = Path(core_bundle)
+        w57_path = (resolve_auxiliary_path(w57_root, iteration, 'axis_v2.json')
+                    if w57_root else aux_bundle / 'axis_v2/axis_v2.json')
+        w78_path = (resolve_auxiliary_path(w78_root, iteration, 'terrain_skill_v2.json')
+                    if w78_root else aux_bundle / 'w78_v2/terrain_skill_v2.json')
+
+    row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
+                                      w78_path, plan, eval_config)
+    row['evaluation_bundle'] = str(aux_bundle.resolve())
+    immutable(sidecar, row)
+    aux_state[key] = evidence(sidecar)
+    return row
 
 
 def record_final_error(out_root,state,request,exc):
@@ -380,7 +551,10 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     identity = initial_state(run, table, eval_config)
-    if any(state.get(k) != v for k,v in identity.items() if k != 'done'): raise ValueError('watcher identity differs')
+    if any(state.get(k) != v for k,v in identity.items()
+           if k not in ('done', 'stage_end_auxiliary')):
+        raise ValueError('watcher identity differs')
+    state.setdefault('stage_end_auxiliary', {})
     if execute:
         manifest = read(run/'manifest.json')
         declared = manifest.get('modes', {}).get('ex41', {})
@@ -395,6 +569,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     pending = None
     def reject_final(request,exc):record_final_error(out_root,state,request,exc)
     for iteration, cp, final_request in candidates(run, plan,on_error=reject_final):
+        stage_end = 'auxiliary' in due_evaluation_scopes(iteration, plan)
         pinned = _manifest_digest(run, iteration)
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
@@ -416,6 +591,15 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                                     'link_path':ref['path'],'link_sha256':ref['sha256']}
                 except (OSError,ValueError,TypeError,KeyError) as exc:
                     reject_final(final_request,exc)
+            if stage_end and key not in state['stage_end_auxiliary']:
+                target = out_root/f'model_{iteration}_{pinned[:12]}'
+                core_bundle = (Path(replay_root)/f'model_{iteration}_{pinned[:12]}'
+                               if replay_root is not None else target/'evaluation')
+                _publish_stage_end_auxiliary(
+                    cp, previous.get('stage_id') or stage_at(run, iteration, plan),
+                    core_bundle, target, plan, state, eval_config=eval_config,
+                    execute=execute, replay_root=replay_root,
+                    w57_root=w57_root, w78_root=w78_root, table=table)
             continue
         if final_request is None and any(r['iteration']==iteration and r['checkpoint_sha256']!=pinned
                                          for r in state['done'].values()):
@@ -435,11 +619,21 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         target = out_root/f'model_{iteration}_{pinned[:12]}'
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
-                    'stage_id':stage, 'commands':commands(cp, target/'evaluation', cfg)}
+                    'stage_id':stage, 'auxiliary_due':stage_end,
+                    'commands':commands(cp, target/'evaluation', cfg, scope='core'),
+                    'auxiliary_commands':(commands(cp, target/'stage_end_auxiliary_eval', cfg,
+                                                    scope='auxiliary') if stage_end else [])}
         score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
         if score_path.is_file():
             recovered=recover_published_score(score_path,cp,stage,plan,out_root)
             state['done'][key]=recovered
+            if stage_end:
+                core_bundle = (Path(replay_root)/f'model_{iteration}_{pinned[:12]}'
+                               if replay_root is not None else target/'evaluation')
+                _publish_stage_end_auxiliary(
+                    cp, stage, core_bundle, target, plan, state,
+                    eval_config=eval_config, execute=execute, replay_root=replay_root,
+                    w57_root=w57_root, w78_root=w78_root, table=table)
             return {**recovered,'recovered_from_score':True}
         interrupted = target.exists()
         if interrupted:
@@ -470,12 +664,12 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         child = None
         if execute and not interrupted:
             argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once', '--checkpoint', str(cp), '--out', str(source),
-                    '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()), '--execute']
+                    '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()),
+                    '--scope', 'core', '--execute']
             child = hidden_child(argv, target/'bundle_child')
         row = collect(cp, stage, source, plan, eval_config,
-                      w57_path=resolve_auxiliary_path(w57_root, iteration, 'axis_v2.json') if w57_root else None,
-                      w78_path=resolve_auxiliary_path(w78_root, iteration, 'terrain_skill_v2.json') if w78_root else None,
-                      w86_path=run/'ex41_w86.jsonl' if execute else None, snapshot_dir=target/'training')
+                      w86_path=run/'ex41_w86.jsonl' if execute else None,
+                      snapshot_dir=target/'training', include_auxiliary=False)
         if interrupted:
             row['components']['evaluation_child'] = 'HOLD: prior interrupted attempt preserved'
             if row['evaluation_state'] != 'HOLD': row['partial_metrics'] = row['metrics']
@@ -502,6 +696,12 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         with (out_root/'score_ledger.jsonl').open('a', encoding='utf-8') as f:
             f.write(json.dumps(receipt, ensure_ascii=False, allow_nan=False)+'\n'); f.flush(); os.fsync(f.fileno())
         state['done'][key] = receipt
+        if stage_end:
+            # Core score is durable before any stage-end W57/W78 child begins.
+            _publish_stage_end_auxiliary(
+                cp, stage, source, target, plan, state, eval_config=eval_config,
+                execute=execute, replay_root=replay_root,
+                w57_root=w57_root, w78_root=w78_root, table=table)
         return receipt
     return pending or {'state':'idle'}
 

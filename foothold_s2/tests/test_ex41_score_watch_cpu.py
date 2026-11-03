@@ -87,7 +87,8 @@ def test_default_dry_never_calls_child_or_creates_score(tmp_path,monkeypatch):
     run=replay_run(tmp_path);state=watch.initial_state(run,TABLE,watch.DEFAULT_CONFIG)
     monkeypatch.setattr(watch,'hidden_child',lambda *a,**k:pytest.fail('DRY spawned a process'))
     row=watch.process_once(run,tmp_path/'out',tmp_path/'scores',TABLE,state,sleep=lambda _:None)
-    assert row['state']=='dry' and len(row['commands'])==6
+    assert row['state']=='dry' and len(row['commands'])==4
+    assert row['auxiliary_due'] is False and row['auxiliary_commands']==[]
     assert not (tmp_path/'scores').exists() and not state['done']
 
 
@@ -119,9 +120,11 @@ def test_zero_exit_with_w78_hold_error_makes_bundle_hold_and_nonzero(tmp_path):
     }), encoding='utf-8')
     child = {'state':'done', 'rc':0, 'pid':123}
     result = evaluator.reconcile_child_result('w78_v2', child, error_dir)
-    terminal = evaluator.bundle_terminal_status({'w78_v2':result})
+    steps = {name:{'state':'done','rc':0} for name in evaluator.CORE_PHASES}
+    steps['w78_v2'] = result
+    terminal = evaluator.bundle_terminal_status(steps)
     assert result['process_rc'] == 0 and result['state'] == 'HOLD' and result['rc'] != 0
-    assert terminal == {'state':'HOLD', 'rc':5, 'auxiliary_missing':['axis_v2','w78_v2']}
+    assert terminal == {'state':'done', 'rc':0, 'auxiliary_missing':['axis_v2','w78_v2']}
 
 
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
@@ -331,7 +334,7 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
     monkeypatch.setattr(evaluator,'hidden_child',spy)
     row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation')
     assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred','axis_v2']
-    assert row['state']=='HOLD' and row['rc']==5 and row['auxiliary_missing']==['axis_v2','w78_v2']
+    assert row['state']=='done' and row['rc']==0 and row['auxiliary_missing']==['axis_v2','w78_v2']
 
 
 def test_stage_receipt_at_next_update_does_not_relabel_previous_checkpoint(tmp_path):
