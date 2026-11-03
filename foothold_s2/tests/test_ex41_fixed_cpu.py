@@ -3,7 +3,6 @@ import copy
 import json
 from pathlib import Path
 import subprocess
-from types import SimpleNamespace
 import pytest
 import yaml
 from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
@@ -82,20 +81,27 @@ def test_stage_push_maximums_follow_clock_stage_and_hold_extension():
 
 def test_training_update_transition_keeps_push_schedule_bound_to_templates(tmp_path):
     """Mirror start_runner order: curriculum transition, then DR readback."""
+    from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
     from foothold_s2.curriculum.ex41 import EX41DRReadback
 
-    runtime, _ = fixture(tmp_path)
-    base = SimpleNamespace(scale=.5,
-                           env=SimpleNamespace(_ex40_dr_scale=.5),
-                           _first_update=True)
+    runtime, runner = fixture(tmp_path)
+    env = runner.env.unwrapped
+    base = RuntimeReadback(env, {}, config_sha256=runtime.plan.sha256)
+    readback = EX41DRReadback(base, runtime)
+
+    train_start_source = (Path(__file__).parents[1] / 'scripts/train_start.py').read_text(encoding='utf-8')
+    loop_source = (Path(__file__).parents[1] / 'runners/start_runner.py').read_text(encoding='utf-8')
+    assert 'ex41_runtime.attach(runner, command_term)' in train_start_source
+    assert loop_source.index('continuous.on_update_start(curriculum_it)') < loop_source.index(
+        'ex40_dr_runtime.update_start(it)')
     # start_runner calls continuous.on_update_start(it) before update_start(it).
     runtime.on_update_start(751)
     assert runtime.effective['stage_id'] == 'S2b'
     assert len(runtime.templates) == 6
     assert len(runtime.plan.stages) == 7  # append-only effective stage history
 
-    EX41DRReadback(base, runtime).update_start(751)
-    assert base.env._ex41_push_vmax_mps == pytest.approx(1.65)
+    readback.update_start(751)
+    assert env._ex41_push_vmax_mps == pytest.approx(1.65)
 
 
 def test_clock_uses_supplied_lengths_and_limits_instead_of_literals():
