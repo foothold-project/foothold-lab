@@ -6,7 +6,7 @@
 
 # AME-2 teacher model_14999 를 앱에 넘길 때 맞출 조건표 (ame2-demo)
 
-등급: **설정**(env.yaml · agent.yaml 줄) · **코드**(학습 코드 사본 · Isaac Lab 원본 줄, `코드확인`) · **실측**(이번에 잰 해시 · 기록, `실측`) · **가정**. 못 잰 것은 §7 에 `미확인` 으로 적었다. 같은 출력 확인은 `확인됨`(§2). 코드 경로 약칭: `AME2_models.py` = `rsl_rl/rsl_rl/models/AME2_models.py`, `observations.py` = `go2/ame2_go2/tasks/mdp/observations.py`, `actions.py` · `commands.py` · `curriculums.py` · `events.py` = `go2/ame2_go2/tasks/mdp/` 아래, `go2_actuator.py` · `go2_curve.py` = `go2/ame2_go2/assets/` 아래, `virtual_floor.py` = `go2/ame2_go2/sensors/` 아래, `isaaclab/…` = 팟 `/workspace/isaaclab/source/isaaclab/isaaclab/…`.
+등급: **설정**(env.yaml · agent.yaml 줄) · **코드**(학습 코드 사본 · Isaac Lab 원본 줄, `코드확인`) · **실측**(이번에 잰 해시 · 기록, `실측`) · **가정**. §7 에 추가 확인 결과와 남은 `미측정` 항목을 적었다. 같은 출력 확인은 `확인됨`(§2). 코드 경로 약칭: `AME2_models.py` = `rsl_rl/rsl_rl/models/AME2_models.py`, `observations.py` = `go2/ame2_go2/tasks/mdp/observations.py`, `actions.py` · `commands.py` · `curriculums.py` · `events.py` = `go2/ame2_go2/tasks/mdp/` 아래, `go2_actuator.py` · `go2_curve.py` = `go2/ame2_go2/assets/` 아래, `virtual_floor.py` = `go2/ame2_go2/sensors/` 아래, `isaaclab/…` = 팟 `/workspace/isaaclab/source/isaaclab/isaaclab/…`.
 
 ## 0a. 앱 개발자가 맨 먼저 볼 값
 
@@ -45,7 +45,7 @@
 | 자리 | 이 run 자체 15,000 회 = 처음부터 누적 25,001 회(NoGap 0~9k → KL fp32 9~10k → 쉬운 돌 5 % 10~20k → 목표 이동 보상 상한 v_max 1.2 m/s 20~25k) · task `Ame2-Go2-Gaze-NoGapStones5` | run 폴더 `README.txt`(ame2_spd) · `agent.yaml:5 · 20~22` | 실측 · 설정 |
 | 설정 sha256 | env.yaml `08b815230d30…` · agent.yaml `ec7e4bd09c96…` | `sha256sum` | 실측 |
 | 학습 코드 | 사본 폴더 `ame2_spd`(git 저장소 아님) = ame2_st 고정 사본(2026-10-27T15:48:32Z) + `run/patch_spd.py`(train.py 만), code id a78a734258cf. go2/ame2_go2 · go2/scripts · rsl_rl/rsl_rl 의 manifest sha256 `19d459da…` 가 학습 전(10-27 15:48Z) · 학습 끝(10-28 03:36Z) · 11-03 모두 같음 | `out/snapshot_manifest.txt` · `out/q/manifest_now.txt` · 11-03 재계산 | 실측 |
-| 판 | Isaac Lab 2.3.2(isaaclab 0.54.2 · isaaclab_rl 0.4.7, 버전 관리 없는 설치) · torch 2.7.0+cu128 · rsl_rl = 사본의 수정판(커밋 없음) · Isaac Sim 5.1.0-rc.19(팟 1 에서 읽음, 학습 호스트 기록 없음) | 학습 시작 `pip_freeze.txt` · 팟 `VERSION` | 실측 |
+| 판 | Isaac Lab 2.3.2(isaaclab 0.54.2 · isaaclab_rl 0.4.7, 버전 관리 없는 설치) · torch 2.7.0+cu128 · rsl_rl = `leggedrobotics/ame2_minimal@8beb9a68` 의 rsl_rl 5.0.0 그대로(§7) · Isaac Sim 5.1(학습 로그) = 5.1.0-rc.19(같은 이미지, §7) | 학습 시작 `pip_freeze.txt` · 팟 `VERSION` | 실측 |
 | 저장본 안의 것 | `actor_state_dict`(41 텐서, log_std 포함) · `critic_state_dict` · optimizer · `go2_env_state`(critic_contract · 지형 단계 등) | 저장본을 열어 확인 | 실측 |
 
 ## 2. ONNX 에 든 것
@@ -179,15 +179,23 @@
 
 **4) 하지 말 것.** START(m6000) 의 지도 함수(32 × 16 · 높이 1 채널) 를 쓰지 않는다. 속도 명령을 그대로 넣지 않는다. 학습 잡음을 배포 입력에 넣지 않는다.
 
-## 7. 안 한 것 · 미확인
+## 7. 추가 확인 (11-03 저녁) · 남은 한계
 
-아래는 모두 `미확인` 이다.
+지시문 HANDOFF §4 의 물음과 v0.1 에서 비워 둔 칸을 재거나 기록으로 확인했다.
 
-- ORT Web(브라우저 WASM) 에서 같은 출력인지는 재지 않았다(onnxruntime 1.26.0 CPU 파이썬만). 시선 crop 은 round 를 쓰므로 실행기마다 sigmoid 값이 아주 조금 달라 .5 경계에 걸리면 창이 한 칸 바뀌어 출력이 크게 달라질 수 있다(기록 400 스텝에서는 생기지 않음).
-- 1 m 목표에서의 실제 속도, 계단 영상이 같은 조건인지(HANDOFF §4-1 · 4-3) 는 재지 않았다.
-- 앱의 빈 칸 0.7 m 고정값이 행동에 주는 영향은 재지 않았다(학습 규칙은 §3.6).
-- 학습 코드 · rsl_rl 의 git 커밋은 없다(사본 폴더). 학습 호스트(c5226af51640) 의 Isaac Sim 판은 기록이 없어 팟 1 값을 적었다. Isaac Lab 코드 줄 번호는 팟 1 의 같은 판(2.3.2 · 0.54.2) 에서 읽었다.
+| 물음 | 답 | 근거 | 등급 |
+|---|---|---|---|
+| ORT Web 에서 같은 출력인가 | onnxruntime-web 1.31.1 WASM 1 thread(Node v24.15.0) 로 기록 400 스텝: action 최대 차이 **2.6e-06**(평지 1.5e-06 · 계단 2.6e-06, 기준 1e-4 통과) | `parity.json` `ort_web` | `실측` |
+| 시선 창 반올림이 실행기마다 뒤집히나 | 기록 400 스텝에서 반올림 경계(.5)까지 가장 가까운 거리: x 0.0005 칸(r0 로 3.0e-05) · y 0.0098 칸. 실행기 사이 gaze_r 차이는 최대 2.4e-07 라 여유가 약 127 배. 이 400 스텝에서는 뒤집힘 없음. 다른 입력에서 경계에 더 가까우면 생길 수 있음 | 기록 `gaze_r` | `실측` |
+| 1 m 목표에서 실제 속도 | 앱 조이스틱처럼 매 스텝 몸 틀 (1.0, 0) m · e = 0 목표를 다시 넣으면 평지에서 4~12 s 평균 전진 **1.08 m/s**(로봇 4 대 1.06, 1.08, 1.09, 1.09, 95 백분위 1.14). 같은 방식 2 m 목표는 0.96 m/s. 8 대 모두 넘어짐 · 리셋 없음. 이동 보상 상한 v_max 1.2 m/s 보다 낮다 | `speed_goal.py`(학습 task, 관측 잡음 끔, 8 대) | `실측` |
+| 계단 영상이 같은 모델 · 조건인가 | 우리 model_14999 영상 두 묶음(`…Vmax1.2_20-25k__yaw180` 난이도 0.35 · `…__yaw180_d0.8` 난이도 0.8) 의 기록 로그 체크포인트는 `ame2_spd/…/model_14999.pt` md5 2fc79f9a…(이 저장본) 이다. 계단 단 높이 = 0.03 + 0.14 × 난이도 → 0.079 m · 0.142 m, 단 너비 U(0.22, 0.30) m. 목표는 env 의 목표 생성기(앞 45° 원뿔 안 평평한 칸), 첫 방향 ±180°, Play 설정(무작위화 · 잡음 · 지연 끔). 팀 문서가 어느 영상을 가리키는지는 문서에 없어 이 두 묶음으로 답한다 | 영상 기록 `traj_stair_*.log` · `custom_terrains.py:296~299` · `env.yaml:298~330` | `실측` |
+| 앱의 빈 칸 0.7 m 고정값 | 앱 규칙(빈 칸 = 같은 스캔의 가장 낮은 유효 높이 - 0.7 m, 가상 평면 없음; 앱 `mobile/sim/ame2-adapter.js:94~125` @20f3d066) 은 학습 규칙(같은 식에 U(0.4, 1.0) m) 의 가운데 값이다. 같은 벤치마크(평가 seed 1001 · 12지형 · 로봇 2,400 대 · 5 에피소드, `eval_gaze.py`) 를 깊이만 0.7 고정으로 다시 돌린 결과: 전체 71.71 % → **71.49 %**, 계단 오르기 97.90 → 98.10 %, 계단 내려가기 99.10 → 98.90 %, 지형별 차이 최대 -1.70 %p(gap). 지형별 표는 `parity.json` `void_depth_0p7`. 같은 seed 로 두 번 잰 측정끼리도 지형별 최대 3.3 %p 까지 차이가 났던 적이 있어(우리 REQ299 측정), 이 차이는 그 흔들림 안이다 | `cmp_depth07.py` | `실측` |
+| 학습 코드 출처 · 커밋 | rsl_rl = `leggedrobotics/ame2_minimal` 커밋 `8beb9a688d67882828019583f7d5a78e3517f233`(2026-10-06, rsl_rl 5.0.0) 의 `rsl_rl/rsl_rl` .py 33 개와 바이트 단위로 같음(수정 없음). go2 코드 83 개는 저장소 밖 우리 코드라 커밋이 없고 code id a78a734258cf · manifest sha256 `19d459da…` 로 식별 | 팟 원본 트리 git 과 대조 | `실측` |
+| 학습 호스트의 Isaac Sim 판 | 5.1: 학습 로그의 Kit 경로가 `Isaac-Sim/5.1`. 학습 시작 때 pip 목록과 팟 1 pip 목록이 같아(출력 머리줄 하나만 다름) 같은 이미지로 보고 **5.1.0-rc.19** | `out/q/smoke.log:1` · `pip_freeze.txt` | `실측` · 추론 |
+
+남은 한계:
 - 기록 조건: 관측 잡음 · 지도 잡음 · 센서 드리프트를 끄고, 평지 칸은 rough 칸의 기울기 · 거칠기를 0 으로 바꾼 칸이다(학습 지형 그대로가 아님). 나머지(도메인 무작위화 · 지연 · 가상 바닥) 는 env.yaml 그대로. 기록 설정(`env_record.yaml`) 과 env.yaml 을 비교하면 그 밖에 두 곳이 다르다: 보상 매개변수 `ame2_move2goal.v_max 1.2`(학습은 train.py 인자로 넣음, 보상에만 쓰여 관측 · 행동과 무관) 와 시작 yaw · 목표 원뿔 커리큘럼의 `max_steps`(학습 기록 24, 기록 env 는 task 기본값 48000 이라 기록 중 시작 yaw 와 목표 원뿔이 좁았다; 리셋 분포만 바뀜). 지형 칸 크기 · prim 경로 · env_spacing 차이는 학습이 env 를 만든 뒤 덤프해서 생긴 표기 차이다(`go2/scripts/rsl_rl/train.py:289`).
+- 1 m 목표 속도는 평지 · 앞쪽 목표만 쟀다(옆 · 뒤 목표, 계단 위 속도는 재지 않음, `미측정`).
 - 실기(SDK 순서 · IMU · 안전 제어) 는 이 문서 범위 밖이다. lin_vel 이 특권이라 실기에는 이 teacher 를 쓰지 않는다(팀장 11/03 16:0x: student 는 따로).
 
 ## 8. 근거 경로

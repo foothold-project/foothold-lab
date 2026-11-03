@@ -99,5 +99,224 @@
   ],
   "action_scale": 0.25,
   "use_default_offset": true
+ },
+ "ort_web": {
+  "onnxruntime_web": "1.31.1",
+  "backend": "wasm (numThreads 1)",
+  "node": "v24.15.0",
+  "tags": {
+   "flat": {
+    "steps": 200,
+    "max_abs_action_web_vs_torch": 1.5497207641601562e-06,
+    "step_of_max": 104
+   },
+   "stairs": {
+    "steps": 200,
+    "max_abs_action_web_vs_torch": 2.6226043701171875e-06,
+    "step_of_max": 83
+   }
+  },
+  "max_abs_action_web_vs_torch": 2.6226043701171875e-06,
+  "pass": true
+ },
+ "void_depth_0p7": {
+  "meta": {
+   "task": "Ame2-Go2-Gaze-Gap12a-Eval5",
+   "seed": 1001,
+   "episodes": 5,
+   "num_envs": 2400,
+   "checkpoint": "/network-volume/limseokheon/ame2_st10/in/spd/model_14999.pt",
+   "completed_updates": 15000,
+   "actor_sha": "810913ea57e5cdd668e61846a67ed3026ae263db8a0166036d84c60c0db7105a",
+   "code": "d2805e11a44c"
+  },
+  "reference_depth_U0.4_1.0": {
+   "rough": {
+    "episodes": 1000,
+    "success": 0.994
+   },
+   "stair_down": {
+    "episodes": 1000,
+    "success": 0.991
+   },
+   "stair_up": {
+    "episodes": 1000,
+    "success": 0.979
+   },
+   "boxes_j": {
+    "episodes": 1000,
+    "success": 0.96
+   },
+   "discrete_j": {
+    "episodes": 1000,
+    "success": 0.97
+   },
+   "climb_up": {
+    "episodes": 1000,
+    "success": 0.944
+   },
+   "climb_down": {
+    "episodes": 1000,
+    "success": 0.96
+   },
+   "steps_j": {
+    "episodes": 1000,
+    "success": 0.933
+   },
+   "stones": {
+    "episodes": 1000,
+    "success": 0.111
+   },
+   "gap": {
+    "episodes": 1000,
+    "success": 0.287
+   },
+   "pallets": {
+    "episodes": 1000,
+    "success": 0.31
+   },
+   "beam": {
+    "episodes": 1000,
+    "success": 0.166
+   },
+   "_all": {
+    "episodes": 12000,
+    "success": 0.7170833333333333
+   }
+  },
+  "depth_fixed_0.7": {
+   "rough": {
+    "episodes": 1000,
+    "success": 0.993
+   },
+   "stair_down": {
+    "episodes": 1000,
+    "success": 0.989
+   },
+   "stair_up": {
+    "episodes": 1000,
+    "success": 0.981
+   },
+   "boxes_j": {
+    "episodes": 1000,
+    "success": 0.963
+   },
+   "discrete_j": {
+    "episodes": 1000,
+    "success": 0.97
+   },
+   "climb_up": {
+    "episodes": 1000,
+    "success": 0.953
+   },
+   "climb_down": {
+    "episodes": 1000,
+    "success": 0.949
+   },
+   "steps_j": {
+    "episodes": 1000,
+    "success": 0.925
+   },
+   "stones": {
+    "episodes": 1000,
+    "success": 0.115
+   },
+   "gap": {
+    "episodes": 1000,
+    "success": 0.27
+   },
+   "pallets": {
+    "episodes": 1000,
+    "success": 0.296
+   },
+   "beam": {
+    "episodes": 1000,
+    "success": 0.175
+   },
+   "_all": {
+    "episodes": 12000,
+    "success": 0.7149166666666666
+   }
+  },
+  "diff_points": {
+   "rough": -0.1,
+   "stair_down": -0.2,
+   "stair_up": 0.2,
+   "boxes_j": 0.3,
+   "discrete_j": 0.0,
+   "climb_up": 0.9,
+   "climb_down": -1.1,
+   "steps_j": -0.8,
+   "stones": 0.4,
+   "gap": -1.7,
+   "pallets": -1.4,
+   "beam": 0.9,
+   "_all": -0.22
+  }
+ },
+ "speed_goal_resent": {
+  "step_dt": 0.02,
+  "steps": 600,
+  "window_s": [
+   4.0,
+   12.0
+  ],
+  "resets": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "goal_1m": {
+   "vx_mean": 1.0788999795913696,
+   "vx_per_robot": [
+    1.059000015258789,
+    1.0779999494552612,
+    1.0850000381469727,
+    1.0920000076293945
+   ],
+   "vx_p95": 1.1399848699569701,
+   "vx_max": 1.151546597480774,
+   "vy_abs_mean": 0.06334010511636734,
+   "wz_abs_mean": 0.3119395077228546,
+   "distance_m": [
+    12.5600004196167,
+    11.470000267028809,
+    12.9399995803833,
+    11.979999542236328
+   ],
+   "time_s": 12.0
+  },
+  "goal_2m": {
+   "vx_mean": 0.9583726525306702,
+   "vx_per_robot": [
+    0.949999988079071,
+    0.968999981880188,
+    0.9340000152587891,
+    0.9789999723434448
+   ],
+   "vx_p95": 1.0247249722480773,
+   "vx_max": 1.0336956977844238,
+   "vy_abs_mean": 0.07264894247055054,
+   "wz_abs_mean": 0.26113298535346985,
+   "distance_m": [
+    10.680000305175781,
+    11.109999656677246,
+    10.75,
+    11.470000267028809
+   ],
+   "time_s": 12.0
+  }
+ },
+ "gaze_round_margin": {
+  "min_x_cells": 0.0005158185958862305,
+  "min_y_cells": 0.009750545024871826,
+  "min_x_r": 3.034227034624885e-05,
+  "max_gaze_r_diff": 2.384185791015625e-07,
+  "ratio": 127.26470588235294
  }
 }

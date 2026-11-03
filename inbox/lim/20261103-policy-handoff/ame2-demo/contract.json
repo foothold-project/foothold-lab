@@ -23,8 +23,8 @@
   "code": "copy folder /network-volume/limseokheon/ame2_spd (not a git repository): frozen copy of ame2_st at 2026-10-27T15:48:32Z + run/patch_spd.py (train.py only); code_id a78a734258cf; manifest of go2/ame2_go2, go2/scripts, rsl_rl/rsl_rl (.py/.sh/.yaml md5) sha256 19d459da98c96ff38b93efccc88d618fc2958c666b63fc95dbccd7629ec03cf7 identical before training (2026-10-27T15:48:30Z), at its end (2026-10-28T03:36:56Z) and on 2026-11-03",
   "AME2_models_py_sha256": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d",
   "isaaclab": "2.3.2 (isaaclab 0.54.2, isaaclab_rl 0.4.7; editable install without version control, pip freeze of the training start)",
-  "isaacsim": "5.1.0-rc.19 (read on pod 1 0d591651a09e; the training host c5226af51640 did not record it)",
-  "rsl_rl": "modified copy ame2_spd/rsl_rl/rsl_rl on PYTHONPATH (pip rsl-rl-lib 3.1.2 installed but not imported); no git commit",
+  "isaacsim": "5.1 per the training log Kit path (Isaac-Sim/5.1); 5.1.0-rc.19 because the training-start pip freeze equals pod 1 (same image)",
+  "rsl_rl": "ame2_spd/rsl_rl/rsl_rl on PYTHONPATH = byte-identical to leggedrobotics/ame2_minimal@8beb9a688d67882828019583f7d5a78e3517f233 rsl_rl/rsl_rl (rsl_rl 5.0.0, 33 .py); pip rsl-rl-lib 3.1.2 installed but not imported",
   "torch_training": "2.7.0+cu128",
   "export": {
    "torch": "2.7.0+cu128",
@@ -423,6 +423,11 @@
    "torch_reference": "2.7.0+cu128"
   }
  },
+ "verification": {
+  "ort_web": "see parity.json ort_web",
+  "speed_goal_resent_1m_mps": 1.0788999795913696,
+  "void_depth_0p7": "see parity.json void_depth_0p7"
+ },
  "artifacts": [
   {
    "path": "ame2-demo.onnx",
@@ -431,8 +436,8 @@
   },
   {
    "path": "parity.json",
-   "sha256": "cb7cc1537221175b02948df9e3239d4d0641d0648b9551e6e1c951848bf0d28f",
-   "bytes": 2841
+   "sha256": "4f5902f6c28cd395d33e31df9117d4711cbd54824958c1fc57473dfef5556145",
+   "bytes": 6957
   },
   {
    "path": "test_vectors_flat20.npz",
