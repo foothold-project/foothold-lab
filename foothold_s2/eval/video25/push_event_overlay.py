@@ -21,10 +21,12 @@ RECOVERY_FALLBACK_S = 1.5
 
 def active_push_event(overlay: dict, time_s: float) -> dict | None:
     """Show a push only through its recovery interval, including its endpoint."""
-    median = overlay["recovery_time_s_median"]
-    duration = RECOVERY_FALLBACK_S if median is None else median
-    return next((event for event in reversed(overlay["events"])
-                 if event["t_s"] <= time_s <= event["t_s"] + duration), None)
+    for event in reversed(overlay["events"]):
+        median = event.get("recovery_time_s_median", overlay["recovery_time_s_median"])
+        duration = RECOVERY_FALLBACK_S if median is None else median
+        if event["t_s"] <= time_s <= event["t_s"] + duration:
+            return event
+    return None
 
 
 def box_arrow_points(legend_rect: tuple[int, int, int, int], event: dict) -> tuple[tuple[int, int], tuple[int, int]]:
@@ -46,8 +48,11 @@ def load_overlay(path: Path, capture_sha256: str, rollout_key: str, env_id: int)
     events = readback.get("push_events")
     if not isinstance(events, list) or not events:
         raise ValueError("push_events missing")
+    recovery_rows = readback.get("recovery_by_event") or []
+    if recovery_rows and len(recovery_rows) != len(events):
+        raise ValueError("push recovery row count differs from events")
     result = []
-    for event in events:
+    for index, event in enumerate(events):
         ids = event.get("env_ids", [])
         if env_id not in ids:
             raise ValueError("filmed env absent from push event")
@@ -57,7 +62,14 @@ def load_overlay(path: Path, capture_sha256: str, rollout_key: str, env_id: int)
         dx, dy = float(dv[0]), float(dv[1])
         if not all(math.isfinite(v) for v in (t_s, dx, dy)) or t_s < 0:
             raise ValueError("push event has non-finite time or delta-v")
-        result.append({"t_s": t_s, "dx": dx, "dy": dy, "magnitude_mps": math.hypot(dx, dy)})
+        event_median = (recovery_rows[index].get("recovery_time_s_median")
+                        if recovery_rows else None)
+        if event_median is not None and (not math.isfinite(float(event_median)) or float(event_median) < 0):
+            raise ValueError("invalid event recovery median")
+        row = {"t_s": t_s, "dx": dx, "dy": dy, "magnitude_mps": math.hypot(dx, dy)}
+        if recovery_rows:
+            row["recovery_time_s_median"] = event_median
+        result.append(row)
     recovery = readback.get("recovery") or {}
     median = recovery.get("recovery_time_s_median")
     if median is not None:
@@ -86,7 +98,7 @@ def draw_push_overlay(scene, overlay: dict, time_s: float, *, legend_rect: tuple
                 cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
     cv2.putText(scene, f"{event['magnitude_mps']:.2f} m/s", (x0 + 8, y0 + 39),
                 cv2.FONT_HERSHEY_SIMPLEX, .43, (255, 255, 255), 1, cv2.LINE_AA)
-    median = overlay["recovery_time_s_median"]
+    median = event.get("recovery_time_s_median", overlay["recovery_time_s_median"])
     if median is None:
         label = "recovery unmeasured"
     elif time_s <= event["t_s"] + median:

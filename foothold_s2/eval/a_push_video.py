@@ -26,6 +26,7 @@ from foothold_s2.eval import w78_video_consumer as shared
 
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 SCHEMA = "foothold-ex41-a-push-video/1"
+DEMO_PUSHES = [[2.0, 1.5], [4.0, 2.0]]  # s, world +x delta-v m/s; demonstration, not evaluation DR.
 
 
 def sha256(path: Path) -> str:
@@ -41,7 +42,7 @@ def group_id(checkpoint_sha: str, *, kind: str, level: int, col: int, env_id: in
              seed: int, push_seed: int, command: tuple[float, float, float]) -> str:
     payload = {"checkpoint_sha256": checkpoint_sha, "kind": kind, "level": level,
                "col": col, "env_id": env_id, "seed": seed, "push_seed": push_seed,
-               "command": list(command)}
+               "command": list(command), "demo_pushes": DEMO_PUSHES}
     return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"))
                            .encode("utf-8")).hexdigest()
 
@@ -75,6 +76,7 @@ def policy_spec(args, mode: str, source: dict) -> dict:
             "physics_mode": "sparse_eval_reference", "command": [1.0, 0.0, 0.0],
             "duration_s": 6.0, "seed": args.seed, "push_seed": args.push_seed,
             "dr_scale": 1.0, "z_mode": "mean", "act_mode": "mean",
+            "demo_pushes": DEMO_PUSHES,
             "hide_others": True, "map_mode": mode,
             "push_group_id": group_id(source["checkpoint_sha256"], kind=args.kind,
                                       level=args.level, col=args.col, env_id=args.env_id,
@@ -106,11 +108,18 @@ def source_child_env(python: Path, source_root: Path) -> dict[str, str]:
 def push_signature(meta: dict) -> tuple:
     push = meta.get("a_push_video") or {}
     events = push.get("push_events") or []
-    if len(events) != 1 or not push.get("dr_recovery", {}).get("defined"):
-        raise ValueError("A push capture lacks one event or defined recovery")
-    event = events[0]
-    return (push["push_group_id"], push["push_seed"], event["step"], event["seed"],
-            tuple(tuple(float(x) for x in dv) for dv in event["dv_xyz_w_mps"]))
+    recovery = push.get("dr_recovery_by_event") or []
+    if len(events) != 2 or len(recovery) != 2 or not all(row.get("defined") for row in recovery):
+        raise ValueError("A push capture lacks two events or two defined recovery rows")
+    signature = []
+    for event, (time_s, strength) in zip(events, DEMO_PUSHES):
+        dv = np.asarray(event["dv_xyz_w_mps"], dtype=float)
+        if (abs(float(event["t_s"]) - time_s) > 1e-5 or dv.shape != (64, 3)
+                or not np.isfinite(dv).all() or not np.allclose(dv[:, 0], strength, atol=1e-4, rtol=0)
+                or not np.allclose(dv[:, 1:], 0, atol=1e-4, rtol=0)):
+            raise ValueError("A push actual delta-v differs from 1.5/2.0 m/s schedule")
+        signature.append((event["step"], event["seed"], tuple(tuple(float(x) for x in row) for row in dv)))
+    return (push["push_group_id"], push["push_seed"], tuple(signature))
 
 
 def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> dict:
@@ -184,6 +193,7 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
     return {"capture": str(capture), "video": str(styled), "video_sha256": sha256(styled),
             "outcome": outcome, "push_signature": signature,
             "dr_recovery": read["dr_recovery"], "raw_audit": raw_audit,
+            "dr_recovery_by_event": read["dr_recovery_by_event"],
             "styled_audit": styled_audit}
 
 
@@ -268,6 +278,7 @@ def run_one(args) -> dict:
                        "env_id": args.env_id, "seed": args.seed, "push_seed": args.push_seed,
                        "video": verified["video"], "video_sha256": verified["video_sha256"],
                        "outcome": verified["outcome"], "dr_recovery": verified["dr_recovery"],
+                       "dr_recovery_by_event": verified["dr_recovery_by_event"],
                        "push_signature": verified["push_signature"],
                        "capture": verified["capture"], "video_rule_version": VIDEO_RULE_VERSION}
             atomic_json(args.out / (mode + ".json"), receipt)
@@ -293,9 +304,9 @@ def compare_mode_receipts(out: Path) -> dict:
         if any(row[key] != base[key] for key in keys):
             raise ValueError("A push three modes differ in terrain, seed or checkpoint")
         earlier, later = base["push_signature"], row["push_signature"]
-        if (earlier[:4] != later[:4] or np.asarray(earlier[4]).shape != (64, 3)
-                or np.asarray(later[4]).shape != (64, 3)
-                or not np.allclose(earlier[4], later[4], rtol=0.0, atol=1.0e-5)):
+        if (earlier[:2] != later[:2] or len(earlier[2]) != 2 or len(later[2]) != 2
+                or any(a[:2] != b[:2] or not np.allclose(a[2], b[2], rtol=0.0, atol=1.0e-5)
+                       for a, b in zip(earlier[2], later[2]))):
             raise ValueError("A push three modes differ in actual push event")
     return {"state": "complete" if len(rows) == 3 else "partial",
             "modes": [row["map_mode"] for row in rows], "group_id": base["group_id"]}
