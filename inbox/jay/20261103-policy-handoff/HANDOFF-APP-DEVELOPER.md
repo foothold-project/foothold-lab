@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션) · 2026-11-03 16:3x v0.1 · 19:1x v0.2 (앱 dev 20f3d066 파일 단위 전수 대조 반영 · §3 새 절)
 > 근거: m6000 조건표 정본 `inbox/jay/20261101-app/APP-POLICY-CONTRACT-m6000.md` v0.3.1 (lead 가지 dc81513c) · AME-2 학습 설정 `ame2_spd/.../params/env.yaml` · `agent.yaml` · foothold-app dev `20f3d066`(2026-11-03 09:19Z, mobile/sim 은 6740de88 과 같음) (`mobile/sim/policy-adapters.js` · `ame2-adapter.js` · `policy-onnx.js` · `docs/spec/11-POLICY-ADAPTER.md`)
 > 요지: 앱에 「모드」 넷(nvidia · start · ame2 · go2)을 두고, 모드를 고르면 그 정책의 값 전부(관측 · 명령 · 지도 · 토크 · 자르기 · 상태 · ONNX)가 함께 바뀌게 한다. 사람이 주는 명령과 화면 상한은 하나로 통일하고, 정책에 넣기 직전에 모드가 바꾼다. 아래 §1 이 답(값)이고 §2 가 만들 것이다
-> 상태: v0.2.1 · start-demo 묶음 전달됨(lab PR #571 · `inbox/jay/20261103-policy-handoff/start-demo/`) · ame2-demo 묶음은 석헌 님 PR 대기(lab #569) · 앱 작업 이슈 foothold-app#259
+> 상태: v0.2.2 · start-demo 묶음 전달됨(lab PR #571 · `inbox/jay/20261103-policy-handoff/start-demo/`) · ame2-demo 묶음은 석헌 님 PR(lab #574, `inbox/lim/20261103-policy-handoff/ame2-demo/`) + lead 보완(`ame2-demo-app/`: json 시험 벡터 · app_onnx) · 출력 이름 gaze_r 반영(11/03 21:2x) · 앱 작업 이슈 foothold-app#259
 
 # 앱 개발 준수 사항 · 정책 모드 넷
 
@@ -60,7 +60,7 @@
 | 토크 곡선 | DCMotor: hip · thigh 한계 23.5 · 포화 23.5 · 속도 30.0 / calf 45.43 · 45.43 · 15.70. 상한 = min(한계, 포화 × (1 − q̇/v)), 하한 = max(−한계, 포화 × (−1 − q̇/v)) | Go2HV 곡선(앱 `ame2-adapter.js:15~21` 그대로) |
 | a 자르기 | ±17 | ±100(목표각 쪽 `targetClip`) |
 | 지연 | 배포 0 | 배포 0 (지금 앱은 0~4 무작위, §3-4 에서 0 으로) |
-| ONNX | 파일 둘 `start-demo_map_on.onnx`(sha 81c7e079…) · `_map_off.onnx`(sha 5d1b7bf3…). 입력 9 `obs45[1,45] · hist[1,10,45] · depth2[1,2,60,60] · h_prop[1,128] · h_terr[1,128] · depth_tick[1] · first_after_reset[1] · use_gt[1] · gt_map[1,512]` · 출력 4 `action[1,12] · h_prop_next · h_terr_next · recon_map[1,32,16]`. 지도 끔 = `_map_off` 파일, 복원 = `_map_on` + use_gt 0, 정답 = `_map_on` + use_gt 1 + gt_map | 파일 하나 `ame2-demo.onnx`(석헌 님 새 묶음, 지금 앱의 `ame2_actor.onnx` 398acb0c… 는 재구성 actor 라 바꿔 끼움). 입력 `prop[1,49] · mapping[1,29,13,3]` · 출력 `action[1,12]`(+ 진단 offsets · gaze_logits) |
+| ONNX | 파일 둘 `start-demo_map_on.onnx`(sha 81c7e079…) · `_map_off.onnx`(sha 5d1b7bf3…). 입력 9 `obs45[1,45] · hist[1,10,45] · depth2[1,2,60,60] · h_prop[1,128] · h_terr[1,128] · depth_tick[1] · first_after_reset[1] · use_gt[1] · gt_map[1,512]` · 출력 4 `action[1,12] · h_prop_next · h_terr_next · recon_map[1,32,16]`. 지도 끔 = `_map_off` 파일, 복원 = `_map_on` + use_gt 0, 정답 = `_map_on` + use_gt 1 + gt_map | 파일 하나 `ame2-demo.onnx`(석헌 님 새 묶음, 지금 앱의 `ame2_actor.onnx` 398acb0c… 는 재구성 actor 라 바꿔 끼움). 입력 `prop[1,49] · mapping[1,29,13,3]` · 출력 `action[1,12]` · 진단 `gaze_r[1,2]` float32 (crop 모서리 ox = clamp(round(r0 × 17), 0, 17) · oy = clamp(round(r1 × 3), 0, 3), 29 × 13 지도 안의 12 × 10 창). 옛 `offsets` · `gaze_logits` 출력은 없다. sha `830595df…` · 앱 계약 꼴은 `ame2-demo-app/app_onnx.json` |
 | 묶음 자리 (ONNX 포함) | `inbox/jay/20261103-policy-handoff/start-demo/` (팀장 검증 뒤) | `inbox/lim/20261103-policy-handoff/ame2-demo/` (석헌 님 PR → 팀장 검증 뒤) |
 
 ### 1.3 `nvidia` 모드 (nvidia-demo)
@@ -194,7 +194,7 @@ for (let k = 0; k < tv.steps; k++) {
 | ame2 판별 문자열 | `main.js:118-120,129,660-664,673` · `scenario.js:35` · `sync-web.mjs:35,46` · `policy-onnx.js:52` · `ame2-onnx.js:4-7` 가 `stop.pause` 나 `'ame2-demo'` 로 가림 | `mode.command.kind`(`body_velocity` · `goal_pose`) 같은 필드로 |
 | 이름 바꾸기 foothold-v2 → nvidia-demo | `policy-adapters.js:173` · `sim.js:14,23` · `main.js:20` · 시험 `ame2-worker-selftest.mjs:112,137,165,198,215,287` · `settings-sim-selftest.mjs:8-10` · `sim-goal-selftest.mjs:283-284` | 모두 함께. URL `?policy=` 는 그대로 두고 값만 바꿔도 된다(`?mode=` 는 선택) |
 | `policy-onnx.js:23,25` | 입력 전부 float32 · `every(Number.isFinite)` | 입력마다 contract `type`(bool 은 `Uint8Array` · `new ort.Tensor('bool', …)`) |
-| `policy-onnx.js:35` · `:34` | `action` 하나만 · `offsets` 특례 | 출력 이름별 묶음을 돌려줌 · 특례를 일반화 |
+| `policy-onnx.js:35` · `:34` | `action` 하나만 · `offsets` 특례 | 출력 이름별 묶음을 돌려줌 · 특례를 일반화(ame2 새 ONNX 의 진단 출력은 `gaze_r` 하나, `offsets` 없음) |
 | `policy-onnx.js:64` · `policy-worker.js:12` | 예열 입력이 float32 0 | 자료형별 예열(bool 입력에서 실패함) |
 | `policy-worker.js:15-16` · `policy-worker-client.js:45,67` | `{action}` 만 보냄 · `data.action` · `Float32Array.from` | `{outputs}` + 버퍼 전송 목록 |
 | 명령 상한 `manual-settings.js:14,20` | 앞뒤 대칭 축 하나 | 모드별 축 상한(후진 1.0 · 걸으며 회전 1.0 따로) |
@@ -222,8 +222,10 @@ for (let k = 0; k < tv.steps; k++) {
 
 | 할 일 | 자리 |
 |---|---|
-| 새 ONNX 계약 | 지금 계약은 `offsets`(int64) · `gaze_logits` 출력이 꼭 있어야 함(`policy-adapters.js:168-171`, 검사 `policy-onnx.js:11`). 새 파일에 없으면 계약도 고침 |
-| f32 되돌림 | f32 는 옛 재구성 actor(`policy-adapters.js:69` `28edbc05…`). ONNX 만 바꾸면 되돌릴 때 **다른 정책이 조용히 돈다** → 새 f32 를 받거나 ame2 도 f32 되돌림을 끈다. 사용 판정(`main.js:170-173`)도 f32 기준 |
+| 새 ONNX 계약 (꼭) | 지금 계약은 `offsets`(int64) · `gaze_logits` 출력이 꼭 있어야 함(`policy-adapters.js:168-171`, 검사 `policy-onnx.js:10-12`). 새 `ame2-demo.onnx` 출력은 `action[1,12]` · `gaze_r[1,2]` float32 뿐이라 **그대로 넣으면 「ONNX 입출력 이름 불일치」 로 거절된다** → 계약 outputs 를 `[{name:'action',dims:[1,12]},{name:'gaze_r',dims:[1,2]}]` 로(값은 `ame2-demo-app/app_onnx.json` 그대로) · `policy-onnx.js:34` 의 `offsets` 진단은 `gaze_r` 에서 ox = clamp(round(r0 × 17), 0, 17) · oy = clamp(round(r1 × 3), 0, 3) 로 계산 |
+| 파일 · sha 바꾸기 (꼭) | `policy-adapters.js:168` `ame2.onnx.file` `ame2_actor.onnx`(sha `398acb0c…`, 재구성 actor) → `ame2-demo.onnx`(sha `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6`). `ame2-onnx.js:4` 가 이 sha 를 읽고 `policy-onnx.js:78` 이 받은 파일 sha 를 대조한다. 파일은 lab `inbox/lim/20261103-policy-handoff/ame2-demo/` 에서 복사 |
+| 시험 벡터 | `ame2-demo-app/test_vectors_flat20.json`(§2-5a 꼴, state_feedback false) 을 앱 실행기로 20 스텝 · action 최대 차 1e-4 이하. lead 실측(onnxruntime 1.31.0 CPU) 1.6e-6 |
+| f32 되돌림 끄기 (꼭) | f32 는 옛 재구성 actor(`ame2-adapter.js:69` `ame2_actor.f32` · sha `28edbc05…`). ONNX 만 바꾸면 ONNX 가 실패할 때 **다른 정책이 조용히 돈다** → ame2 f32 되돌림을 끈다(새 f32 는 만들지 않는다). 사용 판정(`main.js:170-173`)도 f32 기준이라 같이 고침 |
 | 행동 지연 0 | 앱은 리셋마다 0~4 를 무작위로 뽑는다(`ame2-adapter.js:41`, `main.js:242` 가 `ame2DelaySteps` 를 안 넘김) → `ame2DelaySteps: 0` |
 | 배포 허용 목록 | `prepare_sim.py:12-21` `AME2_SHA` · `ONNX_SHA` 를 새 파일로 |
 

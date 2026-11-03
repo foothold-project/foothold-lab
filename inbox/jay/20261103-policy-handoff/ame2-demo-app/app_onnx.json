@@ -1,0 +1,48 @@
+{
+ "app_onnx": {
+  "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측). 출력 gaze_r 은 진단: crop 모서리 ox = clamp(round(r0 * 17), 0, 17), oy = clamp(round(r1 * 3), 0, 3) (29 x 13 지도 안의 12 x 10 창)",
+  "source_pr": "foothold-project/foothold-lab#574",
+  "file": "ame2-demo.onnx",
+  "sha256": "830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6",
+  "inputs": [
+   {
+    "name": "prop",
+    "dims": [
+     1,
+     49
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "mapping",
+    "dims": [
+     1,
+     29,
+     13,
+     3
+    ],
+    "type": "float32"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "action",
+    "dims": [
+     1,
+     12
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "gaze_r",
+    "dims": [
+     1,
+     2
+    ],
+    "type": "float32"
+   }
+  ],
+  "action": "action",
+  "state": []
+ }
+}
