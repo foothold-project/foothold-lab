@@ -59,14 +59,17 @@ def test_ex41_task_registration_and_config_entrypoint_source():
 def _assert_gpu0_marker_lifecycle(source: str) -> None:
     tree = ast.parse(source)
     main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
-    claim_line = next(node.lineno for node in ast.walk(main)
+    claim_line = next(node.lineno for node in ast.walk(tree)
                       if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
                       and node.func.id == "_claim_ex41_gpu0_busy_marker")
+    launcher_line = next(node.lineno for node in ast.walk(tree)
+                         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                         and node.func.id == "AppLauncher")
     gym_line = next(node.lineno for node in ast.walk(main)
                     if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
                     and isinstance(node.func.value, ast.Name) and node.func.value.id == "gym"
                     and node.func.attr == "make")
-    assert claim_line < gym_line, "GPU0 busy marker must be claimed before env creation"
+    assert claim_line < launcher_line < gym_line, "GPU0 busy marker must precede Kit and env creation"
     entry = next(node for node in tree.body if isinstance(node, ast.If)
                  and isinstance(node.test, ast.Compare)
                  and isinstance(node.test.left, ast.Name) and node.test.left.id == "__name__")
@@ -77,13 +80,19 @@ def _assert_gpu0_marker_lifecycle(source: str) -> None:
         and node.value.func.id == "_clear_ex41_gpu0_busy_marker"
         for final_node in try_node.finalbody for node in ast.walk(final_node)
     ), "GPU0 busy marker must clear in process finally"
+    assert any(isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+               and isinstance(node.func.value, ast.Name) and node.func.value.id == "atexit"
+               and node.func.attr == "register" for node in ast.walk(tree)), (
+                   "GPU0 busy marker must clear if module startup fails before main")
 
 
 def test_ex41_gpu0_marker_wraps_shared_production_rehearsal_and_smoke_path():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
     _assert_gpu0_marker_lifecycle(source)
-    claim = source.index("_claim_ex41_gpu0_busy_marker(log_dir, start_iteration)")
-    assert claim < source.index("env = gym.make(args_cli.task, cfg=env_cfg)")
+    claim = source.index("_claim_ex41_gpu0_busy_marker(marker_run, marker_iteration)")
+    assert claim < source.index("app_launcher = AppLauncher(args_cli)")
+    assert source.index("_write_ex41_gpu0_marker_receipt(log_dir)") < source.index(
+        "env = gym.make(args_cli.task, cfg=env_cfg)")
     helper = source[source.index("def _claim_ex41_gpu0_busy_marker"):source.index("def _clear_ex41_gpu0_busy_marker")]
     assert "EX41_PLAN is None" in helper and "args_cli.device" in helper
     assert "wait_for_gpu0_python_idle()" in helper
@@ -91,7 +100,7 @@ def test_ex41_gpu0_marker_wraps_shared_production_rehearsal_and_smoke_path():
 
 def test_ex41_gpu0_marker_lifecycle_test_detects_removed_claim_mutation():
     source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
-    mutated = source.replace("    _claim_ex41_gpu0_busy_marker(log_dir, start_iteration)\n", "", 1)
+    mutated = source.replace("    _claim_ex41_gpu0_busy_marker(marker_run, marker_iteration)\n", "", 1)
     with pytest.raises(StopIteration):
         _assert_gpu0_marker_lifecycle(mutated)
 
