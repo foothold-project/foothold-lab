@@ -434,6 +434,49 @@ def test_stage_end_auxiliary_receipt_records_a_push_videos_and_holds_missing_rec
     assert set(recorded['metrics']['a_push_video']['map_modes']) == set(modes)
 
 
+def test_stage_end_push_ladder_consumes_shared_39_child_contract(tmp_path, monkeypatch):
+    from foothold_s2.eval.ex41_push_ladder_bundle import bundle_cases
+    from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
+
+    checkpoint = tmp_path / 'model_6000.pt'
+    checkpoint.write_bytes(b'known EX41 stage checkpoint')
+    monkeypatch.setattr(watch, 'measure_w57', lambda *_a: ({'known': True}, []))
+    monkeypatch.setattr(watch, 'measure_w78', lambda *_a: ({'known': True}, []))
+    children = []
+    for case in bundle_cases():
+        children.append({
+            **case, 'state': 'done',
+            'summary': {'maximum_tolerated_mps': 1.5,
+                        'magnitudes': {'1.5': {'survival_fraction': 0.95}}},
+        })
+    push_path = tmp_path / 'push_ladder_bundle.json'
+    push_path.write_text(json.dumps({
+        'schema': 'foothold-ex41-push-ladder-bundle/1', 'state': 'done',
+        'checkpoint_sha256': watch.sha256(checkpoint),
+        'expected_children': PUSH_LADDER_EXPECTED_CHILDREN,
+        'children': children,
+    }), encoding='utf-8')
+    plan = watch.load_plan(watch.DEFAULT_TABLE, arm='B')
+
+    accepted = watch.stage_end_auxiliary_receipt(
+        checkpoint, 'B0', tmp_path / 'core', tmp_path / 'w57', tmp_path / 'w78',
+        plan, push_ladder_path=push_path)
+    assert accepted['components']['push_ladder'] == 'complete'
+    assert len(accepted['metrics']['push_ladder']['maximum_tolerated_by_condition']) == 39
+
+    children.pop()
+    push_path.write_text(json.dumps({
+        'schema': 'foothold-ex41-push-ladder-bundle/1', 'state': 'done',
+        'checkpoint_sha256': watch.sha256(checkpoint),
+        'expected_children': PUSH_LADDER_EXPECTED_CHILDREN,
+        'children': children,
+    }), encoding='utf-8')
+    rejected = watch.stage_end_auxiliary_receipt(
+        checkpoint, 'B0', tmp_path / 'core', tmp_path / 'w57', tmp_path / 'w78',
+        plan, push_ladder_path=push_path)
+    assert rejected['components']['push_ladder'].startswith('HOLD: ValueError')
+
+
 def test_dead_watcher_lock_archived_but_live_owner_never_reclaimed(tmp_path):
     import os
     import subprocess

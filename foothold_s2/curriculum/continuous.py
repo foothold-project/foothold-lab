@@ -36,6 +36,12 @@ def sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def sha256_lf_text(path: str | Path) -> str:
+    """Hash UTF-8 text with canonical LF endings independent of checkout EOL."""
+    data = Path(path).read_bytes()
+    return hashlib.sha256(data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')).hexdigest()
+
+
 def load_plan(path: str | Path, *, arm: str | None = None,
               smoke_boundaries: tuple[int, ...] | None = None):
     """EX-41 entry factory; legacy Plan remains the EX-40 parser.

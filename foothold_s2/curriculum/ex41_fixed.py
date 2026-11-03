@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 import yaml
 from foothold_s2.curriculum import w72
-from foothold_s2.curriculum.continuous import sha256
+from foothold_s2.curriculum.continuous import sha256, sha256_lf_text
 from foothold_s2.curriculum.ex41 import EX41Runtime,digest
 
 DURATIONS=(750,1000,1000,1250,500,500)  # approved schema guard, not the elapsed clock
@@ -68,7 +68,7 @@ def validate_plan(plan,doc):
         or len(pb['sha256'])!=64):
         raise ValueError('EX41 pinned m6000 push baseline required')
     baseline_path=(Path(__file__).resolve().parents[2]/pb['path']).resolve(strict=True)
-    if sha256(baseline_path)!=pb['sha256']:
+    if sha256_lf_text(baseline_path)!=pb['sha256']:
         raise ValueError('EX41 pinned m6000 push baseline SHA differs')
     baseline_doc=json.loads(baseline_path.read_text(encoding='utf-8-sig'))
     source_bundle=Path(baseline_doc.get('baseline_bundle_path','')).resolve(strict=True)

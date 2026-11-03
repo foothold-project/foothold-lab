@@ -13,6 +13,8 @@ from typing import Any
 
 from foothold_s2.eval.ex41_push_ladder import MAP_MODES, TERRAIN_CASES
 from foothold_s2.eval.ex41_gpu_priority import gpu0_priority, wait_for_gpu0_python_idle
+from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
+from foothold_s2.curriculum.continuous import sha256_lf_text
 
 
 def bundle_cases(*, include_stand: bool = True) -> list[dict[str, Any]]:
@@ -25,6 +27,8 @@ def bundle_cases(*, include_stand: bool = True) -> list[dict[str, Any]]:
         cases.extend({"terrain": "flat", "map_mode": mode, "command": "stand",
                       "directions": "cardinal", "envs": 1536}
                      for mode in MAP_MODES)
+    if include_stand and len(cases) != PUSH_LADDER_EXPECTED_CHILDREN:
+        raise ValueError("push-ladder case contract cardinality differs")
     return cases
 
 
@@ -43,7 +47,7 @@ def build_argv(case: dict[str, Any], *, checkpoint: Path, out: Path,
 def load_pinned_baseline(path: Path, expected_sha256: str) -> dict[str, Any]:
     path = Path(path).resolve(strict=True)
     data = path.read_bytes()
-    if hashlib.sha256(data).hexdigest() != expected_sha256:
+    if sha256_lf_text(path) != expected_sha256:
         raise ValueError("pinned m6000 push baseline SHA differs")
     baseline = json.loads(data.decode("utf-8-sig"))
     if (baseline.get("schema") != "foothold-ex41-push-baseline/1"

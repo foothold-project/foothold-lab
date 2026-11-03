@@ -21,6 +21,7 @@ from foothold_s2.curriculum.ex41_scoring import enrich_score_metrics, enrich_tra
 from foothold_s2.curriculum.ex41_symmetry import map_pairs, combine
 from foothold_s2.eval.axis_v2_cells import case_specs, yaw_accumulation, finite_median
 from foothold_s2.eval.eval_dr_mode import require_dr_off_document
+from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
 from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic, _manifest_digest, _stable
 from foothold_s2.ex41_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, MODES, commands, hidden_child
@@ -626,8 +627,11 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             if push.get('checkpoint_sha256') != row['checkpoint_sha256']:
                 raise ValueError('push ladder checkpoint SHA differs from stage checkpoint')
             children = push.get('children')
-            if not isinstance(children, list) or len(children) != 12 or any(c.get('state') != 'done' for c in children):
-                raise ValueError('push ladder must contain all 12 walk and stand cells')
+            if (push.get('expected_children') != PUSH_LADDER_EXPECTED_CHILDREN
+                    or not isinstance(children, list)
+                    or len(children) != PUSH_LADDER_EXPECTED_CHILDREN
+                    or any(c.get('state') != 'done' for c in children)):
+                raise ValueError(f'push ladder must contain all {PUSH_LADDER_EXPECTED_CHILDREN} registered children')
             row['metrics']['push_ladder'] = {
                 'command': 'walk_0.5 for flat/random_rough/pyramid_stairs; supplementary stand on flat',
                 'maximum_tolerated_by_condition': [

@@ -446,7 +446,7 @@ fixed_schedule:
   push_vmax_mps: [1.5, 1.65, 1.8, 2.0, 2.0, 2.0]
   push_baseline:
     path: foothold_s2/curriculum/ex41-push-m6000-baseline.json
-    sha256: 0e8ebdb81fb305353b6b355a21c1b25c4563b7a55268b96677935aa8a20d3d7e
+    sha256: ec8c81451846da03f6e3a4899568428b9a2cf91e0f28ef8aaaac4de97d7418bd
   duration_updates: 5000
   pause_limit_updates: 1000
   recovery_boundaries: 2

@@ -4,6 +4,8 @@ import json
 import pytest
 
 from foothold_s2.eval.ex41_push_ladder_bundle import build_argv, bundle_cases, build_stage_criteria, load_pinned_baseline
+from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
+from foothold_s2.curriculum.continuous import sha256_lf_text
 import yaml
 
 
@@ -24,9 +26,20 @@ def test_pinned_m6000_baseline_checks_derived_and_source_sha():
         load_pinned_baseline(path,'0'*64)
 
 
+def test_pinned_baseline_hash_is_stable_across_git_lf_and_windows_crlf(tmp_path):
+    path, _ = _baseline()
+    source = path.read_bytes()
+    lf = source.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+    crlf_path = tmp_path / path.name
+    crlf_path.write_bytes(lf.replace(b'\n', b'\r\n'))
+    expected = sha256_lf_text(path)
+    assert sha256_lf_text(crlf_path) == expected
+    assert load_pinned_baseline(crlf_path, expected)['baseline_checkpoint_iteration'] == 6000
+
+
 def test_bundle_has_four_nine_cell_commands_and_three_flat_stand_supplements():
     cases = bundle_cases()
-    assert len(cases) == 39
+    assert len(cases) == PUSH_LADDER_EXPECTED_CHILDREN == 39
     commands = [row for row in cases if row['command'] != 'stand']
     stand = [row for row in cases if row['command'] == 'stand']
     assert len(commands) == 36 and len(stand) == 3
