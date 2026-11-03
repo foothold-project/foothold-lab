@@ -114,6 +114,19 @@ def test_real_fixed_plan_has_pinned_m6000_dr_half_and_26_maintenance_cells():
     assert plan.fixed_schedule["duration_updates"] == 5000
 
 
+def test_d172_committed_w71_and_explicit_launch_switch():
+    """D172 records W71 readiness; production still needs the lead switch."""
+    plan = load_fixed_plan(TABLE)
+    snapshot = ex41_startup.authorization_snapshot(plan)
+    assert snapshot["config"]["values"]["w71_ready"] is True
+    denied = production_launch_status(plan, lead_approved=False, snapshot=snapshot)
+    allowed = production_launch_status(plan, lead_approved=True, snapshot=snapshot)
+    assert denied["production_launch_allowed"] is False
+    assert denied["reason"] == "lead_approval_switch_missing"
+    assert allowed["production_launch_allowed"] is True
+    assert allowed["w71_ready"] is True
+
+
 def test_current_production_boundary_refuses_unverified_w71(monkeypatch):
     plan = load_fixed_plan(TABLE)
     monkeypatch.setattr(ex41_startup, "authorization_snapshot",

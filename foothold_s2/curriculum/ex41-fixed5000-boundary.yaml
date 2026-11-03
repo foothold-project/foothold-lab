@@ -14,5 +14,5 @@ values:
   heading_forward_fraction: 0.3
   critic_mirror: false
   terrain_level_cap: 5
-  w71_ready: false
+  w71_ready: true
   episode_length_s: 20.0
