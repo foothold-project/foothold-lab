@@ -1,0 +1,457 @@
+{
+ "wall_start": 1791365710.444696,
+ "env": {
+  "ROS_DOMAIN_ID": "58",
+  "GZ_PARTITION": "fh-app-2798194"
+ },
+ "checks": {
+  "S0 인증 운용 기동·계약·렌더 확인·주체 표시": {
+   "ok": true,
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     -0.0
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.22
+    }
+   },
+   "contract": {
+    "gz_camera": "ros"
+   },
+   "state_age_s": 0.03
+  },
+  "S1 B 가 A 의 sid 를 적어도 조종 안 됨": {
+   "ok": true,
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     -0.0
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.32
+    }
+   },
+   "state_age_s": 0.05
+  },
+  "S2 직결 서명 없는 take·teleop·비객체 JSON 거부(노드 생존), 서명 없는 stop 은 받음": {
+   "ok": true,
+   "before_stop": {
+    "mode": "IDLE",
+    "stop": "",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     -0.0
+    ],
+    "auth_rej": 2,
+    "auth_why": "서명 없음",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.22
+    }
+   },
+   "why": "서명 없음",
+   "state_age_after_stop_max_s": 0.03,
+   "state_age_s": 0.03
+  },
+  "S3 잡아 둔 서명 teleop(5 s 창 안) 재발행 → 재전송 거부·출력 0": {
+   "ok": true,
+   "n_replayed": 15,
+   "sig_age_s": [
+    0.05,
+    0.76
+   ],
+   "why": [
+    "명령 형식(JSON 객체 아님)",
+    "재전송된 서명(번호 42 ≤ 59)",
+    "재전송된 서명(번호 45 ≤ 60)",
+    "재전송된 서명(번호 47 ≤ 60)",
+    "재전송된 서명(번호 48 ≤ 60)",
+    "재전송된 서명(번호 51 ≤ 61)",
+    "재전송된 서명(번호 53 ≤ 61)",
+    "재전송된 서명(번호 55 ≤ 61)",
+    "재전송된 서명(번호 58 ≤ 62)"
+   ],
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.22
+    }
+   },
+   "state_age_s": 0.01
+  },
+  "S4 화면 영상 멈춤(이동 중) → video 정지·출력 0·자동 재개 없음·해제 뒤 조종": {
+   "ok": true,
+   "latency_s": 1.52,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "video",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     0.041
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "영상 문제로 정지 - 조종 화면의 영상이 1.5 s 전 촬영(화면 영상 끊김). 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+    "video": {
+     "ok": false,
+     "why": "조종 화면의 영상이 1.8 s 전 촬영(화면 영상 끊김)",
+     "shot_age": 0.02,
+     "render_age": 1.82
+    }
+   },
+   "state_age_s": 0.02
+  },
+  "S5 영상 노드 종료(이동 중) → video 정지 ≤2.5 s(종료 신호부터)·속도 0·재시작 뒤 자동 재개 없음": {
+   "ok": true,
+   "moving_s": 0.2,
+   "latency_from_kill_s": 0.95,
+   "halt_s": 0.3,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "video",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     0.041
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "영상 문제로 정지 - 영상 1.0 s 끊김. 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+    "video": {
+     "ok": false,
+     "why": "영상 1.3 s 끊김",
+     "shot_age": 1.31,
+     "render_age": 1.31
+    }
+   },
+   "recover_s": 3.32,
+   "no_resume": true,
+   "released": true,
+   "state_age_s": 0.01
+  },
+  "S6 손상 JPEG(계약 출처·새 시각) → video 정지": {
+   "ok": true,
+   "latency_s": 0.05,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "video",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     0.0
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "영상 문제로 정지 - 영상 없음 (잘리거나 깨진 JPEG(시작·끝 표지 없음)). 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.01,
+     "render_age": 0.21
+    }
+   },
+   "rejected": {
+    "잘리거나 깨진 JPEG(시작·끝 표지 없음)": 3
+   },
+   "state_age_s": 0.02
+  },
+  "S7 옛 촬영 시각 재전송 → video 정지": {
+   "ok": true,
+   "latency_s": 0.0,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "video",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     0.001
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "영상 문제로 정지 - 영상 없음 (시각 역행 3.2 s). 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.21
+    }
+   },
+   "rejected": {
+    "잘리거나 깨진 JPEG(시작·끝 표지 없음)": 3
+   },
+   "state_age_s": 0.03
+  },
+  "S8 NAV 중 영상 노드 종료 → video 정지 ≤2.5 s(종료 신호부터)·목표 끝남·자동 재개 없음": {
+   "ok": true,
+   "loc_ok": true,
+   "goal": [
+    -2.9,
+    -0.08,
+    0.0
+   ],
+   "nav_state": {
+    "mode": "NAV",
+    "stop": "",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.07,
+     -0.04
+    ],
+    "vel": [
+     0.094,
+     0.0
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "목표로 가는 중",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": 0.22
+    }
+   },
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "video",
+    "owner": "21dc4d62-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0
+    ],
+    "auth_rej": 22,
+    "auth_why": "재전송된 서명(번호 58 ≤ 62)",
+    "msg": "영상 문제로 정지 - 영상 1.0 s 끊김. 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+    "video": {
+     "ok": false,
+     "why": "영상 5.0 s 끊김",
+     "shot_age": 5.01,
+     "render_age": 5.01
+    }
+   },
+   "recover_s": 1.16,
+   "res": {
+    "tag": null,
+    "gen": 1,
+    "status": "CANCELED",
+    "why": "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+   },
+   "latch_seen_from_kill_s": 0.97,
+   "check_wait_s": 0.0,
+   "halt_s": 0.0,
+   "note": "latch_seen = 종료 신호→STOPPED 상태 첫 수신(관측 지연, 상태 0.1 s 주기). check_wait = 영상 노드가 끝난 뒤 검사 시작부터(대기 섞임)",
+   "state_age_s": 0.03
+  },
+  "S9 영상 없이 직접 조종·목표 거부(이유=영상, 위치·지도·목표 전제 충족)": {
+   "ok": true,
+   "pre": {
+    "loc_ok": true,
+    "map_ver": "m-6f65861f905a",
+    "goal_accepted_in_S8": true,
+    "goal": [
+     -2.9,
+     -0.08,
+     0.0
+    ]
+   },
+   "teleop_msg": "영상이 없어 조종을 받지 않습니다 - 영상 6.0 s 끊김",
+   "goal_msg": "영상이 없어 목표를 거부합니다 - 영상 6.1 s 끊김 (영상 없이 가려면 「지도 운용」)",
+   "video": "영상 7.0 s 끊김",
+   "state_age_s": 0.1
+  },
+  "S10 세션 만료(만료 직전까지 이동) → session 정지·주인 없음·출력 0·속도 0": {
+   "ok": true,
+   "pre": {
+    "prep_s": 0.2,
+    "owner": true,
+    "mode": "IDLE",
+    "video_ok": true,
+    "render_age": 0.21,
+    "lease": 11.8
+   },
+   "moved_before": {
+    "t_left_s": 11.59,
+    "vel": [
+     0.0,
+     0.171
+    ],
+    "mode": "MANUAL"
+   },
+   "stop_after_exp_s": 0.1,
+   "halt_s": 0.3,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "session",
+    "owner": null,
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     -0.0,
+     0.5
+    ],
+    "auth_rej": 24,
+    "auth_why": "세션 만료",
+    "msg": "로그인 세션이 만료되어 정지 - 다시 로그인해 「조종권 받기」",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": null
+    }
+   },
+   "state_age_s": 0.04
+  },
+  "S11 이동 중 로그아웃 → session 정지·출력 0·연결 끊김·잡아 둔 서명 재생 거부": {
+   "ok": true,
+   "moving_s": 0.2,
+   "latency_s": 0.05,
+   "halt_s": 0.3,
+   "ws_closed_s": 0.0,
+   "close_code": 4401,
+   "at_stop": {
+    "mode": "STOPPED",
+    "stop": "session",
+    "owner": null,
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0
+    ],
+    "auth_rej": 69,
+    "auth_why": "세션 만료",
+    "msg": "조종하던 화면이 로그아웃(세션 끝)되어 정지 - 다시 로그인해 「조종권 받기」",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.02,
+     "render_age": null
+    }
+   },
+   "replayed": 5,
+   "why": [
+    "끝난 세션(로그아웃)",
+    "세션 만료"
+   ],
+   "state_age_s": 0.06
+  },
+  "S12 지도 운용 미허용 서버에서 map_ops 거부": {
+   "ok": true,
+   "msg": "이 서버는 영상 없는 지도 운용을 허용하지 않습니다",
+   "state_age_s": 0.01
+  }
+ },
+ "timeline": [
+  [
+   10.64,
+   "화면 A 새 프레임 그리기 멈춤"
+  ],
+  [
+   17.39,
+   "영상 노드 2798967 SIGTERM"
+  ],
+  [
+   18.65,
+   "영상 노드 다시 띄움 2799585"
+  ],
+  [
+   32.27,
+   "영상 노드 2799585 SIGTERM"
+  ],
+  [
+   37.29,
+   "영상 노드 다시 띄움 2799866"
+  ],
+  [
+   41.6,
+   "영상 노드 2799866 SIGTERM"
+  ],
+  [
+   48.63,
+   "영상 노드 다시 띄움 2800042"
+  ]
+ ],
+ "ok": true,
+ "unsigned_app_cmd": {
+  "take:direct": 1,
+  "teleop:21dc4d62-1": 1,
+  "stop:None": 1
+ },
+ "wall_end": 1791365779.3098445
+}
