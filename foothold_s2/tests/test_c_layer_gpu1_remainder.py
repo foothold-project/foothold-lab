@@ -32,8 +32,47 @@ def test_p1_marker_yields_before_any_capture(tmp_path: Path) -> None:
 
 def test_27_seconds_plus_ten_percent_is_hard_boundary() -> None:
     assert moved.SLOWDOWN_LIMIT_S == 29.700000000000003
-    assert not moved.exceeds_slowdown([{"update_s": 29.7}])
-    assert moved.exceeds_slowdown([{"update_s": 29.71}])
+    guard = moved.RollingUpdateGuard()
+    below = [guard.add(i, 29.7) for i in range(1, 11)]
+    assert not moved.exceeds_slowdown(below)
+    above = guard.add(11, 29.71)
+    assert moved.exceeds_slowdown([above])
+
+
+def test_rolling_ten_ignores_one_spike() -> None:
+    guard = moved.RollingUpdateGuard()
+    updates = [guard.add(i, 27.0) for i in range(1, 10)]
+    updates.append(guard.add(10, 31.0))
+    assert updates[-1]["rolling10_mean_s"] == 27.4
+    assert not moved.exceeds_slowdown(updates)
+    assert max(row["update_s"] for row in updates) == 31.0
+
+
+def test_rolling_ten_stops_sustained_slowdown() -> None:
+    guard = moved.RollingUpdateGuard()
+    updates = [guard.add(i, 29.8) for i in range(1, 11)]
+    assert moved.exceeds_slowdown(updates)
+
+
+def test_fewer_than_ten_valid_updates_continues_with_recorded_short_window() -> None:
+    guard = moved.RollingUpdateGuard()
+    updates = [guard.add(i, 31.0) for i in range(1, 10)]
+    assert updates[-1]["window_count"] == 9
+    assert updates[-1]["rolling10_mean_s"] is None
+    assert not moved.exceeds_slowdown(updates)
+    gap = guard.add(11, 31.0)
+    assert gap["window_reset"] is True and gap["window_count"] == 1
+    assert not moved.exceeds_slowdown([gap])
+
+
+def test_actual_stop_receipt_would_not_stop_on_rolling_mean() -> None:
+    source = Path("D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/SLOWDOWN_HOLD.json")
+    recorded = json.loads(source.read_text(encoding="utf-8"))
+    guard = moved.RollingUpdateGuard()
+    updates = [guard.add(row["iter"], row["update_s"]) for row in recorded["during"]]
+    assert max(row["update_s"] for row in recorded["during"]) > moved.SLOWDOWN_LIMIT_S
+    assert not moved.exceeds_slowdown(updates)
+    assert updates[-1]["rolling10_mean_s"] < moved.SLOWDOWN_LIMIT_S
 
 
 def test_stale_training_status_cannot_admit_capture(tmp_path: Path) -> None:

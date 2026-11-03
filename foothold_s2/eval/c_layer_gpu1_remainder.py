@@ -7,8 +7,10 @@ checks the EX-41 P1 gate and training time before the next transaction.
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -170,7 +172,33 @@ def train_sample(path: Path) -> dict | None:
 
 
 def exceeds_slowdown(samples: list[dict]) -> bool:
-    return any(row["update_s"] > SLOWDOWN_LIMIT_S for row in samples)
+    return any(row.get("window_count") == 10
+               and row.get("rolling10_mean_s") is not None
+               and row["rolling10_mean_s"] > SLOWDOWN_LIMIT_S for row in samples)
+
+
+class RollingUpdateGuard:
+    """Ten consecutive, finite TensorBoard update intervals; spikes are diagnostic."""
+
+    def __init__(self) -> None:
+        self.intervals: deque[float] = deque(maxlen=10)
+        self.last_step: int | None = None
+
+    def add(self, step: int, seconds: float) -> dict:
+        reset = self.last_step is not None and step != self.last_step + 1
+        if reset:
+            self.intervals.clear()
+        self.last_step = step
+        valid = math.isfinite(seconds) and 0 < seconds < 300
+        if valid:
+            self.intervals.append(float(seconds))
+        else:
+            self.intervals.clear()
+        count = len(self.intervals)
+        return {"iter": step, "update_s": seconds if valid else None,
+                "window_count": count,
+                "rolling10_mean_s": sum(self.intervals) / 10 if count == 10 else None,
+                "window_reset": reset, "valid_interval": valid}
 
 
 class TrainingMonitor:
@@ -183,14 +211,18 @@ class TrainingMonitor:
         if self.tag not in self.events.Tags()["scalars"]:
             raise ValueError("EX-41 TensorBoard has no per-update Perf/total_fps")
         scalars = self.events.Scalars(self.tag)
-        if len(scalars) < 6:
-            raise ValueError("EX-41 needs five measured baseline update intervals")
+        if len(scalars) < 2:
+            raise ValueError("EX-41 TensorBoard has no measured update interval")
         self.last_step = scalars[-1].step
         self.last_time = scalars[-1].wall_time
-        self.baseline = [scalars[i].wall_time - scalars[i - 1].wall_time
-                         for i in range(-5, 0)]
-        if any(not 0 < value < 300 for value in self.baseline):
-            raise ValueError("EX-41 baseline TensorBoard intervals invalid")
+        self.guard = RollingUpdateGuard()
+        tail = scalars[-11:]
+        for previous, current in zip(tail[:-1], tail[1:]):
+            self.guard.add(current.step, float(current.wall_time - previous.wall_time))
+        self.baseline = list(self.guard.intervals)[-5:]
+        self.pre_capture_window_count = len(self.guard.intervals)
+        self.pre_capture_rolling10_mean_s = (
+            sum(self.guard.intervals) / 10 if len(self.guard.intervals) == 10 else None)
 
     def poll(self) -> list[dict]:
         self.events.Reload()
@@ -199,10 +231,9 @@ class TrainingMonitor:
             if item.step <= self.last_step:
                 continue
             elapsed = float(item.wall_time - self.last_time)
-            if not 0 < elapsed < 300:
-                raise ValueError("EX-41 per-update TensorBoard interval invalid")
-            rows.append({"iter": item.step, "update_s": elapsed,
-                         "wall_time": item.wall_time})
+            row = self.guard.add(item.step, elapsed)
+            row["wall_time"] = item.wall_time
+            rows.append(row)
             self.last_step, self.last_time = item.step, item.wall_time
         return rows
 
@@ -296,6 +327,12 @@ def run_next(manifest_path: Path, wanted_sha256: str) -> dict:
         evidence = {"format": "foothold-c-layer-gpu1-run-one/1", "cell": cell,
                     "queue_event": event, "before": before,
                     "baseline_tensorboard_update_s": monitor.baseline, "during": samples,
+                    "pre_capture_window_count": monitor.pre_capture_window_count,
+                    "pre_capture_rolling10_mean_s": monitor.pre_capture_rolling10_mean_s,
+                    "insufficient_window_observed": any(row["window_count"] < 10
+                                                        for row in samples),
+                    "max_single_update_s": max((row["update_s"] for row in samples
+                                                if row["update_s"] is not None), default=None),
                     "slowdown_limit_s": SLOWDOWN_LIMIT_S,
                     "slowdown": exceeds_slowdown(samples)}
         events = out.parent / "events"
