@@ -10,7 +10,7 @@
 
 ## 0. 결정된 것 (다시 묻지 않는다)
 
-- **모드 넷과 이름(D170).** 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 id `nvidia-demo`(앱의 `foothold-v2` 를 이름만 바꿈) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-oh2l2`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 모델이 오면 id 만 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` 로 바꾸고 키는 그대로 둔다. 나중 판 이름: 학습 완료 판은 `start-oh2l2-app/` · `ame2-oh2l2-app/` 로 같은 꼴의 폴더를 새로 만든다(D170 최종 이름 + `-app`).
+- **모드 넷과 이름(D170 · go2 지금 id D175).** 코드 키 `nvidia` · `start` · `ame2` · `go2`. 지금 id `nvidia-demo`(앱의 `foothold-v2` 를 이름만 바꿈) · `start-demo`(저장본 m6000) · `ame2-demo`(저장본 m14999) · `go2-demo`(정책 없음, 실기 Sport 모드 상태를 그리기만). 최종 모델이 오면 id 만 `nvidia-foothold-v2` · `start-oh2l2` · `ame2-oh2l2` · `go2-oh2l2` 로 바꾸고 키는 그대로 둔다. 나중 판 이름: 학습 완료 판은 `start-oh2l2-app/` · `ame2-oh2l2-app/` 로 같은 꼴의 폴더를 새로 만든다(D170 최종 이름 + `-app`).
 - **ONNX 가 기본 계산이다.** 같은 ONNX 하나를 웹 시뮬과 실기가 함께 쓴다. ONNX 파일은 앱 저장소에 커밋하지 않고 lab 묶음 폴더에서 복사해 sha256 이 맞을 때만 쓴다.
 - **JS f32 되돌림은 ONNX 가 안 될 때의 대비로 남겨도 된다**(팀장 11/03 21:4x). 단 ① 기본은 ONNX ② 되돌림이 켜지면 화면에 늘 보이게 표시(§2-6). start 는 f32 가 없으므로 되돌림 없이 ONNX 만 쓴다.
 - **ONNX 실행기는 상태 출력(start 의 GRU 둘)을 다음 호출 입력으로 되먹이고, 입력 자료형(bool 포함)을 계약대로 만든다.**
@@ -120,7 +120,7 @@ export const POLICY_MODES = Object.freeze({
   nvidia: nvidiaDemoMode,   // 지금 foothold-v2 adapter (id 'nvidia-demo')
   start:  startDemoMode,    // 새로 (id 'start-demo', 저장본 m6000)
   ame2:   ame2DemoMode,     // 지금 ame2-demo adapter 를 옮김 (id 'ame2-demo', 저장본 m14999)
-  go2:    go2ReplayMode,    // 새로 (id 'go2-oh2l2', 정책 없음 · SDK 상태를 그림)
+  go2:    go2ReplayMode,    // 새로 (id 'go2-demo', 정책 없음 · SDK 상태를 그림)
 });
 // 고르기: URL ?policy= (값만 새 id 로) · 메뉴. 모르는 키면 오류(조용히 기본값으로 가지 않음)
 ```
