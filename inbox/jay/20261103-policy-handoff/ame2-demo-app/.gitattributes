@@ -1,1 +1,2 @@
+# keep every file byte-exact (the app checks sha256 against SHA256SUMS)
 * -text
