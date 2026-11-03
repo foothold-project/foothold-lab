@@ -236,8 +236,12 @@ class EX41FixedRuntime(EX41Runtime):
         """Stage push limit follows the actual clock stage, independent of DR ramp."""
         index = self.clock.position(int(n))
         values = self.clock.settings['push_vmax_mps']
-        if len(values) != len(self.plan.stages):
+        # plan.stages is append-only effective history: _apply adds a snapshot
+        # after each transition. The immutable templates define schedule shape.
+        if len(values) != len(self.templates):
             raise ValueError('EX41 push Vmax schedule does not match stage count')
+        if not 0 <= index < len(values):
+            raise ValueError('EX41 push Vmax clock position is outside the stage schedule')
         return float(values[index])
 
     def _score_context_allowed(self,d,n):

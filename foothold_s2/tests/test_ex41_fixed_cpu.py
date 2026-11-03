@@ -3,6 +3,7 @@ import copy
 import json
 from pathlib import Path
 import subprocess
+from types import SimpleNamespace
 import pytest
 import yaml
 from foothold_s2.curriculum.continuous import load_plan,make_runtime,sha256
@@ -77,6 +78,24 @@ def test_stage_push_maximums_follow_clock_stage_and_hold_extension():
     c.anchor=5251
     held_stage=c.position(5251)
     assert values[held_stage] == 2.0
+
+
+def test_training_update_transition_keeps_push_schedule_bound_to_templates(tmp_path):
+    """Mirror start_runner order: curriculum transition, then DR readback."""
+    from foothold_s2.curriculum.ex41 import EX41DRReadback
+
+    runtime, _ = fixture(tmp_path)
+    base = SimpleNamespace(scale=.5,
+                           env=SimpleNamespace(_ex40_dr_scale=.5),
+                           _first_update=True)
+    # start_runner calls continuous.on_update_start(it) before update_start(it).
+    runtime.on_update_start(751)
+    assert runtime.effective['stage_id'] == 'S2b'
+    assert len(runtime.templates) == 6
+    assert len(runtime.plan.stages) == 7  # append-only effective stage history
+
+    EX41DRReadback(base, runtime).update_start(751)
+    assert base.env._ex41_push_vmax_mps == pytest.approx(1.65)
 
 
 def test_clock_uses_supplied_lengths_and_limits_instead_of_literals():
