@@ -1,0 +1,103 @@
+{
+ "tags": {
+  "flat": {
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 1.6689300537109375e-06,
+   "mean_abs_action_onnx_vs_torch": 3.5449028246148373e-07,
+   "step_of_max": 104,
+   "max_abs_gaze_r_onnx_vs_torch": 2.384185791015625e-07,
+   "max_abs_action_onnx_vs_env_gpu": 0.0002658367156982422,
+   "max_abs_action_torch_cpu_vs_env_gpu": 0.00026488304138183594,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action": 2.754905939102173
+  },
+  "stairs": {
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 3.5762786865234375e-06,
+   "mean_abs_action_onnx_vs_torch": 4.523415384483087e-07,
+   "step_of_max": 83,
+   "max_abs_gaze_r_onnx_vs_torch": 2.384185791015625e-07,
+   "max_abs_action_onnx_vs_env_gpu": 0.00027942657470703125,
+   "max_abs_action_torch_cpu_vs_env_gpu": 0.0002789497375488281,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action": 4.290324687957764
+  }
+ },
+ "max_abs_action_onnx_vs_torch": 3.5762786865234375e-06,
+ "threshold": 0.0001,
+ "pass": true,
+ "onnx": {
+  "file": "ame2-demo.onnx",
+  "sha256": "830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6",
+  "bytes": 5038171
+ },
+ "runtime": {
+  "onnxruntime": "1.26.0",
+  "provider": "CPUExecutionProvider",
+  "torch_reference": "2.7.0+cu128"
+ },
+ "checkpoint_sha256": "8c3be365eeddd136edda31988df7fed96ad6f9f92713490b2d993037bf978d4d",
+ "recording": {
+  "task": "Ame2-Go2-Gaze-NoGapStones5",
+  "steps": 200,
+  "step_dt": 0.02,
+  "physics_dt": 0.005,
+  "decimation": 4,
+  "terrain_columns": {
+   "flat": 0,
+   "stairs": 12
+  },
+  "terrain_levels": {
+   "flat": 0,
+   "stairs": 5
+  },
+  "changes_from_training_cfg": [
+   "scene.num_envs=2",
+   "rough sub-terrain max_slope_deg=0 max_roughness_m=0 (flat tile)",
+   "curriculum.terrain_levels=None",
+   "curriculum.teacher_mapping_noise=None",
+   "teacher_mapping custom_noise=[0,0,0]",
+   "teacher_prop.enable_corruption=False",
+   "height_scanner.drift_range=(0,0)"
+  ],
+  "checks": {
+   "prop_lin_vel_vs_state": 0.0,
+   "prop_ang_vel_vs_state": 0.0,
+   "prop_gravity_vs_state": 0.0,
+   "prop_joint_pos_rel_vs_state": 0.0,
+   "prop_last_action_vs_clip50_prev_action": 0.0,
+   "target_q_vs_q0_plus_0p25a": 0.0,
+   "map_x_const_over_y": 0.0,
+   "map_y_const_over_x": 0.0
+  },
+  "resets_in_recording": {
+   "flat": 0,
+   "stairs": 0
+  },
+  "code_id": "a78a734258cf"
+ },
+ "default_pose_test": {
+  "joint_pos_rel_max_abs": 0.0,
+  "prop_joint_pos_rel_max_abs": 0.0,
+  "pass_joint_pos_rel_lt_0p05": true,
+  "action0_target_minus_default_max_abs": 0.0,
+  "default_joint_pos": [
+   0.10000000149011612,
+   -0.10000000149011612,
+   0.10000000149011612,
+   -0.10000000149011612,
+   0.800000011920929,
+   0.800000011920929,
+   1.0,
+   1.0,
+   -1.5,
+   -1.5,
+   -1.5,
+   -1.5
+  ],
+  "action_scale": 0.25,
+  "use_default_offset": true
+ }
+}
