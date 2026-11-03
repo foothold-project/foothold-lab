@@ -57,6 +57,24 @@ def wait_for_gpu0_python_idle(*, timeout_seconds: float = 1800, poll_seconds: fl
                 continue
             if "python" in name.casefold() or "kit" in name.casefold() or "isaac" in command.casefold():
                 busy.append({"pid": pid, "process_name": name, "command": command[:500], "state": "busy"})
+        # Some Isaac child processes are briefly absent from nvidia-smi while
+        # initializing or between Kit stages. The C-layer shard command itself
+        # is also the scheduler's unit owner, so wait for that process to yield.
+        known_pids = {row.get("pid") for row in busy}
+        for process in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+            try:
+                info = process.info
+                pid = int(info["pid"])
+                command = " ".join(info.get("cmdline") or [])
+            except (psutil.AccessDenied, psutil.NoSuchProcess, OSError, TypeError, ValueError):
+                continue
+            low = command.casefold()
+            if pid == os.getpid() or pid in known_pids:
+                continue
+            if ("c_layer_shard.py" in low and "--gpu 0" in low) or (
+                    "record_c_layer.py" in low and "--device cuda:0" in low):
+                busy.append({"pid": pid, "process_name": info.get("name"),
+                             "command": command[:500], "state": "c_layer_unit_active"})
         last_busy = busy
         if not busy:
             return {"state": "idle", "gpu_uuid": GPU0_UUID, "checks": checks,

@@ -61,6 +61,7 @@ def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
 
 def test_gpu0_admission_waits_for_other_python_without_signaling_it(monkeypatch):
     import foothold_s2.eval.ex41_push_ladder_bundle as bundle
+    import psutil
 
     own_python = __import__("os").getpid()
     outputs = iter([
@@ -77,6 +78,7 @@ def test_gpu0_admission_waits_for_other_python_without_signaling_it(monkeypatch)
     monkeypatch.setattr(bundle.subprocess, "run", lambda *_a, **_k: Query(next(outputs)))
     monkeypatch.setattr(bundle.os, "getpid", lambda: own_python + 1)
     monkeypatch.setattr(bundle.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(psutil, "process_iter", lambda **_kwargs: [])
     receipt = bundle.wait_for_gpu0_python_idle(timeout_seconds=1, poll_seconds=0)
     assert receipt["state"] == "idle"
     assert receipt["checks"] == 2
