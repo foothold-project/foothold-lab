@@ -5,6 +5,7 @@ import json
 
 import pytest
 
+import foothold_s2.eval.ex41_push250_watch as push250_watch
 from foothold_s2.eval.ex41_push_ladder import (
     PUSH250_MAGNITUDES_MPS,
     TERRAIN_CASES,
@@ -16,7 +17,9 @@ from foothold_s2.eval.ex41_push250_watch import (
     build_child_argv,
     checkpoint_for_update,
     output_path_for_global_iteration,
+    score_watch_attempt_finished,
     wait_for_checkpoint_target,
+    wait_for_score_watch_attempt,
 )
 
 
@@ -114,6 +117,64 @@ def test_checkpoint_wait_survives_failed_and_completed_training_states_until_res
     ]
     assert state_rows[0]["trainer_state"] == "failed"
     assert state_rows[1]["trainer_state"] == "complete"
+
+
+def test_push250_waits_for_score_watch_attempt_to_close_before_gpu1_claim(tmp_path):
+    root = tmp_path / "eval" / "score-watch"
+    score = tmp_path / "eval" / "scores" / "score_1000_aaaaaaaaaaaa.json"
+    score.parent.mkdir(parents=True)
+    score.write_text('{"evaluation_state":"complete"}', encoding="utf-8")
+    score_sha = hashlib.sha256(score.read_bytes()).hexdigest()
+    key = f"1000_{'a' * 64}"
+    assert score_watch_attempt_finished(root, 1000, "a" * 64) == (
+        False, "score_watch_state_missing")
+
+    root.mkdir(parents=True)
+    attempt_dir = root / "model_1000_aaaaaaaaaaaa"
+    attempt_dir.mkdir()
+    running = {"iteration": 1000, "checkpoint_sha256": "a" * 64, "state": "running"}
+    (attempt_dir / "attempt.json").write_text(json.dumps(running), encoding="utf-8")
+    (root / "watch_state.json").write_text(json.dumps({"done": {}}), encoding="utf-8")
+    assert score_watch_attempt_finished(root, 1000, "a" * 64) == (
+        False, "score_watch_checkpoint_not_closed")
+
+    terminal = {"iteration": 1000, "checkpoint_sha256": "a" * 64,
+                "state": "complete", "score_path": str(score), "score_sha256": score_sha}
+    (attempt_dir / "attempt.json").write_text(json.dumps(terminal), encoding="utf-8")
+    (root / "watch_state.json").write_text(json.dumps({"done": {key: terminal}}), encoding="utf-8")
+    assert score_watch_attempt_finished(root, 1000, "a" * 64) == (
+        True, "score_watch_attempt_closed")
+
+
+def test_push250_does_not_treat_unclosed_or_tampered_score_watch_receipt_as_idle(tmp_path):
+    root = tmp_path / "score-watch"
+    score = tmp_path / "score_1250.json"
+    score.write_text('{"evaluation_state":"complete"}', encoding="utf-8")
+    key = f"1250_{'b' * 64}"
+    attempt = {"iteration": 1250, "checkpoint_sha256": "b" * 64,
+               "state": "HOLD", "score_path": str(score),
+               "score_sha256": "0" * 64}
+    attempt_dir = root / "model_1250_bbbbbbbbbbbb"
+    attempt_dir.mkdir(parents=True)
+    (attempt_dir / "attempt.json").write_text(json.dumps(attempt), encoding="utf-8")
+    (root / "watch_state.json").write_text(json.dumps({"done": {key: attempt}}), encoding="utf-8")
+    assert score_watch_attempt_finished(root, 1250, "b" * 64) == (
+        False, "score_watch_score_receipt_unverified")
+
+
+def test_push250_wait_gate_records_wait_and_returns_only_after_score_watch_close(tmp_path, monkeypatch):
+    checks = iter(((False, "score_watch_checkpoint_not_closed"),
+                   (True, "score_watch_attempt_closed")))
+    monkeypatch.setattr(push250_watch, "score_watch_attempt_finished",
+                        lambda *_args: next(checks))
+    state_path = tmp_path / "watcher_state.json"
+    result = wait_for_score_watch_attempt(
+        tmp_path / "score-watch", 1250, "c" * 64, state_path=state_path,
+        poll_seconds=0, sleep=lambda _seconds: None)
+    assert result["state"] == "score_watch_closed"
+    assert result["checks"] == 2
+    assert json.loads(state_path.read_text(encoding="utf-8"))["state"] == (
+        "waiting_for_score_watch_evaluation")
 
 
 def test_output_iteration_uses_global_m6000_parent_offset(tmp_path):

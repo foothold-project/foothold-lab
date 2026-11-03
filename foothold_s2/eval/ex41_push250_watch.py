@@ -386,6 +386,69 @@ def wait_for_checkpoint_target(run_dir: Path, score_dir: Path, local_iteration: 
         sleep(poll_seconds)
 
 
+def score_watch_attempt_finished(score_watch_root: Path, local_iteration: int,
+                                 checkpoint_sha256: str) -> tuple[bool, str]:
+    """Require score-watch to close this checkpoint before push250 claims GPU1.
+
+    The periodic score can be published before the watcher finishes its
+    checkpoint work. In particular, score-watch writes its done state only
+    after its evaluation child and any stage-end auxiliary child have returned.
+    A missing/in-progress/ambiguous receipt therefore leaves GPU1 to score-watch.
+    """
+    root = Path(score_watch_root)
+    state = _read_json(root / "watch_state.json")
+    if not isinstance(state, dict):
+        return False, "score_watch_state_missing"
+    key = f"{local_iteration}_{checkpoint_sha256}"
+    done = (state.get("done") or {}).get(key)
+    if not isinstance(done, dict):
+        return False, "score_watch_checkpoint_not_closed"
+    attempt_path = root / f"model_{local_iteration}_{checkpoint_sha256[:12]}" / "attempt.json"
+    attempt = _read_json(attempt_path)
+    if not isinstance(attempt, dict):
+        return False, "score_watch_attempt_receipt_missing"
+    if (attempt.get("iteration") != local_iteration
+            or attempt.get("checkpoint_sha256") != checkpoint_sha256
+            or attempt.get("state") not in ("complete", "HOLD")
+            or done != attempt):
+        return False, "score_watch_attempt_not_terminal_or_receipts_differ"
+    score_path = attempt.get("score_path")
+    score_sha = attempt.get("score_sha256")
+    if not score_path or not score_sha:
+        return False, "score_watch_score_receipt_missing"
+    score_file = Path(score_path)
+    if not score_file.is_file() or _sha256(score_file) != score_sha:
+        return False, "score_watch_score_receipt_unverified"
+    return True, "score_watch_attempt_closed"
+
+
+def wait_for_score_watch_attempt(score_watch_root: Path, local_iteration: int,
+                                 checkpoint_sha256: str, *, state_path: Path,
+                                 poll_seconds: float = 10.0,
+                                 timeout_seconds: float = 6 * 60 * 60,
+                                 sleep=time.sleep) -> dict[str, Any]:
+    """Wait for the matching score-watch receipt before attempting P1."""
+    started = time.monotonic()
+    checks = 0
+    while True:
+        checks += 1
+        closed, reason = score_watch_attempt_finished(
+            score_watch_root, local_iteration, checkpoint_sha256)
+        if closed:
+            return {"state": "score_watch_closed", "reason": reason,
+                    "checks": checks, "waited_s": time.monotonic() - started}
+        _atomic_json(Path(state_path), {
+            "state": "waiting_for_score_watch_evaluation",
+            "local_iteration": local_iteration,
+            "checkpoint_sha256": checkpoint_sha256,
+            "reason": reason,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        if time.monotonic() - started > timeout_seconds:
+            raise TimeoutError("score-watch did not close this checkpoint within six hours")
+        sleep(poll_seconds)
+
+
 def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: int = 500,
          interval: int = 250, parent_iteration: int = 6000, poll_seconds: float = 10,
          marker: Path = DEFAULT_MARKER, python: Path = DEFAULT_PYTHON,
@@ -396,6 +459,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
     worktree = Path(worktree or Path(__file__).resolve().parents[2])
     state_path = out_dir / "watcher_state.json"
     out_dir.mkdir(parents=True, exist_ok=True)
+    score_watch_root = score_dir.parent / "score-watch"
     local_iteration = first_local_update
     while True:
         ready = wait_for_checkpoint_target(
@@ -407,6 +471,9 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
             _atomic_json(state_path, {"state": "duplicate_prevented", "next_local_iteration": local_iteration,
                                       "existing_result": str(destination), "updated_at": datetime.now(timezone.utc).isoformat()})
             return 5
+        wait_for_score_watch_attempt(
+            score_watch_root, local_iteration, ready["sha256"],
+            state_path=state_path, poll_seconds=poll_seconds)
         admission = gpu1_busy_snapshot(marker)
         _atomic_json(state_path, {"state": "starting", "local_iteration": local_iteration,
                                   "global_iteration": global_iteration, "checkpoint_sha256": ready["sha256"],
