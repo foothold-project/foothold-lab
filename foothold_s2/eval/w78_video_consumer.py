@@ -1,7 +1,7 @@
 """Consume one EX-41 W78 stage-end video request, one clip per invocation.
 
 The runner publishes the request. This consumer validates it before Kit, then
-uses the EX-41-aware recorder and the pinned v3.2 compositor. It never starts
+uses the EX-41-aware recorder and the pinned current-rule compositor. It never starts
 training or changes the runner's request, checkpoint, or evaluation ledger.
 """
 from __future__ import annotations
@@ -103,7 +103,7 @@ def validate_sources(source_root: Path, recorder: Path, composer: Path) -> dict:
     recorder = recorder.resolve(strict=True)
     composer = composer.resolve(strict=True)
     if not recorder.is_file() or not composer.is_file() or composer_version(composer) != VIDEO_RULE_VERSION:
-        raise ValueError("W78 recorder or v3.2 composer is absent")
+        raise ValueError(f"W78 recorder or {VIDEO_RULE_VERSION} composer is absent")
     return {"source_head": head, "source_root": str(root),
             "source_recorder_sha256": sha256(root / "foothold_s2/eval/record_sol23f.py"),
             "recorder_sha256": sha256(recorder), "composer_sha256": sha256(composer)}
@@ -208,7 +208,7 @@ def verify_capture(folder: Path, request: dict, combo: str, source: dict,
                                  "--segment", "seq", "--speed", "1x", "--out", str(styled)],
                                 stdout=log, stderr=subprocess.STDOUT, env=child_env, check=False)
     if result.returncode or not styled.is_file():
-        raise ValueError(f"W78 v3.2 composer failed: rc={result.returncode}")
+        raise ValueError(f"W78 {VIDEO_RULE_VERSION} composer failed: rc={result.returncode}")
     styled_meta = styled.with_suffix(".json")
     composition = json.loads(styled_meta.read_text(encoding="utf-8"))
     require_video_rule(composition, composer_sha256=source["composer_sha256"])

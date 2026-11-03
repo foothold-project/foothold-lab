@@ -33,7 +33,16 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
     recorder.write_text("# C_LAYER_SEED_V1\n", encoding="utf-8")
     (tmp_path / "overlay_25e.py").write_text("# fixed overlay\n", encoding="utf-8")
     composer = tmp_path / "compose.py"
-    composer.write_text('VIDEO_RULE_VERSION = "v3.2-D140"\n', encoding="utf-8")
+    composer.write_text('VIDEO_RULE_VERSION = "v3.3-D167"\n', encoding="utf-8")
+    old_composer = tmp_path / "compose_old.py"
+    old_composer.write_text('VIDEO_RULE_VERSION = "v3.2-D140"\n', encoding="utf-8")
+    gpu_jobs_tool = tmp_path / "gpu_jobs.py"
+    gpu_jobs_tool.write_text("# fixed GPU jobs CLI fixture\n", encoding="utf-8")
+    gpu_jobs_config = tmp_path / "gpu_jobs.json"
+    gpu_jobs_config.write_text(
+        '{"sources":{"ex41_p1_marker":"D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"}}',
+        encoding="utf-8",
+    )
     monkeypatch.setattr(planner, "_head", lambda _root: "a" * 40)
     actual_sha = queue.sha256
     monkeypatch.setattr(queue, "sha256", lambda path: "d5e9ec40" + "a" * 56
@@ -41,12 +50,15 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
     kw = dict(checkpoint=checkpoint, source_root=source, recorder=recorder,
               composer=composer, python=Path(sys.executable), playlist_dir=tmp_path / "_playlists",
               priority_markers={key: tmp_path / (key + ".busy")
-                                for key in ("training", "evaluation", "a_layer")}, device="cuda:0")
+                                for key in ("training", "evaluation", "a_layer")}, device="cuda:0",
+              gpu_jobs_tool=gpu_jobs_tool, gpu_jobs_config=gpu_jobs_config)
     plan = planner.build_plan(**kw)
     assert plan["iteration"] == 6000 and len(plan["jobs"]) == 216
     assert queue.validate_plan(plan)["missing"] == 0
     assert all("-m6000-" in row["label"] for row in plan["jobs"])
     assert {row["map_mode"] for row in plan["jobs"]} == set(queue.MAP_MODES)
+    with pytest.raises(ValueError, match="older video rule"):
+        planner.build_plan(**{**kw, "composer": old_composer})
     wrong = tmp_path / "model_8000.pt"
     wrong.write_bytes(b"wrong")
     with pytest.raises(ValueError, match="model_6000"):
