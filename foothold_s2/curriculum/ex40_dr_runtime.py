@@ -196,6 +196,20 @@ def reset_motor_strength(env, env_ids, asset_cfg, target_range):
         _record(env, "motor_saturation_effort", actuator._saturation_effort[rows], len(rows))
 
 
+def _sample_radial_push_xy(count, vmax_mps, *, device, dtype, generator=None):
+    """Sample horizontal push magnitude uniformly, then direction uniformly."""
+    import torch
+
+    if type(count) is not int or count < 0:
+        raise ValueError('radial push count must be a nonnegative integer')
+    vmax = float(vmax_mps)
+    if not math.isfinite(vmax) or vmax <= 0:
+        raise ValueError('radial push Vmax must be finite and positive')
+    magnitude = torch.rand((count,), device=device, dtype=dtype, generator=generator) * vmax
+    angle = torch.rand((count,), device=device, dtype=dtype, generator=generator) * (2.0 * math.pi)
+    return torch.stack((magnitude * torch.cos(angle), magnitude * torch.sin(angle)), dim=1), magnitude, angle
+
+
 def interval_push(env, env_ids, asset_cfg, target_range):
     """Call the installed Isaac Lab interval push and record applied velocity."""
     import torch
@@ -206,11 +220,22 @@ def interval_push(env, env_ids, asset_cfg, target_range):
         rows = torch.arange(env.scene.num_envs, device=asset.device)
     else:
         rows = torch.as_tensor(env_ids, dtype=torch.long, device=asset.device).flatten()
-    scale = float(getattr(env, "_ex40_dr_scale", 0.0))
-    velocity_range = {axis: _scaled_interval(tuple(target_range.get(axis, (0.0, 0.0))), scale, 0.0)
-                      for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
+    ex41_vmax = getattr(env, '_ex41_push_vmax_mps', None)
     before = asset.root_physx_view.get_root_velocities()[rows].clone()
-    events.push_by_setting_velocity(env, rows, velocity_range, asset_cfg)
+    if ex41_vmax is not None:
+        delta_xy, magnitude, _angle = _sample_radial_push_xy(
+            len(rows), ex41_vmax, device=asset.device, dtype=before.dtype)
+        # Match Isaac Lab's interval push semantics: add the sampled velocity
+        # to the existing root velocity, while leaving z and angular axes alone.
+        root_velocity = before.clone()
+        root_velocity[:, :2] += delta_xy
+        asset.write_root_velocity_to_sim(root_velocity, env_ids=rows)
+        _record(env, 'push_radial_magnitude_mps', magnitude, len(rows))
+    else:
+        scale = float(getattr(env, "_ex40_dr_scale", 0.0))
+        velocity_range = {axis: _scaled_interval(tuple(target_range.get(axis, (0.0, 0.0))), scale, 0.0)
+                          for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
+        events.push_by_setting_velocity(env, rows, velocity_range, asset_cfg)
     after = asset.root_physx_view.get_root_velocities()[rows].clone()
     _record(env, "push_velocity_delta", after - before, len(rows))
 
@@ -291,7 +316,8 @@ class RuntimeReadback:
 
         samples = getattr(self.env, "_ex40_dr_samples", {})
         expected_sample_keys = ("base_com_offset_m", "actuator_gains", "motor_strength_multiplier",
-                                "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta")
+                                "motor_effort_limit", "motor_saturation_effort", "push_velocity_delta",
+                                "push_radial_magnitude_mps")
         summary = {key: {"count": 0, "min": None, "max": None, "mean": None,
                          "target_envs": 0}
                    for key in expected_sample_keys}

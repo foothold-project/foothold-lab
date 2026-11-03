@@ -53,6 +53,8 @@ def test_actual_parent_baseline_judges26_and_preserves39_pinned_cells():
     assert len(b)==26 and len(baseline_counts(p,include_record_only=True))==39
     assert p.parent_update==6000 and p.initial_dr_scale==.5
     assert p.fixed_schedule['duration_updates']==5000
+    assert p.fixed_schedule['push_vmax_mps']==[1.5,1.65,1.8,2.0,2.0,2.0]
+    assert p.domain_randomization['push_interval_s']==[10.0,15.0]
     assert [s.id for s in p.stages]==['S2a','S2b','S2c','S2d','S2e','T0_prime']
 
 
@@ -62,6 +64,19 @@ def test_nominal_clock_endpoints_and_slopes():
         assert c.scale(n)==pytest.approx(expected)
     assert c.scale(1751)-c.scale(1750)==pytest.approx(.15/1000)
     assert c.scale(4001)-c.scale(4000)==pytest.approx(.2/1250)
+
+
+def test_stage_push_maximums_follow_clock_stage_and_hold_extension():
+    c=Clock()
+    values=c.settings['push_vmax_mps']
+    assert [values[c.position(n)] for n in (1,751,1751,2751,4001,4501)] == [1.5,1.65,1.8,2.0,2.0,2.0]
+    c.extension=500
+    assert values[c.position(5001)] == 2.0
+    c.paused=True
+    c.elapsed=5000
+    c.anchor=5251
+    held_stage=c.position(5251)
+    assert values[held_stage] == 2.0
 
 
 def test_clock_uses_supplied_lengths_and_limits_instead_of_literals():

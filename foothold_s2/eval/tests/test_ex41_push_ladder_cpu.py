@@ -41,6 +41,9 @@ def test_grid_covers_every_requested_condition_once():
     assert len(MAP_MODES) == 3
     walk = build_case_grid(command="walk_0.5", directions=DIRECTIONS_DEG)
     assert len(walk) == 432 and {row["command"] for row in walk} == {"walk_0.5"}
+    assert len(build_case_grid(command="walk_1.0")) == 432
+    assert len(build_case_grid(command="walk_1.5")) == 432
+    assert len(build_case_grid(command="stand_turn_1.2")) == 432
     stand = build_case_grid(terrain="flat", command="stand", directions=(0, 90, 180, 270))
     assert len(stand) == 72
     assert {row["direction_deg"] for row in stand} == {0, 90, 180, 270}
@@ -57,6 +60,8 @@ def test_tolerance_uses_pooled_64_envs_per_direction_and_90_percent_threshold():
     assert result["magnitudes"]["2.0"]["survivors"] == 8 * 58
     assert result["magnitudes"]["2.0"]["survival_fraction"] == pytest.approx(58 / 64)
     assert result["maximum_tolerated_mps"] == 2.0
+    assert result["magnitudes"]["2.0"]["worst_direction_survival_fraction"] == pytest.approx(58 / 64)
+    assert result["maximum_tolerated_worst_direction_mps"] == 2.0
     assert result["threshold_fraction"] == 0.9
 
 

@@ -1,0 +1,77 @@
+{
+  "baseline_bundle_path": "D:\\mai-tmp\\runner\\ex41_push_ladder_m6000_20261103_161418\\push_ladder_bundle.json",
+  "baseline_bundle_sha256": "12ea9beafcb97bfc41a76c95c1c830f686c3d2c93783612dee1b627315add08a",
+  "baseline_checkpoint_iteration": 6000,
+  "baseline_checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+  "cells": {
+    "flat/eval_gt": {
+      "envs": 512,
+      "survival_fraction": 0.4453125,
+      "survivors": 228,
+      "worst_direction_survival_fraction": 0.296875
+    },
+    "flat/eval_pred": {
+      "envs": 512,
+      "survival_fraction": 0.392578125,
+      "survivors": 201,
+      "worst_direction_survival_fraction": 0.3125
+    },
+    "flat/probe_prop_only": {
+      "envs": 512,
+      "survival_fraction": 0.380859375,
+      "survivors": 195,
+      "worst_direction_survival_fraction": 0.296875
+    },
+    "pyramid_stairs/eval_gt": {
+      "envs": 512,
+      "survival_fraction": 0.380859375,
+      "survivors": 195,
+      "worst_direction_survival_fraction": 0.234375
+    },
+    "pyramid_stairs/eval_pred": {
+      "envs": 512,
+      "survival_fraction": 0.41796875,
+      "survivors": 214,
+      "worst_direction_survival_fraction": 0.296875
+    },
+    "pyramid_stairs/probe_prop_only": {
+      "envs": 512,
+      "survival_fraction": 0.408203125,
+      "survivors": 209,
+      "worst_direction_survival_fraction": 0.328125
+    },
+    "random_rough/eval_gt": {
+      "envs": 512,
+      "survival_fraction": 0.37109375,
+      "survivors": 190,
+      "worst_direction_survival_fraction": 0.3125
+    },
+    "random_rough/eval_pred": {
+      "envs": 512,
+      "survival_fraction": 0.369140625,
+      "survivors": 189,
+      "worst_direction_survival_fraction": 0.296875
+    },
+    "random_rough/probe_prop_only": {
+      "envs": 512,
+      "survival_fraction": 0.369140625,
+      "survivors": 189,
+      "worst_direction_survival_fraction": 0.21875
+    }
+  },
+  "directions_deg": [
+    0,
+    45,
+    90,
+    135,
+    180,
+    225,
+    270,
+    315
+  ],
+  "push_magnitude_mps": 2.0,
+  "schema": "foothold-ex41-push-baseline/1",
+  "source_command": "walk_0.5",
+  "source_device": "cuda:0",
+  "source_seed": 42
+}

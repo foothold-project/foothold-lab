@@ -17,6 +17,9 @@ PUSH_AT_S = 2.0
 FOLLOW_S = 5.0
 SURVIVAL_THRESHOLD = 0.90
 CARDINAL_DIRECTIONS_DEG = (0, 90, 180, 270)
+COMMANDS = {"walk_0.5": (0.5, 0.0, 0.0), "walk_1.0": (1.0, 0.0, 0.0),
+            "walk_1.5": (1.5, 0.0, 0.0), "stand_turn_1.2": (0.0, 0.0, 1.2),
+            "stand": (0.0, 0.0, 0.0)}
 
 
 def build_case_grid(*, terrain: str | None = None, map_mode: str | None = None,
@@ -25,7 +28,7 @@ def build_case_grid(*, terrain: str | None = None, map_mode: str | None = None,
         raise ValueError(f"unsupported terrain: {terrain}")
     if map_mode is not None and map_mode not in MAP_MODES:
         raise ValueError(f"unsupported map mode: {map_mode}")
-    if command not in ("walk_0.5", "stand") or not directions or not set(directions) <= set(DIRECTIONS_DEG):
+    if command not in COMMANDS or not directions or not set(directions) <= set(DIRECTIONS_DEG):
         raise ValueError("unsupported command or direction set")
     terrains = (terrain,) if terrain else TERRAIN_CASES
     modes = (map_mode,) if map_mode else MAP_MODES
@@ -53,7 +56,7 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
                      command: str = "walk_0.5", directions: tuple[int, ...] = DIRECTIONS_DEG) -> dict[str, Any]:
     if terrain not in TERRAIN_CASES or map_mode not in MAP_MODES:
         raise ValueError("summary identity has an unsupported terrain or map mode")
-    if command not in ("walk_0.5", "stand") or not directions or not set(directions) <= set(DIRECTIONS_DEG):
+    if command not in COMMANDS or not directions or not set(directions) <= set(DIRECTIONS_DEG):
         raise ValueError("summary command or direction selection is invalid")
     expected = {(m, d) for m in MAGNITUDES_MPS for d in directions}
     found: dict[tuple[float, int], dict[str, Any]] = {}
@@ -103,10 +106,12 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
             }
             for angle in directions
         }
+        worst_direction = min(row["survivors_after_5s"] / ENVS_PER_CASE for row in cell_rows)
         by_magnitude[f"{magnitude:.1f}"] = {
             "survivors": survivors,
             "envs": samples,
             "survival_fraction": survivors / samples,
+            "worst_direction_survival_fraction": worst_direction,
             "fall_fraction": (samples - survivors) / samples,
             "recovery_time_s_median": median(recovery) if recovery else None,
             "recovery_time_definition": "median of recovered per-env recovery times across all eight directions",
@@ -123,6 +128,11 @@ def summarize_ladder(rows: list[dict[str, Any]], *, terrain: str, map_mode: str,
         "threshold_fraction": SURVIVAL_THRESHOLD,
         "maximum_tolerated_mps": max(tolerated) if tolerated else None,
         "maximum_tolerated_definition": f"highest registered magnitude with pooled {len(directions)}-direction survival fraction >= 0.90",
+        "maximum_tolerated_worst_direction_mps": max(
+            (m for m in MAGNITUDES_MPS
+             if by_magnitude[f"{m:.1f}"]["worst_direction_survival_fraction"] >= SURVIVAL_THRESHOLD),
+            default=None),
+        "worst_direction_definition": "minimum survival fraction among the registered push directions",
         "magnitudes": by_magnitude,
     }
 
@@ -179,7 +189,7 @@ def run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters, fixed_terra
     if checkpoint_preparation and checkpoint_preparation.get("checkpoint_pose_commands"):
         verify_ex41_pose_observation(obs)
 
-    command = (0.0, 0.0, 0.0) if command_name == "stand" else (0.5, 0.0, 0.0)
+    command = COMMANDS[command_name]
     target_command = torch.tensor(command, dtype=torch.float32, device=raw.device)
     term.vel_command_b[:, :3] = target_command
     term.heading.fill_(False)

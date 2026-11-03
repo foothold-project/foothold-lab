@@ -359,6 +359,12 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
     # Coordinator-only spy, not a claim that mocked children measured anything.
     root=tmp_path/'source';p=root/'foothold_s2/eval';p.mkdir(parents=True)
     (p/'eval_map_modes.py').write_text('# no W78 parser',encoding='utf-8')
+    plan=load_plan(evaluator.DEFAULT_TABLE,arm='B')
+    baseline_relative=Path(plan.fixed_schedule['push_baseline']['path'])
+    baseline_source=(Path(evaluator.ROOT)/baseline_relative).resolve(strict=True)
+    baseline_target=root/baseline_relative
+    baseline_target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(baseline_source,baseline_target)
     monkeypatch.setattr(evaluator,'ROOT',root)
     monkeypatch.setattr(evaluator.subprocess,'check_output',lambda args,**kw:'' if 'status' in args else '1'*40)
     launched=[]

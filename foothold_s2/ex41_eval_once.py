@@ -31,7 +31,7 @@ FULL_W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs
 
 
 def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
-             gpu0_training_active=None):
+             gpu0_training_active=None, push_baseline=None):
     """The EX40 measurement sizes are reused, never its stage verdict rules."""
     from foothold_s2.eval.ex41_gpu_priority import (
         DEFAULT_GPU1_TRAINING_MARKER, gpu0_training_marker_state,
@@ -63,8 +63,13 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
                '--stair-start-angles-deg', '0,30,60,90', '--terrain-set', 'default'])]
     iteration_match = re.fullmatch(r'model_(\d+)\.pt', Path(checkpoint).name)
     iteration = int(iteration_match.group(1)) if iteration_match else 0
+    if push_baseline is None:
+        import yaml
+        push_baseline = yaml.safe_load(DEFAULT_TABLE.read_text(encoding='utf-8-sig'))['fixed_schedule']['push_baseline']
+    baseline_path = (ROOT / push_baseline['path']).resolve(strict=True)
     rows.append(('push_ladder', 'foothold_s2.eval.ex41_push_ladder_bundle',
                  ['--checkpoint', str(checkpoint), '--checkpoint-iteration', str(iteration),
+                  '--baseline-json', str(baseline_path), '--baseline-sha256', push_baseline['sha256'],
                   '--task', 'FootholdS2-Go2-S2-SB-v0', '--seed', str(cfg['eval_seed'])]))
     rows.append(('a_push_video', 'foothold_s2.eval.a_push_video', [
         '--source-root', str(ROOT), '--checkpoint', str(checkpoint),
@@ -197,12 +202,38 @@ def auxiliary_phase_status(name, output):
                 'result_path': str(result_path)}
     if name == 'push_ladder':
         children = result.get('children')
-        expected = 12
+        expected = 39
+        expected_ids = {(terrain, mode, command) for command in
+                        ('walk_0.5','walk_1.5','walk_1.0','stand_turn_1.2')
+                        for terrain in ('flat','random_rough','pyramid_stairs') for mode in MODES}
+        expected_ids.update(('flat',mode,'stand') for mode in MODES)
+        child_ids = {(row.get('terrain'),row.get('map_mode'),row.get('command'))
+                     for row in children if isinstance(row,dict)} if isinstance(children,list) else set()
         if (result.get('state') != 'done' or result.get('expected_children') != expected
                 or not isinstance(children, list) or len(children) != expected
-                or any(not isinstance(child, dict) or child.get('state') != 'done' for child in children)):
+                or any(not isinstance(child, dict) or child.get('state') != 'done' for child in children)
+                or child_ids != expected_ids):
             return {'state': 'HOLD', 'reason': 'push ladder bundle is incomplete',
                     'result_path': str(result_path)}
+        stage_criteria = result.get('stage_criteria', {})
+        criteria = stage_criteria.get('walk_1.5mps_worst_direction', {})
+        comparisons = stage_criteria.get('push_2.0mps_vs_m6000', {})
+        baseline = result.get('baseline', {})
+        expected_plan = load_plan(DEFAULT_TABLE, arm='B')
+        expected_baseline = expected_plan.fixed_schedule['push_baseline']
+        expected_cells = {f'{terrain}/{mode}' for terrain in ('flat','random_rough','pyramid_stairs')
+                          for mode in MODES}
+        if (baseline.get('sha256') != expected_baseline['sha256']
+                or baseline.get('checkpoint_iteration') != 6000
+                or baseline.get('checkpoint_sha256') != expected_plan.parent_sha256
+                or set(criteria) != expected_cells or set(comparisons) != expected_cells
+                or any(not isinstance(row,dict) or row.get('push_magnitude_mps') != 1.5
+                       or row.get('threshold') != 0.90 for row in criteria.values())
+                or any(not isinstance(row,dict) or row.get('push_magnitude_mps') != 2.0
+                       or row.get('baseline_source_sha256') != expected_baseline['sha256']
+                       for row in comparisons.values())):
+            return {'state':'HOLD','reason':'push ladder stage criteria or m6000 comparison coverage differs',
+                    'result_path':str(result_path)}
     if name in ('w78_v2', PERIODIC_W78_PHASE):
         cases = (set(FULL_W78_CASES) if name == 'w78_v2'
                  else {'stairs_side_left', 'stairs_side_right'})
@@ -291,7 +322,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     _atomic(out/'eval_receipt.json', row)
     try:
         for phase in commands(checkpoint, out, cfg, scope=scope,
-                              gpu0_training_active=gpu0_state['active']):
+                              gpu0_training_active=gpu0_state['active'],
+                              push_baseline=plan.fixed_schedule['push_baseline']):
             if phase['name'] in ('w78_v2', PERIODIC_W78_PHASE) and not w78_available:
                 row['steps'][phase['name']]={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
@@ -348,7 +380,8 @@ def main(argv=None):
     if not a.execute:
         print(json.dumps({'state':'dry', 'scope':a.scope,
                           'commands':commands(a.checkpoint, a.out, config(a.eval_config), scope=a.scope,
-                                              gpu0_training_markers=a.gpu0_training_marker)}))
+                                              gpu0_training_markers=a.gpu0_training_marker,
+                                              push_baseline=load_plan(a.table, arm='B').fixed_schedule['push_baseline'])}))
         return 0
     result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config,
                       priority_marker=a.priority_marker, scope=a.scope,

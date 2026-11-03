@@ -731,6 +731,10 @@ class EX41DRReadback:
     def update_start(self,update):
         b=self.base; b.update=int(update); b.schedule_update=None; b.smoke=False
         b.scale=self.runtime.dr_scale(update); b.env._ex40_dr_scale=b.scale
+        stage_id = self.runtime.effective.get('stage_id')
+        b.env._ex41_stage_id = stage_id
+        push_vmax = getattr(self.runtime, 'push_vmax', None)
+        b.env._ex41_push_vmax_mps = push_vmax(update) if callable(push_vmax) else None
         if not b._first_update:
             b.env._ex40_dr_samples={}
             action=b.env.action_manager.get_term('joint_pos')
@@ -739,6 +743,10 @@ class EX41DRReadback:
 
     def summary(self):
         row=self.base.summary(); row['schedule']='EX41 constant or approved boundary ramp'
+        row['push_schedule']={'stage_id':getattr(self.base.env,'_ex41_stage_id',None),
+            'vmax_mps':getattr(self.base.env,'_ex41_push_vmax_mps',None),
+            'independent_of_dr_scale':True,
+            'sampling':'magnitude U[0,Vmax] m/s; direction U[0,360) degrees; horizontal radial vector'}
         return row
 
     def state_dict(self):

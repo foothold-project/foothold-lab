@@ -63,6 +63,7 @@ domain_randomization:
     delay_s:
     - 0.0
     - 0.015
+    # Legacy interval fallback only. EX41 overrides it with fixed_schedule.push_vmax_mps radial sampling.
     push_velocity:
       x:
       - -1.0
@@ -442,6 +443,10 @@ fixed_schedule:
   # D133 11/02 15:0x: judge GT/proprio 26; preserve all 39 numeric records.
   include_record_only: false
   dr_stage_end_scales: [0.5, 0.65, 0.8, 1.0, 1.0, 1.0]
+  push_vmax_mps: [1.5, 1.65, 1.8, 2.0, 2.0, 2.0]
+  push_baseline:
+    path: foothold_s2/curriculum/ex41-push-m6000-baseline.json
+    sha256: 0e8ebdb81fb305353b6b355a21c1b25c4563b7a55268b96677935aa8a20d3d7e
   duration_updates: 5000
   pause_limit_updates: 1000
   recovery_boundaries: 2

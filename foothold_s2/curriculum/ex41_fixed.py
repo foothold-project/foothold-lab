@@ -55,11 +55,31 @@ def validate_plan(plan,doc):
     expected={'duration_updates':5000,'pause_limit_updates':1000,'recovery_boundaries':2,
               'extension_updates':500,'maximum_extensions':1,'maintenance_drop_count':3,
               'interval_updates':250}
-    if set(cfg)!=set(expected)|{'maintenance_baseline','include_record_only','dr_stage_end_scales'} or any(cfg[k]!=v for k,v in expected.items()):
+    if set(cfg)!=set(expected)|{'maintenance_baseline','include_record_only','dr_stage_end_scales','push_vmax_mps','push_baseline'} or any(cfg[k]!=v for k,v in expected.items()):
         raise ValueError('EX41 fixed5000 decision parameters differ')
     if (cfg['dr_stage_end_scales']!=[.5,.65,.8,1.,1.,1.]
         or any(type(x) not in (int,float) for x in cfg['dr_stage_end_scales'])):
         raise ValueError('EX41 approved stage DR endpoints differ')
+    if (cfg['push_vmax_mps'] != [1.5, 1.65, 1.8, 2.0, 2.0, 2.0]
+        or any(type(x) not in (int,float) or not math.isfinite(x) for x in cfg['push_vmax_mps'])):
+        raise ValueError('EX41 stage push maximums must be 1.5, 1.65, 1.8, 2.0, 2.0, 2.0 m/s')
+    pb=cfg['push_baseline']
+    if (not isinstance(pb,dict) or set(pb)!={'path','sha256'} or not isinstance(pb['path'],str)
+        or len(pb['sha256'])!=64):
+        raise ValueError('EX41 pinned m6000 push baseline required')
+    baseline_path=(Path(__file__).resolve().parents[2]/pb['path']).resolve(strict=True)
+    if sha256(baseline_path)!=pb['sha256']:
+        raise ValueError('EX41 pinned m6000 push baseline SHA differs')
+    baseline_doc=json.loads(baseline_path.read_text(encoding='utf-8-sig'))
+    source_bundle=Path(baseline_doc.get('baseline_bundle_path','')).resolve(strict=True)
+    if sha256(source_bundle)!=baseline_doc.get('baseline_bundle_sha256'):
+        raise ValueError('EX41 source m6000 push bundle SHA differs')
+    if (baseline_doc.get('schema')!='foothold-ex41-push-baseline/1'
+        or baseline_doc.get('baseline_checkpoint_iteration')!=6000
+        or baseline_doc.get('baseline_checkpoint_sha256')!=plan.parent_sha256
+        or set(baseline_doc.get('cells',{}))!={f'{t}/{m}' for t in ('flat','random_rough','pyramid_stairs')
+                                               for m in ('eval_gt','eval_pred','probe_prop_only')}):
+        raise ValueError('EX41 m6000 push baseline provenance or matrix differs')
     maintenance_cells(cfg['include_record_only'])
     if type(plan.automatic['stand_min_passed']) is not int or plan.automatic['stand_min_passed']!=61:
         raise ValueError('EX41 approved stand_min_passed is 61')
@@ -88,6 +108,7 @@ def clock_settings(doc):
               'extension_updates','maximum_extensions','interval_updates')},
             'durations':tuple(row['duration']['maximum_updates'] for row in doc['stages']),
             'dr_end_scales':tuple(cfg['dr_stage_end_scales']),
+            'push_vmax_mps':tuple(cfg['push_vmax_mps']),
             'initial_scale':doc['domain_randomization']['scale']}
 
 
@@ -210,6 +231,14 @@ class EX41FixedRuntime(EX41Runtime):
             raise ValueError('EX41 fixed schedule requires verified W71 consumer before launch')
 
     def dr_scale(self,n): return self.clock.scale(n)
+
+    def push_vmax(self, n):
+        """Stage push limit follows the actual clock stage, independent of DR ramp."""
+        index = self.clock.position(int(n))
+        values = self.clock.settings['push_vmax_mps']
+        if len(values) != len(self.plan.stages):
+            raise ValueError('EX41 push Vmax schedule does not match stage count')
+        return float(values[index])
 
     def _score_context_allowed(self,d,n):
         expected=n-1-self.clock.settings['interval_updates']

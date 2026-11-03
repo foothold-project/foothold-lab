@@ -43,7 +43,7 @@ parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 
 parser.add_argument("--push-ladder", action="store_true", help="Fixed-velocity EX-41 push ladder")
 parser.add_argument("--push-ladder-terrain", choices=("flat", "random_rough", "pyramid_stairs"))
 parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "probe_prop_only"))
-parser.add_argument("--push-ladder-command", choices=("walk_0.5", "stand"), default="walk_0.5")
+parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
 parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)

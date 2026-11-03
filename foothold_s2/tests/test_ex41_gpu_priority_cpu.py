@@ -126,7 +126,8 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
     marker = tmp_path / "gpu" / "PRIORITY_BUSY_GPU1"
 
     class Plan:
-        fixed_schedule = True
+        fixed_schedule = ex41_eval_once.load_plan(
+            ex41_eval_once.DEFAULT_TABLE, arm='B').fixed_schedule
         parent_sha256 = "p" * 64
         effective_sha256 = "s" * 64
 
@@ -155,7 +156,7 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
         return {"rc": child_rc, "state": "done" if child_rc == 0 else "failed"}
 
     monkeypatch.setattr(ex41_eval_once, "hidden_child", fake_child)
-    assert Plan.fixed_schedule is True
+    assert 'push_baseline' in Plan.fixed_schedule
     assert not out.exists()
     row = ex41_eval_once.evaluate(checkpoint, out, eval_config=cfg_path,
                                   priority_marker=marker, scope="core")

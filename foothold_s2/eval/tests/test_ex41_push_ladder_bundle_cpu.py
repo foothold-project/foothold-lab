@@ -1,17 +1,37 @@
 from pathlib import Path
 from contextlib import contextmanager
 import json
+import pytest
 
-from foothold_s2.eval.ex41_push_ladder_bundle import build_argv, bundle_cases
+from foothold_s2.eval.ex41_push_ladder_bundle import build_argv, bundle_cases, build_stage_criteria, load_pinned_baseline
+import yaml
 
 
-def test_bundle_has_nine_walk_cases_and_three_flat_stand_supplements():
+def _baseline():
+    root = Path(__file__).resolve().parents[3]
+    plan = yaml.safe_load((root / 'foothold_s2/curriculum/ex41-fixed5000.yaml').read_text(encoding='utf-8-sig'))
+    row = plan['fixed_schedule']['push_baseline']
+    return root / row['path'], row['sha256']
+
+
+def test_pinned_m6000_baseline_checks_derived_and_source_sha():
+    path, sha = _baseline()
+    baseline=load_pinned_baseline(path,sha)
+    assert baseline['baseline_checkpoint_iteration']==6000
+    assert len(baseline['cells'])==9
+    import pytest
+    with pytest.raises(ValueError,match='baseline SHA'):
+        load_pinned_baseline(path,'0'*64)
+
+
+def test_bundle_has_four_nine_cell_commands_and_three_flat_stand_supplements():
     cases = bundle_cases()
-    assert len(cases) == 12
-    walk = [row for row in cases if row['command'] == 'walk_0.5']
+    assert len(cases) == 39
+    commands = [row for row in cases if row['command'] != 'stand']
     stand = [row for row in cases if row['command'] == 'stand']
-    assert len(walk) == 9 and len(stand) == 3
-    assert all(row['envs'] == 3072 and row['directions'] == 'full' for row in walk)
+    assert len(commands) == 36 and len(stand) == 3
+    assert {row['command'] for row in commands} == {'walk_0.5','walk_1.0','walk_1.5','stand_turn_1.2'}
+    assert all(row['envs'] == 3072 and row['directions'] == 'full' for row in commands)
     assert all(row['terrain'] == 'flat' and row['envs'] == 1536
                and row['directions'] == 'cardinal' for row in stand)
 
@@ -26,6 +46,30 @@ def test_bundle_child_cli_records_fixed_l0_single_mode_and_actual_device():
     assert argv[argv.index('--push-ladder-map-mode') + 1] == case['map_mode']
     assert argv[argv.index('--device') + 1] == 'cuda:0'
     assert argv[argv.index('--steps') + 1] == '350'
+
+
+def test_stage_criterion_uses_worst_direction_and_2mps_compares_pinned_m6000():
+    rows=[]
+    baseline={'cells':{}}
+    for terrain in ('flat','random_rough','pyramid_stairs'):
+        for mode in ('eval_gt','eval_pred','probe_prop_only'):
+            baseline['cells'][f'{terrain}/{mode}']={'survival_fraction':.4,
+                'worst_direction_survival_fraction':.25}
+            rows.extend([
+                {'state':'done','terrain':terrain,'map_mode':mode,'command':'walk_1.5',
+                 'summary':{'magnitudes':{'1.5':{'worst_direction_survival_fraction':.875}}}},
+                {'state':'done','terrain':terrain,'map_mode':mode,'command':'walk_0.5',
+                 'summary':{'magnitudes':{'2.0':{'survival_fraction':.45,
+                     'worst_direction_survival_fraction':.375}}}},
+            ])
+    result=build_stage_criteria(rows,baseline,'b'*64)
+    criterion=result['walk_1.5mps_worst_direction']['flat/eval_gt']
+    assert criterion['passed'] is False and criterion['threshold']==.90
+    compared=result['push_2.0mps_vs_m6000']['flat/eval_gt']
+    assert compared['difference_from_m6000']==pytest.approx(.05)
+    assert compared['baseline_source_sha256']=='b'*64
+    with pytest.raises(ValueError,match='missing'):
+        build_stage_criteria(rows[:-1],baseline,'b'*64)
 
 
 def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
@@ -49,8 +93,10 @@ def test_gpu0_bundle_claims_and_records_priority_markers(tmp_path, monkeypatch):
     monkeypatch.setattr(bundle, "wait_for_gpu0_python_idle", lambda: admission)
     monkeypatch.setattr(bundle.subprocess, "run", lambda *_a, **_k: Result())
     output = tmp_path / "out"
+    baseline_json, baseline_sha = _baseline()
     doc = bundle.run_bundle(checkpoint, output, device="cuda:0", task="fake",
-                            include_stand=False, checkpoint_iteration=6000)
+                            include_stand=False, checkpoint_iteration=6000,
+                            baseline_json=baseline_json, baseline_sha256=baseline_sha)
     assert observed == [("EX-41-push-ladder-eval", 6000, str(output.resolve()))]
     assert doc["priority_markers"][0]["path"] == "C:/test/TRAINING_BUSY"
     assert doc["gpu0_admission"] == admission

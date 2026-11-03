@@ -107,6 +107,8 @@ def test_scope_commands_use_side_w78_every_250_and_full_w78_at_stage_end(tmp_pat
     assert auxiliary[2]['argv'][2] == 'foothold_s2.eval.ex41_push_ladder_bundle'
     assert auxiliary[2]['device'] == 'cuda:0'
     assert auxiliary[2]['argv'][auxiliary[2]['argv'].index('--device') + 1] == 'cuda:0'
+    assert '--baseline-json' in auxiliary[2]['argv']
+    assert auxiliary[2]['argv'][auxiliary[2]['argv'].index('--baseline-sha256') + 1] == load_plan(TABLE,arm='B').fixed_schedule['push_baseline']['sha256']
     assert auxiliary[3]['argv'][2] == 'foothold_s2.eval.a_push_video'
     assert auxiliary[3]['device'] == 'cuda:1'
     assert '--cadence' in auxiliary[3]['argv']
@@ -144,7 +146,7 @@ def test_live_gpu0_training_routes_stage_end_children_to_gpu1_and_they_finish(
            'stand': {'contact_force_n': 1}}
 
     class Plan:
-        fixed_schedule = True
+        fixed_schedule = {'push_baseline': load_plan(TABLE, arm='B').fixed_schedule['push_baseline']}
         parent_sha256 = 'p' * 64
         effective_sha256 = 's' * 64
 
@@ -276,15 +278,33 @@ def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp
     assert auxiliary_phase_status('w78_v2',output)['state']=='HOLD'
 
 
-def test_stage_end_push_ladder_requires_all_12_children(tmp_path):
+def test_stage_end_push_ladder_requires_all_39_children_and_registered_criteria(tmp_path):
     from foothold_s2.ex41_eval_once import auxiliary_phase_status
 
     output = tmp_path / 'push_ladder'; output.mkdir()
-    children = [{'state':'done'} for _ in range(12)]
+    children = ([{'state':'done','terrain':terrain,'map_mode':mode,'command':command}
+                 for command in ('walk_0.5','walk_1.5','walk_1.0','stand_turn_1.2')
+                 for terrain in ('flat','random_rough','pyramid_stairs') for mode in ('eval_gt','eval_pred','probe_prop_only')]
+                + [{'state':'done','terrain':'flat','map_mode':mode,'command':'stand'}
+                   for mode in ('eval_gt','eval_pred','probe_prop_only')])
+    cells={f'{terrain}/{mode}' for terrain in ('flat','random_rough','pyramid_stairs')
+           for mode in ('eval_gt','eval_pred','probe_prop_only')}
     doc = {'schema':'foothold-ex41-push-ladder-bundle/1','state':'done',
-           'expected_children':12,'children':children}
+           'expected_children':39,'children':children,
+           'baseline': {'sha256':load_plan(TABLE,arm='B').fixed_schedule['push_baseline']['sha256'],
+                        'checkpoint_iteration':6000,
+                        'checkpoint_sha256':load_plan(TABLE,arm='B').parent_sha256},
+           'stage_criteria':{
+               'walk_1.5mps_worst_direction':{key:{'push_magnitude_mps':1.5,'threshold':.90} for key in cells},
+               'push_2.0mps_vs_m6000':{key:{'push_magnitude_mps':2.0,
+                   'baseline_source_sha256':load_plan(TABLE,arm='B').fixed_schedule['push_baseline']['sha256']}
+                   for key in cells}}}
     (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
     assert auxiliary_phase_status('push_ladder',output)['state']=='done'
+    doc['baseline']['sha256']='b'*64
+    (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
+    assert auxiliary_phase_status('push_ladder',output)['state']=='HOLD'
+    doc['baseline']['sha256']=load_plan(TABLE,arm='B').fixed_schedule['push_baseline']['sha256']
     doc['children'].pop()
     (output/'push_ladder_bundle.json').write_text(json.dumps(doc),encoding='utf-8')
     assert auxiliary_phase_status('push_ladder',output)['state']=='HOLD'
