@@ -11,7 +11,8 @@ BOUNDS = {'reward_weights.swing':(-20.,-2.), 'reward_weights.stumble':(-3.,-1.),
           'ppo.desired_kl':(.0001,.1), 'dr.target_scale':(0.,1.),
           'dr.ramp_updates':(0,100000), 'heading_forward_fraction':(0.,1.),
           'terrain_level_cap':(0,5), 'episode_length_s':(1.,120.)}
-BOOLS = {'critic_mirror','w71_ready'}
+BOOLS = frozenset({'critic_mirror','w71_ready'})
+SNAPSHOT_BOOL_FIELDS = frozenset({'critic_mirror','w71_ready'})
 PAIR_STEP_MAX = .01  # D93-pair-one-point-limit-two: fractions, not percent.
 PAIR_LIMIT_MAX = .02
 
@@ -66,6 +67,10 @@ def read_committed_pair(config_path: str | Path, approval_path: str | Path) -> d
         raise ValueError('W72 unknown boundary format')
     if not isinstance(data[1],dict) or data[1].get('format')!='foothold-ex41-approvals/1':
         raise ValueError('W72 unknown approvals format')
+    values=data[0].get('values')
+    if (not isinstance(values,dict)
+        or any(type(values.get(key)) is not bool for key in SNAPSHOT_BOOL_FIELDS)):
+        raise ValueError('W72 boundary snapshot is missing a registered boolean field')
     return dict(commit=head,config_sha256=hashlib.sha256(blobs[0]).hexdigest(),
                 approval_sha256=hashlib.sha256(blobs[1]).hexdigest(),config=data[0],approvals=data[1])
 

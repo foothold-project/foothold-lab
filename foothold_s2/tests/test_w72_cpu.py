@@ -25,14 +25,14 @@ def test_git_snapshot_rejects_dirty_and_untracked(tmp_path):
     def git(*args): return subprocess.run(['git','-C',str(tmp_path),*args],check=True,capture_output=True)
     git('init'); git('config','user.name','CPU Test'); git('config','user.email','cpu@example.invalid')
     c=tmp_path/'config.yaml'; a=tmp_path/'approval.yaml'
-    c.write_text('format: foothold-ex41-boundary/1\nvalues: {}\n',encoding='utf-8')
+    c.write_text('format: foothold-ex41-boundary/1\nvalues: {critic_mirror: false, w71_ready: false}\n',encoding='utf-8')
     a.write_text('format: foothold-ex41-approvals/1\nfields: {}\n',encoding='utf-8')
     with pytest.raises(ValueError): w72.read_committed_pair(c,a)
     git('add','config.yaml','approval.yaml'); git('commit','-m','known snapshot')
     snap=w72.read_committed_pair(c,a)
-    assert snap['config']['values']=={} and len(snap['config_sha256'])==64
-    c.write_text('values: {changed: true}\n',encoding='utf-8')
-    assert snap['config']['values']=={}  # frozen result
+    assert snap['config']['values']=={'critic_mirror':False,'w71_ready':False} and len(snap['config_sha256'])==64
+    c.write_text('values: {critic_mirror: false, w71_ready: true}\n',encoding='utf-8')
+    assert snap['config']['values']=={'critic_mirror':False,'w71_ready':False}  # frozen result
     with pytest.raises(ValueError): w72.read_committed_pair(c,a)
 
 

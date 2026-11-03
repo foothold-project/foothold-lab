@@ -18,7 +18,7 @@ def real_authorization(root: Path) -> dict:
     git('config', 'core.autocrlf', 'false')
     boundary = root / 'ex41-boundary.yaml'
     approval = root / 'ex41-approvals.yaml'
-    boundary.write_bytes(b'format: foothold-ex41-boundary/1\nvalues:\n  critic_mirror: true\n')
+    boundary.write_bytes(b'format: foothold-ex41-boundary/1\nvalues:\n  critic_mirror: true\n  w71_ready: false\n')
     approval.write_bytes(b'format: foothold-ex41-approvals/1\nfields:\n  critic_mirror:\n    decision_id: D101\n    choices: [false, true]\nautomatic:\n  critic_mirror: D101\n')
     git('add', '--', boundary.name, approval.name)
     git('-c', 'user.name=CPU fixture', '-c', 'user.email=cpu@example.invalid',

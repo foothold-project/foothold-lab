@@ -127,6 +127,40 @@ def test_d172_committed_w71_and_explicit_launch_switch():
     assert allowed["w71_ready"] is True
 
 
+def test_d172_w71_reaches_actual_fixed_runtime_start_and_hydra_wiring(tmp_path):
+    from foothold_s2.curriculum.continuous import make_runtime
+    from foothold_s2.curriculum import w72
+    from foothold_s2.tests.ex41_runtime_fixture import attach_consumer
+
+    plan = load_fixed_plan(TABLE)
+    snapshot = ex41_startup.authorization_snapshot(plan)
+    assert "w71_ready" in w72.BOOLS and "w71_ready" in w72.SNAPSHOT_BOOL_FIELDS
+    assert type(snapshot["config"]["values"]["w71_ready"]) is bool
+    changes = w72.validate_change(
+        {**snapshot["config"]["values"], "w71_ready": False},
+        snapshot["config"]["values"], snapshot["approvals"],
+    )
+    assert {row["path"]: row["decision_id"] for row in changes}["w71_ready"] == "D172"
+
+    runtime = make_runtime(plan, 4, "cpu", tmp_path / "w71-start")
+    attach_consumer(runtime)
+    runtime.start(plan.parent_sha256)
+    assert runtime._started is True
+    assert runtime._snapshot["config"]["values"]["w71_ready"] is True
+    assert runtime._receipt["status"] == "applied"
+    assert runtime._receipt["config_sha256"] == snapshot["config_sha256"]
+    assert runtime._receipt["approval_sha256"] == snapshot["approval_sha256"]
+
+    source = (REPO / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+    assert any(isinstance(d, ast.Call) and isinstance(d.func, ast.Name)
+               and d.func.id == "hydra_task_config" for d in main.decorator_list)
+    assert any(isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+               and isinstance(node.func.value, ast.Name) and node.func.value.id == "ex41_runtime"
+               and node.func.attr == "start" for node in ast.walk(main))
+
+
 def test_current_production_boundary_refuses_unverified_w71(monkeypatch):
     plan = load_fixed_plan(TABLE)
     monkeypatch.setattr(ex41_startup, "authorization_snapshot",
