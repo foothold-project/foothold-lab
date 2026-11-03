@@ -261,6 +261,7 @@ def run_one(args) -> dict:
                 raise ValueError(f"A push recorder failed rc={rc}")
             verified = verify_capture(attempts, label, args, mode, source)
             receipt = {"schema": SCHEMA, "map_mode": mode, "group_id": specs[mode]["push_group_id"],
+                       "source_head": source["source_head"],
                        "checkpoint_sha256": source["checkpoint_sha256"],
                        "cadence": args.cadence, "iteration": args.iteration,
                        "kind": args.kind, "level": args.level, "col": args.col,
@@ -287,11 +288,14 @@ def compare_mode_receipts(out: Path) -> dict:
             raise ValueError("A push mode receipt or video SHA differs")
     base = rows[0]
     for row in rows[1:]:
-        keys = ("group_id", "checkpoint_sha256", "iteration", "kind", "level",
+        keys = ("group_id", "source_head", "checkpoint_sha256", "iteration", "kind", "level",
                 "col", "env_id", "seed", "push_seed")
         if any(row[key] != base[key] for key in keys):
             raise ValueError("A push three modes differ in terrain, seed or checkpoint")
-        if row["push_signature"] != base["push_signature"]:
+        earlier, later = base["push_signature"], row["push_signature"]
+        if (earlier[:4] != later[:4] or np.asarray(earlier[4]).shape != (64, 3)
+                or np.asarray(later[4]).shape != (64, 3)
+                or not np.allclose(earlier[4], later[4], rtol=0.0, atol=1.0e-5)):
             raise ValueError("A push three modes differ in actual push event")
     return {"state": "complete" if len(rows) == 3 else "partial",
             "modes": [row["map_mode"] for row in rows], "group_id": base["group_id"]}

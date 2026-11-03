@@ -86,10 +86,10 @@ def test_three_receipts_reject_changed_push_and_missing_video(tmp_path):
         path = tmp_path / f"{mode}.mp4"
         path.write_bytes(mode.encode())
         row = {"map_mode": mode, "video": str(path), "video_sha256": video.sha256(path),
-               "group_id": "g", "checkpoint_sha256": "c", "iteration": 10,
+               "group_id": "g", "source_head": "s", "checkpoint_sha256": "c", "iteration": 10,
                "kind": "pyramid_stairs", "level": 0, "col": 0, "env_id": 0,
                "seed": 42, "push_seed": 42,
-               "push_signature": ["g", 42, 100, 999, [[0.3, 0.1, 0.0]]]}
+               "push_signature": ["g", 42, 100, 999, [[0.3, 0.1, 0.0]] * 64]}
         (tmp_path / f"{mode}.json").write_text(json.dumps(row), encoding="utf-8")
     assert video.compare_mode_receipts(tmp_path)["state"] == "complete"
     changed = tmp_path / "eval_pred.json"
@@ -99,6 +99,16 @@ def test_three_receipts_reject_changed_push_and_missing_video(tmp_path):
     with pytest.raises(ValueError, match="actual push"):
         video.compare_mode_receipts(tmp_path)
     row["push_signature"][4][0][0] = 0.3
+    changed.write_text(json.dumps(row), encoding="utf-8")
+    row["push_signature"][4][0][0] = 0.3000002
+    changed.write_text(json.dumps(row), encoding="utf-8")
+    assert video.compare_mode_receipts(tmp_path)["state"] == "complete"
+    row["push_signature"][4][0][0] = 0.3
+    row["source_head"] = "wrong"
+    changed.write_text(json.dumps(row), encoding="utf-8")
+    with pytest.raises(ValueError, match="terrain, seed or checkpoint"):
+        video.compare_mode_receipts(tmp_path)
+    row["source_head"] = "s"
     changed.write_text(json.dumps(row), encoding="utf-8")
     (tmp_path / "eval_pred.mp4").unlink()
     with pytest.raises(FileNotFoundError):
