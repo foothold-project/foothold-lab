@@ -966,7 +966,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
                              "rollout_key": push_rollout_key, "env_id": push_env_id,
                              "meaning": push_overlay["meaning"],
                              "recovery_fallback_s": RECOVERY_FALLBACK_S,
-                             "scene_arrow": "world-xy-delta-v-projected-from-root-plus-0.35m"}
+                             "scene_arrow": "world-xy-delta-v-projected-from-root-plus-0.20m"}
                             if push_overlay is not None else None)}
     out.with_suffix(".json").write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return rec

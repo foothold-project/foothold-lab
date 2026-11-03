@@ -148,7 +148,8 @@ def test_world_push_arrow_uses_recorded_camera_only_inside_recovery(tmp_path):
     during = draw_push_scene_arrow(blank.copy(), event, 2.5, root, camera)
     red = (during[:, :, 2] > 190) & (during[:, :, 1] < 110) & (during[:, :, 0] < 110)
     assert red.sum() > 50
-    assert np.where(red)[0].max() < 300  # above this known robot body centre at y=364
+    assert np.where(red)[0].min() < 300
+    assert np.where(red)[0].max() < 400  # known robot body centre is y=364
     assert np.array_equal(draw_push_scene_arrow(blank.copy(), event, 4.0, root, camera), blank)
     with pytest.raises(ValueError, match="camera pose"):
         draw_push_scene_arrow(blank.copy(), event, 2.5, root, None)

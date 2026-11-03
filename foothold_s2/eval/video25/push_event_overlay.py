@@ -111,7 +111,9 @@ def draw_push_scene_arrow(scene, overlay: dict, time_s: float, root_pos_w, camer
     root = np.asarray(root_pos_w, dtype=np.float64)
     if root.shape != (3,) or not np.isfinite(root).all():
         raise ValueError("push scene arrow needs a finite world body position")
-    origin = root + np.array([0.0, 0.0, 0.35])
+    # Sit just above the torso roof in the recorded follow view. A larger
+    # height makes the push arrow look detached from the animal.
+    origin = root + np.array([0.0, 0.0, 0.20])
     endpoint = origin + np.array([event["dx"], event["dy"], 0.0]) * 0.8
     projection = dict(width=scene.shape[1], height=scene.shape[0],
                       focal_length_mm=float(camera_row["focal_length_mm"]),
