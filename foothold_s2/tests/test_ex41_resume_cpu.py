@@ -538,3 +538,34 @@ def test_resume_code_rebase_is_persisted_before_runner_manifest_attachment():
     attach = source.index("runner.attach_manifest(log_dir, manifest)", persist)
     learn = source.index("runner.learn(num_learning_iterations=remaining", attach)
     assert resume_start < rebase < persist < attach < learn
+def test_state_dict_records_effective_w86_weights_cpu():
+    from types import SimpleNamespace
+
+    fake = SimpleNamespace(
+        alg=SimpleNamespace(
+            policy=SimpleNamespace(state_dict=lambda: {"policy.weight": torch.tensor([1.0])}),
+            optimizer=SimpleNamespace(state_dict=lambda: {"state": {}}),
+            learning_rate=0.0003,
+        ),
+        perception=SimpleNamespace(state_dict=lambda: {"perception.weight": torch.tensor([2.0])}),
+        ex41_pose_commands=None,
+        ex41_critic_mirror=False,
+        ex41_mirror_approval=None,
+        ex41_mirror_hold_reason=None,
+        ex41_parent_transfer={},
+        perception_optimizer=SimpleNamespace(state_dict=lambda: {"state": {}}),
+        pcfg={"map_switch_seed": 42},
+        adasmpl=SimpleNamespace(state_dict=lambda: {"p": 0.5}),
+        env=SimpleNamespace(unwrapped=SimpleNamespace(cfg=SimpleNamespace(seed=42))),
+        current_learning_iteration=0,
+        _last_use_gt_frac=0.5,
+        policy_cfg={},
+        continuous_curriculum=SimpleNamespace(
+            effective={"reward_weights": {"swing": -5.0}}, state_dict=lambda: {}),
+        _env_state=lambda: {},
+        rng_state=lambda: {"cpu": "fixture"},
+        map_switch_state=lambda: {"fixture": True},
+    )
+
+    state = StartRunner.state_dict(fake)
+    assert state["ex41_w86_reward_weights"] == {"swing": -5.0}

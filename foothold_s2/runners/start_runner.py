@@ -22,6 +22,7 @@ critic 입력 664 는 이 runner 가 [policy, base_vel, contacts, gt_map, gt_fee
 from __future__ import annotations
 
 import json
+import copy
 import hashlib
 import os
 import random
