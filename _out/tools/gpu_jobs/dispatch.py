@@ -1230,7 +1230,12 @@ def train_mean(state: dict, train: dict | None, window: int) -> float | None:
     That file is rewritten every 10 updates, so a sample is one 10-update block and the guard
     acts from the first sample (no warm-up gap)."""
     hist = state.setdefault("train_hist", [])
-    if train and type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
+    if train is None:
+        # No training marker: old samples belong to a finished run or rehearsal (11/04 23:3x they
+        # held GPU1 idle via train_protect with nothing training).
+        hist.clear()
+        return None
+    if type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
         if not hist or hist[-1][0] != train["iter"]:
             hist.append([train["iter"], float(train["iter_s"])])
             del hist[:-window]

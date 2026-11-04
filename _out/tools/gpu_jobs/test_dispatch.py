@@ -972,3 +972,10 @@ class DispatchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_train_mean_ignores_stale_samples_without_training():
+    state = {"train_hist": [[10, 29.8], [20, 29.9]]}
+    assert board.train_mean(state, None, 10) is None
+    assert state["train_hist"] == []
+    assert board.train_mean(state, {"iter": 30, "iter_s": 12.0}, 10) == 12.0
