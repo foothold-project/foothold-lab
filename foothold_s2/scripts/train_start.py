@@ -997,7 +997,9 @@ def main(env_cfg, agent_cfg):
         eval_config_path = Path(log_dir) / "ex41_reports" / "rehearsal_eval_config.json"
         eval_config_doc = json.loads(Path(REPO, "foothold_s2", "curriculum",
                                           "ex40_score_config.json").read_text(encoding="utf-8"))
-        eval_config_doc.update(map_steps=1, stand_seconds=1.25, stand_skip_seconds=0.25,
+        # The shortest extended sequence has four phases; one step total is
+        # rejected by eval_map_modes.phase_steps before it can emit map_modes.json.
+        eval_config_doc.update(map_steps=4, stand_seconds=1.25, stand_skip_seconds=0.25,
                                check_interval_seconds=1.0)
         eval_config_path.parent.mkdir(parents=True, exist_ok=True)
         eval_config_path.write_text(json.dumps(eval_config_doc, sort_keys=True, indent=2) + "\n",

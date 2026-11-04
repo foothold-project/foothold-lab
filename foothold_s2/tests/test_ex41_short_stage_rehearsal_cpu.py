@@ -13,6 +13,7 @@ from foothold_s2.curriculum import w72
 from foothold_s2.scripts.ex41_rehearsal_schedule import (
     STAGE_IDS, boundary_updates, d181_short_tables, parse_stage_updates,
 )
+from foothold_s2.eval.map_mode_cells import SEQUENCES, phase_steps
 from foothold_s2.scripts.ex41_startup import (
     configure_stage_rehearsal_plan, validate_rehearsal_request,
     validate_stage_rehearsal_mode,
@@ -36,6 +37,14 @@ def test_short_table_parser_and_d181_two_cases():
     for bad in ("2,2,2", "0,2,2,2,2,2", "6,2,2,2,2,2", "2,2,2,2,2,2,2"):
         with pytest.raises(ValueError):
             parse_stage_updates(bad)
+
+
+def test_rehearsal_map_steps_cover_every_extended_sequence_phase():
+    steps = 4
+    assert all(sum(phase_steps(steps, len(sequence))) == steps
+               for sequence in SEQUENCES.values())
+    source = (Path(__file__).parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "eval_config_doc.update(map_steps=4" in source
 
 
 def test_stage_table_is_rehearsal_only_and_production_rejects_it():
