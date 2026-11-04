@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import ast
 import json
@@ -111,7 +111,7 @@ def test_real_fixed_plan_has_pinned_m6000_dr_half_and_26_maintenance_cells():
     assert plan.parent_update == 6000
     assert plan.initial_dr_scale == 0.5
     assert len(baseline) == 26
-    assert plan.fixed_schedule["duration_updates"] == 5000
+    assert plan.fixed_schedule["duration_updates"] == 6000
 
 
 def test_d172_committed_w71_and_explicit_launch_switch():
@@ -205,6 +205,8 @@ def test_fixed_runtime_only_allows_unverified_w71_in_bounded_rehearsal(tmp_path)
     values = {"ppo": {"entropy_coef": 0.01, "desired_kl": 0.01},
               "dr": {"target_scale": 0.5, "ramp_updates": 0},
               "reward_weights": {"zero_yaw": -0.5, "swing": -10.0, "stumble": -2.0},
+              "command_share_bias": {"walk": 0.0, "spin": 0.0, "side": 0.0,
+                                     "diag_fwd": 0.0, "diag_back": 0.0},
               "heading_forward_fraction": 0.3, "critic_mirror": False,
               "terrain_level_cap": 5, "w71_ready": False, "episode_length_s": 20.0}
     production = make_runtime(plan, 64, "cpu", tmp_path / "production")
@@ -702,7 +704,7 @@ def test_end_by_is_an_alert_only_budget_plus_extension_and_buffer(tmp_path):
         runtime, tmp_path, plan, now=started,
         clock_now=lambda: datetime.fromisoformat(receipt["end_by"]) + timedelta(seconds=1),
         seconds_per_update=26.3, deliver=False)
-    expected_end = started + timedelta(seconds=5000 * 26.3)
+    expected_end = started + timedelta(seconds=6000 * 26.3)
     expected_deadline = expected_end + timedelta(seconds=(1000 + 500) * 26.3 + 86400)
     assert datetime.fromisoformat(receipt["expected_end_at"]) == expected_end
     assert datetime.fromisoformat(receipt["end_by"]) == expected_deadline
