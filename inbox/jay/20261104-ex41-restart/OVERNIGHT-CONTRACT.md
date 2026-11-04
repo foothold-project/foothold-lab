@@ -28,6 +28,17 @@ pstack 의 밤샘 계약을 우리 실험에 맞춘 것이다. pstack 은 「시
 | 4 EX-42 분석 | 보고서 push | 5 |
 | 5 점프 판 논의 | D183 을 팀장 논의 안건으로 올림(착수 결정은 팀장) | 멈춤 |
 
+단계 1 이 도는 동안 lead 가 할 일(팀장 23:0x 지시 · GPU 를 쓰지 않음 · 학습을 건드리지 않음):
+
+| 일 | 끝 조건 |
+|---|---|
+| A `automate-me` 로 `mai-mode` 스킬 | 팀장 대화 기록 · foothold-lead-style · RULES-HUB · FAILURE-LOG 에서 규칙을 뽑아 `~/.claude/skills/mai-mode/SKILL.md`(Codex 쪽 사본 포함) · 기존 foothold-lead-style 은 그 안으로 합침 · 이 계약을 그 모드의 「무인 실행」 절로 |
+| B `/correct` | FAILURE-LOG 에서 두 번 이상 난 실수 묶음마다 막는 장치(구조 · lint · 시험) · 각 장치가 실제 과거 실수 커밋에서 실패하는 출력 · 첫 묶음은 「import 누락 · 정의 안 된 이름」(EX-38 robot_lab · EX-41 copy · math) → 시작 스크립트 거절 |
+| C `create-verification-skill` → `verify-ex` | 띄움 · 250 경계마다 · 단계 끝마다 · 끝날 때 할 일과 확인 방법을 프로젝트 스킬로 · 실제 EX-41 경계 하나에서 그 스킬을 끝까지 돌려 증거 확인 |
+| D EX-41 남은 것 | 관문 표 띄운 뒤 행(N1 단계 끝 분석 보고기 · N2 · N4 · N15 · N17~N21) |
+
+답하기 전 규칙: 이미 정한 것인지 WORKLIST · CURRICULUM-GATES · 분석 문서를 먼저 찾는다(팀장 22:5x · 같은 일을 두 번 세 번 시키지 않는다).
+
 끝 조건은 결과를 보고 넓히지 않는다. 막다른 곳이면 넓히지 않고 멈춰서 까닭을 적는다.
 
 ## 3. lead 가 혼자 정하는 것 · 팀장에게 묻는 것

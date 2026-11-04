@@ -1,2 +1,4 @@
 ts	phase	decision	why	evidence	result
 2026-11-04T22:51:01+09:00	start	무인 실행 계약 v1 작성	팀장 22:5x 지시 · pstack 밤샘 계약을 우리 실험에 맞춤	OVERNIGHT-CONTRACT.md	open
+2026-11-04T23:07:55+09:00	C76	C76 촬영은 64 env 유지	평가 칸과 같은 env 를 찍기 위함(REPORT-C76-MVP-ROOT-1104 10줄) · 원인(분할 첫 읽기 빈 값)은 재렌더로 해결	D:/mai-tmp/scripter/REPORT-C76-MVP-ROOT-1104.md	makes 0 blocks
+2026-11-04T23:07:55+09:00	plan	띄운 뒤 lead 일 A~D 를 계약에 추가	팀장 23:0x 지시	OVERNIGHT-CONTRACT.md	open
