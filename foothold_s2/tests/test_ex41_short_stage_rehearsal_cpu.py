@@ -12,6 +12,9 @@ from foothold_s2.curriculum.ex41_fixed import Clock
 from foothold_s2.curriculum import w72
 from foothold_s2.scripts.ex41_rehearsal_schedule import (
     STAGE_IDS, boundary_updates, d181_short_tables, parse_stage_updates,
+    REHEARSAL_POLICY_DT_SECONDS, REHEARSAL_STAND_SECONDS,
+    REHEARSAL_STAND_SKIP_SECONDS, REHEARSAL_STAND_STEPS,
+    REHEARSAL_STAND_SKIP_STEPS,
 )
 from foothold_s2.eval.map_mode_cells import SEQUENCES, phase_steps
 from foothold_s2.scripts.ex41_startup import (
@@ -24,6 +27,15 @@ from foothold_s2 import ex41_score_watch as watch
 
 TABLE = Path(__file__).parents[1] / "curriculum" / "ex41-fixed5000.yaml"
 DEFAULT_EVAL = Path(__file__).parents[1] / "curriculum" / "ex40_score_config.json"
+
+
+def test_rehearsal_stand_window_is_step_aligned_and_has_samples():
+    steps = round(REHEARSAL_STAND_SECONDS / REHEARSAL_POLICY_DT_SECONDS)
+    skip = round(REHEARSAL_STAND_SKIP_SECONDS / REHEARSAL_POLICY_DT_SECONDS)
+    assert (steps, skip) == (REHEARSAL_STAND_STEPS, REHEARSAL_STAND_SKIP_STEPS)
+    assert abs(steps * REHEARSAL_POLICY_DT_SECONDS - REHEARSAL_STAND_SECONDS) <= REHEARSAL_POLICY_DT_SECONDS / 2
+    assert 0 < skip < steps
+    assert steps - skip == 50
 
 
 def test_short_table_parser_and_d181_two_cases():

@@ -994,6 +994,7 @@ def main(env_cfg, agent_cfg):
     if EX41_STAGE_REHEARSAL is not None:
         from foothold_s2.scripts.ex41_rehearsal_schedule import (
             d181_short_tables, REHEARSAL_FAILURE_INJECTIONS,
+            REHEARSAL_STAND_SECONDS, REHEARSAL_STAND_SKIP_SECONDS,
         )
 
         eval_config_path = Path(log_dir) / "ex41_reports" / "rehearsal_eval_config.json"
@@ -1001,7 +1002,8 @@ def main(env_cfg, agent_cfg):
                                           "ex40_score_config.json").read_text(encoding="utf-8"))
         # The shortest extended sequence has four phases; one step total is
         # rejected by eval_map_modes.phase_steps before it can emit map_modes.json.
-        eval_config_doc.update(map_steps=4, stand_seconds=1.25, stand_skip_seconds=0.25,
+        eval_config_doc.update(map_steps=4, stand_seconds=REHEARSAL_STAND_SECONDS,
+                               stand_skip_seconds=REHEARSAL_STAND_SKIP_SECONDS,
                                check_interval_seconds=1.0)
         eval_config_path.parent.mkdir(parents=True, exist_ok=True)
         eval_config_path.write_text(json.dumps(eval_config_doc, sort_keys=True, indent=2) + "\n",
