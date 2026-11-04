@@ -22,7 +22,7 @@
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
 | C1 | 학습 · 점수 감시기 · 단계 끝 평가 · 밀기 감시기 · 영상 촬영기 · 합성기 · 디스패처가 원격에 push 된 한 커밋(가지 `ex41-measure-fix`) | runner · scripter · lead | |
-| C2 | runner 커밋 d4f8193d · 4c1b14e2 · 7a907a90 · scripter 커밋 c4b84391 · cd41b19d · 4bde9787 · 12b8cdf7 · SB 촬영기가 그 커밋의 조상(`git merge-base --is-ancestor` 출력) | lead | |
+| C2 | runner 커밋 d4f8193d · 4c1b14e2 · 7a907a90 · scripter 커밋 c4b84391 · cd41b19d · 4bde9787 · 12b8cdf7 · SB 촬영기가 그 커밋의 조상(`git merge-base --is-ancestor` 출력) | lead | 15:0x ex41-measure-fix e5c30137 에서 patch-id 대조(cherry-pick 이라 해시는 다름): c4b84391 → d2f31e82 · cd41b19d · 12b8cdf7 · 230cc44e 그대로 · 4bde9787 → 6527ffb2 · 54e393a5 → 8cad4806 · runner 3 커밋 dd653dc0 · d6598e06 · e702e65b · lead 93fd9441 · b26c556c · 889266c8 조상 확인. 남음: 새 실행 기동 HEAD 가 이 커밋(또는 그 뒤)인지 기동 때 대조 |
 | C3 | 프로세스마다 시작 때 HEAD 대조 · 다르면 거절(시험: 다른 HEAD 로 띄워 거절되는 로그) | runner | |
 | C4 | 실행 사본 쓰기 잠금(커밋 거절 hook · 시험 커밋이 거절된 출력) | lead | |
 | C5 | 저장소 밖 실행 파일 0(mirror guard · boundary report · 디스패처 · 관리판을 저장소 `tools/` 로) | lead | 일부: 디스패처 · 관리판 `_out/tools/gpu_jobs/dispatch.py`(93fd9441) · 경계 보고 `_out/tools/ex41/boundary_report.py`(b26c556c, 실행 루트 인자 · 측정 없음이면 rc 2 · 경계 적용 DR 줄 출력, 1250 · 1500 · 2000 으로 확인). 남음: mirror guard 는 runner 가 정본 코드로(M8) |
