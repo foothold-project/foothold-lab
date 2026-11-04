@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -373,27 +374,97 @@ def test_core_score_is_published_before_stage_end_auxiliary_dispatch(
         'evaluation_scope':'maintenance_26_and_stand_only'} )
     launched = []
 
+    monkeypatch.setenv('EX41_GPU_JOBS_QUEUE', str(tmp_path / 'queue.json'))
+    registered = []
+    def register(queue_path, specs):
+        registered.extend(specs)
+        return specs
+    monkeypatch.setattr(watch, 'register_stage_end_queue_jobs', register)
+
     def fake_child(argv, folder, **_kwargs):
         argv = list(argv)
         scope = argv[argv.index('--scope') + 1]
         launched.append(scope)
-        if scope == 'auxiliary':
-            score_path = scores / f'score_{iteration}_{sha256(cp)[:12]}.json'
-            assert score_path.is_file()
-            assert json.loads(score_path.read_text(encoding='utf-8'))['evaluation_state'] == 'complete'
         folder.mkdir(parents=True, exist_ok=True)
-        rc = 5 if scope == 'auxiliary' else 0
-        (folder / 'child.json').write_text(json.dumps({'state':'done','rc':rc}), encoding='utf-8')
-        return {'state':'failed' if rc else 'done','rc':rc,'pid':123}
+        (folder / 'child.json').write_text(json.dumps({'state':'done','rc':0}), encoding='utf-8')
+        return {'state':'done','rc':0,'pid':123}
 
     monkeypatch.setattr(watch, 'hidden_child', fake_child)
     result = watch.process_once(run, out, scores, TABLE, state, execute=True,
                                 sleep=lambda _seconds:None)
     assert result['state'] == 'complete'
-    assert launched == (['periodic', 'auxiliary'] if auxiliary_due else ['periodic'])
+    assert launched == ['periodic']
     if auxiliary_due:
-        aux_path = out / f'model_{iteration}_{sha256(cp)[:12]}' / 'stage_end_auxiliary.json'
-        assert json.loads(aux_path.read_text(encoding='utf-8'))['state'] == 'HOLD'
+        jobs = state['stage_end_queue_jobs'][f'{iteration}_{sha256(cp)}']
+        assert len(jobs) == 55
+        assert [row['priority'] for row in registered] == [2, 2, 2] + [3] * 52
+        assert not (out / f'model_{iteration}_{sha256(cp)[:12]}' / 'stage_end_auxiliary.json').exists()
         assert state['done'][f'{iteration}_{sha256(cp)}']['state'] == 'complete'
     else:
         assert not (out / f'model_{iteration}_{sha256(cp)[:12]}' / 'stage_end_auxiliary.json').exists()
+
+
+def test_stage_auxiliary_scopes_are_individual_and_a_push_argv_uses_real_parser(tmp_path):
+    from foothold_s2.eval.a_push_video import build_parser
+
+    cfg = watch.config(watch.DEFAULT_CONFIG)
+    cp = tmp_path / 'model_750.pt'
+    cp.write_bytes(b'known checkpoint bytes')
+    for phase in ('axis_v2', 'w78_v2', 'push_ladder', 'a_push_video'):
+        rows = commands(cp, tmp_path / phase, cfg, scope=phase, gpu0_training_active=True)
+        assert len(rows) == 1 and rows[0]['name'] == phase
+        if phase == 'a_push_video':
+            argv = rows[0]['argv']
+            module_index = argv.index('foothold_s2.eval.a_push_video')
+            parsed = build_parser().parse_args(argv[module_index + 1:])
+            assert parsed.checkpoint == cp
+            assert parsed.device == 'cuda:1'
+            assert parsed.cadence == 'stage_end'
+            assert '--headless' not in argv
+        else:
+            assert rows[0]['device'] == 'cuda:1'
+
+
+def test_stage_end_queue_items_are_independent_and_prioritized(tmp_path):
+    from foothold_s2 import ex41_score_watch as watch
+    from foothold_s2.ex40_score import sha256
+    checkpoint = tmp_path / 'model_750.pt'; checkpoint.write_bytes(b'checkpoint')
+    rows = watch.stage_end_queue_specs(checkpoint, tmp_path / 'target',
+                                      watch.config(watch.DEFAULT_CONFIG),
+                                      gpu0_training_active=True)
+    assert len(rows) == 55
+    eval_rows, push_video, video_rows = rows[:3], rows[3], rows[4:]
+    assert [row['units'][0]['id'] for row in eval_rows] == ['axis_v2', 'w78_v2', 'push_ladder']
+    assert [row['priority'] for row in eval_rows] == [2, 2, 2]
+    assert [row['kind'] for row in eval_rows] == ['evaluation'] * 3
+    assert push_video['units'][0]['id'] == 'a_push_video'
+    assert push_video['kind'] == 'render' and push_video['priority'] == 3
+    assert push_video['units'][0]['verify_argv']
+    assert len(video_rows) == 51
+    assert all(row['priority'] == 3 and row['kind'] == 'render' for row in video_rows)
+    assert len({row['units'][0]['id'] for row in video_rows}) == 51
+    assert sum(row['units'][0]['id'].startswith('W57:') for row in video_rows) == 39
+    assert sum(row['units'][0]['id'].startswith('W80:') for row in video_rows) == 12
+    assert all('--suite' in row['argv'] and '--case' in row['argv'] and '--mode' in row['argv']
+               for row in video_rows)
+    assert all(row['gpu'] == 1 and row['gpu_uuid'] == 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f'
+               and row['units'][0]['id'] in row['authorization_ref'] for row in rows)
+    assert all(row['argv'][row['argv'].index('--scope') + 1] == row['units'][0]['id']
+               for row in eval_rows)
+    assert all(row['units'][0]['verify_argv'] for row in video_rows)
+    assert sha256(checkpoint) in eval_rows[0]['authorization_ref']
+    video = tmp_path / 'known-video.mp4'
+    video.write_bytes(b'answer-known video bytes')
+    first = video_rows[0]
+    verify_argv = first['units'][0]['verify_argv']
+    receipts = Path(verify_argv[verify_argv.index('-c') + 2]) / 'receipts'
+    receipts.mkdir(parents=True, exist_ok=True)
+    suite, case, mode = first['units'][0]['id'].split(':')
+    (receipts / 'known.json').write_text(json.dumps({
+        'schema':'foothold-ex41-stage-video/1','suite':suite,'case':case,'map_mode':mode,
+        'iteration':750,'stage_name':'stage_end','checkpoint_sha256':sha256(checkpoint),
+        'video':str(video),'video_sha256':sha256(video)}), encoding='utf-8')
+    assert subprocess.run(verify_argv, check=False).returncode == 0
+    registered = watch.register_stage_end_queue_jobs(tmp_path / 'queue.json', rows)
+    assert [row['state'] for row in registered] == ['waiting'] * 55
+    assert [row['priority'] for row in registered] == [2] * 3 + [3] * 52

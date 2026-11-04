@@ -322,6 +322,15 @@ def compare_mode_receipts(out: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    ap = build_parser()
+    args = ap.parse_args(argv)
+    result = run_one(args)
+    print(json.dumps(result, ensure_ascii=False, default=str), flush=True)
+    return 0 if result["state"] in ("planned", "complete") else 3
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the production parser so generated child argv is testable as-is."""
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--source-root", type=Path, required=True)
     ap.add_argument("--checkpoint", type=Path, required=True)
@@ -345,10 +354,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--cadence", choices=("250", "500", "stage_end"), default="stage_end")
     ap.add_argument("--boundary-wait-s", type=float, default=600.0)
     ap.add_argument("--plan-only", action="store_true")
-    args = ap.parse_args(argv)
-    result = run_one(args)
-    print(json.dumps(result, ensure_ascii=False, default=str), flush=True)
-    return 0 if result["state"] in ("planned", "complete") else 3
+    return ap
 
 
 if __name__ == "__main__":

@@ -156,5 +156,38 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(q.claim_one(self.path, 1, idle=self.idle)[1], "claimed")
 
 
+    def test_eval_and_render_kinds_use_p2_and_p3(self):
+        eval_job = spec("stage-axis", kind="evaluation", units=1)
+        render_job = spec("stage-video", kind="render", units=1)
+        self.assertEqual(eval_job["priority"], 2)
+        self.assertEqual(render_job["priority"], 3)
+        self.assertEqual(q.validate(eval_job)["kind"], "evaluation")
+        self.assertEqual(q.validate(render_job)["kind"], "render")
+        render_job["units"][0].pop("verify_argv")
+        with self.assertRaisesRegex(ValueError, "render needs verify_argv"):
+            q.validate(render_job)
+
+    def test_gpu_probe_ignores_desktop_clients_but_blocks_target_python(self):
+        rows = [
+            f"GPU-{q.GPU_UUIDS[1]}, 100, C:\\Windows\\explorer.exe",
+            f"GPU-{q.GPU_UUIDS[1]}, 101, C:\\Program Files\\Google\\Chrome\\chrome.exe",
+            f"GPU-{q.GPU_UUIDS[0]}, 102, python.exe",
+        ]
+        info = {100: ("explorer.exe", []), 101: ("chrome.exe", []),
+                102: ("python.exe", ["python.exe", "train.py", "--device", "cuda:0"])}
+        self.assertEqual(q.compute_rows_busy(1, rows, lambda pid: info[pid]),
+                         (True, "gpu_idle_or_desktop_only"))
+        rows.append(f"GPU-{q.GPU_UUIDS[1]}, 103, python.exe")
+        info[103] = ("python.exe", ["python.exe", "eval.py", "--device", "cuda:1"])
+        busy, reason = q.compute_rows_busy(1, rows, lambda pid: info[pid])
+        self.assertFalse(busy)
+        self.assertIn("pid=103", reason)
+
+    def test_gpu_probe_unknown_process_identity_blocks(self):
+        row = f"GPU-{q.GPU_UUIDS[1]}, 104, [Insufficient Permissions]"
+        self.assertFalse(q.compute_rows_busy(1, [row],
+                         lambda _pid: (_ for _ in ()).throw(PermissionError("denied")))[0])
+
+
 if __name__ == "__main__":
     unittest.main()

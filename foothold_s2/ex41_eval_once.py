@@ -88,15 +88,19 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
     selected = {'core': CORE_PHASES, 'periodic': PERIODIC_PHASES,
                 'auxiliary': AUXILIARY_PHASES,
                 'all': PHASES}.get(scope)
+    if selected is None and scope in PHASES:
+        selected = (scope,)
     if selected is None:
         raise ValueError(f'unknown EX41 evaluation scope: {scope}')
     rows = [row for row in rows if row[0] in selected]
-    return [{'name': name, 'device': (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
-             'argv': [str(ISAAC_PYTHON), '-m', module, *args,
-                      '--out', str(out/name), '--headless', '--device',
-                      (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
-                      '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
-            for name, module, args in rows]
+    result = []
+    for name, module, args in rows:
+        device = push_ladder_device if name == 'push_ladder' else 'cuda:1'
+        argv = [str(ISAAC_PYTHON), '-m', module, *args, '--out', str(out/name), '--device', device]
+        if name != 'a_push_video':
+            argv += ['--headless', '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']
+        result.append({'name': name, 'device': device, 'argv': argv})
+    return result
 
 
 def hidden_child(argv, folder, *, env=None, cwd=ROOT):
@@ -271,7 +275,9 @@ def bundle_terminal_status(steps, *, scope='all'):
                     if steps.get(name, {}).get('state') != 'done']
     auxiliary_missing = [name for name in AUXILIARY_PHASES
                          if steps.get(name, {}).get('state') != 'done']
-    if scope == 'auxiliary':
+    if scope in AUXILIARY_PHASES:
+        missing = [scope] if steps.get(scope, {}).get('state') != 'done' else []
+    elif scope == 'auxiliary':
         missing = auxiliary_missing
     elif scope == 'periodic':
         missing = [name for name in PERIODIC_PHASES
@@ -346,20 +352,40 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
 
 
 def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-             priority_marker=None, scope='all', gpu0_training_markers=None):
+             priority_marker=None, scope='all', gpu0_training_markers=None,
+             priority_wait_seconds=21600, priority_poll_seconds=10, sleep=time.sleep):
     """Run the bundle while publishing GPU1 priority to the shared job board."""
-    from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, gpu1_priority
+    from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, gpu1_priority, wait_for_gpu1_marker
 
     checkpoint = Path(checkpoint).resolve(strict=True)
     match = re.fullmatch(r'model_(\d+)\.pt', checkpoint.name)
     iteration = int(match.group(1)) if match else 0
     marker_path = DEFAULT_MARKER if priority_marker is None else Path(priority_marker)
-    with gpu1_priority(marker_path, job='ex41_evaluation_bundle', iteration=iteration) as owner:
-        row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
-                               scope=scope, gpu1_owner=owner,
-                               gpu0_training_markers=gpu0_training_markers)
+    started = time.monotonic()
+    waits = []
+    while True:
+        wait_receipt = wait_for_gpu1_marker(
+            marker_path, timeout_seconds=max(0.0, priority_wait_seconds - (time.monotonic() - started)),
+            poll_seconds=priority_poll_seconds, sleep=sleep)
+        if wait_receipt['checks'] > 1 or wait_receipt['waited_seconds'] > 0:
+            waits.append(wait_receipt)
+        try:
+            with gpu1_priority(marker_path, job=f'ex41_evaluation_{scope}', iteration=iteration) as owner:
+                row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
+                                       scope=scope, gpu1_owner=owner,
+                                       gpu0_training_markers=gpu0_training_markers)
+            break
+        except RuntimeError as exc:
+            if 'priority marker already owned' not in str(exc):
+                raise
+            if time.monotonic() - started >= priority_wait_seconds:
+                raise TimeoutError('GPU1 P1 marker race exceeded admission timeout') from exc
+            sleep(priority_poll_seconds)
+            waits.append({'state':'race_wait','waited_seconds':priority_poll_seconds,
+                          'reason':str(exc)})
     row['gpu1_priority_marker'] = {
         'path': str(marker_path), 'state': 'cleared', 'owner': owner,
+        'waits': waits,
     }
     _atomic(Path(out).resolve()/'eval_receipt.json', row)
     return row
@@ -372,9 +398,11 @@ def main(argv=None):
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--priority-marker', type=Path)
+    p.add_argument('--device', choices=('cuda:1',), default='cuda:1',
+                   help='Queue contract, EX41 evaluation is fixed to GPU1')
     p.add_argument('--gpu0-training-marker', type=Path, action='append', default=None,
                    help='Optional GPU0 training marker path override, repeatable')
-    p.add_argument('--scope', choices=('core', 'periodic', 'auxiliary', 'all'), default='all')
+    p.add_argument('--scope', choices=('core', 'periodic', 'auxiliary', 'all', *AUXILIARY_PHASES), default='all')
     p.add_argument('--execute', action='store_true')
     a = p.parse_args(argv)
     if not a.execute:

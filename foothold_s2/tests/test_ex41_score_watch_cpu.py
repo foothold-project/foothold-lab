@@ -159,7 +159,7 @@ def test_zero_exit_with_w78_hold_error_makes_bundle_hold_and_nonzero(tmp_path):
 
 
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
-    rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
+    rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG),gpu0_training_active=False)
     assert [r['name'] for r in rows]==[
         'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
         'axis_v2','w78_v2','push_ladder','a_push_video']
@@ -373,7 +373,7 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
         # An auxiliary failure also must not turn maintenance into failed rc.
         return {'rc':7,'state':'failed'} if folder.name=='axis_v2' else {'rc':0,'state':'done'}
     monkeypatch.setattr(evaluator,'hidden_child',spy)
-    row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation')
+    row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation',priority_marker=tmp_path/'p1-marker')
     assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
                       'axis_v2','push_ladder','a_push_video']
     assert row['state']=='done' and row['rc']==0 and row['auxiliary_missing']==[
@@ -432,6 +432,34 @@ def test_stage_end_auxiliary_receipt_records_a_push_videos_and_holds_missing_rec
     assert recorded['metrics']['a_push_video']['decision_use'] == 'record_only'
     assert recorded['metrics']['a_push_video']['video_rule_version'] == 'v3.4-D168'
     assert set(recorded['metrics']['a_push_video']['map_modes']) == set(modes)
+
+
+def test_g11_p9_stage_video_receipts_remain_pending_scene_review(tmp_path):
+    checkpoint = tmp_path / 'model_750.pt'
+    checkpoint.write_bytes(b'known EX41 stage checkpoint')
+    stage = 'S2a'
+    video_root = tmp_path / 'stage_video'
+    receipt_root = video_root / 'receipts'
+    receipt_root.mkdir(parents=True)
+    _, cases = watch._stage_video_contract()
+    for suite, case, mode in cases:
+        identity = watch._stage_video_identity(checkpoint, 750, stage, suite, case, mode)
+        video = video_root / f'{identity}.mp4'
+        video.write_bytes(f'known {suite} {case} {mode}'.encode())
+        (receipt_root / f'{identity}.json').write_text(json.dumps({
+            'schema':'foothold-ex41-stage-video/1','id':identity,
+            'suite':suite,'case':case,'map_mode':mode,'iteration':750,
+            'stage_name':stage,'checkpoint_sha256':watch.sha256(checkpoint),
+            'source_head':'3af5b2057fb138357e6ff656abaeb5d8e2194b24',
+            'video_rule_version':'v3.4-D168','video':str(video),
+            'video_sha256':watch.sha256(video)}), encoding='utf-8')
+    plan = watch.load_plan(watch.DEFAULT_TABLE, arm='B')
+    row = watch.stage_end_auxiliary_receipt(
+        checkpoint, stage, tmp_path / 'missing-core', tmp_path / 'missing-w57',
+        tmp_path / 'missing-w78', plan, stage_video_path=video_root)
+    assert row['metrics']['stage_video']['count'] == 51
+    assert row['metrics']['stage_video']['acceptance'] == 'pending_lead_kit_scene_review'
+    assert row['components']['stage_video'] == 'captured_pending_lead_kit_scene_review'
 
 
 def test_stage_end_push_ladder_consumes_shared_39_child_contract(tmp_path, monkeypatch):
@@ -558,3 +586,54 @@ def test_w78_producer_to_p3_metric_no_hand_inserted_runtime_scalar(tmp_path):
     assert len(periodic['metrics']['record_counts'])==39
     assert periodic['components']['critic_mirror_symmetry']=='complete'
     assert periodic['metrics']['critic_mirror_symmetry']['modes']['eval_gt']['w78/L2_a000_pyramid_stairs']['symmetry']==.5
+
+
+def test_execute_measurement_failure_retries_same_checkpoint_and_separates_judgement(tmp_path, monkeypatch):
+    run = replay_run(tmp_path)
+    plan = load_plan(TABLE, arm='B')
+    manifest_path = run / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    manifest['modes'] = {'ex41': {'effective_sha256': plan.effective_sha256,
+                                  'plan_sha256': plan.sha256,
+                                  'parent': {'sha256': plan.parent_sha256}}}
+    manifest_path.write_text(json.dumps(manifest), encoding='utf-8')
+    state = watch.initial_state(run, TABLE, watch.DEFAULT_CONFIG)
+    monkeypatch.setattr(watch, '_stable', lambda path, *_args: sha256(path))
+    children = iter(({'rc':7,'state':'failed','pid':91}, {'rc':0,'state':'done','pid':92}))
+    def child(_argv, folder, **_kwargs):
+        folder.mkdir(parents=True, exist_ok=False)
+        result = next(children)
+        (folder / 'child.json').write_text(json.dumps(result), encoding='utf-8')
+        return result
+    monkeypatch.setattr(watch, 'hidden_child', child)
+    def collection(_cp, _stage, _bundle, _plan, *args, **kwargs):
+        failed = kwargs.get('force_failed', False)
+        return {'evaluation_state':'HOLD' if failed else 'complete',
+                'maintenance_pass':False, 'stage_pass':False, 'metrics':{} if failed else {'counts':{}},
+                'components':{'maintenance_stand':'HOLD: child rc=7' if failed else 'complete'},
+                'evidence':[], 'auxiliary_missing':[]}
+    # First child failure is converted into a missing collection, then second
+    # collection is a real, complete measurement whose decision happens to HOLD.
+    results = iter((
+        {'evaluation_state':'HOLD','maintenance_pass':False,'stage_pass':False,'metrics':{},
+         'components':{'maintenance_stand':'HOLD: child rc=7'},'evidence':[],'auxiliary_missing':[]},
+        {'evaluation_state':'complete','maintenance_pass':False,'stage_pass':False,'metrics':{'counts':{}},
+         'components':{'maintenance_stand':'complete'},'evidence':[],'auxiliary_missing':[]},
+    ))
+    monkeypatch.setattr(watch, 'collect', lambda *_args, **_kwargs: next(results))
+    out, scores = tmp_path / 'out', tmp_path / 'scores'
+    first = watch.process_once(run, out, scores, TABLE, state, execute=True,
+                               sleep=lambda _seconds:None)
+    assert first['state'] == 'measurement_retry_pending'
+    assert first['measurement_state'] == 'failed_retryable'
+    assert first['judgement_state'] == 'not_judged'
+    assert not list(scores.glob('score_5750_*.json'))
+    second = watch.process_once(run, out, scores, TABLE, state, execute=True,
+                                sleep=lambda _seconds:None)
+    assert second['state'] == 'complete'
+    assert second['measurement_state'] == 'complete'
+    assert second['judgement_state'] == 'hold'
+    assert second['attempt_count'] == 2
+    score = json.loads(Path(second['score_path']).read_text(encoding='utf-8'))
+    assert score['measurement_state'] == 'complete' and score['judgement_state'] == 'hold'
+    assert len(state['measurement_failures'][f"5750_{sha256(run/'model_5750.pt')}"]) == 1

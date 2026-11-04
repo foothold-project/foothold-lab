@@ -238,6 +238,30 @@ def gpu1_priority(path: str | Path = DEFAULT_MARKER, *, job: str, iteration: int
         clear_marker(path, owner)
 
 
+def wait_for_gpu1_marker(path: str | Path = DEFAULT_MARKER, *, timeout_seconds: float = 21600,
+                        poll_seconds: float = 10, sleep=time.sleep, marker_reader=None) -> dict:
+    """Wait read-only for a live GPU1 P1 owner; never remove another owner's marker."""
+    marker = Path(path)
+    started = time.monotonic()
+    checks = 0
+    while True:
+        checks += 1
+        if not marker.exists():
+            return {'state': 'clear', 'checks': checks, 'waited_seconds': time.monotonic() - started}
+        try:
+            owner = marker_reader(marker) if marker_reader else _read_owner(marker)
+            live = _pid_is_live(owner) if owner is not None else True
+        except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+            raise RuntimeError(f'GPU1 priority marker unreadable; refusing to start: {type(exc).__name__}: {exc}') from exc
+        if not live:
+            return {'state': 'stale_owner_present', 'checks': checks,
+                    'waited_seconds': time.monotonic() - started,
+                    'stale_pid': owner.get('pid') if isinstance(owner, dict) else None}
+        if time.monotonic() - started >= timeout_seconds:
+            raise TimeoutError('GPU1 P1 marker remained live until admission timeout')
+        sleep(poll_seconds)
+
+
 @contextmanager
 def gpu0_priority(*, job: str, iteration: int, run: str | None = None):
     """Publish a P1 GPU0 receipt plus both C-layer yield markers."""

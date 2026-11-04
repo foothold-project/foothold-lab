@@ -20,9 +20,21 @@ from uuid import uuid4
 
 
 STATES = {"waiting", "running", "done", "failed", "hold"}
-KINDS = {"training", "judge", "diagnostic", "repeat", "capture", "compose"}
-PRIORITY = {"training": 0, "judge": 1, "diagnostic": 2, "repeat": 3,
+KINDS = {"training", "judge", "diagnostic", "evaluation", "render", "repeat", "capture", "compose"}
+PRIORITY = {"training": 0, "judge": 1, "diagnostic": 2, "evaluation": 2,
+            "render": 3, "repeat": 3,
             "capture": 4, "compose": 4}
+GPU_UUIDS = {0: "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+             1: "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"}
+DESKTOP_PROCESS_NAMES = {
+    "dwm.exe", "explorer.exe", "shellhost.exe", "searchhost.exe",
+    "startmenuexperiencehost.exe", "shellexperiencehost.exe", "textinputhost.exe",
+    "crossdeviceresume.exe", "applicationframehost.exe", "systemsettings.exe",
+    "chrome.exe", "msedge.exe", "msedgewebview2.exe", "photos.exe",
+    "snippingtool.exe", "chatgpt.exe", "discord.exe", "potplayer64.exe",
+    "windowsterminal.exe", "logioptionsplus_agent.exe", "logioverlay.exe",
+    "orca.exe", "code.exe",
+}
 
 
 def now() -> str:
@@ -110,8 +122,8 @@ def validate(job: dict) -> dict:
         if not isinstance(unit.get("args", []), list) or not all(isinstance(a, str) for a in unit.get("args", [])):
             raise ValueError("unit args invalid")
         verifier = unit.get("verify_argv")
-        if job["kind"] in ("capture", "compose") and not verifier:
-            raise ValueError("capture/compose needs verify_argv")
+        if job["kind"] in ("capture", "compose", "render") and not verifier:
+            raise ValueError("capture/compose/render needs verify_argv")
         if verifier is not None and (not isinstance(verifier, list) or not verifier or
                                      not all(isinstance(a, str) and a for a in verifier)):
             raise ValueError("verify_argv invalid")
@@ -159,16 +171,66 @@ def register(queue_path: Path, spec: dict) -> dict:
         return job
 
 
+def _device_arg(cmdline: list[str]) -> str | None:
+    for index, arg in enumerate(cmdline):
+        low = arg.casefold()
+        if low in ("--device", "--physics_device", "--active_gpu"):
+            return cmdline[index + 1] if index + 1 < len(cmdline) else None
+        for prefix in ("--device=", "--physics_device=", "--active_gpu="):
+            if low.startswith(prefix):
+                return arg.split("=", 1)[1]
+    return None
+
+
+def compute_rows_busy(gpu: int, rows: list[str], process_lookup) -> tuple[bool, str]:
+    """Ignore desktop compositor clients; conservatively gate Isaac/Python/unknown apps."""
+    expected = GPU_UUIDS[gpu]
+    busy = []
+    for raw in rows:
+        fields = [value.strip() for value in raw.split(",", 2)]
+        if len(fields) != 3 or fields[0].casefold().removeprefix("gpu-") != expected:
+            continue
+        try:
+            pid = int(fields[1])
+            name, cmdline = process_lookup(pid)
+        except Exception:
+            basename = fields[2].replace("/", "\\").rsplit("\\", 1)[-1].casefold()
+            if basename in DESKTOP_PROCESS_NAMES:
+                continue
+            busy.append(f"pid={fields[1]} process_identity_unknown")
+            continue
+        basename = str(name).replace("/", "\\").rsplit("\\", 1)[-1].casefold()
+        if basename in DESKTOP_PROCESS_NAMES:
+            continue
+        low = (basename + " " + " ".join(cmdline)).casefold()
+        if "python" in basename or "kit" in low or "isaac" in low:
+            assigned = _device_arg(list(cmdline))
+            if assigned and assigned.casefold() != f"cuda:{gpu}":
+                continue
+            busy.append(f"pid={pid} {basename} device={assigned or 'unknown'}")
+        else:
+            busy.append(f"pid={pid} non_desktop_compute_app={basename}")
+    if busy:
+        return False, "gpu_experiment_busy:" + ";".join(busy)
+    return True, "gpu_idle_or_desktop_only"
+
+
 def probe_gpu(gpu: int) -> tuple[bool, str]:
-    cmd = ["nvidia-smi", "--id", str(gpu), "--query-compute-apps=pid",
-           "--format=csv,noheader,nounits"]
+    if gpu not in GPU_UUIDS:
+        return False, "unknown_gpu"
+    cmd = ["nvidia-smi", "--query-compute-apps=gpu_uuid,pid,process_name",
+           "--format=csv,noheader"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, type(exc).__name__
     if result.returncode:
         return False, "nvidia_smi_failed"
-    return (not bool(result.stdout.strip()), "gpu_idle" if not result.stdout.strip() else "gpu_busy")
+    import psutil
+    def process_lookup(pid):
+        process = psutil.Process(pid)
+        return process.name(), process.cmdline()
+    return compute_rows_busy(gpu, result.stdout.splitlines(), process_lookup)
 
 
 def external_clear(job: dict, sources: dict) -> tuple[bool, str]:
@@ -179,8 +241,8 @@ def external_clear(job: dict, sources: dict) -> tuple[bool, str]:
     if marker:
         from gpu_jobs import marker_state
         observed = marker_state(Path(marker))
-        if observed["present"]:
-            return False, "priority_busy_marker:" + observed["reason"]
+        if observed.get("blocks", observed.get("present", False)):
+            return False, "priority_busy_marker:" + observed.get("reason", observed.get("state", "unknown"))
     chain = sources.get("chain_log")
     if chain:
         try:

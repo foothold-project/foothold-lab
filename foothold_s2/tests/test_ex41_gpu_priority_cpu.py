@@ -10,7 +10,7 @@ import pytest
 
 from foothold_s2.eval.ex41_gpu_priority import (
     DEFAULT_MARKER, clear_marker, gpu0_priority,
-    gpu1_priority, publish_marker,
+    gpu1_priority, publish_marker, wait_for_gpu1_marker,
 )
 from foothold_s2 import ex41_eval_once
 
@@ -98,6 +98,19 @@ def test_marker_context_clears_after_failure(tmp_path):
     assert not marker.exists()
 
 
+def test_gpu1_p1_wait_is_read_only_and_records_wait_count(tmp_path, monkeypatch):
+    marker = tmp_path / "PRIORITY_BUSY_GPU1"
+    marker.write_text("owner", encoding="utf-8")
+    states = iter((True, True, False))
+    monkeypatch.setattr("foothold_s2.eval.ex41_gpu_priority._pid_is_live", lambda _owner: next(states))
+    result = wait_for_gpu1_marker(marker, poll_seconds=3, sleep=lambda seconds: None,
+                                  marker_reader=lambda _path: {"pid": 123})
+    assert result["state"] == "stale_owner_present"
+    assert result["checks"] == 3
+    assert result["waited_seconds"] >= 0
+    assert marker.read_text(encoding="utf-8") == "owner"
+
+
 def test_gpu_jobs_treats_dead_marker_pid_as_stale(tmp_path):
     source = Path("C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/gpu_jobs/gpu_jobs.py")
     if not source.is_file():
@@ -160,7 +173,7 @@ def test_evaluation_bundle_publishes_marker_for_child_and_clears_it(
     assert not out.exists()
     row = ex41_eval_once.evaluate(checkpoint, out, eval_config=cfg_path,
                                   priority_marker=marker, scope="core")
-    assert observed and observed[0]["job"] == "ex41_evaluation_bundle"
+    assert observed and observed[0]["job"] == "ex41_evaluation_core"
     assert observed[0]["iteration"] == 500
     assert row["state"] == expected_state
     assert row["gpu1_priority_marker"]["state"] == "cleared"

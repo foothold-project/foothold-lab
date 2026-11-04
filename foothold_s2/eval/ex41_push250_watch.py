@@ -99,7 +99,7 @@ def checkpoint_for_update(run_dir: Path, score_dir: Path, local_iteration: int) 
     score_candidates = sorted(score_dir.glob(f"score_{local_iteration}_*.json"))
     for score_path in score_candidates:
         score = _read_json(score_path)
-        if not score or score.get("evaluation_state") != "complete":
+        if not score or score.get("evaluation_state") not in ("complete", "HOLD"):
             continue
         if score.get("checkpoint_sha256") != actual_sha:
             continue
@@ -108,7 +108,10 @@ def checkpoint_for_update(run_dir: Path, score_dir: Path, local_iteration: int) 
             continue
         return {"local_iteration": local_iteration, "checkpoint": checkpoint,
                 "sha256": actual_sha, "manifest_progress": progress["completed_updates"],
-                "score": score_path, "score_sha256": _sha256(score_path)}
+                "score": score_path, "score_sha256": _sha256(score_path),
+                "measurement_state": score.get("evaluation_state"),
+                "judgement_state": ("hold" if score.get("maintenance_pass") is False else "pass")
+                if score.get("evaluation_state") == "complete" else "not_judged"}
     return None
 
 
@@ -474,6 +477,26 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
         wait_for_score_watch_attempt(
             score_watch_root, local_iteration, ready["sha256"],
             state_path=state_path, poll_seconds=poll_seconds)
+        if ready.get("measurement_state") == "HOLD":
+            # A collection failure is visible but does not permanently stop
+            # future D171 boundaries. No GPU marker or evaluator is started.
+            receipt = {
+                "schema": "foothold-ex41-push250-check/1", "state": "HOLD",
+                "reason": "score_watch_measurement_failed; boundary recorded without D171 run",
+                "global_iteration": global_iteration, "local_iteration": local_iteration,
+                "checkpoint": str(ready["checkpoint"]), "checkpoint_sha256": ready["sha256"],
+                "score_path": str(ready["score"]), "score_sha256": ready["score_sha256"],
+                "measurement_state": "failed", "judgement_state": "not_judged",
+                "advanced_to_local_iteration": local_iteration + interval,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _atomic_json(destination, receipt)
+            local_iteration += interval
+            _atomic_json(state_path, {"state": "measurement_hold_advanced",
+                                      "local_iteration": local_iteration,
+                                      "prior_result_path": str(destination),
+                                      "updated_at": datetime.now(timezone.utc).isoformat()})
+            continue
         admission = gpu1_busy_snapshot(marker)
         _atomic_json(state_path, {"state": "starting", "local_iteration": local_iteration,
                                   "global_iteration": global_iteration, "checkpoint_sha256": ready["sha256"],

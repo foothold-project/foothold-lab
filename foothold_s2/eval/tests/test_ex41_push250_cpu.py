@@ -84,6 +84,11 @@ def test_checkpoint_requires_completed_update_manifest_score_and_sha(tmp_path):
     score["checkpoint_sha256"] = "0" * 64
     (score_dir / f"score_500_{digest[:12]}.json").write_text(json.dumps(score), encoding="utf-8")
     assert checkpoint_for_update(run_dir, score_dir, 500) is None
+    score.update(checkpoint_sha256=digest, evaluation_state="HOLD", maintenance_pass=False)
+    (score_dir / f"score_500_{digest[:12]}.json").write_text(json.dumps(score), encoding="utf-8")
+    held = checkpoint_for_update(run_dir, score_dir, 500)
+    assert held["measurement_state"] == "HOLD"
+    assert held["judgement_state"] == "not_judged"
 
 
 def test_checkpoint_wait_survives_failed_and_completed_training_states_until_resume(tmp_path):
@@ -202,3 +207,36 @@ def test_gpu_assignment_ignores_shared_context_on_gpu0():
     assert _explicit_device(["python.exe", "train.py", "--device=cuda:0"]) == "cuda:0"
     assert _explicit_device(["python.exe", "record_c_layer.py", "--device", "cuda:1"]) == "cuda:1"
     assert _explicit_device(["python.exe", "score_watch.py"]) is None
+
+
+def test_push250_records_measurement_hold_and_advances_without_gpu_run(tmp_path, monkeypatch):
+    run = tmp_path / 'run'; run.mkdir()
+    score_dir = tmp_path / 'scores'; score_dir.mkdir()
+    checkpoint = run / 'model_500.pt'; checkpoint.write_bytes(b'known failed measurement checkpoint')
+    pinned = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    score_path = score_dir / f'score_500_{pinned[:12]}.json'
+    score_path.write_text(json.dumps({'evaluation_state':'HOLD','maintenance_pass':False}), encoding='utf-8')
+    ready = {'local_iteration':500, 'checkpoint':checkpoint, 'sha256':pinned,
+             'score':score_path, 'score_sha256':hashlib.sha256(score_path.read_bytes()).hexdigest(),
+             'measurement_state':'HOLD'}
+    calls = []
+    class StopAfterAdvance(Exception): pass
+    def checkpoint_wait(_run, _scores, local_iteration, **_kwargs):
+        calls.append(local_iteration)
+        if local_iteration == 500:
+            return ready
+        raise StopAfterAdvance
+    monkeypatch.setattr(push250_watch, 'wait_for_checkpoint_target', checkpoint_wait)
+    monkeypatch.setattr(push250_watch, 'wait_for_score_watch_attempt',
+                        lambda *_args, **_kwargs: {'state':'score_watch_closed'})
+    monkeypatch.setattr(push250_watch, 'evaluate_checkpoint',
+                        lambda *_args, **_kwargs: pytest.fail('measurement HOLD must skip GPU evaluation'))
+    out = tmp_path / 'out'
+    with pytest.raises(StopAfterAdvance):
+        push250_watch.watch(run, score_dir, out, first_local_update=500, poll_seconds=0)
+    receipt = json.loads((out / '6500.json').read_text(encoding='utf-8'))
+    assert receipt['state'] == 'HOLD'
+    assert receipt['measurement_state'] == 'failed'
+    assert receipt['judgement_state'] == 'not_judged'
+    assert receipt['advanced_to_local_iteration'] == 750
+    assert calls == [500, 750]
