@@ -78,4 +78,4 @@ def test_marker_idle_and_dead_owner_fail(tmp_path):     # I11
 def test_p4_low_water_warns(tmp_path):                  # I15
     with mock.patch.object(ops_check, "P1_MARKER", tmp_path / "none"):
         lv = levels(ops_check.check(RUN, procs=procs(), queue=q({"id": 1, "priority": 4, "state": "대기"})))
-    assert lv["I15 p4_depth"] == "WARN"
+    assert lv["I15 gpu1_depth"] == "WARN"
