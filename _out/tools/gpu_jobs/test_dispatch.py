@@ -732,6 +732,18 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(state["holds"], {})
         self.assertTrue(any("재개" in n for n in notes))
 
+    def test_two_seed_units_fold_into_one_board_row(self):
+        argv = ["python", "D:/x/c_layer_gpu1_remainder_two_seed.py", "--cell"]
+        es = [{"title": f"C76 2seed c{i}", "state": "대기", "priority": 4, "argv": argv + [f"boxes_L{i}_eval_gt"],
+               "auto": False} for i in range(150)]
+        es[0]["state"] = "실행"
+        es.append({"title": "EX-41 250 평가", "state": "대기", "priority": 1, "argv": ["python", "e.py"], "auto": False})
+        rows = board.fold_groups(es)
+        self.assertEqual(len(rows), 2)
+        c = next(r for r in rows if r.get("group") == "c_layer")
+        self.assertIn("남은 150 칸", c["title"])
+        self.assertIn("대기 149", c["title"])
+
     def test_cancel_marks_never_run_items_and_refuses_running(self):
         a = self.add("wrong args", 2)
         args = type("A", (), {"qaction": "cancel", "id": a, "reason": "push250 L0 only"})()

@@ -848,7 +848,15 @@ def slow_data(cfg=LIVE, procs=None) -> dict:
 
 
 def in_c_layer_group(e: dict) -> bool:
-    return e.get("group") == "c_layer" or str(e.get("title", "")).startswith("C층 다음 칸")
+    # 11/04 17:4x: 198 two-seed units (title 「C76 2seed …」) were listed one row each on the board.
+    argv = " ".join(e.get("argv") or [])
+    return (e.get("group") == "c_layer" or str(e.get("title", "")).startswith(("C층 다음 칸", "C76 2seed"))
+            or "c_layer_gpu1_remainder" in argv or "c_layer_queue" in argv)
+
+
+def unit_cell(e: dict) -> str | None:
+    argv = e.get("argv") or []
+    return argv[argv.index("--cell") + 1] if "--cell" in argv[:-1] else None
 
 
 CELL_WORDS = (("stepping_stones_low", "디딤돌"), ("stepping_stones", "디딤돌"), ("pyramid_stairs_inv", "내림계단"),
@@ -886,6 +894,12 @@ def _c_row(group: list[dict], _unused) -> dict:
              f" · 칸당 {per / 60:.0f} 분" if per else
              f"C층 남은 칸 {left}/{total} · 지금 {short_cell(cur)} · 다음 {short_cell(summary.get('next_cell'))}"
              " · 칸당 미확인")
+    if units and any(unit_cell(e) for e in units):
+        # queue units carry their own cell: count them, not the old fixed manifest summary
+        waiting = [e for e in units if e["state"] == "대기"]
+        nxt = next((unit_cell(e) for e in waiting if unit_cell(e)), None)
+        title = (f"C층 칸 촬영 · 남은 {len(units)} 칸(대기 {len(waiting)}) · 지금 "
+                 f"{short_cell(unit_cell(running[0])) if running else '-'} · 다음 {short_cell(nxt)}")
     state = "실행" if running or summary.get("state") == "실행" else summary.get("state", "대기")
     row = dict(summary or units[0], title=title, state=state, auto=bool(summary) and not units,
                group="c_layer")
@@ -904,7 +918,7 @@ def board_data(smi=None, procs=None, cfg=LIVE, now=None, slow=None) -> dict:
     jobs = live_jobs(smi, procs)
     idle = idle_update(smi, jobs, cfg["idle_state"], cfg["idle_util"], now)
     auto = auto_items(cfg, train, now, jobs, slow["attempts"], slow.get("pending"), slow.get("c_files"))
-    entries = ([dict(it, auto=False) for it in queue if it["state"] not in ("끝", "실패")]
+    entries = ([dict(it, auto=False) for it in queue if it["state"] not in ("끝", "실패", "취소")]
                + [dict(it, auto=True) for it in auto])
     entries = fold_groups(entries)
     # running first, then what the dispatcher will start next (by priority), then timed items
