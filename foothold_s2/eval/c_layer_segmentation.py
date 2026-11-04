@@ -6,6 +6,30 @@ import re
 import numpy as np
 
 
+def read_mask_with_render_retry(read_mask, rerender, snapshot, validate, initial_frame,
+                                *, max_retries: int = 5):
+    """Refresh an empty instance mask without advancing physics or commands."""
+    if max_retries < 0:
+        raise ValueError("segmentation max_retries must be nonnegative")
+    frame = initial_frame
+    checks = []
+    for attempt in range(max_retries + 1):
+        packet = read_mask()
+        try:
+            return validate(packet), frame, checks
+        except ValueError:
+            if attempt == max_retries:
+                raise
+            before = snapshot()
+            frame = rerender()
+            after = snapshot()
+            row = {"retry": attempt + 1, "before": before, "after": after}
+            checks.append(row)
+            if after != before:
+                raise RuntimeError("segmentation_render_state_changed")
+    raise AssertionError("unreachable segmentation retry state")
+
+
 def ensure_only_selected_visible(stage, selected_root: str, hidden_roots: list[str], imageable):
     """Restore the chosen cloned robot's render visibility and verify isolation.
 
