@@ -26,6 +26,7 @@ TRAIN_MARKER = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0")
 DISPATCH = Path(__file__).resolve().parents[1] / "gpu_jobs" / "dispatch.py"
 GPU1 = "1"
 P1_IDLE_MINUTES = 10       # a P1 owner that keeps GPU1 under 5 % this long is stuck (I11: 30 min)
+GPU1_IDLE_MIB = 4000      # below this no Kit job is running on GPU1
 P4_LOW_WATER = 3           # queue the next filler before the last ones start (I15)
 
 
@@ -47,7 +48,7 @@ def _procs() -> list[tuple[psutil.Process, str]]:
 
 def _gpu1_util() -> int | None:
     try:
-        r = subprocess.run(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits",
+        r = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits",
                             "-i", GPU1], capture_output=True, text=True, timeout=20)
         return int(r.stdout.strip())
     except (OSError, ValueError, subprocess.SubprocessError):
@@ -108,10 +109,12 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
         alive = psutil.pid_exists(int(m.get("pid") or 0))
         out.append(("OK" if alive else "FAIL", "I11 marker_owner", f"P1 owner pid {m.get('pid')} alive={alive}"))
         age = (now - P1_MARKER.stat().st_mtime) / 60
+        # Memory, not utilization: a Kit job sits at 6-13 GB while its utilization dips to 0-1 %
+        # between phases; the 11/05 stuck owner held the marker with GPU1 at 2.4 GB (desktop only).
         u = util if util is not None else _gpu1_util()
-        idle = u is not None and u < 5 and age > P1_IDLE_MINUTES
+        idle = u is not None and u < GPU1_IDLE_MIB and age > P1_IDLE_MINUTES
         out.append(("FAIL" if idle else "OK", "I11 marker_idle",
-                    f"marker {age:.0f} min · GPU1 util {u} % · job {m.get('job')}"))
+                    f"marker {age:.0f} min · GPU1 {u} MiB · job {m.get('job')}"))
     else:
         out.append(("OK", "I11 marker", "no P1 marker"))
     return out

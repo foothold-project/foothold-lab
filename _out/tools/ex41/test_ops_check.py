@@ -71,7 +71,7 @@ def test_marker_idle_and_dead_owner_fail(tmp_path):     # I11
     import os
     os.utime(m, (0, 0))
     with mock.patch.object(ops_check, "P1_MARKER", m):
-        lv = levels(ops_check.check(RUN, now=31 * 60, procs=procs(), queue=q(), util=0))
+        lv = levels(ops_check.check(RUN, now=31 * 60, procs=procs(), queue=q(), util=2400))
     assert lv["I11 marker_owner"] == "FAIL" and lv["I11 marker_idle"] == "FAIL"
 
 
