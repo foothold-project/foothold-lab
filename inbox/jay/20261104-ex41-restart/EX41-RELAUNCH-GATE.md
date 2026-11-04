@@ -25,7 +25,7 @@
 | C2 | runner 커밋 d4f8193d · 4c1b14e2 · 7a907a90 · scripter 커밋 c4b84391 · cd41b19d · 4bde9787 · 12b8cdf7 · SB 촬영기가 그 커밋의 조상(`git merge-base --is-ancestor` 출력) | lead | |
 | C3 | 프로세스마다 시작 때 HEAD 대조 · 다르면 거절(시험: 다른 HEAD 로 띄워 거절되는 로그) | runner | |
 | C4 | 실행 사본 쓰기 잠금(커밋 거절 hook · 시험 커밋이 거절된 출력) | lead | |
-| C5 | 저장소 밖 실행 파일 0(mirror guard · boundary report · 디스패처 · 관리판을 저장소 `tools/` 로) | lead | |
+| C5 | 저장소 밖 실행 파일 0(mirror guard · boundary report · 디스패처 · 관리판을 저장소 `tools/` 로) | lead | 일부: 디스패처 · 관리판 `_out/tools/gpu_jobs/dispatch.py`(93fd9441) · 경계 보고 `_out/tools/ex41/boundary_report.py`(b26c556c, 실행 루트 인자 · 측정 없음이면 rc 2 · 경계 적용 DR 줄 출력, 1250 · 1500 · 2000 으로 확인). 남음: mirror guard 는 runner 가 정본 코드로(M8) |
 
 ## 2. 측정 체계
 
@@ -39,7 +39,7 @@
 | M6 | 밀기 감시기: HOLD 회차는 기록만 하고 다음 경계로 · 감시기 위치가 학습보다 250 넘게 뒤처지면 경보 | runner | |
 | M7 | 판정 칸 미달 때 할 일이 코드에 있음(D179: 밀기 미달이면 상한 유지 · 다음 단계 끝 재측정 · 두 번 연속이면 보고 · 대책 제안 · 학습은 계속) | runner | |
 | M8 | 대칭 규칙 하나(D179: 팀장 D174 그대로 · 정본 코드로 옮김 · D142 쌍 이벤트는 기록 · lead 의 0.85/5 쌍 폐기) · critic_mirror 관측 사유 문구가 실제 원인을 적음 | runner | |
-| M9 | 경보가 lead 세션에 실제로 닿음(orchestration pending 0 · lead 창 수신 캡처) | lead | |
+| M9 | 경보가 lead 세션에 실제로 닿음(orchestration pending 0 · lead 창 수신 캡처) | lead | 원인: 기동 환경에 `EX41_ORCHESTRATION_TO` 가 없어 `ex41_ops._send_orchestration` 이 받는 곳 없이 실패(15 건 pending). 14:4x 같은 함수에 lead 창 handle 을 주고 보내 True · lead 받은편지함 도착 확인. lead 받은편지함 대기가 lead 창 발신을 거르던 필터를 제목 「[lead」 기준으로 고치고 시험 경보 2 로 깨어남 확인. 남음: 새 시작 스크립트가 이 환경 변수를 넣는지(runner · 기동 때 lead 확인) |
 | M10 | 경계 적용 영수증(DR · 단계) 계획 대비 0.01 어긋나면 경보 | runner | |
 | M11 | 평가 잡음 기준선(m6000 시드 42 · 43 · 44 · 39 칸 · 이미 잼: 칸별 차 중앙값 0.0022 · 최대 0.0084) | lead | `M6000-ANALYSIS.md` |
 | M12 | S2a 첫 500 회 lr 바닥 · KL 넘침(이전 실행 233 / 500 회)을 경계 보고에 넣음 | lead | |
