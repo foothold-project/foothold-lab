@@ -519,7 +519,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
             _atomic_json(destination, result)
         _atomic_json(state_path, {"state": result["state"], "local_iteration": local_iteration,
                                   "global_iteration": global_iteration,
-                                  "result_path": str(destination), "elapsed_s": result["elapsed_s"],
+                                  "result_path": str(destination), "elapsed_s": result.get("elapsed_s"),
                                   "updated_at": datetime.now(timezone.utc).isoformat()})
         if result["state"] != "done":
             return 6
