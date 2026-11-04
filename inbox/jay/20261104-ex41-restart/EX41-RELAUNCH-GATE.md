@@ -75,7 +75,7 @@
 | R3 | 단계 끝 자동 등록 → P2 숫자 → P3 영상 넷 → 재생 목록 | runner · scripter | |
 | R4 | C층(P4) 가 P1 이 오자 비켜 줌 | lead | |
 | R5 | 학습 중 설정 바꾸기(critic_mirror · 보상 한 칸 · 명령 몫 한 칸)를 W72 로 적용하고 되읽음 | runner | |
-| R6 | 이어 가기: 실제 저장본에서 이어 가 저장 한 번 통과 · 코드 비교 기준 다시 잡힘 · 감시기 재기동 · **끊기 직전과 이어 간 직후가 같음을 출력으로(팀장 17:3x): 정책 · critic 가중치 · optimizer 상태 · 학습률(KL 적응 현재 값) · 관측 · 보상 정규화 통계 · 난수 · 커리큘럼 시계(elapsed · pause_used · 단계 · DR · 밀기) · W72 적용 상태 · 명령 몫 · W86 가중치 · 지도 전환 난수열 · use_gt_frac** | runner | |
+| R6 | 이어 가기: 실제 저장본에서 이어 가 저장 한 번 통과 · 코드 비교 기준 다시 잡힘 · 감시기 재기동 · **끊기 직전과 이어 간 직후가 같음을 출력으로(팀장 17:3x): 정책 · critic 가중치 · optimizer 상태 · 학습률(KL 적응 현재 값) · 관측 · 보상 정규화 통계 · 난수 · 커리큘럼 시계(elapsed · pause_used · 단계 · DR · 밀기) · W72 적용 상태 · 명령 몫 · W86 가중치 · 지도 전환 난수열 · use_gt_frac** | runner |  일부(19:1x lead 직접 확인): ex41-measure-fix a3092af4(origin 일치) 실제 Kit · fresh 3072 env 10/10 rc 0(`D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_185400`, model_10 sha 06c18638) → 새 프로세스 재개 11~12 rc 0. 재개 로그 `ex41-r6-kit-resume-20261104_190300.log` 의 EX41_RESUME_STATE_READBACK 에서 정책 · critic · Adam · 학습률(1.71e-4, 바닥 위) · 정규화 · 난수 · 커리큘럼 시계 · W72 경계와 명령 몫 · W86 · 지도 난수와 use_gt_frac 아홉 묶음 matched, segment 0→1 · Traceback 0. 앞서 Kit 이 copy · math 미임포트와 같은 회차 저장 자기 참조 셋을 잡았고 a3092af4 에서 고침(pyflakes 미정의 이름 0). 남음: 정규화 running_buffer_count 0 이 설정상 맞는지 · 감시기 재기동 · 코드 비교 기준 재설정은 미확인 |
 | R7 | 결정 D 마다 런타임 호출 증거(자동 규칙 · 손잡이 · 판정 칸) | runner · lead | |
 
 ## 6. 문서 · 승인
