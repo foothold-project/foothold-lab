@@ -1345,7 +1345,7 @@ def _capture(spec: dict[str, Any]) -> None:
     from foothold_s2.eval.c_layer_frame_audit import project_world_point
     from foothold_s2.eval.c_layer_segmentation import (
         ensure_only_selected_visible, packet_diagnostic, robot_pixel_evidence,
-        require_single_visible_robot,
+        read_mask_with_render_retry, require_single_visible_robot,
     )
 
     import importlib
@@ -1827,13 +1827,24 @@ def _capture(spec: dict[str, Any]) -> None:
                 frame, retry_checks = render_frame_guarded(raw, robot, command_term, sensor,
                                                            env_index=capture_env_id)
                 if instance_annotator is not None:
-                    mask_packet = instance_annotator.get_data()
-                    try:
-                        mask_row = robot_pixel_evidence(
-                            mask_packet, selected_env=capture_env_id,
+                    def validate_mask(packet):
+                        evidence = robot_pixel_evidence(
+                            packet, selected_env=capture_env_id,
                             env_count=n_envs(spec), height=full_args.height, width=full_args.width)
-                        require_single_visible_robot(mask_row)
+                        require_single_visible_robot(evidence)
+                        return evidence
+
+                    def rerender_mask():
+                        raw.sim.render()
+                        return np.ascontiguousarray(raw.render(recompute=True))[..., :3]
+
+                    try:
+                        mask_row, frame, mask_retry_checks = read_mask_with_render_retry(
+                            instance_annotator.get_data, rerender_mask,
+                            lambda: _render_state(raw, robot, command_term, sensor, capture_env_id),
+                            validate_mask, frame)
                     except ValueError as exc:
+                        mask_packet = instance_annotator.get_data()
                         diagnostic = packet_diagnostic(mask_packet, selected_env=capture_env_id)
                         diagnostic.update({"error": str(exc), "env_id": capture_env_id,
                                            "visibility": render_visibility_record})
@@ -1842,6 +1853,8 @@ def _capture(spec: dict[str, Any]) -> None:
                         Image.fromarray(frame).save(diagnostic_path.with_name("segmentation_failure_rgb.png"))
                         raise
                     instance_evidence.append(mask_row)
+                    render_retry_checks.extend({"physics_tick": k, "segmentation": True, **check}
+                                               for check in mask_retry_checks)
                 render_retry_checks.extend({"physics_tick": k, **check} for check in retry_checks)
                 if frame.shape[:2] != (full_args.height, full_args.width):
                     frame = np.asarray(Image.fromarray(frame).resize((full_args.width, full_args.height)))
