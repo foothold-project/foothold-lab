@@ -1344,7 +1344,8 @@ def _capture(spec: dict[str, Any]) -> None:
     from PIL import Image, ImageDraw, ImageFont
     from foothold_s2.eval.c_layer_frame_audit import project_world_point
     from foothold_s2.eval.c_layer_segmentation import (
-        packet_diagnostic, robot_pixel_evidence, require_single_visible_robot,
+        ensure_only_selected_visible, packet_diagnostic, robot_pixel_evidence,
+        require_single_visible_robot,
     )
 
     import importlib
@@ -1653,14 +1654,20 @@ def _capture(spec: dict[str, Any]) -> None:
         render_visibility_record = {"enabled": False, "reason": "single-environment capture"}
         if c_layer_ref(spec) or (sparse_capture and spec.get("hide_others")):
             import omni.usd
+            from pxr import UsdGeom
+            stage = omni.usd.get_context().get_stage()
             render_visibility_record = hide_nonselected_robot_roots(
-                omni.usd.get_context().get_stage(), env_cfg.scene.robot.prim_path,
+                stage, env_cfg.scene.robot.prim_path,
                 capture_env_id, n_envs(spec),
                 keep_env_ids=() if c_layer_ref(spec) else (0,))
             render_visibility_record["kept_env_ids"] = ([capture_env_id] if c_layer_ref(spec)
                                                          else [0, capture_env_id])
             if c_layer_ref(spec) and len(render_visibility_record["hidden_robot_roots"]) != n_envs(spec) - 1:
                 raise RuntimeError("C76 expected all other robot roots to be invisible")
+            if c_layer_ref(spec):
+                render_visibility_record["visibility_check"] = ensure_only_selected_visible(
+                    stage, render_visibility_record["visible_robot_root"],
+                    render_visibility_record["hidden_robot_roots"], UsdGeom.Imageable)
 
         def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
             result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
