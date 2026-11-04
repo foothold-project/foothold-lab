@@ -21,3 +21,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T03:44:14+09:00	boundary500	501 경계 적용 S2a 유지 · DR 0.5(m250 점수 사용 · 증거 있음) · 학습 자동 숫자 보고(m500 · 원문 한 줄)가 텔레그램에 그대로 감 → 읽기 어려움 · 운영 코드라 지금 안 바꿈 · EX-42 에서 텔레그램엔 lead 양식만	팀장 가독성 요구 · 학습 안 건드림	update_00500.json · tg-outbox	open
 2026-11-05T04:15:24+09:00	push	운영에 밀기 감시기(push250)가 안 떠 있었음 → lead 가 04:14 띄움 PID 67860 · 출력 run/eval/push250 · 500 부터 점수와 안정 저장본 기다림 · 출발 점검표에 빠졌던 항목	250 경계 ⑧ 밀림 측정	watcher_state.json waiting_for_score_and_stable_checkpoint	open
 2026-11-05T04:53:43+09:00	boundary500	500 경계 해석 · 유지 · 텔레그램 보냄 · 밀기 500 측정 04:51 시작	판정선 넘은 칸 0	EX41R-250-LOG.md · score_500_4038fcda40ba.json	done
+2026-11-05T05:13:31+09:00	push500	밀기 500 통과(평지 96.9 · 거친 땅 96.9 · 계단 90.6 %) · 계단은 판정선 근처라 지켜봄	D171	eval/push250/6500.json	done
