@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import time
 
@@ -36,6 +37,25 @@ def sha256(path: Path) -> str:
 def atomic_json(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     shared.write_json(path, value)
+
+
+def publish_d48_video(source: Path, out: Path, *, kind: str, level: int,
+                      iteration: int, mode: str, outcome: str) -> Path:
+    """Publish the audited clip under its own recorded D48 outcome."""
+    if mode not in MODES or outcome not in ("success", "fail") or not source.is_file():
+        raise ValueError("D48 push source, map mode or own result invalid")
+    name = video_style.video_name("EX41", kind, level, iteration, outcome,
+                                  segment=f"push_{mode}")
+    target = out / (name + ".mp4")
+    temporary = out / (name + ".mp4.publishing")
+    if target.exists() or temporary.exists():
+        raise ValueError("D48 push published name already exists")
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, temporary)
+    os.replace(temporary, target)
+    if sha256(target) != sha256(source):
+        raise ValueError("D48 push published bytes differ")
+    return target
 
 
 def group_id(checkpoint_sha: str, *, kind: str, level: int, col: int, env_id: int,
@@ -302,13 +322,18 @@ def run_one(args) -> dict:
             if rc or child_log_has_traceback(attempts / "child.log"):
                 raise ValueError(f"A push recorder failed rc={rc}")
             verified = verify_capture(attempts, label, args, mode, source)
+            published = publish_d48_video(Path(verified["video"]), args.out,
+                                          kind=args.kind, level=args.level,
+                                          iteration=args.iteration, mode=mode,
+                                          outcome=verified["outcome"])
             receipt = {"schema": SCHEMA, "map_mode": mode, "group_id": specs[mode]["push_group_id"],
                        "source_head": source["source_head"],
                        "checkpoint_sha256": source["checkpoint_sha256"],
                        "cadence": args.cadence, "iteration": args.iteration,
                        "kind": args.kind, "level": args.level, "col": args.col,
                        "env_id": args.env_id, "seed": args.seed, "push_seed": args.push_seed,
-                       "video": verified["video"], "video_sha256": verified["video_sha256"],
+                       "video": str(published), "video_sha256": sha256(published),
+                       "styled_source": verified["video"],
                        "outcome": verified["outcome"], "dr_recovery": verified["dr_recovery"],
                        "dr_recovery_by_event": verified["dr_recovery_by_event"],
                        "push_signature": verified["push_signature"],
