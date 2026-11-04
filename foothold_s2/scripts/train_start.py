@@ -571,7 +571,8 @@ def main(env_cfg, agent_cfg):
         else:
             log_dir = str(validate_rehearsal_request(
                 args_cli.ex41_rehearsal_updates, args_cli.ex41_rehearsal_output,
-                args_cli.device, args_cli.headless, args_cli.distributed))
+            args_cli.device, args_cli.headless, args_cli.distributed,
+            stage_updates=EX41_STAGE_REHEARSAL))
     env_cfg.log_dir = log_dir
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞(결정 8: 설정과 실행 인자로 고름)
     ex41_cfg_contract = None
@@ -1045,16 +1046,21 @@ if __name__ == "__main__":
                 "state": "failed",
                 "exit_code": code,
                 "system_exit_code": str(e.code),
-                "iter": (read_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR")) or {}).get("iter"),
+            "iter": ((read_status(str(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"))) or {}).get("iter")
+                     if STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR") else None),
                 "pid": os.getpid(),
                 "time": datetime.now().astimezone().isoformat(),
                 "traceback": traceback.format_exc(),
             }
-            write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), detail)
+        status_dir = STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR")
+        if status_dir:
+            write_status(status_dir, detail)
             print("EX41_NONZERO_SYSTEM_EXIT " + json.dumps(detail, sort_keys=True), flush=True)
     except BaseException as exc:
         _record_ex41_process_alert("fatal_training_fault", error=exc)
-        write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})
+        status_dir = STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR")
+        if status_dir:
+            write_status(status_dir, {"state": "failed", "traceback": traceback.format_exc()})
         code = 1
     finally:
         _clear_ex41_gpu0_busy_marker()

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import ast
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,18 @@ def test_stage_table_is_rehearsal_only_and_production_rejects_it():
                                       startup_smoke=False)
     assert validate_rehearsal_request(12, "D:/mai-tmp/s2_lab/ex41_rehearsal_20261104_230000",
                                      "cuda:0", True, stage_updates=table).name.endswith("230000")
+
+
+def test_every_train_start_rehearsal_revalidation_passes_the_short_stage_table():
+    source = Path(__file__).parents[1] / "scripts" / "train_start.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    calls = [node for node in ast.walk(tree)
+             if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Name)
+             and node.func.id == "validate_rehearsal_request"]
+    assert len(calls) == 3
+    assert all(any(keyword.arg == "stage_updates" for keyword in node.keywords)
+               for node in calls)
 
 
 def test_in_memory_plan_uses_short_table_without_mutating_fixed_yaml():
