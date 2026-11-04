@@ -17,3 +17,5 @@ ts	phase	decision	why	evidence	result
 2026-11-05T01:53:50+09:00	boundary250	250 평가가 300 저장(약 02:12)까지 대기 · 원인 ex40_score_watch.py:100 completed_updates >= N+1 · manifest progress 는 50 회 저장 때만 갱신(250 에 머묾) · 학습 영향 없음 · 관문 M3(N 저장 직후) 미충족으로 기록 · 운영 중 감시기 코드 변경은 학습을 건드리지 않는 방법이 정해질 때까지 보류	학습을 멈추지 않는 것이 우선	manifest.json progress.completed_updates=250 · watcher.stdout pending manifest_not_committed	open
 2026-11-05T02:13:26+09:00	boundary250	감시기 그대로 둠(교체 안 함) · m250 점수는 경계 n=501 판단에만 쓰임(continuous.py:476-489) · 약 23 분 지연은 501 전에 도착하면 판단 불변 · 교체는 lock · 자식 확인 절차가 필요해 위험이 더 큼 · 수정은 다음 판(EX-42) 코드에	학습과 감시를 건드리지 않는 쪽	runner 분석 02:05 · ex40_score_watch.py:94-105	decided
 2026-11-05T02:57:36+09:00	boundary250	250 경계 해석 · 유지 · 텔레그램 보냄	판정선 넘은 칸 0 · 생존 최저 63/64	EX41R-250-LOG.md · score_250_6418f50661bd.json	done
+2026-11-05T03:33:39+09:00	gpu1	C76 대기 0 → scripter 에 실패 22 칸 재촬영 걸기 지시(사유 분류 · 다른 원인은 제외)	GPU1 이 놀지 않게	queue.json 실패 23	open
+2026-11-05T03:44:14+09:00	boundary500	501 경계 적용 S2a 유지 · DR 0.5(m250 점수 사용 · 증거 있음) · 학습 자동 숫자 보고(m500 · 원문 한 줄)가 텔레그램에 그대로 감 → 읽기 어려움 · 운영 코드라 지금 안 바꿈 · EX-42 에서 텔레그램엔 lead 양식만	팀장 가독성 요구 · 학습 안 건드림	update_00500.json · tg-outbox	open
