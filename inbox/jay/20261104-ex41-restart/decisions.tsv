@@ -22,3 +22,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T04:15:24+09:00	push	운영에 밀기 감시기(push250)가 안 떠 있었음 → lead 가 04:14 띄움 PID 67860 · 출력 run/eval/push250 · 500 부터 점수와 안정 저장본 기다림 · 출발 점검표에 빠졌던 항목	250 경계 ⑧ 밀림 측정	watcher_state.json waiting_for_score_and_stable_checkpoint	open
 2026-11-05T04:53:43+09:00	boundary500	500 경계 해석 · 유지 · 텔레그램 보냄 · 밀기 500 측정 04:51 시작	판정선 넘은 칸 0	EX41R-250-LOG.md · score_500_4038fcda40ba.json	done
 2026-11-05T05:13:31+09:00	push500	밀기 500 통과(평지 96.9 · 거친 땅 96.9 · 계단 90.6 %) · 계단은 판정선 근처라 지켜봄	D171	eval/push250/6500.json	done
+2026-11-05T05:39:17+09:00	stage	751 S2a → S2b applied · DR 0.5 · 지형 fixed_l02 · 텔레그램 단계 넘김 보냄	계획대로	ex41_application.jsonl 751	done
