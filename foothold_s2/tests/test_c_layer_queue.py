@@ -187,6 +187,16 @@ def test_real_python_child_observes_kit_env_without_visible_device():
                         "CUDA_VISIBLE_DEVICES": None}
 
 
+def test_dispatcher_child_imports_real_source_from_unrelated_cwd(tmp_path):
+    source_root = Path(__file__).resolve().parents[2]
+    child_env = q.recorder_child_env(
+        sys.executable, {**os.environ, "PYTHONPATH": ""}, source_root=source_root)
+    completed = subprocess.run(
+        [sys.executable, "-c", "import foothold_s2; print(foothold_s2.__file__)"],
+        cwd=tmp_path, env=child_env, capture_output=True, text=True, check=True)
+    assert str(source_root).lower() in completed.stdout.lower()
+
+
 def test_recorder_preflight_capture_and_composer_receive_same_kit_env(tmp_path, monkeypatch):
     plan, rows = fixture(tmp_path)
     python = tmp_path / "isaac311" / "python.exe"
