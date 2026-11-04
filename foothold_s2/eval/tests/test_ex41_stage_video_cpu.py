@@ -38,6 +38,8 @@ def test_all_stage_cases_and_modes_are_distinct():
     assert len(stage.SUITES["W57"]) == 13
     assert len(stage.SUITES["W80"]) == 4
     assert len(names) == (13 + 4) * 3
+    assert len(stage.stage_cases()) == 51
+    assert len(set(stage.stage_cases())) == 51
 
 
 @pytest.mark.parametrize("change", [
