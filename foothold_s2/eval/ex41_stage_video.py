@@ -137,6 +137,14 @@ def verify(args, spec: dict, source: dict, folder: Path, label: str) -> dict:
     write_json(folder / "raw_frame_audit.json", raw_audit)
     if not raw_audit["pass"]:
         raise ValueError("stage raw full-frame audit failed")
+    write_json(capture / "review.done", {
+        "format": "d51-capture-receipt/1", "name": label,
+        "checkpoint_sha256": spec["checkpoint_sha256"],
+        "recorder_sha256": source["recorder_sha256"],
+        "env": 5, "kind": "pyramid_stairs_inv", "level": LEVELS[args.suite],
+        "map_mode": args.mode,
+        "files": {path.name: sha256(path) for path in (mp4, meta_path, npz)},
+    })
     child_env = source_child_env(args.python, args.source_root)
     styled = folder / "styled.mp4"
     with (folder / "compose.log").open("wb") as log:
