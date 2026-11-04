@@ -32,6 +32,8 @@ DESKTOP_PROCESS_NAMES = {
     "chrome.exe", "msedge.exe", "msedgewebview2.exe", "photos.exe", "snippingtool.exe",
     "chatgpt.exe", "discord.exe", "potplayer64.exe", "windowsTerminal.exe".casefold(),
     "logioptionsplus_agent.exe", "logioverlay.exe", "orca.exe", "code.exe",
+    # Chrome Remote Desktop host (11/05 06:45 it held the 750 push check for 30 min as unknown).
+    "remoting_desktop.exe",
 }
 
 
