@@ -494,7 +494,16 @@ class EX41FixedRuntime(EX41Runtime):
         if mirror_score and any(mirror_score['iteration']<=r['iteration']<n
                                 for r in self._score_rejections.values()):mirror_score=None
         self._record_mirror_observation(n,mirror_score)
-        failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
+        if getattr(self.plan, 'rehearsal_stage_updates', None) is not None:
+            # Short-stage rehearsal exercises transitions only. It contributes
+            # no W72 maintenance evidence and cannot spend pause budget.
+            score=None
+            failed=[]
+            self._write({'event':'rehearsal_w72_evidence_excluded','iteration':n,
+                         'pause_budget_used':self.clock.pause_used,
+                         'maintenance_evidence':'excluded'})
+        else:
+            failed=maintenance(score['metrics'].get('maintenance_counts'),self.baseline) if score else None
         if n>=interval+1:
             self._missing_maintenance_boundaries=(self._missing_maintenance_boundaries+1 if failed is None else 0)
             if self._missing_maintenance_boundaries>=2:
@@ -528,7 +537,9 @@ class EX41FixedRuntime(EX41Runtime):
                 and delta>=self.plan.automatic['extension_level_delta']
                 and snap['approvals'].get('automatic',{}).get('extension')):
                 self.clock.extension=self.clock.settings['extension_updates']; pos=len(self.templates)-2; event='D110_extension_once'
-        if self.templates[pos].id!=self.effective['stage_id'] and self.stage_meta[self.templates[pos].id]['terrain']['policy']=='performance' and not values['w71_ready']:
+        if (self.templates[pos].id!=self.effective['stage_id']
+                and self.stage_meta[self.templates[pos].id]['terrain']['policy']=='performance'
+                and not values['w71_ready'] and not self.allow_w71_unverified):
             self._reject_boundary(n,ValueError('w71_not_ready')); return
         # Reapply even within a stage to retain a single boundary receipt with
         # its physical scale and pinned maintenance evidence.

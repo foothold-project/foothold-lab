@@ -857,7 +857,9 @@ def apply_runtime_fields(runner,stage,effective):
     """
     env=runner.env.unwrapped; terrain=effective['terrain']
     if terrain['policy'] not in ('fixed_l02','performance'): raise ValueError('EX41 unknown terrain policy')
-    if terrain['policy']=='performance' and not effective['w71_ready']: raise ValueError('EX41 W71 consumer not verified')
+    if (terrain['policy']=='performance' and not effective['w71_ready']
+            and not getattr(runner.continuous_curriculum,'allow_w71_unverified',False)):
+        raise ValueError('EX41 W71 consumer not verified')
     cap=terrain['level_cap']
     if not 0<=cap<env.scene.terrain.terrain_origins.shape[0]: raise ValueError('EX41 terrain cap exceeds generated rows')
     if int(env.scene.terrain.terrain_levels.max())>cap: raise ValueError('EX41 cap cannot silently discard current levels')

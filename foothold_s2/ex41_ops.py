@@ -81,6 +81,48 @@ def _alert(path: Path, event_id: str, kind: str, update: int, details: dict) -> 
     return row
 
 
+def record_boundary_runtime_readback(runtime, dr_runtime, env, run_dir: str | Path,
+                                     update: int, *, inject_delta: float | None = None) -> dict[str, Any]:
+    """Compare the just-applied stage/DR against its live env readback."""
+    expected_scale = float(runtime.dr_scale(update))
+    actual_scale = float(getattr(env, "_ex40_dr_scale"))
+    observed_scale = actual_scale + (float(inject_delta) if inject_delta is not None else 0.0)
+    expected_stage = runtime.effective.get("stage_id")
+    actual_stage = getattr(env, "_ex41_stage_id", None)
+    delta = abs(observed_scale - expected_scale)
+    mismatch = delta >= 0.01 or actual_stage != expected_stage
+    row = {"format": "foothold-ex41-boundary-runtime-readback/1",
+           "iteration": int(update), "expected_stage": expected_stage,
+           "actual_stage": actual_stage, "expected_dr_scale": expected_scale,
+           "actual_dr_scale": actual_scale, "observed_dr_scale": observed_scale,
+           "absolute_dr_delta": delta,
+           "threshold": 0.01, "state": "warning" if mismatch else "verified",
+           "injected_m10_delta": inject_delta}
+    report = Path(run_dir) / "ex41_reports" / "boundary_runtime_readback.jsonl"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    if mismatch:
+        event_id = hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest()
+        alert = _alert(Path(run_dir) / "ex41_reports" / "alerts.jsonl", event_id,
+                       "boundary_readback_mismatch", update, row)
+        if alert is not None:
+            row["alert_event_id"] = event_id
+            delivery_rows = deliver_pending_alerts(run_dir)
+            delivery = next((item for item in delivery_rows
+                             if item.get("event_id") == event_id), {})
+            row["orchestration_received"] = (
+                delivery.get("channels", {}).get("orchestration", {}).get("state") == "sent")
+            row["delivery_receipt"] = str(
+                (Path(run_dir) / "ex41_reports" / "alert_deliveries" /
+                 f"{hashlib.sha256(event_id.encode()).hexdigest()}.json").resolve())
+    if dr_runtime is not None:
+        base = getattr(dr_runtime, "base", dr_runtime)
+        row["dr_runtime_scale"] = float(getattr(base, "scale", actual_scale))
+    with report.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n")
+        stream.flush()
+    return row
+
+
 def _notification_text(row: dict[str, Any]) -> tuple[str, str]:
     kind = str(row.get("kind", "EX-41 alert"))
     iteration = row.get("iteration", "unknown")

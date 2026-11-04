@@ -1,0 +1,25 @@
+# Bounded EX-41 transition rehearsal only. Production uses ex41-fixed5000-boundary.yaml.
+format: foothold-ex41-boundary/1
+revision: 1
+values:
+  ppo:
+    entropy_coef: 0.01
+    desired_kl: 0.01
+  dr:
+    target_scale: 0.5
+    ramp_updates: 0
+  reward_weights:
+    zero_yaw: -0.5
+    swing: -9.99
+    stumble: -2.0
+  command_share_bias:
+    walk: 0.0
+    spin: 0.0
+    side: 0.0
+    diag_fwd: 0.0
+    diag_back: 0.0
+  heading_forward_fraction: 0.3
+  critic_mirror: false
+  terrain_level_cap: 5
+  w71_ready: true
+  episode_length_s: 20.0

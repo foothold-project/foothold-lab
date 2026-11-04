@@ -429,18 +429,67 @@ def stage_at(run, iteration, plan):
     return r['stage_after']
 
 
+def rehearsal_schedule(run):
+    path = Path(run) / 'ex41_reports' / 'rehearsal_schedule.json'
+    if not path.is_file():
+        return None
+    row = read(path)
+    if row.get('format') != 'foothold-ex41-short-stage-rehearsal/1':
+        raise ValueError('short-stage rehearsal schedule format differs')
+    from foothold_s2.scripts.ex41_rehearsal_schedule import parse_stage_updates
+    updates = tuple(row.get('stage_updates', ()))
+    if parse_stage_updates(','.join(str(value) for value in updates)) != updates:
+        raise ValueError('short-stage rehearsal table differs')
+    return row
+
+
+def plan_for_run(table, run):
+    schedule = rehearsal_schedule(run)
+    if schedule is None:
+        return load_plan(table, arm='B')
+    from foothold_s2.scripts.ex41_rehearsal_schedule import boundary_updates
+    from foothold_s2.scripts.ex41_startup import configure_stage_rehearsal_plan
+    plan = load_plan(table, arm='B', smoke_boundaries=boundary_updates(tuple(schedule['stage_updates'])))
+    configure_stage_rehearsal_plan(plan, tuple(schedule['stage_updates']))
+    return plan
+
+
+def eval_config_for_run(run, default):
+    schedule = rehearsal_schedule(run)
+    if schedule is None:
+        return Path(default).resolve()
+    path = Path(schedule.get('eval_config_path', '')).resolve(strict=True)
+    root = Path(run).resolve()
+    if root not in path.parents:
+        raise ValueError('rehearsal evaluation config escaped its run folder')
+    return path
+
+
 def initial_state(run, table, eval_config):
+    effective_eval_config = eval_config_for_run(run, eval_config)
     return {'format':'foothold-ex41-score-watch/1', 'run_dir':str(Path(run).resolve()),
-            'table_sha256':sha256(table), 'eval_config_sha256':sha256(eval_config),
+            'table_sha256':sha256(table), 'eval_config_sha256':sha256(effective_eval_config),
             'done':{}, 'stage_end_auxiliary':{}, 'measurement_attempts':{},
-            'measurement_failures':{}}
+            'measurement_failures':{}, 'rehearsal_injected_failures':{}}
 
 
 def candidates(run, plan, *, on_error=None):
     found = []
+    short = rehearsal_schedule(run)
+    scheduled = set()
+    if short is not None:
+        total = 0
+        for duration in short['stage_updates']:
+            total += int(duration)
+            scheduled.add(total)
     for p in run.glob('model_*.pt'):
         m = MODEL.fullmatch(p.name)
-        if m and int(m[1]) >= 250 and int(m[1]) % 250 == 0: found.append((int(m[1]), p, None))
+        if not m:
+            continue
+        iteration = int(m[1])
+        if (short is not None and iteration in scheduled) or (
+                short is None and iteration >= 250 and iteration % 250 == 0):
+            found.append((iteration, p, None))
     for path in (run/'final_eval_requests').glob('final_*.json'):
         try:
             r = read(path); original = dict(r); request_id = original.pop('request_id', None)
@@ -577,8 +626,23 @@ def stage_end_updates(plan, run_dir):
 
 
 def due_evaluation_scopes(iteration, plan, run_dir):
-    """Periodic 39-cell plus side-W78 runs every 250; full axes/W78 stay at stage ends."""
-    if type(iteration) is not int or iteration < 1 or iteration % 250:
+    """Use actual Clock stage ends for rehearsal; production remains every 250."""
+    if type(iteration) is not int or iteration < 1:
+        return ()
+    short = rehearsal_schedule(run_dir)
+    if short is not None:
+        updates = set()
+        total = 0
+        for duration in short['stage_updates']:
+            total += int(duration)
+            updates.add(total)
+        if iteration not in updates:
+            return ()
+        # The rehearsal table contains no hold or extension evidence by design,
+        # so its cumulative checkpoint table is the complete actual stage-end
+        # clock, including the first stage before a transition receipt exists.
+        return ('periodic', 'auxiliary')
+    elif iteration % 250:
         return ()
     scopes = ['periodic']
     if iteration in stage_end_updates(plan, run_dir):
@@ -704,6 +768,8 @@ def register_stage_end_queue_jobs(queue_path, specs):
                     '--argv-json', json.dumps(item['argv']), '--cwd', item['cwd']]
             for done_file in item['done_files']:
                 argv.extend(['--done-file', done_file])
+            if item.get('needs_approval'):
+                argv.append('--needs-approval')
             result = subprocess.run(argv, cwd=str(module_path.parents[3]), capture_output=True,
                                     text=True, check=False)
             if result.returncode:
@@ -968,6 +1034,36 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         _publish_stage_end_report(checkpoint.parent, sidecar, deliver=deliver_reports)
         return prior
 
+    if execute and getattr(plan, 'rehearsal_stage_updates', None) is not None:
+        rehearsal_receipt = target / 'rehearsal_queue_registration.json'
+        if rehearsal_receipt.is_file():
+            prior = read(rehearsal_receipt)
+            if prior.get('iteration') != iteration or prior.get('checkpoint_sha256') != pinned:
+                raise ValueError('rehearsal queue registration identity differs')
+            aux_state[key] = evidence(rehearsal_receipt)
+            return prior
+        queue_path = Path(os.environ.get('EX41_GPU_JOBS_QUEUE', 'D:/mai-tmp/gpu/queue.json'))
+        specs = stage_end_queue_specs(checkpoint, target, config(eval_config), stage=stage,
+                                      table=table, eval_config=eval_config)
+        selected = [next(row for row in specs if row['phase'] == 'axis_v2'),
+                    next(row for row in specs if row['kind'] == 'render')]
+        for row in selected:
+            row['id'] = f"REHEARSAL-{row['id']}"
+            row['authorization_ref'] = f"REHEARSAL:{iteration}:{pinned}:{row['phase']}"
+            row['needs_approval'] = True
+        registered = register_stage_end_queue_jobs(queue_path, selected)
+        record = {'format':'foothold-ex41-stage-end-rehearsal-queue/1',
+                  'state':'registered_pending_approval','rehearsal':True,
+                  'iteration':iteration,'checkpoint_sha256':pinned,'stage':stage,
+                  'queue_path':str(queue_path.resolve()),
+                  'jobs':[{'id':str(row.get('id')),'title':row.get('title'),
+                           'phase':row.get('phase'),'kind':row.get('kind'),
+                           'priority':row.get('priority'),'needs_approval':row.get('needs_approval'),
+                           'state':row.get('state'),'condition':row.get('condition')}
+                          for row in registered]}
+        _atomic(rehearsal_receipt, record)
+        aux_state[key] = evidence(rehearsal_receipt)
+        return record
     if execute:
         # Stage-end work is independently registered in the active GPU board.
         queue_path = Path(os.environ.get(
@@ -1170,11 +1266,13 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                  execute=False, replay_root=None, w57_root=None, w78_root=None,
                  deliver_reports=False, sleep=time.sleep):
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
-    plan, cfg = load_plan(table, arm='B'), config(eval_config)
+    eval_config = eval_config_for_run(run, eval_config)
+    plan, cfg = plan_for_run(table, run), config(eval_config)
     identity = initial_state(run, table, eval_config)
     if any(state.get(k) != v for k,v in identity.items()
            if k not in ('done', 'stage_end_auxiliary', 'measurement_attempts',
-                        'measurement_failures', 'stage_end_queue_jobs')):
+                        'measurement_failures', 'stage_end_queue_jobs',
+                        'rehearsal_injected_failures')):
         raise ValueError('watcher identity differs')
     state.setdefault('stage_end_auxiliary', {})
     state.setdefault('measurement_attempts', {})
@@ -1330,14 +1428,32 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         receipt = {'format':'foothold-ex41-score-attempt/1', 'state':'running', 'iteration':iteration,
                    'checkpoint_sha256':pinned, 'source':str(source), 'mode':'replay' if replay_root else 'execute'}
         _atomic(target/'attempt.json', receipt)
+        short = rehearsal_schedule(run)
+        if execute and short is not None:
+            injected = state.setdefault('rehearsal_injected_failures', {})
+            inject_iteration = short.get('inject_one_measurement_failure_at')
+            if iteration == inject_iteration and not injected.get(key):
+                target.mkdir(parents=True, exist_ok=True)
+                fail = {'format':'foothold-ex41-score-attempt/1','state':'measurement_retry_pending',
+                        'mode':'rehearsal_injected_failure','iteration':iteration,
+                        'checkpoint_sha256':pinned,'attempt_count':1,
+                        'reason':'intentional single measurement failure injection; no W72 evidence'}
+                _atomic(target/'attempt.json', fail)
+                state['measurement_attempts'][key] = 1
+                state['measurement_failures'].setdefault(key, []).append(evidence(target/'attempt.json'))
+                injected[key] = True
+                return {'state':'measurement_retry_pending','measurement_state':'failed_retryable',
+                        'judgement_state':'not_judged','iteration':iteration,'checkpoint_sha256':pinned,
+                        'attempt_count':1,'reason':'intentional rehearsal failure injection'}
         child = None
         if execute and not interrupted:
+            child_scope = 'core' if short is not None else 'periodic'
             argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once', '--checkpoint', str(cp), '--out', str(source),
                     '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()),
-                    '--scope', 'periodic', '--execute']
+                    '--scope', child_scope, '--execute']
             child = hidden_child(argv, target/'bundle_child')
         periodic_w78 = (source/'w78_v2_sides/terrain_skill_v2.json'
-                        if execute and replay_root is None else None)
+                        if execute and replay_root is None and short is None else None)
         row = collect(cp, stage, source, plan, eval_config,
                       periodic_w78_path=periodic_w78,
                       w86_path=run/'ex41_w86.jsonl' if execute else None,
@@ -1487,7 +1603,7 @@ def main(argv=None):
             _atomic(path, state)
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0
-            end=completion(a.run_dir,load_plan(a.table,arm='B'),state)
+            end=completion(a.run_dir,plan_for_run(a.table,a.run_dir),state)
             if end['state'] in ('complete','complete_with_hold'):
                 _atomic(a.out_root/'watch_completion.json',end)
                 return 0 if end['state']=='complete' else 5

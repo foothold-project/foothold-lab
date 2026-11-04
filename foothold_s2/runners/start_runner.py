@@ -537,6 +537,21 @@ class StartRunner(OnPolicyRunner):
             ex40_dr_runtime = getattr(self, "ex40_dr_runtime", None)
             if ex40_dr_runtime is not None:
                 ex40_dr_runtime.update_start(it)
+            if (continuous is not None and getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                    and self.log_dir is not None and not self.disable_logs
+                    and getattr(continuous, "_last_boundary", None) == curriculum_it):
+                injected_delta = None
+                if (getattr(self, "ex41_rehearsal_m10_injection", False)
+                        and getattr(getattr(continuous, "plan", None), "rehearsal_stage_updates", None) is not None):
+                    injected_delta = 0.01
+                    self.ex41_rehearsal_m10_injection = False
+                from foothold_s2.ex41_ops import record_boundary_runtime_readback, run_nonfatal_reporting
+                raw_env = getattr(self.env, "unwrapped", self.env)
+                run_nonfatal_reporting(
+                    self.log_dir, curriculum_it, "boundary_runtime_readback",
+                    lambda: record_boundary_runtime_readback(
+                        continuous, ex40_dr_runtime, raw_env, self.log_dir,
+                        curriculum_it, inject_delta=injected_delta))
             if getattr(self, "basic_lin_vel_z_schedule", False):
                 from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
 

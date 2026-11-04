@@ -409,8 +409,8 @@ def record_ex41_disk_snapshot(log_dir: str | Path, disk_plan: dict[str, Any],
     return row
 
 
-def load_fixed_plan(path: str | Path):
-    plan = load_plan(path, arm="B")
+def load_fixed_plan(path: str | Path, *, smoke_boundaries=None):
+    plan = load_plan(path, arm="B", smoke_boundaries=smoke_boundaries)
     if not getattr(plan, "fixed_schedule", None):
         raise ValueError("EX-41 startup requires the approved fixed5000 plan")
     if plan.parent_update != 6000 or plan.initial_dr_scale != 0.5:
@@ -486,12 +486,36 @@ def validate_output_with_launch_receipt(log_dir: str | Path, receipt_path: str |
     return root
 
 
+def validate_stage_rehearsal_mode(stage_updates, rehearsal_updates, *,
+                                   production_approved: bool, startup_smoke: bool) -> bool:
+    """Permit a shortened six-stage table only on the isolated rehearsal path."""
+    if stage_updates is None:
+        return False
+    if production_approved or startup_smoke:
+        raise ValueError('short EX-41 stage table is rehearsal-only')
+    if (not isinstance(stage_updates, tuple) or len(stage_updates) != 6
+            or any(type(value) is not int or not 1 <= value <= 5 for value in stage_updates)
+            or sum(stage_updates) > 30
+            or type(rehearsal_updates) is not int
+            or rehearsal_updates != sum(stage_updates)):
+        raise ValueError('short EX-41 stage table does not match rehearsal update cap')
+    return True
+
+
 def validate_rehearsal_request(updates: int, output_dir: str | Path,
                                device: str, headless: bool,
-                               distributed: bool = False) -> Path:
+                               distributed: bool = False,
+                               stage_updates: tuple[int, ...] | None = None) -> Path:
     """Allow only the explicitly bounded, isolated 10-update Kit rehearsal."""
-    if type(updates) is not int or updates != 10:
-        raise ValueError("EX-41 rehearsal is fixed to exactly 10 updates")
+    if stage_updates is None:
+        if type(updates) is not int or updates != 10:
+            raise ValueError("EX-41 standard rehearsal is fixed to exactly 10 updates")
+    else:
+        from foothold_s2.scripts.ex41_rehearsal_schedule import boundary_updates
+
+        if (type(updates) is not int or updates != sum(stage_updates)
+                or len(boundary_updates(stage_updates)) != 5):
+            raise ValueError("EX-41 stage rehearsal update count differs from its six-stage table")
     path = Path(output_dir)
     if not path.is_absolute() or path.parent.name.lower() != "s2_lab":
         raise ValueError("EX-41 rehearsal output must be an absolute s2_lab child")
@@ -503,6 +527,40 @@ def validate_rehearsal_request(updates: int, output_dir: str | Path,
     if path.exists() and any(path.iterdir()):
         raise ValueError("EX-41 rehearsal output must be new or empty")
     return path
+
+
+def configure_stage_rehearsal_plan(plan, stage_updates: tuple[int, ...], *,
+                                   boundary_path: str | Path | None = None) -> dict:
+    """Apply a short table to an isolated rehearsal plan; YAML/production stays pinned."""
+    from foothold_s2.scripts.ex41_rehearsal_schedule import boundary_updates, STAGE_IDS
+
+    rows = tuple(stage_updates)
+    boundaries = boundary_updates(rows)
+    if len(plan.stages) != len(STAGE_IDS) or tuple(stage.id for stage in plan.stages) != STAGE_IDS:
+        raise ValueError("EX-41 short rehearsal requires the six fixed-schedule stages")
+    settings = dict(plan.clock_settings)
+    settings.update(duration_updates=sum(rows), durations=rows,
+                    interval_updates=min(rows), pause_limit_updates=0,
+                    maximum_extensions=0, extension_updates=0)
+    plan.clock_settings = settings
+    plan.rehearsal_stage_updates = rows
+    plan.smoke_boundaries = boundaries
+    if boundary_path is not None:
+        selected_boundary = Path(boundary_path).resolve(strict=True)
+        if selected_boundary.parent != plan.path.parent:
+            raise ValueError("EX-41 rehearsal boundary must be beside its fixed table")
+        plan.boundary_path = selected_boundary
+    for stage, duration in zip(plan.stages, rows):
+        plan.stage_meta[stage.id]["minimum_updates"] = duration
+        plan.stage_meta[stage.id]["maximum_updates"] = duration
+    return {"format": "foothold-ex41-short-stage-rehearsal/1",
+            "stage_ids": list(STAGE_IDS), "stage_updates": list(rows),
+            "transition_next_updates": list(boundaries),
+            "completed_updates": sum(rows), "interval_updates": min(rows),
+            "pause_budget_updates": 0, "production_table_modified": False,
+            "boundary_config_path": str(plan.boundary_path.resolve()),
+            "boundary_config_sha256": hashlib.sha256(plan.boundary_path.read_bytes()).hexdigest(),
+            "w72_evidence_policy": "excluded_from_rehearsal"}
 
 
 def validate_startup_smoke_request(updates: int, output_dir: str | Path,
