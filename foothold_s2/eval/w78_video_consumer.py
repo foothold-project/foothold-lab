@@ -150,6 +150,14 @@ def recorder_argv(python: Path, recorder: Path, checkpoint: Path, combo: str,
             "--headless", "--enable_cameras", "--livestream", "0"]
 
 
+def source_child_env(python: Path, source_root: Path) -> dict[str, str]:
+    """Pin the EX-41 package without passing unsupported recorder env arguments."""
+    env = recorder_child_env(str(python))
+    current = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = str(source_root) + (os.pathsep + current if current else "")
+    return env
+
+
 def gate(python: Path, config: Path) -> dict:
     tool = config.parent / "gpu_jobs.py"
     result = subprocess.run([str(python), str(tool), "--config", str(config), "gate", "w78-video"],
@@ -281,7 +289,7 @@ def run_one(args: argparse.Namespace) -> dict:
             attempt.mkdir()
             argv = recorder_argv(args.python, args.recorder, checkpoint, combo,
                                  request, source, attempt, args.device)
-            child_env = recorder_child_env(str(args.python), source_root=args.source_root)
+            child_env = source_child_env(args.python, args.source_root)
             try:
                 preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
                                            encoding="utf-8", errors="replace", env=child_env, check=False)

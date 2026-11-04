@@ -148,6 +148,9 @@ def test_w78_capture_keeps_physical_gpu_one_when_training_masks_gpu_zero(tmp_pat
     assert child["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
     assert "CUDA_VISIBLE_DEVICES" not in child
     assert parent["CUDA_VISIBLE_DEVICES"] == "0"
+    fixed = consumer.source_child_env(Path(sys.executable), tmp_path)
+    assert fixed["PYTHONPATH"].split(os.pathsep)[0] == str(tmp_path)
+    assert "CUDA_VISIBLE_DEVICES" not in fixed
 
 
 def test_w78_source_requires_shared_pose_loader(tmp_path):
