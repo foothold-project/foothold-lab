@@ -15,7 +15,7 @@ values:
   command_share_bias:
     walk: 0.0
     spin: 0.0
-    side: 0.01
+    side: 0.0
     diag_fwd: 0.0
     diag_back: 0.0
   heading_forward_fraction: 0.3
