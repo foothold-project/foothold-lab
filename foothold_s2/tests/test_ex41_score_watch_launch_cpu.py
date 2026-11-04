@@ -32,6 +32,22 @@ def test_score_watch_argv_is_pinned_and_dry(tmp_path):
     assert argv[argv.index("--eval-config") + 1] == str(eval_config.resolve())
 
 
+def test_score_watch_argv_enables_rehearsal_exit_only_for_rehearsal_manifest(tmp_path):
+    run, score, table, eval_config = inputs(tmp_path)
+    normal = startup.ex41_score_watch_argv(
+        run, score, table=table, eval_config=eval_config,
+        python=startup.EX41_ISAAC_PYTHON,
+    )
+    assert "--rehearsal-stop" not in normal
+    (run / "manifest.json").write_text(json.dumps({"modes":{"ex41":{"rehearsal":{"enabled":True}}}}),
+                                       encoding="utf-8")
+    rehearsal = startup.ex41_score_watch_argv(
+        run, score, table=table, eval_config=eval_config,
+        python=startup.EX41_ISAAC_PYTHON,
+    )
+    assert rehearsal[-1] == "--rehearsal-stop"
+
+
 def test_hook_starts_exactly_once_after_first_completed_update(tmp_path):
     run, score, table, eval_config = inputs(tmp_path)
     calls = []

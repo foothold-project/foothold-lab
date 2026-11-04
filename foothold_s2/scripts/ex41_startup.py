@@ -81,10 +81,17 @@ def ex41_score_watch_argv(run_dir: str | Path, score_dir: str | Path, *,
     interpreter = Path(python).resolve(strict=True)
     if os.path.normcase(str(interpreter)) != os.path.normcase(str(EX41_ISAAC_PYTHON.resolve(strict=False))):
         raise ValueError("EX-41 score watcher requires the pinned isaac311 interpreter")
-    return [str(interpreter), "-m", "foothold_s2.ex41_score_watch",
+    argv = [str(interpreter), "-m", "foothold_s2.ex41_score_watch",
             "--run-dir", str(run), "--out-root", str(ex41_score_watch_output_root(run)),
             "--score-dir", str(score), "--table", str(table_path),
             "--eval-config", str(eval_path), "--execute"]
+    manifest_path = run / "manifest.json"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        rehearsal = manifest.get("modes", {}).get("ex41", {}).get("rehearsal", {})
+        if rehearsal.get("enabled") is True:
+            argv.append("--rehearsal-stop")
+    return argv
 
 
 def _write_score_watch_receipt(path: Path, row: dict) -> None:

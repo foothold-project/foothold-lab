@@ -355,6 +355,31 @@ def test_main_loop_replays_actual_outputs_past_hold_until_final_receipt(tmp_path
     assert end['state']=='complete_with_hold' and end['hold_count']==1 and not end['graduated']
 
 
+def test_rehearsal_watcher_exits_after_scheduled_scores_without_final_request(tmp_path,monkeypatch):
+    run=replay_run(tmp_path)
+    (run/'train_start_status.json').write_text(json.dumps({'state':'done','iter':6000}))
+    eval_config=run/'eval.json';shutil.copy2(watch.DEFAULT_CONFIG,eval_config)
+    (run/'ex41_reports').mkdir()
+    (run/'ex41_reports/rehearsal_schedule.json').write_text(json.dumps({
+        'format':'foothold-ex41-short-stage-rehearsal/1','stage_updates':[1,1,1,1,1,1],
+        'eval_config_path':str(eval_config),'inject_measurement_failure_count':1}))
+    monkeypatch.setattr(watch,'plan_for_run',lambda _table,_run:load_plan(TABLE,arm='B'))
+    monkeypatch.setattr(watch,'candidates',lambda *_args,**_kwargs:[
+        (5750,run/'model_5750.pt',None),(6000,run/'model_6000.pt',None)])
+    stable=watch._stable
+    monkeypatch.setattr(watch,'_stable',lambda p,t,s:stable(p,0,lambda _:None))
+    monkeypatch.setattr(watch.time,'sleep',lambda _:None)
+    rc=watch.main(['--run-dir',str(run),'--out-root',str(tmp_path/'out'),
+                   '--score-dir',str(tmp_path/'scores'),'--table',str(TABLE),
+                   '--replay-root',str(SOURCE/'score-watch-b'),'--rehearsal-stop'])
+    assert rc==0
+    end=watch.read(tmp_path/'out/watch_completion.json')
+    assert end['state']=='complete' and end['training_state']=='done'
+    assert set(row['iteration'] for row in watch.read(tmp_path/'out/watch_state.json')['done'].values())=={5750,6000}
+    assert not (run/'final_eval_requests').exists()
+    assert not (tmp_path/'out/watch.lock').exists()
+
+
 def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,monkeypatch):
     # Coordinator-only spy, not a claim that mocked children measured anything.
     root=tmp_path/'source';p=root/'foothold_s2/eval';p.mkdir(parents=True)

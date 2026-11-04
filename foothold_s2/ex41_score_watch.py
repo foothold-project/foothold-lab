@@ -1594,7 +1594,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     return pending or {'state':'idle'}
 
 
-def completion(run, plan, state):
+def completion(run, plan, state, *, rehearsal=False):
     """A completed training status alone never means graduation or full scores."""
     run=Path(run)
     path=run/'train_start_status.json'
@@ -1621,7 +1621,7 @@ def completion(run, plan, state):
                     return {'state':'waiting_for_final_request_score','iteration':iteration}
             except (OSError,ValueError,TypeError,KeyError) as exc:
                 return {'state':'final_request_error','iteration':iteration,'reason':str(exc),'graduated':False}
-    if training['state']=='done' and not any(request for _,_,request in saved):
+    if training['state']=='done' and not any(request for _,_,request in saved) and not rehearsal:
         return {'state':'waiting_for_final_checkpoint_request'}
     holds=sum(row['state']=='HOLD' for row in state['done'].values())
     gap_keys=sorted(state.get('measurement_gaps', {}))
@@ -1664,11 +1664,15 @@ def main(argv=None):
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--once', action='store_true')
     p.add_argument('--execute', action='store_true')
+    p.add_argument('--rehearsal-stop', action='store_true',
+                   help='In a short-stage rehearsal, exit after all scheduled checkpoints are scored or recorded as gaps')
     p.add_argument('--replay-root', type=Path)
     p.add_argument('--w57-root', type=Path)
     p.add_argument('--w78-root', type=Path)
     a = p.parse_args(argv)
     if a.execute and a.replay_root: p.error('--execute and --replay-root are exclusive')
+    if a.rehearsal_stop and rehearsal_schedule(a.run_dir) is None:
+        p.error('--rehearsal-stop requires a short-stage rehearsal schedule')
     a.out_root.mkdir(parents=True, exist_ok=True)
     lock = a.out_root/'watch.lock'; owned = False
     try:
@@ -1683,7 +1687,8 @@ def main(argv=None):
             _atomic(path, state)
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0
-            end=completion(a.run_dir,plan_for_run(a.table,a.run_dir),state)
+            end=completion(a.run_dir,plan_for_run(a.table,a.run_dir),state,
+                           rehearsal=a.rehearsal_stop)
             if end['state'] in ('complete','complete_with_hold','complete_with_measurement_gaps'):
                 _atomic(a.out_root/'watch_completion.json',end)
                 return 5 if end['state']=='complete_with_hold' else 0
