@@ -33,7 +33,7 @@ fields:
     bounds: [-0.02, 0.02]
   command_share_bias.side:
     decision_id: D96-D177-a
-    bounds: [-0.02, 0.02]
+    bounds: [-0.01, 0.01]
   command_share_bias.diag_fwd:
     decision_id: D96-D177-a
     bounds: [-0.02, 0.02]
