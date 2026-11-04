@@ -611,7 +611,7 @@ def _stage_video_output(checkpoint):
 
 def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_training_active=False,
                           table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
-    """Build three isolated P2 evaluations and 51 independent P3 video jobs."""
+    """Build four isolated P2 evaluations and 51 independent P3 video jobs."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
@@ -620,24 +620,24 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     repo_root = Path(__file__).resolve().parents[1]
     rows = []
     for phase in phase_names:
+        phase_out = base / phase
         argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once',
-                '--checkpoint', str(checkpoint), '--out', str(base),
+                '--checkpoint', str(checkpoint), '--out', str(phase_out),
                 '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()),
                 '--scope', phase, '--device', 'cuda:1', '--execute']
         kind = 'render' if phase == 'a_push_video' else 'evaluation'
-        unit = {'id': phase}
-        if phase == 'a_push_video':
-            script = ("from pathlib import Path; from foothold_s2.eval.a_push_video import compare_mode_receipts; "
-                      "import sys; raise SystemExit(0 if compare_mode_receipts(Path(sys.argv[1])).get('state') == 'complete' else 1)")
-            unit['verify_argv'] = [sys.executable, '-c', script, str(base / phase)]
+        done_files = [str(phase_out / 'eval_receipt.json')]
         rows.append({
             'id': f'ex41-stage-{iteration}-{pinned[:12]}-{phase}',
-            'kind': kind, 'priority': 3 if kind == 'render' else 2,
+            'phase': phase,
+            'kind': 'render' if kind == 'render' else 'eval',
+            'priority': 3 if kind == 'render' else 2,
             'owner': 'ex41_score_watch',
             'authorization_ref': f'stage-end:{iteration}:{pinned}:{phase}',
-            'output': str(base / phase), 'cwd': str(repo_root),
+            'output_path': str(phase_out), 'done_files': done_files,
+            'cwd': str(repo_root),
             'gpu': 1, 'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f',
-            'argv': argv, 'units': [unit],
+            'argv': argv,
         })
     source_root, cases = _stage_video_contract()
     video_out = _stage_video_output(checkpoint)
@@ -647,16 +647,6 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
         'EX41_GPU_JOBS_CONFIG', 'C:/Users/AI-WS01/s2_lab/gpu_jobs/jobs.json'))
     playlist_root = Path(os.environ.get(
         'EX41_PLAYLIST_ROOT', 'C:/Users/AI-WS01/s2_lab/_playlists'))
-    video_case_script = (
-        "import hashlib,json,sys; from pathlib import Path; "
-        "root=Path(sys.argv[1]); expected=dict(zip(('suite','case','map_mode','iteration','stage_name','checkpoint_sha256'),sys.argv[2:])); "
-        "expected['iteration']=int(expected['iteration']); "
-        "rows=[json.loads(p.read_text(encoding='utf-8')) for p in (root/'receipts').glob('*.json')]; "
-        "row=next((r for r in rows if all(r.get(k)==v for k,v in expected.items())),None); "
-        "video=Path(row['video']) if row else Path('.'); "
-        "actual=hashlib.sha256(video.read_bytes()).hexdigest() if row and video.is_file() else None; "
-        "raise SystemExit(0 if row and row.get('schema')=='foothold-ex41-stage-video/1' and actual==row.get('video_sha256') else 1)"
-    )
     for suite, case, mode in cases:
         video_identity = _stage_video_identity(checkpoint, iteration, stage, suite, case, mode)
         argv = [sys.executable, '-m', 'foothold_s2.eval.ex41_stage_video',
@@ -667,31 +657,64 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                 '--python', sys.executable, '--gpu-jobs-config', str(gpu_config),
                 '--out', str(video_out), '--playlist-root', str(playlist_root),
                 '--device', 'cuda:1']
-        unit = {'id': f'{suite}:{case}:{mode}', 'args': [],
-                'verify_argv': [sys.executable, '-c', video_case_script,
-                                str(video_out), suite, case, mode, str(iteration),
-                                str(stage), pinned]}
+        done_file = video_out / 'receipts' / f'{video_identity}.json'
         rows.append({
             'id': f'ex41-stage-video-{iteration}-{pinned[:12]}-{suite}-{case}-{mode}-{video_identity[:10]}',
+            'phase': f'{suite}:{case}:{mode}',
             'kind': 'render', 'priority': 3, 'owner': 'ex41_score_watch',
             'authorization_ref': f'stage-video:{iteration}:{pinned}:{suite}:{case}:{mode}',
-            'output': str(video_out), 'cwd': str(source_root), 'gpu': 1,
+            'output_path': str(video_out), 'done_files': [str(done_file)],
+            'cwd': str(source_root), 'gpu': 1,
             'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f',
-            'argv': argv, 'units': [unit],
+            'argv': argv,
         })
     return rows
 
 
 def register_stage_end_queue_jobs(queue_path, specs):
-    """Register exact phase jobs with W28 and return their durable IDs."""
+    """Register one-shot items in the active gpu_jobs board queue."""
     import importlib.util
-    module_path = Path(__file__).resolve().parents[1] / '_out/tools/gpu_jobs/queue_w28.py'
-    spec = importlib.util.spec_from_file_location('foothold_ex41_queue_w28', module_path)
+    module_path = Path(os.environ.get(
+        'EX41_GPU_JOBS_SCRIPT',
+        'C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/gpu_jobs/gpu_jobs.py')).resolve(strict=True)
+    spec = importlib.util.spec_from_file_location('foothold_active_gpu_jobs', module_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError('W28 queue module unavailable')
+        raise RuntimeError('active gpu_jobs module unavailable')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return [module.register(Path(queue_path), item) for item in specs]
+    registered = []
+    config = {'queue': str(Path(queue_path).resolve())}
+    for item in specs:
+        queue = module.read_queue(config['queue'])
+        existing = next((row for row in queue['items']
+                         if row.get('condition') == item['authorization_ref']), None)
+        if existing is None:
+            args = argparse.Namespace(
+                qaction='add', title=item['id'], priority=item['priority'], gpu=item['gpu'],
+                start=None, end=None, owner=item['owner'], cond=item['authorization_ref'],
+                needs_approval=False, kind=item['kind'], argv_json=json.dumps(item['argv']),
+                cwd=item['cwd'], wait_absent=[], wait_pid=[], done_file=item['done_files'])
+            module.queue_cmd(args, cfg=config)
+            queue = module.read_queue(config['queue'])
+            existing = next((row for row in queue['items']
+                             if row.get('condition') == item['authorization_ref']), None)
+        if existing is None:
+            raise RuntimeError(f"gpu_jobs registration missing after add: {item['id']}")
+        registered.append({**existing, 'phase': item['phase']})
+    return registered
+
+
+def _active_gpu_jobs_module():
+    import importlib.util
+    module_path = Path(os.environ.get(
+        'EX41_GPU_JOBS_SCRIPT',
+        'C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/gpu_jobs/gpu_jobs.py')).resolve(strict=True)
+    spec = importlib.util.spec_from_file_location('foothold_active_gpu_jobs', module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError('active gpu_jobs module unavailable')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
@@ -934,10 +957,9 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         return prior
 
     if execute:
-        # Stage-end work is four independent W28 queue items, so a video or
-        # one diagnostic failure cannot suppress the other measurement outputs.
+        # Stage-end work is independently registered in the active GPU board.
         queue_path = Path(os.environ.get(
-            'EX41_GPU_JOBS_QUEUE', 'C:/Users/AI-WS01/s2_lab/gpu_jobs/queue.json'))
+            'EX41_GPU_JOBS_QUEUE', 'D:/mai-tmp/gpu/queue.json'))
         queue_jobs = state.setdefault('stage_end_queue_jobs', {})
         job_ids = queue_jobs.get(key)
         if job_ids is None:
@@ -945,23 +967,19 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                                           table=table,
                                           eval_config=eval_config)
             registered = register_stage_end_queue_jobs(queue_path, specs)
-            job_ids = {row['id']: row['units'][0]['id'] for row in registered}
+            job_ids = {str(row['id']): row['phase'] for row in registered}
             queue_jobs[key] = job_ids
             return {'state':'queued','iteration':iteration,'checkpoint_sha256':pinned,
                     'jobs':list(job_ids), 'queue_path':str(queue_path)}
-        import importlib.util
-        module_path = Path(__file__).resolve().parents[1] / '_out/tools/gpu_jobs/queue_w28.py'
-        spec = importlib.util.spec_from_file_location('foothold_ex41_queue_w28', module_path)
-        if spec is None or spec.loader is None: raise RuntimeError('W28 queue module unavailable')
-        queue_module = importlib.util.module_from_spec(spec); spec.loader.exec_module(queue_module)
-        queue_doc = queue_module.read(queue_path)
-        jobs = {row['id']:row for row in queue_doc['jobs']}
+        queue_module = _active_gpu_jobs_module()
+        queue_doc = queue_module.read_queue(str(queue_path))
+        jobs = {str(row['id']):row for row in queue_doc['items']}
         statuses = {}
         receipts_dir = target / 'stage_end_receipts'; receipts_dir.mkdir(parents=True, exist_ok=True)
         for job_id, phase in job_ids.items():
             job = jobs.get(job_id)
-            if job is None: raise ValueError(f'registered W28 job disappeared: {job_id}')
-            if job['state'] in ('waiting','running'):
+            if job is None: raise ValueError(f'registered gpu_jobs item disappeared: {job_id}')
+            if job['state'] in ('대기', '실행'):
                 statuses[phase] = {'state':'pending','job_id':job_id,'queue_state':job['state']}
                 continue
             receipt_path = receipts_dir / f'{phase}.json'
@@ -970,26 +988,40 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
             else:
                 if phase.startswith(('W57:', 'W80:')):
                     output = _stage_video_output(checkpoint)
+                    done_path = Path((job.get('done_files') or [''])[0])
                     eval_receipt = None
                 else:
                     output = target / 'stage_end_auxiliary_eval' / phase
                     eval_receipt = output / 'eval_receipt.json'
-                state_value = 'failed' if job['state'] in ('failed','hold') else 'done'
+                    done_path = eval_receipt
+                state_value = 'failed' if job['state'] != '끝' else 'done'
                 reason = None
                 if state_value == 'done':
-                    if eval_receipt is not None and not eval_receipt.is_file():
+                    if phase.startswith(('W57:', 'W80:')):
+                        if not done_path.is_file():
+                            state_value, reason = 'failed', 'queue job ended without stage-video receipt'
+                        else:
+                            video = read(done_path)
+                            if (video.get('schema') != 'foothold-ex41-stage-video/1'
+                                    or video.get('checkpoint_sha256') != pinned
+                                    or video.get('video_rule_version') != 'v3.4-D168'
+                                    or not Path(video.get('video', '')).is_file()
+                                    or sha256(Path(video['video'])) != video.get('video_sha256')):
+                                state_value, reason = 'failed', 'stage-video receipt or video SHA differs'
+                    elif eval_receipt is not None and not eval_receipt.is_file():
                         state_value, reason = 'failed', 'queue job ended without eval_receipt.json'
                     elif eval_receipt is not None:
                         phase_doc = read(eval_receipt)
                         step = phase_doc.get('steps', {}).get(phase, {})
-                        if phase_doc.get('state') != 'done' or step.get('state') != 'done':
+                        if (phase_doc.get('state') != 'done' or step.get('state') != 'done'
+                                or phase_doc.get('checkpoint_sha256') != pinned):
                             state_value, reason = 'failed', 'phase receipt is not done'
                 else:
-                    reason = (job.get('results') or [{}])[-1].get('detail','queue child failed')
+                    reason = job.get('log') or job.get('missing') or job.get('rc') or 'queue child failed'
                 receipt = {'format':'foothold-ex41-stage-phase/1','iteration':iteration,
                            'checkpoint_sha256':pinned,'phase':phase,'state':state_value,
                            'queue_job_id':job_id,'queue_state':job['state'],'reason':reason,
-                           'result_path':str(output.resolve()),'ended_at':job.get('ended_at')}
+                           'result_path':str(output.resolve()),'ended_at':job.get('done_at')}
                 immutable(receipt_path, receipt)
             statuses[phase] = receipt
         if any(row['state'] == 'pending' for row in statuses.values()):

@@ -434,37 +434,30 @@ def test_stage_end_queue_items_are_independent_and_prioritized(tmp_path):
                                       gpu0_training_active=True)
     assert len(rows) == 55
     eval_rows, push_video, video_rows = rows[:3], rows[3], rows[4:]
-    assert [row['units'][0]['id'] for row in eval_rows] == ['axis_v2', 'w78_v2', 'push_ladder']
+    assert [row['phase'] for row in eval_rows] == ['axis_v2', 'w78_v2', 'push_ladder']
     assert [row['priority'] for row in eval_rows] == [2, 2, 2]
-    assert [row['kind'] for row in eval_rows] == ['evaluation'] * 3
-    assert push_video['units'][0]['id'] == 'a_push_video'
+    assert [row['kind'] for row in eval_rows] == ['eval'] * 3
+    assert push_video['phase'] == 'a_push_video'
     assert push_video['kind'] == 'render' and push_video['priority'] == 3
-    assert push_video['units'][0]['verify_argv']
+    assert push_video['done_files']
     assert len(video_rows) == 51
     assert all(row['priority'] == 3 and row['kind'] == 'render' for row in video_rows)
-    assert len({row['units'][0]['id'] for row in video_rows}) == 51
-    assert sum(row['units'][0]['id'].startswith('W57:') for row in video_rows) == 39
-    assert sum(row['units'][0]['id'].startswith('W80:') for row in video_rows) == 12
+    assert len({row['phase'] for row in video_rows}) == 51
+    assert sum(row['phase'].startswith('W57:') for row in video_rows) == 39
+    assert sum(row['phase'].startswith('W80:') for row in video_rows) == 12
     assert all('--suite' in row['argv'] and '--case' in row['argv'] and '--mode' in row['argv']
                for row in video_rows)
     assert all(row['gpu'] == 1 and row['gpu_uuid'] == 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f'
-               and row['units'][0]['id'] in row['authorization_ref'] for row in rows)
-    assert all(row['argv'][row['argv'].index('--scope') + 1] == row['units'][0]['id']
+               and row['authorization_ref'] and row['done_files'] for row in rows)
+    assert all(row['argv'][row['argv'].index('--scope') + 1] == row['phase']
                for row in eval_rows)
-    assert all(row['units'][0]['verify_argv'] for row in video_rows)
+    assert all(row['done_files'] and row['argv'][row['argv'].index('--suite') + 1]
+               in ('W57','W80') for row in video_rows)
     assert sha256(checkpoint) in eval_rows[0]['authorization_ref']
-    video = tmp_path / 'known-video.mp4'
-    video.write_bytes(b'answer-known video bytes')
-    first = video_rows[0]
-    verify_argv = first['units'][0]['verify_argv']
-    receipts = Path(verify_argv[verify_argv.index('-c') + 2]) / 'receipts'
-    receipts.mkdir(parents=True, exist_ok=True)
-    suite, case, mode = first['units'][0]['id'].split(':')
-    (receipts / 'known.json').write_text(json.dumps({
-        'schema':'foothold-ex41-stage-video/1','suite':suite,'case':case,'map_mode':mode,
-        'iteration':750,'stage_name':'stage_end','checkpoint_sha256':sha256(checkpoint),
-        'video':str(video),'video_sha256':sha256(video)}), encoding='utf-8')
-    assert subprocess.run(verify_argv, check=False).returncode == 0
     registered = watch.register_stage_end_queue_jobs(tmp_path / 'queue.json', rows)
-    assert [row['state'] for row in registered] == ['waiting'] * 55
+    assert [row['state'] for row in registered] == ['대기'] * 55
     assert [row['priority'] for row in registered] == [2] * 3 + [3] * 52
+    assert all(row['kind'] in ('eval','render') for row in registered)
+    assert len({row['condition'] for row in registered}) == 55
+    queue_doc = json.loads((tmp_path / 'queue.json').read_text(encoding='utf-8-sig'))
+    assert queue_doc['format'] == 'foothold-gpu-queue/1' and len(queue_doc['items']) == 55

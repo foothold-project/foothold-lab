@@ -1,36 +1,31 @@
-# EX-41 계측 재시도와 단계 영상 큐 통합
-> 분류: 실험 기록
-> 작성: 오흥재 · runner 반영 · 2026-11-04
-> 근거: task 범위 · scripter G11/P9 handoff 3af5b205 · RULES-HUB R17/R20 · FAILURE-LOG M02/M13
-> 요지: 계측 실패 재시도, 단계별 GPU 큐 등록, EX-41 W57/W80 영상 51 조합 등록을 연결한다.
-> 상태: CPU 검증 완료 · GPU 촬영 및 장면 검토 미확인
+﻿# EX-41 measurement retry and stage video queue integration
+> Category: experiment record
+> Author: Oh Heungjae, runner integration, 2026-11-04
+> Evidence: task scope, scripter G11/P9 handoff at `inbox/jay/20261104-video/REPORT-ex41-stage-video-g11-p9.md`, source HEAD `3af5b2057fb138357e6ff656abaeb5d8e2194b24`, RULES-HUB R17/R20, FAILURE-LOG M02/M13
+> Summary: Retry technical measurement failures and register independent stage evaluations and one-clip video jobs in the active GPU board queue.
+> Status: CPU verified; actual Kit capture and lead scene review not confirmed
 
-## 변경
+## Changes
 
-- 계측 출력이 기술 실패이거나 누락이면 같은 checkpoint에서 재시도한다. 시도별 실패 기록은 보존하며 `measurement_retry_pending`과 실제 측정 뒤 판정 HOLD를 분리했다.
-- 단계 끝 평가는 `axis_v2`, `w78_v2`, `push_ladder`를 각각 P2 evaluation 작업으로 등록하고, A층 밀기 영상은 별도 P3 render 작업으로 둔다. 추가로 scripter의 고정 G11/P9 source HEAD `3af5b2057fb138357e6ff656abaeb5d8e2194b24`에서 `stage_cases()`를 읽어 W57 39개와 W80 12개를 각각 한 CLI의 P3 render로 등록한다.
-- W57/W80 영상 출력은 `D:/mai-tmp/runner/ex41_stage_video/model_<iteration>_<sha>` 아래 공유한다. 각 CLI가 별도 receipt와 SHA를 남기며, 합성·촬영 완료를 lead의 Kit 장면 검토 수락으로 표시하지 않는다. 단계 기록은 `captured_pending_lead_kit_scene_review`로 남긴다.
-- push250 watcher는 계측 HOLD 회차를 별도 기록하고 다음 간격으로 넘어가도록 유지했다.
-- `a_push_video` CLI 인자 구성은 실제 parser로 확인했다. W28의 evaluation/render 우선순위, 데스크톱 프로세스 제외, GPU별 명령행 판정과 기존 P1 표식 대기 경로를 반영했다.
+- Technical evaluator failures or missing outputs retry the same checkpoint. Failed attempt receipts remain preserved and are separated from a judgement HOLD after a completed measurement.
+- Stage-end work registers in the active dispatcher queue format `foothold-gpu-queue/1` at `D:/mai-tmp/gpu/queue.json`. `axis_v2`, `w78_v2`, and `push_ladder` are individual P2 evaluation items. A-push video is a separate P3 render item.
+- The pinned scripter producer is `foothold_s2.eval.ex41_stage_video.stage_cases()` at HEAD `3af5b2057fb138357e6ff656abaeb5d8e2194b24`. It returns 51 one-clip jobs: W57 39 and W80 12. Runner registers each as a separate P3 render item, using the exact source-reported suite, case, and mode.
+- Video output and per-job receipts use `D:/mai-tmp/runner/ex41_stage_video/model_<iteration>_<sha>`. Completion receipts verify checkpoint SHA, source HEAD, v3.4-D168, and the output video SHA. The result stays `captured_pending_lead_kit_scene_review` until lead scene review.
+- The push250 watcher records measurement HOLDs and advances to the next interval. The a_push_video command is validated through its real argparse parser.
 
-## 확인
+## Verification
 
-- 답을 아는 CPU 시험: `79 passed in 21.58s` (isaac311, `D:/mai-tmp/runner/test-stage-video8`). 변경 범위 점검 `git diff --check` 통과, 지정 Python 파일 `compileall` 통과.
-- 실제 저장본 `model_750.pt`의 manifest SHA `575655db49e475e171c0a85a859ae4d261cac83814aee2a18be76d6711558e46`로 scripter의 exact G11/P9 CLI `--plan-only` 실행: `state=planned`, W57 `fwd0.5`, `eval_gt`, 150 frame 계획, source HEAD 일치. 이는 plan-only 확인이며 Kit 촬영 증거가 아니다.
-- 현재 GPU1 P1 실행을 읽기 전용으로 확인했다. 점유 표식에는 PID `51656`, 작업 `ex41_evaluation_bundle`, 회차 `2000`이 기록되어 있고 같은 PID의 EX-41 evaluation child가 살아 있다. 따라서 큐 기반 실제 Kit 촬영 1회는 실행하지 않았다. 영상의 Kit capture, full-frame 결과, lead 장면 판독은 미확인이고 영상은 채택 상태가 아니다.
-- D177 명령 몫 변경은 준비하지 않았다. 실제 `w72.py`의 `BOUNDS`와 `BOOLS`에는 command share 경로가 없고 `validate_change()`가 미지원 leaf를 거절하므로, 현 경계 파일에 넣을 수 있는 유효 변경이 아니다.
+- Answer-known CPU suite: `79 passed in 20.27s` using isaac311 and `D:/mai-tmp/runner/test-gpu-manager-rerun`. It registered 55 items through the real `gpu_jobs.py queue_cmd` into a temporary `foothold-gpu-queue/1` file. `git diff --check` and targeted `compileall` passed.
+- The scripter G11/P9 consumer `--plan-only` ran with EX-41 `model_750.pt`, manifest SHA `575655db49e475e171c0a85a859ae4d261cac83814aee2a18be76d6711558e46`, W57 `fwd0.5`, and `eval_gt`. It returned `state=planned`, source HEAD `3af5b2057fb138357e6ff656abaeb5d8e2194b24`, and a 150-frame plan. This is plan-only evidence, not a Kit capture.
+- The latest read-only GPU1 check showed no `PRIORITY_BUSY_GPU1` marker and no live P1 process among the previously reported PIDs. The active dispatcher queue had C76 item 151 in `실행`, priority 3 render; its recorder process PID 95772 was visible on GPU1. GPU1 memory was 8887 MiB of 16303 MiB. No runner capture was started while another render was active. Kit capture, full-frame review, and lead scene acceptance remain unconfirmed.
+- The scripter report separately says Kit and lead scene review are pending at the P1 gate. No acceptance is inferred from plan-only results.
+- D177 command-share change was not prepared. The live W72 `BOUNDS` and `BOOLS` have no command-share field, and `validate_change()` rejects unsupported leaves.
+- Ruff is not installed in isaac311, so lint was not run.
 
-## 수정 파일
+## Modified files in this follow-up
 
-- `_out/tools/gpu_jobs/queue_w28.py`
-- `_out/tools/gpu_jobs/test_queue_w28.py`
-- `foothold_s2/eval/a_push_video.py`
-- `foothold_s2/eval/ex41_gpu_priority.py`
-- `foothold_s2/eval/ex41_push250_watch.py`
-- `foothold_s2/eval/tests/test_ex41_push250_cpu.py`
-- `foothold_s2/ex41_eval_once.py`
 - `foothold_s2/ex41_score_watch.py`
 - `foothold_s2/tests/test_ex41_eval_schedule_cpu.py`
-- `foothold_s2/tests/test_ex41_gpu_priority_cpu.py`
-- `foothold_s2/tests/test_ex41_score_watch_cpu.py`
 - `_out/reports/REPORT-runner-EX41-measure-fix-1104.md`
+
+The initial implementation files are preserved in the preceding commit `a48ac12bb6e88c3ba546c61cc013433976ddb45a`.
