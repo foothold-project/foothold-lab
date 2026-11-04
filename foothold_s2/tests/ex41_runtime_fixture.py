@@ -47,6 +47,10 @@ def real_runtime(root,*,parent=7500,smoke=None,w71=False):
         return subprocess.check_output(['git','-C',str(repo),*args],stderr=subprocess.PIPE).decode().strip()
     git('init','-q'); git('config','core.autocrlf','false')
     doc=yaml.safe_load(TABLE.read_text()); boundary=yaml.safe_load(TABLE.with_name('ex41-boundary.yaml').read_text())
+    # The legacy EX-41 fixture predates D177's command-share field. Supply the
+    # current runtime's nominal defaults without changing the historical file.
+    boundary['values'].setdefault('command_share_bias', {
+        'walk': 0.0, 'spin': 0.0, 'side': 0.0, 'diag_fwd': 0.0, 'diag_back': 0.0})
     approvals=yaml.safe_load(TABLE.with_name('ex41-approvals.yaml').read_text())
     doc['parent_update']=parent; initial={6000:.5,7500:1.}[parent]
     if parent==6000: doc['parent_sha256']='d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5'
