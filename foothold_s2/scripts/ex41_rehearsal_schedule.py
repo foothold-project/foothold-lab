@@ -5,6 +5,7 @@ from __future__ import annotations
 STAGE_IDS = ("S2a", "S2b", "S2c", "S2d", "S2e", "T0_prime")
 MAX_STAGE_UPDATES = 5
 MAX_TOTAL_UPDATES = 30
+REHEARSAL_FAILURE_INJECTIONS = 4  # Initial failure plus three allowed remeasurements.
 
 
 def parse_stage_updates(value: str) -> tuple[int, ...]:

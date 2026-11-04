@@ -33,6 +33,8 @@ W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back
              'stairs_fwd_turn_return', 'stairs_fwd_back_return', 'slope_fwd1.0',
              'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
 W78_PERIODIC_SIDE_CASES = ('stairs_side_left', 'stairs_side_right')
+MAX_TECHNICAL_REMEASUREMENTS = 3
+MAX_TECHNICAL_MEASUREMENT_ATTEMPTS = 1 + MAX_TECHNICAL_REMEASUREMENTS
 
 
 def read(path):
@@ -440,6 +442,9 @@ def rehearsal_schedule(run):
     updates = tuple(row.get('stage_updates', ()))
     if parse_stage_updates(','.join(str(value) for value in updates)) != updates:
         raise ValueError('short-stage rehearsal table differs')
+    injection_count = row.get('inject_measurement_failure_count', 1)
+    if type(injection_count) is not int or not 1 <= injection_count <= MAX_TECHNICAL_MEASUREMENT_ATTEMPTS:
+        raise ValueError('short-stage measurement failure injection count is invalid')
     return row
 
 
@@ -470,7 +475,8 @@ def initial_state(run, table, eval_config):
     return {'format':'foothold-ex41-score-watch/1', 'run_dir':str(Path(run).resolve()),
             'table_sha256':sha256(table), 'eval_config_sha256':sha256(effective_eval_config),
             'done':{}, 'stage_end_auxiliary':{}, 'measurement_attempts':{},
-            'measurement_failures':{}, 'rehearsal_injected_failures':{}}
+            'measurement_failures':{}, 'measurement_gaps':{},
+            'rehearsal_injected_failures':{}, 'rehearsal_injected_failure_counts':{}}
 
 
 def candidates(run, plan, *, on_error=None):
@@ -1187,6 +1193,49 @@ def record_final_error(out_root,state,request,exc):
     errors[key]=evidence(dest)
 
 
+def record_measurement_gap(run, out_root, state, iteration, checkpoint_sha256,
+                           failed_attempt_count, *, deliver=False):
+    """Record exhausted technical measurements without publishing a score."""
+    run, out_root = Path(run).resolve(), Path(out_root).resolve()
+    key = f'{iteration}_{checkpoint_sha256}'
+    failures = list(state.get('measurement_failures', {}).get(key, ()))
+    receipt = {
+        'format': 'foothold-ex41-measurement-gap/1',
+        'state': 'measurement_gap',
+        'measurement_state': 'measurement_gap',
+        'judgement_state': 'not_judged',
+        'iteration': int(iteration),
+        'checkpoint_sha256': checkpoint_sha256,
+        'failed_attempt_count': int(failed_attempt_count),
+        'max_technical_remeasurements': MAX_TECHNICAL_REMEASUREMENTS,
+        'remeasurements_used': max(0, int(failed_attempt_count) - 1),
+        'failure_evidence': failures,
+        'score_path': None,
+        'result_eligible': False,
+        'dr_action': 'leave_missing_for_dr_hold_missing_evidence',
+        'next_action': 'continue_next_checkpoint',
+    }
+    gap_path = out_root / 'measurement_gaps' / f'model_{iteration}_{checkpoint_sha256[:12]}.json'
+    immutable(gap_path, receipt)
+    ref = evidence(gap_path)
+    gaps = state.setdefault('measurement_gaps', {})
+    previous = gaps.get(key)
+    if previous is not None and previous != ref:
+        raise ValueError('measurement gap receipt changed')
+    gaps[key] = ref
+    from foothold_s2.ex41_ops import _alert, deliver_pending_alerts
+    event_id = digest(['ex41-measurement-gap', str(run), iteration, checkpoint_sha256])
+    _alert(run / 'ex41_reports' / 'alerts.jsonl', event_id, 'p1_measurement_gap', iteration,
+           {'checkpoint_sha256': checkpoint_sha256, 'gap_path': str(gap_path),
+            'gap_sha256': ref['sha256'], 'failed_attempt_count': int(failed_attempt_count),
+            'max_technical_remeasurements': MAX_TECHNICAL_REMEASUREMENTS,
+            'result_eligible': False, 'next_action': 'continue_next_checkpoint'})
+    if deliver:
+        deliver_pending_alerts(run)
+    return {'state': 'measurement_gap', **receipt, 'gap_path': str(gap_path),
+            'gap_sha256': ref['sha256'], 'event_id': event_id}
+
+
 def require_final_stage(stage):
     if stage!='T0_prime':raise ValueError('final request stage differs from checkpoint stage')
 
@@ -1272,11 +1321,13 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     if any(state.get(k) != v for k,v in identity.items()
            if k not in ('done', 'stage_end_auxiliary', 'measurement_attempts',
                         'measurement_failures', 'stage_end_queue_jobs',
-                        'rehearsal_injected_failures')):
+                        'measurement_gaps', 'rehearsal_injected_failures',
+                        'rehearsal_injected_failure_counts')):
         raise ValueError('watcher identity differs')
     state.setdefault('stage_end_auxiliary', {})
     state.setdefault('measurement_attempts', {})
     state.setdefault('measurement_failures', {})
+    state.setdefault('measurement_gaps', {})
     if execute:
         manifest = read(run/'manifest.json')
         declared = manifest.get('modes', {}).get('ex41', {})
@@ -1301,6 +1352,8 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if pinned is None:
             pending = {'state':'pending', 'iteration':iteration, 'reason':'manifest_not_committed'}; continue
         key = f'{iteration}_{pinned}'
+        if key in state['measurement_gaps']:
+            continue
         if key in state['done']:
             previous=state['done'][key]
             if final_request:
@@ -1383,6 +1436,9 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
             state['measurement_attempts'][key] = max(
                 int(state['measurement_attempts'].get(key, 0)), len(failures))
         attempt_count = int(state['measurement_attempts'].get(key, 0))
+        if execute and attempt_count >= MAX_TECHNICAL_MEASUREMENT_ATTEMPTS:
+            return record_measurement_gap(run, out_root, state, iteration, pinned,
+                                          attempt_count, deliver=deliver_reports)
         if attempt_count:
             score_path = score_dir/f'score_{iteration}_{pinned[:12]}_retry{attempt_count + 1:02d}.json'
         interrupted = target.exists()
@@ -1430,21 +1486,33 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         _atomic(target/'attempt.json', receipt)
         short = rehearsal_schedule(run)
         if execute and short is not None:
-            injected = state.setdefault('rehearsal_injected_failures', {})
-            inject_iteration = short.get('inject_one_measurement_failure_at')
-            if iteration == inject_iteration and not injected.get(key):
+            injected = state.setdefault('rehearsal_injected_failure_counts', {})
+            inject_iteration = short.get('inject_measurement_failure_at',
+                                         short.get('inject_one_measurement_failure_at'))
+            inject_total = int(short.get('inject_measurement_failure_count', 1))
+            injected_count = int(injected.get(key, 0))
+            if iteration == inject_iteration and injected_count < inject_total:
                 target.mkdir(parents=True, exist_ok=True)
+                failed_attempt_count = attempt_count + 1
                 fail = {'format':'foothold-ex41-score-attempt/1','state':'measurement_retry_pending',
                         'mode':'rehearsal_injected_failure','iteration':iteration,
-                        'checkpoint_sha256':pinned,'attempt_count':1,
-                        'reason':'intentional single measurement failure injection; no W72 evidence'}
+                        'checkpoint_sha256':pinned,'attempt_count':failed_attempt_count,
+                        'injection_index':injected_count + 1,
+                        'injection_total':inject_total,
+                        'reason':'intentional rehearsal technical failure; no W72 evidence'}
                 _atomic(target/'attempt.json', fail)
-                state['measurement_attempts'][key] = 1
+                state['measurement_attempts'][key] = failed_attempt_count
                 state['measurement_failures'].setdefault(key, []).append(evidence(target/'attempt.json'))
-                injected[key] = True
+                injected[key] = injected_count + 1
+                if failed_attempt_count >= MAX_TECHNICAL_MEASUREMENT_ATTEMPTS:
+                    return record_measurement_gap(run, out_root, state, iteration, pinned,
+                                                  failed_attempt_count, deliver=deliver_reports)
                 return {'state':'measurement_retry_pending','measurement_state':'failed_retryable',
                         'judgement_state':'not_judged','iteration':iteration,'checkpoint_sha256':pinned,
-                        'attempt_count':1,'reason':'intentional rehearsal failure injection'}
+                        'attempt_count':failed_attempt_count,
+                        'reason':'intentional rehearsal failure injection',
+                        'injection_index':injected_count + 1,'injection_total':inject_total,
+                        'retry_wait_seconds':cfg['check_interval_seconds']}
         child = None
         if execute and not interrupted:
             child_scope = 'core' if short is not None else 'periodic'
@@ -1489,6 +1557,9 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
             _atomic(target/'attempt.json', receipt)
             state['measurement_attempts'][key] = attempt_count + 1
             state['measurement_failures'].setdefault(key, []).append(evidence(target/'attempt.json'))
+            if attempt_count + 1 >= MAX_TECHNICAL_MEASUREMENT_ATTEMPTS:
+                return record_measurement_gap(run, out_root, state, iteration, pinned,
+                                              attempt_count + 1, deliver=deliver_reports)
             return {'state':'measurement_retry_pending','measurement_state':'failed_retryable',
                     'judgement_state':'not_judged','iteration':iteration,
                     'checkpoint_sha256':pinned,'attempt_count':attempt_count + 1,
@@ -1536,8 +1607,12 @@ def completion(run, plan, state):
     if errors:return {'state':'final_request_error','errors':errors,'graduated':False}
     for iteration,cp,request in saved:
         pinned=_manifest_digest(run,iteration)
-        result=state['done'].get(f'{iteration}_{pinned}')
-        if result is None:return {'state':'waiting_for_remaining_scores','iteration':iteration}
+        key=f'{iteration}_{pinned}'
+        result=state['done'].get(key)
+        if result is None:
+            if key in state.get('measurement_gaps', {}):
+                continue
+            return {'state':'waiting_for_remaining_scores','iteration':iteration}
         if request and result.get('final_request_id')!=read(request)['request_id']:
             ref=state.get('final_links',{}).get(read(request)['request_id'])
             try:
@@ -1549,6 +1624,11 @@ def completion(run, plan, state):
     if training['state']=='done' and not any(request for _,_,request in saved):
         return {'state':'waiting_for_final_checkpoint_request'}
     holds=sum(row['state']=='HOLD' for row in state['done'].values())
+    gap_keys=sorted(state.get('measurement_gaps', {}))
+    if gap_keys:
+        return {'state':'complete_with_measurement_gaps','hold_count':holds,
+                'measurement_gap_count':len(gap_keys),'measurement_gap_keys':gap_keys,
+                'training_state':training['state'],'graduated':False}
     return {'state':'complete_with_hold' if holds or training['state']!='done' else 'complete',
             'hold_count':holds,'training_state':training['state'],'graduated':False}
 
@@ -1604,9 +1684,9 @@ def main(argv=None):
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0
             end=completion(a.run_dir,plan_for_run(a.table,a.run_dir),state)
-            if end['state'] in ('complete','complete_with_hold'):
+            if end['state'] in ('complete','complete_with_hold','complete_with_measurement_gaps'):
                 _atomic(a.out_root/'watch_completion.json',end)
-                return 0 if end['state']=='complete' else 5
+                return 5 if end['state']=='complete_with_hold' else 0
             time.sleep(config(a.eval_config)['check_interval_seconds'])
     except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
         print(json.dumps({'state':'error','reason':f'{type(exc).__name__}: {exc}'}), flush=True)

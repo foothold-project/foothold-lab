@@ -992,7 +992,9 @@ def main(env_cfg, agent_cfg):
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return
     if EX41_STAGE_REHEARSAL is not None:
-        from foothold_s2.scripts.ex41_rehearsal_schedule import d181_short_tables
+        from foothold_s2.scripts.ex41_rehearsal_schedule import (
+            d181_short_tables, REHEARSAL_FAILURE_INJECTIONS,
+        )
 
         eval_config_path = Path(log_dir) / "ex41_reports" / "rehearsal_eval_config.json"
         eval_config_doc = json.loads(Path(REPO, "foothold_s2", "curriculum",
@@ -1011,7 +1013,8 @@ def main(env_cfg, agent_cfg):
                                               for i in range(1, len(EX41_STAGE_REHEARSAL) + 1)],
                     "stage_end_checkpoint_updates": [sum(EX41_STAGE_REHEARSAL[:i])
                                                      for i in range(1, len(EX41_STAGE_REHEARSAL) + 1)],
-                    "inject_one_measurement_failure_at": sum(EX41_STAGE_REHEARSAL[:1]),
+                    "inject_measurement_failure_at": sum(EX41_STAGE_REHEARSAL[:1]),
+                    "inject_measurement_failure_count": REHEARSAL_FAILURE_INJECTIONS,
                     "d181_comparison_tables": {k: list(v) for k, v in d181_short_tables().items()},
                     "w72_evidence_allowed": False}
         schedule_path = Path(log_dir) / "ex41_reports" / "rehearsal_schedule.json"

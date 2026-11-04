@@ -637,3 +637,78 @@ def test_execute_measurement_failure_retries_same_checkpoint_and_separates_judge
     score = json.loads(Path(second['score_path']).read_text(encoding='utf-8'))
     assert score['measurement_state'] == 'complete' and score['judgement_state'] == 'hold'
     assert len(state['measurement_failures'][f"5750_{sha256(run/'model_5750.pt')}"]) == 1
+
+
+def test_three_remeasurements_leave_gap_and_allow_next_boundary(tmp_path, monkeypatch):
+    run = replay_run(tmp_path)
+    plan = load_plan(TABLE, arm='B')
+    manifest_path = run / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    manifest['modes'] = {'ex41': {'effective_sha256': plan.effective_sha256,
+                                  'plan_sha256': plan.sha256,
+                                  'parent': {'sha256': plan.parent_sha256}}}
+    manifest_path.write_text(json.dumps(manifest), encoding='utf-8')
+    out, scores = tmp_path / 'out', tmp_path / 'scores'
+    schedule = run / 'ex41_reports' / 'rehearsal_schedule.json'
+    schedule.parent.mkdir(parents=True, exist_ok=True)
+    rehearsal_config = schedule.parent / 'eval_config.json'
+    shutil.copy2(watch.DEFAULT_CONFIG, rehearsal_config)
+    schedule.write_text(json.dumps({
+        'format': 'foothold-ex41-short-stage-rehearsal/1',
+        'stage_updates': [1, 1, 1, 1, 1, 1],
+        'eval_config_path': str(rehearsal_config.resolve()),
+        'inject_measurement_failure_at': 5750,
+        'inject_measurement_failure_count': watch.MAX_TECHNICAL_MEASUREMENT_ATTEMPTS,
+        'w72_evidence_allowed': False,
+    }), encoding='utf-8')
+    state = watch.initial_state(run, TABLE, watch.DEFAULT_CONFIG)
+    checkpoint_sha = sha256(run / 'model_5750.pt')
+    key = f'5750_{checkpoint_sha}'
+    monkeypatch.setattr(watch, 'plan_for_run', lambda *_a, **_k: plan)
+    monkeypatch.setattr(watch, 'candidates', lambda *_a, **_k: [
+        (5750, run / 'model_5750.pt', None), (6000, run / 'model_6000.pt', None)])
+    monkeypatch.setattr(watch, '_stable', lambda path, *_args: sha256(path))
+    monkeypatch.setattr(watch, 'stage_at', lambda *_a, **_k: 'T0_prime')
+    monkeypatch.setattr(watch, 'due_evaluation_scopes', lambda *_a, **_k: ('periodic',))
+    monkeypatch.setattr(watch, 'hidden_child',
+                        lambda *_a, **_k: pytest.fail('injected failures must precede Kit'))
+    gap = None
+    for attempt in range(1, watch.MAX_TECHNICAL_MEASUREMENT_ATTEMPTS + 1):
+        result = watch.process_once(run, out, scores, TABLE, state, execute=True,
+                                    sleep=lambda _seconds: None)
+        if attempt < watch.MAX_TECHNICAL_MEASUREMENT_ATTEMPTS:
+            assert result['state'] == 'measurement_retry_pending'
+            assert result['attempt_count'] == attempt
+        else:
+            gap = result
+    assert gap['state'] == 'measurement_gap'
+    assert gap['remeasurements_used'] == 3
+    assert gap['result_eligible'] is False and gap['score_path'] is None
+    assert key not in state['done'] and (scores / f'score_5750_{checkpoint_sha[:12]}.json').exists() is False
+    gap_path = Path(gap['gap_path'])
+    persisted_gap = json.loads(gap_path.read_text(encoding='utf-8'))
+    assert persisted_gap['dr_action'] == 'leave_missing_for_dr_hold_missing_evidence'
+    assert persisted_gap['failed_attempt_count'] == 4
+    assert state['rehearsal_injected_failure_counts'][key] == 4
+    alert_path = run / 'ex41_reports' / 'alerts.jsonl'
+    first_alert = alert_path.read_text(encoding='utf-8').splitlines()
+    assert len(first_alert) == 1 and json.loads(first_alert[0])['kind'] == 'p1_measurement_gap'
+
+    def child(_argv, folder, **_kwargs):
+        folder.mkdir(parents=True, exist_ok=False)
+        row = {'state': 'done', 'rc': 0, 'pid': 92}
+        (folder / 'child.json').write_text(json.dumps(row), encoding='utf-8')
+        return row
+
+    monkeypatch.setattr(watch, 'hidden_child', child)
+    monkeypatch.setattr(watch, 'collect', lambda *_a, **_k: {
+        'evaluation_state': 'complete', 'maintenance_pass': False, 'stage_pass': False,
+        'metrics': {'counts': {}}, 'components': {'maintenance_stand': 'complete'},
+        'evidence': [], 'auxiliary_missing': []})
+    next_boundary = watch.process_once(run, out, scores, TABLE, state, execute=True,
+                                      sleep=lambda _seconds: None)
+    assert next_boundary['state'] == 'complete' and next_boundary['iteration'] == 6000
+    assert key not in state['done']
+    assert f"6000_{sha256(run / 'model_6000.pt')}" in state['done']
+    assert key in state['measurement_gaps']
+    assert len(alert_path.read_text(encoding='utf-8').splitlines()) == 1
