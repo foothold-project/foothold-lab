@@ -307,6 +307,14 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any], *,
     if (type(saved_segment) is not int or type(loaded_segment) is not int
             or loaded_segment != saved_segment + 1):
         raise ValueError("EX-41 resume stage segment did not advance exactly once")
+    use_gt_frac = expected.get("last_use_gt_frac")
+    if (not isinstance(use_gt_frac, (int, float)) or not math.isfinite(float(use_gt_frac))
+            or not 0.0 <= float(use_gt_frac) <= 1.0):
+        raise ValueError("EX-41 resume last use_gt_frac evidence is missing or invalid")
+    push_vmax = saved_curriculum.get("push_vmax_mps")
+    if (not isinstance(push_vmax, (int, float)) or not math.isfinite(float(push_vmax))
+            or float(push_vmax) <= 0.0):
+        raise ValueError("EX-41 resume current push Vmax evidence is missing or invalid")
     # Starting a new process is a new auditable segment. The loader must
     # advance this counter; every other saved stage field remains byte-stable.
     saved_stage = {key: value for key, value in saved_curriculum.items()

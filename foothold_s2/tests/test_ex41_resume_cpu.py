@@ -214,6 +214,21 @@ def test_legacy_checkpoint_metrics_are_backfilled_only_from_matching_update(tmp_
     assert read_training_extra_row(tmp_path, 651) is None
 
 
+@pytest.mark.parametrize("field", ["last_use_gt_frac", "push_vmax_mps"])
+def test_r6_readback_refuses_unrecorded_map_or_push_metrics(field):
+    expected = _state()
+    restored = copy.deepcopy(expected)
+    restored["continuous_curriculum"]["segment_index"] = 1
+    if field == "last_use_gt_frac":
+        expected.pop(field)
+        restored.pop(field)
+    else:
+        expected["continuous_curriculum"].pop(field)
+        restored["continuous_curriculum"].pop(field)
+    with pytest.raises(ValueError, match="evidence is missing or invalid"):
+        compare_resume_state(expected, restored)
+
+
 @pytest.mark.parametrize("group,mutate", [
     ("policy_critic_weights", lambda s: s["model_state_dict"].__setitem__("weight", torch.tensor([1., 3.]))),
     ("adam_moments", lambda s: s["optimizer_state_dict"]["state"][0]["step"].fill_(8)),
