@@ -27,6 +27,7 @@ DISPATCH = Path(__file__).resolve().parents[1] / "gpu_jobs" / "dispatch.py"
 GPU1 = "1"
 P1_IDLE_MINUTES = 10       # a P1 owner that keeps GPU1 under 5 % this long is stuck (I11: 30 min)
 GPU1_IDLE_MIB = 4000      # below this no Kit job is running on GPU1
+LONG_UNIT_MINUTES = 45     # a unit longer than this can push a P1 score past its boundary
 P4_LOW_WATER = 3           # queue the next filler before the last ones start (I15)
 
 
@@ -115,6 +116,11 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
         idle = u is not None and u < GPU1_IDLE_MIB and age > P1_IDLE_MINUTES
         out.append(("FAIL" if idle else "OK", "I11 marker_idle",
                     f"marker {age:.0f} min · GPU1 {u} MiB · job {m.get('job')}"))
+        # I24 (11/05 08:3x): a 2-3 h stage-end unit started before P1 and P1 waited behind it.
+        long_run = [j["id"] for j in items if j.get("state") == "실행" and j.get("priority", 9) >= 2
+                    and now - (j.get("run_at") or now) > LONG_UNIT_MINUTES * 60]
+        out.append(("WARN" if long_run else "OK", "I24 p1_behind_long_unit",
+                    f"P1 marker present while units running > {LONG_UNIT_MINUTES} min: {long_run}"))
     else:
         out.append(("OK", "I11 marker", "no P1 marker"))
     return out
