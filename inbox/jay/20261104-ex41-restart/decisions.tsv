@@ -15,3 +15,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T00:06:59+09:00	gpu1	예행 점수 감시 2 개(52756 · 61520) 남음 → runner 에 정리 지시	운영 P1 표식 충돌 막기	runner 창 00:06	open
 2026-11-05T00:13:29+09:00	gpu1	예행 점수 감시 52756 · 61520 사라짐 확인 · 남은 감시는 운영 68180(부모 94296) 하나	runner 정리	Win32_Process 00:13	done
 2026-11-05T01:53:50+09:00	boundary250	250 평가가 300 저장(약 02:12)까지 대기 · 원인 ex40_score_watch.py:100 completed_updates >= N+1 · manifest progress 는 50 회 저장 때만 갱신(250 에 머묾) · 학습 영향 없음 · 관문 M3(N 저장 직후) 미충족으로 기록 · 운영 중 감시기 코드 변경은 학습을 건드리지 않는 방법이 정해질 때까지 보류	학습을 멈추지 않는 것이 우선	manifest.json progress.completed_updates=250 · watcher.stdout pending manifest_not_committed	open
+2026-11-05T02:13:26+09:00	boundary250	감시기 그대로 둠(교체 안 함) · m250 점수는 경계 n=501 판단에만 쓰임(continuous.py:476-489) · 약 23 분 지연은 501 전에 도착하면 판단 불변 · 교체는 lock · 자식 확인 절차가 필요해 위험이 더 큼 · 수정은 다음 판(EX-42) 코드에	학습과 감시를 건드리지 않는 쪽	runner 분석 02:05 · ex40_score_watch.py:94-105	decided
