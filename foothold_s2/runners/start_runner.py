@@ -56,6 +56,25 @@ from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 from foothold_s2.terrains import columns
 
+def _final_checkpoint_is_already_current(runtime, iteration: int, checkpoint_path: str | Path) -> bool:
+    """Avoid overwriting a just-saved stride checkpoint with its own reference."""
+    reference = getattr(runtime, "last_checkpoint", None)
+    path = Path(checkpoint_path)
+    if (not isinstance(reference, dict) or type(reference.get("iteration")) is not int
+            or reference["iteration"] != iteration or not path.is_file()):
+        return False
+    try:
+        resolved = path.resolve(strict=True)
+        recorded = Path(reference.get("path", "")).resolve(strict=True)
+        if recorded != resolved:
+            return False
+        with resolved.open("rb") as stream:
+            actual_sha = hashlib.file_digest(stream, "sha256").hexdigest()
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return reference.get("sha256") == actual_sha
+
+
 CKPT_FORMAT = "foothold-start/1"
 MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크포인트(G0 · G1 · EX-09 · EX-10)에는 이 칸이 없다: 그때의 동작이 이 값이다
 
@@ -726,11 +745,15 @@ class StartRunner(OnPolicyRunner):
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
             checkpoint_path = os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt")
-            self.save(checkpoint_path)
-            self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
-            if getattr(self, "continuous_curriculum", None) is not None:
-                final_runtime = self.continuous_curriculum
-                final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+            final_runtime = getattr(self, "continuous_curriculum", None)
+            already_saved = (final_runtime is not None and _final_checkpoint_is_already_current(
+                final_runtime, self.current_learning_iteration, checkpoint_path))
+            if not already_saved:
+                self.save(checkpoint_path)
+                self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
+                if final_runtime is not None:
+                    final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+            if final_runtime is not None:
                 if (getattr(getattr(final_runtime, "plan", None), "is_ex41", False)
                         and getattr(final_runtime, "finished", False)):
                     from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request

@@ -25,7 +25,7 @@ from foothold_s2.scripts.ex41_resume import (
     sha256_file,
 )
 from foothold_s2.runners import manifest as run_manifest
-from foothold_s2.runners.start_runner import StartRunner
+from foothold_s2.runners.start_runner import StartRunner, _final_checkpoint_is_already_current
 
 
 PLAN = "a" * 64
@@ -291,6 +291,22 @@ def test_resume_stage_allows_only_the_explicit_next_segment_transition():
 
 
 _ACTUAL_MODEL650 = os.environ.get("EX41_RESUME_MODEL_650_PATH")
+def test_final_checkpoint_does_not_overwrite_current_stride_reference(tmp_path):
+    checkpoint = tmp_path / "model_10.pt"
+    checkpoint.write_bytes(b"already saved checkpoint")
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+
+    class Runtime:
+        last_checkpoint = {"iteration": 10, "path": str(checkpoint), "sha256": digest}
+
+    assert _final_checkpoint_is_already_current(Runtime(), 10, checkpoint) is True
+    assert _final_checkpoint_is_already_current(Runtime(), 11, checkpoint) is False
+    Runtime.last_checkpoint = {"iteration": 10, "path": str(checkpoint), "sha256": "0" * 64}
+    assert _final_checkpoint_is_already_current(Runtime(), 10, checkpoint) is False
+    Runtime.last_checkpoint = {"iteration": 9, "path": str(tmp_path / "model_9.pt"), "sha256": "1" * 64}
+    assert _final_checkpoint_is_already_current(Runtime(), 10, checkpoint) is False
+
+
 @pytest.mark.skipif(not _ACTUAL_MODEL650 or not Path(_ACTUAL_MODEL650).is_file(),
                     reason="requires the saved real EX-41 model_650.pt evidence file")
 def test_actual_model650_save_before_reference_and_resume_hook_contract():
