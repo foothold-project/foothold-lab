@@ -10,6 +10,7 @@ import pytest
 from foothold_s2.eval import a_push_video as video
 from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
 from foothold_s2.eval.video25 import record_c_layer as recorder
+from foothold_s2.eval.eval_dr_mode import DRMode
 
 
 def args(tmp_path: Path) -> argparse.Namespace:
@@ -104,21 +105,22 @@ def test_three_receipts_reject_changed_push_and_missing_video(tmp_path):
                "group_id": "g", "source_head": "s", "checkpoint_sha256": "c", "iteration": 10,
                "kind": "pyramid_stairs", "level": 0, "col": 0, "env_id": 0,
                "seed": 42, "push_seed": 42,
-               "push_signature": ["g", 42, 100, 999, [[0.3, 0.1, 0.0]] * 64]}
+               "push_signature": ["g", 42, [[100, 999, [[1.5, 0.0, 0.0]] * 64],
+                                            [200, 1000, [[2.0, 0.0, 0.0]] * 64]]]}
         (tmp_path / f"{mode}.json").write_text(json.dumps(row), encoding="utf-8")
     assert video.compare_mode_receipts(tmp_path)["state"] == "complete"
     changed = tmp_path / "eval_pred.json"
     row = json.loads(changed.read_text())
-    row["push_signature"][4][0][0] = 0.4
+    row["push_signature"][2][0][2][0][0] = 1.6
     changed.write_text(json.dumps(row), encoding="utf-8")
     with pytest.raises(ValueError, match="actual push"):
         video.compare_mode_receipts(tmp_path)
-    row["push_signature"][4][0][0] = 0.3
+    row["push_signature"][2][0][2][0][0] = 1.5
     changed.write_text(json.dumps(row), encoding="utf-8")
-    row["push_signature"][4][0][0] = 0.3000002
+    row["push_signature"][2][0][2][0][0] = 1.5000002
     changed.write_text(json.dumps(row), encoding="utf-8")
     assert video.compare_mode_receipts(tmp_path)["state"] == "complete"
-    row["push_signature"][4][0][0] = 0.3
+    row["push_signature"][2][0][2][0][0] = 1.5
     row["source_head"] = "wrong"
     changed.write_text(json.dumps(row), encoding="utf-8")
     with pytest.raises(ValueError, match="terrain, seed or checkpoint"):
@@ -132,11 +134,13 @@ def test_three_receipts_reject_changed_push_and_missing_video(tmp_path):
 
 def test_push_signature_needs_event_and_recovery():
     row = {"a_push_video": {"push_group_id": "g", "push_seed": 42,
-                            "dr_recovery": {"defined": True},
-                            "push_events": [{"step": 100, "seed": 999,
-                                             "dv_xyz_w_mps": [[0.4, -0.1, 0.0]]}]}}
-    assert video.push_signature(row)[2] == 100
-    row["a_push_video"]["dr_recovery"] = {"defined": False}
+                            "dr_recovery_by_event": [{"defined": True}, {"defined": True}],
+                            "push_events": [{"step": step, "t_s": time_s, "seed": 999 + i,
+                                             "dv_xyz_w_mps": [[strength, 0.0, 0.0]] * 64}
+                                            for i, (step, time_s, strength) in enumerate(
+                                                ((100, 2.0, 1.5), (200, 4.0, 2.0)))]}}
+    assert video.push_signature(row)[2][0][0] == 100
+    row["a_push_video"]["dr_recovery_by_event"][1] = {"defined": False}
     with pytest.raises(ValueError, match="recovery"):
         video.push_signature(row)
 
@@ -155,3 +159,33 @@ def test_integer_done_mask_keeps_other_env_alive():
     assert done.dtype is torch.bool
     assert done.tolist() == [False, True, False]
     assert alive.tolist() == [True, False, False]
+
+
+def test_two_exact_demo_pushes_apply_once_each_and_reject_changed_schedule():
+    class ActionManager:
+        def get_term(self, name):
+            raise KeyError(name)
+
+    class Raw:
+        _ex40_dr_scale = 1.0
+        action_manager = ActionManager()
+
+    calls = []
+    def pusher(raw, target, seed):
+        calls.append((target, seed))
+        return {"env_ids": list(range(64)), "dv_xy_norm_mps_median": target["x"][0]}
+
+    mode = DRMode("on", 1.0, {"full_ranges": {"push_velocity": {"x": [-1, 1]}},
+                              "delay_max_s": .015}, pusher=pusher, eval_seed=42)
+    mode.readback = object()
+    raw = Raw()
+    mode.begin(raw, "same-group", 300, 64, .02, demo_pushes=video.DEMO_PUSHES)
+    assert [mode.step(raw, step) for step in (99, 100, 199, 200, 201)] == [False, True, False, True, False]
+    assert [target["x"] for target, _ in calls] == [(1.5, 1.5), (2.0, 2.0)]
+    assert [event["step"] for event in mode._rollout["events"]] == [100, 200]
+    with pytest.raises(RuntimeError, match="same push step"):
+        mode.step(raw, 200)
+    mode._rollout = None
+    with pytest.raises(ValueError, match="declared"):
+        mode.begin(raw, "same-group", 300, 64, .02,
+                   demo_pushes=[[2.0, 1.5], [4.0, 1.9]])

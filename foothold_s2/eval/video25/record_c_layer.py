@@ -54,6 +54,21 @@ SPARSE_ENV_COUNT = 64
 SPARSE_COMMAND = ("fwd1.0", (1.0, 0.0, 0.0), 18.0)
 
 
+def follow_camera_pose(robot_pos, *, push_video: bool = False):
+    """Keep the A-layer world arrow under 15% of the 1280 px scene width.
+
+    The push-only camera backs away along the existing sightline. Terrain,
+    physics, policy and command sampling are unchanged.
+    """
+    import numpy as np
+    root = np.asarray(robot_pos, dtype=np.float64)
+    eye = root + [-0.6, -1.6, 0.85]
+    target = root + [0.25, 0.0, -0.05]
+    if push_video:
+        eye = target + 1.45 * (eye - target)
+    return tuple(float(value) for value in eye), tuple(float(value) for value in target)
+
+
 def fall_ref(spec) -> bool:
     return spec.get("fall_reference") is True
 
@@ -658,6 +673,8 @@ def parse_a_push_video_spec(spec: dict[str, Any]) -> dict[str, Any]:
             or not isinstance(spec.get("push_group_id"), str) or not spec["push_group_id"]
             or spec.get("dr_scale") != 1.0):
         raise ValueError("EX41 A push video tile, seeds, group or DR scale invalid")
+    if spec.get("demo_pushes") != [[2.0, 1.5], [4.0, 2.0]]:
+        raise ValueError("EX41 A push video needs two declared demonstration pushes")
     source = Path(spec["source_root"])
     if _git_value(source, "rev-parse", "HEAD") != spec["source_head"]:
         raise ValueError("EX41 A push source HEAD differs")
@@ -1554,7 +1571,7 @@ def _capture(spec: dict[str, Any]) -> None:
             if dr_mode is not None:
                 dr_mode.begin(raw, spec["push_group_id"],
                               int(round(spec["duration_s"] / float(raw.step_dt))),
-                              env.num_envs, float(raw.step_dt))
+                              env.num_envs, float(raw.step_dt), demo_pushes=spec["demo_pushes"])
             env.reset()
             if turn16_capture:
                 from foothold_s2.eval import probe_tiles
@@ -1782,8 +1799,8 @@ def _capture(spec: dict[str, Any]) -> None:
                 if target_marker_op is not None:
                     update_target_marker(target_marker_op, robot_pos,
                                          target_marker_record["height_above_root_m"])
-                camera_eye = (float(robot_pos[0] - 0.6), float(robot_pos[1] - 1.6), float(robot_pos[2] + 0.85))
-                camera_target = (float(robot_pos[0] + 0.25), float(robot_pos[1]), float(robot_pos[2] - 0.05))
+                camera_eye, camera_target = follow_camera_pose(
+                    robot_pos, push_video=a_push_video_ref(spec))
                 raw.sim.set_camera_view(eye=camera_eye, target=camera_target)
                 import omni.usd
                 from pxr import UsdGeom
@@ -2039,6 +2056,7 @@ def _capture(spec: dict[str, Any]) -> None:
             "a_push_video": ({"push_group_id": spec["push_group_id"],
                               "push_seed": spec["push_seed"], "dr_scale": spec["dr_scale"],
                               "dr_recovery": dr_summary["recovery"],
+                              "dr_recovery_by_event": dr_summary.get("recovery_by_event"),
                               "push_events": dr_summary["push_events"],
                               "ex41_environment_preparation": ex41_preparation,
                               "ex41_checkpoint_preparation": ex41_checkpoint_preparation,
