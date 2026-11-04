@@ -6,6 +6,30 @@ import re
 import numpy as np
 
 
+def ensure_only_selected_visible(stage, selected_root: str, hidden_roots: list[str], imageable):
+    """Restore the chosen cloned robot's render visibility and verify isolation.
+
+    Isaac Lab may leave a nonzero clone root invisible. Merely skipping that
+    root while hiding its siblings is not enough to render or segment it.
+    """
+    selected = stage.GetPrimAtPath(selected_root)
+    if not selected.IsValid():
+        raise ValueError("C76 selected robot prim is missing")
+    selected_imageable = imageable(selected)
+    before = str(selected_imageable.ComputeVisibility())
+    selected_imageable.MakeVisible()
+    after = str(selected_imageable.ComputeVisibility())
+    if after != "inherited":
+        raise ValueError("C76 selected robot remains invisible after MakeVisible")
+    for path in hidden_roots:
+        prim = stage.GetPrimAtPath(path)
+        if not prim.IsValid() or str(imageable(prim).ComputeVisibility()) != "invisible":
+            raise ValueError("C76 another robot became visible: " + path)
+    return {"selected_root": selected_root, "selected_visibility_before": before,
+            "selected_visibility_after": after, "hidden_robot_count": len(hidden_roots),
+            "other_robots_remain_invisible": True}
+
+
 def packet_diagnostic(packet: dict, *, selected_env: int) -> dict:
     """Bounded evidence when a renderer omits the selected robot instance."""
     labels = packet.get("info", {}).get("idToLabels", {}) if isinstance(packet, dict) else {}
