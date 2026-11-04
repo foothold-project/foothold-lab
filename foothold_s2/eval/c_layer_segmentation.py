@@ -6,6 +6,53 @@ import re
 import numpy as np
 
 
+def read_mask_with_render_retry(read_mask, rerender, snapshot, validate,
+                                *, max_retries: int = 5):
+    """Refresh an empty instance mask without advancing physics or commands."""
+    if max_retries < 0:
+        raise ValueError("segmentation max_retries must be nonnegative")
+    checks = []
+    for attempt in range(max_retries + 1):
+        packet = read_mask()
+        try:
+            return validate(packet), checks
+        except ValueError:
+            if attempt == max_retries:
+                raise
+            before = snapshot()
+            rerender()
+            after = snapshot()
+            row = {"retry": attempt + 1, "before": before, "after": after}
+            checks.append(row)
+            if after != before:
+                raise RuntimeError("segmentation_render_state_changed")
+    raise AssertionError("unreachable segmentation retry state")
+
+
+def ensure_only_selected_visible(stage, selected_root: str, hidden_roots: list[str], imageable):
+    """Restore the chosen cloned robot's render visibility and verify isolation.
+
+    Isaac Lab may leave a nonzero clone root invisible. Merely skipping that
+    root while hiding its siblings is not enough to render or segment it.
+    """
+    selected = stage.GetPrimAtPath(selected_root)
+    if not selected.IsValid():
+        raise ValueError("C76 selected robot prim is missing")
+    selected_imageable = imageable(selected)
+    before = str(selected_imageable.ComputeVisibility())
+    selected_imageable.MakeVisible()
+    after = str(selected_imageable.ComputeVisibility())
+    if after != "inherited":
+        raise ValueError("C76 selected robot remains invisible after MakeVisible")
+    for path in hidden_roots:
+        prim = stage.GetPrimAtPath(path)
+        if not prim.IsValid() or str(imageable(prim).ComputeVisibility()) != "invisible":
+            raise ValueError("C76 another robot became visible: " + path)
+    return {"selected_root": selected_root, "selected_visibility_before": before,
+            "selected_visibility_after": after, "hidden_robot_count": len(hidden_roots),
+            "other_robots_remain_invisible": True}
+
+
 def packet_diagnostic(packet: dict, *, selected_env: int) -> dict:
     """Bounded evidence when a renderer omits the selected robot instance."""
     labels = packet.get("info", {}).get("idToLabels", {}) if isinstance(packet, dict) else {}
@@ -62,9 +109,14 @@ def robot_pixel_evidence(packet: dict, *, selected_env: int, env_count: int,
         env = id_to_env.get(int(instance_id))
         if env is not None:
             counts[str(env)] += int(count)
+    selected_mask = np.isin(pixels, list(robot_ids[selected_env]))
+    ys, xs = np.where(selected_mask)
+    selected_bbox = ([int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+                     if xs.size else None)
     return {"selected_env_id": selected_env, "selected_robot_pixels": counts[str(selected_env)],
             "other_robot_pixels": sum(count for env, count in counts.items() if int(env) != selected_env),
-            "robot_pixels_by_env": counts, "source": "instance_id_segmentation_fast"}
+            "robot_pixels_by_env": counts, "selected_robot_bbox_xyxy": selected_bbox,
+            "source": "instance_id_segmentation_fast"}
 
 
 def require_single_visible_robot(evidence: dict, *, min_selected_pixels: int = 80) -> None:

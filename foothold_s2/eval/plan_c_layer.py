@@ -18,7 +18,7 @@ KINDS = {
                "stepping_beams", "gaps"],
 }
 GEOMETRY_SEED = 20261026
-CAPTURE_SEEDS = (42, 43, 44, 45)
+CAPTURE_SEEDS = (42, 43)
 
 
 def _head(source: Path) -> str:

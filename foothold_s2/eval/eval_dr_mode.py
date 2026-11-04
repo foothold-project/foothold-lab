@@ -493,7 +493,8 @@ class DRMode:
         if self.readback is None or getattr(raw, "_ex40_dr_scale", None) != self.scale:
             raise RuntimeError("DR 켠 평가: 롤아웃 중 배율이 바뀌었거나 readback 이 없다")
 
-    def begin(self, raw, key: str, total_steps: int, num_envs: int, dt: float) -> dict[str, Any] | None:
+    def begin(self, raw, key: str, total_steps: int, num_envs: int, dt: float,
+              demo_pushes: list[list[float]] | None = None) -> dict[str, Any] | None:
         """롤아웃의 reset 전에 부른다: 지난 표본을 비우고(B3) 이 롤아웃의 밀기 step · 시드를 정한다."""
         if self.mode == "off":
             return None
@@ -509,6 +510,15 @@ class DRMode:
             action._ex40_sample_counts = None
         self._rollout = {"key": key, **push_schedule(total_steps, dt), "num_envs": int(num_envs),
                          "push_seed": push_seed(self.eval_seed, key), "pushed": 0, "events": []}
+        if demo_pushes is not None:
+            if demo_pushes != [[2.0, 1.5], [4.0, 2.0]]:
+                raise ValueError("A-layer demonstration requires the declared 2 s/1.5 and 4 s/2.0 m/s pushes")
+            steps = [int(round(t_s / dt)) for t_s, _ in demo_pushes]
+            if not (0 < steps[0] < steps[1] < total_steps):
+                raise ValueError("A-layer demonstration pushes must fit inside the rollout")
+            self._rollout.update({"push_step": steps[0], "push_t_s": steps[0] * dt,
+                                  "expected_pushes": 2, "demo_pushes": demo_pushes,
+                                  "push_steps": steps})
         return {k: v for k, v in self._rollout.items() if k != "events"}
 
     def step(self, raw, step_index: int) -> bool:
@@ -517,10 +527,21 @@ class DRMode:
             return False
         if self._rollout is None:
             raise RuntimeError("DR 켠 평가: begin 없이 step 이 불렸다")
-        if step_index != self._rollout["push_step"]:
+        steps = self._rollout.get("push_steps", [self._rollout["push_step"]])
+        if step_index not in steps:
             return False
+        if any(event["step"] == step_index for event in self._rollout["events"]):
+            raise RuntimeError("the same push step was applied twice")
         self._pinned(raw)
-        event = self.pusher(raw, self.table["full_ranges"]["push_velocity"], self._rollout["push_seed"])
+        demo = self._rollout.get("demo_pushes")
+        index = steps.index(step_index)
+        target = self.table["full_ranges"]["push_velocity"]
+        if demo is not None:
+            strength = demo[index][1]
+            target = {axis: ((strength, strength) if axis == "x" else (0.0, 0.0))
+                      for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
+        event_seed = self._rollout["push_seed"] + index
+        event = self.pusher(raw, target, event_seed)
         if not isinstance(event, dict) or len(event.get("env_ids", [])) != self._rollout["num_envs"]:
             raise RuntimeError("DR 켠 평가: 밀기 기록이 env 전부를 담지 않았다: %r" % (type(event),))
         if self.scale > 0.0 and not float(event.get("dv_xy_norm_mps_median", 0.0)) > 0.0:
@@ -528,7 +549,7 @@ class DRMode:
                                % (self.scale, event.get("dv_xy_norm_mps_median")))
         self._rollout["pushed"] += 1
         self._rollout["events"].append({"step": int(step_index), "t_s": step_index * self._rollout["dt"],
-                                        "seed": self._rollout["push_seed"], "scale": self.scale, **event})
+                                        "seed": event_seed, "scale": self.scale, **event})
         return True
 
     def collect(self, raw, key: str, res: dict[str, Any], row: dict[str, Any] | None = None,
@@ -547,7 +568,13 @@ class DRMode:
             raise RuntimeError("DR 켠 평가: begin 의 롤아웃 %r 과 collect 의 %r 이 다르다" % (self._rollout["key"], key))
         rollout, self._rollout = self._rollout, None
         summary = self.readback.summary()
-        checked = check_fired(summary, self.scale, self.table["full_ranges"], self.table["delay_max_s"],
+        ranges = self.table["full_ranges"]
+        if "demo_pushes" in rollout:
+            ranges = {**ranges, "push_velocity": {axis: ((1.5, 2.0) if axis == "x" else (0.0, 0.0))
+                                                   for axis in ("x", "y", "z", "roll", "pitch", "yaw")}}
+            summary["demo_pushes"] = rollout["demo_pushes"]
+            summary["push_range_override_reason"] = "A-layer video demonstration; not evaluation DR"
+        checked = check_fired(summary, self.scale, ranges, self.table["delay_max_s"],
                               num_envs=rollout["num_envs"], pushes=rollout["pushed"], expected_pushes=rollout["expected_pushes"])
         summary["rollout"] = {k: rollout[k] for k in ("key", "total_steps", "dt", "push_step", "push_t_s", "expected_pushes", "num_envs", "push_seed", "pushed")}
         summary["push_events"] = rollout["events"]
@@ -555,6 +582,18 @@ class DRMode:
         if arrays is not None:
             recovery = recovery_metrics(arrays["alive"], arrays["dones"], arrays["vx"], arrays["vy"], arrays["xy"], rollout["dt"], rollout["push_step"],
                                         wz=arrays.get("wz"), tilt=arrays.get("tilt"), cmd=arrays.get("cmd"))
+            if "push_steps" in rollout:
+                second = rollout["push_steps"][1]
+                first_arrays = {name: value[:second] for name, value in arrays.items()
+                                if name in ("alive", "dones", "vx", "vy", "xy", "wz", "tilt") and value is not None}
+                first = recovery_metrics(first_arrays["alive"], first_arrays["dones"], first_arrays["vx"],
+                                         first_arrays["vy"], first_arrays["xy"], rollout["dt"], rollout["push_step"],
+                                         wz=first_arrays.get("wz"), tilt=first_arrays.get("tilt"), cmd=arrays.get("cmd"))
+                second_recovery = recovery_metrics(arrays["alive"], arrays["dones"], arrays["vx"], arrays["vy"],
+                                                   arrays["xy"], rollout["dt"], second,
+                                                   wz=arrays.get("wz"), tilt=arrays.get("tilt"), cmd=arrays.get("cmd"))
+                summary["recovery_by_event"] = [first, second_recovery]
+                recovery = first
         summary["recovery"] = recovery
         res.setdefault("dr", self._record)["readback"][key] = summary
         push_row = None

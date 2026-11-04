@@ -26,6 +26,7 @@ from foothold_s2.eval import w78_video_consumer as shared
 
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 SCHEMA = "foothold-ex41-a-push-video/1"
+DEMO_PUSHES = [[2.0, 1.5], [4.0, 2.0]]  # s, world +x delta-v m/s; demonstration, not evaluation DR.
 
 
 def sha256(path: Path) -> str:
@@ -41,7 +42,7 @@ def group_id(checkpoint_sha: str, *, kind: str, level: int, col: int, env_id: in
              seed: int, push_seed: int, command: tuple[float, float, float]) -> str:
     payload = {"checkpoint_sha256": checkpoint_sha, "kind": kind, "level": level,
                "col": col, "env_id": env_id, "seed": seed, "push_seed": push_seed,
-               "command": list(command)}
+               "command": list(command), "demo_pushes": DEMO_PUSHES}
     return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"))
                            .encode("utf-8")).hexdigest()
 
@@ -52,7 +53,9 @@ def validate_source(root: Path, recorder: Path, composer: Path, checkpoint: Path
     composer = composer.resolve(strict=True)
     if not recorder.is_relative_to(root) or not composer.is_relative_to(root):
         raise ValueError("A push recorder and composer must belong to the pinned source root")
-    source = shared.validate_sources(root, root / "foothold_s2/eval/record_sol23f.py", composer)
+    if recorder != root / "foothold_s2/eval/video25/record_c_layer.py":
+        raise ValueError("A push requires the SB-capable record_c_layer recorder")
+    source = shared.validate_sources(root, recorder, composer)
     if composer_version(composer) != VIDEO_RULE_VERSION:
         raise ValueError("A push composer rule differs")
     if not checkpoint.is_file():
@@ -75,6 +78,7 @@ def policy_spec(args, mode: str, source: dict) -> dict:
             "physics_mode": "sparse_eval_reference", "command": [1.0, 0.0, 0.0],
             "duration_s": 6.0, "seed": args.seed, "push_seed": args.push_seed,
             "dr_scale": 1.0, "z_mode": "mean", "act_mode": "mean",
+            "demo_pushes": DEMO_PUSHES,
             "hide_others": True, "map_mode": mode,
             "push_group_id": group_id(source["checkpoint_sha256"], kind=args.kind,
                                       level=args.level, col=args.col, env_id=args.env_id,
@@ -91,7 +95,8 @@ def recorder_argv(args, mode: str, source: dict, attempt: Path) -> tuple[list[st
     argv = [str(args.python), str(args.recorder), "--checkpoint", str(args.checkpoint),
             "--policy", json.dumps(spec, ensure_ascii=False, separators=(",", ":")),
             "--label", label, "--scene", "rough", "--mp4", str(attempt / label / "review.mp4"),
-            "--device", "cuda:1", "--width", "1280", "--height", "720", "--fps", "25"]
+            "--device", "cuda:1", "--width", "1280", "--height", "720", "--fps", "25",
+            "--headless", "--enable_cameras", "--livestream", "0"]
     return argv, label
 
 
@@ -106,11 +111,18 @@ def source_child_env(python: Path, source_root: Path) -> dict[str, str]:
 def push_signature(meta: dict) -> tuple:
     push = meta.get("a_push_video") or {}
     events = push.get("push_events") or []
-    if len(events) != 1 or not push.get("dr_recovery", {}).get("defined"):
-        raise ValueError("A push capture lacks one event or defined recovery")
-    event = events[0]
-    return (push["push_group_id"], push["push_seed"], event["step"], event["seed"],
-            tuple(tuple(float(x) for x in dv) for dv in event["dv_xyz_w_mps"]))
+    recovery = push.get("dr_recovery_by_event") or []
+    if len(events) != 2 or len(recovery) != 2 or not all(row.get("defined") for row in recovery):
+        raise ValueError("A push capture lacks two events or two defined recovery rows")
+    signature = []
+    for event, (time_s, strength) in zip(events, DEMO_PUSHES):
+        dv = np.asarray(event["dv_xyz_w_mps"], dtype=float)
+        if (abs(float(event["t_s"]) - time_s) > 1e-5 or dv.shape != (64, 3)
+                or not np.isfinite(dv).all() or not np.allclose(dv[:, 0], strength, atol=1e-4, rtol=0)
+                or not np.allclose(dv[:, 1:], 0, atol=1e-4, rtol=0)):
+            raise ValueError("A push actual delta-v differs from 1.5/2.0 m/s schedule")
+        signature.append((event["step"], event["seed"], tuple(tuple(float(x) for x in row) for row in dv)))
+    return (push["push_group_id"], push["push_seed"], tuple(signature))
 
 
 def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> dict:
@@ -174,6 +186,16 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
             or composition.get("checkpoint_sha256") != source["checkpoint_sha256"]
             or composition.get("push_overlay", {}).get("rollout_key") != spec["push_group_id"]):
         raise ValueError("A push styled receipt or overlay differs")
+    arrow_audit = composition.get("push_overlay", {}).get("arrow_geometry_audit") or {}
+    if (arrow_audit.get("pass") is not True or arrow_audit.get("frames", 0) <= 0
+            or arrow_audit.get("events") != [event[0] for event in DEMO_PUSHES]
+            or composition.get("push_overlay", {}).get("arrow_visible_s") != .4
+            or arrow_audit.get("outside_application_frames") != 0
+            or arrow_audit.get("all_starts_inside_body_box") is not True
+            or arrow_audit.get("all_starts_inside_rendered_robot") is not True
+            or not 0 <= arrow_audit.get("max_angle_diff_deg", float("inf")) < 10
+            or not 0 < arrow_audit.get("max_screen_width_fraction", float("inf")) <= .15):
+        raise ValueError("A push scene and legend arrow geometry FAIL")
     styled_audit = audit_video(styled, expected=150, width=1920, height=1080,
                                screen_evidence=meta.get("camera_screen_projection"),
                                robot_instance_evidence=mask, composite_receipt=receipt_path,
@@ -184,6 +206,7 @@ def verify_capture(attempt: Path, label: str, args, mode: str, source: dict) -> 
     return {"capture": str(capture), "video": str(styled), "video_sha256": sha256(styled),
             "outcome": outcome, "push_signature": signature,
             "dr_recovery": read["dr_recovery"], "raw_audit": raw_audit,
+            "dr_recovery_by_event": read["dr_recovery_by_event"],
             "styled_audit": styled_audit}
 
 
@@ -208,9 +231,8 @@ def run_one(args) -> dict:
         row = json.loads(result.stdout)["ex41_p1"]
         if "blocks" not in row:
             raise ValueError("A push GPU board P1 marker malformed")
-        # The parent EX-41 auxiliary bundle already owns the P1 marker while
-        # it serializes this nested A-layer video child. Ignore only that exact
-        # parent process identity; every other live or unknown P1 still blocks.
+        # The enclosing EX-41 evaluator may own this P1 marker while it runs
+        # the nested video child. Only that verified parent may pass.
         parent_pid = os.environ.get("EX41_PARENT_EVAL_PID")
         parent_created = os.environ.get("EX41_PARENT_EVAL_CREATED_AT")
         marker_path = None
@@ -288,6 +310,7 @@ def run_one(args) -> dict:
                        "env_id": args.env_id, "seed": args.seed, "push_seed": args.push_seed,
                        "video": verified["video"], "video_sha256": verified["video_sha256"],
                        "outcome": verified["outcome"], "dr_recovery": verified["dr_recovery"],
+                       "dr_recovery_by_event": verified["dr_recovery_by_event"],
                        "push_signature": verified["push_signature"],
                        "capture": verified["capture"], "video_rule_version": VIDEO_RULE_VERSION}
             atomic_json(args.out / (mode + ".json"), receipt)
@@ -313,9 +336,9 @@ def compare_mode_receipts(out: Path) -> dict:
         if any(row[key] != base[key] for key in keys):
             raise ValueError("A push three modes differ in terrain, seed or checkpoint")
         earlier, later = base["push_signature"], row["push_signature"]
-        if (earlier[:4] != later[:4] or np.asarray(earlier[4]).shape != (64, 3)
-                or np.asarray(later[4]).shape != (64, 3)
-                or not np.allclose(earlier[4], later[4], rtol=0.0, atol=1.0e-5)):
+        if (earlier[:2] != later[:2] or len(earlier[2]) != 2 or len(later[2]) != 2
+                or any(a[:2] != b[:2] or not np.allclose(a[2], b[2], rtol=0.0, atol=1.0e-5)
+                       for a, b in zip(earlier[2], later[2]))):
             raise ValueError("A push three modes differ in actual push event")
     return {"state": "complete" if len(rows) == 3 else "partial",
             "modes": [row["map_mode"] for row in rows], "group_id": base["group_id"]}

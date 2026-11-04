@@ -50,7 +50,7 @@ def fixture(tmp_path: Path, *, complete: bool = True):
     for kind, level, mode in cells:
         label = video_style.capture_name("EX40", kind, level, 7, 8000, segment=mode)
         rows.append({"kind": kind, "level": level, "map_mode": mode, "env_id": 7,
-                     "label": label, "seeds": [42, 43, 44, 45],
+                     "label": label, "seeds": [42, 43],
                      "policy": {"experiment": "SB", "source_root": str(tmp_path),
                                 "source_profile": "C76", "source_head": "a" * 40,
                                 "source_recorder_sha256": "b" * 64, "selection_role": "c_layer",
@@ -187,6 +187,16 @@ def test_real_python_child_observes_kit_env_without_visible_device():
                         "CUDA_VISIBLE_DEVICES": None}
 
 
+def test_dispatcher_child_imports_real_source_from_unrelated_cwd(tmp_path):
+    source_root = Path(__file__).resolve().parents[2]
+    child_env = q.recorder_child_env(
+        sys.executable, {**os.environ, "PYTHONPATH": ""}, source_root=source_root)
+    completed = subprocess.run(
+        [sys.executable, "-c", "import foothold_s2; print(foothold_s2.__file__)"],
+        cwd=tmp_path, env=child_env, capture_output=True, text=True, check=True)
+    assert str(source_root).lower() in completed.stdout.lower()
+
+
 def test_recorder_preflight_capture_and_composer_receive_same_kit_env(tmp_path, monkeypatch):
     plan, rows = fixture(tmp_path)
     python = tmp_path / "isaac311" / "python.exe"
@@ -251,7 +261,10 @@ def test_inventory_and_seed_gate(tmp_path):
     rows[0]["seeds"] = [42, 42]
     with pytest.raises(ValueError, match="distinct"):
         q.validate_plan(plan)
-    rows[0]["seeds"] = [42, 43, 44, 45]
+    rows[0]["seeds"] = [42, 43, 44]
+    with pytest.raises(ValueError, match="one to two"):
+        q.validate_plan(plan)
+    rows[0]["seeds"] = [42, 43]
     Path(plan["recorder"]).write_bytes(b"legacy seed 42 only")
     plan["recorder_sha256"] = q.sha256(Path(plan["recorder"]))
     with pytest.raises(ValueError, match="variable-seed"):
@@ -369,17 +382,17 @@ def test_first_pass_rejects_unknown_target_results(tmp_path):
 
 
 @pytest.mark.parametrize(("resets", "expected"), [(0, "실패 없음"), (1, "성공 없음")])
-def test_four_attempt_cap_and_missing_role(tmp_path, monkeypatch, resets, expected):
+def test_two_attempt_cap_and_missing_role(tmp_path, monkeypatch, resets, expected):
     plan, _ = fixture(tmp_path)
-    run, calls = fake_capture(plan, [resets] * 4)
+    run, calls = fake_capture(plan, [resets] * 2)
     monkeypatch.setattr(q.subprocess, "run", run)
     out = tmp_path / "out"
-    for _ in range(4):
+    for _ in range(2):
         q.run_one(plan, out=out, high_priority_markers=[])
     summary = q._summary(out, plan["jobs"][0])
     assert summary["state"] == "exhausted" and summary["missing"] == [expected]
-    assert len(calls) == 4
-    assert not (out / "attempts" / summary["cell"] / "05").exists()
+    assert len(calls) == 2
+    assert not (out / "attempts" / summary["cell"] / "03").exists()
 
 
 def test_failed_child_does_not_use_seed_budget_or_publish(tmp_path, monkeypatch):
