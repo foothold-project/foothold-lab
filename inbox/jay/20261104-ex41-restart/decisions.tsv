@@ -31,3 +31,6 @@ ts	phase	decision	why	evidence	result
 2026-11-05T07:31:15+09:00	telegram	#555 를 글자만 보냄 → 앞으로 전체 URL(https://github.com/foothold-project/foothold-lab/issues/555)	팀장 07:2x	tg-outbox	fixed
 2026-11-05T07:33:42+09:00	boundary1000	1001 경계 적용 · S2b · DR 램프 시작(0.5 → 0.5375 · m750 점수 근거)	계획	ex41_application.jsonl 1001	done
 2026-11-05T07:48:21+09:00	self-improve	사고 23 건 정리 EX41R-INCIDENTS.md · 장치: ops_check(I04 I05 I06 I08 I11 I15) · tg_send(I01 I02) · 출발 스크립트 밀기 감시기(I04) · cron 에 ops_check 고리	팀장 07:3x 규칙화 · 시스템화	lead/ex41-dispatch-on-measure 커밋 · 시험 7	open
+2026-11-05T08:12:44+09:00	C76	216 칸 재생 목록 lead 확인: 216 항목 · 파일 없음 0 · 경로 C:/Users/AI-WS01/s2_lab/_playlists/EX40-C-m06000-all216-v34-1105.m3u8 · 성공 154 · 검증된 실패 장면 62 · 재촬영 실패 1(407 seed43 검정 화면 · 기록기 오류)	I14 끝 정의(재생 목록 + 전 프레임)	REPORT-C76-ALL216-1105.md	done
+2026-11-05T08:12:44+09:00	pstack-B
+runner 가 07:31 /correct 지시를 M3 분석으로 끝냄 → 08:12 행 목록(I03 I05 I06 I09 I11 I13 I17 I20)으로 다시 보냄 · 시작 확인	지시 받은 일과 결과 대조	runner 창	open
