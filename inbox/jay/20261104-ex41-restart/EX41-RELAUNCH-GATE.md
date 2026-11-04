@@ -70,7 +70,7 @@
 
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
-| R1 | 운영 출력 자리 · 실제 승인 파일 · 실제 argparse · 단계 길이만 줄인 실제 Kit 실행으로 모든 단계 경계를 지남 | runner | |
+| R1 | 운영 출력 자리 · 실제 승인 파일 · 실제 argparse · 단계 길이만 줄인 실제 Kit 실행으로 모든 단계 경계를 지남 | runner |  일부(22:0x lead 직접 확인): ex41-measure-fix e44e8830(source_dirty.diff 0 바이트) 실제 Kit 단계 축소 예행 `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_214336` · model_1~12 저장 · `ex41_application.jsonl` 에서 0 S2a(DR 0.5) → 3 S2b(0.5) → 5 S2c(0.65) → 7 S2d(0.8) → 9 S2e(1.0) → 11 T0′(1.0) → 13 T0′ 모두 applied. 남음: 같은 판의 P1 평가가 model_2 에서 map_steps=1 로 재측정 세 번 실패(R2 · M1 미통과 · bf3687c4 에서 고침), D181 두 경우 Kit 완주 미확인 |
 | R2 | 250 경계 P1 자동 평가 · 측정 실패를 일부러 넣어 자동 재측정이 증거로 들어가는 것 확인 | runner | |
 | R3 | 단계 끝 자동 등록 → P2 숫자 → P3 영상 넷 → 재생 목록 | runner · scripter | |
 | R4 | C층(P4) 가 P1 이 오자 비켜 줌 | lead | |
