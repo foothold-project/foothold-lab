@@ -170,7 +170,14 @@ def _notification_text(row: dict[str, Any]) -> tuple[str, str]:
     return subject, body
 
 
+def _external_alert_delivery_enabled() -> bool:
+    """External alert delivery is opt-in for a real, approved training run."""
+    return os.environ.get("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY") == "1"
+
+
 def _send_orchestration(subject: str, body: str) -> bool:
+    if not _external_alert_delivery_enabled():
+        return False
     command = ["orca", "orchestration", "send", "--type", "status",
                "--subject", subject, "--body", body, "--json"]
     target = os.environ.get("EX41_ORCHESTRATION_TO")
@@ -197,6 +204,8 @@ def _send_orchestration(subject: str, body: str) -> bool:
 
 
 def _send_telegram(body: str) -> bool:
+    if not _external_alert_delivery_enabled():
+        return False
     try:
         from foothold_s2.chain.runner import default_tg_sender
         config = {
@@ -232,6 +241,8 @@ def deliver_pending_alerts(run_dir: str | Path, *, orchestration_sender=None,
         event_id = str(row.get("event_id", ""))
         if not event_id:
             continue
+        if row.get("delivery_policy") == "local_only":
+            continue
         receipt_path = receipts_dir / f"{hashlib.sha256(event_id.encode()).hexdigest()}.json"
         try:
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
@@ -240,11 +251,21 @@ def deliver_pending_alerts(run_dir: str | Path, *, orchestration_sender=None,
                        "channels": {}}
         subject, body = _notification_text(row)
         for channel, sender, payload in (
-            ("orchestration", orchestration_sender or _send_orchestration, (subject, body)),
-            ("telegram", telegram_sender or _send_telegram, (body,)),
+            ("orchestration", orchestration_sender, (subject, body)),
+            ("telegram", telegram_sender, (body,)),
         ):
             if receipt["channels"].get(channel, {}).get("state") == "sent":
                 continue
+            if sender is None and not _external_alert_delivery_enabled():
+                receipt["channels"][channel] = {
+                    "state": "suppressed",
+                    "reason": "external_delivery_not_enabled",
+                }
+                receipts_dir.mkdir(parents=True, exist_ok=True)
+                _write_delivery_receipt(receipt_path, receipt)
+                continue
+            if sender is None:
+                sender = _send_orchestration if channel == "orchestration" else _send_telegram
             try:
                 accepted = bool(sender(*payload))
             except Exception as exc:  # noqa: BLE001
@@ -258,12 +279,18 @@ def deliver_pending_alerts(run_dir: str | Path, *, orchestration_sender=None,
 
 
 def record_failure_alert(run_dir: str | Path, kind: str, update: int,
-                         details: dict[str, Any], *, deliver: bool = True) -> dict[str, Any]:
+                         details: dict[str, Any], *, deliver: bool = True,
+                         local_only: bool = False) -> dict[str, Any]:
     """Record a fatal or nonzero child result without masking the local receipt."""
     if kind not in ("fatal_training_fault", "nonzero_process_exit"):
         raise ValueError("unsupported EX-41 failure alert kind")
+    details = dict(details)
+    if local_only:
+        details["delivery_policy"] = "local_only"
+        deliver = False
     event_id = hashlib.sha256(json.dumps(
-        [kind, update, details], sort_keys=True, allow_nan=False).encode()).hexdigest()
+        [str(Path(run_dir).resolve()), kind, update, details],
+        sort_keys=True, allow_nan=False).encode()).hexdigest()
     row = _alert(Path(run_dir) / "ex41_reports" / "alerts.jsonl", event_id, kind, update, details)
     if deliver:
         deliver_pending_alerts(run_dir)

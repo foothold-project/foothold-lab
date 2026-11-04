@@ -469,6 +469,12 @@ if EX41_STARTUP_SMOKE:
                                    args_cli.ex41_log_root, args_cli.device,
                                    args_cli.headless, args_cli.distributed)
 
+if EX41_REHEARSAL or EX41_STARTUP_SMOKE:
+    # Rehearsals and smoke tests keep failures local; production explicitly opts in.
+    os.environ.pop("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", None)
+elif EX41_PLAN is not None:
+    os.environ["EX41_ALLOW_EXTERNAL_ALERT_DELIVERY"] = "1"
+
 if EX41_PLAN is not None and args_cli.device == "cuda:0":
     marker_run = (os.path.dirname(os.path.abspath(args_cli.resume_from)) if args_cli.resume_from else
                   args_cli.ex41_rehearsal_output if EX41_REHEARSAL else args_cli.ex41_log_root)
@@ -1027,7 +1033,9 @@ def _record_ex41_process_alert(kind: str, *, rc: int | None = None,
     details = {"rc": rc} if rc is not None else {"fault_type": type(error).__name__}
     from foothold_s2.ex41_ops import record_failure_alert
 
-    record_failure_alert(log_dir, kind, update, details, deliver=True)
+    record_failure_alert(log_dir, kind, update, details,
+                         deliver=not EX41_REHEARSAL,
+                         local_only=EX41_REHEARSAL)
 
 
 if __name__ == "__main__":

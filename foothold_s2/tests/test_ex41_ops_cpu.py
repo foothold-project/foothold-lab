@@ -278,6 +278,51 @@ def test_fatal_alert_has_durable_receipt_without_printing_sender_data(tmp_path):
                                     "telegram": {"state": "sent"}}
 
 
+def test_rehearsal_process_failure_is_local_only_even_if_delivery_is_retried(tmp_path):
+    run = tmp_path / "rehearsal"
+    row = record_failure_alert(run, "nonzero_process_exit", 0, {"rc": 1},
+                               deliver=True, local_only=True)
+    sent = []
+    receipts = deliver_pending_alerts(
+        run,
+        orchestration_sender=lambda *args: sent.append(("orca", args)) or True,
+        telegram_sender=lambda *args: sent.append(("telegram", args)) or True,
+    )
+    assert row["delivery_policy"] == "local_only"
+    assert receipts == []
+    assert sent == []
+
+
+def test_failure_event_id_is_scoped_to_run_directory(tmp_path):
+    first = record_failure_alert(tmp_path / "run-1", "nonzero_process_exit", 0, {"rc": 1},
+                                 deliver=False, local_only=True)
+    second = record_failure_alert(tmp_path / "run-2", "nonzero_process_exit", 0, {"rc": 1},
+                                  deliver=False, local_only=True)
+    assert first["event_id"] != second["event_id"]
+
+
+def test_external_sender_defaults_fail_closed(monkeypatch):
+    called = []
+    monkeypatch.delenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", raising=False)
+    monkeypatch.setenv("EX41_ORCHESTRATION_TO", "term_fixture-only")
+    monkeypatch.setattr(ex41_ops.subprocess, "run", lambda *args, **kwargs: called.append(args))
+    assert ex41_ops._send_orchestration("subject", "body") is False
+    assert ex41_ops._send_telegram("body") is False
+    assert called == []
+
+
+def test_delivery_layer_suppresses_default_senders_without_opt_in(tmp_path, monkeypatch):
+    run = tmp_path / "run"
+    record_failure_alert(run, "nonzero_process_exit", 0, {"rc": 1}, deliver=False)
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "0")
+    receipts = deliver_pending_alerts(run)
+    assert len(receipts) == 1
+    assert receipts[0]["channels"] == {
+        "orchestration": {"state": "suppressed", "reason": "external_delivery_not_enabled"},
+        "telegram": {"state": "suppressed", "reason": "external_delivery_not_enabled"},
+    }
+
+
 def test_answer_known_notification_test_is_not_worded_as_incident(tmp_path):
     row = _alert(tmp_path / "ex41_reports/alerts.jsonl", "delivery-test", "notification_test", 0, {})
     assert _notification_text(row) == (
@@ -292,6 +337,7 @@ def test_orchestration_sender_requires_json_acceptance(monkeypatch):
     monkeypatch.setattr(ex41_ops.subprocess, "run", run)
     monkeypatch.setenv("EX41_ORCHESTRATION_RUN_ID", "run_known-test")
     monkeypatch.setenv("EX41_ORCHESTRATION_TO", "term_known-recipient")
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     assert ex41_ops._send_orchestration("subject", "body") is False
     command, kwargs = calls[-1]
     assert "--json" in command
