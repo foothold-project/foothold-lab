@@ -538,6 +538,8 @@ def test_resume_code_rebase_is_persisted_before_runner_manifest_attachment():
     attach = source.index("runner.attach_manifest(log_dir, manifest)", persist)
     learn = source.index("runner.learn(num_learning_iterations=remaining", attach)
     assert resume_start < rebase < persist < attach < learn
+
+
 def test_state_dict_records_effective_w86_weights_cpu():
     from types import SimpleNamespace
 
