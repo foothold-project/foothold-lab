@@ -94,3 +94,26 @@ else:
     dr = row['after'].get('dr', {})
     print('11 경계 적용', row['iteration'], row['stage_before'], '→', row['stage_after'], '·', row['status'],
           '· 사유', row.get('reason'), '· DR', dr.get('scale'), '→ 목표', dr.get('target_scale'))
+# 12 lr · KL over this boundary's 250 updates (11/04: S2a sat at the 1e-5 floor for 233 of its
+# first 500 updates with KL probe > 0.05 85 times; nobody saw it because no report showed it).
+try:
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+    lo, hi, floor = n - 250, n, 1e-5
+    lr, kl = {}, {}
+    for f in sorted(glob.glob(f'{RUNDIR}/events.out.tfevents.*')):
+        acc = EventAccumulator(f, size_guidance={'scalars': 0}); acc.Reload()
+        tags = acc.Tags()['scalars']
+        for tag, dst in (('Loss/learning_rate', lr), ('Loss/kl_probe/ppo_mean', kl)):
+            if tag in tags:
+                for ev in acc.Scalars(tag):
+                    if lo < ev.step <= hi:
+                        dst[ev.step] = ev.value  # later files win on resumed (repeated) steps
+    if lr:
+        at_floor = sum(v <= floor * 1.0001 for v in lr.values())
+        big_kl = sum(v > 0.05 for v in kl.values())
+        print(f'12 학습률 · KL ({lo + 1}~{hi}, {len(lr)} 회): 바닥(1e-5) {at_floor} 회 · KL probe > 0.05 {big_kl} 회'
+              f' · lr 중앙 {st.median(lr.values()):.2e}')
+    else:
+        print('12 학습률 · KL: TensorBoard 기록 없음(미측)')
+except ImportError:
+    print('12 학습률 · KL: tensorboard 없음(isaac311 로 돌릴 것)')
