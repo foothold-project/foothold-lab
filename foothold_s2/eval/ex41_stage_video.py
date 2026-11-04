@@ -37,6 +37,12 @@ SUITES = {"W57": commands("extended"), "W80": W80}
 LEVELS = {"W57": 1, "W80": 2}
 
 
+def stage_cases() -> tuple[tuple[str, str, str], ...]:
+    """Deterministic 39 W57 plus 12 W80 jobs for the runner's P3 queue."""
+    return tuple((suite, case, mode) for suite, cases in SUITES.items()
+                 for case in cases for mode in MODES)
+
+
 def identity(checkpoint: Path, iteration: int, stage: str, suite: str,
              case: str, mode: str) -> str:
     payload = [str(checkpoint.resolve()), iteration, stage, suite, case, mode]
@@ -180,7 +186,7 @@ def publish_playlists(args, out: Path, source: dict) -> dict:
     if getattr(args, "push_out", None) is not None:
         from foothold_s2.eval.a_push_video import SCHEMA as PUSH_SCHEMA
         supplemental += [(path, PUSH_SCHEMA, "outcome") for path in
-                         sorted(args.push_out.glob("*.json"))]
+                         (args.push_out / f"{mode}.json" for mode in MODES) if path.is_file()]
     for path, schema, result_key in supplemental:
         row = json.loads(path.read_text(encoding="utf-8"))
         video = Path(row["video"])
