@@ -18,6 +18,7 @@ import subprocess
 import numpy as np
 
 from foothold_s2.eval import video_style
+from foothold_s2.eval.ex41_d48_gate import check_receipt as check_d48_receipt
 from foothold_s2.eval.c_layer_frame_audit import audit_video
 from foothold_s2.eval.c_layer_progress import run_recorder
 from foothold_s2.eval.c_layer_queue import child_log_has_traceback
@@ -174,6 +175,16 @@ def publish_playlists(args, out: Path, source: dict) -> dict:
     playlist_root = args.playlist_root.resolve(strict=True)
     if playlist_root.name != "_playlists":
         raise ValueError("D102 playlist root must be _playlists")
+    def checked(row: dict, receipt_path: Path) -> None:
+        try:
+            check_d48_receipt(row)
+        except ValueError as exc:
+            failure_dir = out / "d48_name_failures"
+            failure_dir.mkdir(exist_ok=True)
+            write_json(failure_dir / (hashlib.sha256(str(receipt_path).encode()).hexdigest() + ".json"),
+                       {"state": "technical_failure", "reason": str(exc),
+                        "receipt": str(receipt_path)})
+            raise
     accepted = {"all": [], "fail": []}
     for path in sorted((out / "receipts").glob("*.json")):
         row = json.loads(path.read_text(encoding="utf-8"))
@@ -183,6 +194,7 @@ def publish_playlists(args, out: Path, source: dict) -> dict:
                 or row.get("composer_sha256") != source["composer_sha256"]
                 or not video.is_file() or sha256(video) != row.get("video_sha256")):
             raise ValueError("D102 stage video receipt or SHA invalid")
+        checked(row, path)
         accepted["all"].append(str(video.resolve()))
         if row["own_result"] == "fail":
             accepted["fail"].append(str(video.resolve()))
@@ -202,6 +214,7 @@ def publish_playlists(args, out: Path, source: dict) -> dict:
                 or row.get("video_rule_version") != VIDEO_RULE_VERSION
                 or not video.is_file() or sha256(video) != row.get("video_sha256")):
             raise ValueError("D102 supplemental video receipt or SHA invalid")
+        checked(row, path)
         accepted["all"].append(str(video.resolve()))
         if row[result_key] == "fail":
             accepted["fail"].append(str(video.resolve()))
@@ -244,6 +257,15 @@ def run(args) -> dict:
             old = json.loads(receipt_path.read_text(encoding="utf-8"))
             if old.get("schema") != SCHEMA or sha256(Path(old["video"])) != old.get("video_sha256"):
                 raise ValueError("existing stage receipt invalid")
+            try:
+                check_d48_receipt(old)
+            except ValueError as exc:
+                failure_dir = out / "d48_name_failures"
+                failure_dir.mkdir(exist_ok=True)
+                write_json(failure_dir / (row_id + ".json"),
+                           {"state": "technical_failure", "reason": str(exc),
+                            "receipt": str(receipt_path)})
+                raise
             return {"state": "already_captured", "receipt": str(receipt_path)}
         attempts = out / "attempts" / row_id
         attempts.mkdir(parents=True, exist_ok=True)
@@ -272,6 +294,10 @@ def run(args) -> dict:
                                           args.iteration, verified["result"],
                                           segment=segment(args.suite, args.case, args.mode))
             target = out / (name + ".mp4")
+            check_d48_receipt({"schema": SCHEMA, "suite": args.suite, "case": args.case,
+                               "map_mode": args.mode, "iteration": args.iteration,
+                               "own_result": verified["result"], "video": str(target),
+                               "attempt_dir": str(attempt)})
             if target.exists():
                 raise ValueError("stage published video name exists")
             temporary = target.with_suffix(".publishing")

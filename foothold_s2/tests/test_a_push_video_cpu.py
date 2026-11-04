@@ -189,3 +189,19 @@ def test_two_exact_demo_pushes_apply_once_each_and_reject_changed_schedule():
     with pytest.raises(ValueError, match="declared"):
         mode.begin(raw, "same-group", 300, 64, .02,
                    demo_pushes=[[2.0, 1.5], [4.0, 1.9]])
+
+
+def test_d48_push_publish_uses_recorded_outcome_and_preserves_source(tmp_path):
+    source = tmp_path / "styled.mp4"
+    source.write_bytes(b"known-video")
+    out = tmp_path / "published"
+    out.mkdir()
+    published = video.publish_d48_video(source, out, kind="pyramid_stairs",
+                                        level=0, iteration=750, mode="eval_gt",
+                                        outcome="fail")
+    assert published.name == "EX41-pyramid_stairs_L0-m750-push_eval_gt-1x-fail.mp4"
+    assert published.read_bytes() == source.read_bytes()
+    assert source.is_file()
+    with pytest.raises(ValueError, match="already exists"):
+        video.publish_d48_video(source, out, kind="pyramid_stairs", level=0,
+                                iteration=750, mode="eval_gt", outcome="fail")
