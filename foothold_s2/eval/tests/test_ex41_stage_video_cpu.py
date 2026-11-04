@@ -58,17 +58,26 @@ def test_stage_recorder_rejects_wrong_identity(change):
 
 
 def test_d102_playlist_uses_only_matching_valid_receipts(tmp_path):
+    from foothold_s2.eval.ex41_d48_gate import expected_name
+
     out = tmp_path / "out"
     receipts = out / "receipts"
     receipts.mkdir(parents=True)
     playlists = tmp_path / "_playlists"
     playlists.mkdir()
-    video = tmp_path / "one.mp4"
-    video.write_bytes(b"known video")
+    attempt = tmp_path / "attempt"
+    capture = attempt / "EX41-known"
+    capture.mkdir(parents=True)
+    import numpy as np
+    np.savez(capture / "review_feet.npz", done=np.array([True]))
     row = {"schema": stage.SCHEMA, "checkpoint_sha256": "a" * 64,
            "video_rule_version": stage.VIDEO_RULE_VERSION,
-           "composer_sha256": "b" * 64, "video": str(video),
-           "video_sha256": stage.sha256(video), "own_result": "fail"}
+           "composer_sha256": "b" * 64, "own_result": "fail",
+           "suite": "W57", "case": "fwd0.5", "map_mode": "eval_gt",
+           "iteration": 750, "attempt_dir": str(attempt)}
+    video = tmp_path / expected_name(row)
+    video.write_bytes(b"known video")
+    row.update(video=str(video), video_sha256=stage.sha256(video))
     (receipts / "one.json").write_text(json.dumps(row), encoding="utf-8")
     a = SimpleNamespace(playlist_root=playlists, iteration=750, checkpoint_sha="a" * 64)
     result = stage.publish_playlists(a, out, {"composer_sha256": "b" * 64})
