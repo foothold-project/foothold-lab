@@ -49,10 +49,10 @@
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
 | V1 | 단계 끝에 학습 쪽이 P2(밀기 사다리 6 단 · 걷기 1.5 포함 · 계단 옆걸음 전체 · 축 · 회전 진단) · P3(W57 명령 13 × 지도 셋 · W80 네 방향 · W78 계단 12 · 밀기 지도 셋 · 재생 목록)를 대기열에 스스로 등록 | runner · scripter | |
-| V2 | 녹화기가 SB 정책을 받음 · 화살표 · C76 가시성 · 시드 2 개 고침이 같은 커밋 | scripter | |
-| V3 | 영상 넷이 예행에서 실제로 한 편씩 나옴 · lead 가 장면을 직접 열어 확인(밀기: 순간에만 · 몸통 위 · 힘 방향 · 짧게 · 범례 같은 방향) | scripter · lead | |
-| V4 | 영상 done = 영상 수 = 목록 수 · 전 프레임 문제 0 · 판 영수증 v3.4-D168 | scripter | |
-| V5 | 재생 목록 `s2_lab/_playlists/EX41-m단계-all|fail.m3u8` 가 예행 단계 끝에서 생김 | scripter | |
+| V2 | 녹화기가 SB 정책을 받음 · 화살표 · C76 가시성 · 시드 2 개 고침이 같은 커밋 | scripter | SB 촬영기 · 화살표 · C76 가시성 · 두 시드가 scripter/ex41-video-on-measure 2bc0ccd8(origin) · CPU 94 passed(`D:/mai-tmp/scripter/pytest-ex41-video-gate.txt`). **남음: ex41-measure-fix HEAD e5c30137 에 2bc0ccd8 이 아직 안 들어감 → runner 합침 뒤 같은 HEAD 로 다시 확인** |
+| V3 | 영상 넷이 예행에서 실제로 한 편씩 나옴 · lead 가 장면을 직접 열어 확인(밀기: 순간에만 · 몸통 위 · 힘 방향 · 짧게 · 범례 같은 방향) | scripter · lead | 15:2x lead 장면 직접 판독. 밀기(m750 정답 · `ex41_video_sb_1625006c/a_push_m750/.../eval_gt/styled.mp4`): 1.80 s 화살표 없음 · 2.12 s 몸통 위 원에서 시작 · 범례(노란 ↗)와 같은 방향 · 2.32 s 아직 보임(밀기 0.3 s 안) · 2.56 · 3.02 s 없음 · 4.14 s 두 번째 밀기(2.0 m/s)에 다시 · 기준 통과(12:4x 불합격 판 3.02 s 잔류 고쳐짐). 계단 W78 L5 30° 정답 · 명령 W57 전진 0.5 · 네 방향 W80 계단 옆걸음 왼: 로봇 한 대 · HUD · 지형 정상. 복원 · 끔 밀기는 scripter 화소 검사만 |
+| V4 | 영상 done = 영상 수 = 목록 수 · 전 프레임 문제 0 · 판 영수증 v3.4-D168 | scripter | scripter 영수증: 네 종류 raw · styled 전 프레임 문제 0 · v3.4-D168 · 같은 m750 SHA(`D:/mai-tmp/scripter/REPORT-EX41-video-gate-1104.md`) · lead 는 영수증 경로 확인 · 전 프레임 재검 안 함 |
+| V5 | 재생 목록 `s2_lab/_playlists/EX41-m단계-all|fail.m3u8` 가 예행 단계 끝에서 생김 | scripter | `C:/Users/AI-WS01/s2_lab/_playlists/EX41-m00750-all.m3u8` 6 편(lead 열어 봄) · fail 0 편. 밀기 세 편 파일 이름이 `styled.mp4` 로 D48 규칙과 다름 → scripter 에 전달 |
 
 ## 4. GPU 관리
 
@@ -64,7 +64,7 @@
 | G4 | 같은 종류 기술 실패 3 회 연속이면 그 종류를 막고 경보 | lead | lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_three_consecutive_failures_block_that_family_only |
 | G5 | 학습 상태 파일을 읽는 도구 전부 Windows 잠금 시험 통과 | lead | |
 | G6 | 점검 문구에 「지난 1 시간 산출 수 · 실패 수」 | lead | |
-| G7 | C층 216 칸(시드 [42, 43] · MAX_ATTEMPTS 2) 이 P4 로 깔림 | scripter | 계획 c9600daa |
+| G7 | C층 216 칸(시드 [42, 43] · MAX_ATTEMPTS 2) 이 P4 로 깔림 | scripter | 계획 c9600daa · 대기열 181 ~ 378 P4 · 15:0x 6 칸 끝 · 실패 0 · L3 분할 빈 마스크 원인 미확인(디스패처 3 회 막음으로 헛돌지 않음) |
 
 ## 5. 실제 예행 한 바퀴 (가짜 입력 금지)
 
