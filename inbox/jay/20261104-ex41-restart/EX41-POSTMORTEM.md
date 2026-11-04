@@ -2,7 +2,7 @@
 > 작성: 오흥재 · lead 세션 · 2026-11-04 13:4x
 > 근거: EX-41 실행 기록(`C:/Users/AI-WS01/s2_lab/ex41_main_20261103_195435/`) · lead 세션 기록 · EX41-REQUIREMENT-REGISTER · EX41-LAUNCH-GAPS · EX41-LAUNCH-FINAL-AUDIT · WORKLIST D60~D178 · RULES-HUB · CURRICULUM-GATES · EX41-250-LOG · FAILURE-LOG · #555 · 11/04 13:1x ~ 13:3x 독립 감사 셋(요구 대 구현 · 세션 기록 · 실행 기록)
 > 요지: EX-41(11/03 19:54 ~ 11/04 14:0x · m6000 에서 2000 회)은 출발 관문을 「Kit 예행 3 회 통과」 로 좁혀 띄웠다. 그 결과 측정 실패가 DR 램프를 750 회 멈췄고, 단계 끝 영상은 한 편도 나오지 않았으며, 고친 코드는 가지 셋에 흩어졌다. 팀장 결정 D178 로 이 실행은 비교군으로 남기고 같은 이름 EX-41 을 m6000 에서 다시 띄운다. 이 문서는 무엇을 놓쳤나 · 왜 · 무엇으로 막나를 모은다
-> 상태: v1 · 실행 기록 감사 결과는 같은 문서 7 절에 덧붙임
+> 상태: v1.1 · 세 갈래 감사 반영
 
 # EX-41 사후 점검
 
@@ -73,4 +73,21 @@
 
 ## 7. 실행 기록 감사 (덧붙임 자리)
 
-(실행 기록 전수 감사 결과가 나오면 여기에 덧붙인다.)
+실행 폴더 · 평가 폴더 · 감시기 · 대기열 · TensorBoard 를 모두 읽은 감사(11/04 13:3x). 알려진 11 건은 기록과 맞고, 새로 찾은 15 건 가운데 무거운 것만 옮긴다.
+
+| # | 새로 찾은 것 | 증거 | 영향 |
+|---|---|---|---|
+| N1 | **점수 감시기가 직렬이다.** 750 단계 끝 보조 평가가 GPU1 을 04:11 ~ 08:02(13851 s) 잡는 동안 model_1000(05:00) · model_1250(07:00) 은 시도조차 되지 않았다. 표식 충돌이 없었어도 1250 경계(07:00) 에 점수 1000 이 없어 DR 멈춤이 났을 것(추정). S1 의 공동 원인 | `score_ledger.jsonl` · update_01250.json · child seconds 13851 | DR 멈춤 공동 원인 · 구조 결함 |
+| N2 | 08:02 충돌의 맞은편: push250 의 6750 검사가 19:11Z 부터 GPU1 을 기다려 14051 s 걸렸고(평소 약 210 s) 08:02 에 표식을 잡음(추정). 감시기 stdout · stderr 0 byte 라 지켜볼 수 없었다 | `D:/mai-tmp/runner/ex41_push250/6750.json` elapsed_s | 관찰 불가 |
+| N3 | critic_mirror 관측이 실행 내내 한 번도 유효하지 않았다(9 회 모두 빈 값 · 무효). 1501 · 1751 · 2001 사유는 「sidecar_identity_mismatch」 로 적혔지만 실제 원인은 단계 끝 HOLD(기본 사유 문구 오해) | stage_log 51010 · 59159 · 67285 행 · `ex41_fixed.py:343-357` | 대칭 판단 입력 없음 |
+| N4 | 1501 에서 유지 게이트 2 회 공백(1250 「missing stand_min_passed」 · 1000 「stale」) · `two_consecutive_holds` 경보(operator_review_required) · 운영자 검토 기록 없음. stand_restore 자동 규칙도 1251 · 1501 에서 평가되지 않음 | stage_log 51006 ~ 51012 · alerts | 유지 판단 · 보상 자동 조정 기회 2 회 |
+| N5 | S2a 앞쪽 학습률이 바닥(1e-5)에 오래 붙음: 1 ~ 500 중 233 회, KL probe > 0.05 가 85 회. 600 이후는 100 회당 0 ~ 4 회 | TB `Loss/learning_rate` · `Loss/kl_probe/ppo_mean` | 학습(실효 갱신이 작았음 · 추정). 새 실행에서 첫 단계 KL · lr 을 경계 보고에 넣는다 |
+| N6 | 실행 중 approvals.yaml 이 바뀌었고(D174 critic_mirror, 21:08) 경계 기록의 config_commit 은 worktree HEAD 를 적어 02:17 전 프로세스의 실제 코드(2ee5dc00)와 다르다(추정) | `ex41_application.jsonl` · 파일 mtime | 출처 표기 |
+| N7 | 이어 가기로 651 ~ 690 은 세 번 · 691 ~ 700 은 두 번 기록되고 TB 파일 셋이 step 이 겹친다 | config_consumption 겹친 iteration 50 | 집계할 때 중복 제거 필요 |
+| N8 | 대기열 108 ~ 113 · 4 는 실행되지 않았는데 「끝」(lead 가 queue done 으로 닫음 · 취소 상태가 없다) | `D:/mai-tmp/gpu/queue.json` | 상태값이 사실과 다름 → 「취소」 상태 필요 |
+| N9 | 점수 나이를 n=1501 로 재서 정확히 500 지난 점수도 stale(501 > 500) · off-by-one 추정 | `ex41.py:427` | 이번엔 영향 없음 · 미확인 |
+| N10 | 평지 서기 센서 지표가 늘 비어 있음(fixed_l02 에 평지 열이 없어서 · 설계상 추정) | train_extra ex40_stand_sensor | 기록만 |
+
+**경계마다 제대로 돈 것(증거로 확인).** 경계 적용 기록 1 · 251 · … · 2001 모두 applied · 보상 가중치 불변 · 디스크 감시 8 경계 ok · DR 소비가 회마다 계획 곡선과 맞음(멈춤 구간 포함) · 밀기 vmax S2a 1.5 · S2b 1.65 · 단계 전환 751 · 지형 fixed_l02 · cap 2 · requested_actual_mismatch 0 · 지도 전환 p_off 0.1 · use_gt_frac 1.0 · 계단 시작 각도 분포 unclassified 0 · W86 지표 회마다 · 주기 점수 250 · 500 · 750 · 1500 · 1750 rc 0 · 유지 게이트 failed_cells 없음(m6000 대비 최대 −2) · TensorBoard 86 tag 에 NaN 없음 · 보상 30 % 넘는 하락 없음 · 이어 가기 optimizer · rng 복원.
+
+**정본 v2 에 더한 것.** N1 때문에 단계 끝 P2 · P3 는 250 경계 P1 과 같은 직렬 줄에 두지 않는다: P1 은 단계 끝 일이 GPU1 을 잡고 있어도 다음 단위 경계에서 먼저 들어가고, 단계 끝 일은 단위(칸 · 편)로 쪼개 그 사이에 비켜 준다. 단계 끝 묶음의 총 시간이 250 경계 간격(약 1 시간 55 분)보다 길면 출발 관문에서 막는다.
