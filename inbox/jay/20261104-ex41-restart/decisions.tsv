@@ -9,3 +9,4 @@ ts	phase	decision	why	evidence	result
 2026-11-04T23:33:57+09:00	sessions	scripter · analyst 창에 /compact 직접 입력 · 둘 다 압축 시작 확인	작업자가 자기 /compact 를 못 실행함	창 읽기 23:33	done
 2026-11-04T23:33:57+09:00	gate	9b3f4cce 가 운영 승인 파일 side bounds 를 바꿈 → 예행 뒤 revert · 출발 HEAD 에서 승인 · 경계 파일 diff 0 요구	출발 HEAD 에 예행 값이 남으면 운영 설정이 바뀜	git show 9b3f4cce	open
 2026-11-04T23:45:36+09:00	gpu1	dispatcher 옛 학습 속도 기록으로 GPU1 을 23:35~23:45 막음 → train_mean 고침 f4adebe6 · 시험 106 통과 · lead 가 띄운 dispatch 루프(75628) 재시작 → 76056 · 23:45 item 329 C층 실행	학습 표식 없을 때 옛 표본 무시	lead/ex41-dispatch-on-measure f4adebe6 · D:/mai-tmp/gpu/dispatch.stdout.new.log	GPU1 재개
+2026-11-04T23:55:47+09:00	stage0	출발 조건 충족 판단 · 띄움 23:55:22 HEAD 2b01df9a · 사본 잠금 656/656	P1 첫 시도 성공 5/5 · 공백 처리 · 단계 끝 등록 · W72 실행 중 적용 · 이어 가기(a3092af4 Kit) · 알림 경로(18:18 실제 도착) · 정의 안 된 이름 0	EX41-RELAUNCH-GATE R1 R2 R3 R5 R6 · ex41_launch.txt	open

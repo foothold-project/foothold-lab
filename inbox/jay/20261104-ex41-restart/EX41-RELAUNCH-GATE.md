@@ -31,7 +31,7 @@
 
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
-| M1 | 측정 실패(rc≠0 · 표식 충돌 · 결과 없음) → 같은 회차 자동 재측정 · 영수증 RETRY · W72 증거에 안 들어감 · DR 멈춤 한도 안 씀 | runner | |
+| M1 | 측정 실패(rc≠0 · 표식 충돌 · 결과 없음) → 같은 회차 자동 재측정 · 영수증 RETRY · W72 증거에 안 들어감 · DR 멈춤 한도 안 씀 | runner |  23:5x lead 확인: `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_232543` model_1 공백 처리 · 결과 미사용 · 다음 회차 진행 · 재측정 상한 3(ac181550) |
 | M2 | GPU1 표식이 잡혀 있으면 기다렸다 띄움(실패 금지) | runner | |
 | M3 | 250 경계 평가 트리거가 N 저장 직후(N+50 아님) | runner | |
 | M4 | 단계 끝 일이 P1 을 막지 않음: 단위로 쪼개 P1 이 들어오면 비켜 줌 · 단계 끝 총 시간 실측 ≤ 250 경계 간격 | runner · lead | |
@@ -71,10 +71,10 @@
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
 | R1 | 운영 출력 자리 · 실제 승인 파일 · 실제 argparse · 단계 길이만 줄인 실제 Kit 실행으로 모든 단계 경계를 지남 | runner |  일부(22:0x lead 직접 확인): ex41-measure-fix e44e8830(source_dirty.diff 0 바이트) 실제 Kit 단계 축소 예행 `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_214336` · model_1~12 저장 · `ex41_application.jsonl` 에서 0 S2a(DR 0.5) → 3 S2b(0.5) → 5 S2c(0.65) → 7 S2d(0.8) → 9 S2e(1.0) → 11 T0′(1.0) → 13 T0′ 모두 applied. 남음: 같은 판의 P1 평가가 model_2 에서 map_steps=1 로 재측정 세 번 실패(R2 · M1 미통과 · bf3687c4 에서 고침), D181 두 경우 Kit 완주 미확인 |
-| R2 | 250 경계 P1 자동 평가 · 측정 실패를 일부러 넣어 자동 재측정이 증거로 들어가는 것 확인 | runner | |
-| R3 | 단계 끝 자동 등록 → P2 숫자 → P3 영상 넷 → 재생 목록 | runner · scripter | |
+| R2 | 250 경계 P1 자동 평가 · 측정 실패를 일부러 넣어 자동 재측정이 증거로 들어가는 것 확인 | runner |  23:5x lead 직접 확인 · 실제 Kit 단계 축소 예행 `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_232543`(HEAD 9b3f4cce · 되돌림 2b01df9a): P1 평가 m2 · m3 · m4 · m5 · m6 다섯 모두 첫 시도 완료(`watch_state.json` done 5 · attempts 에 model_1 만), 실패 주입 model_1 은 4 회 시도 = 재측정 3 회 뒤 `measurement_gaps/model_1_d5cc56735107.json`(224727 판 m2 · m4 도 같음 · 학습 계속) |
+| R3 | 단계 끝 자동 등록 → P2 숫자 → P3 영상 넷 → 재생 목록 | runner · scripter |  23:5x lead 확인: `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_232543` 단계 끝마다 실제 대기열 `D:/mai-tmp/gpu/queue.json` 에 REHEARSAL 표시 P2 axis_v2 · P3 a_push_video 등록(item 379~388) · 중복 8 건 취소 · 387 · 388 은 실행 확인용으로 남김. 운영 전체 목록(P2 셋 · P3 W57 39 + W80 12)은 CPU 시험만(실제 gpu_jobs 로 55 건 등록) |
 | R4 | C층(P4) 가 P1 이 오자 비켜 줌 | lead | |
-| R5 | 학습 중 설정 바꾸기(critic_mirror · 보상 한 칸 · 명령 몫 한 칸)를 W72 로 적용하고 되읽음 | runner | |
+| R5 | 학습 중 설정 바꾸기(critic_mirror · 보상 한 칸 · 명령 몫 한 칸)를 W72 로 적용하고 되읽음 | runner |  23:5x lead 확인: `D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_232543` 실행 중 W72 커밋(9b3f4cce) 뒤 회차 4 경계에서 `ex41_application.jsonl` side 몫 0.07/0.07 → 0.08/0.06 applied · 학습 · 점수 감시 계속(model_2~6 평가 완료) · 운영 승인 · 경계 파일은 revert 로 원복(2b01df9a) · c499593e 대비 차이는 0.0 인 command_share_bias 손잡이 다섯뿐 |
 | R6 | 이어 가기: 실제 저장본에서 이어 가 저장 한 번 통과 · 코드 비교 기준 다시 잡힘 · 감시기 재기동 · **끊기 직전과 이어 간 직후가 같음을 출력으로(팀장 17:3x): 정책 · critic 가중치 · optimizer 상태 · 학습률(KL 적응 현재 값) · 관측 · 보상 정규화 통계 · 난수 · 커리큘럼 시계(elapsed · pause_used · 단계 · DR · 밀기) · W72 적용 상태 · 명령 몫 · W86 가중치 · 지도 전환 난수열 · use_gt_frac** | runner |  일부(19:1x lead 직접 확인): ex41-measure-fix a3092af4(origin 일치) 실제 Kit · fresh 3072 env 10/10 rc 0(`D:/mai-tmp/runner/s2_lab/ex41_rehearsal_20261104_185400`, model_10 sha 06c18638) → 새 프로세스 재개 11~12 rc 0. 재개 로그 `ex41-r6-kit-resume-20261104_190300.log` 의 EX41_RESUME_STATE_READBACK 에서 정책 · critic · Adam · 학습률(1.71e-4, 바닥 위) · 정규화 · 난수 · 커리큘럼 시계 · W72 경계와 명령 몫 · W86 · 지도 난수와 use_gt_frac 아홉 묶음 matched, segment 0→1 · Traceback 0. 앞서 Kit 이 copy · math 미임포트와 같은 회차 저장 자기 참조 셋을 잡았고 a3092af4 에서 고침(pyflakes 미정의 이름 0). 남음: 정규화 running_buffer_count 0 이 설정상 맞는지 · 감시기 재기동 · 코드 비교 기준 재설정은 미확인 |
 | R7 | 결정 D 마다 런타임 호출 증거(자동 규칙 · 손잡이 · 판정 칸) | runner · lead | |
 
