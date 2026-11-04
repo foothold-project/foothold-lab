@@ -13,3 +13,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T00:06:59+09:00	launch	EX-41 운영 시작 확인 · 00:05 20/6000 회 · 26.6 s/회 · 시작 되읽기 verified · 부모 d5e9ec40 · 운영 점수 감시 68180	D179 D4	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522 · train_start_status.json	running
 2026-11-05T00:06:59+09:00	telegram	실수: outbox 쓰기 실패를 안 보고 보내 옛 경보를 한 번 다시 보냄 → 바로 정정 메시지	보내기 전 outbox 첫 줄을 읽고 보낸다	C:/ssd-cleanup-logs/tg-outbox.txt	corrected
 2026-11-05T00:06:59+09:00	gpu1	예행 점수 감시 2 개(52756 · 61520) 남음 → runner 에 정리 지시	운영 P1 표식 충돌 막기	runner 창 00:06	open
+2026-11-05T00:13:29+09:00	gpu1	예행 점수 감시 52756 · 61520 사라짐 확인 · 남은 감시는 운영 68180(부모 94296) 하나	runner 정리	Win32_Process 00:13	done
