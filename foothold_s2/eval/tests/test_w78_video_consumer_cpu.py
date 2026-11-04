@@ -1,16 +1,19 @@
 """Known-input checks for the stage-end request and CPU recorder preflight."""
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
 import pytest
 
 from foothold_s2.eval import w78_video_consumer as consumer
+from foothold_s2.eval import a_push_video
 from foothold_s2.eval.c_layer_queue import recorder_child_env
 from foothold_s2.eval.video25 import record_c_layer
 
@@ -55,6 +58,13 @@ def clean_ex41_source(tmp_path: Path) -> Path:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value, encoding="utf-8")
+    source_recorder = root / "foothold_s2/eval/video25/record_c_layer.py"
+    source_recorder.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(record_c_layer.__file__, source_recorder)
+    shutil.copyfile(Path(record_c_layer.__file__).with_name("compose_25e_v2style10.py"),
+                    source_recorder.with_name("compose_25e_v2style10.py"))
+    shutil.copyfile(Path(record_c_layer.__file__).parent.parent / "video_style.py",
+                    root / "foothold_s2/eval/video_style.py")
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     subprocess.run(["git", "-C", str(root), "add", "."], check=True)
     subprocess.run(["git", "-C", str(root), "-c", "user.name=CPU test",
@@ -148,7 +158,7 @@ def test_w78_source_requires_shared_pose_loader(tmp_path):
     subprocess.run(["git", "-C", str(root), "-c", "user.name=CPU test",
                     "-c", "user.email=cpu@example.invalid", "commit", "-qm", "remove loader"],
                    check=True)
-    recorder = Path(record_c_layer.__file__)
+    recorder = root / "foothold_s2/eval/video25/record_c_layer.py"
     composer = recorder.with_name("compose_25e_v2style10.py")
     with pytest.raises(ValueError, match="required module"):
         consumer.validate_sources(root, recorder, composer)
@@ -157,7 +167,7 @@ def test_w78_source_requires_shared_pose_loader(tmp_path):
 def test_clean_ex41_recorder_plan_only(tmp_path):
     root = clean_ex41_source(tmp_path)
     path, request = request_fixture(tmp_path)
-    recorder = Path(record_c_layer.__file__)
+    recorder = root / "foothold_s2/eval/video25/record_c_layer.py"
     composer = recorder.with_name("compose_25e_v2style10.py")
     source = consumer.validate_sources(root, recorder, composer)
     argv = consumer.recorder_argv(Path(sys.executable), recorder,
@@ -170,6 +180,40 @@ def test_clean_ex41_recorder_plan_only(tmp_path):
     assert preview["target_frames"] == 150
     assert preview["spec"]["combination_id"] == consumer.COMBINATIONS[0]
     assert preview["checkpoint_profile"]["checkpoint_sha256"] == request["checkpoint_sha256"]
+
+
+def test_a_push_consumer_and_sb_recorder_real_argparse_plan_only(tmp_path):
+    root = clean_ex41_source(tmp_path)
+    recorder = root / "foothold_s2/eval/video25/record_c_layer.py"
+    composer = recorder.with_name("compose_25e_v2style10.py")
+    checkpoint = tmp_path / "model_750.pt"
+    checkpoint.write_bytes(b"completed EX41 checkpoint fixture")
+    cmd = [sys.executable, "-m", "foothold_s2.eval.a_push_video",
+           "--source-root", str(root), "--checkpoint", str(checkpoint),
+           "--recorder", str(recorder), "--composer", str(composer),
+           "--python", sys.executable, "--gpu-jobs-config", str(tmp_path / "jobs.json"),
+           "--c-layer-lock", str(tmp_path / "c_layer.lock"),
+           "--a-layer-marker", str(tmp_path / "a_layer.busy"),
+           "--training-marker", str(tmp_path / "training.busy"),
+           "--out", str(tmp_path / "out"), "--device", "cuda:1", "--plan-only"]
+    planned = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", check=False)
+    assert planned.returncode == 0, planned.stderr[-1000:]
+    spec = json.loads(planned.stdout)["specs"]["eval_gt"]
+    args = argparse.Namespace(kind="pyramid_stairs", level=0, col=0, env_id=0, seed=42,
+                              push_seed=42, iteration=750, cadence="stage_end", python=Path(sys.executable),
+                              recorder=recorder, checkpoint=checkpoint, composer=composer)
+    argv, _ = a_push_video.recorder_argv(args, "eval_gt",
+                                         a_push_video.validate_source(root, recorder, composer, checkpoint),
+                                         tmp_path / "attempt")
+    preview = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
+                             encoding="utf-8", check=False)
+    assert preview.returncode == 0, preview.stderr[-1000:]
+    assert json.loads(preview.stdout)["spec"]["push_group_id"] == spec["push_group_id"]
+    old = root / "foothold_s2/eval/record_sol23f.py"
+    bad = subprocess.run([*cmd[:cmd.index("--recorder") + 1], str(old),
+                          *cmd[cmd.index("--recorder") + 2:]], capture_output=True,
+                         text=True, encoding="utf-8", check=False)
+    assert bad.returncode != 0 and "SB-capable" in bad.stderr
 
 
 def test_w78_imports_pinned_ex41_package(tmp_path):

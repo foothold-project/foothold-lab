@@ -159,7 +159,7 @@ def test_zero_exit_with_w78_hold_error_makes_bundle_hold_and_nonzero(tmp_path):
 
 
 def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
-    rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG))
+    rows=commands(Path('model_250.pt'),tmp_path,config(watch.DEFAULT_CONFIG), gpu0_training_active=False)
     assert [r['name'] for r in rows]==[
         'map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
         'axis_v2','w78_v2','push_ladder','a_push_video']
@@ -170,6 +170,9 @@ def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
     assert '--axis-v2' in rows[4]['argv']
     assert '--a-layer-marker' in rows[-1]['argv']
     assert '--fixed-level' not in rows[-1]['argv']
+    assert Path(rows[-1]['argv'][rows[-1]['argv'].index('--recorder') + 1]).parts[-2:] == ('video25', 'record_c_layer.py')
+    assert '--headless' not in rows[-1]['argv']
+    assert not any(value.startswith('--kit_args') for value in rows[-1]['argv'])
 
 
 def test_hidden_child_actual_stdin_devnull_and_separate_streams(tmp_path,monkeypatch):

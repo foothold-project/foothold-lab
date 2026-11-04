@@ -52,7 +52,9 @@ def validate_source(root: Path, recorder: Path, composer: Path, checkpoint: Path
     composer = composer.resolve(strict=True)
     if not recorder.is_relative_to(root) or not composer.is_relative_to(root):
         raise ValueError("A push recorder and composer must belong to the pinned source root")
-    source = shared.validate_sources(root, root / "foothold_s2/eval/record_sol23f.py", composer)
+    if recorder != root / "foothold_s2/eval/video25/record_c_layer.py":
+        raise ValueError("A push requires the SB-capable record_c_layer recorder")
+    source = shared.validate_sources(root, recorder, composer)
     if composer_version(composer) != VIDEO_RULE_VERSION:
         raise ValueError("A push composer rule differs")
     if not checkpoint.is_file():

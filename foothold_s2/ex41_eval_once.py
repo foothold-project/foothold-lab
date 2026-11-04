@@ -73,7 +73,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
                   '--task', 'FootholdS2-Go2-S2-SB-v0', '--seed', str(cfg['eval_seed'])]))
     rows.append(('a_push_video', 'foothold_s2.eval.a_push_video', [
         '--source-root', str(ROOT), '--checkpoint', str(checkpoint),
-        '--recorder', str(ROOT / 'foothold_s2/eval/record_sol23f.py'),
+        '--recorder', str(ROOT / 'foothold_s2/eval/video25/record_c_layer.py'),
         '--composer', str(ROOT / 'foothold_s2/eval/video25/compose_25e_v2style10.py'),
         '--python', str(ISAAC_PYTHON),
         '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
@@ -91,12 +91,18 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
     if selected is None:
         raise ValueError(f'unknown EX41 evaluation scope: {scope}')
     rows = [row for row in rows if row[0] in selected]
-    return [{'name': name, 'device': (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
-             'argv': [str(ISAAC_PYTHON), '-m', module, *args,
-                      '--out', str(out/name), '--headless', '--device',
-                      (push_ladder_device if name == 'push_ladder' else 'cuda:1'),
-                      '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']}
-            for name, module, args in rows]
+    result = []
+    for name, module, args in rows:
+        device = push_ladder_device if name == 'push_ladder' else 'cuda:1'
+        # The A-layer coordinator owns Kit flags for evaluation modules. The
+        # push consumer owns its recorder's AppLauncher flags and does not
+        # accept evaluator --headless or --kit_args itself.
+        kit = ([] if name == 'a_push_video' else [
+            '--headless', '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache'])
+        result.append({'name': name, 'device': device,
+                       'argv': [str(ISAAC_PYTHON), '-m', module, *args,
+                                '--out', str(out/name), '--device', device, *kit]})
+    return result
 
 
 def hidden_child(argv, folder, *, env=None, cwd=ROOT):
