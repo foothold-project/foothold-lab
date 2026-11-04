@@ -256,7 +256,10 @@ def deliver_pending_alerts(run_dir: str | Path, *, orchestration_sender=None,
         ):
             if receipt["channels"].get(channel, {}).get("state") == "sent":
                 continue
-            if sender is None and not _external_alert_delivery_enabled():
+            # The opt-in applies to the delivery boundary itself, including
+            # injected senders. Tests may inject fakes, but cannot accidentally
+            # turn a real sender into an external side effect.
+            if not _external_alert_delivery_enabled():
                 receipt["channels"][channel] = {
                     "state": "suppressed",
                     "reason": "external_delivery_not_enabled",

@@ -55,7 +55,8 @@ def test_two_stage_end_sidecars_drive_p3_observation_only(tmp_path,ratios,expect
     assert not r.effective['critic_mirror'] and not consumer.ex41_critic_mirror
 
 
-def test_p3_sidecar_report_is_linked_and_delivered_through_existing_channels(tmp_path):
+def test_p3_sidecar_report_is_linked_and_delivered_through_existing_channels(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     from foothold_s2.ex41_ops import deliver_pending_alerts
     run=tmp_path/'run';run.mkdir();root=tmp_path/'sidecars';root.mkdir()
     _stage_end_report(run,root,750,.5)

@@ -30,7 +30,8 @@ class FakeRuntime:
         return 0.5
 
 
-def test_end_by_alert_uses_existing_receipts_and_deduplicated_delivery(tmp_path):
+def test_end_by_alert_uses_existing_receipts_and_deduplicated_delivery(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     row = record_deadline_alert(tmp_path, 250, {
         "end_by": "2026-11-06T00:00:00+00:00",
         "action": "warning_only", "training_stop_on_deadline": False,
@@ -135,7 +136,8 @@ def test_boundary_does_not_fallback_to_stale_use_gt_fraction(tmp_path):
     assert report["use_gt_frac_t0_prime_le_0p3"] is None
 
 
-def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_delivered(tmp_path):
+def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_delivered(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     sent = {'orca': [], 'telegram': []}
     def deliver(run):
         return deliver_pending_alerts(
@@ -214,7 +216,8 @@ def test_reporting_failure_is_alerted_but_guard_removed_counterexample_raises(tm
     assert alerts[-1]['training_continues'] is True
 
 
-def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path):
+def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     delivered = {"orchestration": [], "telegram": []}
     def deliver(run):
         return deliver_pending_alerts(
@@ -247,7 +250,8 @@ def test_rejected_boundary_and_automatic_change_have_local_alert_receipts(tmp_pa
     assert {row["kind"] for row in alerts} == {"boundary_or_approval_rejected", "automatic_adjustment"}
 
 
-def test_alerts_reach_both_channels_once_and_retry_only_failed_channel(tmp_path):
+def test_alerts_reach_both_channels_once_and_retry_only_failed_channel(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     run = tmp_path / "run"
     sent = {"orchestration": [], "telegram": []}
     def orca(subject, body):
@@ -267,7 +271,8 @@ def test_alerts_reach_both_channels_once_and_retry_only_failed_channel(tmp_path)
     assert len(sent["orchestration"]) == 1 and len(sent["telegram"]) == 2
 
 
-def test_fatal_alert_has_durable_receipt_without_printing_sender_data(tmp_path):
+def test_fatal_alert_has_durable_receipt_without_printing_sender_data(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     run = tmp_path / "run"
     row = record_failure_alert(run, "fatal_training_fault", 750, {"fault": "bad update"},
                                deliver=False)
@@ -315,7 +320,13 @@ def test_delivery_layer_suppresses_default_senders_without_opt_in(tmp_path, monk
     run = tmp_path / "run"
     record_failure_alert(run, "nonzero_process_exit", 0, {"rc": 1}, deliver=False)
     monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "0")
-    receipts = deliver_pending_alerts(run)
+    attempted = []
+    receipts = deliver_pending_alerts(
+        run,
+        orchestration_sender=lambda *_: attempted.append("orca") or True,
+        telegram_sender=lambda *_: attempted.append("telegram") or True,
+    )
+    assert attempted == []
     assert len(receipts) == 1
     assert receipts[0]["channels"] == {
         "orchestration": {"state": "suppressed", "reason": "external_delivery_not_enabled"},

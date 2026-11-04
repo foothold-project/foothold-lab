@@ -29,4 +29,4 @@
 - `_out/reports/REPORT-runner-EX41-measure-fix-1104.md`
 
 The initial implementation files are preserved in the preceding commit `a48ac12bb6e88c3ba546c61cc013433976ddb45a`.
-- Alert 재발 원인 확인: 2026-11-04 18:22 · 18:40 예행과 20:28 재시도 폴더마다 c37a2f9c…가 새 행으로 생성되고 별도 영수증의 Orca · Telegram 모두 sent였음; 실패 이벤트 ID를 실행 폴더별로 나누고 rehearsal 실패는 local_only, pytest 기본 발송은 닫힘으로 변경함; ops · startup 통합 시험 55 passed, 앞선 ops · P3 묶음의 mirror 시험 1건은 단독 재현에서도 실패해 별도 기존 막음으로 남음.
+- 알림 재전송 조사: 18:22 · 18:40 · 20:28 각 rehearsal run에서 c37a2f9c…가 재생성되어 별도 영수증의 Orca · Telegram 모두 sent였음; 실행 경로를 포함한 이벤트 ID와 rehearsal local_only를 유지하고 전달 계층 자체에서 EX41_ALLOW_EXTERNAL_ALERT_DELIVERY=1 없이는 기본·주입 sender 모두 억제하도록 보강, pytest 전역 기본값은 0; 답 아는 가짜 sender 호출 차단 포함 ops · P3 CPU 시험 32 passed (15.33s).
