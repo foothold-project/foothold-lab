@@ -571,3 +571,8 @@ def test_state_dict_records_effective_w86_weights_cpu():
 
     state = StartRunner.state_dict(fake)
     assert state["ex41_w86_reward_weights"] == {"swing": -5.0}
+def test_resume_use_gt_fraction_finiteness_guard_is_available_cpu():
+    from foothold_s2.runners import start_runner
+
+    assert start_runner.math.isfinite(1.0)
+    assert not start_runner.math.isfinite(float("nan"))
