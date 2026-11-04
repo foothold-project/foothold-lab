@@ -661,7 +661,9 @@ def main(env_cfg, agent_cfg):
                                if EX41_REHEARSAL and resume_path is None else None),
             disk_guard=EX41_DISK_RECEIPT,
             startup_smoke_updates=(args_cli.ex41_startup_smoke_updates
-                                   if EX41_STARTUP_SMOKE else None))
+                                   if EX41_STARTUP_SMOKE else None),
+            rehearsal_stage_updates=(EX41_STAGE_REHEARSAL
+                                     if EX41_REHEARSAL and resume_path is None else None))
         if EX41_STAGE_REHEARSAL is not None:
             train_cfg["max_iterations"] = sum(EX41_STAGE_REHEARSAL) + 1
             train_cfg["save_interval"] = 1

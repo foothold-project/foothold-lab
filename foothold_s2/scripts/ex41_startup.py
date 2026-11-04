@@ -744,7 +744,8 @@ def install_end_by_warning_watch(runtime: Any, run_dir: str | Path, plan,
 def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str | Path,
                              rehearsal_updates: int | None = None,
                              disk_guard: dict[str, Any] | None = None,
-                             startup_smoke_updates: int | None = None) -> dict[str, Any]:
+                             startup_smoke_updates: int | None = None,
+                             rehearsal_stage_updates: tuple[int, ...] | None = None) -> dict[str, Any]:
     """Set mandatory transfer flags and the parent reference in a fresh cfg."""
     cfg = dict(train_cfg)
     parent_agent_path = Path(parent_path).resolve(strict=True).parent / "params" / "agent.yaml"
@@ -768,19 +769,32 @@ def configure_ex41_train_cfg(train_cfg: dict[str, Any], plan, parent_path: str |
     if rehearsal_updates is not None and startup_smoke_updates is not None:
         raise ValueError("EX-41 rehearsal and startup smoke limits are mutually exclusive")
     if startup_smoke_updates is not None:
+        if rehearsal_stage_updates is not None:
+            raise ValueError("EX-41 stage table is rehearsal-only, not startup smoke")
         if type(startup_smoke_updates) is not int or startup_smoke_updates != 10:
             raise ValueError("EX-41 startup smoke is fixed to exactly 10 updates")
         cfg["max_iterations"] = startup_smoke_updates
         cfg["save_interval"] = startup_smoke_updates
         cfg["ex41_startup_smoke"] = True
     elif rehearsal_updates is None:
+        if rehearsal_stage_updates is not None:
+            raise ValueError("EX-41 stage table requires bounded rehearsal updates")
         # The runner uses zero-based iteration indices; one extra loop entry is
         # needed to observe the runtime's terminal completed-update boundary.
         cfg["max_iterations"] = 6501
     else:
-        if type(rehearsal_updates) is not int or rehearsal_updates != 10:
-            raise ValueError("EX-41 rehearsal is fixed to exactly 10 updates")
-        cfg["max_iterations"] = rehearsal_updates
+        if rehearsal_stage_updates is None:
+            if type(rehearsal_updates) is not int or rehearsal_updates != 10:
+                raise ValueError("EX-41 rehearsal is fixed to exactly 10 updates")
+            cfg["max_iterations"] = rehearsal_updates
+        else:
+            rows = tuple(rehearsal_stage_updates)
+            if (len(rows) != 6 or any(type(value) is not int or not 1 <= value <= 5
+                                      for value in rows)
+                    or sum(rows) > 30 or type(rehearsal_updates) is not int
+                    or rehearsal_updates != sum(rows)):
+                raise ValueError("EX-41 rehearsal stage table differs from its bounded update count")
+            cfg["max_iterations"] = sum(rows) + 1
         cfg["save_interval"] = 1
         cfg["ex41_rehearsal"] = True
     if disk_guard is not None:

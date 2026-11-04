@@ -264,6 +264,7 @@ def test_m10_readback_warning_is_durable_and_uses_alert_delivery_receipt(tmp_pat
     from foothold_s2 import ex41_ops
 
     sent = []
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
     monkeypatch.setattr(ex41_ops, "_send_orchestration",
                         lambda subject, body: sent.append((subject, body)) or True)
     monkeypatch.setattr(ex41_ops, "_send_telegram", lambda _body: True)

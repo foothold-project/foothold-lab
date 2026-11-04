@@ -434,6 +434,28 @@ def test_rehearsal_config_is_bounded_and_uses_isolated_output(tmp_path):
         validate_rehearsal_request(10, output, "cuda:0", True)
 
 
+def test_configure_train_cfg_accepts_short_stage_table_only_for_matching_rehearsal(tmp_path):
+    plan = load_fixed_plan(TABLE)
+    parent = tmp_path / "model_6000.pt"
+    parent.write_bytes(b"known parent")
+    params = tmp_path / "params"
+    params.mkdir()
+    (params / "agent.yaml").write_text("perception:\n  p_map_off: 0.1\n", encoding="utf-8")
+    rows = (2, 2, 2, 2, 2, 2)
+    configured = configure_ex41_train_cfg(
+        {"ex41_w86_required": True}, plan, parent,
+        rehearsal_updates=12, rehearsal_stage_updates=rows)
+    assert configured["max_iterations"] == 13
+    assert configured["save_interval"] == 1
+    assert configured["ex41_rehearsal"] is True
+    with pytest.raises(ValueError, match="stage table differs"):
+        configure_ex41_train_cfg({"ex41_w86_required": True}, plan, parent,
+                                 rehearsal_updates=11, rehearsal_stage_updates=rows)
+    with pytest.raises(ValueError, match="stage table is rehearsal-only"):
+        configure_ex41_train_cfg({"ex41_w86_required": True}, plan, parent,
+                                 startup_smoke_updates=10, rehearsal_stage_updates=rows)
+
+
 def test_production_path_smoke_is_bounded_but_keeps_production_authorization_false(tmp_path):
     plan = load_fixed_plan(TABLE)
     parent = tmp_path / "model_6000.pt"
