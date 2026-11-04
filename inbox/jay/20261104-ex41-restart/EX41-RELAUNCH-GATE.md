@@ -58,10 +58,10 @@
 
 | # | 행 | 담당 | 증거 |
 |---|---|---|---|
-| G1 | 디스패처 순위 P1 250 경계 > P2 단계 끝 평가 > P3 단계 끝 영상 > P4 C층 · P4 상시 깔림 · 위 순위가 오면 다음 단위부터 비켜 줌 | lead | |
-| G2 | 「대기 · 승인」 글자 판별 제거(`gpu_jobs.py:637-639`) · 「취소」 상태 추가 | lead | |
+| G1 | 디스패처 순위 P1 250 경계 > P2 단계 끝 평가 > P3 단계 끝 영상 > P4 C층 · P4 상시 깔림 · 위 순위가 오면 다음 단위부터 비켜 줌 · 학습 여부는 TRAINING_BUSY_GPU0 표식 + 실제 PID(없음 = GPU1 자유 · 죽은 PID = 재기동용 보류) | lead | 일부: lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_no_training_marker_frees_gpu1_dead_marker_holds_it. 남음: runner 등록이 이 대기열 하나로(W28 금지) · 예행 R4 에서 P1 이 오자 P4 가 비켜 주는 실제 기록 |
+| G2 | 「대기 · 승인」 글자 판별 제거(`gpu_jobs.py:637-639`) · 「취소」 상태 추가 | lead | lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_condition_words_alone_never_gate · test_cancel_marks_never_run_items_and_refuses_running |
 | G3 | 띄우기 전 출력 폴더 · EULA · 대상 사본 도구 · 인자 검사(dry-parse) | lead | 일부 a11d8d43 · 97faa5cb |
-| G4 | 같은 종류 기술 실패 3 회 연속이면 그 종류를 막고 경보 | lead | |
+| G4 | 같은 종류 기술 실패 3 회 연속이면 그 종류를 막고 경보 | lead | lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_three_consecutive_failures_block_that_family_only |
 | G5 | 학습 상태 파일을 읽는 도구 전부 Windows 잠금 시험 통과 | lead | |
 | G6 | 점검 문구에 「지난 1 시간 산출 수 · 실패 수」 | lead | |
 | G7 | C층 216 칸(시드 [42, 43] · MAX_ATTEMPTS 2) 이 P4 로 깔림 | scripter | 계획 c9600daa |
