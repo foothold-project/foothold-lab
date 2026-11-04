@@ -76,6 +76,9 @@ def test_manual_mirror_needs_new_committed_approval_before_setter(tmp_path):
     r,consumer=fixture(tmp_path);r.on_update_start(1)
     snapshot=w72.read_committed_pair(r.plan.boundary_path,r.plan.approvals_path)
     snapshot['config']['values']['critic_mirror']=True
+    # The pinned approvals now include this field; remove it to model the
+    # intended missing-approval counterexample before adding a fresh approval.
+    snapshot['approvals']['fields'].pop('critic_mirror', None)
     commit_inputs(r,snapshot);r.on_update_start(251)
     assert not consumer.ex41_critic_mirror and not r.effective['critic_mirror']
     snapshot['approvals']['fields']['critic_mirror']={'decision_id':'CPU-MANUAL-ONLY','choices':[False,True]}
