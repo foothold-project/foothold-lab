@@ -52,6 +52,7 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
               gpu_jobs_tool=gpu_jobs_tool, gpu_jobs_config=gpu_jobs_config)
     plan = planner.build_plan(**kw)
     assert plan["iteration"] == 6000 and len(plan["jobs"]) == 216
+    assert all(row["seeds"] == [42, 43] for row in plan["jobs"])
     assert queue.validate_plan(plan)["missing"] == 0
     assert all("-m6000-" in row["label"] for row in plan["jobs"])
     assert {row["map_mode"] for row in plan["jobs"]} == set(queue.MAP_MODES)
