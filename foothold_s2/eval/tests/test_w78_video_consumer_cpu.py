@@ -18,6 +18,14 @@ from foothold_s2.eval.c_layer_queue import recorder_child_env
 from foothold_s2.eval.video25 import record_c_layer
 
 
+def test_nonzero_angle_can_be_selected_without_reordering_request():
+    selected = "L5_a030_eval_gt_stairs_fwd"
+    assert consumer.selected_combinations(None) == consumer.COMBINATIONS
+    assert consumer.selected_combinations(selected) == (selected,)
+    with pytest.raises(ValueError, match="outside the twelve-cell"):
+        consumer.selected_combinations("L5_a030_bad_stairs_fwd")
+
+
 def request_fixture(tmp_path: Path) -> tuple[Path, dict]:
     run = tmp_path / "run"
     folder = run / "w78_video_requests"

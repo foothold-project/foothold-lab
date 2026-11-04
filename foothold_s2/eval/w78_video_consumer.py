@@ -31,6 +31,14 @@ SHA = re.compile(r"[0-9a-f]{64}\Z")
 COMBO = re.compile(r"L5_a(000|030|060|090)_(eval_gt|eval_pred|probe_prop_only)_stairs_fwd\Z")
 
 
+def selected_combinations(selected: str | None) -> tuple[str, ...]:
+    if selected is None:
+        return COMBINATIONS
+    if selected not in COMBINATIONS:
+        raise ValueError("W78 requested combination is outside the twelve-cell contract")
+    return (selected,)
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -267,7 +275,7 @@ def run_one(args: argparse.Namespace) -> dict:
         os.close(descriptor)
         receipts = out / "receipts" / request["request_id"]
         receipts.mkdir(parents=True, exist_ok=True)
-        for combo in COMBINATIONS:
+        for combo in selected_combinations(getattr(args, "combination_id", None)):
             receipt_path = receipts / (combo + ".json")
             if receipt_path.exists():
                 receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
@@ -348,6 +356,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gpu-jobs-config", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:1",), default="cuda:1")
+    parser.add_argument("--combination-id", choices=COMBINATIONS,
+                        help="capture one declared combination for a bounded Kit check")
     parser.add_argument("--plan-only", action="store_true")
     args = parser.parse_args(argv)
     result = run_one(args)
