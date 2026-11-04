@@ -23,7 +23,7 @@ from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, re
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 ROLES = ("success", "fail")
-MAX_ATTEMPTS = 4
+MAX_ATTEMPTS = 2
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -140,7 +140,7 @@ def validate_plan(plan: dict) -> dict:
         if (not isinstance(seeds, list) or not 1 <= len(seeds) <= MAX_ATTEMPTS
                 or any(type(seed) is not int or seed < 0 for seed in seeds)
                 or len(set(seeds)) != len(seeds)):
-            raise ValueError("one to four distinct predeclared seeds required per cell")
+            raise ValueError("one to two distinct predeclared seeds required per cell")
         if type(row.get("env_id")) is not int or row["env_id"] < 0:
             raise ValueError("invalid selected env")
         if not isinstance(row.get("policy"), dict) or row["policy"].get("map_mode") != key[2]:

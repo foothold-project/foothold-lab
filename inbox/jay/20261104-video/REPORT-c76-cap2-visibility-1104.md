@@ -17,7 +17,7 @@
 - isaac311 CPU 시험 38 PASS. 비0 env12·선택 루트 결손·다른 루트 노출 반례와 저장소 밖 작업 디렉터리에서 실제 자식 Python import를 포함한다. 수정 코드의 고정 사본은 `D:\mai-wt\foothold-lab\c76-cap2-visible-4bde9787`이며 변경 0건이다.
 - 새 216칸 계획 `D:\mai-tmp\scripter\c76_cap2_visible_v2\plan.json`, SHA256 `6936f3e4598b85b2a87576d174a4e7d248b3cad5439b9da05054fd0fc33727ba`. 같은 EX-40 m6000 저장본 SHA `d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5`를 쓴다.
 - GPU1 대기열 107번의 `balance_beams_L0_eval_gt`, env12 실제 촬영은 종료 코드 0. 기록 450프레임, 원본·합성 전 프레임 검사 각각 PASS. 선택 로봇의 첫 가시성 `invisible` → `inherited`, 전체 프레임 선택 로봇 픽셀 최소 32,922 · 최대 49,059, 다른 로봇 픽셀 최대 0. `review.mp4` SHA256 `6a8179bda34ab1c6dce551ecf0ccb71d8168b9364e0414cd296c35d527904e73`, `styled.mp4` SHA256 `618a2c04856b369046d0c213e37e410e9bc05563b1c240a33f2d31226f051f1e`. 1.0초 그림 `D:\mai-tmp\scripter\c76_cap2_visible_v2\env12_frame1s.png`를 직접 열어 선택 로봇 한 대가 보이는 것을 확인했다.
-- 촬영 자신의 결과는 0.9초 넘어짐으로 `fail`이다. `attempt.json`의 `result=fail`은 정책 결과이며, 이번 수정이 확인한 것은 기록기 기술 성공과 로봇 분할 가시성이다. 이 한 칸을 정책의 성공 영수증으로 세지 않는다.
+- 촬영 자신의 `attempt.json.result=fail`은 `review_feet.npz.done` 4회(0.90 · 2.38 · 3.14 · 4.88초)를 센 판정이다. 네 번 모두 `termination_terms=foot_below_ground`, `time_out=false`이며 넘어짐의 물리 원인은 미확인이다. 마지막 reset 뒤 6.0 · 17.6초에 로봇이 서 있는 장면과 모순되지 않는다. 이 한 칸을 정책의 성공 영수증으로 세지 않는다.
 
 ## 다음 연결
 
