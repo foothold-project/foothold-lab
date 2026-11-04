@@ -855,8 +855,17 @@ def verify_ex41_start_readback(log_dir: str | Path, plan, parent_receipt: dict[s
     saved = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
     expected_modes = manifest.get("modes", {}).get("ex41", {})
     actual_modes = saved.get("modes", {}).get("ex41", {})
-    if actual_modes != expected_modes:
-        raise ValueError("EX-41 U21 manifest readback differs from in-memory manifest")
+    # The manifest contract is JSON.  Compare its persisted representation so
+    # JSON-compatible Python tuples are read back as lists without a false
+    # mismatch, while every persisted value remains checked.
+    expected_modes_json = json.loads(json.dumps(expected_modes, ensure_ascii=False, allow_nan=False))
+    if actual_modes != expected_modes_json:
+        expected_keys = set(expected_modes_json) if isinstance(expected_modes_json, dict) else set()
+        actual_keys = set(actual_modes) if isinstance(actual_modes, dict) else set()
+        differing = sorted(key for key in expected_keys | actual_keys
+                           if expected_modes_json.get(key) != actual_modes.get(key))
+        raise ValueError("EX-41 U21 manifest readback differs from in-memory manifest: "
+                         + ", ".join(differing))
     if (actual_modes.get("plan_sha256") != plan.sha256
             or actual_modes.get("effective_sha256") != plan.effective_sha256):
         raise ValueError("EX-41 U21 plan SHA readback differs")

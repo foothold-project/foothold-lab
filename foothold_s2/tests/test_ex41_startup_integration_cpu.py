@@ -942,7 +942,8 @@ def test_u21_reloads_manifest_yaml_parent_and_first_reset_dr(tmp_path, monkeypat
     modes = {"ex41": {"plan_sha256": plan.sha256,
                        "effective_sha256": plan.effective_sha256,
                        "parent": parent_receipt,
-                       "initial_dr_contract": {"scale": 0.5, "before_first_reset": True}}}
+                       "initial_dr_contract": {"scale": 0.5, "before_first_reset": True},
+                       "json_sequence_contract": {"stages": ("S2a", "T0_prime")}}}
     manifest = {"modes": modes,
                 "yaml": {"env": yaml_flat(str(env_yaml)), "agent": yaml_flat(str(agent_yaml))}}
     (run / "manifest.json").write_text(__import__("json").dumps(manifest), encoding="utf-8")
@@ -1004,6 +1005,13 @@ def test_u21_rejects_disk_manifest_yaml_and_parent_sha_mismatch(tmp_path):
     env = SimpleNamespace(unwrapped=SimpleNamespace(_ex41_initial_dr_scale_applied=0.5,
                                                     _ex40_dr_scale=0.5))
     runtime = SimpleNamespace(scale=0.5)
+
+    bad_manifest = json.loads(disk.read_text(encoding="utf-8"))
+    bad_manifest["modes"]["ex41"]["initial_dr_contract"]["scale"] = 0.8
+    disk.write_text(json.dumps(bad_manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="manifest readback differs.*initial_dr_contract"):
+        verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+    disk.write_text(json.dumps(manifest), encoding="utf-8")
 
     env_yaml.write_text("scene:\n  num_envs: 3\n", encoding="utf-8")
     with pytest.raises(ValueError, match="persisted env.yaml"):
