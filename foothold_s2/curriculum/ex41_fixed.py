@@ -13,12 +13,20 @@ from foothold_s2.curriculum import w72
 from foothold_s2.curriculum.continuous import sha256, sha256_lf_text
 from foothold_s2.curriculum.ex41 import EX41Runtime,digest
 
-DURATIONS=(750,1000,1000,1250,500,1500)  # D178 approved schema guard, not elapsed clock
+PLANNED_DURATIONS=(750,1000,1000,1250,500,500)
+DURATIONS=(750,1000,1000,1250,500,1500)  # T0' fills the remaining hard cap when healthy.
 CASES=('fwd0.5','fwd1.0','spin+1.2','spin-1.2','back0.5','back1.0',
        'side+0.5','side-0.5','diag-fwd+side+','diag-fwd+side-',
        'diag-back+side+','diag-back+side-','stop')
 CELLS=tuple(f'{mode}/{case}'+('_record_only' if mode=='eval_pred' else '')
             for mode in ('eval_gt','probe_prop_only','eval_pred') for case in CASES)
+
+
+def finished_at_boundary(next_update, settings):
+    """End after the configured number of completed updates, never past it."""
+    if type(next_update) is not int or next_update < 1:
+        raise ValueError('EX41 next update must be a positive integer')
+    return next_update > settings['duration_updates']
 
 
 def maintenance_cells(include_record_only=True):
@@ -84,7 +92,7 @@ def validate_plan(plan,doc):
     if type(plan.automatic['stand_min_passed']) is not int or plan.automatic['stand_min_passed']!=61:
         raise ValueError('EX41 approved stand_min_passed is 61')
     if (tuple(r['duration']['maximum_updates'] for r in doc['stages'])!=DURATIONS
-        or tuple(r['duration']['minimum_updates'] for r in doc['stages'])!=DURATIONS
+        or tuple(r['duration']['minimum_updates'] for r in doc['stages'])!=PLANNED_DURATIONS
         or tuple(r['start']['fixed_update'] for r in doc['stages'])!=(0,751,1751,2751,4001,4501)):
         raise ValueError('EX41 fixed stage lengths/start points differ')
     early={'forward':.23,'walk_left':.075,'walk_right':.075,'spin_left':.09,'spin_right':.09,
@@ -219,7 +227,10 @@ class EX41FixedRuntime(EX41Runtime):
         self._last_mirror_observed_score=None
         self._score_stage_history=[]
         cfg=self.clock.settings
-        self.max_updates=cfg['duration_updates']+cfg['pause_limit_updates']+cfg['extension_updates']*cfg['maximum_extensions']
+        # The loop gets one final boundary call (n=6001) to record completion
+        # after exactly 6000 PPO updates. Holds and the one-time extension do
+        # not raise this absolute update cap.
+        self.max_updates=cfg['duration_updates']+1
 
     def start(self,parent_sha256=None):
         self.baseline=baseline_counts(self.plan)
@@ -256,8 +267,10 @@ class EX41FixedRuntime(EX41Runtime):
 
     def on_checkpoint(self,iteration,checkpoint):
         final=self.finished and not self.stop_requested
-        if final and (iteration!=self._iteration-1 or self.effective['stage_id']!='T0_prime'):
-            raise ValueError('EX41 final evaluation requires last completed T0 checkpoint')
+        if final and (iteration!=self._iteration-1
+                      or (not self.plan.smoke_boundaries
+                          and iteration!=self.clock.settings['duration_updates'])):
+            raise ValueError('EX41 final evaluation requires the last completed checkpoint at the hard update cap')
         super().on_checkpoint(iteration,checkpoint)
         if not final:return
         # The runner saves once more after learning exits. That final saved
@@ -267,7 +280,7 @@ class EX41FixedRuntime(EX41Runtime):
              'stage_id':self.effective['stage_id'],'parent_sha256':self.plan.parent_sha256,
              'schedule_sha256':self.plan.effective_sha256,'plan_sha256':self.plan.sha256,
              'dr_scale':self.dr_scale(self._iteration),'full_dr_reached':self.dr_scale(self._iteration)==1.,
-             'consumer_contract':'evaluate exact final SHA after training exit; link request_id; never infer graduation from finish',
+             'consumer_contract':'evaluate exact final SHA after training exit; stage_id records actual capped stage; link request_id; never infer graduation from finish',
              'graduation_spec_status':'separate approved spec and final evidence required'}
         row['request_id']=digest(row)
         folder=self.log_dir/'final_eval_requests';folder.mkdir(parents=True,exist_ok=True)
@@ -525,7 +538,7 @@ class EX41FixedRuntime(EX41Runtime):
             self._write({'event':event,'iteration':n,'schedule_clock':copy.deepcopy(self.clock.__dict__),
                          'failed_cells':failed,'baseline_sha256':self.plan.fixed_schedule['maintenance_baseline']['sha256'],
                          'dr_scale':self.dr_scale(n),'stage':self.effective['stage_id']})
-            ended=n==smoke[-1]+2 if smoke else self.clock.time(n)>=self.clock.settings['duration_updates']+self.clock.extension
+            ended=n==smoke[-1]+2 if smoke else finished_at_boundary(n,self.clock.settings)
             if ended:
                 self.finished=True; self.graduated=False
                 self._write({'event':'fixed_schedule_finished','iteration':n,'graduated':False,
@@ -557,7 +570,7 @@ class EX41FixedRuntime(EX41Runtime):
         cfg=self.clock.settings
         if (clock['pause_used']>cfg['pause_limit_updates'] or clock['extension'] not in (0,cfg['extension_updates'])
             or type(clock['paused']) is not bool or type(clock['extension_decided']) is not bool
-            or clock['recovered']>cfg['recovery_boundaries'] or clock['elapsed']>cfg['duration_updates']+cfg['extension_updates']):
+            or clock['recovered']>cfg['recovery_boundaries'] or clock['elapsed']>cfg['duration_updates']):
             raise ValueError('EX41 fixed clock bounds invalid')
         last=clock['last_score_iteration']; boundary=state.get('last_boundary'); iteration=state.get('iteration')
         initial=boundary==-1 and iteration==0 and clock['anchor']==1

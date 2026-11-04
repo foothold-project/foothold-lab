@@ -21,6 +21,7 @@ TABLE = watch.DEFAULT_TABLE
 def test_nominal_plan_lengths_are_only_capacity_estimates():
     plan = load_plan(TABLE, arm='B')
     assert watch.nominal_stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 6000)
+    assert watch.planned_stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 5000)
     assert [row['end_update'] for row in watch.stage_interval_loads(
         plan, train_seconds_per_update=27, core_seconds=1093,
         auxiliary_seconds=9480)] == [750, 1750, 2750, 4000, 4500, 6000]
@@ -52,8 +53,8 @@ def _clock_log(run, plan, *, hold=False, extension=False):
         stage = plan.stages[clock.position(n)].id
         rows.append({'event': 'schedule_continue', 'iteration': n,
                      'schedule_clock': clock.__dict__.copy(), 'stage': stage})
-        if (stage == plan.stages[-1].id and
-                clock.time(n) >= clock.settings['duration_updates'] + clock.extension):
+        from foothold_s2.curriculum.ex41_fixed import finished_at_boundary
+        if stage == plan.stages[-1].id and finished_at_boundary(n, clock.settings):
             rows.append({'event': 'fixed_schedule_finished', 'iteration': n,
                          'graduated': False})
             break
@@ -66,7 +67,7 @@ def test_actual_clock_receipts_move_auxiliary_to_recovered_stage_end(tmp_path):
     hold_run = tmp_path / 'hold_run';hold_run.mkdir()
     _clock_log(hold_run, plan, hold=True)
     hold_ends = watch.stage_end_updates(plan, hold_run)
-    assert 1750 not in hold_ends and 2250 in hold_ends and 6500 in hold_ends
+    assert 1750 not in hold_ends and 2250 in hold_ends and 6000 in hold_ends
     assert 5500 not in hold_ends
     assert watch.due_evaluation_scopes(1750, plan, hold_run) == ('periodic',)
     assert watch.due_evaluation_scopes(2250, plan, hold_run) == ('periodic', 'auxiliary')
@@ -74,9 +75,9 @@ def test_actual_clock_receipts_move_auxiliary_to_recovered_stage_end(tmp_path):
     extension_run = tmp_path / 'extension_run';extension_run.mkdir()
     _clock_log(extension_run, plan, extension=True)
     extension_ends = watch.stage_end_updates(plan, extension_run)
-    assert 6500 in extension_ends
-    assert watch.due_evaluation_scopes(6500, plan, extension_run) == ('periodic', 'auxiliary')
-    assert watch.due_evaluation_scopes(6500, plan, extension_run) == ('periodic', 'auxiliary')
+    assert 6000 in extension_ends
+    assert watch.due_evaluation_scopes(6000, plan, extension_run) == ('periodic', 'auxiliary')
+    assert watch.due_evaluation_scopes(6000, plan, extension_run) == ('periodic', 'auxiliary')
 
 
 def test_stage_end_requires_runtime_clock_evidence(tmp_path):

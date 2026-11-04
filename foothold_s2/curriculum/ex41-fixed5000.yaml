@@ -1,4 +1,5 @@
-# D178 approved 11/04 14:5x. m6000 +6000 nominal; DR pause <=1000; one +500 extension.
+# D181: 5000 planned updates; T0' starts at 4500 with 500 planned and may fill
+# to the absolute 6000-update cap. One +500 extension and pauses keep existing rules.
 # Parent baseline SHA is verified at start. Old ex41.yaml is historical, not this launch.
 format: foothold-ex41-curriculum/1
 start: transfer
@@ -377,7 +378,7 @@ stages:
   start:
     fixed_update: 4501
   duration:
-    minimum_updates: 1500
+    minimum_updates: 500
     maximum_updates: 1500
   shares:
     forward: 0.23

@@ -451,7 +451,8 @@ def candidates(run, plan, *, on_error=None):
                 or r.get('schedule_sha256') != plan.effective_sha256 or r.get('parent_sha256') != plan.parent_sha256
                 or r.get('training_finished') is not True or r.get('graduated') is not False
                 or type(cp.get('iteration')) is not int or p != (run/f'model_{cp["iteration"]}.pt').resolve()
-                or sha256(p) != cp.get('sha256') or r.get('stage_id') != 'T0_prime'):
+                or sha256(p) != cp.get('sha256')
+                or r.get('stage_id') not in {stage.id for stage in plan.stages}):
                 raise ValueError('final checkpoint request invalid')
         except (OSError,ValueError,TypeError,KeyError) as exc:
             if on_error is None:raise
@@ -476,12 +477,26 @@ def nominal_stage_end_updates(plan):
     return tuple(ends)
 
 
+def planned_stage_end_updates(plan):
+    """Base planned stage ends, distinct from T0' capacity to the hard cap."""
+    if not getattr(plan, 'fixed_schedule', None): return ()
+    completed = 0
+    ends = []
+    for stage in plan.stages:
+        duration = plan.stage_meta[stage.id].get('minimum_updates')
+        if type(duration) is not int or duration <= 0:
+            raise ValueError(f'EX41 planned stage duration is invalid: {stage.id}')
+        completed += duration
+        ends.append(completed)
+    return tuple(ends)
+
+
 def _runtime_clock_stage_ends(run_dir, plan):
     """Read actual stage transitions from the fixed runtime's Clock receipts."""
     run_dir = Path(run_dir)
     path = run_dir / 'stage_log.jsonl'
     if not path.is_file(): return ()
-    from foothold_s2.curriculum.ex41_fixed import Clock
+    from foothold_s2.curriculum.ex41_fixed import Clock, finished_at_boundary
 
     expected_settings = json.loads(json.dumps(plan.clock_settings, sort_keys=True))
     stage_ids = [stage.id for stage in plan.stages]
@@ -530,8 +545,8 @@ def _runtime_clock_stage_ends(run_dir, plan):
             finished = clock_rows.get(iteration)
             if finished is None: raise ValueError('EX41 finish receipt lacks same-update Clock state')
             clock, stage = finished
-            if (stage != stage_ids[-1] or clock.position(iteration) != len(stage_ids)-1
-                    or clock.time(iteration) < clock.settings['duration_updates'] + clock.extension):
+            if (stage != stage_ids[clock.position(iteration)]
+                    or not finished_at_boundary(iteration,clock.settings)):
                 raise ValueError('EX41 finish receipt differs from actual Clock completion')
             ends.append(iteration - 1)
             continue

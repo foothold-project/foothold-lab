@@ -53,6 +53,8 @@ def test_actual_parent_baseline_judges26_and_preserves39_pinned_cells():
     assert len(b)==26 and len(baseline_counts(p,include_record_only=True))==39
     assert p.parent_update==6000 and p.initial_dr_scale==.5
     assert p.fixed_schedule['duration_updates']==6000
+    assert tuple(p.stage_meta[s.id]['minimum_updates'] for s in p.stages)==(750,1000,1000,1250,500,500)
+    assert tuple(p.stage_meta[s.id]['maximum_updates'] for s in p.stages)==(750,1000,1000,1250,500,1500)
     assert p.fixed_schedule['push_vmax_mps']==[1.5,1.65,1.8,2.0,2.0,2.0]
     assert p.domain_randomization['push_interval_s']==[10.0,15.0]
     assert [s.id for s in p.stages]==['S2a','S2b','S2c','S2d','S2e','T0_prime']
@@ -234,10 +236,13 @@ def test_invalid_manual_config_cannot_hide_dr_hold_or_stop_fixed_schedule(tmp_pa
 
 def test_full_runtime_exhaustion_finishes_without_fake_full_dr(tmp_path):
     r,_=fixture(tmp_path)
-    for n in range(251,7002,250): tick(r,n,failed=True)
+    for n in range(251,6252,250):
+        tick(r,n,failed=True)
+        if r.finished: break
     assert r.finished and not r.stop_requested and r.clock.pause_used==1000
     assert r.effective['stage_id']=='T0_prime' and r.dr_scale(6001)==.5
     assert not r.clock.extension
+    assert r._iteration==6001 and r.max_updates==6001
 
 
 def test_corrupted_saved_clock_rejected(tmp_path):
@@ -254,7 +259,31 @@ def test_d110_extension_exactly_once_full_dr_only(tmp_path):
         tick(r,n)
     assert r.clock.extension==500 and r.effective['stage_id']=='S2e'
     tick(r,4751);tick(r,5001);assert r.effective['stage_id']=='T0_prime' and not r.finished
-    tick(r,5251);tick(r,6501);assert r.finished and r.clock.extension==500
+    tick(r,5251);tick(r,6001);assert r.finished and r.clock.extension==500
+
+
+def test_d181_no_extension_uses_t0_prime_to_fill_6000_update_cap(tmp_path):
+    r,_=fixture(tmp_path)
+    for n in range(251,5002,250):
+        tick(r,n)
+    assert r._iteration==5001 and r.effective['stage_id']=='T0_prime'
+    assert not r.finished and r.max_updates==6001
+    for n in (5251,5501,5751,6001): tick(r,n)
+    assert r.finished and r._iteration==6001
+    assert r.clock.position(6001)==5
+
+
+def test_d181_extension_shifts_t0_prime_but_never_exceeds_6000(tmp_path):
+    r,_=fixture(tmp_path)
+    for n in range(251,4502,250):
+        if n==4501:
+            r._level_history=[(i,.1 if i<=4250 else .7) for i in range(4050,4501,50)]
+        tick(r,n)
+    assert r.clock.extension==500 and r.effective['stage_id']=='S2e'
+    tick(r,4751);assert r.effective['stage_id']=='S2e'
+    tick(r,5001);assert r.effective['stage_id']=='T0_prime' and not r.finished
+    tick(r,5501);tick(r,6001)
+    assert r.finished and r._iteration==6001 and r.max_updates==6001
 
 
 def test_second_recovery_at_pause_cap_wins_over_freezing():
@@ -354,21 +383,21 @@ def test_rejected_apply_accounts_time_and_resume_is_valid(tmp_path,monkeypatch):
 
 
 @pytest.mark.parametrize('safety_at_end',[False,True])
-def test_hold1000_plus_extension500_finishes_at6501(tmp_path,safety_at_end):
+def test_hold1000_plus_extension500_stops_at6000_cap(tmp_path,safety_at_end):
     r,_=fixture(tmp_path)
-    for n in range(251,7752,250):
+    for n in range(251,6252,250):
         if n==5501:
             assert r.stage_entry_iteration==5001
             r._level_history=[(i,.1 if i<=5250 else .7) for i in range(5050,5501,50)]
-        if safety_at_end and n==7501:
+        if safety_at_end and n==6001:
             p=score(r,n-1,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
             data=json.loads(p.read_text());data['safety_stop']=True;p.write_text(json.dumps(data))
             r.on_update_start(n)
         else:tick(r,n,failed=n in (751,1751))
-        if n<7501:assert not r.finished
+        if n<6001:assert not r.finished
     assert r.finished is not safety_at_end and r.stop_requested is safety_at_end
     assert r.clock.pause_used==1000 and r.clock.extension==500
-    assert r.dr_scale(7501)==1. and r.effective['stage_id']=='T0_prime'
+    assert r.effective['stage_id'] in ('S2e','T0_prime')
     resumed=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'resumed',segment_index=1)
     attach_consumer(resumed);resumed.load_state_dict(r.state_dict())
     assert resumed.stop_requested is safety_at_end and resumed.finished is not safety_at_end
