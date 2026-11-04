@@ -34,13 +34,10 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
     (tmp_path / "overlay_25e.py").write_text("# fixed overlay\n", encoding="utf-8")
     composer = tmp_path / "compose.py"
     composer.write_text('VIDEO_RULE_VERSION = "v3.4-D168"\n', encoding="utf-8")
-    gpu_jobs_tool = tmp_path / "gpu_jobs.py"
-    gpu_jobs_tool.write_text("# fixed GPU jobs CLI fixture\n", encoding="utf-8")
-    gpu_jobs_config = tmp_path / "gpu_jobs.json"
-    gpu_jobs_config.write_text(
-        '{"sources":{"ex41_p1_marker":"D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"}}',
-        encoding="utf-8",
-    )
+    gpu_tool = tmp_path / "gpu_jobs.py"
+    gpu_tool.write_text("# test tool\n", encoding="utf-8")
+    gpu_config = tmp_path / "jobs.json"
+    gpu_config.write_text('{"sources":{"ex41_p1_marker":"D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"}}', encoding="utf-8")
     monkeypatch.setattr(planner, "_head", lambda _root: "a" * 40)
     actual_sha = queue.sha256
     monkeypatch.setattr(queue, "sha256", lambda path: "d5e9ec40" + "a" * 56
@@ -49,9 +46,10 @@ def test_complete_m6000_plan_and_wrong_checkpoint_rejected(tmp_path, monkeypatch
               composer=composer, python=Path(sys.executable), playlist_dir=tmp_path / "_playlists",
               priority_markers={key: tmp_path / (key + ".busy")
                                 for key in ("training", "evaluation", "a_layer")}, device="cuda:0",
-              gpu_jobs_tool=gpu_jobs_tool, gpu_jobs_config=gpu_jobs_config)
+              gpu_jobs_tool=gpu_tool, gpu_jobs_config=gpu_config)
     plan = planner.build_plan(**kw)
     assert plan["iteration"] == 6000 and len(plan["jobs"]) == 216
+    assert all(row["seeds"] == [42, 43] for row in plan["jobs"])
     assert queue.validate_plan(plan)["missing"] == 0
     assert all("-m6000-" in row["label"] for row in plan["jobs"])
     assert {row["map_mode"] for row in plan["jobs"]} == set(queue.MAP_MODES)

@@ -23,11 +23,12 @@ from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, re
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 ROLES = ("success", "fail")
-MAX_ATTEMPTS = 4
+MAX_ATTEMPTS = 2
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def recorder_child_env(python_executable: str, parent: dict[str, str] | None = None) -> dict[str, str]:
+def recorder_child_env(python_executable: str, parent: dict[str, str] | None = None,
+                       source_root: str | Path | None = None) -> dict[str, str]:
     """Match seq_video.sh's Kit environment for every recorder subprocess."""
     env = dict(os.environ if parent is None else parent)
     executable = Path(python_executable)
@@ -43,6 +44,9 @@ def recorder_child_env(python_executable: str, parent: dict[str, str] | None = N
     env.update({"CONDA_PREFIX": prefix, "OMNI_KIT_ACCEPT_EULA": "YES",
                 "CUDA_DEVICE_ORDER": "PCI_BUS_ID", "PYTHONUNBUFFERED": "1",
                 "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1"})
+    if source_root is not None:
+        root = str(Path(source_root).resolve(strict=True))
+        env["PYTHONPATH"] = os.pathsep.join(filter(None, (root, env.get("PYTHONPATH", ""))))
     env.pop("CUDA_VISIBLE_DEVICES", None)
     return env
 
@@ -136,7 +140,7 @@ def validate_plan(plan: dict) -> dict:
         if (not isinstance(seeds, list) or not 1 <= len(seeds) <= MAX_ATTEMPTS
                 or any(type(seed) is not int or seed < 0 for seed in seeds)
                 or len(set(seeds)) != len(seeds)):
-            raise ValueError("one to four distinct predeclared seeds required per cell")
+            raise ValueError("one to two distinct predeclared seeds required per cell")
         if type(row.get("env_id")) is not int or row["env_id"] < 0:
             raise ValueError("invalid selected env")
         if not isinstance(row.get("policy"), dict) or row["policy"].get("map_mode") != key[2]:
@@ -407,7 +411,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
             policy = dict(row["policy"], seed=seed)
             values = {"{mp4}": str(mp4), "{label}": row["label"], "{policy}": json.dumps(policy)}
             argv = [values.get(token, token) for token in row["recorder_argv"]]
-            child_env = recorder_child_env(argv[0])
+            child_env = recorder_child_env(argv[0], source_root=row["policy"]["source_root"])
             _write(attempt_root / "started.json", {"cell": cell["cell"], "ordinal": ordinal,
                                                    "seed": seed, "checkpoint_sha256": plan["checkpoint_sha256"],
                                                    "recorder_sha256": plan["recorder_sha256"]})
