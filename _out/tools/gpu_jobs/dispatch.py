@@ -1244,7 +1244,9 @@ def did_not_run(it: dict, last: dict | None) -> bool:
     state = str(last.get("state", ""))
     ev = last.get("queue_event") if isinstance(last.get("queue_event"), dict) else {}
     ev_state = str(ev.get("state", ""))
-    captured = ev.get("event") == "captured"
+    # run-next nests the event under queue_event; the two-seed run-one wrapper puts it at top level
+    # (11/04 14:35 item 155 captured a clip but was taken for a yield and held the group).
+    captured = ev.get("event") == "captured" or last.get("event") == "captured"
     if state.startswith("yielded") or "hold" in state or ev_state.startswith("yielded") or "hold" in ev_state:
         return True
     return (state == "pending" or ev_state == "pending") and not captured
@@ -1363,6 +1365,12 @@ def update_holds(state: dict, requeued: list[dict], train: dict | None, mean: fl
     has advanced at least one status sample (10 updates) and passes the per-update gate.
     Hold and resume are each announced once."""
     holds = state.setdefault("holds", {})
+    if train is None:
+        # No training marker (prep time): the hold protects a training run that does not exist.
+        for g in list(holds):
+            del holds[g]
+            notify(f"[dispatcher] {g} 재개", f"{hm(now)} 학습 없음 · 보류를 풀고 {g} 를 다시 띄움")
+        return
     for it in requeued:
         g = item_group(it)
         if g and g not in holds:

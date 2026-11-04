@@ -715,6 +715,23 @@ class DispatchTests(unittest.TestCase):
         self.step(now=1005.0)
         self.assertEqual(self.step(now=1010.0).get("item"), waiting)
 
+    def test_two_seed_wrapper_capture_is_done_not_a_yield(self):
+        a = self.add("C76 2seed", 3, kind="render",
+                     argv=("python", "D:/x/c_layer_gpu1_remainder_two_seed.py", "--cell", "c"))
+        self.step(now=1000.0)
+        self.finish(a, 0, {"cell": "c", "state": "pending", "event": "captured"})
+        self.alive.discard(5000 + a)
+        self.step(now=1005.0)
+        self.assertEqual(self.items()[a]["state"], "끝")
+
+    def test_no_training_releases_and_never_creates_group_holds(self):
+        state = {"holds": {"c_layer": {"since": 1.0, "reason": "pending", "iter": 10}}}
+        notes = []
+        board.update_holds(state, [{"id": 1, "argv": ["python", "c_layer_gpu1_remainder", "run-next"],
+                                    "last_yield": "pending"}], None, None, 2.0, lambda s, b: notes.append(s))
+        self.assertEqual(state["holds"], {})
+        self.assertTrue(any("재개" in n for n in notes))
+
     def test_cancel_marks_never_run_items_and_refuses_running(self):
         a = self.add("wrong args", 2)
         args = type("A", (), {"qaction": "cancel", "id": a, "reason": "push250 L0 only"})()
