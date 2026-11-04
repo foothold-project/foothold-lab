@@ -102,6 +102,8 @@ def validate_sources(source_root: Path, recorder: Path, composer: Path) -> dict:
         raise ValueError("EX41 fixed source lacks a required module")
     recorder = recorder.resolve(strict=True)
     composer = composer.resolve(strict=True)
+    if recorder != root / "foothold_s2/eval/video25/record_c_layer.py":
+        raise ValueError("W78 video requires the SB-capable record_c_layer recorder")
     if not recorder.is_file() or not composer.is_file() or composer_version(composer) != VIDEO_RULE_VERSION:
         raise ValueError(f"W78 recorder or {VIDEO_RULE_VERSION} composer is absent")
     return {"source_head": head, "source_root": str(root),
@@ -144,7 +146,8 @@ def recorder_argv(python: Path, recorder: Path, checkpoint: Path, combo: str,
     return [str(python), str(recorder), "--checkpoint", str(checkpoint),
             "--policy", json.dumps(spec, ensure_ascii=False, separators=(",", ":")),
             "--label", label, "--scene", "rough", "--mp4", str(capture / label / "review.mp4"),
-            "--device", device, "--width", "1280", "--height", "720", "--fps", "25"]
+            "--device", device, "--width", "1280", "--height", "720", "--fps", "25",
+            "--headless", "--enable_cameras", "--livestream", "0"]
 
 
 def gate(python: Path, config: Path) -> dict:
@@ -278,7 +281,7 @@ def run_one(args: argparse.Namespace) -> dict:
             attempt.mkdir()
             argv = recorder_argv(args.python, args.recorder, checkpoint, combo,
                                  request, source, attempt, args.device)
-            child_env = recorder_child_env(str(args.python))
+            child_env = recorder_child_env(str(args.python), source_root=args.source_root)
             try:
                 preflight = subprocess.run(argv + ["--plan-only"], capture_output=True, text=True,
                                            encoding="utf-8", errors="replace", env=child_env, check=False)
