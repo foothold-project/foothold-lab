@@ -553,6 +553,7 @@ class EX41FixedRuntime(EX41Runtime):
 
     def state_dict(self):
         state=super().state_dict(); state['fixed_clock']=copy.deepcopy(self.clock.__dict__)
+        state['push_vmax_mps']=self.push_vmax(max(1,int(getattr(self,'_iteration',1))))
         state['maintenance_baseline_sha256']=self.plan.fixed_schedule['maintenance_baseline']['sha256']
         state['missing_maintenance_boundaries']=self._missing_maintenance_boundaries
         state['last_mirror_observed_score']=self._last_mirror_observed_score

@@ -208,6 +208,9 @@ class StartRunner(OnPolicyRunner):
         self.tot_timesteps = 0
         self.tot_time = 0
         self.current_learning_iteration = 0
+        # Persist the completed update's map-source fraction so self-resume can
+        # compare the exact last saved value before the next rollout starts.
+        self._last_use_gt_frac: float | None = None
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
         self._resumed = False
@@ -663,6 +666,7 @@ class StartRunner(OnPolicyRunner):
             if (continuous is not None
                     and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
                 extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env
+                self._last_use_gt_frac = extra["use_gt_frac"]
             if ex40_dr_runtime is not None:
                 extra["ex40_dr"] = ex40_dr_runtime.summary()
             if nt_stats is not None:
@@ -1099,6 +1103,19 @@ class StartRunner(OnPolicyRunner):
             torch.cuda.set_rng_state_all([state.cpu() for state in s["cuda"]])
 
     def state_dict(self, infos: dict | None = None) -> dict:
+        policy_state = self.alg.policy.state_dict()
+        perception_state = self.perception.state_dict()
+        norm_tokens = ("running_mean", "running_std", "running_var", "_mean", "_std", "_var", "_count")
+        norm_buffers = {
+            f"policy.{key}": value for key, value in policy_state.items()
+            if any(token in key.lower() for token in norm_tokens)
+        }
+        norm_buffers.update({
+            f"perception.{key}": value for key, value in perception_state.items()
+            if any(token in key.lower() for token in norm_tokens)
+        })
+        continuous = getattr(self, "continuous_curriculum", None)
+        effective = getattr(continuous, "effective", {}) if continuous is not None else {}
         return {
             "format": CKPT_FORMAT,
             "ex41_pose_commands": self.ex41_pose_commands,
@@ -1106,16 +1123,24 @@ class StartRunner(OnPolicyRunner):
             "ex41_mirror_approval": self.ex41_mirror_approval,
             "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
             "ex41_parent_transfer": self.ex41_parent_transfer,
-            "model_state_dict": self.alg.policy.state_dict(),  # 정책 + 관측 정규화 통계(EmpiricalNormalization 버퍼)
+            "model_state_dict": policy_state,  # 정책·critic 및 있으면 관측 정규화 버퍼
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
-            "perception_state_dict": self.perception.state_dict(),
+            "perception_state_dict": perception_state,
             "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
             "perception_cfg": dict(self.pcfg),
             "adasmpl": self.adasmpl.state_dict(),
             "env_state": self._env_state(),
             "env_seed": getattr(getattr(getattr(self.env, "unwrapped", self.env), "cfg", None), "seed", None),
             "iter": self.current_learning_iteration,
+            "last_use_gt_frac": self._last_use_gt_frac,
+            "normalization_state": {
+                "actor_obs_enabled": bool(self.policy_cfg.get("actor_obs_normalization", False)),
+                "critic_obs_enabled": bool(self.policy_cfg.get("critic_obs_normalization", False)),
+                "reward_enabled": False,
+                "running_buffers": norm_buffers,
+            },
+            "ex41_w86_reward_weights": copy.deepcopy(effective.get("reward_weights")),
             "rng": self.rng_state(),
             "map_switch": self.map_switch_state(),
             "infos": infos,
@@ -1302,6 +1327,13 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        saved_use_gt_frac = sd.get("last_use_gt_frac")
+        if saved_use_gt_frac is not None:
+            if (not isinstance(saved_use_gt_frac, (int, float))
+                    or not math.isfinite(float(saved_use_gt_frac))
+                    or not 0.0 <= float(saved_use_gt_frac) <= 1.0):
+                raise ValueError("EX-41 checkpoint last use_gt_frac is invalid")
+            self._last_use_gt_frac = float(saved_use_gt_frac)
         self.ex41_parent_transfer = sd.get("ex41_parent_transfer")
         self.ex41_mirror_hold_reason = sd.get("ex41_mirror_hold_reason")
         if self.ex41_critic_mirror:

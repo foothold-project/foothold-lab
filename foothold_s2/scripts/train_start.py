@@ -652,7 +652,7 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.curriculum.ex41 import apply_runtime_fields
         from foothold_s2.scripts.ex41_resume import (
             add_resume_envelope, append_resume_segment,
-            validate_resume_state, compare_resume_state,
+            validate_resume_state, compare_resume_state, read_training_extra_row,
         )
 
         if not (EX41_REHEARSAL or EX41_STARTUP_SMOKE):
@@ -707,8 +707,32 @@ def main(env_cfg, agent_cfg):
                 env, additional_envs=(dr_runtime_env,), reset_guard_log=True)
             print("EX41_RESUME_DR_DEVICE_READBACK "
                   + json.dumps(dr_device_receipt, sort_keys=True), flush=True)
-            restored_state = runner.state_dict()
             saved_state = torch.load(resume_path, map_location="cpu", weights_only=False)
+            legacy_extra = read_training_extra_row(log_dir, int(saved_state["iter"]))
+            legacy_readback = {}
+            if saved_state.get("last_use_gt_frac") is None and legacy_extra is not None:
+                value = legacy_extra.get("use_gt_frac")
+                if isinstance(value, (int, float)) and 0.0 <= float(value) <= 1.0:
+                    saved_state["last_use_gt_frac"] = float(value)
+                    runner._last_use_gt_frac = float(value)
+                    legacy_readback["last_use_gt_frac"] = {
+                        "value": float(value), "source": "train_extra.jsonl matching checkpoint iteration"}
+            old_curriculum = saved_state.get("continuous_curriculum") or {}
+            push = (legacy_extra or {}).get("ex40_dr", {}).get("push_schedule", {}).get("vmax_mps")
+            if old_curriculum.get("push_vmax_mps") is None and isinstance(push, (int, float)):
+                old_curriculum["push_vmax_mps"] = float(push)
+                legacy_readback["push_vmax_mps"] = {
+                    "value": float(push), "source": "train_extra.jsonl matching checkpoint iteration"}
+            restored_state = runner.state_dict()
+            if saved_state.get("normalization_state") is None:
+                # The original agent.yaml governs this legacy save. Reuse the
+                # loaded runner's config and buffers to form the explicit R6 receipt.
+                saved_state["normalization_state"] = restored_state["normalization_state"]
+                legacy_readback["normalization_state"] = {
+                    "source": "loaded params/agent.yaml and restored model buffers"}
+            if legacy_readback:
+                print("EX41_RESUME_LEGACY_READBACK "
+                      + json.dumps(legacy_readback, sort_keys=True), flush=True)
             resume_state_comparison = compare_resume_state(
                 saved_state, restored_state, save_interval=int(train_cfg["save_interval"]))
             checkpoint_reference = resume_state_comparison.get("checkpoint_reference")

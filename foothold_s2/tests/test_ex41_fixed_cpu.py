@@ -81,6 +81,13 @@ def test_stage_push_maximums_follow_clock_stage_and_hold_extension():
     assert values[held_stage] == 2.0
 
 
+def test_checkpoint_carries_current_push_vmax_readback(tmp_path):
+    runtime, _ = fixture(tmp_path)
+    runtime._iteration = 1751
+    saved = runtime.state_dict()
+    assert saved["push_vmax_mps"] == pytest.approx(1.8)
+
+
 def test_training_update_transition_keeps_push_schedule_bound_to_templates(tmp_path):
     """Mirror start_runner order: curriculum transition, then DR readback."""
     from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
@@ -395,9 +402,17 @@ def test_hold1000_plus_extension500_stops_at6000_cap(tmp_path,safety_at_end):
             r.on_update_start(n)
         else:tick(r,n,failed=n in (751,1751))
         if n<6001:assert not r.finished
+        if r.finished or r.stop_requested: break
     assert r.finished is not safety_at_end and r.stop_requested is safety_at_end
     assert r.clock.pause_used==1000 and r.clock.extension==500
     assert r.effective['stage_id'] in ('S2e','T0_prime')
+    if not safety_at_end:
+        cp=r.log_dir/'model_6000.pt';cp.write_bytes(b'known hard-cap checkpoint')
+        r.on_checkpoint(6000,cp)
+        request=json.loads(next((r.log_dir/'final_eval_requests').glob('*.json')).read_text())
+        assert request['stage_id']==r.effective['stage_id']
+        from foothold_s2 import ex41_score_watch as watch
+        assert watch.candidates(r.log_dir,r.plan)[-1][0]==6000
     resumed=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'resumed',segment_index=1)
     attach_consumer(resumed);resumed.load_state_dict(r.state_dict())
     assert resumed.stop_requested is safety_at_end and resumed.finished is not safety_at_end

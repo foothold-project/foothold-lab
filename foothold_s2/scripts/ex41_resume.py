@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any
@@ -25,6 +26,29 @@ def sha256_file(path: str | Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def read_training_extra_row(log_dir: str | Path, iteration: int) -> dict[str, Any] | None:
+    """Read the matching legacy per-update sidecar row for pre-R6 checkpoints.
+
+    New checkpoints carry these values themselves. This is only for existing
+    runs whose save predates the R6 fields; callers must report that source.
+    """
+    if type(iteration) is not int or iteration < 0:
+        raise ValueError("EX-41 resume metrics iteration is invalid")
+    path = Path(log_dir) / "train_extra.jsonl"
+    if not path.is_file():
+        return None
+    match = None
+    with path.open("r", encoding="utf-8") as stream:
+        for line in stream:
+            try:
+                row = json.loads(line)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if isinstance(row, dict) and row.get("it") == iteration:
+                match = row
+    return match
 
 
 def validate_resume_manifest(checkpoint: str | Path, manifest_path: str | Path, *,
@@ -272,7 +296,7 @@ def state_digest(value: Any) -> str:
 
 def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any], *,
                          save_interval: int = 50) -> dict[str, Any]:
-    """Require exact state readback for the U5 continuation-critical groups."""
+    """Require exact, auditable readback for all R6 continuation-critical groups."""
     curriculum_key = "continuous_curriculum"
     saved_curriculum = expected.get(curriculum_key)
     loaded_curriculum = actual.get(curriculum_key)
@@ -366,35 +390,125 @@ def compare_resume_state(expected: dict[str, Any], actual: dict[str, Any], *,
             checkpoint_reference = {"iteration": iteration,
                                     "path": loaded_checkpoint["path"],
                                     "sha256": loaded_sha}
+    def normalization_group(state):
+        recorded = state.get("normalization_state")
+        if isinstance(recorded, dict):
+            return recorded
+        # Older checkpoints did not store a named normalization receipt.
+        # Keep any actual running-stat tensors comparable without inventing
+        # configuration or treating LayerNorm weights as running statistics.
+        running = {}
+        for prefix, key in (("policy", "model_state_dict"),
+                            ("perception", "perception_state_dict")):
+            values = state.get(key) or {}
+            if isinstance(values, dict):
+                for name, value in values.items():
+                    lowered = name.lower()
+                    if any(token in lowered for token in (
+                            "running_mean", "running_std", "running_var",
+                            "_mean", "_std", "_var", "_count")):
+                        running[f"{prefix}.{name}"] = value
+        return {"configuration": "not_recorded_in_legacy_checkpoint",
+                "running_buffers": running}
+
+    def boundary_group(curriculum, stage_state):
+        effective = curriculum.get("effective") or {}
+        config = curriculum.get("config_values") or {}
+        return {
+            "stage_state": stage_state,
+            "last_boundary": curriculum.get("last_boundary"),
+            "snapshot": curriculum.get("snapshot"),
+            "applied_ids": curriculum.get("applied_ids"),
+            "command_share_bias": effective.get("command_share_bias",
+                                                  config.get("command_share_bias")),
+            "shares": effective.get("shares"),
+        }
+
+    def w86_group(state, curriculum):
+        explicit = state.get("ex41_w86_reward_weights")
+        effective = curriculum.get("effective") or {}
+        return explicit if explicit is not None else effective.get("reward_weights")
+
+    def optimizer_group(state):
+        return {key: state.get(key) for key in (
+            "optimizer_state_dict", "perception_optimizer_state_dict")}
+
+    def learning_rate_group(state):
+        policy = state.get("optimizer_state_dict") or {}
+        perception = state.get("perception_optimizer_state_dict") or {}
+        return {
+            "ppo_learning_rate": state.get("ppo_learning_rate"),
+            "ppo_param_group_lrs": [group.get("lr") for group in policy.get("param_groups", [])],
+            "perception_param_group_lrs": [group.get("lr") for group in perception.get("param_groups", [])],
+        }
+
+    saved_lr = expected.get("ppo_learning_rate")
+    if not isinstance(saved_lr, (int, float)) or not math.isfinite(float(saved_lr)):
+        raise ValueError("EX-41 resume PPO learning rate is missing or non-finite")
+    if float(saved_lr) <= 1e-5:
+        raise ValueError("EX-41 resume PPO learning rate is at or below the 1e-5 floor")
+    for group_lr in learning_rate_group(expected)["ppo_param_group_lrs"]:
+        if not isinstance(group_lr, (int, float)) or not math.isfinite(float(group_lr)) or float(group_lr) <= 1e-5:
+            raise ValueError("EX-41 resume optimizer learning rate is at or below the 1e-5 floor")
+
     groups = {
-        "optimizer": {key: expected.get(key) for key in (
-            "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
+        "policy_critic_weights": {"model_state_dict": expected.get("model_state_dict"),
+                                  "perception_state_dict": expected.get("perception_state_dict")},
+        "adam_moments": optimizer_group(expected),
+        "learning_rate": learning_rate_group(expected),
+        "normalization_running_stats": normalization_group(expected),
         "rng": expected.get("rng"),
-        "stage": saved_stage,
-        "dr": saved_curriculum.get("domain_randomization"),
-        "adasmpl": expected.get("adasmpl"),
+        "curriculum_clock": {"stage_id": (saved_curriculum.get("effective") or {}).get("stage_id"),
+                             "stage_pos": saved_stage.get("stage_pos"),
+                             "iteration": saved_stage.get("iteration"),
+                             "fixed_clock": saved_stage.get("fixed_clock"),
+                             "domain_randomization": saved_curriculum.get("domain_randomization"),
+                             "push_vmax_mps": saved_curriculum.get("push_vmax_mps")},
+        "w72_boundary_and_command_share": boundary_group(saved_curriculum, saved_stage),
+        "w86_reward_weights": w86_group(expected, saved_curriculum),
+        "map_switch_rng_and_use_gt_frac": {"map_switch": expected.get("map_switch"),
+                                            "last_use_gt_frac": expected.get("last_use_gt_frac")},
     }
     loaded_groups = {
-        "optimizer": {key: actual.get(key) for key in (
-            "optimizer_state_dict", "perception_optimizer_state_dict", "ppo_learning_rate")},
+        "policy_critic_weights": {"model_state_dict": actual.get("model_state_dict"),
+                                  "perception_state_dict": actual.get("perception_state_dict")},
+        "adam_moments": optimizer_group(actual),
+        "learning_rate": learning_rate_group(actual),
+        "normalization_running_stats": normalization_group(actual),
         "rng": actual.get("rng"),
-        "stage": loaded_stage,
-        "dr": loaded_curriculum.get("domain_randomization"),
-        "adasmpl": actual.get("adasmpl"),
+        "curriculum_clock": {"stage_id": (loaded_curriculum.get("effective") or {}).get("stage_id"),
+                             "stage_pos": loaded_stage.get("stage_pos"),
+                             "iteration": loaded_stage.get("iteration"),
+                             "fixed_clock": loaded_stage.get("fixed_clock"),
+                             "domain_randomization": loaded_curriculum.get("domain_randomization"),
+                             "push_vmax_mps": loaded_curriculum.get("push_vmax_mps")},
+        "w72_boundary_and_command_share": boundary_group(loaded_curriculum, loaded_stage),
+        "w86_reward_weights": w86_group(actual, loaded_curriculum),
+        "map_switch_rng_and_use_gt_frac": {"map_switch": actual.get("map_switch"),
+                                            "last_use_gt_frac": actual.get("last_use_gt_frac")},
     }
     result = {}
     for name, saved in groups.items():
         expected_sha = state_digest(saved)
         actual_sha = state_digest(loaded_groups[name])
         if expected_sha != actual_sha:
-            if name == "stage":
+            if name == "curriculum_clock":
                 before = saved
                 after = loaded_groups[name]
                 differing = sorted(key for key in set(before) | set(after)
                                    if state_digest(before.get(key)) != state_digest(after.get(key)))
-                raise ValueError(f"EX-41 resume readback differs for stage fields: {differing}")
+                raise ValueError(f"EX-41 resume readback differs for curriculum_clock fields: {differing}")
             raise ValueError(f"EX-41 resume readback differs for {name}")
         result[name] = {"state": "matched", "sha256": expected_sha}
+        if name == "learning_rate":
+            result[name]["ppo_value"] = float(saved_lr)
+            result[name]["above_floor_1e-5"] = True
+        if name == "normalization_running_stats":
+            norm = groups[name]
+            result[name]["running_buffer_count"] = len(norm.get("running_buffers", {}))
+            result[name]["configuration"] = norm.get("configuration", "recorded")
+        if name == "map_switch_rng_and_use_gt_frac":
+            result[name]["use_gt_frac_recorded"] = expected.get("last_use_gt_frac") is not None
     result["segment_index"] = {
         "state": "advanced_one_segment",
         "saved": saved_segment,

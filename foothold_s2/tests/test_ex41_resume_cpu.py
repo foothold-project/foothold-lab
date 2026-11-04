@@ -21,6 +21,7 @@ from foothold_s2.scripts.ex41_resume import (
     validate_resume_manifest,
     validate_resume_state,
     compare_resume_state,
+    read_training_extra_row,
     sha256_file,
 )
 from foothold_s2.runners import manifest as run_manifest
@@ -39,6 +40,12 @@ def _state():
         "model_state_dict": {"weight": torch.tensor([1.0, 2.0])},
         "optimizer_state_dict": {"state": {0: {"step": torch.tensor(7)}}, "param_groups": []},
         "ppo_learning_rate": 0.0003,
+        "normalization_state": {
+            "actor_obs_enabled": False, "critic_obs_enabled": False,
+            "reward_enabled": False, "running_buffers": {},
+        },
+        "last_use_gt_frac": 0.375,
+        "ex41_w86_reward_weights": {"swing": -10.0, "zero_yaw": -0.5},
         "perception_state_dict": {"weight": torch.tensor([3.0])},
         "perception_optimizer_state_dict": {"state": {}, "param_groups": []},
         "adasmpl": {"p": 0.4, "count": 2.0, "sum": 3.0, "sumsq": 5.0, "force_gt": False},
@@ -62,8 +69,11 @@ def _state():
             "effective_sha256": EFFECTIVE,
             "stages": [],
             "stage_pos": 0,
-            "effective": {},
-            "config_values": {},
+            "effective": {"command_share_bias": {"walk": 0.01},
+                          "shares": {"walk": 0.5},
+                          "reward_weights": {"swing": -10.0, "zero_yaw": -0.5}},
+            "config_values": {"command_share_bias": {"walk": 0.01}},
+            "push_vmax_mps": 1.5,
             "stage_baseline_sha": PARENT,
             "snapshot": {"revision": 4, "values": {"dr": {"target_scale": 0.5}}},
             "last_boundary": 0,
@@ -178,15 +188,50 @@ def test_cpu_save_then_fresh_process_restore_keeps_all_ex41_state(tmp_path):
     assert restored["next_update"] == 11
 
 
-def test_resume_state_readback_compares_optimizer_rng_stage_dr_and_adasmpl():
+def test_resume_state_readback_compares_all_nine_r6_groups():
     expected=_state()
     restored = copy.deepcopy(expected)
     restored["continuous_curriculum"]["segment_index"] = 1
     assert set(compare_resume_state(expected,restored)) == {
-        "optimizer", "rng", "stage", "dr", "adasmpl", "segment_index"}
+        "policy_critic_weights", "adam_moments", "learning_rate",
+        "normalization_running_stats", "rng", "curriculum_clock",
+        "w72_boundary_and_command_share", "w86_reward_weights",
+        "map_switch_rng_and_use_gt_frac", "segment_index"}
     changed=copy.deepcopy(restored);changed["continuous_curriculum"]["domain_randomization"]["scale"]=0.8
-    with pytest.raises(ValueError,match="readback differs for stage"):
+    with pytest.raises(ValueError,match="readback differs for curriculum_clock"):
         compare_resume_state(expected,changed)
+
+
+def test_legacy_checkpoint_metrics_are_backfilled_only_from_matching_update(tmp_path):
+    log = tmp_path / "train_extra.jsonl"
+    log.write_text('{"it":649,"use_gt_frac":0.25}\n'
+                   '{"it":650,"use_gt_frac":1.0,"ex40_dr":{"push_schedule":{"vmax_mps":1.5}}}\n'
+                   '{bad json\n', encoding="utf-8")
+    assert read_training_extra_row(tmp_path, 650) == {
+        "it": 650, "use_gt_frac": 1.0,
+        "ex40_dr": {"push_schedule": {"vmax_mps": 1.5}},
+    }
+    assert read_training_extra_row(tmp_path, 651) is None
+
+
+@pytest.mark.parametrize("group,mutate", [
+    ("policy_critic_weights", lambda s: s["model_state_dict"].__setitem__("weight", torch.tensor([1., 3.]))),
+    ("adam_moments", lambda s: s["optimizer_state_dict"]["state"][0]["step"].fill_(8)),
+    ("learning_rate", lambda s: s.__setitem__("ppo_learning_rate", 1e-5)),
+    ("normalization_running_stats", lambda s: s["normalization_state"]["running_buffers"].__setitem__("policy.obs.running_mean", torch.tensor([1.]))),
+    ("rng", lambda s: s["rng"]["torch"].fill_(9)),
+    ("curriculum_clock", lambda s: s["continuous_curriculum"]["fixed_clock"].__setitem__("elapsed", 8)),
+    ("w72_boundary_and_command_share", lambda s: s["continuous_curriculum"]["snapshot"].__setitem__("revision", 5)),
+    ("w86_reward_weights", lambda s: s["ex41_w86_reward_weights"].__setitem__("swing", -9.0)),
+    ("map_switch_rng_and_use_gt_frac", lambda s: s.__setitem__("last_use_gt_frac", 0.5)),
+])
+def test_r6_readback_rejects_each_changed_group(group, mutate):
+    expected = _state()
+    restored = copy.deepcopy(expected)
+    restored["continuous_curriculum"]["segment_index"] = 1
+    mutate(restored)
+    with pytest.raises(ValueError, match=f"readback differs for {group}"):
+        compare_resume_state(expected, restored)
 
 
 def test_resume_stage_allows_only_the_explicit_next_segment_transition():
@@ -214,7 +259,7 @@ def test_resume_stage_allows_only_the_explicit_next_segment_transition():
 
     restored["continuous_curriculum"]["segment_index"] = 1
     restored["continuous_curriculum"]["active"] = 1
-    with pytest.raises(ValueError, match="readback differs for stage"):
+    with pytest.raises(ValueError, match="readback differs for w72_boundary_and_command_share"):
         compare_resume_state(expected, restored, save_interval=5)
 
     wrong_target = copy.deepcopy(restored)
@@ -238,6 +283,11 @@ def test_actual_model650_save_before_reference_and_resume_hook_contract():
     saved = torch.load(checkpoint, map_location="cpu", weights_only=False)
     iteration = int(saved["iter"])
     assert iteration == 650
+    legacy_extra = read_training_extra_row(checkpoint.parent, iteration)
+    assert legacy_extra is not None and legacy_extra["use_gt_frac"] == 1.0
+    assert legacy_extra["ex40_dr"]["push_schedule"]["vmax_mps"] == 1.5
+    saved["last_use_gt_frac"] = legacy_extra["use_gt_frac"]
+    saved["continuous_curriculum"]["push_vmax_mps"] = legacy_extra["ex40_dr"]["push_schedule"]["vmax_mps"]
     saved_ref = saved["continuous_curriculum"]["last_checkpoint"]
     assert saved_ref["iteration"] == iteration - 50
     assert Path(saved_ref["path"]).name == f"model_{iteration - 50}.pt"
@@ -256,6 +306,12 @@ def test_actual_model650_save_before_reference_and_resume_hook_contract():
         "sha256": sha256_file(checkpoint),
     }
     result = compare_resume_state(saved, restored, save_interval=50)
+    assert result["policy_critic_weights"]["state"] == "matched"
+    assert result["adam_moments"]["state"] == "matched"
+    assert result["learning_rate"]["ppo_value"] > 1e-5
+    assert result["normalization_running_stats"]["running_buffer_count"] == 0
+    assert result["map_switch_rng_and_use_gt_frac"]["use_gt_frac_recorded"] is True
+    print("EX41_R6_ACTUAL_MODEL650 " + json.dumps(result, sort_keys=True))
     assert result["checkpoint_reference"] == {
         "iteration": iteration,
         "path": str(checkpoint),
