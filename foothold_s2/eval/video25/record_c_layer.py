@@ -1839,10 +1839,12 @@ def _capture(spec: dict[str, Any]) -> None:
                         return np.ascontiguousarray(raw.render(recompute=True))[..., :3]
 
                     try:
-                        mask_row, frame, mask_retry_checks = read_mask_with_render_retry(
+                        # The extra render refreshes the annotator only. Keep the
+                        # RGB frame already accepted by render_frame_guarded.
+                        mask_row, mask_retry_checks = read_mask_with_render_retry(
                             instance_annotator.get_data, rerender_mask,
                             lambda: _render_state(raw, robot, command_term, sensor, capture_env_id),
-                            validate_mask, frame)
+                            validate_mask)
                     except ValueError as exc:
                         mask_packet = instance_annotator.get_data()
                         diagnostic = packet_diagnostic(mask_packet, selected_env=capture_env_id)

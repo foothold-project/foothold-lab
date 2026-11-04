@@ -9,7 +9,7 @@ from foothold_s2.eval.c_layer_segmentation import read_mask_with_render_retry
 
 def test_empty_mask_retry_preserves_simulation_state():
     packets = iter([0, 0, 1])
-    frame = np.zeros((2, 2, 3), dtype=np.uint8)
+    frame = np.full((2, 2, 3), 200, dtype=np.uint8)
     renders = []
 
     def validate(packet):
@@ -19,13 +19,13 @@ def test_empty_mask_retry_preserves_simulation_state():
 
     def rerender():
         renders.append(1)
-        return frame + len(renders)
+        return np.zeros_like(frame)
 
-    evidence, updated, checks = read_mask_with_render_retry(
+    evidence, checks = read_mask_with_render_retry(
         lambda: next(packets), rerender, lambda: {"time": 1.25, "step": 42},
-        validate, frame, max_retries=2)
+        validate, max_retries=2)
     assert evidence["selected_robot_pixels"] == 100
-    assert np.array_equal(updated, frame + 2)
+    assert np.all(frame == 200)
     assert len(checks) == len(renders) == 2
     assert all(row["before"] == row["after"] for row in checks)
 
@@ -34,11 +34,11 @@ def test_mask_retry_rejects_physics_change_and_exhaustion():
     step = iter([1, 2])
     with pytest.raises(RuntimeError, match="segmentation_render_state_changed"):
         read_mask_with_render_retry(lambda: 0, lambda: None, lambda: {"step": next(step)},
-                                    lambda _: (_ for _ in ()).throw(ValueError("empty")), None,
+                                    lambda _: (_ for _ in ()).throw(ValueError("empty")),
                                     max_retries=1)
     with pytest.raises(ValueError, match="empty"):
         read_mask_with_render_retry(lambda: 0, lambda: None, lambda: {"step": 1},
-                                    lambda _: (_ for _ in ()).throw(ValueError("empty")), None,
+                                    lambda _: (_ for _ in ()).throw(ValueError("empty")),
                                     max_retries=0)
 import pytest
 

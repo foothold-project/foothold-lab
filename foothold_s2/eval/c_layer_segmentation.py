@@ -6,22 +6,21 @@ import re
 import numpy as np
 
 
-def read_mask_with_render_retry(read_mask, rerender, snapshot, validate, initial_frame,
+def read_mask_with_render_retry(read_mask, rerender, snapshot, validate,
                                 *, max_retries: int = 5):
     """Refresh an empty instance mask without advancing physics or commands."""
     if max_retries < 0:
         raise ValueError("segmentation max_retries must be nonnegative")
-    frame = initial_frame
     checks = []
     for attempt in range(max_retries + 1):
         packet = read_mask()
         try:
-            return validate(packet), frame, checks
+            return validate(packet), checks
         except ValueError:
             if attempt == max_retries:
                 raise
             before = snapshot()
-            frame = rerender()
+            rerender()
             after = snapshot()
             row = {"retry": attempt + 1, "before": before, "after": after}
             checks.append(row)
