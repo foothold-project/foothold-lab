@@ -27,7 +27,8 @@ MAX_ATTEMPTS = 4
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def recorder_child_env(python_executable: str, parent: dict[str, str] | None = None) -> dict[str, str]:
+def recorder_child_env(python_executable: str, parent: dict[str, str] | None = None,
+                       source_root: str | Path | None = None) -> dict[str, str]:
     """Match seq_video.sh's Kit environment for every recorder subprocess."""
     env = dict(os.environ if parent is None else parent)
     executable = Path(python_executable)
@@ -43,6 +44,9 @@ def recorder_child_env(python_executable: str, parent: dict[str, str] | None = N
     env.update({"CONDA_PREFIX": prefix, "OMNI_KIT_ACCEPT_EULA": "YES",
                 "CUDA_DEVICE_ORDER": "PCI_BUS_ID", "PYTHONUNBUFFERED": "1",
                 "KMP_DUPLICATE_LIB_OK": "TRUE", "PYTHONUTF8": "1"})
+    if source_root is not None:
+        root = str(Path(source_root).resolve(strict=True))
+        env["PYTHONPATH"] = os.pathsep.join(filter(None, (root, env.get("PYTHONPATH", ""))))
     env.pop("CUDA_VISIBLE_DEVICES", None)
     return env
 
@@ -407,7 +411,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
             policy = dict(row["policy"], seed=seed)
             values = {"{mp4}": str(mp4), "{label}": row["label"], "{policy}": json.dumps(policy)}
             argv = [values.get(token, token) for token in row["recorder_argv"]]
-            child_env = recorder_child_env(argv[0])
+            child_env = recorder_child_env(argv[0], source_root=row["policy"]["source_root"])
             _write(attempt_root / "started.json", {"cell": cell["cell"], "ordinal": ordinal,
                                                    "seed": seed, "checkpoint_sha256": plan["checkpoint_sha256"],
                                                    "recorder_sha256": plan["recorder_sha256"]})
