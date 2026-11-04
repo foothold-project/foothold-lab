@@ -845,6 +845,22 @@ class DispatchTests(unittest.TestCase):
         res = json.loads(Path(board.DISPATCH["results"], "item_1.json").read_text(encoding="utf-8"))
         self.assertEqual(res["last_json"], {"eula": "YES"})
 
+    def test_runwrap_leaves_fresh_out_folder_absent(self):
+        import sys
+        from unittest import mock
+        d = Path(self.temp.name)
+        out = d / "stage" / "axis_v2"
+        board.write_queue(self.cfg["queue"], {"format": board.QUEUE_FORMAT, "items": [
+            {"id": 1, "state": "실행", "cwd": str(d), "done_files": [str(out / "eval_receipt.json")],
+             "argv": [sys.executable, "-c",
+                      "import sys, os, json; print(json.dumps({'existed': os.path.exists(sys.argv[2])}))",
+                      "--out", str(out)]}]})
+        with mock.patch("builtins.print"):
+            board.runwrap(1, self.cfg)
+        res = json.loads(Path(board.DISPATCH["results"], "item_1.json").read_text(encoding="utf-8"))
+        self.assertEqual(res["last_json"], {"existed": False})
+        self.assertTrue((d / "stage").is_dir())
+
     def test_no_new_unit_while_training_is_not_running(self):
         self.add("baseline eval", 3)
         for state in ("failed", "starting"):

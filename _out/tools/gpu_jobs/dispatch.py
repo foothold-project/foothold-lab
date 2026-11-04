@@ -1334,8 +1334,13 @@ def runwrap(item_id: int, cfg=LIVE) -> int:
     it = next(i for i in q["items"] if i["id"] == item_id)
     env = unit_env(it, dict(os.environ))
     # Evaluators write into the done-file folder without creating it (items 81 · 114 · 115 failed so).
+    # But an evaluator that demands a fresh --out folder refuses one that exists (11/05 06:45 item 411
+    # ex41_eval_once "fresh evaluation output required"), so create only the folder above --out.
+    argv = it.get("argv") or []
+    out = Path(argv[argv.index("--out") + 1]).resolve() if "--out" in argv[:-1] else None
     for p in it.get("done_files", []):
-        Path(p).parent.mkdir(parents=True, exist_ok=True)
+        parent = Path(p).parent
+        (parent.parent if out is not None and parent.resolve() == out else parent).mkdir(parents=True, exist_ok=True)
     started = datetime.now().timestamp()
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     last_json = None
