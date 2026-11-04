@@ -22,6 +22,8 @@ from foothold_s2.eval.c_layer_progress import run_recorder
 from foothold_s2.eval.c_layer_queue import child_log_has_traceback, recorder_child_env
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 from foothold_s2.eval import video_style
+from foothold_s2.eval.ex41_d48_gate import check_path as check_d48_path
+from foothold_s2.eval.ex41_d48_gate import check_receipt as check_d48_receipt
 from foothold_s2.eval import w78_video_consumer as shared
 
 
@@ -47,6 +49,8 @@ def publish_d48_video(source: Path, out: Path, *, kind: str, level: int,
     name = video_style.video_name("EX41", kind, level, iteration, outcome,
                                   segment=f"push_{mode}")
     target = out / (name + ".mp4")
+    check_d48_path({"schema": SCHEMA, "kind": kind, "level": level,
+                    "iteration": iteration, "map_mode": mode, "outcome": outcome}, target)
     temporary = out / (name + ".mp4.publishing")
     if target.exists() or temporary.exists():
         raise ValueError("D48 push published name already exists")
@@ -299,7 +303,14 @@ def run_one(args) -> dict:
             receipt_path = args.out / (mode + ".json")
             if receipt_path.is_file():
                 compare_mode_receipts(args.out)
-                completed.append(json.loads(receipt_path.read_text(encoding="utf-8")))
+                previous = json.loads(receipt_path.read_text(encoding="utf-8"))
+                try:
+                    check_d48_receipt(previous)
+                except ValueError as exc:
+                    atomic_json(args.out / (mode + ".d48_failure.json"),
+                                {"state": "technical_failure", "reason": str(exc)})
+                    raise
+                completed.append(previous)
                 continue
             attempts = args.out / "attempts" / specs[mode]["push_group_id"] / mode
             attempts.mkdir(parents=True, exist_ok=True)
@@ -322,6 +333,17 @@ def run_one(args) -> dict:
             if rc or child_log_has_traceback(attempts / "child.log"):
                 raise ValueError(f"A push recorder failed rc={rc}")
             verified = verify_capture(attempts, label, args, mode, source)
+            proposed = args.out / (video_style.video_name("EX41", args.kind, args.level,
+                           args.iteration, verified["outcome"], segment=f"push_{mode}") + ".mp4")
+            try:
+                check_d48_receipt({"schema": SCHEMA, "kind": args.kind, "level": args.level,
+                                   "iteration": args.iteration, "map_mode": mode,
+                                   "outcome": verified["outcome"], "video": str(proposed),
+                                   "capture": verified["capture"]})
+            except ValueError as exc:
+                atomic_json(attempts / "d48_failure.json",
+                            {"state": "technical_failure", "reason": str(exc)})
+                raise
             published = publish_d48_video(Path(verified["video"]), args.out,
                                           kind=args.kind, level=args.level,
                                           iteration=args.iteration, mode=mode,
@@ -338,6 +360,7 @@ def run_one(args) -> dict:
                        "dr_recovery_by_event": verified["dr_recovery_by_event"],
                        "push_signature": verified["push_signature"],
                        "capture": verified["capture"], "video_rule_version": VIDEO_RULE_VERSION}
+            check_d48_receipt(receipt)
             atomic_json(args.out / (mode + ".json"), receipt)
             completed.append(receipt)
         compare_mode_receipts(args.out)

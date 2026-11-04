@@ -20,6 +20,7 @@ from foothold_s2.eval.c_layer_queue import recorder_child_env, child_log_has_tra
 from foothold_s2.eval.c_layer_progress import run_recorder
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 from foothold_s2.eval import video_style
+from foothold_s2.eval.ex41_d48_gate import check_receipt as check_d48_receipt
 
 
 SCHEMA = "foothold-ex41-w78-video-request/1"
@@ -284,6 +285,15 @@ def run_one(args: argparse.Namespace) -> dict:
                         or receipt.get("combination_id") != combo
                         or sha256(Path(receipt["video"])) != receipt.get("video_sha256")):
                     raise ValueError("existing W78 receipt is invalid")
+                try:
+                    check_d48_receipt(receipt)
+                except ValueError as exc:
+                    failure_dir = out / "d48_name_failures"
+                    failure_dir.mkdir(exist_ok=True)
+                    write_json(failure_dir / (combo + ".json"),
+                               {"state": "technical_failure", "reason": str(exc),
+                                "receipt": str(receipt_path)})
+                    raise
                 continue
             admission = gate(args.python, args.gpu_jobs_config)
             if not admission["admit_next_unit"]:
@@ -317,6 +327,10 @@ def run_one(args: argparse.Namespace) -> dict:
                                                     request["local_iteration"], verified["own_result"],
                                                     segment=combo.lower())
                 target = out / (video_name + ".mp4")
+                check_d48_receipt({"schema": RECEIPT_SCHEMA, "combination_id": combo,
+                                   "local_iteration": request["local_iteration"],
+                                   "own_result": verified["own_result"], "video": str(target),
+                                   "attempt_dir": str(attempt)})
                 if target.exists():
                     raise ValueError("W78 published video name already exists")
                 temporary = target.with_suffix(".publishing")
