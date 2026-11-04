@@ -24,7 +24,7 @@
 | C1 | 학습 · 점수 감시기 · 단계 끝 평가 · 밀기 감시기 · 영상 촬영기 · 합성기 · 디스패처가 원격에 push 된 한 커밋(가지 `ex41-measure-fix`) | runner · scripter · lead | |
 | C2 | runner 커밋 d4f8193d · 4c1b14e2 · 7a907a90 · scripter 커밋 c4b84391 · cd41b19d · 4bde9787 · 12b8cdf7 · SB 촬영기가 그 커밋의 조상(`git merge-base --is-ancestor` 출력) | lead | 15:0x ex41-measure-fix e5c30137 에서 patch-id 대조(cherry-pick 이라 해시는 다름): c4b84391 → d2f31e82 · cd41b19d · 12b8cdf7 · 230cc44e 그대로 · 4bde9787 → 6527ffb2 · 54e393a5 → 8cad4806 · runner 3 커밋 dd653dc0 · d6598e06 · e702e65b · lead 93fd9441 · b26c556c · 889266c8 조상 확인. 남음: 새 실행 기동 HEAD 가 이 커밋(또는 그 뒤)인지 기동 때 대조 |
 | C3 | 프로세스마다 시작 때 HEAD 대조 · 다르면 거절(시험: 다른 HEAD 로 띄워 거절되는 로그) | runner | |
-| C4 | 실행 사본 쓰기 잠금(커밋 거절 hook · 시험 커밋이 거절된 출력) | lead | |
+| C4 | 실행 사본 쓰기 잠금(커밋 거절 hook · 시험 커밋이 거절된 출력) | lead | `_out/tools/ex41/lock_checkout.py`(f7c4d3d3) · 15:4x 시험 사본(ex41-measure-fix HEAD)에서 lock → 추적 파일 649 개 모두 읽기 전용 · 소스 편집 Permission denied · 새 파일(outputs) 쓰기 됨 · 잠근 채 `import foothold_s2.ex41_score_watch` 정상 · unlock 으로 되돌림. 남음: 기동 직후 실행 사본에 lock · check 0 writable 기록 |
 | C5 | 저장소 밖 실행 파일 0(mirror guard · boundary report · 디스패처 · 관리판을 저장소 `tools/` 로) | lead | 일부: 디스패처 · 관리판 `_out/tools/gpu_jobs/dispatch.py`(93fd9441) · 경계 보고 `_out/tools/ex41/boundary_report.py`(b26c556c, 실행 루트 인자 · 측정 없음이면 rc 2 · 경계 적용 DR 줄 출력, 1250 · 1500 · 2000 으로 확인). 남음: mirror guard 는 runner 가 정본 코드로(M8) |
 
 ## 2. 측정 체계
@@ -42,7 +42,7 @@
 | M9 | 경보가 lead 세션에 실제로 닿음(orchestration pending 0 · lead 창 수신 캡처) | lead | 원인: 기동 환경에 `EX41_ORCHESTRATION_TO` 가 없어 `ex41_ops._send_orchestration` 이 받는 곳 없이 실패(15 건 pending). 14:4x 같은 함수에 lead 창 handle 을 주고 보내 True · lead 받은편지함 도착 확인. lead 받은편지함 대기가 lead 창 발신을 거르던 필터를 제목 「[lead」 기준으로 고치고 시험 경보 2 로 깨어남 확인. 남음: 새 시작 스크립트가 이 환경 변수를 넣는지(runner · 기동 때 lead 확인) |
 | M10 | 경계 적용 영수증(DR · 단계) 계획 대비 0.01 어긋나면 경보 | runner | |
 | M11 | 평가 잡음 기준선(m6000 시드 42 · 43 · 44 · 39 칸 · 이미 잼: 칸별 차 중앙값 0.0022 · 최대 0.0084) | lead | `M6000-ANALYSIS.md` |
-| M12 | S2a 첫 500 회 lr 바닥 · KL 넘침(이전 실행 233 / 500 회)을 경계 보고에 넣음 | lead | |
+| M12 | S2a 첫 500 회 lr 바닥 · KL 넘침(이전 실행 233 / 500 회)을 경계 보고에 넣음 | lead | 경계 보고 12 줄(f7c4d3d3): 지난 250 회 lr 바닥 횟수 · KL probe > 0.05 횟수 · lr 중앙. 이전 실행으로 확인: 500 경계 바닥 117 회 · KL 24 회 · 2000 경계 바닥 4 회 · KL 0 회 |
 
 ## 3. 단계 끝 자동화 · 영상
 
@@ -62,7 +62,7 @@
 | G2 | 「대기 · 승인」 글자 판별 제거(`gpu_jobs.py:637-639`) · 「취소」 상태 추가 | lead | lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_condition_words_alone_never_gate · test_cancel_marks_never_run_items_and_refuses_running |
 | G3 | 띄우기 전 출력 폴더 · EULA · 대상 사본 도구 · 인자 검사(dry-parse) | lead | 일부 a11d8d43 · 97faa5cb |
 | G4 | 같은 종류 기술 실패 3 회 연속이면 그 종류를 막고 경보 | lead | lead/ex41-dispatch-on-measure 93fd9441(ex41-measure-fix a48ac12b 위) · `test_dispatch.py` 102 passed · 14:2x 실제 dispatcher 를 이 판으로 다시 띄움(PID 96960) · 첫 단계 busy_own 151 확인 · 시험 test_three_consecutive_failures_block_that_family_only |
-| G5 | 학습 상태 파일을 읽는 도구 전부 Windows 잠금 시험 통과 | lead | |
+| G5 | 학습 상태 파일을 읽는 도구 전부 Windows 잠금 시험 통과 | lead | 15:4x 실제 Windows 시험(`D:/mai-tmp/lead/g5_lock_test/`): 학습 상태 쓰기(`runners/status.py write_status`, 0e38d9d7 재시도) 와 디스패처 share-all 읽기 셋을 20 초 동시에. 실제 읽기 속도(0.2 s) 13,364 쓰기 · 건너뜀 0 · 깨진 읽기 0 · 쓰기 예외 0. 극단(초당 수천 읽기) 25 쓰기 중 11 건 재시도 끝 건너뜀 · 쓰기 예외 0(학습은 죽지 않음) |
 | G6 | 점검 문구에 「지난 1 시간 산출 수 · 실패 수」 | lead | |
 | G7 | C층 216 칸(시드 [42, 43] · MAX_ATTEMPTS 2) 이 P4 로 깔림 | scripter | 계획 c9600daa · 대기열 181 ~ 378 P4 · 15:0x 6 칸 끝 · 실패 0 · L3 분할 빈 마스크 원인 미확인(디스패처 3 회 막음으로 헛돌지 않음) |
 
