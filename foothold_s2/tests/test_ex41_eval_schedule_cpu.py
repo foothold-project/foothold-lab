@@ -20,13 +20,13 @@ TABLE = watch.DEFAULT_TABLE
 
 def test_nominal_plan_lengths_are_only_capacity_estimates():
     plan = load_plan(TABLE, arm='B')
-    assert watch.nominal_stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 5000)
+    assert watch.nominal_stage_end_updates(plan) == (750, 1750, 2750, 4000, 4500, 6000)
     assert [row['end_update'] for row in watch.stage_interval_loads(
         plan, train_seconds_per_update=27, core_seconds=1093,
-        auxiliary_seconds=9480)] == [750, 1750, 2750, 4000, 4500, 5000]
+        auxiliary_seconds=9480)] == [750, 1750, 2750, 4000, 4500, 6000]
     loads = watch.stage_interval_loads(plan, train_seconds_per_update=27,
                                        core_seconds=1093, auxiliary_seconds=9480)
-    assert [row['core_checkpoints'] for row in loads] == [3, 4, 4, 5, 2, 2]
+    assert [row['core_checkpoints'] for row in loads] == [3, 4, 4, 5, 2, 6]
     assert all(row['queue_growth_seconds'] == 0 for row in loads)
     assert loads[-2]['evaluation_seconds'] == 11666
     assert loads[-2]['training_seconds'] == 13500
@@ -37,12 +37,12 @@ def _clock_log(run, plan, *, hold=False, extension=False):
 
     clock = Clock(plan.clock_settings)
     rows = []
-    boundaries = list(range(1, 6502, 250))
+    boundaries = list(range(1, 7002, 250))
     if hold:
         # The verifier's actual sequence: hold at 1001, recover at 1251/1501.
         boundaries = sorted(set(boundaries + [1001, 1251, 1501]))
     for n in boundaries:
-        if n > 6001: break
+        if n > 7001: break
         failed = True if hold and n == 1001 else False
         score_iteration = n - 1 - 250
         clock.boundary(n, failed, score_iteration if score_iteration > 0 else None)
@@ -66,17 +66,17 @@ def test_actual_clock_receipts_move_auxiliary_to_recovered_stage_end(tmp_path):
     hold_run = tmp_path / 'hold_run';hold_run.mkdir()
     _clock_log(hold_run, plan, hold=True)
     hold_ends = watch.stage_end_updates(plan, hold_run)
-    assert 1750 not in hold_ends and 2250 in hold_ends and 5000 in hold_ends
-    assert 5500 in hold_ends
+    assert 1750 not in hold_ends and 2250 in hold_ends and 6500 in hold_ends
+    assert 5500 not in hold_ends
     assert watch.due_evaluation_scopes(1750, plan, hold_run) == ('periodic',)
     assert watch.due_evaluation_scopes(2250, plan, hold_run) == ('periodic', 'auxiliary')
 
     extension_run = tmp_path / 'extension_run';extension_run.mkdir()
     _clock_log(extension_run, plan, extension=True)
     extension_ends = watch.stage_end_updates(plan, extension_run)
-    assert 5000 in extension_ends and 5500 in extension_ends
-    assert watch.due_evaluation_scopes(5000, plan, extension_run) == ('periodic', 'auxiliary')
-    assert watch.due_evaluation_scopes(5500, plan, extension_run) == ('periodic', 'auxiliary')
+    assert 6500 in extension_ends
+    assert watch.due_evaluation_scopes(6500, plan, extension_run) == ('periodic', 'auxiliary')
+    assert watch.due_evaluation_scopes(6500, plan, extension_run) == ('periodic', 'auxiliary')
 
 
 def test_stage_end_requires_runtime_clock_evidence(tmp_path):
@@ -232,7 +232,7 @@ def test_measured_periodic_side_cost_fits_one_250_update_training_interval():
                                       auxiliary_seconds=9480)
     assert all(row['periodic_seconds'] == row['core_checkpoints'] * 2606 for row in rows)
     assert 1093 + 1513 < 60 * 60
-    assert [row['queue_growth_seconds'] for row in rows] == [0, 0, 0, 0, 1192, 2384]
+    assert [row['queue_growth_seconds'] for row in rows] == [0, 0, 0, 0, 1192, 0]
 
 
 def test_periodic_bundle_requires_exact_side_pair_but_not_full_stage_end_w78(tmp_path):

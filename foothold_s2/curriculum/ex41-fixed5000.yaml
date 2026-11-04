@@ -1,4 +1,4 @@
-# Approved 11/02 14:0x. m6000 +5000 nominal; DR pause <=1000; one +500 extension.
+# D178 approved 11/04 14:5x. m6000 +6000 nominal; DR pause <=1000; one +500 extension.
 # Parent baseline SHA is verified at start. Old ex41.yaml is historical, not this launch.
 format: foothold-ex41-curriculum/1
 start: transfer
@@ -377,8 +377,8 @@ stages:
   start:
     fixed_update: 4501
   duration:
-    minimum_updates: 500
-    maximum_updates: 500
+    minimum_updates: 1500
+    maximum_updates: 1500
   shares:
     forward: 0.23
     walk_left: 0.06
@@ -447,7 +447,7 @@ fixed_schedule:
   push_baseline:
     path: foothold_s2/curriculum/ex41-push-m6000-baseline.json
     sha256: ec8c81451846da03f6e3a4899568428b9a2cf91e0f28ef8aaaac4de97d7418bd
-  duration_updates: 5000
+  duration_updates: 6000
   pause_limit_updates: 1000
   recovery_boundaries: 2
   extension_updates: 500

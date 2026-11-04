@@ -18,6 +18,7 @@ import json
 import os
 import sys
 
+
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
@@ -138,6 +139,7 @@ def _clear_ex41_gpu0_busy_marker() -> None:
 
 atexit.register(_clear_ex41_gpu0_busy_marker)
 if _pre_args.ex41_table:
+    os.environ.setdefault('EX41_ORCHESTRATION_TO', 'term_37f1d02b-35f8-435d-940e-d43a8a5be1de')
     from foothold_s2.scripts.ex41_startup import (
         authorization_snapshot, build_ex41_disk_plan, ex41_output_layout_for_run,
         load_fixed_plan, require_production_authorization, production_launch_status,

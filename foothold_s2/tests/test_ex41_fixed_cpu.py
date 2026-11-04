@@ -52,7 +52,7 @@ def test_actual_parent_baseline_judges26_and_preserves39_pinned_cells():
     p=load_plan(TABLE,arm='B');b=baseline_counts(p)
     assert len(b)==26 and len(baseline_counts(p,include_record_only=True))==39
     assert p.parent_update==6000 and p.initial_dr_scale==.5
-    assert p.fixed_schedule['duration_updates']==5000
+    assert p.fixed_schedule['duration_updates']==6000
     assert p.fixed_schedule['push_vmax_mps']==[1.5,1.65,1.8,2.0,2.0,2.0]
     assert p.domain_randomization['push_interval_s']==[10.0,15.0]
     assert [s.id for s in p.stages]==['S2a','S2b','S2c','S2d','S2e','T0_prime']
@@ -157,11 +157,34 @@ def test_pause_budget_freezes_dr_but_schedule_finishes():
 def test_runtime_fixed_stages_ignore_early_pass_or_newtask_failure(tmp_path):
     r,_=fixture(tmp_path);r.on_update_start(1)
     expected={751:'S2b',1751:'S2c',2751:'S2d',4001:'S2e',4501:'T0_prime'}
-    for n in range(251,5002,250):
+    for n in range(251,6502,250):
         tick(r,n,stage_pass=n<750)
         if n in expected: assert r.effective['stage_id']==expected[n]
-    assert r.finished and not r.graduated and r.dr_scale(5001)==1.
+    assert r.finished and not r.graduated and r.dr_scale(6001)==1.
     assert r._stage_baseline_sha==r.plan.parent_sha256
+
+
+def test_d96_command_share_adjustment_is_approved_and_consumed_at_boundary(tmp_path):
+    r,_=fixture(tmp_path); snap=copy.deepcopy(r._snapshot)
+    snap['config']['values']['command_share_bias']['walk']=.01
+    commit_inputs(r,snap)
+    tick(r,251)
+    shares=r.effective['shares']
+    assert shares['walk_left']==pytest.approx(.085)
+    assert shares['walk_right']==pytest.approx(.065)
+    applied=[row for row in (r.log_dir/'ex41_application.jsonl').read_text().splitlines()
+             if json.loads(row).get('iteration')==251][-1]
+    assert any(row['path']=='command_share_bias.walk' and row['decision_id']=='D96-D177-a'
+               for row in json.loads(applied)['decisions'])
+
+
+def test_d96_rejects_more_than_one_point_in_one_boundary(tmp_path):
+    r,_=fixture(tmp_path); snap=copy.deepcopy(r._snapshot)
+    snap['config']['values']['command_share_bias']['walk']=.011
+    commit_inputs(r,snap);tick(r,251)
+    assert r.effective['shares']['walk_left']==pytest.approx(.075)
+    assert any(row['status']=='rejected' and '1 percentage point' in row['reason']
+               for row in map(json.loads,(r.log_dir/'ex41_application.jsonl').read_text().splitlines()))
 
 
 def test_runtime_stand_halves_only_swing_once_no_pair_or_mirror(tmp_path):
@@ -211,7 +234,7 @@ def test_invalid_manual_config_cannot_hide_dr_hold_or_stop_fixed_schedule(tmp_pa
 
 def test_full_runtime_exhaustion_finishes_without_fake_full_dr(tmp_path):
     r,_=fixture(tmp_path)
-    for n in range(251,6002,250): tick(r,n,failed=True)
+    for n in range(251,7002,250): tick(r,n,failed=True)
     assert r.finished and not r.stop_requested and r.clock.pause_used==1000
     assert r.effective['stage_id']=='T0_prime' and r.dr_scale(6001)==.5
     assert not r.clock.extension
@@ -231,7 +254,7 @@ def test_d110_extension_exactly_once_full_dr_only(tmp_path):
         tick(r,n)
     assert r.clock.extension==500 and r.effective['stage_id']=='S2e'
     tick(r,4751);tick(r,5001);assert r.effective['stage_id']=='T0_prime' and not r.finished
-    tick(r,5251);tick(r,5501);assert r.finished and r.clock.extension==500
+    tick(r,5251);tick(r,6501);assert r.finished and r.clock.extension==500
 
 
 def test_second_recovery_at_pause_cap_wins_over_freezing():
@@ -333,19 +356,19 @@ def test_rejected_apply_accounts_time_and_resume_is_valid(tmp_path,monkeypatch):
 @pytest.mark.parametrize('safety_at_end',[False,True])
 def test_hold1000_plus_extension500_finishes_at6501(tmp_path,safety_at_end):
     r,_=fixture(tmp_path)
-    for n in range(251,6502,250):
+    for n in range(251,7752,250):
         if n==5501:
             assert r.stage_entry_iteration==5001
             r._level_history=[(i,.1 if i<=5250 else .7) for i in range(5050,5501,50)]
-        if safety_at_end and n==6501:
+        if safety_at_end and n==7501:
             p=score(r,n-1,metrics={'maintenance_counts':counts(r),'stand_min_passed':64})
             data=json.loads(p.read_text());data['safety_stop']=True;p.write_text(json.dumps(data))
             r.on_update_start(n)
         else:tick(r,n,failed=n in (751,1751))
-        if n<6501:assert not r.finished
+        if n<7501:assert not r.finished
     assert r.finished is not safety_at_end and r.stop_requested is safety_at_end
     assert r.clock.pause_used==1000 and r.clock.extension==500
-    assert r.dr_scale(6501)==1. and r.effective['stage_id']=='T0_prime'
+    assert r.dr_scale(7501)==1. and r.effective['stage_id']=='T0_prime'
     resumed=make_runtime(load_plan(r.plan.path,arm='B'),4,'cpu',tmp_path/'resumed',segment_index=1)
     attach_consumer(resumed);resumed.load_state_dict(r.state_dict())
     assert resumed.stop_requested is safety_at_end and resumed.finished is not safety_at_end

@@ -1,4 +1,4 @@
-"""Approved 5000-update EX41 schedule, with bounded DR safety pauses.
+"""Approved 6000-update EX41 schedule, with bounded DR safety pauses.
 
 Local n is the next rollout index (1 based). Nominal time is completed updates.
 No gate grants early promotion. A pause delays the remaining schedule and keeps
@@ -13,7 +13,7 @@ from foothold_s2.curriculum import w72
 from foothold_s2.curriculum.continuous import sha256, sha256_lf_text
 from foothold_s2.curriculum.ex41 import EX41Runtime,digest
 
-DURATIONS=(750,1000,1000,1250,500,500)  # approved schema guard, not the elapsed clock
+DURATIONS=(750,1000,1000,1250,500,1500)  # D178 approved schema guard, not elapsed clock
 CASES=('fwd0.5','fwd1.0','spin+1.2','spin-1.2','back0.5','back1.0',
        'side+0.5','side-0.5','diag-fwd+side+','diag-fwd+side-',
        'diag-back+side+','diag-back+side-','stop')
@@ -52,7 +52,7 @@ def build_maintenance_counts(score, baseline, *, total_envs):
 
 def validate_plan(plan,doc):
     cfg=plan.fixed_schedule
-    expected={'duration_updates':5000,'pause_limit_updates':1000,'recovery_boundaries':2,
+    expected={'duration_updates':6000,'pause_limit_updates':1000,'recovery_boundaries':2,
               'extension_updates':500,'maximum_extensions':1,'maintenance_drop_count':3,
               'interval_updates':250}
     if set(cfg)!=set(expected)|{'maintenance_baseline','include_record_only','dr_stage_end_scales','push_vmax_mps','push_baseline'} or any(cfg[k]!=v for k,v in expected.items()):

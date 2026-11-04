@@ -456,6 +456,8 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
          interval: int = 250, parent_iteration: int = 6000, poll_seconds: float = 10,
          marker: Path = DEFAULT_MARKER, python: Path = DEFAULT_PYTHON,
          worktree: Path | None = None) -> int:
+    os.environ.setdefault('EX41_ORCHESTRATION_TO',
+                          'term_37f1d02b-35f8-435d-940e-d43a8a5be1de')
     if first_local_update < interval or first_local_update % interval or interval <= 0:
         raise ValueError("push250 starts at a positive interval-aligned local update")
     run_dir, score_dir, out_dir = Path(run_dir), Path(score_dir), Path(out_dir)

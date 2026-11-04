@@ -11,6 +11,8 @@ BOUNDS = {'reward_weights.swing':(-20.,-2.), 'reward_weights.stumble':(-3.,-1.),
           'ppo.desired_kl':(.0001,.1), 'dr.target_scale':(0.,1.),
           'dr.ramp_updates':(0,100000), 'heading_forward_fraction':(0.,1.),
           'terrain_level_cap':(0,5), 'episode_length_s':(1.,120.)}
+COMMAND_PAIRS=('walk','spin','side','diag_fwd','diag_back')
+BOUNDS.update({f'command_share_bias.{name}':(-.02,.02) for name in COMMAND_PAIRS})
 BOOLS = frozenset({'critic_mirror','w71_ready'})
 SNAPSHOT_BOOL_FIELDS = frozenset({'critic_mirror','w71_ready'})
 PAIR_STEP_MAX = .01  # D93-pair-one-point-limit-two: fractions, not percent.
@@ -98,6 +100,8 @@ def validate_change(before: dict, after: dict, approvals: dict) -> list[dict]:
         if isinstance(b[key],(int,float)) and not isinstance(b[key],bool) and isinstance(value,(int,float)) and not isinstance(value,bool) and b[key]==value: continue
         if key not in BOUNDS and key not in BOOLS:
             raise ValueError(f'W72 locked or unsupported field: {key}')
+        if key.startswith('command_share_bias.') and abs(float(value)-float(b[key])) > .010000000001:
+            raise ValueError('W72 command share change exceeds +/-1 percentage point per boundary')
         permit=approvals['fields'].get(key)
         if not isinstance(permit,dict) or not isinstance(permit.get('decision_id'),str) or not permit['decision_id']:
             raise ValueError(f'W72 unapproved field: {key}')

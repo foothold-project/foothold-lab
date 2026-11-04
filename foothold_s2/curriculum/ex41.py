@@ -206,6 +206,7 @@ class EX41Runtime(Runtime):
         return {'ppo':{'entropy_coef':.01,'desired_kl':.01},
                 'dr':{'target_scale':self.plan.initial_dr_scale,'ramp_updates':0},
                 'reward_weights':{'zero_yaw':-.5,'swing':-10.,'stumble':-2.},
+                'command_share_bias':{name:0. for name in w72.COMMAND_PAIRS},
                 'heading_forward_fraction':.3,'critic_mirror':False,
                 'terrain_level_cap':5,'w71_ready':False,'episode_length_s':20.}
 
@@ -249,6 +250,14 @@ class EX41Runtime(Runtime):
     def _effective(self,pos,n,values):
         s=self.templates[pos]; meta=self.stage_meta[s.id]
         shares=dict(s.shares)
+        pair_names={'walk':'walk_left|walk_right','spin':'spin_left|spin_right',
+                    'side':'side_left|side_right','diag_fwd':'diag_fwd_left|diag_fwd_right',
+                    'diag_back':'diag_back_left|diag_back_right'}
+        for name,bias in values['command_share_bias'].items():
+            pair=pair_names[name]
+            if abs(bias+self._pair_bias.get(pair,0.))>.020000000001:
+                raise ValueError('EX41 combined command share bias exceeds D96 cumulative +/-2 percentage points')
+            left,right=pair.split('|'); shares[left]+=bias; shares[right]-=bias
         for pair,bias in self._pair_bias.items():
             left,right=pair.split('|'); shares[left]+=bias; shares[right]-=bias
         validate_shares(shares)

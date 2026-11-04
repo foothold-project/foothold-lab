@@ -25,6 +25,21 @@ fields:
     choices:
     - false
     - true
+  command_share_bias.walk:
+    decision_id: D96-D177-a
+    bounds: [-0.02, 0.02]
+  command_share_bias.spin:
+    decision_id: D96-D177-a
+    bounds: [-0.02, 0.02]
+  command_share_bias.side:
+    decision_id: D96-D177-a
+    bounds: [-0.02, 0.02]
+  command_share_bias.diag_fwd:
+    decision_id: D96-D177-a
+    bounds: [-0.02, 0.02]
+  command_share_bias.diag_back:
+    decision_id: D96-D177-a
+    bounds: [-0.02, 0.02]
 automatic:
   stand_restore: lead-1102-1400-stand-swing-half-once
   extension: D110-one-extension

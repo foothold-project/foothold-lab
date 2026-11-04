@@ -1539,6 +1539,7 @@ def main(argv: list[str] | None = None) -> int:
     qa.add_argument("--wait-absent", action="append", default=[])
     qa.add_argument("--wait-pid", action="append", type=int, default=[])
     qa.add_argument("--done-file", action="append", default=[])
+    qa.add_argument("--queue", type=Path, help="queue file (defaults to the live dispatcher queue)")
     for name in ("done", "run"):
         qs.add_parser(name).add_argument("id", type=int)
     qc = qs.add_parser("cancel", help="never ran / should not run; kept with a reason")
@@ -1564,7 +1565,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.action == "board":
         return watch(args)
     if args.action == "queue":
-        print(queue_cmd(args))
+        cfg = {**LIVE, "queue": str(args.queue.resolve())} if getattr(args, "queue", None) else LIVE
+        print(queue_cmd(args, cfg=cfg))
         return 0
     if args.action == "status":
         print(live_status())

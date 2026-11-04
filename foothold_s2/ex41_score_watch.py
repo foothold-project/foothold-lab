@@ -672,30 +672,28 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
 
 
 def register_stage_end_queue_jobs(queue_path, specs):
-    """Register one-shot items in the active gpu_jobs board queue."""
-    import importlib.util
-    module_path = Path(os.environ.get(
-        'EX41_GPU_JOBS_SCRIPT',
-        'C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/gpu_jobs/gpu_jobs.py')).resolve(strict=True)
-    spec = importlib.util.spec_from_file_location('foothold_active_gpu_jobs', module_path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError('active gpu_jobs module unavailable')
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    """Register one-shot jobs through this checkout's dispatcher CLI."""
+    module_path = (Path(__file__).resolve().parents[1] / '_out/tools/gpu_jobs/dispatch.py').resolve(strict=True)
+    queue_path = Path(queue_path).resolve()
+    queue_path.parent.mkdir(parents=True, exist_ok=True)
     registered = []
-    config = {'queue': str(Path(queue_path).resolve())}
     for item in specs:
-        queue = module.read_queue(config['queue'])
+        queue = read_dispatch_queue(queue_path)
         existing = next((row for row in queue['items']
                          if row.get('condition') == item['authorization_ref']), None)
         if existing is None:
-            args = argparse.Namespace(
-                qaction='add', title=item['id'], priority=item['priority'], gpu=item['gpu'],
-                start=None, end=None, owner=item['owner'], cond=item['authorization_ref'],
-                needs_approval=False, kind=item['kind'], argv_json=json.dumps(item['argv']),
-                cwd=item['cwd'], wait_absent=[], wait_pid=[], done_file=item['done_files'])
-            module.queue_cmd(args, cfg=config)
-            queue = module.read_queue(config['queue'])
+            argv = [sys.executable, str(module_path), 'queue', 'add', '--queue', str(queue_path),
+                    '--title', item['id'], '--priority', str(item['priority']),
+                    '--gpu', str(item['gpu']), '--owner', item['owner'],
+                    '--cond', item['authorization_ref'], '--kind', item['kind'],
+                    '--argv-json', json.dumps(item['argv']), '--cwd', item['cwd']]
+            for done_file in item['done_files']:
+                argv.extend(['--done-file', done_file])
+            result = subprocess.run(argv, cwd=str(module_path.parents[3]), capture_output=True,
+                                    text=True, check=False)
+            if result.returncode:
+                raise RuntimeError(f'dispatch queue add rc={result.returncode}: {result.stderr.strip()}')
+            queue = read_dispatch_queue(queue_path)
             existing = next((row for row in queue['items']
                              if row.get('condition') == item['authorization_ref']), None)
         if existing is None:
@@ -704,17 +702,16 @@ def register_stage_end_queue_jobs(queue_path, specs):
     return registered
 
 
-def _active_gpu_jobs_module():
+def read_dispatch_queue(queue_path):
+    """Read queue.json using this repository's dispatcher schema."""
     import importlib.util
-    module_path = Path(os.environ.get(
-        'EX41_GPU_JOBS_SCRIPT',
-        'C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/gpu_jobs/gpu_jobs.py')).resolve(strict=True)
+    module_path = (Path(__file__).resolve().parents[1] / '_out/tools/gpu_jobs/dispatch.py').resolve(strict=True)
     spec = importlib.util.spec_from_file_location('foothold_active_gpu_jobs', module_path)
     if spec is None or spec.loader is None:
         raise RuntimeError('active gpu_jobs module unavailable')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return module.read_queue(str(Path(queue_path).resolve()))
 
 
 def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
@@ -971,8 +968,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
             queue_jobs[key] = job_ids
             return {'state':'queued','iteration':iteration,'checkpoint_sha256':pinned,
                     'jobs':list(job_ids), 'queue_path':str(queue_path)}
-        queue_module = _active_gpu_jobs_module()
-        queue_doc = queue_module.read_queue(str(queue_path))
+        queue_doc = read_dispatch_queue(queue_path)
         jobs = {str(row['id']):row for row in queue_doc['items']}
         statuses = {}
         receipts_dir = target / 'stage_end_receipts'; receipts_dir.mkdir(parents=True, exist_ok=True)

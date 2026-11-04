@@ -148,6 +148,7 @@ def launch_ex41_score_watch(run_dir: str | Path, score_dir: str | Path, *,
     env["PYTHONPATH"] = str(repo) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     env["PYTHONUTF8"] = "1"
     env["PYTHONUNBUFFERED"] = "1"
+    env.setdefault("EX41_ORCHESTRATION_TO", "term_37f1d02b-35f8-435d-940e-d43a8a5be1de")
     stdout_path, stderr_path = out / "watcher.stdout.log", out / "watcher.stderr.log"
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
     with stdout_path.open("ab") as stdout, stderr_path.open("ab") as stderr:
