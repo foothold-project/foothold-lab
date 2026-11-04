@@ -69,7 +69,9 @@ def test_all_c_layer_rows_pin_headless_camera_args(tmp_path: Path, monkeypatch):
     recorder = tmp_path / "record_c_layer.py"
     composer = tmp_path / "compose.py"
     python = tmp_path / "python.exe"
-    for path in (checkpoint, recorder, composer, python):
+    gpu_tool = tmp_path / "gpu_jobs.py"
+    gpu_config = tmp_path / "gpu_jobs.json"
+    for path in (checkpoint, recorder, composer, python, gpu_tool, gpu_config):
         path.write_bytes(b"fixture")
 
     monkeypatch.setattr(plan_c_layer, "_head", lambda _source: "a" * 40)
@@ -83,7 +85,8 @@ def test_all_c_layer_rows_pin_headless_camera_args(tmp_path: Path, monkeypatch):
     plan = plan_c_layer.build_plan(
         checkpoint=checkpoint, source_root=source, recorder=recorder,
         composer=composer, python=python, playlist_dir=tmp_path / "playlists",
-        priority_markers={"training": tmp_path / "training.busy"}, device="cuda:1")
+        priority_markers={"training": tmp_path / "training.busy"}, device="cuda:1",
+        gpu_jobs_tool=gpu_tool, gpu_jobs_config=gpu_config)
     assert len(plan["jobs"]) == 216
     for row in plan["jobs"]:
         argv = row["recorder_argv"]
