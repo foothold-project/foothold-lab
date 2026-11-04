@@ -4,3 +4,5 @@ ts	phase	decision	why	evidence	result
 2026-11-04T23:07:55+09:00	plan	띄운 뒤 lead 일 A~D 를 계약에 추가	팀장 23:0x 지시	OVERNIGHT-CONTRACT.md	open
 2026-11-04T23:14:04+09:00	contract	텔레그램 정기 보고 추가: 250 경계 해석 · 단계 넘김 · 띄움/끝	팀장 23:1x	OVERNIGHT-CONTRACT.md 3절	open
 2026-11-04T23:14:04+09:00	gate	W72 학습 중 설정 변경(R5)을 잠금 해제→커밋→잠금 절차 그대로 실제 Kit 예행 요구 · 안 되면 안 띄움	팀장 23:1x 질문 · 실행 사본 잠금과 W72 커밋 고정이 부딪칠 수 있음	w72.py:9-16 · ex41-fixed5000.yaml:13-14	open
+2026-11-04T23:20:41+09:00	contract	텔레그램 모양 고정 · 250 경계 재는 것 12 줄 명시(W72 는 손잡이)	팀장 23:2x	OVERNIGHT-CONTRACT.md 3절 · EX41-250-LOG 열 줄	open
+2026-11-04T23:20:41+09:00	sessions	scripter · analyst 에 HANDOFF 메모 뒤 미리 /compact	팀장 23:2x · 학습 중 압축으로 맥락 잃지 않게	D:/mai-tmp/<이름>/HANDOFF-1104-2330.md	open
