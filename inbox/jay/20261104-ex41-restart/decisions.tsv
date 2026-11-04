@@ -25,3 +25,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T05:39:17+09:00	stage	751 S2a → S2b applied · DR 0.5 · 지형 fixed_l02 · 텔레그램 단계 넘김 보냄	계획대로	ex41_application.jsonl 751	done
 2026-11-05T05:48:02+09:00	gpu1	C층 재촬영 22 칸 끝 · GPU1 05:47 부터 빔 · 다음 일은 750 단계 끝 평가(800 저장 뒤 약 06:00)와 단계 끝 P2 · P3 · 그 사이 약 13 분은 채울 일 없음으로 둠	새 계열 촬영을 임의로 만들지 않음	dispatcher idle 05:47	open
 2026-11-05T06:46:28+09:00	boundary750	750 경계 · 유지 · 후진 1.0 판정선 0.003 넘음(잡음 안) 지켜봄 · 1000 에서도 넘으면 대책 보고 · 단계 끝 55 건 자동 등록(R3 운영 확인)	D179 한 경계 미달은 기록 후 재측정	score_750 · queue 411~465	done
+2026-11-05T06:54:45+09:00	stage-end	750 단계 끝 axis_v2(item 411) 06:45 실패 · 원인: dispatcher runwrap 이 done-file 폴더(=--out)를 미리 만들어 ex41_eval_once 가 「fresh output required」 로 거절 · dispatcher 고침 6852e7e1(시험이 옛 코드에서 실패 확인 · 107 통과) · runwrap 은 항목마다 새 프로세스라 바로 적용 · 빈 폴더 지우고 466 으로 다시 걸음	학습 · 감시기 안 건드림	item_411.log · ex41_eval_once.py:298	open
