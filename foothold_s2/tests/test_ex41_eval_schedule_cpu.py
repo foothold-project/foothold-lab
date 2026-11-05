@@ -397,8 +397,8 @@ def test_core_score_is_published_before_stage_end_auxiliary_dispatch(
     assert launched == ['periodic']
     if auxiliary_due:
         jobs = state['stage_end_queue_jobs'][f'{iteration}_{sha256(cp)}']
-        assert len(jobs) == 55
-        assert [row['priority'] for row in registered] == [2, 2, 2] + [3] * 52
+        assert len(jobs) == 85
+        assert [row['priority'] for row in registered] == [2, 2, 3] + [2] * 31 + [3] * 51
         assert not (out / f'model_{iteration}_{sha256(cp)[:12]}' / 'stage_end_auxiliary.json').exists()
         assert state['done'][f'{iteration}_{sha256(cp)}']['state'] == 'complete'
     else:
@@ -433,32 +433,43 @@ def test_stage_end_queue_items_are_independent_and_prioritized(tmp_path):
     rows = watch.stage_end_queue_specs(checkpoint, tmp_path / 'target',
                                       watch.config(watch.DEFAULT_CONFIG),
                                       gpu0_training_active=True)
-    assert len(rows) == 55
-    eval_rows, push_video, video_rows = rows[:3], rows[3], rows[4:]
-    assert [row['phase'] for row in eval_rows] == ['axis_v2', 'w78_v2', 'push_ladder']
-    assert [row['priority'] for row in eval_rows] == [2, 2, 2]
-    assert [row['kind'] for row in eval_rows] == ['eval'] * 3
-    assert push_video['phase'] == 'a_push_video'
+    assert len(rows) == 85
+    eval_rows = [row for row in rows if row['priority'] == 2]
+    video_rows = [row for row in rows if row['priority'] == 3]
+    assert [row['phase'] for row in eval_rows[:2]] == ['axis_v2', 'push_ladder']
+    assert [row['kind'] for row in eval_rows[:2]] == ['eval'] * 2
+    w78_rows = [row for row in eval_rows if row['phase'].startswith('w78_v2:')]
+    w78_units = [row for row in w78_rows if row['phase'] != 'w78_v2:merge']
+    w78_merge = next(row for row in w78_rows if row['phase'] == 'w78_v2:merge')
+    assert len(w78_units) == 30
+    assert all(len(row['argv'][row['argv'].index('--terrain-skill-v2-cases') + 1].split(',')) == 1
+               and len(row['argv'][row['argv'].index('--terrain-skill-v2-modes') + 1].split(',')) == 1
+               for row in w78_units)
+    assert all('--terrain-skill-v2-resume' in row['argv'] for row in w78_units)
+    # dispatch.py selects same-priority items by (priority, id).
+    assert w78_merge['id'] > max(row['id'] for row in w78_units)
+    dispatch_order = sorted(w78_units + [w78_merge], key=lambda row: (row['priority'], row['id']))
+    assert dispatch_order[-1] is w78_merge
+    assert w78_merge['done_files'] == [str(tmp_path / 'target' / 'stage_end_auxiliary_eval' / 'w78_v2' / 'terrain_skill_v2.json')]
+    assert len(video_rows) == 52
+    push_video = next(row for row in video_rows if row['phase'] == 'a_push_video')
     assert push_video['kind'] == 'render' and push_video['priority'] == 3
-    assert push_video['done_files']
-    assert len(video_rows) == 51
+    assert len([row for row in video_rows if row['phase'].startswith('W57:')]) == 39
+    assert len([row for row in video_rows if row['phase'].startswith('W80:')]) == 12
     assert all(row['priority'] == 3 and row['kind'] == 'render' for row in video_rows)
-    assert len({row['phase'] for row in video_rows}) == 51
-    assert sum(row['phase'].startswith('W57:') for row in video_rows) == 39
-    assert sum(row['phase'].startswith('W80:') for row in video_rows) == 12
     assert all('--suite' in row['argv'] and '--case' in row['argv'] and '--mode' in row['argv']
-               for row in video_rows)
+               for row in video_rows if row['phase'] != 'a_push_video')
     assert all(row['gpu'] == 1 and row['gpu_uuid'] == 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f'
                and row['authorization_ref'] and row['done_files'] for row in rows)
     assert all(row['argv'][row['argv'].index('--scope') + 1] == row['phase']
-               for row in eval_rows)
+               for row in eval_rows[:2])
     assert all(row['done_files'] and row['argv'][row['argv'].index('--suite') + 1]
-               in ('W57','W80') for row in video_rows)
+               in ('W57','W80') for row in video_rows if row['phase'] != 'a_push_video')
     assert sha256(checkpoint) in eval_rows[0]['authorization_ref']
     registered = watch.register_stage_end_queue_jobs(tmp_path / 'queue.json', rows)
-    assert [row['state'] for row in registered] == ['대기'] * 55
-    assert [row['priority'] for row in registered] == [2] * 3 + [3] * 52
+    assert len(registered) == 85
+    assert [row['priority'] for row in registered] == [2, 2, 3] + [2] * 31 + [3] * 51
     assert all(row['kind'] in ('eval','render') for row in registered)
-    assert len({row['condition'] for row in registered}) == 55
+    assert len({row['condition'] for row in registered}) == 85
     queue_doc = json.loads((tmp_path / 'queue.json').read_text(encoding='utf-8-sig'))
-    assert queue_doc['format'] == 'foothold-gpu-queue/1' and len(queue_doc['items']) == 55
+    assert queue_doc['format'] == 'foothold-gpu-queue/1' and len(queue_doc['items']) == 85

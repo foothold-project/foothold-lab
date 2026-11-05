@@ -175,9 +175,11 @@ def immutable(path, row):
 
 def _raw_path(folder, row):
     name = row.get('raw_file')
-    if not isinstance(name, str) or Path(name).name != name or not name.endswith('.npz'):
-        raise ValueError('raw NPZ must be a local basename')
-    path = folder/name
+    if not isinstance(name, str) or not name.endswith('.npz'):
+        raise ValueError('raw NPZ must be a relative NPZ path')
+    path = (Path(folder)/name).resolve(strict=True)
+    if Path(folder).resolve() not in path.parents:
+        raise ValueError('raw NPZ path escapes its W78 result root')
     if sha256(path) != row.get('raw_sha256'): raise ValueError('raw NPZ SHA differs')
     return path
 
@@ -696,12 +698,12 @@ def _stage_video_output(checkpoint):
 
 def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_training_active=False,
                           table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
-    """Build four isolated P2 evaluations and 51 independent P3 video jobs."""
+    """Build independent stage-end P2 evaluations, resumable W78 units, and P3 video jobs."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
     base = Path(target) / 'stage_end_auxiliary_eval'
-    phase_names = ('axis_v2', 'w78_v2', 'push_ladder', 'a_push_video')
+    phase_names = ('axis_v2', 'push_ladder', 'a_push_video')
     repo_root = Path(__file__).resolve().parents[1]
     rows = []
     for phase in phase_names:
@@ -724,6 +726,45 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
             'gpu': 1, 'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f',
             'argv': argv,
         })
+    # W78 is split into resumable mode/case units. The merge is queued last at
+    # the same priority, after all 30 unit jobs, and publishes the canonical
+    # complete receipt consumed by measure_w78.
+    w78_root = base / 'w78_v2'
+    w78_modes = ('eval_gt', 'eval_pred', 'probe_prop_only')
+    w78_cases = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back',
+                 'stairs_fwd_turn_return', 'stairs_fwd_back_return', 'slope_fwd1.0',
+                 'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
+    for mode in w78_modes:
+        for case in w78_cases:
+            unit_out = w78_root / mode / case
+            argv = [sys.executable, '-m', 'foothold_s2.eval.eval_map_modes',
+                    '--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
+                    '--envs', str(cfg['envs']), '--steps', str(cfg['map_steps']),
+                    '--modes', ','.join(w78_modes), '--fixed-terrain', '--eval-seed', str(cfg['eval_seed']),
+                    '--terrain-skill-v2', '--terrain-skill-v2-cases', case,
+                    '--terrain-skill-v2-modes', mode, '--terrain-skill-v2-resume',
+                    '--terrain-levels', '2,5', '--stair-start-angles-deg', '0,30,60,90',
+                    '--terrain-set', 'default', '--out', str(unit_out), '--device', 'cuda:1', '--headless']
+            rows.append({'id': f'ex41-stage-{iteration}-{pinned[:12]}-w78-{mode}-{case}',
+                         'phase': f'w78_v2:{mode}:{case}', 'kind': 'eval', 'priority': 2,
+                         'owner': 'ex41_score_watch',
+                         'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:{mode}:{case}',
+                         'output_path': str(unit_out),
+                         'done_files': [str(unit_out/'terrain_skill_v2.json')],
+                         'cwd': str(repo_root), 'gpu': 1,
+                         'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f', 'argv': argv})
+    merge_out = w78_root / 'terrain_skill_v2.json'
+    merge_argv = [sys.executable, '-m', 'foothold_s2.eval.ex41_w78_merge',
+                  '--root', str(w78_root), '--checkpoint', str(checkpoint), '--out', str(merge_out)]
+    # dispatch.py selects by (priority, id), not insertion order. The zzz
+    # suffix makes this dependent merge run after all 30 same-priority units.
+    rows.append({'id': f'ex41-stage-{iteration}-{pinned[:12]}-w78-zz-merge',
+                 'phase': 'w78_v2:merge', 'kind': 'eval', 'priority': 2,
+                 'owner': 'ex41_score_watch',
+                 'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:merge',
+                 'output_path': str(w78_root), 'done_files': [str(merge_out)],
+                 'cwd': str(repo_root), 'gpu': 1,
+                 'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f', 'argv': merge_argv})
     source_root, cases = _stage_video_contract()
     video_out = _stage_video_output(checkpoint)
     recorder = source_root / 'foothold_s2/eval/video25/record_c_layer.py'
@@ -1048,7 +1089,8 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                 raise ValueError('rehearsal queue registration identity differs')
             aux_state[key] = evidence(rehearsal_receipt)
             return prior
-        queue_path = Path(os.environ.get('EX41_GPU_JOBS_QUEUE', 'D:/mai-tmp/gpu/queue.json'))
+        # Rehearsal jobs must never enter the operational shared queue.
+        queue_path = target / 'rehearsal-queue' / 'queue.json'
         specs = stage_end_queue_specs(checkpoint, target, config(eval_config), stage=stage,
                                       table=table, eval_config=eval_config)
         selected = [next(row for row in specs if row['phase'] == 'axis_v2'),

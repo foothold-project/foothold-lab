@@ -26,17 +26,29 @@ V2_CASES = {**CASES, STOP_BACK_CASE: (
      ((-0.5, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0)],
     ("pyramid_stairs", "pyramid_stairs_inv"))}
 PERIODIC_SIDE_CASES = ("stairs_side_left", "stairs_side_right")
+W78_MODES = tuple(REQUIRED_MODES)
 
 
 def select_v2_cases(value=None):
-    """Select the full W78 suite or its approved periodic side pair."""
+    """Select the full suite, approved side pair, or one resumable case unit."""
     if value in (None, "", "all"):
         return dict(V2_CASES)
     names = tuple(part.strip() for part in value.split(","))
-    if (names != PERIODIC_SIDE_CASES
+    if (not names or len(set(names)) != len(names)
             or any(name not in V2_CASES for name in names)):
-        raise ValueError("W78 v2 case selector accepts only all or stairs_side_left,stairs_side_right")
+        raise ValueError("W78 v2 case selector contains an unknown or duplicate case")
+    if names != PERIODIC_SIDE_CASES and len(names) > 1:
+        raise ValueError("W78 v2 case selector supports all, one resumable case, or the approved ordered side pair")
     return {name: V2_CASES[name] for name in names}
+
+
+def select_v2_modes(value=None):
+    if value in (None, "", "all"):
+        return W78_MODES
+    modes = tuple(part.strip() for part in value.split(","))
+    if not modes or len(set(modes)) != len(modes) or any(mode not in W78_MODES for mode in modes):
+        raise ValueError("W78 v2 mode selector contains an unknown or duplicate mode")
+    return modes
 
 
 def _write_result_json(path, record, *, attempts=8, retry_delay_s=0.25):
@@ -102,6 +114,7 @@ def validate_request(args) -> None:
     _int_set(args.terrain_levels, label="levels", required=LEVELS)
     _int_set(args.stair_start_angles_deg, label="angles", required=ANGLES_DEG)
     select_v2_cases(getattr(args, "terrain_skill_v2_cases", None))
+    select_v2_modes(getattr(args, "terrain_skill_v2_modes", None))
     require_all_modes(args.modes, where="W78 v2")
     checkpoint = Path(args.checkpoint)
     if not checkpoint.is_file():
@@ -112,12 +125,13 @@ def validate_request(args) -> None:
             raise ValueError("W78 v2 needs a fresh empty output directory")
         existing = list(output.iterdir())
         attachment = getattr(args, "ex41_w86_attachment", None)
-        if existing and (not isinstance(attachment, dict) or attachment.get("attached") is not True
-                         or len(existing) != 1 or existing[0].name != "ex41_w86"
-                         or not existing[0].is_dir()):
+        resume = getattr(args, "terrain_skill_v2_resume", False)
+        allowed = {"terrain_skill_v2.partial.json", "ex41_w86"} if resume else {"ex41_w86"}
+        if existing and ({item.name for item in existing} - allowed
+                         or not isinstance(attachment, dict) or attachment.get("attached") is not True):
             raise ValueError("W78 v2 needs a fresh empty output directory or an isolated W86 attach receipt")
-        if existing:
-            runtime_files = list(existing[0].iterdir())
+        if any(item.name == "ex41_w86" for item in existing):
+            runtime_files = list((output / "ex41_w86").iterdir())
             if (len(runtime_files) != 1 or runtime_files[0].name != "ex41_stair_start.jsonl"
                     or not runtime_files[0].is_file()):
                 raise ValueError("W78 v2 output contains stale or unexpected W86 files")
@@ -339,14 +353,15 @@ def _sha_for_optional(path: Path) -> str | None:
     return sha256_file(str(path)) if path.is_file() else None
 
 
-def expected_combinations(cases=None) -> set[tuple[int, int, str, str]]:
+def expected_combinations(cases=None, modes=None) -> set[tuple[int, int, str, str]]:
     selected = V2_CASES if cases is None else cases
+    selected_modes = W78_MODES if modes is None else modes
     return {(level, angle, mode, name) for level in LEVELS for angle in ANGLES_DEG
-            for mode in REQUIRED_MODES for name in selected}
+            for mode in selected_modes for name in selected}
 
 
-def require_complete(completed: set[tuple[int, int, str, str]], cases=None) -> None:
-    expected = expected_combinations(cases)
+def require_complete(completed: set[tuple[int, int, str, str]], cases=None, modes=None) -> None:
+    expected = expected_combinations(cases, modes)
     if completed != expected:
         missing = expected - completed
         extra = completed - expected
@@ -354,10 +369,32 @@ def require_complete(completed: set[tuple[int, int, str, str]], cases=None) -> N
                            f"missing={len(missing)} extra={len(extra)}")
 
 
+def read_resumable_partial(path: Path, *, checkpoint_sha256: str, eval_seed: int,
+                           cases: tuple[str, ...], modes: tuple[str, ...]):
+    prior = __import__("json").loads(Path(path).read_text(encoding="utf-8"))
+    identity = (prior.get("checkpoint_sha256"), prior.get("eval_seed"),
+                tuple(prior.get("case_selection", ())), tuple(prior.get("mode_selection", ())))
+    expected = (checkpoint_sha256, eval_seed, tuple(cases), tuple(modes))
+    if identity != expected:
+        raise ValueError("W78 resumable partial identity differs from checkpoint/seed/mode/case")
+    completed, assignment = set(), {}
+    for mode, rows in prior.get("modes", {}).items():
+        if mode not in modes:
+            raise ValueError("W78 partial contains an unselected map mode")
+        for row in rows.values():
+            level, angle, case = int(row["level"]), int(row["stair_start_angle_deg"]), row["case"]
+            if case not in cases:
+                raise ValueError("W78 partial contains an unselected terrain case")
+            completed.add((level, angle, mode, case))
+            assignment[(level, angle)] = row["terrain_assignment_sha256"]
+    return prior, completed, assignment
+
+
 def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               terrain_names, dr_off, curriculum_off, run_identity):
     validate_request(args)
     selected_cases = select_v2_cases(getattr(args, "terrain_skill_v2_cases", None))
+    selected_modes = select_v2_modes(getattr(args, "terrain_skill_v2_modes", None))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     final = out / "terrain_skill_v2.json"
@@ -378,22 +415,28 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "checkpoint_manifest_sha256": _sha_for_optional(manifest),
               "source_sha256": {p.name: sha256_file(str(p)) for p in source_paths},
               "run_identity": run_identity, "envs": n, "dt_s": dt, "eval_seed": args.eval_seed,
-              "levels": LEVELS, "start_angles_deg": ANGLES_DEG, "modes": {},
+              "levels": LEVELS, "start_angles_deg": ANGLES_DEG,
+              "modes": {mode: {} for mode in selected_modes},
               "ex41_environment_preparation": getattr(args, "ex41_env_preparation", None),
               "ex41_checkpoint_preparation": getattr(args, "ex41_checkpoint_preparation", None),
               "ex41_runtime_attachment": getattr(args, "ex41_runtime_attachment", None),
               "dr_off": dr_off, "curriculum_off": curriculum_off,
               "case_selection": list(selected_cases),
+              "mode_selection": list(selected_modes),
               "cases": {name: {"phases": [[list(command), seconds] for command, seconds in phases],
                                 "focus_kinds": list(kinds)} for name, (phases, kinds) in selected_cases.items()},
               "measurement_note": "descriptive only; terminated samples excluded; no pass threshold"}
-    expected_keys = expected_combinations(selected_cases)
+    expected_keys = expected_combinations(selected_cases, selected_modes)
     completed: set[tuple[int, int, str, str]] = set()
     assignment_sha: dict[tuple[int, int], str] = {}
+    if getattr(args, "terrain_skill_v2_resume", False) and partial.is_file():
+        result, completed, assignment_sha = read_resumable_partial(
+            partial, checkpoint_sha256=result["checkpoint_sha256"], eval_seed=result["eval_seed"],
+            cases=tuple(selected_cases), modes=tuple(selected_modes))
     try:
         for level in LEVELS:
             for angle in ANGLES_DEG:
-                for mode in REQUIRED_MODES:
+                for mode in selected_modes:
                     runner, saved = adapters.load_s2_runner(
                         env, agent_cfg.to_dict(), args.checkpoint, args.device,
                         checkpoint_state=getattr(args, "ex41_checkpoint_state", None))
@@ -403,6 +446,8 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                     mode_rows = result["modes"].setdefault(mode, {})
                     for name, (phases, kinds) in selected_cases.items():
                         key = (level, angle, mode, name)
+                        if key in completed:
+                            continue
                         torch.manual_seed(args.eval_seed)
                         env.reset()
                         fixed = fixed_terrain.apply(raw, level)
@@ -444,19 +489,20 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                         completed.add(key)
                         _write_result_json(partial, result)
                         print("TERRAIN_SKILL_V2_CASE", *key, flush=True)
-        require_complete(completed, selected_cases)
+        require_complete(completed, selected_cases, selected_modes)
         result["w78_min_lr_ratio"] = {}
-        for level in LEVELS:
-            for angle in ANGLES_DEG:
-                for mode in REQUIRED_MODES:
-                    rows = result["modes"][mode]
-                    for kind in ("pyramid_stairs", "pyramid_stairs_inv"):
-                        left = rows[f"L{level}_a{angle:03d}_stairs_side_left"]["by_terrain_kind"][kind]["movement_ratio_median"]
-                        right = rows[f"L{level}_a{angle:03d}_stairs_side_right"]["by_terrain_kind"][kind]["movement_ratio_median"]
-                        result["w78_min_lr_ratio"][f"L{level}_a{angle:03d}_{mode}_{kind}"] = {
-                            "left": left, "right": right,
-                            "min_lr_ratio": min(left, right) if left is not None and right is not None else None,
-                            "definition": "minimum of signed left and right movement ratios; no threshold"}
+        if all(case in selected_cases for case in PERIODIC_SIDE_CASES):
+            for level in LEVELS:
+                for angle in ANGLES_DEG:
+                    for mode in selected_modes:
+                        rows = result["modes"][mode]
+                        for kind in ("pyramid_stairs", "pyramid_stairs_inv"):
+                            left = rows[f"L{level}_a{angle:03d}_stairs_side_left"]["by_terrain_kind"][kind]["movement_ratio_median"]
+                            right = rows[f"L{level}_a{angle:03d}_stairs_side_right"]["by_terrain_kind"][kind]["movement_ratio_median"]
+                            result["w78_min_lr_ratio"][f"L{level}_a{angle:03d}_{mode}_{kind}"] = {
+                                "left": left, "right": right,
+                                "min_lr_ratio": min(left, right) if left is not None and right is not None else None,
+                                "definition": "minimum of signed left and right movement ratios; no threshold"}
         result["state"] = "done"
         _write_result_json(final, result)
         partial.unlink()

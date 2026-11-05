@@ -250,10 +250,12 @@ def deliver_pending_alerts(run_dir: str | Path, *, orchestration_sender=None,
             receipt = {"format": "foothold-ex41-alert-delivery/1", "event_id": event_id,
                        "channels": {}}
         subject, body = _notification_text(row)
-        for channel, sender, payload in (
-            ("orchestration", orchestration_sender, (subject, body)),
-            ("telegram", telegram_sender, (body,)),
-        ):
+        channels = ("orchestration",) if row.get("kind") == "periodic_250_numeric_report" else (
+            "orchestration", "telegram")
+        senders = {"orchestration": (orchestration_sender, (subject, body)),
+                   "telegram": (telegram_sender, (body,))}
+        for channel in channels:
+            sender, payload = senders[channel]
             if receipt["channels"].get(channel, {}).get("state") == "sent":
                 continue
             # The opt-in applies to the delivery boundary itself, including

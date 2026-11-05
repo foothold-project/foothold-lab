@@ -16,6 +16,7 @@ import sys
 import time
 import uuid
 import warnings
+import io
 from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 from functools import wraps
@@ -42,6 +43,25 @@ EX41_W78_VIDEO_ROOT = Path("D:/mai-tmp/ex41/w78_video")
 _EX41_PRODUCTION_ROOT = re.compile(r"ex41_main_[0-9]{8}_[0-9]{6}\Z")
 EX41_UPDATE_SECONDS_ESTIMATE = 26.3
 EX41_END_BY_BUFFER_SECONDS = 24 * 60 * 60
+
+
+def assert_no_undefined_names(paths: list[str | Path]) -> None:
+    """Fail before Kit starts when pyflakes finds an undefined Python name."""
+    try:
+        from pyflakes.api import check
+        from pyflakes.reporter import Reporter
+    except ImportError as exc:
+        raise RuntimeError("EX-41 preflight requires pyflakes to reject undefined names") from exc
+    diagnostics = io.StringIO()
+    reporter = Reporter(diagnostics, diagnostics)
+    for raw_path in paths:
+        path = Path(raw_path).resolve(strict=True)
+        source = path.read_text(encoding="utf-8")
+        check(source, str(path), reporter)
+    undefined = [line for line in diagnostics.getvalue().splitlines()
+                 if "undefined name" in line]
+    if undefined:
+        raise ValueError("EX-41 preflight rejected undefined names:\n" + "\n".join(undefined))
 
 
 def configure_ex41_command_slots(command_term: Any) -> dict[str, Any]:
@@ -552,11 +572,18 @@ def configure_stage_rehearsal_plan(plan, stage_updates: tuple[int, ...], *,
     plan.clock_settings = settings
     plan.rehearsal_stage_updates = rows
     plan.smoke_boundaries = boundaries
+    rehearsal_boundary = plan.path.with_name('ex41-fixed5000-rehearsal-boundary.yaml').resolve(strict=True)
+    rehearsal_approvals = plan.path.with_name('ex41-fixed5000-rehearsal-approvals.yaml').resolve(strict=True)
     if boundary_path is not None:
         selected_boundary = Path(boundary_path).resolve(strict=True)
-        if selected_boundary.parent != plan.path.parent:
-            raise ValueError("EX-41 rehearsal boundary must be beside its fixed table")
-        plan.boundary_path = selected_boundary
+        if selected_boundary != rehearsal_boundary:
+            raise ValueError("EX-41 rehearsal may only use its isolated rehearsal boundary file")
+    production_boundary = plan.path.with_name('ex41-fixed5000-boundary.yaml').resolve()
+    production_approvals = plan.path.with_name('ex41-fixed5000-approvals.yaml').resolve()
+    if rehearsal_boundary == production_boundary or rehearsal_approvals == production_approvals:
+        raise ValueError("EX-41 rehearsal configuration aliases production authorization")
+    plan.boundary_path = rehearsal_boundary
+    plan.approvals_path = rehearsal_approvals
     for stage, duration in zip(plan.stages, rows):
         plan.stage_meta[stage.id]["minimum_updates"] = duration
         plan.stage_meta[stage.id]["maximum_updates"] = duration
@@ -567,6 +594,8 @@ def configure_stage_rehearsal_plan(plan, stage_updates: tuple[int, ...], *,
             "pause_budget_updates": 0, "production_table_modified": False,
             "boundary_config_path": str(plan.boundary_path.resolve()),
             "boundary_config_sha256": hashlib.sha256(plan.boundary_path.read_bytes()).hexdigest(),
+            "approval_config_path": str(plan.approvals_path.resolve()),
+            "approval_config_sha256": hashlib.sha256(plan.approvals_path.read_bytes()).hexdigest(),
             "w72_evidence_policy": "excluded_from_rehearsal"}
 
 

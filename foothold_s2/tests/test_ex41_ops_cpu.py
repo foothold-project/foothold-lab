@@ -165,10 +165,11 @@ def test_250_numeric_report_and_two_adjacent_low_p3_boundaries_are_durable_and_d
     assert len(numeric) == 2 and all(len(row['numeric_cells']) == 39 for row in numeric)
     assert len(repeated) == 1 and repeated[0]['matching_pair_ids']
     assert repeated[0]['automatic_activation'] is False
-    assert len(sent['orca']) == len(sent['telegram']) == 3
+    assert len(sent['orca']) == 3
+    assert len(sent['telegram']) == 1
     assert '250-update numeric report' in sent['orca'][0][0]
-    assert 'P3 eval_gt S' in sent['telegram'][0]
-    assert '/64' in sent['telegram'][0]
+    assert 'two adjacent scored checkpoints' in sent['telegram'][0]
+    assert '250-update numeric report' not in sent['telegram'][0]
 
 
 def test_missing_p3_then_complete_p3_boundary_is_a_hold_not_a_type_error(tmp_path):
@@ -236,7 +237,8 @@ def test_two_consecutive_tool_holds_make_one_durable_alert_and_dedupe(tmp_path, 
     assert len([row for row in alerts if row['kind'] == 'periodic_250_numeric_report']) == 2
     record_boundary(second, tmp_path, 501)
     assert len(alert_path.read_text().splitlines()) == 3
-    assert len(delivered["orchestration"]) == len(delivered["telegram"]) == 3
+    assert len(delivered["orchestration"]) == 3
+    assert len(delivered["telegram"]) == 1
 
 
 def test_rejected_boundary_and_automatic_change_have_local_alert_receipts(tmp_path):
@@ -332,6 +334,22 @@ def test_delivery_layer_suppresses_default_senders_without_opt_in(tmp_path, monk
         "orchestration": {"state": "suppressed", "reason": "external_delivery_not_enabled"},
         "telegram": {"state": "suppressed", "reason": "external_delivery_not_enabled"},
     }
+
+
+def test_periodic_numeric_report_is_orchestration_only(tmp_path, monkeypatch):
+    monkeypatch.setenv("EX41_ALLOW_EXTERNAL_ALERT_DELIVERY", "1")
+    run = tmp_path / "run"
+    alert_path = run / "ex41_reports" / "alerts.jsonl"
+    _alert(alert_path, "periodic-numeric-test", "periodic_250_numeric_report", 250,
+           {"metrics": {"mean_reward": 1.0}})
+    delivered = []
+    rows = deliver_pending_alerts(
+        run, orchestration_sender=lambda *args: delivered.append(("lead", args)) or True,
+        telegram_sender=lambda *args: delivered.append(("telegram", args)) or True)
+    assert len(rows) == 1
+    assert [channel for channel, _ in delivered] == ["lead"]
+    assert rows[0]["channels"]["orchestration"]["state"] == "sent"
+    assert "telegram" not in rows[0]["channels"]
 
 
 def test_answer_known_notification_test_is_not_worded_as_incident(tmp_path):

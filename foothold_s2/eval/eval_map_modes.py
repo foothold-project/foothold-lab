@@ -38,6 +38,8 @@ parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop a
 parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
 parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
 parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
+parser.add_argument("--terrain-skill-v2-modes", default="all", help="W78 v2 modes: all or one of the three map modes")
+parser.add_argument("--terrain-skill-v2-resume", action="store_true", help="resume only a matching W78 v2 partial receipt")
 parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
 parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
 parser.add_argument("--push-ladder", action="store_true", help="Fixed-velocity EX-41 push ladder")

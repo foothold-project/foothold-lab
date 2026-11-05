@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -200,6 +201,57 @@ def gpu1_busy_snapshot(marker: Path = DEFAULT_MARKER) -> dict[str, Any]:
             "busy": busy, "marker_state": owner_state, "state": "busy" if busy else "idle"}
 
 
+@contextmanager
+def gpu1_idle_priority(marker: Path, *, job: str, iteration: int,
+                       timeout_seconds: float = 300, poll_seconds: float = 10,
+                       snapshot=gpu1_busy_snapshot, priority=gpu1_priority,
+                       sleep=time.sleep):
+    """Wait without owning P1, then claim and recheck; release on admission races."""
+    started = time.monotonic()
+    checks = 0
+    while True:
+        if time.monotonic() - started > timeout_seconds:
+            raise TimeoutError("GPU1 did not become idle within the bounded push250 wait")
+        checks += 1
+        before = snapshot(marker)
+        if before.get("state") != "idle":
+            sleep(poll_seconds)
+            continue
+        candidate = priority(marker, job=job, iteration=iteration)
+        try:
+            owner = candidate.__enter__()
+        except RuntimeError:
+            sleep(poll_seconds)
+            continue
+        after = snapshot(marker)
+        others = [row for row in after.get("busy", []) if row.get("pid") != owner.get("pid")]
+        if after.get("marker_state") == "unknown_blocks" or others:
+            candidate.__exit__(None, None, None)
+            sleep(poll_seconds)
+            continue
+        after.update(checks_before_claim=checks,
+                     waited_s_before_claim=time.monotonic() - started)
+        try:
+            yield owner, after
+        finally:
+            candidate.__exit__(None, None, None)
+        return
+
+
+def matching_terminal_result(path: Path, *, local_iteration: int,
+                             global_iteration: int, checkpoint_sha256: str) -> bool:
+    """True only for an already-published terminal result for this exact checkpoint."""
+    row = _read_json(Path(path))
+    if not isinstance(row, dict):
+        raise ValueError("existing push250 result is unreadable")
+    if (row.get("local_iteration") != local_iteration
+            or row.get("global_iteration") != global_iteration
+            or row.get("checkpoint_sha256") != checkpoint_sha256
+            or row.get("state") not in ("done", "HOLD")):
+        raise ValueError("existing push250 result identity is not the completed checkpoint")
+    return True
+
+
 def _compare_to_baseline(result: dict[str, Any], baseline_path: Path) -> dict[str, Any] | None:
     baseline = _read_json(baseline_path)
     if not baseline or baseline.get("state") != "done":
@@ -232,17 +284,19 @@ def _compare_to_baseline(result: dict[str, Any], baseline_path: Path) -> dict[st
 def evaluate_checkpoint(checkpoint: Path, *, global_iteration: int, out_dir: Path,
                         worktree: Path, device: str = "cuda:1", python: Path = DEFAULT_PYTHON,
                         task: str = TASK, seed: int = 42, marker: Path = DEFAULT_MARKER,
-                        timeout_seconds: int = 1800) -> dict[str, Any]:
+                        timeout_seconds: int = 1800, local_iteration: int | None = None) -> dict[str, Any]:
     checkpoint = Path(checkpoint).resolve(strict=True)
     out_dir = Path(out_dir)
     destination = output_path_for_global_iteration(out_dir, global_iteration)
     if destination.exists():
         raise FileExistsError(f"refusing duplicate push250 result: {destination}")
     checkpoint_sha = _sha256(checkpoint)
+    local_iteration = global_iteration - 6000 if local_iteration is None else int(local_iteration)
     admission = gpu1_busy_snapshot(marker)
     result: dict[str, Any] = {
         "schema": "foothold-ex41-push250-check/1", "state": "running",
-        "global_iteration": global_iteration, "checkpoint": str(checkpoint),
+        "global_iteration": global_iteration, "local_iteration": local_iteration,
+        "checkpoint": str(checkpoint),
         "checkpoint_sha256": checkpoint_sha, "device": device, "seed": seed,
         "profile": {"decision": "D171", "map_mode": "eval_gt", "command": "walk_1.0",
                     "magnitudes_mps": [1.0, 1.5, 2.0], "directions_deg": [0,45,90,135,180,225,270,315],
@@ -259,77 +313,48 @@ def evaluate_checkpoint(checkpoint: Path, *, global_iteration: int, out_dir: Pat
     env.update(PYTHONUTF8="1", PYTHONUNBUFFERED="1", PYTHONPATH=str(worktree.resolve()),
                CUDA_DEVICE_ORDER="PCI_BUS_ID", KMP_DUPLICATE_LIB_OK="TRUE", OMNI_KIT_ACCEPT_EULA="YES")
     start = time.monotonic()
-    owner = None
-    marker_context = None
-    admission_wait_started = time.monotonic()
-    while marker_context is None:
-        snapshot = gpu1_busy_snapshot(marker)
-        if snapshot["marker_state"] == "live":
-            if time.monotonic() - admission_wait_started > 6 * 60 * 60:
-                raise TimeoutError("GPU1 P1 marker remained owned for six hours")
-            time.sleep(10)
-            continue
-        candidate = gpu1_priority(marker, job="EX-41-push250-D171", iteration=global_iteration)
-        try:
-            owner = candidate.__enter__()
-            marker_context = candidate
-        except RuntimeError:
-            if time.monotonic() - admission_wait_started > 6 * 60 * 60:
-                raise TimeoutError("GPU1 priority marker could not be acquired for six hours")
-            time.sleep(10)
     try:
-        # Holding P1 while waiting lets the lower-priority C-layer stop at its own safe boundary.
-        checks = 0
-        while True:
-            checks += 1
-            claimed_snapshot = gpu1_busy_snapshot(marker)
-            other_busy = [row for row in claimed_snapshot["busy"] if row.get("pid") != owner["pid"]]
-            if not other_busy:
-                break
-            if time.monotonic() - admission_wait_started > 6 * 60 * 60:
-                raise TimeoutError("GPU1 experiment process did not yield under P1 within six hours")
-            time.sleep(10)
-        claimed_snapshot["checks_until_idle"] = checks
-        claimed_snapshot["waited_s_under_p1"] = time.monotonic() - admission_wait_started
-        # Recheck after claiming P1 to close the admission race. Do not start Kit if another
-        # experiment appeared between the read-only scan and marker publication.
-        result["priority_marker"] = owner
-        result["gpu1_after_claim"] = claimed_snapshot
-        for terrain in TERRAIN_CASES:
-            child_out = work / terrain
-            child_out.mkdir(parents=True, exist_ok=False)
-            argv = build_child_argv(checkpoint=checkpoint, out=child_out, terrain=terrain,
-                                    device=device, python=python, task=task, seed=seed)
-            log = child_out.with_suffix(".log")
-            child_start = time.monotonic()
-            with log.open("w", encoding="utf-8", newline="\n") as stream:
-                completed = subprocess.run(argv, cwd=worktree, env=env, stdin=subprocess.DEVNULL,
-                                           stdout=stream, stderr=subprocess.STDOUT,
-                                           timeout=timeout_seconds,
-                                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-                                           check=False)
-            result_path = child_out / "push_ladder.json"
-            child: dict[str, Any] = {"terrain": terrain, "argv": argv, "log": str(log),
-                                     "rc": completed.returncode, "seconds": time.monotonic() - child_start,
-                                     "state": "HOLD"}
-            if completed.returncode == 0 and result_path.is_file():
-                cell_result = _read_json(result_path)
-                if (cell_result and cell_result.get("checkpoint_sha256") == checkpoint_sha
-                        and cell_result.get("profile") == "push250"
-                        and cell_result.get("summary", {}).get("profile") == "D171_push250"):
-                    child.update(state="done", summary=cell_result["summary"],
-                                 result_path=str(result_path),
-                                 result_sha256=_sha256(result_path),
-                                 arrays=cell_result.get("arrays"))
+        with gpu1_idle_priority(marker, job="EX-41-push250-D171", iteration=global_iteration,
+                                timeout_seconds=300) as (owner, claimed_snapshot):
+            result["priority_marker"] = owner
+            result["gpu1_after_claim"] = claimed_snapshot
+            for terrain in TERRAIN_CASES:
+                child_out = work / terrain
+                child_out.mkdir(parents=True, exist_ok=False)
+                argv = build_child_argv(checkpoint=checkpoint, out=child_out, terrain=terrain,
+                                        device=device, python=python, task=task, seed=seed)
+                log = child_out.with_suffix(".log")
+                child_start = time.monotonic()
+                with log.open("w", encoding="utf-8", newline="\n") as stream:
+                    completed = subprocess.run(argv, cwd=worktree, env=env, stdin=subprocess.DEVNULL,
+                                               stdout=stream, stderr=subprocess.STDOUT,
+                                               timeout=timeout_seconds,
+                                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                                               check=False)
+                result_path = child_out / "push_ladder.json"
+                child: dict[str, Any] = {"terrain": terrain, "argv": argv, "log": str(log),
+                                         "rc": completed.returncode, "seconds": time.monotonic() - child_start,
+                                         "state": "HOLD"}
+                if completed.returncode == 0 and result_path.is_file():
+                    cell_result = _read_json(result_path)
+                    if (cell_result and cell_result.get("checkpoint_sha256") == checkpoint_sha
+                            and cell_result.get("profile") == "push250"
+                            and cell_result.get("summary", {}).get("profile") == "D171_push250"):
+                        child.update(state="done", summary=cell_result["summary"],
+                                     result_path=str(result_path),
+                                     result_sha256=_sha256(result_path),
+                                     arrays=cell_result.get("arrays"))
+                    else:
+                        child["reason"] = "child receipt missing or identity/profile mismatch"
                 else:
-                    child["reason"] = "child receipt missing or identity/profile mismatch"
-            else:
-                child["reason"] = "child rc nonzero or push_ladder.json missing"
-            result["children"].append(child)
-            if child["state"] != "done":
-                break
-    finally:
-        marker_context.__exit__(None, None, None)
+                    child["reason"] = "child rc nonzero or push_ladder.json missing"
+                result["children"].append(child)
+                if child["state"] != "done":
+                    break
+    except Exception:
+        result["elapsed_s"] = time.monotonic() - start
+        result["completed_at"] = datetime.now(timezone.utc).isoformat()
+        raise
     result["elapsed_s"] = time.monotonic() - start
     result["completed_at"] = datetime.now(timezone.utc).isoformat()
     result["state"] = ("done" if len(result["children"]) == len(TERRAIN_CASES)
@@ -473,9 +498,16 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
         global_iteration = parent_iteration + local_iteration
         destination = output_path_for_global_iteration(out_dir, global_iteration)
         if destination.exists():
-            _atomic_json(state_path, {"state": "duplicate_prevented", "next_local_iteration": local_iteration,
-                                      "existing_result": str(destination), "updated_at": datetime.now(timezone.utc).isoformat()})
-            return 5
+            matching_terminal_result(destination, local_iteration=local_iteration,
+                                     global_iteration=global_iteration,
+                                     checkpoint_sha256=ready["sha256"])
+            local_iteration += interval
+            _atomic_json(state_path, {"state": "already_completed_skipped",
+                                      "completed_local_iteration": local_iteration - interval,
+                                      "next_local_iteration": local_iteration,
+                                      "existing_result": str(destination),
+                                      "updated_at": datetime.now(timezone.utc).isoformat()})
+            continue
         wait_for_score_watch_attempt(
             score_watch_root, local_iteration, ready["sha256"],
             state_path=state_path, poll_seconds=poll_seconds)
@@ -507,7 +539,8 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
         try:
             result = evaluate_checkpoint(ready["checkpoint"], global_iteration=global_iteration,
                                          out_dir=out_dir, worktree=worktree, device="cuda:1",
-                                         python=python, marker=marker)
+                                          python=python, marker=marker,
+                                          local_iteration=local_iteration)
         except Exception as exc:
             result = {"schema": "foothold-ex41-push250-check/1", "state": "HOLD",
                       "global_iteration": global_iteration, "local_iteration": local_iteration,
@@ -515,6 +548,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
                       "error": f"{type(exc).__name__}: {exc}",
                       "updated_at": datetime.now(timezone.utc).isoformat()}
             _atomic_json(destination, result)
+        result.setdefault("local_iteration", local_iteration)
         _atomic_json(state_path, {"state": result["state"], "local_iteration": local_iteration,
                                   "global_iteration": global_iteration,
                                   "result_path": str(destination), "elapsed_s": result["elapsed_s"],

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import ast
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -107,6 +108,16 @@ def test_rehearsal_runtime_applies_committed_w72_change_and_excludes_scores(tmp_
     rows = parse_stage_updates("2,2,2,2,2,2")
     boundaries = boundary_updates(rows)
     runtime, _consumer = fixed_runtime_fixture(tmp_path, smoke=boundaries)
+    for name in ("ex41-fixed5000-rehearsal-boundary.yaml",
+                 "ex41-fixed5000-rehearsal-approvals.yaml"):
+        (runtime.plan.path.parent / name).write_bytes((TABLE.parent / name).read_bytes())
+    root = runtime.plan.path.parent
+    subprocess.run(["git", "-C", str(root), "add", "--",
+                    "ex41-fixed5000-rehearsal-boundary.yaml",
+                    "ex41-fixed5000-rehearsal-approvals.yaml"], check=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.name=CPU fixture",
+                    "-c", "user.email=cpu@example.invalid", "-c", "commit.gpgsign=false",
+                    "commit", "-qm", "CPU isolated rehearsal pair"], check=True)
     configure_stage_rehearsal_plan(runtime.plan, rows)
     runtime.plan.rehearsal_stage_updates = rows
     runtime.clock = Clock(runtime.plan.clock_settings)
@@ -174,6 +185,15 @@ def test_injected_p1_failure_retries_same_checkpoint_then_registers_p2_p3(tmp_pa
     rows = parse_stage_updates("2,2,2,2,2,2")
     runtime, _consumer = fixed_runtime_fixture(tmp_path, smoke=boundary_updates(rows))
     plan = runtime.plan
+    for name in ("ex41-fixed5000-rehearsal-boundary.yaml",
+                 "ex41-fixed5000-rehearsal-approvals.yaml"):
+        (plan.path.parent / name).write_bytes((TABLE.parent / name).read_bytes())
+    subprocess.run(["git", "-C", str(plan.path.parent), "add", "--",
+                    "ex41-fixed5000-rehearsal-boundary.yaml",
+                    "ex41-fixed5000-rehearsal-approvals.yaml"], check=True)
+    subprocess.run(["git", "-C", str(plan.path.parent), "-c", "user.name=CPU fixture",
+                    "-c", "user.email=cpu@example.invalid", "-c", "commit.gpgsign=false",
+                    "commit", "-qm", "CPU isolated rehearsal pair"], check=True)
     configure_stage_rehearsal_plan(plan, rows)
     plan.rehearsal_stage_updates = rows
     runtime.clock = Clock(plan.clock_settings)
@@ -230,9 +250,12 @@ def test_injected_p1_failure_retries_same_checkpoint_then_registers_p2_p3(tmp_pa
          "authorization_ref": "render-condition", "needs_approval": False},
     ]
     monkeypatch.setattr(watch, "stage_end_queue_specs", lambda *_a, **_k: [dict(row) for row in specs])
+    queue_paths = []
+    monkeypatch.setenv("EX41_GPU_JOBS_QUEUE", str(tmp_path / "operational" / "queue.json"))
     monkeypatch.setattr(watch, "register_stage_end_queue_jobs",
-                        lambda _path, selected: [{**row, "condition": row["authorization_ref"],
-                                                  "state": "대기"} for row in selected])
+                        lambda path, selected: queue_paths.append(Path(path)) or
+                        [{**row, "condition": row["authorization_ref"],
+                          "state": "대기"} for row in selected])
     first = watch.process_once(run, tmp_path / "out", tmp_path / "scores", table, state,
                                eval_config=DEFAULT_EVAL, execute=True,
                                sleep=lambda _seconds: None)
@@ -249,6 +272,9 @@ def test_injected_p1_failure_retries_same_checkpoint_then_registers_p2_p3(tmp_pa
     receipt = json.loads((tmp_path / "out" / f"model_2_{watch.sha256(checkpoint)[:12]}_retry02" /
                           "rehearsal_queue_registration.json").read_text(encoding="utf-8"))
     assert receipt["rehearsal"] is True
+    assert queue_paths == [tmp_path / "out" / f"model_2_{watch.sha256(checkpoint)[:12]}_retry02" /
+                           "rehearsal-queue" / "queue.json"]
+    assert not (tmp_path / "operational" / "queue.json").exists()
     assert [(row["priority"], row["kind"], row["needs_approval"])
             for row in receipt["jobs"]] == [(2, "eval", True), (3, "render", True)]
 

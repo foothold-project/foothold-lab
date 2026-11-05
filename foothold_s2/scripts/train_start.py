@@ -23,6 +23,17 @@ from pathlib import Path
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
+from foothold_s2.scripts.ex41_startup import assert_no_undefined_names  # noqa: E402
+
+assert_no_undefined_names([
+    __file__,
+    Path(REPO) / "foothold_s2/scripts/ex41_startup.py",
+    Path(REPO) / "foothold_s2/scripts/ex41_resume.py",
+    Path(REPO) / "foothold_s2/runners/start_runner.py",
+    Path(REPO) / "foothold_s2/ex40_score_watch.py",
+    Path(REPO) / "foothold_s2/ex41_score_watch.py",
+    Path(REPO) / "foothold_s2/eval/ex41_push250_watch.py",
+])
 from foothold_s2.runtime_environment import current_runtime_identity  # noqa: E402
 
 # Enforce the measured Python/RSL-RL pair before importing tensors or AppLauncher.
