@@ -1,4 +1,4 @@
-> 분류: C/운영
+﻿> 분류: C/운영
 > 작성: 오흥재 · 2026-11-05
 > 근거: EX-41 운영 원장 · 잠긴 EX-41 코드 · CURRICULUM-GATES v0.16 §E · D182 · EX42-V015-RUNNER-DIFF.md
 > 요지: EX-41 1251 경계 동작을 원자료와 코드로 설명하고 EX-42 정본 계약 1단계를 CPU 시험으로 고정한다
@@ -42,7 +42,7 @@ pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage1c -q foo
 
 ## 5. 출발 관문 2단계
 
-새 CPU 전용 `foothold_s2.scripts.ex42_ops`와 `foothold_s2/run_ex42.ps1`을 추가했다. 세 모드(`ops-check`, `rehearsal`, `production`) 모두 공통으로 EX42Plan 및 AST import 경계를 점검하며, Git source 검사 옵션은 정확한 HEAD · detached · clean 상태를 요구한다. rehearsal은 현재 plan-only이며 실제 simulator를 띄우지 않고, production은 승인 플래그가 있어도 runtime integration 미구현으로 거절된다. PowerShell wrapper에서 ops-check 실행을 확인했고, 실제 출력은 `state=blocked`, `production_launch_allowed=false`, blocker 5개였다.
+새 CPU 전용 `foothold_s2.scripts.ex42_ops`와 `foothold_s2/run_ex42.ps1`을 추가했다. 세 모드(`ops-check`, `rehearsal`, `production`) 모두 공통으로 EX42Plan 및 AST import 경계를 점검하며, Git source 검사 옵션은 정확한 HEAD · detached · clean 상태를 요구한다. rehearsal은 현재 plan-only이며 실제 simulator를 띄우지 않고, production은 승인 플래그가 있어도 runtime integration 미구현으로 거절된다. PowerShell wrapper에서 ops-check 실행을 확인했고, 실제 출력은 `state=blocked`, `production_launch_allowed=false`, blocker 6개였다.
 
 ```text
 pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage2b -q foothold_s2/tests/test_ex42_prep_cpu.py foothold_s2/tests/test_ex42_v016_contract_cpu.py foothold_s2/tests/test_ex42_ops_cpu.py
