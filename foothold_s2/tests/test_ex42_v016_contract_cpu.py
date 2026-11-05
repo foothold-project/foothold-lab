@@ -81,6 +81,13 @@ def test_global_command_floors_are_present_on_every_stage_and_fail_closed():
     expected = {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}
     assert all(stage["terrain"]["floors"]["global_command_floor"] == expected
                for stage in plan.document["stages"])
+    assert plan.validate_stage_command_shares(
+        "E1", 0.40, {"forward": 0.58, "reverse": 0.14,
+                     "side_left": 0.14, "side_right": 0.14})["reverse"] == pytest.approx(0.056)
+    with pytest.raises(ValueError, match="global floor"):
+        plan.validate_stage_command_shares(
+            "E1", 0.35, {"forward": 0.58, "reverse": 0.14,
+                         "side_left": 0.14, "side_right": 0.14})
 
     document = plan.document.copy()
     document["stages"] = [dict(stage) for stage in plan.document["stages"]]

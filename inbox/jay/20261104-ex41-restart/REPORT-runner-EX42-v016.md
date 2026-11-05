@@ -65,7 +65,11 @@ py_compile ex42_ops.py: passed
 
 정본 평가 모드는 문자열 `gt`, `pred`, `off` 세 개다. YAML bare `off`는 Python YAML parser에서 boolean `False`로 읽혀 CPU known-input 시험이 실패했다(고치기 전 1 failed, 3 passed). `'off'`로 인용하고 EX42Plan에서 정확한 세 문자열을 검증하도록 수정했다. 전체 관련 CPU 묶음은 17 passed in 5.95s다.
 
-## 8. 남은 일
+## 8. 명령 몫 stage consumer 5단계
+
+새 `EX42Plan.validate_stage_command_shares()`가 stage ID의 `terrain.floors.global_command_floor`를 읽어 전체 3072 env 분모에서 조건부 명령 몫을 검증한다. E1 답을 아는 입력 0.40 × 0.14 = 0.056은 통과하고 0.35 × 0.14 = 0.049는 거절한다. 현재는 CPU preparation consumer이며 W72 runtime hook은 아직 연결하지 않았다. 전체 EX42 CPU 파일 4개는 25 passed in 6.45s다.
+
+## 9. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.

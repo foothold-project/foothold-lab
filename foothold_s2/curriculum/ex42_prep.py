@@ -174,6 +174,16 @@ class EX42Plan:
         if counts != contract["kind_count_by_family"]:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
 
+    def validate_stage_command_shares(self, stage_id: str, continuous_share: float,
+                                      conditional_shares: dict[str, float]) -> dict[str, float]:
+        """Validate a candidate boundary allocation against that stage's absolute floors."""
+        stage = next((row for row in self.document["stages"] if row["id"] == stage_id), None)
+        if stage is None:
+            raise ValueError(f"EX-42 command allocation references unknown stage: {stage_id}")
+        floors = stage["terrain"]["floors"]["global_command_floor"]
+        return validate_command_shares(continuous_share, conditional_shares, floors=floors,
+                                       total_envs=self.document["command_allocation"]["total_denominator"])
+
     def launch_blockers(self, approvals_path: str | Path,
                         graduation_path: str | Path | None,
                         terrain_manifest_path: str | Path | None) -> list[str]:
