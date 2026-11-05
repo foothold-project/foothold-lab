@@ -104,3 +104,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T00:33	push	m9000 거친 땅 3 시드 0.891 · 0.906 · 0.906 · 합격선 근처 · 기록	push_seeds_m9000 · 학습 지형 L0~2 · S2d 부터 지형 승급	push_seeds_m9000	m9250 도 3 시드
 2026-11-06T00:47	boundary3251	3251 schedule_continue · DR 0.725 · S2c	계획 기울기 그대로 · 다음 3751 S2d	ex41_application.jsonl 3251	-
 2026-11-06T01:33	boundary3250	3250 해석 · 유지 · 후진 조금 되돌아감(선 안) · 보상 38.5 로 내려감(DR 상승)	판정선 넘은 칸 0 · 점수 01:31(경계 약 75 분 전)	score_3250_60b9eeea451d.json	m9250 밀림 3 시드
+2026-11-06T01:40	push	m9250 계단 3 시드 0.844 · 0.922 · 0.875 · 기록 항목 · S2d 전이라 예상 범위	D179 판정은 단계 끝(S2c 끝)에서	push_seeds_m9250	-
