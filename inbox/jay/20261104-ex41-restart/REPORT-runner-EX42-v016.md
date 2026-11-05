@@ -92,3 +92,21 @@ R6/M02/M13에 따라 확장 E 코드는 지형 cfg import를 모듈 import 시�
 CPU 시험: `isaac311`에서 EX-42 준비·운영·guard·지형 계약 시험 32 passed(8.35s). 신규 테스트는 preset 목록·치수·축척 방향·잘못된 수치·Kit 바깥 lazy-import 차단·probe GPU 및 시간 제한 선언·env 생성/학습 호출 부재를 확인한다. pyflakes 0 diagnostics, `git diff --check` 통과. EX-41 운영 파일·프로세스 및 GPU는 건드리지 않았다.
 
 다음 조치는 이 파일들을 커밋한 뒤 `lead-dispatch-measure/_out/tools/gpu_jobs/dispatch.py queue add`로 priority 4, GPU1, done-file 지정, 15분 이하 probe를 대기열에 등록하는 것이다. 실행은 dispatcher가 담당한다. 결과의 `environment_import`와 `family_e_generation`에서 두 증거가 모두 나와야 다음 연결을 판단할 수 있다. 실패/timeout이면 manifest는 만들지 않고 blocker로 보존한다.
+
+## 13. EX-42 E 지형 CPU 단계 및 Kit 대기 등록
+
+커밋 `4407fd360b6e758ab69b7ffa11bce26028023d92`에 네 파일을 추가했다. `foothold_s2/terrains/ex42.py`는 E 계열 네 지형의 승인된 범위와 평가 크기 배율을 CPU에서 선언하고, Isaac import는 Kit 함수 호출 시점까지 미룬다. 지형 종류별 학습 비율은 정본에서 정해지지 않아 임의 배분하지 않는다.
+
+`scripts/ex42_kit_probe.py`는 승인 대기열 전용이며 CUDA 1만 허용한다. 등록 task의 환경 설정을 불러오고 네 종류 mesh 생성 결과를 측정하되 `gym.make`, 학습, 평가를 시작하지 않는다. 균등 비율은 네 생성기를 한 번씩 확인하기 위한 probe 전용 입력이며 학습 계획 비율로 저장하지 않는다. Kit 종료가 810초를 넘으면 timeout 영수증을 남기도록 했다.
+
+재검증 결과:
+
+```text
+pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-terrain-stage2-full -q test_ex42_correct_guards_cpu.py test_ex42_ops_cpu.py test_ex42_prep_cpu.py test_ex42_terrain_cpu.py test_ex42_v016_contract_cpu.py
+32 passed in 7.66s
+py_compile: passed
+pyflakes: 0 diagnostics
+git diff --check: passed
+```
+
+실제 검증은 아직 실행하지 않았다. Kit 작업은 dispatcher queue ID 467, priority 4, GPU1, kind `probe`, done-file `D:/mai-tmp/runner/ex42_kit_probe_20261105_1120.done`으로 대기 중이다. receipt 예정 경로는 `D:/mai-tmp/runner/ex42_kit_probe_20261105_1120.json`이다. 현재 queue state는 `대기`; dispatcher 실행이나 GPU/Kit 사용은 하지 않았다. 대기열 소비 후 `environment_import` 및 `family_e_generation` receipt가 있어야 실제 환경 설정 import와 mesh 생성 확인으로 판정할 수 있다.
