@@ -91,7 +91,7 @@ R6/M02/M13에 따라 확장 E 코드는 지형 cfg import를 모듈 import 시�
 
 CPU 시험: `isaac311`에서 EX-42 준비·운영·guard·지형 계약 시험 32 passed(8.35s). 신규 테스트는 preset 목록·치수·축척 방향·잘못된 수치·Kit 바깥 lazy-import 차단·probe GPU 및 시간 제한 선언·env 생성/학습 호출 부재를 확인한다. pyflakes 0 diagnostics, `git diff --check` 통과. EX-41 운영 파일·프로세스 및 GPU는 건드리지 않았다.
 
-다음 조치는 이 파일들을 커밋한 뒤 `lead-dispatch-measure/_out/tools/gpu_jobs/dispatch.py queue add`로 priority 4, GPU1, done-file 지정, 15분 이하 probe를 대기열에 등록하는 것이다. 실행은 dispatcher가 담당한다. 결과의 `environment_import`와 `family_e_generation`에서 두 증거가 모두 나와야 다음 연결을 판단할 수 있다. 실패/timeout이면 manifest는 만들지 않고 blocker로 보존한다.
+후속 등록은 2026-11-05에 완료했다. dispatcher queue ID 467이 priority 4, GPU1, done-file 지정으로 대기 중이고, 실행은 dispatcher가 담당한다. 결과의 `environment_import`와 `family_e_generation`에서 두 증거가 모두 나와야 다음 연결을 판단할 수 있다. 실패/timeout이면 manifest는 만들지 않고 blocker로 보존한다.
 
 ## 13. EX-42 E 지형 CPU 단계 및 Kit 대기 등록
 
