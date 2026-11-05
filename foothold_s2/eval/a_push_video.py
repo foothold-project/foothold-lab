@@ -221,10 +221,40 @@ def run_one(args) -> dict:
     if args.plan_only:
         return {"state": "planned", "modes": modes, "specs": specs,
                 "source": source, "out": str(args.out), "cadence": args.cadence}
-    # The GPU dispatcher admits this one queue item before launching its parent
-    # evaluator. The removed gpu_jobs.py board must not re-admit the nested clip.
-    if args.training_marker.exists():
-        return {"state": "yielded_to_training_or_evaluation"}
+    def p1_state() -> dict:
+        result = subprocess.run([str(args.python), str(args.gpu_jobs_config.parent / "gpu_jobs.py"),
+                                 "--config", str(args.gpu_jobs_config), "status"],
+                                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                check=False)
+        if result.returncode:
+            raise ValueError("A push GPU board status unavailable")
+        row = json.loads(result.stdout)["ex41_p1"]
+        if "blocks" not in row:
+            raise ValueError("A push GPU board P1 marker malformed")
+        # The enclosing EX-41 evaluator may own this P1 marker while it runs
+        # the nested video child. Only that verified parent may pass.
+        parent_pid = os.environ.get("EX41_PARENT_EVAL_PID")
+        parent_created = os.environ.get("EX41_PARENT_EVAL_CREATED_AT")
+        marker_path = None
+        try:
+            config_doc = json.loads(args.gpu_jobs_config.read_text(encoding="utf-8-sig"))
+            marker_path = Path(config_doc["sources"]["ex41_p1_marker"])
+            owner = json.loads(marker_path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError, KeyError, TypeError):
+            owner = None
+        if (row.get("blocks") is True and isinstance(owner, dict)
+                and owner.get("job") == "ex41_evaluation_bundle"
+                and parent_pid is not None and parent_created is not None
+                and str(owner.get("pid")) == parent_pid
+                and abs(float(owner.get("process_created_at", -1)) - float(parent_created)) <= 0.1):
+            row = {**row, "blocks": False, "state": "parent_owned_nested_eval",
+                   "reason": "same verified EX-41 auxiliary parent owns GPU1 P1",
+                   "marker_path": str(marker_path)}
+        return row
+
+    p1 = p1_state()
+    if p1["blocks"] or args.training_marker.exists():
+        return {"state": "yielded_to_training_or_evaluation", "p1": p1}
     args.a_layer_marker.parent.mkdir(parents=True, exist_ok=True)
     try:
         descriptor = os.open(args.a_layer_marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
@@ -241,7 +271,7 @@ def run_one(args) -> dict:
             if time.monotonic() >= deadline:
                 return {"state": "c_layer_boundary_timeout"}
             time.sleep(2.0)
-        if args.training_marker.exists():
+        if p1_state()["blocks"] or args.training_marker.exists():
             return {"state": "yielded_to_training_or_evaluation_after_boundary"}
         args.out.mkdir(parents=True, exist_ok=True)
         completed = []
@@ -255,7 +285,7 @@ def run_one(args) -> dict:
             attempts.mkdir(parents=True, exist_ok=True)
             if any(attempts.iterdir()):
                 raise ValueError("A push attempt directory must be fresh; no old file reuse")
-            if args.training_marker.exists():
+            if p1_state()["blocks"] or args.training_marker.exists():
                 return {"state": "yielded_to_training_or_evaluation", "completed": completed}
             argv, label = recorder_argv(args, mode, source, attempts)
             child_env = source_child_env(args.python, args.source_root)
@@ -322,8 +352,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--recorder", type=Path, required=True)
     ap.add_argument("--composer", type=Path, required=True)
     ap.add_argument("--python", type=Path, required=True)
-    ap.add_argument("--gpu-jobs-config", type=Path,
-                    help="legacy queue argument, ignored; dispatcher owns GPU admission")
+    ap.add_argument("--gpu-jobs-config", type=Path, required=True)
     ap.add_argument("--c-layer-lock", type=Path, required=True)
     ap.add_argument("--a-layer-marker", type=Path, required=True)
     ap.add_argument("--training-marker", type=Path, required=True)
