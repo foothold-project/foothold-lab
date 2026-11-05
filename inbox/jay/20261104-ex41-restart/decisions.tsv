@@ -98,3 +98,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T22:52	ops	WARN I24 까닭: 492 push_ladder(S2b 단계 끝 · 예상 70 분) 57 분째 · 끝 예상 23:04 · 다음 P1 m3000 저장 약 23:13 이라 겹치지 않음	D179 단계 끝 밀기 판정 재료라 끊지 않음	ops_check 22:51	-
 2026-11-05T22:53	boundary3001	3001 schedule_continue · DR 0.6875 · S2c	m2750 점수 경계 전 · 계획 기울기 그대로	ex41_application.jsonl 3001	m3000 평가 저장 즉시
 2026-11-05T23:13	stageend	S2b 단계 끝 밀기 판정(D179) 9 칸 모두 통과 · 계단 0.969	push_ladder_bundle stage_criteria walk_1.5mps_worst_direction · S2a 미달 뒤 통과	model_2750 stage_end_auxiliary_eval/push_ladder	-
+2026-11-05T23:47	boundary3000	3000 해석 · 유지 · 후진 1.0 0.111 · 학습률 바닥 57/250 로 가라앉음 · 밀림 m8750 통과	판정선 넘은 칸 0 · 점수 23:42 (경계 약 60 분 전)	score_3000_185b1e113d42.json · push250/8750.json	3251 적용 확인
