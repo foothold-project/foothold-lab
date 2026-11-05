@@ -125,7 +125,33 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
                     f"P1 marker present while units running > {LONG_UNIT_MINUTES} min: {long_run}"))
     else:
         out.append(("OK", "I11 marker", "no P1 marker"))
+    out.append(next_boundary_score(run_root, now))
     return out
+
+
+SECONDS_PER_UPDATE = 28.0   # 11/05 measured 27-29 s
+SCORE_MARGIN_MINUTES = 20   # after 2251 the pause budget is spent: one late score freezes DR (I29)
+
+
+def next_boundary_score(run_root: Path, now: float, it: int | None = None,
+                        scores: list[str] | None = None) -> tuple[str, str, str]:
+    """The score that boundary b+1 needs is m(b-250); warn when it is missing close to b+1."""
+    if it is None:
+        try:
+            main = next((run_root / "main").iterdir())
+            last = (main / "train_extra.jsonl").read_bytes().rstrip().rsplit(b"\n", 1)[-1]
+            it = int(json.loads(last)["it"])
+        except (OSError, StopIteration, ValueError, KeyError):
+            return ("WARN", "I29 next_score", "training iteration unreadable")
+    boundary = (it // 250) * 250 + 251 if it % 250 else it + 1
+    need = boundary - 251
+    if scores is None:
+        scores = [p.name for p in (run_root / "eval" / "scores").glob("score_*.json")]
+    have = any(n.startswith(f"score_{need}_") for n in scores)
+    minutes = (boundary - it) * SECONDS_PER_UPDATE / 60
+    level = "OK" if have or need < 250 or minutes > SCORE_MARGIN_MINUTES else "WARN"
+    return (level, "I29 next_score",
+            f"boundary {boundary} in ~{minutes:.0f} min needs m{need}: {'present' if have else 'missing'}")
 
 
 def main(argv: list[str]) -> int:

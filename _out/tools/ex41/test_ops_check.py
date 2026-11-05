@@ -88,6 +88,13 @@ def test_parked_items_do_not_count_as_filler(tmp_path):  # I15 · I26
     assert lv["I15 gpu1_depth"] == "WARN"
 
 
+def test_late_score_near_boundary_warns():              # I29
+    lv = ops_check.next_boundary_score(RUN, 0, it=2480, scores=["score_2000_x.json"])
+    assert lv[0] == "WARN", lv                          # 2501 needs m2250 · 10 min left
+    assert ops_check.next_boundary_score(RUN, 0, it=2480, scores=["score_2250_x.json"])[0] == "OK"
+    assert ops_check.next_boundary_score(RUN, 0, it=2300, scores=[])[0] == "OK"   # 94 min left
+
+
 def test_p1_behind_long_unit_warns(tmp_path):           # I24
     m = tmp_path / "PRIORITY_BUSY_GPU1"
     m.write_text(json.dumps({"pid": __import__("os").getpid(), "job": "EX-41-push250-D171"}), encoding="utf-8")
