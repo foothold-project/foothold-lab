@@ -418,16 +418,28 @@ def read_queue(path: str) -> dict:
 
 
 def write_queue(path: str, q: dict) -> None:
-    # A private temp file per writer (I31 11/05 21:42: two writers shared queue.tmp and
-    # left two JSON documents spliced in queue.json).
+    # Private temp file + shared lock, same as the live dispatcher 272c0902 (I31).
     tmp = Path(path).with_name(f"{Path(path).name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
     tmp.write_text(json.dumps(q, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(path)
 
 
+def parse_when(text: str | None, now: float) -> float | None:
+    """'HH:MM' (today) or 'MM-DD HH:MM'. None/'' -> None. Never shifts a day silently."""
+    if not text:
+        return None
+    base = datetime.fromtimestamp(now)
+    for fmt, value in (("%Y-%m-%d %H:%M", f"{base.year}-{text}"),
+                       ("%Y-%m-%d %H:%M", f"{base:%Y-%m-%d} {text}")):
+        try:
+            return datetime.strptime(value, fmt).timestamp()
+        except ValueError:
+            continue
+    raise ValueError(f"time must be HH:MM or MM-DD HH:MM: {text}")
+
+
 @contextlib.contextmanager
-def queue_lock(path: str, timeout: float = 120.0, stale: float = 300.0):
-    """Serialize read-modify-write of queue.json across the loop and every CLI call (I31)."""
+def queue_lock(path, timeout: float = 120.0, stale: float = 300.0):
     lock = f"{path}.lock"
     t0 = time.monotonic()
     while True:
@@ -453,20 +465,6 @@ def queue_lock(path: str, timeout: float = 120.0, stale: float = 300.0):
             os.remove(lock)
         except OSError:
             pass
-
-
-def parse_when(text: str | None, now: float) -> float | None:
-    """'HH:MM' (today) or 'MM-DD HH:MM'. None/'' -> None. Never shifts a day silently."""
-    if not text:
-        return None
-    base = datetime.fromtimestamp(now)
-    for fmt, value in (("%Y-%m-%d %H:%M", f"{base.year}-{text}"),
-                       ("%Y-%m-%d %H:%M", f"{base:%Y-%m-%d} {text}")):
-        try:
-            return datetime.strptime(value, fmt).timestamp()
-        except ValueError:
-            continue
-    raise ValueError(f"time must be HH:MM or MM-DD HH:MM: {text}")
 
 
 def queue_cmd(args, cfg=LIVE, now=None) -> str:
@@ -1176,9 +1174,6 @@ DISPATCH = {
     "idle_log": "D:/mai-tmp/gpu/idle_log.jsonl",
     "state": "D:/mai-tmp/gpu/dispatch_state.json",
     "p1_markers": ["D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"],
-    # A periodic score attempt waiting for GPU1 (I24 · 11/05 09:4x: the gap between one P1 owner
-    # releasing the marker and the waiting score watch claiming it let a P2 unit start first).
-    "p1_attempt_globs": ["C:/Users/AI-WS01/s2_lab/ex41_main_*/eval/score-watch/model_*/attempt.json"],
     "lead": "term_37f1d02b-35f8-435d-940e-d43a8a5be1de",
     "notify_every": 300,
     "train_limit_s": 29.7,
@@ -1274,36 +1269,17 @@ def train_mean(state: dict, train: dict | None, window: int) -> float | None:
     That file is rewritten every 10 updates, so a sample is one 10-update block and the guard
     acts from the first sample (no warm-up gap)."""
     hist = state.setdefault("train_hist", [])
-    if train is None:
-        # No training marker: old samples belong to a finished run or rehearsal (11/04 23:3x they
-        # held GPU1 idle via train_protect with nothing training).
-        hist.clear()
-        return None
-    if type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
+    if train and type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
         if not hist or hist[-1][0] != train["iter"]:
             hist.append([train["iter"], float(train["iter_s"])])
             del hist[:-window]
     return sum(s for _, s in hist) / len(hist) if hist else None
 
 
-def p1_waiting(globs: list[str]) -> str | None:
-    import glob as _glob
-    for g in globs:
-        for f in _glob.glob(g):
-            try:
-                if json.loads(Path(f).read_text(encoding="utf-8")).get("state") == "running":
-                    return f"p1_attempt:{f}"
-            except (OSError, ValueError):
-                continue
-    return None
-
-
 def p1_busy(jobs: list[dict], ours: set[int], markers: list[str]) -> str | None:
     for m in markers:
         if marker_state(Path(m))["present"]:
             return f"marker:{m}"
-    if (why := p1_waiting(DISPATCH.get("p1_attempt_globs", []))):
-        return why
     for j in jobs:
         if j["kind"] != "guard" and on_gpu(j, DISPATCH["gpu"]) and j["pid"] not in ours:
             return f"gpu1_process:{j['pid']}:{j['script']}"
@@ -1392,13 +1368,8 @@ def runwrap(item_id: int, cfg=LIVE) -> int:
     it = next(i for i in q["items"] if i["id"] == item_id)
     env = unit_env(it, dict(os.environ))
     # Evaluators write into the done-file folder without creating it (items 81 · 114 · 115 failed so).
-    # But an evaluator that demands a fresh --out folder refuses one that exists (11/05 06:45 item 411
-    # ex41_eval_once "fresh evaluation output required"), so create only the folder above --out.
-    argv = it.get("argv") or []
-    out = Path(argv[argv.index("--out") + 1]).resolve() if "--out" in argv[:-1] else None
     for p in it.get("done_files", []):
-        parent = Path(p).parent
-        (parent.parent if out is not None and parent.resolve() == out else parent).mkdir(parents=True, exist_ok=True)
+        Path(p).parent.mkdir(parents=True, exist_ok=True)
     started = datetime.now().timestamp()
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     last_json = None
@@ -1483,48 +1454,12 @@ def notify_launch(state: dict, it: dict, pid: int, log: str, now: float, notify)
         state["launches_since_notice"] = 0
 
 
-# Minutes a unit is expected to hold GPU1 (11/05 measured: w78_v2 stage-end 2 h 32 min,
-# push_ladder 64 min, periodic P1 45 min, C-layer cell 4 min, video clip about 5 min).
-EST_MINUTES = (("w78_v2", 160), ("push_ladder", 70), ("axis_v2", 45), ("a_push_video", 20),
-               ("stage-video", 8), ("C76", 6), ("Kit probe", 15))
-P1_START_AFTER = 50      # the score watch starts m(N) after the N+50 save (M3, ex40_score_watch.py:100)
-P1_SLACK_MIN = 5
-
-
-def est_minutes(it: dict) -> float:
-    if isinstance(it.get("est_min"), (int, float)):
-        return float(it["est_min"])
-    title = it.get("title") or ""
-    for key, minutes in EST_MINUTES:
-        if key in title:
-            return float(minutes)
-    return 30.0
-
-
-def p1_window_minutes(train: dict | None, boundary: int = 250) -> float | None:
-    """Minutes until the next periodic score evaluation will want GPU1, from the live trainer."""
-    if not train or train.get("state") != "running":
-        return None
-    it, sec = train.get("iter"), train.get("iter_s")
-    if type(it) is not int or not isinstance(sec, (int, float)) or sec <= 0:
-        return None
-    nxt = (it // boundary) * boundary + P1_START_AFTER
-    if nxt <= it:
-        nxt += boundary
-    return (nxt - it) * sec / 60 - P1_SLACK_MIN
-
-
 def fresh_p1(ours: set[int]) -> str | None:
     return p1_busy(live_jobs(nvidia_smi(), processes()), ours, DISPATCH["p1_markers"])
 
 
-def dispatch_step(cfg=LIVE, *args, **kwargs) -> dict:
-    with queue_lock(cfg["queue"]):
-        return _dispatch_step(cfg, *args, **kwargs)
-
-
-def _dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper, notify=notify_lead,
-                   exists=lambda p: Path(p).exists(), alive=pid_alive, fam=family, recheck=fresh_p1) -> dict:
+def dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper, notify=notify_lead,
+                  exists=lambda p: Path(p).exists(), alive=pid_alive, fam=family, recheck=fresh_p1) -> dict:
     now = now if now is not None else datetime.now().timestamp()
     try:
         state = json.loads(Path(DISPATCH["state"]).read_text(encoding="utf-8"))
@@ -1568,15 +1503,6 @@ def _dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper
         ready = sorted((it for it in items if item_ready(it, now, exists, alive, blocked)[0]
                         and item_group(it) not in held_groups),
                        key=lambda it: (it["priority"], it["id"]))
-        # P1 first (팀장 11/05 12:1x): a unit starts only if it can end before the next periodic
-        # score evaluation needs GPU1 (I24: a 2.5 h stage-end w78 delayed m1000 past 1251).
-        window = p1_window_minutes(train)
-        if window is not None:
-            fits = [it for it in ready if it.get("priority", 9) <= 1 or est_minutes(it) <= window]
-            if ready and not fits:
-                result["deferred"] = [(it["id"], est_minutes(it)) for it in ready[:3]]
-                result["window_min"] = round(window, 1)
-            ready = fits
         late = recheck(ours) if ready else None
         if ready and late:
             result.update(action="yield_p1", reason=f"recheck:{late}")
@@ -1666,6 +1592,7 @@ def main(argv: list[str] | None = None) -> int:
     qa.add_argument("--wait-absent", action="append", default=[])
     qa.add_argument("--wait-pid", action="append", type=int, default=[])
     qa.add_argument("--done-file", action="append", default=[])
+    qa.add_argument("--queue", type=Path, help="queue file (defaults to the live dispatcher queue)")
     for name in ("done", "run"):
         qs.add_parser(name).add_argument("id", type=int)
     qc = qs.add_parser("cancel", help="never ran / should not run; kept with a reason")
@@ -1691,7 +1618,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.action == "board":
         return watch(args)
     if args.action == "queue":
-        print(queue_cmd(args))
+        cfg = {**LIVE, "queue": str(args.queue.resolve())} if getattr(args, "queue", None) else LIVE
+        print(queue_cmd(args, cfg=cfg))
         return 0
     if args.action == "status":
         print(live_status())
