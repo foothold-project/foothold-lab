@@ -95,7 +95,9 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
     reh = [j["id"] for j in items if "REHEARSAL" in (j.get("title") or "") and j.get("state") in ("대기", "실행")]
     out.append(("FAIL" if reh else "OK", "I06 rehearsal_items", f"waiting/running rehearsal items {reh}"))
     # Any waiting GPU1 work keeps it busy; warn before the queue runs dry (P2/P3 stage-end work counts).
-    waiting = [j for j in items if j.get("gpu") in (1, None) and j.get("state") == "대기"]
+    # Items parked with a future start (e.g. 11/05 13:3x broken stage videos) cannot fill GPU1 now.
+    waiting = [j for j in items if j.get("gpu") in (1, None) and j.get("state") == "대기"
+               and (j.get("start") is None or j["start"] <= now)]
     out.append(("WARN" if len(waiting) < P4_LOW_WATER else "OK", "I15 gpu1_depth",
                 f"{len(waiting)} GPU1 items waiting"))
     fails = [j["id"] for j in items if j.get("state") == "실패" and now - (j.get("done_at") or 0) < 3600]

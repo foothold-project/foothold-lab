@@ -81,6 +81,13 @@ def test_p4_low_water_warns(tmp_path):                  # I15
     assert lv["I15 gpu1_depth"] == "WARN"
 
 
+def test_parked_items_do_not_count_as_filler(tmp_path):  # I15 · I26
+    parked = [{"id": i, "priority": 3, "state": "대기", "start": 2e9} for i in range(48)]
+    with mock.patch.object(ops_check, "P1_MARKER", tmp_path / "none"):
+        lv = levels(ops_check.check(RUN, now=1e9, procs=procs(), queue=q(*parked)))
+    assert lv["I15 gpu1_depth"] == "WARN"
+
+
 def test_p1_behind_long_unit_warns(tmp_path):           # I24
     m = tmp_path / "PRIORITY_BUSY_GPU1"
     m.write_text(json.dumps({"pid": __import__("os").getpid(), "job": "EX-41-push250-D171"}), encoding="utf-8")
