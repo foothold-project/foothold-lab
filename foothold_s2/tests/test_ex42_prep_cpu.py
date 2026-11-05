@@ -156,3 +156,26 @@ def test_score_contract_preserves_26_judge_and_13_record_only_values():
     assert result["judge_cells"] == judge and result["record_only_cells"] == record
     with pytest.raises(ValueError, match="exactly 26 judge"):
         score_cell_roles({}, record)
+
+
+def test_ex42_missing_or_late_boundary_score_uses_planned_dr_and_records_gap():
+    from foothold_s2.curriculum.ex42_runtime import resolve_missing_score_dr_boundary
+
+    missing = resolve_missing_score_dr_boundary(
+        planned_scale=0.65, boundary_iteration=1001,
+        expected_score_iteration=1000, observed_score_iteration=None,
+    )
+    assert missing["status"] == "measurement_gap"
+    assert missing["reason"] == "score_missing"
+    assert missing["dr_action"] == "follow_schedule_record_gap"
+    assert missing["applied_scale"] == missing["planned_scale"] == 0.65
+    assert missing["learning_continues"] is True
+
+    late = resolve_missing_score_dr_boundary(
+        planned_scale=0.8, boundary_iteration=1501,
+        expected_score_iteration=1500, observed_score_iteration=1250,
+    )
+    assert late["status"] == "measurement_gap"
+    assert late["reason"] == "score_late_or_wrong_iteration"
+    assert late["applied_scale"] == late["planned_scale"] == 0.8
+    assert late["maintenance_action"] == "not_decided_here"

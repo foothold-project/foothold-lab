@@ -130,3 +130,11 @@ Dispatcher item 468 receipt를 읽었다. `state=passed`, `kit_started=true`, `t
 - `foothold_s2/scripts/ex42_manifest_build.py`는 receipt들을 CPU에서 조립하는 CLI다. 부분 결과는 exit 2로 끝나며 launch gate 입력으로 사용될 수 없다.
 - `continuous.make_runtime`은 이제 EX-42를 EX-40 runtime에 흘려보내지 않고 `EX42Runtime` 전용 입구로 보낸다. 이 입구는 3072 env와 명시적 CUDA device, 승인·졸업·완전 측정 manifest를 확인한다. 현재 v0.16 table은 `preparation_only`, 승인/측정 가정도 미결이고 active stage transition consumer는 아직 구현되지 않았으므로 본 학습은 계속 fail-closed다. 이 변경은 curriculum progression 구현 완료를 뜻하지 않는다.
 - 실제 Kit 측정은 실행하지 않았다. 기존 receipt 467/468은 각각 E mesh probe와 1-env/3-step env smoke 범위다. 현재 worktree에는 A/B/C/D/continuous 각 preset builder/명시 kind inventory가 없어 39종 전체 manifest는 생성할 수 없다. 필요한 후속은 각 family의 명시 cfg 공급자와 실제 queued Kit kind receipt, family별 required aggregate measurements이며, 그 결과가 들어오기 전에는 미측정으로 유지한다.
+
+
+## 후속: EX-42 점수 누락 경계와 DR 일정
+
+- 팀장 지시대로 해당 경계 점수가 없거나 예상 회차가 아닌 늦은 점수만 있으면 `measurement_gap` 결정 payload를 반환하고 `applied_scale=planned_scale`을 유지하는 CPU 정책 함수를 추가했다. 이 payload는 학습 지속과 공백 이유를 기록하며, 누락 점수 때문에 DR scale을 보류하지 않는다. 코드 위치: `foothold_s2/curriculum/ex42_runtime.py`의 `resolve_missing_score_dr_boundary`.
+- CPU 회귀는 경계 1001에서 m1000 점수 누락 시 planned DR 0.65, 경계 1501에서 m1250만 관측 시 planned DR 0.8을 확인한다. 두 경우 모두 gap reason과 회차를 기록하고 학습 지속을 표시한다.
+- **팀장 확인 질문:** 점수가 도착했고 maintenance가 성능 미달일 때 기존 `hold_exposure_continue_training`만 적용하고 DR은 예정대로 올릴지, 아니면 maintenance 미달이면 DR scale도 유지할지 결정이 필요하다. 이번 수정은 이 경우를 바꾸지 않는다.
+- EX-42 고정 table은 여전히 `preparation_only`이며 실제 runtime transition consumer는 아직 준비 gate 뒤에 연결되지 않았다. v0.16 table에는 단계별 DR scale 일정 항목도 없다. 따라서 0.65/0.8은 함수 전달값을 확인하는 CPU 입력일 뿐 공식 단계표 값이 아니며, 일정 값을 새로 만들지 않았다. 후속 caller는 승인된 일정에서 `planned_scale`을 전달해야 한다.
