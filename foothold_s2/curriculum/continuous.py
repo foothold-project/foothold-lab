@@ -63,15 +63,30 @@ def load_plan(path: str | Path, *, arm: str | None = None,
 def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
                  score_dir: str | Path | None = None,
                  terrain_policy: dict | None = None, segment_index: int = 0,
-                 allow_w71_unverified: bool = False):
-    """Return Runtime or EX41Runtime. Same attach/reset/checkpoint interface.
+                 allow_w71_unverified: bool = False,
+                 ex42_approvals_path: str | Path | None = None,
+                 ex42_graduation_path: str | Path | None = None,
+                 ex42_terrain_manifest_path: str | Path | None = None):
+    """Return the experiment-specific runtime or fail closed.
 
     EX41 uses local completed update n (parent m7500 is recorded separately).
-    Transfer initializes n=0 without a rollout; first rollout is n=1.
-    EX41 resume preserves n and all W72 state. No live EX40 ledger is consumed.
+    EX42 routes through its dedicated readiness gate and is never treated as
+    an EX40 runtime.
     """
     if getattr(plan, 'is_ex42', False):
-        raise ValueError('EX-42 training runtime is not launchable from preparation-only plan')
+        from foothold_s2.curriculum.ex42_runtime import EX42Runtime
+        approvals_path = ex42_approvals_path or (
+            plan.path.parent / plan.document["approval_file"]
+        )
+        return EX42Runtime(
+            plan, env_count, device, log_dir,
+            approvals_path=approvals_path,
+            graduation_path=ex42_graduation_path,
+            terrain_manifest_path=ex42_terrain_manifest_path,
+            score_dir=score_dir,
+            terrain_policy=terrain_policy,
+            segment_index=segment_index,
+        )
     if getattr(plan, 'is_ex41', False):
         if getattr(plan, 'fixed_schedule', None):
             from foothold_s2.curriculum.ex41_fixed import EX41FixedRuntime

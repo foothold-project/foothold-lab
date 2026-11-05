@@ -122,3 +122,11 @@ CPU 시험은 먼저 새 모듈 부재로 collection error가 나는 것을 확�
 ## 15. EX-42 environment create + step 결과
 
 Dispatcher item 468 receipt를 읽었다. `state=passed`, `kit_started=true`, `training_started=false`, `environment_created=true`다. 실제 `ManagerBasedRLEnv`는 `FootholdS2SBEnvCfg`에서 `num_envs=1`, `device=cuda:1`, `action_dim=12`로 생성되었고 reset 뒤 zero action 3 step 모두 finite reward를 반환했으며 done 수는 0이었다. probe 비율은 네 family E 메시를 호출하기 위한 진단 전용 0.25씩이며 학습 일정으로 쓰지 않았다. 확인은 해당 네 지형의 환경 생성과 3 step까지이며, production curriculum runtime, 점수 생산, measured terrain manifest 연결은 아직 미구현이다.
+
+
+## 후속: per-kind manifest 경로와 runtime 입구
+
+- `foothold_s2/curriculum/ex42_manifest.py`는 Kit가 실제 생성한 한 terrain kind의 mesh 정점·면 SHA, bounds, 개수, 생성 시간을 측정하고 queued Kit receipt로 봉인하는 API를 추가한다. `assemble_manifest`는 family receipt의 출처, 중복, 축별 치수 방향과 family별 개수를 검사하며, 완전한 A/B/C/D/E/continuous inventory와 필수 aggregate 측정이 모두 갖춰진 경우에만 기존 `EX42Plan.validate_terrain_manifest`를 통과시켜 `measured`로 만든다. 부분 입력은 `partial`로 남는다.
+- `foothold_s2/scripts/ex42_manifest_build.py`는 receipt들을 CPU에서 조립하는 CLI다. 부분 결과는 exit 2로 끝나며 launch gate 입력으로 사용될 수 없다.
+- `continuous.make_runtime`은 이제 EX-42를 EX-40 runtime에 흘려보내지 않고 `EX42Runtime` 전용 입구로 보낸다. 이 입구는 3072 env와 명시적 CUDA device, 승인·졸업·완전 측정 manifest를 확인한다. 현재 v0.16 table은 `preparation_only`, 승인/측정 가정도 미결이고 active stage transition consumer는 아직 구현되지 않았으므로 본 학습은 계속 fail-closed다. 이 변경은 curriculum progression 구현 완료를 뜻하지 않는다.
+- 실제 Kit 측정은 실행하지 않았다. 기존 receipt 467/468은 각각 E mesh probe와 1-env/3-step env smoke 범위다. 현재 worktree에는 A/B/C/D/continuous 각 preset builder/명시 kind inventory가 없어 39종 전체 manifest는 생성할 수 없다. 필요한 후속은 각 family의 명시 cfg 공급자와 실제 queued Kit kind receipt, family별 required aggregate measurements이며, 그 결과가 들어오기 전에는 미측정으로 유지한다.
