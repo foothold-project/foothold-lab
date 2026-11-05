@@ -94,3 +94,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T20:32	ops	WARN I15 까닭 · DR 2691 회 0.641	m2750 저장(약 20:5x) 전 빔 · 2751 단계 넘김 감시 중	ops_check 20:31	-
 2026-11-05T21:00	stage	2751 단계 넘김 S2b → S2c · DR 0.65 · schedule_continue	적용 행 2751 · stage_log env_reset_applied to S2c · 명령 몫 걷기 0.075→0.06 · 옆 0.06→0.07 · 대각 앞 0.015→0.02 · 지형 fixed_l02 L2 그대로 · m2750 평가 저장 24 초 뒤 시작(20:58:08) · S2b 단계 끝 일 등록은 m2750 점수 뒤 확인	ex41_application.jsonl 2751 · stage_log.jsonl	score_2750 · 단계 끝 등록 확인
 2026-11-05T21:5x	I31	queue.json 복구 · 잠금 넣음 · dispatcher 루프(84252) · 감시기(21564) 재기동 · S2b 단계 끝 55 건 등록	깨진 파일은 첫 문서 533 건 + 꼬리(534~537) · 첫 문서로 복구 · 등록은 condition 으로 기존 재사용	queue.corrupt-2145.json · watch_state stage_end_queue_jobs 2750 = 55	단계 끝 일 진행 확인
+2026-11-05T22:14	push	밀기 감시기 재기동(92516 · 2750 부터) · done 비교를 정체 칸으로	I31 복구 뒤 m8750 밀기가 막혀 있었음(watcher_state waiting_for_score_watch_evaluation) · 73480ef1 · 시험 29 통과	push250/watcher_state.json starting	push_ladder 끝(약 23:0x) 뒤 m8750
