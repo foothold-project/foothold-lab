@@ -77,3 +77,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T17:52	ops	scripter 메모 확인 뒤 압축 · WARN I15 까닭	I15: m2250 평가 중 · 대기열 비어도 GPU1 은 P1 이 씀 · m2250 계단 옆 평가 17:51 시작 · 끝 약 18:16	ops_check 17:51	-
 2026-11-05T18:18	boundary2250	2250 해석 · 유지 · 점수 감시기 e7e20402 로 재기동	판정선 넘은 칸 0 · 후진 1.0 회복 · 감시기 92032 쉬는 상태(자식 없음 · idle) 확인 뒤 lead 가 멈춤 → 89680 (ex41-scorewatch-s2b) · 같은 인자 · idle 확인 · ops_check score_watch OK	score_2250_88b9371e2872.json · watcher3.stdout.log	2501 적용 확인
 2026-11-05T18:3x	push	밀림 계단 미달 4 회(750 · 1000 · 1750 · 2250) 늦은 보고 · 학습 계속 · 잡음 재측정 P4	750 · 1000 두 경계 연속 미달을 그때 안 봄(I30) · 통과/미달 번갈아 · 최약 방향 매번 다름 · 계단만	eval/push250/*.json	팀장 보고 · m8250 재측정
+2026-11-05T18:28	push	m8250 계단 재측정: 시드 42 0.812 · 43 0.828 · 44 0.922 · 잡음 큼 실측 · 합격선 근처 약간 아래	같은 저장본 최약 방향 0.11 흔들림 · 손잡이 그대로 · EX-42 판정 방식 안건	D:/mai-tmp/lead/push_noise_m8250/*/push_ladder.json	done
