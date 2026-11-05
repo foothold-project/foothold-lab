@@ -37,7 +37,9 @@ def test_known_ex42_table_is_design_only_and_preserves_all_unresolved_fields():
     assert plan.document["environment"]["num_envs"] == 3072
     assert plan.document["evaluation"]["judge_cells"] == 26
     assert plan.document["evaluation"]["record_only_cells"] == 13
-    assert plan.document["environment"]["evaluation"]["scale_multiplier"] is None
+    assert plan.document["environment"]["evaluation"]["scale_multiplier"] == {
+        "gap": 1.15, "support_surface": 0.85,
+    }
     blockers = plan.launch_blockers(APPROVALS, None, None)
     assert "explicit_lead_approval_missing" in blockers
     assert "ex41_graduation_receipt_missing" in blockers
@@ -62,15 +64,22 @@ def test_terrain_manifest_measured_contract_and_larger_evaluation_requirement():
                           "original_dimensions_m": {"x": 1.0, "y": 1.0, "z": 0.2},
                           "training_dimensions_m": {"x": 1.0, "y": 1.0, "z": 0.2},
                           "evaluation_dimensions_m": {"x": 1.1, "y": 1.0, "z": 0.2},
-                          "geometry_sha256": "a" * 64})
+                          "evaluation_axis_directions": {"x": "higher", "y": "same", "z": "same"},
+                          "geometry_sha256": "a" * 64,
+                          "paper_reference": "CPU fixture only",
+                          "physical_flag": False})
     manifest = {"format": "foothold-ex42-terrain-manifest/1", "status": "measured",
                 "training_presets": plan.document["environment"]["training_presets"],
                 "measurements": {"peak_memory_gib": 3.0, "generation_seconds": 8.0,
                                  "ray_count_per_second": 1000}, "kinds": kinds}
     plan.validate_terrain_manifest(manifest)
     kinds[0]["evaluation_dimensions_m"] = dict(kinds[0]["training_dimensions_m"])
-    with pytest.raises(ValueError, match="not larger"):
+    with pytest.raises(ValueError, match="does not match direction"):
         plan.validate_terrain_manifest(manifest)
+
+    kinds[0]["evaluation_dimensions_m"] = {"x": 1.0, "y": 0.85, "z": 0.2}
+    kinds[0]["evaluation_axis_directions"] = {"x": "same", "y": "lower", "z": "same"}
+    plan.validate_terrain_manifest(manifest)
 
 
 def test_actual_cli_parser_and_dry_run_report_hold(capsys):

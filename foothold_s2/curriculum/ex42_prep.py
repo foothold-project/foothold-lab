@@ -15,7 +15,18 @@ import yaml
 
 
 STAGE_IDS = ("E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b")
-FAMILIES = ("A", "B", "C", "D", "continuous")
+FAMILIES = ("A", "B", "C", "D", "E", "continuous")
+CANONICAL_V016_COMMIT = "69e5ac6bb5a5e16f8b5c419e8674237f3f597dd8"
+EXPECTED_D182 = {
+    "expert_advice_decisions": ["D176-4", "D176-8", "D176-6", "D176-7"],
+    "consecutive_hold": "exposure_only_training_continues",
+    "foot_drag": {"baseline_fraction": 0.25, "spread_multiplier": 2,
+                   "judge_from_stage": "E2", "class": "assumption"},
+    "physical_flag_cells": "evaluation_record_only",
+    "extension_e": {"slope_deg": 35.0, "stairs_height_m": 0.30},
+    "pallets_l9": {"gap_m": 0.35, "height_delta_m": 0.30,
+                   "one_axis_per_boundary": True},
+}
 EX42_FORMAT = "foothold-ex42-curriculum/1"
 BOUNDARY_FORMAT = "foothold-ex42-boundary/1"
 APPROVAL_FORMAT = "foothold-ex42-approvals/1"
@@ -44,6 +55,12 @@ class EX42Plan:
             raise ValueError("EX-42 curriculum format mismatch")
         if doc.get("status") != "preparation_only":
             raise ValueError("EX-42 table status must remain preparation_only")
+        design = doc.get("design")
+        if (not isinstance(design, dict)
+                or design.get("canonical_commit") != CANONICAL_V016_COMMIT
+                or design.get("canonical_version") != "v0.16"
+                or design.get("d182_decisions") != EXPECTED_D182):
+            raise ValueError("EX-42 table must match canonical v0.16 and D182")
         env = doc.get("environment")
         if not isinstance(env, dict) or env.get("num_envs") != 3072:
             raise ValueError("EX-42 requires the preregistered 3072 environment count")
@@ -62,6 +79,11 @@ class EX42Plan:
                 raise ValueError(f"EX-42 invalid update range for {row.get('id')}")
             if not isinstance(row.get("boundary_axes"), list) or not row["boundary_axes"]:
                 raise ValueError(f"EX-42 stage has no registered boundary axis: {row.get('id')}")
+            if row.get("hold_policy") != "hold_exposure_continue_training":
+                raise ValueError(f"EX-42 hold must stop exposure only: {row.get('id')}")
+            expected_floors = {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}
+            if row.get("terrain", {}).get("floors", {}).get("global_command_floor") != expected_floors:
+                raise ValueError(f"EX-42 stage global command floors differ from D176: {row.get('id')}")
         evaluation = doc.get("evaluation", {})
         if (evaluation.get("judge_cells") != 26 or evaluation.get("record_only_cells") != 13
                 or evaluation.get("total_cells") != 39
@@ -75,6 +97,20 @@ class EX42Plan:
         pending = doc.get("assumptions_pending_lead")
         if not isinstance(pending, dict) or not pending:
             raise ValueError("EX-42 unresolved assumptions must remain visible")
+        if set(pending) != {"evaluation_friction", "q4_two_window_range",
+                            "next_jump_study_start", "terrain_manifest_measurements",
+                            "runtime_integration"}:
+            raise ValueError("EX-42 unresolved items must match the current measured gaps")
+        allocation = doc.get("command_allocation", {})
+        if (allocation.get("total_denominator") != 3072
+                or allocation.get("conditional_denominator") != "continuous_environments"
+                or allocation.get("continuous_share_min") != 0.43
+                or allocation.get("global_command_floor") != {
+                    "reverse": 0.05, "side_left": 0.03, "side_right": 0.03}):
+            raise ValueError("EX-42 command share denominators or global floors differ from D176")
+        terrain_contract = doc.get("terrain_manifest_contract", {})
+        if terrain_contract.get("evaluation_axis_rule") != "harder_per_axis":
+            raise ValueError("EX-42 evaluation size must be checked per axis")
         return cls(plan_path, doc, hashlib.sha256(raw).hexdigest())
 
     def validate_terrain_manifest(self, manifest: dict[str, Any]) -> None:
@@ -116,12 +152,24 @@ class EX42Plan:
                     raise ValueError(f"EX-42 terrain dimensions invalid: {family}/{kind}/{dimension_key}")
             train = row["training_dimensions_m"]
             evaluate = row["evaluation_dimensions_m"]
+            directions = row["evaluation_axis_directions"]
             if set(train) != set(evaluate):
                 raise ValueError(f"EX-42 eval/train dimension axes differ: {family}/{kind}")
-            if contract["evaluation_must_be_larger"] and not any(evaluate[k] > train[k] for k in train):
-                raise ValueError(f"EX-42 evaluation terrain is not larger: {family}/{kind}")
+            if not isinstance(directions, dict) or set(directions) != set(train):
+                raise ValueError(f"EX-42 evaluation axis directions missing: {family}/{kind}")
+            for axis, direction in directions.items():
+                if direction not in {"higher", "lower", "same"}:
+                    raise ValueError(f"EX-42 evaluation axis direction invalid: {family}/{kind}/{axis}")
+                if ((direction == "higher" and not evaluate[axis] > train[axis])
+                        or (direction == "lower" and not evaluate[axis] < train[axis])
+                        or (direction == "same" and evaluate[axis] != train[axis])):
+                    raise ValueError(f"EX-42 evaluation axis does not match direction: {family}/{kind}/{axis}")
             if not isinstance(row["geometry_sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", row["geometry_sha256"]):
                 raise ValueError(f"EX-42 geometry SHA missing: {family}/{kind}")
+            if not isinstance(row["paper_reference"], str) or not row["paper_reference"].strip():
+                raise ValueError(f"EX-42 paper reference missing: {family}/{kind}")
+            if type(row["physical_flag"]) is not bool:
+                raise ValueError(f"EX-42 physical flag must be an explicit boolean: {family}/{kind}")
         if counts != contract["kind_count_by_family"]:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
 
@@ -236,3 +284,28 @@ def score_cell_roles(judge_cells: dict[str, Any], record_cells: dict[str, Any]) 
     return {"judge_cells": judge_cells, "record_only_cells": record_cells,
             "judge_count": len(judge_cells), "record_only_count": len(record_cells),
             "total_cells": len(judge_cells) + len(record_cells)}
+
+
+def validate_command_shares(continuous_share: float,
+                            conditional_shares: dict[str, float], *,
+                            floors: dict[str, float] | None = None,
+                            total_envs: int = 3072) -> dict[str, float]:
+    """Validate conditional command shares against whole-environment floors."""
+    if type(total_envs) is not int or total_envs != 3072:
+        raise ValueError("EX-42 command denominator must remain 3072 environments")
+    values = [continuous_share, *conditional_shares.values()]
+    if any(type(value) not in (int, float) or isinstance(value, bool)
+           or not math.isfinite(float(value)) or not 0.0 <= value <= 1.0
+           for value in values):
+        raise ValueError("EX-42 command shares must be finite fractions in [0, 1]")
+    if abs(sum(conditional_shares.values()) - 1.0) > 1e-9:
+        raise ValueError("EX-42 conditional command shares must sum to one")
+    required = floors or {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}
+    realized = {name: float(continuous_share) * float(conditional_shares.get(name, 0.0))
+                for name in required}
+    for name, floor in required.items():
+        if type(floor) not in (int, float) or isinstance(floor, bool) or not 0 <= floor <= 1:
+            raise ValueError(f"EX-42 invalid global command floor: {name}")
+        if realized[name] + 1e-12 < floor:
+            raise ValueError(f"EX-42 global floor not met: {name}={realized[name]:.6f} < {floor:.6f}")
+    return realized
