@@ -2,7 +2,7 @@
 > 작성: 오흥재 · 2026-11-05
 > 근거: EX-41 운영 원장 · 잠긴 EX-41 코드 · CURRICULUM-GATES v0.16 §E · D182 · EX42-V015-RUNNER-DIFF.md
 > 요지: EX-41 1251 경계 동작을 원자료와 코드로 설명하고 EX-42 정본 계약 1단계를 CPU 시험으로 고정한다
-> 상태: EX-41 분석 확인 · EX-42 계약 1단계 및 CPU 출발 관문 통과 · 런타임 미연결
+> 상태: EX-41 분석 확인 · EX-42 계약·CPU 지형 계약 시험 통과 · Kit 확인은 P4 대기열 예정
 
 # EX-41 경계 분석 및 EX-42 v0.16 계약 1단계
 
@@ -82,3 +82,13 @@ py_compile ex42_ops.py: passed
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.
 - CPU preflight 및 AST import 확인은 준비 경로일 뿐이며, Kit/GPU 예행 승인이나 본 학습 허가가 아니다.
+
+## 12. 지형 스펙 및 Kit 확인 요청 준비
+
+R6/M02/M13에 따라 확장 E 코드는 지형 cfg import를 모듈 import 시점에 하지 않는다. 새 `terrains/ex42.py`는 정본 치수의 네 종류를 선언하고, D182 평가 축척은 `gap_m × 1.15`, `support_m`·`width_m × 0.85`로 이름이 명시된 축에만 적용한다. 그 외 값은 보존한다. E 종류별 내부 비율은 정본에 없어서 함수 입력으로 필수화했고 균등 배분을 학습 설정 기본값으로 두지 않았다.
+
+`scripts/ex42_kit_probe.py`는 GPU/Kit을 직접 실행하지 않는 CLI 준비물이다. 승인 대기열에서만 GPU1로 실행하도록 장치 검사를 두고, 등록 env cfg를 로드·인스턴스화한 뒤 환경 자체는 만들지 않고, 네 확장 E 메시를 작은 진단 전용 구성으로 생성한다. 이 임시 0.25 비율은 네 생성기를 모두 호출하기 위한 probe 전용이며 계획이나 학습 비율에 기록하지 않는다. 타이머는 810초에서 timeout receipt를 쓰고 rc 124로 끝내며, 성공 시에만 done-file을 만든다. 이 경로는 아직 Kit에서 실행되지 않았으므로 실제 env import/메시 생성 증거가 아니다.
+
+CPU 시험: `isaac311`에서 EX-42 준비·운영·guard·지형 계약 시험 32 passed(8.35s). 신규 테스트는 preset 목록·치수·축척 방향·잘못된 수치·Kit 바깥 lazy-import 차단·probe GPU 및 시간 제한 선언·env 생성/학습 호출 부재를 확인한다. pyflakes 0 diagnostics, `git diff --check` 통과. EX-41 운영 파일·프로세스 및 GPU는 건드리지 않았다.
+
+다음 조치는 이 파일들을 커밋한 뒤 `lead-dispatch-measure/_out/tools/gpu_jobs/dispatch.py queue add`로 priority 4, GPU1, done-file 지정, 15분 이하 probe를 대기열에 등록하는 것이다. 실행은 dispatcher가 담당한다. 결과의 `environment_import`와 `family_e_generation`에서 두 증거가 모두 나와야 다음 연결을 판단할 수 있다. 실패/timeout이면 manifest는 만들지 않고 blocker로 보존한다.
