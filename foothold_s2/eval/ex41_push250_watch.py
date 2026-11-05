@@ -415,7 +415,10 @@ def score_watch_attempt_finished(score_watch_root: Path, local_iteration: int,
     if (attempt.get("iteration") != local_iteration
             or attempt.get("checkpoint_sha256") != checkpoint_sha256
             or attempt.get("state") not in ("complete", "HOLD")
-            or done != attempt):
+            # A recovered watcher (I31 11/05 21:4x) adds mode/reason to done; compare the
+            # identity fields instead of the whole dict so one restart cannot block every push.
+            or any(done.get(k) != attempt.get(k) for k in
+                   ("iteration", "checkpoint_sha256", "state", "score_path", "score_sha256"))):
         return False, "score_watch_attempt_not_terminal_or_receipts_differ"
     score_path = attempt.get("score_path")
     score_sha = attempt.get("score_sha256")
