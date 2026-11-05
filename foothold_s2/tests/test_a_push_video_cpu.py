@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,44 @@ def source(tmp_path: Path) -> dict:
     return {"source_root": str(tmp_path), "source_head": "a" * 40,
             "source_recorder_sha256": "b" * 64, "checkpoint_sha256": "c" * 64,
             "capture_recorder_sha256": "d" * 64, "composer_sha256": "e" * 64}
+
+
+def dispatcher_args(tmp_path: Path) -> argparse.Namespace:
+    row = args(tmp_path)
+    row.python = Path(sys.executable)
+    row.source_root = tmp_path
+    row.out = tmp_path / "out"
+    row.mode = "eval_gt"
+    row.plan_only = False
+    row.gpu_jobs_config = tmp_path / "missing_old_board" / "jobs.json"
+    row.c_layer_lock = tmp_path / "c_layer.lock"
+    row.a_layer_marker = tmp_path / "priority" / "A_LAYER_BUSY"
+    row.training_marker = tmp_path / "training.marker"
+    row.boundary_wait_s = 0.0
+    return row
+
+
+def test_dispatcher_admitted_push_reaches_recorder_without_old_board(tmp_path, monkeypatch):
+    class ReachedRecorder(Exception):
+        pass
+
+    row = dispatcher_args(tmp_path)
+    monkeypatch.setattr(video, "validate_source", lambda *unused: source(tmp_path))
+    monkeypatch.setattr(video, "policy_spec", lambda *unused: {"push_group_id": "known"})
+    monkeypatch.setattr(video, "recorder_argv", lambda *unused: (_ for _ in ()).throw(ReachedRecorder))
+    with pytest.raises(ReachedRecorder):
+        video.run_one(row)
+    assert not row.gpu_jobs_config.exists()
+    assert not row.a_layer_marker.exists()
+
+
+def test_training_marker_still_yields_before_capture(tmp_path, monkeypatch):
+    row = dispatcher_args(tmp_path)
+    row.training_marker.write_text("busy", encoding="utf-8")
+    monkeypatch.setattr(video, "validate_source", lambda *unused: source(tmp_path))
+    monkeypatch.setattr(video, "policy_spec", lambda *unused: {"push_group_id": "known"})
+    assert video.run_one(row)["state"] == "yielded_to_training_or_evaluation"
+    assert not row.a_layer_marker.exists()
 
 
 def test_a_push_heading_label_leaves_top_blue_arrow_visible(monkeypatch):
