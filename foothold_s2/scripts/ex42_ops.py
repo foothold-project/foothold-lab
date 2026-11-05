@@ -209,6 +209,8 @@ def main(argv: list[str] | None = None) -> int:
             result["blockers"].append(str(exc))
     if args.production:
         result["blockers"].append("production_launch_not_implemented")
+        if args.source_root is None or args.expected_head is None:
+            result["blockers"].append("fixed_source_identity_required")
         if not args.production_launch_approved:
             result["blockers"].append("explicit_lead_approval_missing")
         result["state"] = "blocked"

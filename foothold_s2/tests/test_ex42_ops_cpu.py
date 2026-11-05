@@ -41,6 +41,7 @@ def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
     result = json.loads(capsys.readouterr().out)
     assert result["state"] == "blocked"
     assert "runtime_integration_pending" in result["blockers"]
+    assert "fixed_source_identity_required" in result["blockers"]
 
 
 def test_fixed_source_requires_detached_clean_matching_head(tmp_path):

@@ -42,7 +42,7 @@ pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage1c -q foo
 
 ## 5. 출발 관문 2단계
 
-새 CPU 전용 `foothold_s2.scripts.ex42_ops`와 `foothold_s2/run_ex42.ps1`을 추가했다. 세 모드(`ops-check`, `rehearsal`, `production`) 모두 공통으로 EX42Plan 및 AST import 경계를 점검하며, Git source 검사 옵션은 정확한 HEAD · detached · clean 상태를 요구한다. rehearsal은 현재 plan-only이며 실제 simulator를 띄우지 않고, production은 승인 플래그가 있어도 runtime integration 미구현으로 거절된다. PowerShell wrapper에서 ops-check 실행을 확인했고, 실제 출력은 `state=blocked`, `production_launch_allowed=false`, blocker 6개였다.
+새 CPU 전용 `foothold_s2.scripts.ex42_ops`와 `foothold_s2/run_ex42.ps1`을 추가했다. 세 모드(`ops-check`, `rehearsal`, `production`) 모두 공통으로 EX42Plan 및 AST import 경계를 점검하며, Git source 검사 옵션은 정확한 HEAD · detached · clean 상태를 요구한다. rehearsal은 현재 plan-only이며 실제 simulator를 띄우지 않고, production은 승인 플래그가 있어도 runtime integration 미구현으로 거절되고, 고정 source root와 expected HEAD가 없으면 추가 차단된다. PowerShell wrapper에서 ops-check 실행을 확인했고, 실제 출력은 `state=blocked`, `production_launch_allowed=false`, blocker 6개였다.
 
 ```text
 pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage2b -q foothold_s2/tests/test_ex42_prep_cpu.py foothold_s2/tests/test_ex42_v016_contract_cpu.py foothold_s2/tests/test_ex42_ops_cpu.py
@@ -75,7 +75,7 @@ py_compile ex42_ops.py: passed
 
 ## 10. 예행 사양 관문 7단계
 
-`run_ex42.ps1 -Mode rehearsal` 입력에 출력 폴더와 10개 stage update 수를 받도록 했다. CPU plan-only 검사는 새 D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS 경로, 양수 stage 길이 10개, detached · clean · 고정 HEAD를 요구하고 결과에 `kit_started=false`, `training_started=false`를 기록한다. 실제 예행 런타임은 아직 미연결이라 언제나 실행을 거절한다. EX42 CPU 시험은 26 passed in 6.76s, pyflakes 0, diff check 통과다.
+`run_ex42.ps1 -Mode rehearsal` 입력에 출력 폴더와 10개 stage update 수를 받도록 했다. CPU plan-only 검사는 새 D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS 경로, 양수 stage 길이 10개, detached · clean · 고정 HEAD를 요구하고 결과에 `kit_started=false`, `training_started=false`를 기록한다. 실제 예행 런타임은 아직 미연결이라 언제나 실행을 거절한다. EX42 CPU 시험은 26 passed in 7.45s, pyflakes 0, diff check 통과다.
 
 ## 11. 남은 일
 
