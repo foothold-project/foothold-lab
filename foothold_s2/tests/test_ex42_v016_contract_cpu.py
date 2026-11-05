@@ -39,6 +39,7 @@ def test_plan_matches_canonical_v016_and_d182_values():
     assert doc["evaluation"]["paper_cells"]["stairs_landing"]["landing_depth_m"] == 1.2
     assert doc["evaluation"]["judge_cells"] == 26
     assert doc["evaluation"]["record_only_cells"] == 13
+    assert doc["evaluation"]["map_modes"] == ["gt", "pred", "off"]
     assert doc["environment"]["training_presets"]["B"] == "ame2_go2_mix_v1"
     assert doc["environment"]["terrain_presets"]["B"]["climb_up_l9_m"] == 0.53
     assert doc["terrain_manifest_contract"]["kind_count_by_family"] == {

@@ -87,6 +87,7 @@ class EX42Plan:
         evaluation = doc.get("evaluation", {})
         if (evaluation.get("judge_cells") != 26 or evaluation.get("record_only_cells") != 13
                 or evaluation.get("total_cells") != 39
+                or evaluation.get("map_modes") != ["gt", "pred", "off"]
                 or evaluation.get("judge_cells", 0) + evaluation.get("record_only_cells", 0)
                 != evaluation.get("total_cells")):
             raise ValueError("EX-42 evaluation must preserve 26 judge plus 13 record-only cells")

@@ -61,7 +61,11 @@ pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage3 -q foot
 py_compile ex42_ops.py: passed
 ```
 
-## 7. 남은 일
+## 7. 지도 모드 계약 정정 4단계
+
+정본 평가 모드는 문자열 `gt`, `pred`, `off` 세 개다. YAML bare `off`는 Python YAML parser에서 boolean `False`로 읽혀 CPU known-input 시험이 실패했다(고치기 전 1 failed, 3 passed). `'off'`로 인용하고 EX42Plan에서 정확한 세 문자열을 검증하도록 수정했다. 전체 관련 CPU 묶음은 17 passed in 5.95s다.
+
+## 8. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.

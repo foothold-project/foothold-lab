@@ -286,7 +286,7 @@ evaluation:
   map_modes:
   - gt
   - pred
-  - false
+  - 'off'
   fixed_levels:
   - 3
   - 6
