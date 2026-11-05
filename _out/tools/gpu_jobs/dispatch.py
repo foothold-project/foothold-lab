@@ -1442,6 +1442,37 @@ def notify_launch(state: dict, it: dict, pid: int, log: str, now: float, notify)
         state["launches_since_notice"] = 0
 
 
+# Minutes a unit is expected to hold GPU1 (11/05 measured: w78_v2 stage-end 2 h 32 min,
+# push_ladder 64 min, periodic P1 45 min, C-layer cell 4 min, video clip about 5 min).
+EST_MINUTES = (("w78_v2", 160), ("push_ladder", 70), ("axis_v2", 45), ("a_push_video", 20),
+               ("stage-video", 8), ("C76", 6), ("Kit probe", 15))
+P1_START_AFTER = 50      # the score watch starts m(N) after the N+50 save (M3, ex40_score_watch.py:100)
+P1_SLACK_MIN = 5
+
+
+def est_minutes(it: dict) -> float:
+    if isinstance(it.get("est_min"), (int, float)):
+        return float(it["est_min"])
+    title = it.get("title") or ""
+    for key, minutes in EST_MINUTES:
+        if key in title:
+            return float(minutes)
+    return 30.0
+
+
+def p1_window_minutes(train: dict | None, boundary: int = 250) -> float | None:
+    """Minutes until the next periodic score evaluation will want GPU1, from the live trainer."""
+    if not train or train.get("state") != "running":
+        return None
+    it, sec = train.get("iter"), train.get("iter_s")
+    if type(it) is not int or not isinstance(sec, (int, float)) or sec <= 0:
+        return None
+    nxt = (it // boundary) * boundary + P1_START_AFTER
+    if nxt <= it:
+        nxt += boundary
+    return (nxt - it) * sec / 60 - P1_SLACK_MIN
+
+
 def fresh_p1(ours: set[int]) -> str | None:
     return p1_busy(live_jobs(nvidia_smi(), processes()), ours, DISPATCH["p1_markers"])
 
@@ -1491,6 +1522,15 @@ def dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper,
         ready = sorted((it for it in items if item_ready(it, now, exists, alive, blocked)[0]
                         and item_group(it) not in held_groups),
                        key=lambda it: (it["priority"], it["id"]))
+        # P1 first (팀장 11/05 12:1x): a unit starts only if it can end before the next periodic
+        # score evaluation needs GPU1 (I24: a 2.5 h stage-end w78 delayed m1000 past 1251).
+        window = p1_window_minutes(train)
+        if window is not None:
+            fits = [it for it in ready if it.get("priority", 9) <= 1 or est_minutes(it) <= window]
+            if ready and not fits:
+                result["deferred"] = [(it["id"], est_minutes(it)) for it in ready[:3]]
+                result["window_min"] = round(window, 1)
+            ready = fits
         late = recheck(ours) if ready else None
         if ready and late:
             result.update(action="yield_p1", reason=f"recheck:{late}")

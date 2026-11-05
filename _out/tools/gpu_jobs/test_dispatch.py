@@ -873,6 +873,20 @@ class DispatchTests(unittest.TestCase):
             att.write_text(json.dumps({"state": "complete"}), encoding="utf-8")
             self.assertEqual(self.step()["action"], "launched")
 
+    def test_unit_that_would_overrun_next_p1_waits(self):
+        from unittest import mock
+        long = self.add("ex41-stage-750-x-w78_v2", 2)
+        short = self.add("ex41-stage-video-750-x-W57", 3)
+        with mock.patch.object(board, "current_training", lambda cfg=None: {"state": "running", "iter": 1260, "iter_s": 27.0}):
+            r = self.step()
+        self.assertEqual((r["action"], self.spawned), ("launched", [short]))
+        self.assertEqual(self.items()[long]["state"], "대기")
+
+    def test_window_math(self):
+        self.assertAlmostEqual(board.p1_window_minutes({"state": "running", "iter": 1260, "iter_s": 30.0}), 40 * 30 / 60 - 5)
+        self.assertAlmostEqual(board.p1_window_minutes({"state": "running", "iter": 1300, "iter_s": 30.0}), 250 * 30 / 60 - 5)
+        self.assertIsNone(board.p1_window_minutes(None))
+
     def test_no_new_unit_while_training_is_not_running(self):
         self.add("baseline eval", 3)
         for state in ("failed", "starting"):
