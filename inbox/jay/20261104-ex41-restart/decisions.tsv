@@ -36,3 +36,4 @@ ts	phase	decision	why	evidence	result
 2026-11-05T08:34:22+09:00	I24	412(750 단계 끝 w78_v2) 1 시간 25 분째 · 1000 P1 대기 · 프로세스 종료는 분류기가 막음(팀장 승인 필요) → 텔레그램으로 승인 요청 · 답 없으면 그대로 두고 DR 보류 기록	합의 규칙 「하던 단위까지만」 · M4 미구현	ops_check I24 WARN · item 412	open
 2026-11-05T08:52:00+09:00	I24	ops_check WARN 유지 · 412 그대로(팀장 답 없음) · w78 산출 128 → 160 · 1251 경계(약 09:35) DR 보류 가능성 기록 예정	승인 없이 종료 안 함	ops_check 08:51	open
 2026-11-05T09:12:39+09:00	pstack-B	runner /correct 끝 ed65fac0(runner/ex42-correct) · I03 I05 I06 I09 I11 I13 I17 I20 I24 · lead 가 핵심 시험 11 개 재실행 통과 · 옛 코드 실패 출력은 runner 보고서 주장(lead 미재현) · I24 단위 45 분 이내는 GPU 실측 미확인 · EX-42 출발 전 Kit 예행에서 확인	계약 lead 일 B	REPORT-runner-ex42-correct.md	done
+2026-11-05T09:31:17+09:00	boundary1250	1251 경계 dr_hold_missing_evidence(m1000 점수 없음 · I24 결과) · 그런데 DR 은 0.5375 → 0.575 로 올라감 · 「보류」 와 실제 DR 값이 어긋나 보임 → runner 에 코드 줄로 설명 요청(분석만)	I24 예측대로 발생 · 학습 계속	ex41_application.jsonl 1251	open
