@@ -73,7 +73,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
                   '--task', 'FootholdS2-Go2-S2-SB-v0', '--seed', str(cfg['eval_seed'])]))
     rows.append(('a_push_video', 'foothold_s2.eval.a_push_video', [
         '--source-root', str(ROOT), '--checkpoint', str(checkpoint),
-        '--recorder', str(ROOT / 'foothold_s2/eval/record_sol23f.py'),
+        '--recorder', str(ROOT / 'foothold_s2/eval/video25/record_c_layer.py'),
         '--composer', str(ROOT / 'foothold_s2/eval/video25/compose_25e_v2style10.py'),
         '--python', str(ISAAC_PYTHON),
         '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
