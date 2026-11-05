@@ -102,3 +102,16 @@ def test_p1_behind_long_unit_warns(tmp_path):           # I24
         lv = levels(ops_check.check(RUN, now=10_000, procs=procs(), util=9000,
                                     queue=q({"id": 412, "priority": 2, "state": "실행", "run_at": 10_000 - 77 * 60})))
     assert lv["I24 p1_behind_long_unit"] == "WARN"
+
+
+def test_marker_low_memory_but_fresh_child_ok(tmp_path):   # I11 · 11/06 push ladder between cells
+    m = tmp_path / "PRIORITY_BUSY_GPU1"
+    m.write_text(json.dumps({"pid": 4242, "job": "ex41_evaluation_push_ladder"}), encoding="utf-8")
+    import os
+    os.utime(m, (0, 0))
+    with mock.patch.object(ops_check, "P1_MARKER", m),          mock.patch.object(ops_check, "_owner_recent_child", return_value=True):
+        lv = levels(ops_check.check(RUN, now=31 * 60, procs=procs(), queue=q(), util=2400))
+    assert lv["I11 marker_idle"] == "OK"
+    with mock.patch.object(ops_check, "P1_MARKER", m),          mock.patch.object(ops_check, "_owner_recent_child", return_value=False):
+        lv = levels(ops_check.check(RUN, now=31 * 60, procs=procs(), queue=q(), util=2400))
+    assert lv["I11 marker_idle"] == "FAIL"

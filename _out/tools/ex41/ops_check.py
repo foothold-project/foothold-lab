@@ -56,6 +56,17 @@ def _gpu1_util() -> int | None:
         return None
 
 
+def _owner_recent_child(pid: int, minutes: float) -> bool:
+    """True when the P1 owner has a descendant process started within `minutes` (I11 progress)."""
+    import time
+    try:
+        kids = psutil.Process(pid).children(recursive=True)
+    except (psutil.Error, ValueError):
+        return False
+    t = time.time()
+    return any(t - k.create_time() < minutes * 60 for k in kids if k.is_running())
+
+
 def check(run_root: Path, now: float | None = None, procs=None, queue=None, util=None,
           util_history: list[int] | None = None) -> list[tuple[str, str, str]]:
     now = now or time.time()
@@ -115,7 +126,10 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
         # Memory, not utilization: a Kit job sits at 6-13 GB while its utilization dips to 0-1 %
         # between phases; the 11/05 stuck owner held the marker with GPU1 at 2.4 GB (desktop only).
         u = util if util is not None else _gpu1_util()
-        idle = u is not None and u < GPU1_IDLE_MIB and age > P1_IDLE_MINUTES
+        # 11/06 06:31: a stage-end push ladder starts one Kit child per cell; between cells GPU1
+        # drops to desktop-only memory. A child spawned recently under the owner means progress.
+        idle = (u is not None and u < GPU1_IDLE_MIB and age > P1_IDLE_MINUTES
+                and not _owner_recent_child(int(m.get("pid") or 0), P1_IDLE_MINUTES))
         out.append(("FAIL" if idle else "OK", "I11 marker_idle",
                     f"marker {age:.0f} min · GPU1 {u} MiB · job {m.get('job')}"))
         # I24 (11/05 08:3x): a 2-3 h stage-end unit started before P1 and P1 waited behind it.
