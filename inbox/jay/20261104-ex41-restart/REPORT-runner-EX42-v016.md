@@ -51,7 +51,17 @@ py_compile ex42_ops.py, ex42_prep.py: passed
 PowerShell run_ex42.ps1 -Mode ops-check: expected blocked result, wrapper rejected
 ```
 
-## 6. 남은 일
+## 6. 실제 parser 및 환경 import 관문 3단계
+
+`ex42_ops`는 EX-41에서 쓰는 parser builder로 `train_start.py` 선언과 설치된 RSL-RL CLI를 실제 조합해 알려진 인자를 파싱한다. `--task`, `--agent`, `--num_envs`, `--seed`, `--max_iterations`, `--resume_from` 및 AppLauncher의 `--headless --device cuda:0` 분리를 확인했다. 학습은 시작하지 않았다. 실제 등록 task의 env cfg import도 시도했으나 `isaac311`에 `pxr` 모듈이 없어 `ModuleNotFoundError`로 막혔다. 따라서 env class import는 미확인/미통과이며, ops-check는 이를 blocker로 보고한다. Kit/GPU는 기동하지 않았다.
+
+```text
+pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage3 -q foothold_s2/tests/test_ex42_prep_cpu.py foothold_s2/tests/test_ex42_v016_contract_cpu.py foothold_s2/tests/test_ex42_ops_cpu.py
+17 passed in 5.81s
+py_compile ex42_ops.py: passed
+```
+
+## 7. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.

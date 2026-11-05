@@ -6,7 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from foothold_s2.scripts.ex42_ops import inspect_fixed_source, main, ops_check
+from foothold_s2.scripts.ex42_ops import (
+    inspect_fixed_source,
+    main,
+    ops_check,
+    verify_env_cfg_import,
+    verify_train_entry_contract,
+)
 
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
@@ -20,6 +26,8 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     assert "runtime_integration_pending" in result["blockers"]
     assert "explicit_lead_approval_missing" in result["blockers"]
     assert "terrain_manifest_missing" in result["blockers"]
+    assert "environment_import_unavailable" in result["blockers"]
+    assert result["train_entry"]["training_started"] is False
     assert main(["--ops-check", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["production_launch_allowed"] is False
@@ -58,3 +66,13 @@ def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
     assert "ops-check" in script and "rehearsal" in script and "production" in script
     assert "foothold_s2.scripts.ex42_ops" in script
     assert "train_start.py" not in script
+
+
+def test_real_train_parser_and_environment_import_attempt_are_reported_without_kit():
+    parser = verify_train_entry_contract()
+    assert parser["parser"].startswith("train_start declarations")
+    assert parser["applauncher_passthrough"] == ["--headless", "--device", "cuda:0"]
+    env = verify_env_cfg_import()
+    assert env["kit_started"] is False
+    assert env["imported"] is False
+    assert env["error_type"] == "ModuleNotFoundError"

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import argparse
 import ast
-import hashlib
+import importlib
 import json
 from pathlib import Path
 import subprocess
-import sys
 from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -67,6 +66,50 @@ def verify_import_boundary() -> dict[str, int]:
     return {"ast_files": len(paths), "kit_imports": 0}
 
 
+def verify_train_entry_contract() -> dict[str, Any]:
+    """Build the real train_start + installed RSL parser without running it."""
+    from foothold_s2.ex41_start_preflight import train_parser_from_source
+
+    parser = train_parser_from_source(REPO)
+    required = {"--task", "--agent", "--num_envs", "--seed", "--max_iterations", "--resume_from"}
+    absent = sorted(required - set(parser._option_string_actions))
+    if absent:
+        raise ValueError(f"EX-42 train entry is missing parser flags: {absent}")
+    argv = ["--task", "FootholdS2-Go2-S2-SB-v0", "--agent", "s2_sb",
+            "--num_envs", "3072", "--seed", "42", "--max_iterations", "1",
+            "--resume_from", "D:/mai-tmp/runner/known-parent/model_6000.pt",
+            "--headless", "--device", "cuda:0"]
+    known, unknown = parser.parse_known_args(argv)
+    if (known.task != "FootholdS2-Go2-S2-SB-v0" or known.num_envs != 3072
+            or known.max_iterations != 1 or known.resume_from is None
+            or unknown != ["--headless", "--device", "cuda:0"]):
+        raise ValueError("EX-42 candidate train argv differs from the real parser contract")
+    return {"parser": "train_start declarations + installed RSL-RL cli_args.py",
+            "known_argv": argv[:-3], "applauncher_passthrough": unknown,
+            "training_started": False}
+
+
+def verify_env_cfg_import(task_id: str = "FootholdS2-Go2-S2-SB-v0") -> dict[str, Any]:
+    """Resolve the registered env class and attempt its real Python import, without Kit launch."""
+    import gymnasium as gym
+
+    importlib.import_module("foothold_s2.sb_tasks")
+    spec = gym.spec(task_id)
+    entry = spec.kwargs.get("env_cfg_entry_point")
+    if not isinstance(entry, str) or ":" not in entry:
+        raise ValueError("EX-42 registered task has no environment cfg entry point")
+    module_name, class_name = entry.split(":", 1)
+    try:
+        module = importlib.import_module(module_name)
+    except (ImportError, RuntimeError) as exc:
+        return {"task_id": task_id, "entry": entry, "imported": False,
+                "error_type": type(exc).__name__, "error": str(exc), "kit_started": False}
+    if not hasattr(module, class_name):
+        raise ValueError(f"EX-42 registered environment class is missing: {entry}")
+    return {"task_id": task_id, "entry": entry, "imported": True,
+            "class": class_name, "kit_started": False}
+
+
 def ops_check(table: str | Path = DEFAULT_TABLE,
               approvals: str | Path = DEFAULT_APPROVALS, *,
               graduation: str | Path | None = None,
@@ -82,6 +125,10 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
     elif expected_head is not None:
         blockers.append("source_root_missing")
     import_check = verify_import_boundary()
+    train_entry = verify_train_entry_contract()
+    env_import = verify_env_cfg_import(plan.document["environment"]["task_id"])
+    if not env_import["imported"]:
+        blockers.append("environment_import_unavailable")
     return {
         "state": "blocked" if blockers else "ready",
         "plan_sha256": plan.sha256,
@@ -91,6 +138,8 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
         "kit_started": False,
         "training_started": False,
         "import_check": import_check,
+        "train_entry": train_entry,
+        "environment_import": env_import,
     }
 
 
