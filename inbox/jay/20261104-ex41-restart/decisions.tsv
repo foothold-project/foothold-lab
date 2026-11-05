@@ -90,3 +90,7 @@ ts	phase	decision	why	evidence	result
 2026-11-05T19:52	boundary2500	후진 1.0 판정선 넘음(세 모드 0.163~0.174) · 한 경계 미달 기록 · 2750 재측정 · 학습 계속	DR 재개 뒤 첫 저장본 · 잡음 폭보다 큼 · maintenance_pass True 라 DR 계속 · 두 번 연속이면 팀장 보고	score_2500_59995788eeff.json	2751 적용 · m2750 확인
 2026-11-05T19:53	ops	밀림 m8500 통과(계단 0.953) · DR 2601 회 0.6275 · WARN I15 까닭(다음 P1 m2750 은 저장 즉시 · 약 20:5x)	ops_check 19:51	push250/8500.json · train_extra	-
 2026-11-05T20:00	push	m8500 계단 밀림 3 시드 0.953 · 0.953 · 0.969 셋 다 통과 · m8250(평균 0.854) 보다 좋아짐	8 방향 합 0.977 · 0.990	push_seeds_m8500	다음 경계도 3 시드
+2026-11-05T20:12	ops	WARN I15 까닭 · DR 2646 회 0.6342	다음 P1 m2750 저장 즉시(약 20:5x) · 2751 단계 넘김 감시 걸음	ops_check 20:11	-
+2026-11-05T20:32	ops	WARN I15 까닭 · DR 2691 회 0.641	m2750 저장(약 20:5x) 전 빔 · 2751 단계 넘김 감시 중	ops_check 20:31	-
+2026-11-05T21:00	stage	2751 단계 넘김 S2b → S2c · DR 0.65 · schedule_continue	적용 행 2751 · stage_log env_reset_applied to S2c · 명령 몫 걷기 0.075→0.06 · 옆 0.06→0.07 · 대각 앞 0.015→0.02 · 지형 fixed_l02 L2 그대로 · m2750 평가 저장 24 초 뒤 시작(20:58:08) · S2b 단계 끝 일 등록은 m2750 점수 뒤 확인	ex41_application.jsonl 2751 · stage_log.jsonl	score_2750 · 단계 끝 등록 확인
+2026-11-05T21:5x	I31	queue.json 복구 · 잠금 넣음 · dispatcher 루프(84252) · 감시기(21564) 재기동 · S2b 단계 끝 55 건 등록	깨진 파일은 첫 문서 533 건 + 꼬리(534~537) · 첫 문서로 복구 · 등록은 condition 으로 기존 재사용	queue.corrupt-2145.json · watch_state stage_end_queue_jobs 2750 = 55	단계 끝 일 진행 확인
