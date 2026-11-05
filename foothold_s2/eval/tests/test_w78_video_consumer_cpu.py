@@ -16,6 +16,7 @@ from foothold_s2.eval import w78_video_consumer as consumer
 from foothold_s2.eval import a_push_video
 from foothold_s2.eval.c_layer_queue import recorder_child_env
 from foothold_s2.eval.video25 import record_c_layer
+from foothold_s2.ex41_eval_once import ROOT as EX41_ROOT, commands as ex41_commands
 
 
 def test_nonzero_angle_can_be_selected_without_reordering_request():
@@ -225,6 +226,37 @@ def test_a_push_consumer_and_sb_recorder_real_argparse_plan_only(tmp_path):
                           *cmd[cmd.index("--recorder") + 2:]], capture_output=True,
                          text=True, encoding="utf-8", check=False)
     assert bad.returncode != 0 and "SB-capable" in bad.stderr
+
+
+def test_ex41_eval_once_a_push_video_argv_passes_real_source_gate(tmp_path):
+    checkpoint = tmp_path / "model_750.pt"
+    checkpoint.write_bytes(b"completed EX41 checkpoint fixture")
+    baseline = tmp_path / "push-baseline.json"
+    baseline.write_text("{}", encoding="utf-8")
+    row = ex41_commands(
+        checkpoint, tmp_path / "out",
+        {"envs": 64, "eval_seed": 42, "map_steps": 1,
+         "stand_seconds": 2.0, "stand_skip_seconds": 0.5,
+         "stand": {"contact_force_n": 5.0}},
+        scope="a_push_video", gpu0_training_active=False,
+        push_baseline={"path": str(baseline), "sha256": "a" * 64},
+    )[0]
+    argv = row["argv"]
+    recorder = Path(argv[argv.index("--recorder") + 1])
+    composer = Path(argv[argv.index("--composer") + 1])
+    assert recorder == EX41_ROOT / "foothold_s2/eval/video25/record_c_layer.py"
+
+    # validate_source runs against a clean pinned-source fixture so its source
+    # cleanliness gate is real, while this test's producer edit stays uncommitted.
+    clean_root = clean_ex41_source(tmp_path)
+    clean_recorder = clean_root / recorder.relative_to(EX41_ROOT)
+    clean_composer = clean_root / composer.relative_to(EX41_ROOT)
+    source = a_push_video.validate_source(clean_root, clean_recorder, clean_composer, checkpoint)
+    assert source["capture_recorder_sha256"] == a_push_video.sha256(clean_recorder)
+
+    wrong_recorder = clean_root / "foothold_s2/eval/record_sol23f.py"
+    with pytest.raises(ValueError, match="SB-capable record_c_layer"):
+        a_push_video.validate_source(clean_root, wrong_recorder, clean_composer, checkpoint)
 
 
 def test_w78_imports_pinned_ex41_package(tmp_path):

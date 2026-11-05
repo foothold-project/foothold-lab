@@ -450,7 +450,7 @@ def test_g11_p9_stage_video_receipts_remain_pending_scene_review(tmp_path):
             'schema':'foothold-ex41-stage-video/1','id':identity,
             'suite':suite,'case':case,'map_mode':mode,'iteration':750,
             'stage_name':stage,'checkpoint_sha256':watch.sha256(checkpoint),
-            'source_head':'3af5b2057fb138357e6ff656abaeb5d8e2194b24',
+            'source_head':'e604b22fa1253679ffa97828a43895c32fe3bd23',
             'video_rule_version':'v3.4-D168','video':str(video),
             'video_sha256':watch.sha256(video)}), encoding='utf-8')
     plan = watch.load_plan(watch.DEFAULT_TABLE, arm='B')
@@ -460,6 +460,43 @@ def test_g11_p9_stage_video_receipts_remain_pending_scene_review(tmp_path):
     assert row['metrics']['stage_video']['count'] == 51
     assert row['metrics']['stage_video']['acceptance'] == 'pending_lead_kit_scene_review'
     assert row['components']['stage_video'] == 'captured_pending_lead_kit_scene_review'
+
+
+def test_stage_phase_output_uses_child_argv_and_rejects_escape(tmp_path):
+    phase = 'w78_v2'
+    root = tmp_path / phase
+    child = root / phase
+    child.mkdir(parents=True)
+    (child / 'terrain_skill_v2.json').write_text('{"known":true}', encoding='utf-8')
+    receipt = root / 'eval_receipt.json'
+    receipt.write_text(json.dumps({'state': 'done', 'steps': {
+        phase: {'state': 'done', 'argv': ['python', '--out', str(child)]}
+    }}), encoding='utf-8')
+    assert watch.phase_output_from_receipt(root, phase) == child.resolve()
+    assert (watch.phase_output_or_missing(root, phase) / 'terrain_skill_v2.json').is_file()
+    assert not (root / 'terrain_skill_v2.json').exists()
+
+    receipt.write_text(json.dumps({'steps': {phase: {
+        'argv': ['python', '--out', str(tmp_path / 'unrelated')]}}}), encoding='utf-8')
+    with pytest.raises(ValueError, match='differs from its phase root'):
+        watch.phase_output_from_receipt(root, phase)
+    assert not watch.phase_output_or_missing(root, phase).exists()
+
+
+def test_m750_stage_phase_receipts_point_to_existing_child_outputs():
+    root = Path('C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/'
+                'score-watch/model_750_02876f9b1835/stage_end_auxiliary_eval')
+    if not root.is_dir():
+        pytest.skip('read-only m750 operating evidence is absent on this host')
+    names = {'axis_v2': 'axis_v2.json', 'w78_v2': 'terrain_skill_v2.json',
+             'push_ladder': 'push_ladder_bundle.json'}
+    for phase, name in names.items():
+        actual = watch.phase_output_from_receipt(root / phase, phase)
+        assert actual == (root / phase / phase).resolve()
+        assert (actual / name).is_file()
+        assert not (root / phase / name).exists()
+    assert watch.phase_output_from_receipt(root / 'a_push_video', 'a_push_video') == (
+        root / 'a_push_video/a_push_video').resolve()
 
 
 def test_stage_end_push_ladder_consumes_shared_39_child_contract(tmp_path, monkeypatch):
