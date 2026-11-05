@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -77,3 +78,39 @@ def test_d102_playlist_uses_only_matching_valid_receipts(tmp_path):
     video.write_bytes(b"changed")
     with pytest.raises(ValueError, match="SHA"):
         stage.publish_playlists(a, out, {"composer_sha256": "b" * 64})
+
+
+def test_dispatcher_admitted_clip_ignores_absent_legacy_board(tmp_path, monkeypatch):
+    """A queue item reaches its one-clip recorder without the removed board."""
+    class ReachedRecorder(Exception):
+        pass
+
+    a = args(out=tmp_path / "out", source_root=tmp_path, recorder=tmp_path / "record.py",
+             composer=tmp_path / "compose.py", python=Path(sys.executable),
+             device="cuda:1", gpu_jobs_config=tmp_path / "missing" / "jobs.json",
+             playlist_root=tmp_path / "playlists", plan_only=False)
+    monkeypatch.setattr(stage, "validate_checkpoint", lambda _: (a.checkpoint, "a" * 64))
+    monkeypatch.setattr(stage, "validate_sources", lambda *unused: {"source_head": "b" * 40})
+    monkeypatch.setattr(stage, "stage_spec", lambda *unused: {"command_name": a.case})
+    monkeypatch.setattr(stage, "recorder_argv", lambda *unused: (_ for _ in ()).throw(ReachedRecorder))
+    with pytest.raises(ReachedRecorder):
+        stage.run(a)
+    assert not a.gpu_jobs_config.exists()
+    assert (a.out / "attempts").is_dir()
+    assert not (a.out / "stage_video.lock").exists()
+
+
+def test_stage_cli_accepts_legacy_argument_without_board(tmp_path, monkeypatch, capsys):
+    def planned(a):
+        assert a.gpu_jobs_config == tmp_path / "absent.json"
+        return {"state": "planned"}
+
+    monkeypatch.setattr(stage, "run", planned)
+    paths = ["--checkpoint", "--source-root", "--recorder", "--composer", "--python",
+             "--out", "--playlist-root"]
+    argv = [token for name in paths for token in (name, str(tmp_path / name[2:]))]
+    argv += ["--gpu-jobs-config", str(tmp_path / "absent.json"), "--iteration", "750",
+             "--stage-name", "S2a", "--suite", "W57", "--case", "fwd0.5",
+             "--mode", "eval_gt", "--plan-only"]
+    assert stage.main(argv) == 0
+    assert json.loads(capsys.readouterr().out)["state"] == "planned"

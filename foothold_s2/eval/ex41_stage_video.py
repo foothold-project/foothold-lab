@@ -24,7 +24,7 @@ from foothold_s2.eval.c_layer_queue import child_log_has_traceback
 from foothold_s2.eval.map_mode_cells import commands
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, require_video_rule
 from foothold_s2.eval.w78_video_consumer import (
-    gate, parent_sha, sha256, source_child_env, validate_sources, write_json,
+    parent_sha, sha256, source_child_env, validate_sources, write_json,
 )
 
 SCHEMA = "foothold-ex41-stage-video/1"
@@ -220,14 +220,14 @@ def run(args) -> dict:
     args.checkpoint_sha = checkpoint_sha
     source = validate_sources(args.source_root, args.recorder, args.composer)
     spec = stage_spec(args, source, checkpoint_sha)
-    if args.device != "cuda:1" or not args.python.is_file() or not args.gpu_jobs_config.is_file():
-        raise ValueError("EX41 stage video requires cuda:1, Python and GPU board")
+    if args.device != "cuda:1" or not args.python.is_file():
+        raise ValueError("EX41 stage video requires cuda:1 and Python")
     row_id = identity(checkpoint, args.iteration, args.stage_name, args.suite, args.case, args.mode)
     if args.plan_only:
         return {"state": "planned", "id": row_id, "spec": spec, "source": source}
-    admission = gate(args.python, args.gpu_jobs_config)
-    if not admission["admit_next_unit"]:
-        return {"state": "yielded", "gate": admission}
+    # GPU admission is owned by the dispatcher before it starts this one-clip child.
+    # The old gpu_jobs.py board is absent from the EX-41 runtime and must not be
+    # consulted a second time inside an already admitted queue item.
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     lock = out / "stage_video.lock"
@@ -300,8 +300,10 @@ def run(args) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("checkpoint", "source-root", "recorder", "composer", "python",
-                 "gpu-jobs-config", "out", "playlist-root"):
+                 "out", "playlist-root"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--gpu-jobs-config", type=Path,
+                        help="legacy queue argument, ignored; dispatcher owns GPU admission")
     parser.add_argument("--iteration", type=int, required=True)
     parser.add_argument("--stage-name", required=True)
     parser.add_argument("--suite", choices=tuple(SUITES), required=True)
