@@ -1095,7 +1095,10 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
             if job['state'] in ('대기', '실행'):
                 statuses[phase] = {'state':'pending','job_id':job_id,'queue_state':job['state']}
                 continue
-            receipt_path = receipts_dir / f'{phase}.json'
+            # Video phases are named 'W57:fwd0.5:eval_gt'; ':' is not a legal Windows
+            # file-name character (11/05 13:26 the watcher died on it). Keep the
+            # phase name inside the receipt and use a safe file name only.
+            receipt_path = receipts_dir / f"{phase.replace(':', '__')}.json"
             if receipt_path.is_file():
                 receipt = read(receipt_path)
             else:
