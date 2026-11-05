@@ -646,7 +646,7 @@ class DispatchTests(unittest.TestCase):
         patch = mock.patch.dict(board.DISPATCH, {"results": str(root / "res"), "logs": str(root / "logs"),
                                                  "idle_log": str(root / "idle.jsonl"),
                                                  "state": str(root / "state.json"),
-                                                 "p1_markers": [str(root / "PRIORITY_BUSY_GPU1")]})
+                                                 "p1_markers": [str(root / "PRIORITY_BUSY_GPU1")], "p1_attempt_globs": []})
         patch.start()
         self.addCleanup(patch.stop)
         self.smi = {"gpus": {0: {"util": 80, "mib": 1}, 1: {"util": 0, "mib": 1}}, "apps": {}}
@@ -860,6 +860,18 @@ class DispatchTests(unittest.TestCase):
         res = json.loads(Path(board.DISPATCH["results"], "item_1.json").read_text(encoding="utf-8"))
         self.assertEqual(res["last_json"], {"existed": False})
         self.assertTrue((d / "stage").is_dir())
+
+    def test_waiting_score_attempt_blocks_new_units(self):
+        from unittest import mock
+        a = self.add("stage-end push ladder", 2)
+        att = Path(self.temp.name) / "model_1000_x" / "attempt.json"
+        att.parent.mkdir(parents=True)
+        att.write_text(json.dumps({"state": "running", "iteration": 1000}), encoding="utf-8")
+        with mock.patch.dict(board.DISPATCH, {"p1_attempt_globs": [str(Path(self.temp.name) / "model_*" / "attempt.json")]}):
+            r = self.step()
+            self.assertEqual((r["action"], self.spawned), ("yield_p1", []))
+            att.write_text(json.dumps({"state": "complete"}), encoding="utf-8")
+            self.assertEqual(self.step()["action"], "launched")
 
     def test_no_new_unit_while_training_is_not_running(self):
         self.add("baseline eval", 3)

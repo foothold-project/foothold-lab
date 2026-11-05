@@ -1135,6 +1135,9 @@ DISPATCH = {
     "idle_log": "D:/mai-tmp/gpu/idle_log.jsonl",
     "state": "D:/mai-tmp/gpu/dispatch_state.json",
     "p1_markers": ["D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"],
+    # A periodic score attempt waiting for GPU1 (I24 · 11/05 09:4x: the gap between one P1 owner
+    # releasing the marker and the waiting score watch claiming it let a P2 unit start first).
+    "p1_attempt_globs": ["C:/Users/AI-WS01/s2_lab/ex41_main_*/eval/score-watch/model_*/attempt.json"],
     "lead": "term_37f1d02b-35f8-435d-940e-d43a8a5be1de",
     "notify_every": 300,
     "train_limit_s": 29.7,
@@ -1242,10 +1245,24 @@ def train_mean(state: dict, train: dict | None, window: int) -> float | None:
     return sum(s for _, s in hist) / len(hist) if hist else None
 
 
+def p1_waiting(globs: list[str]) -> str | None:
+    import glob as _glob
+    for g in globs:
+        for f in _glob.glob(g):
+            try:
+                if json.loads(Path(f).read_text(encoding="utf-8")).get("state") == "running":
+                    return f"p1_attempt:{f}"
+            except (OSError, ValueError):
+                continue
+    return None
+
+
 def p1_busy(jobs: list[dict], ours: set[int], markers: list[str]) -> str | None:
     for m in markers:
         if marker_state(Path(m))["present"]:
             return f"marker:{m}"
+    if (why := p1_waiting(DISPATCH.get("p1_attempt_globs", []))):
+        return why
     for j in jobs:
         if j["kind"] != "guard" and on_gpu(j, DISPATCH["gpu"]) and j["pid"] not in ours:
             return f"gpu1_process:{j['pid']}:{j['script']}"
