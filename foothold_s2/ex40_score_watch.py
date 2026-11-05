@@ -97,7 +97,9 @@ def _manifest_digest(run: Path, update: int) -> str | None:
         manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
         if manifest.get("schema") != "foothold-manifest/1":
             return None
-        if int(manifest["progress"]["completed_updates"]) < update + 1:
+        # A model_N entry is the commit point for that checkpoint; progress is
+        # written less often and lagged ~23 min behind (I09, runner ed65fac0).
+        if int(manifest["progress"]["completed_updates"]) < update:
             return None
         digest = manifest["checkpoints"].get(f"model_{update}.pt")
         return digest if isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) else None
