@@ -69,7 +69,11 @@ py_compile ex42_ops.py: passed
 
 새 `EX42Plan.validate_stage_command_shares()`가 stage ID의 `terrain.floors.global_command_floor`를 읽어 전체 3072 env 분모에서 조건부 명령 몫을 검증한다. E1 답을 아는 입력 0.40 × 0.14 = 0.056은 통과하고 0.35 × 0.14 = 0.049는 거절한다. 현재는 CPU preparation consumer이며 W72 runtime hook은 아직 연결하지 않았다. 전체 EX42 CPU 파일 4개는 25 passed in 6.45s다.
 
-## 9. 남은 일
+## 9. 확인된 lint 정리 6단계
+
+`pyflakes`가 `ex42_prep.py`의 미사용 `json` import 1건을 찾았다. import를 제거하고 재검했다. EX42 전체 CPU 시험 25 passed in 6.50s, pyflakes 0 diagnostics, `git diff --check` 통과다.
+
+## 10. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.
