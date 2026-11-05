@@ -82,6 +82,20 @@ if w is None:
 else:
     L = [v[0] for k, v in w.items() if 'left' in k]; R = [v[0] for k, v in w.items() if 'right' in k]
     print(f'7 계단 옆 발 끌림 왼 {min(L):.3f}~{max(L):.3f} 오른 {min(R):.3f}~{max(R):.3f} · 생존 최저', min((v[1], k) for k, v in w.items()))
+def push_line(k):
+    """Item 8 (I30: m7000 · m7750 stairs push misses went unreported because this line was missing)."""
+    p = Path(f'{RUN}/eval/push250/{6000 + k}.json')
+    if not p.is_file():
+        return f'8 밀림 m{6000 + k}: 아직 없음(밀기 감시기 대기 · 다음 점검에서 다시 볼 것)'
+    d = json.load(open(p, encoding='utf-8'))
+    parts = [f"{c['terrain']} {c['summary']['d171_1_5_worst_direction']['survival_fraction']:.3f}"
+             f"{'' if c['summary']['d171_1_5_worst_direction']['passed'] else ' 미달'}" for c in d['children']]
+    return f"8 밀림 m{6000 + k} {'통과' if d.get('d171_all_terrains_passed') else '미달'} · 1.5 최악 방향 " + ' · '.join(parts)
+
+
+print(push_line(n))
+if Path(f'{RUN}/eval/push250/{6000 + prev}.json').is_file():
+    print('  직전', push_line(prev)[2:])
 print('9 서기', sc['metrics'].get('stand_counts'), '· 무릎', [round(j['ratio'] * 100, 2) for j in sc['metrics'].get('training_knee_effort', {}).get('joints', {}).values()], '%')
 RUNDIR = Path(glob.glob(f'{RUN}/main/*/train_start_status.json')[0]).parent.as_posix()
 st_ = json.load(open(f'{RUNDIR}/train_start_status.json'))
