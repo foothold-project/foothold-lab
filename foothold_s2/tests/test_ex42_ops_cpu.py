@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from foothold_s2.scripts.ex42_ops import inspect_fixed_source, main, ops_check
+
+REPO = Path(__file__).resolve().parents[2]
+TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
+APPROVALS = REPO / "foothold_s2/curriculum/ex42-approvals.yaml"
+
+
+def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
+    result = ops_check(TABLE, APPROVALS)
+    assert result["state"] == "blocked"
+    assert result["production_launch_allowed"] is False
+    assert "runtime_integration_pending" in result["blockers"]
+    assert "explicit_lead_approval_missing" in result["blockers"]
+    assert "terrain_manifest_missing" in result["blockers"]
+    assert main(["--ops-check", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["production_launch_allowed"] is False
+
+
+def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
+    assert main(["--production", "--production-launch-approved", "--table", str(TABLE),
+                 "--approvals", str(APPROVALS)]) == 2
+    result = json.loads(capsys.readouterr().out)
+    assert result["state"] == "blocked"
+    assert "runtime_integration_pending" in result["blockers"]
+
+
+def test_fixed_source_requires_detached_clean_matching_head(tmp_path):
+    repo = tmp_path / "source"
+    repo.mkdir()
+    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    (repo / "source.txt").write_text("known", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "source.txt"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                    "commit", "-m", "fixture"], check=True, capture_output=True)
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, text=True,
+                          capture_output=True).stdout.strip()
+    subprocess.run(["git", "-C", str(repo), "checkout", "--detach", head], check=True,
+                   capture_output=True)
+    assert inspect_fixed_source(repo, expected_head=head)["clean"] is True
+    with pytest.raises(ValueError, match="HEAD differs"):
+        inspect_fixed_source(repo, expected_head="0" * 40)
+    (repo / "source.txt").write_text("dirty", encoding="utf-8")
+    with pytest.raises(ValueError, match="not clean"):
+        inspect_fixed_source(repo)
+
+
+def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
+    script = (REPO / "foothold_s2/run_ex42.ps1").read_text(encoding="utf-8")
+    assert "ops-check" in script and "rehearsal" in script and "production" in script
+    assert "foothold_s2.scripts.ex42_ops" in script
+    assert "train_start.py" not in script

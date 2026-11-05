@@ -2,7 +2,7 @@
 > 작성: 오흥재 · 2026-11-05
 > 근거: EX-41 운영 원장 · 잠긴 EX-41 코드 · CURRICULUM-GATES v0.16 §E · D182 · EX42-V015-RUNNER-DIFF.md
 > 요지: EX-41 1251 경계 동작을 원자료와 코드로 설명하고 EX-42 정본 계약 1단계를 CPU 시험으로 고정한다
-> 상태: EX-41 분석 확인 · EX-42 계약 1단계 통과 · 출발 준비 미완료
+> 상태: EX-41 분석 확인 · EX-42 계약 1단계 및 CPU 출발 관문 통과 · 런타임 미연결
 
 # EX-41 경계 분석 및 EX-42 v0.16 계약 1단계
 
@@ -40,7 +40,18 @@ pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage1c -q foo
 
 답이 알려진 share 경계 0.056 통과와 0.049 거절, 평가 축의 감소 방향, v0.16/D182 값, 준비-only 차단을 포함한다. Kit, GPU, 실제 terrain 생성, 실제 점수 생산은 수행하지 않았다.
 
-## 5. 남은 일
+## 5. 출발 관문 2단계
+
+새 CPU 전용 `foothold_s2.scripts.ex42_ops`와 `foothold_s2/run_ex42.ps1`을 추가했다. 세 모드(`ops-check`, `rehearsal`, `production`) 모두 공통으로 EX42Plan 및 AST import 경계를 점검하며, Git source 검사 옵션은 정확한 HEAD · detached · clean 상태를 요구한다. rehearsal은 현재 plan-only이며 실제 simulator를 띄우지 않고, production은 승인 플래그가 있어도 runtime integration 미구현으로 거절된다. PowerShell wrapper에서 ops-check 실행을 확인했고, 실제 출력은 `state=blocked`, `production_launch_allowed=false`, blocker 5개였다.
+
+```text
+pytest -p no:cacheprovider --basetemp=D:/mai-tmp/runner/ex42-v016-stage2b -q foothold_s2/tests/test_ex42_prep_cpu.py foothold_s2/tests/test_ex42_v016_contract_cpu.py foothold_s2/tests/test_ex42_ops_cpu.py
+16 passed in 4.60s
+py_compile ex42_ops.py, ex42_prep.py: passed
+PowerShell run_ex42.ps1 -Mode ops-check: expected blocked result, wrapper rejected
+```
+
+## 6. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.
