@@ -99,3 +99,6 @@ ts	phase	decision	why	evidence	result
 2026-11-05T22:53	boundary3001	3001 schedule_continue · DR 0.6875 · S2c	m2750 점수 경계 전 · 계획 기울기 그대로	ex41_application.jsonl 3001	m3000 평가 저장 즉시
 2026-11-05T23:13	stageend	S2b 단계 끝 밀기 판정(D179) 9 칸 모두 통과 · 계단 0.969	push_ladder_bundle stage_criteria walk_1.5mps_worst_direction · S2a 미달 뒤 통과	model_2750 stage_end_auxiliary_eval/push_ladder	-
 2026-11-05T23:47	boundary3000	3000 해석 · 유지 · 후진 1.0 0.111 · 학습률 바닥 57/250 로 가라앉음 · 밀림 m8750 통과	판정선 넘은 칸 0 · 점수 23:42 (경계 약 60 분 전)	score_3000_185b1e113d42.json · push250/8750.json	3251 적용 확인
+2026-11-05T23:53	GPU1	S2b 단계 끝 영상 494 마스크 빈 프레임 실패 · 한 번 다시 넣음 · WARN fail_1h 까닭	W80 455 · 463 과 같은 annotator 간헐 결함(scripter REPORT-W80-MASK-1105.md) · 재시도로 통과했던 종류	item_494.log	재시도 결과 확인
+2026-11-06T00:13	push	m9000 밀림 거친 땅 0.891(57/64) 기록 미달 · 시드 43 · 44 추가(P2 · 영상보다 먼저) · WARN fail_1h 494 재시도 중	250 경계 기록 항목(단계 끝 판정 아님) · 잡음 sd 0.038 · 3 시드 규칙	push250/9000.json	3 시드 결과
+2026-11-06T00:33	push	m9000 거친 땅 3 시드 0.891 · 0.906 · 0.906 · 합격선 근처 · 기록	push_seeds_m9000 · 학습 지형 L0~2 · S2d 부터 지형 승급	push_seeds_m9000	m9250 도 3 시드
