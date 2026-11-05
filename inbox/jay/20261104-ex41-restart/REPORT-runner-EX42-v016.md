@@ -109,4 +109,12 @@ pyflakes: 0 diagnostics
 git diff --check: passed
 ```
 
-실제 검증은 아직 실행하지 않았다. Kit 작업은 dispatcher queue ID 467, priority 4, GPU1, kind `probe`, done-file `D:/mai-tmp/runner/ex42_kit_probe_20261105_1120.done`으로 대기 중이다. receipt 예정 경로는 `D:/mai-tmp/runner/ex42_kit_probe_20261105_1120.json`이다. 현재 queue state는 `대기`; dispatcher 실행이나 GPU/Kit 사용은 하지 않았다. 대기열 소비 후 `environment_import` 및 `family_e_generation` receipt가 있어야 실제 환경 설정 import와 mesh 생성 확인으로 판정할 수 있다.
+Kit 확인은 2026-11-05에 완료됐다. Dispatcher item 467의 rc 0, 수행 시간 9.56초이며 receipt `D:/mai-tmp/runner/ex42_kit_probe_20261105_1120.json`은 `passed`다. `FootholdS2SBEnvCfg`를 import·인스턴스화했고 네 E 지형을 생성해 합계 13,618 vertices, 26,304 faces, mesh SHA `c28e622ad8d27fd34e77eb617e3c0c8635ff740751ba04767b4e3668b922150d`를 기록했다. 단 이 P4 probe는 `environment_created=false`라 `gym.make`, reset, simulation step은 확인하지 않았다. 현재 queue readback에는 item 467의 priority가 2로 표시된다. 등록 요청은 P4였으며 변경 주체/시각은 확인 가능한 dispatcher log에 남아 있지 않다.
+
+## 14. EX-42 environment create + step smoke
+
+P4 receipt에서 task env cfg import와 mesh 생성은 통과했지만 환경 생성 및 step은 수행하지 않았으므로, 별도 probe를 추가했다. `foothold_s2/scripts/ex42_env_probe.py`는 1 env, family-E 4종의 probe-only terrain mix, zero action 3 step으로 제한한다. policy 평가·학습은 하지 않고, 810초 timeout과 success-only done-file을 사용한다. 실제 Kit은 dispatcher로만 실행하도록 `cuda:1` 외 장치를 거절한다.
+
+CPU 시험은 먼저 새 모듈 부재로 collection error가 나는 것을 확인한 뒤 구현했다. 이후 EX-42 CPU 묶음 35 passed(7.03s), py_compile 통과, pyflakes 0 diagnostics, `git diff --check` 통과. 코드/test는 `e25ab650f93c865269e05a95e852ff8513e75ccf`에 커밋했다.
+
+P2 dispatcher item 468은 GPU1, `--device cuda:1`, 3 step, 최대 810초로 대기 중이다. done-file `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.done`, receipt `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.json`이다. 현재 Kit 결과는 아직 없으며 실제 환경 생성·reset·step은 미확인이다. 통과해도 EX-42 curriculum runtime 소비자 연결과 per-kind measured terrain manifest 작성은 별도 미완료다.
