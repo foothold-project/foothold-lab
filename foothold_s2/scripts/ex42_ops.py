@@ -7,10 +7,12 @@ import ast
 import importlib
 import json
 from pathlib import Path
+import re
 import subprocess
+from pathlib import PureWindowsPath
 from typing import Any
 
-from foothold_s2.curriculum.ex42_prep import EX42Plan
+from foothold_s2.curriculum.ex42_prep import EX42Plan, STAGE_IDS
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -110,6 +112,26 @@ def verify_env_cfg_import(task_id: str = "FootholdS2-Go2-S2-SB-v0") -> dict[str,
             "class": class_name, "kit_started": False}
 
 
+def validate_rehearsal_plan(output_root: str, stage_updates: list[int], *,
+                            source_root: str | Path, expected_head: str) -> dict[str, Any]:
+    """Validate an isolated, bounded rehearsal plan without creating or launching it."""
+    output = PureWindowsPath(output_root)
+    if (output.drive.upper() != "D:" or len(output.parts) != 4
+            or output.parts[1].casefold() != "mai-tmp"
+            or output.parts[2].casefold() != "runner"
+            or not re.fullmatch(
+                r"ex42_rehearsal_[0-9]{8}_[0-9]{6}", output.name)):
+        raise ValueError("EX-42 rehearsal output must be D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS")
+    if len(stage_updates) != 10 or any(type(value) is not int or value < 1 for value in stage_updates):
+        raise ValueError("EX-42 rehearsal requires one positive update count for each of ten stages")
+    source = inspect_fixed_source(source_root, expected_head=expected_head)
+    if Path(output_root).exists():
+        raise ValueError("EX-42 rehearsal output must be new")
+    return {"output_root": str(output), "source": source,
+            "stage_ids": list(STAGE_IDS),
+            "stage_updates": stage_updates, "training_started": False, "kit_started": False}
+
+
 def ops_check(table: str | Path = DEFAULT_TABLE,
               approvals: str | Path = DEFAULT_APPROVALS, *,
               graduation: str | Path | None = None,
@@ -151,6 +173,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--terrain-manifest", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--expected-head")
+    parser.add_argument("--rehearsal-output")
+    parser.add_argument("--rehearsal-stage-updates", type=int, nargs=10)
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--ops-check", action="store_true")
     modes.add_argument("--rehearsal", action="store_true")
@@ -173,6 +197,16 @@ def main(argv: list[str] | None = None) -> int:
         result["blockers"].append("rehearsal_runtime_not_integrated")
         result["state"] = "blocked"
         result["mode"] = "rehearsal_plan_only"
+        try:
+            if args.rehearsal_output is None or args.rehearsal_stage_updates is None:
+                raise ValueError("EX-42 rehearsal needs an isolated output root and ten stage lengths")
+            if args.source_root is None or args.expected_head is None:
+                raise ValueError("EX-42 rehearsal needs a fixed source root and expected HEAD")
+            result["rehearsal_plan"] = validate_rehearsal_plan(
+                args.rehearsal_output, args.rehearsal_stage_updates,
+                source_root=args.source_root, expected_head=args.expected_head)
+        except (OSError, ValueError) as exc:
+            result["blockers"].append(str(exc))
     if args.production:
         result["blockers"].append("production_launch_not_implemented")
         if not args.production_launch_approved:

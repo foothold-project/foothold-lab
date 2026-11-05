@@ -9,6 +9,8 @@ param(
     [string]$TerrainManifest,
     [string]$SourceRoot,
     [string]$ExpectedHead,
+    [string]$RehearsalOutput,
+    [int[]]$RehearsalStageUpdates,
     [switch]$ProductionLaunchApproved
 )
 
@@ -22,6 +24,8 @@ try {
     if ($TerrainManifest) { $pythonArgs += @('--terrain-manifest', $TerrainManifest) }
     if ($SourceRoot) { $pythonArgs += @('--source-root', $SourceRoot) }
     if ($ExpectedHead) { $pythonArgs += @('--expected-head', $ExpectedHead) }
+    if ($RehearsalOutput) { $pythonArgs += @('--rehearsal-output', $RehearsalOutput) }
+    if ($RehearsalStageUpdates) { $pythonArgs += @('--rehearsal-stage-updates') + $RehearsalStageUpdates }
     if ($ProductionLaunchApproved) { $pythonArgs += '--production-launch-approved' }
 
     & $Python @pythonArgs

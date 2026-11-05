@@ -12,6 +12,7 @@ from foothold_s2.scripts.ex42_ops import (
     ops_check,
     verify_env_cfg_import,
     verify_train_entry_contract,
+    validate_rehearsal_plan,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -62,11 +63,36 @@ def test_fixed_source_requires_detached_clean_matching_head(tmp_path):
         inspect_fixed_source(repo)
 
 
+def test_rehearsal_plan_requires_new_d_output_ten_stages_and_fixed_source(tmp_path):
+    repo = tmp_path / "source"
+    repo.mkdir()
+    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    (repo / "source.txt").write_text("known", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "source.txt"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                    "commit", "-m", "fixture"], check=True, capture_output=True)
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, text=True,
+                          capture_output=True).stdout.strip()
+    subprocess.run(["git", "-C", str(repo), "checkout", "--detach", head], check=True,
+                   capture_output=True)
+    kwargs = {"source_root": repo, "expected_head": head}
+    good = validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
+                                   [1] * 10, **kwargs)
+    assert good["stage_updates"] == [1] * 10
+    assert good["training_started"] is False and good["kit_started"] is False
+    with pytest.raises(ValueError, match="D:/mai-tmp/runner"):
+        validate_rehearsal_plan("C:/temp/ex42_rehearsal_20261105_235959", [1] * 10, **kwargs)
+    with pytest.raises(ValueError, match="ten stages"):
+        validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
+                                [1] * 9, **kwargs)
+
+
 def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
     script = (REPO / "foothold_s2/run_ex42.ps1").read_text(encoding="utf-8")
     assert "ops-check" in script and "rehearsal" in script and "production" in script
     assert "foothold_s2.scripts.ex42_ops" in script
     assert "train_start.py" not in script
+    assert "RehearsalStageUpdates" in script
 
 
 def test_real_train_parser_and_environment_import_attempt_are_reported_without_kit():

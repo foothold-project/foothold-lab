@@ -1,4 +1,4 @@
-﻿> 분류: C/운영
+> 분류: C/운영
 > 작성: 오흥재 · 2026-11-05
 > 근거: EX-41 운영 원장 · 잠긴 EX-41 코드 · CURRICULUM-GATES v0.16 §E · D182 · EX42-V015-RUNNER-DIFF.md
 > 요지: EX-41 1251 경계 동작을 원자료와 코드로 설명하고 EX-42 정본 계약 1단계를 CPU 시험으로 고정한다
@@ -73,7 +73,11 @@ py_compile ex42_ops.py: passed
 
 `pyflakes`가 `ex42_prep.py`의 미사용 `json` import 1건을 찾았다. import를 제거하고 재검했다. EX42 전체 CPU 시험 25 passed in 6.50s, pyflakes 0 diagnostics, `git diff --check` 통과다.
 
-## 10. 남은 일
+## 10. 예행 사양 관문 7단계
+
+`run_ex42.ps1 -Mode rehearsal` 입력에 출력 폴더와 10개 stage update 수를 받도록 했다. CPU plan-only 검사는 새 D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS 경로, 양수 stage 길이 10개, detached · clean · 고정 HEAD를 요구하고 결과에 `kit_started=false`, `training_started=false`를 기록한다. 실제 예행 런타임은 아직 미연결이라 언제나 실행을 거절한다. EX42 CPU 시험은 26 passed in 6.76s, pyflakes 0, diff check 통과다.
+
+## 11. 남은 일
 
 - v0.15 diff 23개 중 runtime consumer까지 연결되지 않은 항목을 계속 구현한다. 특히 terrain preset 생성·manifest 측정·실제 평가기 연결은 현재 미구현이다.
 - EX-41과 같은 출발 관문으로 ops_check, 예행 계획, 실제 parser 및 환경 import, 시작 스크립트를 단계별 커밋과 CPU 시험으로 추가한다.
