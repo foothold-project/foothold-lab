@@ -2,7 +2,7 @@
 > 작성: 오흥재 · 2026-11-05
 > 근거: EX-41 운영 원장 · 잠긴 EX-41 코드 · CURRICULUM-GATES v0.16 §E · D182 · EX42-V015-RUNNER-DIFF.md
 > 요지: EX-41 1251 경계 동작을 원자료와 코드로 설명하고 EX-42 정본 계약 1단계를 CPU 시험으로 고정한다
-> 상태: EX-41 분석 확인 · EX-42 계약·CPU 지형 계약 시험 통과 · Kit 확인은 P4 대기열 예정
+> 상태: EX-41 분석 확인 · EX-42 계약·CPU 지형 계약 시험 통과 · P4 import/mesh 및 P2 environment/step probe 통과
 
 # EX-41 경계 분석 및 EX-42 v0.16 계약 1단계
 
@@ -117,4 +117,8 @@ P4 receipt에서 task env cfg import와 mesh 생성은 통과했지만 환경 �
 
 CPU 시험은 먼저 새 모듈 부재로 collection error가 나는 것을 확인한 뒤 구현했다. 이후 EX-42 CPU 묶음 35 passed(7.03s), py_compile 통과, pyflakes 0 diagnostics, `git diff --check` 통과. 코드/test는 `e25ab650f93c865269e05a95e852ff8513e75ccf`에 커밋했다.
 
-P2 dispatcher item 468은 GPU1, `--device cuda:1`, 3 step, 최대 810초로 대기 중이다. done-file `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.done`, receipt `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.json`이다. 현재 Kit 결과는 아직 없으며 실제 환경 생성·reset·step은 미확인이다. 통과해도 EX-42 curriculum runtime 소비자 연결과 per-kind measured terrain manifest 작성은 별도 미완료다.
+이 절 작성 시점에는 P2 dispatcher item 468이 GPU1, `--device cuda:1`, 3 step, 최대 810초로 대기 중이었다. done-file은 `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.done`, receipt는 `D:/mai-tmp/runner/ex42_env_probe_20261105_1325.json`이다. 이후 receipt 결과는 §15에 기록한다. EX-42 curriculum runtime 소비자와 measured terrain manifest 연결은 별도 미완료다.
+
+## 15. EX-42 environment create + step 결과
+
+Dispatcher item 468 receipt를 읽었다. `state=passed`, `kit_started=true`, `training_started=false`, `environment_created=true`다. 실제 `ManagerBasedRLEnv`는 `FootholdS2SBEnvCfg`에서 `num_envs=1`, `device=cuda:1`, `action_dim=12`로 생성되었고 reset 뒤 zero action 3 step 모두 finite reward를 반환했으며 done 수는 0이었다. probe 비율은 네 family E 메시를 호출하기 위한 진단 전용 0.25씩이며 학습 일정으로 쓰지 않았다. 확인은 해당 네 지형의 환경 생성과 3 step까지이며, production curriculum runtime, 점수 생산, measured terrain manifest 연결은 아직 미구현이다.
