@@ -54,3 +54,12 @@ ts	phase	decision	why	evidence	result
 2026-11-05T13:52	ops	WARN I15 · fail_1h 까닭	I15: 영상 47 건을 418 한 편 확인 전까지 묶어 둠(I26) · fail_1h: 415~417 은 I26 원인 확인 · 고침 23454d88	ops_check 13:51	418 통과 뒤 풀기
 2026-11-05T14:14	DR	학습 멈추지 않음 · 2001 · 2251 점수 제때 대기로 상승 재개	팀장 14:0x 「학습은 멈추지 말고 DR 올려」 · runner CPU: 고친 시계는 load_state_dict 통과하나 이어 가기 사전검사가 manifest SHA 다름으로 거절(train_start.py:349) · 실행 중 바꿀 장치 없음 → 멈춤 없이 올릴 길 없음 · 1750 평가 14:3x 끝 예상 · 2001 약 15:2x	REPORT-DR-CATCHUP-1105.md · diagnosis.json	팀장에게 멈춤 필요 여부 다시 물음
 2026-11-05T14:36	boundary1750	1750 해석 · 유지 · 계단 대칭 하락 지켜봄 · 영상 47 건 풀기	판정선 넘은 칸 0 · 대칭 <0.8 칸 3/8/7(L2 칸 포함) · 418 영상 150 프레임 검정 0 · 첫 장면 lead 확인	score_1750_49d053f818de.json · 418 receipt	2001 회복 1/2 예상
+2026-11-05T14:41	GPU1	영상 37 건 다시 묶음 · scripter 운영 소스 되돌림 지시	422~425 더러운 소스로 실패 · 원인은 lead 지시(I28) · 되돌린 뒤 소스 사본 잠그고 풀기	gpu/logs/item_422.log	대기: scripter status 0 줄
+2026-11-05T14:42	GPU1	영상 37 건 다시 풂 · 영상 소스 사본 잠금	scripter 되돌림 e604b22f · 23454d88 과 diff 0 · lock 646 · 0 writable · 실패 7 건(415~417 · 422~425)은 나중에 다시 넣음	lock_checkout check	running
+2026-11-05T14:52	ops	WARN fail_1h 까닭	414 = I27(기록기 경로 · EX-42 에서 고침) · 422~427 = I28(운영 소스 더러움 · 되돌림 · 잠금) · 새 실패 없음 · 영상 끝 12	ops_check 14:51	지켜봄
+2026-11-05T15:12	ops	runner 압축 · WARN fail_1h 같은 까닭(I27 · I28)	runner 맥락 16% · 인계 메모 HANDOFF-1105-1455.md 확인 뒤 /compact · 영상 끝 23 · 새 실패 0	ops_check 15:11	압축 뒤 메모 읽고 EX-42 이어 가게 지시
+2026-11-05T15:17	boundary2001	2001 dr_hold_recovery_1_of_2 · DR 0.575 · S2b	m1750 점수 경계 전 도착(score sha 277ec1c7) · 멈춤 예산 1000 중 750 사용 · 2251 에 m2000 점수가 오면 recovery 2/2 로 같은 기울기 재개, 안 오면 DR 0.575 고정 · m2000 평가 2050 저장(약 15:40) 뒤 시작 · 끝 예상 16:2x · 2251 약 17:1x	ex41_application.jsonl 2001 행	watch m2000 평가
+2026-11-05T15:33	ops	runner EX-42 재개 지시 · scripter push 후 메모 · WARN fail_1h 같은 까닭(I28)	runner 압축 뒤 15:12 부터 대기 · scripter 맥락 20%	창 읽기 15:31	-
+2026-11-05T15:53	GPU1	영상 455(W80 stairs_fwd eval_pred) 한 편 실패 · 다시 안 넣음 · 기록	기록기 검사 'C76 robot instance mask missing subject or shows another robot' · 한 칸만 · 같은 원인 반복 없음(407 검정 화면과 같은 종류의 칸별 촬영 결함) · P1 영향 없음	attempts/9b6fd3b4.../01/child.log	scripter 다음 차례에 칸 원인 확인
+2026-11-05T16:13	EX-42	runner df019f00 받음 · 남은 일은 승인값 필요해 대기	per-kind manifest 생성기 · fail-closed 런타임 입구 커밋 · 전체 39 종 manifest 와 단계 전이는 가족별 cfg · 측정 영수증 · 미결 승인값이 없어 미완료(runner 보고) · 승인값은 EX-42 논의에서 · runner 맥락 28% 대기	runner 창 15:54	EX-41 끝 뒤 분석 보고서와 함께 정리
+2026-11-05T16:25	boundary2000	2000 해석 · 유지 · 후진 1.0 지켜봄 · 2251 회복 2/2 예상	판정선 넘은 칸 0 · 지도 끔 후진 1.0 0.139 · 대칭 회복 · 점수 16:22 도착(경계 약 50 분 전)	score_2000_e3febdb3d93f.json	2251 적용 행 확인
