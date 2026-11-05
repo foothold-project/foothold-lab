@@ -21,7 +21,7 @@ description: FOOTHOLD EX 학습 실행(EX-41 · EX-42 …)을 띄우고, 매 점
 
 ## 2. Doctor (매 점검 · cron 7 · 27 · 47 분)
 
-`PY _out/tools/ex41/ops_check.py <run_root>` — FAIL 은 그 회차 안에 고치고, WARN 은 처리하거나 까닭을 decisions.tsv 에. 점검 항목과 사고 번호는 스크립트 머리말. dispatcher 코드를 고쳤으면 루프 재시작(I08).
+`PY _out/tools/ex41/ops_check.py <run_root>` · FAIL 은 그 회차 안에 고치고, WARN 은 처리하거나 까닭을 decisions.tsv 에. 점검 항목과 사고 번호는 스크립트 머리말. dispatcher 코드를 고쳤으면 루프 재시작(I08).
 
 ## 3. Drive · 250 경계마다
 
@@ -29,7 +29,7 @@ description: FOOTHOLD EX 학습 실행(EX-41 · EX-42 …)을 띄우고, 매 점
 2. 점수 파일 `eval/scores/score_<N>_*.json` 이 생기면 `PY _out/tools/ex41/boundary_report.py <run_root> <N>`(rc 2 = 측정 공백 · 결과로 안 씀).
 3. 열두 줄을 다 채운다(EX41-250-LOG 규칙 · 계약 3 절): 생존 · 추종 · 후진 · 옆 · 회전 · 계단 대칭 · 발 끌림 · 밀림(500 부터 `eval/push250/<6000+N>.json`) · 서기 · 학습 곡선 · 경계 적용(`ex41_application.jsonl` 의 N+1 행 · reason) · 측정 공백 · 학습률 · KL.
 4. 판정: 판정선 0.15 · 평가 잡음 폭(M11 최대 0.0084) 안의 넘침은 「지켜봄」 · 한 경계 미달은 기록 후 다음 경계 재측정 · 두 번 연속이면 원인 가설과 손잡이 후보를 붙여 팀장 보고(D179) · 학습은 멈추지 않는다.
-5. 경계 판단에 쓰이는 점수: 경계 n+1 은 m(n-250) 점수. 늦으면 `dr_hold_missing_evidence`(멈춤 한도 소비) — 점수가 다음 경계 전에 오는지 시각으로 셈.
+5. 경계 판단에 쓰이는 점수: 경계 n+1 은 m(n-250) 점수. 늦으면 `dr_hold_missing_evidence`(멈춤 한도 소비) · 점수가 다음 경계 전에 오는지 시각으로 셈.
 6. 기록: `EX41R-250-LOG.md` 절 · decisions.tsv 한 줄 · #555 댓글 · 텔레그램 `PY _out/tools/ex41/tg_send.py <msg.txt>`(첫 줄 `[EX-` · 15 줄 이하 · `#555` 는 자동 URL).
 
 ## 4. Drive · 단계 끝마다
