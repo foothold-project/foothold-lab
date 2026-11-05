@@ -116,3 +116,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T04:4x	stage3751	S2c → S2d 단계 넘김 확인 · DR 0.80 · performance level_cap 5 · 텔레그램 보냄	m3750 평가 04:37:46 시작 · 단계 끝 일은 점수 뒤 등록(S2b 와 같은 흐름 · 지금 0 건은 정상)	ex41_application.jsonl 3751	m3750 점수 · D179
 2026-11-06T05:2x	boundary3750	3750 유지 통과 · back1.0 0.156 판정선 넘음(한 칸 · 0.006) · DR 계획대로 유지 · 4000 재확인	2500 0.168→2750 0.137 회복 전례 · 계획대로 DR 진행(팀장 11/05 규칙) · 단계 끝 일 55 건 등록 확인	score_3750_9e98514cb2d3	D179 · 4000
 2026-11-06T06:3x	I32	I11 FAIL 오판 수정(밀기 판정 칸 사이) · WARN I24 [556] 는 표식을 쥔 그 밀기 판정 자신이라 P1 을 막는 일이 아님(까닭 기록)	m4000 점수 평가 06:33:09 시작 · 4001 DR 0.84 계획대로 applied	59a72946	-
+2026-11-06T06:4x	stageend3750	S2c 단계 끝 밀기 판정(D179) 9 칸 모두 통과 · 계단 최저 0.906(probe)	push_ladder_bundle walk_1.5mps_worst_direction · S2b 끝 계단 0.969 보다 낮음 · 기준 안	model_3750 stage_end_auxiliary_eval/push_ladder	영상 51 편

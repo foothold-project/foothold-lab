@@ -289,3 +289,5 @@ fwd1.0    eval_gt 0.088→0.081→0.077 | spin±1.2 wz 0.086 / 0.091 · 앞뒤 �
 **단계 끝 일.** 55 건 등록(05:2x · queue 잠금 뒤 첫 등록 · 렌더 52 · 평가 3). D179 밀기 판정 실행 중.
 
 **4001 경계 (06:32).** `schedule_continue` S2d · DR 0.80 → 0.84(계획 기울기) · performance · level_cap 5 · applied. m3750 점수 05:21 로 제때. model_4000 06:32:12 저장 · 점수 평가 06:33:09 시작.
+
+**S2c 단계 끝 밀기 판정 D179 (m3750 · 06:40 끝).** 9 칸 모두 통과(1.5 m/s · 최약 방향 ≥ 0.9). 평지 eval_gt 1.0 · eval_pred 1.0 · probe 0.984 / 거친 땅 0.984 · 0.984 · 0.953 / 계단 0.922 · 0.953 · 0.906. S2b 끝(계단 0.969)보다 계단 최저가 낮아졌으나 기준 안 · DR 0.65 → 0.80 상승 뒤 값. 2.0 m/s(기록용 · m6000 대비) 생존 0.93~0.98 · m6000 0.38~0.45. 묶음 `model_3750_9e98514cb2d3/stage_end_auxiliary_eval/push_ladder/push_ladder/push_ladder_bundle.json` state done.
