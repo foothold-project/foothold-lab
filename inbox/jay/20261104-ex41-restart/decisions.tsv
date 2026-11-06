@@ -126,3 +126,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T10:25	boundary4501	4501 DR 0.92 applied · m4500 평가 시작	계획대로 · 보류 없음	ex41_application.jsonl 4501	4500 점수
 2026-11-06T11:1x	boundary4500	4500 생존 유지 · side-0.5 세 모드 판정선 넘음(0.176) · 좌우 비대칭 다시 커짐 · DR 계획대로	4250 에 넘던 셋은 회복 · 칸마다 오르내림 · 4750 에서 side- 두 번 연속이면 따로 보고	score_4500_c46a9f648a5f	4750
 2026-11-06T12:21	boundary4751	4751 DR 0.96 applied · m4750 평가 시작	계획대로 · 보류 없음	ex41_application.jsonl 4751	4750 점수 · 5001 단계 넘김
+2026-11-06T13:0x	boundary4750	4750 생존 유지 · side- 두 번 연속 판정선 넘음(0.158) · side+ 0.155 · 후진 좋아짐 · DR 계획대로	옆걸음이 S2d 에서 가장 약한 기술 · 텔레그램 따로 보고 · 단계 끝 영상에서 확인	score_4750_43dd25cbe976	5001 단계 넘김
