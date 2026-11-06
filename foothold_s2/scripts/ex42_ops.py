@@ -194,9 +194,22 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
         source = inspect_fixed_source(source_root, expected_head=expected_head)
     elif expected_head is not None:
         blockers.append("source_root_missing")
-    import_check = verify_import_boundary()
-    train_entry = verify_train_entry_contract()
-    env_import = verify_env_cfg_import(plan.document["environment"]["task_id"])
+    try:
+        import_check = verify_import_boundary()
+    except Exception as exc:
+        import_check = {"verified": False, "error_type": type(exc).__name__, "error": str(exc)}
+        blockers.append("import_boundary_unavailable")
+    try:
+        train_entry = verify_train_entry_contract()
+    except Exception as exc:
+        train_entry = {"verified": False, "error_type": type(exc).__name__, "error": str(exc),
+                       "training_started": False}
+        blockers.append("train_entry_contract_unavailable")
+    try:
+        env_import = verify_env_cfg_import(plan.document["environment"]["task_id"])
+    except Exception as exc:
+        env_import = {"task_id": plan.document["environment"]["task_id"], "imported": False,
+                      "error_type": type(exc).__name__, "error": str(exc), "kit_started": False}
     if not env_import["imported"]:
         blockers.append("environment_import_unavailable")
     return {

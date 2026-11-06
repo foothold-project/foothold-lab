@@ -39,6 +39,32 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     assert len(payload["train_entry"]["final_argv_sha256"]) == 64
 
 
+def test_ops_check_collects_environment_blockers_when_train_import_is_missing(monkeypatch, capsys):
+    from foothold_s2.scripts import ex42_ops
+
+    called = {"env": False}
+
+    def missing_train_entry():
+        raise ModuleNotFoundError("rsl_rl is unavailable")
+
+    def missing_environment(task_id):
+        called["env"] = True
+        return {"task_id": task_id, "imported": False, "error_type": "ModuleNotFoundError",
+                "error": "gymnasium is unavailable", "kit_started": False}
+
+    monkeypatch.setattr(ex42_ops, "verify_train_entry_contract", missing_train_entry)
+    monkeypatch.setattr(ex42_ops, "verify_env_cfg_import", missing_environment)
+    assert ex42_ops.main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE),
+                          "--approvals", str(APPROVALS)]) == 2
+    payload = json.loads(capsys.readouterr().out)
+    assert called["env"] is True
+    assert payload["state"] == "blocked"
+    assert payload["production_launch_allowed"] is False
+    assert "runtime_integration_pending" in payload["blockers"]
+    assert "environment_import_unavailable" in payload["blockers"]
+    assert "train_entry_contract_unavailable" in payload["blockers"]
+
+
 def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
     assert main(["--production", "--exp", "EX-42", "--production-launch-approved", "--table", str(TABLE),
                  "--approvals", str(APPROVALS)]) == 2
@@ -68,7 +94,27 @@ def test_fixed_source_requires_detached_clean_matching_head(tmp_path):
         inspect_fixed_source(repo)
 
 
-def test_rehearsal_plan_requires_new_d_output_ten_stages_and_fixed_source(tmp_path):
+def test_rehearsal_plan_uses_machine_tmp_root_and_requires_new_output(tmp_path, monkeypatch):
+    from foothold_s2.scripts import ex42_ops
+    from foothold_s2.machine_profile import machine_path as resolve_machine_path
+    import yaml
+
+    configured_tmp_root = tmp_path / "machine-local-tmp"
+    profile = tmp_path / "machine-profile.yaml"
+    profile.write_text(yaml.safe_dump({
+        "format": "foothold-machine-profile/1", "machine_id": "test-machine",
+        "paths": {
+            "isaaclab_root": str(tmp_path / "isaaclab"),
+            "isaac_sim_root": str(tmp_path / "isaacsim"),
+            "conda_python": str(tmp_path / "python"),
+            "rsl_rl_module": str(tmp_path / "rsl_rl" / "__init__.py"),
+            "s2_lab_root": str(tmp_path / "s2_lab"),
+            "mai_tmp_root": str(configured_tmp_root),
+            "mai_worktree_root": str(tmp_path / "worktrees"),
+        },
+    }), encoding="utf-8")
+    monkeypatch.setattr(ex42_ops, "machine_path",
+                        lambda key: resolve_machine_path(key, profile=profile))
     repo = tmp_path / "source"
     repo.mkdir()
     subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
@@ -81,16 +127,16 @@ def test_rehearsal_plan_requires_new_d_output_ten_stages_and_fixed_source(tmp_pa
     subprocess.run(["git", "-C", str(repo), "checkout", "--detach", head], check=True,
                    capture_output=True)
     kwargs = {"source_root": repo, "expected_head": head}
-    good = validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
-                                   [1] * 11, **kwargs)
+    output_root = configured_tmp_root / "runner" / "ex42_rehearsal_20261105_235959"
+    good = validate_rehearsal_plan(str(output_root), [1] * 11, **kwargs)
     assert good["stage_updates"] == [1] * 11
     assert good["stage_ids"][0] == "EX42_0_T0_prime"
     assert good["training_started"] is False and good["kit_started"] is False
-    with pytest.raises(ValueError, match="D:/mai-tmp/runner"):
-        validate_rehearsal_plan("C:/temp/ex42_rehearsal_20261105_235959", [1] * 11, **kwargs)
+    with pytest.raises(ValueError, match="machine-local-tmp"):
+        validate_rehearsal_plan(str(tmp_path / "wrong" / "ex42_rehearsal_20261105_235959"),
+                                [1] * 11, **kwargs)
     with pytest.raises(ValueError, match="eleven runtime stages"):
-        validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
-                                [1] * 10, **kwargs)
+        validate_rehearsal_plan(str(output_root), [1] * 10, **kwargs)
 
 
 def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
