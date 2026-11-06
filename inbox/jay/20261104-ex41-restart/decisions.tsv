@@ -177,3 +177,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T21:3x	ops WARN fail_1h 653	render_still_dark 3 번째(I34) · 729 로 다시 넣음 · 원인 가르기는 scripter 새 창에서(지금 창 컨텍스트 6 %) · 받은편지함: super2 W42 설계 끝(mai-os 4126746 · #64) 팀장 확인 대기	lead
 2026-11-06T21:4x	W43 W44	팀장 제안 둘 접수(GPU 두 장 묶음 · T0 3,000 + L9) · lead 의견 채팅 · 결정 아님	팀장 21:4x	chat	W43 W44
 2026-11-06T22:0x	W04 W27	학습 6000 끝(22:03:09) · GPU0 영상 분담: S2e 51 편이 도구 대상 밖 → 새 잠금 사본 9b532df5 로 허용 · 표본 678 GPU0 실행(dispatcher 84740) · m6000 점수 GPU1 진행 · GPU0 빈 시간 22:03~22:07	lead
+2026-11-06T22:1x	W27	표본 678 GPU0 끝 22:09:56 rc0 · cuda:0 영수증 · 원본 · 합성 150 프레임 issue 0 PASS · 정지 장면 직접 봄(정상) → half 반복으로 S2e 영상 50 편 GPU0(대기 36 + 진행) · GPU1 에 728 · 729 둘과 m6000 점수 · W78 · m6000 영상은 점수 뒤 등록되면 같은 도구로 GPU0	lead
