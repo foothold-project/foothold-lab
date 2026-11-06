@@ -7,6 +7,31 @@ import re
 import statistics
 from datetime import datetime
 from PIL import Image
+from generate_reports import table, table_cell
+
+def broken_table_rows(text):
+    lines = text.splitlines()
+    errors = []
+    split = re.compile(r'(?<!\\)\|')
+    def ncols(line):
+        return len(split.split(line.strip().strip('|')))
+    for i, line in enumerate(lines[:-1]):
+        if not line.startswith('|') or not re.match(r'^\|\s*:?-', lines[i+1]):
+            continue
+        expected = ncols(lines[i+1])
+        end = i + 2
+        while end < len(lines) and lines[end].startswith('|'):
+            end += 1
+        for j in [i, *range(i+2, end)]:
+            if ncols(lines[j]) != expected:
+                errors.append({'line': j+1, 'actual': ncols(lines[j]), 'expected': expected})
+    return errors
+
+# Known-answer cases include the reported header defect and raw/preescaped body cells.
+assert broken_table_rows('| label | |wz| |\n| --- | --- |\n| a | b |')
+assert not broken_table_rows(table(['label', '|wz|'], [['a|b', r'c\|d']]))
+assert table_cell('a|b') == r'a\|b'
+assert table_cell(r'a\|b') == r'a\|b'
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
@@ -35,8 +60,12 @@ for n in sorted({int(r['iteration']) for r in rows if int(r['iteration']) > 0}):
 
 reports = sorted(ROOT.glob('*.md'))
 links = 0
+table_results = {}
 for p in reports:
     text = p.read_text(encoding='utf-8')
+    bad_rows = broken_table_rows(text)
+    assert not bad_rows, (p.name, bad_rows)
+    table_results[p.name] = {'broken_rows': len(bad_rows)}
     assert '\u2014' not in text
     assert all(x.startswith('> ') for x in text.splitlines()[:5])
     for dest in re.findall(r'\]\(([^)]+)\)', text):
@@ -62,6 +91,7 @@ result = {'checked_at': datetime.now().astimezone().isoformat(), 'state': 'PASS'
           'reference_dr_off': reference['dr_off'],
           'reference_source_module_count': len(reference['source_sha256']),
           'reports': len(reports), 'local_links_resolved': links, 'images_decoded': len(images),
+          'markdown_tables': table_results, 'markdown_known_answer_checks': 4,
           'local_cmp_hashes_verified': len(media['comparisons']),
           'limits': ['No GPU, no live training changes',
                      'W78 stage-end slices pending; not a completed N1 judgment',

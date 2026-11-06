@@ -51,9 +51,12 @@ def median(xs):
     v=[float(x) for x in xs if x is not None and math.isfinite(float(x))]
     return float(np.median(v)) if v else None
 def fmt(x,n=3): return '미측정' if x is None else f'{x:.{n}f}'
+def table_cell(value):
+    # Escape only raw pipes; both header and data cells use this path.
+    return re.sub(r'(?<!\\)\|', r'\\|', str(value))
 def table(headers,rows):
-    return '\n'.join(['| '+' | '.join(headers)+' |','| '+' | '.join(['---']*len(headers))+' |']+
-                     ['| '+' | '.join(str(v).replace('|','/') for v in r)+' |' for r in rows])
+    return '\n'.join(['| '+' | '.join(table_cell(v) for v in headers)+' |','| '+' | '.join(['---']*len(headers))+' |']+
+                     ['| '+' | '.join(table_cell(v) for v in r)+' |' for r in rows])
 def primary(c): return 'wz' if c.startswith('spin') else ('vy' if c.startswith('side') else 'vx')
 def circ(angles):
     if not len(angles): return None,None

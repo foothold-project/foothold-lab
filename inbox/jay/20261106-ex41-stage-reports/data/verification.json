@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-06T16:45:46.240111+09:00",
+  "checked_at": "2026-11-06T17:15:11.174010+09:00",
   "state": "PASS",
   "raw_command_cells_recomputed": 819,
   "raw_velocity_medians_recomputed": 2457,
@@ -133,6 +133,24 @@
   "reports": 5,
   "local_links_resolved": 97,
   "images_decoded": 37,
+  "markdown_tables": {
+    "README.md": {
+      "broken_rows": 0
+    },
+    "RESULT-EX41-S2a.md": {
+      "broken_rows": 0
+    },
+    "RESULT-EX41-S2b.md": {
+      "broken_rows": 0
+    },
+    "RESULT-EX41-S2c.md": {
+      "broken_rows": 0
+    },
+    "RESULT-EX41-S2d.md": {
+      "broken_rows": 0
+    }
+  },
+  "markdown_known_answer_checks": 4,
   "local_cmp_hashes_verified": 6,
   "limits": [
     "No GPU, no live training changes",

@@ -116,7 +116,7 @@ for st,lo,hi in STAGES:
        f'단계 끝 등록 칸 {len(ps)}개 중 {npass}개가 기존 기준을 넘었다. 반복 시드 검증 없이 차이를 확정적 일반화 성과로 부르지 않는다. [정기 전체 값](data/push250.csv) · [단계 끝 전체 값](data/push_stage_end.csv).','',
        '기록 전용 외란 2.0 m/s는 걷기 0.5 조건이다. 부모 m6000과의 차이는 [별도 표](data/push2_record.csv)에 보존했다. 이것을 걷기 1.5 판정의 개선율로 대신 쓰지 않는다.','',
        '## W57: 직진 중 방향과 돌고 멈추기','',
-       table(['지도','명령/목표각','생존/64','시작 대비 마지막 yaw(도)','목표 정지 오차(도)','정지 후 |wz|(rad/s)'],[[MODE_LABEL[r['mode']],r['case'],int(r['alive']),fmt(r['yaw_delta_deg'],2),fmt(r['stop_error_deg'],2),fmt(r['stop_abs_wz'])] for r in W57 if r['iteration']==hi]),'',
+       table(['지도','명령/목표각','생존/64','시작 대비 마지막 yaw(도)','목표 정지 오차(도)','정지 후 wz 절댓값(rad/s)'],[[MODE_LABEL[r['mode']],r['case'],int(r['alive']),fmt(r['yaw_delta_deg'],2),fmt(r['stop_error_deg'],2),fmt(r['stop_abs_wz'])] for r in W57 if r['iteration']==hi]),'',
        'yaw는 몸이 수평으로 돌아간 각도다. 전진의 부호 있는 중앙값은 좌·우 오차가 상쇄될 수 있으므로 전원 정확하다는 뜻이 아니다. 목표 회전은 속도만 맞추는 spin 평가와 달리 목표 각도로 돌고 멈추는 검사다.','',
        '## 보행 위상과 발 기록','',f'![접촉 막대](figs/{st}-contact.png)','',f'![위상 분포](figs/{st}-phase.png)','',
        table(['모드/전진','FL↔RR 오차°','FR↔RL 오차°','대각 쌍간 오차°','R 중앙','주기 s','유효 env/주기 수','네 발 접촉 C'],[[MODE_LABEL[r['mode']]+'/'+r['case'],fmt(r['FL_RR_abs_error_median_deg'],1),fmt(r['FR_RL_abs_error_median_deg'],1),fmt(r['diagonal_abs_error_median_deg'],1),fmt(r['diagonal_R_median']),fmt(r['diagonal_period_median_s']),f"{r['diagonal_valid_envs']} / {int(r['diagonal_cycles'])}",fmt(r['C_mean'])] for r in GS if r['iteration']==hi]),'',
