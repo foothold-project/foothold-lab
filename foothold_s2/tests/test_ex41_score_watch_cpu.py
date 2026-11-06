@@ -475,7 +475,7 @@ def test_g11_p9_stage_video_receipts_remain_pending_scene_review(tmp_path):
             'schema':'foothold-ex41-stage-video/1','id':identity,
             'suite':suite,'case':case,'map_mode':mode,'iteration':750,
             'stage_name':stage,'checkpoint_sha256':watch.sha256(checkpoint),
-            'source_head':'3af5b2057fb138357e6ff656abaeb5d8e2194b24',
+            'source_head':'e604b22fa1253679ffa97828a43895c32fe3bd23',
             'video_rule_version':'v3.4-D168','video':str(video),
             'video_sha256':watch.sha256(video)}), encoding='utf-8')
     plan = watch.load_plan(watch.DEFAULT_TABLE, arm='B')

@@ -8,10 +8,14 @@ the answer is WAIT. Existing EX-35 and render owners retain their own gates.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
 from pathlib import Path
 import re
 from datetime import datetime, timezone
+import time
+import uuid
 
 try:
     import psutil
@@ -414,9 +418,40 @@ def read_queue(path: str) -> dict:
 
 
 def write_queue(path: str, q: dict) -> None:
-    tmp = Path(path).with_suffix(".tmp")
+    # Each writer owns a unique temp file; queue.json is shared by the CLI and loop.
+    tmp = Path(path).with_name(f"{Path(path).name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
     tmp.write_text(json.dumps(q, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(path)
+
+
+@contextlib.contextmanager
+def queue_lock(path: str, timeout: float = 120.0, stale: float = 300.0):
+    """Serialize queue read-modify-write across dispatcher and CLI processes."""
+    lock = f"{path}.lock"
+    started = time.monotonic()
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode("ascii"))
+            os.close(fd)
+            break
+        except FileExistsError:
+            try:
+                if time.time() - os.path.getmtime(lock) > stale:
+                    os.remove(lock)
+                    continue
+            except OSError:
+                pass
+            if time.monotonic() - started > timeout:
+                raise TimeoutError(f"queue lock busy: {lock}")
+            time.sleep(0.2)
+    try:
+        yield
+    finally:
+        try:
+            os.remove(lock)
+        except OSError:
+            pass
 
 
 def parse_when(text: str | None, now: float) -> float | None:
@@ -434,6 +469,11 @@ def parse_when(text: str | None, now: float) -> float | None:
 
 
 def queue_cmd(args, cfg=LIVE, now=None) -> str:
+    with queue_lock(cfg["queue"]):
+        return _queue_cmd(args, cfg, now)
+
+
+def _queue_cmd(args, cfg=LIVE, now=None) -> str:
     now = now if now is not None else datetime.now().timestamp()
     q = read_queue(cfg["queue"])
     items = q["items"]
@@ -1421,6 +1461,12 @@ def fresh_p1(ours: set[int]) -> str | None:
 
 def dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper, notify=notify_lead,
                   exists=lambda p: Path(p).exists(), alive=pid_alive, fam=family, recheck=fresh_p1) -> dict:
+    with queue_lock(cfg["queue"]):
+        return _dispatch_step(cfg, now, smi, procs, spawn, notify, exists, alive, fam, recheck)
+
+
+def _dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper, notify=notify_lead,
+                   exists=lambda p: Path(p).exists(), alive=pid_alive, fam=family, recheck=fresh_p1) -> dict:
     now = now if now is not None else datetime.now().timestamp()
     try:
         state = json.loads(Path(DISPATCH["state"]).read_text(encoding="utf-8"))

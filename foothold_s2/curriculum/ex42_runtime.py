@@ -6,10 +6,13 @@ an approved runtime schedule all exist.
 """
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any
 
-from foothold_s2.curriculum.ex42_prep import EX42Plan
+import yaml
+
+from foothold_s2.curriculum.ex42_prep import APPROVAL_FORMAT, EX42Plan
 
 
 def resolve_missing_score_dr_boundary(
@@ -53,6 +56,83 @@ def resolve_missing_score_dr_boundary(
         "learning_continues": True,
         "maintenance_action": "not_decided_here",
     }
+
+
+def read_approved_dr_schedule(approvals_path: str | Path,
+                              stage_ids: tuple[str, ...]) -> tuple[dict[str, float], str]:
+    """Load a complete, explicitly approved stage-scale map. Never supply defaults."""
+    path = Path(approvals_path).resolve(strict=True)
+    doc = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(doc, dict) or doc.get("format") != APPROVAL_FORMAT:
+        raise ValueError("EX-42 approval format invalid for DR schedule")
+    schedule = doc.get("domain_randomization")
+    if (not isinstance(schedule, dict) or schedule.get("approved") is not True
+            or not isinstance(schedule.get("decision_id"), str)
+            or not schedule["decision_id"].strip()):
+        raise ValueError("EX-42 approved DR schedule missing")
+    scales = schedule.get("stage_scales")
+    if not isinstance(scales, dict) or set(scales) != set(stage_ids):
+        raise ValueError("EX-42 DR schedule must explicitly cover every stage")
+    normalized: dict[str, float] = {}
+    for stage_id in stage_ids:
+        value = scales[stage_id]
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(float(value)) or not 0.0 <= float(value) <= 1.0):
+            raise ValueError(f"EX-42 DR scale invalid for stage {stage_id}")
+        normalized[stage_id] = float(value)
+    return normalized, schedule["decision_id"]
+
+
+class EX42StageTransitionConsumer:
+    """Consume caller-selected sequential stage transitions and approved DR values.
+
+    Stage promotion/maintenance judgement remains external. Missing or late score
+    evidence cannot delay the planned scale and is returned as a measurement gap.
+    """
+
+    def __init__(self, plan: EX42Plan, approvals_path: str | Path,
+                 *, current_stage_id: str | None = None):
+        stages = plan.document.get("stages")
+        if not isinstance(stages, list) or not stages:
+            raise ValueError("EX-42 plan has no stages")
+        self.stage_ids = tuple(row.get("id") for row in stages)
+        if (any(not isinstance(stage, str) or not stage for stage in self.stage_ids)
+                or len(set(self.stage_ids)) != len(self.stage_ids)):
+            raise ValueError("EX-42 stage IDs are missing or duplicated")
+        self.stage_scales, self.decision_id = read_approved_dr_schedule(
+            approvals_path, self.stage_ids)
+        self.stage_index = 0
+        if current_stage_id is not None:
+            if current_stage_id not in self.stage_ids:
+                raise ValueError("EX-42 current stage is unknown")
+            self.stage_index = self.stage_ids.index(current_stage_id)
+
+    @property
+    def current_stage_id(self) -> str:
+        return self.stage_ids[self.stage_index]
+
+    def transition(self, env: Any, next_stage_id: str, *, boundary_iteration: int,
+                   expected_score_iteration: int,
+                   observed_score_iteration: int | None) -> dict[str, Any]:
+        next_index = self.stage_index + 1
+        if next_index >= len(self.stage_ids) or next_stage_id != self.stage_ids[next_index]:
+            raise ValueError("EX-42 transition must advance exactly one planned stage")
+        evidence = resolve_missing_score_dr_boundary(
+            planned_scale=self.stage_scales[next_stage_id],
+            boundary_iteration=boundary_iteration,
+            expected_score_iteration=expected_score_iteration,
+            observed_score_iteration=observed_score_iteration,
+        )
+        target = getattr(env, "unwrapped", env)
+        target._ex42_stage_id = next_stage_id
+        target._ex40_dr_scale = evidence["applied_scale"]
+        self.stage_index = next_index
+        return {
+            "stage_before": self.stage_ids[next_index - 1],
+            "stage_after": next_stage_id,
+            "decision_id": self.decision_id,
+            **evidence,
+        }
 
 
 class EX42Runtime:

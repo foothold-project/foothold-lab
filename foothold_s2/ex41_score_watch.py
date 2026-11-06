@@ -668,7 +668,7 @@ def _stage_video_contract():
         raise RuntimeError('scripter EX41 stage-video contract unavailable')
     pinned = subprocess.run(['git', '-C', str(source_root), 'rev-parse', 'HEAD'],
                             capture_output=True, text=True, check=False)
-    if pinned.returncode or pinned.stdout.strip() != '3af5b2057fb138357e6ff656abaeb5d8e2194b24':
+    if pinned.returncode or pinned.stdout.strip() != 'e604b22fa1253679ffa97828a43895c32fe3bd23':
         raise ValueError('scripter EX41 stage-video source HEAD differs from G11/P9 pin')
     probe = subprocess.run(
         [sys.executable, '-c',
@@ -694,6 +694,36 @@ def _stage_video_output(checkpoint):
     root = Path(os.environ.get('EX41_STAGE_VIDEO_OUT_ROOT',
                                'D:/mai-tmp/runner/ex41_stage_video'))
     return root / f'model_{iteration}_{pinned[:12]}'
+
+
+def phase_receipt_path(receipts_dir, phase):
+    """Keep the exact phase label in JSON while making a Windows-safe filename."""
+    return Path(receipts_dir) / f"{str(phase).replace(':', '__')}.json"
+
+
+def phase_output_from_receipt(phase_root, phase):
+    """Validate the child --out recorded by eval_once and fence it to the phase root."""
+    phase_root = Path(phase_root).resolve()
+    doc = read(phase_root / 'eval_receipt.json')
+    step = doc.get('steps', {}).get(phase)
+    argv = step.get('argv') if isinstance(step, dict) else None
+    if not isinstance(argv, list) or argv.count('--out') != 1:
+        raise ValueError(f'{phase} eval receipt has no unique child --out')
+    try:
+        actual = Path(argv[argv.index('--out') + 1]).resolve()
+    except (IndexError, TypeError) as exc:
+        raise ValueError(f'{phase} eval receipt child --out invalid') from exc
+    if actual != phase_root / phase:
+        raise ValueError(f'{phase} eval receipt child --out differs from its phase root')
+    return actual
+
+
+def phase_output_or_missing(phase_root, phase):
+    """Route malformed/missing child receipts to a nonexistent path, preserving HOLD."""
+    try:
+        return phase_output_from_receipt(phase_root, phase)
+    except (OSError, ValueError, TypeError, KeyError):
+        return Path(phase_root) / '__invalid_or_missing_eval_receipt__'
 
 
 def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_training_active=False,
@@ -942,7 +972,7 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             video_path = Path(video.get('video', ''))
             if (video.get('schema') != 'foothold-ex41-stage-video/1'
                     or (video.get('suite'), video.get('case'), video.get('map_mode')) != (suite, case, mode)
-                    or video.get('source_head') != '3af5b2057fb138357e6ff656abaeb5d8e2194b24'
+                    or video.get('source_head') != 'e604b22fa1253679ffa97828a43895c32fe3bd23'
                     or video.get('video_rule_version') != 'v3.4-D168'
                     or not video_path.is_file()
                     or sha256(video_path) != video.get('video_sha256')):
@@ -952,7 +982,7 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             raise ValueError(f'G11/P9 expected {len(expected)} unique video receipts, found {len(video_rows)}')
         row['metrics']['stage_video'] = {
             'decision_use': 'record_only', 'acceptance': 'pending_lead_kit_scene_review',
-            'source_head': '3af5b2057fb138357e6ff656abaeb5d8e2194b24',
+            'source_head': 'e604b22fa1253679ffa97828a43895c32fe3bd23',
             'count': len(video_rows), 'expected_count': len(expected),
             'receipts': [evidence(pair[0]) for _, pair in sorted(video_rows.items())],
         }
@@ -1137,7 +1167,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
             if job['state'] in ('대기', '실행'):
                 statuses[phase] = {'state':'pending','job_id':job_id,'queue_state':job['state']}
                 continue
-            receipt_path = receipts_dir / f'{phase}.json'
+            receipt_path = phase_receipt_path(receipts_dir, phase)
             if receipt_path.is_file():
                 receipt = read(receipt_path)
             else:
@@ -1171,6 +1201,11 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                         if (phase_doc.get('state') != 'done' or step.get('state') != 'done'
                                 or phase_doc.get('checkpoint_sha256') != pinned):
                             state_value, reason = 'failed', 'phase receipt is not done'
+                        else:
+                            try:
+                                output = phase_output_from_receipt(output, phase)
+                            except (OSError, ValueError, TypeError, KeyError) as exc:
+                                state_value, reason = 'failed', f'phase child output invalid: {exc}'
                 else:
                     reason = job.get('log') or job.get('missing') or job.get('rc') or 'queue child failed'
                 receipt = {'format':'foothold-ex41-stage-phase/1','iteration':iteration,
@@ -1183,10 +1218,10 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
             return {'state':'queued','iteration':iteration,'checkpoint_sha256':pinned,
                     'components':statuses,'queue_path':str(queue_path)}
         aux_out = target / 'stage_end_auxiliary_eval'
-        w57_path = aux_out / 'axis_v2/axis_v2.json'
-        w78_path = aux_out / 'w78_v2/terrain_skill_v2.json'
-        push_ladder_path = aux_out / 'push_ladder/push_ladder_bundle.json'
-        a_push_video_path = aux_out / 'a_push_video'
+        w57_path = phase_output_or_missing(aux_out / 'axis_v2', 'axis_v2') / 'axis_v2.json'
+        w78_path = phase_output_or_missing(aux_out / 'w78_v2', 'w78_v2') / 'terrain_skill_v2.json'
+        push_ladder_path = phase_output_or_missing(aux_out / 'push_ladder', 'push_ladder') / 'push_ladder_bundle.json'
+        a_push_video_path = phase_output_or_missing(aux_out / 'a_push_video', 'a_push_video')
         stage_video_path = _stage_video_output(checkpoint)
         row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
                                           w78_path, plan, eval_config, push_ladder_path,

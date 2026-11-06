@@ -27,8 +27,9 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     assert "runtime_integration_pending" in result["blockers"]
     assert "explicit_lead_approval_missing" in result["blockers"]
     assert "terrain_manifest_missing" in result["blockers"]
+    assert "stage_dr_schedule_unapproved" in result["blockers"]
     assert "environment_import_unavailable" in result["blockers"]
-    assert len(result["blockers"]) == 6
+    assert len(result["blockers"]) == 7
     assert result["train_entry"]["training_started"] is False
     assert main(["--ops-check", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
     payload = json.loads(capsys.readouterr().out)

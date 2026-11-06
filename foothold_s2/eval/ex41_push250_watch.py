@@ -438,7 +438,10 @@ def score_watch_attempt_finished(score_watch_root: Path, local_iteration: int,
     if (attempt.get("iteration") != local_iteration
             or attempt.get("checkpoint_sha256") != checkpoint_sha256
             or attempt.get("state") not in ("complete", "HOLD")
-            or done != attempt):
+            # A restarted score watcher may add explanatory mode/reason fields to done.
+            # Match the evidence identity, not unrelated presentation fields.
+            or any(done.get(key) != attempt.get(key) for key in
+                   ("iteration", "checkpoint_sha256", "state", "score_path", "score_sha256"))):
         return False, "score_watch_attempt_not_terminal_or_receipts_differ"
     score_path = attempt.get("score_path")
     score_sha = attempt.get("score_sha256")

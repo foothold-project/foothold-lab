@@ -13,6 +13,7 @@ from pathlib import PureWindowsPath
 from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan, STAGE_IDS
+from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -141,6 +142,11 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
     plan = EX42Plan.load(table)
     blockers = plan.launch_blockers(approvals, graduation, terrain_manifest)
     blockers.append("runtime_integration_pending")
+    try:
+        stage_ids = tuple(row["id"] for row in plan.document["stages"])
+        read_approved_dr_schedule(approvals, stage_ids)
+    except (OSError, KeyError, TypeError, ValueError):
+        blockers.append("stage_dr_schedule_unapproved")
     source = None
     if source_root is not None:
         source = inspect_fixed_source(source_root, expected_head=expected_head)
