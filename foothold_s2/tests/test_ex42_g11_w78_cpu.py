@@ -10,7 +10,11 @@ def receipt(value=1.0):
             "eval_seed": 42, "envs": 64, "levels": [2], "start_angles_deg": [0],
             "dt_s": 0.02, "dr_off": True, "curriculum_off": True,
             "mode_selection": ["eval_gt"], "case_selection": ["stairs_side_left"],
-            "modes": {"eval_gt": {"L2_a000_stairs_side_left": {"distance": value}}}}
+            "modes": {"eval_gt": {"L2_a000_stairs_side_left": {
+                "distance": value, "case": "stairs_side_left", "requested_kinds": ["stairs"],
+                "terrain_assignment_sha256": "d" * 64,
+                "terrain_tiles": [{"env": 0, "kind": "stairs", "level": 2, "column": 0}],
+                "phase_steps": [50]}}}}
 
 
 def test_g11_exact_same_code_unit():
@@ -28,6 +32,12 @@ def test_g11_repeat_width_is_measured_not_assumed():
     full, unit = receipt(), receipt(1.1)
     assert compare_split(full, [unit], repeats=[receipt(1.04), receipt(1.2)])["state"] == "PASS"
     assert compare_split(full, [unit], repeats=[receipt(1.01), receipt(1.02)])["reason"] == "beyond_repeat_width"
+
+
+def test_g11_same_numbers_but_different_terrain_assignment_holds():
+    full, unit = receipt(), receipt()
+    unit["modes"]["eval_gt"]["L2_a000_stairs_side_left"]["terrain_assignment_sha256"] = "e" * 64
+    assert compare_split(full, [unit])["reason"] == "terrain_or_phase_identity_differs"
 
 
 def test_g11_queue_yields_to_gpu1_p1():

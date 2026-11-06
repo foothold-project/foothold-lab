@@ -15,6 +15,8 @@ from typing import Any
 
 IDENTITY = ("checkpoint_sha256", "checkpoint_iter", "eval_seed", "envs",
             "levels", "start_angles_deg", "dt_s", "dr_off", "curriculum_off")
+ROW_IDENTITY = ("case", "requested_kinds", "terrain_assignment_sha256",
+                "terrain_tiles", "phase_steps")
 
 
 def _numbers(value: Any, prefix: str = "") -> dict[str, float]:
@@ -78,7 +80,11 @@ def compare_split(full: dict, units: list[dict], *, repeats: list[dict] = ()) ->
         if len(keys) != len(full.get("levels", [])) * len(full.get("start_angles_deg", [])):
             return {"state": "HOLD", "reason": "split_coverage_differs"}
         for key in keys:
-            left, right = _numbers(_row(full, mode, key)), _numbers(_row(unit, mode, key))
+            full_row, unit_row = _row(full, mode, key), _row(unit, mode, key)
+            if any(field not in full_row or field not in unit_row
+                   or full_row[field] != unit_row[field] for field in ROW_IDENTITY):
+                return {"state": "HOLD", "reason": "terrain_or_phase_identity_differs"}
+            left, right = _numbers(full_row), _numbers(unit_row)
             if left.keys() != right.keys():
                 return {"state": "HOLD", "reason": "numeric_fields_differ"}
             differences.extend({"cell": f"{mode}/{key}{field}", "full": value,
