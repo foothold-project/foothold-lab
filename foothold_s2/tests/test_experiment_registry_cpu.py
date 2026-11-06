@@ -14,12 +14,19 @@ from foothold_s2.experiment_registry import (
     operational_definition,
     output_paths,
     source_path,
+    device_contract,
+    device_contract_sha256,
+    queue_gpu_identity,
 )
 
 
 def test_ex41_definition_matches_current_operational_inputs_and_paths():
     exp = load_experiment("EX-41")
     values = exp["operational_values"]
+    assert device_contract(exp) == {
+        "training": "cuda:0", "evaluation": "cuda:1",
+        "video": "cuda:1", "w78": "cuda:1",
+    }
     plan = yaml.safe_load(source_path(exp, "curriculum").read_text(encoding="utf-8"))
     score = json.loads(source_path(exp, "score_config").read_text(encoding="utf-8"))
 
@@ -126,5 +133,40 @@ def test_stage_end_jobs_take_identity_and_contract_from_experiment(tmp_path, mon
     assert args[args.index("--terrain-levels") + 1] == "2,5"
     assert args[args.index("--stair-start-angles-deg") + 1] == "0,30,60,90"
     assert args[args.index("--terrain-skill-v2-cases") + 1] == "stairs_side_left"
+
+
+def test_stage_end_jobs_read_each_device_role_and_queue_gpu_from_definition(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from foothold_s2 import ex41_score_watch as watch
+    definition = deepcopy(operational_definition("EX-41"))
+    definition["devices"] = {"training": "cuda:0", "evaluation": "cuda:0",
+                             "video": "cuda:1", "w78": "cuda:0"}
+    checkpoint = tmp_path / "model_750.pt"
+    checkpoint.write_bytes(b"known checkpoint")
+    source = tmp_path / "video-source"
+    source.mkdir()
+    monkeypatch.setattr(watch, "_stage_video_contract",
+                        lambda _definition: (source, (("W57", "fwd1.0", "eval_gt"),)))
+    jobs = watch.stage_end_queue_specs(
+        checkpoint, tmp_path / "score-watch", {"envs": 64, "map_steps": 10, "eval_seed": 42},
+        definition=definition)
+    by_phase = {row["phase"]: row for row in jobs}
+    assert by_phase["axis_v2"]["gpu"] == 0
+    assert by_phase["axis_v2"]["gpu_uuid"] == "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    assert by_phase["axis_v2"]["argv"][by_phase["axis_v2"]["argv"].index("--device") + 1] == "cuda:0"
+    w78 = by_phase["w78_v2:eval_gt:stairs_side_left"]
+    assert w78["gpu"] == 0 and w78["argv"][w78["argv"].index("--device") + 1] == "cuda:0"
+    video = by_phase["W57:fwd1.0:eval_gt"]
+    assert video["gpu"] == 1 and video["argv"][video["argv"].index("--device") + 1] == "cuda:1"
+
+
+def test_device_contract_is_complete_and_canonical():
+    exp = operational_definition("EX-41")
+    changed = {**exp, "devices": {**exp["devices"], "evaluation": "cuda:0"}}
+    assert device_contract_sha256(changed) != device_contract_sha256(exp)
+    assert queue_gpu_identity("cuda:0") == (0, "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b")
+    invalid = {**exp, "devices": {**exp["devices"], "w78": "cuda:9"}}
+    with pytest.raises(ValueError, match="registered CUDA"):
+        device_contract(invalid)
 
 

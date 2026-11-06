@@ -166,10 +166,24 @@ def test_commands_gpu1_three_modes_w57_then_w78_and_fresh_output(tmp_path):
     for r in rows:
         a=r['argv'];assert a[a.index('--device')+1]==r['device']
         assert not Path(a[a.index('--out')+1]).exists()
-    assert rows[-2]['device'] == 'cuda:0'
+    assert rows[-2]['device'] == 'cuda:1'
+    assert rows[-2]['argv'][rows[-2]['argv'].index('--device') + 1] == 'cuda:1'
     assert '--axis-v2' in rows[4]['argv']
     assert '--a-layer-marker' in rows[-1]['argv']
     assert '--fixed-level' not in rows[-1]['argv']
+
+
+def test_score_watch_run_identity_rejects_device_contract_change(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from foothold_s2.experiment_registry import operational_definition
+    run = replay_run(tmp_path)
+    definition = operational_definition('EX-41')
+    state = watch.initial_state(run, TABLE, watch.DEFAULT_CONFIG, definition=definition)
+    changed = deepcopy(definition)
+    changed['devices']['evaluation'] = 'cuda:0'
+    with pytest.raises(ValueError, match='watcher identity differs'):
+        watch.process_once(run, tmp_path/'out', tmp_path/'scores', TABLE, state,
+                           definition=changed, sleep=lambda _: None)
 
 
 def test_hidden_child_actual_stdin_devnull_and_separate_streams(tmp_path,monkeypatch):
@@ -382,6 +396,7 @@ def test_rehearsal_watcher_exits_after_scheduled_scores_without_final_request(tm
 
 def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,monkeypatch):
     # Coordinator-only spy, not a claim that mocked children measured anything.
+    from contextlib import contextmanager
     root=tmp_path/'source';p=root/'foothold_s2/eval';p.mkdir(parents=True)
     (p/'eval_map_modes.py').write_text('# no W78 parser',encoding='utf-8')
     plan=load_plan(evaluator.DEFAULT_TABLE,arm='B')
@@ -398,6 +413,12 @@ def test_w78_unintegrated_coordinator_still_schedules_map_stand_w57(tmp_path,mon
         # An auxiliary failure also must not turn maintenance into failed rc.
         return {'rc':7,'state':'failed'} if folder.name=='axis_v2' else {'rc':0,'state':'done'}
     monkeypatch.setattr(evaluator,'hidden_child',spy)
+    @contextmanager
+    def cpu_priority(device, marker, **_kwargs):
+        yield {'owner': None, 'snapshot': {'state': 'idle', 'device': device,
+                                           'marker': str(marker)}, 'device': device}
+    from foothold_s2.eval import ex41_push250_watch
+    monkeypatch.setattr(ex41_push250_watch, 'configured_device_idle_priority', cpu_priority)
     row=evaluator.evaluate(native(6000)[0],tmp_path/'evaluation',priority_marker=tmp_path/'p1-marker')
     assert launched==['map64','stand_eval_gt','stand_probe_prop_only','stand_eval_pred',
                       'axis_v2','push_ladder','a_push_video']

@@ -1,6 +1,11 @@
 format: foothold-experiment-definition/1
 experiment_id: EX-42
 status: preparation_only
+devices:
+  training: cuda:0
+  evaluation: cuda:1
+  video: cuda:1
+  w78: cuda:1
 issue: foothold-project/foothold-lab#555
 worklist: inbox/jay/20261104-ex41-restart/WORKLIST.tsv
 paths:

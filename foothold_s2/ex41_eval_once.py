@@ -13,6 +13,8 @@ import time
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic
+from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
+    operational_definition)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / 'foothold_s2/curriculum/ex40_score_config.json'
@@ -31,15 +33,11 @@ FULL_W78_CASES = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs
 
 
 def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
-             gpu0_training_active=None, push_baseline=None):
+             gpu0_training_active=None, push_baseline=None, devices=None):
     """The EX40 measurement sizes are reused, never its stage verdict rules."""
-    from foothold_s2.eval.ex41_gpu_priority import (
-        DEFAULT_GPU1_TRAINING_MARKER, gpu0_training_marker_state,
-    )
-
-    active = (gpu0_training_marker_state(gpu0_training_markers)['active']
-              if gpu0_training_active is None else bool(gpu0_training_active))
-    push_ladder_device = 'cuda:1' if active else 'cuda:0'
+    # The run's device roles are immutable inputs from the selected experiment
+    # definition. Training activity must not silently move an evaluation.
+    device_roles = device_contract(devices or operational_definition('EX-41'))
     common = ['--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
               '--envs', str(cfg['envs'])]
     maps = [*common, '--modes', ','.join(MODES), '--fixed-terrain',
@@ -71,6 +69,9 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
                  ['--checkpoint', str(checkpoint), '--checkpoint-iteration', str(iteration),
                   '--baseline-json', str(baseline_path), '--baseline-sha256', push_baseline['sha256'],
                   '--task', 'FootholdS2-Go2-S2-SB-v0', '--seed', str(cfg['eval_seed'])]))
+    from foothold_s2.eval.ex41_gpu_priority import DEFAULT_GPU0_MARKERS, DEFAULT_GPU1_TRAINING_MARKER
+    video_training_marker = (str(DEFAULT_GPU1_TRAINING_MARKER) if device_roles['video'] == 'cuda:1'
+                             else str(DEFAULT_GPU0_MARKERS[0]))
     rows.append(('a_push_video', 'foothold_s2.eval.a_push_video', [
         '--source-root', str(ROOT), '--checkpoint', str(checkpoint),
         '--recorder', str(ROOT / 'foothold_s2/eval/video25/record_c_layer.py'),
@@ -79,9 +80,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
         '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
         '--c-layer-lock', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/out/c_layer.lock',
         '--a-layer-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/A_LAYER_BUSY',
-        # This is the target GPU's training marker. GPU0 training does not
-        # yield a GPU1 capture; GPU1 training and the GPU1 P1 board still do.
-        '--training-marker', str(DEFAULT_GPU1_TRAINING_MARKER),
+            '--training-marker', video_training_marker,
         '--iteration', str(iteration), '--seed', str(cfg['eval_seed']),
         '--push-seed', str(cfg['eval_seed']), '--cadence', 'stage_end',
     ]))
@@ -95,7 +94,12 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
     rows = [row for row in rows if row[0] in selected]
     result = []
     for name, module, args in rows:
-        device = push_ladder_device if name == 'push_ladder' else 'cuda:1'
+        if name == 'a_push_video':
+            device = device_roles['video']
+        elif name in ('w78_v2', PERIODIC_W78_PHASE):
+            device = device_roles['w78']
+        else:
+            device = device_roles['evaluation']
         argv = [str(ISAAC_PYTHON), '-m', module, *args, '--out', str(out/name), '--device', device]
         if name != 'a_push_video':
             argv += ['--headless', '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']
@@ -292,7 +296,8 @@ def bundle_terminal_status(steps, *, scope='all'):
 
 
 def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
-                     scope='all', gpu1_owner=None, gpu0_training_markers=None):
+                     scope='all', gpu1_owner=None, gpu0_training_markers=None,
+                     definition=None, device=None):
     checkpoint, out = Path(checkpoint).resolve(strict=True), Path(out).resolve()
     plan, cfg = load_plan(table, arm='B'), config(eval_config)
     if not getattr(plan, 'fixed_schedule', None) or out.exists():
@@ -308,15 +313,23 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
                    (ROOT/'foothold_s2/eval/terrain_skill_v2_run.py').is_file())
     out.mkdir(parents=True)
     before = sha256(checkpoint)
+    definition = definition or operational_definition('EX-41')
+    devices = device_contract(definition)
+    selected_device = (devices['video'] if scope == 'a_push_video' else
+                       devices['w78'] if scope == 'w78_v2' else devices['evaluation'])
+    if device is not None and device != selected_device:
+        raise ValueError('EX41 bundle device differs from its configured role')
     row = {'format': 'foothold-ex41-eval-bundle/1', 'state': 'running',
            'checkpoint': str(checkpoint), 'checkpoint_sha256': before,
            'schedule_sha256': plan.effective_sha256, 'parent_sha256': plan.parent_sha256,
-           'source_git_head': head, 'device': 'cuda:1', 'scope': scope,
+           'source_git_head': head, 'devices': devices,
+           'device_contract_sha256': device_contract_sha256(definition),
+           'device': selected_device, 'scope': scope,
            'eval_config_sha256': sha256(eval_config), 'steps': {}}
     from foothold_s2.eval.ex41_gpu_priority import gpu0_training_marker_state
     gpu0_state = gpu0_training_marker_state(gpu0_training_markers)
     row['gpu0_training_marker_state'] = gpu0_state
-    row['stage_end_push_ladder_device'] = 'cuda:1' if gpu0_state['active'] else 'cuda:0'
+    row['stage_end_push_ladder_device'] = devices['evaluation']
     env = dict(os.environ)
     env.pop('CUDA_VISIBLE_DEVICES', None)
     env.update(PYTHONUTF8='1', PYTHONUNBUFFERED='1', PYTHONPATH=str(ROOT),
@@ -329,7 +342,8 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
     try:
         for phase in commands(checkpoint, out, cfg, scope=scope,
                               gpu0_training_active=gpu0_state['active'],
-                              push_baseline=plan.fixed_schedule['push_baseline']):
+                              push_baseline=plan.fixed_schedule['push_baseline'],
+                              devices=definition):
             if phase['name'] in ('w78_v2', PERIODIC_W78_PHASE) and not w78_available:
                 row['steps'][phase['name']]={'state':'missing','reason':'W78 v2 parser/implementation not integrated'}
                 _atomic(out/'eval_receipt.json',row)
@@ -353,38 +367,47 @@ def _evaluate_bundle(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAUL
 
 def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG,
              priority_marker=None, scope='all', gpu0_training_markers=None,
+             definition=None, device=None,
              priority_wait_seconds=21600, priority_poll_seconds=10, sleep=time.sleep):
-    """Run the bundle while publishing GPU1 priority to the shared job board."""
-    from foothold_s2.eval.ex41_gpu_priority import DEFAULT_MARKER, gpu1_priority, wait_for_gpu1_marker
+    """Run a bundle under the experiment's fixed device-role contract."""
+    from foothold_s2.eval.ex41_push250_watch import priority_marker_for_device
 
     checkpoint = Path(checkpoint).resolve(strict=True)
     match = re.fullmatch(r'model_(\d+)\.pt', checkpoint.name)
     iteration = int(match.group(1)) if match else 0
-    marker_path = DEFAULT_MARKER if priority_marker is None else Path(priority_marker)
+    definition = definition or operational_definition('EX-41')
+    devices = device_contract(definition)
+    selected_device = (devices['video'] if scope == 'a_push_video' else
+                       devices['w78'] if scope == 'w78_v2' else devices['evaluation'])
+    if device is not None and device != selected_device:
+        raise ValueError('requested evaluator device differs from the experiment device contract')
+    marker_path = (Path(priority_marker) if priority_marker is not None
+                   else priority_marker_for_device(selected_device))
     started = time.monotonic()
     waits = []
     while True:
-        wait_receipt = wait_for_gpu1_marker(
-            marker_path, timeout_seconds=max(0.0, priority_wait_seconds - (time.monotonic() - started)),
-            poll_seconds=priority_poll_seconds, sleep=sleep)
-        if wait_receipt['checks'] > 1 or wait_receipt['waited_seconds'] > 0:
-            waits.append(wait_receipt)
         try:
-            with gpu1_priority(marker_path, job=f'ex41_evaluation_{scope}', iteration=iteration) as owner:
+            from foothold_s2.eval.ex41_push250_watch import configured_device_idle_priority
+            with configured_device_idle_priority(selected_device, marker_path,
+                    job=f'ex41_evaluation_{scope}', iteration=iteration,
+                    timeout_seconds=max(0.0, priority_wait_seconds - (time.monotonic() - started)),
+                    poll_seconds=priority_poll_seconds, sleep=sleep) as owner:
+                marker_owner = owner.get('owner')
                 row = _evaluate_bundle(checkpoint, out, table=table, eval_config=eval_config,
-                                       scope=scope, gpu1_owner=owner,
-                                       gpu0_training_markers=gpu0_training_markers)
+                                       scope=scope, gpu1_owner=marker_owner,
+                                       gpu0_training_markers=gpu0_training_markers,
+                                       definition=definition, device=selected_device)
             break
         except RuntimeError as exc:
             if 'priority marker already owned' not in str(exc):
                 raise
             if time.monotonic() - started >= priority_wait_seconds:
-                raise TimeoutError('GPU1 P1 marker race exceeded admission timeout') from exc
+                raise TimeoutError(f'{selected_device} P1 marker race exceeded admission timeout') from exc
             sleep(priority_poll_seconds)
             waits.append({'state':'race_wait','waited_seconds':priority_poll_seconds,
                           'reason':str(exc)})
-    row['gpu1_priority_marker'] = {
-        'path': str(marker_path), 'state': 'cleared', 'owner': owner,
+    row['device_priority_marker'] = {
+        'path': str(marker_path), 'state': 'cleared', 'owner': marker_owner,
         'waits': waits,
     }
     _atomic(Path(out).resolve()/'eval_receipt.json', row)
@@ -393,27 +416,35 @@ def evaluate(checkpoint, out, *, table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--exp', default='EX-41')
     p.add_argument('--checkpoint', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
     p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
     p.add_argument('--priority-marker', type=Path)
-    p.add_argument('--device', choices=('cuda:1',), default='cuda:1',
-                   help='Queue contract, EX41 evaluation is fixed to GPU1')
+    p.add_argument('--device', choices=('cuda:0', 'cuda:1'))
     p.add_argument('--gpu0-training-marker', type=Path, action='append', default=None,
                    help='Optional GPU0 training marker path override, repeatable')
     p.add_argument('--scope', choices=('core', 'periodic', 'auxiliary', 'all', *AUXILIARY_PHASES), default='all')
     p.add_argument('--execute', action='store_true')
     a = p.parse_args(argv)
+    definition = operational_definition(a.exp)
+    devices = device_contract(definition)
+    selected_device = (devices['video'] if a.scope == 'a_push_video' else
+                       devices['w78'] if a.scope == 'w78_v2' else devices['evaluation'])
+    if a.device is not None and a.device != selected_device:
+        p.error('--device differs from the selected experiment role')
     if not a.execute:
         print(json.dumps({'state':'dry', 'scope':a.scope,
                           'commands':commands(a.checkpoint, a.out, config(a.eval_config), scope=a.scope,
                                               gpu0_training_markers=a.gpu0_training_marker,
-                                              push_baseline=load_plan(a.table, arm='B').fixed_schedule['push_baseline'])}))
+                                              push_baseline=load_plan(a.table, arm='B').fixed_schedule['push_baseline'],
+                                              devices=definition)}))
         return 0
     result = evaluate(a.checkpoint, a.out, table=a.table, eval_config=a.eval_config,
                       priority_marker=a.priority_marker, scope=a.scope,
-                      gpu0_training_markers=a.gpu0_training_marker)
+                      gpu0_training_markers=a.gpu0_training_marker,
+                      definition=definition, device=selected_device)
     print(json.dumps(result, ensure_ascii=True))
     return 0 if result['state'] == 'done' else 5
 

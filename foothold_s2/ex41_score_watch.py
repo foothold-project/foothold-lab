@@ -26,7 +26,8 @@ from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
 from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic, _manifest_digest, _stable
-from foothold_s2.experiment_registry import operational_definition, paths_for_run, source_path
+from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
+    operational_definition, paths_for_run, queue_gpu_identity, source_path)
 from foothold_s2.ex41_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, MODES, commands, hidden_child
 
 MODEL = re.compile(r'model_(0|[1-9][0-9]*)\.pt\Z')
@@ -473,10 +474,13 @@ def eval_config_for_run(run, default):
     return path
 
 
-def initial_state(run, table, eval_config):
+def initial_state(run, table, eval_config, *, definition=None):
     effective_eval_config = eval_config_for_run(run, eval_config)
+    definition = definition or operational_definition('EX-41')
+    devices = device_contract(definition)
     return {'format':'foothold-ex41-score-watch/1', 'run_dir':str(Path(run).resolve()),
             'table_sha256':sha256(table), 'eval_config_sha256':sha256(effective_eval_config),
+            'device_contract':devices, 'device_contract_sha256':device_contract_sha256(definition),
             'done':{}, 'stage_end_auxiliary':{}, 'measurement_attempts':{},
             'measurement_failures':{}, 'measurement_gaps':{},
             'rehearsal_injected_failures':{}, 'rehearsal_injected_failure_counts':{}}
@@ -737,6 +741,7 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
     operations = (definition or {}).get('operations', {})
+    devices = device_contract(definition or operational_definition('EX-41'))
     base = Path(target) / operations.get('stage_end_eval_subdir', 'stage_end_auxiliary_eval')
     queue_prefix = operations.get('queue_id_prefix', 'ex41')
     queue_owner = operations.get('queue_owner', 'ex41_score_watch')
@@ -745,10 +750,12 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     rows = []
     for phase in phase_names:
         phase_out = base / phase
+        phase_device = devices['video'] if phase == 'a_push_video' else devices['evaluation']
+        gpu, gpu_uuid = queue_gpu_identity(phase_device)
         argv = [sys.executable, '-m', 'foothold_s2.ex41_eval_once',
                 '--checkpoint', str(checkpoint), '--out', str(phase_out),
                 '--table', str(Path(table).resolve()), '--eval-config', str(Path(eval_config).resolve()),
-                '--scope', phase, '--device', 'cuda:1', '--execute']
+                '--scope', phase, '--device', phase_device, '--execute']
         kind = 'render' if phase == 'a_push_video' else 'evaluation'
         done_files = [str(phase_out / 'eval_receipt.json')]
         rows.append({
@@ -760,7 +767,7 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
             'authorization_ref': f'stage-end:{iteration}:{pinned}:{phase}',
             'output_path': str(phase_out), 'done_files': done_files,
             'cwd': str(repo_root),
-            'gpu': 1, 'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f',
+            'gpu': gpu, 'gpu_uuid': f'GPU-{gpu_uuid}',
             'argv': argv,
         })
     # W78 is split into resumable mode/case units. The merge is queued last at
@@ -776,6 +783,7 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     start_angles = tuple(w78_cfg.get('stair_start_angles_deg', (0, 30, 60, 90)))
     task_id = w78_cfg.get('task_id', 'FootholdS2-Go2-S2-SB-v0')
     terrain_set = w78_cfg.get('terrain_set', 'default')
+    w78_gpu, w78_uuid = queue_gpu_identity(devices['w78'])
     for mode in w78_modes:
         for case in w78_cases:
             unit_out = w78_root / mode / case
@@ -786,15 +794,15 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                     '--terrain-skill-v2', '--terrain-skill-v2-cases', case,
                     '--terrain-skill-v2-modes', mode, '--terrain-skill-v2-resume',
                     '--terrain-levels', ','.join(map(str, terrain_levels)), '--stair-start-angles-deg', ','.join(map(str, start_angles)),
-                    '--terrain-set', terrain_set, '--out', str(unit_out), '--device', 'cuda:1', '--headless']
+                    '--terrain-set', terrain_set, '--out', str(unit_out), '--device', devices['w78'], '--headless']
             rows.append({'id': f'{queue_prefix}-stage-{iteration}-{pinned[:12]}-w78-{mode}-{case}',
                          'phase': f'w78_v2:{mode}:{case}', 'kind': 'eval', 'priority': 2,
                          'owner': queue_owner,
                          'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:{mode}:{case}',
                          'output_path': str(unit_out),
                          'done_files': [str(unit_out/'terrain_skill_v2.json')],
-                         'cwd': str(repo_root), 'gpu': 1,
-                         'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f', 'argv': argv})
+                         'cwd': str(repo_root), 'gpu': w78_gpu,
+                         'gpu_uuid': f'GPU-{w78_uuid}', 'argv': argv})
     merge_out = w78_root / 'terrain_skill_v2.json'
     merge_argv = [sys.executable, '-m', 'foothold_s2.eval.ex41_w78_merge',
                   '--root', str(w78_root), '--checkpoint', str(checkpoint), '--out', str(merge_out)]
@@ -805,8 +813,8 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                  'owner': queue_owner,
                  'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:merge',
                  'output_path': str(w78_root), 'done_files': [str(merge_out)],
-                 'cwd': str(repo_root), 'gpu': 1,
-                 'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f', 'argv': merge_argv})
+                 'cwd': str(repo_root), 'gpu': w78_gpu,
+                 'gpu_uuid': f'GPU-{w78_uuid}', 'argv': merge_argv})
     source_root, cases = _stage_video_contract(definition)
     video_out = _stage_video_output(checkpoint, definition)
     recorder = source_root / 'foothold_s2/eval/video25/record_c_layer.py'
@@ -824,7 +832,7 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                 '--recorder', str(recorder), '--composer', str(composer),
                 '--python', sys.executable, '--gpu-jobs-config', str(gpu_config),
                 '--out', str(video_out), '--playlist-root', str(playlist_root),
-                '--device', 'cuda:1']
+                '--device', devices['video']]
         done_file = video_out / 'receipts' / f'{video_identity}.json'
         rows.append({
             'id': f'{queue_prefix}-stage-video-{iteration}-{pinned[:12]}-{suite}-{case}-{mode}-{video_identity[:10]}',
@@ -832,8 +840,8 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
             'kind': 'render', 'priority': 3, 'owner': queue_owner,
             'authorization_ref': f'stage-video:{iteration}:{pinned}:{suite}:{case}:{mode}',
             'output_path': str(video_out), 'done_files': [str(done_file)],
-            'cwd': str(source_root), 'gpu': 1,
-            'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f',
+            'cwd': str(source_root), 'gpu': queue_gpu_identity(devices['video'])[0],
+            'gpu_uuid': f'GPU-{queue_gpu_identity(devices["video"])[1]}',
             'argv': argv,
         })
     return rows
@@ -1413,7 +1421,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
     eval_config = eval_config_for_run(run, eval_config)
     plan, cfg = plan_for_run(table, run), config(eval_config)
-    identity = initial_state(run, table, eval_config)
+    identity = initial_state(run, table, eval_config, definition=definition)
     if any(state.get(k) != v for k,v in identity.items()
            if k not in ('done', 'stage_end_auxiliary', 'measurement_attempts',
                         'measurement_failures', 'stage_end_queue_jobs',
@@ -1497,9 +1505,9 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
         if not execute and replay_root is None:
             return {'state':'dry', 'iteration':iteration, 'checkpoint_sha256':pinned,
                     'stage_id':stage, 'auxiliary_due':stage_end,
-                    'commands':commands(cp, target/'evaluation', cfg, scope='periodic'),
+                    'commands':commands(cp, target/'evaluation', cfg, scope='periodic', devices=definition),
                     'auxiliary_commands':(commands(cp, target/'stage_end_auxiliary_eval', cfg,
-                                                    scope='auxiliary') if stage_end else [])}
+                                                    scope='auxiliary', devices=definition) if stage_end else [])}
         score_path = score_dir/f'score_{iteration}_{pinned[:12]}.json'
         if score_path.is_file():
             published = read(score_path)
@@ -1788,7 +1796,8 @@ def main(argv=None):
         acquire_watch_lock(lock)
         owned = True
         path = a.out_root/'watch_state.json'
-        state = read(path) if path.exists() else initial_state(a.run_dir, a.table, a.eval_config)
+        state = read(path) if path.exists() else initial_state(a.run_dir, a.table, a.eval_config,
+                                                               definition=definition)
         while True:
             row = process_once(a.run_dir, a.out_root, a.score_dir, a.table, state, eval_config=a.eval_config,
                                execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root,

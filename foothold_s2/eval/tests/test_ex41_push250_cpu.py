@@ -189,7 +189,7 @@ def test_output_iteration_uses_global_m6000_parent_offset(tmp_path):
         output_path_for_global_iteration(tmp_path, 0)
 
 
-def test_child_command_is_gpu1_and_matches_d171_request(tmp_path):
+def test_child_command_reads_device_role_and_matches_d171_request(tmp_path):
     argv = build_child_argv(checkpoint=tmp_path / "model_500.pt", out=tmp_path / "flat",
                             terrain="flat")
     assert "--push-ladder-profile" in argv
@@ -198,9 +198,35 @@ def test_child_command_is_gpu1_and_matches_d171_request(tmp_path):
     assert argv[argv.index("--push-ladder-map-mode") + 1] == "eval_gt"
     assert argv[argv.index("--device") + 1] == "cuda:1"
     assert argv[argv.index("--envs") + 1] == "1536"
-    with pytest.raises(ValueError, match="restricted to GPU1"):
-        build_child_argv(checkpoint=tmp_path / "model_500.pt", out=tmp_path / "flat",
-                         terrain="flat", device="cuda:0")
+    argv0 = build_child_argv(checkpoint=tmp_path / "model_500.pt", out=tmp_path / "flat0",
+                             terrain="flat", device="cuda:0")
+    assert argv0[argv0.index("--device") + 1] == "cuda:0"
+
+
+def test_push250_marker_path_follows_the_configured_evaluation_role():
+    assert push250_watch.priority_marker_for_device("cuda:0").name == "PRIORITY_BUSY_GPU0"
+    assert push250_watch.priority_marker_for_device("cuda:1").name == "PRIORITY_BUSY_GPU1"
+    with pytest.raises(ValueError, match="unsupported configured device"):
+        push250_watch.priority_marker_for_device("cuda:2")
+
+
+def test_push250_watcher_refuses_to_resume_with_a_changed_device_contract(tmp_path):
+    from copy import deepcopy
+    from foothold_s2.experiment_registry import (
+        device_contract, device_contract_sha256, operational_definition,
+    )
+
+    definition = operational_definition("EX-41")
+    state = {"device_contract": device_contract(definition),
+             "device_contract_sha256": device_contract_sha256(definition)}
+    out = tmp_path / "push250"
+    out.mkdir()
+    (out / "watcher_state.json").write_text(json.dumps(state), encoding="utf-8")
+    changed = deepcopy(definition)
+    changed["devices"]["evaluation"] = "cuda:0"
+    with pytest.raises(ValueError, match="device identity differs"):
+        push250_watch.watch(tmp_path / "run", tmp_path / "scores", out,
+                            first_local_update=500, definition=changed)
 
 
 def test_gpu_assignment_ignores_shared_context_on_gpu0():

@@ -7,6 +7,8 @@ external absolute reference.
 from __future__ import annotations
 
 import re
+import hashlib
+import json
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
@@ -17,6 +19,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_ROOT = REPO_ROOT / "experiments"
 FORMAT = "foothold-experiment-definition/1"
 _ID = re.compile(r"^[A-Z][A-Z0-9-]{1,31}$")
+_DEVICE_ROLES = ("training", "evaluation", "video", "w78")
+_GPU_UUIDS = {
+    "cuda:0": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+    "cuda:1": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+}
 
 
 def load_experiment(experiment_id: str, *, registry_root: str | Path = REGISTRY_ROOT) -> dict[str, Any]:
@@ -106,3 +113,29 @@ def operational_definition(experiment_id: str, *, registry_root: str | Path = RE
     if definition.get("status") != "operating" or definition.get("operations", {}).get("enabled") is not True:
         raise ValueError(f"experiment operations are not enabled: {experiment_id}")
     return definition
+
+
+def device_contract(definition: dict[str, Any]) -> dict[str, str]:
+    """Return the four pinned device roles from one experiment definition."""
+    devices = definition.get("devices")
+    if not isinstance(devices, dict) or set(devices) != set(_DEVICE_ROLES):
+        raise ValueError("experiment definition must pin training, evaluation, video, and w78 devices")
+    result: dict[str, str] = {}
+    for role in _DEVICE_ROLES:
+        device = devices.get(role)
+        if not isinstance(device, str) or device not in _GPU_UUIDS:
+            raise ValueError(f"experiment {role} device must be an explicit registered CUDA device")
+        result[role] = device
+    return result
+
+
+def device_contract_sha256(definition: dict[str, Any]) -> str:
+    payload = json.dumps(device_contract(definition), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def queue_gpu_identity(device: str) -> tuple[int, str]:
+    """Translate a registered CUDA device to dispatcher index and UUID."""
+    if device not in _GPU_UUIDS:
+        raise ValueError(f"unsupported experiment queue device: {device}")
+    return int(device.rsplit(":", 1)[1]), _GPU_UUIDS[device]

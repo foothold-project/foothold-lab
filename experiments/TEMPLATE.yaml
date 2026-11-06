@@ -2,6 +2,11 @@
 format: foothold-experiment-definition/1
 experiment_id: EX-XX
 status: preparation_only
+devices:
+  training: cuda:0
+  evaluation: cuda:1
+  video: cuda:1
+  w78: cuda:1
 issue: foothold-project/foothold-lab#555
 worklist: inbox/jay/<date>/WORKLIST.tsv
 paths:

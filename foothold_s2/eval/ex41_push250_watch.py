@@ -15,11 +15,13 @@ from typing import Any
 
 from foothold_s2.eval.ex41_gpu_priority import (
     DEFAULT_MARKER,
+    DEFAULT_GPU0_EVAL_MARKER,
     _pid_is_live,
     _read_owner,
     gpu1_priority,
 )
-from foothold_s2.experiment_registry import operational_definition, paths_for_run
+from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
+    operational_definition, paths_for_run, queue_gpu_identity)
 from foothold_s2.eval.ex41_push_ladder import TERRAIN_CASES
 
 GPU1_UUID = "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
@@ -122,12 +124,12 @@ def output_path_for_global_iteration(out_dir: Path, global_iteration: int) -> Pa
     return Path(out_dir) / f"{global_iteration}.json"
 
 
-def build_child_argv(*, checkpoint: Path, out: Path, terrain: str, device: str = "cuda:1",
+def build_child_argv(*, checkpoint: Path, out: Path, terrain: str, device: str | None = None,
                      python: Path = DEFAULT_PYTHON, task: str = TASK, seed: int = 42) -> list[str]:
     if terrain not in TERRAIN_CASES:
         raise ValueError(f"unsupported D171 terrain: {terrain}")
-    if device != "cuda:1":
-        raise ValueError("push250 watcher is restricted to GPU1")
+    device = device or device_contract(operational_definition("EX-41"))["evaluation"]
+    queue_gpu_identity(device)
     return [str(python), "-m", "foothold_s2.eval.eval_map_modes",
             "--task", task, "--checkpoint", str(checkpoint), "--out", str(out),
             "--envs", "1536", "--steps", "350", "--modes", "eval_gt",
@@ -147,20 +149,31 @@ def _atomic_json(path: Path, data: dict[str, Any]) -> None:
     os.replace(temp, path)
 
 
-def gpu1_busy_snapshot(marker: Path = DEFAULT_MARKER) -> dict[str, Any]:
-    """Read-only GPU1 gate; desktop GUI compute clients are intentionally ignored."""
+def priority_marker_for_device(device: str) -> Path:
+    if device == "cuda:1":
+        return DEFAULT_MARKER
+    if device == "cuda:0":
+        return DEFAULT_GPU0_EVAL_MARKER
+    raise ValueError(f"unsupported configured device: {device}")
+
+
+def gpu1_busy_snapshot(marker: Path | None = None, device: str | None = None) -> dict[str, Any]:
+    """Read-only configured-device gate; desktop GUI compute clients are ignored."""
     import psutil
+    device = device or device_contract(operational_definition("EX-41"))["evaluation"]
+    marker = Path(marker) if marker is not None else priority_marker_for_device(device)
+    _, expected_uuid = queue_gpu_identity(device)
 
     query = subprocess.run(
         ["nvidia-smi", "--query-compute-apps=gpu_uuid,pid,process_name", "--format=csv,noheader"],
         stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
         errors="replace", timeout=20, check=False)
     if query.returncode != 0:
-        raise RuntimeError(f"GPU1 admission query failed rc={query.returncode}")
+        raise RuntimeError(f"{device} admission query failed rc={query.returncode}")
     busy = []
     for line in query.stdout.splitlines():
         fields = [part.strip() for part in line.split(",", 2)]
-        if len(fields) != 3 or fields[0].casefold().removeprefix("gpu-") != GPU1_UUID:
+        if len(fields) != 3 or fields[0].casefold().removeprefix("gpu-") != expected_uuid:
             continue
         try:
             pid = int(fields[1])
@@ -183,7 +196,7 @@ def gpu1_busy_snapshot(marker: Path = DEFAULT_MARKER) -> dict[str, Any]:
         low = (name + " " + command).casefold()
         if "python" in name.casefold() or "kit" in low or "isaac" in low:
             assigned = _explicit_device(cmdline)
-            if assigned and assigned.casefold() != "cuda:1":
+            if assigned and assigned.casefold() != device.casefold():
                 continue
             busy.append({"pid": pid, "name": name, "state": "experiment_process",
                          "device": assigned or "unknown"})
@@ -197,7 +210,8 @@ def gpu1_busy_snapshot(marker: Path = DEFAULT_MARKER) -> dict[str, Any]:
         except (OSError, ValueError, RuntimeError, TypeError, KeyError):
             owner_state = "unknown_blocks"
             busy.append({"pid": None, "state": "priority_marker_unknown"})
-    return {"gpu_uuid": GPU1_UUID, "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    return {"gpu_uuid": expected_uuid, "device": device,
+            "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "busy": busy, "marker_state": owner_state, "state": "busy" if busy else "idle"}
 
 
@@ -236,6 +250,46 @@ def gpu1_idle_priority(marker: Path, *, job: str, iteration: int,
         finally:
             candidate.__exit__(None, None, None)
         return
+
+
+@contextmanager
+def configured_device_idle_priority(device: str, marker: Path, *, job: str, iteration: int,
+                                   timeout_seconds: float = 300, poll_seconds: float = 10,
+                                   sleep=time.sleep):
+    """Use the matching per-GPU P1 gate without moving a run between devices."""
+    if device == "cuda:1":
+        with gpu1_idle_priority(marker, job=job, iteration=iteration,
+                                timeout_seconds=timeout_seconds, poll_seconds=poll_seconds,
+                                snapshot=lambda path: gpu1_busy_snapshot(path, device), sleep=sleep) as row:
+            owner, snapshot = row
+            yield {"owner": owner, "snapshot": snapshot, "device": device}
+        return
+    if device != "cuda:0":
+        raise ValueError(f"unsupported configured evaluation device: {device}")
+    from foothold_s2.eval.ex41_gpu_priority import (
+        DEFAULT_GPU0_EVAL_MARKER, gpu0_priority, wait_for_gpu0_python_idle,
+    )
+    marker = DEFAULT_GPU0_EVAL_MARKER
+    started = time.monotonic()
+    while True:
+        if time.monotonic() - started > timeout_seconds:
+            raise TimeoutError("configured GPU0 did not become idle within bounded push250 wait")
+        try:
+            before = wait_for_gpu0_python_idle(timeout_seconds=0, poll_seconds=poll_seconds)
+        except TimeoutError:
+            sleep(poll_seconds)
+            continue
+        with gpu0_priority(job=job, iteration=iteration) as owners:
+            try:
+                after = wait_for_gpu0_python_idle(timeout_seconds=0, poll_seconds=poll_seconds)
+            except TimeoutError:
+                sleep(poll_seconds)
+                continue
+            yield {"owners": owners, "device": device,
+                   "gpu_uuid": queue_gpu_identity(device)[1],
+                   "checks_before_claim": before["checks"], "post_claim": after,
+                   "waited_s_before_claim": time.monotonic() - started}
+            return
 
 
 def matching_terminal_result(path: Path, *, local_iteration: int,
@@ -282,17 +336,20 @@ def _compare_to_baseline(result: dict[str, Any], baseline_path: Path) -> dict[st
 
 
 def evaluate_checkpoint(checkpoint: Path, *, global_iteration: int, out_dir: Path,
-                        worktree: Path, device: str = "cuda:1", python: Path = DEFAULT_PYTHON,
-                        task: str = TASK, seed: int = 42, marker: Path = DEFAULT_MARKER,
+                        worktree: Path, device: str | None = None, python: Path = DEFAULT_PYTHON,
+                        task: str = TASK, seed: int = 42, marker: Path | None = None,
                         timeout_seconds: int = 1800, local_iteration: int | None = None) -> dict[str, Any]:
     checkpoint = Path(checkpoint).resolve(strict=True)
+    device = device or device_contract(operational_definition("EX-41"))["evaluation"]
+    queue_gpu_identity(device)
+    marker = Path(marker) if marker is not None else priority_marker_for_device(device)
     out_dir = Path(out_dir)
     destination = output_path_for_global_iteration(out_dir, global_iteration)
     if destination.exists():
         raise FileExistsError(f"refusing duplicate push250 result: {destination}")
     checkpoint_sha = _sha256(checkpoint)
     local_iteration = global_iteration - 6000 if local_iteration is None else int(local_iteration)
-    admission = gpu1_busy_snapshot(marker)
+    admission = gpu1_busy_snapshot(marker, device)
     result: dict[str, Any] = {
         "schema": "foothold-ex41-push250-check/1", "state": "running",
         "global_iteration": global_iteration, "local_iteration": local_iteration,
@@ -303,7 +360,7 @@ def evaluate_checkpoint(checkpoint: Path, *, global_iteration: int, out_dir: Pat
                     "envs_per_magnitude_direction": 64, "envs_per_terrain": 1536,
                     "terrain_cases": list(TERRAIN_CASES), "level": 0,
                     "push_at_s": 2.0, "follow_s": 5.0},
-        "gpu1_admission": admission, "children": [], "started_at": datetime.now(timezone.utc).isoformat(),
+        "device_admission": admission, "children": [], "started_at": datetime.now(timezone.utc).isoformat(),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     work = out_dir / "_work" / f"{global_iteration}_{checkpoint_sha[:12]}"
@@ -314,10 +371,10 @@ def evaluate_checkpoint(checkpoint: Path, *, global_iteration: int, out_dir: Pat
                CUDA_DEVICE_ORDER="PCI_BUS_ID", KMP_DUPLICATE_LIB_OK="TRUE", OMNI_KIT_ACCEPT_EULA="YES")
     start = time.monotonic()
     try:
-        with gpu1_idle_priority(marker, job="EX-41-push250-D171", iteration=global_iteration,
-                                timeout_seconds=300) as (owner, claimed_snapshot):
-            result["priority_marker"] = owner
-            result["gpu1_after_claim"] = claimed_snapshot
+        with configured_device_idle_priority(device, marker, job="EX-41-push250-D171",
+                                iteration=global_iteration, timeout_seconds=300) as claimed:
+            result["priority_marker"] = claimed.get("owners", claimed)
+            result["gpu_after_claim"] = claimed
             for terrain in TERRAIN_CASES:
                 child_out = work / terrain
                 child_out.mkdir(parents=True, exist_ok=False)
@@ -482,18 +539,30 @@ def wait_for_score_watch_attempt(score_watch_root: Path, local_iteration: int,
 
 def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: int = 500,
          interval: int = 250, parent_iteration: int = 6000, poll_seconds: float = 10,
-         marker: Path = DEFAULT_MARKER, python: Path = DEFAULT_PYTHON,
+         marker: Path | None = None, python: Path = DEFAULT_PYTHON,
          worktree: Path | None = None, score_watch_dir: Path | None = None,
-         task: str = TASK, seed: int = 42) -> int:
+         task: str = TASK, seed: int = 42, device: str | None = None,
+         definition: dict[str, Any] | None = None) -> int:
     os.environ.setdefault('EX41_ORCHESTRATION_TO',
                           'term_37f1d02b-35f8-435d-940e-d43a8a5be1de')
     if first_local_update < interval or first_local_update % interval or interval <= 0:
         raise ValueError("push250 starts at a positive interval-aligned local update")
     run_dir, score_dir, out_dir = Path(run_dir), Path(score_dir), Path(out_dir)
     worktree = Path(worktree or Path(__file__).resolve().parents[2])
+    definition = definition or operational_definition("EX-41")
+    devices = device_contract(definition)
+    device = device or devices["evaluation"]
+    if device != devices["evaluation"]:
+        raise ValueError("push250 device override differs from the experiment device contract")
+    marker = Path(marker) if marker is not None else priority_marker_for_device(device)
+    identity = {"device_contract": devices,
+                "device_contract_sha256": device_contract_sha256(definition)}
     state_path = out_dir / "watcher_state.json"
     out_dir.mkdir(parents=True, exist_ok=True)
     score_watch_root = Path(score_watch_dir) if score_watch_dir is not None else score_dir.parent / "score-watch"
+    saved = _read_json(state_path)
+    if saved and any(saved.get(key) != value for key, value in identity.items()):
+        raise ValueError("push250 watcher device identity differs from the active experiment definition")
     local_iteration = first_local_update
     while True:
         ready = wait_for_checkpoint_target(
@@ -506,7 +575,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
                                      global_iteration=global_iteration,
                                      checkpoint_sha256=ready["sha256"])
             local_iteration += interval
-            _atomic_json(state_path, {"state": "already_completed_skipped",
+            _atomic_json(state_path, {**identity, "state": "already_completed_skipped",
                                       "completed_local_iteration": local_iteration - interval,
                                       "next_local_iteration": local_iteration,
                                       "existing_result": str(destination),
@@ -530,19 +599,19 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
             }
             _atomic_json(destination, receipt)
             local_iteration += interval
-            _atomic_json(state_path, {"state": "measurement_hold_advanced",
+            _atomic_json(state_path, {**identity, "state": "measurement_hold_advanced",
                                       "local_iteration": local_iteration,
                                       "prior_result_path": str(destination),
                                       "updated_at": datetime.now(timezone.utc).isoformat()})
             continue
-        admission = gpu1_busy_snapshot(marker)
-        _atomic_json(state_path, {"state": "starting", "local_iteration": local_iteration,
+        admission = gpu1_busy_snapshot(marker, device)
+        _atomic_json(state_path, {**identity, "state": "starting", "local_iteration": local_iteration,
                                   "global_iteration": global_iteration, "checkpoint_sha256": ready["sha256"],
-                                  "score_path": str(ready["score"]), "gpu1_admission": admission,
+                                  "score_path": str(ready["score"]), "device_admission": admission,
                                   "updated_at": datetime.now(timezone.utc).isoformat()})
         try:
             result = evaluate_checkpoint(ready["checkpoint"], global_iteration=global_iteration,
-                                         out_dir=out_dir, worktree=worktree, device="cuda:1",
+                                         out_dir=out_dir, worktree=worktree, device=device,
                                           python=python, marker=marker, task=task, seed=seed,
                                           local_iteration=local_iteration)
         except Exception as exc:
@@ -553,7 +622,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
                       "updated_at": datetime.now(timezone.utc).isoformat()}
             _atomic_json(destination, result)
         result.setdefault("local_iteration", local_iteration)
-        _atomic_json(state_path, {"state": result["state"], "local_iteration": local_iteration,
+        _atomic_json(state_path, {**identity, "state": result["state"], "local_iteration": local_iteration,
                                   "global_iteration": global_iteration,
                                   "result_path": str(destination), "elapsed_s": result["elapsed_s"],
                                   "updated_at": datetime.now(timezone.utc).isoformat()})
@@ -584,6 +653,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(str(exc))
     training = definition["operational_values"]["training"]
     evaluation = definition["operational_values"]["evaluation"]
+    devices = device_contract(definition)
     args.score_dir = args.score_dir or paths["scores"]
     args.out_dir = args.out_dir or paths["push250"]
     args.first_local_update = (definition["operational_values"]["evaluation"]["checkpoint_first"]
@@ -598,7 +668,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             result = evaluate_checkpoint(args.once_checkpoint, global_iteration=args.once_global_iteration,
                                          out_dir=args.out_dir, worktree=args.worktree, python=args.python,
-                                         task=args.task, seed=args.seed)
+                                         task=args.task, seed=args.seed, device=devices["evaluation"])
         except Exception as exc:
             result = {"schema": "foothold-ex41-push250-check/1", "state": "HOLD",
                       "global_iteration": args.once_global_iteration,
@@ -613,7 +683,7 @@ def main(argv: list[str] | None = None) -> int:
                  first_local_update=args.first_local_update, interval=args.interval,
                  parent_iteration=args.parent_iteration, poll_seconds=args.poll_seconds,
                  python=args.python, worktree=args.worktree, score_watch_dir=paths["score_watch"],
-                 task=args.task, seed=args.seed)
+                 task=args.task, seed=args.seed, device=devices["evaluation"], definition=definition)
 
 
 if __name__ == "__main__":
