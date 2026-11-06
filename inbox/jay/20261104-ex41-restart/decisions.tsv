@@ -185,3 +185,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T22:2x	W43 승인	팀장 승인: Linux 두 GPU 묶음 실측 제안(설치 날 예행에 같은 시드 1 장 대 2 장 · 평가 자리) · 원칙 「문제 없고 효율 좋고 결과 좋고 빠른 것」	팀장 22:2x 원문	chat	W43
 2026-11-06T22:2x	W42 승인	팀장: super2 작업 목록 설계 제안대로 ok(파일 둘 · 상태 · C1~C9 · 원문 비공개 · 텔레그램은 P0 마감 지남 · GPU 막는 결정 대기만 · 외부 주소 Tailscale 유지 + 시험) → 2 단계(42 행 옮기기) 진행	팀장 22:2x 원문	chat	W42
 2026-11-06T22:2x	W44	팀장 물음: 「E1 첫 변경 = L5 → L9 상한 · 성과 승급」 안이 괜찮은가 → lead 의견(조건부 찬성 · L6~L9 실제 치수 먼저 · 유지 칸 하락 시 상한 멈춤 · 정본 E1 정의와 대조) · analyst v4 에 검토 추가	lead	chat	W44
+2026-11-06T22:3x	ops WARN fail_1h 689	render_still_dark 4 번째(GPU0 · m5500 W57 spin- probe) → 730 으로 다시 넣음 · 4 건 모두 pyramid_stairs_inv env5 자리 · 다시 찍으면 통과 · 원인 가르기는 scripter 새 창(W15 와 묶음) · W04 는 m6000 점수 대기라 열어 둠	lead
