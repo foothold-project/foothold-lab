@@ -14,3 +14,5 @@ W12	관문 D N2 N9 N15 N17~N21	P3	at:2026-11-08T12:00	lead	D:/mai-wt/foothold-la
 W13	I24 · 팀장 11/06	P1	iter:6000	lead	-	open	학습 끝(6000) 바로 뒤 한 덩어리 W78 셋(491 m2750 · 555 m3750 · 612 m5000)+마지막(m6000)을 GPU1 · GPU0 에 나눠 돌림 · 23:00 묶음 풀기
 W14	팀장 11/06 17:2x	P3	-	lead	-	open	DR 1.0 넘는 평가 측정(정말 후순위 · 안 해도 됨)
 W15	scripter 17:1x 대조 실패	P2	at:2026-11-08T12:00	scripter	D:/mai-tmp/scripter/REPORT-w78-noise-floor.md	open	W78 조각 ≠ 한 덩어리 원인 가르기(같은 단위 두 번 돌린 잡음 바닥 · 코드 판 같게) → EX-42 쪼개기 설계 조건
+W16	팀장 11/06 16:0x · 17:3x	P0	at:2026-11-06T21:00	runner	D:/mai-tmp/runner/REPORT-bridge-1106.md	open	22 시 EX-41 끝 뒤 GPU0 이어 학습(m6000 → T0′ 설정 1000 회 · EX-42 0 단계) 가능 여부 CPU 확인 · 기동은 팀장 승인 뒤
+W17	팀장 11/06 17:3x	P0	at:2026-11-06T21:30	lead	D:/mai-tmp/lead/W17-gpu-plan.md	open	22 시 뒤 GPU 배분 확정(GPU1 m6000 점수 · 단계 끝 · W78 · 영상 / GPU0 이어 학습 또는 W78) · 텔레그램으로 팀장 결정 요청
