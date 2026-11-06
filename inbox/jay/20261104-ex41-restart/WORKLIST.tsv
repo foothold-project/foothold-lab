@@ -6,7 +6,7 @@ W04	계약 1 단계 끝	P0	iter:6000	lead	C:/Users/AI-WS01/s2_lab/ex41_main_2026
 W05	S2d 단계 끝 · I14	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W05.verified	open	S2d 영상 51 편 · 재생 목록 · 전 프레임 검사 · 밀기 영상(614)
 W06	I27 · 팀장 11/06	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W06.verified	open	m750 밀기 영상(666) 촬영 · 전 프레임 검사
 W07	팀장 11/06 17:2x	P1	at:2026-11-06T19:00	runner	D:/mai-wt/foothold-lab/runner-ex42-v016/foothold_s2/curriculum/ex42-approvals.yaml::dr-1.0-fixed	done	EX-42 DR 1.0 고정 승인 반영 · ops-check 에서 단계 DR 막음 빠짐 · 반영 확인(파일) · 커밋은 runner 요청함
-W08	팀장 11/06 17:2x	P1	at:2026-11-07T12:00	runner	D:/mai-tmp/runner/REPORT-exp-registry.md	open	실험 정의 파일 하나(experiments/EX-42.yaml) + 운영 도구가 --exp 만 받게(계획 PLAN-WORKLIST-EXP-PATHS 2 절)
+W08	팀장 11/06 17:2x	P1	at:2026-11-07T12:00	runner	D:/mai-tmp/runner/REPORT-exp-registry.md	done	실험 정의 파일 하나(experiments/EX-42.yaml) + 운영 도구가 --exp 만 받게(계획 PLAN-WORKLIST-EXP-PATHS 2 절) · runner 6739259d · registry 시험 7 lead 재실행 통과 · 장치 칸은 W20
 W09	팀장 11/06 17:2x	P0	at:2026-11-06T19:00	lead	D:/mai-wt/foothold-lab/lead-dispatch-measure/_out/tools/ex41/test_ops_check.py::worklist	done	작업 목록 장치(ops_check 가 이 파일을 읽음)
 W10	계약 2 단계	P1	at:2026-11-07T12:00	lead	D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/EX41-ANALYSIS.md	open	EX-41 분석 보고서(6000 점수 · 단계 보고서 · 지도 셋 비교 · 사고) push · URL · 그림
 W11	계약 lead 일 A	P3	at:2026-11-08T12:00	lead	C:/Users/AI-WS01/.claude/skills/mai-mode/SKILL.md	open	mai-mode 스킬
@@ -15,10 +15,10 @@ W13	I24 · 팀장 11/06	P1	iter:6000	lead	-	dropped	학습 끝(6000) 바로 뒤 
 W14	팀장 11/06 17:2x	P3	-	lead	-	open	DR 1.0 넘는 평가 측정(정말 후순위 · 안 해도 됨)
 W15	scripter 17:1x 대조 실패	P2	at:2026-11-08T12:00	scripter	D:/mai-tmp/lead/W15.verified	open	W78 조각 ≠ 한 덩어리 원인 가르기(같은 단위 두 번 돌린 잡음 바닥 · 코드 판 같게) → EX-42 쪼개기 설계 조건
 W16	팀장 11/06 16:0x · 17:3x	P0	at:2026-11-06T21:00	runner	D:/mai-tmp/runner/REPORT-bridge-1106.md	done	22 시 EX-41 끝 뒤 GPU0 이어 학습(m6000 → T0′ 설정 1000 회 · EX-42 0 단계) 가능 여부 CPU 확인 · 기동은 팀장 승인 뒤 · 17:52 결론: 지금 코드로 불가(EX-41 잠금 계획은 6 단계 전체만 · EX-42 전환 미구현) → 오늘 밤은 B 안
-W17	팀장 11/06 17:3x	P0	at:2026-11-06T21:30	lead	D:/mai-tmp/lead/W17.verified	open	22 시 뒤: GPU1 = m6000 점수 → m6000 단계 끝(밀기 판정은 자동 GPU0) → W78 m5000(612 23:00) · m6000 → 영상 → W78 m2750 · m3750(07:00 뒤) · GPU0 는 W78 · 영상이 cuda:1 로 박혀(ex41_eval_once.py:98 · ex41_stage_video.py:312) 밤사이 빔 · 장치 바꾸면 m750 과 조건 달라 안 바꿈
+W17	팀장 11/06 17:3x	P0	at:2026-11-06T21:30	lead	D:/mai-tmp/lead/W17.verified	done	22 시 뒤: GPU1 = m6000 점수 → m6000 단계 끝(밀기 판정은 자동 GPU0) → W78 m5000(612 23:00) · m6000 → 영상 → W78 m2750 · m3750(07:00 뒤) · GPU0 는 W78 · 영상이 cuda:1 로 박혀(ex41_eval_once.py:98 · ex41_stage_video.py:312) 밤사이 빔 · 장치 바꾸면 m750 과 조건 달라 안 바꿈
 W18	팀장 11/06 16:0x	P2	at:2026-11-07T10:00	analyst	D:/mai-tmp/lead/W18.verified	open	단계 보고서 v1.1(W78 한 덩어리 결과 · S2d 영상 칸 채움 · 지도 셋 비교 절)
 W19	runner 17:52 bridge 불가	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-ex42-stage0.md	open	EX-42 0 단계 = EX-41 T0′ 설정 1000 회(팀장 16:0x) 를 EX-42 계획 · 전환 · 점수 감시가 같은 단계를 읽게 · CPU 시험
-W20	lead 17:5x GPU0 빔	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-exp-registry.md::device	open	EX-42 운영 도구 장치를 실험 정의에서 받게(cuda:1 고정 없앰) · 학습 끝난 GPU0 를 평가 · 영상에 쓸 수 있게 · 같은 실험 안에서는 장치 고정(비교 조건)
+W20	lead 17:5x GPU0 빔	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/lead/W20.verified	open	EX-42 운영 도구 장치를 실험 정의에서 받게(cuda:1 고정 없앰) · 학습 끝난 GPU0 를 평가 · 영상에 쓸 수 있게 · 같은 실험 안에서는 장치 고정(비교 조건)
 W21	GATE-N-ROWS 6ccd2911	P2	at:2026-11-07T18:00	lead	D:/mai-tmp/lead/W21.verified	open	관문 미반영 셋(N2 B층 서기 영상 · N17 PROVENANCE 칸 · N21 DR 켠 평가 칸) EX-42 설계에 넣을지 팀장과 정함
 W22	팀장 11/06 18:0x	P0	at:2026-11-06T21:30	scripter	D:/mai-tmp/lead/W22.verified	open	GPU0 영상 갈래(영상 기록기 cuda:0 허용 · 학습 표식 살아 있으면 거절 · GPU0 dispatcher 준비) · 22 시 뒤 한 편 시험 → 남은 영상 절반 GPU0
 W23	팀장 11/06 18:0x	P1	at:2026-11-07T12:00	lead	D:/mai-tmp/lead/W23.verified	open	Linux 준비 확인(super2 · pipeline 답) · linux-runbook 에 EX-42 절 · 11/08 18:00 뒤 설치 여부 팀장 결정 자료
