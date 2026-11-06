@@ -68,6 +68,18 @@ for c in ('back0.5', 'back1.0', 'side+0.5', 'side-0.5', 'spin+1.2', 'spin-1.2', 
     row = [f"{m[:8]} {f(base.get((m,c),{}).get('err'))}→{f(pc.get((m,c),{}).get('err'))}→{f(cur[(m,c)]['err'])} ({cur[(m,c)]['alive']})"
            for m in ('eval_gt', 'eval_pred', 'probe_prop_only')]
     print(f'  {c:9s}', ' | '.join(row))
+# 지도 셋(정답 eval_gt · 복원 eval_pred · 끔 probe_prop_only) 비교 · 팀장 11/06 17:2x 「지도 켬 · 끔 · 복원은 EX-41 핵심」
+cmds = sorted({c for (m, c) in cur if m == 'eval_gt'})
+for other, name in (('eval_pred', '복원'), ('probe_prop_only', '끔')):
+    d = [(cur[(other, c)]['err'] - cur[('eval_gt', c)]['err'], c) for c in cmds
+         if (other, c) in cur and cur[(other, c)]['err'] is not None and cur[('eval_gt', c)]['err'] is not None]
+    if d:
+        big = max(d, key=lambda x: abs(x[0]))
+        alive = sum(cur[(other, c)]['alive'] for c in cmds if (other, c) in cur) - sum(cur[('eval_gt', c)]['alive'] for c in cmds)
+        print(f'M 지도 {name} - 정답: 오차 차 평균 {sum(x[0] for x in d)/len(d):+.3f} · 가장 큰 차 {big[1]} {big[0]:+.3f} · 생존 합 차 {alive:+d}')
+for m in ('eval_gt', 'eval_pred', 'probe_prop_only'):
+    over = [c for c in cmds if (m, c) in cur and cur[(m, c)]['err'] and cur[(m, c)]['err'] > 0.15]
+    print(f'M {m:15s} 판정선 넘은 명령 {len(over)} {over} · 생존 최저 {min(cur[(m, c)]["alive"] for c in cmds if (m, c) in cur)}/64')
 print('5 회전 앞뒤 흔들림 vx(정답)', [f"{c} {f(base[('eval_gt',c)]['vx'])}→{f(pc.get(('eval_gt',c),{}).get('vx'))}→{f(cur[('eval_gt',c)]['vx'])}" for c in ('spin+1.2', 'spin-1.2')])
 sym = sc['metrics'].get('critic_mirror_symmetry', {}).get('modes', {})
 for m, rows in sym.items():
