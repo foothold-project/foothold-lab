@@ -115,3 +115,21 @@ def test_marker_low_memory_but_fresh_child_ok(tmp_path):   # I11 · 11/06 push l
     with mock.patch.object(ops_check, "P1_MARKER", m),          mock.patch.object(ops_check, "_owner_recent_child", return_value=False):
         lv = levels(ops_check.check(RUN, now=31 * 60, procs=procs(), queue=q(), util=2400))
     assert lv["I11 marker_idle"] == "FAIL"
+
+
+def test_worklist_overdue_without_evidence_fails(tmp_path):   # W · 팀장 11/06 17:2x
+    w = tmp_path / "WORKLIST.tsv"
+    ev = tmp_path / "done.md"
+    w.write_text("id\tsource\tpriority\tdue\towner\tevidence\tstatus\twhat\n"
+                 f"A\tx\tP1\tat:2026-11-06T10:00\tlead\t{ev}\topen\tstage report\n"
+                 f"B\tx\tP0\titer:6000\tlead\t{ev}::marker\topen\tfinal score\n"
+                 "C\tx\tP3\t-\tlead\t-\topen\toptional\n", encoding="utf-8")
+    import datetime
+    now = datetime.datetime(2026, 11, 6, 11, 0).timestamp()
+    lv = {b: a for a, b, _ in ops_check.worklist(w, now, 5990)}
+    assert lv["W A"] == "FAIL" and lv["W B"] == "WARN" and "W C" not in lv
+    lv = {b: a for a, b, _ in ops_check.worklist(w, now, 6000)}
+    assert lv["W B"] == "FAIL"
+    ev.write_text("marker", encoding="utf-8")       # evidence arrives -> asks to close, no FAIL
+    lv = {b: a for a, b, _ in ops_check.worklist(w, now, 6000)}
+    assert lv["W A"] == "WARN" and lv["W B"] == "WARN"

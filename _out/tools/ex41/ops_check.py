@@ -168,9 +168,74 @@ def next_boundary_score(run_root: Path, now: float, it: int | None = None,
             f"boundary {boundary} in ~{minutes:.0f} min needs m{need}: {'present' if have else 'missing'}")
 
 
+WORKLIST = Path("D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/WORKLIST.tsv")
+PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+
+
+def _evidence_present(spec: str) -> bool:
+    """`path` exists, or `path::text` exists and contains text. '-' never counts as evidence."""
+    if not spec or spec == "-":
+        return False
+    path, _, needle = spec.partition("::")
+    p = Path(path)
+    if not p.exists():
+        return False
+    if not needle:
+        return True
+    try:
+        return needle in p.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+
+
+def worklist(path: Path, now: float, it: int | None) -> list[tuple[str, str, str]]:
+    """W (팀장 11/06 17:2x): planned work is read by the check, not remembered.
+
+    An open item whose due (`at:YYYY-MM-DDTHH:MM` or `iter:N`) has passed without its evidence
+    file is FAIL; due within 30 min (or 50 updates) is WARN. The top three open items are listed.
+    """
+    import csv
+    from datetime import datetime
+    try:
+        rows = list(csv.DictReader(path.open(encoding="utf-8"), delimiter="\t"))
+    except OSError:
+        return [("FAIL", "W worklist", f"worklist unreadable: {path}")]
+    out, todo = [], []
+    for r in rows:
+        if r.get("status") != "open":
+            continue
+        if _evidence_present(r.get("evidence", "")):
+            out.append(("WARN", f"W {r['id']}", "evidence present but status still open · mark done"))
+            continue
+        due, level = r.get("due", "-"), "OK"
+        if due.startswith("at:"):
+            t = datetime.strptime(due[3:], "%Y-%m-%dT%H:%M").timestamp()
+            level = "FAIL" if now >= t else ("WARN" if t - now < 1800 else "OK")
+        elif due.startswith("iter:") and it is not None:
+            n = int(due[5:])
+            level = "FAIL" if it >= n else ("WARN" if n - it <= 50 else "OK")
+        if level != "OK":
+            out.append((level, f"W {r['id']}", f"{r['priority']} {r['owner']} due {due} · {r['what'][:70]}"))
+        todo.append(r)
+    todo.sort(key=lambda r: (PRIORITY_ORDER.get(r.get("priority"), 9), r.get("due", "")))
+    top = " | ".join(f"{r['id']} {r['priority']} {r['what'][:40]}" for r in todo[:3])
+    out.append(("OK", "W next", f"{len(todo)} open · next: {top}"))
+    return out
+
+
+def _train_iter(run_root: Path) -> int | None:
+    try:
+        main_dir = next((run_root / "main").iterdir())
+        last = (main_dir / "train_extra.jsonl").read_bytes().rstrip().rsplit(b"\n", 1)[-1]
+        return int(json.loads(last)["it"])
+    except (OSError, StopIteration, ValueError, KeyError):
+        return None
+
+
 def main(argv: list[str]) -> int:
     run_root = Path(argv[0])
     rows = check(run_root)
+    rows += worklist(WORKLIST, time.time(), _train_iter(run_root))
     if "--json" in argv:
         print(json.dumps([{"level": a, "check": b, "detail": c} for a, b, c in rows], ensure_ascii=False))
     else:
