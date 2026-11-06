@@ -1,16 +1,30 @@
-"""EX-41 per-boundary checklist numbers (EX41-250-LOG rule): vs m6000 and previous boundary.
+"""EX-41 per-boundary checklist numbers (EX41-250-LOG rule): vs parent checkpoint and previous boundary.
 
 Usage: python boundary_report.py <run_root> <local_iter>
   run_root = the s2_lab/ex41_main_<stamp> folder (holds eval/ and main/<run>/).
 Prints the 10-item table plus the boundary application row (DR scale · stage · reason) so the
 report always shows whether DR moved as planned (11/04: DR sat at 0.575 for 750 updates unread).
 """
-import glob, json, statistics as st, sys
+import argparse, glob, json, statistics as st, sys
 
 from pathlib import Path
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT))
+from foothold_s2.experiment_registry import operational_definition, source_path
 
-RUN = Path(sys.argv[1]).as_posix().rstrip('/')
-M6000 = r'C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json'
+parser = argparse.ArgumentParser()
+parser.add_argument('--exp', required=True)
+parser.add_argument('run_root', type=Path)
+parser.add_argument('local_iteration', type=int)
+args = parser.parse_args()
+DEFINITION = operational_definition(args.exp)
+RUN = args.run_root.resolve(strict=True).as_posix().rstrip('/')
+PATHS = DEFINITION['paths']['directories']
+PARENT_UPDATE = int(DEFINITION['operational_values']['parent']['update'])
+INTERVAL = int(DEFINITION['operational_values']['training']['interval_updates'])
+PARENT_MAP = source_path(DEFINITION, 'maintenance_map64')
+EXP_LABEL = DEFINITION['experiment_id']
+APPLICATION_LOG = DEFINITION.get('operations', {}).get('application_log', 'application.jsonl')
 KEY = {'vx': 'vx_abs_error_mean_alive_mps', 'vy': 'vy_abs_error_mean_alive_mps', 'wz': 'wz_abs_error_mean_alive_radps'}
 
 
@@ -31,8 +45,8 @@ def cells(path):
 
 
 def boundary(n):
-    sc = glob.glob(f'{RUN}/eval/scores/score_{n}_*.json')[0]
-    mm = glob.glob(f'{RUN}/eval/score-watch/model_{n}_*/evaluation/map64/map_modes.json')
+    sc = glob.glob(f"{RUN}/{PATHS['scores']}/score_{n}_*.json")[0]
+    mm = glob.glob(f"{RUN}/{PATHS['score_watch']}/model_{n}_*/evaluation/map64/map_modes.json")
     return json.load(open(sc, encoding='utf-8')), cells(mm[0])
 
 
@@ -46,22 +60,22 @@ def w78(score):
     return o
 
 
-n = int(sys.argv[2]); prev = n - 250
+n = args.local_iteration; prev = n - INTERVAL
 try:
     sc, cur = boundary(n)
 except IndexError:
     # No score or no map64 for this boundary: a measurement gap, never a result (11/04 1000 · 1250).
-    print(f'== EX-41 {n}: 점수 또는 map64 없음 · 측정 실패 · 결과로 쓰지 않음 · 재측정 영수증을 볼 것')
+    print(f'== {EXP_LABEL} {n}: 점수 또는 map64 없음 · 측정 실패 · 결과로 쓰지 않음 · 재측정 영수증을 볼 것')
     raise SystemExit(2)
-base = cells(M6000)
+base = cells(PARENT_MAP)
 try:
     _, pc = boundary(prev)
 except IndexError:
     pc = {}
 f = lambda x: '  -  ' if x is None else f'{x:.3f}'
-print(f'== EX-41 {n} (누적 m{6000+n}) · maintenance_pass {sc.get("maintenance_pass")} · safety_stop {sc.get("safety_stop")}')
+print(f'== {EXP_LABEL} {n} (누적 m{PARENT_UPDATE+n}) · maintenance_pass {sc.get("maintenance_pass")} · safety_stop {sc.get("safety_stop")}')
 worst = min(cur.items(), key=lambda kv: kv[1]['alive'])
-print('1 생존 최저', worst[0], worst[1]['alive'], '/64 · m6000 대비 -2 넘게 나빠진 칸:',
+print('1 생존 최저', worst[0], worst[1]['alive'], '/64 · parent checkpoint 대비 -2 넘게 나빠진 칸:',
       [k for k in cur if k in base and cur[k]['alive'] < base[k]['alive'] - 2])
 print('2 판정선 0.15 넘은 칸:', [(k, round(v['err'], 3)) for k, v in cur.items() if v['err'] and v['err'] > 0.15])
 for c in ('back0.5', 'back1.0', 'side+0.5', 'side-0.5', 'spin+1.2', 'spin-1.2', 'fwd1.0'):
@@ -83,10 +97,10 @@ else:
     L = [v[0] for k, v in w.items() if 'left' in k]; R = [v[0] for k, v in w.items() if 'right' in k]
     print(f'7 계단 옆 발 끌림 왼 {min(L):.3f}~{max(L):.3f} 오른 {min(R):.3f}~{max(R):.3f} · 생존 최저', min((v[1], k) for k, v in w.items()))
 print('9 서기', sc['metrics'].get('stand_counts'), '· 무릎', [round(j['ratio'] * 100, 2) for j in sc['metrics'].get('training_knee_effort', {}).get('joints', {}).values()], '%')
-RUNDIR = Path(glob.glob(f'{RUN}/main/*/train_start_status.json')[0]).parent.as_posix()
+RUNDIR = Path(glob.glob(f"{RUN}/{PATHS['main'].split('{run}')[0]}*/train_start_status.json")[0]).parent.as_posix()
 st_ = json.load(open(f'{RUNDIR}/train_start_status.json'))
 print('10 학습', st_['iter'], round(st_['iter_s'], 1), 's · 보상', round(st_['mean_reward'], 1), '· 길이', round(st_['mean_episode_length'], 1))
-app = [json.loads(l) for l in open(f'{RUNDIR}/ex41_application.jsonl', encoding='utf-8') if l.strip()]
+app = [json.loads(l) for l in open(f'{RUNDIR}/{APPLICATION_LOG}', encoding='utf-8') if l.strip()]
 row = next((r for r in reversed(app) if r.get('iteration') == n + 1), None)
 if row is None:
     print('11 경계 적용 기록 없음 · n+1 =', n + 1, '(경계가 아직 적용되지 않았거나 기록이 빠짐)')
@@ -98,7 +112,7 @@ else:
 # first 500 updates with KL probe > 0.05 85 times; nobody saw it because no report showed it).
 try:
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-    lo, hi, floor = n - 250, n, 1e-5
+    lo, hi, floor = n - INTERVAL, n, 1e-5
     lr, kl = {}, {}
     for f in sorted(glob.glob(f'{RUNDIR}/events.out.tfevents.*')):
         acc = EventAccumulator(f, size_guidance={'scalars': 0}); acc.Reload()

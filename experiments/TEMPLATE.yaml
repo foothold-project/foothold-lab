@@ -1,0 +1,29 @@
+# Copy this file to experiments/<ID>.yaml and fill every value before use.
+format: foothold-experiment-definition/1
+experiment_id: EX-XX
+status: preparation_only
+issue: foothold-project/foothold-lab#555
+worklist: inbox/jay/<date>/WORKLIST.tsv
+paths:
+  slug: exxx
+  root_template: '{slug}_{stamp}'
+  directories:
+    main: main/{run}
+    scores: eval/scores
+    push250: eval/push250
+    score_watch: eval/score-watch
+    stage_end: eval/stage-end
+    stage_video: eval/stage-video
+files:
+  curriculum: foothold_s2/curriculum/<plan>.yaml
+  boundary: foothold_s2/curriculum/<boundary>.yaml
+  approvals: foothold_s2/curriculum/<approvals>.yaml
+  score_config: null
+  push_baseline: null
+  maintenance_baseline: null
+  stage_video_source: null
+operational_values:
+  parent: {update: null, sha256: null}
+  training: {status: preparation_only}
+  evaluation: {environments: 64, seed: 42}
+  operations_enabled: false

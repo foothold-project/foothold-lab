@@ -130,7 +130,7 @@ def test_main_loop_continues_after_invalid_final_request(tmp_path, monkeypatch):
         if len(data['done']) == 2: raise StopCPUProbe()
     monkeypatch.setattr(watch.time, 'sleep', stop_after_later_score)
     with pytest.raises(StopCPUProbe):
-        watch.main(['--run-dir', str(run), '--out-root', str(tmp_path/'out'),
+        watch.main(['--exp', 'EX-41', '--run-dir', str(run), '--out-root', str(tmp_path/'out'),
                     '--score-dir', str(tmp_path/'scores'), '--replay-root', str(SOURCE/'score-watch-b')])
     saved = watch.read(tmp_path/'out/watch_state.json')
     assert sorted(r['iteration'] for r in saved['done'].values()) == [5750, 6000]

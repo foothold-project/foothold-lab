@@ -14,6 +14,7 @@ from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan, STAGE_IDS
 from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
+from foothold_s2.experiment_registry import load_experiment, source_path
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -173,8 +174,9 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EX-42 CPU operations/readiness gate")
-    parser.add_argument("--table", type=Path, default=DEFAULT_TABLE)
-    parser.add_argument("--approvals", type=Path, default=DEFAULT_APPROVALS)
+    parser.add_argument("--exp", required=True, help="experiment definition ID in experiments/<ID>.yaml")
+    parser.add_argument("--table", type=Path)
+    parser.add_argument("--approvals", type=Path)
     parser.add_argument("--graduation", type=Path)
     parser.add_argument("--terrain-manifest", type=Path)
     parser.add_argument("--source-root", type=Path)
@@ -192,7 +194,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        result = ops_check(args.table, args.approvals, graduation=args.graduation,
+        definition = load_experiment(args.exp)
+        table = args.table or source_path(definition, "curriculum")
+        approvals = args.approvals or source_path(definition, "approvals")
+        result = ops_check(table, approvals, graduation=args.graduation,
                            terrain_manifest=args.terrain_manifest,
                            source_root=args.source_root, expected_head=args.expected_head)
     except (OSError, ValueError) as exc:

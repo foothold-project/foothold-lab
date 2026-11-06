@@ -10,7 +10,6 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 import time
 from typing import Any
 
@@ -20,6 +19,7 @@ from foothold_s2.eval.ex41_gpu_priority import (
     _read_owner,
     gpu1_priority,
 )
+from foothold_s2.experiment_registry import operational_definition, paths_for_run
 from foothold_s2.eval.ex41_push_ladder import TERRAIN_CASES
 
 GPU1_UUID = "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
@@ -483,7 +483,8 @@ def wait_for_score_watch_attempt(score_watch_root: Path, local_iteration: int,
 def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: int = 500,
          interval: int = 250, parent_iteration: int = 6000, poll_seconds: float = 10,
          marker: Path = DEFAULT_MARKER, python: Path = DEFAULT_PYTHON,
-         worktree: Path | None = None) -> int:
+         worktree: Path | None = None, score_watch_dir: Path | None = None,
+         task: str = TASK, seed: int = 42) -> int:
     os.environ.setdefault('EX41_ORCHESTRATION_TO',
                           'term_37f1d02b-35f8-435d-940e-d43a8a5be1de')
     if first_local_update < interval or first_local_update % interval or interval <= 0:
@@ -492,7 +493,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
     worktree = Path(worktree or Path(__file__).resolve().parents[2])
     state_path = out_dir / "watcher_state.json"
     out_dir.mkdir(parents=True, exist_ok=True)
-    score_watch_root = score_dir.parent / "score-watch"
+    score_watch_root = Path(score_watch_dir) if score_watch_dir is not None else score_dir.parent / "score-watch"
     local_iteration = first_local_update
     while True:
         ready = wait_for_checkpoint_target(
@@ -542,7 +543,7 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
         try:
             result = evaluate_checkpoint(ready["checkpoint"], global_iteration=global_iteration,
                                          out_dir=out_dir, worktree=worktree, device="cuda:1",
-                                          python=python, marker=marker,
+                                          python=python, marker=marker, task=task, seed=seed,
                                           local_iteration=local_iteration)
         except Exception as exc:
             result = {"schema": "foothold-ex41-push250-check/1", "state": "HOLD",
@@ -563,24 +564,41 @@ def watch(run_dir: Path, score_dir: Path, out_dir: Path, *, first_local_update: 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--exp", required=True, help="experiment definition ID in experiments/<ID>.yaml")
     parser.add_argument("--run-dir", type=Path, required=True, help="live training run folder with manifest.json")
-    parser.add_argument("--score-dir", type=Path, required=True, help="completed periodic score files")
-    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--first-local-update", type=int, default=500)
-    parser.add_argument("--interval", type=int, default=250)
-    parser.add_argument("--parent-iteration", type=int, default=6000)
+    parser.add_argument("--score-dir", type=Path)
+    parser.add_argument("--out-dir", type=Path)
+    parser.add_argument("--first-local-update", type=int)
+    parser.add_argument("--interval", type=int)
+    parser.add_argument("--parent-iteration", type=int)
     parser.add_argument("--poll-seconds", type=float, default=10)
     parser.add_argument("--python", type=Path, default=DEFAULT_PYTHON)
     parser.add_argument("--worktree", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--once-checkpoint", type=Path)
     parser.add_argument("--once-global-iteration", type=int)
     args = parser.parse_args(argv)
+    try:
+        definition = operational_definition(args.exp)
+        paths = paths_for_run(definition, args.run_dir)
+    except (OSError, ValueError, KeyError) as exc:
+        parser.error(str(exc))
+    training = definition["operational_values"]["training"]
+    evaluation = definition["operational_values"]["evaluation"]
+    args.score_dir = args.score_dir or paths["scores"]
+    args.out_dir = args.out_dir or paths["push250"]
+    args.first_local_update = (definition["operational_values"]["evaluation"]["checkpoint_first"]
+                               if args.first_local_update is None else args.first_local_update)
+    args.interval = training["interval_updates"] if args.interval is None else args.interval
+    args.parent_iteration = args.parent_iteration if args.parent_iteration is not None else definition["operational_values"]["parent"]["update"]
+    args.task = evaluation.get("task_id", TASK)
+    args.seed = int(evaluation["seed"])
     if args.once_checkpoint:
         if args.once_global_iteration is None:
             parser.error("--once-global-iteration is required with --once-checkpoint")
         try:
             result = evaluate_checkpoint(args.once_checkpoint, global_iteration=args.once_global_iteration,
-                                         out_dir=args.out_dir, worktree=args.worktree, python=args.python)
+                                         out_dir=args.out_dir, worktree=args.worktree, python=args.python,
+                                         task=args.task, seed=args.seed)
         except Exception as exc:
             result = {"schema": "foothold-ex41-push250-check/1", "state": "HOLD",
                       "global_iteration": args.once_global_iteration,
@@ -594,7 +612,8 @@ def main(argv: list[str] | None = None) -> int:
     return watch(args.run_dir, args.score_dir, args.out_dir,
                  first_local_update=args.first_local_update, interval=args.interval,
                  parent_iteration=args.parent_iteration, poll_seconds=args.poll_seconds,
-                 python=args.python, worktree=args.worktree)
+                 python=args.python, worktree=args.worktree, score_watch_dir=paths["score_watch"],
+                 task=args.task, seed=args.seed)
 
 
 if __name__ == "__main__":

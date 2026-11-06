@@ -26,6 +26,7 @@ from foothold_s2.eval.eval_dr_mode import require_dr_off_document
 from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
 from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic, _manifest_digest, _stable
+from foothold_s2.experiment_registry import operational_definition, paths_for_run, source_path
 from foothold_s2.ex41_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, MODES, commands, hidden_child
 
 MODEL = re.compile(r'model_(0|[1-9][0-9]*)\.pt\Z')
@@ -658,17 +659,19 @@ def due_evaluation_scopes(iteration, plan, run_dir):
     return tuple(scopes)
 
 
-def _stage_video_contract():
-    """Resolve the fixed scripter producer and deterministic 51-cell contract."""
+def _stage_video_contract(definition=None):
+    """Resolve the producer contract pinned by the selected experiment."""
+    video_cfg = (definition or {}).get('operations', {}).get('stage_video_contract', {})
     source_root = Path(os.environ.get(
         'EX41_STAGE_VIDEO_SOURCE_ROOT',
-        'D:/mai-wt/foothold-lab/scripter-ex41-stagevideo')).resolve(strict=True)
+        video_cfg.get('source_root', 'D:/mai-wt/foothold-lab/scripter-ex41-stagevideo'))).resolve(strict=True)
     module_path = source_root / 'foothold_s2/eval/ex41_stage_video.py'
     if not module_path.is_file():
         raise RuntimeError('scripter EX41 stage-video contract unavailable')
     pinned = subprocess.run(['git', '-C', str(source_root), 'rev-parse', 'HEAD'],
                             capture_output=True, text=True, check=False)
-    if pinned.returncode or pinned.stdout.strip() != 'e604b22fa1253679ffa97828a43895c32fe3bd23':
+    expected_commit = video_cfg.get('source_commit', 'e604b22fa1253679ffa97828a43895c32fe3bd23')
+    if pinned.returncode or pinned.stdout.strip() != expected_commit:
         raise ValueError('scripter EX41 stage-video source HEAD differs from G11/P9 pin')
     probe = subprocess.run(
         [sys.executable, '-c',
@@ -687,12 +690,13 @@ def _stage_video_identity(checkpoint, iteration, stage, suite, case, mode):
     return hashlib.sha256(json.dumps(payload, separators=(',', ':')).encode()).hexdigest()
 
 
-def _stage_video_output(checkpoint):
+def _stage_video_output(checkpoint, definition=None):
     checkpoint = Path(checkpoint)
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
+    video_cfg = (definition or {}).get('operations', {}).get('stage_video_contract', {})
     root = Path(os.environ.get('EX41_STAGE_VIDEO_OUT_ROOT',
-                               'D:/mai-tmp/runner/ex41_stage_video'))
+                               video_cfg.get('output_root', 'D:/mai-tmp/runner/ex41_stage_video')))
     return root / f'model_{iteration}_{pinned[:12]}'
 
 
@@ -727,12 +731,15 @@ def phase_output_or_missing(phase_root, phase):
 
 
 def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_training_active=False,
-                          table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG):
+                          table=DEFAULT_TABLE, eval_config=DEFAULT_CONFIG, definition=None):
     """Build independent stage-end P2 evaluations, resumable W78 units, and P3 video jobs."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
-    base = Path(target) / 'stage_end_auxiliary_eval'
+    operations = (definition or {}).get('operations', {})
+    base = Path(target) / operations.get('stage_end_eval_subdir', 'stage_end_auxiliary_eval')
+    queue_prefix = operations.get('queue_id_prefix', 'ex41')
+    queue_owner = operations.get('queue_owner', 'ex41_score_watch')
     phase_names = ('axis_v2', 'push_ladder', 'a_push_video')
     repo_root = Path(__file__).resolve().parents[1]
     rows = []
@@ -745,11 +752,11 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
         kind = 'render' if phase == 'a_push_video' else 'evaluation'
         done_files = [str(phase_out / 'eval_receipt.json')]
         rows.append({
-            'id': f'ex41-stage-{iteration}-{pinned[:12]}-{phase}',
+            'id': f'{queue_prefix}-stage-{iteration}-{pinned[:12]}-{phase}',
             'phase': phase,
             'kind': 'render' if kind == 'render' else 'eval',
             'priority': 3 if kind == 'render' else 2,
-            'owner': 'ex41_score_watch',
+            'owner': queue_owner,
             'authorization_ref': f'stage-end:{iteration}:{pinned}:{phase}',
             'output_path': str(phase_out), 'done_files': done_files,
             'cwd': str(repo_root),
@@ -760,24 +767,29 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     # the same priority, after all 30 unit jobs, and publishes the canonical
     # complete receipt consumed by measure_w78.
     w78_root = base / 'w78_v2'
-    w78_modes = ('eval_gt', 'eval_pred', 'probe_prop_only')
-    w78_cases = ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back',
+    w78_cfg = operations.get('w78', {})
+    w78_modes = tuple(w78_cfg.get('modes', ('eval_gt', 'eval_pred', 'probe_prop_only')))
+    w78_cases = tuple(w78_cfg.get('cases', ('stairs_fwd', 'stairs_side_left', 'stairs_side_right', 'stairs_back',
                  'stairs_fwd_turn_return', 'stairs_fwd_back_return', 'slope_fwd1.0',
-                 'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')
+                 'flat_fwd1.0', 'flat_fwd1.0_heading', 'stairs_fwd_stop_back')))
+    terrain_levels = tuple(w78_cfg.get('terrain_levels', (2, 5)))
+    start_angles = tuple(w78_cfg.get('stair_start_angles_deg', (0, 30, 60, 90)))
+    task_id = w78_cfg.get('task_id', 'FootholdS2-Go2-S2-SB-v0')
+    terrain_set = w78_cfg.get('terrain_set', 'default')
     for mode in w78_modes:
         for case in w78_cases:
             unit_out = w78_root / mode / case
             argv = [sys.executable, '-m', 'foothold_s2.eval.eval_map_modes',
-                    '--task', 'FootholdS2-Go2-S2-SB-v0', '--checkpoint', str(checkpoint),
+                    '--task', task_id, '--checkpoint', str(checkpoint),
                     '--envs', str(cfg['envs']), '--steps', str(cfg['map_steps']),
                     '--modes', ','.join(w78_modes), '--fixed-terrain', '--eval-seed', str(cfg['eval_seed']),
                     '--terrain-skill-v2', '--terrain-skill-v2-cases', case,
                     '--terrain-skill-v2-modes', mode, '--terrain-skill-v2-resume',
-                    '--terrain-levels', '2,5', '--stair-start-angles-deg', '0,30,60,90',
-                    '--terrain-set', 'default', '--out', str(unit_out), '--device', 'cuda:1', '--headless']
-            rows.append({'id': f'ex41-stage-{iteration}-{pinned[:12]}-w78-{mode}-{case}',
+                    '--terrain-levels', ','.join(map(str, terrain_levels)), '--stair-start-angles-deg', ','.join(map(str, start_angles)),
+                    '--terrain-set', terrain_set, '--out', str(unit_out), '--device', 'cuda:1', '--headless']
+            rows.append({'id': f'{queue_prefix}-stage-{iteration}-{pinned[:12]}-w78-{mode}-{case}',
                          'phase': f'w78_v2:{mode}:{case}', 'kind': 'eval', 'priority': 2,
-                         'owner': 'ex41_score_watch',
+                         'owner': queue_owner,
                          'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:{mode}:{case}',
                          'output_path': str(unit_out),
                          'done_files': [str(unit_out/'terrain_skill_v2.json')],
@@ -788,15 +800,15 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                   '--root', str(w78_root), '--checkpoint', str(checkpoint), '--out', str(merge_out)]
     # dispatch.py selects by (priority, id), not insertion order. The zzz
     # suffix makes this dependent merge run after all 30 same-priority units.
-    rows.append({'id': f'ex41-stage-{iteration}-{pinned[:12]}-w78-zz-merge',
+    rows.append({'id': f'{queue_prefix}-stage-{iteration}-{pinned[:12]}-w78-zz-merge',
                  'phase': 'w78_v2:merge', 'kind': 'eval', 'priority': 2,
-                 'owner': 'ex41_score_watch',
+                 'owner': queue_owner,
                  'authorization_ref': f'stage-end:{iteration}:{pinned}:w78:merge',
                  'output_path': str(w78_root), 'done_files': [str(merge_out)],
                  'cwd': str(repo_root), 'gpu': 1,
                  'gpu_uuid': 'GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f', 'argv': merge_argv})
-    source_root, cases = _stage_video_contract()
-    video_out = _stage_video_output(checkpoint)
+    source_root, cases = _stage_video_contract(definition)
+    video_out = _stage_video_output(checkpoint, definition)
     recorder = source_root / 'foothold_s2/eval/video25/record_c_layer.py'
     composer = source_root / 'foothold_s2/eval/video25/compose_25e_v2style10.py'
     gpu_config = Path(os.environ.get(
@@ -815,9 +827,9 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
                 '--device', 'cuda:1']
         done_file = video_out / 'receipts' / f'{video_identity}.json'
         rows.append({
-            'id': f'ex41-stage-video-{iteration}-{pinned[:12]}-{suite}-{case}-{mode}-{video_identity[:10]}',
+            'id': f'{queue_prefix}-stage-video-{iteration}-{pinned[:12]}-{suite}-{case}-{mode}-{video_identity[:10]}',
             'phase': f'{suite}:{case}:{mode}',
-            'kind': 'render', 'priority': 3, 'owner': 'ex41_score_watch',
+            'kind': 'render', 'priority': 3, 'owner': queue_owner,
             'authorization_ref': f'stage-video:{iteration}:{pinned}:{suite}:{case}:{mode}',
             'output_path': str(video_out), 'done_files': [str(done_file)],
             'cwd': str(source_root), 'gpu': 1,
@@ -902,7 +914,7 @@ def stage_interval_loads(plan, *, train_seconds_per_update, core_seconds,
 
 def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_path,
                                 plan, eval_config=DEFAULT_CONFIG, push_ladder_path=None,
-                                a_push_video_path=None, stage_video_path=None):
+                                a_push_video_path=None, stage_video_path=None, definition=None):
     """Create measurements and explicitly unreviewed G11/P9 stage-video evidence."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     row = {'format': 'foothold-ex41-stage-end-auxiliary/1',
@@ -910,6 +922,9 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
            'checkpoint_sha256': sha256(checkpoint), 'stage_id': stage,
            'state': 'complete', 'components': {}, 'metrics': {}, 'evidence': []}
     cfg = config(eval_config)
+    video_cfg = (definition or {}).get('operations', {}).get('stage_video_contract', {})
+    expected_source_head = video_cfg.get('source_commit', 'e604b22fa1253679ffa97828a43895c32fe3bd23')
+    expected_video_rule = (definition or {}).get('operations', {}).get('video_rule_version', 'v3.4-D168')
     for name, path, measure in (
         ('w57', w57_path, lambda p: measure_w57(p, checkpoint, cfg)),
         ('w78_v2', w78_path, lambda p: measure_w78(p, checkpoint))):
@@ -954,7 +969,7 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
     try:
         if stage_video_path is None:
             raise ValueError('G11/P9 stage-video receipt root is missing')
-        source_root, cases = _stage_video_contract()
+        source_root, cases = _stage_video_contract(definition)
         expected = {_stage_video_identity(checkpoint, row['iteration'], stage, suite, case, mode):
                     (suite, case, mode) for suite, case, mode in cases}
         receipt_root = Path(stage_video_path) / 'receipts'
@@ -972,8 +987,8 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             video_path = Path(video.get('video', ''))
             if (video.get('schema') != 'foothold-ex41-stage-video/1'
                     or (video.get('suite'), video.get('case'), video.get('map_mode')) != (suite, case, mode)
-                    or video.get('source_head') != 'e604b22fa1253679ffa97828a43895c32fe3bd23'
-                    or video.get('video_rule_version') != 'v3.4-D168'
+                    or video.get('source_head') != expected_source_head
+                    or video.get('video_rule_version') != expected_video_rule
                     or not video_path.is_file()
                     or sha256(video_path) != video.get('video_sha256')):
                 raise ValueError(f'G11/P9 video receipt or SHA invalid: {receipt_path.name}')
@@ -982,7 +997,7 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
             raise ValueError(f'G11/P9 expected {len(expected)} unique video receipts, found {len(video_rows)}')
         row['metrics']['stage_video'] = {
             'decision_use': 'record_only', 'acceptance': 'pending_lead_kit_scene_review',
-            'source_head': 'e604b22fa1253679ffa97828a43895c32fe3bd23',
+            'source_head': expected_source_head,
             'count': len(video_rows), 'expected_count': len(expected),
             'receipts': [evidence(pair[0]) for _, pair in sorted(video_rows.items())],
         }
@@ -1006,12 +1021,12 @@ def stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path, w78_pa
                     or video.get('iteration') != row['iteration']
                     or video.get('checkpoint_sha256') != row['checkpoint_sha256']
                     or video.get('cadence') != 'stage_end'
-                    or video.get('video_rule_version') != 'v3.4-D168'):
+                    or video.get('video_rule_version') != expected_video_rule):
                 raise ValueError(f'A-layer {mode} receipt identity or D168 rule differs')
             row['evidence'].append(evidence(video_dir / f'{mode}.json'))
             row['evidence'].append(evidence(Path(video['video'])))
         row['metrics']['a_push_video'] = {
-            'decision_use': 'record_only', 'video_rule_version': 'v3.4-D168',
+            'decision_use': 'record_only', 'video_rule_version': expected_video_rule,
             'group_id': video_status['group_id'],
             'map_modes': {mode: {'outcome': video_rows[mode].get('outcome'),
                                  'video_sha256': video_rows[mode].get('video_sha256')}
@@ -1091,7 +1106,7 @@ def _publish_stage_end_report(run_dir, sidecar, *, deliver=False):
 def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, state, *,
                                  eval_config=DEFAULT_CONFIG, execute=False,
                                  replay_root=None, w57_root=None, w78_root=None,
-                                 table=DEFAULT_TABLE, deliver_reports=False):
+                                 table=DEFAULT_TABLE, deliver_reports=False, definition=None):
     """Publish W57/W78 after core score publication, without changing that score."""
     checkpoint = Path(checkpoint).resolve(strict=True)
     iteration = int(checkpoint.stem.split('_')[-1])
@@ -1099,6 +1114,10 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
     key = f'{iteration}_{pinned}'
     aux_state = state.setdefault('stage_end_auxiliary', {})
     target = Path(target)
+    operations = (definition or {}).get('operations', {})
+    expected_video_rule = operations.get('video_rule_version', 'v3.4-D168')
+    eval_subdir = operations.get('stage_end_eval_subdir', 'stage_end_auxiliary_eval')
+    receipt_subdir = operations.get('stage_end_receipts_subdir', 'stage_end_receipts')
     sidecar = target / 'stage_end_auxiliary.json'
     if sidecar.is_file():
         prior = read(sidecar)
@@ -1122,7 +1141,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         # Rehearsal jobs must never enter the operational shared queue.
         queue_path = target / 'rehearsal-queue' / 'queue.json'
         specs = stage_end_queue_specs(checkpoint, target, config(eval_config), stage=stage,
-                                      table=table, eval_config=eval_config)
+                                      table=table, eval_config=eval_config, definition=definition)
         selected = [next(row for row in specs if row['phase'] == 'axis_v2'),
                     next(row for row in specs if row['kind'] == 'render')]
         for row in selected:
@@ -1150,8 +1169,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         job_ids = queue_jobs.get(key)
         if job_ids is None:
             specs = stage_end_queue_specs(checkpoint, target, config(eval_config), stage=stage,
-                                          table=table,
-                                          eval_config=eval_config)
+                                          table=table, eval_config=eval_config, definition=definition)
             registered = register_stage_end_queue_jobs(queue_path, specs)
             job_ids = {str(row['id']): row['phase'] for row in registered}
             queue_jobs[key] = job_ids
@@ -1160,7 +1178,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         queue_doc = read_dispatch_queue(queue_path)
         jobs = {str(row['id']):row for row in queue_doc['items']}
         statuses = {}
-        receipts_dir = target / 'stage_end_receipts'; receipts_dir.mkdir(parents=True, exist_ok=True)
+        receipts_dir = target / receipt_subdir; receipts_dir.mkdir(parents=True, exist_ok=True)
         for job_id, phase in job_ids.items():
             job = jobs.get(job_id)
             if job is None: raise ValueError(f'registered gpu_jobs item disappeared: {job_id}')
@@ -1189,7 +1207,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
                             video = read(done_path)
                             if (video.get('schema') != 'foothold-ex41-stage-video/1'
                                     or video.get('checkpoint_sha256') != pinned
-                                    or video.get('video_rule_version') != 'v3.4-D168'
+                                    or video.get('video_rule_version') != expected_video_rule
                                     or not Path(video.get('video', '')).is_file()
                                     or sha256(Path(video['video'])) != video.get('video_sha256')):
                                 state_value, reason = 'failed', 'stage-video receipt or video SHA differs'
@@ -1217,15 +1235,15 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
         if any(row['state'] == 'pending' for row in statuses.values()):
             return {'state':'queued','iteration':iteration,'checkpoint_sha256':pinned,
                     'components':statuses,'queue_path':str(queue_path)}
-        aux_out = target / 'stage_end_auxiliary_eval'
+        aux_out = target / eval_subdir
         w57_path = phase_output_or_missing(aux_out / 'axis_v2', 'axis_v2') / 'axis_v2.json'
         w78_path = phase_output_or_missing(aux_out / 'w78_v2', 'w78_v2') / 'terrain_skill_v2.json'
         push_ladder_path = phase_output_or_missing(aux_out / 'push_ladder', 'push_ladder') / 'push_ladder_bundle.json'
         a_push_video_path = phase_output_or_missing(aux_out / 'a_push_video', 'a_push_video')
-        stage_video_path = _stage_video_output(checkpoint)
+        stage_video_path = _stage_video_output(checkpoint, definition)
         row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
                                           w78_path, plan, eval_config, push_ladder_path,
-                                          a_push_video_path, stage_video_path)
+                                          a_push_video_path, stage_video_path, definition=definition)
         row['phase_receipts'] = statuses
         row['evaluation_bundle'] = str(aux_out.resolve())
         immutable(sidecar, row)
@@ -1246,7 +1264,8 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
 
     row = stage_end_auxiliary_receipt(checkpoint, stage, core_bundle, w57_path,
                                       w78_path, plan, eval_config, push_ladder_path,
-                                      a_push_video_path, _stage_video_output(checkpoint))
+                                      a_push_video_path, _stage_video_output(checkpoint, definition),
+                                      definition=definition)
     row['evaluation_bundle'] = str(aux_bundle.resolve())
     immutable(sidecar, row)
     aux_state[key] = evidence(sidecar)
@@ -1390,7 +1409,7 @@ def recover_published_score(score_path, cp, stage, plan, out_root):
 
 def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_CONFIG,
                  execute=False, replay_root=None, w57_root=None, w78_root=None,
-                 deliver_reports=False, sleep=time.sleep):
+                 deliver_reports=False, sleep=time.sleep, definition=None):
     run, out_root, score_dir = (Path(p).resolve() for p in (run, out_root, score_dir))
     eval_config = eval_config_for_run(run, eval_config)
     plan, cfg = plan_for_run(table, run), config(eval_config)
@@ -1457,7 +1476,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                     core_bundle, target, plan, state, eval_config=eval_config,
                     execute=execute, replay_root=replay_root,
                     w57_root=w57_root, w78_root=w78_root, table=table,
-                    deliver_reports=deliver_reports)
+                    deliver_reports=deliver_reports, definition=definition)
             continue
         if final_request is None and any(r['iteration']==iteration and r['checkpoint_sha256']!=pinned
                                          for r in state['done'].values()):
@@ -1494,7 +1513,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                         cp, stage, core_bundle, target, plan, state,
                         eval_config=eval_config, execute=execute, replay_root=replay_root,
                         w57_root=w57_root, w78_root=w78_root, table=table,
-                        deliver_reports=deliver_reports)
+                        deliver_reports=deliver_reports, definition=definition)
                 return {**recovered,'recovered_from_score':True,
                         'measurement_state':'complete','judgement_state':
                         'hold' if published.get('maintenance_pass') is False else 'pass'}
@@ -1666,7 +1685,7 @@ def process_once(run, out_root, score_dir, table, state, *, eval_config=DEFAULT_
                 cp, stage, source, target, plan, state, eval_config=eval_config,
                 execute=execute, replay_root=replay_root,
                 w57_root=w57_root, w78_root=w78_root, table=table,
-                deliver_reports=deliver_reports)
+                deliver_reports=deliver_reports, definition=definition)
         return receipt
     return pending or {'state':'idle'}
 
@@ -1736,9 +1755,12 @@ def acquire_watch_lock(lock):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    for name in ('run-dir','out-root','score-dir'): p.add_argument('--'+name, type=Path, required=True)
-    p.add_argument('--table', type=Path, default=DEFAULT_TABLE)
-    p.add_argument('--eval-config', type=Path, default=DEFAULT_CONFIG)
+    p.add_argument('--exp', required=True, help='experiment definition ID in experiments/<ID>.yaml')
+    p.add_argument('--run-dir', type=Path, required=True)
+    p.add_argument('--out-root', type=Path)
+    p.add_argument('--score-dir', type=Path)
+    p.add_argument('--table', type=Path)
+    p.add_argument('--eval-config', type=Path)
     p.add_argument('--once', action='store_true')
     p.add_argument('--execute', action='store_true')
     p.add_argument('--rehearsal-stop', action='store_true',
@@ -1747,6 +1769,16 @@ def main(argv=None):
     p.add_argument('--w57-root', type=Path)
     p.add_argument('--w78-root', type=Path)
     a = p.parse_args(argv)
+    try:
+        definition = operational_definition(a.exp)
+        paths = (paths_for_run(definition, a.run_dir)
+                 if a.out_root is None or a.score_dir is None else {})
+    except (OSError, ValueError, KeyError) as exc:
+        p.error(str(exc))
+    a.out_root = a.out_root or paths['score_watch']
+    a.score_dir = a.score_dir or paths['scores']
+    a.table = a.table or source_path(definition, 'curriculum')
+    a.eval_config = a.eval_config or source_path(definition, 'score_config')
     if a.execute and a.replay_root: p.error('--execute and --replay-root are exclusive')
     if a.rehearsal_stop and rehearsal_schedule(a.run_dir) is None:
         p.error('--rehearsal-stop requires a short-stage rehearsal schedule')
@@ -1760,7 +1792,7 @@ def main(argv=None):
         while True:
             row = process_once(a.run_dir, a.out_root, a.score_dir, a.table, state, eval_config=a.eval_config,
                                execute=a.execute, replay_root=a.replay_root, w57_root=a.w57_root,
-                               w78_root=a.w78_root, deliver_reports=a.execute)
+                               w78_root=a.w78_root, deliver_reports=a.execute, definition=definition)
             _atomic(path, state)
             print(json.dumps(row, ensure_ascii=True, allow_nan=False), flush=True)
             if a.once or (not a.execute and a.replay_root is None): return 5 if row['state']=='HOLD' else 0

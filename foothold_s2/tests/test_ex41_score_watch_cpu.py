@@ -346,7 +346,7 @@ def test_main_loop_replays_actual_outputs_past_hold_until_final_receipt(tmp_path
     stable=watch._stable
     monkeypatch.setattr(watch,'_stable',lambda p,t,s:stable(p,0,lambda _:None))
     monkeypatch.setattr(watch.time,'sleep',lambda _:None)
-    rc=watch.main(['--run-dir',str(run),'--out-root',str(tmp_path/'out'),
+    rc=watch.main(['--exp','EX-41','--run-dir',str(run),'--out-root',str(tmp_path/'out'),
                    '--score-dir',str(tmp_path/'scores'),'--replay-root',str(SOURCE/'score-watch-b')])
     assert rc==5
     saved=watch.read(tmp_path/'out/watch_state.json')
@@ -369,7 +369,7 @@ def test_rehearsal_watcher_exits_after_scheduled_scores_without_final_request(tm
     stable=watch._stable
     monkeypatch.setattr(watch,'_stable',lambda p,t,s:stable(p,0,lambda _:None))
     monkeypatch.setattr(watch.time,'sleep',lambda _:None)
-    rc=watch.main(['--run-dir',str(run),'--out-root',str(tmp_path/'out'),
+    rc=watch.main(['--exp','EX-41','--run-dir',str(run),'--out-root',str(tmp_path/'out'),
                    '--score-dir',str(tmp_path/'scores'),'--table',str(TABLE),
                    '--replay-root',str(SOURCE/'score-watch-b'),'--rehearsal-stop'])
     assert rc==0

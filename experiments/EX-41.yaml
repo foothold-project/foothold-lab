@@ -1,0 +1,122 @@
+format: foothold-experiment-definition/1
+experiment_id: EX-41
+status: operating
+issue: foothold-project/foothold-lab#555
+worklist: inbox/jay/20261104-ex41-restart/WORKLIST.tsv
+paths:
+  slug: ex41
+  root_template: '{slug}_main_{stamp}'
+  directories:
+    main: main/{run}
+    scores: eval/scores
+    push250: eval/push250
+    score_watch: eval/score-watch
+    stage_end: eval/score-watch
+    stage_video: eval/stage-video
+operations:
+  enabled: true
+  queue_id_prefix: ex41
+  queue_owner: ex41_score_watch
+  stage_end_eval_subdir: stage_end_auxiliary_eval
+  stage_end_receipts_subdir: stage_end_receipts
+  stage_video_contract:
+    source_root: D:/mai-wt/foothold-lab/scripter-ex41-stagevideo
+    source_commit: e604b22fa1253679ffa97828a43895c32fe3bd23
+    output_root: D:/mai-tmp/runner/ex41_stage_video
+  w78:
+    task_id: FootholdS2-Go2-S2-SB-v0
+    modes:
+    - eval_gt
+    - eval_pred
+    - probe_prop_only
+    cases:
+    - stairs_fwd
+    - stairs_side_left
+    - stairs_side_right
+    - stairs_back
+    - stairs_fwd_turn_return
+    - stairs_fwd_back_return
+    - slope_fwd1.0
+    - flat_fwd1.0
+    - flat_fwd1.0_heading
+    - stairs_fwd_stop_back
+    terrain_levels:
+    - 2
+    - 5
+    stair_start_angles_deg:
+    - 0
+    - 30
+    - 60
+    - 90
+    terrain_set: default
+  video_rule_version: v3.4-D168
+  application_log: ex41_application.jsonl
+files:
+  curriculum: foothold_s2/curriculum/ex41-fixed5000.yaml
+  boundary: foothold_s2/curriculum/ex41-fixed5000-boundary.yaml
+  approvals: foothold_s2/curriculum/ex41-fixed5000-approvals.yaml
+  score_config: foothold_s2/curriculum/ex40_score_config.json
+  push_baseline: foothold_s2/curriculum/ex41-push-m6000-baseline.json
+  maintenance_baseline: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
+  stage_video_source: D:/mai-wt/foothold-lab/scripter-ex41-stagevideo
+  maintenance_map64: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json
+operational_values:
+  parent:
+    update: 6000
+    sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5
+    env_yaml_sha256: f2e7b7651fe0d7ee4a63141f2d432f52d8067ea336aa90d5661685c759c52a82
+    agent_yaml_sha256: 5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd
+  training:
+    environments: 3072
+    seed: 42
+    plan_updates: 5000
+    hard_cap_updates: 6000
+    interval_updates: 250
+    stages:
+    - id: S2a
+      updates: 750
+      dr_scale: 0.5
+      push_vmax_mps: 1.5
+    - id: S2b
+      updates: 1000
+      dr_scale: 0.65
+      push_vmax_mps: 1.65
+    - id: S2c
+      updates: 1000
+      dr_scale: 0.8
+      push_vmax_mps: 1.8
+    - id: S2d
+      updates: 1250
+      dr_scale: 1.0
+      push_vmax_mps: 2.0
+    - id: S2e
+      updates: 500
+      dr_scale: 1.0
+      push_vmax_mps: 2.0
+    - id: T0_prime
+      updates: 500
+      maximum_updates: 1500
+      dr_scale: 1.0
+      push_vmax_mps: 2.0
+    extensions:
+      updates: 500
+      maximum_count: 1
+    pause_limit_updates: 1000
+    terrain_curriculum: fixed_l02
+    map_mode: eval_gt
+  evaluation:
+    device: cuda:1
+    environments: 64
+    seed: 42
+    checkpoint_first: 500
+    checkpoint_stride: 250
+    judged_cells: 26
+    recorded_cells: 39
+    modes:
+    - eval_gt
+    - eval_pred
+    - probe_prop_only
+  thresholds:
+    maintenance_drop_count: 3
+    survival_min: 60
+    tracking_error_max: 0.15

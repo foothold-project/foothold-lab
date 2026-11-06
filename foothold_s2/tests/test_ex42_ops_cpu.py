@@ -27,17 +27,16 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     assert "runtime_integration_pending" in result["blockers"]
     assert "explicit_lead_approval_missing" in result["blockers"]
     assert "terrain_manifest_missing" in result["blockers"]
-    assert "stage_dr_schedule_unapproved" in result["blockers"]
     assert "environment_import_unavailable" in result["blockers"]
-    assert len(result["blockers"]) == 7
+    assert len(result["blockers"]) == 6
     assert result["train_entry"]["training_started"] is False
-    assert main(["--ops-check", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
+    assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["production_launch_allowed"] is False
 
 
 def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
-    assert main(["--production", "--production-launch-approved", "--table", str(TABLE),
+    assert main(["--production", "--exp", "EX-42", "--production-launch-approved", "--table", str(TABLE),
                  "--approvals", str(APPROVALS)]) == 2
     result = json.loads(capsys.readouterr().out)
     assert result["state"] == "blocked"

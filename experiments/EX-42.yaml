@@ -1,0 +1,38 @@
+format: foothold-experiment-definition/1
+experiment_id: EX-42
+status: preparation_only
+issue: foothold-project/foothold-lab#555
+worklist: inbox/jay/20261104-ex41-restart/WORKLIST.tsv
+paths:
+  slug: ex42
+  root_template: '{slug}_{stamp}'
+  directories:
+    main: main/{run}
+    scores: eval/scores
+    push250: eval/push250
+    score_watch: eval/score-watch
+    stage_end: eval/stage-end
+    stage_video: eval/stage-video
+files:
+  curriculum: foothold_s2/curriculum/ex42-prep.yaml
+  boundary: foothold_s2/curriculum/ex42-boundary.yaml
+  approvals: foothold_s2/curriculum/ex42-approvals.yaml
+  score_config: null
+  push_baseline: null
+  maintenance_baseline: null
+  stage_video_source: null
+operational_values:
+  parent: {update: null, sha256: null}
+  training:
+    environments: 3072
+    seed: 42
+    status: preparation_only
+    stages_from: foothold_s2/curriculum/ex42-prep.yaml
+    dr_schedule_from: foothold_s2/curriculum/ex42-approvals.yaml
+  evaluation:
+    environments: 64
+    seed: 42
+    judged_cells: 26
+    recorded_cells: 39
+    modes: [gt, pred, off]
+  operations_enabled: false
