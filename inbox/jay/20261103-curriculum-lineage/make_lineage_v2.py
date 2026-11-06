@@ -523,7 +523,182 @@ def plan42_png(path):
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 03 why v2: + what happened in EX-41
+def why_outcomes():
+    n_back = sum("back1.0" in RES[s]["cmds"] for s in STAGE_END)
+    n_fs = sum(any(c.startswith(("fwd", "spin")) for c in RES[s]["cmds"]) for s in STAGE_END)
+    n_side = sum(any(c.startswith("side") for c in RES[s]["cmds"]) for s in STAGE_END)
+    pushed = {s: d for s, d in D179.items() if d}
+    ok = [s for s, d in pushed.items() if min(d.values()) >= 0.9]
+    bad = [s for s in pushed if s not in ok]
+    st_lo = min(d["pyramid_stairs"] for s, d in pushed.items() if s in ok)
+    st_hi = max(d["pyramid_stairs"] for s, d in pushed.items() if s in ok)
+    s_lo = min(RES[s]["s_mean"] for s in STAGE_END)
+    s_hi = max(RES[s]["s_mean"] for s in STAGE_END)
+    hold_a = HOLDS[0][0]
+    hold_b = next(it for it, why in HOLDS if why == "dr_resume_same_slope") - 1
+    t0 = RES["T0′"]["over"]
+    return {
+        "부모 · 시작": "m6000 부모로 6000 회 이어 학습 · 끝 m12000 (EX-42 부모)",
+        "DR 배율": f"계획대로 1.0 도달(로컬 5000) · 다만 S2b 에서 {hold_b - hold_a + 1} 회 유지로 단계가 밀림",
+        "DR 안전장치": f"한 번 작동: 로컬 {hold_a}~{hold_b} DR 0.575 유지. 까닭은 성적 미달이 아니라 점수 증거 누락 → 두 경계 회복 뒤 재개",
+        "밀기": f"단계 끝 1.5 m/s 판정 {', '.join(bad)} 미달 · {', '.join(ok)} 통과(계단 {st_lo:.2f}~{st_hi:.2f}) · T0′ 판정 대기",
+        "후진 범위 · 몫": f"단계 끝 6 번 중 {n_back} 번 후진 1.0 이 0.15 를 넘음(0.15 언저리를 오르내림) · 생존은 늘 63/64 이상",
+        "전진 · 회전 몫": f"단계 끝에서 전진 · 회전 칸이 0.15 를 넘은 적 {n_fs} 번",
+        "옆 · 대각 앞 몫 (S2c 부터)": f"단계 끝에서 옆 칸이 0.15 를 넘은 적 {n_side} 번 (중간 경계 5750 에 옆 셋이 넘음 · 로그)",
+        "heading 직진 유지 몫": "따로 재지 않음 (미확인)",
+        "걸림 · 스윙 벌점": "가중 끝까지 -2 · -10 (경계 기록) · 효과를 가르는 대조 없음 (미확인)",
+        "회전 0 명령 때 회전 L1": "가중 끝까지 -0.5 · 효과를 가르는 대조 없음 (미확인)",
+        "lin_vel_z": "0 그대로",
+        "미리 등록 보상 4 항": "0 가중 그대로 · 기록만",
+        "자세 명령 2 칸": "0 고정 그대로 · EX-42 E6a 에서 엶",
+        "지형": "S2d 부터 L5 성과 승급 · 그 뒤 단계 끝 밀기 판정은 통과 유지",
+        "지도": f"T0′ 끝 m6000: 0.15 넘은 칸 정답 {t0['eval_gt']} · 복원 {t0['eval_pred']} · 끔 {t0['probe_prop_only']} · 복원과 정답이 같은 수준",
+        "좌우 대칭": f"끝까지 끔 · 단계 끝 정답 S 평균 {s_lo:.2f}~{s_hi:.2f} · 켜는 조건(평균 0.8 미만 두 번) 안 옴",
+        "자동 조정": "서 있기 복원 · +500 연장 안 씀 · DR 유지 한 번(증거 누락)",
+        "평가 주기": "250 경계 24 번 모두 점수 · 단계 끝 다섯 곳 밀기 판정 · 영상 결측은 어두운 화면(I34)",
+        "회차 · 끝": "6000 에서 끝 (D181 · 팀장 11/06 결정) · m12000",
+    }
+
+
+def why_png(path):
+    out = why_outcomes()
+    rows = [r + (out[r[0]],) for r in v1.WHY]
+    cols = [("항목", 2.5), ("이전 → 지금", 5.6), ("왜 (무엇을 극복하나)", 6.6), ("근거가 된 m6000 실측", 4.6),
+            ("결정 · 출처 파일:줄", 4.6), ("등급", 1.2), ("EX-41 에서 어떻게 됐나 (실측 · v2)", 6.0)]
+    H = 0.82
+    fig_w = sum(w for _, w in cols) + 0.6
+    fig_h = H * (len(rows) + 1) + 1.6
+    fig = plt.figure(figsize=(fig_w, fig_h), dpi=100)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, fig_w)
+    ax.set_ylim(fig_h, 0)
+    ax.axis("off")
+    ax.text(0.3, 0.45, "왜 바꿨나 · EX-40 m6000 의 무엇을 넘으려고 · 그리고 EX-41 에서 어떻게 됐나 · v2", fontsize=22, weight="bold", va="center")
+    ax.text(0.3, 0.95, "오른쪽 칸은 EX-41 실제 실행의 경계 기록 · 단계 끝 점수 · 밀기 사다리에서 읽은 값 · 효과를 따로 재지 않은 것은 「미확인」",
+            fontsize=12, color="#37474f", va="center")
+    y, x = 1.3, 0.3
+    for name, w in cols:
+        ax.add_patch(Rectangle((x, y), w, H * 0.6, facecolor="#4a148c" if name.startswith("EX-41") else "#263238"))
+        ax.text(x + 0.1, y + H * 0.3, name, color="white", fontsize=13, weight="bold", va="center")
+        x += w
+    y += H * 0.6
+    for row in rows:
+        x = 0.3
+        for j, ((name, w), t) in enumerate(zip(cols, row)):
+            fc = "#fff8e1" if j == 1 else ("#f5f5f5" if j == 0 else "white")
+            if j == 3 and t == "미확인":
+                fc = "#ffcdd2"
+            if j == 6:
+                fc = "#fff3e0" if "미확인" in t else "#e8f5e9"
+            ax.add_patch(Rectangle((x, y), w, H, facecolor=fc, edgecolor="#cfd8dc"))
+            wrapped = textwrap.wrap(t, width=int(w * 7.6) if j else int(w * 7.0))
+            if len(wrapped) > 3:
+                raise ValueError("why cell too long: " + t[:40])
+            ax.text(x + 0.08, y + H / 2, "\n".join(wrapped), fontsize=10.6 if j else 11.5, va="center",
+                    weight="bold" if j == 0 else "normal", linespacing=1.15)
+            x += w
+        y += H
+    fig.savefig(path, dpi=100)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 05 step flow v2
+def _result(sid):
+    r, d = RES[sid], D179[sid]
+    o = r["over"]
+    over = f"0.15 넘은 칸 정답 {o['eval_gt']} · 복원 {o['eval_pred']} · 끔 {o['probe_prop_only']}" + (f" ({', '.join(r['cmds'])})" if r["cmds"] else "")
+    push = "밀기 1.5 판정 대기" if d is None else (f"밀기 1.5 {'통과' if min(d.values()) >= 0.9 else '미달'} (계단 {d['pyramid_stairs']:.2f} · 거친 {d['random_rough']:.2f})")
+    return f"m{STAGE_END[sid]}: {over} · 생존 최저 {r['surv']}/64 · {push} · 대칭 S {r['s_mean']:.2f} (0.8 미만 {r['s_low']})"
+
+
+def _span(sid):
+    a, b = spans[sid]
+    return f"{a}~{b}"
+
+
+def steps_v2():
+    old = {s[0].split("\n")[0]: s for s in v1.STEPS}
+    keep = [s for s in v1.STEPS if not (s[5] == "예상")]
+    s2a, ab, bc, cd, de, et = (old[k] for k in ("S2a", "S2a → S2b", "S2b → S2c", "S2c → S2d", "S2d → S2e", "S2e → T0′"))
+    new = [
+        (f"S2a\n로컬 {_span('S2a')}", s2a[1], s2a[2], s2a[3], _result("S2a"), "실측", "밀기 미달 · 후진 1.0", s2a[7]),
+        (f"S2a → S2b\n{_span('S2b')}", ab[1], ab[2], ab[3],
+         "DR 이 증거 누락으로 로컬 1251~2250 에 0.575 유지(+1000 회) 뒤 재개 · " + _result("S2b"), "실측", "옆걸음 좌우 차", ab[7]),
+        (f"S2b → S2c\n{_span('S2c')}", bc[1], bc[2], bc[3], _result("S2c"), "실측", "전체 DR · 지형 레벨", bc[7]),
+        (f"S2c → S2d\n{_span('S2d')}", cd[1], cd[2], cd[3], _result("S2d"), "실측", "대칭 S 낮아짐 · 후진 1.0", cd[7]),
+        (f"S2d → S2e\n{_span('S2e')}", de[1], de[2], de[3], "+500 연장 안 씀 · " + _result("S2e"), "실측", "후진 0.5 · 1.0", de[7]),
+        (f"S2e → T0′\n{_span('T0′')}", et[1], et[2], et[3], _result("T0′"), "실측", "대칭 S · 밀기 판정 대기", et[7]),
+        ("EX-42 입구\n(결정 · 계획)", "기본 명령 보행 끝 · 6000 에서 종료(팀장)",
+         "0 단계 T0′ 보완 1,000 → E0 250 → E1 상한 L5→L9 경계마다 +1 → 지형 20,000 → 미션 (06 그림)",
+         "이전 학습이 무너지지 않게 쉬운 것부터 한 축씩 · 250 경계마다 빠르게 판단 (D183 이어짐)",
+         "미측 · 예행(W24) · 관문 막음 닫기(W35) · Linux 판단 11/08 18:00 뒤 출발", "계획",
+         "-", "decisions.tsv 11/06 19:5x~11/07 00:2x · PLAN-ex42 v5"),
+    ]
+    return keep + new
+
+
+def step_png(path):
+    steps = steps_v2()
+    cols = [("전환", 1.9, 0), ("직전 단계에서 드러난 과제", 4.4, 1), ("이번에 바꾼 설정 (값)", 5.6, 2),
+            ("왜 그 과제를 푸나", 5.4, 3), ("결과 (실측 · 원자료)", 5.6, 4), ("다음으로 넘긴 과제", 3.3, 6), ("결정 · 출처", 3.9, 7)]
+    H, gap = 1.05, 0.22
+    fig_w = sum(c[1] for c in cols) + 0.6
+    fig_h = (H + gap) * len(steps) + 2.4
+    fig = plt.figure(figsize=(fig_w, fig_h), dpi=100)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, fig_w)
+    ax.set_ylim(fig_h, 0)
+    ax.axis("off")
+    ax.text(0.3, 0.45, "단계마다 무엇을 바꿔 이전 과제를 풀었나 · EX-40 m0 → m6000 → EX-41 실제 → EX-42 입구 · v2", fontsize=22, weight="bold", va="center")
+    ax.text(0.3, 0.92, "EX-40 · EX-41 결과는 모두 점수 원자료 실측(EX-41 은 boundary_report.py · 밀기 사다리) · 0.15 는 기록선 · 밀기 1.5 는 걷는 중 8 방향 최약 · 지도 셋 중 최저 · 0.9 이상 통과(D179)",
+            fontsize=12, color="#37474f", va="center")
+    y = 1.3
+    x = 0.3
+    for name, w, _ in cols:
+        ax.add_patch(Rectangle((x, y), w, 0.45, facecolor="#263238"))
+        ax.text(x + 0.08, y + 0.225, name, color="white", fontsize=12.5, weight="bold", va="center")
+        x += w
+    y += 0.55
+    for k, st in enumerate(steps):
+        is41 = st[0].startswith(("S2", "EX-42"))
+        is_plan = st[5] == "계획"
+        is_result = st[0].startswith("m6000")
+        x = 0.3
+        for j, (name, w, idx) in enumerate(cols):
+            t = st[idx]
+            if j == 0:
+                fc = "#e65100" if is_plan else ("#4a148c" if is41 else ("#b71c1c" if is_result else "#37474f"))
+                ax.add_patch(Rectangle((x, y), w, H, facecolor=fc, edgecolor="white"))
+                ax.text(x + w / 2, y + H / 2, t, color="white", fontsize=12, weight="bold", ha="center", va="center")
+            else:
+                fc, ec, ls, lw = "white", "#cfd8dc", "-", 1
+                if j == 4:
+                    fc = "#fff3e0" if is_plan else ("#ffebee" if (is41 and "밀기 1.5 미달" in t) else "#e8f5e9")
+                    if is_plan:
+                        ec, ls, lw = "#e65100", "--", 1.6
+                if j == 1:
+                    fc = "#fff8e1"
+                if is_result and j in (1, 2):
+                    fc = "#ffebee"
+                ax.add_patch(Rectangle((x, y), w, H, facecolor=fc, edgecolor=ec, ls=ls, lw=lw))
+                label = ("[계획] " if is_plan else "[실측] ") if j == 4 else ""
+                wrapped = textwrap.wrap(label + t, width=int(w * 7.3))
+                if len(wrapped) > 5:
+                    raise ValueError("cell text too long: " + t[:50])
+                ax.text(x + 0.07, y + H / 2, "\n".join(wrapped), fontsize=10.2, va="center", linespacing=1.12)
+            x += w
+        if k < len(steps) - 1:
+            ax.annotate("", xy=(0.3 + cols[0][1] / 2, y + H + gap), xytext=(0.3 + cols[0][1] / 2, y + H),
+                        arrowprops=dict(arrowstyle="-|>", color="#455a64", lw=1.8))
+        y += H + gap
+    fig.savefig(path, dpi=100)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
+    why_png(HERE / "03-why-changed-v2.png")
+    step_png(HERE / "05-why-changed-step-v2.png")
     plan42_png(HERE / "06-ex42-plan-v2.png")
     table_png(HERE / "02-stage-table-v2.png")
     timeline_png(HERE / "01-timeline-v2.png")
