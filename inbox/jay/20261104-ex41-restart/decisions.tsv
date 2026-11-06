@@ -201,3 +201,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T00:4x	W46	팀장: 계보 그림 5 장을 EX-41 결과로 판 올리고 EX-42 커리큘럼 그림 추가 · 근거가 맞을 때 줘도 됨 → m6000 점수(약 01:30) · v5 숫자 뒤 생성 · 옛 판 보존 · GitHub URL 로 모바일 전달	팀장 00:4x 원문	chat	W46
 2026-11-07T00:4x	W46 자리	팀장 지정: 계보 그림 자리는 lead-curriculum-canon/inbox/jay/20261103-curriculum-lineage(가지 lead-curriculum-canon-1103) · lead 가 엉뚱한 사본(lead-worklist-1103)을 찾음 · 그 사본은 23:50 판(lineage-1 노트 커밋 fc51abc1)이라 두 사본 차이를 먼저 맞추고 시작	팀장 00:4x 원문	chat	W46
 2026-11-07T01:1x	W04	m6000 점수 01:18 · 판정선 넘은 칸 1(끔 back1.0 0.155) · 지도 정답 · 복원 0 · 단계 끝 55 건 등록 · 영상 51 GPU0(half 반복 · fail_streak_ok 미리) · boundary_report 학습 끝 상태 처리 고침 · W04 는 단계 끝 결과 뒤 닫음	lead
+2026-11-07T01:3x	GPU1 순서 · W05	GPU1: W78 612(m5000) 실행 중 · 그 뒤 m6000 단계 끝 순서를 축 746 → 밀기 판정 748 → 영상 749 로 당기려고 W78 747(m6000) 을 4 시간 · 491 · 555(m2750 · m3750 옛 단계) 를 5 시간 뒤로 미룸(W04 의 D179 를 먼저) · GPU0 m6000 영상 751 754 어두운 화면 한 번씩 다시(801 802) · W05 닫음(재생 목록은 W25)	lead

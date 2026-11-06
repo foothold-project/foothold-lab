@@ -3,7 +3,7 @@ W01	팀장 11/06 16:0x · 계약 2 절	P1	at:2026-11-07T08:00	analyst	D:/mai-tmp
 W02	팀장 11/06 16:0x · I24	P1	at:2026-11-06T19:00	scripter	D:/mai-tmp/scripter/REPORT-w78units-1106.md	dropped	W78 조각 m750 대조 → m2750 · m3750 · m5000 90 조각 · 합치기 · 17:1x 답 아는 대조 실패(조각 ≠ 한 덩어리 · 60,426/70,674 수치 차 · 생존 15 대 13 한 칸) · EX-41 에선 안 씀
 W03	계약 2 절 · 단계 넘김	P0	iter:5520	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/ex41_application.jsonl::"iteration": 5501	done	5501 T0′ 넘김 확인 · 텔레그램 · #555
 W04	계약 1 단계 끝	P0	iter:6000	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/model_6000.pt	open	6000 도달 · 마지막 점수 · 마지막 단계 끝 일 등록 확인
-W05	S2d 단계 끝 · I14	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W05.verified	open	S2d 영상 51 편 · 재생 목록 · 전 프레임 검사 · 밀기 영상(614)
+W05	S2d 단계 끝 · I14	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W05.verified	done	S2d 영상 51 편 · 재생 목록 · 전 프레임 검사 · 밀기 영상(614)
 W06	I27 · 팀장 11/06	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W06.verified	done	m750 밀기 영상(666) 촬영 · 전 프레임 검사
 W07	팀장 11/06 17:2x	P1	at:2026-11-06T19:00	runner	D:/mai-wt/foothold-lab/runner-ex42-v016/foothold_s2/curriculum/ex42-approvals.yaml::dr-1.0-fixed	done	EX-42 DR 1.0 고정 승인 반영 · ops-check 에서 단계 DR 막음 빠짐 · 반영 확인(파일) · 커밋은 runner 요청함
 W08	팀장 11/06 17:2x	P1	at:2026-11-07T12:00	runner	D:/mai-tmp/runner/REPORT-exp-registry.md	done	실험 정의 파일 하나(experiments/EX-42.yaml) + 운영 도구가 --exp 만 받게(계획 PLAN-WORKLIST-EXP-PATHS 2 절) · runner 6739259d · registry 시험 7 lead 재실행 통과 · 장치 칸은 W20
