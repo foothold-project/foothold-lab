@@ -1,0 +1,587 @@
+{
+  "captured_at": "2026-11-06T16:43:17.338185+09:00",
+  "sources": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\map64\\map_modes.json",
+      "sha256": "5a7d71a881a5795d883eef2e503b21a0a8403778c692213379ff4dc704876a1c",
+      "bytes": 2947053
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_1000_667c64d37b20.json",
+      "sha256": "6255ace6ca65d674601da608213fda2b98908e493577b4d1b085b04801bc2054",
+      "bytes": 4952343
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1000_667c64d37b20\\evaluation\\map64\\map_modes.json",
+      "sha256": "b6ee864cb02f17ceb8767fa752f77dc306fcf5ab3286b4378111aec824abb7a2",
+      "bytes": 2961526
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_1000.pt",
+      "sha256": "667c64d37b20ce03a9055c2053656a0ded9ea22c9e8133e566c3979a37e472d4",
+      "bytes": 31501760
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_1250_8f01e223c6f6.json",
+      "sha256": "8b4925e251023e0c39867f893af215864d6d09295087bc374aa5d8d9546dc072",
+      "bytes": 5064673
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1250_8f01e223c6f6\\evaluation\\map64\\map_modes.json",
+      "sha256": "581b3da8a9edd0edc4cdad6eaa8719205ef91c372ef36cbd8371786d087027f3",
+      "bytes": 2962599
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_1250.pt",
+      "sha256": "8f01e223c6f6530a2f6db8a6ef6397fcdfa8d01763b24e7553fa5949ad155dac",
+      "bytes": 33634880
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_1500_71671fb16e24.json",
+      "sha256": "6e56c8887b179f0c1e57805765e070201a0e0e3040cce3b7a5fe3907760e5860",
+      "bytes": 4931831
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1500_71671fb16e24\\evaluation\\map64\\map_modes.json",
+      "sha256": "e7c3e446ab7cb0018b8dcf05d206765316ab7f5f3a2cf0638f80389f5255a102",
+      "bytes": 2962924
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_1500.pt",
+      "sha256": "71671fb16e247030c46a2955dc0ce83f9aa5a24517911c3ed57e4442e6c69ed2",
+      "bytes": 33635904
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_1750_49d053f818de.json",
+      "sha256": "277ec1c7e2f974a235e935902c277ceec5f6d433137094287afd7d9028bc9d2f",
+      "bytes": 5153318
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1750_49d053f818de\\evaluation\\map64\\map_modes.json",
+      "sha256": "ebf66ffd2ee6b881cc97b6df4b53fed2a49badf5ddf93502be2678e98e3e868c",
+      "bytes": 2962262
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_1750.pt",
+      "sha256": "49d053f818de92e5a9fedd14722f64e2219c1f5d6eeb4bd56a98c81ecf2ec10e",
+      "bytes": 33636864
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_2000_e3febdb3d93f.json",
+      "sha256": "d94391beeddbb38ca826695d0172e89a5f425947ed064c700f7c0226843d44bd",
+      "bytes": 4957627
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2000_e3febdb3d93f\\evaluation\\map64\\map_modes.json",
+      "sha256": "ffeeb4781aa8061602f0655dc9575a18cb42b0998d9b63de96b790f7042398a5",
+      "bytes": 2962710
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_2000.pt",
+      "sha256": "e3febdb3d93f2b071bd56a63c0229986979dd99382538418de26029cd9311602",
+      "bytes": 33638336
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_2250_88b9371e2872.json",
+      "sha256": "277ff5357dcb60687cfd1e1567b28a35eef428fbbd15db0bd0dde3416b008d00",
+      "bytes": 5043162
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2250_88b9371e2872\\evaluation\\map64\\map_modes.json",
+      "sha256": "9fc33909091f21d3512465c5397180eb302f9ebf801ac4a47a6d1c86312fb816",
+      "bytes": 2961553
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_2250.pt",
+      "sha256": "88b9371e28728e5c5a6c17efa4d068c3c3207b2824c60f12fbb10c2b588dfe98",
+      "bytes": 35903872
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_2500_59995788eeff.json",
+      "sha256": "097b10692c6c792b628da5b8e951963176ad7ad9cda2359ea36661e29a6bb7d1",
+      "bytes": 4736139
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2500_59995788eeff\\evaluation\\map64\\map_modes.json",
+      "sha256": "a12ae4f7bf39c655eb8aa75d9dfd29920ef5e8586764f0dd2d378ebcad6b705d",
+      "bytes": 2962615
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_2500.pt",
+      "sha256": "59995788eefff69483ee813faf328b2955e83ad59f28722f72e2ad0ae4f95109",
+      "bytes": 38087424
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_250_6418f50661bd.json",
+      "sha256": "58dca0281162f563752ef8117333ae6ddedfa15a90735f1a84315d646b680ea8",
+      "bytes": 5098570
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_250_6418f50661bd\\evaluation\\map64\\map_modes.json",
+      "sha256": "44915066e9322c34a929507c9549eaa04a1cf95f27623a93ca8544baa0d20f01",
+      "bytes": 2963319
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_250.pt",
+      "sha256": "6418f50661bdf4c74ffefb2952c8a435b4d90dcd138a863038fea6b336dfcae7",
+      "bytes": 26938251
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_2750_cc37ad8f16d7.json",
+      "sha256": "7e196e63cb47866032a795f96e0afb2b9c136a806a80b82e369cdb3ffe410dca",
+      "bytes": 4910311
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\evaluation\\map64\\map_modes.json",
+      "sha256": "8cb4578ec6d2698a18afec6230693dd7208003c4eab089d67639c826bf095eb1",
+      "bytes": 2962057
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_2750.pt",
+      "sha256": "cc37ad8f16d7e57aceec269725c0940254f4db73ce3d6b72870aa7e4f4ecedb7",
+      "bytes": 40304512
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_3000_185b1e113d42.json",
+      "sha256": "7cf74e1293d048dc1a6324ce7734c0ff0b57923da641793b626e8dbc60c6d3f4",
+      "bytes": 4854490
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3000_185b1e113d42\\evaluation\\map64\\map_modes.json",
+      "sha256": "19308e2e0ffdc808a29b6e00476a8a2f4f7834dfd6693313733bef3a4807896e",
+      "bytes": 2962138
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_3000.pt",
+      "sha256": "185b1e113d4234796de64514648601072eb0882ed5a06688b8da46d8f131e6bf",
+      "bytes": 42393920
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_3250_60b9eeea451d.json",
+      "sha256": "73ab409d10a53be57187b85e2c76f72d16554c3e07a1c0bede56880089b25ef8",
+      "bytes": 4652195
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3250_60b9eeea451d\\evaluation\\map64\\map_modes.json",
+      "sha256": "55201f99516cce2efab99a33637907f4581f543c0716372ef5698b3ea173d5e9",
+      "bytes": 2962103
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_3250.pt",
+      "sha256": "60b9eeea451d36b6e89107248b31b3bc28013aab3ece9c66c485d15b5aed7b08",
+      "bytes": 44553088
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_3500_93ec433fabaa.json",
+      "sha256": "7b6f2fbd0578886c5e5c05cd697194b140efdd98beff5d739736ecc026bede45",
+      "bytes": 5072261
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3500_93ec433fabaa\\evaluation\\map64\\map_modes.json",
+      "sha256": "e5be1809540d78607389ad7c1a8ce17d02aac6ab14925a02192465eb86085c98",
+      "bytes": 2961612
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_3500.pt",
+      "sha256": "93ec433fabaa313531474ba6efe97f92409fb4a835b96d0cc625eb908b7795ae",
+      "bytes": 44459392
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_3750_9e98514cb2d3.json",
+      "sha256": "425369009a1ae61093154752439fafc1e758c027ba178b3bea13ecb4d5164b8a",
+      "bytes": 4918651
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\evaluation\\map64\\map_modes.json",
+      "sha256": "bcf91f59f79bba9a2be60845d0842d89a0f8d28ff4ce9379ab85e899288c4699",
+      "bytes": 2961963
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_3750.pt",
+      "sha256": "9e98514cb2d39e0d16173b5bb9be8680759e3a8c2c5a42c7126c0a8ffba10f83",
+      "bytes": 44185664
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_4000_7341db9981cb.json",
+      "sha256": "b383ac4bd9c4a18c35d1f5247a7ed1eacc601041717bbd3d1ad123dec18a8b3a",
+      "bytes": 5129528
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4000_7341db9981cb\\evaluation\\map64\\map_modes.json",
+      "sha256": "ef3b8fc16bb129ec5735a0a67a934d732a0fec83d7ac7eeaccfa586fc649b523",
+      "bytes": 2962229
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_4000.pt",
+      "sha256": "7341db9981cb55a72d3e4cad701b28d0728a47fd529607bd129a7c7afd225660",
+      "bytes": 44280000
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_4250_1e1a574e809a.json",
+      "sha256": "084c1b9f9e3b2ab9c79c9e3e0e7d164869c6ad620e84a7bcb275b7755fd4b2ed",
+      "bytes": 4972189
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4250_1e1a574e809a\\evaluation\\map64\\map_modes.json",
+      "sha256": "43708db723bdcc7048a70e8a4bd1679da3d125077865030379b3f7d51704c12b",
+      "bytes": 2961388
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_4250.pt",
+      "sha256": "1e1a574e809ab1ea7d6ffa02d8d61f069dedd899701b38cb8408de1ff0cde508",
+      "bytes": 44181760
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_4500_c46a9f648a5f.json",
+      "sha256": "fc15d5e7de4f0a4569dabd830f5502ace28e1cb1eb71891e2a5602afa796dabe",
+      "bytes": 4890558
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4500_c46a9f648a5f\\evaluation\\map64\\map_modes.json",
+      "sha256": "9991c46104e0739c33bd9245bf6367029a38f645304200f2b96a6624f459e595",
+      "bytes": 2962289
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_4500.pt",
+      "sha256": "c46a9f648a5f5560eff4b0f9cd01ba4ba5537d1548daefcc6bde8e07e4fcbb20",
+      "bytes": 44251712
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_4750_43dd25cbe976.json",
+      "sha256": "eca1f9cf48c8324d9c74f6d7dc6e448d7c98ca8014f6c871db0b1df9d6479381",
+      "bytes": 4858958
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4750_43dd25cbe976\\evaluation\\map64\\map_modes.json",
+      "sha256": "f59e4d7aa5985b5403a5dc42e10556b4e8d9c639dde1af7e1906870a325383bb",
+      "bytes": 2961560
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_4750.pt",
+      "sha256": "43dd25cbe976a4133fd889be69475c7f975b12c70bab89c5e3b6cd2c78649c21",
+      "bytes": 44215424
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_5000_85cb163cfd23.json",
+      "sha256": "337a34df9c1e28af13c97b42ab4209ab82b605f8350a7c64db3bd2bc67cfd405",
+      "bytes": 5195663
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\evaluation\\map64\\map_modes.json",
+      "sha256": "73c49c0fa7954961be4e56e94afa71f848b0a5d9ba5fd8af338c2608de656177",
+      "bytes": 2961035
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_5000.pt",
+      "sha256": "85cb163cfd235e75e8fd3fbb8fbdd98c234827a2f1cb8542f45fe9098b2cafa9",
+      "bytes": 44271360
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_500_4038fcda40ba.json",
+      "sha256": "57faf2f279e1d6a5382e30764322908ee03b9515b4da8838a38c6b8e853be490",
+      "bytes": 5321955
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_500_4038fcda40ba\\evaluation\\map64\\map_modes.json",
+      "sha256": "cbd61951fe90365d46e42bb020d8103515ba8dde41d9d82ede8b017b602f5c0e",
+      "bytes": 2962839
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_500.pt",
+      "sha256": "4038fcda40bab0940a351cc06c39e5211977ee94d4875ee1e4e68f97ec6cbd33",
+      "bytes": 26939531
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_750_02876f9b1835.json",
+      "sha256": "098660a65f4f6f8ba95ea25921a8fc226338d7f7a33cd969f3ca7cea1eff0efb",
+      "bytes": 4850840
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\evaluation\\map64\\map_modes.json",
+      "sha256": "07ce92284643607d7f054c1b63be420a7707f39e62b46b897f6f81358e06f5c9",
+      "bytes": 2962163
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_750.pt",
+      "sha256": "02876f9b1835d2b9c9b2079193ba14924d1f3853c3ecee70e16e43cb23d60955",
+      "bytes": 29172619
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\events.out.tfevents.1793804158.AI-WS01.94296.0",
+      "sha256": "aac19cb7d979bd03660fdbb4c5c1668d2de0ad7c214e07d1cca0b77e8bb2faca",
+      "bytes": 30728938
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\ex41_application.jsonl",
+      "sha256": "493023bdd8ac91ea022480ec854f7609ea4979068d09960ea6f5b23b5e688187",
+      "bytes": 122282
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "d76033fc08eaa06e378080e1731c427f016ee0f4cb4fa8353039e0a442fa1c4a",
+      "bytes": 2510617
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "2ef9d64add09e3b230e329cd5fed5499982ba52d235383cc009f8647a34df4f1",
+      "bytes": 426611
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "f26792e3bb8d744601081647eaecbc59facd8c4450d08bfd72fcecb9be3bf037",
+      "bytes": 424486
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "ef35d1df2f7018658efd3891a3c64532f614bee365850da571ce3390fd3d6b0f",
+      "bytes": 426842
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "3b0f583b0763e2d3fdd6ae1a6459da05960217735697561937fd32d133446ca5",
+      "bytes": 425662
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "41dfde03c7ba0d718b2bbc205a5a7010d0681563077864637489b4a8bb6b8155",
+      "bytes": 426431
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "2006889461e89566851d7d97bffca98843e10d23c8780f1431e0ff1588fc93e6",
+      "bytes": 424607
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "b017cd6e548721aab922fe1989c788a44132557773cdf15112cefc8b5d49a1f1",
+      "bytes": 2505447
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "d91bd5da1b3122d49c2d83c4d1a621f983b9240500f50941990359ff00fb6398",
+      "bytes": 426242
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "c14aad7df0b038cded84ba763f0580b8146018921be9857b971d5be99ae1f102",
+      "bytes": 424382
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "008ad7ae1de6395c7c25737f5731b0a9526482e020e7ff584d31b15514ce2af4",
+      "bytes": 426404
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "830c4035eb2a0747a9a576ce33a97ec9c885d08ebb9dbb8b088fd718ceb38228",
+      "bytes": 425702
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "3c93663808b7aa84249ba953fb5d8b20905c143eb55e512cfdd85007c9df3c01",
+      "bytes": 426270
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "3b1dff722dba3b9e0d4aa8e784194bb280a144d2c53e7e0b305bc3e82e2e2186",
+      "bytes": 425000
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "ae5af8a47f88d134048bc3e896ce2e2210e662cee0c52821511689791d19722f",
+      "bytes": 2506781
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "617e35041e91e25129559ed01ab63296ca1e2d6f9014575c9edf73bbd8fc4b88",
+      "bytes": 426708
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "01ee3a0db52004b34ff55dd06c32c96b6b1989f9b3de47b79d29492163b09096",
+      "bytes": 425400
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "b47be67e3ca31f2268b50ed396fed06e329f6e1b7f36caee03887c0420518bcb",
+      "bytes": 427205
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "1659f10a6c9cdf6f07c2ef7104e89c80d92c9d7f299f828d66aef874481697a1",
+      "bytes": 426551
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "8e814d4f9baf820ca596a08d404750d62f1724e9d7d25b4d45e6c85cc256c470",
+      "bytes": 426663
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "bfff5abd1b081007325f73261601af998dbc4d4d7a120216c4f223c522a9f66f",
+      "bytes": 425478
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "1a30b80b246b2901deacf83964e33d3979a1df8b9067dcd7a35002284f726431",
+      "bytes": 2499347
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "1c7de0f82593de403273b2977e938e4dc3babe7994496cc303649424315380fd",
+      "bytes": 427600
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "823f10e4e9e63d47d9f18978270c82c0295f37f387bee5595fe005a80a6ddfec",
+      "bytes": 426072
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "bf170088bd66ea8b0d33a9f51b5376ea093c05c37e41cfe2e0e9faffbba35dd5",
+      "bytes": 427070
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "3b8968e62d6604e311c7b62a9e1748eb5f81992338f421c4a97ce3bb6f6507c6",
+      "bytes": 426299
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "8e85f15b7e4cb2425b6098cec1fa2f9d2e85e8bad93ace845521b54c93435a90",
+      "bytes": 427488
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "91c141308874ea49c64359c29856a77c5346f6db71fa0a8d61587d670fd90617",
+      "bytes": 426351
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\10000.json",
+      "sha256": "b5b7729a3625061dd06cbbfc28e586381d4a4e33b38a21bbf0f9c16a3db1f0dd",
+      "bytes": 50303
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\10250.json",
+      "sha256": "479e9a3c91dab3384cfba56df3f1e5c18cb344ac7261a67de35f87a64eec4145",
+      "bytes": 50620
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\10500.json",
+      "sha256": "7a4fe79a5c7ca527c4e84e5fdcedadc16a9d542c36474c22dcc41c65be34a96c",
+      "bytes": 50272
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\10750.json",
+      "sha256": "3fe9f231b521363c5af6d3e109af765ca9d12b81e327fc3c6cc38a6150af4a18",
+      "bytes": 50716
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\11000.json",
+      "sha256": "a2d089743cd01e816253598bf052a8cab64f83b9e94c0f527fd7732b284377c7",
+      "bytes": 50552
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\6500.json",
+      "sha256": "3e327ca31da10a9883ef7d9cec0a2633bc5ff9fa2657176ba82a14e718c85333",
+      "bytes": 50662
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\6750.json",
+      "sha256": "ee47e803db31b04ee94baa17f8fbefabec01432ab5293d5eb9ca8c91a49aefdc",
+      "bytes": 50888
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\7000.json",
+      "sha256": "39893652b5582d3bef3f70c2284577cbb82d04c78d70f8f881f2c7702c10ef69",
+      "bytes": 50873
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\7250.json",
+      "sha256": "2b64ce0022e849367a4c049a3852020a6af90845572a1d354a7ded44e7ef94fe",
+      "bytes": 50502
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\7500.json",
+      "sha256": "69b82ccea3f360f7f80b02160c55da8340eb16a664094ad06282a07b20b5775c",
+      "bytes": 50281
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\7750.json",
+      "sha256": "22a96205ddb13a7d8b49bce6e64863a22eb8d6e56663ad902dbf1066a461c9d0",
+      "bytes": 50745
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\8000.json",
+      "sha256": "39d6e98fc8f8950abd66874767daa4a7e01c4a2a5914ed4592536f2cf5bd792b",
+      "bytes": 50470
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\8250.json",
+      "sha256": "08546fb3084acd64ab45fb040e68e2a1c4dc1c3cd868255d3ecf8b4f49ebf399",
+      "bytes": 50752
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\8500.json",
+      "sha256": "0a873f703eb1afbb79ba7e0c625625ede5d17d58f80e9749d020f8ad98f62375",
+      "bytes": 50596
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\8750.json",
+      "sha256": "db222bd31dcf39059fb05cfc7a63beadde05de05be6e374d97e5de15afc8592d",
+      "bytes": 50367
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\9000.json",
+      "sha256": "48dd78f7ba2564310849b4a46d41aa7b32cfd3362ac9ead5841f8da5bc925ec2",
+      "bytes": 51004
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\9250.json",
+      "sha256": "8c6879dde51d71a766809835c7289bc1fc3fef9a0a9725193012c6ea5a375744",
+      "bytes": 50824
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\9500.json",
+      "sha256": "1543aeb8362ae7eabc45b4685abb08ca2808fc2a8e949b2d1fc81b883ff21695",
+      "bytes": 50808
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\9750.json",
+      "sha256": "be377601f889f0e70d965f4fef2a5cbc6639864ae1dba2d0bdb8d54944373a7d",
+      "bytes": 50304
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "a180568eb7349e2829439de6fc8bfe0c777f1422c4edf1d86ac2453877b43a36",
+      "bytes": 414132
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "8547b4858537cbf049130a584107bd515be5a2e57ff0da84a9b1830c0d344736",
+      "bytes": 412391
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "3da6baf8cd5e16d49d057446b79a86c6e4ebddd42823c393a08112416258c02b",
+      "bytes": 412976
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "bbee83a2d33002a135386784d3bf858ab9a253c5b4c647a7817ff2a04725210c",
+      "bytes": 412702
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\ex41_w86.jsonl",
+      "sha256": "709ba12013289b6c6eeb6b597aab887d72bc27f53e7a494f1b14d52a9377d938",
+      "bytes": 35797223
+    }
+  ],
+  "checks": [
+    "9 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary",
+    "20 score/map/checkpoint SHA matches; parent+20 maps env/step/seed/command/tile assignment matched",
+    "TB missing samples retained empty: Loss/map_switch/off_ep_reward_mean 4998/5000",
+    "TB missing samples retained empty: Loss/map_switch/off_ep_length_mean 4998/5000",
+    "TensorBoard snapshot: 6 core tags have all 5000 local updates; wall-time tags excluded"
+  ]
+}

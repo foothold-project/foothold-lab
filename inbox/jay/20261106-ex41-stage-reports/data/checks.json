@@ -1,0 +1,7 @@
+[
+  "9 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary",
+  "20 score/map/checkpoint SHA matches; parent+20 maps env/step/seed/command/tile assignment matched",
+  "TB missing samples retained empty: Loss/map_switch/off_ep_reward_mean 4998/5000",
+  "TB missing samples retained empty: Loss/map_switch/off_ep_length_mean 4998/5000",
+  "TensorBoard snapshot: 6 core tags have all 5000 local updates; wall-time tags excluded"
+]

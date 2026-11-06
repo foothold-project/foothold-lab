@@ -1,0 +1,143 @@
+{
+  "checked_at": "2026-11-06T16:45:46.240111+09:00",
+  "state": "PASS",
+  "raw_command_cells_recomputed": 819,
+  "raw_velocity_medians_recomputed": 2457,
+  "evaluation_compatibility": [
+    {
+      "iteration": 250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_250_6418f50661bd\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_500_4038fcda40ba\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 1000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1000_667c64d37b20\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 1250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1250_8f01e223c6f6\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 1500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1500_71671fb16e24\\evaluation\\map64\\map_modes.json",
+      "code_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa"
+    },
+    {
+      "iteration": 1750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_1750_49d053f818de\\evaluation\\map64\\map_modes.json",
+      "code_commit": "f3727983ae24143aa25e2b7bf9f704d6ad1003a6"
+    },
+    {
+      "iteration": 2000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2000_e3febdb3d93f\\evaluation\\map64\\map_modes.json",
+      "code_commit": "f3727983ae24143aa25e2b7bf9f704d6ad1003a6"
+    },
+    {
+      "iteration": 2250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2250_88b9371e2872\\evaluation\\map64\\map_modes.json",
+      "code_commit": "f3727983ae24143aa25e2b7bf9f704d6ad1003a6"
+    },
+    {
+      "iteration": 2500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2500_59995788eeff\\evaluation\\map64\\map_modes.json",
+      "code_commit": "17b4bad6fd5b3c7c5f372bc675788e6c2c72934d"
+    },
+    {
+      "iteration": 2750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_2750_cc37ad8f16d7\\evaluation\\map64\\map_modes.json",
+      "code_commit": "17b4bad6fd5b3c7c5f372bc675788e6c2c72934d"
+    },
+    {
+      "iteration": 3000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3000_185b1e113d42\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 3250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3250_60b9eeea451d\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 3500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3500_93ec433fabaa\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 3750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 4000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4000_7341db9981cb\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 4250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4250_1e1a574e809a\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 4500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4500_c46a9f648a5f\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 4750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4750_43dd25cbe976\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 5000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    }
+  ],
+  "reference_dr_off": [
+    "physics_material",
+    "add_base_mass"
+  ],
+  "reference_source_module_count": 64,
+  "reports": 5,
+  "local_links_resolved": 97,
+  "images_decoded": 37,
+  "local_cmp_hashes_verified": 6,
+  "limits": [
+    "No GPU, no live training changes",
+    "W78 stage-end slices pending; not a completed N1 judgment",
+    "Visual review sampled frames only, not full 1x playback",
+    "m5000 video absent from captured playlist"
+  ]
+}
