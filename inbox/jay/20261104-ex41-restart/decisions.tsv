@@ -142,3 +142,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T17:3x	w78units	W78 조각 방식 EX-41 에선 안 씀 · 한 덩어리 W78 넷을 학습 끝 뒤 GPU1 · GPU0 에 나눠 돌림	scripter 답 아는 대조 실패(667 668 ≠ 412 · 수치 60,426/70,674 차 · 생존 15 대 13 한 칸 · 코드 판 차와 난수 순서 차 미분리) · 669 는 PYTHONPATH 기술 실패(CPU 재실행으로 같은 결론)	D:/mai-tmp/scripter/REPORT-w78units-1106.md	W13 · W15
 2026-11-06T17:2x	W01	단계 보고서 표 고침 확인 · analyst 186ec34f · lead 표 검사 다섯 편 broken_rows 0 · W57 머리 「정지 후 wz 절댓값」	팀장 17:2x 지적	186ec34f	v1.1 은 W78 · S2d 영상 뒤
 2026-11-06T17:3x	ops_warn	fail_1h [669] = scripter W78 대조 관문 PYTHONPATH 기술 실패(CPU 재실행으로 같은 결론 · 다시 안 넣음) · W05 W06 근거를 lead 확인 파일로 강화(재생 목록은 일찍 생김)	작업 목록 첫 실행에서 느슨한 근거 둘 발견	WORKLIST.tsv	-
+2026-11-06T17:5x	bridge	22 시 뒤 GPU0 이어 학습(A 안) 불가 → B 안(GPU0 한 덩어리 W78) · EX-42 0 단계로 T0′ 보완은 runner W19 · 622 영상 검정 화면 다시 넣음	runner REPORT-bridge-1106(ex41_fixed.py:97 · ex42_runtime.py:151-168) · 622 render_still_dark(545 · 550 · 551 과 같은 결함)	D:/mai-tmp/runner/REPORT-bridge-1106.md	W17 · W19

@@ -13,7 +13,8 @@ W11	계약 lead 일 A	P3	at:2026-11-08T12:00	lead	C:/Users/AI-WS01/.claude/skill
 W12	관문 D N2 N9 N15 N17~N21	P3	at:2026-11-08T12:00	analyst	D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/GATE-N-ROWS.md	open	관문 남은 행 처분표(EX-42 로 넘길 것 · 버릴 것 · 할 것)
 W13	I24 · 팀장 11/06	P1	iter:6000	lead	-	open	학습 끝(6000) 바로 뒤 한 덩어리 W78 셋(491 m2750 · 555 m3750 · 612 m5000)+마지막(m6000)을 GPU1 · GPU0 에 나눠 돌림 · 23:00 묶음 풀기
 W14	팀장 11/06 17:2x	P3	-	lead	-	open	DR 1.0 넘는 평가 측정(정말 후순위 · 안 해도 됨)
-W15	scripter 17:1x 대조 실패	P2	at:2026-11-08T12:00	scripter	D:/mai-tmp/scripter/REPORT-w78-noise-floor.md	open	W78 조각 ≠ 한 덩어리 원인 가르기(같은 단위 두 번 돌린 잡음 바닥 · 코드 판 같게) → EX-42 쪼개기 설계 조건
-W16	팀장 11/06 16:0x · 17:3x	P0	at:2026-11-06T21:00	runner	D:/mai-tmp/runner/REPORT-bridge-1106.md	open	22 시 EX-41 끝 뒤 GPU0 이어 학습(m6000 → T0′ 설정 1000 회 · EX-42 0 단계) 가능 여부 CPU 확인 · 기동은 팀장 승인 뒤
-W17	팀장 11/06 17:3x	P0	at:2026-11-06T21:30	lead	D:/mai-tmp/lead/W17-gpu-plan.md	open	22 시 뒤 GPU 배분 확정(GPU1 m6000 점수 · 단계 끝 · W78 · 영상 / GPU0 이어 학습 또는 W78) · 텔레그램으로 팀장 결정 요청
+W15	scripter 17:1x 대조 실패	P2	at:2026-11-08T12:00	scripter	D:/mai-tmp/lead/W15.verified	open	W78 조각 ≠ 한 덩어리 원인 가르기(같은 단위 두 번 돌린 잡음 바닥 · 코드 판 같게) → EX-42 쪼개기 설계 조건
+W16	팀장 11/06 16:0x · 17:3x	P0	at:2026-11-06T21:00	runner	D:/mai-tmp/runner/REPORT-bridge-1106.md	done	22 시 EX-41 끝 뒤 GPU0 이어 학습(m6000 → T0′ 설정 1000 회 · EX-42 0 단계) 가능 여부 CPU 확인 · 기동은 팀장 승인 뒤 · 17:52 결론: 지금 코드로 불가(EX-41 잠금 계획은 6 단계 전체만 · EX-42 전환 미구현) → 오늘 밤은 B 안
+W17	팀장 11/06 17:3x	P0	at:2026-11-06T21:30	lead	D:/mai-tmp/lead/W17-gpu-plan.md	open	22 시 뒤 B 안 확정: GPU0 = 한 덩어리 W78(m2750 → m3750) · GPU1 = m6000 점수 → 단계 끝 → W78(m5000 → m6000) → 영상 · GPU0 실행 경로 준비
 W18	팀장 11/06 16:0x	P2	at:2026-11-07T10:00	analyst	D:/mai-tmp/lead/W18.verified	open	단계 보고서 v1.1(W78 한 덩어리 결과 · S2d 영상 칸 채움 · 지도 셋 비교 절)
+W19	runner 17:52 bridge 불가	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-ex42-stage0.md	open	EX-42 0 단계 = EX-41 T0′ 설정 1000 회(팀장 16:0x) 를 EX-42 계획 · 전환 · 점수 감시가 같은 단계를 읽게 · CPU 시험
