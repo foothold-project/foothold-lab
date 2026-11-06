@@ -20,8 +20,9 @@ W18	팀장 11/06 16:0x	P2	at:2026-11-07T10:00	analyst	D:/mai-tmp/lead/W18.verifi
 W19	runner 17:52 bridge 불가	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-ex42-stage0.md	open	EX-42 0 단계 = EX-41 T0′ 설정 1000 회(팀장 16:0x) 를 EX-42 계획 · 전환 · 점수 감시가 같은 단계를 읽게 · CPU 시험
 W20	lead 17:5x GPU0 빔	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/lead/W20.verified	open	EX-42 운영 도구 장치를 실험 정의에서 받게(cuda:1 고정 없앰) · 학습 끝난 GPU0 를 평가 · 영상에 쓸 수 있게 · 같은 실험 안에서는 장치 고정(비교 조건)
 W21	GATE-N-ROWS 6ccd2911	P2	at:2026-11-07T18:00	lead	D:/mai-tmp/lead/W21.verified	open	관문 미반영 셋(N2 B층 서기 영상 · N17 PROVENANCE 칸 · N21 DR 켠 평가 칸) EX-42 설계에 넣을지 팀장과 정함
-W22	팀장 11/06 18:0x	P0	at:2026-11-06T21:30	scripter	D:/mai-tmp/lead/W22.verified	open	GPU0 영상 갈래(영상 기록기 cuda:0 허용 · 학습 표식 살아 있으면 거절 · GPU0 dispatcher 준비) · 22 시 뒤 한 편 시험 → 남은 영상 절반 GPU0
+W22	팀장 11/06 18:0x	P0	at:2026-11-06T21:30	scripter	D:/mai-tmp/lead/W22.verified	done	GPU0 영상 갈래(영상 기록기 cuda:0 허용 · 학습 표식 살아 있으면 거절 · GPU0 dispatcher 준비) · 22 시 뒤 한 편 시험 → 남은 영상 절반 GPU0 · 준비 끝 scripter 92c9ac31 · lead 시험 12 재실행 통과
 W23	팀장 11/06 18:0x	P1	at:2026-11-07T12:00	lead	D:/mai-tmp/lead/W23.verified	open	Linux 준비 확인(super2 · pipeline 답) · linux-runbook 에 EX-42 절 · 11/08 18:00 뒤 설치 여부 팀장 결정 자료
 W24	팀장 11/06 18:0x	P0	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-ex42-rehearsal.md	open	EX-42 예행: EX-41 때처럼 모든 단계를 짧게 실제 Kit 로 돌려 경계 평가 · 단계 넘김 · 단계 끝 등록 · 감시기 · 알림 확인(W19 · W08 뒤)
 W25	팀장 11/06 18:0x	P1	at:2026-11-07T12:00	lead	D:/mai-tmp/lead/W25.verified	open	영상 다 끝나면 종합 재생 목록 다시 만들기 · 세션에는 눌러서 기본 앱으로 열리는 링크 · 텔레그램에는 실제 경로
 W26	팀장 11/06 18:0x	P1	at:2026-11-07T12:00	analyst	D:/mai-tmp/analyst/OPINION-ex42-budget-linux-1106.md	open	EX-42 지형 구간 학습량 의견 · Linux 이득 · 위험
+W27	W22 뒤	P0	iter:6000	lead	D:/mai-tmp/lead/W27.verified	open	22 시 학습 끝 확인 → dispatch_gpu0 --check → split plan → sample 한 편 GPU0 촬영 · 전 프레임 PASS → half · GPU0 dispatcher 기동(REPORT-W22 절차)
