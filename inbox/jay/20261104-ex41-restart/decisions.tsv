@@ -157,3 +157,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T19:1x	W30	WSL2 운영 틀 예행을 pipeline 에 지시 · Isaac Sim 은 WSL2 공식 미지원이라 GPU · 학습 확인은 실제 Ubuntu 설치 뒤	팀장 19:1x · Isaac Sim 5.1 requirements(Ubuntu 22.04/24.04 · Windows 10/11 · WSL 없음) · NVIDIA 포럼 「컨테이너 WSL2 미지원 · RTX 미지원」	https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/requirements.html	pipeline 보고
 2026-11-06T19:1x	W19 W20 W24 W28	runner 셋 끝(ed2ac3f1 장치 칸 · e798992d 0 단계 · 01719220 예행 계획) lead 시험 72 통과 · analyst 지형 블록안 제출(20,000~40,000 · 10,000 블록 · 40,000 은 블록별 승인 · 학습 외 48 h 예약 시 11/25 여유 17 h)	팀장 18:5x	D:/mai-tmp/analyst/PLAN-ex42-terrain-blocks-1106.md	팀장 승인(W31)
 2026-11-06T19:2x	W32	WSL 예행이 찾은 막힘: ex41_start_preflight ISAAC_RSL_CLI C:/isaac 고정 → runner 에 기기 설정 파일 지시	pipeline 19:19	inbox	WSL 재시험
+2026-11-06T19:3x	W33 W34 W35	팀장 지시: 런북 최신화(D: 이미 포맷) · D: 정리(EX-41 뒤 · 확인 뒤) · EX-42 실수 반복 금지 → 과거 실수 전부를 장치로 대조하는 출발 관문표 · 없음 0 전까지 출발 금지	팀장 19:3x 원문	chat	11/07 12:00 · 18:00
