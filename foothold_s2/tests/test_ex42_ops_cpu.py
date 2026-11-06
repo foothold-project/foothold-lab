@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import builtins
 from pathlib import Path
 
 import pytest
@@ -111,3 +112,18 @@ def test_real_train_parser_and_environment_import_attempt_are_reported_without_k
     assert env["kit_started"] is False
     assert env["imported"] is False
     assert env["error_type"] == "ModuleNotFoundError"
+
+
+def test_missing_gymnasium_still_emits_blocker_json_and_rc2(monkeypatch, capsys):
+    original_import = builtins.__import__
+    def import_without_gym(name, *args, **kwargs):
+        if name == "gymnasium":
+            raise ImportError("simulated missing gymnasium")
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", import_without_gym)
+    assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE),
+                 "--approvals", str(APPROVALS)]) == 2
+    result = json.loads(capsys.readouterr().out)
+    assert result["state"] == "blocked"
+    assert result["kit_started"] is False and result["training_started"] is False
+    assert "environment_import_unavailable" in result["blockers"]

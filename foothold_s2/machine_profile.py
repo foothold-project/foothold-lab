@@ -101,7 +101,9 @@ def machine_path(key: str, *, profile: str | Path | None = None,
     return Path(value)
 
 
-def machine_reference_path(value: str | Path) -> Path:
+def machine_reference_path(value: str | Path, *, profile: str | Path | None = None,
+                           environ: Mapping[str, str] | None = None,
+                           platform: str | None = None) -> Path:
     """Resolve a portable machine-root reference or keep a fixture path intact."""
     raw = str(value)
     if not raw.startswith("machine:"):
@@ -113,7 +115,7 @@ def machine_reference_path(value: str | Path) -> Path:
     rel = PurePosixPath(relative)
     if rel.is_absolute() or PureWindowsPath(relative).is_absolute() or ".." in rel.parts:
         raise ValueError("machine path reference must stay under its configured root")
-    return machine_path(key).joinpath(*rel.parts)
+    return machine_path(key, profile=profile, environ=environ, platform=platform).joinpath(*rel.parts)
 
 
 def main(argv: list[str] | None = None) -> int:

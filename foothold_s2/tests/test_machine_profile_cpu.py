@@ -27,7 +27,6 @@ def test_windows_profile_preserves_known_ops_check_install_and_roots():
 
 
 def test_linux_profile_requires_explicitly_bound_machine_values():
-    profile_file = REPO / "machines/AI-WS01-linux.yaml"
     values = {
         "FOOTHOLD_MACHINE_PROFILE": "machines/AI-WS01-linux.yaml",
         "ISAACLAB_ROOT": "/opt/isaaclab",
@@ -56,6 +55,7 @@ def test_linux_profile_requires_explicitly_bound_machine_values():
         "GPU0_EVAL_MARKER": "/srv/markers/eval0",
         "GPU1_EVAL_MARKER": "/srv/markers/eval1",
         "EX41_PUSH250_OUTPUT": "/srv/mai-tmp/runner/push250",
+        "FOOTHOLD_EX42_GATE_REPORT": "/srv/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md",
     }
     loaded = load_machine_profile(environ=values, platform="linux")
     assert loaded["machine_id"] == "AI-WS01-linux"
@@ -71,14 +71,29 @@ def test_posix_requires_profile_selection_instead_of_windows_drive_defaults():
         load_machine_profile(environ={}, platform="linux")
 
 
-def test_machine_references_join_configured_root_and_reject_escape():
+def test_machine_references_join_configured_root_and_reject_escape(tmp_path):
+    profile = tmp_path / "machine.yaml"
+    profile.write_text("""format: foothold-machine-profile/1
+machine_id: test-linux
+paths:
+  isaaclab_root: /opt/isaaclab
+  isaac_sim_root: /opt/isaacsim
+  conda_python: /opt/conda/bin/python
+  rsl_rl_module: /opt/conda/lib/python3.11/site-packages/rsl_rl/__init__.py
+  s2_lab_root: /srv/s2_lab
+  mai_tmp_root: /srv/mai-tmp
+  mai_worktree_root: /srv/mai-wt
+""", encoding="utf-8")
     resolved = machine_reference_path(
-        "machine:mai_tmp_root/runner/sample/model_6000.pt")
-    assert PureWindowsPath(str(resolved)).as_posix() == "D:/mai-tmp/runner/sample/model_6000.pt"
+        "machine:mai_tmp_root/runner/sample/model_6000.pt", profile=profile,
+        environ={}, platform="linux")
+    assert resolved == Path("/srv/mai-tmp/runner/sample/model_6000.pt")
     with pytest.raises(ValueError, match="stay under"):
-        machine_reference_path("machine:s2_lab_root/../outside")
+        machine_reference_path("machine:s2_lab_root/../outside", profile=profile,
+                               environ={}, platform="linux")
     with pytest.raises(ValueError, match="stay under"):
-        machine_reference_path("machine:s2_lab_root/C:/outside")
+        machine_reference_path("machine:s2_lab_root/C:/outside", profile=profile,
+                               environ={}, platform="linux")
 
 
 def test_active_ex42_launch_modules_have_no_machine_drive_literals():

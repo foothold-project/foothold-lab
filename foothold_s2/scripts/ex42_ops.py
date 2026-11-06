@@ -108,7 +108,11 @@ def verify_train_entry_contract() -> dict[str, Any]:
 
 def verify_env_cfg_import(task_id: str = "FootholdS2-Go2-S2-SB-v0") -> dict[str, Any]:
     """Resolve the registered env class and attempt its real Python import, without Kit launch."""
-    import gymnasium as gym
+    try:
+        import gymnasium as gym
+    except (ImportError, RuntimeError) as exc:
+        return {"task_id": task_id, "entry": None, "imported": False,
+                "error_type": type(exc).__name__, "error": str(exc), "kit_started": False}
 
     importlib.import_module("foothold_s2.sb_tasks")
     spec = gym.spec(task_id)
