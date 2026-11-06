@@ -374,7 +374,7 @@ def timeline_png(path):
     ticks = [0, 1500, 3000, 4500, 6000, 6750, 8750, 9750, 11000, 11500, 12000]
     ax.set_xticks(ticks)
     ax.set_xticklabels([f"m{t}" for t in ticks], fontsize=11)
-    ax.set_xlabel("누적 회차 (EX-41 로컬 n = 누적 - 6000)  ·  단계 끝 결과 칸: 위 = 밀기 1.5 m/s 판정(D179) · 아래 = 0.15 넘은 칸 수 (정답 · 복원 · 끔) · T0′ 밀기 판정은 대기 중", fontsize=13)
+    ax.set_xlabel("누적 회차 (EX-41 로컬 n = 누적 - 6000)  ·  단계 끝 결과 칸: 위 = 밀기 1.5 m/s 판정(D179) · 아래 = 0.15 넘은 칸 수 (정답 · 복원 · 끔) · T0′ 판정만 cuda:0(앞 단계 cuda:1)", fontsize=13)
     for a in axes:
         a.axvline(6000, color="#d50000", lw=2.5)
         a.axvline(12000, color="#ef6c00", lw=2)
@@ -542,7 +542,7 @@ def why_outcomes():
         "부모 · 시작": "m6000 부모로 6000 회 이어 학습 · 끝 m12000 (EX-42 부모)",
         "DR 배율": f"계획대로 1.0 도달(로컬 5000) · 다만 S2b 에서 {hold_b - hold_a + 1} 회 유지로 단계가 밀림",
         "DR 안전장치": f"한 번 작동: 로컬 {hold_a}~{hold_b} DR 0.575 유지. 까닭은 성적 미달이 아니라 점수 증거 누락 → 두 경계 회복 뒤 재개",
-        "밀기": f"단계 끝 1.5 m/s 판정 {', '.join(bad)} 미달 · {', '.join(ok)} 통과(계단 {st_lo:.2f}~{st_hi:.2f}) · T0′ 판정 대기",
+        "밀기": f"단계 끝 1.5 m/s 판정 {', '.join(bad)} 미달 · {', '.join(ok)} 통과(계단 {st_lo:.2f}~{st_hi:.2f})" + ("" if D179["T0′"] else " · T0′ 판정 대기"),
         "후진 범위 · 몫": f"단계 끝 6 번 중 {n_back} 번 후진 1.0 이 0.15 를 넘음(0.15 언저리를 오르내림) · 생존은 늘 63/64 이상",
         "전진 · 회전 몫": f"단계 끝에서 전진 · 회전 칸이 0.15 를 넘은 적 {n_fs} 번",
         "옆 · 대각 앞 몫 (S2c 부터)": f"단계 끝에서 옆 칸이 0.15 를 넘은 적 {n_side} 번 (중간 경계 5750 에 옆 셋이 넘음 · 로그)",
@@ -603,6 +603,76 @@ def why_png(path):
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 04 baseline v2: m12000 = EX-42 start
+SCORE12 = next(RUN.glob("eval/scores/score_6000_*.json"))
+
+
+def baseline_png(path):
+    new = json.loads(next(RUN.glob("eval/score-watch/model_6000_*/stage_end_auxiliary_eval/push_ladder/push_ladder/push_ladder_bundle.json")).read_text(encoding="utf-8"))
+    old = json.loads(v1.LADDER.read_text(encoding="utf-8"))
+    sc = json.loads(SCORE12.read_text(encoding="utf-8-sig"))
+    assert new["checkpoint_sha256"] == sc["checkpoint_sha256"]
+    fig, axes = plt.subplots(1, 2, figsize=(28, 10), dpi=100, gridspec_kw=dict(width_ratios=[1.25, 1]))
+    fig.suptitle("m12000 기준선 (EX-41 끝 · EX-42 가 넘어야 할 출발점) · 실측 · v2", fontsize=24, weight="bold", x=0.04, ha="left")
+    ax = axes[0]
+    style = {"flat": "-", "random_rough": "--", "pyramid_stairs": ":"}
+    color = {"eval_gt": "#1565c0", "eval_pred": "#2e7d32", "probe_prop_only": "#c62828"}
+    tname = {"flat": "평지", "random_rough": "거친 땅", "pyramid_stairs": "계단"}
+    mname = {"eval_gt": "정답", "eval_pred": "복원", "probe_prop_only": "끔"}
+
+    def curve(ch):
+        s = ch["summary"]
+        mags = sorted(float(k) for k in s["magnitudes"])
+        return mags, [s["magnitudes"][f"{m:g}" if f"{m:g}" in s["magnitudes"] else str(m)]["survival_fraction"] for m in mags]
+    for ch in new["children"]:
+        if ch["command"] != "walk_0.5":
+            continue
+        s = ch["summary"]
+        m, v = curve(ch)
+        ax.plot(m, v, color=color[s["map_mode"]], lw=2.4, ls=style[s["terrain"]], marker="o",
+                label=f"m12000 걷는 중 0.5 · {tname[s['terrain']]} · {mname[s['map_mode']]}")
+    olds = [curve(ch) for ch in old["children"] if ch["command"] != "stand"]
+    m0 = olds[0][0]
+    ax.plot(m0, [sum(v[i] for _, v in olds) / len(olds) for i in range(len(m0))], color="#757575", lw=4, alpha=0.6,
+            label="m6000 (EX-41 시작) 걷는 중 0.5 · 9 칸 평균")
+    ax.axhline(0.9, color="#000", lw=1.2)
+    ax.axvline(1.5, color="#6a1b9a", ls="--")
+    ax.text(1.53, 0.05, "판정 1.5 m/s", color="#6a1b9a", fontsize=12, rotation=90, va="bottom")
+    ax.set_xlabel("밀기 크기 m/s (방향 8 개 모음)", fontsize=13)
+    ax.set_ylabel("생존 비율", fontsize=13)
+    ax.set_title("밀기 사다리 · m12000 단계 끝(64 env × 칸 × 방향) 대 m6000 (512 env)", fontsize=15)
+    ax.legend(fontsize=9.5, ncol=2, loc="lower left")
+    ax.grid(alpha=0.3)
+    ax = axes[1]
+    ax.axis("off")
+    r, d = RES["T0′"], D179["T0′"]
+    blk = txt.split("== EX-41 6000")[1]
+    mrec = re.search(r"^M 지도 복원 - 정답: (.*)$", blk, re.M).group(1)
+    moff = re.search(r"^M 지도 끔 - 정답: (.*)$", blk, re.M).group(1)
+    lines = [("유지 판정 (점수 m6000 · 01:18)", ""),
+             ("  maintenance_pass", str(sc.get("maintenance_pass", "?"))),
+             ("  생존 최저", f"{r['surv']}/64"),
+             ("  0.15 넘은 칸 정답 · 복원 · 끔", f"{r['over']['eval_gt']} · {r['over']['eval_pred']} · {r['over']['probe_prop_only']}  ({', '.join(r['cmds'])})"),
+             ("  지도 복원 - 정답 (오차 · 생존)", mrec.replace("오차 차 평균 ", "평균 ").replace("가장 큰 차 ", "최대 ").replace("생존 합 차 ", "생존 ")),
+             ("  지도 끔 - 정답 (오차 · 생존)", moff.replace("오차 차 평균 ", "평균 ").replace("가장 큰 차 ", "최대 ").replace("생존 합 차 ", "생존 ")),
+             ("  좌우 대칭 S 정답", f"평균 {r['s_mean']:.2f} · 0.8 미만 {r['s_low']} 칸"),
+             ("밀기 1.5 m/s 판정 (D179 · 04:48)", ""),
+             ("  최약 방향 평지 · 거친 · 계단", f"{d['flat']:.3f} · {d['random_rough']:.3f} · {d['pyramid_stairs']:.3f}  → {'통과' if min(d.values()) >= 0.9 else '미달'}"),
+             ("  장치", "cuda:0 (앞 단계는 cuda:1 · 학습 끝난 뒤 GPU0)"),
+             ("EX-42 0 단계에서 볼 것", ""),
+             ("  대칭 S 낮아짐 · 계단 복원 밀기 최저", "T0′ 보완 1,000 회의 확인 칸"),
+             ("  후진 1.0 지도 끔", "0.15 언저리 오르내림 이어짐")]
+    y = 0.95
+    for k, v in lines:
+        ax.text(0.0, y, k, fontsize=14, weight="bold" if not k.startswith("  ") else "normal", transform=ax.transAxes)
+        ax.text(0.47, y, v, fontsize=13, transform=ax.transAxes)
+        y -= 0.068
+    ax.text(0.0, y - 0.02, f"원자료: {SCORE12.name} · push_ladder_bundle.json (sha 일치) · boundary_report.py", fontsize=11, color="#546e7a", transform=ax.transAxes)
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.savefig(path, dpi=100)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 05 step flow v2
 def _result(sid):
     r, d = RES[sid], D179[sid]
@@ -628,7 +698,7 @@ def steps_v2():
         (f"S2b → S2c\n{_span('S2c')}", bc[1], bc[2], bc[3], _result("S2c"), "실측", "전체 DR · 지형 레벨", bc[7]),
         (f"S2c → S2d\n{_span('S2d')}", cd[1], cd[2], cd[3], _result("S2d"), "실측", "대칭 S 낮아짐 · 후진 1.0", cd[7]),
         (f"S2d → S2e\n{_span('S2e')}", de[1], de[2], de[3], "+500 연장 안 씀 · " + _result("S2e"), "실측", "후진 0.5 · 1.0", de[7]),
-        (f"S2e → T0′\n{_span('T0′')}", et[1], et[2], et[3], _result("T0′"), "실측", "대칭 S · 밀기 판정 대기", et[7]),
+        (f"S2e → T0′\n{_span('T0′')}", et[1], et[2], et[3], _result("T0′"), "실측", "대칭 S · 계단 복원 밀기 (EX-42 0 단계)", et[7]),
         ("EX-42 입구\n(결정 · 계획)", "기본 명령 보행 끝 · 6000 에서 종료(팀장)",
          "0 단계 T0′ 보완 1,000 → E0 250 → E1 상한 L5→L9 경계마다 +1 → 지형 20,000 → 미션 (06 그림)",
          "이전 학습이 무너지지 않게 쉬운 것부터 한 축씩 · 250 경계마다 빠르게 판단 (D183 이어짐)",
@@ -697,6 +767,7 @@ def step_png(path):
 
 
 if __name__ == "__main__":
+    baseline_png(HERE / "04-m12000-baseline-v2.png")
     why_png(HERE / "03-why-changed-v2.png")
     step_png(HERE / "05-why-changed-step-v2.png")
     plan42_png(HERE / "06-ex42-plan-v2.png")
