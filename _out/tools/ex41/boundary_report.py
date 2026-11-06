@@ -111,7 +111,7 @@ if Path(f'{RUN}/eval/push250/{6000 + prev}.json').is_file():
 print('9 서기', sc['metrics'].get('stand_counts'), '· 무릎', [round(j['ratio'] * 100, 2) for j in sc['metrics'].get('training_knee_effort', {}).get('joints', {}).values()], '%')
 RUNDIR = Path(glob.glob(f'{RUN}/main/*/train_start_status.json')[0]).parent.as_posix()
 st_ = json.load(open(f'{RUNDIR}/train_start_status.json'))
-print('10 학습', st_['iter'], round(st_['iter_s'], 1), 's · 보상', round(st_['mean_reward'], 1), '· 길이', round(st_['mean_episode_length'], 1))
+print('10 학습', st_.get('iter'), *(f"{round(st_[k], 1)}{u}" for k, u in (('iter_s', ' s'), ('mean_reward', ' 보상'), ('mean_episode_length', ' 길이')) if isinstance(st_.get(k), (int, float))), '· 상태', st_.get('state', ''))
 app = [json.loads(l) for l in open(f'{RUNDIR}/ex41_application.jsonl', encoding='utf-8') if l.strip()]
 row = next((r for r in reversed(app) if r.get('iteration') == n + 1), None)
 if row is None:
