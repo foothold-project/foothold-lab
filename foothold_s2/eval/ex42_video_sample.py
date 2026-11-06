@@ -7,6 +7,7 @@ from pathlib import Path
 
 from foothold_s2.eval.c_layer_frame_audit import audit_video
 from foothold_s2.eval.ex42_component_receipts import sha256
+from foothold_s2.eval.ex42_video_delivery import verify_frozen_plan
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, require_video_rule
 
 
@@ -42,6 +43,7 @@ def bulk_registration_allowed(plan: dict, sample_receipt: dict,
                               sample_approval: dict, *, loader_sha256: str,
                               composer_sha256: str) -> bool:
     """Do not register the remaining videos before a decoded lead-reviewed clip."""
+    verify_frozen_plan(plan)
     rid = sample_receipt.get("request_id")
     if rid not in {row["id"] for row in plan.get("requests", [])}:
         return False

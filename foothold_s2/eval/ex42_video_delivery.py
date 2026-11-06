@@ -27,7 +27,7 @@ def freeze_requests(*, checkpoint_sha256: str, plan_sha256: str,
                ("kind", "map_mode", "terrain_kind", "terrain_level", "segment")}
         if (row["kind"] not in KINDS or row["map_mode"] not in MODES
                 or not isinstance(row["terrain_kind"], str) or not row["terrain_kind"]
-                or not isinstance(row["terrain_level"], int)
+                or type(row["terrain_level"]) is not int
                 or not isinstance(row["segment"], str) or not row["segment"]):
             raise ValueError("required video kind, mode or terrain cell missing")
         if row["kind"] == "C" and row["terrain_kind"] == "flat":
@@ -48,12 +48,21 @@ def freeze_requests(*, checkpoint_sha256: str, plan_sha256: str,
             "requests": sorted(frozen, key=lambda row: row["id"])}
 
 
+def verify_frozen_plan(plan: dict) -> None:
+    if plan.get("schema") != SCHEMA or plan.get("video_rule_version") != VIDEO_RULE_VERSION:
+        raise ValueError("video plan schema or style version differs")
+    reconstructed = freeze_requests(checkpoint_sha256=plan["checkpoint_sha256"],
+        plan_sha256=plan["plan_sha256"], stage_name=plan["stage_name"],
+        requests=plan["requests"])
+    if reconstructed != plan:
+        raise ValueError("frozen video IDs or request fields changed")
+
+
 def validate_delivery(plan: dict, receipts: list[dict], playlist: Path,
                       *, loader_sha256: str, composer_sha256: str,
                       sample_approval: dict | None = None) -> dict:
     """Check exact request, receipt and playlist sets plus video and audit bytes."""
-    if plan.get("schema") != SCHEMA or plan.get("video_rule_version") != VIDEO_RULE_VERSION:
-        raise ValueError("video plan schema or style version differs")
+    verify_frozen_plan(plan)
     planned = {row["id"]: row for row in plan["requests"]}
     if len(planned) != len(plan["requests"]):
         raise ValueError("duplicate planned request ID")

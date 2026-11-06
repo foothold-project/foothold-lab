@@ -54,3 +54,15 @@ def test_g22_no_silent_category_omission():
         assert "A/B/C" in str(exc)
     else:
         raise AssertionError("missing required video classes were accepted")
+
+
+def test_g22_frozen_request_cannot_be_removed_after_plan(tmp_path):
+    plan, rows, playlist, approval = fixture(tmp_path)
+    plan["requests"].pop()
+    try:
+        validate_delivery(plan, rows, playlist, loader_sha256="c" * 64,
+                          composer_sha256="d" * 64, sample_approval=approval)
+    except ValueError as exc:
+        assert "A/B/C" in str(exc)
+    else:
+        raise AssertionError("altered mandatory request plan was accepted")
