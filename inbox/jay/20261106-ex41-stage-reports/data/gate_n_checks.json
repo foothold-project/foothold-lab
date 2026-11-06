@@ -1,0 +1,1252 @@
+{
+  "scores_26_judge_39_record": 20,
+  "map64_curriculum_off_and_hash": 20,
+  "w86": [
+    {
+      "iteration": 750,
+      "knee_percent": {
+        "FL_calf_joint": 0.07595486111111112,
+        "FR_calf_joint": 0.03662109375,
+        "RL_calf_joint": 0.1315646701388889,
+        "RR_calf_joint": 0.06646050347222222
+      },
+      "score_equal": true,
+      "links": 19,
+      "foot_slip_mean": 0.8163794836478876
+    },
+    {
+      "iteration": 2750,
+      "knee_percent": {
+        "FL_calf_joint": 0.08273654513888888,
+        "FR_calf_joint": 0.07188585069444445,
+        "RL_calf_joint": 0.03255208333333333,
+        "RR_calf_joint": 0.16682942708333331
+      },
+      "score_equal": true,
+      "links": 19,
+      "foot_slip_mean": 0.6640206063338532
+    },
+    {
+      "iteration": 3750,
+      "knee_percent": {
+        "FL_calf_joint": 0.03662109375,
+        "FR_calf_joint": 0.08273654513888888,
+        "RL_calf_joint": 0.09765625,
+        "RR_calf_joint": 0.048828125
+      },
+      "score_equal": true,
+      "links": 19,
+      "foot_slip_mean": 0.769396662557205
+    },
+    {
+      "iteration": 5000,
+      "knee_percent": {
+        "FL_calf_joint": 0.17768012152777776,
+        "FR_calf_joint": 0.30110677083333337,
+        "RL_calf_joint": 0.3607855902777778,
+        "RR_calf_joint": 0.28483072916666663
+      },
+      "score_equal": true,
+      "links": 19,
+      "foot_slip_mean": 1.0847173867722106
+    }
+  ],
+  "videos": [
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/01fba2152d51423daf0a5166b41b38fdaefdf59728eacbcbf7966985d85a4c00.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "be3b338229ddbcfdcec8eecd5bfa2cb57c8c4559af768a28d9d5386feb015ff8",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/0830c223a1091336dd6e7a1e58e541b7f67ec5187ab33efe0a9e4e98611284f6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidep05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "bedc3e5d71a32b2de5620e01a4ad9b6b7241ed2a91f1dc860fdeff6246537039",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/0fac9b3a4e7c57bcdf6374e979d0c8a535b11be9d22d5c97ce62708f86b5a29a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "84e5929d0278a92f9ea95a356edccbf48daed0b9f8d0cb92aaf6f9306a7d1f03",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/109232095621cb222e4f754b0fb4dc8e989d0ec0b84a68a674052fa45b44eef4.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinp12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "078dc4e2afb4ea8b3e956f9c1eeed8b79787caf0de203ed47a70dcb0d013142b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/11fffc8e9a978f6942414129a7701bd1f032bab0649689f50de542f5c4e1e353.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8b282498c64fc536930a99f19a983903a1813d9c00020e380f6538ab22838679",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/1699b940be1a018463c9aee0e33ca9052fc2e1921e0440a8c27ccff5b25fec80.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_stop_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "4272d415ab83d5491b6a18dbd89151b6d61864a2306e36c42ac3f66ba2d4ff24",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/169f67db5dbcdfa3a2038ea9ce6f32a3294dda166a726561dcf1542fae7ee591.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidem05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "114543e7800885fe45adf9cd1d76bffe053261ef2bb6c1775f774f802fe5c9c7",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/1ae7cd4461db01414cba5d58105b179732bc1cbc5fdeb8589b5748d67538f41f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_fwd_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ea182bb753e2db3de5e75619571e35460728f0515b9b8d799cebef332ac0dc59",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/22df842a424263307a518f8533f48b6c5fdbee02ca39879f267e36c2297e3e0d.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "69bb42b31b994bbc1cc66a5c5804d58d260cb1cc915101af6309736e8f532f59",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/3b87f379244c208a92778f20d0bdba48fdc95032314c39a67ed3f8663105cadc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_fwd_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "49609ef4af5bacaaabe22bc764af7f84161c21a96878a6467f3759fd407840fc",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/3dfa3d34c6ce9a3e9cd207ec5c6e3b62451fb45a17da857a9473c82310a9f812.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_stop_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7a900fc2a3d6b83ded052c323a72d83b8ba242404fa962acda544a8161769187",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/3e99149a1ff4ec555c37d12757d86e4e5227f77932c41ddccc1574c550a96ecc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_right_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f23e38480d88da32de6c7aede5bc777cfa02c9327ba5a70b2f213fcb5dd239cb",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/440974b1fde0ac19d267b3ba266513248335092bb00e24ac647330a5928021e5.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidem05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "bf5892d6bf56c81707c98b0a36f52847ae4c32ce07be4d1010977b7b92058e8c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/54d8cac70709ea81c276faad55b0b6a39b66a6578e6e4c65017006e3a6cbc728.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinm12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "87e94c1a09d8c0038d2bc5a57fc4be09b043f348b6ed05357ea4293b2d788258",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/5c51b0cd10aa6bd95973b430d4d9e62184b6d51755662765982cc2644fdbdb27.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8209fc7d87705f4878dc0767a29d7f655d03916ca99b37d7a73a9b7ac27b5a1b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/601a05f947f03addb5362822c5cd9471714db3b0121770d3a975e2cdf76686f7.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "277e6e8624b9d3ece37f16ea7918710a41cb01335a4ca7bbe8aa84a5ab342b31",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/61a8637f9efa1aed92150bc7759a7efa701273c502d554a57324a56758cfd341.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_stop_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a1e12e997385f736f48d9e1bb12895c70e2dca8bdaea77b806de2059da226d83",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/62b9fd19691614a4da927abf995736186aecd188579169a9a385569bdf7ee631.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "191673e0024ea63d69bb9512bb0cfd33916ef2ada46432c6c3df370b23053acb",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/63bf6d2db4007111e5768b1cb489c3d4c37698936a902a5d633a5f4ad3c0223c.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "24cb6f24ea403a244e9e4a947ba481850d61b902485c07bbda6dafa0fba06ffd",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/63cec9d2b1d094572e406a46fdcf5d0d948a38baf00422af212d481d5f54f992.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_back_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a067fe000e6eddf4faeda94b9b77a3333735283fbe79d5aa52af6bda7860643f",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/6477392e8be869fdddca058f498c0771d944c20f75d7221fe05921f1db5f3efc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidep05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8c2beb6b5607ad4b01f3d5bdfba5fa98218c799535b56a1f5046d4fb9e879cdd",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/7141931c48b2939001bc2ae9bfabbca914477c182a3bb6100667be1bc8cc0dc5.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_right_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "04883e4960ceb359723dd10f7ef51f76a5323793722ecaf158a0f0e7de90b2ff",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/71a61d8fbe89cd8035b30462f198b3023b8e6decdfe95263bf9db4c47e0012c6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "5ac765b89a3fe0517749b580a896b58ed2e1b4e403cc8a6dea872666fcce7cf0",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/7542960acfb646f3d5090f724a969b23cce0a793ac7b5d3addcbd057c0fab7ac.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_fwd_probe_prop_only-1x-fail.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "90a25cc9227f38fe476a01479c9dec37a554a9f9d2d997996414162936701b6d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/77479708f5febdccbd27a13e84813a93e8f7e53ca45893952a2c53628b67cfde.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "27b551f1e88953ecbd06d337e5beb7aab38b48abd7b7d77a165f87a71a1e82dd",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/78355487eba25f3b3f2051cfeb22ef611303d3b8a2f20d360d4840ec21716c9f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_back_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7dc74f2a343bd45d845c4c6ce3fd2579c411bc633dc9598f99593e0f80f2d0ce",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/7c54464cae08a3d32dd47b40fa574057bf3e4b31db82e30f70d25002acef9b67.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_left_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "dc357e0d7ceb998923957d9de77b7bb9b5b427628bb92e363da90309f8a1a095",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/821227a3679081981f15370fb0b03730cff8c1ae5e2fa9a1e27c7a44d8e9e94f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_left_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "259dc4bf3221d134119671fea930030840ec9e82563c096d5e09661b4b93b655",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/83fe1ae20a5554cd2c7de1a93c42a694fb9e2a5f913dfa857769c1caf5a4eb60.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "82a3cbf3df47de0ba01fa4402fb018fa676f396542ee7814aea12305bd71b59a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/88f402ac745da8002f2082e8530aa21e6136a63776434bbe491b27a1d0091c3e.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c2b0620b6f179b8bd90e52046ba3e98597cf00fd97e7dd43469620211359c0d9",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/9031957ee9fec70092f099361c8ce85a53fe0358682c4990c3cfdd0b4109ae0d.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c25b0e7ef9f5902ce603eb9769da34089e995a10ab68b29b886ae6f6dd2ff0c1",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/94f20b3d7d586a4a01cc37202fba947089fa45f55b3b12b877b591f7e8f38fff.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidep05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "e34da2d577af9a0059c6c05e31eb9e032b741e3eabdf155eec5deec38bd15c32",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/975a4d55fdc7b696daa28939db69748c240305c9a1d21738a360898ccb71ec38.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "abee46a83fc2fe557c6d2a9d79a67c0518e10726995ed4cf0e0c055446616a6d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/9ef618b7983eebb47464603933288020f9df7fa1e419f0b70ff3f581fe9cab7a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "dad53eb944bf6ec7a8a897ed0316c82acb7c23fe790bef84a9628d20d8807933",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/9f7e466eca04abf0e60b8c7e22768b1944d0034dde80566d09b28d696dfc812e.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_back_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d02f5924c4252537cbb40c2c98a4ec77fa4b6dc976a5d38fd42ba2fdfc467b50",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/a242622d8997588beb50c41e2c9cf11493a4a2d296f1bae363d18197b28a02b0.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_back05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "34968a180e69615bbddefcaaeb991413f64944c71a744489e4f6bf393170d4a3",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/a2753e560afb8d3f4936272286f847556be94f2a5f2097eb318e501d9eb02226.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c20caa282097d91689906e37102af2735b31a92cf311b6ec4c902432fc6962d7",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/ab18b89f27a845e2a816bd066dfb4200c3d4bc6ebdbce37071dea49359a2b254.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "5cba492e00f5f073a00876d1979cb3aa5da41e1902d5aef26e990a90459643e1",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/ad25023d2d400f2709aeac9cfe0bb5e25bb045d17e2f3591ea64ddbc6818afe0.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_sidem05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f8c3ce9f3b542556e9bb993906ce1cb067ff879b66484fe39de456853e6cf5a6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/af4a3693689f7bc5cc46150c23a75a26bcf03e2a9305c7e027f61f3c7981c3c3.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_fwd10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "52ed40496d455deb348574e0a53718070ec1ad860c0f3896b0777edd1b4c6d43",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/b25394addffb483c9934651f0dc0c270313012b36d5461603e8b8bb741dd72d2.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinp12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "0d5521ed96521e4f8136d05ec7e1d9b8db5673325615830324ea1f6b1900822e",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/bceb63ae4627d41f543cccc29e8b0d91314dabe54db3d6b4decbbd77b1353149.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinm12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "acfe8ebda01c2e8a74b8fcac60f7c471b6a2d51cdec7aacc911ec0febbfdbb12",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/be56a57154d66f711e59b3159411b280a1c398604db2451ab90e18af0b12cde6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_right_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "69815489d363914996b31184fb37bd207884a44a1294e0a887d4c3274a1c1536",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/c4a7f6e8b6486c36b89fc6773eec53cd2e3806c02eed9c884a1ca66caec72efd.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "e16331b8838716e043f22d09eab362c62271af3750cbeef65c5f5312b8457a20",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/cb668ae3ec232a3cea85f806978a47d85a4e7c72cd167d46a590c183b335b0e3.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinp12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "53957fcfa88754866abb8383f6df75ab2f21dd69e84484318023088d4fc7a178",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/d58f2c04379be91570d44717fb961362f02f020b752e041b2118cd7f7bf7e635.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "85f15756d3fea6bd5809f0e45160de5b351af5a67468b415d68b7cb16e9440c9",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/d6d5f563ad4d1089e65eed4807ccfacace1dd0ab58f0d1b8bbdc5c47d6596f33.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L2-m2750-w80_stairs_side_left_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ae6a1a2cf6bf7a7ebdfd2c532ab09d925742461f8371a1f52c7d0764de548682",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/dce98af7de0cec29f2588587224425862f1804187e09673dd77b00e71fc2333a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_spinm12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c83192fb07658f350f46bc267241237971edef2e04fee0f208a1e5e6c68d11b4",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/e1410c5ea12b61e7c9a6ef92d39dc516bf8ed5e6b4f61fa7d80342d5f46059b3.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmbackpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d8c2bbcfb4864134d2fc327126e1fd3041ed585ff6d12d402abd43ae5baca0d6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/f5e8662b72e005fbf70ef8ce529b13dfd7cbf1982c49cd6dd4f876c0caa1433a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "2140b5a339854f445197c8a94a8ab96863b248d6a6d3ec8e45dfc0ec47b16a26",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/receipts/fe352e3f3066df73ecac67adcc113aca7e9640d2bbebbfd0fec4aa4fe8c5307d.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_2750_cc37ad8f16d7/EX41-pyramid_stairs_inv_L1-m2750-w57_diagmfwdpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "616f53cd66d396696b56ef6fa410b50d2691d4031910847b836ed2038ef08c67",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/021aa21e087f0b412e7926e97703c773fadecae5b276bc914998e17dab70e458.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinp12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8c7dcc0541e377c60c0ef45b649dd75bda0c563b2bade21455f1fb0b33cd44ce",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/07a7c5f7c536f25b806bc472ab7c8e8f28ba2de3620d211c088af35cc3826d05.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "cc0d59d92bbab860bb7685356c6b290876598b08f651809fd59bb49b23c4988a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/0c73f25fa1c0340d4bbdf65640a9d43b8372cfb748d131fff715a371c2663b45.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "83f21ca9b9c4b2836ab1b12088a72cec86c74f302d3c7923b3445ef6323547e3",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/184e27cfdc1b9871f0d7c8d08326d03c272ab81333f72f4bb4abd28db7141c91.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "9c538e65f7f0ceea5896744f52452f904579b93a900461df3c39332a7f047145",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/1e7a10aaaeacf3f3789575b0b555dfe6557e22670dd0da4d21bbd8c910b752b3.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidep05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a7a372c026aff02b03f704f4da080b234ffd7f6de3250a820bde2b4aea35c3e1",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/20822c709dacd94b3e4794a4750c4a0404de774bede3f4388e47fa95deee1807.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_fwd_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "1e475f971484cf33621382c173015a2bff033d5034c8e4b43d6ad89aaadc259d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/25ef8afd0164d3834f875647448161446ab4d64c1afe85205ed5558917eeecb7.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "fc30dedec34d7dc75ea4e3c95a5a7c011dca67348f433de59513445bee1955ef",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/343d1a7f7edc91952108d38e7a68f8ce06d634883e043f35cdbefa6fabe5c7df.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinm12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "1942477501b1921c8f592e20ca6cfefc8028d3023784b4f7cde50b0338ad0631",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/3c2ddb42f93ecd5d41456df3c80fe76e4f58718f07b0f4ac2399af8a9e73451a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "74c72e41fbecddb1d3a7cf839099a469fa8ce5dbb3bc72129248d961d36f632f",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/4246d973354724917d1d1552f813e24bafcf778f92a48b4aca374dbd0bae584e.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "41a7002e526222d3b942f0559116ee98ccc79b61be8cf5a0b72f3a6370febb09",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/45c8b93e07c105060643152cca1ad3a1e398f9a9f4f51a56bd1d7d0a5ec1c17f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_stop_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "76a2bad59bd4a64878f9331259f6eeac807a893a7cf61e4407f137e449cbedb4",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/4bcb37b872a49ddcf42c2a4401c40322d16da2779a0ecfae847cf9f09c172096.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "97db6c1f59df3105f63b2f46056285c324f920b6854f2448b31a9db595924dac",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/52eb40b1e7b30a3269ea0447a21bde3942ce8bd66500cdae5b01f6e7a102beaa.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_back_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "37eae7a3cb7a21d5441c6c8d98171d3444cfbf3db0b40e95c85b8980c26f1da5",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/55d28002f6d5718c8168b5620f72c773f0a5c9f07c9f0dac162a630e9f6429fa.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_stop_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "bef9ec4cfb3f7611736b3400830655bfd775e5e3c1e816036b7c78ffbbc04781",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/5651e6fa9f2dd0acc796264815bcc961b5ac0af5b73bee9b4fa2ba0a71290d19.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinp12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d452b05c295ec69712bee28fcd53d85b9e9d50735e6bd00084636beff082a2a6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/5dbe315f9d190b57088aae0a30ba028f9765c97366d0c4fcbb5db54df3ee8449.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_right_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "835e8cda33fb4315365572bb75692cda1401f4244a3973f3549e77ffc9a1d9a7",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/60c5b8ee74490229c2246d2efdee59e952d1c1466aa723c1fef9ca724a4e3d22.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "5b3477182497af1df759114ab1a5f3146499b78efb74725c87eff52030d7c3e9",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/636449e92887bc448d4daebe83b9ea95913a90397b6d0549a3231739f7330c22.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ddec32f20047b0408bdb63c0f74686a959285504132c7b7b92d1addfa7cb6205",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/6980b0f5e291dcb386a0b95911dddcd7a9e881a21dc591ddd3c2461b1583da17.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "48806a986788409db3d68e1d80388bacde279c50e7f81e2bf21986abf8598c9d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/6a1b246e895ad169e40369bb961f497983e77ada049f3baf5a838e6d535722ff.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_right_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "dd1ee4012d8594d3f530912ca89f17177e1eafb240ec8d919c02d4fcb661b5c6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/6a266dc3d62555813229905dbb0f9ab1959fe831fd6381332ba66327625e2112.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_left_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "3cc816d0583f1e526fb92c20169c0c83cd9b49619ba7fa1b374bff6f982d0aa9",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/6c02cf823e62e4396fd6379f013d680f5c5e166c75ff25550fc72c2973db2d3d.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ae53a710bee1baa2f1d65019665bd0ba5b88736faf5f69d0eab7cff0a0728160",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/6dc6f178e35564af5489d4535821fb93b5d7875425aac0f5c74c9832d15d1336.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "6439fe92e79e70496b0fb66d3befa2b62f197305a877794300fdc77bcc4ebfb3",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/7ce02a7ed8beecb4611937cf449187440c0ec7adc6afe2f2b4385ec303a67619.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7abfcffa4e29034074dec639b518a748ac44a58e411d0e72f0d76f0e71e6c7e1",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/7ea325c4ba237567be9388431622f1d843f6a5e6e123ab839b43a1fa5c564e70.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d92b5734b02e909b52e3812702b0e84f7d2cebc93bb0c379c7601b58f3a0804e",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/85711110b99357154aebc22142c89dff4240e0c36b35d01984bf5e6e2ef45372.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "cede63dccb1146398d50a8cef76ae7da48f1f041ea54fd14e7fdc297566b425a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/890c4773452dedfa278d8d4413225be2de366d442b538928d2fe0302e5cda307.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_fwd_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8160c8464e7f06401a85bdfd0e5da53a6f9ec868454a0736e58875d9e0b09581",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/8a691675aacf6b5eb7e064cb1bcaebfe5b8f979128720928c7a72474a3362870.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_right_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d19beb7ab33a87a65be39a06490d55e2ea84f9edeb4ba3925eb3496643193e6e",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/8d189412e391013709c469f5e8d4379b56c3bd1b62e0541d1932c027341cab53.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_back_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "beb542a740199dd61e7f758fbbb21a705029e5304f137b4ad8851d8886a9f200",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/915ec9bae92e1946a2fbd0d4045eb044cf62ff54a9cb0de5c7acad2009d082c9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidem05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c1f0b843a6b7ecaa6fe2ff0faaa17ba5559cf848305b3e1dd5724558f47ccb21",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/92b0ade8af3e8a65e7e98331bcf516b08c8b053ca41df56abc2beedb16c91a29.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_back_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "6664909244c157e944fde3d7504dbe7dc80bcbfa21e4a333849f144061c2e499",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/950ee32870c39d9f8ec133f26a2188b02ce4ac400472245819458dc44a26cbdb.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidep05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "aff176238a17173b5d3e6b5451778c57533bf68966cb1fba7b5d0d1c020b37fc",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/9523adb7e4e7bc0231f25646eba4a178a296613d44495aaaa76e40a561bfe772.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_fwd_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "95b3d36fe99dffbee4ec5d2e41214be92def25e4b7cfc238f774aed397b73b87",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/98e087c7a7feb136861153d45292b2887d5b5cf498b5934a48f40a9d3bd4c7b9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidem05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "1ac1d020f8107384f4c6fa95a7f99a9f793a865478af48a86712b4f92c837581",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/993597fa04bf6db2a6b6ae2a147553b392552cc75230e2ddc370eddec621a895.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c61e66d5fc55a4f2df90c1290866d7962065ed50bd7d9d74a2ae54a874d72554",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/9c943005f3c24b264c605a85851b5fffc846dc9e173b7480f61b69cb6db9f358.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f6913dcf396c4bd348e32643f313a64996aa1b24596a2de874c7f126dcdfaa83",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/9cd964b00505f1ce6048978de4bf4c92139458912d4d714fc3fda45f55ce61f6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "eb96d6af649e15bb4e12f1df500d5248389e73dcd23267fe5150920b4fcc4385",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/a03bca658b03bcd03b0cc1af312e1e2e394639afb0af39e223015d4bdce80ac6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmbackpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "97efa5cb5285b90a0ed87dbe9332742b4c2c6a3f1ae0cc506218664c7046f939",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/b0895ead3da765db29cbae29914c26c075923b57ccd2749b1c7b250cfe8c1af6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_left_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7095264cdb55a4c2d71d3f03af458a00c1c4ea35db773689594acc6ae6bcb9d6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/bc528f671f57952a9ad2506ab222fde80ee2dac32e11391143387edcd88cd49a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinm12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "3a8661379e85aa9c58bedd34f2be2263a604506cf86e4d6b98a762ff1b5b2e63",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/beb07c412804e27ab18407855ec7f7850e1ba80a2a76723d008576c84383b6e4.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinp12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a2ee5a4cfc3a669bfe28616c95052783da861204e31c947d41f11718cb4091da",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/bf710b24fce65574256f40b394b5e147104a0e6b6971ea7bf87374234436f72a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_diagmfwdpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "6e7f27d265495fddf30273793a4958908fb62fb68f9219604ba19ce3011b2c1f",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/c2dc983046f528c0fefaab8f7f7e24703eae350e85f7d152b70c7ee11bc7aaec.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "20f59c2755216bd66a224028cee89afe6ad2e35583b81aee3511b0065e3e9bc6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/c630e00346bb14d1ef058b8cdd53a0f6f08701ae037b96cf4eb1d7f77be9cb1c.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_spinm12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f6f7e2b975d98cbf07eb56e03af67f30563892911fe3e0664808877e9b77de0d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/d28b97beeab95b7bf8b96e7098f61788e8464609acc9b85e1c15e725a9101b01.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_stop_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ffc240dd1f0c88dfd6a1159e0dae1b2c2e1a0f383ae56eb4b828f4a821d26730",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/d379316a48827cf9d412bf5e49259e1ee89dbd508b75c4d568ec0829f300ceda.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_fwd10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7577f2bf899dbe62982037db383f5fcacfd232f96a4618631838b7460f09792b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/dcbb21e22a1bc6a83278e7e6fe8169273ce91d4b499503b15c1f54ccab8027ee.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidem05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "699046e377a515b82d6ec993531f78527cb76b10c45a04a45c97215464547d1a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/dcf17b8b007fe8a3c19f57560a3908683719c2feec30ef4b414728ca690172c9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_sidep05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "6d7624eaddca8b8f910b2d880988eeebf389d924f879bde6cd0a9730136d2ff6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/df3db0c34387cbab3f9f11a6971bfdf3dfd0433f76aaac75ef39c01a7f41488f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "149c76707850fb40663e37bba07c4385b8bd795a1960703379ee256828f91194",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/e3e0be629eddfeb77873ff53b9b59a82aeb5cf7a1827e95e5af9e4005c8ad8b2.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L2-m3750-w80_stairs_side_left_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "cae310113274df2962d76d02caa7487886b3193a3d1e68c48e162e1f83d27802",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/receipts/edb3db964253004c567cfbe66651197523e783ba7684074e6c2de0246a4198cf.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_3750_9e98514cb2d3/EX41-pyramid_stairs_inv_L1-m3750-w57_back10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "0446f03422e24a71f9a902826746a466b61caada3eabb068197466ed6dd64757",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/3242465e24e6d8849beb1477159aa059799aff4f85ed130dfebe48b58365679c.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_spinm12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a8b859be3ac49211aaf477ae9b80ca671c2af4f1f6c7436b857d3c99126d0f93",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/39ec02092b6fda21e2955616c81264bdfe26f24ad081b28e76c1c75d40cc6302.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "9174e3923bc65e7f6f0cd4693eb61ffeb4d0469fa586cb694a0e9b1ef515c13c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/6d401911ceae60d97312fde706e801c425d74d2894320f1920b7a3d1fde66fa4.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "702c6599126f1b9a7028b3da0e9a92305632bf643bb2871a8daa8e63c016245c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/6e44ddd81e2ce8771a742d9d29827417a13944b830be2865023187278bc7f1d9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_spinp12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "fa089e8ef61a57cb98fbe9c7214e4c968876385a3740b3e85d840643e98b5d0f",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/785a3e3ac35f842d0b18520a85d1bd82246c28ea090b68a356338d06519ec62b.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "4eb0c1be407d068779b3a0a108cdbf83aa0b5efc2304d2e3f0be629964424e2b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/81d077cbd05c050399d67e82aca6e60a76412a4c9161332680f0b312083a1e76.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_spinm12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "9af6f9185664db6a565a4fefe1a9876eca32a900290197e8a10d2dfa2229698a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/968ed998ba489877fd4d3d6d4c3a2b16186a3e3219b3c1efda8078b2a0860c80.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "52fe6c514b52976bf4422a699578296fbc54a2f4efebe8ff48797b4d5f3fddf8",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/a088828a48e3e2725befe3af721de7b2bfada04c194ad694273867059bcc02ee.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_spinm12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "2344cb9da485659a8c13052cb2a12d5b72df70bd000ef9f63163f496304a63a3",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/c1208c957314f8c8d4662e02e7f1d9d4ca0689c8fe06bca364998705520046ae.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "30f53b038d49da5a8104fb4d8f8212fe80e53865a0f68324378c758a2154e50d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/cbdbf673cf2d4e9f4c6e7b185a1b415e61baa46f00d456a2932444d2541a7d1b.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_fwd05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ee982a20d1a782c24eefd974f32549e6b9f08001aaa255a59e35ceef004ddeec",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/receipts/f6609e59859fa5f95feb509e93cd4b5adb1d1f1f5533956a7ed394383ba13bca.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_5000_85cb163cfd23/EX41-pyramid_stairs_inv_L1-m5000-w57_spinp12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "503eec05d70077efa88b98cbb2d2a1dba5395c17a35e85c4a0f1ea090262a1b1",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/0246dbdac795a41833c93c74cd9e36914d6a14817edb3070e895f98665abb3f8.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd10_probe_prop_only-1x-success.mp4",
+      "source_head": "23454d886ae79016c9990aa083a3da2ff4f0b169",
+      "sha256": "35e40227e4a27467477a941ac4256ffd5bb8d776c13ff8b23b2c68695a796a35",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/0c66951154a4d0de1a9c4d7346aca95131c518297a7260ac3bafc2a282f6c586.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidem05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "139a41d8fd47f42d79ad4a150bf4365472a7611148294023e4c8bde2393be8a4",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/0e7c387a9408e7922c03a5eb83e23106b798634f48e57a2c7cc3792d8f37a2df.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "16d113714e10dc439de6ecf4c37199dba4422f1bbf94cc79205412d166ebbcac",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/10a65cdc010b9f5da5ed97907c43080275a4ea5b93671588cd4fb70c9739a3ff.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_left_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f4804fe83279cc568935ced118cfd36976664edda583e24e22328c0db3e91d9c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/1117d8a3fe378d9666e3e397fbc685846accc5724c30984d73300301513e034d.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back10_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "c967fc7f2d23204e824f7b351f9c1c5e46f82dfd29e6a3986d93790b605149b2",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/125757da0a81b818ef7604c1736f525f7488b86982b8dc52dac7a8a6c922f56e.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "59ff70d43fec175589c88e196ed56a2311a87246ca61fafbbc5f14693abcedd3",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/15b79022ee52b2115bd39df2a8fe0fa0ba2866de30c717b029ec3f2a0ed81ef9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidep05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "7f59b00e57f6423923bdec1607e67424153b1530191f9aaf0dcc8dc25887eb3c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/1ec602ed5d259832241467763662910b206a1e3f9fffc575e49bfbacb6920bd4.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinm12_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "31f8804414496da77d32d99ccf899c9306d2c6690851b8ab8f2523bc71e7fd3d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/2029d80e2c1afb79786c84a1fd014bb8b754b0b88f487fbb7a4d3f6c6fddd450.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_right_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f536a0fe04174daab14db7205a5aa5fedb294ef5f0062a0e146f07516b14bac4",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/276d5b7c0383958b86779ef5fe9719a6bf04b024165ba6efdad45752c7a3efc2.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidem05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "005d7cafcef8d3b09bb586a0cac7156bab8344c8e5e1ea2157a6b97c4a99cc71",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/28297dfd6d60f141f091c68523216173ed48235e54730e79d3eabd462bf06a7b.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_back_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a9af017d15ded0d70aed0c9fb5c35fb57d67c4627f59134eaef96da7cb91ed97",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/2d5fee3c4a04ef0c160e1d7b8cff7e4c3967afd375956b95ce6f3817f6c7f8db.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_right_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d508b746cf85af8361528f4a87fbd574416ef14240e293569b00b0ce104b2651",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/2d88e3ed855ab81b6ad8455c7d9861ff65cef9935447b08953bba5bd08858a55.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinp12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "f76703ca35af1342dacfb656233ac432862b6b947d4f6e43e9c3dcef69e7dff5",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/2fb9a6539f03e1771ce8b4a7e206cb16343754ff35a606cd2906832735edc438.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_fwd_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "85f6b9eb99382076f719c864ce58293104df9a90dd347dd8cb9b46a0154456d4",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/32f34c0bfcaac3a943a5b64bbc7147ef470c4a11df45dd20cda1b5fd7cd619a6.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a8ce7a83bfe0141237492f2c8a09d7c5fac12bb3a0b27e4e31fcc514a0a5d5b0",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/390976d6b2b008bf3c6991024e6906e6ea2bc6ee991e9695c6940fc824efef86.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidep05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ff36eac39f71fccdc27df0714f79d993092eb8f60199d5118fd3760af39a6194",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/476b6a51c5a792c209d7b53ee4dccb93cf1bd635b31aa6f1c150175f4b626b08.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_stop_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "bb92db7fe6ea7e90670066b698ae14e62dd427d8e5e4fc459568013178129355",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/52031d01d33c56c0c0e164251f7640f1daeb6250a0f10027de620aad9165342b.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_stop_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "bf09f12606f091bed4bf396ecbdba4424ee95f23733855c595eaf9ca2a2cf087",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/54efc9d42b3369073ae3c702f7f8bb68df08fdd11fec6df8e08a57973c2279aa.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "910db7bbebe7f6ee5ee25192849fa408eb339a3f8e0c6d1bf32950e978373c31",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/6697e4e1bb560b1100051b2e65e5578aa511e80db3d512632957405701f0444e.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "87a1142b73b43048cf8879e447ee08d0bbaaa70d7076b444a001ab9b010a7fa8",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/737ae3c3e6ee79d726fa9a590fb886b2c1d2309e1a0b4ec3e7757dfcd16882c5.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back05_eval_pred-1x-success.mp4",
+      "source_head": "a7c715461115164b063827bc3c7883bfeac90f7f",
+      "sha256": "2fb832f8de4abb51e94b7bbd925e92398a083b77c580b6dc9332c815a5d6c252",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/7510e5c758e9f73f4b7b7755e0d56873844113211c26e9c48a54f272fb20eaf8.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd05_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "574086082d85e25045495ff5354cf50e4df7c56a170f11763ad90889d46fc8e6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/77d3cf4c2565355b6cd568ee4eb65da96ed6a17c193015ed639833284aebb5bc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_stop_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "1aec4401f4a564773e8ecf5e6c6441b45eeeb57d8a8491f7d3a4680a13bd1e0a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/797d803c1aa114cbf5991e6b41633d16d90188340db46932ad06ce050594d51f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidem_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "78d06dbf701fa0ea4633cb0c69e9cecd6b12ac91c1edf0b1c54f9518b84166dd",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/7987aad67c9d43ea3be6c3bb134940c8d2d947261b9010532593be0daa225536.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "8a33295c94081b2ee29c11ad1b9964ea7bf9ae56d7e19356683f4f5d7fe473db",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/7a1b03eb5d283a46ba59a1351e05adb55a791807a84cccdaa42540d8b90e2bdc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_left_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "dc7a0431ca46075a9680654854b358721571717b318c25d501b5ffcdb4ad11ef",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/80f82c214d74e9100779a10ee2e961fa8ee8ae85c72db2b12b108f374611be7a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidep_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "1d2760350fe7ffb196b4ceabe3c312f3bde1c70222fb1bf3aa08dda6ec49f68b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/889b97f043a98f58c961d81c2f4f6c4dbc0fb0fb385232a7da29fd53a51887c9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinp12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "3988da025635a3ef3fb5e029bb037f7b7f33942c425ae1d26054ad712f387251",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/8b1860143cde69f1a79852ff9f461c012a38b04ae7e9bf4d4ab7f1874488d999.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "40eb7e9899fa0a47848a1c6fad52b0a5098e5766f07939a943690f3a91a3c275",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/8db9d1028a238773f3d68694cba1c973f2f9eecbdcc6d5925550cec9814b5414.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back10_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "ed2092c43f8471d6b62640c1760692bbefe1c11149ea7495b9c68f84ff096a8d",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/8f2c1300f038e4254754a2ea8069ae9db4f4e2219f96a58c28b034a2a7017015.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back10_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "e4b79d9c39a0998bc42d9f2dd738f2bbea6d0c40efb0dbf75bf7a44d2ef20266",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/922035ee42b639dcc84b9afe73905d6d80604fdd7fa2589f9980cefb8f756c4c.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinm12_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "195303e6a6d6f6b29b4db0d149e6e76bfb922736099f44a58431fbc47aab8ea7",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/9b6fd3b4819b2cb8660d8ecbfd28f12642fddd3d05e6afe2ca57a4225a65cd44.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_fwd_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "cea851c59205c743558a87a669260d1535bdf3dc3da434ceea21a4c264952bdc",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/9d9b07cd44683539db5262dce89373f7ddd42d3b3ab92f607a6a1c08bb57f876.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinp12_eval_gt-1x-success.mp4",
+      "source_head": "23454d886ae79016c9990aa083a3da2ff4f0b169",
+      "sha256": "207305ec30f92734e8e26810627d2406c634d984f999b610ba673a14e33f19d6",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/a0153cbe565992bf5ee2e6647361411956b3d205063018383ea1cdea2b860def.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_back05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "760523dda10ed32a440b901048457857641f387eb0c18c445caeed7c7bbc0f1e",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/a028ee8e25c7d659b156e0421e0475ab4a121c39802a86f2d25fa654a3443258.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_back_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "fc016dc7ea3aa81f222e22e426c86d52b02490f824be5743b010f3de37122753",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/a909dcefb3230317d051ad26fda52a1280021612af3d935c696b4a4d34d248cc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidem_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "2609470d7a5a90eb9ba108c31fe4345e2810a3204c766d8d2e282b6707ab97c9",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/ad54a2fba76757146c5eff8c20d0e4f9b610c345ab6f6158df687c745df94def.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidep05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "399f724e48e54205a5df53f433ce14834affc7830223e60e3dc848af918b1e81",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/b3649414a3b13349a75e0d87b3c0f75fa7eb5087c01c682cdeab666d47dc6831.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "51f9872f7bc0fc94f5d8847a70c7d17682181e9016ee838fc1789481d0cee96c",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/b548e4ea32f7b518f1b1543c7dcdbef708f478cce452d3b30059ea2a147db7dc.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd10_eval_pred-1x-success.mp4",
+      "source_head": "23454d886ae79016c9990aa083a3da2ff4f0b169",
+      "sha256": "8778e21e28186142bd98d237b30d88fcf860c05a53def64f7e3e96c6612ef05a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/bc27fea6a50b3acaa4c608db05c9942e26516ffe41dc5618068ca3b24e42346a.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd05_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "02639cf7018fac14c3d900fead72606a6c19689bf21463fa3b4b0b1eda148d03",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/c4cf9b2a20fb86e3ffdcc0c57491df212c30addb1ab36085910ef2fc7f7a67a1.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidep_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a99685d76670de37a3d4d9f13281215ce369caaf24a99a01b1e98fc8f81661ea",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/d1f706b918de0e99209e376d0bf615a98d4d14beabd1f0feea55e66a36ffe2e0.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_fwd_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "2a06d144f0c3e84cd712e34d7f2f2c38246dc43c1f275c0a1b057e2953b5acaf",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/d44cef7ba057290a2a903b3fb2f1e240e0053599fc035d159342f3d9cd1db49f.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmbackpsidem_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "d487ccca68767149c9b33e47796e035ac29295cb3f4bae692ac0dd94949dfdd5",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/d5d9a5bc5f60edf212911c558e03e24e24bfce509ccac1b5745f81f154696bb8.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_diagmfwdpsidep_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "605140b12b11baed32ca3f8046b40122fd68c8c549aa5a43a04fbb5ecba43fec",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/e6638e31ba949f9ec5778f5bc548d26357d6fb1215ef9f50ce8d0d26e1121049.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_back_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "084d7f97f0c608f59a2f332f97a551072298f97f4210e6df67f6652febe4bb06",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/e8ebc1bed80d31e3b5715d5c807bbe2ef85d1fe6a7f3fb8bab64a29c2bf5f822.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_right_eval_gt-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "a957e9b2d343ee3dca66ba9cf8594ad7941755feb7832299ccd52d7d2090db94",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/ef46b96c7d1f6a785f8857bcea42e4797306285a0d3bed5b148f4d78c5bf94ed.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L2-m750-w80_stairs_side_left_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "77b98ccedb62da90fe12234cd362c9d6265ac7c4860d8d2f39216db2b5ed238a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/f3d6f2d984312922c7237022fcb141847773e6c95c835fdcdc4d909ec59921e8.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_spinm12_eval_pred-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "14d5fad39ae3f32bfe422e45fec13b37602d88eb10d7b703db18457e9e1b7380",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/f885c86d944a8af2103edfa83c8cee85accf46348fccc611e78e07e1913c0df9.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_sidem05_probe_prop_only-1x-success.mp4",
+      "source_head": "e604b22fa1253679ffa97828a43895c32fe3bd23",
+      "sha256": "0c5833a5e142ee4e4072e295f6e680104c5fd37989dece32aa03ef034aa8244a",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/receipts/fec22e69ccfa3eee51800780324d7e5c3c02b5e4aba1235f942a65ccf635db8b.json",
+      "video": "D:/mai-tmp/runner/ex41_stage_video/model_750_02876f9b1835/EX41-pyramid_stairs_inv_L1-m750-w57_fwd10_eval_gt-1x-success.mp4",
+      "source_head": "23454d886ae79016c9990aa083a3da2ff4f0b169",
+      "sha256": "2151daf3db5bdd388be16d66f85152603aacbf94986e4d3240bf38896f51bb25",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/eval_gt.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m2750-push_eval_gt-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "40b73903f1ba51cd52357ce9722acbbea585b4a19b1ce4d5fe6d4ef132b541ce",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/eval_pred.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m2750-push_eval_pred-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "622ce9b3bb1699143dfd568229f353706946905a4f441293dd738dbe65342129",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/probe_prop_only.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_2750_cc37ad8f16d7/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m2750-push_probe_prop_only-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "0ef7f12956b9598d178556552a896455883d5f0ad28b2a15949d4f6f29dd3906",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/eval_gt.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m3750-push_eval_gt-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "a44e3bf1011c62a8efeef9b9ffececff3015f99e7895b22163e90446e3c8e31b",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/eval_pred.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m3750-push_eval_pred-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "ec974ed394056771fbc843883cb4ec2e1ceeec10258c46171c92e20406db7034",
+      "own_capture_result_equal": true
+    },
+    {
+      "receipt": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/probe_prop_only.json",
+      "video": "C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_3750_9e98514cb2d3/stage_end_auxiliary_eval/a_push_video/a_push_video/EX41-pyramid_stairs_L0-m3750-push_probe_prop_only-1x-success.mp4",
+      "source_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "sha256": "bc404e1e1a6f5899f88c5a8680e1277d440609b68eec933adac5160bfb0696ed",
+      "own_capture_result_equal": true
+    }
+  ],
+  "wrong_outcome_rejected": true,
+  "limitations": [
+    "D48 own success means no done in capture; not task success",
+    "arithmetic and source wiring checks do not calibrate physical sensors",
+    "video inventory snapshot is partial while producer is running"
+  ]
+}
