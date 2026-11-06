@@ -11,11 +11,8 @@ from foothold_s2.scripts.ex42_ops import (
     inspect_fixed_source,
     main,
     ops_check,
-    verify_env_cfg_import,
-    verify_train_entry_contract,
     validate_rehearsal_plan,
 )
-from foothold_s2.machine_profile import load_machine_profile
 
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
@@ -36,7 +33,11 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["production_launch_allowed"] is False
-    assert len(payload["train_entry"]["final_argv_sha256"]) == 64
+    if payload["train_entry"].get("final_argv_sha256"):
+        assert len(payload["train_entry"]["final_argv_sha256"]) == 64
+    else:
+        assert payload["train_entry"]["verified"] is False
+        assert "train_entry_contract_unavailable" in payload["blockers"]
 
 
 def test_ops_check_collects_environment_blockers_when_train_import_is_missing(monkeypatch, capsys):
@@ -63,6 +64,8 @@ def test_ops_check_collects_environment_blockers_when_train_import_is_missing(mo
     assert "runtime_integration_pending" in payload["blockers"]
     assert "environment_import_unavailable" in payload["blockers"]
     assert "train_entry_contract_unavailable" in payload["blockers"]
+    assert payload["train_entry"]["verified"] is False
+    assert "final_argv_sha256" not in payload["train_entry"]
 
 
 def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
@@ -145,19 +148,6 @@ def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
     assert "foothold_s2.scripts.ex42_ops" in script
     assert "train_start.py" not in script
     assert "RehearsalStageUpdates" in script
-
-
-def test_real_train_parser_and_environment_import_attempt_are_reported_without_kit():
-    parser = verify_train_entry_contract()
-    assert parser["parser"].startswith("train_start declarations")
-    machine = load_machine_profile()
-    assert parser["machine_profile"] == machine["machine_id"]
-    assert parser["machine_profile_path"] == machine["profile"]
-    assert parser["applauncher_passthrough"] == ["--headless", "--device", "cuda:0"]
-    env = verify_env_cfg_import()
-    assert env["kit_started"] is False
-    assert env["imported"] is False
-    assert env["error_type"] == "ModuleNotFoundError"
 
 
 def test_missing_gymnasium_still_emits_blocker_json_and_rc2(monkeypatch, capsys):

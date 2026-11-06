@@ -69,3 +69,14 @@ D:/mai-wt/foothold-lab/ex42-rehearsal-e798992d/foothold_s2/run_ex42.ps1 -Mode re
 8. 최종 receipt에 source HEAD, 단계 길이 override, queue ID, GPU UUID, 시작/끝 시각, 오류 및 미확인 항목이 기록된다.
 
 현재 준비도는 `blocked`다. 이 문서는 실행 허가가 아니며, runtime 경로와 env import를 해결한 뒤 lead가 command와 출력 ROOT를 확인해야 한다.
+
+
+## W32 R4 runtime-install measurement
+
+Add the successful real parser and environment import check to the install-day evidence list. It is intentionally outside default pytest discovery so an absent local Isaac/RSL runtime is reported by the portable ops-check test instead of being skipped or treated as a successful import. On the installed runtime only, run explicitly:
+
+```powershell
+C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/ex42_runtime_install_day.py -p no:cacheprovider --basetemp=D:/mai-tmp/runner/pytest-runtime-install-day -q
+```
+
+Pass requires the real train parser and environment class import to succeed, while `kit_started` remains false. Until that explicit install-day run, the successful runtime import is unmeasured.
