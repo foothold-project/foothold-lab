@@ -122,3 +122,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T08:29	boundary4251	4251 DR 0.88 applied · m4250 평가 시작 확인	계획 기울기대로 · 보류 없음	ex41_application.jsonl 4251	4250 점수
 2026-11-06T09:1x	boundary4250	4250 유지 통과 · 여섯 칸 오차 상승(전진 1.0 0.075→0.147) · probe back1.0 0.159 · DR 계획대로	팀장 규칙대로 DR 진행 · 4500 에서 추세 확인 · 지형 L5 · DR 0.88 첫 구간(추정)	score_4250_1e1a574e809a	4500
 2026-11-06T09:5x	stage3750	S2c 단계 끝 영상 51 편 · 밀기 영상 3 편 끝 · 전 프레임 검정 0 · 실패 판정 0	557 render_still_dark · 609 는 lead 가 같은 출력 경로로 다시 넣은 탓(I33) · 610 에서 폴더 보존 뒤 통과	EX41-m03750-all.m3u8	w78_v2 학습 끝 뒤
+2026-11-06T09:58	ops_warn	WARN I15 대기 2(w78_v2 491 · 555 · 둘 다 학습 끝 뒤) · fail_1h 609(I33 · 610 에서 통과)	GPU1 은 m4500 저장(약 10:5x)까지 빔 · 채울 일 없음(밀림 m10000 통과로 추가 시드 불필요)	ops_check	m4500
