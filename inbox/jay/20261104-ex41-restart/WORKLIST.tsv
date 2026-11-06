@@ -31,7 +31,8 @@ W29	팀장 19:0x 정정	P0	at:2026-11-08T17:00	lead	D:/mai-tmp/lead/W29.verified
 W30	팀장 11/06 19:1x	P1	at:2026-11-07T18:00	pipeline	D:/mai-tmp/lead/W30.verified	done	WSL2 Ubuntu-24.04 에서 운영 틀(dispatcher · 잠금 · ops_check · tg_send · orca CLI · isaac311 패키지 해석 · git 꾸러미) CPU 예행 · GPU · Kit 안 씀(Isaac Sim 5.1 WSL2 미지원) · 결과 0133687 · 막음 3(preflight 경로 W32 · tg_send PowerShell · Linux orca 없음)
 W31	W28 제출안	P1	at:2026-11-07T12:00	lead	D:/mai-tmp/lead/W31.verified	open	팀장에게 지형 블록안(20,000~40,000 · 10,000 블록) 승인 요청 · 승인 뒤 CURRICULUM-GATES diff 반영(planner/정본 담당)
 W32	pipeline WSL 19:19	P1	at:2026-11-07T18:00	runner	D:/mai-tmp/runner/REPORT-machine-profile.md	open	기기 설정 파일(Isaac Lab · Isaac Sim · conda · 운영 루트 경로) · 운영 코드의 C:/ D: 절대 경로 없애기 · ex41_start_preflight ISAAC_RSL_CLI · WSL 재시험(pipeline)
-W33	팀장 11/06 19:3x	P1	at:2026-11-07T18:00	super2	D:/mai-tmp/lead/W33.verified	open	런북 최신 결정 반영(D: 이미 포맷 · 작업 디스크) + D: 정리 계획안(살아 있음 · 보관 · 정리 분류 · Linux 와 같은 상대 트리) · 실행은 EX-41 끝 뒤 팀장 확인 뒤
+W33	팀장 11/06 19:3x	P1	at:2026-11-07T18:00	super2	D:/mai-tmp/lead/W33.verified	done	런북 최신 결정 반영(D: 이미 포맷 · 작업 디스크) + D: 정리 계획안(살아 있음 · 보관 · 정리 분류 · Linux 와 같은 상대 트리) · 실행은 EX-41 끝 뒤 팀장 확인 뒤 · super2 런북 초안 28(mai-os bd2c8f1) · 계획 Claude/os/d-drive-cleanup-plan.md · 실행은 EX-41 끝 뒤 팀장 확인
 W34	팀장 11/06 19:3x	P0	at:2026-11-07T12:00	analyst	D:/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md	open	EX-42 출발 관문표: 과거 실수 전부(FAILURE-LOG · INCIDENTS · POSTMORTEM · RULES-HUB · 오늘 lead 실수) × 막는 장치 × EX-42 에 있는지 · 없음 = 출발 막음
 W35	팀장 11/06 19:3x	P0	at:2026-11-07T18:00	lead	D:/mai-tmp/lead/W35.verified	open	W34 의 「없음」 줄을 장치로 채움(담당 배정 · 시험) · 0 이 될 때까지 EX-42 출발 금지
 W36	W30 막음	P1	at:2026-11-08T12:00	pipeline	D:/mai-tmp/lead/W36.verified	open	tg_send 를 PowerShell 없이 Python 으로 보내기(Linux) · Linux 용 orca CLI 설치 · 계약 확인 · 설치 날 명령 목록
+W37	W33 계획	P1	at:2026-11-08T17:00	lead	D:/mai-tmp/lead/W37.verified	open	D: 정리 실행(EX-41 GPU 일 끝 · 팀장 확인 뒤 · D:/mai-* → D:/mai/<역할> 한 뿌리 · 살아 있는 사본 · 대기열 경로 먼저 · 정션) · Linux 와 같은 상대 트리
