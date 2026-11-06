@@ -31,7 +31,7 @@ def test_g11_repeat_width_is_measured_not_assumed():
 
 
 def test_g11_queue_yields_to_gpu1_p1():
-    unit = {"id": 7, "gpu": 1, "priority": 2, "kind": "eval", "state": "대기"}
+    unit = {"id": 7, "gpu": 1, "priority": 3, "kind": "eval", "state": "대기"}
     p1 = {"id": 8, "gpu": 1, "priority": 1, "kind": "eval", "state": "실행"}
     assert unit_queue_admission({"items": [unit, p1]}, 7)["state"] == "yield_to_P1"
     assert unit_queue_admission({"items": [unit]}, 7)["state"] == "eligible"

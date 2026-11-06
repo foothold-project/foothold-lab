@@ -6,7 +6,10 @@ source or an unmeasured numeric difference stays HOLD.
 
 from __future__ import annotations
 
+import argparse
+import json
 import math
+from pathlib import Path
 from typing import Any
 
 
@@ -114,11 +117,35 @@ def unit_queue_admission(queue: dict, unit_id: int) -> dict:
     if not isinstance(rows, list):
         raise ValueError("queue items missing")
     unit = next((row for row in rows if row.get("id") == unit_id), None)
-    if not unit or unit.get("gpu") != 1 or unit.get("priority") != 2 or unit.get("kind") != "eval":
-        raise ValueError("W78 unit must be GPU1 P2 evaluation")
+    if (not unit or unit.get("gpu") != 1 or unit.get("priority") not in (2, 3)
+            or unit.get("kind") != "eval"):
+        raise ValueError("W78 unit must be GPU1 evaluation below P1")
     if unit.get("state") not in ("대기", "실행"):
         raise ValueError("W78 queue item is not pending or running")
     higher = [row.get("id") for row in rows if row.get("gpu") == 1
               and row.get("priority") == 1 and row.get("state") in ("대기", "실행")]
     return {"state": "yield_to_P1" if higher else "eligible", "unit_id": unit_id,
             "higher_priority_ids": higher}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description="Read-only EX42 W78 split evidence gate")
+    parser.add_argument("--full", type=Path, required=True)
+    parser.add_argument("--unit", type=Path, action="append", required=True)
+    parser.add_argument("--repeat", type=Path, action="append", default=[])
+    parser.add_argument("--queue", type=Path)
+    parser.add_argument("--unit-id", type=int)
+    args = parser.parse_args(argv)
+    read = lambda path: json.loads(path.read_text(encoding="utf-8-sig"))
+    result = compare_split(read(args.full), [read(path) for path in args.unit],
+                           repeats=[read(path) for path in args.repeat])
+    if args.queue is not None or args.unit_id is not None:
+        if args.queue is None or args.unit_id is None:
+            parser.error("--queue and --unit-id must be paired")
+        result["queue"] = unit_queue_admission(read(args.queue), args.unit_id)
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    return 0 if result["state"] == "PASS" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
