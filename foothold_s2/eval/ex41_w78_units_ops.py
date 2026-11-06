@@ -163,6 +163,11 @@ def main(argv=None) -> int:
         if a.out is None:
             p.error("merge requires --out")
         result = merge_if_complete(a.root, a.checkpoint, a.out)
+    if a.action == "merge" and result.get("state") == "done":
+        result = {"state": "done", "out": str(a.out), "parts": len(result["parts"]),
+                  "modes": {mode: len(rows) for mode, rows in result["modes"].items()}}
+    elif a.action == "compare":
+        result = {**result, "differences": result["differences"][:20]}
     print(json.dumps(result, ensure_ascii=False, sort_keys=True, allow_nan=False))
     return 0 if result.get("state") != "different" else 1
 
