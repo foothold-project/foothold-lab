@@ -97,5 +97,7 @@ def test_eligible_rejects_started_or_other_scope():
     row["run_at"] = 123.0
     assert not module.eligible(row)
     row.pop("run_at")
+    row["argv"][row["argv"].index("--iteration") + 1] = "5500"
+    assert module.eligible(row)  # S2e stage end (lead 11/06 W40)
     row["argv"][row["argv"].index("--iteration") + 1] = "750"
     assert not module.eligible(row)

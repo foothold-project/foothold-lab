@@ -52,14 +52,14 @@ def eligible(item: dict) -> bool:
     if argv[:3] != [str(PYTHON), "-m", "foothold_s2.eval.ex41_stage_video"]:
         return False
     try:
-        return int(option(argv, "--iteration")) in (5000, 6000) and option(argv, "--device") == "cuda:1"
+        return int(option(argv, "--iteration")) in (5000, 5500, 6000) and option(argv, "--device") == "cuda:1"
     except (ValueError, IndexError):
         return False
 
 
 def rewrite(item: dict, root: Path = ROOT) -> dict:
     if not eligible(item):
-        raise ValueError("only an unstarted EX-41 S2d or m6000 stage clip can move")
+        raise ValueError("only an unstarted EX-41 S2d, S2e or m6000 stage clip can move")
     item = dict(item)
     argv = list(item["argv"])
     for key, value in {
@@ -127,7 +127,7 @@ def move(action: str, sample_id: int | None = None, *, queue_path: str = QUEUE,
         training_finished(marker)
         if action == "sample":
             if not rows:
-                raise ValueError("no unstarted S2d or m6000 stage clip remains")
+                raise ValueError("no unstarted S2d, S2e or m6000 stage clip remains")
             chosen = [rows[0]]
             sample = None
         elif action == "half":
