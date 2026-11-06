@@ -23,10 +23,11 @@ from foothold_s2.eval.ex41_gpu_priority import (
 from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
     operational_definition, paths_for_run, queue_gpu_identity)
 from foothold_s2.eval.ex41_push_ladder import TERRAIN_CASES
+from foothold_s2.machine_profile import machine_path
 
 GPU1_UUID = "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
-DEFAULT_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
-DEFAULT_OUTPUT = Path("D:/mai-tmp/runner/ex41_push250")
+DEFAULT_PYTHON = machine_path("conda_python")
+DEFAULT_OUTPUT = machine_path("ex41_push250_output")
 TASK = "FootholdS2-Go2-S2-SB-v0"
 DESKTOP_PROCESS_NAMES = {
     "dwm.exe", "explorer.exe", "shellhost.exe", "searchhost.exe",
@@ -138,7 +139,7 @@ def build_child_argv(*, checkpoint: Path, out: Path, terrain: str, device: str |
             "--push-ladder-terrain", terrain, "--push-ladder-map-mode", "eval_gt",
             "--push-ladder-command", "walk_1.0", "--push-ladder-directions", "full",
             "--headless", "--device", device,
-            "--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache"]
+            f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
 
 
 def _atomic_json(path: Path, data: dict[str, Any]) -> None:

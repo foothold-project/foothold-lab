@@ -14,6 +14,7 @@ from foothold_s2.scripts.ex42_ops import (
     verify_train_entry_contract,
     validate_rehearsal_plan,
 )
+from foothold_s2.machine_profile import load_machine_profile
 
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
@@ -100,6 +101,9 @@ def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():
 def test_real_train_parser_and_environment_import_attempt_are_reported_without_kit():
     parser = verify_train_entry_contract()
     assert parser["parser"].startswith("train_start declarations")
+    machine = load_machine_profile()
+    assert parser["machine_profile"] == machine["machine_id"]
+    assert parser["machine_profile_path"] == machine["profile"]
     assert parser["applauncher_passthrough"] == ["--headless", "--device", "cuda:0"]
     env = verify_env_cfg_import()
     assert env["kit_started"] is False

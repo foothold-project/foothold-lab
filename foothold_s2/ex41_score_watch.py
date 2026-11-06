@@ -28,6 +28,7 @@ from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic, _manifest_digest, _stable
 from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
     operational_definition, paths_for_run, queue_gpu_identity, source_path)
+from foothold_s2.machine_profile import machine_path
 from foothold_s2.ex41_eval_once import DEFAULT_CONFIG, DEFAULT_TABLE, MODES, commands, hidden_child
 
 MODEL = re.compile(r'model_(0|[1-9][0-9]*)\.pt\Z')
@@ -668,7 +669,7 @@ def _stage_video_contract(definition=None):
     video_cfg = (definition or {}).get('operations', {}).get('stage_video_contract', {})
     source_root = Path(os.environ.get(
         'EX41_STAGE_VIDEO_SOURCE_ROOT',
-        video_cfg.get('source_root', 'D:/mai-wt/foothold-lab/scripter-ex41-stagevideo'))).resolve(strict=True)
+        str(machine_path('ex41_stage_video_source')))).resolve(strict=True)
     module_path = source_root / 'foothold_s2/eval/ex41_stage_video.py'
     if not module_path.is_file():
         raise RuntimeError('scripter EX41 stage-video contract unavailable')
@@ -698,9 +699,8 @@ def _stage_video_output(checkpoint, definition=None):
     checkpoint = Path(checkpoint)
     iteration = int(checkpoint.stem.split('_')[-1])
     pinned = sha256(checkpoint)
-    video_cfg = (definition or {}).get('operations', {}).get('stage_video_contract', {})
     root = Path(os.environ.get('EX41_STAGE_VIDEO_OUT_ROOT',
-                               video_cfg.get('output_root', 'D:/mai-tmp/runner/ex41_stage_video')))
+                               str(machine_path('ex41_stage_video_output'))))
     return root / f'model_{iteration}_{pinned[:12]}'
 
 
@@ -820,9 +820,9 @@ def stage_end_queue_specs(checkpoint, target, cfg, *, stage='stage_end', gpu0_tr
     recorder = source_root / 'foothold_s2/eval/video25/record_c_layer.py'
     composer = source_root / 'foothold_s2/eval/video25/compose_25e_v2style10.py'
     gpu_config = Path(os.environ.get(
-        'EX41_GPU_JOBS_CONFIG', 'C:/Users/AI-WS01/s2_lab/gpu_jobs/jobs.json'))
+        'EX41_GPU_JOBS_CONFIG', str(machine_path('gpu_jobs_config'))))
     playlist_root = Path(os.environ.get(
-        'EX41_PLAYLIST_ROOT', 'C:/Users/AI-WS01/s2_lab/_playlists'))
+        'EX41_PLAYLIST_ROOT', str(machine_path('playlist_root'))))
     for suite, case, mode in cases:
         video_identity = _stage_video_identity(checkpoint, iteration, stage, suite, case, mode)
         argv = [sys.executable, '-m', 'foothold_s2.eval.ex41_stage_video',
@@ -1172,7 +1172,7 @@ def _publish_stage_end_auxiliary(checkpoint, stage, core_bundle, target, plan, s
     if execute:
         # Stage-end work is independently registered in the active GPU board.
         queue_path = Path(os.environ.get(
-            'EX41_GPU_JOBS_QUEUE', 'D:/mai-tmp/gpu/queue.json'))
+            'EX41_GPU_JOBS_QUEUE', str(machine_path('gpu_queue'))))
         queue_jobs = state.setdefault('stage_end_queue_jobs', {})
         job_ids = queue_jobs.get(key)
         if job_ids is None:

@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from foothold_s2.machine_profile import machine_path
 
 from foothold_s2.curriculum.continuous import load_plan
 from foothold_s2.curriculum import w72
@@ -36,10 +37,10 @@ EX41_DISK_REFERENCE_UPDATES = 8001
 EX41_DISK_REFERENCE_LOG_BYTES = 13_922_236_660
 EX41_DISK_REFERENCE_RAW_VIDEO_BYTES = 193_355_567
 EX41_DISK_REFERENCE_FINAL_VIDEO_BYTES = 133_030_760
-EX41_ISAAC_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
-EX41_PRODUCTION_PARENT = Path("C:/Users/AI-WS01/s2_lab")
-EX41_PLAYLIST_ROOT = EX41_PRODUCTION_PARENT / "_playlists"
-EX41_W78_VIDEO_ROOT = Path("D:/mai-tmp/ex41/w78_video")
+EX41_ISAAC_PYTHON = machine_path("conda_python")
+EX41_PRODUCTION_PARENT = machine_path("s2_lab_root")
+EX41_PLAYLIST_ROOT = machine_path("playlist_root")
+EX41_W78_VIDEO_ROOT = machine_path("ex41_w78_video_root")
 _EX41_PRODUCTION_ROOT = re.compile(r"ex41_main_[0-9]{8}_[0-9]{6}\Z")
 EX41_UPDATE_SECONDS_ESTIMATE = 26.3
 EX41_END_BY_BUFFER_SECONDS = 24 * 60 * 60
@@ -325,7 +326,7 @@ def _planner_disk_level(path: Path, required_bytes: int, *, usage_fn=shutil.disk
     """Use planner's shared threshold checker on the destination volume."""
     block_gb = required_bytes / wt_disk_guard.GB
     config = wt_disk_guard.wt_config.load(
-        {"HOME": "D:/mai-tmp/runner"}, user_file=None, default_file=None)
+        {"HOME": str(machine_path("runner_home"))}, user_file=None, default_file=None)
     rows = wt_disk_guard.check(
         [str(Path(path.anchor))], warn_gb=block_gb + 1e-9,
         block_gb=block_gb, config=config, usage_fn=usage_fn)
@@ -609,7 +610,7 @@ def validate_startup_smoke_request(updates: int, output_dir: str | Path,
     if (not path.is_absolute() or path.drive.upper() != "C:"
             or path.parent != EX41_PRODUCTION_PARENT
             or not re.fullmatch(r"ex41_smoke_[0-9]{8}_[0-9]{6}", path.name)):
-        raise ValueError("EX-41 startup smoke output must be C:/Users/AI-WS01/s2_lab/ex41_smoke_YYYYMMDD_HHMMSS")
+        raise ValueError(f"EX-41 startup smoke output must be under {EX41_PRODUCTION_PARENT.as_posix()}")
     if device != "cuda:0" or not headless or distributed:
         raise ValueError("EX-41 startup smoke requires headless cuda:0 and one process")
     return validate_ex41_output_directory(path)

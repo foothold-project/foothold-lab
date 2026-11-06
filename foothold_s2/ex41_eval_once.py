@@ -15,11 +15,12 @@ from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic
 from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
     operational_definition)
+from foothold_s2.machine_profile import machine_path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / 'foothold_s2/curriculum/ex40_score_config.json'
 DEFAULT_TABLE = ROOT / 'foothold_s2/curriculum/ex41-fixed5000.yaml'
-ISAAC_PYTHON = Path('C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe')
+ISAAC_PYTHON = machine_path('conda_python')
 MODES = ('eval_gt', 'probe_prop_only', 'eval_pred')
 CORE_PHASES = ('map64', *(f'stand_{m}' for m in MODES))
 AUXILIARY_PHASES = ('axis_v2', 'w78_v2', 'push_ladder', 'a_push_video')
@@ -78,8 +79,8 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
         '--composer', str(ROOT / 'foothold_s2/eval/video25/compose_25e_v2style10.py'),
         '--python', str(ISAAC_PYTHON),
         '--gpu-jobs-config', str(ROOT / '_out/tools/gpu_jobs/jobs.json'),
-        '--c-layer-lock', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/out/c_layer.lock',
-        '--a-layer-marker', 'C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/A_LAYER_BUSY',
+        '--c-layer-lock', str(machine_path('c_layer_lock')),
+        '--a-layer-marker', str(machine_path('a_layer_marker')),
             '--training-marker', video_training_marker,
         '--iteration', str(iteration), '--seed', str(cfg['eval_seed']),
         '--push-seed', str(cfg['eval_seed']), '--cadence', 'stage_end',
@@ -102,7 +103,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
             device = device_roles['evaluation']
         argv = [str(ISAAC_PYTHON), '-m', module, *args, '--out', str(out/name), '--device', device]
         if name != 'a_push_video':
-            argv += ['--headless', '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache']
+            argv += ['--headless', f'--kit_args=--/UJITSO/datastore/localCachePath={machine_path("isaac_cache_root")}']
         result.append({'name': name, 'device': device, 'argv': argv})
     return result
 

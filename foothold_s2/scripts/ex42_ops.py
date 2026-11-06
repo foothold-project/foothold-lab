@@ -15,6 +15,7 @@ from typing import Any
 from foothold_s2.curriculum.ex42_prep import EX42Plan, RUNTIME_STAGE_IDS
 from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
 from foothold_s2.experiment_registry import load_experiment, source_path
+from foothold_s2.machine_profile import load_machine_profile, machine_path
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -76,6 +77,7 @@ def verify_train_entry_contract() -> dict[str, Any]:
     """Build the real train_start + installed RSL parser without running it."""
     from foothold_s2.ex41_start_preflight import train_parser_from_source
 
+    machine = load_machine_profile()
     parser = train_parser_from_source(REPO)
     required = {"--task", "--agent", "--num_envs", "--seed", "--max_iterations", "--resume_from"}
     absent = sorted(required - set(parser._option_string_actions))
@@ -83,7 +85,7 @@ def verify_train_entry_contract() -> dict[str, Any]:
         raise ValueError(f"EX-42 train entry is missing parser flags: {absent}")
     argv = ["--task", "FootholdS2-Go2-S2-SB-v0", "--agent", "s2_sb",
             "--num_envs", "3072", "--seed", "42", "--max_iterations", "1",
-            "--resume_from", "D:/mai-tmp/runner/known-parent/model_6000.pt",
+            "--resume_from", str(machine_path("mai_tmp_root") / "runner/known-parent/model_6000.pt"),
             "--headless", "--device", "cuda:0"]
     known, unknown = parser.parse_known_args(argv)
     if (known.task != "FootholdS2-Go2-S2-SB-v0" or known.num_envs != 3072
@@ -91,6 +93,8 @@ def verify_train_entry_contract() -> dict[str, Any]:
             or unknown != ["--headless", "--device", "cuda:0"]):
         raise ValueError("EX-42 candidate train argv differs from the real parser contract")
     return {"parser": "train_start declarations + installed RSL-RL cli_args.py",
+            "machine_profile": machine["machine_id"],
+            "machine_profile_path": machine["profile"],
             "known_argv": argv[:-3], "applauncher_passthrough": unknown,
             "training_started": False}
 
@@ -119,20 +123,32 @@ def verify_env_cfg_import(task_id: str = "FootholdS2-Go2-S2-SB-v0") -> dict[str,
 def validate_rehearsal_plan(output_root: str, stage_updates: list[int], *,
                             source_root: str | Path, expected_head: str) -> dict[str, Any]:
     """Validate an isolated, bounded rehearsal plan without creating or launching it."""
-    output = PureWindowsPath(output_root)
-    if (output.drive.upper() != "D:" or len(output.parts) != 4
-            or output.parts[1].casefold() != "mai-tmp"
-            or output.parts[2].casefold() != "runner"
-            or not re.fullmatch(
-                r"ex42_rehearsal_[0-9]{8}_[0-9]{6}", output.name)):
-        raise ValueError("EX-42 rehearsal output must be D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS")
+    output_win = PureWindowsPath(output_root)
+    expected_win = PureWindowsPath(str(machine_path("mai_tmp_root")) + "/runner")
+    expected_parent_label = expected_win.as_posix()
+    if output_win.is_absolute() and expected_win.is_absolute():
+        output_name, output_parent = output_win.name, output_win.parent
+        output_value = str(output_win)
+        parent_matches = output_parent == expected_win
+        exists = Path(output_root).exists()
+    else:
+        output_native = Path(output_root).resolve()
+        expected_parent = (machine_path("mai_tmp_root") / "runner").resolve()
+        expected_parent_label = str(expected_parent)
+        output_name, output_parent = output_native.name, output_native.parent
+        output_value = str(output_native)
+        parent_matches = output_parent == expected_parent
+        exists = output_native.exists()
+    if (not parent_matches
+            or not re.fullmatch(r"ex42_rehearsal_[0-9]{8}_[0-9]{6}", output_name)):
+        raise ValueError(f"EX-42 rehearsal output must be under {expected_parent_label}")
     if (len(stage_updates) != len(RUNTIME_STAGE_IDS)
             or any(type(value) is not int or value < 1 for value in stage_updates)):
         raise ValueError("EX-42 rehearsal requires one positive update count for each of eleven runtime stages")
     source = inspect_fixed_source(source_root, expected_head=expected_head)
-    if Path(output_root).exists():
+    if exists:
         raise ValueError("EX-42 rehearsal output must be new")
-    return {"output_root": str(output), "source": source,
+    return {"output_root": output_value, "source": source,
             "stage_ids": list(RUNTIME_STAGE_IDS),
             "stage_updates": stage_updates, "training_started": False, "kit_started": False}
 

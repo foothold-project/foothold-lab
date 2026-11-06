@@ -9,14 +9,15 @@ from pathlib import Path
 import subprocess
 import time
 import uuid
+from foothold_s2.machine_profile import machine_path
 
-DEFAULT_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
+DEFAULT_MARKER = machine_path("gpu1_eval_marker")
 DEFAULT_GPU0_MARKERS = (
-    Path("C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY"),
-    Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0"),
+    machine_path("gpu0_training_marker"),
+    machine_path("gpu0_training_marker_alt"),
 )
-DEFAULT_GPU1_TRAINING_MARKER = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU1")
-DEFAULT_GPU0_EVAL_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0")
+DEFAULT_GPU1_TRAINING_MARKER = machine_path("gpu1_training_marker")
+DEFAULT_GPU0_EVAL_MARKER = machine_path("gpu0_eval_marker")
 GPU0_UUID = "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
 
 

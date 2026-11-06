@@ -15,6 +15,7 @@ from foothold_s2.eval.ex41_push_ladder import MAP_MODES, TERRAIN_CASES
 from foothold_s2.eval.ex41_gpu_priority import gpu0_priority, wait_for_gpu0_python_idle
 from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
 from foothold_s2.curriculum.continuous import sha256_lf_text
+from foothold_s2.machine_profile import machine_path
 
 
 def bundle_cases(*, include_stand: bool = True) -> list[dict[str, Any]]:
@@ -41,7 +42,7 @@ def build_argv(case: dict[str, Any], *, checkpoint: Path, out: Path,
             "--eval-seed", str(seed), "--push-ladder", "--push-ladder-terrain", case["terrain"],
             "--push-ladder-map-mode", case["map_mode"], "--push-ladder-command", case["command"],
             "--push-ladder-directions", case["directions"], "--headless", "--device", device,
-            "--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache"]
+            f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
 
 
 def load_pinned_baseline(path: Path, expected_sha256: str) -> dict[str, Any]:

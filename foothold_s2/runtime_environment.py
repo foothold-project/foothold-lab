@@ -9,21 +9,26 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from foothold_s2.machine_profile import machine_path
 
-EXPECTED_PYTHON = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
-EXPECTED_RSL_RL_INIT = Path(
-    "C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/rsl_rl/__init__.py"
-)
+
 EXPECTED_RSL_RL_VERSION = "3.1.2"
+
+def expected_runtime_paths() -> tuple[Path, Path]:
+    return machine_path("conda_python"), machine_path("rsl_rl_module")
 
 
 def validate_runtime_identity(*, python_executable: str | Path,
                               rsl_rl_module: str | Path,
                               rsl_rl_version: str,
                               ppo_source: str | Path,
-                              expected_python: str | Path = EXPECTED_PYTHON,
-                              expected_module: str | Path = EXPECTED_RSL_RL_INIT,
+                              expected_python: str | Path | None = None,
+                              expected_module: str | Path | None = None,
                               expected_version: str = EXPECTED_RSL_RL_VERSION) -> dict[str, Any]:
+    if expected_python is None or expected_module is None:
+        profile_python, profile_module = expected_runtime_paths()
+        expected_python = expected_python or profile_python
+        expected_module = expected_module or profile_module
     python_path = Path(python_executable).resolve()
     module_path = Path(rsl_rl_module).resolve()
     expected_python_path = Path(expected_python).resolve()
@@ -61,7 +66,13 @@ def current_runtime_identity() -> dict[str, Any]:
     package_root = Path(spec.origin).resolve().parent
     ppo_source = package_root / "algorithms" / "ppo.py"
     version = importlib.metadata.version("rsl-rl-lib")
-    return validate_runtime_identity(python_executable=sys.executable,
+    expected_python, expected_module = expected_runtime_paths()
+    isaac_sim_root = machine_path("isaac_sim_root").resolve(strict=True)
+    result = validate_runtime_identity(python_executable=sys.executable,
                                     rsl_rl_module=spec.origin,
                                     rsl_rl_version=version,
-                                    ppo_source=ppo_source)
+                                    ppo_source=ppo_source,
+                                    expected_python=expected_python,
+                                    expected_module=expected_module)
+    result["isaac_sim_root"] = str(isaac_sim_root)
+    return result

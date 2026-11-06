@@ -7,6 +7,7 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Any
+from foothold_s2.machine_profile import machine_path
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
@@ -209,8 +210,8 @@ def _send_telegram(body: str) -> bool:
     try:
         from foothold_s2.chain.runner import default_tg_sender
         config = {
-            "outbox": os.environ.get("EX41_TELEGRAM_OUTBOX", "C:/ssd-cleanup-logs/tg-outbox.txt"),
-            "script": os.environ.get("EX41_TELEGRAM_SCRIPT", "C:/ssd-cleanup-logs/tg-send.ps1"),
+            "outbox": os.environ.get("EX41_TELEGRAM_OUTBOX", str(machine_path("telegram_outbox"))),
+            "script": os.environ.get("EX41_TELEGRAM_SCRIPT", str(machine_path("telegram_script"))),
         }
         return bool(default_tg_sender(config, body))
     except (OSError, subprocess.SubprocessError, ImportError):

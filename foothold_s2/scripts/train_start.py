@@ -35,6 +35,7 @@ assert_no_undefined_names([
     Path(REPO) / "foothold_s2/eval/ex41_push250_watch.py",
 ])
 from foothold_s2.runtime_environment import current_runtime_identity  # noqa: E402
+from foothold_s2.machine_profile import machine_path  # noqa: E402
 
 # Enforce the measured Python/RSL-RL pair before importing tensors or AppLauncher.
 LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()
@@ -394,7 +395,7 @@ elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.
 
 from isaaclab.app import AppLauncher  # noqa: E402
 
-ISAAC_RSL = os.path.join(os.environ.get("ISAACLAB_PATH", "C:/isaac/IsaacLab"), "scripts", "reinforcement_learning", "rsl_rl")
+ISAAC_RSL = str(machine_path("isaaclab_root") / "scripts" / "reinforcement_learning" / "rsl_rl")
 sys.path.insert(0, ISAAC_RSL)
 import cli_args  # noqa: E402  isort: skip
 

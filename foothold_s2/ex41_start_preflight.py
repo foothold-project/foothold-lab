@@ -13,6 +13,7 @@ import subprocess
 from typing import Any
 
 from foothold_s2.runtime_environment import current_runtime_identity
+from foothold_s2.machine_profile import machine_path
 
 
 REQUIRED_PARENT_UPDATE = 6000
@@ -20,8 +21,10 @@ REQUIRED_TRAIN_FLAGS = (
     "--task", "--agent", "--num_envs", "--seed", "--max_iterations",
     "--resume_from",
 )
-ISAAC_RSL_CLI = Path("C:/isaac/IsaacLab/scripts/reinforcement_learning/rsl_rl/cli_args.py")
-APPLAUNCHER_SOURCE = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/app/app_launcher.py")
+def _isaac_sources() -> tuple[Path, Path]:
+    root = machine_path("isaaclab_root")
+    return (root / "scripts/reinforcement_learning/rsl_rl/cli_args.py",
+            root / "source/isaaclab/isaaclab/app/app_launcher.py")
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -95,12 +98,13 @@ def audit_train_source(repo: str | Path) -> dict[str, Any]:
     """Static source audit only; does not import train_start or AppLauncher."""
     root = Path(repo).resolve(strict=True)
     train = root / "foothold_s2" / "scripts" / "train_start.py"
-    for p in (train, ISAAC_RSL_CLI, APPLAUNCHER_SOURCE):
+    isaac_rsl_cli, app_launcher_source = _isaac_sources()
+    for p in (train, isaac_rsl_cli, app_launcher_source):
         if not p.is_file():
             raise ValueError(f"required parser source is missing: {p}")
     text = train.read_text(encoding="utf-8")
-    args_text = ISAAC_RSL_CLI.read_text(encoding="utf-8")
-    app_text = APPLAUNCHER_SOURCE.read_text(encoding="utf-8")
+    args_text = isaac_rsl_cli.read_text(encoding="utf-8")
+    app_text = app_launcher_source.read_text(encoding="utf-8")
     missing = [flag for flag in REQUIRED_TRAIN_FLAGS if flag not in text]
     if "def add_rsl_rl_args(parser" not in args_text:
         missing.append("RSL-RL parser source")
@@ -117,7 +121,7 @@ def audit_train_source(repo: str | Path) -> dict[str, Any]:
     if missing:
         raise ValueError("required training CLI declarations are missing: " + ", ".join(missing))
     return {"train_start": str(train), "required_flags_source_checked": list(REQUIRED_TRAIN_FLAGS),
-            "rsl_rl_parser_source": str(ISAAC_RSL_CLI), "app_launcher_parser_source": str(APPLAUNCHER_SOURCE),
+            "rsl_rl_parser_source": str(isaac_rsl_cli), "app_launcher_parser_source": str(app_launcher_source),
             "task_import_source_checked": "foothold_s2.tasks",
             "parser_execution": "source_ast_and_safe_rsl_args_only", "environment_import": "not_run",
             "kit_launch": "not_run", "runtime_identity": current_runtime_identity(),
@@ -144,7 +148,8 @@ def train_parser_from_source(repo: str | Path) -> argparse.ArgumentParser:
     module = ast.Module(body=declarations, type_ignores=[])
     exec(compile(module, str(train), "exec"), namespace)
     parser = namespace["parser"]
-    spec = importlib.util.spec_from_file_location("ex41_safe_cli_args", ISAAC_RSL_CLI)
+    isaac_rsl_cli, _ = _isaac_sources()
+    spec = importlib.util.spec_from_file_location("ex41_safe_cli_args", isaac_rsl_cli)
     if spec is None or spec.loader is None:
         raise ValueError("installed RSL-RL CLI parser cannot be loaded")
     cli_module = importlib.util.module_from_spec(spec)

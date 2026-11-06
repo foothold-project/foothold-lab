@@ -4,7 +4,7 @@ param(
     [string]$Mode,
     [Parameter(Mandatory = $true)]
     [string]$Exp,
-    [string]$Python = 'C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe',
+    [string]$Python,
     [string]$Table,
     [string]$Approvals,
     [string]$Graduation,
@@ -20,6 +20,13 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path "$PSScriptRoot/..").Path
 Push-Location $repoRoot
 try {
+    $bootstrap = Get-Command python -ErrorAction Stop
+    $profilePython = (& $bootstrap.Source -m foothold_s2.machine_profile --print-path conda_python).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $profilePython) { throw 'Selected machine profile did not provide conda_python.' }
+    if ($Python -and [System.IO.Path]::GetFullPath($Python) -ne [System.IO.Path]::GetFullPath($profilePython)) {
+        throw 'Python override differs from the selected machine profile.'
+    }
+    $Python = $profilePython
     $pythonArgs = @('-m', 'foothold_s2.scripts.ex42_ops', "--$Mode", '--exp', $Exp)
     if ($Table) { $pythonArgs += @('--table', $Table) }
     if ($Approvals) { $pythonArgs += @('--approvals', $Approvals) }

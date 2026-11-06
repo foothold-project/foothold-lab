@@ -7,6 +7,7 @@ from pathlib import Path
 
 from foothold_s2.runtime_environment import (
     current_runtime_identity,
+    expected_runtime_paths,
     validate_runtime_identity,
 )
 
@@ -14,8 +15,10 @@ from foothold_s2.runtime_environment import (
 class RuntimeEnvironmentTests(unittest.TestCase):
     def test_installed_isaac311_environment_matches_pinned_identity(self):
         identity = current_runtime_identity()
+        expected_python, expected_module = expected_runtime_paths()
         self.assertEqual(identity["python_executable"].lower(),
-                         "c:\\users\\ai-ws01\\anaconda3\\envs\\isaac311\\python.exe")
+                         str(expected_python).lower())
+        self.assertEqual(identity["rsl_rl_module"].lower(), str(expected_module).lower())
         self.assertEqual(identity["rsl_rl_version"], "3.1.2")
         self.assertFalse(identity["ppo_constructor_storage"])
         self.assertTrue(identity["ppo_init_storage"])
