@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import psutil
 
 import numpy as np
 
@@ -35,6 +36,34 @@ W80 = {"stairs_fwd": (0.5, 0.0, 0.0),
        "stairs_back": (-0.5, 0.0, 0.0)}
 SUITES = {"W57": commands("extended"), "W80": W80}
 LEVELS = {"W57": 1, "W80": 2}
+TRAINING_BUSY_GPU0 = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0")
+
+
+def assert_gpu0_training_idle(device: str, marker: Path = TRAINING_BUSY_GPU0,
+                              process_factory=psutil.Process) -> None:
+    """Fail closed while the GPU0 training owner named by the marker is live."""
+    if device != "cuda:0":
+        return
+    try:
+        row = json.loads(marker.read_text(encoding="utf-8-sig"))
+    except FileNotFoundError:
+        return
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"GPU0 training marker unreadable: {marker}") from exc
+    pid = row.get("pid") if isinstance(row, dict) else None
+    created = row.get("process_created_at") if isinstance(row, dict) else None
+    if type(pid) is not int or pid <= 0 or not isinstance(created, (int, float)):
+        raise ValueError(f"GPU0 training marker lacks pid or process creation time: {marker}")
+    try:
+        actual_created = process_factory(pid).create_time()
+    except psutil.NoSuchProcess:
+        return
+    except (psutil.Error, OSError) as exc:
+        raise ValueError(f"GPU0 training process state uncertain: pid {pid}") from exc
+    if abs(float(actual_created) - float(created)) <= 0.25:
+        raise ValueError(f"GPU0 training is active: pid {pid}")
+    # A reused PID does not prove the marked training run is still alive.
+    # The dispatcher separately checks live GPU occupancy before admission.
 
 
 def stage_cases() -> tuple[tuple[str, str, str], ...]:
@@ -216,15 +245,17 @@ def publish_playlists(args, out: Path, source: dict) -> dict:
 
 
 def run(args) -> dict:
+    assert_gpu0_training_idle(args.device)
     checkpoint, checkpoint_sha = validate_checkpoint(args)
     args.checkpoint_sha = checkpoint_sha
     source = validate_sources(args.source_root, args.recorder, args.composer)
     spec = stage_spec(args, source, checkpoint_sha)
-    if args.device != "cuda:1" or not args.python.is_file():
-        raise ValueError("EX41 stage video requires cuda:1 and Python")
+    if args.device not in ("cuda:0", "cuda:1") or not args.python.is_file():
+        raise ValueError("EX41 stage video requires cuda:0 or cuda:1 and Python")
     row_id = identity(checkpoint, args.iteration, args.stage_name, args.suite, args.case, args.mode)
     if args.plan_only:
-        return {"state": "planned", "id": row_id, "spec": spec, "source": source}
+        return {"state": "planned", "id": row_id, "spec": spec, "source": source,
+                "device": args.device}
     # GPU admission is owned by the dispatcher before it starts this one-clip child.
     # The old gpu_jobs.py board is absent from the EX-41 runtime and must not be
     # consulted a second time inside an already admitted queue item.
@@ -244,6 +275,8 @@ def run(args) -> dict:
             old = json.loads(receipt_path.read_text(encoding="utf-8"))
             if old.get("schema") != SCHEMA or sha256(Path(old["video"])) != old.get("video_sha256"):
                 raise ValueError("existing stage receipt invalid")
+            if args.device == "cuda:0" and old.get("device") != "cuda:0":
+                raise ValueError("existing stage receipt does not prove GPU0 capture")
             return {"state": "already_captured", "receipt": str(receipt_path)}
         attempts = out / "attempts" / row_id
         attempts.mkdir(parents=True, exist_ok=True)
@@ -264,6 +297,7 @@ def run(args) -> dict:
                     or plan.get("checkpoint_profile", {}).get("checkpoint_sha256") != checkpoint_sha
                     or plan.get("spec", {}).get("command_name") != args.case):
                 raise ValueError("stage recorder preflight differs")
+            assert_gpu0_training_idle(args.device)
             child_rc = run_recorder(argv, attempt / "child.log", child_env, no_progress_s=600.0)
             if child_rc or child_log_has_traceback(attempt / "child.log"):
                 raise ValueError(f"stage recorder child failed rc={child_rc}")
@@ -280,6 +314,7 @@ def run(args) -> dict:
             receipt = {"schema": SCHEMA, "id": row_id, "suite": args.suite, "case": args.case,
                        "map_mode": args.mode, "checkpoint_sha256": checkpoint_sha,
                        "iteration": args.iteration, "stage_name": args.stage_name,
+                       "device": args.device,
                        "video": str(target), "video_sha256": sha256(target),
                        "own_result": verified["result"], "attempt_dir": str(attempt),
                        "source_head": source["source_head"], "recorder_sha256": source["recorder_sha256"],
@@ -309,7 +344,7 @@ def main(argv=None) -> int:
     parser.add_argument("--suite", choices=tuple(SUITES), required=True)
     parser.add_argument("--case", required=True)
     parser.add_argument("--mode", choices=MODES, required=True)
-    parser.add_argument("--device", choices=("cuda:1",), default="cuda:1")
+    parser.add_argument("--device", choices=("cuda:0", "cuda:1"), default="cuda:1")
     parser.add_argument("--w78-out", type=Path,
                         help="include validated W78 receipts in D102 playlists")
     parser.add_argument("--push-out", type=Path,
