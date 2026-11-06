@@ -21,6 +21,7 @@ from pathlib import Path
 import psutil
 
 QUEUE = Path("D:/mai-tmp/gpu/queue.json")
+FINAL_ITER = 6000  # lead decision 11/06: EX-41 ends at 6000
 P1_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
 TRAIN_MARKER = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0")
 DISPATCH = Path(__file__).resolve().parents[1] / "gpu_jobs" / "dispatch.py"
@@ -83,7 +84,13 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
 
     # training and its watchers
     train = [c for _, c in procs if "train_start.py" in c and mine(c)]
-    out.append(("OK" if train else "FAIL", "train", f"{len(train)} train_start for this run"))
+    final = sorted(Path(run_root).glob(f"main/*/model_{FINAL_ITER}.pt"))
+    if train:
+        out.append(("OK", "train", f"{len(train)} train_start for this run"))
+    elif final:
+        out.append(("OK", "train", f"finished: {final[0].name} present (planned end {FINAL_ITER})"))
+    else:
+        out.append(("FAIL", "train", f"0 train_start for this run"))
     sw = [c for _, c in procs if "ex41_score_watch" in c]
     out.append(("OK" if any(mine(c) for c in sw) else "FAIL", "score_watch", "production score watch alive"))
     stray = [c for c in sw if not mine(c)]

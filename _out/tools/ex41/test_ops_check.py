@@ -133,3 +133,12 @@ def test_worklist_overdue_without_evidence_fails(tmp_path):   # W · 팀장 11/0
     ev.write_text("marker", encoding="utf-8")       # evidence arrives -> asks to close, no FAIL
     lv = {b: a for a, b, _ in ops_check.worklist(w, now, 6000)}
     assert lv["W A"] == "WARN" and lv["W B"] == "WARN"
+
+
+def test_train_absent_ok_only_after_final_checkpoint(tmp_path):
+    no_train = [x for x in procs() if "train_start.py" not in x[1]]
+    run = tmp_path / "run"
+    (run / "main" / "x").mkdir(parents=True)
+    assert levels(ops_check.check(run, procs=no_train, queue=q()))["train"] == "FAIL"
+    (run / "main" / "x" / f"model_{ops_check.FINAL_ITER}.pt").write_bytes(b"x")
+    assert levels(ops_check.check(run, procs=no_train, queue=q()))["train"] == "OK"
