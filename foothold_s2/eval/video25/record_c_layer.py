@@ -2046,6 +2046,11 @@ def _capture(spec: dict[str, Any]) -> None:
                 map_arrays[key] = np.empty((0,), dtype=np.float32)
         np.savez_compressed(npz_path, t=np.asarray(data["t"], dtype=np.float64),
                             seg=np.asarray(data["seg"], dtype=np.int8), dt=np.float64(step_dt),
+                            terrain_kind=np.full(len(data["t"]), spec["kind"], dtype="U64") if sparse_capture else np.empty((0,), dtype="U64"),
+                            terrain_level=np.full(len(data["t"]), tile["level"], dtype=np.int16) if sparse_capture else np.empty((0,), dtype=np.int16),
+                            terrain_env=np.full(len(data["t"]), spec["env_id"], dtype=np.int16) if sparse_capture else np.empty((0,), dtype=np.int16),
+                            terrain_col=np.full(len(data["t"]), spec["col"], dtype=np.int16) if sparse_capture else np.empty((0,), dtype=np.int16),
+                            terrain_assignment_sha256=np.full(len(data["t"]), sparse_assignment["assignment_sha256"], dtype="U64") if sparse_capture else np.empty((0,), dtype="U64"),
                             seg_s=np.float64(active_commands[0][2]), foot_z=np.asarray(data["foot_xyz"])[:, :, 2],
                             foot_xy=np.asarray(data["foot_xyz"])[:, :, :2],
                             foot_contact=np.asarray(data["foot_contact"], dtype=np.bool_),
