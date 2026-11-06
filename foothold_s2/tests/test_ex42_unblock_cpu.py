@@ -39,9 +39,18 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
     plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
     approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml")
                                .read_text(encoding="utf-8"))
+    approvals.pop("domain_randomization", None)
     path = tmp_path / "approvals.yaml"
     path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
     with pytest.raises(ValueError, match="approved DR schedule missing"):
+        EX42Runtime.transition_consumer(plan, path)
+    approvals["domain_randomization"] = {
+        "approved": True,
+        "decision_id": "fixture-missing-stage-zero",
+        "stage_scales": {stage_id: 1.0 for stage_id in plan.runtime_stage_ids[1:]},
+    }
+    path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
+    with pytest.raises(ValueError, match="explicitly cover every stage"):
         EX42Runtime.transition_consumer(plan, path)
 
     # Explicit fixture values exercise consumption only; they are not committed
@@ -49,7 +58,7 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
     approvals["domain_randomization"] = {
         "approved": True,
         "decision_id": "fixture-decision",
-        "stage_scales": {stage["id"]: 0.37 for stage in plan.document["stages"]},
+        "stage_scales": {stage_id: 0.37 for stage_id in plan.runtime_stage_ids},
     }
     path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
     consumer = EX42Runtime.transition_consumer(plan, path, current_stage_id="E0")
@@ -68,6 +77,39 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
         consumer.transition(env, "E3", boundary_iteration=501,
                             expected_score_iteration=500,
                             observed_score_iteration=500)
+
+
+def test_stage_zero_transition_and_score_watch_share_one_stage_and_approved_scale(tmp_path):
+    from foothold_s2.ex42_score_watch import checkpoint_stage_context
+
+    plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
+    approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml")
+                               .read_text(encoding="utf-8"))
+    approvals["domain_randomization"] = {
+        **approvals["domain_randomization"],
+        "stage_scales": {stage_id: 1.0 for stage_id in plan.runtime_stage_ids},
+    }
+    path = tmp_path / "approved.yaml"
+    path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
+
+    initial = checkpoint_stage_context(plan, path, 1000)
+    assert initial["stage_id"] == "EX42_0_T0_prime"
+    assert initial["dr_scale"] == 1.0
+    assert initial["stage_config"]["force_gt"] is False
+    with pytest.raises(ValueError, match="transition receipt"):
+        checkpoint_stage_context(plan, path, 1001)
+
+    consumer = EX42Runtime.transition_consumer(plan, path)
+    env = SimpleNamespace()
+    transition = consumer.transition(
+        env, "E0", boundary_iteration=1001, expected_score_iteration=1000,
+        observed_score_iteration=None,
+    )
+    score = checkpoint_stage_context(plan, path, 1001, transition_rows=(transition,))
+    assert transition["stage_after"] == score["stage_id"] == env._ex42_stage_id == "E0"
+    assert transition["applied_scale"] == score["dr_scale"] == env._ex40_dr_scale == 1.0
+    assert transition["status"] == "measurement_gap"
+    assert env._ex42_stage_config["id"] == score["stage_id"]
 
 
 def test_dispatch_queue_updates_serialize_and_temp_names_are_private(tmp_path, monkeypatch):

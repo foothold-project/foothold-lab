@@ -12,7 +12,7 @@ import subprocess
 from pathlib import PureWindowsPath
 from typing import Any
 
-from foothold_s2.curriculum.ex42_prep import EX42Plan, STAGE_IDS
+from foothold_s2.curriculum.ex42_prep import EX42Plan, RUNTIME_STAGE_IDS
 from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
 from foothold_s2.experiment_registry import load_experiment, source_path
 
@@ -56,7 +56,9 @@ def inspect_fixed_source(repo: str | Path, *, expected_head: str | None = None) 
 
 def verify_import_boundary() -> dict[str, int]:
     """AST-check gate modules and reject import-time simulator bootstrap."""
-    paths = [Path(__file__).resolve(), REPO / "foothold_s2/curriculum/ex42_prep.py"]
+    paths = [Path(__file__).resolve(), REPO / "foothold_s2/curriculum/ex42_prep.py",
+             REPO / "foothold_s2/curriculum/ex42_runtime.py",
+             REPO / "foothold_s2/ex42_score_watch.py"]
     forbidden = ("isaacsim", "isaaclab.app", "omni.kit")
     for path in paths:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -124,13 +126,14 @@ def validate_rehearsal_plan(output_root: str, stage_updates: list[int], *,
             or not re.fullmatch(
                 r"ex42_rehearsal_[0-9]{8}_[0-9]{6}", output.name)):
         raise ValueError("EX-42 rehearsal output must be D:/mai-tmp/runner/ex42_rehearsal_YYYYMMDD_HHMMSS")
-    if len(stage_updates) != 10 or any(type(value) is not int or value < 1 for value in stage_updates):
-        raise ValueError("EX-42 rehearsal requires one positive update count for each of ten stages")
+    if (len(stage_updates) != len(RUNTIME_STAGE_IDS)
+            or any(type(value) is not int or value < 1 for value in stage_updates)):
+        raise ValueError("EX-42 rehearsal requires one positive update count for each of eleven runtime stages")
     source = inspect_fixed_source(source_root, expected_head=expected_head)
     if Path(output_root).exists():
         raise ValueError("EX-42 rehearsal output must be new")
     return {"output_root": str(output), "source": source,
-            "stage_ids": list(STAGE_IDS),
+            "stage_ids": list(RUNTIME_STAGE_IDS),
             "stage_updates": stage_updates, "training_started": False, "kit_started": False}
 
 
@@ -143,8 +146,16 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
     plan = EX42Plan.load(table)
     blockers = plan.launch_blockers(approvals, graduation, terrain_manifest)
     blockers.append("runtime_integration_pending")
+    definition = load_experiment("EX-42")
+    values = definition.get("operational_values", {})
+    parent = values.get("parent", {})
+    training = values.get("training", {})
+    if (parent != plan.document["stage_zero"]["parent"]
+            or training.get("initial_stage") != plan.document["stage_zero"]["id"]
+            or training.get("initial_stage_updates") != plan.document["stage_zero"]["maximum_updates"]):
+        blockers.append("stage_zero_definition_mismatch")
     try:
-        stage_ids = tuple(row["id"] for row in plan.document["stages"])
+        stage_ids = plan.runtime_stage_ids
         read_approved_dr_schedule(approvals, stage_ids)
     except (OSError, KeyError, TypeError, ValueError):
         blockers.append("stage_dr_schedule_unapproved")
@@ -182,7 +193,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--expected-head")
     parser.add_argument("--rehearsal-output")
-    parser.add_argument("--rehearsal-stage-updates", type=int, nargs=10)
+    parser.add_argument("--rehearsal-stage-updates", type=int, nargs=len(RUNTIME_STAGE_IDS))
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--ops-check", action="store_true")
     modes.add_argument("--rehearsal", action="store_true")

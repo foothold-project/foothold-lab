@@ -14,6 +14,8 @@ import yaml
 
 
 STAGE_IDS = ("E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b")
+STAGE_ZERO_ID = "EX42_0_T0_prime"
+RUNTIME_STAGE_IDS = (STAGE_ZERO_ID, *STAGE_IDS)
 FAMILIES = ("A", "B", "C", "D", "E", "continuous")
 CANONICAL_V016_COMMIT = "69e5ac6bb5a5e16f8b5c419e8674237f3f597dd8"
 EXPECTED_D182 = {
@@ -68,6 +70,38 @@ class EX42Plan:
         stages = doc.get("stages")
         if not isinstance(stages, list) or tuple(row.get("id") for row in stages) != STAGE_IDS:
             raise ValueError("EX-42 stage table must contain the ten canonical stages in order")
+        stage_zero = doc.get("stage_zero")
+        if not isinstance(stage_zero, dict) or stage_zero.get("id") != STAGE_ZERO_ID:
+            raise ValueError("EX-42 must define the explicit EX-41 T0-prime bridge as stage zero")
+        source = stage_zero.get("source")
+        if (not isinstance(source, dict) or source.get("experiment_id") != "EX-41"
+                or source.get("stage_id") != "T0_prime"):
+            raise ValueError("EX-42 stage zero must identify its EX-41 T0-prime source")
+        source_name = source.get("path")
+        if not isinstance(source_name, str) or Path(source_name).name != source_name:
+            raise ValueError("EX-42 stage-zero source must be a same-directory file name")
+        source_path = plan_path.parent / source_name
+        source_raw = source_path.read_bytes()
+        normalized_sha = hashlib.sha256(source_raw.replace(b"\r\n", b"\n")).hexdigest()
+        if source.get("normalized_sha256") != normalized_sha:
+            raise ValueError("EX-42 stage-zero source SHA differs from the EX-41 fixed table")
+        source_doc = _read_yaml(source_path)
+        source_stage = next((row for row in source_doc.get("stages", [])
+                             if row.get("id") == "T0_prime"), None)
+        if source_stage is None:
+            raise ValueError("EX-42 T0-prime source stage is missing")
+        for key in ("shares", "ranges", "force_gt", "terrain"):
+            if stage_zero.get(key) != source_stage.get(key):
+                raise ValueError(f"EX-42 stage zero differs from EX-41 T0-prime {key}")
+        parent = stage_zero.get("parent")
+        if parent != {"update": 6000,
+                      "sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5"}:
+            raise ValueError("EX-42 stage zero parent must be the fixed EX-41 m6000 checkpoint")
+        if (stage_zero.get("minimum_updates") != 1000
+                or stage_zero.get("maximum_updates") != 1000
+                or stage_zero.get("extension_updates") != 0
+                or stage_zero.get("start_update") != 0):
+            raise ValueError("EX-42 T0-prime bridge must be exactly 1000 updates from local update zero")
         for row in stages:
             if (type(row.get("minimum_updates")) is not int
                     or type(row.get("maximum_updates")) is not int
@@ -112,6 +146,53 @@ class EX42Plan:
         if terrain_contract.get("evaluation_axis_rule") != "harder_per_axis":
             raise ValueError("EX-42 evaluation size must be checked per axis")
         return cls(plan_path, doc, hashlib.sha256(raw).hexdigest())
+
+    @property
+    def runtime_stages(self) -> tuple[dict[str, Any], ...]:
+        """One stage sequence shared by transition, DR approval, and score identity."""
+        zero = self.document["stage_zero"]
+        first = {"id": zero["id"], "start": {"fixed_update": zero["start_update"]},
+                 "duration": {"minimum_updates": zero["minimum_updates"],
+                              "maximum_updates": zero["maximum_updates"],
+                              "extension_updates": zero["extension_updates"]},
+                 "shares": zero["shares"], "ranges": zero["ranges"],
+                 "force_gt": zero["force_gt"], "terrain": zero["terrain"]}
+        return (first, *tuple(self.document["stages"]))
+
+    @property
+    def runtime_stage_ids(self) -> tuple[str, ...]:
+        return tuple(row["id"] for row in self.runtime_stages)
+
+    def stage_id_at(self, local_iteration: int, *, transitions: tuple[dict[str, Any], ...] = ()) -> str:
+        """Resolve a checkpoint's stage from the shared sequence and applied receipts.
+
+        EX42_0_T0_prime is known at startup. After its boundary, actual transition
+        receipts are required so extensions cannot be mistaken for nominal timing.
+        """
+        if type(local_iteration) is not int or local_iteration < 0:
+            raise ValueError("EX-42 score checkpoint iteration must be a nonnegative integer")
+        ids = self.runtime_stage_ids
+        if local_iteration <= self.document["stage_zero"]["maximum_updates"]:
+            return ids[0]
+        current_index = 0
+        last_boundary = 0
+        for row in transitions:
+            if not isinstance(row, dict):
+                raise ValueError("EX-42 transition history row is invalid")
+            boundary = row.get("boundary_iteration")
+            if type(boundary) is not int or boundary <= last_boundary:
+                raise ValueError("EX-42 transition history boundary is invalid or out of order")
+            if boundary > local_iteration:
+                break
+            next_index = current_index + 1
+            if (next_index >= len(ids) or row.get("stage_before") != ids[current_index]
+                    or row.get("stage_after") != ids[next_index]):
+                raise ValueError("EX-42 transition history does not follow the shared stage sequence")
+            current_index = next_index
+            last_boundary = boundary
+        if current_index == 0:
+            raise ValueError("EX-42 score stage is unknown without an applied stage-zero transition receipt")
+        return ids[current_index]
 
     def validate_terrain_manifest(self, manifest: dict[str, Any]) -> None:
         contract = self.document["terrain_manifest_contract"]

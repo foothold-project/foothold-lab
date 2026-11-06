@@ -92,15 +92,15 @@ class EX42StageTransitionConsumer:
 
     def __init__(self, plan: EX42Plan, approvals_path: str | Path,
                  *, current_stage_id: str | None = None):
-        stages = plan.document.get("stages")
-        if not isinstance(stages, list) or not stages:
+        stages = plan.runtime_stages
+        if not isinstance(stages, tuple) or not stages:
             raise ValueError("EX-42 plan has no stages")
-        self.stage_ids = tuple(row.get("id") for row in stages)
+        self.stages = tuple(stages)
+        self.stage_ids = tuple(row.get("id") for row in self.stages)
         if (any(not isinstance(stage, str) or not stage for stage in self.stage_ids)
                 or len(set(self.stage_ids)) != len(self.stage_ids)):
             raise ValueError("EX-42 stage IDs are missing or duplicated")
-        self.stage_scales, self.decision_id = read_approved_dr_schedule(
-            approvals_path, self.stage_ids)
+        self.stage_scales, self.decision_id = read_approved_dr_schedule(approvals_path, self.stage_ids)
         self.stage_index = 0
         if current_stage_id is not None:
             if current_stage_id not in self.stage_ids:
@@ -125,11 +125,13 @@ class EX42StageTransitionConsumer:
         )
         target = getattr(env, "unwrapped", env)
         target._ex42_stage_id = next_stage_id
+        target._ex42_stage_config = self.stages[next_index]
         target._ex40_dr_scale = evidence["applied_scale"]
         self.stage_index = next_index
         return {
             "stage_before": self.stage_ids[next_index - 1],
             "stage_after": next_stage_id,
+            "boundary_iteration": boundary_iteration,
             "decision_id": self.decision_id,
             **evidence,
         }

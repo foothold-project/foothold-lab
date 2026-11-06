@@ -13,6 +13,7 @@ domain_randomization:
   decision_id: lead-relay-teamlead-20261106-1725-dr-1.0-fixed
   rationale: '팀장 11/06 17:2x: 「DR 은 우선 1.0 으로 시작해서 그대로 두는 쪽으로 하자」'
   stage_scales:
+    EX42_0_T0_prime: 1.0
     E0: 1.0
     E1: 1.0
     E1F: 1.0

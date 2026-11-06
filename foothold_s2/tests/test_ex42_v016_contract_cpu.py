@@ -61,6 +61,20 @@ def test_v016_makes_known_values_decisions_but_keeps_unmeasured_values_open():
     assert doc["stages"][3]["id"] == "E2"
     assert doc["maintenance"]["judge_from_stage"]["foot_drag"] == "E2"
     assert doc["stages"][3]["hold_policy"] == "hold_exposure_continue_training"
+    stage_zero = doc["stage_zero"]
+    assert stage_zero["id"] == "EX42_0_T0_prime"
+    assert stage_zero["parent"] == {
+        "update": 6000,
+        "sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    }
+    assert (stage_zero["minimum_updates"], stage_zero["maximum_updates"],
+            stage_zero["extension_updates"]) == (1000, 1000, 0)
+    assert stage_zero["force_gt"] is False
+    plan = EX42Plan.load(TABLE)
+    assert plan.runtime_stage_ids == (
+        "EX42_0_T0_prime", *(stage["id"] for stage in doc["stages"]),
+    )
+    assert plan.runtime_stages[0]["shares"] == doc["stage_zero"]["shares"]
 
 
 def test_conditional_command_shares_respect_absolute_3072_environment_floors():

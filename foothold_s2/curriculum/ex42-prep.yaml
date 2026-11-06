@@ -93,6 +93,47 @@ environment:
       - flag
       completion: tile_end_reach
       continuous_generator_unchanged: true
+stage_zero:
+  id: EX42_0_T0_prime
+  source:
+    experiment_id: EX-41
+    stage_id: T0_prime
+    path: ex41-fixed5000.yaml
+    normalized_sha256: 75b55225ed01114b190578ec6c01fcf2b82a6139bb1dd3bd800843752f6fc1b7
+  parent:
+    update: 6000
+    sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5
+  minimum_updates: 1000
+  maximum_updates: 1000
+  extension_updates: 0
+  start_update: 0
+  shares:
+    forward: 0.23
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.09
+    spin_right: 0.09
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+  ranges:
+    forward_vx: [0.1, 1.5]
+    walk_vx: [0.3, 0.8]
+    walk_wz_abs: [0.2, 1.0]
+    spin_wz_abs: [0.3, 1.5]
+    reverse_vx: [-1.3, -0.2]
+    side_vy_abs: [0.2, 0.6]
+    diag_vx_abs: [0.3, 0.6]
+    diag_vy_abs: [0.2, 0.5]
+  force_gt: false
+  terrain:
+    policy: performance
+    level_cap: 5
 stages:
 - id: E0
   name: parent_and_mesh_check

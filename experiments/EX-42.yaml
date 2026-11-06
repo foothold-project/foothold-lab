@@ -27,13 +27,20 @@ files:
   maintenance_baseline: null
   stage_video_source: null
 operational_values:
-  parent: {update: null, sha256: null}
+  parent:
+    update: 6000
+    sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5
   training:
     environments: 3072
     seed: 42
     status: preparation_only
+    initial_stage: EX42_0_T0_prime
+    initial_stage_updates: 1000
     stages_from: foothold_s2/curriculum/ex42-prep.yaml
     dr_schedule_from: foothold_s2/curriculum/ex42-approvals.yaml
+  score_watch:
+    stage_identity_module: foothold_s2.ex42_score_watch
+    applied_transition_log: eval/ex42_application.jsonl
   evaluation:
     environments: 64
     seed: 42

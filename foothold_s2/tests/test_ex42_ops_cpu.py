@@ -78,14 +78,15 @@ def test_rehearsal_plan_requires_new_d_output_ten_stages_and_fixed_source(tmp_pa
                    capture_output=True)
     kwargs = {"source_root": repo, "expected_head": head}
     good = validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
-                                   [1] * 10, **kwargs)
-    assert good["stage_updates"] == [1] * 10
+                                   [1] * 11, **kwargs)
+    assert good["stage_updates"] == [1] * 11
+    assert good["stage_ids"][0] == "EX42_0_T0_prime"
     assert good["training_started"] is False and good["kit_started"] is False
     with pytest.raises(ValueError, match="D:/mai-tmp/runner"):
-        validate_rehearsal_plan("C:/temp/ex42_rehearsal_20261105_235959", [1] * 10, **kwargs)
-    with pytest.raises(ValueError, match="ten stages"):
+        validate_rehearsal_plan("C:/temp/ex42_rehearsal_20261105_235959", [1] * 11, **kwargs)
+    with pytest.raises(ValueError, match="eleven runtime stages"):
         validate_rehearsal_plan("D:/mai-tmp/runner/ex42_rehearsal_20261105_235959",
-                                [1] * 9, **kwargs)
+                                [1] * 10, **kwargs)
 
 
 def test_start_wrapper_exposes_only_gated_modes_and_does_not_call_training():

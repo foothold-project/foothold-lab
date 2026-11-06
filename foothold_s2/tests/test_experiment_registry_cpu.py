@@ -59,6 +59,11 @@ def test_ex42_definition_points_at_preparation_contract_and_approved_schedule():
     assert exp["operational_values"]["training"]["stages_from"] == exp["files"]["curriculum"]
     assert plan["status"] == "preparation_only"
     assert approvals["domain_randomization"]["decision_id"] == "lead-relay-teamlead-20261106-1725-dr-1.0-fixed"
+    parent = exp["operational_values"]["parent"]
+    assert parent == plan["stage_zero"]["parent"]
+    assert exp["operational_values"]["training"]["initial_stage"] == plan["stage_zero"]["id"]
+    assert exp["operational_values"]["training"]["initial_stage_updates"] == 1000
+    assert approvals["domain_randomization"]["stage_scales"]["EX42_0_T0_prime"] == 1.0
 
 
 def test_registry_accepts_new_definition_without_code_identifier_changes(tmp_path):
