@@ -1,0 +1,16 @@
+id	source	priority	due	owner	evidence	status	what
+W01	팀장 11/06 16:0x · 계약 2 절	P1	at:2026-11-06T19:00	analyst	D:/mai-tmp/analyst/mdtables_check.ok	open	단계 보고서 W57 표 고침 · 표 검사 0 · 그 뒤 W78 · S2d 영상 칸 채운 v1.1
+W02	팀장 11/06 16:0x · I24	P1	at:2026-11-06T19:00	scripter	D:/mai-tmp/scripter/REPORT-w78units-1106.md	dropped	W78 조각 m750 대조 → m2750 · m3750 · m5000 90 조각 · 합치기 · 17:1x 답 아는 대조 실패(조각 ≠ 한 덩어리 · 60,426/70,674 수치 차 · 생존 15 대 13 한 칸) · EX-41 에선 안 씀
+W03	계약 2 절 · 단계 넘김	P0	iter:5520	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/ex41_application.jsonl::"iteration": 5501	open	5501 T0′ 넘김 확인 · 텔레그램 · #555
+W04	계약 1 단계 끝	P0	iter:6000	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/model_6000.pt	open	6000 도달 · 마지막 점수 · 마지막 단계 끝 일 등록 확인
+W05	S2d 단계 끝 · I14	P2	at:2026-11-07T02:00	lead	C:/Users/AI-WS01/s2_lab/_playlists/EX41-m05000-all.m3u8	open	S2d 영상 51 편 · 재생 목록 · 전 프레임 검사 · 밀기 영상(614)
+W06	I27 · 팀장 11/06	P2	at:2026-11-07T02:00	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/eval/score-watch/model_750_02876f9b1835/stage_end_auxiliary_eval/a_push_video/eval_receipt.json	open	m750 밀기 영상(666) 촬영 · 전 프레임 검사
+W07	팀장 11/06 17:2x	P1	at:2026-11-06T19:00	runner	D:/mai-wt/foothold-lab/runner-ex42-v016/foothold_s2/curriculum/ex42-approvals.yaml::dr-1.0-fixed	open	EX-42 DR 1.0 고정 승인 반영 · ops-check 에서 단계 DR 막음 빠짐
+W08	팀장 11/06 17:2x	P1	at:2026-11-07T12:00	runner	D:/mai-tmp/runner/REPORT-exp-registry.md	open	실험 정의 파일 하나(experiments/EX-42.yaml) + 운영 도구가 --exp 만 받게(계획 PLAN-WORKLIST-EXP-PATHS 2 절)
+W09	팀장 11/06 17:2x	P0	at:2026-11-06T19:00	lead	D:/mai-wt/foothold-lab/lead-dispatch-measure/_out/tools/ex41/test_ops_check.py::worklist	done	작업 목록 장치(ops_check 가 이 파일을 읽음)
+W10	계약 2 단계	P1	at:2026-11-07T12:00	lead	D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/EX41-ANALYSIS.md	open	EX-41 분석 보고서(6000 점수 · 단계 보고서 · 지도 셋 비교 · 사고) push · URL · 그림
+W11	계약 lead 일 A	P3	at:2026-11-08T12:00	lead	C:/Users/AI-WS01/.claude/skills/mai-mode/SKILL.md	open	mai-mode 스킬
+W12	관문 D N2 N9 N15 N17~N21	P3	at:2026-11-08T12:00	lead	D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/GATE-N-ROWS.md	open	관문 남은 행 처분표(EX-42 로 넘길 것 · 버릴 것 · 할 것)
+W13	I24 · 팀장 11/06	P1	iter:6000	lead	-	open	학습 끝(6000) 바로 뒤 한 덩어리 W78 셋(491 m2750 · 555 m3750 · 612 m5000)+마지막(m6000)을 GPU1 · GPU0 에 나눠 돌림 · 23:00 묶음 풀기
+W14	팀장 11/06 17:2x	P3	-	lead	-	open	DR 1.0 넘는 평가 측정(정말 후순위 · 안 해도 됨)
+W15	scripter 17:1x 대조 실패	P2	at:2026-11-08T12:00	scripter	D:/mai-tmp/scripter/REPORT-w78-noise-floor.md	open	W78 조각 ≠ 한 덩어리 원인 가르기(같은 단위 두 번 돌린 잡음 바닥 · 코드 판 같게) → EX-42 쪼개기 설계 조건
