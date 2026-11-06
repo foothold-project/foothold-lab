@@ -132,3 +132,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T15:5x	status	팀장 물음에 중간 점검 보고(EX41R-STATUS-1106) · m750 밀기 영상 666 다시 넣음 · 전체 재생 목록 375 편 · I26 I27 닫음	계약 2 절 · 관문 · 대기열 · 재생 목록 실측	EX41R-STATUS-1106.md · EX41-ALL-stages-1106.m3u8	팀장 결정 셋
 2026-11-06T16:14	boundary5251	5251 DR 1.0 applied · m5250 평가 시작	계획대로	ex41_application.jsonl 5251	5250 점수
 2026-11-06T16:2x	w78units	scripter 에 W78 단계 끝 (mode,case) 단위 실행 지시(ed65fac0 도구 · m750 412 로 먼저 대조 · m2750 m3750 m5000 90 단위 P2)	팀장 16:0x 물음 · GPU1 빈 시간 출발 뒤 약 536 분 · 도구는 11/05 09:01 부터 있었으나 EX-41 에 안 씀(근본 원인)	brief · runner ed65fac0	시험 결과
+2026-11-06T16:2x	workers	runner 에 EX-42 단계 넘김 연결 · 운영 고침 옮기기 · analyst 에 S2a~S2d 정식 단계 보고서 지시 · 셋 다 turn 시작 확인 · WARN I24 [613] 은 표식을 쥔 S2d 밀기 판정 자신(P1 m5250 은 16:14 에 같이 시작)	팀장 16:0x 물음 · 작업자 약 21 시간 대기 해소	brief-runner · brief-analyst	보고 대기
