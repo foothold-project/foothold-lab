@@ -138,6 +138,13 @@ class EX42StageTransitionConsumer:
 class EX42Runtime:
     """Keep the generic runtime factory from silently treating EX-42 as EX-40."""
 
+    @staticmethod
+    def transition_consumer(plan: EX42Plan, approvals_path: str | Path,
+                            *, current_stage_id: str | None = None) -> EX42StageTransitionConsumer:
+        """Build the stage-transition consumer from the approved EX-42 schedule."""
+        return EX42StageTransitionConsumer(
+            plan, approvals_path, current_stage_id=current_stage_id)
+
     def __init__(
         self, plan: EX42Plan, env_count: int, device: str, log_dir: str | Path,
         *, approvals_path: str | Path, graduation_path: str | Path | None,

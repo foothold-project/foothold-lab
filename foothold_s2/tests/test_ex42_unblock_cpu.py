@@ -13,7 +13,7 @@ import pytest
 import yaml
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
-from foothold_s2.curriculum.ex42_runtime import EX42StageTransitionConsumer
+from foothold_s2.curriculum.ex42_runtime import EX42Runtime
 from foothold_s2.eval.ex41_push250_watch import score_watch_attempt_finished
 from foothold_s2.ex40_score_watch import _manifest_digest
 from foothold_s2.ex41_score_watch import (
@@ -42,7 +42,7 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
     path = tmp_path / "approvals.yaml"
     path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
     with pytest.raises(ValueError, match="approved DR schedule missing"):
-        EX42StageTransitionConsumer(plan, path)
+        EX42Runtime.transition_consumer(plan, path)
 
     # Explicit fixture values exercise consumption only; they are not committed
     # as an EX-42 schedule or offered as defaults.
@@ -52,7 +52,7 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
         "stage_scales": {stage["id"]: 0.37 for stage in plan.document["stages"]},
     }
     path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
-    consumer = EX42StageTransitionConsumer(plan, path, current_stage_id="E0")
+    consumer = EX42Runtime.transition_consumer(plan, path, current_stage_id="E0")
     env = SimpleNamespace(_ex42_stage_id="E0", _ex40_dr_scale=0.1)
     row = consumer.transition(env, "E1", boundary_iteration=251,
                               expected_score_iteration=250,
