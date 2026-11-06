@@ -1,7 +1,7 @@
 id	source	priority	due	owner	evidence	status	what
 W01	팀장 11/06 16:0x · 계약 2 절	P1	at:2026-11-07T08:00	analyst	D:/mai-tmp/lead/W01.verified	done	단계 보고서 W57 표 고침 됨(186ec34f · lead 검사 0) · 남은 것: W78 · S2d 영상 칸 채운 v1.1
 W02	팀장 11/06 16:0x · I24	P1	at:2026-11-06T19:00	scripter	D:/mai-tmp/scripter/REPORT-w78units-1106.md	dropped	W78 조각 m750 대조 → m2750 · m3750 · m5000 90 조각 · 합치기 · 17:1x 답 아는 대조 실패(조각 ≠ 한 덩어리 · 60,426/70,674 수치 차 · 생존 15 대 13 한 칸) · EX-41 에선 안 씀
-W03	계약 2 절 · 단계 넘김	P0	iter:5520	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/ex41_application.jsonl::"iteration": 5501	open	5501 T0′ 넘김 확인 · 텔레그램 · #555
+W03	계약 2 절 · 단계 넘김	P0	iter:5520	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/ex41_application.jsonl::"iteration": 5501	done	5501 T0′ 넘김 확인 · 텔레그램 · #555
 W04	계약 1 단계 끝	P0	iter:6000	lead	C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522/main/EX-41-B-main_20261104_235522/model_6000.pt	open	6000 도달 · 마지막 점수 · 마지막 단계 끝 일 등록 확인
 W05	S2d 단계 끝 · I14	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W05.verified	open	S2d 영상 51 편 · 재생 목록 · 전 프레임 검사 · 밀기 영상(614)
 W06	I27 · 팀장 11/06	P2	at:2026-11-07T02:00	lead	D:/mai-tmp/lead/W06.verified	open	m750 밀기 영상(666) 촬영 · 전 프레임 검사
