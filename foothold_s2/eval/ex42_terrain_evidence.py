@@ -24,6 +24,20 @@ def select_cell(tiles: list[dict], kind: str, level: int) -> dict:
             "env_count": len(matches), "tile": min(matches, key=lambda tile: tile["env"])}
 
 
+def resolve_video_request(request: dict, *, column_names, applied_levels,
+                          applied_types, assignment_sha256: str) -> dict:
+    """Build recorder selection from the actual applied assignment."""
+    chosen = select_cell(tiles_from_assignment(column_names, applied_levels,
+                                               applied_types),
+                         request["terrain_kind"], request["terrain_level"])
+    if chosen["state"] == "unmeasured":
+        return {**chosen, "request_id": request["id"], "measurement": "미측정"}
+    return {"state": "ready", "request_id": request["id"],
+            "kind": chosen["kind"], "fixed_level": chosen["level"],
+            "env_id": chosen["tile"]["env"], "col": chosen["tile"]["col"],
+            "assignment_sha256": assignment_sha256, "env_count": chosen["env_count"]}
+
+
 def verify_raw_terrain(review_json: Path, raw_npz: Path, selection: dict) -> dict:
     """Require the video segment and NPZ to prove the same tile and assignment."""
     if selection.get("state") != "selected":

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from foothold_s2.eval.ex42_terrain_evidence import (
-    select_cell, tiles_from_assignment, verify_raw_terrain,
+    resolve_video_request, select_cell, tiles_from_assignment, verify_raw_terrain,
 )
 
 
@@ -13,6 +13,14 @@ def test_g20_selection_by_kind_level_including_flat():
     assert select_cell(tiles, "flat", 2)["tile"]["env"] == 2
     assert select_cell(tiles, "flat", 0) == {"state": "unmeasured", "kind": "flat",
                                                    "level": 0, "env_count": 0}
+    request = {"id": "r1", "terrain_kind": "flat", "terrain_level": 2}
+    ready = resolve_video_request(request, column_names=["stairs", "flat"],
+        applied_levels=[0, 2, 2], applied_types=[0, 0, 1], assignment_sha256="a" * 64)
+    assert (ready["state"], ready["env_id"], ready["col"]) == ("ready", 2, 1)
+    request["terrain_level"] = 0
+    assert resolve_video_request(request, column_names=["stairs", "flat"],
+        applied_levels=[0, 2, 2], applied_types=[0, 0, 1],
+        assignment_sha256="a" * 64)["measurement"] == "미측정"
 
 
 def test_g20_video_and_raw_terrain_must_match(tmp_path):
