@@ -15,7 +15,7 @@ from foothold_s2.ex40_score import config, sha256
 from foothold_s2.ex40_score_watch import _atomic
 from foothold_s2.experiment_registry import (device_contract, device_contract_sha256,
     operational_definition)
-from foothold_s2.machine_profile import machine_path
+from foothold_s2.machine_profile import machine_path, machine_reference_path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / 'foothold_s2/curriculum/ex40_score_config.json'
@@ -65,7 +65,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
     if push_baseline is None:
         import yaml
         push_baseline = yaml.safe_load(DEFAULT_TABLE.read_text(encoding='utf-8-sig'))['fixed_schedule']['push_baseline']
-    baseline_path = (ROOT / push_baseline['path']).resolve(strict=True)
+    baseline_path = machine_reference_path(push_baseline['path']).resolve(strict=True)
     rows.append(('push_ladder', 'foothold_s2.eval.ex41_push_ladder_bundle',
                  ['--checkpoint', str(checkpoint), '--checkpoint-iteration', str(iteration),
                   '--baseline-json', str(baseline_path), '--baseline-sha256', push_baseline['sha256'],

@@ -13,6 +13,7 @@ from pathlib import Path, PureWindowsPath
 from typing import Any
 
 import yaml
+from foothold_s2.machine_profile import machine_reference_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,8 @@ def source_path(definition: dict[str, Any], key: str, *, repo_root: str | Path =
     value = files.get(key)
     if not isinstance(value, str) or not value:
         raise ValueError(f"experiment source path missing: {key}")
+    if value.startswith("machine:"):
+        return machine_reference_path(value)
     win = PureWindowsPath(value)
     if win.is_absolute() or value.startswith(("/", "\\")):
         return Path(value)

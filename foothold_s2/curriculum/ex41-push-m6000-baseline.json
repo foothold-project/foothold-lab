@@ -1,5 +1,5 @@
 {
-  "baseline_bundle_path": "D:\\mai-tmp\\runner\\ex41_push_ladder_m6000_20261103_161418\\push_ladder_bundle.json",
+  "baseline_bundle_path": "machine:mai_tmp_root/runner/ex41_push_ladder_m6000_20261103_161418/push_ladder_bundle.json",
   "baseline_bundle_sha256": "12ea9beafcb97bfc41a76c95c1c830f686c3d2c93783612dee1b627315add08a",
   "baseline_checkpoint_iteration": 6000,
   "baseline_checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",

@@ -99,7 +99,7 @@ stage_zero:
     experiment_id: EX-41
     stage_id: T0_prime
     path: ex41-fixed5000.yaml
-    normalized_sha256: 75b55225ed01114b190578ec6c01fcf2b82a6139bb1dd3bd800843752f6fc1b7
+    normalized_sha256: 92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c
   parent:
     update: 6000
     sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5

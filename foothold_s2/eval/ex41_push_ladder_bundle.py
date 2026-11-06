@@ -15,7 +15,7 @@ from foothold_s2.eval.ex41_push_ladder import MAP_MODES, TERRAIN_CASES
 from foothold_s2.eval.ex41_gpu_priority import gpu0_priority, wait_for_gpu0_python_idle
 from foothold_s2.eval.ex41_push_ladder_contract import PUSH_LADDER_EXPECTED_CHILDREN
 from foothold_s2.curriculum.continuous import sha256_lf_text
-from foothold_s2.machine_profile import machine_path
+from foothold_s2.machine_profile import machine_path, machine_reference_path
 
 
 def bundle_cases(*, include_stand: bool = True) -> list[dict[str, Any]]:
@@ -56,7 +56,7 @@ def load_pinned_baseline(path: Path, expected_sha256: str) -> dict[str, Any]:
             or set(baseline.get("cells", {})) != {
                 f"{terrain}/{mode}" for terrain in TERRAIN_CASES for mode in MAP_MODES}):
         raise ValueError("pinned m6000 push baseline identity or coverage differs")
-    source = Path(baseline.get("baseline_bundle_path", "")).resolve(strict=True)
+    source = machine_reference_path(baseline.get("baseline_bundle_path", "")).resolve(strict=True)
     if hashlib.sha256(source.read_bytes()).hexdigest() != baseline.get("baseline_bundle_sha256"):
         raise ValueError("source m6000 push bundle SHA differs")
     return baseline

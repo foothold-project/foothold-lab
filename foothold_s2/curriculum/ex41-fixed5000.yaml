@@ -447,7 +447,7 @@ fixed_schedule:
   push_vmax_mps: [1.5, 1.65, 1.8, 2.0, 2.0, 2.0]
   push_baseline:
     path: foothold_s2/curriculum/ex41-push-m6000-baseline.json
-    sha256: ec8c81451846da03f6e3a4899568428b9a2cf91e0f28ef8aaaac4de97d7418bd
+    sha256: fda56435abc948ebf5be9d2c70f307a1f05da222783a754a0fc0945e29e38522
   duration_updates: 6000
   pause_limit_updates: 1000
   recovery_boundaries: 2
@@ -456,5 +456,5 @@ fixed_schedule:
   maintenance_drop_count: 3
   interval_updates: 250
   maintenance_baseline:
-    path: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
+    path: machine:s2_lab_root/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
     sha256: a1457a3d9ff780bac2804f0949875e305559fa761dc609be09c33ee9a19b85a6

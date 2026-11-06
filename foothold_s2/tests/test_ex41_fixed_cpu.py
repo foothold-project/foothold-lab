@@ -10,6 +10,7 @@ from foothold_s2.curriculum.ex41_fixed import (Clock,CELLS,maintenance,baseline_
     maintenance_cells,build_maintenance_counts)
 from foothold_s2.tests.ex41_runtime_fixture import attach_consumer,commit_inputs
 from foothold_s2.tests.test_ex41_runtime_cpu import score
+from foothold_s2.machine_profile import machine_reference_path
 
 TABLE=Path(__file__).parents[1]/'curriculum/ex41-fixed5000.yaml'
 
@@ -337,7 +338,7 @@ def test_stand_missing_reports_unknown_never_pass_default(tmp_path):
 
 def test_native_producer_actual_parent_contract_uses_alive_not_success():
     p=load_plan(TABLE,arm='B');b=baseline_counts(p,include_record_only=True)
-    raw=json.loads(Path(p.fixed_schedule['maintenance_baseline']['path']).read_text(encoding='utf-8-sig'))
+    raw=json.loads(machine_reference_path(p.fixed_schedule['maintenance_baseline']['path']).read_text(encoding='utf-8-sig'))
     c=build_maintenance_counts(raw,b,total_envs=64)
     assert len(c)==39 and maintenance(c,b)==[]
     for key in CELLS: assert c[key]['passed']==raw['cells'][key]['alive_envs_at_end']

@@ -12,6 +12,7 @@ import yaml
 from foothold_s2.curriculum import w72
 from foothold_s2.curriculum.continuous import sha256, sha256_lf_text
 from foothold_s2.curriculum.ex41 import EX41Runtime,digest
+from foothold_s2.machine_profile import machine_reference_path
 
 PLANNED_DURATIONS=(750,1000,1000,1250,500,500)
 DURATIONS=(750,1000,1000,1250,500,1500)  # T0' fills the remaining hard cap when healthy.
@@ -79,7 +80,7 @@ def validate_plan(plan,doc):
     if sha256_lf_text(baseline_path)!=pb['sha256']:
         raise ValueError('EX41 pinned m6000 push baseline SHA differs')
     baseline_doc=json.loads(baseline_path.read_text(encoding='utf-8-sig'))
-    source_bundle=Path(baseline_doc.get('baseline_bundle_path','')).resolve(strict=True)
+    source_bundle=machine_reference_path(baseline_doc.get('baseline_bundle_path','')).resolve(strict=True)
     if sha256(source_bundle)!=baseline_doc.get('baseline_bundle_sha256'):
         raise ValueError('EX41 source m6000 push bundle SHA differs')
     if (baseline_doc.get('schema')!='foothold-ex41-push-baseline/1'
@@ -121,7 +122,7 @@ def clock_settings(doc):
 
 
 def baseline_counts(plan, *, include_record_only=None):
-    cfg=plan.fixed_schedule['maintenance_baseline']; p=Path(cfg['path']).resolve(strict=True)
+    cfg=plan.fixed_schedule['maintenance_baseline']; p=machine_reference_path(cfg['path']).resolve(strict=True)
     if sha256(p)!=cfg['sha256']: raise ValueError('EX41 maintenance baseline SHA differs')
     data=json.loads(p.read_text(encoding='utf-8-sig'))
     if data['checkpoint_iteration']!=6000 or data['checkpoint_sha256']!=plan.parent_sha256:

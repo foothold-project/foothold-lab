@@ -60,8 +60,8 @@ files:
   approvals: foothold_s2/curriculum/ex41-fixed5000-approvals.yaml
   score_config: foothold_s2/curriculum/ex40_score_config.json
   push_baseline: foothold_s2/curriculum/ex41-push-m6000-baseline.json
-  maintenance_baseline: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
-  maintenance_map64: C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json
+  maintenance_baseline: machine:s2_lab_root/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json
+  maintenance_map64: machine:s2_lab_root/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json
 operational_values:
   parent:
     update: 6000

@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from foothold_s2.machine_profile import load_machine_profile, machine_path
+from foothold_s2.machine_profile import load_machine_profile, machine_path, machine_reference_path
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -69,6 +69,16 @@ def test_linux_profile_requires_explicitly_bound_machine_values():
 def test_posix_requires_profile_selection_instead_of_windows_drive_defaults():
     with pytest.raises(ValueError, match="FOOTHOLD_MACHINE_PROFILE"):
         load_machine_profile(environ={}, platform="linux")
+
+
+def test_machine_references_join_configured_root_and_reject_escape():
+    resolved = machine_reference_path(
+        "machine:mai_tmp_root/runner/sample/model_6000.pt")
+    assert PureWindowsPath(str(resolved)).as_posix() == "D:/mai-tmp/runner/sample/model_6000.pt"
+    with pytest.raises(ValueError, match="stay under"):
+        machine_reference_path("machine:s2_lab_root/../outside")
+    with pytest.raises(ValueError, match="stay under"):
+        machine_reference_path("machine:s2_lab_root/C:/outside")
 
 
 def test_active_ex42_launch_modules_have_no_machine_drive_literals():
