@@ -35,3 +35,11 @@ def test_g11_queue_yields_to_gpu1_p1():
     p1 = {"id": 8, "gpu": 1, "priority": 1, "kind": "eval", "state": "실행"}
     assert unit_queue_admission({"items": [unit, p1]}, 7)["state"] == "yield_to_P1"
     assert unit_queue_admission({"items": [unit]}, 7)["state"] == "eligible"
+
+
+def test_g11_actual_dispatcher_p1_marker_preempts_unit(monkeypatch):
+    from _out.tools.gpu_jobs import dispatch
+
+    monkeypatch.setattr(dispatch, "marker_state", lambda path: {"present": True})
+    marker = "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"
+    assert dispatch.p1_busy([], set(), [marker]) == f"marker:{marker}"
