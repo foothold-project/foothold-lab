@@ -179,3 +179,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T22:0x	W04 W27	학습 6000 끝(22:03:09) · GPU0 영상 분담: S2e 51 편이 도구 대상 밖 → 새 잠금 사본 9b532df5 로 허용 · 표본 678 GPU0 실행(dispatcher 84740) · m6000 점수 GPU1 진행 · GPU0 빈 시간 22:03~22:07	lead
 2026-11-06T22:1x	W27	표본 678 GPU0 끝 22:09:56 rc0 · cuda:0 영수증 · 원본 · 합성 150 프레임 issue 0 PASS · 정지 장면 직접 봄(정상) → half 반복으로 S2e 영상 50 편 GPU0(대기 36 + 진행) · GPU1 에 728 · 729 둘과 m6000 점수 · W78 · m6000 영상은 점수 뒤 등록되면 같은 도구로 GPU0	lead
 2026-11-06T22:1x	ops FAIL train · W27 · WARN W04 · gpu1_depth	train FAIL 은 계획된 끝(6000) → ops_check 가 model_6000 있으면 OK 로(FINAL_ITER · 시험 13 통과) · W27 끝(W27.verified) · W04 는 증거(model_6000)는 있으나 마지막 점수 · 단계 끝 일 등록 전이라 열어 둠 · GPU1 대기 2 는 학습 끝 뒤 영상이 GPU0 로 간 결과로 정상(점수 · W78 남음)	lead
+2026-11-06T22:1x	dispatcher 막음 알림 3	22:07 「같은 작업 3 회 연속 실패 · 막음」 셋(w78_video_consumer 두 사본 · c76 cap2 two_seed)은 옛 실패 이력(10/3x~11/0x) · 그 종류 대기 항목 0 · GPU0 dispatcher 처음 기동 때 다시 읽은 것으로 봄 · 조치 없음 · GPU0 679 끝 → 680 진행	lead
