@@ -384,7 +384,147 @@ def timeline_png(path):
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 06 EX-42 plan
+# Source: D:/mai-tmp/analyst/PLAN-ex42-terrain-blocks-1106.md v5 §0.4 (E stage rows read from
+# CURRICULUM-GATES.md 187~195, sha 0db658ef) and §8.1 (L level sizes, CPU generated mid-row values).
+# DECIDED = lead's chat decisions recorded in decisions.tsv 11/06 19:5x ~ 11/07 00:2x.
+PLAN42 = Path("D:/mai-tmp/analyst/PLAN-ex42-terrain-blocks-1106.md")
+CANON_ROWS = Path("D:/mai-tmp/analyst/w38-v5-evidence/canonical-duration-rows.json")
+E_V5 = [("E1", 1750, "익숙한 연속 지형 · 명령 과제 · 상한 L5→L9 경계마다 +1"), ("E1F", 750, "깃발 목표 추종 · 정지 · 재출발"),
+        ("E2", 1500, "쉬운 새 발 놓기 하나(넓은 징검돌 · 평균대 · 작은 틈 L0 중 하나)"), ("E3", 2250, "종류별 치수 · 불규칙성 +1 · 다음 쉬운 종류"),
+        ("E4", 2000, "고난도 종류(climb · gap · stones · beam …)"), ("E5", 1500, "혼합 · 방향 일반화"),
+        ("M", 500, "지도 끔 보완(조건부 · 어디서나)"), ("E6a", 1000, "자세 명령 값(몸 높이 · roll) 열기"),
+        ("E6b", 2000, "지형 2 판(high_ledge 0.3→0.6 · wall · crawl)")]
+STAIR_MID = {5: 0.149, 6: 0.167, 7: 0.185, 8: 0.203, 9: 0.221}  # v5 §8.1 table (CPU 생성 중간값)
+SLOPE_MID = {5: 12.41, 6: 14.57, 7: 16.70, 8: 18.78, 9: 20.81}
+
+
+def plan42_png(path):
+    rows = {r["stage"]: r for r in json.loads(CANON_ROWS.read_text(encoding="utf-8"))["rows"]}
+    assert sum(r["base"] for r in rows.values()) == 13250 and sum(b for _, b, _ in E_V5) == 13250
+    assert all(rows[k]["base"] == b for k, b, _ in E_V5 if k not in ("E1", "E3"))  # v5 moves 750 E3 -> E1
+    assert rows["E1"]["base"] + rows["E3"]["base"] == 1750 + 2250
+    plan = PLAN42.read_text(encoding="utf-8")
+    for needle in ("| 합계 · 앞 지형 배치 | **20,000** |", "| 합계 · 미션 배치 | **20,000** |", "| 전체 | **40,000** |",
+                   "| 0 | 0.059 |", "| 9 | 0.221 |"):
+        assert needle in plan, needle
+    fig = plt.figure(figsize=(28, 17), dpi=100)
+    fig.suptitle("EX-42 커리큘럼 계획 · m12000 (EX-41 끝) 에서 지형 40,000 회 · v5 (11/07)", fontsize=26, weight="bold", x=0.04, ha="left")
+    fig.text(0.04, 0.935, "실선 테두리 = 팀장 결정 · 점선 테두리 = analyst v5 제안(팀장 결정 대기) · 회차는 완료 PPO 갱신 · 시간 27.8 초/회 가정이면 40,000 회 약 309 시간(Linux · 두 GPU 미측)",
+             fontsize=13, color="#37474f")
+    # --- (a) whole budget band
+    ax = fig.add_axes([0.04, 0.79, 0.92, 0.11])
+    ax.set_xlim(-4400, 40000)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    def box(a, w, y, h, t, fc, dashed=False, fs=12, tc="black"):
+        ax.add_patch(Rectangle((a, y), w, h, facecolor=fc, edgecolor="#37474f", lw=1.6, ls="--" if dashed else "-"))
+        ax.text(a + w / 2, y + h / 2, t, ha="center", va="center", fontsize=fs, color=tc)
+    box(-4300, 2600, 0.15, 0.7, "0 단계 T0′ 보완\n1,000 회\n(40,000 밖)", "#bbdefb", fs=11)
+    box(-1600, 1400, 0.15, 0.7, "E0 250\n(밖)", "#e3f2fd", fs=11)
+    ax.text(-2900, 0.03, "앞 두 칸 너비는 회차 비례 아님", fontsize=9.5, color="#546e7a", ha="center")
+    for k in range(4):
+        terrain = k < 2
+        box(k * 10000, 10000, 0.15, 0.7, f"블록 B{k + 1} · {k * 10000 + 1:,}~{(k + 1) * 10000:,}\n"
+            + ("지형 적응 (기본 순서)" if terrain else "어려운 미션 (기본 순서)") + "\n끝에서 분석 · 학습은 멈추지 않음",
+            "#c8e6c9" if terrain else "#ffe0b2", fs=13)
+    ax.text(20000, 0.98, "20,000 = 기본 순서의 경계일 뿐 · 결과가 좋으면 미션을 앞당기고 부족하면 늦춤 · 미션은 한 번에 하나 (팀장 11/06 22:1x)",
+            ha="center", va="top", fontsize=12.5, color="#bf360c", weight="bold")
+    # --- (b) first 20,000 reservation (v5 proposal)
+    ax = fig.add_axes([0.04, 0.60, 0.92, 0.16])
+    ax.set_xlim(-4400, 40000)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.text(-2500, 0.93, "지형 20,000 회 예약 (v5 제안)", fontsize=14, weight="bold", va="top")
+    x = 0
+    pal = ["#a5d6a7", "#81c784", "#66bb6a", "#4caf50", "#43a047", "#388e3c", "#90caf9", "#2e7d32", "#1b5e20"]
+    for (sid, n, desc), col in zip(E_V5, pal):
+        box(x, n, 0.38, 0.4, f"{sid}\n{n:,}", col, dashed=True, fs=11, tc="white" if col in ("#388e3c", "#2e7d32", "#1b5e20") else "black")
+        x += n
+    for n, t, col in [(3000, "연장 공용\n3,000", "#fff9c4"), (2000, "미달 재도전\n2,000", "#ffecb3"), (1750, "회복 · 전환\n1,750", "#ffe0b2")]:
+        box(x, n, 0.38, 0.4, t, col, dashed=True, fs=11)
+        x += n
+    assert x == 20000
+    ax.text(0, 0.30, "E 단계 첫 시도 13,250 = 정본 기본 합(E0 제외) · v5 는 E3 의 레벨 몫 750 을 E1 로 옮김\n단계마다 최소 · 최대 체류(시간 상자) · 미달이면 보류(deferred) 후 선행이 갖춰진 다른 과제로",
+            fontsize=11.5, va="top")
+    x = 20000
+    for i, (n, t) in enumerate([(2000, "① 외다리 ·\n평행봉"), (2000, "② ㄹ 자\n좁은 길 회전"), (2000, "③ 작은 도약\n→ 넓은 틈"),
+                                (2000, "④ 높은 턱"), (2000, "⑤ 큰 단차\n내려오기"), (2000, "⑥ 낮은 천장\n기어가기")]):
+        box(x, n, 0.38, 0.4, t, "#ffcc80", dashed=True, fs=10.5)
+        x += n
+    for n, t in [(6000, "미션 재도전 6,000 (각 최대 1,000 · 한 번)"), (2000, "회복 2,000")]:
+        box(x, n, 0.38, 0.4, t, "#ffe0b2", dashed=True, fs=11)
+        x += n
+    assert x == 40000
+    ax.text(20000, 0.93, "미션 20,000 회 예약 (v5 제안 · 슬롯은 예시 · 준비 안 되면 비워 두고 선행 연습)", fontsize=14, weight="bold", va="top")
+    ax.text(20300, 0.30, "몸통 · 배 · 머리 접촉 금지(결정) · 무릎은 실측 뒤 정함\n평행봉 · ㄹ 자 형상은 팀장 그림 필요(U06 · U07) · 큰 점프는 실기 위험이 커서 뒤로",
+            fontsize=11.5, va="top")
+    # --- (c) E1 ladder
+    ax = fig.add_axes([0.06, 0.31, 0.38, 0.24])
+    lv = list(STAIR_MID)
+    ax.step([4.5] + lv, [STAIR_MID[5]] + [STAIR_MID[k] for k in lv], where="post", color="#2e7d32", lw=3, label="계단 단 높이 m (중간값)")
+    ax.set_xticks(lv)
+    ax.set_xticklabels([f"L{k}" for k in lv], fontsize=12)
+    ax.set_ylabel("계단 단 높이 m", fontsize=13, color="#2e7d32")
+    for k in lv:
+        ax.text(k, STAIR_MID[k] + 0.004, f"{STAIR_MID[k]:.3f}", ha="center", fontsize=11, color="#2e7d32")
+    ax2 = ax.twinx()
+    ax2.plot(lv, [SLOPE_MID[k] for k in lv], color="#6a1b9a", marker="o", lw=2, label="경사 ° (중간값)")
+    ax2.set_ylabel("경사 °", fontsize=13, color="#6a1b9a")
+    ax.set_title("E1 첫 변경 (결정): 같은 지형 종류에서 상한 L5 → L9 · 경계마다 +1 · 성과 · 유지 통과 때만", fontsize=13.5)
+    ax.text(5.0, 0.212, "+1 당 계단 1.8 cm · 최소 체류 250 회\nEX-41 끝 상한 = L5", fontsize=11.5)
+    ax.grid(alpha=0.3)
+    # --- (d) decided vs proposed
+    ax = fig.add_axes([0.50, 0.05, 0.46, 0.50])
+    ax.axis("off")
+    dec = ["목표 지형 40,000 회 · 20,000 먼저 확보 · 10,000 블록마다 분석 (W31 · 11/06 19:5x)",
+           "0 단계 T0′ 보완 1,000 · E0 250 은 40,000 밖 (11/06 21:2x)",
+           "E1 첫 변경 = 상한 L5 → L9, 경계마다 +1 (11/06 22:3x · 23:1x)",
+           "블록 끝에서 학습을 멈추지 않음 · 합의 규칙 안이면 팀장 없이 이어 감 (11/06 22:1x)",
+           "미션 시작은 결과로 · 한 번에 하나 · 몸통 · 배 · 머리 접촉 금지 (11/06 22:1x)",
+           "EX-41 식 회차 시계 뼈대 + 단계마다 최소 · 최대 체류 (11/07 00:1x)",
+           "250 경계마다 빠르게 판단 · 유지 / 올림 / 보상 조정 (11/07 00:2x)",
+           "Linux 두 GPU 묶음 실측 뒤 결정 (W43 · 11/06 22:2x)"]
+    pro = ["미달 = 보류(deferred) · 다음 줄 무조건 아님 · 선행 갖춘 과제로",
+           "40,000 공용 예약표(위 두 띠) · 미션 상자 2,000 + 재도전 1,000 · 회복 500 + 500",
+           "보상 후보 셋(swing · stumble · zero_yaw) 한 번 +10 % · 누적 1.25 배 · +250 · +500 확인 뒤 채택 / 원복",
+           "점수 나온 뒤 30 분 안 판단 · lead · analyst 각자 읽고 대조",
+           "값이 없는 12 개(U01~U12)는 실측으로 · 기준은 결과 전 등록"]
+    y = 0.98
+    ax.text(0, y, "팀장 결정", fontsize=16, weight="bold", color="#1b5e20", va="top")
+    y -= 0.06
+    for t in dec:
+        ax.text(0.01, y, "■ " + t, fontsize=12.3, va="top")
+        y -= 0.052
+    y -= 0.02
+    ax.text(0, y, "analyst v5 제안 (팀장 결정 대기)", fontsize=16, weight="bold", color="#e65100", va="top")
+    y -= 0.06
+    for t in pro:
+        ax.text(0.01, y, "□ " + t, fontsize=12.3, va="top")
+        y -= 0.052
+    ax.text(0, max(y - 0.02, 0.0), "근거: PLAN-ex42-terrain-blocks-1106.md v5 · CURRICULUM-GATES 187~195 · decisions.tsv", fontsize=10.5, color="#546e7a", va="top")
+    # --- (e) mission families
+    ax = fig.add_axes([0.06, 0.05, 0.38, 0.22])
+    ax.axis("off")
+    ax.text(0, 1.0, "미션을 능력 묶음으로 (목적: 사고 · 붕괴 현장 진입 · 팀장 11/06 22:1x)", fontsize=14, weight="bold", va="top")
+    fam = [("A 정밀 발 놓기", "외다리 · 평행봉 · 징검돌 · 구멍 난 바닥 · 부서진 계단", "넓은 것은 지형 단계 안 · 좁은 것은 뒤"),
+           ("D 불안정 지면", "미끄럼 · 흔들리는 판 · 움직이는 잔해 · 기울어진 슬래브", "지형 단계 안 후보"),
+           ("C 몸 낮추기", "낮은 천장 기어가기 · 좁은 틈", "A 다음"),
+           ("B 힘 · 도약", "틈 점프 · 높은 턱 · 경사 사이 틈 오르내리기", "실기 위험이 커서 뒤"),
+           ("E 회복", "넘어진 뒤 일어나기 · 막다른 곳 후진", "별도 판단")]
+    y = 0.84
+    for a_, b_, c_ in fam:
+        ax.text(0.0, y, a_, fontsize=12.5, weight="bold", va="top")
+        ax.text(0.22, y, b_, fontsize=12, va="top")
+        ax.text(0.78, y, c_, fontsize=11.5, va="top", color="#6a1b9a")
+        y -= 0.16
+    fig.savefig(path, dpi=100)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
+    plan42_png(HERE / "06-ex42-plan-v2.png")
     table_png(HERE / "02-stage-table-v2.png")
     timeline_png(HERE / "01-timeline-v2.png")
     print("ok", {k: (v["over"], v["surv"]) for k, v in RES.items()})
