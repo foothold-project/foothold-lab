@@ -118,6 +118,12 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
                and (j.get("start") is None or j["start"] <= now)]
     out.append(("WARN" if len(waiting) < P4_LOW_WATER else "OK", "I15 gpu1_depth",
                 f"{len(waiting)} GPU1 items waiting"))
+    # I35: GPU0 work waiting but nothing running on GPU0 (fail-streak block stopped it 22:41~22:52).
+    g0_wait = [j["id"] for j in items if j.get("gpu") == 0 and j.get("state") == "대기"
+               and (j.get("start") is None or j["start"] <= now)]
+    g0_run = [j["id"] for j in items if j.get("gpu") == 0 and j.get("state") == "실행"]
+    out.append(("FAIL" if g0_wait and not g0_run and not train else "OK", "I35 gpu0_idle",
+                f"GPU0 waiting {len(g0_wait)} · running {g0_run}"))
     fails = [j["id"] for j in items if j.get("state") == "실패" and now - (j.get("done_at") or 0) < 3600]
     out.append(("WARN" if fails else "OK", "fail_1h", f"failed in last hour {fails}"))
 

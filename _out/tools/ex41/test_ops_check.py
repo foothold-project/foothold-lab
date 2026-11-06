@@ -142,3 +142,11 @@ def test_train_absent_ok_only_after_final_checkpoint(tmp_path):
     assert levels(ops_check.check(run, procs=no_train, queue=q()))["train"] == "FAIL"
     (run / "main" / "x" / f"model_{ops_check.FINAL_ITER}.pt").write_bytes(b"x")
     assert levels(ops_check.check(run, procs=no_train, queue=q()))["train"] == "OK"
+
+
+def test_gpu0_waiting_without_running_fails_after_training():
+    no_train = [x for x in procs() if "train_start.py" not in x[1]]
+    stuck = q({"id": 1, "gpu": 0, "state": "대기"})
+    assert levels(ops_check.check(RUN, procs=no_train, queue=stuck))["I35 gpu0_idle"] == "FAIL"
+    moving = q({"id": 1, "gpu": 0, "state": "대기"}, {"id": 2, "gpu": 0, "state": "실행"})
+    assert levels(ops_check.check(RUN, procs=no_train, queue=moving))["I35 gpu0_idle"] == "OK"
