@@ -32,6 +32,8 @@ assert broken_table_rows('| label | |wz| |\n| --- | --- |\n| a | b |')
 assert not broken_table_rows(table(['label', '|wz|'], [['a|b', r'c\|d']]))
 assert table_cell('a|b') == r'a\|b'
 assert table_cell(r'a\|b') == r'a\|b'
+assert table_cell('1~750 / 6001~6750') == r'1\~750 / 6001\~6750'
+assert table_cell(r'1\~750') == r'1\~750'
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
@@ -91,7 +93,7 @@ result = {'checked_at': datetime.now().astimezone().isoformat(), 'state': 'PASS'
           'reference_dr_off': reference['dr_off'],
           'reference_source_module_count': len(reference['source_sha256']),
           'reports': len(reports), 'local_links_resolved': links, 'images_decoded': len(images),
-          'markdown_tables': table_results, 'markdown_known_answer_checks': 4,
+          'markdown_tables': table_results, 'markdown_known_answer_checks': 6,
           'local_cmp_hashes_verified': len(media['comparisons']),
           'limits': ['No GPU, no live training changes',
                      'W78 stage-end slices pending; not a completed N1 judgment',

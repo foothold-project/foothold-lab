@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-06T17:15:11.174010+09:00",
+  "checked_at": "2026-11-06T17:18:57.768581+09:00",
   "state": "PASS",
   "raw_command_cells_recomputed": 819,
   "raw_velocity_medians_recomputed": 2457,
@@ -150,7 +150,7 @@
       "broken_rows": 0
     }
   },
-  "markdown_known_answer_checks": 4,
+  "markdown_known_answer_checks": 6,
   "local_cmp_hashes_verified": 6,
   "limits": [
     "No GPU, no live training changes",

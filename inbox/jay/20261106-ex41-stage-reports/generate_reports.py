@@ -52,8 +52,9 @@ def median(xs):
     return float(np.median(v)) if v else None
 def fmt(x,n=3): return '미측정' if x is None else f'{x:.{n}f}'
 def table_cell(value):
-    # Escape only raw pipes; both header and data cells use this path.
-    return re.sub(r'(?<!\\)\|', r'\\|', str(value))
+    # Raw pipes split columns; raw tildes can strike out numeric ranges in GFM.
+    # Both header and data cells use this path without double escaping.
+    return re.sub(r'(?<!\\)[|~]', lambda match: '\\' + match[0], str(value))
 def table(headers,rows):
     return '\n'.join(['| '+' | '.join(table_cell(v) for v in headers)+' |','| '+' | '.join(['---']*len(headers))+' |']+
                      ['| '+' | '.join(table_cell(v) for v in r)+' |' for r in rows])
