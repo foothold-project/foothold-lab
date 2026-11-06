@@ -29,3 +29,4 @@ paths:
   gpu0_eval_marker: ${GPU0_EVAL_MARKER}
   gpu1_eval_marker: ${GPU1_EVAL_MARKER}
   ex41_push250_output: ${EX41_PUSH250_OUTPUT}
+  ex42_gate_report: ${FOOTHOLD_EX42_GATE_REPORT}

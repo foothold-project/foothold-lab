@@ -27,3 +27,4 @@ paths:
   gpu0_eval_marker: D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0
   gpu1_eval_marker: D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1
   ex41_push250_output: D:/mai-tmp/runner/ex41_push250
+  ex42_gate_report: D:/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md

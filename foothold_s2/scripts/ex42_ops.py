@@ -16,6 +16,7 @@ from foothold_s2.curriculum.ex42_prep import EX42Plan, RUNTIME_STAGE_IDS
 from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
 from foothold_s2.experiment_registry import load_experiment, source_path
 from foothold_s2.machine_profile import load_machine_profile, machine_path
+from foothold_s2.ex42_gate_checks import open_gate_rows, launch_argv_sha256
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -78,6 +79,8 @@ def verify_train_entry_contract() -> dict[str, Any]:
     from foothold_s2.ex41_start_preflight import train_parser_from_source
 
     machine = load_machine_profile()
+    from foothold_s2.runtime_environment import current_runtime_identity
+    identity = current_runtime_identity()
     parser = train_parser_from_source(REPO)
     required = {"--task", "--agent", "--num_envs", "--seed", "--max_iterations", "--resume_from"}
     absent = sorted(required - set(parser._option_string_actions))
@@ -92,10 +95,14 @@ def verify_train_entry_contract() -> dict[str, Any]:
             or known.max_iterations != 1 or known.resume_from is None
             or unknown != ["--headless", "--device", "cuda:0"]):
         raise ValueError("EX-42 candidate train argv differs from the real parser contract")
+    isaac_cli = machine_path("isaaclab_root") / "scripts/reinforcement_learning/rsl_rl/cli_args.py"
+    argv_hash = launch_argv_sha256(argv, python=identity["python_executable"],
+                                   isaac_cli=str(isaac_cli.resolve(strict=True)))
     return {"parser": "train_start declarations + installed RSL-RL cli_args.py",
             "machine_profile": machine["machine_id"],
             "machine_profile_path": machine["profile"],
-            "known_argv": argv[:-3], "applauncher_passthrough": unknown,
+            "runtime_identity": identity, "known_argv": argv[:-3],
+            "applauncher_passthrough": unknown, "final_argv_sha256": argv_hash,
             "training_started": False}
 
 
@@ -158,10 +165,13 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
               graduation: str | Path | None = None,
               terrain_manifest: str | Path | None = None,
               source_root: str | Path | None = None,
-              expected_head: str | None = None) -> dict[str, Any]:
+              expected_head: str | None = None,
+              gate_report: str | Path | None = None) -> dict[str, Any]:
     plan = EX42Plan.load(table)
     blockers = plan.launch_blockers(approvals, graduation, terrain_manifest)
     blockers.append("runtime_integration_pending")
+    report_path = Path(gate_report) if gate_report is not None else machine_path("ex42_gate_report")
+    blockers.extend(f"gate_open:{row}" for row in open_gate_rows(report_path))
     definition = load_experiment("EX-42")
     values = definition.get("operational_values", {})
     parent = values.get("parent", {})
@@ -208,6 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--terrain-manifest", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--expected-head")
+    parser.add_argument("--gate-report", type=Path)
     parser.add_argument("--rehearsal-output")
     parser.add_argument("--rehearsal-stage-updates", type=int, nargs=len(RUNTIME_STAGE_IDS))
     modes = parser.add_mutually_exclusive_group(required=True)
@@ -226,7 +237,8 @@ def main(argv: list[str] | None = None) -> int:
         approvals = args.approvals or source_path(definition, "approvals")
         result = ops_check(table, approvals, graduation=args.graduation,
                            terrain_manifest=args.terrain_manifest,
-                           source_root=args.source_root, expected_head=args.expected_head)
+                           source_root=args.source_root, expected_head=args.expected_head,
+                           gate_report=args.gate_report)
     except (OSError, ValueError) as exc:
         result = {"state": "blocked", "blockers": [str(exc)],
                   "production_launch_allowed": False, "kit_started": False,

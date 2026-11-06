@@ -1,0 +1,215 @@
+"""CPU-side EX-42 source, score, map, configuration, approval and batch gates."""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import stat
+from pathlib import Path
+import subprocess
+from typing import Any, Callable, Iterable
+
+
+REQUIRED_GATE_ROWS = ("G01", "G03", "G05", "G08", "G13", "G15", "G17", "G18", "G33")
+_GATE_ID = re.compile(r"\b(G[0-9]{2})\b")
+_OPEN_MARKERS = ("없음 · 막음", "예행 대기", "미확인")
+
+
+def open_gate_rows(path: str | Path, required: Iterable[str] = REQUIRED_GATE_ROWS) -> list[str]:
+    """Read the analyst gate table; missing/malformed required rows fail closed."""
+    found: dict[str, str] = {}
+    try:
+        lines = Path(path).read_text(encoding="utf-8-sig").splitlines()
+    except OSError as exc:
+        raise ValueError(f"EX-42 gate report unavailable: {exc}") from exc
+    for line in lines:
+        if not line.startswith("|") or "---" in line:
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 5:
+            continue
+        match = _GATE_ID.search(cells[0])
+        if match:
+            found[match.group(1)] = cells[4]
+    required_set = tuple(required)
+    missing = sorted(set(required_set) - found.keys())
+    if missing:
+        raise ValueError("gate report is missing required rows: " + ",".join(missing))
+    return [row for row in required_set if any(marker in found[row] for marker in _OPEN_MARKERS)]
+
+
+def locked_source_contract(*, launch_head: str, remote_head: str,
+                           clean: bool, file_modes: dict[str, int],
+                           file_sha256: dict[str, str], expected_sha256: dict[str, str]) -> dict[str, Any]:
+    """Validate launch pin and immutable source inventory from measured git/file data."""
+    if not launch_head or launch_head != remote_head:
+        raise ValueError("EX-42 launch HEAD differs from remote HEAD")
+    if clean is not True:
+        raise ValueError("EX-42 locked source worktree is dirty")
+    if set(file_modes) != set(expected_sha256) or set(file_sha256) != set(expected_sha256):
+        raise ValueError("EX-42 locked source inventory differs")
+    mismatched = sorted(name for name, expected in expected_sha256.items()
+                        if file_sha256[name] != expected)
+    if mismatched:
+        raise ValueError("EX-42 locked source SHA differs: " + ",".join(mismatched))
+    writable = sorted(name for name, mode in file_modes.items() if mode & stat.S_IWRITE)
+    if writable:
+        raise ValueError("EX-42 locked source has writable files: " + ",".join(writable))
+    return {"launch_head": launch_head, "remote_head": remote_head,
+            "clean": True, "writable_count": 0,
+            "files": dict(sorted(file_sha256.items()))}
+
+
+def audit_locked_checkout(root: str | Path, *, remote_ref: str,
+                          protected_paths: Iterable[str]) -> dict[str, Any]:
+    """Measure HEAD/remote/dirty state, readonly bits, and SHA for a fixed checkout."""
+    root_path = Path(root).resolve(strict=True)
+    def git(*args: str) -> str:
+        result = subprocess.run(["git", "-C", str(root_path), *args], capture_output=True,
+                               text=True, encoding="utf-8", errors="replace", check=False)
+        if result.returncode:
+            raise ValueError("EX-42 lock audit git failure: " + result.stderr.strip())
+        return result.stdout.strip()
+    launch_head = git("rev-parse", "HEAD")
+    remote_head = git("rev-parse", remote_ref)
+    clean = not bool(git("status", "--porcelain=v1", "--untracked-files=all"))
+    modes, shas = {}, {}
+    expected = {}
+    for relative in protected_paths:
+        path = (root_path / relative).resolve(strict=True)
+        if not path.is_relative_to(root_path):
+            raise ValueError("EX-42 protected source path escapes checkout")
+        modes[relative] = path.stat().st_mode
+        shas[relative] = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        pinned = subprocess.run(["git", "-C", str(root_path), "show", f"{remote_ref}:{relative}"],
+                                capture_output=True, check=False)
+        if pinned.returncode:
+            raise ValueError(f"EX-42 locked source missing from remote commit: {relative}")
+        expected[relative] = hashlib.sha256(pinned.stdout.replace(b"\r\n", b"\n")).hexdigest()
+    return locked_source_contract(launch_head=launch_head, remote_head=remote_head,
+                                 clean=clean, file_modes=modes, file_sha256=shas,
+                                 expected_sha256=expected)
+
+
+def verify_launch_argv(argv: list[str], *, python: str, isaac_cli: str,
+                       expected_sha256: str) -> dict[str, Any]:
+    """Check selected interpreter, installed Isaac CLI and exact passthrough argv."""
+    payload = {"python": python, "isaac_cli": isaac_cli, "argv": argv}
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True,
+                                       separators=(",", ":")).encode()).hexdigest()
+    if not Path(python).is_file() or not Path(isaac_cli).is_file():
+        raise ValueError("EX-42 selected Python or Isaac CLI is missing")
+    if digest != expected_sha256:
+        raise ValueError("EX-42 final argv hash differs")
+    return {**payload, "argv_sha256": digest}
+
+
+def launch_argv_sha256(argv: list[str], *, python: str, isaac_cli: str) -> str:
+    payload = {"python": python, "isaac_cli": isaac_cli, "argv": argv}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True,
+                                     separators=(",", ":")).encode()).hexdigest()
+
+
+def checkpoint_ready(manifest: dict[str, Any], *, iteration: int,
+                     checkpoint_exists: bool, checkpoint_sha256: str) -> bool:
+    """Readiness depends on a named verified checkpoint, not delayed progress alone."""
+    if type(iteration) is not int or iteration < 0 or not checkpoint_exists:
+        return False
+    checkpoints = manifest.get("checkpoints")
+    return (isinstance(checkpoints, dict)
+            and checkpoints.get(f"model_{iteration}.pt") == checkpoint_sha256
+            and isinstance(checkpoint_sha256, str) and len(checkpoint_sha256) == 64)
+
+
+def validate_score_pair(*, expected_iteration: int, score: dict[str, Any],
+                        manifest: dict[str, Any], checkpoint_exists: bool,
+                        checkpoint_sha256: str) -> None:
+    """Reject stale PASS, corrupt newest evidence and N/N+1 identity mismatch."""
+    if not checkpoint_ready(manifest, iteration=expected_iteration,
+                            checkpoint_exists=checkpoint_exists,
+                            checkpoint_sha256=checkpoint_sha256):
+        raise ValueError("expected model_N checkpoint and SHA are not ready")
+    if score.get("checkpoint_iteration") != expected_iteration:
+        raise ValueError("score iteration is not the requested N checkpoint")
+    if score.get("checkpoint_sha256") != checkpoint_sha256:
+        raise ValueError("score checkpoint SHA differs")
+    if score.get("state") != "complete":
+        raise ValueError("latest score receipt is not complete")
+
+
+def validate_map_matrix(expected: Iterable[tuple[str, str]], rows: Iterable[dict[str, Any]]) -> None:
+    """Require every expected map-mode/command cell exactly once, with no extras."""
+    expected_pairs = list(expected)
+    actual_pairs = []
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("map_mode"), str) or not isinstance(row.get("command"), str):
+            raise ValueError("map score row is missing mode or command")
+        actual_pairs.append((row["map_mode"], row["command"]))
+    if len(set(actual_pairs)) != len(actual_pairs) or set(actual_pairs) != set(expected_pairs):
+        raise ValueError("map score matrix has missing, duplicate, or unexpected cells")
+
+
+def extract_realized_config(env_yaml: str | Path, agent_yaml: str | Path) -> dict[str, Any]:
+    """Return observed values only, with source file path per selected setting."""
+    import yaml
+    env_path, agent_path = Path(env_yaml), Path(agent_yaml)
+    env = yaml.safe_load(env_path.read_text(encoding="utf-8-sig"))
+    agent = yaml.safe_load(agent_path.read_text(encoding="utf-8-sig"))
+    if not isinstance(env, dict) or not isinstance(agent, dict):
+        raise ValueError("realized configuration inputs must be mappings")
+    candidates = {
+        "commands": (env, ("commands",)),
+        "map_selection": (env, ("observations", "policy", "map_mode")),
+        "domain_randomization": (env, ("events",)),
+        "actuators": (env, ("scene", "robot", "actuators")),
+        "rewards": (env, ("rewards",)),
+        "level_cap": (env, ("curriculum", "terrain_levels")),
+        "algorithm": (agent, ("algorithm",)),
+    }
+    out = {}
+    for name, (doc, paths) in candidates.items():
+        value: Any = doc
+        for key in paths:
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            else:
+                value = None
+                break
+        out[name] = {"value": value, "source": str(env_path if doc is env else agent_path),
+                     "observed": value is not None}
+    return out
+
+
+def validate_automatic_rule(*, rule: dict[str, Any], approval: dict[str, Any],
+                            value: float, boundary: str) -> bool:
+    """Only explicitly approved rule/value pairs may request automatic action."""
+    key = rule.get("field")
+    choices = rule.get("choices")
+    permit = approval.get("fields", {}).get(key) if isinstance(approval, dict) else None
+    if (not isinstance(key, str) or not isinstance(choices, list)
+            or not isinstance(permit, dict) or permit.get("approved") is not True
+            or permit.get("decision_id") != rule.get("decision_id")
+            or not any(type(value) is type(choice) and value == choice for choice in choices)
+            or boundary not in rule.get("boundaries", [])):
+        raise ValueError("EX-42 automatic rule is missing a matching approved boundary choice")
+    return True
+
+
+def process_score_batch(rows: Iterable[Any], validate: Callable[[Any], Any],
+                        *, reset: Callable[[], Any], alert: Callable[[str], None]) -> dict[str, Any]:
+    """Keep valid rows from mixed batches; all-invalid and reset failures alert safely."""
+    accepted, rejected = [], []
+    for index, row in enumerate(rows):
+        try:
+            accepted.append(validate(row))
+        except Exception as exc:
+            rejected.append({"index": index, "error": f"{type(exc).__name__}: {exc}"})
+    if not accepted:
+        alert("EX42 batch has no valid rows")
+        return {"accepted": [], "rejected": rejected, "state": "unknown"}
+    try:
+        reset()
+    except Exception as exc:
+        alert(f"EX42 batch reset failed: {type(exc).__name__}: {exc}")
+        return {"accepted": accepted, "rejected": rejected, "state": "unknown"}
+    return {"accepted": accepted, "rejected": rejected, "state": "partial" if rejected else "complete"}
