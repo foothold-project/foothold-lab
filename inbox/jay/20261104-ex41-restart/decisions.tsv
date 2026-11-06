@@ -168,3 +168,4 @@ ts	phase	decision	why	evidence	result
 2026-11-06T20:1x	W35 scripter	scripter 관문 G11 G14 G20 G21 G22 장치 · CPU 시험 14(lead 재실행 통과 · 9de47b9a · scripter-ex42-gates) · 실제 m750 자료로 G11 HOLD 확인 · EX-42 생산자 · 소비자 연결과 Kit 예행 · 팀장 한 편 확인은 예행 대기 → 막음 유지	D:/mai-tmp/scripter/REPORT-gate-scripter-1107.md	report	W39 재감사
 2026-11-06T20:2x	W32	pipeline WSL 재시험(1d433e9): C:/isaac 막힘 풀림 · Linux 기기 설정 거절 · 통과 맞음 · 남은 둘(ex42_ops gymnasium import 가 try 밖 → JSON 없이 rc1 · 기기 설정 시험 하나 Windows 값 고정) runner 에 전달	C:/mai/wt/mai-os/pipeline/os/reports/20261106-w32-recheck.md	report	runner
 2026-11-06T20:3x	W32	WSL R3(ea57fa1): CLI JSON rc2 · 기기 설정 5/5 통과 · ops 시험 7 중 2 통과(rsl_rl 없음에서 막힘 보고가 멈춰 뒤 막힘 누락 4 · 예행 시험 D:/mai-tmp 고정 1) → runner	C:/mai/wt/mai-os/pipeline/os/reports/20261106-w32-r3.md	report	R4
+2026-11-06T20:54	W40	m5500 D179 9 칸 통과(계단 0.953 ×3 · 거친 땅 1.000 ×3) · 판정 정의를 m5000 기록값과 대조해 같음 확인 · 영상 52 · W78 675 는 계획대로 22 시 뒤	lead
