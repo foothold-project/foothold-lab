@@ -23,6 +23,17 @@ def test_g20_selection_by_kind_level_including_flat():
         assignment_sha256="a" * 64)["measurement"] == "미측정"
 
 
+def test_g20_real_sparse50_column_contract_includes_flat():
+    from foothold_s2.eval.fixed_terrain import fixed_assignment
+    from foothold_s2.terrains import columns
+
+    names = columns.column_types(columns.FULL, columns.FULL_COLS)
+    levels, types = fixed_assignment(64, 10, columns.FULL_COLS, level=0)
+    chosen = select_cell(tiles_from_assignment(names, levels, types), "flat", 0)
+    assert chosen["state"] == "selected"
+    assert names[chosen["tile"]["col"]] == "flat"
+
+
 def test_g20_video_and_raw_terrain_must_match(tmp_path):
     tile = {"env": 4, "kind": "flat", "level": 2, "col": 9}
     selection = {"state": "selected", "tile": tile}

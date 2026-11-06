@@ -30,8 +30,6 @@ def freeze_requests(*, checkpoint_sha256: str, plan_sha256: str,
                 or type(row["terrain_level"]) is not int
                 or not isinstance(row["segment"], str) or not row["segment"]):
             raise ValueError("required video kind, mode or terrain cell missing")
-        if row["kind"] == "C" and row["terrain_kind"] == "flat":
-            raise ValueError("C-layer is rough terrain; flat requires an A/B request")
         identity = {**row, "checkpoint_sha256": checkpoint_sha256,
                     "plan_sha256": plan_sha256, "stage_name": stage_name}
         digest = hashlib.sha256(json.dumps(identity, sort_keys=True,
