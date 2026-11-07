@@ -30,6 +30,11 @@ P1_IDLE_MINUTES = 10       # a P1 owner that keeps GPU1 under 5 % this long is s
 GPU1_IDLE_MIB = 4000      # below this no Kit job is running on GPU1
 LONG_UNIT_MINUTES = 45     # a unit longer than this can push a P1 score past its boundary
 P4_LOW_WATER = 3           # queue the next filler before the last ones start (I15)
+# I36: no evaluation output for 30 min and <=0.10 CPU seconds across a 2 s
+# sample means a score attempt is waiting, not evaluating. Sample only stale jobs.
+I36_STALE_SECONDS = 30 * 60
+I36_CPU_SAMPLE_SECONDS = 2.0
+I36_CPU_DELTA_MAX = 0.10
 
 
 def _cmd(p: psutil.Process) -> str:
@@ -66,6 +71,87 @@ def _owner_recent_child(pid: int, minutes: float) -> bool:
         return False
     t = time.time()
     return any(t - k.create_time() < minutes * 60 for k in kids if k.is_running())
+
+
+def _cpu_tree_seconds(pid: int) -> tuple[float, float] | None:
+    try:
+        owner = psutil.Process(pid)
+        created = owner.create_time()
+        processes = [owner, *owner.children(recursive=True)]
+        total = 0.0
+        for process in processes:
+            try:
+                times = process.cpu_times()
+                total += times.user + times.system
+            except psutil.Error:
+                continue
+        return created, total
+    except (psutil.Error, ValueError):
+        return None
+
+
+def _cpu_tree_delta(pid: int) -> float | None:
+    before = _cpu_tree_seconds(pid)
+    if before is None:
+        return None
+    time.sleep(I36_CPU_SAMPLE_SECONDS)
+    after = _cpu_tree_seconds(pid)
+    if after is None or before[0] != after[0]:
+        return None
+    return max(0.0, after[1] - before[1])
+
+
+def _latest_output_file(path: Path) -> float | None:
+    try:
+        return max((entry.stat().st_mtime for entry in path.rglob('*') if entry.is_file()),
+                   default=None)
+    except OSError:
+        return None
+
+
+def score_attempt_wait(run_root: Path, now: float, procs, items,
+                       cpu_delta=None) -> tuple[str, str, str]:
+    """I36: check active score-watch attempts and its running evaluation queue jobs."""
+    cpu_delta = cpu_delta or _cpu_tree_delta
+    run_norm = str(run_root).replace('\\', '/').casefold()
+    owners = [(p, c) for p, c in procs
+              if 'ex41_score_watch' in c and run_norm in c.replace('\\', '/').casefold()]
+    owner_pid = getattr(owners[0][0], 'pid', None) if owners else None
+    candidates = []
+    for job in items:
+        if (job.get('state') not in ('실행', 'running')
+                or job.get('kind') not in ('eval', 'evaluation')
+                or job.get('owner') != 'ex41_score_watch'):
+            continue
+        args = job.get('argv') or []
+        if '--out' not in args:
+            continue
+        output = Path(args[args.index('--out') + 1])
+        if run_norm not in str(output).replace('\\', '/').casefold():
+            continue
+        candidates.append((f"queue {job.get('id')}", job.get('run_at'), output, job.get('pid')))
+    for receipt in (run_root / 'eval' / 'score-watch').glob('model_*/attempt.json'):
+        try:
+            row = json.loads(receipt.read_text(encoding='utf-8'))
+            if row.get('state') == 'running' and row.get('source'):
+                candidates.append((f"attempt m{row.get('iteration')}", receipt.stat().st_mtime,
+                                   Path(row['source']), owner_pid))
+        except (OSError, ValueError):
+            continue
+    stalled = []
+    for label, started, output, pid in candidates:
+        if not isinstance(started, (int, float)) or now - started <= I36_STALE_SECONDS:
+            continue
+        newest = _latest_output_file(output)
+        if newest is not None and now - newest <= I36_STALE_SECONDS:
+            continue
+        delta = cpu_delta(pid) if isinstance(pid, int) else None
+        if delta is None or delta <= I36_CPU_DELTA_MAX:
+            stalled.append(f"{label}: age={(now - started)/60:.0f}m "
+                           f"output_age={('missing' if newest is None else f'{(now-newest)/60:.0f}m')} "
+                           f"cpu_delta={delta}")
+    return ('FAIL' if stalled else 'OK', 'I36 score_wait',
+            '; '.join(stalled) if stalled else f'{len(candidates)} active score attempts progressing or fresh')
 
 
 def check(run_root: Path, now: float | None = None, procs=None, queue=None, util=None,
@@ -124,6 +210,7 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
     g0_run = [j["id"] for j in items if j.get("gpu") == 0 and j.get("state") == "실행"]
     out.append(("FAIL" if g0_wait and not g0_run and not train else "OK", "I35 gpu0_idle",
                 f"GPU0 waiting {len(g0_wait)} · running {g0_run}"))
+    out.append(score_attempt_wait(run_root, now, procs, items))
     fails = [j["id"] for j in items if j.get("state") == "실패" and now - (j.get("done_at") or 0) < 3600]
     out.append(("WARN" if fails else "OK", "fail_1h", f"failed in last hour {fails}"))
 

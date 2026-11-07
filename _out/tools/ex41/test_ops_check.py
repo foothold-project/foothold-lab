@@ -1,5 +1,6 @@
 """Answer-known cases: each 11/04-05 incident state must FAIL or WARN in ops_check."""
 import json
+import os
 import sys
 from pathlib import Path
 from unittest import mock
@@ -12,8 +13,9 @@ RUN_W = "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522"
 
 
 class P:
-    def __init__(self, ct=0.0):
+    def __init__(self, ct=0.0, pid=1):
         self.info = {"create_time": ct}
+        self.pid = pid
 
 
 def procs(push=True, stray=False, loop_ct=9e12):
@@ -150,3 +152,60 @@ def test_gpu0_waiting_without_running_fails_after_training():
     assert levels(ops_check.check(RUN, procs=no_train, queue=stuck))["I35 gpu0_idle"] == "FAIL"
     moving = q({"id": 1, "gpu": 0, "state": "대기"}, {"id": 2, "gpu": 0, "state": "실행"})
     assert levels(ops_check.check(RUN, procs=no_train, queue=moving))["I35 gpu0_idle"] == "OK"
+
+
+def test_i36_running_eval_with_recent_output_is_ok(tmp_path):
+    run = tmp_path / 'run'
+    output = run / 'eval' / 'score-watch' / 'model_100_x' / 'stage_end_auxiliary_eval'
+    output.mkdir(parents=True)
+    recent = output / 'progress.json'
+    recent.write_text('{}', encoding='utf-8')
+    now = recent.stat().st_mtime + 10
+    job = {'id': 555, 'kind': 'eval', 'owner': 'ex41_score_watch', 'state': '실행',
+           'run_at': now - 3600, 'pid': 99, 'argv': ['--out', str(output)]}
+    assert ops_check.score_attempt_wait(run, now, [], [job],
+                                        cpu_delta=lambda pid: 0)[0] == 'OK'
+
+
+def test_i36_running_eval_stalled_for_30_minutes_fails(tmp_path):
+    run = tmp_path / 'run'
+    job = {'id': 555, 'kind': 'eval', 'owner': 'ex41_score_watch', 'state': '실행',
+           'run_at': 1000, 'pid': 99, 'argv': ['--out', str(run / 'eval' / 'missing')]}
+    level, name, detail = ops_check.score_attempt_wait(run, 1000 + 31 * 60, [], [job],
+                                                       cpu_delta=lambda pid: 0.0)
+    assert (level, name) == ('FAIL', 'I36 score_wait') and 'queue 555' in detail
+    assert ops_check.score_attempt_wait(run, 1000 + 31 * 60, [], [job],
+                                        cpu_delta=lambda pid: 0.2)[0] == 'OK'
+
+
+def test_i36_new_eval_is_not_stalled(tmp_path):
+    run = tmp_path / 'run'
+    job = {'id': 555, 'kind': 'eval', 'owner': 'ex41_score_watch', 'state': '실행',
+           'run_at': 1000, 'pid': 99, 'argv': ['--out', str(run / 'eval' / 'missing')]}
+    assert ops_check.score_attempt_wait(run, 1000 + 5 * 60, [], [job],
+                                        cpu_delta=lambda pid: 0.0)[0] == 'OK'
+
+
+def test_i36_score_watch_attempt_without_output_fails(tmp_path):
+    run = tmp_path / 'run'
+    receipt = run / 'eval' / 'score-watch' / 'model_6000_x' / 'attempt.json'
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text(json.dumps({'state': 'running', 'iteration': 6000,
+                                   'source': str(receipt.parent / 'evaluation')}), encoding='utf-8')
+    os.utime(receipt, (1000, 1000))
+    owner = P(pid=77)
+    procs_now = [(owner, f'python -m foothold_s2.ex41_score_watch --run-dir {run}')]
+    level, name, detail = ops_check.score_attempt_wait(run, 1000 + 31 * 60, procs_now, [],
+                                                       cpu_delta=lambda pid: 0.0)
+    assert (level, name) == ('FAIL', 'I36 score_wait') and 'attempt m6000' in detail
+
+
+def test_i36_check_calls_guard_for_running_queue_job(tmp_path):
+    run = tmp_path / 'run'
+    job = {'id': 555, 'kind': 'eval', 'owner': 'ex41_score_watch', 'state': '실행',
+           'run_at': 1000, 'pid': 99, 'argv': ['--out', str(run / 'eval' / 'missing')]}
+    with mock.patch.object(ops_check, 'P1_MARKER', tmp_path / 'none'), \
+         mock.patch.object(ops_check, 'DISPATCH', Path(__file__).resolve()), \
+         mock.patch.object(ops_check, '_cpu_tree_delta', return_value=0.0):
+        rows = ops_check.check(run, now=1000 + 31 * 60, procs=procs(), queue=q(job))
+    assert levels(rows)['I36 score_wait'] == 'FAIL'
