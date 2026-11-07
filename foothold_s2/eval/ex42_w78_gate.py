@@ -56,6 +56,32 @@ def _row(receipt: dict, mode: str, key: str) -> dict:
     return value
 
 
+def _denominators(row: dict):
+    """Return the sample basis for each recorded kind and env, or None if incomplete."""
+    per_env, by_kind = row.get("per_env"), row.get("by_terrain_kind")
+    if not isinstance(per_env, list) or not isinstance(by_kind, dict):
+        return None
+    try:
+        envs = [(sample["env"], sample["kind"], sample["level"],
+                 sample["alive_samples"], sample["drag_den"],
+                 sample["closed_swing_count"], sample["open_swing_count"],
+                 [(phase["alive_samples"], phase["scheduled_samples"])
+                  for phase in sample["movement_phases"]]) for sample in per_env]
+        kinds = {kind: (sample["env_count"], sample["phase_movement_valid_envs"],
+                        sample["drag_den"], sample["closed_swing_count"],
+                        sample["open_swing_count"])
+                 for kind, sample in by_kind.items()}
+        tiles = [(tile["env"], tile["kind"], tile["level"])
+                 for tile in row["terrain_tiles"]]
+    except (KeyError, TypeError, ValueError):
+        return None
+    if sorted((env, kind, level) for env, kind, level, *_ in envs) != sorted(tiles):
+        return None
+    if set(kinds) != {kind for _, kind, _ in tiles}:
+        return None
+    return {"per_env": envs, "by_kind": kinds}
+
+
 def compare_split(full: dict, units: list[dict], *, repeats: list[dict] = ()) -> dict:
     """Accept only exact values or differences bounded by same-code repeats.
 
@@ -66,6 +92,7 @@ def compare_split(full: dict, units: list[dict], *, repeats: list[dict] = ()) ->
         raise ValueError("completed full and split W78 receipts required")
     source = _source(full)
     differences = []
+    paired_rows = []
     for unit in units:
         if unit.get("state") != "done" or _source(unit) != source:
             return {"state": "HOLD", "reason": "source_or_completion_differs"}
@@ -84,22 +111,34 @@ def compare_split(full: dict, units: list[dict], *, repeats: list[dict] = ()) ->
             if any(field not in full_row or field not in unit_row
                    or full_row[field] != unit_row[field] for field in ROW_IDENTITY):
                 return {"state": "HOLD", "reason": "terrain_or_phase_identity_differs"}
+            paired_rows.append((mode, key, full_row, unit_row))
             left, right = _numbers(full_row), _numbers(unit_row)
             if left.keys() != right.keys():
                 return {"state": "HOLD", "reason": "numeric_fields_differ"}
             differences.extend({"cell": f"{mode}/{key}{field}", "full": value,
                                 "split": right[field], "abs_difference": abs(value - right[field])}
                                for field, value in left.items() if value != right[field])
-    if not differences:
-        return {"state": "PASS", "numeric_differences": 0, "basis": "exact"}
-    if len(repeats) < 2:
-        return {"state": "HOLD", "reason": "repeat_width_missing",
-                "numeric_differences": len(differences)}
     for repeat in repeats:
         if repeat.get("state") != "done" or _source(repeat) != source or any(
                 field not in repeat or field not in full or repeat[field] != full[field]
                 for field in IDENTITY):
             return {"state": "HOLD", "reason": "repeat_identity_differs"}
+        for mode, key, full_row, unit_row in paired_rows:
+            repeat_row = _row(repeat, mode, key)
+            if any(field not in repeat_row or repeat_row[field] != full_row[field]
+                   for field in ROW_IDENTITY):
+                return {"state": "HOLD", "reason": "repeat_terrain_or_phase_differs"}
+            full_den, unit_den, repeat_den = (_denominators(row)
+                                               for row in (full_row, unit_row, repeat_row))
+            if any(value is None for value in (full_den, unit_den, repeat_den)):
+                return {"state": "HOLD", "reason": "repeat_denominator_missing"}
+            if full_den != unit_den or full_den != repeat_den:
+                return {"state": "HOLD", "reason": "repeat_denominator_differs"}
+    if not differences:
+        return {"state": "PASS", "numeric_differences": 0, "basis": "exact"}
+    if len(repeats) < 2:
+        return {"state": "HOLD", "reason": "repeat_width_missing",
+                "numeric_differences": len(differences)}
     outside = []
     for difference in differences:
         mode, rest = difference["cell"].split("/", 1)

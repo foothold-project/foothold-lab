@@ -1,4 +1,6 @@
 from copy import deepcopy
+import json
+from pathlib import Path
 
 from foothold_s2.eval.ex42_w78_gate import compare_split, unit_queue_admission
 
@@ -14,7 +16,15 @@ def receipt(value=1.0):
                 "distance": value, "case": "stairs_side_left", "requested_kinds": ["stairs"],
                 "terrain_assignment_sha256": "d" * 64,
                 "terrain_tiles": [{"env": 0, "kind": "stairs", "level": 2, "column": 0}],
-                "phase_steps": [50]}}}}
+                "phase_steps": [50],
+                "per_env": [{"env": 0, "kind": "stairs", "level": 2,
+                             "alive_samples": 50, "drag_den": 100,
+                             "movement_phases": [{"alive_samples": 50,
+                                                  "scheduled_samples": 50}],
+                             "closed_swing_count": 4, "open_swing_count": 0}],
+                "by_terrain_kind": {"stairs": {"env_count": 1,
+                    "phase_movement_valid_envs": [1], "drag_den": 100,
+                    "closed_swing_count": 4, "open_swing_count": 0}}}}}}
 
 
 def test_g11_exact_same_code_unit():
@@ -32,6 +42,48 @@ def test_g11_repeat_width_is_measured_not_assumed():
     full, unit = receipt(), receipt(1.1)
     assert compare_split(full, [unit], repeats=[receipt(1.04), receipt(1.2)])["state"] == "PASS"
     assert compare_split(full, [unit], repeats=[receipt(1.01), receipt(1.02)])["reason"] == "beyond_repeat_width"
+
+
+def test_g11_repeat_wrong_terrain_cannot_widen_noise_floor():
+    full, unit = receipt(), receipt(1.1)
+    repeats = [receipt(1.04), receipt(1.2)]
+    row = repeats[0]["modes"]["eval_gt"]["L2_a000_stairs_side_left"]
+    row["terrain_assignment_sha256"] = "e" * 64
+    row["terrain_tiles"][0]["level"] = 9
+    assert compare_split(full, [unit], repeats=repeats)["reason"] == "repeat_terrain_or_phase_differs"
+
+
+def test_g11_analyst_fixture_repeat_wrong_terrain_holds():
+    path = Path(__file__).with_name("fixtures") / "fixture-repeat-wrong-terrain.json"
+    fixture = json.loads(path.read_text(encoding="utf-8"))
+    assert compare_split(fixture["full"], [fixture["unit"]],
+                         repeats=fixture["repeats"])["reason"] == "repeat_terrain_or_phase_differs"
+
+
+def test_g11_repeat_wrong_denominator_or_missing_denominator_holds():
+    full, unit = receipt(), receipt(1.1)
+    repeats = [receipt(1.04), receipt(1.2)]
+    row = repeats[0]["modes"]["eval_gt"]["L2_a000_stairs_side_left"]
+    row["per_env"][0]["movement_phases"][0]["alive_samples"] = 49
+    assert compare_split(full, [unit], repeats=repeats)["reason"] == "repeat_denominator_differs"
+    del row["per_env"][0]["movement_phases"][0]["alive_samples"]
+    assert compare_split(full, [unit], repeats=repeats)["reason"] == "repeat_denominator_missing"
+
+
+def test_g11_each_repeat_sample_identity_is_checked():
+    full, unit = receipt(), receipt(1.1)
+    changes = (
+        (lambda row: row["requested_kinds"].append("other"), "repeat_terrain_or_phase_differs"),
+        (lambda row: row["terrain_tiles"][0].update(column=9), "repeat_terrain_or_phase_differs"),
+        (lambda row: row["phase_steps"].append(1), "repeat_terrain_or_phase_differs"),
+        (lambda row: row["per_env"][0].update(kind="other"), "repeat_denominator_missing"),
+        (lambda row: row["by_terrain_kind"]["stairs"].update(drag_den=99),
+         "repeat_denominator_differs"),
+    )
+    for change, expected in changes:
+        repeats = [receipt(1.04), receipt(1.2)]
+        change(repeats[0]["modes"]["eval_gt"]["L2_a000_stairs_side_left"])
+        assert compare_split(full, [unit], repeats=repeats)["reason"] == expected
 
 
 def test_g11_same_numbers_but_different_terrain_assignment_holds():

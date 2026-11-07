@@ -288,6 +288,17 @@ def _evidence_present(spec: str) -> bool:
         return False
 
 
+def _decided_at_iso(value: str) -> bool:
+    from datetime import datetime
+    if not value or "T" not in value:
+        return False
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+
+
 def worklist(path: Path, now: float, it: int | None) -> list[tuple[str, str, str]]:
     """W (팀장 11/06 17:2x): planned work is read by the check, not remembered.
 
@@ -302,6 +313,10 @@ def worklist(path: Path, now: float, it: int | None) -> list[tuple[str, str, str
         return [("FAIL", "W worklist", f"worklist unreadable: {path}")]
     out, todo = [], []
     for r in rows:
+        if r.get("status") == "done":
+            if not _evidence_present(r.get("evidence", "")) or not _decided_at_iso(r.get("decided_at", "")):
+                out.append(("FAIL", f"W {r['id']}", "done without evidence or ISO decided_at"))
+            continue
         if r.get("status") != "open":
             continue
         if _evidence_present(r.get("evidence", "")):

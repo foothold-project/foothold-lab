@@ -137,6 +137,42 @@ def test_worklist_overdue_without_evidence_fails(tmp_path):   # W · 팀장 11/0
     assert lv["W A"] == "WARN" and lv["W B"] == "WARN"
 
 
+def test_w53_done_without_evidence_or_decided_at_fails(tmp_path):
+    w = tmp_path / "WORKLIST.tsv"
+    missing = tmp_path / "never-created-evidence.md"
+    w.write_text("id\tsource\tpriority\tdue\towner\tevidence\tstatus\twhat\tdecision\tdecided_at\n"
+                 f"WTEST\tCPU fixture\tP0\tat:2026-11-06T10:00\tanalyst\t{missing}\tdone\tmissing evidence\t\t\n",
+                 encoding="utf-8")
+    rows = ops_check.worklist(w, 0, None)
+    assert ("FAIL", "W WTEST", "done without evidence or ISO decided_at") in rows
+
+
+def test_w53_analyst_fixture_done_missing_fails(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "fixture-done-missing.tsv"
+    w = tmp_path / "WORKLIST.tsv"
+    text = fixture.read_text(encoding="utf-8")
+    text = text.replace("D:\\mai-tmp\\analyst\\w39-evidence\\never-created-evidence.md",
+                        str(tmp_path / "never-created-evidence.md"))
+    w.write_text(text, encoding="utf-8")
+    assert any(level == "FAIL" and name == "W WTEST"
+               for level, name, _ in ops_check.worklist(w, 0, None))
+
+
+def test_w53_done_requires_real_evidence_and_offset_iso_timestamp(tmp_path):
+    w = tmp_path / "WORKLIST.tsv"
+    evidence = tmp_path / "receipt.json"
+    def write_row(decided_at):
+        w.write_text("id\tsource\tpriority\tdue\towner\tevidence\tstatus\twhat\tdecision\tdecided_at\n"
+                     f"A\tx\tP0\t-\tlead\t{evidence}\tdone\tfinished\tx\t{decided_at}\n",
+                     encoding="utf-8")
+    write_row("2026-11-06T17:19:44+09:00")
+    assert any(a == "FAIL" for a, _, _ in ops_check.worklist(w, 0, None))
+    evidence.write_text("{}", encoding="utf-8")
+    assert not any(a == "FAIL" for a, _, _ in ops_check.worklist(w, 0, None))
+    write_row("2026-11-06T17:19:44")
+    assert any(a == "FAIL" for a, _, _ in ops_check.worklist(w, 0, None))
+
+
 def test_train_absent_ok_only_after_final_checkpoint(tmp_path):
     no_train = [x for x in procs() if "train_start.py" not in x[1]]
     run = tmp_path / "run"
