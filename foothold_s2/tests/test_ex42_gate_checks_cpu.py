@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from foothold_s2.ex42_gate_checks import (
-    REQUIRED_GATE_ROWS, audit_locked_checkout, checkpoint_ready, extract_realized_config,
+    EX42_LOCKED_SOURCE_PATHS, REQUIRED_GATE_ROWS, audit_ex42_launch_source,
+    audit_locked_checkout, checkpoint_ready, extract_realized_config,
     launch_argv_sha256, locked_source_contract, open_gate_rows,
     process_score_batch, validate_automatic_rule, validate_map_matrix,
     validate_score_pair, verify_launch_argv,
@@ -97,6 +98,41 @@ def test_g03_actual_git_checkout_matches_remote_and_readonly_inventory(tmp_path)
     os.chmod(root / files[0], stat.S_IREAD | stat.S_IWRITE)
     with pytest.raises(ValueError, match="writable files"):
         audit_locked_checkout(root, remote_ref="origin/main", protected_paths=files)
+
+
+def test_g03_launch_caller_rejects_attached_branch_even_when_old_audit_passes(tmp_path):
+    origin, root = tmp_path / "origin.git", tmp_path / "locked-source"
+    subprocess.run(["git", "init", "--bare", str(origin)], check=True, capture_output=True)
+    subprocess.run(["git", "init", "-b", "main", str(root)], check=True, capture_output=True)
+    for index, relative in enumerate(EX42_LOCKED_SOURCE_PATHS):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"source-pinned-{index}\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", *EX42_LOCKED_SOURCE_PATHS],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.name=test", "-c",
+                    "user.email=test@example.invalid", "commit", "-m", "pin"],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(root), "remote", "add", "origin", str(origin)],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(root), "push", "-u", "origin", "main"],
+                   check=True, capture_output=True)
+    for relative in EX42_LOCKED_SOURCE_PATHS:
+        os.chmod(root / relative, stat.S_IREAD)
+
+    old_audit = audit_locked_checkout(
+        root, remote_ref="origin/main", protected_paths=EX42_LOCKED_SOURCE_PATHS)
+    assert old_audit["launch_head"] == old_audit["remote_head"]
+    assert old_audit["writable_count"] == 0
+    with pytest.raises(ValueError, match="must be detached"):
+        audit_ex42_launch_source(root, remote_ref="origin/main")
+
+    subprocess.run(["git", "-C", str(root), "checkout", "--detach", "origin/main"],
+                   check=True, capture_output=True)
+    locked = audit_ex42_launch_source(root, remote_ref="origin/main")
+    assert locked["detached"] is True
+    assert locked["launch_head"] == locked["remote_head"]
+    assert locked["writable_count"] == 0
 
 
 def test_g05_exact_interpreter_cli_and_argv_sha(tmp_path):

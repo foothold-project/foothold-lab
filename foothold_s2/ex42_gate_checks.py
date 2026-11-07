@@ -15,6 +15,25 @@ _GATE_ID = re.compile(r"G[0-9]{2}")
 _GATE_ROW_PREFIX = re.compile(r"G[^\s|]*", re.IGNORECASE)
 _OPEN_MARKERS = ("없음 · 막음", "예행 대기", "미확인")
 
+# Code-owned inventory. A command-line caller cannot narrow the locked files.
+EX42_LOCKED_SOURCE_PATHS = (
+    "experiments/EX-42.yaml",
+    "foothold_s2/curriculum/ex42-prep.yaml",
+    "foothold_s2/curriculum/ex42-boundary.yaml",
+    "foothold_s2/curriculum/ex42-approvals.yaml",
+    "foothold_s2/curriculum/ex42_gate_schema.json",
+    "foothold_s2/curriculum/ex42_prep.py",
+    "foothold_s2/curriculum/ex42_runtime.py",
+    "foothold_s2/ex42_gate_checks.py",
+    "foothold_s2/ex42_chain.py",
+    "foothold_s2/ex42_score_watch.py",
+    "foothold_s2/ex42_status.py",
+    "foothold_s2/runners/start_runner.py",
+    "foothold_s2/scripts/train_start.py",
+    "foothold_s2/scripts/ex42_training_entry.py",
+    "foothold_s2/scripts/ex42_ops.py",
+)
+
 
 def _load_gate_schema() -> tuple[str, ...]:
     try:
@@ -131,6 +150,25 @@ def audit_locked_checkout(root: str | Path, *, remote_ref: str,
     return locked_source_contract(launch_head=launch_head, remote_head=remote_head,
                                  clean=clean, file_modes=modes, file_sha256=shas,
                                  expected_sha256=expected)
+
+
+def audit_ex42_launch_source(root: str | Path, *, remote_ref: str) -> dict[str, Any]:
+    """Require the training caller's source root to be detached and lock-pinned."""
+    if (not isinstance(remote_ref, str) or not remote_ref.startswith("origin/")
+            or ".." in Path(remote_ref).parts):
+        raise ValueError("EX-42 source lock must name an origin tracking ref")
+    root_path = Path(root).resolve(strict=True)
+    symbolic = subprocess.run(
+        ["git", "-C", str(root_path), "symbolic-ref", "-q", "HEAD"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+    if symbolic.returncode == 0:
+        raise ValueError("EX-42 source checkout must be detached and lock-pinned")
+    if symbolic.returncode != 1:
+        raise ValueError("EX-42 source checkout HEAD state is unreadable")
+    result = audit_locked_checkout(
+        root_path, remote_ref=remote_ref, protected_paths=EX42_LOCKED_SOURCE_PATHS)
+    return {**result, "detached": True, "remote_ref": remote_ref,
+            "protected_paths": list(EX42_LOCKED_SOURCE_PATHS)}
 
 
 def verify_launch_argv(argv: list[str], *, python: str, isaac_cli: str,

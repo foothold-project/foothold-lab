@@ -52,5 +52,7 @@ def test_train_start_preparation_gate_precedes_kit_and_keeps_attachment_call():
     source = ROOT / "foothold_s2/scripts/train_start.py"
     text = source.read_text(encoding="utf-8")
     assert text.index("EX-42 preparation_only:") < text.index("from isaaclab.app import AppLauncher")
+    assert text.index("EX42_SOURCE_LOCK_RECEIPT = audit_ex42_launch_source") < text.index(
+        "from isaaclab.app import AppLauncher")
     assert "attach_ex42_training_chain(runner, EX42_TRAINING_CHAIN)" in text
     ast.parse(text)

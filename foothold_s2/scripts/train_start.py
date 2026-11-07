@@ -68,6 +68,7 @@ _pre.add_argument("--ex42_log_dir")
 _pre.add_argument("--ex42_queue_path")
 _pre.add_argument("--ex42_dispatch_path")
 _pre.add_argument("--ex42_p1_score_argv_json")
+_pre.add_argument("--ex42_source_ref")
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--headless", action="store_true")
@@ -411,6 +412,7 @@ _ex42_values = {
     "log_dir": _pre_args.ex42_log_dir,
     "queue_path": _pre_args.ex42_queue_path,
     "p1_score_argv_json": _pre_args.ex42_p1_score_argv_json,
+    "source_ref": _pre_args.ex42_source_ref,
 }
 _ex42_requested = any(value is not None for value in _ex42_values.values()) or bool(_pre_args.ex42_dispatch_path)
 if _ex42_requested:
@@ -418,6 +420,9 @@ if _ex42_requested:
     if _missing_ex42:
         raise ValueError("EX-42 caller inputs are incomplete: " + ", ".join(_missing_ex42))
     from foothold_s2.scripts.ex42_training_entry import build_ex42_training_chain
+    from foothold_s2.ex42_gate_checks import audit_ex42_launch_source
+
+    EX42_SOURCE_LOCK_RECEIPT = audit_ex42_launch_source(REPO, remote_ref=_pre_args.ex42_source_ref)
 
     EX42_TRAINING_CHAIN = build_ex42_training_chain(
         plan_path=_pre_args.ex42_plan,
@@ -480,6 +485,8 @@ parser.add_argument("--ex42_queue_path", type=str, default=None)
 parser.add_argument("--ex42_dispatch_path", type=str, default=None)
 parser.add_argument("--ex42_p1_score_argv_json", type=str, default=None,
                     help="Explicit JSON argv template; exactly one {iteration} placeholder is required")
+parser.add_argument("--ex42_source_ref", type=str, default=None,
+                    help="Pinned origin tracking ref for the detached, read-only EX-42 checkout")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
