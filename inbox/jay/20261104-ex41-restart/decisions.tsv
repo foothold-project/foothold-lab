@@ -268,3 +268,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T13:56:19+09:00	W35 G15	runner ce8e0648(명령 × 지도 39 칸 중 한 칸 빠진 점수도 받던 반례 · 39 칸 · judge 26 / record_only 13 · 역할 일치 검사) · lead 93 passed · 다음 G17	보고 받은 회차 안에 답	ce8e0648	open
 2026-11-07T14:07:17+09:00	W56 초안 · 정본 재시도	analyst W56 초안 a553f4c3(18:00 논의 한 장 · 8 안건 · 다시 묻지 않을 것 먼저 · 권고 없음) · W15 1079 결과 칸만 남음 · analyst 압축(8 %) · 정본 재시도 3(hf_pyramid_slope L2 · L3)	10 분 점검 ACT	DISCUSSION-1800-1107.md	open
 2026-11-07T14:10:02+09:00	W35 G17	runner 910b7656(n0 · 단계 경계 설정 스냅샷 생산기 연결 · 전에는 기록 없음 · 누락 칸 unknown) · lead 95 passed 재현 · Kit 필요로 남김 · 다음 G18	보고 받은 회차 안에 답	910b7656	open
+2026-11-07T14:18:20+09:00	W35 G18 · 정본	runner 407c3d84(승인 DR 일정의 단계 선택을 검사기 · 영수증에 연결 · runtime 미완료) · lead 95 passed · 다음 G33 · 정본 216: complete 50 · pending 39(dark 36 · 기타 1) · hf_pyramid_slope 칸에 dark 몰림 · 재시도 3	10 분 점검	407c3d84	open
