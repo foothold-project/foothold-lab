@@ -179,3 +179,39 @@ def test_ex42_missing_or_late_boundary_score_uses_planned_dr_and_records_gap():
     assert late["reason"] == "score_late_or_wrong_iteration"
     assert late["applied_scale"] == late["planned_scale"] == 0.8
     assert late["maintenance_action"] == "not_decided_here"
+
+
+def test_parent_checkpoint_is_resolved_by_manifest_sha_not_nominal_filename(tmp_path):
+    import hashlib
+    import json
+
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
+    root = Path(__file__).parents[1]
+    plan = EX42Plan.load(root / "curriculum/ex42-prep.yaml")
+    payload = b"fixed parent checkpoint bytes"
+    digest = hashlib.sha256(payload).hexdigest()
+    checkpoint = tmp_path / "model_6000.pt"
+    checkpoint.write_bytes(payload)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({
+        "progress": {"completed_updates": 6000},
+        "checkpoints": {"model_6000.pt": digest},
+    }), encoding="utf-8")
+
+    # The production plan is pinned to the reviewed live-run SHA, while this
+    # compact fixture proves lookup follows the manifest key rather than a
+    # fabricated model_12000.pt filename.
+    plan.document["stage_zero"]["parent"]["sha256"] = digest
+    parent = plan.verify_parent_manifest(manifest)
+    assert parent["manifest_checkpoint_key"] == "model_6000.pt"
+    assert parent["checkpoint_path"] == str(checkpoint.resolve())
+    assert parent["cumulative_update"] == 12000
+    assert parent["checkpoint_sha256"] == digest
+
+    manifest.write_text(json.dumps({
+        "progress": {"completed_updates": 6000},
+        "checkpoints": {"model_6000.pt": "0" * 64},
+    }), encoding="utf-8")
+    with pytest.raises(ValueError, match="exactly one checkpoint"):
+        plan.verify_parent_manifest(manifest)
