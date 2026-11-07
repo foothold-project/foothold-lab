@@ -288,54 +288,29 @@ def _evidence_present(spec: str) -> bool:
         return False
 
 
-def _decided_at_iso(value: str) -> bool:
-    from datetime import datetime
-    if not value or "T" not in value:
-        return False
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+MAI_WORK_DIRS = ("C:/mai/mai-tools/tools/mai-work", str(Path.home() / "mai" / "mai-tools" / "tools" / "mai-work"))
 
 
 def worklist(path: Path, now: float, it: int | None) -> list[tuple[str, str, str]]:
-    """W (팀장 11/06 17:2x): planned work is read by the check, not remembered.
+    """W (팀장 11/06 17:2x · W42 4 단계 11/07): planned work is read by the check, not remembered.
 
-    An open item whose due (`at:YYYY-MM-DDTHH:MM` or `iter:N`) has passed without its evidence
-    file is FAIL; due within 30 min (or 50 updates) is WARN. The top three open items are listed.
+    The rules live in mai-work (mai-tools tools/mai-work, C1 to C11; C11 is the done-evidence rule G25), the same code the mai-watch 작업 tab uses, so this check
+    and the tab cannot disagree. `MAI_WORK_DIR` points at another copy. If mai-work cannot be imported the check says so (FAIL)
+    instead of falling back to a second copy of the rules.
     """
-    import csv
-    from datetime import datetime
+    import os
+    import sys
+    for d in (os.environ.get("MAI_WORK_DIR"),) + MAI_WORK_DIRS:
+        if d and os.path.isdir(os.path.join(d, "mai_work")):
+            if d not in sys.path:
+                sys.path.insert(0, d)
+            break
     try:
-        rows = list(csv.DictReader(path.open(encoding="utf-8"), delimiter="\t"))
-    except OSError:
-        return [("FAIL", "W worklist", f"worklist unreadable: {path}")]
-    out, todo = [], []
-    for r in rows:
-        if r.get("status") == "done":
-            if not _evidence_present(r.get("evidence", "")) or not _decided_at_iso(r.get("decided_at", "")):
-                out.append(("FAIL", f"W {r['id']}", "done without evidence or ISO decided_at"))
-            continue
-        if r.get("status") != "open":
-            continue
-        if _evidence_present(r.get("evidence", "")):
-            out.append(("WARN", f"W {r['id']}", "evidence present but status still open · mark done"))
-            continue
-        due, level = r.get("due", "-"), "OK"
-        if due.startswith("at:"):
-            t = datetime.strptime(due[3:], "%Y-%m-%dT%H:%M").timestamp()
-            level = "FAIL" if now >= t else ("WARN" if t - now < 1800 else "OK")
-        elif due.startswith("iter:") and it is not None:
-            n = int(due[5:])
-            level = "FAIL" if it >= n else ("WARN" if n - it <= 50 else "OK")
-        if level != "OK":
-            out.append((level, f"W {r['id']}", f"{r['priority']} {r['owner']} due {due} · {r['what'][:70]}"))
-        todo.append(r)
-    todo.sort(key=lambda r: (PRIORITY_ORDER.get(r.get("priority"), 9), r.get("due", "")))
-    top = " | ".join(f"{r['id']} {r['priority']} {r['what'][:40]}" for r in todo[:3])
-    out.append(("OK", "W next", f"{len(todo)} open · next: {top}"))
-    return out
+        from mai_work.ops import ops_lines
+    except ImportError as e:
+        return [("FAIL", "W worklist", f"mai-work not importable ({e}); set MAI_WORK_DIR")]
+    return ops_lines(path, now, it)
+
 
 
 def _train_iter(run_root: Path) -> int | None:
