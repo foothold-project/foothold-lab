@@ -593,3 +593,19 @@ def test_c76_continuous_mesh_seed_stays_fixed_across_capture_seeds(tmp_path):
     row["policy"]["geometry_seed"] = 43
     with pytest.raises(ValueError, match="geometry seed"):
         q.validate_plan(plan)
+
+
+def test_gpu0_plan_skips_gpu1_marker_gate_but_gpu1_plan_calls_it(monkeypatch):
+    calls = []
+    monkeypatch.setattr(q.subprocess, "run", lambda argv, **_k: calls.append(argv) or SimpleNamespace(
+        returncode=3, stdout=json.dumps({"job": "c-layer", "admit_next_unit": False}), stderr=""))
+    gpu0 = {"jobs": [{"recorder_argv": ["py", "rec.py", "--device", "cuda:0"]}],
+            "gpu_jobs_tool": "gate.py", "gpu_jobs_config": "jobs.json"}
+    gpu1 = {"jobs": [{"recorder_argv": ["py", "rec.py", "--device", "cuda:1"]}],
+            "gpu_jobs_tool": "gate.py", "gpu_jobs_config": "jobs.json"}
+    import importlib
+    fresh = importlib.reload(q)  # the autouse fixture replaced _gpu_gate
+    assert fresh._gpu_gate(gpu0, "c-layer")["admit_next_unit"] is True
+    assert calls == []
+    assert fresh._gpu_gate(gpu1, "c-layer")["admit_next_unit"] is False
+    assert calls and calls[0][-2:] == ["gate", "c-layer"]

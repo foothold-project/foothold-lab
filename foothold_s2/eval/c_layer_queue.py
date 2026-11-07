@@ -282,6 +282,11 @@ def _slot(row: dict) -> str:
 
 
 def _gpu_gate(plan: dict, job_id: str) -> dict:
+    argv0 = plan["jobs"][0]["recorder_argv"]
+    if argv0[argv0.index("--device") + 1] == "cuda:0":
+        # The gate guards GPU1 behind the EX-41 P1 evaluation marker. A cuda:0
+        # plan is admitted by the GPU0 dispatcher, as in ex41_stage_video.
+        return {"job": job_id, "admit_next_unit": True, "reason": "gpu0_dispatcher_admission"}
     argv = [plan["jobs"][0]["recorder_argv"][0], plan["gpu_jobs_tool"],
             "--config", plan["gpu_jobs_config"], "gate", job_id]
     result = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
