@@ -257,3 +257,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T12:50:58+09:00	W15 전체 판	scripter 반복 결과: 같은 코드 · 같은 조각 3 회 수치 변화 0(결정적) · 옛 한 덩어리 412 는 코드 HEAD 가 달라 범위 밖 → 사전 판정 규칙대로 같은 코드 전체 판 1079(GPU1 P2 · 약 150 분) 등록 · 정본 GPU1 몫(P3)은 그 뒤	사전 등록 규칙	REPORT-W15-noise-result-1107.md	open
 2026-11-07T13:02:07+09:00	W24 계획 끝 · W51 다음	runner 58ebbde6 예행 계획 갱신(오늘 마감 W24 닫음) · 남은 빈칸: train_start 가 EX42TrainingChain 을 만들어 붙이는 호출자 없음 → Kit 명령 원문 미정 · W51 다음 단계로 그 호출자(준비 전용 유지 · CPU 시험)를 지시	보고 받은 회차 안에 답	PLAN-EX42-REHEARSAL-1106.md	open
 2026-11-07T13:09:19+09:00	W55 끝 · I42	W10 v2 4b686407 · 정본 문서 v1.2(PR #586 · 계단에서 지도 줄) · 링크 고치며 -a 로 빌드 산출 155 파일을 섞어 push → 되돌림 커밋 · PR 순 변경 13 파일 확인	W55	EX41R-INCIDENTS.md I42	done
+2026-11-07T13:10:49+09:00	W44 자료	analyst 6b8739a7 원격 확인 · L5 → L9 계단 한 단 0.149 → 0.221 m(+48 %) · 틈은 EX-41 에 없던 종류 · 권고 없이 갈림길 근거 · W44 는 팀장 18:00 결정으로 열어 둠 · analyst 다음 W21 자료	보고 받은 회차 안에 답	EVIDENCE-W44-T0-L9-1107.md	open
