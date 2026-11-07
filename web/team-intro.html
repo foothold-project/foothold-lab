@@ -720,7 +720,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f8d7a234').then(function(r){
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1049,7 +1049,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <p class="sub" style="margin-bottom:12px">20주. <b>1단계는 전원이 같은 것을 각자 한 번씩 완주한다</b>. 한 사람만 환경을 알면 그 사람이 5개월 내내 병목이 된다.
     이후 축을 나누되 실험은 변수별로 분담한다. 각 단계는 <b>그 시점에서 멈춰도 발표 가능한 산출물</b>을 남긴다.</p>
   <div class="gantt">
-    <table class="g">
+    <div class="tw"><table class="g">
       <colgroup><col style="width:10%"><col style="width:25%"><col style="width:9%"><col span="20" style="width:2.8%"></colgroup>
       <tr>
         <th rowspan="2">단계</th><th rowspan="2">세부 과업</th><th rowspan="2">담당</th>
@@ -1106,7 +1106,7 @@ document.addEventListener('DOMContentLoaded',function(){
       <tr><td class="ph" rowspan="1">발표</td>
         <td class="tk">시연 영상 · 최종 발표 준비</td><td class="ow">맹라현+<b style="color:var(--dim)">전원</b></td>
         <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td></tr>
-    </table>
+    </table></div>
     <div class="ms">
       <span><i></i>수행 기간</span>
       <span><i class="soft"></i>확장 축(조건부 착수)</span>
@@ -1122,7 +1122,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <p class="sub" style="margin-bottom:14px">완료 기준(DoD)은 <b>말이 아니라 확인 가능한 상태</b>로 적었다.</p>
   <div class="p4">
     <div>
-      <table class="d">
+      <div class="tw"><table class="d">
         <tr><th>관문 · 산출물</th><th>완료 기준 (Definition of Done)</th></tr>
         <tr class="key"><td class="o">기획발표<small>9/4 · 운영진 제출</small></td>
           <td class="dod">프로젝트 기획서 · 브레인스토밍 · WBS 3종. 문제정의·수요 근거·검증 시나리오·평가지표 확정</td></tr>
@@ -1136,7 +1136,7 @@ document.addEventListener('DOMContentLoaded',function(){
           <td class="dod">실물 Go2 가 SLAM·Nav2 로 지정 코스를 자율 주행. 실패 회차와 원인까지 리포트</td></tr>
         <tr class="key"><td class="o">FINAL: 최종 실증결과 보고서 · 시연<small>12/11</small></td>
           <td class="dod">정량 지표 + 비교 시연 영상 확보. <b>못 한 것과 그 이유</b>까지. 발표 리허설 1회 이상</td></tr>
-      </table>
+      </table></div>
     </div>
     <div>
       <h2>수행 방법 <span class="en">Methods</span></h2>

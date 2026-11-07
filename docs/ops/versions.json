@@ -1,13 +1,13 @@
 {
  "deliverables/final/final-report.md": {
-  "hash": "e5a16ab0b5c5619f",
+  "hash": "84c3cf3bada002da",
   "major": "",
-  "ver": "v1.1"
+  "ver": ""
  },
  "deliverables/final/nav-report.md": {
-  "hash": "a48f43badd27f05d",
+  "hash": "2db873d1a9cef66a",
   "major": "",
-  "ver": "v1.1"
+  "ver": ""
  },
  "deliverables/logs/mentoring-log.md": {
   "hash": "ca46878ece87672e",
@@ -85,9 +85,9 @@
   "ver": "v1.4"
  },
  "docs/COLLAB.md": {
-  "hash": "03e099621d237c4f",
+  "hash": "720d1e858b2ea6c0",
   "major": "v2.1",
-  "ver": "v2.4"
+  "ver": "v2.3"
  },
  "docs/CSV-SPEC-v1.md": {
   "hash": "e98d24c5e7f0aa42",
@@ -95,9 +95,9 @@
   "ver": "v1.0"
  },
  "docs/DECISIONS.md": {
-  "hash": "8e41eb195eeec04a",
+  "hash": "0b900cd730ba4d92",
   "major": "v2.1",
-  "ver": "v2.6"
+  "ver": "v2.5"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -120,9 +120,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "bb2933a33728ee36",
+  "hash": "a4d7023e7c1ddc3b",
   "major": "v2.1",
-  "ver": "v2.26"
+  "ver": "v2.25"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -160,9 +160,9 @@
   "ver": "v1.3"
  },
  "docs/WORKFLOW.md": {
-  "hash": "ca0e097f39ce57d4",
+  "hash": "825d6ce94e3b5021",
   "major": "v2.0",
-  "ver": "v2.2"
+  "ver": "v2.1"
  },
  "docs/WORKING-CHECKOUTS.md": {
   "hash": "8cb732aaa79a0428",
@@ -244,31 +244,6 @@
   "major": "",
   "ver": ""
  },
- "docs/digest/2026-W40-material.md": {
-  "hash": "5bc24cd21ecb7931",
-  "major": "",
-  "ver": ""
- },
- "docs/digest/2026-W41-material.md": {
-  "hash": "fcd01368ac7dee7f",
-  "major": "",
-  "ver": ""
- },
- "docs/digest/2026-W42-material.md": {
-  "hash": "34d9e43d46ca3c29",
-  "major": "",
-  "ver": ""
- },
- "docs/digest/2026-W43-material.md": {
-  "hash": "c2e7908915fba99d",
-  "major": "",
-  "ver": ""
- },
- "docs/digest/2026-W44-material.md": {
-  "hash": "e740fa7034edf9e7",
-  "major": "",
-  "ver": ""
- },
  "docs/guides/ros2-01-setup.md": {
   "hash": "134819c0ab6febdd",
   "major": "v1.0",
@@ -343,11 +318,6 @@
   "hash": "f7fc5da990c2b6fe",
   "major": "v1.0",
   "ver": "v1.0"
- },
- "docs/meetings/20261001-ops-mentoring.md": {
-  "hash": "51038be37fec5f29",
-  "major": "",
-  "ver": ""
  },
  "docs/meetings/README.md": {
   "hash": "5282241ecb9979b4",
@@ -433,16 +403,6 @@
   "hash": "bc687168cf97727f",
   "major": "v1.0",
   "ver": "v1.0"
- },
- "docs/notices/2026-10-07-board.md": {
-  "hash": "e935f3c5e200239a",
-  "major": "v1.0",
-  "ver": "v1.0"
- },
- "docs/notices/2026-10-07.md": {
-  "hash": "0e2a58a2059d81a2",
-  "major": "",
-  "ver": ""
  },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
@@ -563,16 +523,6 @@
   "hash": "a445ee1da18c4862",
   "major": "v1.1",
   "ver": "v1.3"
- },
- "docs/research/20261007-ame2-go2-v1-v6.md": {
-  "hash": "e72ea89d14574d87",
-  "major": "v0.2",
-  "ver": "v0.2"
- },
- "docs/research/20261007-underground-recon-service-review.md": {
-  "hash": "d63a5dac3c0947ae",
-  "major": "v1.1",
-  "ver": "v1.1"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

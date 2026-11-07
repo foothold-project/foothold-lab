@@ -6,56 +6,43 @@
 <title>컴퓨터 비전 교재 · FOOTHOLD</title>
 <script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;else document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>/* ============================================================
-   FOOTHOLD 위키 스타일시트 · 모든 페이지가 공유 (2026-10-07 개편)
-   디자인 기준: plan-next-env.html (따뜻한 아이보리 바탕 · 초록 · 오렌지)
-   레이아웃: 최대 1100px 단일 중심 본문. 문서 트리는 「메뉴」 drawer, 페이지 목차는 본문 위 접이식 줄
+   FOOTHOLD 브랜드 스타일시트 · 모든 페이지가 공유
+   Primary  : 딥 틸그린  (지형·필드 로보틱스)
+   Accent   : 세이프티 오렌지 (주의·강조)
+   Typography: Pretendard · H1 38/800 · H2 24/700 · 본문 16/400 · 캡션 12.5
    ============================================================ */
 :root{
-  color-scheme:light;
-  --bg:#f5f3ee; --panel:#fffdf8; --ink:#232c2b; --sub:#616b66; --line:#d6d9cc;
-  --brand:#22634d; --brand-ink:#1d5642; --brand-soft:#e1ecdf; --brand-line:#b7cfb9;
-  --accent:#ae5723; --accent-soft:#f5e5d2;
-  --code:#ebe7de;
-  --shadow:0 10px 32px #23302608;
-  --radius:12px; --wrap:1100px;
-  --tb-h:52px; --on-fill:#fffdf8;
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1e2528; --sub:#5c6870; --line:#e4e1da;
+  --brand:#0e5e52; --brand-ink:#0a4a41; --brand-soft:#e2efec; --brand-line:#bcd8d1;
+  --accent:#c65214; --accent-soft:#f9ece1;
+  --code:#efede8;
+  --shadow:0 1px 2px rgba(30,37,40,.05),0 8px 24px -12px rgba(30,37,40,.12);
+  --rail-w:250px; --toc-w:200px; --radius:14px;
+  --tb-h:56px; --on-fill:#fff; /* 상단바는 한 줄 고정 · 메뉴가 늘어도 높이가 안 는다 */
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  color-scheme:dark;
-  --bg:#161d1a; --panel:#202923; --ink:#e6e9de; --sub:#b3bdb1; --line:#405043;
-  --brand:#8bc7a2; --brand-ink:#a3d4b5; --brand-soft:#293e32; --brand-line:#3f5f4b;
-  --accent:#edb887; --accent-soft:#443526;
-  --code:#2a322c;
-  --shadow:none; --on-fill:#161d1a;
-}}
 *{box-sizing:border-box}
 
-/* ---------- 레이아웃: 단일 중심 본문 (트리는 drawer, 목차는 본문 위 줄) ---------- */
-.shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"tree" "toc" "main";
-  max-width:var(--wrap);margin:0 auto}
-.js .shell{grid-template-areas:"toc" "main"}
-main{grid-area:main;min-width:0;padding:34px 24px 64px;overflow-wrap:break-word}
-main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 58px)}
-a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+/* ---------- 레이아웃: 문서 트리 | 본문 | 페이지 목차 ---------- */
+.shell{display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr) var(--toc-w);
+  grid-template-areas:"tree main toc";max-width:1320px;margin:0 auto}
+main{grid-area:main;min-width:0;padding:28px 48px 120px}
+main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 18px)}
 .skip{position:absolute;left:-999px;top:0;z-index:100;background:var(--brand);color:#fff;
   padding:8px 14px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
 .skip:focus{left:0}
 
 /* ---------- 상단 고정바 (한 줄) ---------- */
-.topbar{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--line)}
-.tbin{max-width:var(--wrap);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:14px;height:var(--tb-h)}
-.gnav{display:flex;gap:2px 4px;flex:1;min-width:0;overflow:hidden}
-.gnav a{text-decoration:none;color:var(--sub);font-size:15px;font-weight:600;
-  padding:4px 10px;border-radius:6px;white-space:nowrap}
+.topbar{position:sticky;top:0;z-index:60;background:var(--panel);border-bottom:1px solid var(--line)}
+.tbin{max-width:1320px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:18px;height:var(--tb-h)}
+.gnav{display:flex;gap:2px;flex:1;min-width:0;overflow:hidden}
+.gnav a{text-decoration:none;color:var(--sub);font-size:15px;font-weight:700;
+  padding:6px 15px;border-radius:9px;white-space:nowrap}
 .gnav a:hover{color:var(--ink);background:var(--code)}
-.gnav a[aria-current]{color:var(--brand);background:var(--brand-soft)}
+.gnav a[aria-current]{color:var(--brand-ink);background:var(--brand-soft)}
 .menubtn{display:none}
-.js .menubtn{display:inline-flex;align-items:center}
-.menubtn,.menubtn:hover,/* ---------- 문서 트리: JS 있으면 「메뉴」 drawer, 없으면 본문 위에 펼친 목록 ---------- */
-nav.tree{grid-area:tree;padding:18px 24px;border-bottom:1px solid var(--line);font-size:15px}
-.js nav.tree{position:fixed;top:var(--tb-h);left:0;bottom:0;width:min(330px,86vw);z-index:70;overflow-y:auto;
-  padding:18px 12px 40px;background:var(--panel);border-right:1px solid var(--line);border-bottom:0;transform:translateX(-102%);transition:transform .18s ease;visibility:hidden}
-.js nav.tree.open{transform:none;visibility:visible}
+.menubtn,.menubtn:hover,/* ---------- 좌측 문서 트리 (정적 HTML · details 로 접고 편다) ---------- */
+nav.tree{grid-area:tree;position:sticky;top:var(--tb-h);height:calc(100vh - var(--tb-h));overflow-y:auto;
+  padding:18px 12px 40px;border-right:1px solid var(--line);font-size:15px}
 .tree summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px;
   padding:6px 8px;border-radius:7px;font-weight:800;color:var(--ink);font-size:15px}
 .tree summary::-webkit-details-marker{display:none}
@@ -80,53 +67,49 @@ nav.tree{grid-area:tree;padding:18px 24px;border-bottom:1px solid var(--line);fo
 .crumb a:hover{color:var(--brand-ink);text-decoration:underline}
 .crumb li[aria-current]{color:var(--ink);font-weight:700}
 
-/* ---------- 이 페이지 목차: 본문 위 접이식 줄 (스크롤해도 상단바 아래 붙어 있다) ---------- */
-aside.pagetoc{grid-area:toc;position:sticky;top:var(--tb-h);z-index:50;margin:0 24px;
-  background:var(--bg);border-bottom:1px solid var(--line)}
-aside.pagetoc.notoc{display:none}
-.js aside.pagetoc .toc{display:none;background:var(--panel);border:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);padding:10px 12px 14px;max-height:60vh;overflow-y:auto;margin-bottom:-1px}
-.js aside.pagetoc.open .toc{display:flex}
+/* ---------- 우측 = 이 페이지 목차 전용 ---------- */
+aside.pagetoc{grid-area:toc;position:sticky;top:var(--tb-h);height:calc(100vh - var(--tb-h));overflow-y:auto;
+  padding:26px 14px 40px 6px}
+aside.pagetoc.notoc{visibility:hidden}
 
-/* ---------- 머리 (plan-next-env 처럼 상자 없이 바탕 위에) ---------- */
-.hero{margin-bottom:34px;padding:0;position:relative}
-.eyebrow{font-size:15px;font-weight:650;color:var(--brand);letter-spacing:.13em;text-transform:uppercase}
-.hero h1{font-size:clamp(28px,4.5vw,46px);font-weight:750;letter-spacing:-.04em;line-height:1.22;
-  max-width:820px;margin:.35em 0 .45em}
-.hero .lede{color:var(--sub);max-width:760px;margin:0;font-size:19px;line-height:1.7}
-.stamp{display:inline-block;margin-top:18px;font-size:15px;color:var(--sub);
-  border:1px solid var(--line);border-radius:6px;padding:3px 10px;background:var(--panel)}
+/* ---------- 히어로 ---------- */
+.hero{margin-bottom:44px;padding:34px 38px;background:var(--panel);
+  border:1px solid var(--line);border-radius:20px;
+  position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;
+  border-radius:50%;pointer-events:none}
+.eyebrow{font-size:12.16px;font-weight:800;color:var(--brand);letter-spacing:.14em;text-transform:uppercase}
+.hero h1{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:.25em 0 .35em}
+.hero .lede{color:var(--sub);margin:0;font-size:16.5px}
+.stamp{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--sub);
+  border:1px solid var(--line);border-radius:12px;padding:3px 13px;background:var(--bg)}
 
 /* 🖥(U+1F5A5)는 기본이 글자 모양이라 FE0F 없이 쓰면 검은 막대로 보인다 → 이 한 글자만 컬러 이모지 글꼴로(숫자·# 는 건드리지 않음) */
 @font-face{font-family:Emo;src:local("Noto Color Emoji"),local("Apple Color Emoji"),local("Segoe UI Emoji");unicode-range:U+1F5A5}
 /* ---------- 본문 타이포 ---------- */
-h2{font-size:clamp(23px,3vw,29px);font-weight:700;letter-spacing:-.02em;line-height:1.4;margin:56px 0 14px;
-  padding-top:34px;border-top:1px solid var(--line)}
+h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:60px 0 10px;
+  padding-top:26px;border-top:1px solid var(--line)}
 h2 .n{color:var(--brand);margin-right:9px;font-variant-numeric:tabular-nums}
-h3{font-size:19px;font-weight:700;line-height:1.5;margin:32px 0 10px}
+h3{font-size:17.5px;font-weight:700;margin:32px 0 6px}
 p{margin:.5em 0 1em}
-main p{}
-main .card p,main .call p,main .res p,main td p,main .fig p{max-width:none}
 .sub{color:var(--sub)}
-a{color:var(--brand);text-underline-offset:3px}
+a{color:var(--brand-ink)}
 main a:hover{text-decoration-thickness:2px}
 ul,ol{padding-left:22px;margin:.4em 0 1em}
 li{margin:4px 0}
-strong{font-weight:650}
-code{background:var(--code);border-radius:5px;padding:2px 6px;font-size:.86em;overflow-wrap:anywhere;
-  font-family:Emo,ui-monospace,"Cascadia Mono",Consolas,monospace}
-pre{background:var(--code);border-radius:8px;padding:14px 16px;overflow-x:auto;
+strong{font-weight:700}
+code{background:var(--code);border-radius:6px;padding:2px 6px;font-size:.86em;overflow-wrap:anywhere;
+  font-family:Emo,Consolas,"Cascadia Mono",monospace}
+pre{background:var(--code);border-radius:12px;padding:14px 18px;overflow-x:auto;
   font-size:13px;line-height:1.6}
 pre code{background:none;padding:0}
-/* 일반 접기(클래스 없는 details): plan-next-env 의 접기 모양 */
-main details:not([class]){border-bottom:1px solid var(--line);padding:12px 0}
-main details:not([class])>summary{cursor:pointer;font-weight:600;min-height:36px}
 
 /* ---------- 명령 해부 (pre 바로 아래 붙는 토큰 설명) ---------- */
 .cmd{margin:14px 0 22px}
-.cmd pre{margin:0;border-radius:8px 8px 0 0}
+.cmd pre{margin:0;border-radius:12px 12px 0 0}
 .cmd .why{font-size:15px;color:var(--sub);margin:0 0 6px;padding-left:2px}
-.anno{border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;
-  background:var(--panel);font-size:13.5px;overflow:hidden}
+.anno{border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;
+  background:var(--panel);font-size:13px;overflow:hidden}
 .anno>div{display:grid;grid-template-columns:230px 1fr;gap:0 14px;
   padding:7px 14px;border-bottom:1px solid var(--line)}
 .anno>div:last-child{border-bottom:0}
@@ -145,30 +128,32 @@ dl.defs dd{margin:0;font-size:15px;color:var(--ink)}
 @media (max-width:640px){dl.defs>div{grid-template-columns:1fr;gap:2px}}
 
 /* ---------- 표 ---------- */
-.tablewrap{overflow-x:auto;margin:18px 0 22px;border-radius:8px}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th{font-size:13.5px;font-weight:600;color:var(--sub);
-  text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
-  background:var(--brand-soft)}
-td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-td.pos{color:var(--brand);font-weight:650}
-td.neg{color:var(--accent);font-weight:650}
+.tablewrap{overflow-x:auto;margin:16px 0 22px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);
+  text-align:left;padding:11px 16px;border-bottom:2px solid var(--line);white-space:nowrap;
+  background:var(--code)}
+td{padding:10px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.pos{color:var(--brand-ink);font-weight:600}
+td.neg{color:var(--accent);font-weight:600}
 
-/* ---------- 콜아웃 (plan-next-env 의 .note 모양) ---------- */
-.call{
-  background:var(--brand-soft);border-radius:0 8px 8px 0;
-  padding:12px 18px;margin:20px 0}
-.call.trap{border-left-color:var(--accent);background:var(--accent-soft)}
-.call .t{font-size:12.5px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--brand);margin-bottom:3px}
+/* ---------- 콜아웃 ---------- */
+.call{border:1px solid var(--brand-line);
+  background:var(--brand-soft);border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 20px;margin:18px 0}
+.call.trap{border-color:var(--accent-soft);border-left-color:var(--accent);background:var(--accent-soft)}
+.call .t{font-size:11.68px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--brand-ink);margin-bottom:3px}
 .call.trap .t{color:var(--accent)}
 .call p{margin:.3em 0}
 
-/* ---------- 카드 (plan-next-env 의 .panel 모양) ---------- */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:20px 0}
+/* ---------- 카드 ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:18px 0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:20px 22px;min-width:0}
-.card h4{margin:0 0 6px;font-size:16px;font-weight:700}
+  padding:18px 20px;}
+.card h4{margin:0 0 5px;font-size:15px;font-weight:700}
 .card p{margin:0;font-size:15px;color:var(--sub)}
 .card .who{display:inline-block;font-size:11.68px;font-weight:800;color:var(--brand-ink);
   background:var(--brand-soft);border-radius:999px;padding:2px 11px;margin-bottom:9px}
@@ -201,22 +186,38 @@ footer a{color:var(--sub)}
 .pagerow .pt{font-weight:700;color:var(--brand-ink)}
 .pagerow a.next{text-align:right}
 
-/* 좁은 화면: 분류 링크는 문서 트리(메뉴) 안에서 */
-@media (max-width:760px){
-  .brand{margin-right:auto}
+/* 본문 폭이 모자라면 페이지 목차는 본문 위 접이식 줄로 */
+@media (max-width:1180px){
+  .shell{grid-template-columns:var(--rail-w) minmax(0,1fr);grid-template-areas:"tree toc" "tree main"}
+  aside.pagetoc{position:sticky;top:var(--tb-h);z-index:50;height:auto;overflow:visible;padding:0;
+    border-bottom:1px solid var(--line);background:var(--bg)}
+  aside.pagetoc.notoc{display:none}
+  aside.pagetoc .toc{display:none;background:var(--panel);padding:10px 12px 14px;max-height:52vh;overflow-y:auto}
+  aside.pagetoc.open .toc{display:flex}
+  main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 58px)}
+}
+/* 좁은 화면: 문서 트리는 메뉴 버튼 → drawer, 상단 분류 링크는 트리 안에서 */
+@media (max-width:920px){
+  :root{--tb-h:52px}
+  .shell{grid-template-columns:minmax(0,1fr);grid-template-areas:"tree" "toc" "main"}
+  .tbin{gap:10px;padding:0 14px}
   .gnav{display:none}
+  nav.tree{position:static;top:auto;height:auto;width:auto;overflow-y:visible;padding-bottom:18px;
+    border-right:0;border-bottom:1px solid var(--line);transform:none;visibility:visible}
+  .js .shell{grid-template-areas:"toc" "main"}
+  .js .menubtn{display:inline-flex}
+  .js nav.tree{position:fixed;top:var(--tb-h);left:0;bottom:0;height:auto;width:min(310px,86vw);z-index:70;
+    background:var(--panel);border-right:1px solid var(--line);
+    transform:translateX(-102%);transition:transform .18s ease;visibility:hidden}
+  .js nav.tree.open{transform:none;visibility:visible}
+  main{padding:22px 18px 80px}
+  .hero{padding:26px 24px}
+  .hero h1{font-size:29px}
   .phasebar{flex-direction:column}
   .phasebar>div+div{border-left:0;border-top:1px solid var(--line)}
   .pagerow{flex-direction:column}
 }
-@media (max-width:480px){
-  .tbin{gap:10px;padding:0 16px}
-  main{padding:26px 16px 44px}
-  aside.pagetoc{margin:0 16px}
-  nav.tree{padding:16px}
-  .card{padding:18px}
-}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.js nav.tree{transition:none}}
+@media (prefers-reduced-motion:reduce){.js nav.tree{transition:none}}
 
 /* ---------- 학습 자료: 명령 종류 배지 · 스텝 번호 · 성공 판정 ---------- */
 .tag{display:inline-block;font-size:10.56px;font-weight:800;letter-spacing:.05em;border-radius:999px;
@@ -314,10 +315,6 @@ td .bt:hover{text-decoration:underline}
 .fig img{display:block;max-width:100%;height:auto;border-radius:8px}
 .fig figcaption{font-size:15px;color:var(--sub);margin-top:10px}
 .fig figcaption b{display:block;color:var(--ink);font-weight:800;font-size:15px;margin-bottom:2px}
-/* 세로형 도식(10-06): 휴대폰 폭 기준으로 그리고 넓은 화면에선 키우지 않는다. figpair 는 두 그림을 나란히, 좁으면 위아래로 */
-.fig svg.narrow{width:100%;max-width:520px;height:auto;margin:0 auto}
-.figpair{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:start}
-.figpair svg{width:100%;height:auto}
 .leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.16px;color:var(--sub);margin-top:12px}
 .leg span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .leg i{width:20px;height:0;border-top:2.5px solid currentColor;flex-shrink:0}
@@ -334,22 +331,6 @@ td .bt:hover{text-decoration:underline}
 .vids.wide video{aspect-ratio:16/3;min-height:120px;object-fit:contain}
 .vids figcaption{font-size:12.5px;color:var(--sub);padding:10px 14px 13px;line-height:1.6}
 .vids figcaption b{display:block;color:var(--brand-ink);font-size:15px;font-weight:800}
-.vids.three{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:6px}
-@media (max-width:640px){.vids.three{grid-template-columns:1fr}}
-.vids.four{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:6px}
-@media (max-width:1100px){.vids.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.vids.four{grid-template-columns:1fr}}
-/* 본문 폭(약 760px)에서 5열이면 카드가 145px 라 Chrome 기본 컨트롤이 전체화면 버튼을 숨긴다 → 3열 */
-.vids.five{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
-@media (max-width:900px){.vids.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.vids.five{grid-template-columns:1fr}}
-/* 전체화면 버튼 (app.js 가 .vids 영상마다 붙인다 · 좁은 카드에선 기본 컨트롤에 전체화면이 안 보인다) */
-.fsbtn{float:right;margin:0 0 6px 8px;font:600 11.5px/1 "Pretendard Variable",Pretendard,sans-serif;
-  color:var(--sub);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
-.fsbtn:hover,.fsbtn:focus-visible{color:var(--brand-ink);border-color:var(--brand-line)}
-.vids .miss{display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;background:var(--code);color:var(--sub);font-size:15px;font-weight:700}
-.vidrow{margin:20px 0 0;font-size:15px;color:var(--sub)}
-.vidrow b{color:var(--ink)}
 
 .was{margin:14px 0;padding:12px 16px 13px;
   background:var(--panel);border-radius:0 var(--radius) var(--radius) 0}
@@ -421,7 +402,7 @@ td .bt:hover{text-decoration:underline}
    <div class="res ok"><b>✅ 정상이라면</b><pre>…</pre></div>  .res.warn ⚠️ · .res.err ❌ */
 .mach{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:12.5px;line-height:1.5;
   color:var(--sub);background:var(--brand-soft);border:1px solid var(--brand-line);border-bottom:0;
-  border-radius:8px 8px 0 0;padding:7px 14px}
+  border-radius:12px 12px 0 0;padding:7px 14px}
 .mach b{color:var(--brand-ink);font-weight:800;font-size:15px;white-space:nowrap}
 .mach code{background:transparent;padding:0;color:var(--ink);font-weight:700;font-size:12px}
 .mach .nt{margin-left:auto;font-weight:700;color:var(--ink);white-space:nowrap}
@@ -433,11 +414,11 @@ td .bt:hover{text-decoration:underline}
 .mach.pod+pre{border-left:1px solid var(--accent);border-right:1px solid var(--accent)}
 .mach.ros+pre{border-left:1px solid var(--brand-line);border-right:1px solid var(--brand-line)}
 .mach.any+pre{border-left:1px solid var(--line);border-right:1px solid var(--line)}
-.cmd .mach+pre{border-radius:0 0 8px 8px} .cmd .mach+pre:has(+.anno){border-radius:0}
+.cmd .mach+pre{border-radius:0 0 12px 12px} .cmd .mach+pre:has(+.anno){border-radius:0}
 .cmd pre+.res{margin-top:8px}
 .res.ok code{color:var(--brand-ink)}
 .res{margin:0 0 22px;border:1px solid var(--brand-line);
-  border-radius:0 8px 8px 0;background:var(--panel);font-size:15px;padding:9px 16px 11px}
+  border-radius:0 12px 12px 0;background:var(--panel);font-size:15px;padding:9px 16px 11px}
 .cmd .res,.cmd .anno+.res{margin-top:8px}
 .res b{display:block;font-size:12.16px;font-weight:800;letter-spacing:.04em;color:var(--brand-ink);margin-bottom:3px}
 .res pre{margin:6px 0 4px;font-size:12.5px;padding:10px 14px;border-radius:8px}
@@ -472,142 +453,6 @@ pre.cc>code,pre:not(.cc){}
 @media (max-width:639px){.scrollhint{display:block}}
 @media (max-width:720px){.mach .nt{white-space:normal;margin-left:0}}
 .badge.obs{color:var(--brand-ink);background:transparent;border-color:var(--brand-line)}
-
-/* ---------- 연구기록 양식 (09-30): hero 메타 격자 · 증거 범례 · 증거 3단계 ---------- */
-.hero .meta{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-  gap:10px 20px;margin:22px 0 0;padding:16px 0 0;border-top:1px solid var(--line);font-size:15px}
-.hero .meta>div{min-width:0}
-.hero .meta dt{font-size:11.68px;font-weight:800;color:var(--sub);letter-spacing:.04em}
-.hero .meta dd{margin:2px 0 0;color:var(--ink);overflow-wrap:anywhere}
-.evlegend{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;
-  margin:14px 0 0;font-size:12.5px;color:var(--sub)}
-.ev.ok{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
-.ev.guess{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
-.ev.todo{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
-/* 장면 단면 격자(10-06): 작은 SVG 단면 + 아래 HTML 설명. 휴대폰에선 2열 */
-.scenegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px}
-.scenegrid .scene{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel)}
-.scenegrid .scene svg{width:100%;height:auto}
-.scenegrid .scene b{display:block;font-size:15px;color:var(--ink)}
-.scenegrid .scene span{display:block;font-size:12.16px;color:var(--sub);line-height:1.45}
-
-/* ---------- 버튼으로 하나씩 보기 (.tabbar 는 app.js 가 [data-tabset] 앞에 만든다) ---------- */
-.tabbar{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
-.tabbar button{font:inherit;font-size:15px;font-weight:600;line-height:1.4;min-height:44px;padding:9px 16px;cursor:pointer;
-  border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
-.tabbar button:hover{border-color:var(--brand-line)}
-.tabbar button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-fill);font-weight:650}
-.tabbar button[aria-pressed="true"]::before{content:"✓ "}
-.tabbar button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.tabpanel[hidden]{display:none}
-.card h3{margin:2px 0 6px;font-size:15px;font-weight:700;line-height:1.45;color:var(--ink)}
-.card em{font-style:normal;font-weight:700;color:var(--ink)}
-
-/* Codex 읽기 구성: 넓은 한 본문 안에서 절·행동·근거를 구분한다. */
-main{padding-bottom:72px}
-.hero{padding:12px 0 28px}
-.hero h1{font-size:clamp(30px,4.4vw,46px);line-height:1.28;letter-spacing:-.045em}
-.hero .lede{max-width:760px;font-size:18px;line-height:1.8}
-.reading-nav{position:sticky;top:calc(var(--tb-h) + 40px);z-index:40;display:flex;align-items:center;gap:10px;margin:8px 0 24px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-.reading-nav label{font-size:15px;font-weight:700;white-space:nowrap;color:var(--sub)}
-.reading-nav select{flex:1;min-width:0;max-width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:0;padding:9px 4px;cursor:pointer}
-.reading-nav button{width:42px;min-height:42px;flex-shrink:0;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--brand-ink);cursor:pointer}
-.reading-nav button:disabled{opacity:.35;cursor:default}
-.reading-chapter{min-width:0;padding:28px 30px;margin:0 0 26px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
-.reading-chapter>h2{margin:0 0 22px;padding:0 0 16px;border-top:0;border-bottom:1px solid var(--line);font-size:24px;line-height:1.5;letter-spacing:-.025em}
-.reading-chapter>h3{padding-top:22px;border-top:1px dashed var(--line);margin-top:32px;font-size:19px}
-.reading-chapter>h2+h3{border-top:0;padding-top:0;margin-top:0}
-.reading-chapter>p,.reading-chapter>ul,.reading-chapter>ol{}
-.reading-chapter p{line-height:1.85}
-.reading-chapter .card{background:var(--bg)}
-.reading-chapter table{font-size:14px;line-height:1.7}
-.reading-chapter th,.reading-chapter td{padding:12px 14px}
-.reading-chapter .tablewrap{border:1px solid var(--line);border-radius:10px;margin:18px 0}
-.reading-chapter .tablewrap table{margin:0}
-.wide-table table{min-width:var(--table-min,720px)}
-.table-reading-hint{font-size:15px;color:var(--sub);margin:16px 0 -8px}
-.reading-chapter pre{font-size:13px;line-height:1.75}
-.reading-chapter .anno{font-size:14px;line-height:1.75}
-.reading-chapter .ifonly{background:var(--bg);margin:20px 0;border:1px solid var(--line);border-radius:10px}
-.reading-chapter .ifonly>summary{padding:15px 18px;font-size:15px;min-height:48px}
-.reading-chapter .ifonly>.body{padding:6px 18px 20px}
-.reading-chapter h2[id],.reading-chapter h3[id],.reading-chapter h4[id]{scroll-margin-top:calc(var(--tb-h) + 130px)}
-.home-status{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0}
-.home-status span{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:15px;color:var(--sub);background:var(--panel)}
-.home-status .current{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
-.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:20px 0}
-.feature-grid>.feature{min-width:0;padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-.feature-grid>.feature .num{display:block;color:var(--accent);font-size:12.16px;font-weight:800;margin-bottom:10px}
-.feature-grid>.feature h3{margin:0 0 10px;font-size:20px;line-height:1.45}
-.feature-grid>.feature p{margin:0;font-size:15px;color:var(--sub)}
-.feature-grid>.feature a{display:inline-block;margin-top:16px;font-size:15px;font-weight:700}
-.next-actions{counter-reset:action;list-style:none;padding:0;margin:16px 0;display:grid;gap:12px}
-.next-actions li{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--line)}
-.next-actions li::before{counter-increment:action;content:counter(action);display:grid;place-items:center;align-self:start;width:30px;height:30px;border-radius:50%;background:var(--brand-soft);color:var(--brand-ink);font-weight:800;font-size:15px}
-.next-actions strong{display:block}.next-actions p{margin:3px 0 0;font-size:15px;color:var(--sub)}
-.journey{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0;color:var(--sub)}
-.journey span{flex:1;min-width:140px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg);font-size:15px}
-.journey b{display:block;color:var(--ink);font-size:16px;margin-bottom:3px}
-.archive-home{margin:20px 0;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-.archive-home>summary{padding:18px;font-size:16px;font-weight:700}
-.archive-home>.body{padding:4px 22px 24px}
-.archive-home .hero h1{font-size:28px}
-.archive-home .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-.svg-scroll{overflow-x:auto;max-width:100%;margin:14px 0;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
-.svg-scroll>svg{min-width:740px;display:block}
-.corridor-chart>svg{min-width:980px}
-.diagram-legend{font-size:15px;color:var(--sub);line-height:1.75;margin:10px 0}
-:where(button,select,a,summary):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.vids video:focus-visible,.vids figure:focus-within{outline:3px solid var(--accent);outline-offset:3px}
-.fsbtn,.copybtn{font-family:inherit}
-@media(max-width:720px){
-  main{padding:22px 14px 48px}
-  .hero{padding-top:4px}.hero .lede{font-size:16px}
-  .feature-grid{grid-template-columns:1fr;gap:10px}.feature-grid>.feature{padding:18px}
-  .reading-chapter{padding:20px 16px;margin-bottom:18px;border-radius:12px}
-  .reading-chapter>h2{font-size:21px;line-height:1.55}.reading-chapter>h3{font-size:18px}
-  .reading-nav{padding:8px;gap:6px}.reading-nav label{font-size:12.16px}.reading-nav button{width:36px}
-  .archive-home>.body{padding:0 14px 18px}.archive-home .cards{grid-template-columns:1fr}
-  .journey{display:grid;grid-template-columns:1fr 1fr}.journey>i{display:none}
-}
-@media print{
-  .reading-nav,.topbar,.pagetoc,.tree,.copybtn,.fsbtn{display:none!important}
-  .shell{display:block}main{max-width:none;padding:0}
-  .reading-chapter{border:0;border-radius:0;padding:0;margin:24px 0;break-inside:auto}
-  .reading-chapter>h2{break-after:avoid}.feature-grid{grid-template-columns:repeat(3,1fr)}
-  .tablewrap,.svg-scroll{overflow:visible}.svg-scroll>svg{min-width:0}
-  .wide-table table{min-width:0}.table-reading-hint{display:none}
-}
-
-/* 상단 탭의 게시글 목록: 본문을 바꾸지 않고 같은 위치에서 분류를 고른다. */
-.gnav a[aria-expanded="true"]{background:var(--brand-soft);color:var(--brand-ink)}
-.category-board{position:absolute;top:100%;left:0;right:0;max-height:70vh;overflow-y:auto;background:var(--panel);border-bottom:1px solid var(--line);z-index:80}
-.category-board[hidden],.category-posts[hidden]{display:none}
-.category-board-inner{max-width:1100px;margin:auto;padding:22px 24px 30px}
-.category-close{float:right;min-height:40px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--sub);font:inherit;font-size:15px;cursor:pointer}
-.category-heading{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 75px 20px 0}
-.category-heading h2{margin:0;padding:0;border:0;font-size:23px;line-height:1.5;color:var(--ink)}
-.category-heading>a{font-size:15px;white-space:nowrap}
-.post-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.post-group{min-width:0}
-.post-group h3{margin:0 0 8px;font-size:15px;color:var(--sub);letter-spacing:0;line-height:1.6}
-.post-group ul{padding:0;margin:0;list-style:none}
-.post-group li{border-bottom:1px solid var(--line)}
-.post-group a{display:block;padding:10px 8px;font-size:15px;line-height:1.6;text-decoration:none;color:var(--ink);border-radius:5px;overflow-wrap:anywhere}
-.post-group a:hover,.post-group a[aria-current="page"]{background:var(--brand-soft);color:var(--brand-ink)}
-#foothold-plan [id]{scroll-margin-top:calc(var(--tb-h) + 20px)}
-@media(max-width:760px){
-  :root{--tb-h:94px}
-  .tbin{height:94px;flex-wrap:wrap;gap:0 10px}
-  .gnav{display:flex;order:4;flex:0 0 100%;height:42px;align-items:center;overflow-x:auto;overflow-y:hidden;gap:0}
-  .gnav a{padding:7px 8px;font-size:12.16px}
-  .category-board{max-height:calc(100dvh - 104px)}
-  .category-board-inner{padding:18px 16px 24px}
-  .post-groups{grid-template-columns:1fr;gap:22px}
-  .category-heading h2{font-size:20px}
-  .reading-chapter h2[id],.reading-chapter h3[id],.reading-chapter h4[id]{scroll-margin-top:calc(var(--tb-h) + 130px)}
-}
-@media print{.category-board{display:none!important}}
 
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -954,39 +799,6 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<style id="stamp-css">
-/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
-   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
-/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
-   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
-   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
-   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
-body{min-height:100vh;display:flex;flex-direction:column}
-body>.bstamp{margin-top:auto}
-/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
-   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
-   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
-   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
-   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
-body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
-body>*{flex-shrink:0}
-/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
-   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
-   width:100% 로 먼저 채우고 max-width 로 자른다. */
-.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
-  margin:40px auto 22px;
-  padding:12px 18px 0;
-  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
-  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
-.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
-.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.bstamp .gap{flex:1}
-/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
-   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
-   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
-   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
-@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
-</style>
 <style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
@@ -1148,7 +960,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f8d7a234').then(function(r){
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1235,11 +1047,44 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
 </head>
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-11-07 09:10 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-30 13:39 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <!-- nav:crumb -->
 <nav class="crumb" aria-label="현재 위치"><ol><li><a href="tech-rl.html">기술 문서</a></li><li>센서·자율주행</li><li aria-current="page">컴퓨터 비전</li></ol></nav>
@@ -1254,21 +1099,21 @@ document.addEventListener('DOMContentLoaded',function(){
 
 <div class="call"><div class="t">지금 여기 · 2026-09-15 기준</div>
 <p><strong>RL 은 팀원에게 넘겼고, 나는 센서 · CV · ROS 2 를 맡는다.</strong> 중간발표(10/1~2) 전 최소 시연은 <strong>영상 출력 · 센서 데이터 · 사람 인식과 실제 정지</strong>(09-14 우선순위 ①~③), Nav2 통합(「이동 중 사람 → 감속/정지/우회」)은 <strong>추천 확장 목표</strong>이지 팀이 확정한 필수 범위가 아니다. 이 교재의 C1~C8 은 그 밑바탕(이미지 → 탐지 → ROS 2 → 기하 → 좌표)이고, 시뮬 Go2 코드 전문은 28 Go2 CV·LiDAR 시리즈, 전체 구조는 <a href="tech-slam-nav.html">14 SLAM · Nav2</a> 에 있다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>상태</th><th>무엇</th></tr>
 <tr><td><span class="badge done">확인 완료</span></td><td>시뮬 Go2 에 카메라 · XT-16 근사 RTX LiDAR 부착, 기존 설정 무변경, rails 6 s 데이터 취득(14 §2)</td></tr>
 <tr><td><span class="badge run">구현 예정</span></td><td>사람 탐지 → 속도 명령 변경 → 실제 정지 · 탐지 → 깊이·TF → map 좌표 → 비용 지도 → Nav2</td></tr>
 <tr><td><span class="badge hyp">미확인</span></td><td>실기 카메라(잠정 D455) 웹 스트림 규격 · depth 포함 여부 · 장착 변환 · LiDAR 토픽</td></tr>
-</table></div></div>
+</table></div></div></div>
 <details class="ifonly"><summary><b>옛 「지금 여기」 (2026-08-27 기준)</b><span class="skip">현행 아님</span></summary><div class="body">
 <p><strong>이번 주 CV 결승선은 <a href="#C3-5">C3-5</a>다</strong> · 개인 노트북에서 웹캠 YOLO를 띄우고 <strong>FPS·VRAM을 숫자로 적는 것</strong>. 그게 08-29(토) Must이자 <code>S1</code> 완료 기준의 뒷부분이고, 동시에 B축(취업) 포트폴리오의 첫 정량 증거다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>순서</th><th>어디</th><th>무엇</th><th>언제</th><th>상태</th></tr>
 <tr><td>1</td><td><a href="#C3-1">C3-1</a></td><td><code>ultralytics</code> 설치 + <code>torch.cuda.is_available()</code> 확인 (15분)</td><td>08-27 저녁</td><td>대기</td></tr>
 <tr><td>2</td><td><a href="#C1-1">C1-1</a>~<a href="#C1-5">C1-5</a></td><td>OpenCV로 웹캠 열기 · 이미지가 숫자 배열이라는 것 확인</td><td>08-29</td><td>대기</td></tr>
 <tr><td>3</td><td><a href="#C3-3">C3-3</a>~<a href="#C3-5">C3-5</a></td><td><b>웹캠 실시간 탐지 + 실측표</b></td><td>08-29 (4h)</td><td class="neg">Must</td></tr>
 <tr><td>4</td><td><a href="#C4-1">C4-1</a></td><td><code>usb_cam</code> → <code>/image_raw</code> (학원 노트북 · 낮 고정)</td><td>08-28 낮</td><td>대기</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub"><strong>2회 이월된 항목이 여기 둘 있다</strong>(GPU 점검 · <code>ultralytics</code> 설치). 3회 이월 전에 쪼개라는 규칙에 따라 <a href="#C3-1">C3-1</a>(설치 확인 15분)과 <a href="#C3-5">C3-5</a>(추론 성공)로 이미 분해해 두었다.</p>
 </div></details>
 
@@ -1277,26 +1122,26 @@ document.addEventListener('DOMContentLoaded',function(){
 <h3>왜 이 순서인가</h3>
 <p>CV 강의는 보통 <strong>딥러닝 이론 → CNN → 탐지 → 배포</strong> 순으로 간다. 그 순서는 좋지만 <strong>우리 일정에 맞지 않는다.</strong> 우리가 9월 첫 주에 필요한 것은 CNN의 역전파가 아니라 <strong>"웹캠 영상에 박스가 그려지고 그 속도가 몇 FPS인지"</strong>이기 때문이다.</p>
 <p>그래서 이 교재는 <strong>파이프라인을 먼저 끝에서 끝까지 뚫고, 이론은 그 파이프라인을 못 고칠 때만 되돌아가서 채운다.</strong> 순서는 이렇게 된다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>큰 흐름</th><th>무엇을 얻나</th><th>왜 이 자리인가</th></tr>
 <tr><td><b>C1 → C2 → C3</b><br>영상 → 박스</td><td>웹캠 영상에 탐지 박스가 뜨고, 그 성능이 숫자로 나온다</td><td>ROS 2 없이 개인 노트북만으로 된다. <b>밤에 할 수 있는 유일한 CV 작업</b></td></tr>
 <tr><td><b>C4</b><br>박스 → 토픽</td><td>탐지가 ROS 2 노드가 되어 팀 시스템에 붙는다</td><td>학원 노트북(웹캠·GUI)이 필요하다. <b>낮 고정</b></td></tr>
 <tr><td><b>C5 → C6</b><br>토픽 → 좌표</td><td>탐지된 픽셀이 지도 위의 점이 된다 = <code>S4</code></td><td>여기서 처음으로 수학이 필요하다. 앞이 안 돌면 여기는 검증할 방법이 없다</td></tr>
 <tr><td><b>C7</b><br>정확도</td><td>우리 대상에 맞춘 모델 + mAP 수치</td><td>파이프라인이 돌고 나서 정확도를 올리는 게 순서다. 반대로 하면 뭘 고쳤는지 모른다</td></tr>
 <tr><td><b>C8</b><br>LiDAR</td><td><code>B/인지</code>의 나머지 절반</td><td>실기 접근 전에는 확인할 값이 없다. <b>지금은 지도만 그린다</b></td></tr>
-</table></div>
+</table></div></div>
 
 <h3>진도표 · 각 스텝이 어느 목표에 매여 있나 <span class="sub">(09-15 기준)</span></h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>구간</th><th>다루는 것</th><th>스텝</th><th>어느 장비</th><th>매인 목표</th></tr>
 <tr><td><b>C1~C3</b></td><td>이미지 배열 · 탐지 개념 · YOLO 추론 실측</td><td>C1-1 ~ C3-6</td><td><span class="tag nb">개인</span></td><td>최소 시연(10/1~2 전) 밑바탕 · 시뮬 Go2 코드는 28 C4</td></tr>
 <tr><td><b>C4</b></td><td><code>usb_cam</code> · <code>cv_bridge</code> · QoS · 탐지 노드 · launch</td><td>C4-1 ~ C4-8</td><td><span class="tag ch">학원</span></td><td>최소 시연(정지 노드) · 실기 웹 스트림 재발행</td></tr>
 <tr><td><b>C5 · C6</b></td><td>핀홀 · <code>K</code> · 역투영 · optical frame · TF</td><td>C5-1 ~ C6-6</td><td><span class="tag ch">학원</span></td><td><span class="badge run">구현 예정</span> 확장(Nav2 통합, 제안) · 거리 정지 · 비용 지도</td></tr>
 <tr><td><b>C7</b></td><td>데이터셋 · 라벨링 · 학습 · mAP 리포트</td><td>C7-1 ~ C7-5</td><td><span class="tag nb">개인</span></td><td>포트폴리오 · 일정 미확정</td></tr>
 <tr><td><b>C8</b></td><td>LiDAR 점군 · 카메라-LiDAR 융합</td><td>C8-1 ~ C8-4</td><td>시뮬 → 실기</td><td>우선순위 ③④ (XT-16 근사 점군 · XT-16/L1 비교) · 실기 규격 <span class="badge hyp">미확인</span></td></tr>
-</table></div>
+</table></div></div>
 <details class="ifonly"><summary><b>옛 진도표 (2026-08 · S1~S6 관문 · 10-10/11-07/12-11)</b><span class="skip">현행 아님</span></summary><div class="body">
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>구간</th><th>다루는 것</th><th>스텝</th><th>어느 장비</th><th>매인 단계</th><th>상태</th></tr>
 <tr><td><b>C1</b></td><td>이미지 = 숫자 배열 · OpenCV · 웹캠 열기</td><td>C1-1 ~ C1-6</td><td><span class="tag nb">개인</span></td><td><code>S1</code></td><td class="neg">← 지금 여기</td></tr>
 <tr><td><b>C2</b></td><td>분류/탐지/분할 · bbox · IoU · NMS · mAP</td><td>C2-1 ~ C2-5</td><td>읽기만</td><td><code>S1</code></td><td>대기</td></tr>
@@ -1306,7 +1151,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <tr><td><b>C6</b></td><td>역투영 · optical frame · TF · 지면 평면 가정</td><td>C6-1 ~ C6-6</td><td><span class="tag ch">학원</span></td><td><b><code>S4</code> (11-07)</b></td><td>대기</td></tr>
 <tr><td><b>C7</b></td><td>데이터셋 · 라벨링 · 학습 · mAP 리포트</td><td>C7-1 ~ C7-5</td><td><span class="tag nb">개인</span></td><td>포트폴리오 (9월)</td><td>대기</td></tr>
 <tr><td><b>C8</b></td><td>LiDAR 점군 · 카메라-LiDAR 융합</td><td>C8-1 ~ C8-4</td><td>실기</td><td><code>S6</code> (12-11)</td><td>지도만</td></tr>
-</table></div>
+</table></div></div>
 </div></details>
 <div class="wherebar"><b>장비가 스텝을 가른다.</b><span class="tag nb">개인 노트북 · RTX 3060 6GB · Windows</span><span class="tag ch">학원 노트북 · 네이티브 Ubuntu 24.04 · ROS 2 Jazzy</span><b>C1·C2·C3·C7은 밤에 된다. C4 이후는 낮에만 된다.</b></div>
 <p class="sub"><strong>왜 갈리나.</strong> ROS 2는 학원 노트북에만 깔려 있고, 웹캠은 그 노트북에 물리적으로 꽂혀야 한다. 원격 접속으로는 <code>rqt_image_view</code> 같은 GUI와 카메라 장치가 안 넘어온다. 그래서 <strong>C3까지를 개인 노트북에서 끝내 두는 것이 저녁 시간을 살리는 유일한 방법</strong>이다.</p>
@@ -1328,21 +1173,21 @@ document.addEventListener('DOMContentLoaded',function(){
 <p>왜 이렇게 나누나. 카메라는 색과 무늬를 보므로 <strong>사람·표지·문 같은 의미</strong>를 알아본다. 하지만 사진 한 장은 거리를 모른다. LiDAR는 반대다 · 그것이 사람인지 벽인지는 모르지만 <strong>몇 미터 앞인지는 센티미터 단위로</strong> 안다. 둘을 합치면 "3.2m 앞에 사람"이 된다. 그 합치는 작업이 <a href="#c6">C6</a>과 <a href="#c8">C8</a>이다.</p>
 
 <h3>내가 맡은 범위 · 센서 · CV · ROS 2</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>영역</th><th>내 역할</th><th>지금 상태</th></tr>
 <tr><td><b>센서</b> · 시뮬 Go2 카메라 · LiDAR 부착, 데이터 취득, 실기 센서 대응</td><td><b>담당</b></td><td><span class="badge done">확인 완료</span> 부착·취득 · <span class="badge hyp">미확인</span> 실기 규격</td></tr>
 <tr><td><b>CV</b> · 사람 탐지 → 상위 속도 명령 변경(정지/감속), 평가</td><td><b>담당</b></td><td><span class="badge run">구현 예정</span> · 교재 C4·C5<br>시뮬 시연 1회(09-16, rails 정지·재출발 4런 PASS) → 연구 기록<br>통로 목적지 우회(09-16, LiDAR 자체 planner · 원기둥·정지한 사람 우회 · 코스 미완주) → 연구 기록</td></tr>
 <tr><td><b>ROS 2 · 항법 연결</b> · 토픽 · TF · 비용 지도 · Nav2 연결 코드</td><td><b>담당</b>(확장 목표)</td><td><span class="badge run">구현 예정</span> · 14 §5</td></tr>
 <tr><td>RL 정책 학습 · 평가 지표</td><td>팀원에게 인계</td><td>내 교재·연구 기록은 그대로 둔다(연구 기록)</td></tr>
-</table></div>
+</table></div></div>
 <p>우선순위(09-14): 중간발표 10/1~2 전 ① D455 기준 RGB 출력·저장 → ② 사람 1종 탐지 → 정지/감속 → 화면 상태 표시 → ③ XT-16 근사 점군·장애물. ④ XT-16/L1 근거리 비교 · ⑤ SLAM·Nav2 는 중간발표 필수 아님 · 28 Go2 CV·LiDAR.</p>
 <details class="ifonly"><summary><b>옛 역할 표 · 9월 배분 (2026-08 계획)</b><span class="skip">현행 아님</span></summary><div class="body">
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>영역</th><th>내 역할</th><th>폴더</th><th>관문</th></tr>
 <tr><td><code>A/평가</code> · 일반화 벤치마크·지표</td><td><b>주담당</b></td><td><code>sim/eval/</code></td><td>9/12 · 9/30</td></tr>
 <tr><td><code>B/인지</code> · <b>LiDAR · 카메라 · 센서 융합</b></td><td><b>주담당</b></td><td><code>nav/perception/</code></td><td>11/7 · 12/11</td></tr>
 <tr><td><code>B/항법</code> · ROS 2 · TF · SLAM · Nav2</td><td>부담당 (주담당: 팀장)</td><td><code>nav/</code></td><td>11/7 · 12/11</td></tr>
-</table></div>
+</table></div></div>
 <div class="call trap"><div class="t">9월의 함정 · CV가 아니라 평가가 주력이다 (당시 판단)</div>
 <p>9/30 중간발표 제출물은 <strong>일반화 평가표 + 트윈 렌더</strong>이고, 거기에 <strong>트랙 B(CV·ROS 2·Nav2)는 걸려 있지 않다.</strong> 9월 자율 시간의 60%는 <code>A/평가</code>로 간다. 이 교재의 C1~C3을 이번 주에 밀어 두는 이유가 그것이다 · <strong>9월에 CV를 붙들 시간이 없으므로, 8월 안에 "돌아가는 증거" 한 장을 확보해 둔다.</strong></p>
 <p>대신 <strong>파인튜닝 mAP(<a href="#c7">C7</a>)는 9월에도 죽이지 않는다.</strong> RunPod 실험 1회가 2h15m이라 그 대기시간에 개인 노트북에서 굴릴 수 있다. 이게 죽으면 이력서에 "모델 학습 경험 0"이 된다.</p></div>
@@ -1488,13 +1333,13 @@ cap.<span class="f">release</span>()</pre></div>
 
 <h3 id="C1-6"><span class="step">C1-6</span>여기서 멈출 것 · 안 배우는 것들</h3>
 <p>OpenCV 교재는 보통 여기서 <strong>필터·엣지 검출·허프 변환·특징점 매칭</strong>으로 넘어간다. <strong>우리는 지금 안 한다.</strong></p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>주제</th><th>왜 지금 안 하나</th><th>언제 필요해지나</th></tr>
 <tr><td>블러 · 엣지(Canny) · 이진화</td><td>딥러닝 탐지가 그 일을 대신한다. 전처리로 넣으면 오히려 정확도가 떨어진다</td><td>영상 품질이 나빠 전처리가 필요할 때만</td></tr>
 <tr><td>특징점(SIFT·ORB) 매칭</td><td>SLAM 내부에서 쓰이지만 <b>우리는 SLAM을 만들지 않고 <code>slam_toolbox</code>를 쓴다</b></td><td>Visual SLAM으로 갈 때 (계획에 없음)</td></tr>
 <tr><td>광학 흐름(Optical Flow)</td><td>추적이 필요해지면 그때. YOLO에 딸린 <code>track()</code>이 먼저다</td><td>객체 추종 데모를 만들 때</td></tr>
 <tr><td>왜곡 보정 · 캘리브레이션</td><td>필요는 한데 <b>순서가 뒤</b>다. 지금 배워도 쓸 <code>K</code> 행렬이 없다</td><td><a href="#c5">C5</a> · 확장 단계</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub">폐기가 아니라 <strong>순서 이동</strong>이다. 필요해지는 스텝에 각각 적어 두었다.</p>
 
 <h2 id="c2"><span class="n">C2</span>탐지의 언어 · 용어부터 정리</h2>
@@ -1512,12 +1357,12 @@ cap.<span class="f">release</span>()</pre></div>
 <p class="sub"><strong>단, 표준 메시지를 발행한다고 Nav2 와 자동으로 연결되지는 않는다.</strong> 박스는 픽셀 좌표일 뿐이라 깊이 · 센서 보정 · 시간 동기화 · TF · 추적(또는 시간 만료) · 비용 지도 반영(또는 정지 로직)이 전부 우리 코드로 필요하다(<a href="#C4-5">C4-5</a> · 14 §4).</p></div>
 
 <h3 id="C2-2"><span class="step">C2-2</span>바운딩 박스 표기법 세 가지 · 섞이면 박스가 엉뚱한 데 뜬다</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>표기</th><th>값 네 개의 뜻</th><th>단위</th><th>어디서 쓰나</th></tr>
 <tr><td><code>xyxy</code></td><td>왼쪽위 x, 왼쪽위 y, 오른쪽아래 x, 오른쪽아래 y</td><td>픽셀</td><td><b>OpenCV로 그릴 때</b> · YOLO 결과 <code>r.boxes.xyxy</code></td></tr>
 <tr><td><code>xywh</code></td><td>왼쪽위 x, 왼쪽위 y, 너비, 높이</td><td>픽셀</td><td>COCO 데이터셋 · <code>vision_msgs</code>는 <b>중심</b> 기준이라 또 다름</td></tr>
 <tr><td><code>YOLO 포맷</code></td><td><b>중심</b> x, <b>중심</b> y, 너비, 높이</td><td><b>0~1 정규화</b></td><td><b>라벨 파일(<code>.txt</code>)</b> · <a href="#c7">C7</a> 파인튜닝</td></tr>
-</table></div>
+</table></div></div>
 <p><strong>정규화가 왜 있나.</strong> 학습 중에 이미지 크기가 계속 바뀌기 때문이다. 640×480으로 찍은 사진을 416×416으로 줄여 학습에 넣어도 <strong>비율로 적어 두면 라벨을 고칠 필요가 없다.</strong></p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre># 픽셀 xyxy → YOLO 포맷 (라벨 파일에 적을 때)
 cx = ((x1 + x2) / 2) / W
@@ -1549,13 +1394,13 @@ h  = (y2 - y1) / H
 <p>이 습관이 그대로 <code>A/평가</code>의 「일반화 평가표」와 같은 형식이라, <strong>두 축이 한 이력서 안에서 같은 이야기를 한다</strong> · "지표를 설계하고 기준선과 대조해 정량 비교했다."</p></div>
 
 <h3 id="C2-5"><span class="step">C2-5</span>모델 크기 고르기 · 6GB VRAM에서의 현실</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>접미어</th><th>크기</th><th>개인 노트북(3060 6GB)</th><th>Jetson Orin NX 16GB</th><th>쓸 자리</th></tr>
 <tr><td><code>n</code> (nano)</td><td>가장 작음</td><td class="pos">여유롭게 실시간</td><td class="pos">TensorRT로 30FPS+</td><td><b>실기 탑재 기본선</b></td></tr>
 <tr><td><code>s</code> (small)</td><td>작음</td><td class="pos">실시간 가능</td><td class="pos">가능</td><td>정확도가 부족할 때 한 단계</td></tr>
 <tr><td><code>m</code> (medium)</td><td>중간</td><td>해상도를 낮추면</td><td>여유 있음</td><td>오프라인 분석 · rosbag 후처리</td></tr>
 <tr><td><code>l</code> · <code>x</code></td><td>큼</td><td class="neg">VRAM 부족 위험</td><td>느림</td><td>안 쓴다</td></tr>
-</table></div>
+</table></div></div>
 <p><strong>고르는 순서는 정확도가 아니라 속도부터다.</strong> <code>n</code>으로 파이프라인을 먼저 뚫고, mAP가 부족한 게 <strong>측정으로 확인되면</strong> 한 단계 올린다. 처음부터 큰 모델로 시작하면 <strong>느린 이유가 모델인지 코드인지 구분이 안 된다.</strong></p>
 <p class="sub">숫자를 여기 적지 않은 이유 · <strong>남의 벤치마크는 내 노트북에서 재현되지 않는다.</strong> <a href="#C3-5">C3-5</a>에서 직접 잰 값이 이 표를 대체한다.</p>
 
@@ -1653,13 +1498,13 @@ cap.<span class="f">release</span>(); cv2.<span class="f">destroyAllWindows</spa
 </div>
 
 <h3 id="C3-4"><span class="step">C3-4</span>느릴 때 만지는 손잡이 네 개</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>손잡이</th><th>어떻게</th><th>얻는 것</th><th>잃는 것</th></tr>
 <tr><td><code>imgsz</code></td><td><code>640</code> → <code>416</code> → <code>320</code></td><td><b>가장 크게 빨라진다</b> (대략 픽셀 수에 비례)</td><td>작은 물체를 놓치기 시작한다</td></tr>
 <tr><td><code>half=True</code></td><td>FP16 반정밀도 추론</td><td>속도 ↑ · <b>VRAM 절반</b></td><td>정확도 변화는 대체로 무시할 수준</td></tr>
 <tr><td>모델 크기</td><td><code>s</code> → <code>n</code></td><td>확실히 빨라진다</td><td>mAP가 눈에 띄게 떨어진다</td></tr>
 <tr><td>프레임 건너뛰기</td><td>2~3장에 1번만 추론</td><td>체감 FPS 유지</td><td>반응이 늦다. <b>추적과 같이 쓰면 완화된다</b></td></tr>
-</table></div>
+</table></div></div>
 <div class="call trap"><div class="t">순서를 지킨다 · 한 번에 하나만</div>
 <p><code>imgsz</code>를 내리면서 동시에 <code>half</code>를 켜면 <strong>무엇이 얼마나 기여했는지 알 수 없다.</strong> 팀 실험 규율 그대로 <strong>한 번에 하나만 바꾸고 기준선과 대조한다.</strong> 그래서 다음 스텝이 표다.</p></div>
 
@@ -1692,23 +1537,23 @@ cap.<span class="f">release</span>(); cv2.<span class="f">destroyAllWindows</spa
 </div>
 <div class="chk"><b>성공 판정</b>아래 표가 숫자로 채워진다.</div>
 </div>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>모델</th><th>imgsz</th><th>half</th><th>FPS</th><th>VRAM(MB)</th><th>추론(ms)</th><th>메모</th></tr>
 <tr><td><code>yolo11n</code></td><td>640</td><td>✓</td><td>(  )</td><td>(  )</td><td>(  )</td><td>기준선</td></tr>
 <tr><td><code>yolo11n</code></td><td>416</td><td>✓</td><td>(  )</td><td>(  )</td><td>(  )</td><td>해상도만 바꿈</td></tr>
 <tr><td><code>yolo11n</code></td><td>320</td><td>✓</td><td>(  )</td><td>(  )</td><td>(  )</td><td>작은 물체 확인 필요</td></tr>
 <tr><td><code>yolo11s</code></td><td>640</td><td>✓</td><td>(  )</td><td>(  )</td><td>(  )</td><td>모델만 바꿈</td></tr>
 <tr><td><code>yolo11n</code></td><td>640</td><td>✗</td><td>(  )</td><td>(  )</td><td>(  )</td><td>half 효과 확인</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub"><strong>표를 채운 뒤 한 문장을 적는다</strong> · <em>"우리 실기 기본선은 <code>(  )</code>으로 간다. 근거는 <code>(  )</code>."</em> 표는 근거이고, <strong>결정이 산출물</strong>이다. 이 문장이 없으면 표는 숫자 더미로 남는다.</p>
 
 <h3 id="C3-6"><span class="step">C3-6</span>TensorRT 변환은 지금 하지 않는다</h3>
 <p>Jetson에 올릴 때는 <code>model.export(format="engine", half=True)</code>로 TensorRT 엔진을 만들어야 속도가 제대로 나온다. <strong>지금은 안 한다.</strong></p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>왜 미루나</th><th>언제 하나</th></tr>
 <tr><td>엔진 파일은 <b>변환한 그 장비에서만</b> 돈다. 내 노트북에서 만든 엔진은 Jetson에서 안 열린다</td><td><b>실기 데모 2~3주 전</b>, Jetson 위에서 직접</td></tr>
 <tr><td>Go2 온보드에서 돌릴지 노트북으로 받아 돌릴지가 <b>아직 미확정</b>이다</td><td>배포 위치가 정해진 뒤 (<a href="#go2">아래 §Go2</a>)</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub">지금 필요한 것은 <strong>"내 노트북에서 몇 FPS"</strong>라는 기준선 하나다. 변환은 그 기준선이 있어야 <strong>얼마나 빨라졌는지</strong> 말할 수 있다.</p>
 
 <h2 id="c4"><span class="n">C4</span>ROS 2 이미지 파이프라인 <span class="sub">= 최소 시연의 ROS 2 뼈대</span></h2>
@@ -1786,11 +1631,11 @@ out.header = msg.header      <span class="c"># ★ 시각과 프레임 이름을
 
 <div class="call trap"><div class="t">함정 · Ubuntu 24.04에서 <code>pip install ultralytics</code>가 거부된다</div>
 <p>Ubuntu 24.04는 시스템 파이썬에 <code>pip</code>로 설치하는 것을 막는다(PEP 668). <code>externally-managed-environment</code> 에러가 그것이다. 그런데 <strong>ROS 2 노드는 시스템 파이썬으로 실행되므로</strong>, 보통 venv를 만들면 이번엔 <code>rclpy</code>를 못 찾는다. 둘 중 하나를 고른다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>방법</th><th>명령</th><th>대가</th></tr>
 <tr><td><b>venv에 시스템 패키지 상속</b></td><td><code>python3 -m venv --system-site-packages ~/cvenv</code> → 활성화 후 <code>pip install ultralytics</code></td><td>노드 실행 전 매번 <code>source ~/cvenv/bin/activate</code>가 필요하다</td></tr>
 <tr><td>시스템에 직접</td><td><code>pip install ultralytics --break-system-packages</code></td><td>시스템 파이썬을 오염시킨다. <b>학원 공용 노트북이면 피한다</b></td></tr>
-</table></div>
+</table></div></div>
 <p><strong>venv 쪽을 권한다.</strong> <code>--system-site-packages</code>가 핵심이다 · 이게 있어야 venv 안에서 <code>rclpy</code>·<code>cv_bridge</code>가 그대로 보인다. 이 결정은 <a href="#C4-8">C4-8</a>의 launch 파일에도 영향을 주니 <strong>어느 쪽을 골랐는지 적어 둔다</strong>: <code>(  )</code></p></div>
 
 <h3 id="C4-4"><span class="step">C4-4</span>탐지 노드 골격</h3>
@@ -2007,13 +1852,13 @@ undist = cv2.<span class="f">undistort</span>(frame, K, D)</pre></div>
 <p class="sub">체스보드는 A4에 인쇄해 <strong>딱딱한 판에 붙인다.</strong> 종이가 휘면 값이 조용히 틀어진다.</p></div>
 
 <h3 id="C5-5"><span class="step">C5-5</span>이 절의 산출물</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>값</th><th>어디서</th><th>내 값</th></tr>
 <tr><td><code>fx</code> · <code>fy</code></td><td>캘리브레이션 또는 <code>/camera_info</code></td><td>(  ) · (  )</td></tr>
 <tr><td><code>cx</code> · <code>cy</code></td><td>같음</td><td>(  ) · (  )</td></tr>
 <tr><td><code>D</code> 계수 5개</td><td>같음</td><td>(  )</td></tr>
 <tr><td>해상도</td><td><code>/camera_info</code>의 <code>width</code>·<code>height</code></td><td>(  ) × (  )</td></tr>
-</table></div>
+</table></div></div>
 <div class="call trap"><div class="t">해상도를 바꾸면 <code>K</code>도 바꿔야 한다</div>
 <p><code>fx</code>·<code>cx</code>는 <strong>픽셀 단위</strong>다. 이미지를 절반으로 줄이면 <strong>네 값 모두 절반이 된다.</strong> <a href="#C3-4">C3-4</a>에서 <code>imgsz</code>를 낮춰 속도를 벌었다면, <strong>그 축소 비율을 좌표 변환에 반영해야 한다.</strong> 안 하면 탐지 결과가 지도에서 <b>일정 비율로 어긋나는데</b> 원인 찾기가 몹시 어렵다. 가장 안전한 방법은 <strong>추론은 축소본으로 하되 박스 좌표는 원본 해상도로 되돌린 뒤 변환에 넣는 것</strong>이다(ultralytics는 기본적으로 원본 기준으로 돌려준다 · 직접 <code>resize</code>했을 때만 문제가 된다).</p></div>
 
@@ -2022,14 +1867,14 @@ undist = cv2.<span class="f">undistort</span>(frame, K, D)</pre></div>
 
 <h3 id="C6-1"><span class="step">C6-1</span>프레임 사슬 · 수업의 <code>world→moving→child</code>가 실전에서는</h3>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>map → odom → base_link → camera_link → camera_optical_frame</pre></div>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>프레임</th><th>뜻</th><th>누가 만드나</th></tr>
 <tr><td><code>map</code></td><td>세계 기준. <b>튀지만 누적 오차가 없다</b></td><td>SLAM (<code>slam_toolbox</code>)</td></tr>
 <tr><td><code>odom</code></td><td>주행거리 기준. <b>부드럽지만 서서히 밀린다</b></td><td>로봇 오도메트리</td></tr>
 <tr><td><code>base_link</code></td><td>로봇 몸통 중심</td><td>로봇 드라이버</td></tr>
 <tr><td><code>camera_link</code></td><td>카메라가 몸통 <b>어디에</b> 붙어 있나</td><td><b>URDF 또는 <code>static_transform_publisher</code></b> ← 내가 해야 할 수도</td></tr>
 <tr><td><code>camera_optical_frame</code></td><td>실제 광학 좌표계</td><td>같음</td></tr>
-</table></div>
+</table></div></div>
 <p><strong>왜 <code>map</code>과 <code>odom</code>이 둘 다 있나.</strong> 오도메트리는 부드럽지만 시간이 갈수록 밀린다. SLAM은 밀림을 고쳐 주지만 고칠 때 순간적으로 <strong>위치가 튄다.</strong> 제어에는 부드러운 것이, 지도 표시에는 정확한 것이 필요하므로 <strong>둘을 다 두고 상황에 따라 골라 쓴다.</strong> 탐지 결과를 지도에 남길 때는 <code>map</code> 기준이다.</p>
 <div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">ros2</span><span class="k"> run</span> tf2_tools view_frames        <span class="c"># TF 트리를 PDF로 그려 준다</span>
 <span class="f">ros2</span><span class="k"> run</span> tf2_ros tf2_echo map camera_optical_frame</pre></div>
@@ -2040,23 +1885,23 @@ undist = cv2.<span class="f">undistort</span>(frame, K, D)</pre></div>
 
 <h3 id="C6-2"><span class="step">C6-2</span>광학 프레임 함정 · 90도가 조용히 두 번 돈다</h3>
 <div class="call trap"><div class="t">에러 없이 결과만 90도 돌아간다</div>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>프레임</th><th>x</th><th>y</th><th>z</th></tr>
 <tr><td><code>camera_link</code> (로봇 관례 · REP-103)</td><td>앞</td><td>왼쪽</td><td>위</td></tr>
 <tr><td><code>camera_optical_frame</code> (영상 관례)</td><td>오른쪽</td><td>아래</td><td><b>앞</b></td></tr>
-</table></div>
+</table></div></div>
 <p>두 프레임 사이에는 <strong>90도 회전이 두 번</strong> 들어간다. 이걸 모르고 변환하면 결과가 돌아간 채로 나오는데 <strong>코드는 아무 에러도 내지 않는다.</strong> 값이 이상하면 여기부터 의심한다.</p>
 <p><strong>기억하는 법</strong>: <a href="#C1-2">C1-2</a>에서 확인한 <strong>OpenCV 이미지 좌표(x 오른쪽, y 아래)에 z(깊이)를 앞으로 붙인 것</strong>이 광학 프레임이다. 그러니 <strong><code>K</code> 행렬로 계산한 결과는 언제나 <code>camera_optical_frame</code> 기준</strong>이지 <code>camera_link</code> 기준이 아니다.</p></div>
 
 <h3 id="C6-3"><span class="step">C6-3</span>깊이를 어디서 가져오나 · 세 갈래</h3>
 <p><a href="#C5-1">C5-1</a>에서 확인했듯 사진에는 거리 정보가 없다. 부족한 하나를 밖에서 가져와야 한다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>방법</th><th>성립 조건</th><th>정확도</th><th>우리 상황</th></tr>
 <tr><td><b>depth 카메라</b></td><td>카메라가 거리를 함께 준다</td><td class="pos">가장 정확</td><td>실기 카메라는 잠정 D455(depth 있음)이나 <b>웹 스트림에 depth 가 실리는지 미확인</b>. 시뮬 렌더 depth 는 평가 참값용이고 실제 D455 오차를 재현하지 않는다</td></tr>
 <tr><td><b>LiDAR 융합</b></td><td>점군을 이미지에 투영해 박스 안 점의 거리를 읽는다</td><td class="pos">정확</td><td>등에 별도 LiDAR 모듈이 있다 → <a href="#c8">C8</a></td></tr>
 <tr><td><b>지면 평면 가정</b></td><td>대상이 <b>바닥에 닿아 있다</b>고 가정</td><td>평지에서만</td><td class="neg"><b>험지 프로젝트라 한계가 크다</b></td></tr>
 <tr><td>물체 크기 기지</td><td>대상의 실제 크기를 안다</td><td>대상이 정해져 있을 때만</td><td>보조 수단</td></tr>
-</table></div>
+</table></div></div>
 <div class="call"><div class="t">이 표의 첫 줄이 CV 설계를 통째로 가른다</div>
 <p>실기 웹 스트림에 거리가 함께 오는지에 따라 <strong>C6이 반나절짜리가 되거나 2주짜리가 된다.</strong> 09-14 기준 중간발표 인식 경로는 <strong>RGB ROI 정지</strong>라 depth 없이도 최소 시연은 성립하고, 거리 정지는 별도 실험으로 나눈다.</p>
 <p class="sub">물을 때 <strong>"RGB-D인가요"보다 "거리 정보가 같이 나오나요"</strong>로 묻는 편이 오해가 없다.</p></div>
@@ -2137,13 +1982,13 @@ p_map = <span class="f">do_transform_point</span>(p, t)</pre></div>
 <h3 id="C7-1"><span class="step">C7-1</span>먼저 통과선을 적는다</h3>
 <div class="call"><div class="t">숫자를 보기 전에 적는다</div>
 <p>팀 실험 규율 그대로다 · <strong>"한 번에 하나만 바꾼다 · 기준선과 대조한다 · 통과선을 먼저 적는다."</strong></p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>항목</th><th>내가 정한 값</th></tr>
 <tr><td>대상 클래스</td><td>(  )</td></tr>
 <tr><td>기준선 = 사전학습 모델의 mAP50</td><td>(  )</td></tr>
 <tr><td><b>통과선</b> = 파인튜닝 후 mAP50이 이 이상이면 채택</td><td>(  )</td></tr>
 <tr><td>속도 하한 = FPS가 이 아래로 떨어지면 반려</td><td>(  )</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub">채택이든 폐기든 결과는 <code>EXPERIMENTS.md</code>에 한 줄로 남긴다. <strong>폐기한 실험도 기록이 남으면 자산</strong>이다 · "이건 해 봤는데 안 됐다"가 다음 사람의 시간을 아낀다.</p></div>
 
 <h3 id="C7-2"><span class="step">C7-2</span>데이터셋 구조와 라벨 포맷</h3>
@@ -2196,12 +2041,12 @@ model.<span class="f">train</span>(data=<span class="s">&quot;dataset/data.yaml&
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>m = YOLO(&quot;runs/ft01/weights/best.pt&quot;)
 r = m.val(data=&quot;dataset/data.yaml&quot;)
 print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>모델</th><th>mAP50</th><th>mAP50-95</th><th>FPS</th><th>비고</th></tr>
 <tr><td>사전학습 (기준선)</td><td>(  )</td><td>(  )</td><td>(  )</td><td>우리 데이터로 그냥 평가</td></tr>
 <tr><td>파인튜닝 <code>ft01</code></td><td>(  )</td><td>(  )</td><td>(  )</td><td>바꾼 것: (  )</td></tr>
 <tr><td>파인튜닝 <code>ft02</code></td><td>(  )</td><td>(  )</td><td>(  )</td><td>바꾼 것: (  )</td></tr>
-</table></div>
+</table></div></div>
 <div class="chk"><b>성공 판정</b>표가 채워지고 <strong>「통과선을 넘었나」에 예/아니오</strong>가 적히면 끝. <code>runs/ft01/</code>의 <code>confusion_matrix.png</code>도 같이 본다 · <strong>어느 클래스에서 틀리는지</strong>가 다음 라벨링의 방향이다.</div>
 </div>
 
@@ -2220,22 +2065,22 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 
 <h3 id="C8-2"><span class="step">C8-2</span>확인해야 하는 것들</h3>
 <p>09-11 수업에서 <strong>[들음]</strong>으로 답이 난 것: 머리 위 <strong>Hesai XT-16</strong>(3D 16ch · 수직 30°) · 턱 밑 <strong>Unitree L1</strong>(3D 비반복 360°×90°) · 카메라 <strong>RealSense 「d455i」표기</strong>(공식 SKU 대조 전 잠정 D455 기준) · 카메라 영상은 ROS 2 토픽이 아니라 <strong>웹 스트림</strong>. 실기에 2D LiDAR 는 없다. <span class="badge hyp">미확인</span> 라벨 · 장착 위치·변환 · 토픽 · 실성능 · 스트림 규격. 현행 표는 C0 5-A.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>무엇</th><th>어떻게 확정하나</th><th>왜 필요한가</th></tr>
 <tr><td>센서 라벨 3종</td><td>모듈 옆면·베이스 <b>라벨 사진</b></td><td>「d455i」 표기 확정, 드라이버 패키지</td></tr>
 <tr><td>LiDAR 점군 토픽</td><td><code>ros2 topic list</code> (Hesai ROS 2 기본 <code>/lidar_points</code>, Go2 내장 <code>utlidar/cloud</code> · 우리 개체는 미확인)</td><td>순정 컨트롤러와 무관하게 점군을 받는다</td></tr>
 <tr><td>웹 스트림 규격</td><td>프로토콜(MJPEG/HTTP · WebRTC · 앱 전용) · 해상도 · fps · depth 포함 여부</td><td>수신 코드(<code>VideoCapture(url)</code> 한 줄인지 별도 의존성인지)와 <a href="#C6-3">C6-3</a> 갈림길</td></tr>
 <tr><td>카메라 K · 왜곡</td><td>웹 스트림에는 안 실린다 · <b>로봇 안에서</b> <code>rs-enumerate-devices</code> 또는 realsense-ros 로 덤프</td><td><a href="#C5-2">C5-2</a></td></tr>
 <tr><td>장착 위치·각도</td><td>자로 재기 또는 스펙 문서</td><td><code>base_link</code>→센서 프레임 TF</td></tr>
-</table></div>
+</table></div></div>
 <details class="ifonly"><summary><b>옛 확인 목록 (2026-08 · 모델명 미확인 당시)</b><span class="skip">현행 아님</span></summary><div class="body">
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>무엇</th><th>어떻게 10초에 확정하나</th><th>왜 필요한가</th></tr>
 <tr><td>등에 얹힌 LiDAR 모델명</td><td>모듈 옆면·베이스 <b>라벨 사진</b> 한 장</td><td>드라이버 패키지가 정해진다</td></tr>
 <tr><td>점군 토픽 이름</td><td><code>ros2 topic list</code> · <code>/livox/lidar</code>·<code>/rslidar_points</code>·<code>/velodyne_points</code> 등</td><td>이게 있어야 <b>순정 컨트롤러와 무관하게</b> 점군을 받는다</td></tr>
 <tr><td>Go2 카메라가 거리를 주나</td><td>토픽 목록에 <code>depth</code>가 있나</td><td><b><a href="#C6-3">C6-3</a>의 갈림길</b></td></tr>
 <tr><td>카메라 장착 위치·각도</td><td>스펙 문서 또는 직접 측정</td><td><code>base_link</code>→<code>camera_link</code> TF 값</td></tr>
-</table></div>
+</table></div></div>
 <p class="sub">영상으로 확인된 것: <strong>기계식 회전 puck 형태의 360° LiDAR가 별도 브래킷으로 등에 얹혀 있고 자체 케이블이 있다.</strong> 모델명은 각인이 안 보여 특정되지 않는다. <strong>추측을 결론 자리에 앉히지 않는다.</strong> (09-11 에 XT-16 으로 [들음])</p>
 </div></details>
 
@@ -2268,22 +2113,22 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 <h3 id="cam-buy">어떤 카메라가 필요한가 <span class="sub">= 지금은 아무것도 사지 않는다</span></h3>
 <p class="why"><span class="tag">판단</span>"CV를 하려면 카메라부터 사야 하나"가 첫 질문이 되기 쉽다. <strong>아니다.</strong> 단계별로 요구가 완전히 다르고, <strong>구매가 필요해지는 지점은 딱 한 군데(<a href="#c6">C6</a>)</strong>이며, 그 한 군데조차 <strong>이미 로봇 등에 얹힌 라이다로 해결될 가능성이 높다.</strong></p>
 
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>구간</th><th>필요한 카메라</th><th>지금 가진 것으로 되나</th></tr>
 <tr><td><a href="#c1">C1</a>~<a href="#c4">C4</a> <span class="sub">~10/10</span></td><td>아무 UVC 웹캠</td><td class="pos">된다. 노트북 내장 웹캠으로 충분하다. <b>탐지 정확도를 재는 구간이 아니라 파이프라인을 뚫는 구간</b>이다</td></tr>
 <tr><td><a href="#c5">C5</a> 캘리브레이션</td><td><b>초점을 고정할 수 있는</b> 카메라</td><td>된다. 단 <b>오토포커스를 꺼야 한다</b> · 초점이 움직이면 <code>fx</code>가 같이 변해 <code>K</code>가 무의미해진다</td></tr>
 <tr><td><a href="#c6">C6</a> 픽셀→map <span class="sub">확장</span></td><td><b>거리를 줄 무언가</b></td><td class="neg">여기가 유일한 갈림길이다 ↓</td></tr>
 <tr><td><a href="#c8">C8</a> 융합</td><td>라이다</td><td class="pos">이미 로봇에 달려 있다</td></tr>
-</table></div>
+</table></div></div>
 
 <h4>C6의 갈림길 · 거리를 어디서 가져오나</h4>
 <p><a href="#C5-2">C5-2</a>에서 본 대로 <strong>사진 한 장에는 거리 정보가 물리적으로 없다.</strong> 그 빠진 하나를 채우는 방법이 셋이고, 셋의 비용이 완전히 다르다.</p>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>방법</th><th>비용</th><th>정확도</th><th>깨지는 조건</th></tr>
 <tr><td><b>① 지면 평면 가정</b><br><span class="sub">mono 카메라만</span></td><td class="pos">0원. 코드 20줄</td><td>가까울수록 좋고 멀수록 급격히 나빠진다</td><td class="neg">물체가 지면에 닿아 있어야 하고, <b>카메라 pitch가 흔들리면 그대로 오차</b>가 된다. 4족보행은 걸을 때마다 pitch가 출렁인다</td></tr>
 <tr><td><b>② RGB-D 카메라</b><br><span class="sub">실기는 잠정 D455 · 이미 있다</span></td><td class="pos">구매 없음. 단 <b>웹 스트림에 depth 가 실리는지 미확인</b></td><td>실내 0.6~6 m(D455 이상 범위)</td><td class="neg">햇빛에서 급격히 나빠진다. 실기 시연이 실외면 위험</td></tr>
 <tr><td><b>③ 라이다 융합</b><br><span class="sub">탐지 박스 ↔ 점군</span></td><td class="pos">0원 · <b>XT-16 · L1 이 달려 있다</b>([들음])</td><td class="pos">cm 단위. 먼 거리도 유지</td><td>점군 토픽·장착 변환 <b>미확인</b>. 근거리·낮은 물체 사각 있음(14 §2 rails 사례)</td></tr>
-</table></div>
+</table></div></div>
 
 <div class="call"><div class="t">결론 · 구매 판단은 라이다 확인 뒤로 미룬다</div>
 <p><strong>②·③ 모두 장비는 이미 있다 · 살 것은 없고 확인할 것만 있다.</strong> 「기하는 LiDAR, 의미는 카메라」는 입문용 역할 예시이고, D455 의 depth 가 스트림으로 오면 ② 가 더 단순할 수 있다. 어느 쪽이든 <strong>보행 정책 입력은 바꾸지 않는다.</strong></p>
@@ -2307,19 +2152,19 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 <p class="sub">위 넷은 <strong>공개 자료 기준 조사</strong>다. <strong>우리 개체에서 확인된 것이 아니다</strong> · 확인 목록은 <a href="#C8-2">C8-2</a>.</p>
 
 <h3>배포 위치 · Jetson인가 노트북인가</h3>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th></th><th>Jetson Orin NX 16GB (온보드)</th><th>노트북 RTX 3060 (스트리밍)</th></tr>
 <tr><td>지연</td><td class="pos">낮음</td><td class="neg">Wi-Fi 지연·드랍</td></tr>
 <tr><td>성능</td><td>n급 TensorRT FP16으로 실용 30FPS+</td><td class="pos">더 큰 모델 가능</td></tr>
 <tr><td>개발 편의</td><td class="neg">플래싱·의존성</td><td class="pos">개발·디버깅 쉬움</td></tr>
 <tr><td>데모 신뢰성</td><td class="pos">로봇 단독 동작</td><td class="neg">네트워크가 죽으면 데모가 죽는다</td></tr>
-</table></div>
+</table></div></div>
 <div class="call"><div class="t">전략</div>
 <p><strong>노트북 스트리밍으로 개발하고, 데모 2~3주 전에 Jetson으로 옮긴다.</strong> 온보드 컴퓨팅이 Orin NX 16GB로 확정되어 있어 <strong>경량화 증류는 필요 없다</strong> · 우리 정책이 파라미터 17만 개, 6.9MB라 Orin NX에는 과분하다. YOLO도 마찬가지다.</p>
 <p>Jetson이 안 열려도 <strong>노트북 스트리밍만으로 데모가 성립</strong>한다. <a href="#c3">C3</a>에서 TensorRT 변환을 미룬 이유가 이것이다.</p></div>
 
 <h2 id="errors"><span class="n">?</span>에러 사전 · 증상에서 원인으로</h2>
-<div class="tablewrap"><table>
+<div class="tablewrap"><div class="tw"><table>
 <tr><th>증상</th><th>가장 흔한 원인</th><th>어디</th></tr>
 <tr><td><code>NoneType has no attribute 'shape'</code></td><td><code>imread</code>가 파일을 못 찾아 <code>None</code>을 반환. 경로·한글 폴더명</td><td><a href="#C1-1">C1-1</a></td></tr>
 <tr><td>창이 떴다 즉시 사라진다</td><td><code>cv2.waitKey</code>가 없다</td><td><a href="#C1-2">C1-2</a></td></tr>
@@ -2341,11 +2186,10 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 <tr><td><code>LookupException</code> / <code>ExtrapolationException</code></td><td>TF가 아직 없거나 잠깐 비었다. <code>timeout</code> + <code>try/except</code>로 그 프레임만 건너뛴다</td><td><a href="#C6-6">C6-6</a></td></tr>
 <tr><td>rosbag 재생 시 TF가 없다</td><td>녹화 때 <code>/tf</code>·<code>/tf_static</code>을 빠뜨렸다. <b>되돌릴 수 없다</b></td><td><a href="#C8-4">C8-4</a></td></tr>
 <tr><td>학습이 시작은 되는데 mAP가 0이다</td><td>라벨 경로 규칙(<code>images/</code>→<code>labels/</code>) 또는 정규화 안 된 라벨</td><td><a href="#C7-2">C7-2</a></td></tr>
-</table></div>
+</table></div></div>
 
 <!-- nav:pagerow -->
 <!-- /nav:pagerow -->
 
-</main>
-<!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">2026-11-07 09:10</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

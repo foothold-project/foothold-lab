@@ -633,39 +633,6 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<style id="stamp-css">
-/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
-   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
-/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
-   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
-   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
-   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
-body{min-height:100vh;display:flex;flex-direction:column}
-body>.bstamp{margin-top:auto}
-/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
-   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
-   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
-   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
-   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
-body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
-body>*{flex-shrink:0}
-/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
-   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
-   width:100% 로 먼저 채우고 max-width 로 자른다. */
-.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
-  margin:40px auto 22px;
-  padding:12px 18px 0;
-  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
-  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
-.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
-.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.bstamp .gap{flex:1}
-/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
-   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
-   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
-   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
-@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
-</style>
 <!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
@@ -827,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f8d7a234').then(function(r){
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -914,6 +881,39 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
 </head>
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="on" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
@@ -934,7 +934,7 @@ document.addEventListener('DOMContentLoaded',function(){
 상태: 확정</p></blockquote>
 <p>📢 <b>인프라 가이드 2편 게시 + 월요일 준비물</b> (2026-08-22)</p>
 <ol><li><b>Runpod 팀 운용 가이드</b> · FOOTHOLD 팀 워크스페이스를 쓰는 법 전부: 권한 차이(초대받은 권한 확인하세요), 네트워크 볼륨 표준(팟 종료해도 데이터 보존), 팟 쓰고 나면 Terminate, 비용 좌표. <a href="https://foothold-project.vercel.app/research-runpod-team-ops" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-runpod-team-ops</a></li><li><b>벤치마크 재현 프로토콜</b> · 일반화 벤치마크를 재현·검증하는 표준 절차. 원자료 재검에서 중요한 발견이 있어 보고서도 정정했습니다 (에피소드 50회가 동일 궤적의 재생이었음 · 다음 실험 설계 포함). <a href="https://foothold-project.vercel.app/research-benchmark-repro-protocol" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-benchmark-repro-protocol</a></li><li><b>월요일 준비물 리마인드</b>: 개인 방향성 페이퍼 1~2장 (백그라운드 · 희망 직무·회사 · 파트, 자유 양식) · 멘토님 맞춤 어드바이스로 이어집니다. 참고: <a href="https://foothold-project.vercel.app/research-role-map-careers" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-role-map-careers</a></li><li>경비 상신도 월요일 다같이 진행합니다.</li></ol>
-<p>8/21 팀 미팅 기록: <a href="https://foothold-project.vercel.app/meeting-20260821-team-meeting" target="_blank" rel="noopener">https://foothold-project.vercel.app/meeting-20260821-team-meeting</a></p><style>.nl{margin:2.6rem 0 0;border-top:1px solid var(--rule);padding-top:1.1rem}.nl>h2{font-size:1rem;font-weight:800;margin:0 0 .7rem}.nl-row{display:flex;gap:.9rem;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit}.nl-row b{font-size:.78rem;font-weight:700;min-width:6.2rem;font-variant-numeric:tabular-nums}.nl-row span{font-size:.74rem;color:var(--ink-3);flex:1}.nl-row i{font-style:normal;font-size:.6rem;font-weight:800;letter-spacing:.1em;color:var(--dim)}a.nl-row:hover b{color:var(--dim)}</style><div class="nl"><h2>지난 공지 17개</h2><a class="nl-row" href="notice-20261007.html"><b>2026-10-07</b><span>팀원 진행 상황 보고 요청 공지 원고. 양식과 올릴 곳, 마감을 알린다.</span></a><a class="nl-row" href="notice-20260929.html"><b>2026-09-29</b><span>foothold-v2 를 정본으로 냅니다. 어느 판도 학습에 안 쓴 여덟 지형에서 기준선 43.88 % 가 88.46 % 가 </span></a><a class="nl-row" href="notice-20260912.html"><b>2026-09-12</b><span>foothold-v1 을 배포하고, 보고서 1차 · 갤러리 144컷 · 평가 정본을 한 벌로 냅니다</span></a><a class="nl-row" href="notice-20260902.html"><b>2026-09-02</b><span>프로젝트 웹이 v2.0.0 으로 다시 만들어졌다. 무엇이 어떻게 바뀌었나.</span></a><a class="nl-row" href="notice-20260827.html"><b>2026-08-27</b><span>8/26~27 에 바뀐 작업 방식 전부. 팀에 보내는 공지.</span></a><a class="nl-row" href="notice-20260826.html"><b>2026-08-26</b><span>팀 공통 규율 · AI 로 작업할 때 반드시 지킬 것</span></a><a class="nl-row" href="notice-20260825.html"><b>2026-08-25</b><span>📢 자동화 지도 · 프로젝트 웹에 올렸습니다 (2026-08-25)</span></a><a class="nl-row" href="notice-20260824.html"><b>2026-08-24</b><span>📢 자기소개, 각자 원하는 방식으로 (오늘 오후 3시 박철제 멘토님 미팅 전)</span></a><a class="nl-row" href="notice-20260823.html"><b>2026-08-23</b><span>📢 조선대 3주차 자료 «ROS2 Python 프로그래밍» 자료실 업로드 (2026-08-23)</span></a><div class="nl-row nl-cur"><b>2026-08-22</b><span>📢 인프라 가이드 2편 게시 + 월요일 준비물 (2026-08-22)</span><i>지금 보는 공지</i></div><a class="nl-row" href="notice-20260820.html"><b>2026-08-20</b><span>📢 전담 현직자 멘토(제6의 멤버) 킥오프: 오늘 8/20(목) 16:00 줌 (2026-08-20</span></a><a class="nl-row" href="notice-20260818.html"><b>2026-08-18</b><span>📢 GPU 서버 계정 발급 (보충): 웹에도 정리했습니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260814.html"><b>2026-08-14</b><span>📢 현장 확인: 저수준 제어가 이 프로젝트의 관문입니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260813.html"><b>2026-08-13</b><span>📢 이제 진짜로 올릴 수 있습니다: 시작 가이드 (2026-08-13)</span></a><a class="nl-row" href="notice-20260812.html"><b>2026-08-12</b><span>📢 자료 제출함(inbox)이 열렸습니다 (2026-08-12)</span></a><a class="nl-row" href="notice-20260811.html"><b>2026-08-11</b><span>📢 FOOTHOLD 공지 · 협업 시스템 오픈 + 첫 실측 결과 (2026-08-11)</span></a><a class="nl-row" href="notice-20260809.html"><b>2026-08-09</b><span>FOOTHOLD 협업 시스템 오픈</span></a></div>
+<p>8/21 팀 미팅 기록: <a href="https://foothold-project.vercel.app/meeting-20260821-team-meeting" target="_blank" rel="noopener">https://foothold-project.vercel.app/meeting-20260821-team-meeting</a></p><style>.nl{margin:2.6rem 0 0;border-top:1px solid var(--rule);padding-top:1.1rem}.nl>h2{font-size:1rem;font-weight:800;margin:0 0 .7rem}.nl-row{display:flex;gap:.9rem;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit}.nl-row b{font-size:.78rem;font-weight:700;min-width:6.2rem;font-variant-numeric:tabular-nums}.nl-row span{font-size:.74rem;color:var(--ink-3);flex:1}.nl-row i{font-style:normal;font-size:.6rem;font-weight:800;letter-spacing:.1em;color:var(--dim)}a.nl-row:hover b{color:var(--dim)}</style><div class="nl"><h2>지난 공지 16개</h2><a class="nl-row" href="notice-20260929.html"><b>2026-09-29</b><span>foothold-v2 를 정본으로 냅니다. 어느 판도 학습에 안 쓴 여덟 지형에서 기준선 43.88 % 가 88.46 % 가 </span></a><a class="nl-row" href="notice-20260912.html"><b>2026-09-12</b><span>foothold-v1 을 배포하고, 보고서 1차 · 갤러리 144컷 · 평가 정본을 한 벌로 냅니다</span></a><a class="nl-row" href="notice-20260902.html"><b>2026-09-02</b><span>프로젝트 웹이 v2.0.0 으로 다시 만들어졌다. 무엇이 어떻게 바뀌었나.</span></a><a class="nl-row" href="notice-20260827.html"><b>2026-08-27</b><span>8/26~27 에 바뀐 작업 방식 전부. 팀에 보내는 공지.</span></a><a class="nl-row" href="notice-20260826.html"><b>2026-08-26</b><span>팀 공통 규율 · AI 로 작업할 때 반드시 지킬 것</span></a><a class="nl-row" href="notice-20260825.html"><b>2026-08-25</b><span>📢 자동화 지도 · 프로젝트 웹에 올렸습니다 (2026-08-25)</span></a><a class="nl-row" href="notice-20260824.html"><b>2026-08-24</b><span>📢 자기소개, 각자 원하는 방식으로 (오늘 오후 3시 박철제 멘토님 미팅 전)</span></a><a class="nl-row" href="notice-20260823.html"><b>2026-08-23</b><span>📢 조선대 3주차 자료 «ROS2 Python 프로그래밍» 자료실 업로드 (2026-08-23)</span></a><div class="nl-row nl-cur"><b>2026-08-22</b><span>📢 인프라 가이드 2편 게시 + 월요일 준비물 (2026-08-22)</span><i>지금 보는 공지</i></div><a class="nl-row" href="notice-20260820.html"><b>2026-08-20</b><span>📢 전담 현직자 멘토(제6의 멤버) 킥오프: 오늘 8/20(목) 16:00 줌 (2026-08-20</span></a><a class="nl-row" href="notice-20260818.html"><b>2026-08-18</b><span>📢 GPU 서버 계정 발급 (보충): 웹에도 정리했습니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260814.html"><b>2026-08-14</b><span>📢 현장 확인: 저수준 제어가 이 프로젝트의 관문입니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260813.html"><b>2026-08-13</b><span>📢 이제 진짜로 올릴 수 있습니다: 시작 가이드 (2026-08-13)</span></a><a class="nl-row" href="notice-20260812.html"><b>2026-08-12</b><span>📢 자료 제출함(inbox)이 열렸습니다 (2026-08-12)</span></a><a class="nl-row" href="notice-20260811.html"><b>2026-08-11</b><span>📢 FOOTHOLD 공지 · 협업 시스템 오픈 + 첫 실측 결과 (2026-08-11)</span></a><a class="nl-row" href="notice-20260809.html"><b>2026-08-09</b><span>FOOTHOLD 협업 시스템 오픈</span></a></div>
 
 </div>
 <script>
@@ -1032,6 +1032,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script>
-<!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">2026-11-07 09:10</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
