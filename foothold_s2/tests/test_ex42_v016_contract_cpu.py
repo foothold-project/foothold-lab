@@ -63,9 +63,12 @@ def test_v016_makes_known_values_decisions_but_keeps_unmeasured_values_open():
     assert doc["stages"][3]["hold_policy"] == "hold_exposure_continue_training"
     stage_zero = doc["stage_zero"]
     assert stage_zero["id"] == "EX42_0_T0_prime"
+    # Team decision 2026-11-07 08:5x, recorded in decisions.tsv row 216:
+    # EX-41 model_6000 is cumulative m12000 and is the EX-42 parent.
     assert stage_zero["parent"] == {
-        "update": 6000,
-        "sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+        "cumulative_update": 12000,
+        "manifest_local_update": 6000,
+        "sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
     }
     assert (stage_zero["minimum_updates"], stage_zero["maximum_updates"],
             stage_zero["extension_updates"]) == (1000, 1000, 0)
