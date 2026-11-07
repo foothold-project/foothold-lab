@@ -292,3 +292,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T17:32:09+09:00	analyst v6 받음	확정 셋 반영 확인(diff 대조 · 값 변경 없음)	팀장 17:2x	analyst/ex41-stage-reports e8246e88 CHANGES-EX42-v6-1725.md	18:00 자료
 2026-11-07T17:37:59+09:00	W47 배포 경로	PR #586 머지만으로는 미배포: 배포원은 foothold-site main(DEPLOY.md:9~11) · 마지막 10/12 0c44481f · lead 가 확인 없이 「머지하면 배포」 라 말함 · 팀장에 super2 창 직접 「차이 목록 먼저」 요청	super2 답 · gh deployments 재확인	foothold-site deployments · web/DEPLOY.md	팀장 결정 대기
 2026-11-07T17:40:42+09:00	W58 닫음	runner 판단 사전 알림 도구 수용	팀장 17:2x 사전 알림	runner/ex42-v016 c6d5a033 · 재현 3 passed · 실데이터 예측 재현	발송 경로 연결은 EX-42 시작 때
+2026-11-07T18:05:51+09:00	18:00 마감 셋	W44 닫음(이미 결정) · W21 N21 만 남아 11/08 12:00 · W47 배포는 그림 v3 확인 뒤 11/08 18:00	ops FAIL C1 마감 지남	WORKLIST · decisions 189 194 · af7d72ff	W21 N21 팀장 답 대기
