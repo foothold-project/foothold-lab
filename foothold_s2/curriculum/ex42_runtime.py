@@ -147,6 +147,20 @@ class EX42Runtime:
         return EX42StageTransitionConsumer(
             plan, approvals_path, current_stage_id=current_stage_id)
 
+    @staticmethod
+    def training_chain(plan: EX42Plan, *, approvals_path: str | Path,
+                       parent_manifest_path: str | Path, run_dir: str | Path,
+                       repo_root: str | Path, queue_path: str | Path,
+                       dispatch_path: str | Path | None = None,
+                       alert_sender: Any = None):
+        """Build the runner-owned chain adapter without granting launch approval."""
+        from foothold_s2.ex42_chain import EX42TrainingChain
+        return EX42TrainingChain(
+            plan=plan, approvals_path=approvals_path,
+            parent_manifest_path=parent_manifest_path, run_dir=run_dir,
+            repo_root=repo_root, queue_path=queue_path,
+            dispatch_path=dispatch_path, alert_sender=alert_sender)
+
     def __init__(
         self, plan: EX42Plan, env_count: int, device: str, log_dir: str | Path,
         *, approvals_path: str | Path, graduation_path: str | Path | None,
