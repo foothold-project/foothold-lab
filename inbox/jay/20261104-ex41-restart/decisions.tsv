@@ -273,3 +273,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T15:32:54+09:00	W15 결과	scripter: 1079 rc 0 · 같은 코드 full 대 조각이 반복 폭(0) 밖 · 16/16 행 분모 불일치 · G11 HOLD numeric_fields_differ → EX-42 에서 W78 조각 쪼개기 채택 보류(한 덩어리 유지) · 다음 CPU 로 분모 차 원인 · analyst W56 에 반영 · GPU1 은 정본 216 뒤쪽 절반으로	사전 등록 규칙	REPORT-W15-full-unit-1107.md	open
 2026-11-07T15:35:32+09:00	W56 · W15 닫음	18:00 논의 한 장 analyst 957f215f(원격 확인) 팀장께 전달 · W15 조각 채택 보류로 닫음(분모 원인은 scripter 후속)	오늘 마감	DISCUSSION-1800-1107.md	done
 2026-11-07T15:37:56+09:00	W42 합치기 다시 보류	mai-tools#40 병합 확인 · 그러나 본 사본 C:/mai/mai-tools 가 #39(d27e1af) 라 2ca2d6bd 합치면 G25 반례 통과 · 시험 3 실패 → 합치기 취소 · super2 에 본 사본 #40 갱신 요청 · analyst 는 18:00 결정까지 대기 · GPU1 정본 재시도 2	관문은 깨뜨려 봐야 믿는다	test_ops_check.py	open
+2026-11-07T15:39:05+09:00	W42 점검기 합침	super2 본 사본 #40(eeb97ea) 갱신 뒤 2ca2d6bd 합침 · 22 passed · G25 반례 FAIL · 실기계 FAIL 0 · 작업 탭과 운영 점검이 같은 규칙(C1~C11)	관문 확인 뒤 합침	lead/ex41-dispatch-on-measure	done
