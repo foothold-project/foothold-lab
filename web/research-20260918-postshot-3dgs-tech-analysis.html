@@ -608,6 +608,39 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
 <style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
@@ -769,7 +802,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
+    fetch('/assets/search-index.json?v=f8d7a234').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -856,39 +889,6 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
-<style id="stamp-css">
-/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
-   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
-/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
-   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
-   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
-   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
-body{min-height:100vh;display:flex;flex-direction:column}
-body>.bstamp{margin-top:auto}
-/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
-   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
-   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
-   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
-   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
-body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
-body>*{flex-shrink:0}
-/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
-   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
-   width:100% 로 먼저 채우고 max-width 로 자른다. */
-.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
-  margin:40px auto 22px;
-  padding:12px 18px 0;
-  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
-  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
-.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
-.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.bstamp .gap{flex:1}
-/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
-   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
-   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
-   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
-@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
-</style>
 </head>
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
@@ -925,7 +925,7 @@ body>*{flex-shrink:0}
 <p>우리가 아는 3D 모델은 삼각형 메시다. 점을 찍고 삼각형으로 잇고 그 위에 사진을 입힌다. 이 방식은 <b>면이 분명한 것</b>에 강하다. 책상, 벽, 기계 부품.</p>
 <p>그런데 실제 장면에는 면이 분명하지 않은 것이 훨씬 많다. 나뭇잎, 잔디, 철망, 머리카락, 반투명한 유리. 삼각형으로 옮기려면 어마어마한 수가 필요하고, 그래도 잎사귀 가장자리는 톱니처럼 남는다.</p>
 <p><b>가우시안 스플래팅은 면을 포기한다.</b> 대신 <b>가운데가 진하고 가장자리로 갈수록 흐려지는 타원</b>을 공간에 수십만 개 띄운다. 그것을 겹쳐 칠해서 장면을 만든다. 잎사귀 한 장을 삼각형으로 재현하는 대신, 잎사귀처럼 보이는 흐릿한 얼룩을 그 자리에 두는 것이다.</p>
-<p><figure class="mdimg"><img src="assets/visual/gs-what-is.svg?v=91db1e05" alt="그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계" loading="lazy"><figcaption>그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-what-is.svg?v=dfdad6e0" alt="그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계" loading="lazy"><figcaption>그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계</figcaption></figure></p>
 <h3>1-2. 숫자 59개</h3>
 <p>타원 하나가 들고 있는 것은 위 그림처럼 숫자 <b>59개</b>가 전부다.</p>
 <div class="tw"><table><thead><tr><th>무엇</th><th>개수</th><th>뜻</th></tr></thead><tbody><tr><td>위치</td><td>3</td><td>공간 어디에 있나</td></tr><tr><td>크기</td><td>3</td><td>세 축으로 각각 얼마나 퍼지나</td></tr><tr><td>회전</td><td>4</td><td>어느 쪽으로 누웠나</td></tr><tr><td>불투명도</td><td>1</td><td>얼마나 진한가</td></tr><tr><td>색</td><td>48</td><td><b>보는 각도마다 다른 색</b></td></tr></tbody></table></div>
@@ -971,7 +971,7 @@ body>*{flex-shrink:0}
 <section id="s4"><span id="3"></span><h2>3. 왜 원경이 뭉개졌나 · 시차</h2>
 <h3>3-1. 깊이는 «각» 에서 나온다</h3>
 <p>한 장의 사진만으로는 거리를 알 수 없다. 작은 것이 가까이 있는지 큰 것이 멀리 있는지 구분할 방법이 없다. 그래서 <b>두 자리에서 같은 점을 보고, 두 시선이 만나는 각으로 거리를 잰다.</b> 사람 눈이 둘인 이유와 같다.</p>
-<p><figure class="mdimg"><img src="assets/visual/gs-parallax.svg?v=74a07dc3" alt="그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다" loading="lazy"><figcaption>그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-parallax.svg?v=bd23c972" alt="그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다" loading="lazy"><figcaption>그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다</figcaption></figure></p>
 <p>각이 좁아지면 두 광선이 거의 나란해진다. 나란한 두 선은 <b>어디서 만나는지가 불분명하다.</b> 그림 오른쪽의 길쭉한 얼룩이 그 「불분명함」이다.</p>
 <p>관계는 간단하다. <b>깊이 오차는 각에 반비례하고, 거리와는 무관하다.</b></p>
 <div class="tw"><table><thead><tr><th>두 시점이 이루는 각</th><th>깊이 오차</th></tr></thead><tbody><tr><td>16도</td><td>0.18 %</td></tr><tr><td>1.5도</td><td>1.9 %</td></tr><tr><td>0.5도</td><td>5.7 %</td></tr><tr><td>0.1도</td><td><b>29 %</b></td></tr></tbody></table></div>
@@ -1005,7 +1005,7 @@ defined for a moving camera.&quot;*</p></blockquote>
 <i>&quot;The moving shadows create holes in the ground of the radiance field.&quot;</i></p></blockquote>
 <p><b>움직이는 그림자가 지면에 구멍을 낸다</b>고까지 말한다. 우리가 야외 보도를 찍을 때 정확히 걸릴 자리다.</p>
 <h3>4-2. 왜 카메라 한 대로는 원리적으로 안 되나</h3>
-<p><figure class="mdimg"><img src="assets/visual/gs-moving.svg?v=89b27506" alt="그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다" loading="lazy"><figcaption>그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-moving.svg?v=398cc4a0" alt="그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다" loading="lazy"><figcaption>그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다</figcaption></figure></p>
 <p>정지한 대상은 내가 걸어다니는 동안 그대로 있으므로, 시각이 달라도 <b>같은 점</b>에 광선이 모인다. 움직이는 대상은 다르다. <b>어느 한 순간에 그 점을 보는 광선이 하나뿐</b>이다.</p>
 <p>0.5초 뒤 다른 각도에서 어깨를 다시 봐도 소용없다. 그것은 <b>다른 시각의 다른 위치의 어깨</b>다. 삼각측량할 두 광선이 영원히 생기지 않는다.</p>
 <p>그리고 광선이 하나뿐이면 <b>「깊이가 변한 것」과 「물체가 그 광선을 따라 움직인 것」이 구분되지 않는다.</b> 정보 자체가 없다.</p>
@@ -1216,5 +1216,6 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1-->
+<!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">2026-11-07 09:10</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -633,6 +633,39 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
 <!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
@@ -794,7 +827,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
+    fetch('/assets/search-index.json?v=f8d7a234').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -881,39 +914,6 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
-<style id="stamp-css">
-/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
-   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
-/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
-   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
-   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
-   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
-body{min-height:100vh;display:flex;flex-direction:column}
-body>.bstamp{margin-top:auto}
-/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
-   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
-   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
-   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
-   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
-body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
-body>*{flex-shrink:0}
-/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
-   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
-   width:100% 로 먼저 채우고 max-width 로 자른다. */
-.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
-  margin:40px auto 22px;
-  padding:12px 18px 0;
-  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
-  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
-.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
-.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.bstamp .gap{flex:1}
-/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
-   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
-   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
-   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
-@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
-</style>
 </head>
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
@@ -949,35 +949,40 @@ body>*{flex-shrink:0}
 .gate-h .g-left{font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:.88rem}
 </style><div class="gate-h"><h2 style="margin:0">기획발표</h2><span class="g-left">2026년 09월 04일 · <span class="dd-live" data-due="2026-09-04">지남</span> · 산출물 6/6</span></div>
 <p class="sub" style="margin:4px 0 0">운영진 제출 3종. 기획서 · 브레인스토밍 · WBS</p>
-<div class="tw"><table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
 <tr><td><a href="deliverable-proposal.html"><b>프로젝트 기획서</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/proposal.pdf?v=bb3e1d5c" target="_blank" rel="noopener">PDF</a></td><td><span style="color:var(--ink-3)">아직 없음</span></td></tr>
 <tr><td><a href="deliverable-proposal-summary.html"><b>기획서 요약</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/proposal-summary.pdf?v=f6340d1b" target="_blank" rel="noopener">PDF</a></td><td><span style="color:var(--ink-3)">아직 없음</span></td></tr>
 <tr><td><a href="deliverable-brainstorming.html"><b>브레인스토밍</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/brainstorming.pdf?v=5f43ed64" target="_blank" rel="noopener">PDF</a></td><td><span style="color:var(--ink-3)">아직 없음</span></td></tr>
 <tr><td><a href="deliverable-wbs-official.html"><b>WBS</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/wbs-official.pdf?v=c362b52e" target="_blank" rel="noopener">PDF</a></td><td><span style="color:var(--ink-3)">아직 없음</span></td></tr>
 <tr><td><a href="deliverable-roles-responsibilities.html"><b>역할과 책임</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/roles-responsibilities.pdf?v=ab43818a" target="_blank" rel="noopener">PDF</a></td><td><span style="color:var(--ink-3)">아직 없음</span></td></tr>
 <tr><td><a href="deliverable-proposal-deck.html"><b>기획 발표 자료</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/proposal-deck.pdf?v=9ebc40c9" target="_blank" rel="noopener">PDF</a> · <a href="assets/deliverables/proposal-deck-presented.html?v=942a8a22" target="_blank" rel="noopener">HTML</a></td><td>슬라이드가 실제로 만들어지고 리허설을 한 번 돌고, 각 장의 숫자가 실측 문서와 일치하면 확정으로 바꾼다.</td></tr>
-</tbody></table></div>
+</tbody></table>
 <div class="gate-h"><h2 style="margin:0">A-정책</h2><span class="g-left">2026년 09월 12일 · <span class="dd-live" data-due="2026-09-12">지남</span> · 산출물 1/1</span></div>
 <p class="sub" style="margin:4px 0 0">우리 지형으로 학습한 정책과 지표 세트</p>
-<div class="tw"><table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
 <tr><td><a href="deliverable-policy-metrics.html"><b>기준 정책 · 지표 세트</b></a></td><td><span class="st-done">완료</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>아래 §2 표의 여섯 지표가 모두 숫자로 채워지고, §3 학습 조건이 재현 가능하게 적히고, 체크포인트 경로가 남으면 상태를 `확정` 으로 바꾼다. 관문: `A-정책` (2026-09-12)</td></tr>
-</tbody></table></div>
-<div class="gate-h"><h2 style="margin:0">MVP · 중간발표</h2><span class="g-left">2026년 09월 30일 · <span class="dd-live" data-due="2026-09-30">오늘</span> · 산출물 2/3</span></div>
+</tbody></table>
+<div class="gate-h"><h2 style="margin:0">MVP · 중간발표</h2><span class="g-left">2026년 09월 30일 · <span class="dd-live" data-due="2026-09-30">지남</span> · 산출물 2/3</span></div>
 <p class="sub" style="margin:4px 0 0">트랙 A 완결</p>
-<div class="tw"><table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
-<tr><td><a href="deliverable-mvp-submission.html"><b>MVP 종합보고서 (제출본)</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/mvp-submission.pdf?v=f227277e" target="_blank" rel="noopener">PDF</a> · <a href="assets/deliverables/mvp-submission-presented.html?v=fc0eaa56" target="_blank" rel="noopener">HTML</a></td><td>제출 파일이 실제로 존재하고 해시가 기록되고, 이 산출물 페이지에서 바로 열리면 확정으로 바꾼다. 관문: `MVP · 중간발표` (2026-09-30)</td></tr>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td><a href="deliverable-mvp-submission.html"><b>MVP 종합보고서 (제출본)</b></a></td><td><span class="st-done">완료</span></td><td><a href="assets/deliverables/mvp-submission.pdf?v=f227277e" target="_blank" rel="noopener">PDF</a> · <a href="assets/deliverables/mvp-submission-presented.html?v=858717bf" target="_blank" rel="noopener">HTML</a></td><td>제출 파일이 실제로 존재하고 해시가 기록되고, 이 산출물 페이지에서 바로 열리면 확정으로 바꾼다. 관문: `MVP · 중간발표` (2026-09-30)</td></tr>
 <tr><td><a href="deliverable-generalization-report.html"><b>일반화 평가표</b></a></td><td><span class="st-done">완료</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§3 비교표의 세 비교군이 모두 채워지고, §2 지형 분리가 명시되고, §4 핵심 질문에 숫자로 답이 되면 상태를 `확정` 으로 바꾼다. 관문: `MVP · 중간발표` (2026-09-30)</td></tr>
 <tr><td><a href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b></a></td><td><span class="st-wait">대기</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§2 영상 목록이 실제 파일로 존재하고, §3 렌더 조건이 기록되고, 중간발표에서 상영 가능한 길이로 편집되면 상태를 `확정` 으로 바꾼다. 관문: `MVP · 중간발표` (2026-09-30) 에서 `FINAL · 최종발표` (2026-12-11) 로 옮긴다 (2026-09-29 팀장 확정)</td></tr>
-</tbody></table></div>
-<div class="gate-h"><h2 style="margin:0">NAV · 실기 항법</h2><span class="g-left">2026년 11월 07일 · <span class="dd-live" data-due="2026-11-07">D-38</span> · 산출물 0/1</span></div>
-<p class="sub" style="margin:4px 0 0">조선대 단계 종료</p>
-<div class="tw"><table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
-<tr><td><a href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b></a></td><td><span class="st-wait">대기</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§3 완주 기록이 영상·지도 파일·설정과 함께 남고, §4 실패 사례가 정리되면 상태를 `확정` 으로 바꾼다. 관문: `NAV · 실기 항법` (2026-11-07)</td></tr>
-</tbody></table></div>
-<div class="gate-h"><h2 style="margin:0">FINAL · 최종발표</h2><span class="g-left">2026년 12월 11일 · <span class="dd-live" data-due="2026-12-11">D-72</span> · 산출물 0/1</span></div>
-<p class="sub" style="margin:4px 0 0">지정 코스 자율주행 시연</p>
-<div class="tw"><table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
-<tr><td><a href="deliverable-final-report.html"><b>최종 실증결과 보고서</b></a></td><td><span class="st-wait">대기</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§2~§5 가 모두 숫자로 채워지고, 시연 영상과 시스템 구성도가 붙고, 발표 리허설을 1회 이상 마치면 상태를 `확정` 으로 바꾼다. 관문: `FINAL · 최종발표` (2026-12-11)</td></tr>
-</tbody></table></div>
-</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</tbody></table>
+<div class="gate-h"><h2 style="margin:0">SIM · 시뮬 · 트윈 · 앱</h2><span class="g-left">2026년 11월 07일 · <span class="dd-live" data-due="2026-11-07">오늘</span> · 산출물 0/0</span></div>
+<p class="sub" style="margin:4px 0 0">시뮬 RL · 디지털 트윈 · dashboard · app 완성</p>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+</tbody></table>
+<div class="gate-h"><h2 style="margin:0">NAV · 실기 항법</h2><span class="g-left">2026년 11월 30일 · <span class="dd-live" data-due="2026-11-30">D-23</span> · 산출물 0/1</span></div>
+<p class="sub" style="margin:4px 0 0">순정 보행 + 자율주행 SLAM · Nav2 완성</p>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td><a href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b></a></td><td><span class="st-wait">대기</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§3 완주 기록이 영상·지도 파일·설정과 함께 남고, §4 실패 사례가 정리되면 상태를 `확정` 으로 바꾼다. 관문: `NAV · 실기 항법` (2026-11-30 · 2026-10-12 팀장 확정으로 11-07 에서 옮김)</td></tr>
+</tbody></table>
+<div class="gate-h"><h2 style="margin:0">FINAL · 최종발표</h2><span class="g-left">2026년 12월 07일 · <span class="dd-live" data-due="2026-12-07">D-30</span> · 산출물 0/1</span></div>
+<p class="sub" style="margin:4px 0 0">완성 마감. 실제 발표는 12/9 또는 12/10 (학교 공유 대기) · 12/11 수료식</p>
+<table class="dl-tbl"><thead><tr><th style="width:28%">산출물</th><th style="width:11%">상태</th><th style="width:11%">제출본</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td><a href="deliverable-final-report.html"><b>최종 실증결과 보고서</b></a></td><td><span class="st-wait">대기</span></td><td><span style="color:var(--ink-3)">없음</span></td><td>§2~§5 가 모두 숫자로 채워지고, 시연 영상과 시스템 구성도가 붙고, 발표 리허설을 1회 이상 마치면 상태를 `확정` 으로 바꾼다. 관문: `FINAL · 최종발표` (2026-12-07 완성 마감 · 실제 발표 12/9 또는 12/10 · 12/11 수료식 · 2026-10-12 팀장 확정)</td></tr>
+</tbody></table>
+</div>
+<!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">2026-11-07 09:10</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
