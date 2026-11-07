@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def _request(**changes):
     values = dict(
-        dr_mode="on", dr_scale=1.0, command_suite="n21", commands="all",
+        dr_mode="on", dr_scale=1.0, n21_record_only=True, command_suite="n21", commands="all",
         modes="eval_gt,eval_pred,probe_prop_only", terrain_set="n21-continuous",
         fixed_terrain=True, fixed_level=2, envs=64,
         n21_point="stage_end", n21_stage="E0",
@@ -69,7 +69,10 @@ def test_n21_selector_is_exact_and_rejects_scope_drift():
     assert len(n21_dr_record.CONTINUOUS_KINDS) == 7
     assert n21_dr_record.terrain_spec("n21-flat")["fixed_level"] == 2
     n21_dr_record.validate_request(_request())
-    for bad in (_request(dr_mode="off"), _request(dr_scale=0.8),
+    off_request = _request(dr_mode="off", dr_scale=0.0)
+    n21_dr_record.validate_request(off_request)
+    n21_dr_record.validate_entrypoint(off_request)
+    for bad in (_request(dr_scale=0.8),
                 _request(modes="eval_gt,eval_pred"), _request(terrain_set="sparse50"),
                 _request(envs=7), _request(fixed_level=1),
                 _request(n21_point="parent_e0", n21_stage="E0"),
@@ -171,6 +174,7 @@ def test_wrapper_initial_reset_happens_after_dr_hook_for_on_and_off():
 
 def test_n21_separate_receipt_is_rejected_by_existing_dr_off_guard():
     completed = {
+        "dr_mode": {"mode": "on", "scale": 1.0},
         "dr": {"mode": "on", "scale": 1.0}, "dr_off": [],
         "fixed_terrain": {"fixed_level": 2, "num_envs": 64},
         "modes": {mode: dict.fromkeys(N21_COMMANDS, {}) for mode in n21_dr_record.MAP_MODES},
@@ -186,6 +190,55 @@ def test_n21_separate_receipt_is_rejected_by_existing_dr_off_guard():
         n21_dr_record.receipt(incomplete, approval=approval, terrain_set="n21-flat")
 
 
+def test_n21_dr_off_receipt_uses_same_schema_and_existing_consumer_accepts_it():
+    disabled = ["physics_material", "add_base_mass"]
+    completed = {
+        "dr_mode": n21_dr_record.off_mode_record(disabled),
+        "dr_off": disabled,
+        "fixed_terrain": {"fixed_level": 2, "num_envs": 64},
+        "envs": 64,
+        "command_suite": "n21",
+        "modes": {mode: dict.fromkeys(N21_COMMANDS, {}) for mode in n21_dr_record.MAP_MODES},
+        "n21_point": "parent_e0", "n21_stage": "EX42_0_T0_prime",
+    }
+    approval = n21_dr_record.approval_record(
+        n21_dr_record.DEFAULT_APPROVAL, "EX42_0_T0_prime", None)
+    doc = n21_dr_record.receipt(completed, approval=approval, terrain_set="n21-flat")
+    assert doc["schema"] == n21_dr_record.N21_SCHEMA
+    assert doc["record_only"] is True and doc["n21_point"] == "parent_e0"
+    assert "dr" not in doc
+    assert doc["dr_mode"] == n21_dr_record.off_mode_record(disabled)
+    assert set(doc["dr_mode"]["runtime_events_fired"].values()) == {0}
+    assert eval_dr_mode.require_dr_off_document(doc, where="N21 DR-off receipt") is doc
+    from foothold_s2.curriculum.ex41_scoring import maintenance_counts_from_map_modes
+    with pytest.raises(ValueError, match="map64 extended"):
+        maintenance_counts_from_map_modes(doc, {})
+
+
+def test_n21_dr_off_runtime_is_noop_with_zero_effective_scale_and_events():
+    from foothold_s2.eval.adapters import disable_eval_randomization
+
+    events = SimpleNamespace(physics_material=object(), add_base_mass=object())
+    joint_pos = SimpleNamespace(max_delay_s=0.015)
+    env_cfg = SimpleNamespace(events=events, actions=SimpleNamespace(joint_pos=joint_pos))
+    disabled = disable_eval_randomization(env_cfg)
+    assert disabled == list(n21_dr_record.N21_DR_OFF_EVENTS)
+    assert joint_pos.max_delay_s == 0.0
+    args = _request(dr_mode="off", dr_scale=0.0)
+    mode = eval_dr_mode.DRMode.from_args(args, env_cfg=env_cfg, capture_per_env=True)
+    raw = SimpleNamespace()
+    assert mode.mode == "off" and mode.scale is None and mode.table is None
+    assert mode.after_make(raw) is None
+    assert mode.begin(raw, "eval_gt/fwd0.5", 60, 64, 0.02) is None
+    assert mode.step(raw, 0) is False
+    result = {}
+    assert mode.collect(raw, "eval_gt/fwd0.5", result) is None
+    assert "dr" not in result
+    rec = n21_dr_record.off_mode_record(disabled)
+    assert rec["scale"] == 0.0
+    assert set(rec["runtime_events_fired"].values()) == {0}
+
+
 def test_eval_map_modes_dr_on_path_and_receipt_are_explicit_and_ordered():
     source = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
     ast.parse(source)
@@ -196,6 +249,7 @@ def test_eval_map_modes_dr_on_path_and_receipt_are_explicit_and_ordered():
     assert "DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)" in source
     assert "adapters.disable_eval_randomization(env_cfg) if args.dr_mode == \"off\" else []" in source
     assert "eval_dr_mode.make_wrapped_env_after_dr_ready(" in source
+    assert 'elif parser_n21:\n    res["dr_mode"] = n21_dr_record.off_mode_record(dr_off)' in source
     helper = (ROOT / "foothold_s2/eval/eval_dr_mode.py").read_text(encoding="utf-8")
     assert helper.index("raw_env = gym_make(task, cfg=env_cfg)") < helper.index("dr_mode.after_make(raw)")
     assert helper.index("dr_mode.after_make(raw)") < helper.index("env = vecenv_wrapper(")

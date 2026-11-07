@@ -66,7 +66,8 @@ if parser_n21:
     try:
         n21_dr_record.validate_entrypoint(args)
         n21_approval = n21_dr_record.approval_record(
-            args.n21_approval, args.n21_stage, args.dr_scale, dr_table_path=args.dr_table)
+            args.n21_approval, args.n21_stage, args.dr_scale if args.dr_mode == "on" else None,
+            dr_table_path=args.dr_table)
         n21_table_fingerprint = eval_dr_mode.load_table(args.dr_table)["sha256"]
         if n21_table_fingerprint != n21_approval["range_source"]["sha256"]:
             raise ValueError("N21 DR range table changed after the EX-42 plan pin")
@@ -173,7 +174,7 @@ if args.ex39_heading_smoke_guard:
     cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
     cmd_cfg.seed = 42
 dr_mode = eval_dr_mode.DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)
-if parser_n21 and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
+if parser_n21 and args.dr_mode == "on" and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
     raise RuntimeError("N21 DR range table differs from the pre-Kit approval fingerprint")
 dr_off = adapters.disable_eval_randomization(env_cfg) if args.dr_mode == "off" else []
 
@@ -316,6 +317,8 @@ res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.che
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
                        "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
+elif parser_n21:
+    res["dr_mode"] = n21_dr_record.off_mode_record(dr_off)
 if parser_n21:
     res["n21_point"] = args.n21_point
     res["n21_stage"] = args.n21_stage

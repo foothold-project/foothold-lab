@@ -25,15 +25,21 @@ CONTINUOUS_KINDS = (
 )
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 N21_SCHEMA = "foothold-ex42-n21-dr-record-only/1"
+N21_DR_OFF_EVENTS = ("physics_material", "add_base_mass")
+N21_RUNTIME_EVENTS = (
+    "base_com", "actuator_gains", "motor_strength", "push", "push_events",
+    "delay_reset_samples", "delay_observed_max_substeps",
+)
 DEFAULT_APPROVAL = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-approvals.yaml"
 
 
 def validate_request(args) -> None:
     """Fail closed before Kit unless this is the agreed N21 measurement cell."""
-    if args.dr_mode != "on":
-        raise ValueError("N21 record-only requires --dr-mode on")
-    if args.dr_scale != 1.0:
-        raise ValueError("N21 requires approved DR scale 1.0")
+    if args.dr_mode not in ("on", "off"):
+        raise ValueError("N21 record-only requires --dr-mode on or off")
+    expected_scale = 1.0 if args.dr_mode == "on" else 0.0
+    if args.dr_scale != expected_scale:
+        raise ValueError("N21 %s requires effective DR scale %.1f" % (args.dr_mode, expected_scale))
     if args.command_suite != "n21" or args.commands != "all":
         raise ValueError("N21 requires the exact eight-command suite")
     if tuple(args.modes.split(",")) != MAP_MODES:
@@ -55,7 +61,7 @@ def validate_request(args) -> None:
 
 
 def validate_entrypoint(args) -> None:
-    """Keep every DR-on map evaluation in the isolated N21 record-only lane."""
+    """Keep DR-on maps and N21 selectors in the isolated record-only lane."""
     if getattr(args, "n21_record_only", False):
         validate_request(args)
         return
@@ -66,7 +72,7 @@ def validate_entrypoint(args) -> None:
         raise ValueError("N21 selectors require --n21-record-only")
 
 
-def approval_record(path: str | Path, stage: str, scale: float,
+def approval_record(path: str | Path, stage: str, scale: float | None,
                     dr_table_path: str | Path = DEFAULT_APPROVAL.parent / "ex41-fixed5000.yaml") -> dict[str, Any]:
     """Read, validate and fingerprint the DR approval without inventing ranges."""
     approval_path = Path(path)
@@ -79,7 +85,8 @@ def approval_record(path: str | Path, stage: str, scale: float,
     if not isinstance(scales, dict) or stage not in scales:
         raise ValueError("N21 stage has no approved DR scale: %s" % stage)
     approved_scale = scales[stage]
-    if isinstance(approved_scale, bool) or not isinstance(approved_scale, (int, float)) or float(approved_scale) != float(scale):
+    if (isinstance(approved_scale, bool) or not isinstance(approved_scale, (int, float))
+            or (scale is not None and float(approved_scale) != float(scale))):
         raise ValueError("N21 requested scale differs from approved stage scale")
     decision_id = dr.get("decision_id")
     rationale = dr.get("rationale")
@@ -132,6 +139,18 @@ def terrain_spec(terrain_set: str) -> dict[str, Any]:
     raise ValueError("unknown N21 terrain selector: %s" % terrain_set)
 
 
+def off_mode_record(disabled_events: list[str]) -> dict[str, Any]:
+    """Describe the effective DR-off lane without creating a DR readback block."""
+    if sorted(disabled_events) != sorted(N21_DR_OFF_EVENTS):
+        raise ValueError("N21 DR-off requires exactly the configured startup events disabled")
+    return {
+        "mode": "off",
+        "scale": 0.0,
+        "startup_events_disabled": list(disabled_events),
+        "runtime_events_fired": {name: 0 for name in N21_RUNTIME_EVENTS},
+    }
+
+
 def configure_terrain(env_cfg, terrain_set: str, seed: int) -> None:
     """Install the explicitly selected, fixed L2 terrain family before gym.make."""
     from foothold_s2.terrains import columns
@@ -149,9 +168,26 @@ def configure_terrain(env_cfg, terrain_set: str, seed: int) -> None:
 
 
 def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set: str) -> dict[str, Any]:
-    """Wrap a DR-on evaluation document in an unmistakable record-only contract."""
-    if not isinstance(document, dict) or "dr" not in document or document["dr"].get("mode") != "on":
-        raise ValueError("N21 receipt requires a completed DR-on result")
+    """Wrap DR-on or DR-off evaluation in the same isolated record-only contract."""
+    if not isinstance(document, dict):
+        raise ValueError("N21 receipt requires a completed result document")
+    mode_record = document.get("dr_mode")
+    mode = mode_record.get("mode") if isinstance(mode_record, dict) else None
+    if mode == "on":
+        dr = document.get("dr")
+        if not isinstance(dr, dict) or dr.get("mode") != "on":
+            raise ValueError("N21 DR-on receipt requires a completed DR-on block")
+        effective_scale = dr.get("scale")
+        if float(mode_record.get("scale", -1.0)) != float(effective_scale):
+            raise ValueError("N21 DR-on mode metadata differs from its runtime block")
+    elif mode == "off":
+        if "dr" in document:
+            raise ValueError("N21 DR-off receipt cannot contain a DR runtime block")
+        if mode_record != off_mode_record(document.get("dr_off", [])):
+            raise ValueError("N21 DR-off receipt must record zero runtime events and disabled startup events")
+        effective_scale = 0.0
+    else:
+        raise ValueError("N21 receipt requires an explicit DR-on or DR-off mode")
     modes = document.get("modes")
     if not isinstance(modes, dict) or set(modes) != set(MAP_MODES):
         raise ValueError("N21 receipt is missing one or more map modes")
@@ -164,12 +200,12 @@ def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set: 
         raise ValueError("N21 parent receipt must identify EX42_0_T0_prime")
     if point == "stage_end" and stage == "EX42_0_T0_prime":
         raise ValueError("N21 stage-end receipt cannot be the parent baseline")
-    dr = document["dr"]
+    approved_scale_matches = (mode == "off" or float(approval.get("scale", -1.0)) == float(effective_scale)) if isinstance(approval, dict) else False
     if (not isinstance(approval, dict) or approval.get("stage") != stage
-            or float(approval.get("scale", -1.0)) != float(dr.get("scale", -2.0))
+            or not approved_scale_matches
             or not isinstance(approval.get("sha256"), str) or len(approval["sha256"]) != 64
             or not isinstance(approval.get("range_source"), dict)):
-        raise ValueError("N21 receipt approval does not match its stage/scale or range source")
+        raise ValueError("N21 receipt approval does not match its stage or range source")
     fixed = document.get("fixed_terrain")
     if (not isinstance(fixed, dict) or fixed.get("fixed_level") != 2
             or fixed.get("num_envs") != 64):
