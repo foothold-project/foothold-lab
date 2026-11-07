@@ -1,0 +1,86 @@
+{
+  "at": "2026-11-07T14:01:09.903910+09:00",
+  "status": "DRAFT_WAITING_1079",
+  "files": [
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w44\\EVIDENCE-W44-T0-L9-1107.md",
+      "sha256": "538eabc6c991328da845bf3d16cfdc865ad4654a6a891c98015f2fc7acd50fb3"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w21\\EVIDENCE-W21-N2-N17-N21-1107.md",
+      "sha256": "578033f831984819848388f81ffcb9175147e27fba5047b37331180a802c7f35"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w41\\EVIDENCE-W41-DECISIONS-1107.md",
+      "sha256": "939573818a61a2f4140d22a3167608f08c08053c7acd79c1efa8f7f71e07d218"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w39\\GATE-EX42-no-repeat-v2.md",
+      "sha256": "c74df37cdf9bfb06356a26203aafdb63f43daa0c58fb87d44ea562e9d6d3d438"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\Desktop\\jay\\Claude\\os\\linux-ex42-readiness-20261106.md",
+      "sha256": "ce8eb68e80615ee903651d00af8e4b0f5054ecd238113d5d49287cce9d7d5006"
+    },
+    {
+      "path": "C:\\mai\\wt\\mai-os\\pipeline\\os\\reports\\REPORT-wsl-dryrun-1106.md",
+      "sha256": "4d0818b2ae7933e2a6823a66adf4ec08a5866514d75b08c43beba651af272410"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w78units\\m750\\units\\eval_gt\\stairs_side_left\\terrain_skill_v2.json",
+      "sha256": "795771c3b5d13274a2fcd1fa81762e6878e9570eb7ade2e9e39bfbaf46da9c7b"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w15_noise_1107\\repeat2\\eval_gt\\stairs_side_left\\terrain_skill_v2.json",
+      "sha256": "a1fe2bf88141d182c4770c90209c01f3ebbe9d1499b7ee9ba25d3ecd630ba868"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w15_noise_1107\\repeat3\\eval_gt\\stairs_side_left\\terrain_skill_v2.json",
+      "sha256": "1eeb9b4e67ff1cdd9156604a9a88209296c8dac28a6f3f50892169570e7dbc38"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w78units\\m750\\units\\probe_prop_only\\flat_fwd1.0\\terrain_skill_v2.json",
+      "sha256": "eb5737e70d91161ee2590ace09541c774b6289e87799da73d1f26486af615abf"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w15_noise_1107\\repeat2\\probe_prop_only\\flat_fwd1.0\\terrain_skill_v2.json",
+      "sha256": "ea00b91b5c9dc168a552dab8602d01f6249d449baedd0063cd25bb441dfc89fd"
+    },
+    {
+      "path": "D:\\mai-tmp\\scripter\\w15_noise_1107\\repeat3\\probe_prop_only\\flat_fwd1.0\\terrain_skill_v2.json",
+      "sha256": "e5b8fab7f8b1f4ebf4c9a1801053c672ce72922c134fbfa89e13bd49df4ab3c8"
+    }
+  ],
+  "repeat_recomputed": [
+    {
+      "mode": "eval_gt",
+      "case": "stairs_side_left",
+      "repeats": 3,
+      "numeric_fields": 34786,
+      "different_from_first": 0,
+      "outside_repeat_envelope": 0,
+      "repeat_changed_fields": 0,
+      "full_key_mismatch": 0,
+      "max_repeat_span": 0.0
+    },
+    {
+      "mode": "probe_prop_only",
+      "case": "flat_fwd1.0",
+      "repeats": 3,
+      "numeric_fields": 37926,
+      "different_from_first": 0,
+      "outside_repeat_envelope": 0,
+      "repeat_changed_fields": 0,
+      "full_key_mismatch": 0,
+      "max_repeat_span": 0.0
+    }
+  ],
+  "no_gpu": true,
+  "windows_seconds_per_update_assumption": 27.8,
+  "T0_hours": {
+    "1000": 7.722222222222222,
+    "3000": 23.166666666666668
+  },
+  "W39_blockers_at_1109": 26,
+  "W39_not_current_reaudit": true
+}
