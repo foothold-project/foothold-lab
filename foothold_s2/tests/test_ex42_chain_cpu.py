@@ -47,6 +47,15 @@ def make_chain(tmp_path, *, alert_sender=None, score_argv_factory=None,
     ), run
 
 
+def _complete_map_matrix():
+    from foothold_s2.eval.map_mode_cells import commands
+    aliases = {"gt": "eval_gt", "pred": "eval_pred", "off": "probe_prop_only"}
+    return [{"command": command, "map_mode": aliases[mode],
+             "role": "record_only" if mode == "off" else "judge"}
+            for mode in ("gt", "pred", "off")
+            for command in commands("extended")]
+
+
 def test_parent_manifest_identity_resolves_real_name_by_sha(tmp_path):
     chain, run = make_chain(tmp_path)
     start = json.loads((run / "startup_receipt.json").read_text(encoding="utf-8"))
@@ -284,6 +293,9 @@ def test_p1_collection_failure_is_retryable_but_completed_judgment_hold_is_not(t
         "plan_sha256": chain.plan.sha256,
         "stage_id": "EX42_0_T0_prime",
         "judgment": "HOLD",
+        "map_matrix": _complete_map_matrix(),
+        "judge_count": 26,
+        "record_only_count": 13,
     }), encoding="utf-8")
     held = chain.record_p1_outcome(
         iteration=250, stage_id="EX42_0_T0_prime",
@@ -320,6 +332,37 @@ def test_g13_completed_score_cannot_pass_when_manifest_names_a_different_model_s
         assert "model_N" in str(exc) or "score SHA" in str(exc)
     else:
         raise AssertionError("G13 accepted score SHA without a matching model_250 manifest entry")
+
+
+def test_g15_completed_p1_score_cannot_pass_when_map_mode_cell_is_missing(tmp_path):
+    chain, run = make_chain(tmp_path)
+    checkpoint_bytes = b"valid model 250 for map matrix"
+    checkpoint_sha = hashlib.sha256(checkpoint_bytes).hexdigest()
+    (run / "model_250.pt").write_bytes(checkpoint_bytes)
+    (run / "manifest.json").write_text(json.dumps({
+        "progress": {"completed_updates": 250},
+        "checkpoints": {"model_250.pt": checkpoint_sha},
+    }), encoding="utf-8")
+    score_path = tmp_path / "score.json"
+    score_path.write_text(json.dumps({
+        "checkpoint_sha256": checkpoint_sha,
+        "checkpoint_iteration": 250,
+        "plan_sha256": chain.plan.sha256,
+        "stage_id": "EX42_0_T0_prime",
+        "judgment": "PASS",
+        "map_matrix": _complete_map_matrix()[:-1],
+        "judge_count": 26,
+        "record_only_count": 13,
+    }), encoding="utf-8")
+    try:
+        chain.record_p1_outcome(
+            iteration=250, stage_id="EX42_0_T0_prime", checkpoint_sha256=checkpoint_sha,
+            attempt=1, collection_state="complete", score_path=score_path,
+            score_sha256=hashlib.sha256(score_path.read_bytes()).hexdigest())
+    except ValueError as exc:
+        assert "map-mode" in str(exc) or "missing, duplicate" in str(exc)
+    else:
+        raise AssertionError("G15 accepted a score with one missing command × map-mode cell")
 
 
 def _run_runner_to_checkpoint(tmp_path, *, score_argv_factory):

@@ -293,7 +293,7 @@ class EX42TrainingChain:
             checkpoint = self.run_dir / f"model_{iteration}.pt"
             manifest = json.loads((self.run_dir / "manifest.json").read_text(encoding="utf-8-sig"))
             checkpoint_sha = _sha(checkpoint) if checkpoint.is_file() else ""
-            from foothold_s2.ex42_gate_checks import validate_score_pair
+            from foothold_s2.ex42_gate_checks import validate_ex42_map_score, validate_score_pair
             validate_score_pair(
                 expected_iteration=iteration,
                 score={**score, "state": "complete"},
@@ -301,6 +301,7 @@ class EX42TrainingChain:
                 checkpoint_exists=checkpoint.is_file(),
                 checkpoint_sha256=checkpoint_sha,
             )
+            validate_ex42_map_score(score, self.plan.document["evaluation"]["map_modes"])
             expected = {"checkpoint_sha256": checkpoint_sha256,
                         "checkpoint_iteration": iteration,
                         "plan_sha256": self.plan.sha256,

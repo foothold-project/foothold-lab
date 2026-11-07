@@ -12,7 +12,7 @@ from foothold_s2.ex42_gate_checks import (
     EX42_LOCKED_SOURCE_PATHS, REQUIRED_GATE_ROWS, audit_ex42_launch_source,
     audit_locked_checkout, checkpoint_ready, extract_realized_config,
     launch_argv_sha256, locked_source_contract, open_gate_rows,
-    process_score_batch, validate_automatic_rule, validate_map_matrix,
+    process_score_batch, validate_automatic_rule, validate_ex42_map_score, validate_map_matrix,
     validate_score_pair, verify_launch_argv,
 )
 from foothold_s2.ex42_status import read_status, write_status
@@ -202,16 +202,24 @@ def test_g13_checkpoint_and_score_pair_distinguish_late_corrupt_and_old_pass():
 
 
 def test_g15_three_modes_and_commands_reject_missing_duplicate_or_extra():
-    expected = [(mode, command) for mode in ("gt", "pred", "off")
-                for command in ("fwd", "turn")]
-    rows = [{"map_mode": mode, "command": command} for mode, command in expected]
-    validate_map_matrix(expected, rows)
-    with pytest.raises(ValueError, match="missing, duplicate"):
-        validate_map_matrix(expected, rows[:-1])
-    with pytest.raises(ValueError, match="missing, duplicate"):
-        validate_map_matrix(expected, rows + [rows[0]])
-    with pytest.raises(ValueError, match="missing, duplicate"):
-        validate_map_matrix(expected, rows + [{"map_mode": "gt", "command": "back"}])
+    from foothold_s2.eval.map_mode_cells import commands
+    aliases = {"gt": "eval_gt", "pred": "eval_pred", "off": "probe_prop_only"}
+    rows = [{"map_mode": aliases[mode], "command": command,
+             "role": "record_only" if mode == "off" else "judge"}
+            for mode in ("gt", "pred", "off") for command in commands("extended")]
+    complete = {"map_matrix": rows, "judge_count": 26, "record_only_count": 13}
+    validate_ex42_map_score(complete, ["gt", "pred", "off"])
+    assert len(rows) == 39
+    for bad in (rows[:-1], rows + [rows[0]],
+                rows[:-1] + [{"map_mode": "eval_gt", "command": "unregistered", "role": "judge"}]):
+        with pytest.raises(ValueError, match="missing, duplicate"):
+            validate_ex42_map_score({**complete, "map_matrix": bad}, ["gt", "pred", "off"])
+    wrong_role = [dict(row) for row in rows]
+    wrong_role[0]["role"] = "record_only"
+    with pytest.raises(ValueError, match="incorrect judge/record role"):
+        validate_ex42_map_score({**complete, "map_matrix": wrong_role}, ["gt", "pred", "off"])
+    with pytest.raises(ValueError, match="role counts"):
+        validate_ex42_map_score({**complete, "judge_count": 25}, ["gt", "pred", "off"])
 
 
 def test_g17_extracts_observed_values_and_sources_without_defaults(tmp_path):

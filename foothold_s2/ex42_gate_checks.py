@@ -232,6 +232,30 @@ def validate_map_matrix(expected: Iterable[tuple[str, str]], rows: Iterable[dict
         raise ValueError("map score matrix has missing, duplicate, or unexpected cells")
 
 
+def validate_ex42_map_score(score: dict[str, Any], map_modes: list[str]) -> None:
+    """Validate EX-42's pinned 13-command × 3-mode matrix and judge/record roles."""
+    if map_modes != ["gt", "pred", "off"]:
+        raise ValueError("EX-42 score map modes differ from the pinned gt/pred/off set")
+    from foothold_s2.eval.map_mode_cells import commands
+
+    command_names = tuple(commands("extended"))
+    if len(command_names) != 13 or len(set(command_names)) != 13:
+        raise ValueError("EX-42 extended command inventory is not the pinned 13 cells")
+    aliases = {"gt": "eval_gt", "pred": "eval_pred", "off": "probe_prop_only"}
+    expected = [(aliases[mode], command) for mode in map_modes for command in command_names]
+    rows = score.get("map_matrix")
+    if not isinstance(rows, list):
+        raise ValueError("EX-42 score map-mode matrix is missing")
+    validate_map_matrix(expected, rows)
+    expected_roles = {"eval_gt": "judge", "eval_pred": "judge",
+                      "probe_prop_only": "record_only"}
+    for row in rows:
+        if row.get("role") != expected_roles[row["map_mode"]]:
+            raise ValueError("EX-42 map-mode cell has an incorrect judge/record role")
+    if score.get("judge_count") != 26 or score.get("record_only_count") != 13:
+        raise ValueError("EX-42 score role counts do not match the 26/13 map-mode matrix")
+
+
 def extract_realized_config(env_yaml: str | Path, agent_yaml: str | Path) -> dict[str, Any]:
     """Return observed values only, with source file path per selected setting."""
     import yaml
