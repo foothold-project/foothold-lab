@@ -19,6 +19,7 @@ $repo = 'D:/mai-wt/foothold-lab/runner-ex42-v016'
 $src = 'D:/mai-wt/foothold-lab/ex42-rehearsal-2ad96345'
 $head = '2ad96345478d73d65c973c982985b3fde7fe8370'
 git -C $repo worktree add --detach $src $head
+$env:FOOTHOLD_MACHINE_PROFILE = 'machines/AI-WS01-windows.yaml'
 $env:TEMP = 'D:/mai-tmp/runner'
 $env:TMP = 'D:/mai-tmp/runner'
 git -C $src status --porcelain
@@ -100,7 +101,7 @@ $out = "D:/mai-tmp/runner/ex42_rehearsal_$stamp"
 | `E6a` | `ex42_application.jsonl`의 경계 전환; `manifest.json`의 `model_<N_9>.pt`; 저장 후 P1 등록 영수증 및 예행 queue 항목 |
 | `E6b` | `ex42_application.jsonl`의 종료 상태; `manifest.json`의 `model_<N_10>.pt`와 최종 SHA; 종료 상태 파일 |
 
-`model_N_i.pt`의 `i`는 설명용 단계 순번이 아니라 파일의 실제 update 숫자로 치환한다. 각 stage-end 등록은 `stage_reports/<stage_id>_<N_i>.json`, `components/` 영수증, 예행 queue item과 개별 done-file로 확인한다. 해당 자동 등록 경로는 현재 미연결이므로 파일이 없으면 단계 성공으로 처리하지 않는다.
+`model_<N_i>.pt`에서 `<N_i>`는 단계 순번이 아니라 manifest에 나온 해당 단계의 실제 종료 update 숫자로 치환한다. 각 stage-end 등록은 `stage_reports/<stage_id>_<N_i>.json`, `components/` 영수증, 예행 queue item과 개별 done-file로 확인한다. 해당 자동 등록 경로는 현재 미연결이므로 파일이 없으면 단계 성공으로 처리하지 않는다.
 
 예행은 총 110 update다. 각 경계 평가가 늦거나 실패해도 학습 update와 예정 DR 단계는 멈추지 않는다. 빈 점수는 판정으로 쓰지 않고 측정 공백으로 기록한다. 점수가 있으면 score watcher의 `stage_id`가 직전 적용 transition receipt와 일치해야 한다. 0단계 이후 적용 전환 영수증이 없으면 watcher는 단계 이름을 추측하지 않고 보류한다.
 
