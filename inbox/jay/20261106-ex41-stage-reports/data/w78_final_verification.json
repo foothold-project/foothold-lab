@@ -1,0 +1,35 @@
+{
+  "known_answers": [
+    "full scheduled denominator after death",
+    "signed backward projection",
+    "spin excluded from translation ratio",
+    "closed vs open swing",
+    "unclipped symmetry and nonpositive denominator",
+    "median is not mean"
+  ],
+  "comparison_rows": 120,
+  "identity_ratio_distance_delta_survival": "pass",
+  "render_idempotent": true,
+  "local_links_exist": true,
+  "github_gfm_render": {
+    "RESULT-EX41-T0prime.md": {
+      "tables": 26,
+      "broken_rows": 0,
+      "sha256": "6f5e29632feffb30c2fc55d5c3d6cda002872eb968c79b6a577ac500f5217c74",
+      "html_sha256": "323ad9374aa13ea29d9dbebc11794389ee2600f279aac8382f6ff924f3a72450"
+    },
+    "W18-W10-FINAL-NOTE.md": {
+      "tables": 2,
+      "broken_rows": 0,
+      "sha256": "786838902955368e88974ab90c375c5860fc5359113348117982689e5f5e4e85",
+      "html_sha256": "546db5a2b82735b0d2e338fb0a31c367b2b1cdf392cad719155cd3752841fb8b"
+    },
+    "README.md": {
+      "tables": 2,
+      "broken_rows": 0,
+      "sha256": "60164ea21dcfd68e0fe712843e61dae8f2bab722b2558c5809d96fcfcc8cdddb",
+      "html_sha256": "d3c3c7ef14a1b54131bc5278b35f82bd37261d5be5ccb598b8e4d60bedbd252a"
+    }
+  },
+  "scope": "CPU report verification; raw audit counts and source SHA in w78_m5500_audit.json and w78_m6000_audit.json"
+}

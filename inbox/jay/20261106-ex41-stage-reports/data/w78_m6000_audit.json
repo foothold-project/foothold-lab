@@ -1,0 +1,2920 @@
+{
+  "captured_at": "2026-11-07T12:33:05.903436+09:00",
+  "iteration": 6000,
+  "cumulative_iteration": 12000,
+  "stage": "T0prime",
+  "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_6000.pt",
+  "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+  "result": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2.json",
+  "result_sha256": "fdb649de4a745fd8185508146759db53f82499fb76012a80876c77ecf9cab1e6",
+  "receipt": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\eval_receipt.json",
+  "receipt_sha256": "66c6a8bcd0e288ad28691905ab801cd632aab72de60a472a3f8b4c236557b1b1",
+  "source_sha256": {
+    "terrain_skill_v2_run.py": "78aefaf04de0e01ebd42bc5d21e3c5a7cfe351372623d0e765ecc461441e3c8e",
+    "eval_map_modes.py": "c92b5ebe4e370d330ceb66344a9021095b8cab1440c3a8989018184b268137e1",
+    "adapters.py": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+    "fixed_terrain.py": "f216af6e7367ff72369741920e11e923ed968a11f6e86328da4218b0c27bd224"
+  },
+  "run_identity": {
+    "device": "cuda:1",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "eval_seed": 42,
+    "torch": "2.7.0+cu128",
+    "torch_cuda": "12.8",
+    "gpu_name": "NVIDIA GeForce RTX 5080",
+    "gpu_total_mem_mib": 16302,
+    "gpu_index": 1,
+    "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+    "code_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+    "code_dirty_files": 0
+  },
+  "dr_off": [
+    "physics_material",
+    "add_base_mass"
+  ],
+  "curriculum_off": [
+    "terrain_levels",
+    "command_range"
+  ],
+  "cases": {
+    "stairs_fwd": {
+      "phases": [
+        [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "stairs_side_left": {
+      "phases": [
+        [
+          [
+            0.0,
+            0.5,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "stairs_side_right": {
+      "phases": [
+        [
+          [
+            0.0,
+            -0.5,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "stairs_back": {
+      "phases": [
+        [
+          [
+            -0.5,
+            0.0,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "stairs_fwd_turn_return": {
+      "phases": [
+        [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          4.0
+        ],
+        [
+          [
+            0.0,
+            0.0,
+            1.2
+          ],
+          2.6
+        ],
+        [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          4.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "stairs_fwd_back_return": {
+      "phases": [
+        [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          4.0
+        ],
+        [
+          [
+            -0.5,
+            0.0,
+            0.0
+          ],
+          4.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    },
+    "slope_fwd1.0": {
+      "phases": [
+        [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          5.0
+        ]
+      ],
+      "focus_kinds": [
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv"
+      ]
+    },
+    "flat_fwd1.0": {
+      "phases": [
+        [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "random_rough",
+        "boxes"
+      ]
+    },
+    "flat_fwd1.0_heading": {
+      "phases": [
+        [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          6.0
+        ]
+      ],
+      "focus_kinds": [
+        "random_rough",
+        "boxes"
+      ]
+    },
+    "stairs_fwd_stop_back": {
+      "phases": [
+        [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          3.0
+        ],
+        [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          2.0
+        ],
+        [
+          [
+            -0.5,
+            0.0,
+            0.0
+          ],
+          3.0
+        ],
+        [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          2.0
+        ]
+      ],
+      "focus_kinds": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv"
+      ]
+    }
+  },
+  "seconds": 8933.312999999966,
+  "combinations": 240,
+  "env_case_rows": 15360,
+  "kind_case_rows": 1680,
+  "value_checks": 1059298,
+  "max_float_delta": 8.848309516196196e-07,
+  "known_answers": [
+    "full scheduled denominator after death",
+    "signed backward projection",
+    "spin excluded from translation ratio",
+    "closed vs open swing",
+    "unclipped symmetry and nonpositive denominator",
+    "median is not mean"
+  ],
+  "terrain_assignments": {
+    "2": {
+      "sha256": "0fa58f201d3da3c3d7890a4c21b3029f33e5baddcf40dbadcd38de5f5cc5fa0f",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 0
+        },
+        {
+          "env": 1,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 1
+        },
+        {
+          "env": 2,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 2
+        },
+        {
+          "env": 3,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 3
+        },
+        {
+          "env": 4,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 4
+        },
+        {
+          "env": 5,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 5
+        },
+        {
+          "env": 6,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 6
+        },
+        {
+          "env": 7,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 7
+        },
+        {
+          "env": 8,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 8
+        },
+        {
+          "env": 9,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 9
+        },
+        {
+          "env": 10,
+          "kind": "boxes",
+          "level": 2,
+          "column": 10
+        },
+        {
+          "env": 11,
+          "kind": "boxes",
+          "level": 2,
+          "column": 11
+        },
+        {
+          "env": 12,
+          "kind": "boxes",
+          "level": 2,
+          "column": 12
+        },
+        {
+          "env": 13,
+          "kind": "boxes",
+          "level": 2,
+          "column": 13
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 14
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 15
+        },
+        {
+          "env": 16,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 16
+        },
+        {
+          "env": 17,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 17
+        },
+        {
+          "env": 18,
+          "kind": "hf_pyramid_slope",
+          "level": 2,
+          "column": 18
+        },
+        {
+          "env": 19,
+          "kind": "hf_pyramid_slope",
+          "level": 2,
+          "column": 19
+        },
+        {
+          "env": 20,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 2,
+          "column": 20
+        },
+        {
+          "env": 21,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 2,
+          "column": 21
+        },
+        {
+          "env": 22,
+          "kind": "stage_stairs",
+          "level": 2,
+          "column": 22
+        },
+        {
+          "env": 23,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 0
+        },
+        {
+          "env": 24,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 1
+        },
+        {
+          "env": 25,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 2
+        },
+        {
+          "env": 26,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 3
+        },
+        {
+          "env": 27,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 4
+        },
+        {
+          "env": 28,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 5
+        },
+        {
+          "env": 29,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 6
+        },
+        {
+          "env": 30,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 7
+        },
+        {
+          "env": 31,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 8
+        },
+        {
+          "env": 32,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 9
+        },
+        {
+          "env": 33,
+          "kind": "boxes",
+          "level": 2,
+          "column": 10
+        },
+        {
+          "env": 34,
+          "kind": "boxes",
+          "level": 2,
+          "column": 11
+        },
+        {
+          "env": 35,
+          "kind": "boxes",
+          "level": 2,
+          "column": 12
+        },
+        {
+          "env": 36,
+          "kind": "boxes",
+          "level": 2,
+          "column": 13
+        },
+        {
+          "env": 37,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 14
+        },
+        {
+          "env": 38,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 15
+        },
+        {
+          "env": 39,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 16
+        },
+        {
+          "env": 40,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 17
+        },
+        {
+          "env": 41,
+          "kind": "hf_pyramid_slope",
+          "level": 2,
+          "column": 18
+        },
+        {
+          "env": 42,
+          "kind": "hf_pyramid_slope",
+          "level": 2,
+          "column": 19
+        },
+        {
+          "env": 43,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 2,
+          "column": 20
+        },
+        {
+          "env": 44,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 2,
+          "column": 21
+        },
+        {
+          "env": 45,
+          "kind": "stage_stairs",
+          "level": 2,
+          "column": 22
+        },
+        {
+          "env": 46,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 0
+        },
+        {
+          "env": 47,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 1
+        },
+        {
+          "env": 48,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 2
+        },
+        {
+          "env": 49,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 3
+        },
+        {
+          "env": 50,
+          "kind": "pyramid_stairs",
+          "level": 2,
+          "column": 4
+        },
+        {
+          "env": 51,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 5
+        },
+        {
+          "env": 52,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 6
+        },
+        {
+          "env": 53,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 7
+        },
+        {
+          "env": 54,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 8
+        },
+        {
+          "env": 55,
+          "kind": "pyramid_stairs_inv",
+          "level": 2,
+          "column": 9
+        },
+        {
+          "env": 56,
+          "kind": "boxes",
+          "level": 2,
+          "column": 10
+        },
+        {
+          "env": 57,
+          "kind": "boxes",
+          "level": 2,
+          "column": 11
+        },
+        {
+          "env": 58,
+          "kind": "boxes",
+          "level": 2,
+          "column": 12
+        },
+        {
+          "env": 59,
+          "kind": "boxes",
+          "level": 2,
+          "column": 13
+        },
+        {
+          "env": 60,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 14
+        },
+        {
+          "env": 61,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 15
+        },
+        {
+          "env": 62,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 16
+        },
+        {
+          "env": 63,
+          "kind": "random_rough",
+          "level": 2,
+          "column": 17
+        }
+      ]
+    },
+    "5": {
+      "sha256": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 0
+        },
+        {
+          "env": 1,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 1
+        },
+        {
+          "env": 2,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 2
+        },
+        {
+          "env": 3,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 3
+        },
+        {
+          "env": 4,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 4
+        },
+        {
+          "env": 5,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 5
+        },
+        {
+          "env": 6,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 6
+        },
+        {
+          "env": 7,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 7
+        },
+        {
+          "env": 8,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 8
+        },
+        {
+          "env": 9,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 9
+        },
+        {
+          "env": 10,
+          "kind": "boxes",
+          "level": 5,
+          "column": 10
+        },
+        {
+          "env": 11,
+          "kind": "boxes",
+          "level": 5,
+          "column": 11
+        },
+        {
+          "env": 12,
+          "kind": "boxes",
+          "level": 5,
+          "column": 12
+        },
+        {
+          "env": 13,
+          "kind": "boxes",
+          "level": 5,
+          "column": 13
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 14
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 15
+        },
+        {
+          "env": 16,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 16
+        },
+        {
+          "env": 17,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 17
+        },
+        {
+          "env": 18,
+          "kind": "hf_pyramid_slope",
+          "level": 5,
+          "column": 18
+        },
+        {
+          "env": 19,
+          "kind": "hf_pyramid_slope",
+          "level": 5,
+          "column": 19
+        },
+        {
+          "env": 20,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 5,
+          "column": 20
+        },
+        {
+          "env": 21,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 5,
+          "column": 21
+        },
+        {
+          "env": 22,
+          "kind": "stage_stairs",
+          "level": 5,
+          "column": 22
+        },
+        {
+          "env": 23,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 0
+        },
+        {
+          "env": 24,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 1
+        },
+        {
+          "env": 25,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 2
+        },
+        {
+          "env": 26,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 3
+        },
+        {
+          "env": 27,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 4
+        },
+        {
+          "env": 28,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 5
+        },
+        {
+          "env": 29,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 6
+        },
+        {
+          "env": 30,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 7
+        },
+        {
+          "env": 31,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 8
+        },
+        {
+          "env": 32,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 9
+        },
+        {
+          "env": 33,
+          "kind": "boxes",
+          "level": 5,
+          "column": 10
+        },
+        {
+          "env": 34,
+          "kind": "boxes",
+          "level": 5,
+          "column": 11
+        },
+        {
+          "env": 35,
+          "kind": "boxes",
+          "level": 5,
+          "column": 12
+        },
+        {
+          "env": 36,
+          "kind": "boxes",
+          "level": 5,
+          "column": 13
+        },
+        {
+          "env": 37,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 14
+        },
+        {
+          "env": 38,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 15
+        },
+        {
+          "env": 39,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 16
+        },
+        {
+          "env": 40,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 17
+        },
+        {
+          "env": 41,
+          "kind": "hf_pyramid_slope",
+          "level": 5,
+          "column": 18
+        },
+        {
+          "env": 42,
+          "kind": "hf_pyramid_slope",
+          "level": 5,
+          "column": 19
+        },
+        {
+          "env": 43,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 5,
+          "column": 20
+        },
+        {
+          "env": 44,
+          "kind": "hf_pyramid_slope_inv",
+          "level": 5,
+          "column": 21
+        },
+        {
+          "env": 45,
+          "kind": "stage_stairs",
+          "level": 5,
+          "column": 22
+        },
+        {
+          "env": 46,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 0
+        },
+        {
+          "env": 47,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 1
+        },
+        {
+          "env": 48,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 2
+        },
+        {
+          "env": 49,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 3
+        },
+        {
+          "env": 50,
+          "kind": "pyramid_stairs",
+          "level": 5,
+          "column": 4
+        },
+        {
+          "env": 51,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 5
+        },
+        {
+          "env": 52,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 6
+        },
+        {
+          "env": 53,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 7
+        },
+        {
+          "env": 54,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 8
+        },
+        {
+          "env": 55,
+          "kind": "pyramid_stairs_inv",
+          "level": 5,
+          "column": 9
+        },
+        {
+          "env": 56,
+          "kind": "boxes",
+          "level": 5,
+          "column": 10
+        },
+        {
+          "env": 57,
+          "kind": "boxes",
+          "level": 5,
+          "column": 11
+        },
+        {
+          "env": 58,
+          "kind": "boxes",
+          "level": 5,
+          "column": 12
+        },
+        {
+          "env": 59,
+          "kind": "boxes",
+          "level": 5,
+          "column": 13
+        },
+        {
+          "env": 60,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 14
+        },
+        {
+          "env": 61,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 15
+        },
+        {
+          "env": 62,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 16
+        },
+        {
+          "env": 63,
+          "kind": "random_rough",
+          "level": 5,
+          "column": 17
+        }
+      ]
+    }
+  },
+  "source_code_root": "D:\\mai-wt\\foothold-lab\\ex41-scorewatch-s2b\\foothold_s2\\eval",
+  "npz_sources": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_fwd.npz",
+      "sha256": "865dae6bc7b9e74d2fab3858852c5dc5bdbc0e78dfade1f2e68e5060ea397118",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_side_left.npz",
+      "sha256": "cd46e5c4145d68be5ed724153534f5075187b192cbbdb0a03cb7ceb6d0aae8f5",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_side_right.npz",
+      "sha256": "814a778f833f4d7aa8c7eee7b279529423e4c6c2b1e751365233681492a7d1a5",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_back.npz",
+      "sha256": "9e9daa300806d33c87b788bc5855ee56ddc69c91edf57a9b33e7ccb3480f40d2",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "cdaa55bd2a65edf0870d709c0871b5e07ee40e7781f86a6516c14c482a11679e",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "652c839a1d43441235fdd7fd279dc37ed7a6c2c5cbd2caa871e473c98f19941d",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_slope_fwd1.0.npz",
+      "sha256": "fdcb0a3c82e5e1b4b165b49630a3803feff469f700b7446d206a92761d9dc1be",
+      "mode": "eval_gt",
+      "key": "L2_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_flat_fwd1.0.npz",
+      "sha256": "73992d5e50dbd748cd89e1839513da4f042f45f3fa207218366278b52ee63931",
+      "mode": "eval_gt",
+      "key": "L2_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "974c832928ec41b4ec22f9378fe0464a266f315b61690ab9339d5a5b9cf5cd7d",
+      "mode": "eval_gt",
+      "key": "L2_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "50a0b0717a5831b4d8abe913744f95e0292be6d38e5ea973ba3f614d6f138c2b",
+      "mode": "eval_gt",
+      "key": "L2_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_fwd.npz",
+      "sha256": "18e32df36758fd1dd0967f54717d2ee5ba86770eceb8787d130a88ba672cd668",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_side_left.npz",
+      "sha256": "9147422bdd5181efb0c5e9e3fbb693540aaa6346cfb1791e84d7eefa2d02c013",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_side_right.npz",
+      "sha256": "977da8bd0e64f8390a7373608111905bb43b4ddc831735623b0d0ab21a6e90df",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_back.npz",
+      "sha256": "b3b87bef01ff5052d2e3be4fe2b0086192e1e6cb6f764a3ef9e0d7126b7a3ecb",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "bfbbdde7545163159fb2b6b6ae01c8b0efe1c2a8fe602baed9faf82f431ed2b8",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "f414e742d06e82f9f990063d5ef68bd6da79da40f52fec6fda0a7193db55ca61",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_slope_fwd1.0.npz",
+      "sha256": "dbc8976ecdafae64d129b071437493440e8887f519b3554063ac22c7ffcb9165",
+      "mode": "eval_gt",
+      "key": "L2_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_flat_fwd1.0.npz",
+      "sha256": "2035ddf53a74c4a3c1ac5f09561a317e0fa98d996a75eff4c3593fe26385fded",
+      "mode": "eval_gt",
+      "key": "L2_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "cfaa6ed326896d60cbb095474cb0f53015dea320d87e6a47289c340497ca8869",
+      "mode": "eval_gt",
+      "key": "L2_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "b28bb1e62daf78dd00235c35a73f3c6f317514a205de452bb25f9771fa8175f6",
+      "mode": "eval_gt",
+      "key": "L2_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_fwd.npz",
+      "sha256": "f4fa726d01b1d814b176fb4eb997b10aaab026c00d00fe473c7bfaec75b2f0f1",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_side_left.npz",
+      "sha256": "55024a71e782113843ecd868f7eb34e2e618e6c551d754a2921743c4f5bb7e25",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_side_right.npz",
+      "sha256": "19bd49c4d719aec457dd7c1bb1596f7a3e071aa425637bc9f9d2013c0a11dabd",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_back.npz",
+      "sha256": "f534590dc15e68a6f7c56e578402bf0139fb410f80cc0afe0433156c8f9779f8",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "b869e823495515da3dc4a171f77d874c0c7821827246c93ab7cbdbcd36d95a57",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "f8d72b7545eaf3737e5f76d1a8b0250beff7a574f7fb774fda4a833b2e97e741",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_slope_fwd1.0.npz",
+      "sha256": "50c7a5c22018c8c55e44f9eda4babaf3731428add820b41e1a402db2ec39811d",
+      "mode": "eval_gt",
+      "key": "L2_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_flat_fwd1.0.npz",
+      "sha256": "acc82c072f9fd3b8ff1e378fee5c4e70384b0165c3f4b9bcf23f2136226f2d2a",
+      "mode": "eval_gt",
+      "key": "L2_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "9b421bb91cf37dd8ab85c8c04e7521349f0dd276bcf8e79f18be8b04546a224e",
+      "mode": "eval_gt",
+      "key": "L2_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "22199b8d7f5efd56ae1dc0c43b5b6460bbaf4ec5a96fa27096a08e964144996e",
+      "mode": "eval_gt",
+      "key": "L2_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_fwd.npz",
+      "sha256": "ee62d326f586327b7c3fc8469d22af4d68e1d3d9603f90ef2ebf99433a980126",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_side_left.npz",
+      "sha256": "07318e6a937d79bb38b05305f93dd83855bbfaffae65cdca49686d0ccc4e4676",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_side_right.npz",
+      "sha256": "f30fba12069e1709c2d461aa8d04692bf26665d845f837e945badf533a298b8a",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_back.npz",
+      "sha256": "221a8902c192deba5a54ebe018bd4a6629f7850288097c6a342ad50b0a12ea4b",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "a712bc92a57aee5baad0e497c940812c3243887fe7ad1daf272b85c5bb3233ff",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "41baf42f6d2130e9a9bda6262a9bad40f2951f9df5b667df6dabe3f5f51f39c1",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_slope_fwd1.0.npz",
+      "sha256": "794d8687e57d6ded50e30d7bd41474ff9c2a75cda8e03c2a63e4b33b298a274e",
+      "mode": "eval_gt",
+      "key": "L2_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_flat_fwd1.0.npz",
+      "sha256": "abd57c7c66dda6a900d4199343651bd3a6a3928a0bb792d9ea2fca804ff039d0",
+      "mode": "eval_gt",
+      "key": "L2_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "a17a05d35d9a953adcc9b4b89747e23484f301c3576b35c0f8e959a9096dde89",
+      "mode": "eval_gt",
+      "key": "L2_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "c36f7eb7036d29245f89f869d767780e9052f276a8a21a5408aa4cce811258dd",
+      "mode": "eval_gt",
+      "key": "L2_a090_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_fwd.npz",
+      "sha256": "1d6800b1a535953001f3adb8a22d582b97cefc431501b54e4b404754411f3abe",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_side_left.npz",
+      "sha256": "8394c97199b849d83486598d15686309caa6e5cb7bbeb1c688c37da3ca1fa481",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_side_right.npz",
+      "sha256": "c7f85cefd777a97539e222d0bfcf10081775fecd7268e7ec9b17274614503129",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_back.npz",
+      "sha256": "eebc4bf93cfb973f85d9d70b80fb3db8530b57a6f92d0587cd844acc8038f0b2",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "6a70825297c08306941fc8bb3d26fe07e9e628425d6c887790c05e1f5372e8be",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "aed44b48a25b3e5196a6160ca7d2cb547aa7f74d6cbc1ee751cd2689a3ad97d7",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_slope_fwd1.0.npz",
+      "sha256": "2130a587a274f543e8c4472a5e7211415459643e1eac3311d5752d23925c07f3",
+      "mode": "eval_gt",
+      "key": "L5_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_flat_fwd1.0.npz",
+      "sha256": "bacae2bfa8545ec743da433071ead38deb9e669cfbf13d67e96cbe4789d220a1",
+      "mode": "eval_gt",
+      "key": "L5_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "fa51f657be1372408df05058dce7ea3064dc76e7677893df5c62f780de8c0535",
+      "mode": "eval_gt",
+      "key": "L5_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "ae4f7e51c96cf4ab6cc348be0a7f3b3a76edbe05ace1a5fe39e47aa18cc0c897",
+      "mode": "eval_gt",
+      "key": "L5_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_fwd.npz",
+      "sha256": "a7f291008152de7633857ef08664776389f9621affb118062cece88d4d58324c",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_side_left.npz",
+      "sha256": "1f94b9a91331feb13058d21f8db7e01f88bdf4322618e8c73384a1b12275b80e",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_side_right.npz",
+      "sha256": "a26d8ecfa7d3467d23051359011527f2403663672f02eb58ab2c838e2df60657",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_back.npz",
+      "sha256": "16611390130c313f5d116c23b5bc06d3a1b57ec9984887b3a638cb7b199f9e25",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "82bc07d7acb590f3265b9aadde998a5968924cdd4e4bdfce805105029cd1bc2e",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "cc0129c5c11b727530c2f86652cd775858e64033f5dd30346f8ebfa457bac21c",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_slope_fwd1.0.npz",
+      "sha256": "63ce58ac1a532cb744af7b850e2caa28ba50a8044e61c9e86f1a9cddc83891a5",
+      "mode": "eval_gt",
+      "key": "L5_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_flat_fwd1.0.npz",
+      "sha256": "c0cf1e3cc4efd8addb82e0dcfd221f213ea1f904904f728d33f50c8130153b43",
+      "mode": "eval_gt",
+      "key": "L5_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "16968bee0d767ebcecc68160c29037330f64ab515861f48b25eeff84bfb60d4f",
+      "mode": "eval_gt",
+      "key": "L5_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "ff4caabd64b8b199e27adb8dc3fa4cea032a757880e8a1d78a49f6fa113e2ab3",
+      "mode": "eval_gt",
+      "key": "L5_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_fwd.npz",
+      "sha256": "4f54413f2d72afcff12d1ae60437b4bb0f8efb2f54daea4c85ee99da17abdb66",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_side_left.npz",
+      "sha256": "4eee2110a3ff37547c65788fd9783e9773fd6de31225e440781b92e1091604bd",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_side_right.npz",
+      "sha256": "c0776435c44d90ce91da5a2450cb6eb76a9ae402295546a9a0bbdc163fc3fad2",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_back.npz",
+      "sha256": "4da4a0373631ab3a57eadd7e6953d01cd54266c1f92f265dd12b68724912480b",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "8390e76cbbd55e5b830cc18254d90fea431040d6ab82e3c2723370781498c31e",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "12e5f15d8ba9bba8224c62439d082833ee13e78899c3cd765692a4bf34e03f30",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_slope_fwd1.0.npz",
+      "sha256": "4318bd266947bfd89fd85397ed0623ead37c2cd0c5cc9936935cdc67dd7565cf",
+      "mode": "eval_gt",
+      "key": "L5_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_flat_fwd1.0.npz",
+      "sha256": "4a8305475acfba53ee1345539078d2bbe46cc2a14138e3aa04bf01d5fddb06e7",
+      "mode": "eval_gt",
+      "key": "L5_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "57139cf81b64f67e461b53584b51f206617843afe011864d26d8c91829df2709",
+      "mode": "eval_gt",
+      "key": "L5_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "f8c8491d2b386e56f9f498b8bce1b1ffc85aef61923ced63e4d13d7644e2df7b",
+      "mode": "eval_gt",
+      "key": "L5_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_fwd.npz",
+      "sha256": "ac45ce8cc2734bd377093e7fb849b540bc091adb5da3b5205f8c7ca35781cf3f",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_side_left.npz",
+      "sha256": "cf2a2b0ad08eb7cdac5987d868f84d1353773b6721370279a648e64464cd08dc",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_side_right.npz",
+      "sha256": "b745e6d154d56888fbdf0a6ca53ceb369884f34920f433fb5875d9c040a98335",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_back.npz",
+      "sha256": "6138fd6c186645da40b7b35e7d82841ba25dabe1c9fc32fc90e741982b4c1c1d",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_fwd_turn_return.npz",
+      "sha256": "ea94f83bc84b586cfade4cbf566e38d79e8df5a68fc3dc45ee964a7c8ff5c125",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_fwd_back_return.npz",
+      "sha256": "de36c440177e09c1dc757c97f59bc214f5c153cedbb2053f78441fe27e7e13a1",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_slope_fwd1.0.npz",
+      "sha256": "b009516750b552d9e726e5f27025067ccbb8397a6bbf8f0b2788615cdc0ab0c0",
+      "mode": "eval_gt",
+      "key": "L5_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_flat_fwd1.0.npz",
+      "sha256": "522c71fa811c8fe5ee7040d69e6973eaca25c75ab14955164aa2131deb0ec6e1",
+      "mode": "eval_gt",
+      "key": "L5_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_flat_fwd1.0_heading.npz",
+      "sha256": "967f1f24302dca5f750626ed0c9ae7946ae55badff9a5ceb748141302639b0dc",
+      "mode": "eval_gt",
+      "key": "L5_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_gt_stairs_fwd_stop_back.npz",
+      "sha256": "2f4750a87eef7c697bc9d5c36916c7b4e18f547f3c07ec5fa992f5466bc6929c",
+      "mode": "eval_gt",
+      "key": "L5_a090_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_fwd.npz",
+      "sha256": "948f69b9f7ad8b8eead1f497b94cfa95931c1634430deae82ee7fef0a7052ff3",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_side_left.npz",
+      "sha256": "fc4d22567314c130ef3bd18327ce14ffbf1c64b15973dbabe83e882ba77c2f5f",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_side_right.npz",
+      "sha256": "f06f6ab92c62c29c0edee70cd28af3e6db5169ff5115066559e25d3bcfbd2227",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_back.npz",
+      "sha256": "8c7edbfb7e01c37b3f5c58a0a44c30144057a12907c70da67789f403a8a00736",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "bcc71cbd5c148f88ff0e5670bcf5f7b7391e6f30e2add7d32a9242d1e981eab0",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "54fdd87505b86695427b0bbceea411443a78adb86abc7634b01a408fa4bae2de",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_slope_fwd1.0.npz",
+      "sha256": "8a4fba47c347f0030af1c51de2cb34af2b5312fca5bad3257c65ebe8380b171d",
+      "mode": "eval_pred",
+      "key": "L2_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_flat_fwd1.0.npz",
+      "sha256": "fb42569567724681dad68c8a6bb510889fb89214744aa981b2abf94a4846904f",
+      "mode": "eval_pred",
+      "key": "L2_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "ac066640af1c44b3736840a429209c2452623b598aa37e62fe4092462f2d9b04",
+      "mode": "eval_pred",
+      "key": "L2_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "e0bf4d2b9e84a84a2c83cfd85446fe01141e9e68594a574b0af478a8285e76af",
+      "mode": "eval_pred",
+      "key": "L2_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_fwd.npz",
+      "sha256": "122750df7a632f4f1dd7977dce6672337ee50c5afc12cf9527549e76b294fbf6",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_side_left.npz",
+      "sha256": "7e66f9c1870adc74b46545c42b24cec525b8fc8e73c920b9da2eb3bc096b013f",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_side_right.npz",
+      "sha256": "b505752ae9bc970ce94a9ecf3caacdb54eee877529239989064b75c0edc49a0e",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_back.npz",
+      "sha256": "beb96384aae6e3129ca5251d5d811ffb1bf84b2ffc8b84807b307eae5fbcd58d",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "492134d0e0434f8fac95da918ecfca5bd2d702b338b7637a9ca3ba7379357d8b",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "13cf92e9131d009859d67abe45862f1a84eb4be4346e17158538db9914c86cbc",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_slope_fwd1.0.npz",
+      "sha256": "0b09b41c56bd6073dc7e7d4b71ae231e9ea38ff7599583a77d4a5955698c7476",
+      "mode": "eval_pred",
+      "key": "L2_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_flat_fwd1.0.npz",
+      "sha256": "8c742f65bb5d3109dc4e640e9e1ccc35e3d5f3708914bbf0db3bc3557934c209",
+      "mode": "eval_pred",
+      "key": "L2_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "5fbe519ce5ca6b24dd54c3c13af9943d2ee065f85d7e341a371cf95eba987213",
+      "mode": "eval_pred",
+      "key": "L2_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "45fb0cc28b499d34214e1da602ef286089b37168adbf7256586fb3093da3f2cd",
+      "mode": "eval_pred",
+      "key": "L2_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_fwd.npz",
+      "sha256": "050a6d5abb7198b717a598ec87ac61e6427134d98d6921a35f6ce377c991fce2",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_side_left.npz",
+      "sha256": "e4060f101c8624788a463344884bfa20fae0a259a4471330d4572010de42cdf1",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_side_right.npz",
+      "sha256": "7ed4fe8d8eea9f9ce80b9a77c9895eab718b6d162086a2db88825bda89fc44cc",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_back.npz",
+      "sha256": "f817165b05f685fd033e5b483e5cee3ef3d30ac01d9f2d486f215f2d15dbd06d",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "7e2c6dd7df4a20e342fbfd7f18676f4fc320a98e704a51ebc00f6b435323457e",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "ea7938055991cc3f151cbbd7568e6e2a03aba4254a140769f9560702685e8b4f",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_slope_fwd1.0.npz",
+      "sha256": "002e541c972376c7f04916f80128819b7dd306926c0e312ff309eede48d565f4",
+      "mode": "eval_pred",
+      "key": "L2_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_flat_fwd1.0.npz",
+      "sha256": "13624672dfb91b46e26608f3164dbb30ab502b4f14318276d87cf32a30b5d364",
+      "mode": "eval_pred",
+      "key": "L2_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "03aea87d0fbad84e8ee593f9e6ea2feb3209e8ff8bbacf86c38c6da031f8cf4f",
+      "mode": "eval_pred",
+      "key": "L2_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "499a6e93bea266fc32affd44ef3c98adb19501bb52e86d2164f3996094f54c95",
+      "mode": "eval_pred",
+      "key": "L2_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_fwd.npz",
+      "sha256": "fca5c4a32a0dce897bf45dbe90a207e210d740f8aaf60a6385c02987924c3af8",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_side_left.npz",
+      "sha256": "a1e9e6a16960b80231a4dc5c4884dab1e406a29b81b588a7a4b8dded00fb8065",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_side_right.npz",
+      "sha256": "15f03f32855be2d9e5f4c99766a85cabb65cc1ca3fbd7175310e611cd8485784",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_back.npz",
+      "sha256": "3482ed9e64ddec8886682ae0f9f69b5686b37ae167127a145dba42f803fda687",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "1c84e08031d680701b8288b8604c9004bc5daf710ef1c0f457389df378b08806",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "26785b0cb33b4e8ec57e1f4a3a2a9591a1ced911eba0c2c9520eb0665ae30293",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_slope_fwd1.0.npz",
+      "sha256": "c14570bbd20f9008ba589c007144e7f1d9a947e43b439dcb9de744bf9f1da1bc",
+      "mode": "eval_pred",
+      "key": "L2_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_flat_fwd1.0.npz",
+      "sha256": "db32d0a11fd87956bafc068fe1ea368b7e42cbba6f43c7fef69fcab1b3b57d84",
+      "mode": "eval_pred",
+      "key": "L2_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "8be97956428fb5aa105af52b56fc7643e7acc2d06538ba3a3eab37f39068dca0",
+      "mode": "eval_pred",
+      "key": "L2_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "ada711056f7a2be6a3cade295ec7e0c80b38fe9d8a950e39a928e7bbe0d53e1f",
+      "mode": "eval_pred",
+      "key": "L2_a090_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_fwd.npz",
+      "sha256": "fa0c72c05b3d295445696f0d93e2ad23e98a4091405254bb2797d0d5fc1cabe2",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_side_left.npz",
+      "sha256": "02b17627a38c83bc118b108fe4b0bac789d748f4813c4cc1f9a0af203960c4c1",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_side_right.npz",
+      "sha256": "4314cfef136087e6a497622f001449db7fd7e038b31ea8c16f3a3fe98a93c624",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_back.npz",
+      "sha256": "8e18d521e6313afe01a580f40ed0935451c0ce8114aa707e1a236f331e29027e",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "191ec81554bbcc5f69baab04a12eb6413cd2e6f14ffffcf7f517bf27c6dea0d8",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "529298fec4544d5f2e859c12ed6ee28476b142a4fddae18a73f5fa1100dc3a80",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_slope_fwd1.0.npz",
+      "sha256": "fc37dff1d9d880371db1dd91ebd703e2191667ffab4e10a4560ccda92c4d5c92",
+      "mode": "eval_pred",
+      "key": "L5_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_flat_fwd1.0.npz",
+      "sha256": "b5674d0779629f510bf20b7e818e501dcdd0c96166cd20f8a8330993a209828f",
+      "mode": "eval_pred",
+      "key": "L5_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "b33502eafdd93fcac938ac82572b7f60803fd2fe2de02605ad033a383c4b98ae",
+      "mode": "eval_pred",
+      "key": "L5_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "094e091ce49d5f94bfbf6997ec59a6cd46cbdd921c620b69e3403d1e80f3b11b",
+      "mode": "eval_pred",
+      "key": "L5_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_fwd.npz",
+      "sha256": "65dd9075ad3470ab7425ccffcf9cab44c4a3abd7878310e6920cb0a68c83d8ac",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_side_left.npz",
+      "sha256": "3a7f75b9f6c2ba61b994e8ef6f77ea9cd4b16ed750085f727f6fda5cfa5a87be",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_side_right.npz",
+      "sha256": "93be3c5613c082ac55b1803e3ef83bc1cf6351c6a6e39da8fc9a691d607e47a4",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_back.npz",
+      "sha256": "6b88e0459cbe427cf4838ab58e9c8d8c298dd47dafa3e4d993c9efb7b6b61be4",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "8f4d397c65066189272d6a5f23bdd67908985f97804832adda26050cf511deda",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "1bc394ab18512b285e28535857285aba3065d945cf788f4ab50057c3acba8288",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_slope_fwd1.0.npz",
+      "sha256": "266cdf1733ef06e6378df3be4861f69bdad6ab7b281b4026813e15314c88e428",
+      "mode": "eval_pred",
+      "key": "L5_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_flat_fwd1.0.npz",
+      "sha256": "92e7f059b51b9a94f24f2a9b674b8cc88e0b121d572befe1c42a5d26971c0e71",
+      "mode": "eval_pred",
+      "key": "L5_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "c7f4f53442a90d697a86098282326f534525310dc6cad5d3d478877ae7a5ba40",
+      "mode": "eval_pred",
+      "key": "L5_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "446ba967dd93fd67273dfb9eaae6cb58334a74a66ead4c5d6bd7c1ed8b03ba9c",
+      "mode": "eval_pred",
+      "key": "L5_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_fwd.npz",
+      "sha256": "df1dfeda5b6e9b1a3901be49299c7859d7310f60221ce23c55e6e60bf8df8031",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_side_left.npz",
+      "sha256": "26debf18ea99348880a8bb0be68b61e52411c75666ceaa63e995105a9f5be9af",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_side_right.npz",
+      "sha256": "c4c9a370f146cd356f12168e20043b171858a9c5098e0df4d3e20e5aeac84e95",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_back.npz",
+      "sha256": "81b9bf5e9d9bd13c390b38c7e925d1494fce7cd8ecfe13437ab0182fccac8799",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "aa71e964eca319ef83763470a985fc0a01f80fa85aece5d645799ab84b61b70b",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "774817bb9636b966a6e6c199fe08a3982d68b2a9de3970d7c6053fc2b84927fa",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_slope_fwd1.0.npz",
+      "sha256": "d9ea80260e5cefbdd6fd17024cd6c2239fe390fd7f05a15a3f00b651771568fc",
+      "mode": "eval_pred",
+      "key": "L5_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_flat_fwd1.0.npz",
+      "sha256": "231fdf14e3793bffc6b54e7ad3547f71b6f7013c8b5d1950d4eff7989b326955",
+      "mode": "eval_pred",
+      "key": "L5_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "4125389cc59f451acd1fe2ae7e519e3ee9dd5467ada992804eb3bea6bb039e73",
+      "mode": "eval_pred",
+      "key": "L5_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "4c53863c9a4cf463f62137f513cb2920326aa7ac14678ae0a68669b458964578",
+      "mode": "eval_pred",
+      "key": "L5_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_fwd.npz",
+      "sha256": "530ba0cccf44ab8d2d560b7de1c690318092656e9c36efb6c8111c348254fbdb",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_side_left.npz",
+      "sha256": "e2be50ceff7e7e0fe7854c0f10fda4e1461f7fd574a941511f4f56a2c29ea66d",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_side_right.npz",
+      "sha256": "2332f340cc17e315b02a5f33427ab88d4d4db2c2ee0741665aa1051598705628",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_back.npz",
+      "sha256": "90e6e35a7d810cffe6a8b7c8fcbcc82244614df33b02b080e658d0651aec4f80",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_fwd_turn_return.npz",
+      "sha256": "4129093b0efcf4604468a3f4341292e0c8cb336af9b918b80383402d84a1a36d",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_fwd_back_return.npz",
+      "sha256": "528ab851f2c26d2aa21c0b0646f6e52c4fa8f187e48d27f5f901656746494993",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_slope_fwd1.0.npz",
+      "sha256": "83721683837700cf1e26419b692fe44b7b78aaebd6078b36b550dd1ab4306809",
+      "mode": "eval_pred",
+      "key": "L5_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_flat_fwd1.0.npz",
+      "sha256": "3b4fd781eb01097624ba1a83b9d68ae80356b393d931015d8da9c34eb918cd77",
+      "mode": "eval_pred",
+      "key": "L5_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_flat_fwd1.0_heading.npz",
+      "sha256": "323f22ba56492350d0148e854fe6212324359dd81d193d697f549b5053091f69",
+      "mode": "eval_pred",
+      "key": "L5_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_eval_pred_stairs_fwd_stop_back.npz",
+      "sha256": "a98663bd8b341616bada77539adc4c146db388290a7522ce3ae12dc77ffa543c",
+      "mode": "eval_pred",
+      "key": "L5_a090_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_fwd.npz",
+      "sha256": "e72310647ea54d7562d35b14171905e4e7eb1574c406d50fea3e9bbd7a1d93a6",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_side_left.npz",
+      "sha256": "f67dfdf2a9995797031dd9f2c5ec69755dbc1afcf51162a8374a6a8800c835d6",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_side_right.npz",
+      "sha256": "44eb68a29f93df2c8920eeb72010b7b137d7e1540d4b9aa32354baf12b79e403",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_back.npz",
+      "sha256": "afc6b0f4264e694d2506d6d598abeb4a022e7bc266d0d2e8329b160f02311c1e",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "9be830329e2ff1f39c54ae33baed46dbe8a9596553747d1bbf5eae828f567db2",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "ef0840ff6a7b6ade972893d9a23b8818201fd00d9e9970a1005f67229e0330f2",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "f1b4ffa6fb38670cf77cd7b9e1e8a935706abe49346b32d6624838b3a17b013d",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "e52d155f3fa0686489889153c226f5d30b7a463fa5a35bc16124e5274dcc925b",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "1188bc2a86c3e67c0b4153106c45c7b28390e63f0035097df54dc74677f5baae",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a000_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "362f8b33589869c231644058d1318e8be812f771c902d76767c008fb41f8c8e9",
+      "mode": "probe_prop_only",
+      "key": "L2_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_fwd.npz",
+      "sha256": "bab7a65dc7c4aacdec001f375313517092dd543ca10d61f4ff7389cc0e7634ff",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_side_left.npz",
+      "sha256": "8faf5c04c9c7808eca3f1591973c002e2ecb50dcb9025ab46a45d9174d1b717c",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_side_right.npz",
+      "sha256": "f546f332f592b532b50d7eea72ae6136f3cf577633afacc9d1c4517db565ea06",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_back.npz",
+      "sha256": "e55c2aa656550e1c96d2117f3c14c0bb5853b7bcdef9f4bb5dd4fd901d02d5bd",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "9ce2b0a8dfe8bd36261046c883bdc743be75e18bd54f9dc71d636ec6dcfbc606",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "65fb9bb4498288d3643a7d4386a5691f59bc7c514aed568119a7c84a4342b267",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "4709db4fd9d5d7a9e774f23fc736a2dbed901f22eb753580abf6525dc821f7e5",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "9cee52e1897fc4aa78f846f21a8f33f1b5706b323212cc141882795824d54322",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "844cc45b99d7ce701a03c96d504456476158e3f7de4f188b3b906e64f4697f1a",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a030_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "2feabefdc858349559570a3ee7357470999d9258240bb77f3c5266740cdfc4ba",
+      "mode": "probe_prop_only",
+      "key": "L2_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_fwd.npz",
+      "sha256": "f469d736ffd4ecc3febd96ce444cc7eaeebe3ccba45d86b173ac78103692e1ab",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_side_left.npz",
+      "sha256": "8900e53443488db88b4f69d58918cbb40abe8e368231cc4c34d4d84f1f6b250c",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_side_right.npz",
+      "sha256": "6927ce176fa084bf519cf80a87641ecb070e16444d06725276170cb0625d7f1f",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_back.npz",
+      "sha256": "f275e78658218ea1cd325f666975819937ca0374ee57ccda0a510b53df6b7a64",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "a6d9da9301bbe805affd4737328a5b95f1d489e24376c8d21a7474fbc7fc0449",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "2ed90bf9de9a8aff1fa1d691010bd71924e44de500c758fb32fdf2162715a7b9",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "099492a41f22d31b40b590262b066d2c6202c222b0f95df18542e236691ff4ce",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "b37386adeec5aa7cfc534d78761a72d7c78b8fcf350d24040dca77679658a0a8",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "3f7904ab7aed6cb0a0ae500318d646a23362a8414bf5bea74deb7fc8f576549b",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a060_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "c7db5e7de304502dd6d8a29e9865dce939d31ba48a97f9a3c4e0fa4f270aa10b",
+      "mode": "probe_prop_only",
+      "key": "L2_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_fwd.npz",
+      "sha256": "85cec595e214bce8fca523d7d4dde047a7dea4b96004798256106fabb9171ce9",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_side_left.npz",
+      "sha256": "284686c3daa741b8f6205f40bcc3bfaab44cf2d6e3a69ab9bcd42017a96088b4",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_side_right.npz",
+      "sha256": "defe7c9b407f526a29011268939760e91ff99c544566e7a06c158bd6ce59b355",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_back.npz",
+      "sha256": "d28870852d2a7b434e5c750cafc9c051379b3c95251508345842c3968a0abbb7",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "7130de7cf3ce563bd3938fcdbe491ce5861c7fe6a40ad0656cc525691cd25970",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "de95699235a91227a63357050fab34ee1966e58da3566bf3bca8a11ceaac5be5",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "83ad6fa0e0ebfd4da9f0188802dfd53a998291b213948e64b7cd0e205becac3c",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "9851a27c3beabd154e02463fd56c2672345d027cf79cbad3b6911718a706302e",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "3193c5c69d25c30b25717f590b00fe375698fd9f80d1bd9fa4a5705330ac4fbe",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L2_a090_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "d7f7c8a3cbcbb5c28057684a67b6c7cebb8fc2af9166ec754070774f5be92cbc",
+      "mode": "probe_prop_only",
+      "key": "L2_a090_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_fwd.npz",
+      "sha256": "56e4d9dd38c1de4f752f2dea77d26c68f52471fe8e6760f2564e78170573d93b",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_side_left.npz",
+      "sha256": "ac5a23ebfadcfb2a12dcbcaf02fb34478a6823202cba72355aaa87fe33d46faf",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_side_right.npz",
+      "sha256": "f5762011a51a66c16e6fc7b9a361e886bd831b725519bde4f1bc041f75ac62fe",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_back.npz",
+      "sha256": "326a98741ee55f46163652fc919843426f4ad0f3d5e4d5e4ff5664fa128d6577",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "d624eadb1d015a986b0d36716d598df7eaa31b666f172b54c2c1b6095f084b7d",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "b8124b3c7f963a78ddf59a1102dc622e50737379ff8bb5bfe7d592e5b1121d8b",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "512684c28abedfe5960ed9125e2b7735e6645039c47e82392fe94df5617ffe8e",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "67908c808fe5d3ccfe490b2ac6aa4d8473f05020a72ce91ab630cb268cf39491",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "c8237df1ddf18e0f89167b39dd4656e3eae3b18144b1415f2d6e4c91d0c5bc99",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a000_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "b6d29aa8f4f7f24a6fc4e69bc22bb2ed9c3a2e331c39d046e374e4a30d37adc1",
+      "mode": "probe_prop_only",
+      "key": "L5_a000_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_fwd.npz",
+      "sha256": "79ad55eb3018537e93847084204ccdd600f99c7d69b3af881f4784394ade81b0",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_side_left.npz",
+      "sha256": "24fcdb060bd3905bd041b6f4ab56debcb636fcdc1bea615f94024ca51295c554",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_side_right.npz",
+      "sha256": "23b465d22dfdc251106bda406e3508627223e7f7d4443d73dffad6c0f6b6e2bc",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_back.npz",
+      "sha256": "f9311e2bfd6726e76df5c077ab64566eaf61f95b380910698ea0bb519082d6d5",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "c68adf67cf4c7439f3b01cb7d6e5884e303605c652a232846b2a30571c179809",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "8d7b8d20bf70a8540e1f6ad18a5968980c8579f87c86bd8ebd955a01b2499716",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "fbcba2a7f724e0ddcce408ca8cfbecd92930c624d61ddea671b199fec1f448a1",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "cc2c6319ca2d1008e74dae1b781e3fc79dbc58d6e4a549efae5640b6394a0b94",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "af7e16e521b6ffa8dd40a7dd728693e7c44903da5b8d591d6ee537f6346f71ff",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a030_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "ebd8d1d01f70a729e88b9d4c7b7826a99e198982393a9031970f628b704eeaab",
+      "mode": "probe_prop_only",
+      "key": "L5_a030_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_fwd.npz",
+      "sha256": "29b99c9cff0412ff7480ab286ba04ab73e22b5512258455d6d866bb1599d0a17",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_side_left.npz",
+      "sha256": "f8d8236a16663a7f0dfcd2cfa6eb60de9912426ff31e6f99839a4301547c84a7",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_side_right.npz",
+      "sha256": "f7cb6760c121017b4b62a5888f7f72878774812428f082a266c61e917353d6cb",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_back.npz",
+      "sha256": "02aa968c08e0ece011aa03d31564c8a43dec3cfb8d6416a8bcc2490540c717e9",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "d15309bb2567d152768f34f11f1b380ae3b6896e257983e0f31321b3590c375a",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "81c427d2edc891041e5a9cb7060bd0c4f5aaac8934fa5b2aa4614b36dcd30390",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "71998053eea7c61caedf7c167a1af4c3c7899a52e3c7bb305645d500aeafc157",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "5fcdb8d63eda5a9e499303502613c67675d8f5754013e0c3c008cdfc320d098e",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "70d24acd9a4294af6e87545f7791d37469a4d5d56d12eb3d579767680070cab9",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a060_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "e8626961120970d2fcce97e14e7083014c2eb9b5b983cc153044375bf1487804",
+      "mode": "probe_prop_only",
+      "key": "L5_a060_stairs_fwd_stop_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_fwd.npz",
+      "sha256": "6ff974f33083495001f82e322ea21a5740c8a8ae08133c72bb7ec08a553a9314",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_fwd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_side_left.npz",
+      "sha256": "32704f5d5a6436ceea7d5780e884a0e7b767aacf08e46a25a5149be0091b422b",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_side_left"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_side_right.npz",
+      "sha256": "a14f592b2f834c7916717486e1bd801736102b084faab126054ec35ccd2ec647",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_side_right"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_back.npz",
+      "sha256": "1b08e9a71395ba2a9cfe207c4062774b1241942ae507732cb310232264db94ed",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_back"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_fwd_turn_return.npz",
+      "sha256": "1cd0bfb47f7a68afe95f40218c368652c7c05bbcc1f4dd8891385b38be6b387d",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_fwd_turn_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_fwd_back_return.npz",
+      "sha256": "3657e6c8dee03aed5aab75bf47caf2f942f395438681f9d931b2b81225606129",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_fwd_back_return"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_slope_fwd1.0.npz",
+      "sha256": "150d8629051bf293d0ac3d5b8bb98b99221d98e83e6a0a1df002c08a52dd4b6a",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_slope_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_flat_fwd1.0.npz",
+      "sha256": "2a09346485b753f9ddeebf7006a13261bb8b5b998222194028072e9515f8eb9e",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_flat_fwd1.0"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_flat_fwd1.0_heading.npz",
+      "sha256": "74d898f484a9ef5feac9da92c6fc7239a4dab932fe2de4fd1203ff17de6c7d66",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_flat_fwd1.0_heading"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2_L5_a090_probe_prop_only_stairs_fwd_stop_back.npz",
+      "sha256": "82b6bfc1a70c1590ae10bc183bbc422cb9ad4fe6ee6fc23da5dd54b2f4d49c97",
+      "mode": "probe_prop_only",
+      "key": "L5_a090_stairs_fwd_stop_back"
+    }
+  ],
+  "symmetry": [
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.47795109343171743,
+      "right": 0.6011834310010696,
+      "S": 0.795017075962739
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5184388892934658,
+      "right": 0.49386667851281046,
+      "S": 0.9526034576338541
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.5498693460548142,
+      "right": 0.6755685992538929,
+      "S": 0.8139356190653286
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5840366760594771,
+      "right": 0.6333214322539668,
+      "S": 0.9221805015833948
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.5321842537183935,
+      "right": 0.6420511218967537,
+      "S": 0.8288814325971576
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.6655966310265163,
+      "right": 0.545505836525311,
+      "S": 0.8195742152180138
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.4692435956435899,
+      "right": 0.6165335187315941,
+      "S": 0.7610998938208153
+    },
+    {
+      "mode": "eval_gt",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4979886376019567,
+      "right": 0.5027078398037702,
+      "S": 0.9906124356372568
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.46597196672577407,
+      "right": 0.5284035315721606,
+      "S": 0.8818486987385689
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.47018874264710275,
+      "right": 0.47486337002298873,
+      "S": 0.9901558476164214
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.44142408823439233,
+      "right": 0.6754038120177576,
+      "S": 0.6535706200941408
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5380470469609524,
+      "right": 0.5301228185882793,
+      "S": 0.9852722388916889
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.4520583936354767,
+      "right": 0.5682368848845363,
+      "S": 0.7955456705830234
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5088512678661694,
+      "right": 0.5507724950959285,
+      "S": 0.92388649105933
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.40951660100836307,
+      "right": 0.46417117581237105,
+      "S": 0.8822534063896706
+    },
+    {
+      "mode": "eval_gt",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4452026129731288,
+      "right": 0.4597969790858527,
+      "S": 0.9682591083096288
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.4618544930832771,
+      "right": 0.5964626523598174,
+      "S": 0.7743225686570939
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.526294003908212,
+      "right": 0.5212068668209637,
+      "S": 0.9903340394352365
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.5253329996205867,
+      "right": 0.7012260803456107,
+      "S": 0.7491635213591424
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.6032055859267712,
+      "right": 0.6532693928666413,
+      "S": 0.9233642238767948
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.5354273729926596,
+      "right": 0.6439484300153951,
+      "S": 0.8314755468537426
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.6240892449890574,
+      "right": 0.6226061735674738,
+      "S": 0.9976236228496301
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.46270051063504075,
+      "right": 0.5840343355232229,
+      "S": 0.7922488156805336
+    },
+    {
+      "mode": "eval_pred",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4983105610652516,
+      "right": 0.5250529291108251,
+      "S": 0.9490672910046201
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.44064696750428994,
+      "right": 0.48994028256895644,
+      "S": 0.8993891361489985
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.44954545668947204,
+      "right": 0.5309863654679309,
+      "S": 0.8466233521708431
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.43776775576426497,
+      "right": 0.647580225005125,
+      "S": 0.6760054412730105
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.520766722598734,
+      "right": 0.5012279256844583,
+      "S": 0.9624807114848409
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.47896770993092413,
+      "right": 0.6064240239094943,
+      "S": 0.7898231122888489
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5337406402702133,
+      "right": 0.5624548882556458,
+      "S": 0.9489483537524499
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.42557125518253697,
+      "right": 0.5050866819297274,
+      "S": 0.8425707317338187
+    },
+    {
+      "mode": "eval_pred",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4627752749218295,
+      "right": 0.46776644205053647,
+      "S": 0.9893297879453958
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.5103001430586058,
+      "right": 0.6957425223601361,
+      "S": 0.7334611967190644
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5243299243294556,
+      "right": 0.490097987424621,
+      "S": 0.9347129825775014
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.6326528649590909,
+      "right": 0.7482852469726154,
+      "S": 0.8454701833540809
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.6007230665713238,
+      "right": 0.6411355492348473,
+      "S": 0.9369673344244395
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.6215769860086342,
+      "right": 0.835557810291648,
+      "S": 0.7439066194494374
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.676876138287286,
+      "right": 0.5727608487506708,
+      "S": 0.8461826564014203
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.5370040277050188,
+      "right": 0.6888928550978503,
+      "S": 0.779517487706768
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 2,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.48966794446421164,
+      "right": 0.5188815196231008,
+      "S": 0.9436989484996324
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs",
+      "left": 0.48605384327083206,
+      "right": 0.6333001978571217,
+      "S": 0.7674935913733762
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 0,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4553927181005322,
+      "right": 0.44531027168442966,
+      "S": 0.9778598866091733
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs",
+      "left": 0.5384305088136655,
+      "right": 0.741024659362932,
+      "S": 0.7266026872527572
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 30,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.49270287977725574,
+      "right": 0.4589190188221013,
+      "S": 0.9314315739935848
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs",
+      "left": 0.5103153125941754,
+      "right": 0.8416433774183193,
+      "S": 0.6063320003295588
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 60,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.5073063881509007,
+      "right": 0.5153273301633696,
+      "S": 0.9844352481559125
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs",
+      "left": 0.45381567512949306,
+      "right": 0.6874928622879088,
+      "S": 0.660102380727618
+    },
+    {
+      "mode": "probe_prop_only",
+      "level": 5,
+      "angle": 90,
+      "kind": "pyramid_stairs_inv",
+      "left": 0.4503402457634608,
+      "right": 0.44678711644451446,
+      "S": 0.9921101226186819
+    }
+  ]
+}

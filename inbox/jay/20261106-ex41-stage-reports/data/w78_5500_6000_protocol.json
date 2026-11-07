@@ -1,0 +1,53 @@
+{
+  "matched_fields": [
+    "source_sha256",
+    "dr_off",
+    "curriculum_off",
+    "cases",
+    "terrain_assignments",
+    "run_identity.code_head",
+    "run_identity.device"
+  ],
+  "old": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2.json",
+  "new": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\w78_v2\\w78_v2\\terrain_skill_v2.json",
+  "old_sha256": "16549bad90c723478650d4d0f87f265af58df3226ff6a20b1b6ecc7d31ee7c81",
+  "new_sha256": "fdb649de4a745fd8185508146759db53f82499fb76012a80876c77ecf9cab1e6",
+  "comparisons": 120,
+  "feet_stop_rows": 84,
+  "known_answers": [
+    "full scheduled denominator after death",
+    "signed backward projection",
+    "spin excluded from translation ratio",
+    "closed vs open swing",
+    "unclipped symmetry and nonpositive denominator",
+    "median is not mean"
+  ],
+  "queue_receipts": [
+    {
+      "path": "D:\\mai-tmp\\gpu\\results\\item_675.json",
+      "sha256": "ee322b1cc4a2c088684fcaf731991029b0442b8d2c19ff7f66bee54f63898f68",
+      "iteration": 5500,
+      "queue_id": 675,
+      "checkpoint_sha256": "2a6211040d092d3b25bbc5e0d2f0b5443bb5fac951d408e36b1871d5bdac6e4f",
+      "source_git_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "device": "cuda:1",
+      "eval_config_sha256": "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+      "state": "done",
+      "rc": 0,
+      "seconds": 8917.219000000041
+    },
+    {
+      "path": "D:\\mai-tmp\\gpu\\results\\item_747.json",
+      "sha256": "1a0897c82ca15bfdea69ef91461abcf319a3a0573d71a32140998aa0b6bc1d58",
+      "iteration": 6000,
+      "queue_id": 747,
+      "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+      "source_git_head": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a",
+      "device": "cuda:1",
+      "eval_config_sha256": "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+      "state": "done",
+      "rc": 0,
+      "seconds": 8933.312999999966
+    }
+  ]
+}
