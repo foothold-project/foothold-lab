@@ -1,0 +1,169 @@
+{
+  "schema": "foothold-w41-decision-audit/1",
+  "captured_at": "2026-11-07T13:47:08.151363+09:00",
+  "ledger": {
+    "path": "D:\\mai-wt\\foothold-lab\\lead-worklist-1103\\inbox\\jay\\20261104-ex41-restart\\decisions.tsv",
+    "commit": "08322ddd11c57fe2405580b6fbe491817e5b707c",
+    "blob_sha256": "4a10bc58d6d042b0cc42dc9083ce7872ffcf9eb6658b9aa51b0654850d11b9e1",
+    "lines": [
+      {
+        "line": 174,
+        "text": "2026-11-06T21:2x\tD183 W31 정정\t팀장 정정: D183 의 기저(이전 학습이 무너지지 않게 · 쉬운 것부터 단계별 · 앞 결과 분석 뒤 다음 과제)는 바뀌지 않았다. 19:5x 줄의 「D183 을 바꿈」 은 lead 의 잘못된 표현. 해석: 어려운 미션(틈 점프 · 높은 턱 오르기 · 내려오기 · 평행봉 · ㄹ 자 좁은 평행봉 회전)은 20,000 이후 블록, 20,000 전에는 여러 어려운 지형 극복을 먼저 쌓는다. 40,000 은 지형 구간만(T0′ 1,000 · E0 제외) ok. 미션 성과 기준 analyst 제안 ok. 값 없는 항목은 팀장과 이어서 논의\t팀장 21:2x 원문\tchat\tW38 W41"
+      },
+      {
+        "line": 183,
+        "text": "2026-11-06T22:1x\tW41 U11 · 접촉 · 시작 시점\t팀장 결정: (1) 10,000 블록 끝 승인 대기를 예산 예외로 두지 않는다 · 학습은 블록 끝에서 멈추지 않고 중간 자료로 빠르게 판단 · 합의 규칙 안이면 팀장 없이 이어 감 (2) 몸통 · 배 · 머리 접촉 금지(실기 위험) · 무릎은 실측으로 (3) 값 없는 것은 실제 데이터로(기준은 결과 전 등록) (4) 미션 시작은 결과로 · 20,000 은 기본 순서 · 미션은 한 번에 하나 · 핵심은 단계 학습 · 무너지지 않음 · 새 학습 적응 (5) 평행봉 = 외다리 좁은 길 포함 · 목적 사고 · 붕괴 현장 진입\t팀장 22:1x 원문\tchat\tW41 W38"
+      },
+      {
+        "line": 189,
+        "text": "2026-11-06T22:3x\tW44 승인\t팀장 승인: EX-42 E1 첫 변경 = 같은 지형 종류에서 상한 L5 → L9 · 성과 승급(0 단계 T0′ 1,000 그대로 · 40,000 안에 셈). 조건(L6~L9 실측 · 올리는 폭 · 멈춤 규칙 · 정본 E1 대조)은 analyst v4 에서 실측으로 닫고 결과 전 등록. 팀장 지시: lead 제안은 성공할지 검증한 뒤에 내놓아 바로 승인할 수 있게\t팀장 22:3x 원문\tchat\tW44"
+      },
+      {
+        "line": 194,
+        "text": "2026-11-06T23:2x\tW44 W38 v5\t팀장: 경계마다 +1(L5→L9) 동의 · 어려운 단계 미달로 진도가 멈추지 않게(앞으로 성과 승급 · 미션 모두) · EX-41 처럼 쭉 이어지게 lead+analyst 조율 → v5 의뢰(시간 상자 · 미달 시 마지막 통과 레벨 고정하고 다음 단계 · 뒤 블록 재도전 1 회 · 예산 맞춤) · turn 확인\t팀장 23:1x 원문\tchat\tW44 W38"
+      },
+      {
+        "line": 198,
+        "text": "2026-11-07T00:1x\tW38 v5 승인(틀)\t팀장 승인: EX-41 식 회차 시계를 뼈대 · 성과는 그 안에서 얼마나 높이 가나 · 단계마다 최소 · 최대 체류 · 미달 시 마지막 통과 레벨 고정하고 다음 단계 · 뒤 블록 재도전 1 회 · 유지 칸 하락은 되돌림 먼저 · 미션도 같은 틀. 숫자(상자 길이 · 예산)는 analyst v5 가 실측으로 · lead 검증 뒤 등록\t팀장 00:1x 원문\tchat\tW38 W44"
+      },
+      {
+        "line": 199,
+        "text": "2026-11-07T00:2x\tEX-42 운영 원칙\t팀장 지시: 250 경계마다 빠르게 파악 · 대응(유지 · 올림 · 보상 조정 판단 → 적용 → 다음 경계 결과로 확인) · 어려운 지형에선 보상 조정 필요할 수 있음 · 기본 명령 · 보행은 탄탄하다고 해석 · lead + analyst 판단 · 잘못 해석 금지 → v5 카드에 250 경계 판단표 추가\t팀장 00:2x 원문\tchat\tW38"
+      },
+      {
+        "line": 207,
+        "text": "2026-11-07T02:3x\tW38 v5 받음\tanalyst v5(00:2x 보강): 시간 상자 동의하되 「다음 줄 무조건」 반대 → 미달은 deferred · 선행 충족된 다른 과제로 · 40,000 공용 예약표(지형 20,000 = 첫 시도 13,250 + 연장 3,000 + 재도전 2,000 + 회복 1,750 · 미션 20,000 = 6 슬롯 × 2,000 + 재도전 6,000 + 회복 2,000) · 250 경계 판단표 · 보상 후보 셋(swing · stumble · zero_yaw +10% · 누적 1.25 배) · 30 분 판단 · lead 검산(이항 22.58/71.46/98.03 % · 합 20,000/20,000 · 27.8 s 시간) 일치 · 팀장 결정 셋 대기\tlead 검산\tPLAN-ex42 v5\tW38 W41"
+      },
+      {
+        "line": 217,
+        "text": "2026-11-07T08:5x\tW38 v5 승인\t팀장: v5 동의(a 미달=보류 · 선행 갖춘 과제로 · b 40,000 예약표 · 상자 · c 유지 미회복이면 강제 개방 없이 복습 · 경보) · 단서 「극복할 만한 대상이면 극복 시도 자체는 나쁘지 않다」 → v5 의 재도전 1 회를 「기울기 개선 · 원인 처치가 있을 때 재도전」으로 쓰고 근거 있으면 재도전 우선순위 올림\t팀장 08:5x 원문\tchat\tW38 W41"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "U1",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 21934,
+      "offset": 64843226,
+      "length": 5219,
+      "sha256": "bd4eb76bcca5134ed12c911d237173c52d265be378d2564d4eb8b9a437bd6116",
+      "time": "2026-11-06T21:26:39.701000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U2",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 22910,
+      "offset": 67754388,
+      "length": 3035,
+      "sha256": "164528670809858bd2565f8532d2943bd2179aea7b92be4e3fb5634699f866f1",
+      "time": "2026-11-06T22:16:41.763000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U3",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 23029,
+      "offset": 68239878,
+      "length": 1573,
+      "sha256": "655142b6eb0715c6b80fdff414abddf07ead9861bfa884242ad0a343e3ca7754",
+      "time": "2026-11-06T22:25:27.719000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U4",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 23168,
+      "offset": 68749909,
+      "length": 935,
+      "sha256": "0a7966b22f0fb1e40d60f6024f8c4c544389bb0626eac630b6ef59965e2e5bf6",
+      "time": "2026-11-06T22:36:09.201000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U5",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 23552,
+      "offset": 69601674,
+      "length": 1731,
+      "sha256": "cf611e298222f7773fe93be907ee08664bb42e64b719f0e1c154f8e0ac4542de",
+      "time": "2026-11-06T23:17:23.408000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U6",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 23804,
+      "offset": 70252031,
+      "length": 1015,
+      "sha256": "ea9bbbd2d4ad8741927cee847b0c687f0a94e18ed47e774b4c4377adc87e2508",
+      "time": "2026-11-07T00:24:28.853000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "U7",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 26161,
+      "offset": 87355093,
+      "length": 1411,
+      "sha256": "ae9ef404640aa91cc7d85e15d3a22620e40bcd5ba06a0b5e98b6e8e5c39b49a6",
+      "time": "2026-11-07T08:54:50.455000+09:00",
+      "role": "user"
+    },
+    {
+      "id": "A1",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 21388,
+      "offset": 62874972,
+      "length": 3485,
+      "sha256": "9b4015872cda055646acfcd37706407d36ca49e8e3282a5b8cd6e20afe5c5d29",
+      "time": "2026-11-06T20:33:04.712000+09:00",
+      "role": "assistant_context_not_approval"
+    },
+    {
+      "id": "A2",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 22134,
+      "offset": 65497379,
+      "length": 8003,
+      "sha256": "bcd13730f69f861936e23c86671826805f0f043525bef4c684b549ac31ededa7",
+      "time": "2026-11-06T21:33:18.804000+09:00",
+      "role": "assistant_context_not_approval"
+    },
+    {
+      "id": "A3",
+      "source": "C:\\Users\\AI-WS01\\.claude\\projects\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\781698cc-b2c4-4e2f-bda3-aa4f3591abac.jsonl",
+      "line": 24638,
+      "offset": 76309792,
+      "length": 4390,
+      "sha256": "cedfccf6942d1a59ded08f96a1b87e1823d0c82a1b186c2ee995e2ffe9393beb",
+      "time": "2026-11-07T02:32:46.673000+09:00",
+      "role": "assistant_context_not_approval"
+    }
+  ],
+  "files": [
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\lead-worklist-1103\\inbox\\jay\\20261104-ex41-restart\\WORKLIST.tsv",
+      "sha256": "4b5d4a3ac80881c1ed4037bcfb999b0bdb2e904690c15791f8f7563a096e709e"
+    },
+    {
+      "path": "D:\\mai-tmp\\analyst\\PLAN-ex42-terrain-blocks-1106.md",
+      "sha256": "971ed1798349b6e2044feef0bb469119818372b16c9355951b96fb51bd4b5584"
+    },
+    {
+      "path": "C:\\mai\\wt\\foothold-lab\\fable-25a\\inbox\\jay\\20261104-jump\\DESIGN-JUMP-draft.md",
+      "sha256": "f296354307d0ec9eea76d518a2fd9a65961665bcf1b0d32212b12523f8e55beb"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w44\\EVIDENCE-W44-T0-L9-1107.md",
+      "sha256": "538eabc6c991328da845bf3d16cfdc865ad4654a6a891c98015f2fc7acd50fb3"
+    }
+  ],
+  "limits": [
+    "Original excerpts are private and excluded from git",
+    "No new GPU, no canonical ledger edits",
+    "Explicit wording and contextual acceptance are distinguished",
+    "No approval means no hit in inspected sources, not an exhaustive claim about every prior session"
+  ]
+}

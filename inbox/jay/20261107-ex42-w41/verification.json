@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "raw_source_rows": 10,
+  "ledger_rows": 8,
+  "referenced_files": 4,
+  "tables": [
+    {
+      "columns": 3,
+      "body_rows": 8
+    },
+    {
+      "columns": 3,
+      "body_rows": 5
+    }
+  ],
+  "broken_rows": 0,
+  "source_mutation_detected": true,
+  "report_sha256": "939573818a61a2f4140d22a3167608f08c08053c7acd79c1efa8f7f71e07d218",
+  "gpu_used": false
+}
