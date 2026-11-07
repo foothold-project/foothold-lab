@@ -61,3 +61,4 @@ W59	팀장 11/07 18:4x · W21 N21	P1	at:2026-11-08T18:00	runner	D:/mai-wt/footho
 W60	팀장 11/07 22:4x	P1	at:2026-11-12T12:00	lead		open	미션 실행 정의 미리 준비: 높은 턱 · 틈 사다리 · 진입 조건 값을 E2~E4 지형 결과로 정할 자료를 미션 시작(약 20,000 회 · 11/14 목표) 3 일 전에 팀장께 · analyst 측정 의뢰는 E2 끝나면		
 W61	팀장 11/08 00:5x	P0	at:2026-11-08T12:00	super2		open	Linux 설치 날 정답 순서 한 장: 전원 끄기 전 Windows → USB 꽂을 자리 → TRX50 AI TOP BIOS(F4) 메뉴 → 디스크 4(990 EVO Plus)만 설치 → 첫 로그인 → Chrome · Claude Code · Codex · gh → clone 직전 · 단계마다 정상 화면 · 안 되면 · 시간 · 미확인 표시		
 W62	팀장 11/08 00:5x	P0	at:2026-11-08T12:00	lead		open	W61 뒤에 붙는 실험 준비 순서: 저장소 · isaac 환경 · nvidia-smi 두 장 · W15 같은 저장본 대조 · GPU 두 장 묶음 짧은 판(회당 시간 · 배수) · Kit 예행(N21 한 판 포함) · EX-42 시작 관문 · 11/14 · 11/21 일정 계산		
+W63	lead 11/08 01:1x · GPU 빔 막기	P1	at:2026-11-08T09:00	runner		open	N21 무게·마찰 평가 Windows Kit 예행 한 판(GPU0 · m12000 · 평지 L2 · 대표 8 · 지도 셋 · 짧은 판 먼저) · W59 Kit 미검증 닫기		
