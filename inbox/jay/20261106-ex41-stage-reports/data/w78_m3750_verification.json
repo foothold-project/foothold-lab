@@ -1,0 +1,80 @@
+{
+  "github_gfm_tables": [
+    {
+      "rows": 4,
+      "columns": 4
+    },
+    {
+      "rows": 4,
+      "columns": 3
+    },
+    {
+      "rows": 9,
+      "columns": 3
+    },
+    {
+      "rows": 5,
+      "columns": 6
+    },
+    {
+      "rows": 14,
+      "columns": 2
+    },
+    {
+      "rows": 8,
+      "columns": 2
+    },
+    {
+      "rows": 14,
+      "columns": 7
+    },
+    {
+      "rows": 40,
+      "columns": 6
+    },
+    {
+      "rows": 10,
+      "columns": 4
+    },
+    {
+      "rows": 31,
+      "columns": 6
+    },
+    {
+      "rows": 7,
+      "columns": 8
+    },
+    {
+      "rows": 7,
+      "columns": 5
+    },
+    {
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "rows": 21,
+      "columns": 5
+    },
+    {
+      "rows": 7,
+      "columns": 9
+    },
+    {
+      "rows": 7,
+      "columns": 6
+    },
+    {
+      "rows": 3,
+      "columns": 4
+    }
+  ],
+  "broken_rows": 0,
+  "other_stage_reports_unchanged": 5,
+  "outside_W78_unchanged_except_status_and_pending_phrase": true,
+  "images_decode": 2,
+  "known_answer_groups": 6,
+  "section_idempotent": true,
+  "gfm_sha256": "4eaf97b087ae2ada3db5a04081613d0a48d3b6c6f3006b10ece9c2f21a9babb8",
+  "final_m6000_present": false
+}

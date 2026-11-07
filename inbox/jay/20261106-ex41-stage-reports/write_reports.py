@@ -2,6 +2,7 @@
 from pathlib import Path
 import csv,json,math,statistics,argparse
 from w45_sections import section
+from update_w78 import apply_saved_section
 from datetime import datetime
 import numpy as np
 from generate_reports import STAGES,MODES,MODE_LABEL,FEET,table,fmt,median,BASE,TRAIN,RUN,KEYS
@@ -173,7 +174,7 @@ for st,lo,hi in STAGES:
         pos=s.index('## 재현과 근거 등급')
         s[pos:pos]=section(st,hi,EXTRA,CELLS,PUSH)
         s += ['','## PR #586 대조','', '정본 후보 [PR #586](https://github.com/foothold-project/foothold-lab/pull/586) 5c1f6d6c와 [자동 재대조 표](data/canon_comparison.json)를 비교했다. 두 새 단계의 주요 수치는 일치한다. 영상 결측 수는 재시도 게시로 바뀌어 위 채집 시각 기준을 따른다. PR의 생존 최저는 단계 끝 값이다. 본문의 단계 중 최저와 시간 범위가 다르므로 수치 불일치로 세지 않았다.']
-    text='\n'.join(s)+'\n';assert '\u2014' not in text
+    text=apply_saved_section('\n'.join(s)+'\n',hi);assert '\u2014' not in text
     (OUT/f'RESULT-EX41-{st}.md').write_text(text,encoding='utf-8')
 
 
@@ -193,7 +194,7 @@ readme=[f'> 분류: A/평가 · 단계 보고 묶음',f'> 작성: analyst · {NO
         '- `data/`: 모든 숫자를 다시 만들 CSV와 JSON. source_manifest에 원본 경로와 해시.',
         '- [최종 재대조 결과](data/verification.json): 원자료 집계·평가 조건·로컬 링크·그림·CMP 해시 확인.',
         '- `data/media.json`: 영상 SHA·해독 결과·대표 프레임·로컬 CMP 경로. 영상 자체는 git에 넣지 않는다.',
-        '- W78 v2: 조각 결과 대기(scripter 진행 중). S2a~S2d 본문은 이전 채집 판을 보존했다. S2e/T0′ 영상 결측은 각 문서의 최신 채집 표를 따른다.',
+        '- W78 v2: '+(' · '.join(f'm{hi} 최종 수치 대조 완료' for _,_,hi in STAGES if (DATA/f'w78_m{hi}_audit.json').exists()) or '조각 결과 대기(scripter 진행 중)')+'. 다른 저장본의 미완 칸은 대기 상태를 유지한다. 각 문서의 W78 보충 절과 영상 판독 범위를 따로 읽는다.',
         '- 새 학습·GPU·운영 사본 수정 없음. 기존 #555 작업의 분석 산출만 커밋한다.','']
 (OUT/'README.md').write_text('\n'.join(readme),encoding='utf-8')
 print('Selected reports + six-stage README generated from frozen numeric artifacts')
