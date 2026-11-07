@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-07T15:33:07.859061+09:00",
+  "at": "2026-11-07T16:27:07.356378+09:00",
   "status": "DISCUSSION_READY_W15_NOT_EQUIVALENT",
   "files": [
     {
@@ -107,5 +107,27 @@
       "denominator_different_rows": 16,
       "recomputed": true
     }
+  },
+  "correction_1625": {
+    "request": "lead 2026-11-07 16:25",
+    "decision": "T0 prime 1000 already approved; remove W44 duration question; L5 to L9 by +1 at each performance boundary",
+    "ledger_path": "D:\\mai-wt\\foothold-lab\\lead-worklist-1103\\inbox\\jay\\20261104-ex41-restart\\decisions.tsv",
+    "ledger_worktree_head": "add6b2bf5ea0775b8b30a2de6573b539cab7d9b8",
+    "rows": [
+      {
+        "line": 189,
+        "line_sha256": "24dd6bd211bd52325d75109e1ddc7b5090a53ce2d66ea23760e3b49ccdab41fa"
+      },
+      {
+        "line": 194,
+        "line_sha256": "ab076ca64c8d54d4b06586f5d4c94f5c236859e037e5faec32cf9acaa8ac8da7"
+      }
+    ],
+    "original_reopened": [
+      "U1 line21934 sha bd4eb76bcca5134ed12c911d237173c52d265be378d2564d4eb8b9a437bd6116",
+      "U4 line23168",
+      "U5 line23552"
+    ],
+    "budget_scope": "T0 prime remains excluded from 40000 per original U1; ledger189 inclusion phrase not adopted."
   }
 }
