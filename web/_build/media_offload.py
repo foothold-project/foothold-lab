@@ -1,52 +1,46 @@
 # -*- coding: utf-8 -*-
-"""영상은 NAS 에서, 페이지는 Vercel 에서 (#511 3단계).
+"""영상은 Vercel 에서, 원본 백업은 NAS 에 (#511).
 
 > 분류: 운영
-> 작성: 오흥재 · 2026-10-08 00:18
-> 근거: 실측 (10/7 Funnel 경로 속도 · Vercel 배포 저장소 10 GB)
-> 요지: 배포본에서 영상 파일을 빼고 NAS 에 있는지 sha256 으로 확인한다. 페이지의 영상 주소는 그대로 두고 vercel.json 의 돌림 규칙 한 줄이 NAS 로 보낸다.
+> 작성: 오흥재 · 2026-10-08 00:18 (v1) · super2 · 2026-11-02 05:08 (v2)
+> 근거: 실측 (10/7 Funnel 경로 속도 · Vercel 배포 저장소 10 GB · 11/02 라이브 HEAD 200 Server Vercel)
+> 요지: 배포본의 영상 · PDF 를 NAS 에 sha256 대조로 백업한다. 배포본에서는 빼지 않는다. vercel.json 에 영상을 바깥으로 돌리는 규칙이 다시 생기면 배포를 막는다.
 > 상태: 확정
-> 판: v1.1
+> 판: v2.0
 
 ## 왜
 
-Vercel 은 배포마다 사이트 한 벌을 통째로 보관한다. 10/7 한 벌 892 MB 중 영상이
-609 MB(68 %) 였고 Hobby 배포 저장소 10 GB 가 찼다. 영상을 빼면 한 벌이 약 280 MB.
+v1 (10/8) 은 영상을 배포본에서 빼고 vercel.json 돌림 규칙으로 NAS (Tailscale Funnel)
+에서 내보냈다. 바깥 망에서 갤러리가 8 ~ 17 초 걸려 10/9 팀장 결정 「가」 로 되돌렸고,
+foothold-site 625587a2 가 영상 345 개 · PDF 7 개를 배포본에 되가져오고 돌림 줄을 지웠다.
+lab 의 이 파일과 vercel.json 은 그 뒤로 v1 그대로라, lab 에서 다시 배포하면 10/9 결정이
+조용히 되돌아갈 자리였다 (11/02 발견). 원본 백업은 그대로 NAS 에 한다.
 
 ## 어떻게
 
-- 페이지 HTML 은 안 고친다. `/assets/.../x.mp4` 요청이 오면 Vercel 이
-  `vercel.json` 돌림 규칙으로 `MEDIA_BASE` 의 같은 경로로 보낸다(307).
-  덱의 상대 경로 · 갤러리 스크립트 주소도 브라우저가 절대 경로로 풀어 같은 규칙을 탄다.
-- 빌드는 복사가 끝난 배포본에서 영상을 찾아, NAS 에 같은 sha256 이 있으면 지우고
-  없으면 NAS 로 복사해 대조한 뒤 지운다. NAS 에 못 닿으면 배포를 막는다.
-- 영상 서버: NAS 의 Caddy 컨테이너(127.0.0.1:8090, 폴더 읽기 전용) 를 Tailscale
-  Funnel 이 `https://ai-nas01.tail025053.ts.net` 으로 연다. 목록은 안 보인다.
-- 뒤쪽을 바꿀 때(도메인 · R2 등)는 `MEDIA_BASE` 와 vercel.json 한 줄만 바꾼다.
-  두 값이 다르면 이 관문이 막는다.
+- 페이지도 영상도 Vercel 이 낸다. 이 단계는 배포본을 바꾸지 않는다.
+- 배포본의 영상 · PDF 마다 NAS 에 같은 sha256 이 있는지 보고, 없거나 다르면 복사해
+  대조한 뒤 `MANIFEST.sha256` 에 적는다. 배포본에서 지우지 않는다.
+- NAS 에 못 닿거나 복사 대조가 틀리면 크게 알리되 배포는 막지 않는다. 웹 배포가 NAS 에
+  기대지 않는 것이 10/9 결정이다. 백업이 안 된 개수는 숫자로 찍는다.
 
-## 관문
+## 관문 (막는 것)
 
-1. 배포본에 영상 파일 0개.
-2. 지운 영상마다 NAS 에 같은 sha256 이 있다.
-3. vercel.json 에 영상 돌림 규칙이 있고 목적지가 `MEDIA_BASE` 다.
-재현 모드(`write=False`)는 NAS 에 쓰지 않고 «없는 것» 만 센다.
+1. vercel.json 에 영상 · PDF 를 바깥 주소 (http · https) 로 돌리는 규칙이 없다.
+2. 배포본 영상 · PDF 가 0 개가 아니다 (누가 다시 빼면 잡는다 · 빈 대상을 통과라 하지 않는다).
+3. 자기시험이 알려진 답으로 통과한다.
 
 ★ 이 관문이 «못 잡는 것»
-- 배포본에 «없는» 영상. foothold-site 에만 있던 갤러리 클립(10/7 192개)은 재현
-  모드 산출 폴더에 안 들어와 여기서 안 보인다. 그 192개는 1단계 복사 때
-  sha256 으로 대조했고 NAS `MANIFEST.sha256` 에 있다.
-- 영상 서버가 지금 «응답하는지». NAS · Caddy · Funnel 이 꺼져 있어도 이 관문은
-  통과한다(파일이 NAS 폴더에 있는지만 본다). 응답은 배포 뒤 실제 주소에서 잰다.
-- 페이지가 가리키는 영상 주소가 NAS 에 «있는지». 원래 죽은 링크였던 영상은
-  여기서도 죽은 채로 넘어간다.
+- NAS 백업이 «최신인지» 는 배포 때만 본다. 배포 없이 NAS 가 바뀌면 모른다.
+- 영상 서버 (Vercel) 의 실제 응답 · 속도. 배포 뒤 실제 주소에서 잰다.
 
 ## 판 이력
 
 | 판 | 날짜 | 무엇 | 왜 |
 |---|---|---|---|
-| v1.0 | 2026-10-08 | 처음 씀 | 팀장 10/7 「원본은 foothold 공유 그대로」 · Funnel 실측 통과 |
-| v1.1 | 2026-10-08 | PDF 도 넘긴다 (7개 19.6 MB) · vercel.json 규칙에 pdf | 팀장 10/8 경량화 ② 승인 |
+| v1.0 | 2026-10-08 | 처음 씀 (영상을 NAS 로 넘기고 배포본에서 뺌) | 팀장 10/7 「원본은 foothold 공유 그대로」 · Funnel 실측 통과 |
+| v1.1 | 2026-10-08 | PDF 도 넘긴다 · vercel.json 규칙에 pdf | 팀장 10/8 경량화 ② 승인 |
+| v2.0 | 2026-11-02 | 백업만 한다 (빼지 않음 · 바깥 돌림 규칙이 있으면 막음 · NAS 실패는 경고) | 10/9 팀장 결정 「가」 를 lab 빌드에 맞춤 |
 """
 import hashlib
 import io
@@ -56,10 +50,9 @@ import shutil
 import sys
 import tempfile
 
-MEDIA_BASE = 'https://ai-nas01.tail025053.ts.net'
 # 순서대로 찾는다. UNC 는 `net use` 로 자격이 이 로그인 세션에 들어 있어야 열린다.
 NAS_ROOTS = (r'\\100.80.160.84\foothold\media\site', r'N:\media\site')
-VID = ('.mp4', '.webm', '.mov', '.m4v', '.pdf')   # 10/8 경량화 ②: 산출물 PDF 도 NAS 로
+VID = ('.mp4', '.webm', '.mov', '.m4v', '.pdf')   # 10/8 경량화 ②: 산출물 PDF 도 백업
 MANIFEST = 'MANIFEST.sha256'
 HOW_TO_MOUNT = ('NAS 를 붙이십시오 (별도 PowerShell 창):\n'
                 '      net use N: \\\\100.80.160.84\\foothold /user:VFXPEDIA * /persistent:no')
@@ -83,27 +76,22 @@ def nas_root(roots=NAS_ROOTS):
     return None
 
 
-def redirect_ok(site, base=MEDIA_BASE):
-    """vercel.json 에 영상 돌림 규칙이 있고 목적지가 base 인가."""
+def media_redirects(site):
+    """vercel.json 에서 영상 · PDF 를 바깥 주소로 돌리는 규칙의 목적지들. 없으면 []."""
     p = os.path.join(site, 'vercel.json')
     try:
         cfg = json.load(io.open(p, encoding='utf-8'))
     except (OSError, ValueError):
-        return False
+        return []
+    out = []
     for r in cfg.get('redirects') or []:
-        if '.mp4' in r.get('source', '') or 'mp4' in r.get('source', ''):
-            if str(r.get('destination', '')).startswith(base + '/'):
-                return True
-    return False
+        src, dst = str(r.get('source', '')), str(r.get('destination', ''))
+        if any(e.lstrip('.') in src for e in VID) and dst.startswith(('http://', 'https://')):
+            out.append(dst)
+    return out
 
 
-def offload(site, nas, write=True):
-    """배포본(site) 의 영상을 NAS 로 넘기고 배포본에서 지운다.
-
-    돌려주는 것: dict(found, already, copied, missing, mismatch, removed)
-    write=False 면 NAS 에 쓰지도 배포본에서 지우지도 않는다(검사만).
-    """
-    st = dict(found=0, already=0, copied=0, missing=[], mismatch=[], removed=0)
+def _media(site):
     vids = []
     for root, dirs, files in os.walk(site):
         if '.git' in dirs:
@@ -111,6 +99,17 @@ def offload(site, nas, write=True):
         for n in files:
             if n.lower().endswith(VID):
                 vids.append(os.path.join(root, n))
+    return vids
+
+
+def backup(site, nas, write=True):
+    """배포본(site) 의 영상 · PDF 를 NAS 에 백업한다. 배포본은 건드리지 않는다.
+
+    돌려주는 것: dict(found, already, copied, missing, mismatch)
+    write=False 면 NAS 에 쓰지 않는다 (없는 것만 센다).
+    """
+    st = dict(found=0, already=0, copied=0, missing=[], mismatch=[])
+    vids = _media(site)
     st['found'] = len(vids)
     lines = {}
     mpath = os.path.join(nas, MANIFEST)
@@ -139,9 +138,6 @@ def offload(site, nas, write=True):
             os.replace(tmp, dst)
             st['copied'] += 1
         lines[rel] = want
-        if write:
-            os.remove(src)
-            st['removed'] += 1
     if write and (st['copied'] or not os.path.isfile(mpath)):
         with io.open(mpath, 'w', encoding='utf-8', newline='\n') as f:
             for rel in sorted(lines):
@@ -158,40 +154,39 @@ def _selftest():
         v = os.path.join(site, 'a', 'b', 'x.mp4')
         io.open(v, 'wb').write(b'clip-1')
         io.open(os.path.join(site, 'a', 'p.html'), 'w').write('<video src="b/x.mp4">')
-        # 1) 검사만: NAS 에 없으면 missing 으로 센다 · 아무것도 안 지운다
-        s = offload(site, nas, write=False)
-        if s['missing'] != ['a/b/x.mp4'] or not os.path.isfile(v):
-            return False, '검사 모드가 없는 영상을 못 셌거나 지웠다: %r' % s
-        # 2) 쓰기: 복사 · 대조 · 배포본에서 지움 · 목록 기록
-        s = offload(site, nas, write=True)
-        if (s['copied'], s['removed']) != (1, 1) or os.path.isfile(v) \
+        # 1) 검사만: NAS 에 없으면 missing 으로 센다 · NAS 에 안 쓴다
+        s = backup(site, nas, write=False)
+        if s['missing'] != ['a/b/x.mp4'] or os.listdir(nas):
+            return False, '검사 모드가 없는 영상을 못 셌거나 NAS 에 썼다: %r' % s
+        # 2) 쓰기: 복사 · 대조 · 목록 기록 · 배포본에는 그대로 남는다
+        s = backup(site, nas, write=True)
+        if s['copied'] != 1 or not os.path.isfile(v) \
                 or not os.path.isfile(os.path.join(nas, 'a', 'b', 'x.mp4')):
-            return False, '복사·삭제가 기대와 다르다: %r' % s
+            return False, '복사가 기대와 다르거나 배포본에서 지웠다: %r' % s
         if 'a/b/x.mp4' not in io.open(os.path.join(nas, MANIFEST), encoding='utf-8').read():
             return False, '목록에 안 적혔다'
-        # 3) 같은 영상이 다시 오면 복사하지 않고 지우기만
-        io.open(v, 'wb').write(b'clip-1')
-        s = offload(site, nas, write=True)
-        if (s['already'], s['copied'], s['removed']) != (1, 0, 1):
+        # 3) 같은 영상이면 다시 복사하지 않는다
+        s = backup(site, nas, write=True)
+        if (s['already'], s['copied']) != (1, 0):
             return False, '이미 있는 영상을 다시 복사했다: %r' % s
         # 4) 내용이 바뀐 영상은 다시 복사
         io.open(v, 'wb').write(b'clip-2')
-        s = offload(site, nas, write=True)
+        s = backup(site, nas, write=True)
         if s['copied'] != 1 or io.open(os.path.join(nas, 'a', 'b', 'x.mp4'), 'rb').read() != b'clip-2':
             return False, '바뀐 영상을 안 바꿨다: %r' % s
-        # 5) 돌림 규칙: 없으면 거짓 · 목적지가 다르면 거짓 · 맞으면 참
-        if redirect_ok(site):
-            return False, 'vercel.json 이 없는데 통과했다'
-        cfg = {'redirects': [{'source': '/(.*)\\.(mp4|webm|mov|m4v)',
-                              'destination': 'https://elsewhere.example/$1.$2'}]}
+        # 5) 돌림 규칙: 없으면 [] · 안쪽 주소 돌림은 [] · 바깥으로 돌리면 잡는다 (pdf 만 있어도)
+        if media_redirects(site):
+            return False, 'vercel.json 이 없는데 돌림 규칙을 찾았다'
+        cfg = {'redirects': [{'source': '/old', 'destination': '/new'},
+                             {'source': '/(.*)\\.(mp4|webm)', 'destination': '/v/$1.$2'}]}
         json.dump(cfg, io.open(os.path.join(site, 'vercel.json'), 'w'))
-        if redirect_ok(site):
-            return False, '목적지가 다른데 통과했다'
-        cfg['redirects'][0]['destination'] = MEDIA_BASE + '/$1.$2'
+        if media_redirects(site):
+            return False, '사이트 안쪽 돌림을 바깥 돌림으로 셌다'
+        cfg['redirects'].append({'source': '/(.*)\\.pdf', 'destination': 'https://nas.example/$1.pdf'})
         json.dump(cfg, io.open(os.path.join(site, 'vercel.json'), 'w'))
-        if not redirect_ok(site):
-            return False, '맞는 규칙을 못 알아봤다'
-    return True, '알려진 답 5단계 · 돌림 규칙 3칸'
+        if media_redirects(site) != ['https://nas.example/$1.pdf']:
+            return False, '바깥으로 돌리는 규칙을 못 잡았다'
+    return True, '알려진 답 4단계 · 돌림 규칙 3칸'
 
 
 def main(site, write=True):
@@ -200,28 +195,30 @@ def main(site, write=True):
         print('  [!] 자기시험 실패: %s' % why)
         return False
     print('  자기시험 통과 (%s)' % why)
-    if not redirect_ok(site):
-        print('  [!] vercel.json 에 영상 돌림 규칙이 없거나 목적지가 %s 가 아닙니다' % MEDIA_BASE)
+    bad = media_redirects(site)
+    if bad:
+        print('  [!] vercel.json 이 영상 · PDF 를 바깥으로 돌립니다: %s\n'
+              '      10/9 팀장 결정은 Vercel 에서 직접 내는 것입니다. 그 규칙을 지우십시오' % ' · '.join(bad))
+        return False
+    vids = _media(site)
+    if not vids:   # 재현 모드에서도 lab 영상이 들어온다. 0 이면 검사할 것이 없었던 것이지 통과가 아니다
+        print('  [!] 배포본에 영상 · PDF 가 0 개입니다. 누가 배포본에서 뺐는지 보십시오')
         return False
     nas = nas_root()
     if not nas:
-        print('  [!] NAS 영상 폴더에 닿지 않습니다 (%s).\n      %s'
-              % (' 또는 '.join(NAS_ROOTS), HOW_TO_MOUNT))
-        return False
-    s = offload(site, nas, write=write)
-    print('  NAS %s · 배포본 영상 %d개 · 이미 있음 %d · 새로 올림 %d · 배포본에서 뺌 %d'
-          % (nas, s['found'], s['already'], s['copied'], s['removed']))
+        print('  [!!] NAS 백업 안 됨: %s 에 닿지 않습니다. 배포는 계속하지만 영상 · PDF %d 개가 '
+              '이번에 백업되지 않았습니다.\n      %s'
+              % (' 또는 '.join(NAS_ROOTS), len(vids), HOW_TO_MOUNT))
+        return True
+    s = backup(site, nas, write=write)
+    print('  NAS %s · 배포본 영상 · PDF %d개 · 이미 있음 %d · 새로 백업 %d'
+          % (nas, s['found'], s['already'], s['copied']))
     if s['mismatch']:
-        print('  [!] 복사 대조 실패 %d개: %s' % (len(s['mismatch']), ' · '.join(s['mismatch'][:3])))
-        return False
+        print('  [!!] NAS 백업 대조 실패 %d개 (배포는 계속): %s'
+              % (len(s['mismatch']), ' · '.join(s['mismatch'][:3])))
     if s['missing']:
-        print('  [!] NAS 에 없는 영상 %d개 (검사 모드라 올리지 않음): %s'
+        print('  NAS 에 없는 것 %d개 (검사 모드라 백업하지 않음): %s'
               % (len(s['missing']), ' · '.join(s['missing'][:3])))
-        return False
-    left = [n for r, d, fs in os.walk(site) if '.git' not in r for n in fs if n.lower().endswith(VID)]
-    if write and left:
-        print('  [!] 배포본에 영상이 %d개 남았습니다' % len(left))
-        return False
     return True
 
 

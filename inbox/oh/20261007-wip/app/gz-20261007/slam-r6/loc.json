@@ -1,0 +1,511 @@
+{
+ "part": "make",
+ "wall_start": 1791357743.2390676,
+ "env": {
+  "ROS_DOMAIN_ID": "58",
+  "GZ_PARTITION": "fh-app-2553843"
+ },
+ "checks": {
+  "S0 지도·map→odom 정본 하나 + costmap 이 그것을 실제 구독": {
+   "ok": true,
+   "map_pubs": [
+    "slam_toolbox"
+   ],
+   "tf_pubs": [
+    "robot_state_publisher",
+    "ros_gz_bridge",
+    "slam_toolbox"
+   ],
+   "map_subs": [
+    "/app_gateway",
+    "/global_costmap/global_costmap",
+    "/rosbridge_websocket",
+    "/slam_probe",
+    "/slam_toolbox"
+   ],
+   "scan_subs": [
+    "/app_gateway",
+    "/collision_monitor",
+    "/global_costmap/global_costmap",
+    "/local_costmap/local_costmap",
+    "/slam_toolbox"
+   ],
+   "stray": {},
+   "amcl_like": [],
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.0,
+     0.0,
+     0.0,
+     0.03
+    ],
+    "res": null,
+    "gt": [
+     -2.0005183363190366,
+     -0.500000124246168,
+     -6.282285817046103e-06
+    ]
+   }
+  },
+  "S0b 명령 경로 하나(SLAM 프로필)": {
+   "ok": true,
+   "mux_pub": [
+    "/app_gateway"
+   ],
+   "mux_sub": [
+    "/collision_monitor"
+   ],
+   "cmd_pub": [
+    "/collision_monitor"
+   ],
+   "cmd_sub": [
+    "/ros_gz_bridge"
+   ],
+   "dock_pub": [
+    "/docking_server"
+   ],
+   "dock_sub": [],
+   "gz": {
+    "/cmd_vel": {
+     "pub_n": 1,
+     "sub_n": 1
+    },
+    "/sim_wd/cmd_vel": {
+     "pub_n": 1,
+     "sub_n": 1
+    }
+   },
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.0,
+     0.0,
+     0.0,
+     0.02
+    ],
+    "res": null,
+    "gt": [
+     -2.0005183363190366,
+     -0.500000124246168,
+     -6.282285817046103e-06
+    ]
+   }
+  },
+  "S0c slam 실적용 파라미터(필터·Mapper 거리 기준 일치)": {
+   "ok": true,
+   "check_min_dist_and_heading_precisely": true,
+   "minimum_travel_distance": 0.5,
+   "minimum_travel_heading": 0.5,
+   "minimum_time_interval": 0.5,
+   "throttle_scans": 1,
+   "map_update_interval": 5.0,
+   "mode": "mapping",
+   "scan_topic": "/scan",
+   "transform_timeout": 0.2,
+   "use_sim_time": true,
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.0,
+     0.0,
+     0.0,
+     0.03
+    ],
+    "res": null,
+    "gt": [
+     -2.0005183363190366,
+     -0.500000124246168,
+     -6.282285817046103e-06
+    ]
+   }
+  },
+  "S1 SLAM 상태·저장만 가능": {
+   "ok": true,
+   "loc": {
+    "mode": "slam",
+    "ok": true,
+    "why": "",
+    "std": null
+   },
+   "map_ver": "slam-a97da699bd97",
+   "can": [
+    false,
+    true
+   ],
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.0,
+     0.0,
+     0.0,
+     0.03
+    ],
+    "res": null,
+    "gt": [
+     -2.0005183363190366,
+     -0.500000124246168,
+     -6.282285817046103e-06
+    ]
+   }
+  },
+  "S2 SLAM 지도 위 목표 SUCCEEDED": {
+   "ok": true,
+   "goal": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "res": {
+    "gen": 1,
+    "status": "SUCCEEDED",
+    "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+   },
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "목표에 도착했습니다 (SUCCEEDED 0)",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.791,
+     -0.07,
+     -0.032,
+     0.06
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.1967597632555294,
+     -0.5699670149198302,
+     -0.02843778577195002
+    ]
+   }
+  },
+  "S3 이동 뒤 지도 자람·수락 스캔·같은 세션": {
+   "ok": true,
+   "known": [
+    1171,
+    2793
+   ],
+   "accepted": [
+    0,
+    1
+   ],
+   "gt_moved_m": 0.828,
+   "map_ver": "slam-a97da699bd97",
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "목표에 도착했습니다 (SUCCEEDED 0)",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.825,
+     -0.071,
+     -0.029,
+     0.01
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.1752212635509467,
+     -0.5711368353719369,
+     -0.02842063346023279
+    ]
+   }
+  },
+  "S4 앱 저장 → 저장 전 없던 새 버전·이번에 생긴 파일·완성 표시": {
+   "ok": true,
+   "last": {
+    "op": "map.save",
+    "rid": 1,
+    "req": "a013b3-1",
+    "ok": true,
+    "why": "slamr6 v1 저장 - 저장 지도 런에서 불러와 쓸 수 있습니다",
+    "t": 1791357761.953,
+    "by": "slamprobe",
+    "file": "<workspace>/control-app/test/results/gz-20261007/maps-slam/slamr6/v1.yaml"
+   },
+   "new": [
+    [
+     "slamr6",
+     1
+    ]
+   ],
+   "fresh": {
+    "yaml": true,
+    "pgm": true,
+    "json": true
+   },
+   "before_n": 4,
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "목표에 도착했습니다 (SUCCEEDED 0)",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-a97da699bd97",
+    "loc_epoch": 0,
+    "pose": [
+     0.825,
+     -0.071,
+     -0.029,
+     0.01
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.1752212635509467,
+     -0.5711368353719369,
+     -0.02842063346023279
+    ]
+   }
+  },
+  "S5 SLAM 재시작 → 새 세션·정지·옛 목표 거부·지문 다름": {
+   "ok": true,
+   "ver": [
+    "slam-a97da699bd97",
+    "slam-9ac680f722bd"
+   ],
+   "at_change": {
+    "mode": "STOPPED",
+    "stop": "map",
+    "msg": "지도가 바뀌어 정지 - 옛 목표는 취소됨. 새 지도에서 위치를 맞춘 뒤 「정지 해제」",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-9ac680f722bd",
+    "loc_epoch": 0,
+    "pose": [
+     0.825,
+     -0.071,
+     -0.029,
+     0.02
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.1752212635509467,
+     -0.5711368353719369,
+     -0.02842063346023279
+    ]
+   },
+   "reject_msg": "지도가 바뀌었습니다 - 지금 지도에서 목표를 다시 찍으세요",
+   "lifecycle": [
+    [
+     "configure",
+     true,
+     true
+    ],
+    [
+     "activate",
+     true,
+     true
+    ]
+   ],
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "지도가 바뀌었습니다 - 지금 지도에서 목표를 다시 찍으세요",
+    "loc": {
+     "mode": "slam",
+     "ok": true,
+     "why": "",
+     "std": null
+    },
+    "map_ver": "slam-9ac680f722bd",
+    "loc_epoch": 0,
+    "pose": [
+     0.825,
+     -0.071,
+     -0.029,
+     0.01
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.1752212635509467,
+     -0.5711368353719369,
+     -0.02842063346023279
+    ]
+   }
+  }
+ },
+ "gz_topic_raw": {
+  "/cmd_vel": "Publishers [Address, Message Type]:\n  tcp://127.0.0.1:34005, gz.msgs.Twist\nSubscribers [Address, Message Type]:\n  tcp://127.0.0.1:44151, gz.msgs.Twist",
+  "/sim_wd/cmd_vel": "Publishers [Address, Message Type]:\n  tcp://127.0.0.1:44151, gz.msgs.Twist\nSubscribers [Address, Message Type]:\n  tcp://127.0.0.1:44151, gz.msgs.Twist"
+ },
+ "slam_params_applied": {
+  "check_min_dist_and_heading_precisely": true,
+  "minimum_travel_distance": 0.5,
+  "minimum_travel_heading": 0.5,
+  "minimum_time_interval": 0.5,
+  "throttle_scans": 1,
+  "map_update_interval": 5.0,
+  "mode": "mapping",
+  "scan_topic": "/scan",
+  "transform_timeout": 0.2,
+  "use_sim_time": true
+ },
+ "offset_map_minus_gt": [
+  2.001,
+  0.5,
+  0.0
+ ],
+ "cells_start": {
+  "free": 1069,
+  "occ": 102,
+  "unknown": 10151,
+  "other": 0,
+  "size": [
+   111,
+   102
+  ],
+  "origin": [
+   -0.936,
+   -2.066
+  ]
+ },
+ "premise": "S2 목표 칸: 중심 빈 칸 + 둘레 0.3 m 안 «장애물 없음»(미지 칸 허용). SLAM 지도는 광선 사이가 미지라 «둘레 전부 빈 칸»을 못 맞춘다. 이것은 미지 칸이 없다거나 탐색이 안전하다는 증명이 아니다 - 경로 안전은 Nav2 costmap·collision_monitor 몫",
+ "offset_after_goal": [
+  2.0,
+  0.5,
+  -0.001
+ ],
+ "cells_after_move": {
+  "free": 2582,
+  "occ": 211,
+  "unknown": 8631,
+  "other": 0,
+  "size": [
+   112,
+   102
+  ],
+  "origin": [
+   -0.942,
+   -2.066
+  ]
+ },
+ "accepted_scans": {
+  "before_s2": 0,
+  "after_s3": 1,
+  "poses": [
+   [
+    0.537,
+    -0.048
+   ]
+  ],
+  "gt_moved_m": 0.828
+ },
+ "saved": {
+  "name": "slamr6",
+  "version": 1,
+  "file": "<workspace>/control-app/test/results/gz-20261007/maps-slam/slamr6/v1.yaml"
+ },
+ "slam_proc": [
+  [
+   2554295,
+   [
+    "/opt/ros/jazzy/lib/slam_toolbox/sync_slam_toolbox_node",
+    "--ros-args",
+    "-r",
+    "__node:=slam_toolbox",
+    "-r",
+    "__ns:=/",
+    "--params-file",
+    "<workspace>/control-app/sim/slam_params_app.yaml",
+    "--params-file",
+    "/tmp/launch_params_0w9onv24"
+   ]
+  ]
+ ],
+ "lifecycle": [
+  [
+   "configure",
+   true,
+   true
+  ],
+  [
+   "activate",
+   true,
+   true
+  ]
+ ],
+ "lifecycle_state": "active",
+ "verdict": "PASS"
+}

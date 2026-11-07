@@ -1,0 +1,231 @@
+{
+  "format": "start-demo-onnx/1",
+  "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_6000.pt",
+  "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+  "source": "D:\\mai-wt\\foothold-lab\\scripter-w78-video\\foothold_s2\\deploy\\export_ex40_w89.py",
+  "source_sha256": "3cac552ab20e368f0246c4c1b678b1564fc65d4c155a79d13e203c7b5501cd8f",
+  "batch": 1,
+  "inputs": [
+    "obs45",
+    "hist",
+    "depth2",
+    "h_prop",
+    "h_terr",
+    "depth_tick",
+    "first_after_reset",
+    "use_gt",
+    "gt_map"
+  ],
+  "outputs": [
+    "action",
+    "h_prop_next",
+    "h_terr_next",
+    "recon_map"
+  ],
+  "actor_input_order": "obs45 + [mu16, v3, zf16, zb16]",
+  "map_on": "use_gt=false: reconstruction; use_gt=true: diagnostic ground truth",
+  "map_off": "map attention keys masked; TR-Net still runs",
+  "action": "raw Isaac-order 12-vector; clip +/-17 and default_joint_pos + 0.25*action outside ONNX",
+  "state": "external 10x45 history, delayed two depth frames, h_prop/h_terr 128, tick/reset flags",
+  "artifacts": {
+    "map_on": {
+      "name": "start-demo_map_on.onnx",
+      "sha256": "81c7e079516058ee6243f6edd11efa8f0da239c6cc86fbca791bda5bcd82f110",
+      "bytes": 5808798
+    },
+    "map_off": {
+      "name": "start-demo_map_off.onnx",
+      "sha256": "5d1b7bf39aa0d9fb8ae33bf33dad82902165d53679ccd7ec5df727a0b70fe037",
+      "bytes": 5818629
+    }
+  },
+  "renamed_from": {
+    "format": "foothold-ex40-w89-onnx/1",
+    "bundle": "D:\\mai-tmp\\scripter\\w89_export",
+    "contract_sha256": "f1aca5f432860762eb2fcbbd896f9d25feb67912fde7e134158b56ac7c4a698d",
+    "decision": "D169 2026-11-03 16:0x",
+    "onnx_bytes": "unchanged"
+  },
+  "model": "start-demo",
+  "input_shapes": {
+    "obs45": [
+      1,
+      45
+    ],
+    "hist": [
+      1,
+      10,
+      45
+    ],
+    "depth2": [
+      1,
+      2,
+      60,
+      60
+    ],
+    "h_prop": [
+      1,
+      128
+    ],
+    "h_terr": [
+      1,
+      128
+    ],
+    "depth_tick": [
+      1
+    ],
+    "first_after_reset": [
+      1
+    ],
+    "use_gt": [
+      1
+    ],
+    "gt_map": [
+      1,
+      32,
+      16
+    ]
+  },
+  "input_types": {
+    "obs45": "tensor(float)",
+    "hist": "tensor(float)",
+    "depth2": "tensor(float)",
+    "h_prop": "tensor(float)",
+    "h_terr": "tensor(float)",
+    "depth_tick": "tensor(bool)",
+    "first_after_reset": "tensor(bool)",
+    "use_gt": "tensor(bool)",
+    "gt_map": "tensor(float)"
+  },
+  "test_vectors": {
+    "reconstruction": "test_vectors_flat20_reconstruction.json",
+    "off": "test_vectors_flat20_off.json",
+    "gt": "test_vectors_flat20_gt.json"
+  },
+  "default_test_vectors": "test_vectors_flat20.json",
+  "app_onnx": {
+    "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측)",
+    "inputs": [
+      {
+        "name": "obs45",
+        "dims": [
+          1,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "hist",
+        "dims": [
+          1,
+          10,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth2",
+        "dims": [
+          1,
+          2,
+          60,
+          60
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth_tick",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "first_after_reset",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "use_gt",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "gt_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "action",
+        "dims": [
+          1,
+          12
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "recon_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "action": "action",
+    "state": [
+      {
+        "out": "h_prop_next",
+        "in": "h_prop"
+      },
+      {
+        "out": "h_terr_next",
+        "in": "h_terr"
+      }
+    ],
+    "depth_delay": "10 Hz frames; depth2 = the two most recent frames delivered one frame (0.1 s) late; depth_tick true on the step a new frame arrives (every 5 steps)"
+  }
+}

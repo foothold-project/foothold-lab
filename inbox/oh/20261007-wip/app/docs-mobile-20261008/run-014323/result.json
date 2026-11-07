@@ -1,0 +1,67 @@
+{
+ "src": "<workspace>/control-app/docs/public/index-mobile.html",
+ "cases": [
+  {
+   "name": "portrait 390×844: 문서 11개 모두 페이지 가로 넘침 0 · 표/코드는 칸 안 가로스크롤",
+   "ok": true,
+   "bad": {},
+   "tables": 74,
+   "tables_scrollable": 28,
+   "font_px": [
+    14.5,
+    15.5
+   ]
+  },
+  {
+   "name": "portrait: 목차 버튼 보임 → 목차 열림 → 항목 누르면 닫히고 이동",
+   "ok": true,
+   "toggle": "block",
+   "toc_links": 12,
+   "closed": true
+  },
+  {
+   "name": "landscape 844×390: 문서 11개 모두 페이지 가로 넘침 0 · 표/코드는 칸 안 가로스크롤",
+   "ok": true,
+   "bad": {},
+   "tables": 74,
+   "tables_scrollable": 0,
+   "font_px": [
+    14.5,
+    15.5
+   ]
+  },
+  {
+   "name": "landscape: 목차 버튼 보임 → 목차 열림 → 항목 누르면 닫히고 이동",
+   "ok": true,
+   "toggle": "block",
+   "toc_links": 12,
+   "closed": true
+  },
+  {
+   "name": "small 360×640: 문서 11개 모두 페이지 가로 넘침 0 · 표/코드는 칸 안 가로스크롤",
+   "ok": true,
+   "bad": {},
+   "tables": 74,
+   "tables_scrollable": 43,
+   "font_px": [
+    14.5,
+    15.5
+   ]
+  },
+  {
+   "name": "small: 목차 버튼 보임 → 목차 열림 → 항목 누르면 닫히고 이동",
+   "ok": true,
+   "toggle": "block",
+   "toc_links": 12,
+   "closed": true
+  },
+  {
+   "name": "외부 요청 0 (글꼴·스크립트 모두 파일 안)",
+   "ok": true,
+   "external": [],
+   "requests": 3
+  }
+ ],
+ "chrome_pid": 3492723,
+ "ok": true
+}

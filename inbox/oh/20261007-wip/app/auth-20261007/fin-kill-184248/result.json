@@ -1,0 +1,146 @@
+{
+ "wall_start": 1791366198.1208322,
+ "env": {
+  "ROS_DOMAIN_ID": "58",
+  "GZ_PARTITION": "fh-app-2811550"
+ },
+ "checks": {
+  "K0 전제: 임무 목표로 실제 이동 중(NAV·odom)": {
+   "ok": true,
+   "ack": {
+    "command_id": "opA-mission.start-120894.035",
+    "ok": true,
+    "why": "",
+    "op": "mission.start"
+   },
+   "state": {
+    "mode": "NAV",
+    "stop": "",
+    "owner": "7fa4d924-1",
+    "out": [
+     0.08,
+     -0.18
+    ],
+    "vel": [
+     0.065,
+     -0.133
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "목표로 가는 중",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.08,
+     "render_age": 0.17
+    }
+   },
+   "goal_tag": "m-20261007-184326-1-s1-a1",
+   "state_age_s": 0.01
+  },
+  "K1 임무 서버 SIGKILL(화면 hb·영상 정상) → 임무 목표 정지 래치 stop=mission": {
+   "ok": true,
+   "latch_from_kill_s": 0.95,
+   "check_wait_s": 0.96,
+   "state": {
+    "mode": "STOPPED",
+    "stop": "mission",
+    "owner": "7fa4d924-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     -0.019
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "임무 서버 응답이 끊겨 임무 이동 정지 - 임무 서버를 확인한 뒤 「정지 해제」(임무는 다시 켜지면 일시정지로 남음)",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.08,
+     "render_age": 0.17
+    }
+   },
+   "gen": 1,
+   "killed_tag": "m-20261007-184326-1-s1-a1",
+   "state_age_s": 0.01
+  },
+  "K2 같은 DB 로 재기동 → PAUSED(server_restart)·5 s 자동 재개 없음": {
+   "ok": true,
+   "paused_s": 1.06,
+   "active": {
+    "id": "m-20261007-184326-1",
+    "state": "PAUSED",
+    "pause": {
+     "reason": "server_restart",
+     "why": "임무 서버가 다시 시작되어 멈췄습니다 - 로봇 위치를 확인하고 「계속」"
+    }
+   },
+   "bad": [],
+   "state_age_s": 0.01
+  },
+  "K3 임무 서버 없음 + 화면 직접 목표(K0 수락 목표·같은 map_ver·남은 거리 > 0.3 m) → 오인 정지 없이 이동": {
+   "ok": true,
+   "moved_s": 0.4,
+   "stops": [],
+   "state": {
+    "mode": "NAV",
+    "stop": "",
+    "owner": "7fa4d924-1",
+    "out": [
+     0.25,
+     0.02
+    ],
+    "vel": [
+     0.257,
+     -0.051
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "목표로 가는 중",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.08,
+     "render_age": 0.17
+    }
+   },
+   "goal_tag": null,
+   "target": [
+    -1.08,
+    -0.08,
+    0.614
+   ],
+   "left_m": 0.92,
+   "map_ver": [
+    "m-6f65861f905a",
+    "m-6f65861f905a"
+   ],
+   "state_age_s": 0.04
+  }
+ },
+ "timeline": [
+  [
+   8.34,
+   "임무 서버 2812351 SIGKILL"
+  ],
+  [
+   9.5,
+   "임무 서버 다시 띄움 2812822"
+  ],
+  [
+   15.66,
+   "다시 띄운 임무 서버 2812822 SIGKILL - K3 는 임무 서버 없이"
+  ],
+  [
+   17.21,
+   "K3 목표 = K0 수락 목표 [-1.08, -0.08] · 남은 거리 0.92 m · map_ver K0 m-6f65861f905a / 지금 m-6f65861f905a"
+  ]
+ ],
+ "ok": true,
+ "unsigned_app_cmd": {},
+ "wall_end": 1791366218.7590306
+}
