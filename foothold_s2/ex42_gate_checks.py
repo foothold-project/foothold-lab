@@ -284,6 +284,14 @@ def extract_realized_config(env_yaml: str | Path, agent_yaml: str | Path) -> dic
                 break
         out[name] = {"value": value, "source": str(env_path if doc is env else agent_path),
                      "observed": value is not None}
+    if not out["map_selection"]["observed"]:
+        perception = agent.get("perception")
+        if isinstance(perception, dict):
+            selected = {key: perception[key] for key in
+                        ("map_input", "force_gt", "p_map_off") if key in perception}
+            if selected:
+                out["map_selection"] = {"value": selected, "source": str(agent_path),
+                                        "observed": True}
     return out
 
 

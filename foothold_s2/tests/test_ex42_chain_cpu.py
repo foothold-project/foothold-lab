@@ -103,6 +103,13 @@ def test_transition_gap_applies_approved_dr_and_registers_priority_one(tmp_path)
     assert queue["items"][0]["priority"] == 1 and queue["items"][0]["gpu"] == 1
     assert queue["items"][0]["argv"] == ["python", "-m", "known.score_command"]
 
+    params = run / "params"
+    params.mkdir()
+    (params / "env.yaml").write_text(
+        "commands: {}\nobservations:\n  policy:\n    map_mode: gt\n"
+        "events: {}\nscene:\n  robot:\n    actuators: {}\n"
+        "rewards: {}\ncurriculum:\n  terrain_levels: 5\n", encoding="utf-8")
+    (params / "agent.yaml").write_text("algorithm: {}\n", encoding="utf-8")
     env = SimpleNamespace(_ex40_dr_scale=0.4)
     transition = chain.transition(
         env, "E0", boundary_iteration=1001, expected_score_iteration=1000,
@@ -363,6 +370,74 @@ def test_g15_completed_p1_score_cannot_pass_when_map_mode_cell_is_missing(tmp_pa
         assert "map-mode" in str(exc) or "missing, duplicate" in str(exc)
     else:
         raise AssertionError("G15 accepted a score with one missing command × map-mode cell")
+
+
+def test_g17_start_and_stage_boundary_write_saved_and_runtime_config_evidence(tmp_path):
+    stage_holder = {}
+
+    def boundary_provider(iteration, _runner):
+        if iteration != 1001:
+            return None
+        return {"next_stage_id": stage_holder["chain"].plan.runtime_stage_ids[1],
+                "expected_score_iteration": 1000,
+                "observed_score_iteration": None,
+                "checkpoint_sha256": "a" * 64}
+
+    chain, run = make_chain(tmp_path, boundary_provider=boundary_provider)
+    stage_holder["chain"] = chain
+    params = run / "params"
+    params.mkdir()
+    (params / "env.yaml").write_text(
+        "commands:\n  base_velocity:\n    ranges: {lin_vel_x: [0.1, 0.2]}\n"
+        "observations:\n  policy:\n    map_mode: gt\n"
+        "events:\n  push: enabled\n"
+        "scene:\n  robot:\n    actuators: motorA\n"
+        "rewards:\n  feet: 0.5\n"
+        "curriculum:\n  terrain_levels: 2\n", encoding="utf-8")
+    (params / "agent.yaml").write_text(
+        "algorithm:\n  lr: 0.0003\n", encoding="utf-8")
+    runtime = SimpleNamespace()
+    runner = SimpleNamespace(env=SimpleNamespace(unwrapped=runtime, num_envs=3072),
+                             log_dir=str(run), pcfg={"force_gt": True,
+                                                     "p_map_off": 0.1,
+                                                     "map_input": "reconstruction"})
+    assert chain.on_runner_update_start(runner, 0) is None
+    transition = chain.on_runner_update_start(runner, 1001)
+    assert transition["status"] == "measurement_gap"
+    path = run / "ex42_config_snapshots.jsonl"
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert [row["iteration"] for row in rows] == [0, 1001]
+    assert rows[0]["stage_id"] == chain.plan.runtime_stage_ids[0]
+    assert rows[0]["saved_active_config"]["commands"]["observed"] is True
+    assert rows[0]["saved_active_config"]["map_selection"]["observed"] is True
+    assert rows[0]["saved_active_config"]["domain_randomization"]["observed"] is True
+    assert rows[0]["saved_active_config"]["rewards"]["observed"] is True
+    assert rows[0]["saved_active_config"]["level_cap"]["observed"] is True
+    assert rows[1]["stage_id"] == chain.plan.runtime_stage_ids[1]
+    assert rows[1]["runtime_readback"]["stage_id"] == chain.plan.runtime_stage_ids[1]
+    assert rows[1]["runtime_readback"]["dr_scale"] == 1.0
+    assert rows[1]["complete"] is False
+    assert rows[1]["requested_realized_comparison"] == "not_verified"
+
+
+def test_g17_missing_saved_config_values_remain_unknown_not_defaults(tmp_path):
+    chain, run = make_chain(tmp_path)
+    params = run / "params"
+    params.mkdir()
+    (params / "env.yaml").write_text("scene: {}\n", encoding="utf-8")
+    (params / "agent.yaml").write_text("algorithm: {}\n", encoding="utf-8")
+    runner = SimpleNamespace(env=SimpleNamespace(unwrapped=SimpleNamespace()),
+                             log_dir=str(run), pcfg={})
+
+    assert chain.on_runner_update_start(runner, 0) is None
+    row = json.loads((run / "ex42_config_snapshots.jsonl").read_text(encoding="utf-8"))
+    assert row["state"] == "partial"
+    assert row["complete"] is False
+    assert row["requested_realized_comparison"] == "not_verified"
+    assert {"commands", "map_selection", "domain_randomization", "actuators",
+            "rewards", "level_cap"}.issubset(row["missing_saved_fields"])
+    assert row["saved_active_config"]["commands"] == {
+        "value": None, "source": str(params / "env.yaml"), "observed": False}
 
 
 def _run_runner_to_checkpoint(tmp_path, *, score_argv_factory):

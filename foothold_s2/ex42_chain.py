@@ -101,9 +101,13 @@ class EX42TrainingChain:
     def on_runner_update_start(self, runner: Any, iteration: int) -> dict[str, Any] | None:
         """Apply an explicitly supplied stage boundary before that update's rollout."""
         if self.boundary_provider is None:
+            if iteration == 0:
+                self.record_runtime_config_snapshot(runner, iteration, boundary=None)
             return None
         boundary = self.boundary_provider(iteration, runner)
         if boundary is None:
+            if iteration == 0:
+                self.record_runtime_config_snapshot(runner, iteration, boundary=None)
             return None
         required = ("next_stage_id", "expected_score_iteration", "observed_score_iteration",
                     "checkpoint_sha256")
@@ -116,6 +120,72 @@ class EX42TrainingChain:
             checkpoint_sha256=boundary["checkpoint_sha256"],
         )
         return result
+
+    def record_runtime_config_snapshot(self, runner: Any, iteration: int, *,
+                                       boundary: dict[str, Any] | None) -> dict[str, Any]:
+        """Record active saved configs and runtime readbacks at n0/stage boundaries.
+
+        This is observational evidence only. Missing fields remain unknown and
+        reporting failures are isolated from the training update path.
+        """
+        from foothold_s2.ex42_gate_checks import extract_realized_config
+
+        env_yaml = self.run_dir / "params" / "env.yaml"
+        agent_yaml = self.run_dir / "params" / "agent.yaml"
+        target_env = getattr(getattr(runner, "env", None), "unwrapped", getattr(runner, "env", None))
+        stage_id = ((boundary or {}).get("stage_after")
+                    or getattr(target_env, "_ex42_stage_id", None)
+                    or self.consumer.current_stage_id)
+        requested_stage = next((row for row in self.plan.runtime_stages
+                                if row["id"] == stage_id), None)
+        identity = {**self.identity, "event": "runtime_config_snapshot",
+                    "iteration": iteration, "stage_id": stage_id,
+                    "boundary_iteration": (boundary or {}).get("boundary_iteration")}
+        try:
+            if not env_yaml.is_file() or not agent_yaml.is_file():
+                raise FileNotFoundError("EX-42 params/env.yaml or params/agent.yaml missing")
+            observed = extract_realized_config(env_yaml, agent_yaml)
+            missing = sorted(name for name, value in observed.items()
+                             if value.get("observed") is not True)
+            runtime_readback = {
+                "stage_id": getattr(target_env, "_ex42_stage_id", None),
+                "stage_config": getattr(target_env, "_ex42_stage_config", None),
+                "dr_scale": getattr(target_env, "_ex40_dr_scale", None),
+                "num_envs": getattr(getattr(runner, "env", None), "num_envs", None),
+                "map_sampling": ({key: getattr(runner, "pcfg", {}).get(key)
+                                  for key in ("force_gt", "p_map_off", "map_input")}
+                                 if isinstance(getattr(runner, "pcfg", None), dict) else None),
+            }
+            row = {**identity, "state": "partial" if missing else "saved_configuration_snapshot",
+                   "complete": False,
+                   "config_sources": {
+                       "env_yaml": {"path": str(env_yaml), "sha256": _sha(env_yaml)},
+                       "agent_yaml": {"path": str(agent_yaml), "sha256": _sha(agent_yaml)},
+                   },
+                   "requested_stage_config": requested_stage,
+                   "saved_active_config": observed,
+                   "runtime_readback": runtime_readback,
+                   "missing_saved_fields": missing,
+                   "requested_realized_comparison": "not_verified",
+                   "note": "saved params plus visible runtime fields only; unknowns are not filled from defaults"}
+        except Exception as exc:
+            row = {**identity, "state": "unknown", "complete": False,
+                   "reason": f"{type(exc).__name__}: {exc}",
+                   "requested_stage_config": requested_stage,
+                   "requested_realized_comparison": "not_verified"}
+        path = self.run_dir / "ex42_config_snapshots.jsonl"
+        try:
+            _append_jsonl(path, row)
+            row["receipt"] = {"state": "written", "path": str(path)}
+        except OSError as exc:
+            row["receipt"] = {"state": "unknown", "retry": True,
+                              "warning": f"{type(exc).__name__}: {exc}"}
+        # A partial snapshot is useful evidence, not an operational failure.
+        # Alert only when collection itself is unknown or persistence failed.
+        if row["state"] == "unknown" or row["receipt"]["state"] != "written":
+            row["alert_receipt"] = self._alert({**identity, "state": row["state"],
+                                                "reason": row.get("reason", row.get("missing_saved_fields"))})
+        return row
 
     def on_checkpoint_saved(self, runner: Any, iteration: int) -> dict[str, Any]:
         """Queue P1 only after StartRunner has saved and published model_N.
@@ -206,6 +276,10 @@ class EX42TrainingChain:
                 "checkpoint_sha256": checkpoint_sha256,
             })
         row["status_receipt"] = status_result
+        snapshot = self.record_runtime_config_snapshot(
+            SimpleNamespace(env=env, log_dir=str(self.run_dir)), boundary=row,
+            iteration=boundary_iteration)
+        row["config_snapshot"] = snapshot
         return row
 
     def register_checkpoint_p1(self, *, iteration: int, checkpoint_dir: str | Path,
