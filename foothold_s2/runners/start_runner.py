@@ -451,6 +451,15 @@ class StartRunner(OnPolicyRunner):
             torch.cuda.reset_peak_memory_stats(self.device)
 
     # ------------------------------------------------------------------ 학습
+    def attach_ex42_training_chain(self, chain) -> None:
+        """Attach the optional EX-42 boundary/save hooks without approving launch."""
+        plan = getattr(chain, "plan", None)
+        if not getattr(plan, "is_ex42", False):
+            raise ValueError("EX-42 chain requires the pinned EX-42 plan")
+        if plan.document.get("status") != "preparation_only":
+            raise ValueError("EX-42 launch status must remain preparation_only")
+        chain.attach_runner(self)
+
     def learn(self, num_learning_iterations: int, init_at_random_ep_len: bool = False) -> None:
         self._prepare_logging_writer()
         if init_at_random_ep_len:
@@ -534,6 +543,14 @@ class StartRunner(OnPolicyRunner):
                 # before collecting another rollout after the terminal update.
                 if curriculum_finished(continuous):
                     break
+            ex42_chain = getattr(self, "ex42_training_chain", None)
+            if ex42_chain is not None:
+                # Boundary application is training state, so a broken approved
+                # transition fails before collecting this update's rollout.
+                ex42_boundary = ex42_chain.on_runner_update_start(self, curriculum_it)
+                if ex42_boundary is not None:
+                    print("EX42_STAGE_TRANSITION " + json.dumps(
+                        ex42_boundary, ensure_ascii=False, sort_keys=True), flush=True)
             ex40_dr_runtime = getattr(self, "ex40_dr_runtime", None)
             if ex40_dr_runtime is not None:
                 ex40_dr_runtime.update_start(it)
@@ -743,6 +760,12 @@ class StartRunner(OnPolicyRunner):
                     checkpoint_path = os.path.join(self.log_dir, f"model_{it}.pt")
                     self.save(checkpoint_path)
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
+                    ex42_chain = getattr(self, "ex42_training_chain", None)
+                    if ex42_chain is not None:
+                        # P1 admission follows both model_N bytes and manifest SHA.
+                        p1_result = ex42_chain.on_checkpoint_saved(self, it)
+                        print("EX42_P1_ENQUEUE " + json.dumps(
+                            p1_result, ensure_ascii=False, sort_keys=True), flush=True)
                     if continuous is not None:
                         continuous.on_checkpoint(curriculum_it, checkpoint_path)
                 disk_guard = self.cfg.get("ex41_disk_guard")
@@ -766,17 +789,24 @@ class StartRunner(OnPolicyRunner):
             if not already_saved:
                 self.save(checkpoint_path)
                 self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
+                ex42_chain = getattr(self, "ex42_training_chain", None)
+                if ex42_chain is not None:
+                    p1_result = ex42_chain.on_checkpoint_saved(
+                        self, self.current_learning_iteration)
+                    print("EX42_P1_ENQUEUE " + json.dumps(
+                        p1_result, ensure_ascii=False, sort_keys=True), flush=True)
                 if final_runtime is not None:
                     final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
             if final_runtime is not None:
                 if (getattr(getattr(final_runtime, "plan", None), "is_ex41", False)
                         and getattr(final_runtime, "finished", False)):
-                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+                    from foothold_s2.eval.ex41_w78_video_request import (
+                        publish_stage_end_request as publish_final_stage_end_request)
                     from foothold_s2.ex41_ops import run_nonfatal_reporting
 
                     def publish_final_w78_request():
                         stage_name = getattr(final_runtime, "effective", {}).get("stage_id")
-                        request = publish_stage_end_request(
+                        request = publish_final_stage_end_request(
                             self.log_dir, final_runtime, stage_name=stage_name,
                             next_stage=None, boundary_iteration=self.current_learning_iteration)
                         final_runtime._write({"event": "w78_video_request", **request})

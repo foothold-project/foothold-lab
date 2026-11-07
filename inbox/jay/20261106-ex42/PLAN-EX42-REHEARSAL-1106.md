@@ -136,3 +136,5 @@ C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe -m pytest foothold_s2/tests/
 ```
 
 Pass requires the real train parser and environment class import to succeed, while `kit_started` remains false. Until that explicit install-day run, the successful runtime import is unmeasured.
+
+Hypothetical argv after an explicit lead decision lifts `preparation_only` (not authorized or runnable now): `python -m foothold_s2.scripts.train_start --task FootholdS2-Go2-S2-v0 --device cuda:0 --ex42_plan foothold_s2/curriculum/ex42-prep.yaml --ex42_approvals foothold_s2/curriculum/ex42-approvals.yaml --ex42_parent_manifest C:/Users/AI-WS01/s2_lab/ex41_main_<stamp>/main/<run>/manifest.json --ex42_log_dir C:/Users/AI-WS01/s2_lab/ex42_<stamp>/main/<run> --ex42_queue_path D:/mai-tmp/runner/ex42-rehearsal-queue.json --ex42_p1_score_argv_json '["python","-m","<approved-score-entry>","--iteration","{iteration}"]'`; with the present `preparation_only` plan the caller validates the pinned parent and writes its non-launch receipt, then rejects before `AppLauncher`.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import re
 import subprocess
@@ -94,9 +95,12 @@ class EX42Plan:
             if stage_zero.get(key) != source_stage.get(key):
                 raise ValueError(f"EX-42 stage zero differs from EX-41 T0-prime {key}")
         parent = stage_zero.get("parent")
-        if parent != {"update": 6000,
-                      "sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5"}:
-            raise ValueError("EX-42 stage zero parent must be the fixed EX-41 m6000 checkpoint")
+        if parent != {
+                "cumulative_update": 12000,
+                "manifest_local_update": 6000,
+                "sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+        }:
+            raise ValueError("EX-42 stage zero parent must match the EX-41 cumulative m12000 manifest SHA")
         if (stage_zero.get("minimum_updates") != 1000
                 or stage_zero.get("maximum_updates") != 1000
                 or stage_zero.get("extension_updates") != 0
@@ -253,6 +257,42 @@ class EX42Plan:
                 raise ValueError(f"EX-42 physical flag must be an explicit boolean: {family}/{kind}")
         if counts != contract["kind_count_by_family"]:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
+
+    def verify_parent_manifest(self, manifest_path: str | Path) -> dict[str, Any]:
+        """Resolve the parent checkpoint by its pinned manifest SHA, not by filename."""
+        path = Path(manifest_path).resolve(strict=True)
+        try:
+            manifest = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"EX-42 parent manifest is unreadable: {exc}") from exc
+        if not isinstance(manifest, dict):
+            raise ValueError("EX-42 parent manifest must be a JSON object")
+        progress = manifest.get("progress")
+        local_update = self.document["stage_zero"]["parent"]["manifest_local_update"]
+        if (not isinstance(progress, dict) or type(progress.get("completed_updates")) is not int
+                or progress["completed_updates"] < local_update):
+            raise ValueError("EX-42 parent manifest has not completed the pinned local update")
+        checkpoints = manifest.get("checkpoints")
+        if not isinstance(checkpoints, dict):
+            raise ValueError("EX-42 parent manifest has no checkpoint inventory")
+        expected = self.document["stage_zero"]["parent"]["sha256"]
+        matches = [name for name, digest in checkpoints.items() if digest == expected]
+        if len(matches) != 1:
+            raise ValueError("EX-42 parent manifest must contain exactly one checkpoint with the pinned SHA")
+        checkpoint = (path.parent / matches[0]).resolve(strict=True)
+        if checkpoint.parent != path.parent or not checkpoint.is_file():
+            raise ValueError("EX-42 parent checkpoint must be a file beside its manifest")
+        actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+        if actual != expected:
+            raise ValueError("EX-42 parent checkpoint bytes differ from manifest-pinned SHA")
+        return {
+            "manifest_path": str(path),
+            "manifest_completed_updates": progress["completed_updates"],
+            "manifest_checkpoint_key": matches[0],
+            "checkpoint_path": str(checkpoint),
+            "cumulative_update": self.document["stage_zero"]["parent"]["cumulative_update"],
+            "checkpoint_sha256": actual,
+        }
 
     def validate_stage_command_shares(self, stage_id: str, continuous_share: float,
                                       conditional_shares: dict[str, float]) -> dict[str, float]:

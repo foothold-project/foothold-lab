@@ -61,6 +61,13 @@ _pre.add_argument("--ex41_rehearsal_output")
 _pre.add_argument("--ex41_rehearsal_dr_08", action="store_true")
 _pre.add_argument("--ex41_rehearsal_stage_updates")
 _pre.add_argument("--ex41_startup_smoke_updates", type=int)
+_pre.add_argument("--ex42_plan")
+_pre.add_argument("--ex42_approvals")
+_pre.add_argument("--ex42_parent_manifest")
+_pre.add_argument("--ex42_log_dir")
+_pre.add_argument("--ex42_queue_path")
+_pre.add_argument("--ex42_dispatch_path")
+_pre.add_argument("--ex42_p1_score_argv_json")
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--headless", action="store_true")
@@ -82,6 +89,7 @@ EX41_GPU0_BUSY_OWNERS = None
 EX41_GPU0_BUSY_RUN = None
 EX41_GPU0_BUSY_ADMISSION = None
 EX41_GPU0_BUSY_RECEIPT_PATH = None
+EX42_TRAINING_CHAIN = None
 
 
 def _claim_ex41_gpu0_busy_marker(log_dir: str, iteration: int) -> None:
@@ -393,6 +401,38 @@ elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.
       or _pre_args.ex41_production_launch_approved):
     raise ValueError("EX-41 options require --ex41_table")
 
+# EX-42 remains preparation-only. Validate the same approved plan, approval
+# file, parent manifest SHA, run directory, and explicit P1 argv template
+# before AppLauncher. This path intentionally refuses before Kit is started.
+_ex42_values = {
+    "plan": _pre_args.ex42_plan,
+    "approvals": _pre_args.ex42_approvals,
+    "parent_manifest": _pre_args.ex42_parent_manifest,
+    "log_dir": _pre_args.ex42_log_dir,
+    "queue_path": _pre_args.ex42_queue_path,
+    "p1_score_argv_json": _pre_args.ex42_p1_score_argv_json,
+}
+_ex42_requested = any(value is not None for value in _ex42_values.values()) or bool(_pre_args.ex42_dispatch_path)
+if _ex42_requested:
+    _missing_ex42 = [name for name, value in _ex42_values.items() if not value]
+    if _missing_ex42:
+        raise ValueError("EX-42 caller inputs are incomplete: " + ", ".join(_missing_ex42))
+    from foothold_s2.scripts.ex42_training_entry import build_ex42_training_chain
+
+    EX42_TRAINING_CHAIN = build_ex42_training_chain(
+        plan_path=_pre_args.ex42_plan,
+        approvals_path=_pre_args.ex42_approvals,
+        parent_manifest_path=_pre_args.ex42_parent_manifest,
+        run_dir=_pre_args.ex42_log_dir,
+        repo_root=REPO,
+        queue_path=_pre_args.ex42_queue_path,
+        dispatch_path=_pre_args.ex42_dispatch_path,
+        score_argv_json=_pre_args.ex42_p1_score_argv_json,
+    )
+    raise RuntimeError(
+        "EX-42 preparation_only: chain validated and receipt written; refusing before AppLauncher"
+    )
+
 from isaaclab.app import AppLauncher  # noqa: E402
 
 ISAAC_RSL = str(machine_path("isaaclab_root") / "scripts" / "reinforcement_learning" / "rsl_rl")
@@ -432,6 +472,14 @@ parser.add_argument("--ex41_rehearsal_stage_updates", type=str, default=None,
                     help="Rehearsal only: six comma-separated short stage lengths; never valid for production")
 parser.add_argument("--ex41_startup_smoke_updates", type=int,
                     help="Bound the normal EX-41 startup path to exactly 10 updates with production authorization false")
+parser.add_argument("--ex42_plan", type=str, default=None)
+parser.add_argument("--ex42_approvals", type=str, default=None)
+parser.add_argument("--ex42_parent_manifest", type=str, default=None)
+parser.add_argument("--ex42_log_dir", type=str, default=None)
+parser.add_argument("--ex42_queue_path", type=str, default=None)
+parser.add_argument("--ex42_dispatch_path", type=str, default=None)
+parser.add_argument("--ex42_p1_score_argv_json", type=str, default=None,
+                    help="Explicit JSON argv template; exactly one {iteration} placeholder is required")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -456,6 +504,12 @@ if (args_cli.ex41_rehearsal_updates != _pre_args.ex41_rehearsal_updates
     raise ValueError("EX-41 rehearsal preflight and runtime parser disagree")
 if args_cli.ex41_startup_smoke_updates != _pre_args.ex41_startup_smoke_updates:
     raise ValueError("EX-41 startup smoke preflight and runtime parser disagree")
+for _ex42_name in _ex42_values:
+    if getattr(args_cli, f"ex42_{_ex42_name}", None) != getattr(_pre_args, f"ex42_{_ex42_name}", None):
+        # p1_score_argv_json is intentionally explicit and has no inferred default.
+        raise ValueError(f"EX-42 preflight and runtime parser disagree on {_ex42_name}")
+if args_cli.ex42_dispatch_path != _pre_args.ex42_dispatch_path:
+    raise ValueError("EX-42 preflight and runtime parser disagree on dispatch path")
 if EX41_REHEARSAL:
     from foothold_s2.scripts.ex41_startup import (
         validate_rehearsal_request, validate_rehearsal_resume_request,
@@ -697,6 +751,10 @@ def main(env_cfg, agent_cfg):
         print("EX41_FIRST_OBSERVATION " + json.dumps(ex41_first_observation, sort_keys=True), flush=True)
     else:
         runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
+    if EX42_TRAINING_CHAIN is not None:
+        from foothold_s2.scripts.ex42_training_entry import attach_ex42_training_chain
+
+        attach_ex42_training_chain(runner, EX42_TRAINING_CHAIN)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
     ex41_end_by_receipt = None

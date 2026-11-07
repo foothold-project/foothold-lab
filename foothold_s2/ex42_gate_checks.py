@@ -10,32 +10,74 @@ import subprocess
 from typing import Any, Callable, Iterable
 
 
-REQUIRED_GATE_ROWS = ("G01", "G03", "G05", "G08", "G13", "G15", "G17", "G18", "G33")
-_GATE_ID = re.compile(r"\b(G[0-9]{2})\b")
+_GATE_SCHEMA_PATH = Path(__file__).with_name("curriculum") / "ex42_gate_schema.json"
+_GATE_ID = re.compile(r"G[0-9]{2}")
+_GATE_ROW_PREFIX = re.compile(r"G[^\s|]*", re.IGNORECASE)
 _OPEN_MARKERS = ("없음 · 막음", "예행 대기", "미확인")
 
 
-def open_gate_rows(path: str | Path, required: Iterable[str] = REQUIRED_GATE_ROWS) -> list[str]:
-    """Read the analyst gate table; missing/malformed required rows fail closed."""
-    found: dict[str, str] = {}
+def _load_gate_schema() -> tuple[str, ...]:
+    try:
+        schema = json.loads(_GATE_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"EX-42 gate schema unavailable: {exc}") from exc
+    if not isinstance(schema, dict):
+        raise ValueError("EX-42 gate schema must be a JSON object")
+    rows = schema.get("required_rows")
+    expected_rows = schema.get("expected_rows")
+    ids = tuple(rows) if isinstance(rows, list) and all(isinstance(row, str) for row in rows) else ()
+    if (schema.get("schema") != "foothold-ex42-gate-register/1"
+            or expected_rows != 33 or len(ids) != expected_rows
+            or len(set(ids)) != len(ids) or any(_GATE_ID.fullmatch(row) is None for row in ids)):
+        raise ValueError("EX-42 gate schema is not the canonical 33-row register")
+    return ids
+
+
+try:
+    REQUIRED_GATE_ROWS = _load_gate_schema()
+except ValueError:
+    # Keep imports usable so ops-check can report the schema failure as a blocker.
+    REQUIRED_GATE_ROWS = ()
+
+
+def open_gate_rows(path: str | Path) -> list[str]:
+    """Read all canonical gate rows; absent, duplicate, open, or unregistered rows block."""
+    required = _load_gate_schema()
+    found: dict[str, list[str]] = {}
+    malformed: set[str] = set()
+    unregistered: set[str] = set()
     try:
         lines = Path(path).read_text(encoding="utf-8-sig").splitlines()
     except OSError as exc:
         raise ValueError(f"EX-42 gate report unavailable: {exc}") from exc
     for line in lines:
-        if not line.startswith("|") or "---" in line:
+        if not line.startswith("|"):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if len(cells) < 5:
+        if not cells or cells[0].lower() == "gate" or all(set(cell) <= {"-", ":"} for cell in cells):
             continue
-        match = _GATE_ID.search(cells[0])
-        if match:
-            found[match.group(1)] = cells[4]
-    required_set = tuple(required)
-    missing = sorted(set(required_set) - found.keys())
-    if missing:
-        raise ValueError("gate report is missing required rows: " + ",".join(missing))
-    return [row for row in required_set if any(marker in found[row] for marker in _OPEN_MARKERS)]
+        match = _GATE_ID.fullmatch(cells[0])
+        if match is None:
+            prefix = _GATE_ROW_PREFIX.match(cells[0])
+            if prefix:
+                unregistered.add("UNREGISTERED_" + re.sub(r"[^A-Za-z0-9]+", "_", prefix.group(0)).upper())
+            continue
+        row_id = match.group(0)
+        if row_id not in required:
+            unregistered.add(row_id)
+        if len(cells) < 5:
+            malformed.add(row_id)
+            continue
+        found.setdefault(row_id, []).append(cells[4])
+
+    blockers = []
+    for row_id in required:
+        states = found.get(row_id, [])
+        if len(states) != 1 or row_id in malformed or any(
+                marker in states[0] for marker in _OPEN_MARKERS):
+            blockers.append(row_id)
+    blockers.extend(sorted(unregistered))
+    return blockers
 
 
 def locked_source_contract(*, launch_head: str, remote_head: str,

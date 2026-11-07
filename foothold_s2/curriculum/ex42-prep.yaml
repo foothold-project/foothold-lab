@@ -101,8 +101,9 @@ stage_zero:
     path: ex41-fixed5000.yaml
     normalized_sha256: 92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c
   parent:
-    update: 6000
-    sha256: d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5
+    cumulative_update: 12000
+    manifest_local_update: 6000
+    sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0

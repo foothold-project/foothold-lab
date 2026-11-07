@@ -4,6 +4,7 @@ import json
 import os
 import stat
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -33,6 +34,23 @@ def test_g01_ops_gate_table_fails_closed_on_any_open_row(tmp_path):
     assert open_gate_rows(path) == ["G33"]
     with pytest.raises(ValueError, match="gate report unavailable"):
         open_gate_rows(tmp_path / "missing.md")
+
+
+def test_g01_analyst_33_row_counterexample_blocks_g11():
+    fixture = Path(__file__).with_name("fixtures") / "ex42-gate-g11-open.md"
+    assert open_gate_rows(fixture) == ["G11"]
+
+
+def test_g01_missing_and_unregistered_ids_are_blockers(tmp_path):
+    ids = [f"G{i:02d}" for i in range(1, 34)]
+    lines = ["| Gate | Issue | Risk | Guard | State | Owner |", "|---|---|---|---|---|---|"]
+    lines.extend(f"| {row} | x | x | x | 검증 완료 | runner |" for row in ids if row != "G11")
+    path = tmp_path / "missing-row.md"
+    path.write_text("\n".join(lines), encoding="utf-8")
+    assert open_gate_rows(path) == ["G11"]
+    lines.append("| G34 | x | x | x | 검증 완료 | runner |")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    assert open_gate_rows(path) == ["G11", "G34"]
 
 
 def test_g03_locked_head_inventory_and_writable_counter():
