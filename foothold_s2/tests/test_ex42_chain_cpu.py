@@ -13,6 +13,8 @@ from foothold_s2.curriculum.ex42_runtime import EX42Runtime
 from foothold_s2.eval.ex42_component_receipts import SCHEMA, sha256
 from foothold_s2.eval.ex42_video_delivery import KINDS, VIDEO_RULE_VERSION, freeze_requests
 from foothold_s2.ex42_status import read_status
+from foothold_s2.runners.start_runner import StartRunner
+from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
 
 ROOT = Path(__file__).parents[2]
@@ -20,7 +22,8 @@ TABLE = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
 APPROVALS = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 
-def make_chain(tmp_path, *, alert_sender=None):
+def make_chain(tmp_path, *, alert_sender=None, score_argv_factory=None,
+               boundary_provider=None, p1_interval=250):
     source_plan = EX42Plan.load(TABLE)
     parent_bytes = b"known EX-41 m12000 parent fixture"
     parent_sha = hashlib.sha256(parent_bytes).hexdigest()
@@ -39,7 +42,8 @@ def make_chain(tmp_path, *, alert_sender=None):
         plan=plan, approvals_path=APPROVALS,
         parent_manifest_path=parent / "manifest.json", run_dir=run,
         repo_root=ROOT, queue_path=tmp_path / "gpu/queue.json",
-        alert_sender=alert_sender,
+        alert_sender=alert_sender, score_argv_factory=score_argv_factory,
+        boundary_provider=boundary_provider, p1_interval=p1_interval,
     ), run
 
 
@@ -51,6 +55,19 @@ def test_parent_manifest_identity_resolves_real_name_by_sha(tmp_path):
     assert start["parent"]["manifest_checkpoint_key"] == "model_6000.pt"
     assert start["parent"]["cumulative_update"] == 12000
     assert start["parent"]["checkpoint_sha256"] == chain.parent["checkpoint_sha256"]
+
+
+def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_path):
+    plan = EX42Plan.load(TABLE)
+    assert plan.document["status"] == "preparation_only"
+    try:
+        EX42Runtime(plan, 3072, "cuda:0", tmp_path,
+                    approvals_path=APPROVALS, graduation_path=None,
+                    terrain_manifest_path=None)
+    except ValueError as exc:
+        assert "preparation-only runtime is blocked" in str(exc)
+    else:
+        raise AssertionError("EX-42 preparation-only plan unexpectedly opened runtime launch")
 
 
 def test_transition_gap_applies_approved_dr_and_registers_priority_one(tmp_path):
@@ -71,6 +88,7 @@ def test_transition_gap_applies_approved_dr_and_registers_priority_one(tmp_path)
         score_argv=["python", "-m", "known.score_command"],
     )
     queue = json.loads((tmp_path / "gpu/queue.json").read_text(encoding="utf-8"))
+    assert len(queue["items"]) == 1
     assert queued["checkpoint_sha256"] == checkpoint_sha
     assert queued["stage_id"] == "EX42_0_T0_prime"
     assert queue["items"][0]["priority"] == 1 and queue["items"][0]["gpu"] == 1
@@ -269,3 +287,96 @@ def test_p1_collection_failure_is_retryable_but_completed_judgment_hold_is_not(t
     assert held["state"] == "judgment_hold"
     assert held["retry_required"] is False
     assert failed["receipt"]["path"] != held["receipt"]["path"]
+
+
+def _run_runner_to_checkpoint(tmp_path, *, score_argv_factory):
+    calls = []
+
+    def boundary(iteration, _runner):
+        calls.append(("boundary_provider", iteration))
+        if iteration == 1:
+            return {"next_stage_id": "E0", "expected_score_iteration": 0,
+                    "observed_score_iteration": None, "checkpoint_sha256": "a" * 64}
+        return None
+
+    chain, run = make_chain(
+        tmp_path, score_argv_factory=score_argv_factory,
+        boundary_provider=boundary, p1_interval=1)
+    runner = StartRunner(FakeStartEnv(num_envs=8, seed=71),
+                         train_cfg(24, {"microbatch_envs": 4}),
+                         log_dir=str(run), device="cpu")
+    runner.current_learning_iteration = 1
+    runner.cfg["save_interval"] = 1
+    runner.save_interval = 1
+    runner.pcfg["latest_interval"] = 999999
+    runner._check_code = lambda _iteration: None
+
+    def publish_manifest(iteration, name, _num_envs):
+        path = run / name
+        (run / "manifest.json").write_text(json.dumps({
+            "progress": {"completed_updates": iteration},
+            "checkpoints": {name: hashlib.sha256(path.read_bytes()).hexdigest()},
+        }), encoding="utf-8")
+        calls.append(("manifest", iteration))
+
+    runner._manifest_checkpoint = publish_manifest
+    runner.attach_ex42_training_chain(chain)
+    assert chain.plan.document["status"] == "preparation_only"
+    original_boundary = chain.on_runner_update_start
+
+    def observe_boundary(*args):
+        value = original_boundary(*args)
+        if value is not None:
+            calls.append(("transition_applied", value["boundary_iteration"]))
+        return value
+
+    chain.on_runner_update_start = observe_boundary
+    original_p1 = chain.on_checkpoint_saved
+
+    def observe_p1(*args):
+        value = original_p1(*args)
+        calls.append(("p1_result", value["state"]))
+        return value
+
+    chain.on_checkpoint_saved = observe_p1
+    original_step = runner.env.step
+
+    def observe_step(actions):
+        calls.append(("env_step", 1))
+        return original_step(actions)
+
+    runner.env.step = observe_step
+    calls.append(("attached", 1))
+    runner.learn(1)
+    calls.append(("learn_returned", runner.current_learning_iteration))
+    return chain, runner, run, calls
+
+
+def test_start_runner_calls_boundary_then_saves_manifest_then_registers_p1(tmp_path):
+    chain, runner, run, calls = _run_runner_to_checkpoint(
+        tmp_path, score_argv_factory=lambda iteration: [
+            "python", "-m", "known.score_command", "--checkpoint-iteration", str(iteration)])
+    assert calls.index(("boundary_provider", 1)) < calls.index(("manifest", 1))
+    assert calls.index(("transition_applied", 1)) < calls.index(("env_step", 1))
+    assert calls.index(("manifest", 1)) < calls.index(("p1_result", "queued"))
+    queue = json.loads((tmp_path / "gpu/queue.json").read_text(encoding="utf-8"))
+    assert queue["items"][0]["argv"][-1] == "1"
+    assert queue["items"][0]["priority"] == 1
+    events = [json.loads(line) for line in (run / "ex42_application.jsonl").read_text().splitlines()]
+    assert next(row for row in events if row.get("event") == "stage_transition")["stage_after"] == "E0"
+    assert next(row for row in events if row.get("event") == "p1_queued")["checkpoint_iteration"] == 1
+    assert runner.current_learning_iteration == 1
+    assert calls[-1] == ("learn_returned", 1)
+
+
+def test_start_runner_p1_enqueue_failure_is_recorded_without_stopping_learning(tmp_path):
+    chain, runner, run, calls = _run_runner_to_checkpoint(
+        tmp_path, score_argv_factory=lambda _iteration: [])
+    events = [json.loads(line) for line in (run / "ex42_application.jsonl").read_text().splitlines()]
+    failure = next(row for row in events if row.get("event") == "p1_enqueue_failed")
+    assert failure["state"] == "collection_failed_retryable"
+    assert calls.index(("manifest", 1)) < calls.index(("p1_result", "collection_failed_retryable"))
+    assert runner.current_learning_iteration == 1
+    assert calls[-1] == ("learn_returned", 1)
+    status = read_status(run / "train_start_status.json")
+    assert status["state"] == "read"

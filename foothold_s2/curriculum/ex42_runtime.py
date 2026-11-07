@@ -152,14 +152,19 @@ class EX42Runtime:
                        parent_manifest_path: str | Path, run_dir: str | Path,
                        repo_root: str | Path, queue_path: str | Path,
                        dispatch_path: str | Path | None = None,
-                       alert_sender: Any = None):
+                       alert_sender: Any = None,
+                       score_argv_factory: Any = None,
+                       boundary_provider: Any = None,
+                       p1_interval: int = 250):
         """Build the runner-owned chain adapter without granting launch approval."""
         from foothold_s2.ex42_chain import EX42TrainingChain
         return EX42TrainingChain(
             plan=plan, approvals_path=approvals_path,
             parent_manifest_path=parent_manifest_path, run_dir=run_dir,
             repo_root=repo_root, queue_path=queue_path,
-            dispatch_path=dispatch_path, alert_sender=alert_sender)
+            dispatch_path=dispatch_path, alert_sender=alert_sender,
+            score_argv_factory=score_argv_factory,
+            boundary_provider=boundary_provider, p1_interval=p1_interval)
 
     def __init__(
         self, plan: EX42Plan, env_count: int, device: str, log_dir: str | Path,

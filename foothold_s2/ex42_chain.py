@@ -45,7 +45,10 @@ class EX42TrainingChain:
                  parent_manifest_path: str | Path, run_dir: str | Path,
                  repo_root: str | Path, queue_path: str | Path,
                  dispatch_path: str | Path | None = None,
-                 alert_sender: Callable[[dict[str, Any]], Any] | None = None):
+                 alert_sender: Callable[[dict[str, Any]], Any] | None = None,
+                 score_argv_factory: Callable[[int], list[str]] | None = None,
+                 boundary_provider: Callable[[int, Any], dict[str, Any] | None] | None = None,
+                 p1_interval: int = 250):
         self.plan = plan
         self.approvals_path = Path(approvals_path).resolve(strict=True)
         self.parent = plan.verify_parent_manifest(parent_manifest_path)
@@ -54,9 +57,23 @@ class EX42TrainingChain:
         self.queue_path = Path(queue_path)
         self.dispatch_path = Path(dispatch_path or self.repo_root / "_out/tools/gpu_jobs/dispatch.py")
         self.alert_sender = alert_sender
+        if type(p1_interval) is not int or p1_interval <= 0:
+            raise ValueError("EX-42 P1 interval must be a positive integer")
+        self.score_argv_factory = score_argv_factory
+        self.boundary_provider = boundary_provider
+        self.p1_interval = p1_interval
         self.application_path = self.run_dir / "ex42_application.jsonl"
         self.status_path = self.run_dir / "train_start_status.json"
         self.alert_path = self.run_dir / "alerts.jsonl"
+        self._queued_p1_keys: set[tuple[int, str]] = set()
+        if self.application_path.is_file():
+            self._queued_p1_keys = {
+                (row["checkpoint_iteration"], row["checkpoint_sha256"])
+                for row in read_transition_rows(self.application_path)
+                if row.get("event") == "p1_queued"
+                and type(row.get("checkpoint_iteration")) is int
+                and isinstance(row.get("checkpoint_sha256"), str)
+            }
         self.consumer = EX42Runtime.transition_consumer(plan, self.approvals_path)
         self._write_receipt("startup_receipt.json", {
             "state": "chain_ready_not_launch_authorized",
@@ -71,6 +88,65 @@ class EX42TrainingChain:
     def identity(self) -> dict[str, Any]:
         return {"experiment": "EX-42", "plan_sha256": self.plan.sha256,
                 "parent_checkpoint_sha256": self.parent["checkpoint_sha256"]}
+
+    def attach_runner(self, runner: Any) -> None:
+        """Install hooks consumed by StartRunner without changing launch gates."""
+        runner_dir = getattr(runner, "log_dir", None)
+        if runner_dir is None or Path(runner_dir).resolve() != self.run_dir.resolve():
+            raise ValueError("EX-42 chain and StartRunner must share one run directory")
+        if self.score_argv_factory is None:
+            raise ValueError("EX-42 runner hook requires the real score argv factory")
+        runner.ex42_training_chain = self
+
+    def on_runner_update_start(self, runner: Any, iteration: int) -> dict[str, Any] | None:
+        """Apply an explicitly supplied stage boundary before that update's rollout."""
+        if self.boundary_provider is None:
+            return None
+        boundary = self.boundary_provider(iteration, runner)
+        if boundary is None:
+            return None
+        required = ("next_stage_id", "expected_score_iteration", "observed_score_iteration",
+                    "checkpoint_sha256")
+        if any(key not in boundary for key in required):
+            raise ValueError("EX-42 boundary provider omitted required evidence")
+        result = self.transition(
+            runner.env, boundary["next_stage_id"], boundary_iteration=iteration,
+            expected_score_iteration=boundary["expected_score_iteration"],
+            observed_score_iteration=boundary["observed_score_iteration"],
+            checkpoint_sha256=boundary["checkpoint_sha256"],
+        )
+        return result
+
+    def on_checkpoint_saved(self, runner: Any, iteration: int) -> dict[str, Any]:
+        """Queue P1 only after StartRunner has saved and published model_N.
+
+        Evaluation/dispatcher failures are receipts and alerts, never exceptions
+        in the training loop. Checkpoint or manifest corruption is caught by the
+        verifier before a job can enter the queue.
+        """
+        if iteration % self.p1_interval:
+            return {"state": "not_due", "iteration": iteration}
+        try:
+            checkpoint_path = Path(runner.log_dir) / f"model_{iteration}.pt"
+            digest = _sha(checkpoint_path)
+            key = (iteration, digest)
+            if key in self._queued_p1_keys:
+                return {"state": "already_queued", "iteration": iteration,
+                        "checkpoint_sha256": digest}
+            argv = self.score_argv_factory(iteration) if self.score_argv_factory else None
+            queued = self.register_checkpoint_p1(
+                iteration=iteration, checkpoint_dir=runner.log_dir,
+                score_argv=argv or [], application_log=self.application_path)
+            return {"state": "queued", **queued}
+        except Exception as exc:
+            row = {**self.identity, "event": "p1_enqueue_failed",
+                   "checkpoint_iteration": iteration,
+                   "state": "collection_failed_retryable",
+                   "retry_required": True,
+                   "reason": f"{type(exc).__name__}: {exc}"}
+            event = self._record_event(row)
+            alert = self._alert(row)
+            return {**row, "event_receipt": event, "alert_receipt": alert}
 
     def _write_receipt(self, name: str, payload: dict[str, Any]) -> dict[str, Any]:
         result = write_status(self.run_dir / name, payload)
@@ -117,7 +193,7 @@ class EX42TrainingChain:
         )
         row = {**self.identity, "checkpoint_sha256": checkpoint_sha256,
                "score_checkpoint_iteration": expected_score_iteration, **row}
-        event_result = self._record_event(row)
+        event_result = self._record_event({"event": "stage_transition", **row})
         status_result = write_status(self.status_path, {
             **row, "state": "running", "transition_receipt": event_result,
         })
@@ -169,6 +245,7 @@ class EX42TrainingChain:
         )
         message = dispatch.queue_cmd(args, {"queue": str(self.queue_path)})
         job_id = int(message.rsplit(" ", 1)[-1])
+        self._queued_p1_keys.add((iteration, checkpoint_sha))
         event = {**self.identity, **context, "checkpoint_path": str(checkpoint),
                  "checkpoint_sha256": checkpoint_sha, "queue_id": job_id,
                  "queue_priority": 1, "queue_gpu": 1,
