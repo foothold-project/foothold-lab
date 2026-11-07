@@ -1,0 +1,2661 @@
+[
+  {
+    "cell": "pyramid_stairs_L0_eval_gt",
+    "ordinal": 1,
+    "status": "other_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 0,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_eval_gt\\01",
+    "closed_mtime": "2026-11-07T09:41:58.785769+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "e4d1efdbab5b2137aaaa3bf679359d1593ab734c44ec09c4af7b4bf5e8d51686",
+    "error": "ValueError: EX-41 pose_cmd must have shape (N,2)"
+  },
+  {
+    "cell": "pyramid_stairs_L0_eval_gt",
+    "ordinal": 2,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 0,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_eval_gt\\02",
+    "closed_mtime": "2026-11-07T09:48:30.295984+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_eval_gt\\02\\EX41-pyramid_stairs_L0_env0-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "19bd6b5fd3af7779ebb74fb0239935da8d4ac409978aa67a60aeb51e1b804987",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 105.92552185058594,
+    "capture_wall_s": 150.625,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -36.35424575805664,
+        -89.97310791015624,
+        1.699153220653534
+      ],
+      "camera_target_w": [
+        -35.50424575805664,
+        -88.37310791015625,
+        0.7991532206535339
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -21.002772903442384,
+        -86.44561920166015,
+        1.187560147047043
+      ],
+      "camera_target_w": [
+        -20.152772903442383,
+        -84.84561920166016,
+        0.28756014704704286
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -35.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 0.8491532206535339,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -40,
+    "start_tile_y0": -92,
+    "end_x": -20.402772903442383,
+    "end_y": -84.84561920166016,
+    "end_z": 0.33756014704704285,
+    "end_u": 19.597227096557617,
+    "end_v": 7.154380798339844,
+    "end_edge": -11.597227096557617,
+    "end_yaw": 26.14706168409492,
+    "end_tile_x0": -40,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 449,
+    "rgb_retry_calls": 449,
+    "first_recovered_dark_sim_time": 0.04999999888241291
+  },
+  {
+    "cell": "pyramid_stairs_L0_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 0,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_eval_pred\\01",
+    "closed_mtime": "2026-11-07T09:54:01.222780+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_eval_pred\\01\\EX41-pyramid_stairs_L0_env0-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "037bdb11813e7e42b672cfac5e934053019609d1fd3f28d8148dc721729e3611",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 105.55258178710938,
+    "capture_wall_s": 137.0,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -36.35424575805664,
+        -89.97310791015624,
+        1.699153220653534
+      ],
+      "camera_target_w": [
+        -35.50424575805664,
+        -88.37310791015625,
+        0.7991532206535339
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -23.12945137023926,
+        -86.51144561767578,
+        1.1438968241214753
+      ],
+      "camera_target_w": [
+        -22.279451370239258,
+        -84.91144561767578,
+        0.24389682412147523
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -35.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 0.8491532206535339,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -40,
+    "start_tile_y0": -92,
+    "end_x": -22.529451370239258,
+    "end_y": -84.91144561767578,
+    "end_z": 0.2938968241214752,
+    "end_u": 17.470548629760742,
+    "end_v": 7.088554382324219,
+    "end_edge": -9.470548629760742,
+    "end_yaw": -6.2736402536905755,
+    "end_tile_x0": -40,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L0_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 0,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T09:57:59.984436+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L0_probe_prop_only\\01\\EX41-pyramid_stairs_L0_env0-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "2e88cadda9d93b993c6097c2314c6a2e62d715ce9bbc487c80c4f876526ca9a7",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 104.24642181396484,
+    "capture_wall_s": 124.844,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -36.35424575805664,
+        -89.97310791015624,
+        1.699153220653534
+      ],
+      "camera_target_w": [
+        -35.50424575805664,
+        -88.37310791015625,
+        0.7991532206535339
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -20.081880187988283,
+        -86.5737319946289,
+        1.2281509995460511
+      ],
+      "camera_target_w": [
+        -19.23188018798828,
+        -84.9737319946289,
+        0.32815099954605104
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -35.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 0.8491532206535339,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -40,
+    "start_tile_y0": -92,
+    "end_x": -19.48188018798828,
+    "end_y": -84.9737319946289,
+    "end_z": 0.378150999546051,
+    "end_u": 20.51811981201172,
+    "end_v": 7.026268005371094,
+    "end_edge": -12.518119812011719,
+    "end_yaw": 31.331901052630194,
+    "end_tile_x0": -40,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L1_eval_gt",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 1,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L1_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:02:32.523999+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L1_eval_gt\\01\\EX41-pyramid_stairs_L1_env0-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "7f847f37ff071734fbf870ac90671440cdff1f1dd64db16a397fccda8b33e0bf",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 100.07606506347656,
+    "capture_wall_s": 138.188,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -28.354245758056642,
+        -89.97310791015624,
+        1.805324411392212
+      ],
+      "camera_target_w": [
+        -27.50424575805664,
+        -88.37310791015625,
+        0.9053244113922119
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -12.95230541229248,
+        -84.15189514160156,
+        1.4501793742179871
+      ],
+      "camera_target_w": [
+        -12.10230541229248,
+        -82.55189514160156,
+        0.550179374217987
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -27.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 0.9553244113922119,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -32,
+    "start_tile_y0": -92,
+    "end_x": -12.35230541229248,
+    "end_y": -82.55189514160156,
+    "end_z": 0.6001793742179871,
+    "end_u": 19.64769458770752,
+    "end_v": 9.448104858398438,
+    "end_edge": -11.64769458770752,
+    "end_yaw": 35.80375254481797,
+    "end_tile_x0": -32,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L1_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 1,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L1_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:07:11.712919+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L1_eval_pred\\01\\EX41-pyramid_stairs_L1_env0-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "ac87c8885aaea0f026df02f5c364fd57df3ad8db9cfa4d4515156f7670d004ee",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 103.36671447753906,
+    "capture_wall_s": 145.719,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -28.354245758056642,
+        -89.97310791015624,
+        1.805324411392212
+      ],
+      "camera_target_w": [
+        -27.50424575805664,
+        -88.37310791015625,
+        0.9053244113922119
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -11.983585929870605,
+        -88.49406585693359,
+        1.9377268314361573
+      ],
+      "camera_target_w": [
+        -11.133585929870605,
+        -86.8940658569336,
+        1.0377268314361572
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -27.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 0.9553244113922119,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -32,
+    "start_tile_y0": -92,
+    "end_x": -11.383585929870605,
+    "end_y": -86.8940658569336,
+    "end_z": 1.0877268314361572,
+    "end_u": 20.616414070129395,
+    "end_v": 5.105934143066406,
+    "end_edge": -12.616414070129395,
+    "end_yaw": 11.3033489375323,
+    "end_tile_x0": -32,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L1_probe_prop_only",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 1,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L1_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:08:20.995900+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 315,
+    "fatal_sim_time": 2.9299999345093966,
+    "fatal_env_step": 146,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9994615912437439,
+      0.0007532117888331413,
+      0.006077439058572054,
+      0.03223240375518799
+    ],
+    "fatal_x": -25.27008819580078,
+    "fatal_y": -88.1379623413086,
+    "fatal_z": 0.4229355454444885,
+    "fatal_u": 6.729911804199219,
+    "fatal_v": 3.8620376586914062,
+    "fatal_edge": 1.2700881958007812,
+    "fatal_yaw": 3.694928144036229,
+    "fatal_tile_x0": -32,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -25.870088195800783,
+      -89.73796234130859,
+      1.2729355454444886
+    ],
+    "fatal_target_derived": [
+      -25.02008819580078,
+      -88.1379623413086,
+      0.37293554544448854
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L2_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 2,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L2_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:09:28.800182+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 315,
+    "fatal_sim_time": 3.609999919310212,
+    "fatal_env_step": 180,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9994495511054993,
+      -0.013144315220415592,
+      0.01914038136601448,
+      0.02369687333703041
+    ],
+    "fatal_x": -16.994110107421875,
+    "fatal_y": -88.22107696533203,
+    "fatal_z": 0.38263222575187683,
+    "fatal_u": 7.005889892578125,
+    "fatal_v": 3.7789230346679688,
+    "fatal_edge": 0.994110107421875,
+    "fatal_yaw": 2.6881553421240634,
+    "fatal_tile_x0": -24,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -17.594110107421876,
+      -89.82107696533203,
+      1.232632225751877
+    ],
+    "fatal_target_derived": [
+      -16.744110107421875,
+      -88.22107696533203,
+      0.33263222575187684
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L2_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 2,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L2_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:14:08.619298+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L2_eval_pred\\01\\EX41-pyramid_stairs_L2_env0-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "4bf30777d4c0832453a244d2b63ddad164f739922521341940b0734534a1a76b",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 102.51604461669922,
+    "capture_wall_s": 142.25,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919875,
+        364.32755510533923
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -20.354245758056642,
+        -89.97310791015624,
+        1.9664700984954835
+      ],
+      "camera_target_w": [
+        -19.50424575805664,
+        -88.37310791015625,
+        1.0664700984954834
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.89971671919864,
+        364.32755510533934
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -3.975973701477051,
+        -89.79811248779296,
+        2.0445515871047975
+      ],
+      "camera_target_w": [
+        -3.125973701477051,
+        -88.19811248779297,
+        1.1445515871047973
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -19.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 1.1164700984954834,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -24,
+    "start_tile_y0": -92,
+    "end_x": -3.375973701477051,
+    "end_y": -88.19811248779297,
+    "end_z": 1.1945515871047974,
+    "end_u": 20.62402629852295,
+    "end_v": 3.8018875122070312,
+    "end_edge": -12.62402629852295,
+    "end_yaw": 1.2064256158671363,
+    "end_tile_x0": -24,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L2_probe_prop_only",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 2,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L2_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:15:19.266058+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 316,
+    "fatal_sim_time": 4.52999989874661,
+    "fatal_env_step": 226,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9987936019897461,
+      0.01376228779554367,
+      -0.0439772829413414,
+      -0.01696895994246006
+    ],
+    "fatal_x": -15.977286338806152,
+    "fatal_y": -88.28052520751953,
+    "fatal_z": 0.3409557640552521,
+    "fatal_u": 8.022713661193848,
+    "fatal_v": 3.7194747924804688,
+    "fatal_edge": -0.022713661193847656,
+    "fatal_yaw": -2.0196496779798707,
+    "fatal_tile_x0": -24,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -16.577286338806154,
+      -89.88052520751953,
+      1.1909557640552522
+    ],
+    "fatal_target_derived": [
+      -15.727286338806152,
+      -88.28052520751953,
+      0.2909557640552521
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L3_eval_gt",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 3,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L3_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:20:00.162729+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L3_eval_gt\\01\\EX41-pyramid_stairs_L3_env0-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "51ed5169c14528a276b3aea412fb5c19839d763e1a0cce0bd9cf2aeb20bd5426",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 100.31856536865234,
+    "capture_wall_s": 145.031,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -12.35424575805664,
+        -89.97310791015624,
+        2.0369637966156007
+      ],
+      "camera_target_w": [
+        -11.50424575805664,
+        -88.37310791015625,
+        1.1369637966156005
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.89971671919864,
+        364.32755510533934
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        3.6770538330078124,
+        -90.6606689453125,
+        2.241792893409729
+      ],
+      "camera_target_w": [
+        4.5270538330078125,
+        -89.0606689453125,
+        1.341792893409729
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -11.75424575805664,
+    "start_y": -88.37310791015625,
+    "start_z": 1.1869637966156006,
+    "start_u": 4.245754241943359,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -16,
+    "start_tile_y0": -92,
+    "end_x": 4.2770538330078125,
+    "end_y": -89.0606689453125,
+    "end_z": 1.391792893409729,
+    "end_u": 20.277053833007812,
+    "end_v": 2.9393310546875,
+    "end_edge": -12.277053833007812,
+    "end_yaw": -14.581067231714396,
+    "end_tile_x0": -16,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L3_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 3,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L3_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:20:53.631094+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.9299999792128801,
+    "fatal_env_step": 46,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9970895051956177,
+      0.019352100789546967,
+      -0.057717639952898026,
+      0.045898791402578354
+    ],
+    "fatal_x": -11.02311897277832,
+    "fatal_y": -88.33242797851562,
+    "fatal_z": 1.114586353302002,
+    "fatal_u": 4.97688102722168,
+    "fatal_v": 3.667572021484375,
+    "fatal_edge": 3.0231189727783203,
+    "fatal_yaw": 5.158585053994532,
+    "fatal_tile_x0": -16,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -11.62311897277832,
+      -89.93242797851562,
+      1.964586353302002
+    ],
+    "fatal_target_derived": [
+      -10.77311897277832,
+      -88.33242797851562,
+      1.064586353302002
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L3_probe_prop_only",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 3,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L3_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:21:35.372413+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.009999999776482582,
+    "fatal_env_step": 0,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9991226196289062,
+      -5.960464477539063e-08,
+      2.60770320892334e-08,
+      0.041882336139678955
+    ],
+    "fatal_x": -11.75424575805664,
+    "fatal_y": -88.37310791015625,
+    "fatal_z": 1.1869637966156006,
+    "fatal_u": 4.245754241943359,
+    "fatal_v": 3.62689208984375,
+    "fatal_edge": 3.62689208984375,
+    "fatal_yaw": 4.800766753222415,
+    "fatal_tile_x0": -16,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -12.35424575805664,
+      -89.97310791015624,
+      2.0369637966156007
+    ],
+    "fatal_target_derived": [
+      -11.50424575805664,
+      -88.37310791015625,
+      1.1369637966156005
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L4_eval_gt",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 4,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L4_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:26:32.256600+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L4_eval_gt\\01\\EX41-pyramid_stairs_L4_env0-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "118a091987bdb3a681d0cb9cc8fc37ce2cd43f1ba84a03846ae9abcebaeeb14f",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 97.60552978515625,
+    "capture_wall_s": 162.765,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -4.354245996475219,
+        -89.97310791015624,
+        2.1065094232559205
+      ],
+      "camera_target_w": [
+        -3.5042459964752197,
+        -88.37310791015625,
+        1.2065094232559204
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        9.661211395263672,
+        -92.41936645507812,
+        1.4151596188545228
+      ],
+      "camera_target_w": [
+        10.511211395263672,
+        -90.81936645507812,
+        0.5151596188545227
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -3.7542459964752197,
+    "start_y": -88.37310791015625,
+    "start_z": 1.2565094232559204,
+    "start_u": 4.24575400352478,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -8,
+    "start_tile_y0": -92,
+    "end_x": 10.261211395263672,
+    "end_y": -90.81936645507812,
+    "end_z": 0.5651596188545227,
+    "end_u": 18.261211395263672,
+    "end_v": 1.180633544921875,
+    "end_edge": -10.261211395263672,
+    "end_yaw": -48.57520730059029,
+    "end_tile_x0": -8,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 449,
+    "rgb_retry_calls": 449,
+    "first_recovered_dark_sim_time": 0.04999999888241291
+  },
+  {
+    "cell": "pyramid_stairs_L4_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 4,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L4_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:27:13.067284+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.08999999798834324,
+    "fatal_env_step": 4,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.998041570186615,
+      0.011997468769550323,
+      0.04589240998029709,
+      0.04078154265880585
+    ],
+    "fatal_x": -3.7589738368988037,
+    "fatal_y": -88.37378692626953,
+    "fatal_z": 1.232228398323059,
+    "fatal_u": 4.241026163101196,
+    "fatal_v": 3.6262130737304688,
+    "fatal_edge": 3.6262130737304688,
+    "fatal_yaw": 4.752141094861607,
+    "fatal_tile_x0": -8,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      -4.358973836898803,
+      -89.97378692626953,
+      2.082228398323059
+    ],
+    "fatal_target_derived": [
+      -3.5089738368988037,
+      -88.37378692626953,
+      1.182228398323059
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L4_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 4,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L4_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:31:23.440101+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L4_probe_prop_only\\01\\EX41-pyramid_stairs_L4_env0-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "4ee56715fdbb5fafdbd08861f13bbc3706d82fb549ae40d2e6549ca1adb8d9e4",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 98.5499267578125,
+    "capture_wall_s": 127.844,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -4.354245996475219,
+        -89.97310791015624,
+        2.1065094232559205
+      ],
+      "camera_target_w": [
+        -3.5042459964752197,
+        -88.37310791015625,
+        1.2065094232559204
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        10.942708396911621,
+        -88.98128662109374,
+        2.4124349117279054
+      ],
+      "camera_target_w": [
+        11.792708396911621,
+        -87.38128662109375,
+        1.5124349117279052
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": -3.7542459964752197,
+    "start_y": -88.37310791015625,
+    "start_z": 1.2565094232559204,
+    "start_u": 4.24575400352478,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": -8,
+    "start_tile_y0": -92,
+    "end_x": 11.542708396911621,
+    "end_y": -87.38128662109375,
+    "end_z": 1.5624349117279053,
+    "end_u": 19.54270839691162,
+    "end_v": 4.61871337890625,
+    "end_edge": -11.542708396911621,
+    "end_yaw": 5.197705354846146,
+    "end_tile_x0": -8,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_L5_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs",
+    "level": 5,
+    "mode": "eval_gt",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L5_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:32:47.603909+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 317,
+    "fatal_sim_time": 6.569999853149056,
+    "fatal_env_step": 328,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9776651859283447,
+      0.0207054540514946,
+      -0.2090703696012497,
+      -0.005634314846247435
+    ],
+    "fatal_x": 9.33889102935791,
+    "fatal_y": -88.30965423583984,
+    "fatal_z": 0.5666416883468628,
+    "fatal_u": 9.33889102935791,
+    "fatal_v": 3.6903457641601562,
+    "fatal_edge": -1.3388910293579102,
+    "fatal_yaw": -1.2351623265131404,
+    "fatal_tile_x0": 0,
+    "fatal_tile_y0": -92,
+    "fatal_eye_derived": [
+      8.73889102935791,
+      -89.90965423583984,
+      1.4166416883468629
+    ],
+    "fatal_target_derived": [
+      9.58889102935791,
+      -88.30965423583984,
+      0.5166416883468627
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_L5_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 5,
+    "mode": "eval_pred",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L5_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:37:30.525284+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L5_eval_pred\\01\\EX41-pyramid_stairs_L5_env0-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "d7ec4ecf63d004549a270072fa23d31f6b19249a8bb2929d99e8ec9b63e109aa",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 99.24787902832031,
+    "capture_wall_s": 160.422,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919864,
+        364.32755510533934
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        3.645753765106201,
+        -89.97310791015624,
+        2.297095513343811
+      ],
+      "camera_target_w": [
+        4.495753765106201,
+        -88.37310791015625,
+        1.397095513343811
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        10.5641263961792,
+        -90.44662628173828,
+        2.2631988286972047
+      ],
+      "camera_target_w": [
+        11.4141263961792,
+        -88.84662628173828,
+        1.3631988286972045
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": 4.245753765106201,
+    "start_y": -88.37310791015625,
+    "start_z": 1.447095513343811,
+    "start_u": 4.245753765106201,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": 0,
+    "start_tile_y0": -92,
+    "end_x": 11.1641263961792,
+    "end_y": -88.84662628173828,
+    "end_z": 1.4131988286972046,
+    "end_u": 11.1641263961792,
+    "end_v": 3.1533737182617188,
+    "end_edge": -3.164126396179199,
+    "end_yaw": 40.881232391091395,
+    "end_tile_x0": 0,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 1,
+    "rgb_retry_calls": 1,
+    "first_recovered_dark_sim_time": 0.009999999776482582
+  },
+  {
+    "cell": "pyramid_stairs_L5_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs",
+    "level": 5,
+    "mode": "probe_prop_only",
+    "env": 0,
+    "col": 0,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L5_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:41:30.100677+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_L5_probe_prop_only\\01\\EX41-pyramid_stairs_L5_env0-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "e66cc241c7587e30acf902e4d8f7d28d58dab203407996319233d0a2d0fe291c",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 97.80160522460938,
+    "capture_wall_s": 126.765,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.89971671919864,
+        364.32755510533934
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        3.645753765106201,
+        -89.97310791015624,
+        2.297095513343811
+      ],
+      "camera_target_w": [
+        4.495753765106201,
+        -88.37310791015625,
+        1.397095513343811
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.8997167191985,
+        364.3275551053392
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        15.330140495300293,
+        -96.58147583007812,
+        1.1806460082530976
+      ],
+      "camera_target_w": [
+        16.180140495300293,
+        -94.98147583007812,
+        0.28064600825309755
+      ]
+    },
+    "camera_pose_max_offset_error": 5.773159728050814e-15,
+    "start_x": 4.245753765106201,
+    "start_y": -88.37310791015625,
+    "start_z": 1.447095513343811,
+    "start_u": 4.245753765106201,
+    "start_v": 3.62689208984375,
+    "start_edge": 3.62689208984375,
+    "start_yaw": 4.800766807972952,
+    "start_tile_x0": 0,
+    "start_tile_y0": -92,
+    "end_x": 15.930140495300293,
+    "end_y": -94.98147583007812,
+    "end_z": 0.33064600825309753,
+    "end_u": 15.930140495300293,
+    "end_v": -2.981475830078125,
+    "end_edge": -7.930140495300293,
+    "end_yaw": -48.89893578634496,
+    "end_tile_x0": 0,
+    "end_tile_y0": -92,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L0_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 0,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L0_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:42:17.680294+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.3299999926239252,
+    "fatal_env_step": 16,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9307052493095398,
+      0.07873893529176712,
+      -0.028292343020439148,
+      0.3560723662376404
+    ],
+    "fatal_x": -35.93716812133789,
+    "fatal_y": -47.68331527709961,
+    "fatal_z": -0.1095232293009758,
+    "fatal_u": 4.062831878662109,
+    "fatal_v": 4.316684722900391,
+    "fatal_edge": 3.6833152770996094,
+    "fatal_yaw": 41.47309724111313,
+    "fatal_tile_x0": -40,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -36.53716812133789,
+      -49.28331527709961,
+      0.7404767706990242
+    ],
+    "fatal_target_derived": [
+      -35.68716812133789,
+      -47.68331527709961,
+      -0.1595232293009758
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L0_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 0,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L0_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:42:54.975372+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.009999999776482582,
+    "fatal_env_step": 0,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.935716986656189,
+      0.0,
+      0.0,
+      0.35275161266326904
+    ],
+    "fatal_x": -36.05669021606445,
+    "fatal_y": -47.76580810546875,
+    "fatal_z": -0.004082202911376953,
+    "fatal_u": 3.943309783935547,
+    "fatal_v": 4.23419189453125,
+    "fatal_edge": 3.76580810546875,
+    "fatal_yaw": 41.31141704094733,
+    "fatal_tile_x0": -40,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -36.656690216064455,
+      -49.36580810546875,
+      0.845917797088623
+    ],
+    "fatal_target_derived": [
+      -35.80669021606445,
+      -47.76580810546875,
+      -0.054082202911376956
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L0_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 0,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L0_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:47:00.916308+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L0_probe_prop_only\\01\\EX41-pyramid_stairs_inv_L0_env5-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "5ddf386eaad29c2ab31295daa96752a7b46239085f8eac5dd3e98bab3b214122",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 102.43407440185547,
+    "capture_wall_s": 124.14,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -36.656690216064455,
+        -49.36580810546875,
+        0.845917797088623
+      ],
+      "camera_target_w": [
+        -35.80669021606445,
+        -47.76580810546875,
+        -0.054082202911376956
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -24.261521911621095,
+        -38.181531524658205,
+        1.1839529931545258
+      ],
+      "camera_target_w": [
+        -23.411521911621094,
+        -36.5815315246582,
+        0.28395299315452577
+      ]
+    },
+    "camera_pose_max_offset_error": 1.4432899320127035e-15,
+    "start_x": -36.05669021606445,
+    "start_y": -47.76580810546875,
+    "start_z": -0.004082202911376953,
+    "start_u": 3.943309783935547,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -40,
+    "start_tile_y0": -52,
+    "end_x": -23.661521911621094,
+    "end_y": -36.5815315246582,
+    "end_z": 0.33395299315452576,
+    "end_u": 16.338478088378906,
+    "end_v": 15.418468475341797,
+    "end_edge": -8.338478088378906,
+    "end_yaw": 48.52780207719895,
+    "end_tile_x0": -40,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L1_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 1,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L1_eval_gt\\01",
+    "closed_mtime": "2026-11-07T10:47:57.440407+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 1.3299999702721834,
+    "fatal_env_step": 66,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9264609217643738,
+      0.07637736201286316,
+      -0.057362813502550125,
+      0.36406904458999634
+    ],
+    "fatal_x": -27.19575309753418,
+    "fatal_y": -46.99850845336914,
+    "fatal_z": -0.19025123119354248,
+    "fatal_u": 4.80424690246582,
+    "fatal_v": 5.001491546630859,
+    "fatal_edge": 2.9985084533691406,
+    "fatal_yaw": 42.43325382959646,
+    "fatal_tile_x0": -32,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -27.79575309753418,
+      -48.59850845336914,
+      0.6597487688064575
+    ],
+    "fatal_target_derived": [
+      -26.94575309753418,
+      -46.99850845336914,
+      -0.24025123119354247
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L1_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 1,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L1_eval_pred\\01",
+    "closed_mtime": "2026-11-07T10:52:29.750238+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L1_eval_pred\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "e848acb133aa4a458a2915de2221890069733913436645e7e5578a78d277aaaf",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 100.13035583496094,
+    "capture_wall_s": 140.594,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -28.656692123413087,
+        -49.36580810546875,
+        0.7226851046085357
+      ],
+      "camera_target_w": [
+        -27.806692123413086,
+        -47.76580810546875,
+        -0.17731489539146422
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -16.5049711227417,
+        -38.01174697875977,
+        1.1767200589179994
+      ],
+      "camera_target_w": [
+        -15.6549711227417,
+        -36.411746978759766,
+        0.2767200589179993
+      ]
+    },
+    "camera_pose_max_offset_error": 1.4432899320127035e-15,
+    "start_x": -28.056692123413086,
+    "start_y": -47.76580810546875,
+    "start_z": -0.12731489539146423,
+    "start_u": 3.943307876586914,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -32,
+    "start_tile_y0": -52,
+    "end_x": -15.9049711227417,
+    "end_y": -36.411746978759766,
+    "end_z": 0.32672005891799927,
+    "end_u": 16.0950288772583,
+    "end_v": 15.588253021240234,
+    "end_edge": -8.0950288772583,
+    "end_yaw": 39.05707418464745,
+    "end_tile_x0": -32,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L1_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 1,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L1_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T10:56:33.521680+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L1_probe_prop_only\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "dc55d7c6b9d4574636a8222ab7e8b0e1500a24877c47b5e9f8a01cd30d1ef5a4",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 99.6316909790039,
+    "capture_wall_s": 126.953,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -28.656692123413087,
+        -49.36580810546875,
+        0.7226851046085357
+      ],
+      "camera_target_w": [
+        -27.806692123413086,
+        -47.76580810546875,
+        -0.17731489539146422
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -16.820746994018556,
+        -37.71884689331055,
+        1.1876751840114594
+      ],
+      "camera_target_w": [
+        -15.970746994018555,
+        -36.11884689331055,
+        0.28767518401145936
+      ]
+    },
+    "camera_pose_max_offset_error": 1.4432899320127035e-15,
+    "start_x": -28.056692123413086,
+    "start_y": -47.76580810546875,
+    "start_z": -0.12731489539146423,
+    "start_u": 3.943307876586914,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -32,
+    "start_tile_y0": -52,
+    "end_x": -16.220746994018555,
+    "end_y": -36.11884689331055,
+    "end_z": 0.33767518401145935,
+    "end_u": 15.779253005981445,
+    "end_v": 15.881153106689453,
+    "end_edge": -7.881153106689453,
+    "end_yaw": 45.083687838189874,
+    "end_tile_x0": -32,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L2_eval_gt",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 2,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L2_eval_gt\\01",
+    "closed_mtime": "2026-11-07T11:01:02.598377+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L2_eval_gt\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "808e485ec3ca8c3f4210c4005d4977d31402b5a3039f21dc6c384d45483bfa39",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 98.80884552001953,
+    "capture_wall_s": 135.578,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -20.656692123413087,
+        -49.36580810546875,
+        0.5520352184772491
+      ],
+      "camera_target_w": [
+        -19.806692123413086,
+        -47.76580810546875,
+        -0.34796478152275084
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -8.858153915405273,
+        -37.55254135131836,
+        1.1689800083637238
+      ],
+      "camera_target_w": [
+        -8.008153915405273,
+        -35.95254135131836,
+        0.26898000836372377
+      ]
+    },
+    "camera_pose_max_offset_error": 1.4432899320127035e-15,
+    "start_x": -20.056692123413086,
+    "start_y": -47.76580810546875,
+    "start_z": -0.29796478152275085,
+    "start_u": 3.943307876586914,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -24,
+    "start_tile_y0": -52,
+    "end_x": -8.258153915405273,
+    "end_y": -35.95254135131836,
+    "end_z": 0.31898000836372375,
+    "end_u": 15.741846084594727,
+    "end_v": 16.04745864868164,
+    "end_edge": -8.04745864868164,
+    "end_yaw": 51.77432062908435,
+    "end_tile_x0": -24,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L2_eval_pred",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 2,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L2_eval_pred\\01",
+    "closed_mtime": "2026-11-07T11:05:49.950264+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L2_eval_pred\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-eval_pred-1x\\review.json",
+    "review_sha256": "a5aaf224e21fb477b74db98ea083b4ac3ac228dcaca4d884dbbfa6d4c95df4db",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 99.26922607421875,
+    "capture_wall_s": 148.719,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -20.656692123413087,
+        -49.36580810546875,
+        0.5520352184772491
+      ],
+      "camera_target_w": [
+        -19.806692123413086,
+        -47.76580810546875,
+        -0.34796478152275084
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -8.757764434814453,
+        -38.66912994384766,
+        1.1773292779922486
+      ],
+      "camera_target_w": [
+        -7.907764434814453,
+        -37.069129943847656,
+        0.27732927799224855
+      ]
+    },
+    "camera_pose_max_offset_error": 1.4432899320127035e-15,
+    "start_x": -20.056692123413086,
+    "start_y": -47.76580810546875,
+    "start_z": -0.29796478152275085,
+    "start_u": 3.943307876586914,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -24,
+    "start_tile_y0": -52,
+    "end_x": -8.157764434814453,
+    "end_y": -37.069129943847656,
+    "end_z": 0.32732927799224854,
+    "end_u": 15.842235565185547,
+    "end_v": 14.930870056152344,
+    "end_edge": -7.842235565185547,
+    "end_yaw": 50.37869476879268,
+    "end_tile_x0": -24,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L2_probe_prop_only",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 2,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L2_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T11:06:39.089020+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 1.2499999720603228,
+    "fatal_env_step": 62,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9303404688835144,
+      0.05996047332882881,
+      -0.09294459968805313,
+      0.3496178686618805
+    ],
+    "fatal_x": -19.286174774169922,
+    "fatal_y": -47.06495666503906,
+    "fatal_z": -0.3531375229358673,
+    "fatal_u": 4.713825225830078,
+    "fatal_v": 4.9350433349609375,
+    "fatal_edge": 3.0649566650390625,
+    "fatal_yaw": 40.894801687682055,
+    "fatal_tile_x0": -24,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -19.886174774169923,
+      -48.664956665039064,
+      0.49686247706413267
+    ],
+    "fatal_target_derived": [
+      -19.036174774169922,
+      -47.06495666503906,
+      -0.4031375229358673
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L3_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 3,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L3_eval_gt\\01",
+    "closed_mtime": "2026-11-07T11:08:02.487114+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 316,
+    "fatal_sim_time": 4.049999909475446,
+    "fatal_env_step": 202,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.8863983154296875,
+      0.11988772451877594,
+      -0.12851303815841675,
+      0.42826318740844727
+    ],
+    "fatal_x": -9.080816268920898,
+    "fatal_y": -45.09842300415039,
+    "fatal_z": 0.25253501534461975,
+    "fatal_u": 6.919183731079102,
+    "fatal_v": 6.901576995849609,
+    "fatal_edge": 1.0808162689208984,
+    "fatal_yaw": 50.51424871315329,
+    "fatal_tile_x0": -16,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -9.680816268920898,
+      -46.69842300415039,
+      1.1025350153446198
+    ],
+    "fatal_target_derived": [
+      -8.830816268920898,
+      -45.09842300415039,
+      0.20253501534461976
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L3_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 3,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L3_eval_pred\\01",
+    "closed_mtime": "2026-11-07T11:08:46.750198+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.009999999776482582,
+    "fatal_env_step": 0,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.935716986656189,
+      0.0,
+      0.0,
+      0.35275161266326904
+    ],
+    "fatal_x": -12.056692123413086,
+    "fatal_y": -47.76580810546875,
+    "fatal_z": -0.36345788836479187,
+    "fatal_u": 3.943307876586914,
+    "fatal_v": 4.23419189453125,
+    "fatal_edge": 3.76580810546875,
+    "fatal_yaw": 41.31141704094733,
+    "fatal_tile_x0": -16,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -12.656692123413086,
+      -49.36580810546875,
+      0.4865421116352081
+    ],
+    "fatal_target_derived": [
+      -11.806692123413086,
+      -47.76580810546875,
+      -0.41345788836479186
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L3_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 3,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L3_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T11:13:13.922619+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L3_probe_prop_only\\01\\EX41-pyramid_stairs_inv_L3_env5-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "bab3c23e16f38d67a1741405c3ad54d93c08e594eb55744d11ca0d9a99c35ea8",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 98.27852630615234,
+    "capture_wall_s": 146.391,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -12.656692123413086,
+        -49.36580810546875,
+        0.4865421116352081
+      ],
+      "camera_target_w": [
+        -11.806692123413086,
+        -47.76580810546875,
+        -0.41345788836479186
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -0.6713155046105385,
+        -38.06436309814453,
+        1.1848577618598939
+      ],
+      "camera_target_w": [
+        0.17868449538946152,
+        -36.46436309814453,
+        0.2848577618598938
+      ]
+    },
+    "camera_pose_max_offset_error": 1.3322676295501878e-15,
+    "start_x": -12.056692123413086,
+    "start_y": -47.76580810546875,
+    "start_z": -0.36345788836479187,
+    "start_u": 3.943307876586914,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -16,
+    "start_tile_y0": -52,
+    "end_x": -0.07131550461053848,
+    "end_y": -36.46436309814453,
+    "end_z": 0.3348577618598938,
+    "end_u": 15.928684495389462,
+    "end_v": 15.535636901855469,
+    "end_edge": -7.9286844953894615,
+    "end_yaw": 55.23786629732495,
+    "end_tile_x0": -16,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 449,
+    "rgb_retry_calls": 449,
+    "first_recovered_dark_sim_time": 0.04999999888241291
+  },
+  {
+    "cell": "pyramid_stairs_inv_L4_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 4,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L4_eval_gt\\01",
+    "closed_mtime": "2026-11-07T11:13:57.932275+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.5299999881535769,
+    "fatal_env_step": 26,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9279029369354248,
+      0.07323149591684341,
+      -0.03720895200967789,
+      0.36366042494773865
+    ],
+    "fatal_x": -3.772559404373169,
+    "fatal_y": -47.548641204833984,
+    "fatal_z": -0.589171826839447,
+    "fatal_u": 4.227440595626831,
+    "fatal_v": 4.451358795166016,
+    "fatal_edge": 3.5486412048339844,
+    "fatal_yaw": 42.41517997815002,
+    "fatal_tile_x0": -8,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -4.372559404373169,
+      -49.148641204833986,
+      0.26082817316055296
+    ],
+    "fatal_target_derived": [
+      -3.522559404373169,
+      -47.548641204833984,
+      -0.6391718268394471
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L4_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 4,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L4_eval_pred\\01",
+    "closed_mtime": "2026-11-07T11:14:57.834235+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 314,
+    "fatal_sim_time": 1.889999957755208,
+    "fatal_env_step": 94,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9245544075965881,
+      0.10459423065185547,
+      -0.1090809553861618,
+      0.34980061650276184
+    ],
+    "fatal_x": -2.7717928886413574,
+    "fatal_y": -46.61149597167969,
+    "fatal_z": -0.45063161849975586,
+    "fatal_u": 5.228207111358643,
+    "fatal_v": 5.3885040283203125,
+    "fatal_edge": 2.6114959716796875,
+    "fatal_yaw": 40.46630908855387,
+    "fatal_tile_x0": -8,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      -3.3717928886413575,
+      -48.21149597167969,
+      0.3993683815002441
+    ],
+    "fatal_target_derived": [
+      -2.5217928886413574,
+      -46.61149597167969,
+      -0.5006316184997559
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L4_probe_prop_only",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "fail",
+    "kind": "pyramid_stairs_inv",
+    "level": 4,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L4_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T11:19:05.747324+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L4_probe_prop_only\\01\\EX41-pyramid_stairs_inv_L4_env5-m6000-probe_prop_only-1x\\review.json",
+    "review_sha256": "6f3a4136763a97ffee482c9660caef8e5e9cfcfe67dffb81736737bd3af75a9b",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 96.79216766357422,
+    "capture_wall_s": 130.719,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -4.656691646575927,
+        -49.36580810546875,
+        0.33390376567840574
+      ],
+      "camera_target_w": [
+        -3.8066916465759277,
+        -47.76580810546875,
+        -0.5660962343215943
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        -7.416806316375732,
+        -60.071267700195314,
+        1.316101884841919
+      ],
+      "camera_target_w": [
+        -6.566806316375732,
+        -58.47126770019531,
+        0.41610188484191896
+      ]
+    },
+    "camera_pose_max_offset_error": 1.3322676295501878e-15,
+    "start_x": -4.056691646575928,
+    "start_y": -47.76580810546875,
+    "start_z": -0.5160962343215942,
+    "start_u": 3.9433083534240723,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": -8,
+    "start_tile_y0": -52,
+    "end_x": -6.816806316375732,
+    "end_y": -58.47126770019531,
+    "end_z": 0.46610188484191895,
+    "end_u": 1.1831936836242676,
+    "end_v": -6.4712677001953125,
+    "end_edge": -6.4712677001953125,
+    "end_yaw": -131.17420940218292,
+    "end_tile_x0": -8,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L5_eval_gt",
+    "ordinal": 1,
+    "status": "validated",
+    "locomotion_result": "success",
+    "kind": "pyramid_stairs_inv",
+    "level": 5,
+    "mode": "eval_gt",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L5_eval_gt\\01",
+    "closed_mtime": "2026-11-07T11:23:48.681468+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "review_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L5_eval_gt\\01\\EX41-pyramid_stairs_inv_L5_env5-m6000-eval_gt-1x\\review.json",
+    "review_sha256": "86472988009c663621be7c2fab8736bafee859448536ce8440b59b2bd7da1779",
+    "capture_s": 18.0,
+    "frames": 450,
+    "minimum_accepted_brightness": 96.26773834228516,
+    "capture_wall_s": 142.313,
+    "measured_camera_count": 450,
+    "camera_first_measured": {
+      "physics_tick": 0,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        3.343308115005493,
+        -49.36580810546875,
+        0.2306631565093994
+      ],
+      "camera_target_w": [
+        4.193308115005493,
+        -47.76580810546875,
+        -0.6693368434906006
+      ]
+    },
+    "camera_last_measured": {
+      "physics_tick": 899,
+      "root_center_px": [
+        510.899716719199,
+        364.3275551053391
+      ],
+      "root_in_frame": true,
+      "focal_length_mm": 18.14756202697754,
+      "horizontal_aperture_mm": 20.954999923706055,
+      "camera_eye_w": [
+        14.485996627807618,
+        -41.11602935791016,
+        1.0980920851230622
+      ],
+      "camera_target_w": [
+        15.335996627807617,
+        -39.516029357910156,
+        0.19809208512306214
+      ]
+    },
+    "camera_pose_max_offset_error": 1.3322676295501878e-15,
+    "start_x": 3.943308115005493,
+    "start_y": -47.76580810546875,
+    "start_z": -0.6193368434906006,
+    "start_u": 3.943308115005493,
+    "start_v": 4.23419189453125,
+    "start_edge": 3.76580810546875,
+    "start_yaw": 41.31141774952181,
+    "start_tile_x0": 0,
+    "start_tile_y0": -52,
+    "end_x": 15.085996627807617,
+    "end_y": -39.516029357910156,
+    "end_z": 0.24809208512306213,
+    "end_u": 15.085996627807617,
+    "end_v": 12.483970642089844,
+    "end_edge": -7.085996627807617,
+    "end_yaw": -5.236557334388042,
+    "end_tile_x0": 0,
+    "end_tile_y0": -52,
+    "rgb_recovered_frames": 0,
+    "rgb_retry_calls": 0,
+    "first_recovered_dark_sim_time": null
+  },
+  {
+    "cell": "pyramid_stairs_inv_L5_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 5,
+    "mode": "eval_pred",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L5_eval_pred\\01",
+    "closed_mtime": "2026-11-07T11:24:33.216890+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 314,
+    "fatal_sim_time": 0.6499999854713678,
+    "fatal_env_step": 32,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9316474795341492,
+      0.049991607666015625,
+      -0.035918496549129486,
+      0.35811132192611694
+    ],
+    "fatal_x": 4.325085163116455,
+    "fatal_y": -47.4671745300293,
+    "fatal_z": -0.6754657030105591,
+    "fatal_u": 4.325085163116455,
+    "fatal_v": 4.532825469970703,
+    "fatal_edge": 3.467174530029297,
+    "fatal_yaw": 41.85177913037564,
+    "fatal_tile_x0": 0,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      3.725085163116455,
+      -49.0671745300293,
+      0.1745342969894409
+    ],
+    "fatal_target_derived": [
+      4.575085163116455,
+      -47.4671745300293,
+      -0.7254657030105591
+    ]
+  },
+  {
+    "cell": "pyramid_stairs_inv_L5_probe_prop_only",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "pyramid_stairs_inv",
+    "level": 5,
+    "mode": "probe_prop_only",
+    "env": 5,
+    "col": 5,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\pyramid_stairs_inv_L5_probe_prop_only\\01",
+    "closed_mtime": "2026-11-07T11:25:18.565474+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.3299999926239252,
+    "fatal_env_step": 16,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.9319656491279602,
+      0.07114200294017792,
+      -0.025612633675336838,
+      0.3545743525028229
+    ],
+    "fatal_x": 4.059972763061523,
+    "fatal_y": -47.68516159057617,
+    "fatal_z": -0.7280474901199341,
+    "fatal_u": 4.059972763061523,
+    "fatal_v": 4.314838409423828,
+    "fatal_edge": 3.685161590576172,
+    "fatal_yaw": 41.334161003128884,
+    "fatal_tile_x0": 0,
+    "fatal_tile_y0": -52,
+    "fatal_eye_derived": [
+      3.4599727630615233,
+      -49.28516159057617,
+      0.1219525098800659
+    ],
+    "fatal_target_derived": [
+      4.309972763061523,
+      -47.68516159057617,
+      -0.7780474901199341
+    ]
+  },
+  {
+    "cell": "boxes_L0_eval_gt",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "boxes",
+    "level": 0,
+    "mode": "eval_gt",
+    "env": 10,
+    "col": 10,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\boxes_L0_eval_gt\\01",
+    "closed_mtime": "2026-11-07T11:26:03.860636+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 1.289999971166253,
+    "fatal_env_step": 64,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.29068443179130554,
+      -0.060237057507038116,
+      -0.046699512749910355,
+      -0.9537784457206726
+    ],
+    "fatal_x": -36.75200653076172,
+    "fatal_y": -8.426353454589844,
+    "fatal_z": 0.3643050193786621,
+    "fatal_u": 3.2479934692382812,
+    "fatal_v": 3.5736465454101562,
+    "fatal_edge": 3.2479934692382812,
+    "fatal_yaw": -146.32411834650128,
+    "fatal_tile_x0": -40,
+    "fatal_tile_y0": -12,
+    "fatal_eye_derived": [
+      -37.35200653076172,
+      -10.026353454589843,
+      1.2143050193786622
+    ],
+    "fatal_target_derived": [
+      -36.50200653076172,
+      -8.426353454589844,
+      0.3143050193786621
+    ]
+  },
+  {
+    "cell": "boxes_L0_eval_pred",
+    "ordinal": 1,
+    "status": "dark_failure",
+    "locomotion_result": null,
+    "kind": "boxes",
+    "level": 0,
+    "mode": "eval_pred",
+    "env": 10,
+    "col": 10,
+    "seed": 42,
+    "geometry_seed": 20261026,
+    "attempt_path": "D:\\mai-tmp\\lead\\canon216_m12000\\out\\attempts\\boxes_L0_eval_pred\\01",
+    "closed_mtime": "2026-11-07T11:26:42.847041+09:00",
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "recorder_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "fatal_line": 313,
+    "fatal_sim_time": 0.6499999854713678,
+    "fatal_env_step": 32,
+    "fatal_retry_count": 30,
+    "fatal_brightness": 0.0,
+    "fatal_before_after_equal": true,
+    "command": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "fatal_quat_wxyz": [
+      0.29555845260620117,
+      -0.031378913670778275,
+      -0.051191546022892,
+      -0.9534359574317932
+    ],
+    "fatal_x": -36.249717712402344,
+    "fatal_y": -8.106019020080566,
+    "fatal_z": 0.363150417804718,
+    "fatal_u": 3.7502822875976562,
+    "fatal_v": 3.8939809799194336,
+    "fatal_edge": 3.7502822875976562,
+    "fatal_yaw": -145.7595175819171,
+    "fatal_tile_x0": -40,
+    "fatal_tile_y0": -12,
+    "fatal_eye_derived": [
+      -36.849717712402345,
+      -9.706019020080566,
+      1.213150417804718
+    ],
+    "fatal_target_derived": [
+      -35.999717712402344,
+      -8.106019020080566,
+      0.31315041780471803
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "attempts": 39,
+  "independent_raw_fatal_count": 19,
+  "recovered_rows": 1348,
+  "source_hashes_rechecked": 979,
+  "hash_mismatches": [],
+  "ast_files": 2,
+  "known_answer_assertions": 7,
+  "tables_broken_rows": 0,
+  "no_gpu": true
+}
