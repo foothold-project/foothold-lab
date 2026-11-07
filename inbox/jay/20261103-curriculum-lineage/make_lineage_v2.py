@@ -634,13 +634,13 @@ def baseline_png(path):
     olds = [curve(ch) for ch in old["children"] if ch["command"] != "stand"]
     m0 = olds[0][0]
     ax.plot(m0, [sum(v[i] for _, v in olds) / len(olds) for i in range(len(m0))], color="#757575", lw=4, alpha=0.6,
-            label="m6000 (EX-41 시작) 걷는 중 0.5 · 9 칸 평균")
+            label="누적 m6000 (EX-41 출발점) 걷는 중 0.5 · 9 칸 평균")
     ax.axhline(0.9, color="#000", lw=1.2)
     ax.axvline(1.5, color="#6a1b9a", ls="--")
     ax.text(1.53, 0.05, "판정 1.5 m/s", color="#6a1b9a", fontsize=12, rotation=90, va="bottom")
     ax.set_xlabel("밀기 크기 m/s (방향 8 개 모음)", fontsize=13)
     ax.set_ylabel("생존 비율", fontsize=13)
-    ax.set_title("밀기 사다리 · m12000 단계 끝(64 env × 칸 × 방향) 대 m6000 (512 env)", fontsize=15)
+    ax.set_title("밀기 사다리 · m12000 단계 끝(64 env × 칸 × 방향) 대 누적 m6000 (512 env)", fontsize=15)
     ax.legend(fontsize=9.5, ncol=2, loc="lower left")
     ax.grid(alpha=0.3)
     ax = axes[1]
@@ -649,8 +649,8 @@ def baseline_png(path):
     blk = txt.split("== EX-41 6000")[1]
     mrec = re.search(r"^M 지도 복원 - 정답: (.*)$", blk, re.M).group(1)
     moff = re.search(r"^M 지도 끔 - 정답: (.*)$", blk, re.M).group(1)
-    lines = [("유지 판정 (점수 m6000 · 01:18)", ""),
-             ("  maintenance_pass", str(sc.get("maintenance_pass", "?"))),
+    lines = [("유지 판정 (EX-41 로컬 6000 = 누적 m12000 점수)", ""),
+             ("  유지 통과 (maintenance_pass)",str(sc.get("maintenance_pass", "?"))),
              ("  생존 최저", f"{r['surv']}/64"),
              ("  0.15 넘은 칸 정답 · 복원 · 끔", f"{r['over']['eval_gt']} · {r['over']['eval_pred']} · {r['over']['probe_prop_only']}  ({', '.join(r['cmds'])})"),
              ("  지도 복원 - 정답 (오차 · 생존)", mrec.replace("오차 차 평균 ", "평균 ").replace("가장 큰 차 ", "최대 ").replace("생존 합 차 ", "생존 ")),

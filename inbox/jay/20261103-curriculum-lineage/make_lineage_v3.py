@@ -73,8 +73,8 @@ def plan_v3(path):
     def box(a, w, y, h, t, fc, dashed=False, fs=12, tc="black"):
         ax.add_patch(Rectangle((a, y), w, h, facecolor=fc, edgecolor="#37474f", lw=1.6, ls="--" if dashed else "-"))
         ax.text(a + w / 2, y + h / 2, t, ha="center", va="center", fontsize=fs, color=tc)
-    box(-4300, 2600, 0.1, 0.75, "준비 1,000 회\n지도 넣는 연습\n(40,000 밖)", "#bbdefb", fs=11)
-    box(-1600, 1400, 0.1, 0.75, "점검\n250 회\n(밖)", "#e3f2fd", fs=11)
+    box(-4300, 2600, 0.1, 0.75, "준비 T0′ 1,000 회\n지도 넣는 연습\n(40,000 밖)", "#bbdefb", fs=11)
+    box(-1600, 1400, 0.1, 0.75, "점검 E0\n250 회\n(밖)", "#e3f2fd", fs=11)
     names = ["지형 적응 ①", "지형 적응 ②", "어려운 미션 ①", "어려운 미션 ②"]
     for k in range(4):
         box(k * 10000, 10000, 0.1, 0.75, f"{names[k]} · {k * 10000 + 1:,}~{(k + 1) * 10000:,} 회\n10,000 회마다 결과 분석 · 학습은 멈추지 않음",
@@ -94,7 +94,7 @@ def plan_v3(path):
     circ = "①②③④⑤⑥⑦⑧⑨"
     for i, ((sid, n, _), col) in enumerate(zip(v2.E_V5, pal)):
         dark = col in ("#388e3c", "#2e7d32", "#1b5e20")
-        label = f"{circ[i]}\n{E_NAME[sid]}" if n >= 1500 else circ[i]
+        label = f"{circ[i]} {sid}\n{E_NAME[sid]}" if n >= 1500 else circ[i]
         box(x, n, 0.22, 0.56, label, col, dashed=True, fs=10.5 if n >= 1500 else 13, tc="white" if dark else "black")
         ax.text(x + n / 2, 0.16, f"{n:,}", ha="center", va="top", fontsize=9.5, color="#37474f")
         x += n
@@ -103,7 +103,7 @@ def plan_v3(path):
         ax.text(x + n / 2, 0.16, f"{n:,}", ha="center", va="top", fontsize=9.5, color="#37474f")
         x += n
     assert x == 20000
-    ax.text(0, 0.06, "  ·  ".join(f"{circ[i]} {E_NAME[sid].replace(chr(10), ' ')}" for i, (sid, _, _) in enumerate(v2.E_V5)),
+    ax.text(0, 0.06, "  ·  ".join(f"{circ[i]} {sid} {E_NAME[sid].replace(chr(10), ' ')}" for i, (sid, _, _) in enumerate(v2.E_V5)),
             fontsize=10.5, va="top", color="#1b5e20")
     for t in ["외다리 ·\n평행봉", "ㄹ 자 좁은\n길 돌기", "작은 도약\n→ 넓은 틈", "높은 턱\n오르기", "큰 단차\n내려오기", "낮은 천장\n기어가기"]:
         box(x, 2000, 0.22, 0.56, t, "#ffcc80", dashed=True, fs=10.5)
@@ -190,6 +190,128 @@ def plan_v3(path):
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 01~05: v2 figure + reading header
+# The v2 body is kept as is (it is generated from data with asserts); v3 adds a header with
+# the point of the figure and a gloss of the internal codes, and splits the two widest figures.
+from PIL import Image  # noqa: E402
+import numpy as np  # noqa: E402
+
+
+def compose(body, out, title, points, gloss):
+    """body: HxWx3 uint8. Header height is computed from line counts so nothing overlaps."""
+    H, W = body.shape[:2]
+    s = W / 2800
+    rows_g = (len(gloss) + 1) // 2
+    hh = int((95 + 46 * len(points) + 58 + 40 * rows_g + 30) * s)
+    fig = plt.figure(figsize=(W / 100, (H + hh) / 100), dpi=100)
+    ax = fig.add_axes([0, H / (H + hh), 1, hh / (H + hh)])
+    ax.set_xlim(0, W)
+    ax.set_ylim(hh, 0)
+    ax.axis("off")
+    ax.add_patch(Rectangle((0, 0), W, hh, facecolor="#f5f7fa", edgecolor="none"))
+    x0 = 30 * s
+    ax.text(x0, 22 * s, title, fontsize=26 * s, weight="bold", va="top")
+    y = 95 * s
+    for p in points:
+        ax.text(x0, y, "· " + p, fontsize=15 * s, va="top")
+        y += 46 * s
+    y += 10 * s
+    ax.text(x0, y, "낱말 풀이 (그림 안 기호)", fontsize=15 * s, weight="bold", va="top", color="#0d47a1")
+    y += 44 * s
+    for i, (k, v) in enumerate(gloss):
+        cx = x0 + (i % 2) * W / 2
+        cy = y + (i // 2) * 40 * s
+        ax.text(cx, cy, k, fontsize=13.5 * s, weight="bold", va="top")
+        ax.text(cx + 260 * s, cy, v, fontsize=13 * s, va="top")
+    bx = fig.add_axes([0, 0, 1, H / (H + hh)])
+    bx.imshow(body, interpolation="none")
+    bx.axis("off")
+    fig.savefig(out, dpi=100)
+    plt.close(fig)
+
+
+def load(name):
+    return np.asarray(Image.open(HERE / name).convert("RGB"))
+
+
+def find_red_split(a):
+    red = (a[:, :, 0] > 180) & (a[:, :, 1] < 60) & (a[:, :, 2] < 60)
+    cols = np.where(red.sum(0) > a.shape[0] * 0.5)[0]
+    assert len(cols) and cols.max() - cols.min() < 8, cols
+    return int(cols.min()), int(cols.max()) + 1
+
+
+G_STAGE = [("B0 ~ B3c", "EX-40 의 단계 이름 (누적 0~6,000 회)"), ("S2a ~ S2e · T0′", "EX-41 의 단계 이름 · T0′ 는 지도를 복원 지도로 바꾸는 마지막 단계"),
+           ("DR", "무작위화: 마찰 · 무게 · 모터 힘 · 지연을 일부러 흔들어 실제 로봇과의 차이에 대비 (1.0 = 계획한 최대 범위)"),
+           ("밀기 · Vmax", "걷는 중 몸을 미는 세기 · 최대값 m/s")]
+
+
+def wrap_all():
+    a = load("01-timeline-v2.png")
+    compose(a, HERE / "01-timeline-v3.png", "그림 1 · EX-40 에서 EX-41 까지 12,000 회 동안 무엇을 언제 바꿨나",
+            ["가로축은 처음부터 센 학습 회차(누적)입니다. 0~6,000 은 EX-40, 6,001~12,000 은 EX-41 이고, EX-41 기록 안에서는 0~6,000 으로 다시 세어 「로컬」 이라 부릅니다.",
+             "위에서 아래로: 단계 이름 → 흔들기(DR) · 밀기 세기 → 명령 속도 범위 → 명령 종류 비율 → 지형 · 지도 · 보상 → 단계 끝 결과.",
+             "노란 띠는 기록 누락으로 흔들기 올리기가 1,000 회(로컬 1,251~2,250) 멈춘 구간입니다. 맨 아래 줄을 보면 EX-41 첫 단계(S2a)만 밀기 판정 미달이고 나머지는 통과입니다."],
+            G_STAGE + [("force_gt", "정책에 정답 지형 지도를 강제로 줌"), ("1·1·0 (맨 아래)", "속도 오차가 0.15 를 넘은 칸 수 · 정답 · 복원 · 끔 지도 순"),
+                       ("D179", "밀기 1.5 m/s 판정 규칙의 결정 번호"), ("명령 범위 선", "각 명령 속도의 상한 · 하한 (m/s · rad/s)")])
+
+    a = load("02-stage-table-v2.png")
+    r0, r1 = find_red_split(a)
+    label_w = 420
+    assert (np.abs(a[225, label_w - 3:label_w + 3].astype(int) - a[225, label_w + 20].astype(int)).sum(1) > 60).any()
+    # rows 178~2421 = the table only (v2 title, legend and footnote are restated in the v3 header)
+    assert (a[190:260, 32].astype(int).sum(1) < 300).all() and (a[2421:2429, 40:3950] > 235).all()
+    t = a[178:2421]
+    left, right = t[:, :r0], np.concatenate([t[:, :label_w], t[:, r1:]], axis=1)
+    g2 = [("롤", "그 명령이 나오는 비율"), ("vx · vy · wz", "앞뒤 · 옆 · 제자리 회전 속도 명령"), ("COM", "무게중심 위치를 흔든 폭"),
+          ("heading 직진 유지", "방향을 잡고 곧게 가는 명령"), ("PPO · lr", "학습 알고리즘과 학습률"), ("lin_vel_z", "몸이 위아래로 튀는 것에 주는 벌점"),
+          ("칸 색", "회색 = 앞과 같음 · 주황 = 바뀜 · 파랑 = 새로 생김 · 초록 = 실측 결과 · 빨강 = 미달")]
+    compose(left, HERE / "02a-stage-table-ex40-v3.png", "그림 2a · 단계 표: EX-40 (누적 0~6,000 회)",
+            ["열 하나가 단계 하나, 줄 하나가 설정 하나입니다. 왼쪽에서 오른쪽으로 갈수록 명령 종류와 흔들기(DR)가 늘어납니다.",
+             "EX-40 은 단계 끝 결과를 이 표 대신 그림 5a 에 적었습니다 (그때는 250 회마다 26 칸으로 판정)."], G_STAGE[:1] + G_STAGE[2:] + g2)
+    compose(right, HERE / "02b-stage-table-ex41-v3.png", "그림 2b · 단계 표: EX-41 (누적 6,001~12,000 회)",
+            ["EX-41 은 EX-40 끝 저장본(누적 m6000)에서 이어 배웠습니다. 각 단계 길이는 회차로 고정했고, 성과가 좋아도 일찍 넘기지 않았습니다.",
+             "맨 아래 다섯 줄이 단계 끝 실측 결과입니다. 밀기 1.5 m/s 판정은 첫 단계(S2a)만 미달이고 이후 모두 통과입니다.",
+             "밀기 판정: 걷는 중 1.5 m/s 로 8 방향에서 밀어 가장 나쁜 방향의 생존 비율(지도 셋 중 최저) · 0.9 이상이면 통과. 0.15 는 속도 오차 기록선으로 생존 판정과 다릅니다.",
+             "계획과 다른 점: S2b 에서 기록 누락으로 DR 이 로컬 1,251~2,250 동안 0.575 에 머물렀고(자동 유지 장치), 뒤 단계가 1,000 회씩 밀렸습니다. T0′ 는 6,000 에서 끝냈습니다(팀장 결정)."],
+            G_STAGE[1:] + g2 + [("W72", "좌우 대칭 보조 학습을 켜는 조건의 작업 번호 (끝까지 안 켬)")])
+
+    a = load("03-why-changed-v2.png")
+    compose(a, HERE / "03-why-changed-v3.png", "그림 3 · 왜 바꿨나, 그리고 EX-41 에서 실제로 어떻게 됐나",
+            ["줄 하나가 설정 하나입니다. 왼쪽부터 이전 → 지금 · 왜 바꿨나 · 근거가 된 m6000 실측 · 결정과 출처 · 근거의 종류 · EX-41 결과.",
+             "오른쪽 끝 칸: 초록 = 실측으로 확인 · 연주황 = 그 설정 하나의 효과를 따로 재지 않음(미확인). 효과를 가를 대조 실험이 없으면 미확인으로 둡니다."],
+            [("D124 · D96 …", "결정 기록 번호"), ("WORKLIST:152", "작업 목록 파일의 줄 번호"), ("…yaml:4-6", "실제로 실행한 설정 파일의 줄"),
+             ("등급", "근거의 종류 · 코드 = 설정 파일에서 확인 · 실측 = 점수로 잼 · 가정 = 재지 않은 이유"),
+             ("걸림 · 스윙", "발끝이 걸리는 것에 주는 벌점 · 발을 들어 올리게 하는 보상"), ("back1.0", "후진 1.0 m/s 명령 칸")] + G_STAGE[2:3])
+
+    a = load("04-m12000-baseline-v2.png")
+    compose(a, HERE / "04-m12000-baseline-v3.png", "그림 4 · EX-42 출발점 m12000 은 얼마나 튼튼한가 (실측)",
+            ["왼쪽 「밀기 사다리」: 걷는 로봇을 점점 세게 밀었을 때(가로축) 넘어지지 않은 비율(세로축). 검은 가로선 0.9 = 통과선 · 보라 점선 1.5 m/s = 판정하는 세기.",
+             "회색 굵은 선은 EX-41 출발점(누적 m6000)으로 1.5 m/s 에서 약 0.8 이었고, m12000 은 9 칸 모두 0.9 를 넘었습니다(가장 약한 계단 0.938).",
+             "오른쪽은 이미 배운 것을 지켰는지(유지 판정)와 밀기 판정, 그리고 EX-42 첫 단계에서 다시 볼 것입니다."],
+            [("정답 · 복원 · 끔", "정책에 주는 지형 지도의 종류 · 정답 지도 · 센서로 복원한 지도 · 지도 없음"), ("env", "동시에 도는 시뮬레이션 로봇 수"),
+             ("0.15", "속도 오차 기록선 (m/s)"), ("대칭 S", "좌우 대칭 점수 · 1 이면 완전 대칭"), ("D179", "밀기 1.5 m/s 판정 규칙의 결정 번호"),
+             ("로컬 6000", "EX-41 안에서 센 회차 6,000 = 누적 m12000")])
+
+    a = load("05-why-changed-step-v2.png")
+    H = a.shape[0]
+    cut = 1070  # between the "m6000 결과" row and the S2a row (row boxes end 1051, arrow 1062~1076)
+    head = a[130:188]  # table header row
+    assert a[cut].astype(int).sum(1).min() > 600, "cut is not on a blank line"
+    top = a[:cut]
+    bottom = np.concatenate([a[:188], a[cut:]], axis=0)
+    g5 = [("vx · vy · wz 오차", "명령 속도와 실제 속도의 차 (m/s · rad/s)"), ("64/64", "64 대 중 넘어지지 않은 수"), ("back1.0 · side", "후진 1.0 m/s · 옆걸음 명령 칸"),
+          ("D·· · score_1500", "결정 기록 번호 · 1,500 회 점수 파일"), ("FAIL · 통과", "그 단계 끝 판정 결과")]
+    compose(top, HERE / "05a-steps-ex40-v3.png", "그림 5a · 단계마다 무엇을 바꿔 앞 과제를 풀었나: EX-40 (누적 0~6,000 회)",
+            ["줄 하나가 단계 하나의 넘어감입니다. 왼쪽부터 앞 단계에서 드러난 과제 → 바꾼 설정 → 왜 → 실측 결과 → 다음으로 넘긴 과제 → 출처.",
+             "빨간 줄 「m6000 결과」 는 EX-40 이 남긴 과제 다섯이고, EX-41 은 이것을 고치며 시작했습니다(그림 5b)."], g5 + G_STAGE[2:3])
+    compose(bottom, HERE / "05b-steps-ex41-v3.png", "그림 5b · 단계마다 무엇을 바꿔 앞 과제를 풀었나: EX-41 과 EX-42 입구",
+            ["EX-41 의 각 단계가 무엇을 고치려 했고 실측으로 어떻게 됐는지입니다. 분홍 칸 = 미달 · 초록 칸 = 실측 결과 · 주황 점선 = 아직 계획(EX-42).",
+             "EX-41 첫 단계(S2a)는 밀기 판정 미달이었고, 다음 단계(S2b)부터는 모두 통과했습니다(어느 설정 덕인지는 따로 재지 않음)."], g5 + G_STAGE[1:2] + [("0.15 넘은 칸", "지도 종류별(정답 · 복원 · 끔)로 오차 기록선을 넘은 칸 수")])
+    _ = head, H
+
+
 if __name__ == "__main__":
     plan_v3(HERE / "06-ex42-plan-v3.png")
+    wrap_all()
     print("ok")
