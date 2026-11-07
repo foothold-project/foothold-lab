@@ -1,6 +1,6 @@
 {
-  "at": "2026-11-07T14:01:09.903910+09:00",
-  "status": "DRAFT_WAITING_1079",
+  "at": "2026-11-07T15:24:48.067521+09:00",
+  "status": "DISCUSSION_READY_W15_NOT_EQUIVALENT",
   "files": [
     {
       "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261107-ex42-w44\\EVIDENCE-W44-T0-L9-1107.md",
@@ -82,5 +82,11 @@
     "3000": 23.166666666666668
   },
   "W39_blockers_at_1109": 26,
-  "W39_not_current_reaudit": true
+  "W39_not_current_reaudit": true,
+  "w15_final": {
+    "audit_file": "W15-audit.json",
+    "audit_sha256": "f30ea34466d865c6236b7f6b419b488006449d61b4b85f691c3aa64d60111a7c",
+    "result": "NOT_EQUIVALENT_IN_TESTED_GROUPS",
+    "scope": "Two selected mode/case groups, each eight level/angle cells and three unit repeats. No all-group repeat or causal claim."
+  }
 }
