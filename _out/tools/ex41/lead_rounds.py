@@ -67,6 +67,10 @@ def main() -> int:
         if r.get("status") == "open":
             open_by.setdefault(r["owner"], []).append(f"{r['id']} {r['priority']} {r['due']}")
     hs = handles()
+    box = orca("orchestration", "inbox", "--limit", "200")
+    msgs = (box.get("result") or {}).get("messages") or []
+    sent = {name: [m.get("subject", "") for m in msgs if (m.get("from") or "").startswith(prefix)]
+            for name, prefix in WORKERS.items()}
     print("== 작업자")
     for name in WORKERS:
         h = hs.get(name)
@@ -85,6 +89,12 @@ def main() -> int:
         state = "일하는 중" if busy else "쉼"
         print(f"{name:8s} {state} · 마지막 끝 {done[-1] if done else '-'} · 컨텍스트 {ctx[-1] + '%' if ctx else '-'} · 열린 일 {len(mine)} {mine}")
         print(f"         마지막 보고: {last}")
+        print(f"         받은편지함 최근: {sent[name][0][:90] if sent[name] else '없음(최근 200 통)'}")
+        # A report printed in the window but never sent is the 11:25 runner miss (I41).
+        win_reports = re.findall(r"\[" + name + r"\] (?:끝|막힘|질문)[^\n]{0,50}", text)
+        key = win_reports[-1][:24] if win_reports else ""
+        if key and not any(key in s for s in sent[name]):
+            acts.append(f"ACT {name}: 창의 보고 「{win_reports[-1][:60]}」 가 받은편지함에 없음 · 창 보고를 읽고 처리 · 작업자에 송신 규칙 다시")
         if not busy:
             acts.append(f"ACT {name}: 쉼 · 마지막 보고 읽고 다음 단계 보냈는지 확인 · 열린 일 {mine}")
         if ctx and int(ctx[-1]) <= 10:
