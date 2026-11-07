@@ -1,0 +1,208 @@
+{
+  "full": {
+    "state": "done",
+    "run_identity": {
+      "code_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "source_sha256": {
+      "terrain_skill_v2_run.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "checkpoint_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "checkpoint_iter": 750,
+    "eval_seed": 42,
+    "envs": 64,
+    "levels": [
+      2
+    ],
+    "start_angles_deg": [
+      0
+    ],
+    "dt_s": 0.02,
+    "dr_off": true,
+    "curriculum_off": true,
+    "mode_selection": [
+      "eval_gt"
+    ],
+    "case_selection": [
+      "stairs_side_left"
+    ],
+    "modes": {
+      "eval_gt": {
+        "L2_a000_stairs_side_left": {
+          "distance": 1,
+          "case": "stairs_side_left",
+          "requested_kinds": [
+            "stairs"
+          ],
+          "terrain_assignment_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "terrain_tiles": [
+            {
+              "env": 0,
+              "kind": "stairs",
+              "level": 2,
+              "column": 0
+            }
+          ],
+          "phase_steps": [
+            50
+          ]
+        }
+      }
+    }
+  },
+  "unit": {
+    "state": "done",
+    "run_identity": {
+      "code_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "source_sha256": {
+      "terrain_skill_v2_run.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "checkpoint_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "checkpoint_iter": 750,
+    "eval_seed": 42,
+    "envs": 64,
+    "levels": [
+      2
+    ],
+    "start_angles_deg": [
+      0
+    ],
+    "dt_s": 0.02,
+    "dr_off": true,
+    "curriculum_off": true,
+    "mode_selection": [
+      "eval_gt"
+    ],
+    "case_selection": [
+      "stairs_side_left"
+    ],
+    "modes": {
+      "eval_gt": {
+        "L2_a000_stairs_side_left": {
+          "distance": 1.1,
+          "case": "stairs_side_left",
+          "requested_kinds": [
+            "stairs"
+          ],
+          "terrain_assignment_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "terrain_tiles": [
+            {
+              "env": 0,
+              "kind": "stairs",
+              "level": 2,
+              "column": 0
+            }
+          ],
+          "phase_steps": [
+            50
+          ]
+        }
+      }
+    }
+  },
+  "repeats": [
+    {
+      "state": "done",
+      "run_identity": {
+        "code_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "source_sha256": {
+        "terrain_skill_v2_run.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "checkpoint_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "checkpoint_iter": 750,
+      "eval_seed": 42,
+      "envs": 64,
+      "levels": [
+        2
+      ],
+      "start_angles_deg": [
+        0
+      ],
+      "dt_s": 0.02,
+      "dr_off": true,
+      "curriculum_off": true,
+      "mode_selection": [
+        "eval_gt"
+      ],
+      "case_selection": [
+        "stairs_side_left"
+      ],
+      "modes": {
+        "eval_gt": {
+          "L2_a000_stairs_side_left": {
+            "distance": 1.04,
+            "case": "stairs_side_left",
+            "requested_kinds": [
+              "stairs"
+            ],
+            "terrain_assignment_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "terrain_tiles": [
+              {
+                "env": 0,
+                "kind": "stairs",
+                "level": 9,
+                "column": 0
+              }
+            ],
+            "phase_steps": [
+              50
+            ]
+          }
+        }
+      }
+    },
+    {
+      "state": "done",
+      "run_identity": {
+        "code_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "source_sha256": {
+        "terrain_skill_v2_run.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "checkpoint_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "checkpoint_iter": 750,
+      "eval_seed": 42,
+      "envs": 64,
+      "levels": [
+        2
+      ],
+      "start_angles_deg": [
+        0
+      ],
+      "dt_s": 0.02,
+      "dr_off": true,
+      "curriculum_off": true,
+      "mode_selection": [
+        "eval_gt"
+      ],
+      "case_selection": [
+        "stairs_side_left"
+      ],
+      "modes": {
+        "eval_gt": {
+          "L2_a000_stairs_side_left": {
+            "distance": 1.2,
+            "case": "stairs_side_left",
+            "requested_kinds": [
+              "stairs"
+            ],
+            "terrain_assignment_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "terrain_tiles": [
+              {
+                "env": 0,
+                "kind": "stairs",
+                "level": 9,
+                "column": 0
+              }
+            ],
+            "phase_steps": [
+              50
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
