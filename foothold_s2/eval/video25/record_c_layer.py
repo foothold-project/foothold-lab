@@ -86,8 +86,14 @@ def stage_video_ref(spec) -> bool:
     return spec.get("stage_video_reference") is True
 
 
+def ex41_c76_ref(spec) -> bool:
+    """A C76 canon cell recorded from an EX-41 checkpoint (canon m12000 216 renders)."""
+    return spec.get("c_layer_reference") is True and spec.get("ex41_checkpoint") is True
+
+
 def ex41_video_ref(spec) -> bool:
-    return w78_video_ref(spec) or a_push_video_ref(spec) or stage_video_ref(spec)
+    return (w78_video_ref(spec) or a_push_video_ref(spec) or stage_video_ref(spec)
+            or ex41_c76_ref(spec))
 
 
 def w78_video_ref(spec) -> bool:
