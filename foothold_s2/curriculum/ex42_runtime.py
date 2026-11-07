@@ -100,7 +100,9 @@ class EX42StageTransitionConsumer:
         if (any(not isinstance(stage, str) or not stage for stage in self.stage_ids)
                 or len(set(self.stage_ids)) != len(self.stage_ids)):
             raise ValueError("EX-42 stage IDs are missing or duplicated")
-        self.stage_scales, self.decision_id = read_approved_dr_schedule(approvals_path, self.stage_ids)
+        self.approvals_path = Path(approvals_path).resolve(strict=True)
+        self.approval_doc = yaml.safe_load(self.approvals_path.read_text(encoding="utf-8-sig"))
+        self.stage_scales, self.decision_id = read_approved_dr_schedule(self.approvals_path, self.stage_ids)
         self.stage_index = 0
         if current_stage_id is not None:
             if current_stage_id not in self.stage_ids:
@@ -117,8 +119,14 @@ class EX42StageTransitionConsumer:
         next_index = self.stage_index + 1
         if next_index >= len(self.stage_ids) or next_stage_id != self.stage_ids[next_index]:
             raise ValueError("EX-42 transition must advance exactly one planned stage")
+        from foothold_s2.ex42_gate_checks import validate_automatic_rule
+        planned_scale = self.stage_scales[next_stage_id]
+        rule = {"field": "domain_randomization", "decision_id": self.decision_id,
+                "choices": [planned_scale], "boundaries": [next_stage_id]}
+        validate_automatic_rule(rule=rule, approval=self.approval_doc,
+                                value=planned_scale, boundary=next_stage_id)
         evidence = resolve_missing_score_dr_boundary(
-            planned_scale=self.stage_scales[next_stage_id],
+            planned_scale=planned_scale,
             boundary_iteration=boundary_iteration,
             expected_score_iteration=expected_score_iteration,
             observed_score_iteration=observed_score_iteration,
@@ -133,6 +141,12 @@ class EX42StageTransitionConsumer:
             "stage_after": next_stage_id,
             "boundary_iteration": boundary_iteration,
             "decision_id": self.decision_id,
+            "automatic_action_receipt": {
+                "field": "domain_randomization", "state": "approved_value_selected",
+                "decision_id": self.decision_id, "boundary": next_stage_id,
+                "value": evidence["applied_scale"], "approval_validated": True,
+                "runtime_application": "not_implemented_preparation_only",
+            },
             **evidence,
         }
 

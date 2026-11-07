@@ -300,7 +300,12 @@ def validate_automatic_rule(*, rule: dict[str, Any], approval: dict[str, Any],
     """Only explicitly approved rule/value pairs may request automatic action."""
     key = rule.get("field")
     choices = rule.get("choices")
-    permit = approval.get("fields", {}).get(key) if isinstance(approval, dict) else None
+    permit = None
+    if isinstance(approval, dict):
+        if key == "domain_randomization":
+            permit = approval.get("domain_randomization")
+        else:
+            permit = approval.get("fields", {}).get(key)
     if (not isinstance(key, str) or not isinstance(choices, list)
             or not isinstance(permit, dict) or permit.get("approved") is not True
             or permit.get("decision_id") != rule.get("decision_id")

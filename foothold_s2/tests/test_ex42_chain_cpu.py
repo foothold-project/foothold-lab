@@ -118,6 +118,11 @@ def test_transition_gap_applies_approved_dr_and_registers_priority_one(tmp_path)
     assert transition["status"] == "measurement_gap"
     assert transition["applied_scale"] == 1.0
     assert env._ex40_dr_scale == 1.0 and env._ex42_stage_id == "E0"
+    assert transition["automatic_action_receipt"] == {
+        "field": "domain_randomization", "state": "approved_value_selected",
+        "decision_id": chain.consumer.decision_id, "boundary": "E0",
+        "value": 1.0, "approval_validated": True,
+        "runtime_application": "not_implemented_preparation_only"}
     assert transition["alert_receipt"]["delivery"] == "accepted"
     assert len(delivered) == 1
     events = [json.loads(line) for line in (run / "ex42_application.jsonl").read_text().splitlines()]
