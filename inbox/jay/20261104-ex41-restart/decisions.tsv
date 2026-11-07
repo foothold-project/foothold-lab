@@ -309,3 +309,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08T00:15:32+09:00	W48 결측 더함	GPU0 stepping_stones_low_L4_eval_pred · GPU1 stepping_stones_high_L5_probe_prop_only 3 회 기술 실패 → 결측 · 누계 8 (GPU0 5 · GPU1 3)	canon_retry.py	attempts	아침 표
 2026-11-08T00:25:34+09:00	W48 결측 더함	GPU1 balance_beams_L0_probe_prop_only 3 회 → 결측 · 누계 9 (GPU0 5 · GPU1 4)	canon_retry.py	out_gpu1/attempts	아침 표
 2026-11-08T00:35:52+09:00	W48 중복 막음 · 결측	GPU0 로 옮긴 칸이 GPU0 에서 끝나자 GPU1 재시도가 같은 칸을 다시 건 것(1319) 취소 · canon_retry 에 옮긴 칸 13 개 제외 목록 · 결측 GPU1 balance_beams_L2_probe_prop_only 더해 누계 10 (GPU0 5 · GPU1 5)	canon_retry.py --gpu1	queue cancel 1319	-
+2026-11-08T00:45:39+09:00	GPU1 곧 빔 (예고)	정본 216 꼬리: GPU1 대기 2 · 약 01:10 부터 빔 예상 · GPU0 대기 11(약 02:30 끝 추정) · 칸을 다시 옮기면 시도 기록이 세 폴더로 흩어져 득보다 실이 큼 · 다른 GPU 일: EX-42 Kit 예행은 OS(Linux) 결정 뒤라 지금 걸 일 없음 · 결측 누계 11 (GPU0 5 · GPU1 6)	queue.json · canon_retry	-	아침 보고에 놀았던 시각 적음
