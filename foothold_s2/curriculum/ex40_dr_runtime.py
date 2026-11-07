@@ -382,6 +382,97 @@ class RuntimeReadback:
                 "pending_values": [name for name in ("push_velocity",)
                                    if self.ranges.get(name) is None]}
 
+    def per_env_actual(self) -> dict:
+        """Return exact CPU-readable physical/action values, retaining env/body/joint axes.
+
+        This is intentionally separate from ``summary``: summary is compact for training
+        logs, while N21 needs an auditable per-environment record of the values actually
+        present after reset. A missing PhysX/action readback is an error, never a guessed
+        default.
+        """
+        import torch
+
+        def cpu_list(value, label):
+            tensor = torch.as_tensor(value).detach().to(device="cpu")
+            if tensor.numel() and not bool(torch.isfinite(tensor).all()):
+                raise RuntimeError("EX-40 per-env readback is nonfinite: " + label)
+            return tensor.tolist()
+
+        asset = self.env.scene["robot"]
+        n = int(self.env.scene.num_envs)
+        view = asset.root_physx_view
+        masses = torch.as_tensor(view.get_masses())
+        materials = torch.as_tensor(view.get_material_properties())
+        if masses.shape[0] != n or materials.shape[0] != n:
+            raise RuntimeError("EX-40 per-env mass/material readback env axis mismatch")
+        result = {
+            "env_ids": list(range(n)),
+            "body_names": list(getattr(asset, "body_names", ())),
+            "mass_kg_by_env_body": cpu_list(masses, "mass"),
+            "material_axes": ["static_friction", "dynamic_friction", "restitution"],
+            "material_coefficients_by_env_shape": cpu_list(materials, "material"),
+        }
+
+        baseline_com = getattr(self.env, "_ex40_dr_com_baseline", None)
+        if baseline_com is None:
+            raise RuntimeError("EX-40 per-env COM baseline is unavailable after reset")
+        com = torch.as_tensor(view.get_coms())
+        baseline_com = torch.as_tensor(baseline_com).to(device=com.device)
+        if com.shape[0] != n or baseline_com.shape != com.shape:
+            raise RuntimeError("EX-40 per-env COM readback shape mismatch")
+        result["com_local_pose_by_env_body"] = cpu_list(com, "COM pose")
+        result["com_baseline_local_pose_by_env_body"] = cpu_list(baseline_com, "COM baseline pose")
+        result["base_com_offset_m_by_env_body"] = cpu_list(com[..., :3] - baseline_com[..., :3], "COM")
+
+        gains = {}
+        strengths = {}
+        motor_baselines = getattr(self.env, "_ex40_dr_motor_baselines", None) or {}
+        for name, actuator in asset.actuators.items():
+            stiffness = torch.as_tensor(actuator.stiffness)
+            damping = torch.as_tensor(actuator.damping)
+            if stiffness.shape[0] != n or damping.shape[0] != n:
+                raise RuntimeError("EX-40 per-env actuator gain env axis mismatch: " + name)
+            gains[name] = {"joint_names": list(getattr(actuator, "joint_names", ())),
+                           "stiffness": cpu_list(stiffness, name + ".stiffness"),
+                           "damping": cpu_list(damping, name + ".damping")}
+            baseline = motor_baselines.get(name)
+            if baseline is None:
+                raise RuntimeError("EX-40 per-env motor-strength baseline is unavailable: " + name)
+            effort = torch.as_tensor(actuator.effort_limit)
+            stall = torch.as_tensor(actuator._saturation_effort)
+            effort_base = torch.as_tensor(baseline["effort_limit"], device=effort.device)
+            stall_base = torch.as_tensor(baseline["saturation_effort"], device=stall.device)
+            if effort_base.ndim == 1:
+                effort_base = effort_base.unsqueeze(0)
+            if stall_base.ndim == 1:
+                stall_base = stall_base.unsqueeze(0)
+            try:
+                effort_ratio = effort / torch.broadcast_to(effort_base, effort.shape)
+                stall_ratio = stall / torch.broadcast_to(stall_base, stall.shape)
+            except RuntimeError as exc:
+                raise RuntimeError("EX-40 per-env motor-strength baseline shape mismatch: " + name) from exc
+            strengths[name] = {
+                "joint_names": list(getattr(actuator, "joint_names", ())),
+                "effort_limit_raw": cpu_list(effort, name + ".effort_limit"),
+                "saturation_effort_raw": cpu_list(stall, name + ".saturation_effort"),
+                "effort_multiplier": cpu_list(effort_ratio, name + ".effort_multiplier"),
+                "saturation_multiplier": cpu_list(stall_ratio, name + ".saturation_multiplier"),
+            }
+        result["actuator_gains_by_env_joint"] = gains
+        result["motor_strength_by_env_joint"] = strengths
+
+        action = self.env.action_manager.get_term("joint_pos")
+        delay = getattr(action, "delay", None)
+        if delay is None:
+            raise RuntimeError("EX-40 per-env delay readback is unavailable")
+        delay = torch.as_tensor(delay)
+        if delay.shape[0] != n:
+            raise RuntimeError("EX-40 per-env delay env axis mismatch")
+        result["delay_substeps_by_env"] = cpu_list(delay, "delay")
+        result["delay_seconds_by_env"] = cpu_list(delay.to(dtype=torch.float64) * float(self.env.physics_dt), "delay_seconds")
+        result["physics_dt_seconds"] = float(self.env.physics_dt)
+        return result
+
     def state_dict(self) -> dict:
         def cpu_state(value):
             if value is None:

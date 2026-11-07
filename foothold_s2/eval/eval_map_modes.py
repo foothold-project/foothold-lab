@@ -21,6 +21,8 @@ import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
 from foothold_s2.eval import map_mode_cells as _command_cells
+from foothold_s2.eval import eval_dr_mode
+from foothold_s2.eval import n21_dr_record
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
@@ -28,10 +30,15 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
-parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3"), default="core")
+parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21"), default="core")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
-parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
+parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
+parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
+parser.add_argument("--n21-stage", default=None, help="N21 approved EX-42 stage id")
+parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=None)
+parser.add_argument("--n21-approval", default=str(n21_dr_record.DEFAULT_APPROVAL), help="EX-42 DR approval file, fingerprinted in the receipt")
+eval_dr_mode.add_arguments(parser)
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
@@ -54,6 +61,26 @@ parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 parser_sparse = args.terrain_set == "sparse50"
+parser_n21 = bool(args.n21_record_only)
+if parser_n21:
+    try:
+        n21_dr_record.validate_entrypoint(args)
+        n21_approval = n21_dr_record.approval_record(
+            args.n21_approval, args.n21_stage, args.dr_scale, dr_table_path=args.dr_table)
+        n21_table_fingerprint = eval_dr_mode.load_table(args.dr_table)["sha256"]
+        if n21_table_fingerprint != n21_approval["range_source"]["sha256"]:
+            raise ValueError("N21 DR range table changed after the EX-42 plan pin")
+    except (ValueError, OSError) as exc:
+        parser.error(str(exc))
+else:
+    n21_approval = None
+    try:
+        n21_dr_record.validate_entrypoint(args)
+    except ValueError as exc:
+        parser.error(str(exc))
+dr_error = eval_dr_mode.validate_args(args)
+if dr_error:
+    parser.error(dr_error)
 if parser_sparse and (not args.fixed_terrain or args.fixed_level is None):
     parser.error("--terrain-set sparse50 은 --fixed-terrain 과 --fixed-level N 을 같이 준다(Kit 기동 전 거절)")
 if args.fixed_level is not None and not args.fixed_terrain:
@@ -125,6 +152,10 @@ agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
 env_cfg.scene.num_envs = args.envs
 env_cfg.sim.device = args.device
 agent_cfg.device = args.device
+if parser_n21:
+    n21_dr_record.configure_terrain(env_cfg, args.terrain_set, args.eval_seed)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
 args.ex41_env_preparation = None
 if args.terrain_skill_v2:
     from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
@@ -141,11 +172,14 @@ if args.ex39_heading_smoke_guard:
     cmd_cfg = env_cfg.commands.base_velocity
     cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
     cmd_cfg.seed = 42
-dr_off = adapters.disable_eval_randomization(env_cfg)
+dr_mode = eval_dr_mode.DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)
+if parser_n21 and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
+    raise RuntimeError("N21 DR range table differs from the pre-Kit approval fingerprint")
+dr_off = adapters.disable_eval_randomization(env_cfg) if args.dr_mode == "off" else []
 
 START_OFFSET_MAX_M = 0.5
 EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다
-if sorted(dr_off) != sorted(EXPECTED_DR_OFF):
+if args.dr_mode == "off" and sorted(dr_off) != sorted(EXPECTED_DR_OFF):
     raise RuntimeError("꺼진 DR 목록 %r 이 기대 %r 와 다르다" % (dr_off, EXPECTED_DR_OFF))
 
 curriculum_off = []
@@ -178,6 +212,7 @@ args.ex41_checkpoint_state = checkpoint_state
 args.ex41_checkpoint_preparation = checkpoint_preparation
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
+dr_mode.after_make(raw)  # DR scale is fixed before the first reset.
 args.ex41_w86_attachment = None
 args.ex41_runtime_attachment = None
 if args.terrain_skill_v2:
@@ -279,6 +314,12 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.dr_mode == "on":
+    res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
+                       "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
+if parser_n21:
+    res["n21_point"] = args.n21_point
+    res["n21_stage"] = args.n21_stage
 res["policy_dt_s"] = float(dt)
 if args.ex39_heading_smoke_guard:
     res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
@@ -352,9 +393,11 @@ for mode in args.modes.split(","):
     res["modes"][mode] = {}
 
     for cname, cmd in ((c, v) for c, v in CMDS.items() if c in WANT_CMDS):
+        rollout_key = "%s/%s" % (mode, cname)
         torch.manual_seed(args.eval_seed)
         if args.ex39_heading_smoke_guard:
             term.params.ex39_arm = "B"
+        dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
         env.reset()
         terrain = raw.scene.terrain
 
@@ -438,6 +481,7 @@ for mode in args.modes.split(","):
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
+            dr_mode.step(raw, k)
             last_err["e"] = None
             a = policy(obs)
 
@@ -524,6 +568,10 @@ for mode in args.modes.split(","):
         res.setdefault("map_err_gt_rebuild_max_abs_m", {})["%s/%s" % (mode, cname)] = last_err.get("rebuild_maxdiff")           # 센서 원자료로 다시 만든 정답 지도와 obs 의 정답 지도의 최대 차이(0 이어야 분류가 믿을 만하다)
         if last_err.get("rel_error"):
             res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
+        dr_mode.collect(raw, rollout_key, res, row, arrays={
+            "alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy,
+            "wz": wz, "tilt": tilt, "xy": XY.cpu().numpy(), "cmd": cmd,
+        })
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
@@ -531,6 +579,8 @@ for mode in args.modes.split(","):
         res.setdefault("sequences", {})[mode] = {}
         for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
             torch.manual_seed(42)
+            rollout_key = "%s/%s" % (mode, seq_name)
+            dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
             env.reset()
             if args.fixed_terrain:
                 fixed_terrain.apply(raw)
@@ -545,6 +595,7 @@ for mode in args.modes.split(","):
             counts["gt"] = counts["total"] = 0
             seq_row = {"total_steps": S, "phase_steps": map_mode_cells.phase_steps(S, len(seq_commands)),
                        "phases": [], "independent_reset": True}
+            global_step = 0
             for phase_index, (phase_cmd, nsteps) in enumerate(zip(seq_commands, seq_row["phase_steps"])):
                 term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
                 map_mode_cells.disable_heading_for_fixed_eval(term)
@@ -558,6 +609,7 @@ for mode in args.modes.split(","):
                 for step in range(nsteps):
                     term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
                     map_mode_cells.assert_heading_off_for_fixed_eval(term)
+                    dr_mode.step(raw, global_step)
                     action = policy(obs)
                     obs, _reward, dones, _extra = env.step(action)
                     map_mode_cells.assert_heading_off_for_fixed_eval(term)
@@ -568,6 +620,7 @@ for mode in args.modes.split(","):
                     wz_t[step] = robot.data.root_ang_vel_b[:, 2]
                     xy_t[step] = robot.data.root_pos_w[:, :2]
                     alive = alive & ~dones.bool()
+                    global_step += 1
                 phase_vx, phase_vy, phase_wz, phase_alive = (
                     vx_t.cpu().numpy(), vy_t.cpu().numpy(), wz_t.cpu().numpy(), alive_t.cpu().numpy())
                 phase = map_mode_cells.summarize(
@@ -586,6 +639,7 @@ for mode in args.modes.split(","):
                 raise RuntimeError("sequence eval_gt policy input did not use GT for every sample")
             seq_row["gt_used"] = counts["gt"]
             seq_row["policy_steps_x_envs"] = counts["total"]
+            dr_mode.collect(raw, rollout_key, res, seq_row)
             res["sequences"][mode][seq_name] = seq_row
             print("MAPMODE_SEQUENCE", mode, seq_name, json.dumps({
                 "alive_at_end": [p["by_kind"] for p in seq_row["phases"]],
@@ -616,5 +670,14 @@ with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     stream.flush()
     os.fsync(stream.fileno())
 os.replace(out_json + ".tmp", out_json)
+if parser_n21:
+    n21_doc = n21_dr_record.receipt(res, approval=n21_approval, terrain_set=args.terrain_set)
+    n21_json = os.path.join(args.out, "n21_record_only.json")
+    with open(n21_json + ".tmp", "w", encoding="utf-8") as stream:
+        json.dump(n21_doc, stream, ensure_ascii=False, indent=1, allow_nan=False)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(n21_json + ".tmp", n21_json)
+    print("N21_RECORD_ONLY", n21_json, flush=True)
 print("MAPMODE_DONE", flush=True)
 os._exit(0)

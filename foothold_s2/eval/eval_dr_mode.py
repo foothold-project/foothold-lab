@@ -98,8 +98,9 @@ def validate_args(args) -> str | None:
     """Kit 기동 전에 거절할 사유를 돌려준다(없으면 None). 호출자가 parser.error 로 올린다."""
     if args.dr_mode == "off":
         return None
-    if getattr(args, "axis_v2", False):
-        return "--dr-mode on 은 W57 --axis-v2 와 같이 쓰지 않는다(W57 관문 칸은 DR 끔)"
+    if any(getattr(args, name, False) for name in
+           ("axis_v2", "terrain_skill", "terrain_skill_v2", "push_ladder")):
+        return "--dr-mode on 은 별도 axis/terrain/push 평가기와 같이 쓰지 않는다(해당 평가기에 DR hook 이 연결되지 않음)"
     scale = args.dr_scale
     if not isinstance(scale, (int, float)) or isinstance(scale, bool) or not math.isfinite(scale) or not 0.0 <= scale <= 1.0:
         return "--dr-scale 은 [0, 1] 의 유한한 수(D125 승인값 1.0)"
@@ -417,7 +418,8 @@ class DRMode:
     from_args(Kit 전) → after_make(gym.make 뒤 · 첫 reset 전) → [begin(reset 전) → step(매 step, env.step 전) → collect(끝)] × 롤아웃
     """
 
-    def __init__(self, mode: str, scale: float | None, table: dict[str, Any] | None = None, *, pusher=None, eval_seed: int = 0):
+    def __init__(self, mode: str, scale: float | None, table: dict[str, Any] | None = None, *, pusher=None,
+                 eval_seed: int = 0, capture_per_env: bool = False):
         self.mode = mode
         self.scale = scale
         self.table = table
@@ -426,18 +428,20 @@ class DRMode:
         self.startup_events_kept: list[str] = []
         self.readback = None
         self.pusher = pusher or _default_pusher
+        self.capture_per_env = bool(capture_per_env)
         self._record: dict[str, Any] | None = None
         self._rollout: dict[str, Any] | None = None
 
     @classmethod
-    def from_args(cls, args, env_cfg, *, installer=None, pusher=None) -> "DRMode":
+    def from_args(cls, args, env_cfg, *, installer=None, pusher=None, capture_per_env: bool = False) -> "DRMode":
         if args.dr_mode == "off":
             return cls("off", None)
         error = validate_args(args)
         if error:
             raise RuntimeError(error)
         table = load_table(args.dr_table)
-        self = cls("on", float(args.dr_scale), table, pusher=pusher, eval_seed=int(args.eval_seed))
+        self = cls("on", float(args.dr_scale), table, pusher=pusher, eval_seed=int(args.eval_seed),
+                   capture_per_env=capture_per_env)
         events = getattr(env_cfg, "events", None)
         kept = [name for name in STARTUP_EVENTS if getattr(events, name, None) is not None]
         if kept != list(STARTUP_EVENTS):
@@ -568,6 +572,8 @@ class DRMode:
             raise RuntimeError("DR 켠 평가: begin 의 롤아웃 %r 과 collect 의 %r 이 다르다" % (self._rollout["key"], key))
         rollout, self._rollout = self._rollout, None
         summary = self.readback.summary()
+        if self.capture_per_env:
+            summary["actual_values_by_env"] = self.readback.per_env_actual()
         ranges = self.table["full_ranges"]
         if "demo_pushes" in rollout:
             ranges = {**ranges, "push_velocity": {axis: ((1.5, 2.0) if axis == "x" else (0.0, 0.0))
