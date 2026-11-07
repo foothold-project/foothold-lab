@@ -212,6 +212,21 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
                       "error_type": type(exc).__name__, "error": str(exc), "kit_started": False}
     if not env_import["imported"]:
         blockers.append("environment_import_unavailable")
+    runtime_identity_verified = bool(train_entry.get("runtime_identity"))
+    parser_contract_verified = bool(train_entry.get("parser"))
+    # ops-check is deliberately a preflight. It never creates a launch output,
+    # so it cannot close G05 even when the selected interpreter and parser
+    # sources are readable. Keep that distinction machine-readable.
+    g05 = {
+        "state": "kit_required",
+        "complete": False,
+        "runtime_identity_verified": runtime_identity_verified,
+        "parser_contract_verified": parser_contract_verified,
+        "environment_imported": bool(env_import.get("imported")),
+        "final_argv_sha256": train_entry.get("final_argv_sha256"),
+        "new_output_sha256": None,
+        "reason": "native launch output SHA is not produced by ops-check",
+    }
     return {
         "state": "blocked" if blockers else "ready",
         "plan_sha256": plan.sha256,
@@ -223,6 +238,7 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
         "import_check": import_check,
         "train_entry": train_entry,
         "environment_import": env_import,
+        "g05_evidence": g05,
     }
 
 

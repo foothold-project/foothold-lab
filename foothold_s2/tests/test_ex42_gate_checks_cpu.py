@@ -141,14 +141,43 @@ def test_g05_exact_interpreter_cli_and_argv_sha(tmp_path):
     cli.write_text("", encoding="utf-8")
     argv = ["--task", "EX42", "--num_envs", "3072", "--headless", "--device", "cuda:0"]
     expected = launch_argv_sha256(argv, python=str(python), isaac_cli=str(cli))
-    assert verify_launch_argv(argv, python=str(python), isaac_cli=str(cli),
-                              expected_sha256=expected)["argv_sha256"] == expected
+    result = verify_launch_argv(argv, python=str(python), isaac_cli=str(cli),
+                                expected_sha256=expected)
+    assert result["argv_sha256"] == expected
+    assert result["evidence_scope"] == "path_and_argv_digest_only"
+    assert result["runtime_import_verified"] is False
+    assert result["new_output_sha256"] is None
     with pytest.raises(ValueError, match="argv hash"):
         verify_launch_argv(argv + ["--seed", "7"], python=str(python),
                            isaac_cli=str(cli), expected_sha256=expected)
     with pytest.raises(ValueError, match="missing"):
         verify_launch_argv(argv, python=str(tmp_path / "missing"), isaac_cli=str(cli),
                            expected_sha256=expected)
+
+
+def test_g05_placeholder_paths_and_argv_hash_do_not_close_native_gate(tmp_path, monkeypatch):
+    from foothold_s2.scripts import ex42_ops
+
+    python, cli = tmp_path / "python.exe", tmp_path / "cli_args.py"
+    python.write_text("placeholder", encoding="utf-8")
+    cli.write_text("placeholder", encoding="utf-8")
+    argv = ["--task", "EX42", "--headless", "--device", "cuda:0"]
+    digest = launch_argv_sha256(argv, python=str(python), isaac_cli=str(cli))
+    fake_preflight = verify_launch_argv(argv, python=str(python), isaac_cli=str(cli),
+                                        expected_sha256=digest)
+    assert fake_preflight["argv_sha256"] == digest  # old CPU check looked successful
+
+    monkeypatch.setattr(ex42_ops, "verify_train_entry_contract", lambda: {
+        "parser": "source-only", "runtime_identity": None,
+        "final_argv_sha256": fake_preflight["argv_sha256"], "training_started": False})
+    monkeypatch.setattr(ex42_ops, "verify_env_cfg_import", lambda task_id: {
+        "task_id": task_id, "imported": False, "error_type": "ModuleNotFoundError",
+        "error": "No module named 'pxr'", "kit_started": False})
+    result = ex42_ops.ops_check(ex42_ops.DEFAULT_TABLE, ex42_ops.DEFAULT_APPROVALS)
+    assert result["g05_evidence"]["state"] == "kit_required"
+    assert result["g05_evidence"]["complete"] is False
+    assert result["g05_evidence"]["environment_imported"] is False
+    assert result["g05_evidence"]["new_output_sha256"] is None
 
 
 def test_g13_checkpoint_and_score_pair_distinguish_late_corrupt_and_old_pass():

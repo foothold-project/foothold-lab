@@ -173,7 +173,7 @@ def audit_ex42_launch_source(root: str | Path, *, remote_ref: str) -> dict[str, 
 
 def verify_launch_argv(argv: list[str], *, python: str, isaac_cli: str,
                        expected_sha256: str) -> dict[str, Any]:
-    """Check selected interpreter, installed Isaac CLI and exact passthrough argv."""
+    """Check file presence and argv digest; this is not runtime/import evidence."""
     payload = {"python": python, "isaac_cli": isaac_cli, "argv": argv}
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True,
                                        separators=(",", ":")).encode()).hexdigest()
@@ -181,7 +181,10 @@ def verify_launch_argv(argv: list[str], *, python: str, isaac_cli: str,
         raise ValueError("EX-42 selected Python or Isaac CLI is missing")
     if digest != expected_sha256:
         raise ValueError("EX-42 final argv hash differs")
-    return {**payload, "argv_sha256": digest}
+    return {**payload, "argv_sha256": digest,
+            "evidence_scope": "path_and_argv_digest_only",
+            "runtime_import_verified": False,
+            "new_output_sha256": None}
 
 
 def launch_argv_sha256(argv: list[str], *, python: str, isaac_cli: str) -> str:
