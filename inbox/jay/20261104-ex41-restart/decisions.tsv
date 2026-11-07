@@ -308,3 +308,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T23:56:34+09:00	W48 GPU 균형	GPU0 대기 5(약 50 분 뒤 빔) · GPU1 대기 26(약 4 시간) → GPU1 뒤쪽 13 칸(1268~1292) 취소 · 같은 칸을 GPU0 계획으로 1293~1305 에 걸음 · 두 장 끝나는 시각을 맞춤 · 그 칸들의 앞선 시도 기록은 out_gpu1 에 남음(정리 때 두 폴더 합침)	queue.json 대기 수	dispatch queue cancel · queue_canon216.py	GPU0 18 · GPU1 13
 2026-11-08T00:15:32+09:00	W48 결측 더함	GPU0 stepping_stones_low_L4_eval_pred · GPU1 stepping_stones_high_L5_probe_prop_only 3 회 기술 실패 → 결측 · 누계 8 (GPU0 5 · GPU1 3)	canon_retry.py	attempts	아침 표
 2026-11-08T00:25:34+09:00	W48 결측 더함	GPU1 balance_beams_L0_probe_prop_only 3 회 → 결측 · 누계 9 (GPU0 5 · GPU1 4)	canon_retry.py	out_gpu1/attempts	아침 표
+2026-11-08T00:35:52+09:00	W48 중복 막음 · 결측	GPU0 로 옮긴 칸이 GPU0 에서 끝나자 GPU1 재시도가 같은 칸을 다시 건 것(1319) 취소 · canon_retry 에 옮긴 칸 13 개 제외 목록 · 결측 GPU1 balance_beams_L2_probe_prop_only 더해 누계 10 (GPU0 5 · GPU1 5)	canon_retry.py --gpu1	queue cancel 1319	-
