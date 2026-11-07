@@ -1,0 +1,65 @@
+{
+  "pr": "https://github.com/foothold-project/foothold-lab/pull/586",
+  "commit": "5c1f6d6ca45f73837ff98cbc1a0f7feccdd89dc3",
+  "source_sha256": "9a10b27195fb12ae5309c2329cc62b0af5ed34ae627a480d13d869d00a002feb",
+  "stages": [
+    {
+      "stage": "S2e",
+      "iteration": 5500,
+      "source_line": "| S2e | m11001~m11500 | 5001~5500 | 1.00 | 2 · 2 · 2 (back0.5, back1.0) | 63/64 | 통과 · 1.000 · 1.000 · 0.953 | 0.92 (0.8 미만 0) |",
+      "checks": {
+        "exceed_015": true,
+        "alive": true,
+        "push_rounded_3": true,
+        "S_rounded_2": true,
+        "S_below08": true
+      },
+      "over_015": [
+        2,
+        2,
+        2
+      ],
+      "end_min_alive": 63,
+      "stage_wide_min_alive": 61,
+      "push_worst_across_modes": [
+        1.0,
+        1.0,
+        0.953125
+      ],
+      "S_mean_gt": 0.9222292302475504,
+      "S_below08_gt": 0
+    },
+    {
+      "stage": "T0′",
+      "iteration": 6000,
+      "source_line": "| T0′ | m11501~m12000 | 5501~6000 | 1.00 | 0 · 0 · 1 (back1.0) | 63/64 | 통과 · 0.984 · 0.969 · 0.938 | 0.88 (0.8 미만 4) |",
+      "checks": {
+        "exceed_015": true,
+        "alive": true,
+        "push_rounded_3": true,
+        "S_rounded_2": true,
+        "S_below08": true
+      },
+      "over_015": [
+        0,
+        0,
+        1
+      ],
+      "end_min_alive": 63,
+      "stage_wide_min_alive": 63,
+      "push_worst_across_modes": [
+        0.984375,
+        0.96875,
+        0.9375
+      ],
+      "S_mean_gt": 0.8788587301617719,
+      "S_below08_gt": 4
+    }
+  ],
+  "numeric_disagreements": 0,
+  "notes": [
+    "Stage-end minimum differs from minimum over all boundaries of a stage; not a numerical disagreement.",
+    "Video missing count is time-dependent; current readback is w45_evidence.json, not the prior count 9.",
+    "S aggregation does not establish the actual mirror trigger rule."
+  ]
+}

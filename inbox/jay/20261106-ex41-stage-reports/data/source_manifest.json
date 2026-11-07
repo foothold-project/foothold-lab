@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-06T16:43:17.338185+09:00",
+  "captured_at": "2026-11-07T09:30:34.220378+09:00",
   "sources": [
     {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_6000_d5e9ec400f33\\map64\\map_modes.json",
@@ -292,6 +292,66 @@
       "bytes": 26939531
     },
     {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_5250_ba95e929793b.json",
+      "sha256": "400d7ae08d64a3862ef7d8a8c81c140d688a24fdd6b7cf65cbe5c59d77a5cbbe",
+      "bytes": 4888707
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5250_ba95e929793b\\evaluation\\map64\\map_modes.json",
+      "sha256": "90c5c1b606779ba35a326f1e3c3002379f9dc46b61daaec21e45b0b99a944367",
+      "bytes": 2960491
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_5250.pt",
+      "sha256": "ba95e929793b6cefb08ce2f73a682caf25331241ed8de9066dd58a0861c73522",
+      "bytes": 44247168
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_5500_2a6211040d09.json",
+      "sha256": "b9d949869b7600a1942a900d683429d5eab920d8f2eaf31266ca70eb06f1811c",
+      "bytes": 4678040
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\evaluation\\map64\\map_modes.json",
+      "sha256": "b7ee8da5cef2fd961cf28af26bec3cef3984a91f763bffad98946f33b0058544",
+      "bytes": 2961694
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_5500.pt",
+      "sha256": "2a6211040d092d3b25bbc5e0d2f0b5443bb5fac951d408e36b1871d5bdac6e4f",
+      "bytes": 44380992
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_5750_3daf442b355c.json",
+      "sha256": "7914dfbfe56b30205d01f84457ec1c0a495a88e76e1cb303a0cbbcdf2ee67245",
+      "bytes": 4639433
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5750_3daf442b355c\\evaluation\\map64\\map_modes.json",
+      "sha256": "49c7dfc1212bd75bda04bf6a58dfca25e83adeade2816dff72aba513fb85d0dd",
+      "bytes": 2961912
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_5750.pt",
+      "sha256": "3daf442b355c51743bf8f4b135f14becec841ace1dc23d907f4c0ed66c2889aa",
+      "bytes": 44458240
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_6000_1c6af6319c82.json",
+      "sha256": "6fa783e6bfdf32505032994f37904c526f51bb5e678a8bf2f02a8c036c074962",
+      "bytes": 4779244
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\evaluation\\map64\\map_modes.json",
+      "sha256": "4acc0fcfdef53f103c93eb45aaf225eeba1570c5cfb304f9644f24af4021656a",
+      "bytes": 2961453
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\model_6000.pt",
+      "sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+      "bytes": 44279424
+    },
+    {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\scores\\score_750_02876f9b1835.json",
       "sha256": "098660a65f4f6f8ba95ea25921a8fc226338d7f7a33cd969f3ca7cea1eff0efb",
       "bytes": 4850840
@@ -308,13 +368,13 @@
     },
     {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\events.out.tfevents.1793804158.AI-WS01.94296.0",
-      "sha256": "aac19cb7d979bd03660fdbb4c5c1668d2de0ad7c214e07d1cca0b77e8bb2faca",
-      "bytes": 30728938
+      "sha256": "4358056d54674b0e723bbb718bccbdc1bbea51ff3e98f73e27a8abc7abb7a032",
+      "bytes": 34703920
     },
     {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\ex41_application.jsonl",
-      "sha256": "493023bdd8ac91ea022480ec854f7609ea4979068d09960ea6f5b23b5e688187",
-      "bytes": 122282
+      "sha256": "84ee84fc0f005ece08012def3ff029de296c2536c28bf9be274267458b942957",
+      "bytes": 138534
     },
     {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_750_02876f9b1835\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
@@ -457,6 +517,76 @@
       "bytes": 426351
     },
     {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "be95e8213d567f768035a928271d2eb632637046de7d36f06f3c4a93c2674764",
+      "bytes": 2505175
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "739b110d2728a74352e69a20e937dba3de1150a5cabde4db5c2cdd4584c5d71b",
+      "bytes": 427101
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "3ca291f37a0aed07bd80153e81e9146cf9dfdb4d0e9dd9524a4c38c3d0b4602e",
+      "bytes": 425575
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "2947b7e5f02bd67c4ad2486ae01f8ec9e8a88b4e7cc176e1148dd9c5e58db036",
+      "bytes": 427241
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "73bf3985feeb36e1c1dba5c46c737f25f20b76d6e885376ac0ee256d2792d850",
+      "bytes": 426402
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "c897dddf76bce8e05441b7f2ca6436993dc8c7c5f93ade77fb5b0cfe044c948a",
+      "bytes": 427348
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "02cde5dfe5d8af3edab0c041c08a49fd35617630509bb9f3d752cac3a5c50125",
+      "bytes": 426228
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2.json",
+      "sha256": "cdebe652ce76bd99b4348c987c1cbb1d068e3ed01903030b20d438f6f2e5c93e",
+      "bytes": 2501840
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd0.5.npz",
+      "sha256": "1024be1aebce2f4b96b2bee07e135a7f2040a92e5f19f87cdbe75fa14accf448",
+      "bytes": 428010
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_gt_fwd1.0.npz",
+      "sha256": "751bba40232992f9d464991830de91585fa55bd2ddf7da2e8d517ed63d8e5756",
+      "bytes": 426850
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd0.5.npz",
+      "sha256": "7ba4ddc3275dcaa5bdee2c8f3b1bf9aa523d22843eff3a445049f97a9ee33773",
+      "bytes": 428019
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_probe_prop_only_fwd1.0.npz",
+      "sha256": "58df611b232717f06d09a6a9cea0388386d9782f18efc892117f1f4ac8fab28b",
+      "bytes": 426944
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd0.5.npz",
+      "sha256": "0cd3819ca2ec0643235ef12c42b8922c62c905d4da1945ad3f149da280014461",
+      "bytes": 427915
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\axis_v2\\axis_v2\\axis_v2_eval_pred_fwd1.0.npz",
+      "sha256": "0c586f8a8a6243a5350a1c7546e5e5416931b540cc7d158d2658cdbbef814008",
+      "bytes": 426631
+    },
+    {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\10000.json",
       "sha256": "b5b7729a3625061dd06cbbfc28e586381d4a4e33b38a21bbf0f9c16a3db1f0dd",
       "bytes": 50303
@@ -480,6 +610,26 @@
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\11000.json",
       "sha256": "a2d089743cd01e816253598bf052a8cab64f83b9e94c0f527fd7732b284377c7",
       "bytes": 50552
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\11250.json",
+      "sha256": "6ea0b0f8ec30c9725734b6c65278480b3f2e36657a0c8178cf158d09b91d96c4",
+      "bytes": 50553
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\11500.json",
+      "sha256": "62230adbb8078598f89d50dbf202c8e5f68075a3738f4da73d4f521426501beb",
+      "bytes": 50312
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\11750.json",
+      "sha256": "07fc997e13677ddd922fea10ed737bc130a2104ca5ee3c8d94eeddaaef56c72b",
+      "bytes": 50395
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\12000.json",
+      "sha256": "51739858c8e83a60786439982f93ccfd9d3c479a728064e48610f2bbdd888fac",
+      "bytes": 50709
     },
     {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\push250\\6500.json",
@@ -572,16 +722,26 @@
       "bytes": 412702
     },
     {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "5acd3809944792b654ae9d6e8a7f2628eafa1cc10a0451508a736412258d8597",
+      "bytes": 411880
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\stage_end_auxiliary_eval\\push_ladder\\push_ladder\\push_ladder_bundle.json",
+      "sha256": "0d7a493aff8d724247e6d6b9d039202d38d221894030edb24f29ce7ec320626e",
+      "bytes": 413276
+    },
+    {
       "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\ex41_w86.jsonl",
-      "sha256": "709ba12013289b6c6eeb6b597aab887d72bc27f53e7a494f1b14d52a9377d938",
-      "bytes": 35797223
+      "sha256": "154b211ddd79ea7bfe41426447f79e8b00f20489a125523fde5ff61cf092a968",
+      "bytes": 40483600
     }
   ],
   "checks": [
-    "9 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary",
-    "20 score/map/checkpoint SHA matches; parent+20 maps env/step/seed/command/tile assignment matched",
-    "TB missing samples retained empty: Loss/map_switch/off_ep_reward_mean 4998/5000",
-    "TB missing samples retained empty: Loss/map_switch/off_ep_length_mean 4998/5000",
-    "TensorBoard snapshot: 6 core tags have all 5000 local updates; wall-time tags excluded"
+    "11 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary",
+    "24 score/map/checkpoint SHA matches; parent+24 maps env/step/seed/command/tile assignment matched",
+    "TB missing samples retained empty: Loss/map_switch/off_ep_reward_mean 5998/6000",
+    "TB missing samples retained empty: Loss/map_switch/off_ep_length_mean 5998/6000",
+    "TensorBoard snapshot: 6 core tags have all 6000 local updates; wall-time tags excluded"
   ]
 }

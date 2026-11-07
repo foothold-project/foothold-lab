@@ -5502,5 +5502,1025 @@
     "stage_after": "S2e",
     "stage_before": "S2d",
     "status": "applied"
+  },
+  {
+    "after": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": true,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5251,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "S2e",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+    "before": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": true,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5001,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "S2e",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "checkpoint_sha256": "85cb163cfd235e75e8fd3fbb8fbdd98c234827a2f1cb8542f45fe9098b2cafa9",
+    "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+    "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+    "decisions": [],
+    "event_id": "f6b6d6ff8e326eda81cab88e07ac059099a794a3b2b6e7fa51b3f2294cd96573",
+    "format": "foothold-ex41-application/1",
+    "iteration": 5251,
+    "parent_update": 6000,
+    "readback": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "episode_length_s": 20.0,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      }
+    },
+    "reason": "schedule_continue",
+    "score_sha256": "337a34df9c1e28af13c97b42ab4209ab82b605f8350a7c64db3bd2bc67cfd405",
+    "stage_after": "S2e",
+    "stage_before": "S2e",
+    "status": "applied"
+  },
+  {
+    "after": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": false,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5501,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "T0_prime",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+    "before": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": true,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5251,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "S2e",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "checkpoint_sha256": "ba95e929793b6cefb08ce2f73a682caf25331241ed8de9066dd58a0861c73522",
+    "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+    "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+    "decisions": [],
+    "event_id": "3868a42269fb0033e222db203e6485233e99725f4b7d5c9d310fec1106a925f8",
+    "format": "foothold-ex41-application/1",
+    "iteration": 5501,
+    "parent_update": 6000,
+    "readback": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "episode_length_s": 20.0,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      }
+    },
+    "reason": "schedule_continue",
+    "score_sha256": "400d7ae08d64a3862ef7d8a8c81c140d688a24fdd6b7cf65cbe5c59d77a5cbbe",
+    "stage_after": "T0_prime",
+    "stage_before": "S2e",
+    "status": "applied"
+  },
+  {
+    "after": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": false,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5751,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "T0_prime",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+    "before": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": false,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5501,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "T0_prime",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "checkpoint_sha256": "2a6211040d092d3b25bbc5e0d2f0b5443bb5fac951d408e36b1871d5bdac6e4f",
+    "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+    "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+    "decisions": [],
+    "event_id": "0f9721322ad57040726f3889e9f3071c2e704a0c8af41ce256d135b3f42884e7",
+    "format": "foothold-ex41-application/1",
+    "iteration": 5751,
+    "parent_update": 6000,
+    "readback": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "episode_length_s": 20.0,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      }
+    },
+    "reason": "schedule_continue",
+    "score_sha256": "b9d949869b7600a1942a900d683429d5eab920d8f2eaf31266ca70eb06f1811c",
+    "stage_after": "T0_prime",
+    "stage_before": "T0_prime",
+    "status": "applied"
+  },
+  {
+    "after": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": false,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 6001,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "T0_prime",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+    "before": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "dr": {
+        "ramp_updates": 0,
+        "scale": 1.0,
+        "target_scale": 1.0
+      },
+      "episode_length_s": 20.0,
+      "force_gt": false,
+      "heading": {
+        "forward_fraction": 0.3,
+        "forward_wz_limit": 0.5,
+        "gain": 0.5,
+        "spin_target_fraction": 0.3,
+        "target_wz_limit": 1.5
+      },
+      "iteration": 5751,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "ranges": {
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ],
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.2,
+          0.6
+        ],
+        "spin_wz_abs": [
+          0.3,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          0.8
+        ],
+        "walk_wz_abs": [
+          0.2,
+          1.0
+        ]
+      },
+      "reward_weights": {
+        "feet_air_time": 0.0,
+        "foot_slip": 0.0,
+        "four_foot_contact_at_stop": 0.1,
+        "hip_pos_penalty": -0.05,
+        "joint_acc": -1e-07,
+        "joint_limit_margin": 0.0,
+        "knee_effort_margin": 0.0,
+        "stand_gap": -0.2,
+        "stand_load": -0.1,
+        "stumble": -2.0,
+        "swing": -10.0,
+        "thigh_calf_pos_l1": -0.01,
+        "track_ang_vel": 1.0,
+        "track_lin_vel": 2.0,
+        "zero_yaw": -0.5
+      },
+      "shares": {
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "forward": 0.23,
+        "reverse": 0.14,
+        "side_left": 0.07,
+        "side_right": 0.07,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "walk_left": 0.06,
+        "walk_right": 0.06
+      },
+      "stage_id": "T0_prime",
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      },
+      "w71_ready": true
+    },
+    "checkpoint_sha256": "3daf442b355c51743bf8f4b135f14becec841ace1dc23d907f4c0ed66c2889aa",
+    "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+    "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+    "decisions": [],
+    "event_id": "d4ab1e1ee28e473a200f1c5582b95972fe8064963ef9bcfc0731d4afba6e1644",
+    "format": "foothold-ex41-application/1",
+    "iteration": 6001,
+    "parent_update": 6000,
+    "readback": {
+      "authorization": {
+        "approval_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-approvals.yaml",
+        "approval_id": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "approval_sha256": "353a2eb72fc3b209214b18ff6f6dc33f80fe152d61af3ba4dc8a70ab1a7f0b17",
+        "boundary_file": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\curriculum\\ex41-fixed5000-boundary.yaml",
+        "config_commit": "2b01df9a60ce41a51882dbd3fc78db8c8e05e8aa",
+        "config_sha256": "b37c669ee5d75e321b2f2098882309f95ed4ef144502a36893ee0fa052f50b1a",
+        "decision_ids": [
+          "schedule_continue"
+        ],
+        "gate": "W72",
+        "status": "APPROVED"
+      },
+      "critic_mirror": false,
+      "episode_length_s": 20.0,
+      "ppo": {
+        "desired_kl": 0.01,
+        "entropy_coef": 0.01
+      },
+      "terrain": {
+        "level_cap": 5,
+        "policy": "performance"
+      }
+    },
+    "reason": "schedule_continue",
+    "score_sha256": "7914dfbfe56b30205d01f84457ec1c0a495a88e76e1cb303a0cbbcdf2ee67245",
+    "stage_after": "T0_prime",
+    "stage_before": "T0_prime",
+    "status": "applied"
   }
 ]

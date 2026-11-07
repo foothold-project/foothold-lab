@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-11-06T17:18:57.768581+09:00",
+  "checked_at": "2026-11-07T09:42:20.184808+09:00",
   "state": "PASS",
-  "raw_command_cells_recomputed": 819,
-  "raw_velocity_medians_recomputed": 2457,
+  "raw_command_cells_recomputed": 975,
+  "raw_velocity_medians_recomputed": 2925,
   "evaluation_compatibility": [
     {
       "iteration": 250,
@@ -123,6 +123,30 @@
       "changed_contract_fields_vs_m750": [],
       "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\evaluation\\map64\\map_modes.json",
       "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 5250,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5250_ba95e929793b\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 5500,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 5750,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5750_3daf442b355c\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
+    },
+    {
+      "iteration": 6000,
+      "changed_contract_fields_vs_m750": [],
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\evaluation\\map64\\map_modes.json",
+      "code_commit": "432e2f10eebd08f1ef93edc07c6cb008025a7f3a"
     }
   ],
   "reference_dr_off": [
@@ -130,9 +154,9 @@
     "add_base_mass"
   ],
   "reference_source_module_count": 64,
-  "reports": 5,
-  "local_links_resolved": 97,
-  "images_decoded": 37,
+  "reports": 7,
+  "local_links_resolved": 153,
+  "images_decoded": 57,
   "markdown_tables": {
     "README.md": {
       "broken_rows": 0
@@ -148,14 +172,21 @@
     },
     "RESULT-EX41-S2d.md": {
       "broken_rows": 0
+    },
+    "RESULT-EX41-S2e.md": {
+      "broken_rows": 0
+    },
+    "RESULT-EX41-T0prime.md": {
+      "broken_rows": 0
     }
   },
   "markdown_known_answer_checks": 6,
-  "local_cmp_hashes_verified": 6,
+  "local_cmp_hashes_verified": 9,
   "limits": [
     "No GPU, no live training changes",
     "W78 stage-end slices pending; not a completed N1 judgment",
     "Visual review sampled frames only, not full 1x playback",
-    "m5000 video absent from captured playlist"
+    "Old S2a-S2d reports preserve their prior capture; W45 latest media inventory is separate",
+    "m6000 push device differs from prior stages; causal influence unmeasured"
   ]
 }

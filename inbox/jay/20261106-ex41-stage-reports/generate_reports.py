@@ -18,7 +18,8 @@ RUN = Path('C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522')
 TRAIN = RUN/'main/EX-41-B-main_20261104_235522'
 BASE = Path('C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json')
 PLAYLIST = Path('C:/Users/AI-WS01/s2_lab/_playlists/EX41-ALL-stages-1106.m3u8')
-STAGES = [('S2a',1,750),('S2b',751,2750),('S2c',2751,3750),('S2d',3751,5000)]
+STAGES = [('S2a',1,750),('S2b',751,2750),('S2c',2751,3750),('S2d',3751,5000),('S2e',5001,5500),('T0prime',5501,6000)]
+MAX_ITER=max(hi for _,_,hi in STAGES)
 MODES = ['eval_gt','eval_pred','probe_prop_only']
 MODE_LABEL = {'eval_gt':'GT 정답','eval_pred':'Pred 복원','probe_prop_only':'지도 끔'}
 COLORS = ['#007C83','#C35A00','#74528E']
@@ -86,13 +87,15 @@ def known_answers():
     assert primary('side-0.5')=='vy' and primary('spin+1.2')=='wz'
     assert [s for s,a,b in STAGES if a<=750<=b]==['S2a']
     assert [s for s,a,b in STAGES if a<=751<=b]==['S2b']
-    VALIDATION.append('9 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary')
+    assert [s for s,a,b in STAGES if a<=5500<=b]==['S2e']
+    assert [s for s,a,b in STAGES if a<=5501<=b]==['T0prime']
+    VALIDATION.append('11 known-answer assertions passed: phase, missing cycles, dt, median, axis, boundary')
 
 def get_maps():
     maps={0:read(BASE)};scores={};paths={0:str(BASE)}
     for p in sorted((RUN/'eval/scores').glob('score_*.json')):
         s=read(p); n=s['iteration']
-        if n>5000: continue
+        if n>MAX_ITER: continue
         assert n not in scores,'duplicate score iteration'
         scores[n]=s
         es=[e for e in s['evidence'] if e['path'].replace('\\','/').endswith('/map64/map_modes.json')]
@@ -102,13 +105,13 @@ def get_maps():
         assert maps[n]['checkpoint_sha256']==s['checkpoint_sha256']
         cp=TRAIN/f'model_{n}.pt';raw(cp)
         assert SOURCES[str(cp)]['sha256']==s['checkpoint_sha256']
-    assert set(scores)==set(range(250,5001,250))
+    assert set(scores)==set(range(250,MAX_ITER+1,250))
     ref=maps[750]
     for n,m in maps.items():
         for key in ['envs','steps','eval_seed','command_suite','commands','terrain_columns']:
             assert m[key]==ref[key],(n,key)
         assert m['fixed_terrain']['assignment_sha256']==ref['fixed_terrain']['assignment_sha256']
-    VALIDATION.append('20 score/map/checkpoint SHA matches; parent+20 maps env/step/seed/command/tile assignment matched')
+    VALIDATION.append(f'{len(scores)} score/map/checkpoint SHA matches; parent+{len(scores)} maps env/step/seed/command/tile assignment matched')
     rows=[]
     for n,m in sorted(maps.items()):
         for mode in MODES:
@@ -132,13 +135,13 @@ def get_tb(scratch):
     ea=EventAccumulator(str(snap),size_guidance={'scalars':0}).Reload(); series={}
     for tag in ea.Tags()['scalars']:
         if tag.endswith('/time'): continue
-        vals={e.step:float(e.value) for e in ea.Scalars(tag) if 1<=e.step<=5000}
+        vals={e.step:float(e.value) for e in ea.Scalars(tag) if 1<=e.step<=MAX_ITER}
         if tag in ['Train/mean_reward','Train/mean_episode_length','Policy/mean_noise_std','Loss/learning_rate','Loss/kl_probe/ppo_mean','Loss/value_function']:
-            assert len(vals)==5000,(tag,len(vals))
-        elif len(vals)!=5000: VALIDATION.append(f'TB missing samples retained empty: {tag} {len(vals)}/5000')
+            assert len(vals)==MAX_ITER,(tag,len(vals))
+        elif len(vals)!=MAX_ITER: VALIDATION.append(f'TB missing samples retained empty: {tag} {len(vals)}/{MAX_ITER}')
         series[tag]=vals
-    rows=[{'iteration':n,**{t:v.get(n) for t,v in series.items()}} for n in range(1,5001)]
-    VALIDATION.append('TensorBoard snapshot: 6 core tags have all 5000 local updates; wall-time tags excluded')
+    rows=[{'iteration':n,**{t:v.get(n) for t,v in series.items()}} for n in range(1,MAX_ITER+1)]
+    VALIDATION.append(f'TensorBoard snapshot: 6 core tags have all {MAX_ITER} local updates; wall-time tags excluded')
     return series,rows
 
 def get_w57():
@@ -179,7 +182,7 @@ def get_push():
     for p in (RUN/'eval/push250').glob('*.json'):
         if not re.fullmatch(r'[1-9][0-9]*\.json',p.name):continue
         j=read(p);n=int(j['global_iteration'])-6000
-        if not 1<=n<=5000:continue
+        if not 1<=n<=MAX_ITER:continue
         if 'terrains' not in j:
             VALIDATION.append(f'push250 evidence incomplete (not counted PASS): {p.name}, state={j.get("state")}')
         for t in j.get('terrains',[]):
@@ -202,7 +205,7 @@ def get_w86():
     rows=[]
     for x in lines(TRAIN/'ex41_w86.jsonl'):
         n=x['iteration']
-        if not 1<=n<=5000: continue
+        if not 1<=n<=MAX_ITER: continue
         f=x['feet'];r={'iteration':n,'quarantined':x['quarantine_env_count']}
         for i,ft in enumerate(FEET):
             r[f'drag_{ft}']=f['drag_frames'][i]/max(1,f['contact_moving_frames'][i])
@@ -285,17 +288,18 @@ def metric_fig(out,stage,lo,hi,rows,series,apps,push,phase_rows,rasters):
     axs[0].legend(fontsize=8);fig.suptitle(f'{stage} · 완전 착지 주기 위상, 점 하나=env 하나. 수치 0 근처만으로 trot 합격을 선언하지 않음.');fig.tight_layout(rect=[0,0,1,.94]);figsave(fig,out/f'{stage}-phase.png')
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,default=Path(__file__).parent);ap.add_argument('--scratch',type=Path,default=Path('D:/mai-tmp/analyst/ex41-stage-reports-1106'));args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,default=Path(__file__).parent);ap.add_argument('--stages',nargs='*',default=None);ap.add_argument('--scratch',type=Path,default=Path('D:/mai-tmp/analyst/ex41-stage-reports-1106'));args=ap.parse_args()
     out=args.out;out.mkdir(parents=True,exist_ok=True);figs=out/'figs';figs.mkdir(exist_ok=True);data=out/'data';data.mkdir(exist_ok=True);args.scratch.mkdir(parents=True,exist_ok=True)
     known_answers();print('known-answer checks PASS',flush=True)
     maps,scores,rows,paths=get_maps();csvout(data/'command_cells.csv',rows);print('maps PASS',flush=True)
     tb,tbrows=get_tb(args.scratch);csvout(data/'training.csv',tbrows);print('TB PASS',flush=True)
-    apps=[x for x in lines(TRAIN/'ex41_application.jsonl') if x['iteration']<=5001];dump(data/'application.json',apps)
+    apps=[x for x in lines(TRAIN/'ex41_application.jsonl') if x['iteration']<=MAX_ITER+1];dump(data/'application.json',apps)
     docs,w57,gait,rasters=get_w57();csvout(data/'w57.csv',w57);csvout(data/'phase_env.csv',gait)
     periodic,ends,record=get_push();csvout(data/'push250.csv',periodic);csvout(data/'push_stage_end.csv',ends);csvout(data/'push2_record.csv',record)
     w86=get_w86();csvout(data/'w86_training.csv',w86)
     # Extract all numbers first; prose and numeric tables are also generated below.
     for stage,lo,hi in STAGES:
+        if args.stages and stage not in args.stages: continue
         metric_fig(figs,stage,lo,hi,rows,tb,apps,periodic,gait,rasters)
         print('figures',stage,flush=True)
     summary={}

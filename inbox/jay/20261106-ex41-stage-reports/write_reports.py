@@ -1,6 +1,7 @@
 """Generate readable reports from frozen, recomputed CSV/JSON. No manual numeric cells."""
 from pathlib import Path
-import csv,json,math,statistics
+import csv,json,math,statistics,argparse
+from w45_sections import section
 from datetime import datetime
 import numpy as np
 from generate_reports import STAGES,MODES,MODE_LABEL,FEET,table,fmt,median,BASE,TRAIN,RUN,KEYS
@@ -19,6 +20,8 @@ def csvread(name):
 CELLS=csvread('command_cells.csv');TB=csvread('training.csv');GAIT=csvread('phase_env.csv');W57=csvread('w57.csv')
 PUSH=csvread('push_stage_end.csv');PUSH2=csvread('push2_record.csv');PERIODIC=csvread('push250.csv');W86=csvread('w86_training.csv')
 APPS=load('application.json');SUMMARY=load('summary.json');MEDIA=load('media.json');SOURCES=load('source_manifest.json')
+EXTRA=load('w45_evidence.json')
+ap=argparse.ArgumentParser();ap.add_argument('--stages',nargs='*',default=None);args=ap.parse_args()
 NOW=datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %Z')
 NARRATIVE={
  'S2a':('새 처방 아래 기본 보행은 유지했지만, 후진과 강한 외란 대응은 아직 안정되지 않았다.',
@@ -37,6 +40,17 @@ NARRATIVE={
          '지형 레벨이 올라간 상태에서 에피소드가 길게 유지되고 단계 끝 밀기 기준도 넘었다. 더 어려운 분포를 버틴 성과다. 다만 개별 높은 지형을 모두 통과했다는 주장은 W78 결과가 와야 한다.',
          '직전 단계 끝과 비교하면 고정 평가의 전진·옆걸음 오차가 늘고, 빠른 후진 오차는 높은 채 남았다. 대각 쌍 교대 오차도 커졌다. 학습 보상 하락을 단순히 지형이 어려워진 탓으로만 설명하면 이 회귀 신호를 놓친다. 동시에 생존 붕괴나 학습 발산으로 단정할 근거도 부족하다.',
          '다음 유지 구간에서는 전진·후진·옆걸음의 오차와 발 교대가 함께 돌아오는지 본다. 학습을 새로 멈추라는 제안은 아니다. 지형 확대와 DR 확대가 함께 진행되어 어느 쪽의 영향인지는 분리되지 않았다.')}
+NARRATIVE['S2e']=(
+ 'DR 최대 강도를 유지하며 생존과 밀기 대응은 지켰지만, 마지막에는 후진 정확도가 나빠졌다.',
+ '강도를 더 올리지 않는 유지 구간에서도 높은 학습 지형에서 몸을 지탱했고, 단계 끝 등록 밀기 기준을 지켰다. 전진 오차는 직전 단계 끝보다 줄었다.',
+ '끝 저장본에서는 두 후진 속도 모두 세 지도 모드에서 기존 오차 기록선을 넘었다. 생존 붕괴와 다른 정확도 저하다. 좌우 대칭이 좋아졌다는 사실로 이 후진 약점을 덮지 않았다.',
+ '복원 지도 노출 단계에 후진의 회복과 지도별 차이 확인을 남겼다. 학습률이 작아도 표본마다 결과가 출렁일 수 있으므로 마지막 한 칸만으로 완전히 다졌다고 선언하지 않는다.')
+NARRATIVE['T0prime']=(
+ '복원 지도 노출 뒤 후진 오차는 회복했지만, 계단 옆걸음의 좌우 비대칭이 늘어 다음 보완 과제로 남았다.',
+ 'GT 강제를 풀고 복원 지도를 사용할 수 있는 조건에서도 생존과 등록 밀기 기준을 유지했다. 직전 단계 끝보다 전진·후진과 오른쪽 옆걸음 오차가 줄었다.',
+ '정답·복원 지도 고정 평가의 주축 오차는 기존 기록선 안에 들었지만, 지도 끔 빠른 후진과 계단 좌우 이동량 차이는 남았다. 전진 접촉 위상도 별도 축이며 지도 선택 하나의 효과로 단정할 수 없다.',
+ '다음 출발선은 확보했으나 모든 기술 졸업을 뜻하지 않는다. 다음 보완에서는 좌우 이동량·지도 끔 후진·계단 복원 밀기 여유를 따로 확인하고 이전 명령과 접촉을 유지해야 한다.')
+
 
 def rows_at(n,mode='eval_gt'):return {r['case']:r for r in CELLS if r['iteration']==n and r['mode']==mode}
 def gait_summary(n):
@@ -60,6 +74,8 @@ GS=[r for _,_,hi in STAGES for r in gait_summary(hi)]
 (DATA/'gait_summary.json').write_text(json.dumps(GS,ensure_ascii=False,indent=2),encoding='utf-8')
 index=[]
 for st,lo,hi in STAGES:
+    index.append([st,f'{lo}~{hi}',NARRATIVE[st][0],f'[보고서](RESULT-EX41-{st}.md)'])
+    if args.stages and st not in args.stages: continue
     prev=0 if lo==1 else lo-1;sm=SUMMARY[st];s0=NARRATIVE[st];cur=rows_at(hi);before=rows_at(prev)
     aa=[(i+1,a) for i,a in enumerate(APPS) if lo<=a['iteration']<=hi and a['status']=='applied']
     last=aa[-1][1]['after'];nxt=next((a for a in APPS if a['iteration']==hi+1),None)
@@ -75,7 +91,7 @@ for st,lo,hi in STAGES:
        '**다음 단계에 준 영향.** '+s0[3],'',
        '이 문서는 완료된 단계의 근거를 정리한다. 학습 승인이나 졸업 판정을 새로 만들지 않는다. 아래 수치는 원자료를 읽어 생성한 **실측**이다. 인과 설명과 다음 단계 권고는 **해석**이며 단일 시드의 결론이다.',
        '', '## 영상과 비교 자료','',
-       f'공용 재생 목록: `{MEDIA["playlist"]}`. 보고 시점의 이 저장본 항목은 {MEDIA["playlist_counts"][str(hi)]}편이다. 전편을 사람이 재생 확인한 수가 아니다.', '']
+       f'재생 목록: `{MEDIA.get("stage_playlists",{}).get(str(hi),MEDIA["playlist"])}`. 보고 시점의 이 저장본 항목은 {MEDIA["playlist_counts"][str(hi)]}편이다. 전편을 사람이 재생 확인한 수가 아니다.', '']
     if vs:
         s += [table(['명령(정답 지도)','원본 프레임/초','완전 해독·검정','대표 프레임과 원본'],[
             [v['case'],f"{v['frames']} / {v['fps']:g}",f"{v['decoded_frames']} 해독 · 검정 {v['black_frames']}",f"[프레임]({v['sheet']}) · `{v['path']}`"] for v in vs]),'',
@@ -106,7 +122,7 @@ for st,lo,hi in STAGES:
        '점선은 기존 경계 보고의 0.15 기록선이다. 새 합격선을 만든 것이 아니다. 값이 넘으면 어떤 명령·모드인지 확인한다. 이 선을 생존 관문의 통과/실패와 혼동하지 않는다.','',
        table(['명령','주축','직전 끝 GT','이번 끝 GT','차이(이번−이전)','Pred','지도 끔'],[[c,cur[c]['primary_axis'],fmt(before[c]['error']),fmt(cur[c]['error']),fmt(cur[c]['error']-before[c]['error']),fmt(rows_at(hi,'eval_pred')[c]['error']),fmt(rows_at(hi,'probe_prop_only')[c]['error'])] for c in cur]),'',
        f'![생존](figs/{st}-survival.png)','',
-       f'단계 중 모든 핵심 평가 칸의 최저 생존은 {sm["min_alive"]}/64이다. 생존은 종료까지 안 넘어진 개수이고, 명령대로 잘 이동했는지의 점수는 아니다.','',
+       f'단계 중 지도 세 모드 39칸의 최저 생존은 {sm["min_alive"]}/64이다. 생존은 종료까지 안 넘어진 개수이고, 명령대로 잘 이동했는지의 점수는 아니다.','',
        '### 단계 끝 전체 오차 표','',
        table(['지도','명령','vx m/s','vy m/s','wz rad/s','생존/64'],[[MODE_LABEL[r['mode']],r['case'],fmt(r['vx']),fmt(r['vy']),fmt(r['wz']),int(r['alive'])] for r in CELLS if r['iteration']==hi]),'',
        '원자료별 경로와 JSON 위치는 [command_cells.csv](data/command_cells.csv)의 source·pointer 열. 모든 경계가 들어 있어 좋은 저장본만 골라 낸 표가 아니다.','',
@@ -141,19 +157,30 @@ for st,lo,hi in STAGES:
        '- 미확인: 반복 시드 일반화·전체 영상 판독·W78 v2 완결 판정.','',
        '```powershell',
        '$env:PYTHONUTF8="1"; $env:PYTHONDONTWRITEBYTECODE="1"',
-       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe generate_reports.py',
-       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe extract_media.py',
-       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe write_reports.py',
+       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe generate_reports.py --stages S2e T0prime --scratch D:/mai-tmp/analyst/w45-1107',
+       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe extract_media.py --new-stages',
+       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe collect_w45.py',
+       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe compare_canon.py',
+       '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe write_reports.py --stages S2e T0prime',
        '& C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe verify_artifacts.py','```','',
-       '운영 원본이 자라는 동안 다시 실행하면 채집 시점과 해시가 달라진다. 본문·그림의 재현에는 커밋에 포함된 CSV/JSON을 고정 입력으로 쓰고, 원자료 재집계는 manifest의 해시와 대조한다. TensorBoard 읽기 사본은 D:/mai-tmp/analyst/ex41-stage-reports-1106에 있다. 원본 파일·프로세스·GPU·운영 원장을 변경하지 않았다.']
+       '운영 원본이 자라는 동안 다시 실행하면 채집 시점과 해시가 달라진다. 본문·그림의 재현에는 커밋에 포함된 CSV/JSON을 고정 입력으로 쓰고, 원자료 재집계는 manifest의 해시와 대조한다. 이번 TensorBoard 읽기 사본은 D:/mai-tmp/analyst/w45-1107에 있다. 원본 파일·프로세스·GPU·운영 원장을 변경하지 않았다.']
+    if hi in [5500,6000]:
+        rr=[r for r in TB if lo<=r['iteration']<=hi]
+        gs0=next(r for r in GS if r['iteration']==prev and r['mode']=='eval_gt' and r['case']=='fwd1.0')
+        gs1=next(r for r in GS if r['iteration']==hi and r['mode']=='eval_gt' and r['case']=='fwd1.0')
+        ix=s.index('## W78 v2와 남은 확인')
+        s[ix:ix]=[f"**이 단계 해석.** GT 전진 1.0의 대각 교대 절대오차 중앙값은 직전 끝 {fmt(gs0['diagonal_abs_error_median_deg'],1)}°에서 {fmt(gs1['diagonal_abs_error_median_deg'],1)}°로 변했다. 이 값은 완전 주기만의 통계이며 전체 보행이나 모든 지형의 trot 합격을 뜻하지 않는다. 학습 지형 레벨의 처음/마지막 50회 중앙값은 {fmt(median(r['Curriculum/terrain_levels'] for r in rr[:50]),3)} / {fmt(median(r['Curriculum/terrain_levels'] for r in rr[-50:]),3)}다. 보상과 value loss가 끝까지 한 방향으로 발산한 모습은 아니지만, 고정 평가의 비대칭·후진 오차가 남아 더 배울 일이 없다는 결론도 내릴 수 없다.",'']
+        pos=s.index('## 재현과 근거 등급')
+        s[pos:pos]=section(st,hi,EXTRA,CELLS,PUSH)
+        s += ['','## PR #586 대조','', '정본 후보 [PR #586](https://github.com/foothold-project/foothold-lab/pull/586) 5c1f6d6c와 [자동 재대조 표](data/canon_comparison.json)를 비교했다. 두 새 단계의 주요 수치는 일치한다. 영상 결측 수는 재시도 게시로 바뀌어 위 채집 시각 기준을 따른다. PR의 생존 최저는 단계 끝 값이다. 본문의 단계 중 최저와 시간 범위가 다르므로 수치 불일치로 세지 않았다.']
     text='\n'.join(s)+'\n';assert '\u2014' not in text
     (OUT/f'RESULT-EX41-{st}.md').write_text(text,encoding='utf-8')
-    index.append([st,f'{lo}~{hi}',s0[0],f'[보고서](RESULT-EX41-{st}.md)'])
+
 
 readme=[f'> 분류: A/평가 · 단계 보고 묶음',f'> 작성: analyst · {NOW}',
         '> 근거: EX-41 운영 원자료 · OVERNIGHT-CONTRACT §2 · #555',
-        '> 요지: 네 단계의 성과·회귀·증거 공백을 같은 형식으로 비교한다.',
-        '> 상태: v1.0 · 정식 보고 게시 · W78 v2와 전체 영상 판독은 미완', '', '# EX-41 S2a~S2d 정식 단계 보고', '',table(['단계','로컬 회차','핵심','문서'],index),'',
+        '> 요지: 여섯 단계의 성과·회귀·증거 공백을 같은 형식으로 비교한다.',
+        '> 상태: v1.1 · S2e/T0′ 추가 · W78 v2와 전체 영상 판독은 미완', '', '# EX-41 S2a~T0′ 정식 단계 보고', '',table(['단계','로컬 회차','핵심','문서'],index),'',
         '핵심: 생존과 강한 밀기 대응을 유지·개선한 것과, 모든 명령의 정확도·발 교대를 다듬은 것은 다르다. 특히 뒤 단계의 고정 평가 회귀를 학습 지형이 어려워진 탓으로만 덮지 않았다.','',
         '## 빠르게 비교할 숫자','',
         table(['단계 끝','GT fwd1.0 오차 m/s','GT back1.0 오차 m/s','GT side- 오차 m/s','GT 대각교대 오차°','단계끝 밀기 통과/칸'],[
@@ -166,7 +193,7 @@ readme=[f'> 분류: A/평가 · 단계 보고 묶음',f'> 작성: analyst · {NO
         '- `data/`: 모든 숫자를 다시 만들 CSV와 JSON. source_manifest에 원본 경로와 해시.',
         '- [최종 재대조 결과](data/verification.json): 원자료 집계·평가 조건·로컬 링크·그림·CMP 해시 확인.',
         '- `data/media.json`: 영상 SHA·해독 결과·대표 프레임·로컬 CMP 경로. 영상 자체는 git에 넣지 않는다.',
-        '- W78 v2: 조각 결과 대기(scripter 진행 중). S2d 영상은 이 채집 시점 재생 목록에 없음.',
+        '- W78 v2: 조각 결과 대기(scripter 진행 중). S2a~S2d 본문은 이전 채집 판을 보존했다. S2e/T0′ 영상 결측은 각 문서의 최신 채집 표를 따른다.',
         '- 새 학습·GPU·운영 사본 수정 없음. 기존 #555 작업의 분석 산출만 커밋한다.','']
 (OUT/'README.md').write_text('\n'.join(readme),encoding='utf-8')
-print('4 reports + README generated from frozen numeric artifacts')
+print('Selected reports + six-stage README generated from frozen numeric artifacts')

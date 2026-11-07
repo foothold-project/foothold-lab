@@ -1,12 +1,18 @@
 {
-  "captured_at": "2026-11-06T16:43:51.149537+09:00",
+  "captured_at": "2026-11-07T09:42:09.328403+09:00",
   "playlist": "C:\\Users\\AI-WS01\\s2_lab\\_playlists\\EX41-ALL-stages-1106.m3u8",
   "playlist_sha256": "941fd9e199654a74ba4f0f2ab19075e476ab672d01f89ca815828b06f811d78a",
   "playlist_counts": {
     "750": 51,
     "2750": 54,
     "3750": 54,
-    "5000": 0
+    "5000": 0,
+    "5500": 51,
+    "6000": 48
+  },
+  "stage_playlists": {
+    "5500": "C:\\Users\\AI-WS01\\s2_lab\\_playlists\\EX41-m05500-all.m3u8",
+    "6000": "C:\\Users\\AI-WS01\\s2_lab\\_playlists\\EX41-m06000-all.m3u8"
   },
   "videos": [
     {
@@ -140,6 +146,84 @@
       "iteration": 5000,
       "case": "sidem05",
       "state": "not_in_playlist"
+    },
+    {
+      "iteration": 5500,
+      "case": "fwd10",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_5500_2a6211040d09\\EX41-pyramid_stairs_inv_L1-m5500-w57_fwd10_eval_gt-1x-success.mp4",
+      "sha256": "9d743f727bc1bf236ad524f0e80c43d01e9d74277653cff492cfdf658e2b6cd2",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m5500-fwd10-frames.jpg"
+    },
+    {
+      "iteration": 5500,
+      "case": "back10",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_5500_2a6211040d09\\EX41-pyramid_stairs_inv_L1-m5500-w57_back10_eval_gt-1x-success.mp4",
+      "sha256": "f17cd67829271f8914a99419b719c37655cff2cad58ccf34c730ac200206d22a",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m5500-back10-frames.jpg"
+    },
+    {
+      "iteration": 5500,
+      "case": "sidem05",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_5500_2a6211040d09\\EX41-pyramid_stairs_inv_L1-m5500-w57_sidem05_eval_gt-1x-success.mp4",
+      "sha256": "b26c014257d73e3ee9164a888dae914c0548271a761c40ebdbf7d0128f0f82ab",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m5500-sidem05-frames.jpg"
+    },
+    {
+      "iteration": 6000,
+      "case": "fwd10",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\EX41-pyramid_stairs_inv_L1-m6000-w57_fwd10_eval_gt-1x-success.mp4",
+      "sha256": "97d032a39ab019702206b9fb4df6e042fbe4ee589ac98d83235baa0bf9d17d2c",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m6000-fwd10-frames.jpg"
+    },
+    {
+      "iteration": 6000,
+      "case": "back10",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\EX41-pyramid_stairs_inv_L1-m6000-w57_back10_eval_gt-1x-success.mp4",
+      "sha256": "3a9f37aa208b33666275f5d92d2eebcdbc8f531b71dc830a37a3fdd1e66d951c",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m6000-back10-frames.jpg"
+    },
+    {
+      "iteration": 6000,
+      "case": "sidem05",
+      "state": "decoded",
+      "path": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\EX41-pyramid_stairs_inv_L1-m6000-w57_sidem05_eval_gt-1x-success.mp4",
+      "sha256": "d9b74e7c4565daf4092f9cfbbb7d24162d8696af8e4afc221080a8eb357d985f",
+      "frames": 150,
+      "fps": 25.0,
+      "decoded_frames": 150,
+      "black_frames": 0,
+      "sampled_frames": 13,
+      "sheet": "figs/m6000-sidem05-frames.jpg"
     }
   ],
   "comparisons": [
@@ -190,6 +274,31 @@
       "path": "D:\\mai-tmp\\analyst\\ex41-stage-reports-1106\\media\\CMP-EX41-m2750-m3750-sidem05-GT-1x.mp4",
       "sha256": "137116f6e4550c19ec35c4a647f1cdd99e9fdf5d4f7157cb19b86977b05d80f8",
       "conditions": "same named terrain L1 and command/map mode; not the same trajectory or a paired statistical sample"
+    },
+    {
+      "left": 5500,
+      "right": 6000,
+      "case": "fwd10",
+      "path": "D:\\mai-tmp\\analyst\\ex41-stage-reports-1106\\media\\CMP-EX41-m5500-m6000-fwd10-GT-1x.mp4",
+      "sha256": "9b2dfde31de8b66d7efc27e263e9f337415909741e807e101e6db8221c8d9dcb",
+      "conditions": "same named terrain L1 and command/map mode; not the same trajectory or a paired statistical sample"
+    },
+    {
+      "left": 5500,
+      "right": 6000,
+      "case": "back10",
+      "path": "D:\\mai-tmp\\analyst\\ex41-stage-reports-1106\\media\\CMP-EX41-m5500-m6000-back10-GT-1x.mp4",
+      "sha256": "1118a839f41f923229284e07d41367a32d14cad032069fd898b5ccf2c3edddc3",
+      "conditions": "same named terrain L1 and command/map mode; not the same trajectory or a paired statistical sample"
+    },
+    {
+      "left": 5500,
+      "right": 6000,
+      "case": "sidem05",
+      "path": "D:\\mai-tmp\\analyst\\ex41-stage-reports-1106\\media\\CMP-EX41-m5500-m6000-sidem05-GT-1x.mp4",
+      "sha256": "f1b2376c2ede2a06386fce47e26683e7fc401b82dd45ca1d6607f00bcb75c255",
+      "conditions": "same named terrain L1 and command/map mode; not the same trajectory or a paired statistical sample"
     }
-  ]
+  ],
+  "previous_capture": "2026-11-07T09:32:37.200596+09:00"
 }

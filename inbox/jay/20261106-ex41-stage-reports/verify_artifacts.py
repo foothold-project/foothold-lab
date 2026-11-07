@@ -7,7 +7,7 @@ import re
 import statistics
 from datetime import datetime
 from PIL import Image
-from generate_reports import table, table_cell
+from generate_reports import table, table_cell, STAGES
 
 def broken_table_rows(text):
     lines = text.splitlines()
@@ -79,8 +79,8 @@ images = sorted((ROOT / 'figs').glob('*'))
 for p in images:
     with Image.open(p) as im:
         im.verify()
-assert len(reports) == 5
-assert len(images) == 37
+assert len(reports) == len(STAGES)+1
+assert all((ROOT/'figs'/f'{st}-training.png').is_file() for st,_,_ in STAGES)
 media = json.loads((DATA / 'media.json').read_text(encoding='utf-8'))
 for row in media['comparisons']:
     p = Path(row['path'])
@@ -98,6 +98,7 @@ result = {'checked_at': datetime.now().astimezone().isoformat(), 'state': 'PASS'
           'limits': ['No GPU, no live training changes',
                      'W78 stage-end slices pending; not a completed N1 judgment',
                      'Visual review sampled frames only, not full 1x playback',
-                     'm5000 video absent from captured playlist']}
+                     'Old S2a-S2d reports preserve their prior capture; W45 latest media inventory is separate',
+                     'm6000 push device differs from prior stages; causal influence unmeasured']}
 (DATA / 'verification.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps({k:v for k,v in result.items() if k != 'evaluation_compatibility'}, ensure_ascii=False))
