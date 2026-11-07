@@ -40,6 +40,14 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
         assert "train_entry_contract_unavailable" in payload["blockers"]
 
 
+def test_ops_check_surfaces_analyst_g11_counterexample(capsys):
+    fixture = Path(__file__).with_name("fixtures") / "ex42-gate-g11-open.md"
+    result = ops_check(TABLE, APPROVALS, gate_report=fixture)
+    assert result["state"] == "blocked"
+    assert "gate_open:G11" in result["blockers"]
+    assert result["production_launch_allowed"] is False
+
+
 def test_ops_check_collects_environment_blockers_when_train_import_is_missing(monkeypatch, capsys):
     from foothold_s2.scripts import ex42_ops
 
