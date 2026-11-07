@@ -92,7 +92,9 @@ def main() -> int:
         print(f"         받은편지함 최근: {sent[name][0][:90] if sent[name] else '없음(최근 200 통)'}")
         # A report printed in the window but never sent is the 11:25 runner miss (I41).
         win_reports = re.findall(r"\[" + name + r"\] (?:끝|막힘|질문)[^\n]{0,50}", text)
-        key = win_reports[-1][:24] if win_reports else ""
+        last_w = win_reports[-1] if win_reports else ""
+        token = re.search(r"\b[0-9a-f]{8}\b", last_w)
+        key = token.group(0) if token else last_w[:24]
         if key and not any(key in s for s in sent[name]):
             acts.append(f"ACT {name}: 창의 보고 「{win_reports[-1][:60]}」 가 받은편지함에 없음 · 창 보고를 읽고 처리 · 작업자에 송신 규칙 다시")
         if not busy:
@@ -111,11 +113,12 @@ def main() -> int:
         elif len(wait) == 0:
             acts.append(f"ACT GPU{g}: 다음 일 없음 · 지금 일 끝나기 전에 걸기")
     print("== 정본 216")
-    r = subprocess.run([sys.executable, r"C:\Users\AI-WS01\.claude\jobs\781698cc\tmp\canon_retry.py"],
-                       capture_output=True, text=True, encoding="utf-8", errors="replace")
-    print(r.stdout.strip())
-    if "retry 0" not in r.stdout:
-        acts.append("ACT W48: 재시도 없는 pending 칸 · canon_retry.py --queue")
+    for extra, label in (([], "GPU0"), (["--gpu1"], "GPU1")):
+        r = subprocess.run([sys.executable, r"C:\Users\AI-WS01\.claude\jobs\781698cc\tmp\canon_retry.py", *extra],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        print(label, r.stdout.strip())
+        if "retry 0" not in r.stdout:
+            acts.append(f"ACT W48 {label}: 재시도 없는 pending 칸 · canon_retry.py --queue {' '.join(extra)}")
     print("== 할 일")
     print("\n".join(acts) if acts else "없음")
     return 1 if acts else 0
