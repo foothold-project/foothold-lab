@@ -1,0 +1,140 @@
+{
+  "sources": [
+    {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\terrains\\trimesh\\utils.py",
+      "sha256": "8824f5eb563aafeb537b461c403801eb3a4ea92b42b146fac94ab13010d00deb"
+    },
+    {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\terrains\\trimesh\\mesh_terrains.py",
+      "sha256": "bc50d7abcbd87d56c96ec04d5bfff24cb1d8f9aeb9249367db2637bdc6cdbaab"
+    },
+    {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\terrains\\height_field\\hf_terrains.py",
+      "sha256": "f15733686fd406731a519bd558e338e6a6628ddbd0d74e55f3a639b8398213aa"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\terrains\\rough_go2_cfg.py",
+      "sha256": "cb2541ccc1148e128023d810bb87d8f8be56440a6d3f4c2e529a687871641610"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-gates-1107\\foothold_s2\\terrains\\rough_go2_cfg.py",
+      "sha256": "cb2541ccc1148e128023d810bb87d8f8be56440a6d3f4c2e529a687871641610"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\ex41-launch-2b01df9a\\foothold_s2\\eval\\start_sheet.py",
+      "sha256": "15e830bda3fc5ed7f106074d415b30e6ca5334887a9f1b011d980ffce018d9ec"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-gates-1107\\foothold_s2\\terrains\\ex42.py",
+      "sha256": "bb8a50064453324ddc2c3e06c434dd3b499b8a755a493e7011ac053bb77d7d87"
+    },
+    {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\terrains\\terrain_generator.py",
+      "sha256": "71d0b0279d5114f136ccdc6f002cf85ab76eadff25a30b4a9d0eca95ae78dfa4"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\training.csv",
+      "sha256": "8c3ada10717218dd3979f00b4eb0d481d7ae1c2bc54b3d12d5cb6f1cb3a4e041"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\command_cells.csv",
+      "sha256": "21a446a928b5313b280ca9a8481f51da89704e926602b8300e9ed033b33ae01e"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m3750_audit.json",
+      "sha256": "11e6ac4c20b4044eaa3d8c72617057c349a3d1a65c9b5785df47b38f0ceb46f8"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m3750_kinds.csv",
+      "sha256": "00ebedc1bf24c63f71b7b47dca2623d458458030d6f878e5aa20b2fca75ee973"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m5500_audit.json",
+      "sha256": "334de129d584b5a7b3a962202dec68b31b91b7c9a81fe2f59faae035cee975b0"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m5500_kinds.csv",
+      "sha256": "0dabab2241cde492281e74d0a79421f98a9cd5d8419ed248988b4b75834decb7"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m6000_audit.json",
+      "sha256": "ec8c7304fcdb77dc1b4bd4535eb7b04d0c9ec4166298420bd01ba2a18e71c041"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_m6000_kinds.csv",
+      "sha256": "11152467891a33d74346947766364bf1a63b3e7f1c9d1925acfa104287a945ae"
+    }
+  ],
+  "geometry_rows": 30,
+  "device": "cpu",
+  "sampling": "d=(L+0.5)/10 mesh; row bounds d=[L/10,(L+1)/10); actual run U not recovered",
+  "runner_head": "2ad96345478d73d65c973c982985b3fde7fe8370",
+  "scope": "No GPU/Kit/physics. Exact AST mesh functions, pure gap support boxes. EX42 full scene not built.",
+  "known_answers": [
+    "mesh stair difference equals input height",
+    "boxes tops within prescribed signed bound",
+    "three measured gap intervals equal source width",
+    "W78 final sources match prior audit SHA"
+  ],
+  "raw_map_sources_rechecked": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_3750_9e98514cb2d3\\evaluation\\map64\\map_modes.json",
+      "sha256": "bcf91f59f79bba9a2be60845d0842d89a0f8d28ff4ce9379ab85e899288c4699"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4000_7341db9981cb\\evaluation\\map64\\map_modes.json",
+      "sha256": "ef3b8fc16bb129ec5735a0a67a934d732a0fec83d7ac7eeaccfa586fc649b523"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4250_1e1a574e809a\\evaluation\\map64\\map_modes.json",
+      "sha256": "43708db723bdcc7048a70e8a4bd1679da3d125077865030379b3f7d51704c12b"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4500_c46a9f648a5f\\evaluation\\map64\\map_modes.json",
+      "sha256": "9991c46104e0739c33bd9245bf6367029a38f645304200f2b96a6624f459e595"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_4750_43dd25cbe976\\evaluation\\map64\\map_modes.json",
+      "sha256": "f59e4d7aa5985b5403a5dc42e10556b4e8d9c639dde1af7e1906870a325383bb"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5000_85cb163cfd23\\evaluation\\map64\\map_modes.json",
+      "sha256": "73c49c0fa7954961be4e56e94afa71f848b0a5d9ba5fd8af338c2608de656177"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5250_ba95e929793b\\evaluation\\map64\\map_modes.json",
+      "sha256": "90c5c1b606779ba35a326f1e3c3002379f9dc46b61daaec21e45b0b99a944367"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5500_2a6211040d09\\evaluation\\map64\\map_modes.json",
+      "sha256": "b7ee8da5cef2fd961cf28af26bec3cef3984a91f763bffad98946f33b0058544"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_5750_3daf442b355c\\evaluation\\map64\\map_modes.json",
+      "sha256": "49c7dfc1212bd75bda04bf6a58dfca25e83adeade2816dff72aba513fb85d0dd"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\evaluation\\map64\\map_modes.json",
+      "sha256": "4acc0fcfdef53f103c93eb45aaf225eeba1570c5cfb304f9644f24af4021656a"
+    }
+  ],
+  "terrain_snapshot_source": {
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\main\\EX-41-B-main_20261104_235522\\stage_log.jsonl",
+    "sha256": "14be55cedb886d7d9fc78a7494ec4cda8e90584e08279355fe7ed7354888cfab",
+    "rows": 144
+  },
+  "w78_reused_inputs": [
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_5500_6000_protocol.json",
+      "sha256": "95c15983b15ae743d276fd6541c3d60005e679c6f871821133c685e1c5d140ca"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_5500_6000_comparison.csv",
+      "sha256": "97eb518f0d0ef167b6cfc108043db23d93d58473e0bd3c62a4f58f24fc06653e"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\analyst-ex41-score-name-1102\\inbox\\jay\\20261106-ex41-stage-reports\\data\\w78_5500_6000_feet_stop.csv",
+      "sha256": "eed6b322ec129e6d877799f424e317a16228ad6b5316875b14eb9d2f263fd348"
+    }
+  ]
+}

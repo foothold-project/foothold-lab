@@ -1,0 +1,31 @@
+L,kind,metric,lo,hi_exclusive,midpoint,mesh_measured,mesh_min_z,mesh_max_z,extra
+5,pyramid_stairs,step_height_m,0.14,0.158,0.14900000000000002,0.149,0.0,1.043,step_width=0.3; platform=3.0
+5,pyramid_stairs_inv,step_height_m,0.14,0.158,0.14900000000000002,0.149,-1.043,0.0,step_width=0.3; platform=3.0
+5,stage_stairs,step_height_m,0.15,0.15,0.15,0.15000000000000002,0.0,1.05,step_width=0.3; platform=3.0
+5,boxes,box_top_abs_bound_m,0.0625,0.07,0.06625,0.066224083,-0.065939203,0.066224083,"adjacent difference <= 2*bound, not guaranteed actual"
+5,start_gen_v1_gaps,gap_width_m,0.43333333333333357,0.43333333333333357,0.43333333333333357,0.43333333333333357,-0.5869780242779816,0.0,exact support boxes; unscaled; not EX41 exposure
+5,paper_ext_v1_stairs_high,step_height_m,0.175,0.2,0.1875,0.1875,0.0,1.3125,EX42 extension; not EX41 W78 test
+6,pyramid_stairs,step_height_m,0.158,0.176,0.16699999999999998,0.167,0.0,1.169,step_width=0.3; platform=3.0
+6,pyramid_stairs_inv,step_height_m,0.158,0.176,0.16699999999999998,0.167,-1.169,0.0,step_width=0.3; platform=3.0
+6,stage_stairs,step_height_m,0.15,0.15,0.15,0.15000000000000002,0.0,1.05,step_width=0.3; platform=3.0
+6,boxes,box_top_abs_bound_m,0.07,0.07750000000000001,0.07375000000000001,0.073721148,-0.073404014,0.073721148,"adjacent difference <= 2*bound, not guaranteed actual"
+6,start_gen_v1_gaps,gap_width_m,0.5,0.5,0.5,0.5,-0.5869780242779816,0.0,exact support boxes; unscaled; not EX41 exposure
+6,paper_ext_v1_stairs_high,step_height_m,0.2,0.22499999999999998,0.21250000000000002,0.2125,0.0,1.4875,EX42 extension; not EX41 W78 test
+7,pyramid_stairs,step_height_m,0.176,0.194,0.185,0.185,0.0,1.295,step_width=0.3; platform=3.0
+7,pyramid_stairs_inv,step_height_m,0.176,0.194,0.185,0.185,-1.295,0.0,step_width=0.3; platform=3.0
+7,stage_stairs,step_height_m,0.15,0.15,0.15,0.15000000000000002,0.0,1.05,step_width=0.3; platform=3.0
+7,boxes,box_top_abs_bound_m,0.07750000000000001,0.08500000000000002,0.08125000000000002,0.081218213,-0.080868833,0.081218213,"adjacent difference <= 2*bound, not guaranteed actual"
+7,start_gen_v1_gaps,gap_width_m,0.5666666666666664,0.5666666666666664,0.5666666666666664,0.5666666666666664,-0.5869780242779816,0.0,exact support boxes; unscaled; not EX41 exposure
+7,paper_ext_v1_stairs_high,step_height_m,0.22499999999999998,0.25,0.2375,0.23750000000000004,0.0,1.6625,EX42 extension; not EX41 W78 test
+8,pyramid_stairs,step_height_m,0.194,0.21200000000000002,0.203,0.203,0.0,1.421,step_width=0.3; platform=3.0
+8,pyramid_stairs_inv,step_height_m,0.194,0.21200000000000002,0.203,0.203,-1.421,0.0,step_width=0.3; platform=3.0
+8,stage_stairs,step_height_m,0.15,0.15,0.15,0.15000000000000002,0.0,1.05,step_width=0.3; platform=3.0
+8,boxes,box_top_abs_bound_m,0.08500000000000002,0.09250000000000003,0.08875,0.088715278,-0.088333651,0.088715278,"adjacent difference <= 2*bound, not guaranteed actual"
+8,start_gen_v1_gaps,gap_width_m,0.6333333333333333,0.6333333333333333,0.6333333333333333,0.6333333333333333,-0.5869780242779816,0.0,exact support boxes; unscaled; not EX41 exposure
+8,paper_ext_v1_stairs_high,step_height_m,0.25,0.275,0.2625,0.26249999999999996,0.0,1.8375,EX42 extension; not EX41 W78 test
+9,pyramid_stairs,step_height_m,0.21200000000000002,0.22999999999999998,0.22099999999999997,0.221,0.0,1.547,step_width=0.3; platform=3.0
+9,pyramid_stairs_inv,step_height_m,0.21200000000000002,0.22999999999999998,0.22099999999999997,0.221,-1.547,0.0,step_width=0.3; platform=3.0
+9,stage_stairs,step_height_m,0.15,0.15,0.15,0.15000000000000002,0.0,1.05,step_width=0.3; platform=3.0
+9,boxes,box_top_abs_bound_m,0.09250000000000003,0.1,0.09625,0.096212357,-0.095798463,0.096212357,"adjacent difference <= 2*bound, not guaranteed actual"
+9,start_gen_v1_gaps,gap_width_m,0.6999999999999997,0.6999999999999997,0.6999999999999997,0.6999999999999997,-0.5869780242779816,0.0,exact support boxes; unscaled; not EX41 exposure
+9,paper_ext_v1_stairs_high,step_height_m,0.275,0.3,0.2875,0.2875000000000001,0.0,2.0125,EX42 extension; not EX41 W78 test

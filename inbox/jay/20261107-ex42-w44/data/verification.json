@@ -1,0 +1,13 @@
+{
+  "geometry_rows": 30,
+  "training_windows": 4,
+  "raw_command_cells": 390,
+  "raw_map_files": 10,
+  "L5_W78_rows_reaggregated": 24,
+  "terrain_snapshots": 144,
+  "source_hash_checks": 30,
+  "github_gfm_tables": 8,
+  "broken_rows": 0,
+  "report_sha256": "538eabc6c991328da845bf3d16cfdc865ad4654a6a891c98015f2fc7acd50fb3",
+  "scope": "CPU analysis only; no new performance threshold or preferred branch"
+}
