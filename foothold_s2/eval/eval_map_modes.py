@@ -210,9 +210,8 @@ if args.push_ladder:
 checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(env_cfg, args.checkpoint)
 args.ex41_checkpoint_state = checkpoint_state
 args.ex41_checkpoint_preparation = checkpoint_preparation
-env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
-raw = env.unwrapped
-dr_mode.after_make(raw)  # DR scale is fixed before the first reset.
+env, raw = eval_dr_mode.make_wrapped_env_after_dr_ready(
+    gym.make, RslRlVecEnvWrapper, args.task, env_cfg, agent_cfg.clip_actions, dr_mode)
 args.ex41_w86_attachment = None
 args.ex41_runtime_attachment = None
 if args.terrain_skill_v2:

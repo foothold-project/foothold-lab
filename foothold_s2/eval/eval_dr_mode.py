@@ -411,6 +411,20 @@ def check_fired(summary: dict[str, Any], scale: float, ranges: dict[str, Any], d
     return {"fired": fired, "reset_sample_counts": counts, "delay_max_substeps": expected_max, "delay_observed_max_substeps": observed}
 
 
+def make_wrapped_env_after_dr_ready(gym_make, vecenv_wrapper, task, env_cfg, clip_actions, dr_mode):
+    """Create the raw env, pin DR, then create the RSL-RL wrapper.
+
+    RslRlVecEnvWrapper.__init__ performs an initial reset. Keep that reset after
+    ``after_make`` so a DR-enabled delayed action sees its scheduled scale. The
+    DR-off hook remains a no-op and follows the same construction path.
+    """
+    raw_env = gym_make(task, cfg=env_cfg)
+    raw = raw_env.unwrapped
+    dr_mode.after_make(raw)
+    env = vecenv_wrapper(raw_env, clip_actions=clip_actions)
+    return env, raw
+
+
 class DRMode:
     """평가기 한 판의 DR 상태. off 는 전부 no-op 이라 현행 출력이 바뀌지 않는다.
 

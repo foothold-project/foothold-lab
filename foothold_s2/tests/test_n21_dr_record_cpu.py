@@ -128,6 +128,47 @@ def test_dr_scale_is_pinned_before_first_reset():
     assert raw._ex40_dr_scale == mode.readback.scale == 1.0
 
 
+def test_wrapper_initial_reset_happens_after_dr_hook_for_on_and_off():
+    events = []
+
+    class RawEnv:
+        @property
+        def unwrapped(self):
+            return self
+
+        def reset(self):
+            events.append("reset")
+            if mode_name[0] == "on":
+                assert self._ex40_dr_scale == 1.0
+
+    class FakeMode:
+        def after_make(self, raw):
+            events.append("after_make")
+            if mode_name[0] == "on":
+                raw._ex40_dr_scale = 1.0
+
+    class FakeWrapper:
+        def __init__(self, raw_env, *, clip_actions):
+            events.append(("wrapper", clip_actions))
+            self.unwrapped = raw_env.unwrapped
+            raw_env.reset()
+
+    for selected_mode in ("on", "off"):
+        mode_name = [selected_mode]
+        events.clear()
+        raw_env = RawEnv()
+
+        def fake_gym_make(task, *, cfg):
+            assert task == "n21-task" and cfg == "cfg"
+            events.append("gym_make")
+            return raw_env
+
+        wrapped, raw = eval_dr_mode.make_wrapped_env_after_dr_ready(
+            fake_gym_make, FakeWrapper, "n21-task", "cfg", True, FakeMode())
+        assert events == ["gym_make", "after_make", ("wrapper", True), "reset"]
+        assert wrapped.unwrapped is raw is raw_env
+
+
 def test_n21_separate_receipt_is_rejected_by_existing_dr_off_guard():
     completed = {
         "dr": {"mode": "on", "scale": 1.0}, "dr_off": [],
@@ -154,6 +195,9 @@ def test_eval_map_modes_dr_on_path_and_receipt_are_explicit_and_ordered():
     assert 'n21_table_fingerprint != n21_approval["range_source"]["sha256"]' in source
     assert "DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)" in source
     assert "adapters.disable_eval_randomization(env_cfg) if args.dr_mode == \"off\" else []" in source
-    assert source.index("dr_mode.after_make(raw)") < source.index("env.reset()")
+    assert "eval_dr_mode.make_wrapped_env_after_dr_ready(" in source
+    helper = (ROOT / "foothold_s2/eval/eval_dr_mode.py").read_text(encoding="utf-8")
+    assert helper.index("raw_env = gym_make(task, cfg=env_cfg)") < helper.index("dr_mode.after_make(raw)")
+    assert helper.index("dr_mode.after_make(raw)") < helper.index("env = vecenv_wrapper(")
     assert "dr_mode.begin(raw, rollout_key" in source and "dr_mode.step(raw, k)" in source
     assert "n21_record_only.json" in source
