@@ -1,0 +1,16 @@
+{
+  "GATE-EX42-no-repeat-v2.md": "c74df37cdf9bfb06356a26203aafdb63f43daa0c58fb87d44ea562e9d6d3d438",
+  "recheck.py": "95ed2ccca093e7f78671b5d141d8725e8655ccb0d6e0350e6887be4f10066c68",
+  "archive\\W34-v1.md": "ed1740fefcae843a7ba1e3621f221e03b78580d88fa5dd17b924174c542355f7",
+  "evidence\\dark-tests.txt": "a3774c47ea4940e20e11defa120dfdab2c3a363e0cb7eeb3ac6402308374e646",
+  "evidence\\fixture-done-missing.tsv": "b6052d7988f77ec580f086f9033312dcf5ccc8cf57429b20a97d36b55abcc940",
+  "evidence\\fixture-g11-open.md": "531d5ef69fa736aa5b2449adaa19ff8c4b78da226958ef2ab99f6b3ad5bdb8cc",
+  "evidence\\fixture-repeat-wrong-terrain.json": "d29360363ee1889de74694766992b3c4166f068c1bd4b28a3b60ea65a62a082e",
+  "evidence\\G31-L17-source.txt": "4719d09bd2a25ee9896c57e2afb65fdecd3118f8e6b403c708a7d5cee871ebaa",
+  "evidence\\i36-tests.txt": "76739199badb3de04e7a774597ce9c8d39d5cb596cc47872c722aef1aec863b5",
+  "evidence\\recheck.json": "475e4f9d6a59c9e53d486b0217177b70e98912432eee445356a37b11fc8aa15e",
+  "evidence\\runner-tests.txt": "1302e7a494eaec711f632de22c6df84b61e1e12f662ef84a29f9e72ab1005a01",
+  "evidence\\w34-coverage.json": "6bd5296aa835267fa9c78f7107bde9edc0591c7efd8e9369968730f09dc45f46",
+  "evidence\\w34-source-inventory.json": "d88a33e17ef1ff4cf620ef492fd12c3b9b2995fe8ef36a2d08970a3596c25b4e",
+  "evidence\\w35-tests.txt": "dd2f5fd8744355fba1e390e01fba42905460670aa8259dbcb9540fcd6a27b39b"
+}

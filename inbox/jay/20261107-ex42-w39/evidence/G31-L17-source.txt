@@ -1,0 +1,66 @@
+source: mai-os 0a76038:os/linux-runbook.md
+763: ### L-17. 디스크 착각 · 용량 · 자료와 세션 유실 막기 (EX-42 출발 관문 G31 · lead 11/06 19:5x · super2)
+764: 
+765: 관문표 `D:/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md` 59 행 G31 (C: 용량 소진 · D: 를 빈 Linux 디스크로 착각 · 이전 중 원자료 · 세션 유실) 을 닫는 확인 여섯. **이 절은 지우기 · 포맷 · 옮기기의 새 권한이 아니다.** 각 줄은 「확인 명령 → 답을 아는 결과 → 다르면 멈춤」 이다. Windows 쪽 답은 11/06 실측이고, Linux 쪽 답은 그날 처음 잰다.
+766: 
+767: **1. 대상 디스크 (990 EVO Plus) 를 이름 · 크기가 아니라 고유 ID 로 고른다**
+768: 
+769: 함정 둘 (11/06 실측):
+770: - **크기가 같은 디스크가 둘이다.** `Get-Disk` 에서 3,726 GB 는 4 번 `Samsung SSD 990 EVO Plus 4TB` (파티션 1) 과 5 번 `WD_BLACK SN850X 4000GB` (= D:, 파티션 2, 936 GB 사용 중) 둘이다. 설치 화면에서 「4 TB 빈 디스크」 로 고르면 D: 를 고를 수 있다
+771: - **Windows 의 NVMe 「일련번호」 는 Linux 의 SERIAL 과 다른 값이다.** Windows `Get-Disk` · `Win32_DiskDrive` 의 SerialNumber 는 `0025_385C_4140_2E31.` (NVMe 이름공간 ID 를 끊어 적은 꼴) 이고, Linux `lsblk` 의 SERIAL 은 제조사 일련번호 (`S7...` 꼴) 를 보인다 (일반적인 동작 · 이 PC 에서는 미확인). 2-1 · 2-2 의 「일련번호가 같은 디스크」 를 글자 그대로 따르면 맞는 디스크인데도 다르다고 나오거나, 사람이 모델명으로 대신 고르게 된다. **비교는 이름공간 ID (EUI-64) 로 한다**
+772: 
+773: | 디스크 | Windows 번호 · 드라이브 | Windows `UniqueId` (11/06) | 하는 일 |
+774: |---|---|---|---|
+775: | Samsung 990 EVO Plus 4TB | 4 · 드라이브 문자 없음 · 파티션 1 (Reserved 16 MB) | `eui.0025385C41402E31` | **여기에만 설치** |
+776: | WD_BLACK SN850X 4000GB | 5 · **D:** · 파티션 2 | `eui.E8238FA6BF530001001B448B4D62D2DD` | 손대지 않음 (작업 디스크 · 0-6) |
+777: | SHPP41-2000GM | 6 · **C:** (Windows) · 파티션 4 | `eui.ACE42E0045557CE52EE4AC0000000001` | 손대지 않음 (0-5 가 (가) 면 설치 동안 뺌) |
+778: 
+779: - Windows 확인 (다13 · 2-1 을 대신함): `Get-Disk | Where-Object UniqueId -eq 'eui.0025385C41402E31' | Format-List Number,FriendlyName,NumberOfPartitions,Size`. **답**: 정확히 한 줄 · Number 4 · `Samsung SSD 990 EVO Plus 4TB` · NumberOfPartitions 1 · Size 4,000,787,030,016 바이트 (3,726 GB). 11/06 실측 일치. 두 줄이거나 파티션이 1 이 아니면 멈춤
+780: - Linux 설치 화면 확인 (2-2 를 대신함): `for d in /sys/block/nvme*n1; do echo "$d $(cat $d/wwid) $(cat $d/device/model) $(lsblk -dno SIZE /dev/${d##*/}) parts=$(lsblk -no NAME /dev/${d##*/} | tail -n +2 | wc -l)"; done`. **답**: `wwid` 의 16 진수 글자를 소문자로 비교해 `0025385c41402e31` 을 담은 줄이 정확히 하나 · 그 줄의 모델 `Samsung SSD 990 EVO Plus 4TB` · `parts=1`. 그 줄의 `/dev/nvmeXn1` 만 고른다. **nvme 번호 (0 · 1 · 2) 는 부팅마다 바뀔 수 있으니 번호로 기억하지 않는다**. 나머지 두 줄은 위 표의 eui 와 같아야 한다 (C: · D: 가 보인다는 증거). Linux 쪽 `wwid` 모양은 미확인이고, 위 16 진수를 담은 줄이 없으면 설치하지 않는다
+781: - 다 쓴 뒤: `lsblk -o NAME,WWN,SIZE,FSTYPE,MOUNTPOINTS` 에서 ext4 `/` 와 vfat `/boot/efi` 가 eui `0025385c41402e31` 디스크에만 있다. Windows 로 돌아가 `Get-Partition -DiskNumber 5` 가 11/06 과 같은 파티션 2 개 · D: 사용량이 줄지 않음 (936 GB 근처)
+782: 
+783: **2. 백업은 SHA 목록 대조와 빈 폴더 복원으로만 「됐다」 고 한다**
+784: 
+785: 대상: 1-2 (저장소 밖 자료 · `s2_lab` 의 EX-41 출력 포함) · 1-3 (세션 · 설정 · DB) · E-2. 설치는 990 EVO 에만 쓰므로 Windows 디스크의 원본은 그대로지만, 1 이 틀렸을 때 되살릴 자리가 이것뿐이다.
+786: 
+787: - 명령: `python tools/tree_hash.py hash <원본> --out src.tsv` · NAS 쪽에서 같은 명령으로 `dst.tsv` · `python tools/tree_hash.py compare src.tsv dst.tsv`
+788: - **답**: 종료값 0 과 `RESULT: every file matches by path, size and SHA-256`. 목록 끝에 `# done` 이 없으면 2 (미완). 11/06 알려진 답 시험 (`~/.mai/units` 57 파일): 같은 사본 → 0 · 사본의 파일 하나 끝에 한 글자 덧붙임 → 1 · `RESULT: DIFFERENT`
+789: - 복원 시험 (1-3): 사본에서 빈 폴더로 되살려 ① 세션 기록 셋에서 알려진 메시지 한 줄씩 찾음 ② sqlite 사본 `PRAGMA integrity_check` = `ok` ③ 체크포인트 하나 sha256 이 정본 (RULES-HUB 9 절 · L-15 의 EX-38 m3001 `7ff575f3...706c`) 과 같음. 셋 다 맞기 전에는 2 절 (설치) 로 가지 않는다
+790: - EX-41 출력: 11/06 20 시 `C:\Users\AI-WS01\s2_lab\ex41_main_20261104_235522` 13.18 GB (main 4.47 GB · 저장본 114 개 각 37.0 MB · eval 8.71 GB). EX-41 이 끝난 뒤 다시 잰 크기로 대조한다
+791: 
+792: **3. 자리는 Linux 고유 경로로 (Windows 디스크를 학습 출력에 쓰지 않는다)**
+793: 
+794: - 자리표는 `os/d-drive-cleanup-plan.md` 3 절 (작업 뿌리 `~/mai` 아래 `wt` · `tmp` · `cache`, 자료 뿌리 `~/data/foothold` · 0-4c) 과 3-1 의 runner 기기 설정 파일 칸
+795: - Windows 디스크는 `ntfs3` **읽기 전용** (`/mnt/win-c` 등, E-2) 으로만 붙인다. 확인: `findmnt -no OPTIONS /mnt/win-c` 에 `ro`. **답**: `ro` 가 있음
+796: - 학습 · 평가 출력 자리가 Linux 디스크인지: `df --output=source,target <출력 자리>`. **답**: source 가 위 1 의 990 EVO 파티션 (`/dev/nvmeXn1p2`) · `/mnt/win-*` 아래가 아님
+797: 
+798: **4. 용량은 실측 크기로 미리 센다**
+799: 
+800: | 무엇 | 실측 · 계산 | 근거 |
+801: |---|---|---|
+802: | EX-41 한 판 출력 | 13.18 GB / 5,700 회 (11/06 20 시, 저장 50 회마다 · 저장본 37.0 MB) | 위 2 |
+803: | EX-42 40,000 회 출력 (계산 · 영상 뺌) | 저장본 800 개 × 37 MB = 29.6 GB + 평가 8.71 GB × 40,000 / 5,700 = 61 GB → **약 91 GB**, 두 배 여유로 약 180 GB. EX-42 정책 크기가 EX-41 과 같다는 가정 (미확인) · 지형 · mesh 를 늘린 평가 출력은 늘 수 있음 | EX-42 설계 §8 |
+804: | 영상 | 미측정 (scripter · runner 가 EX-41 영상 총량을 적어야 함) | |
+805: | 남은 자리 (11/06) | Windows C: 471 GB · D: 2,790 GB · Linux 디스크 3,726 GB (설치 뒤 `/` 남은 양을 그날 잰다) | `Get-Volume` |
+806: 
+807: - Linux 확인: `df -B1 --output=avail ~/data/foothold ~/mai/tmp`. **답**: 각각 위 180 GB + 영상 + 100 GB (wt_guard `disk_guard` 경고선) 보다 큼
+808: - 학습 중 막기는 runner 의 디스크 검사 (`foothold_s2/tests/test_ex41_disk_guard_cpu.py` 가 시험하는 장치, 관문표 E20) 를 EX-42 출력 크기로 다시 정한 값으로 (runner)
+809: - C: 소진 재발 막기: EX-42 를 Windows 에서 돌릴 경우 출력이 `C:\Users\AI-WS01\s2_lab` 이면 C: 471 GB 에서 시작한다. D: 정리 (`os/d-drive-cleanup-plan.md` 4-3) 로 `s2_lab` 을 D: 로 옮긴 뒤에 시작하는 것을 제안
+810: 
+811: **5. 되돌림 (한 장비라 Linux 가 막히면 Windows 로 돌아가 잇는다 · 팀장 11/06 19:0x 「장비는 AI-WS01 이거 하나야」)**
+812: 
+813: - 설치 전 1-5 (부트 상태 사본 · ESP 해시) · 설치 뒤 다18 (Windows ESP 무변경). **답**: ESP 해시 목록이 1-5 와 같음 · `efibootmgr` 에 `Windows Boot Manager` 가 있음
+814: - 원격 왕복 2-5 확인 3 (`boot-windows-once` · 돌아오기 두 번). **답**: Windows 로 한 번 부팅 뒤 다음 부팅은 Linux (`next_entry` 소비)
+815: - 자료 되살리기는 2 의 NAS 사본과 Windows 디스크 원본 (읽기 전용으로 붙여 복사). 되돌림 시각은 L-5 (저녁에 시작하면 다음 날 18 시로 다시 정함 · `os/linux-ex42-readiness-20261106.md` 2 절)
+816: 
+817: **6. 세션 재개**
+818: 
+819: - 넘어가기 전: 모든 세션이 하던 일 · 다음 일을 상태판과 이슈에 적고 멈춤 (다1 · 1-0). 그 뒤의 쓰기는 옮겨지지 않는다
+820: - 사본: 1-3 (Claude · Codex · Orca 의 Codex 홈 · `~/.mai`) 을 2 의 방법으로 대조 · 복원 시험
+821: - Linux 에서 갈래로 붙임 (L-2 · L-b 정함) · 붙인 세션은 L-12 의 첫 메시지로 최신 맥락을 읽음
+822: - **답** (6-3 판정 넷): 세션마다 ① 알려진 표본 한 줄을 그대로 말함 ② cwd 와 가지가 Linux 자리 (`~/mai/wt/...`) ③ 자기 이슈 · WORKLIST 행을 읽음 ④ 다음 일을 말함. 하나라도 틀리면 그 세션은 Windows 원본을 그대로 두고 다시 붙인다 (갈래라 원본은 안 바뀐다)
+823: 
+824: ## E. 실험이 끊기지 않게 (10/22 이전 · 팀장 10/20 20:0x · lead 의뢰)
+825: 
+826: Windows 디스크는 멀티부트라 그대로 남는다. 그래도 Linux 에서 **같은 가지 · 같은 체크포인트 · 같은 판**으로 바로 이어 가지 못하면 실험이 끊긴 것이다. 아래 넷은 다0a 에서 끝내고 라 단계에서 확인한다.
+827: 

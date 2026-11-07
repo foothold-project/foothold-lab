@@ -1,0 +1,291 @@
+{
+  "at": "2026-11-07T10:56:14.210490+09:00",
+  "roots": {
+    "runner": {
+      "path": "D:/mai-wt/foothold-lab/runner-ex42-v016",
+      "head": "5e0c37a1821cbd379dd845e1705693015c80d570",
+      "dirty": ""
+    },
+    "w35": {
+      "path": "D:/mai-wt/foothold-lab/scripter-ex42-gates",
+      "head": "a8381f8a93510ee8893b91c871680e2c2a4565e5",
+      "dirty": ""
+    },
+    "i36": {
+      "path": "D:/mai-wt/foothold-lab/scripter-ops-check-i36",
+      "head": "1d38212253e7e6e149609af60c150d648949b244",
+      "dirty": ""
+    },
+    "dark": {
+      "path": "D:/mai-wt/foothold-lab/stagevideo-darkdiag-1107",
+      "head": "b07b4089bfd5856670995878d938f8a57de2b576",
+      "dirty": ""
+    }
+  },
+  "gate_subset_counterexample": {
+    "fixture": "D:\\mai-tmp\\analyst\\w39-evidence\\fixture-g11-open.md",
+    "expected_open": [
+      "G11"
+    ],
+    "default_actual": [],
+    "explicit_all33_actual": [
+      "G11"
+    ],
+    "required": [
+      "G01",
+      "G03",
+      "G05",
+      "G08",
+      "G13",
+      "G15",
+      "G17",
+      "G18",
+      "G33"
+    ]
+  },
+  "false_done_counterexample": {
+    "fixture": "D:\\mai-tmp\\analyst\\w39-evidence\\fixture-done-missing.tsv",
+    "output": [
+      [
+        "OK",
+        "W next",
+        "0 open · next: "
+      ]
+    ],
+    "evidence_exists": false
+  },
+  "repeat_terrain_counterexample": {
+    "expected": "HOLD",
+    "actual": {
+      "state": "PASS",
+      "reason": "within_measured_repeat_width",
+      "numeric_differences": 1,
+      "outside_count": 0,
+      "outside_examples": [],
+      "repeat_count": 2
+    },
+    "control_actual": {
+      "state": "PASS",
+      "reason": "within_measured_repeat_width",
+      "numeric_differences": 1,
+      "outside_count": 0,
+      "outside_examples": [],
+      "repeat_count": 2
+    },
+    "changed": [
+      "terrain_assignment_sha256",
+      "terrain_tiles[0].level=9"
+    ]
+  },
+  "dark_raw": {
+    "source": "D:\\mai-tmp\\runner\\ex41_dark_diag_1107\\capture\\attempts\\6929329c023ea3d97c6e7d59d5013be0a167b57ac7991f31198ec519fdd8fcb6\\01\\dark_render_diagnostics\\render_samples.jsonl",
+    "sha256": "7de6a2f0e0270f4a6635ad1c4516a133f1a724a88e86ff9102edd75575cc7a26",
+    "sample_count": 119,
+    "dark_png_sha_and_pixels_checked": 47,
+    "frames": {
+      "17": {
+        "rows": 17,
+        "dark": 16,
+        "brightness": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          104.99497985839844
+        ],
+        "ticks": [
+          34
+        ],
+        "all_states_equal": true
+      },
+      "72": {
+        "rows": 31,
+        "dark": 31,
+        "brightness": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ticks": [
+          144
+        ],
+        "all_states_equal": true
+      }
+    },
+    "queue": {
+      "id": 827,
+      "rc": 1,
+      "started": 1794011310.436961,
+      "last_json": {
+        "attempt": "D:\\mai-tmp\\runner\\ex41_dark_diag_1107\\capture\\attempts\\6929329c023ea3d97c6e7d59d5013be0a167b57ac7991f31198ec519fdd8fcb6\\01",
+        "reason": "stage recorder child failed rc=1",
+        "state": "failed"
+      },
+      "ended": 1794011371.203888
+    },
+    "queue_sha256": "baddf46a0535fdd4123233d309fce5b2e2abccece08dc42cd021d1435f2ff720"
+  },
+  "source_files": [
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\curriculum\\ex42_runtime.py",
+      "sha256": "fc8ad765b12109320833d7d9b499bc67d5c06c097ef679e90bbb5b56c220b7f8",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\foothold_s2\\curriculum\\ex42_runtime.py"
+    },
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\experiments\\EX-42.yaml",
+      "sha256": "fc1c3778dbafd0bcd861f8b97bca854a887ec92becda57486ce53b2f3dd065d3",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\experiments\\EX-42.yaml"
+    },
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\ex42_gate_checks.py",
+      "sha256": "bdaa579b357c57d2404e37ec5c3cc1f4b432d26844aba58ebc92bf1cc680a1a2",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\foothold_s2\\ex42_gate_checks.py"
+    },
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\ex42_status.py",
+      "sha256": "a3517bfc8f04e7c0f3b6ec45286720e84982b1f25820342f390eebad948c8342",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\foothold_s2\\ex42_status.py"
+    },
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\scripts\\ex42_ops.py",
+      "sha256": "29f3297bf8ad0ca3457a4939f76ec87680a044251b691994128a689bdc22fed4",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\foothold_s2\\scripts\\ex42_ops.py"
+    },
+    {
+      "group": "runner",
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\curriculum\\ex42-prep.yaml",
+      "sha256": "f277b3a572a9bbf21cbc43bd98db03b2b1cdfa8a1159e59d9bf0cf6d065f2287",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\runner\\foothold_s2\\curriculum\\ex42-prep.yaml"
+    },
+    {
+      "group": "w35",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-gates\\foothold_s2\\eval\\ex42_w78_gate.py",
+      "sha256": "a150c81b834f101afc712c879c35e08890c95f674b480aa659f80030e0a7aec5",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\w35\\foothold_s2\\eval\\ex42_w78_gate.py"
+    },
+    {
+      "group": "w35",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-gates\\foothold_s2\\eval\\ex42_component_receipts.py",
+      "sha256": "64bf2862efb1e0a9055cb50c404f547114ba169bd8a9ff7c1cc75e55a621aa3c",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\w35\\foothold_s2\\eval\\ex42_component_receipts.py"
+    },
+    {
+      "group": "w35",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-gates\\foothold_s2\\eval\\ex42_terrain_evidence.py",
+      "sha256": "f7abc195cac8adb31b8c50e6443c6a6235768d40e9da192b63c55f75733c1762",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\w35\\foothold_s2\\eval\\ex42_terrain_evidence.py"
+    },
+    {
+      "group": "w35",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-gates\\foothold_s2\\eval\\ex42_video_sample.py",
+      "sha256": "8bbbbb6f9d03b0e61752f5e2bd228ac8717bcab3cd1be8544e280035bdd97bff",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\w35\\foothold_s2\\eval\\ex42_video_sample.py"
+    },
+    {
+      "group": "w35",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-gates\\foothold_s2\\eval\\ex42_video_delivery.py",
+      "sha256": "8022f800dadcfd6b61008f477633fc8794fbd9453603aa0856e20515db6c7249",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\w35\\foothold_s2\\eval\\ex42_video_delivery.py"
+    },
+    {
+      "group": "i36",
+      "path": "D:\\mai-wt\\foothold-lab\\scripter-ops-check-i36\\_out\\tools\\ex41\\ops_check.py",
+      "sha256": "659f0fe8b2770366fa9d0ec6f73128cd33f04a5b4174838bd2eefd8dc66f8c8a",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\i36\\_out\\tools\\ex41\\ops_check.py"
+    },
+    {
+      "group": "dark",
+      "path": "D:\\mai-wt\\foothold-lab\\stagevideo-darkdiag-1107\\foothold_s2\\eval\\video25\\dark_render_diagnostics.py",
+      "sha256": "4a1f8ec586c5f4371585a6cd4b548c94608ec28dab1829abfd5236c99b1d6c51",
+      "snapshot": "D:\\mai-tmp\\analyst\\w39-evidence\\source\\dark\\foothold_s2\\eval\\video25\\dark_render_diagnostics.py"
+    }
+  ],
+  "runner_call_search": {
+    "ex42_w78_gate": [],
+    "ex42_component_receipts": [],
+    "ex42_terrain_evidence": [],
+    "ex42_video_sample": [],
+    "ex42_video_delivery": [],
+    "ex42_status": [],
+    "validate_map_matrix": [
+      {
+        "path": "foothold_s2\\ex42_gate_checks.py",
+        "line": 140,
+        "text": "def validate_map_matrix(expected: Iterable[tuple[str, str]], rows: Iterable[dict[str, Any]]) -> None:"
+      }
+    ],
+    "extract_realized_config": [
+      {
+        "path": "foothold_s2\\ex42_gate_checks.py",
+        "line": 152,
+        "text": "def extract_realized_config(env_yaml: str | Path, agent_yaml: str | Path) -> dict[str, Any]:"
+      }
+    ],
+    "validate_automatic_rule": [
+      {
+        "path": "foothold_s2\\ex42_gate_checks.py",
+        "line": 183,
+        "text": "def validate_automatic_rule(*, rule: dict[str, Any], approval: dict[str, Any],"
+      }
+    ],
+    "process_score_batch": [
+      {
+        "path": "foothold_s2\\ex42_gate_checks.py",
+        "line": 198,
+        "text": "def process_score_batch(rows: Iterable[Any], validate: Callable[[Any], Any],"
+      }
+    ],
+    "audit_locked_checkout": [
+      {
+        "path": "foothold_s2\\ex42_gate_checks.py",
+        "line": 63,
+        "text": "def audit_locked_checkout(root: str | Path, *, remote_ref: str,"
+      }
+    ]
+  }
+}
