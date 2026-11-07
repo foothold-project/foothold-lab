@@ -37,7 +37,7 @@ W35	팀장 11/06 19:3x	P0	at:2026-11-08T18:00	lead	D:/mai-tmp/lead/W35.verified	
 W36	W30 막음	P1	at:2026-11-08T12:00	pipeline	D:/mai-tmp/lead/W36.verified	done	tg_send 를 PowerShell 없이 Python 으로 보내기(Linux) · Linux 용 orca CLI 설치 · 계약 확인 · 설치 날 명령 목록 · pipeline 0e504c8 · Python sender 시험 Windows 9/9 · WSL 9/9 · 실송신 · Linux orca 는 설치 날 실측		
 W37	W33 계획	P1	at:2026-11-08T17:00	lead	D:/mai-tmp/lead/W37.verified	open	D: 정리 실행(팀장 19:3x 확정: EX-41 끝나면 바로 · 방향 확정 · 다시 묻지 않음 · D:/mai-* → D:/mai/<역할> 한 뿌리 · 살아 있는 사본 · 대기열 경로 먼저 · 정션) · Linux 와 같은 상대 트리		
 W38	팀장 11/06 19:5x	P1	at:2026-11-07T18:00	analyst	D:/mai-tmp/lead/W38.verified	done	지형 블록안 v2: 목표 40,000 · 20,000 먼저 · 10,000 블록 · 미션(점프 · 높은 턱 · 넓은 틈) 블록 배치와 성과 기준 · D183 이어짐(바뀐 것 아님 · 팀장 21:2x 정정) 반영 · 정본 diff 안 · analyst v2 20:13 · 팀장 결정 4 묶음 남음(W41)		
-W39	W35 확인	P0	at:2026-11-08T18:00	analyst	D:/mai-tmp/analyst/GATE-EX42-no-repeat-v2.md	open	관문표 재감사 v2 · 남은 막음 = 예행 대기만인지 · 팀장 11/08 18:00 출발 판단 자료		
+W39	W35 확인	P0	at:2026-11-08T18:00	analyst	D:/mai-tmp/analyst/GATE-EX42-no-repeat-v2.md	done	관문표 재감사 v2 · 남은 막음 = 예행 대기만인지 · 팀장 11/08 18:00 출발 판단 자료	analyst 06851dfa GATE-EX42-no-repeat-v2.md · 막음 26 유지 · 반례 3	2026-11-07T11:09:48+09:00
 W40	lead 20:1x 놓침	P1	at:2026-11-07T06:00	lead	D:/mai-tmp/lead/W40.verified	done	S2e 단계 끝(m5500) 일 55 건 확인 · 밀기 판정(676) 결과 · 영상 52 편 · W78 675 · 단계 넘김 보고에 S2e 단계 끝 일을 넣지 않은 것 정정		
 W41	W38 v2 10 절	P1	at:2026-11-08T18:00	lead	D:/mai-tmp/lead/W41.verified	open	팀장 결정 4: 40,000 셈 범위(T0′ · E0 제외 권고) · 미션 진입 조건(선행 기술별) · 높은 턱 0.75 m · 틈 0.90/1.00 m 사다리 · 미션 몫 5→10→20 % · 두 창 기준 · 블록 끝 대기를 예산 예외로 · 11/25 마감 시각		
 W42	팀장 11/06 21:2x	P1	at:2026-11-08T18:00	super2	D:/mai-tmp/lead/W42.verified	open	작업 목록 관리 프로그램: WORKLIST.tsv 를 단계 · 시작 · 끝 예상 · 선행(인과) · 우선순위 · 상태(열림 · 진행 · 끝 · 변경 · 취소 · 보류 · 대체) · 결정 근거 줄로 · 마감 지난 일 자동 조치 · mai-watch 작업 탭 · Linux 에서도 같은 주소 · 외부 주소 검토		
@@ -49,3 +49,6 @@ W47	팀장 11/07 08:5x	P0	at:2026-11-07T18:00	lead	D:/mai-tmp/lead/W47.verified	
 W48	팀장 11/07 09:2x 정본 렌더 · GPU0 분배	P1	at:2026-11-08T08:00	lead	D:/mai-tmp/lead/canon216_m12000/out	open	정본 m12000 216 칸 영상(EX-40 정본과 같은 장면 · 앞 1.0 · 18 초 · 시드 42/43) · GPU0 830~ · 747 끝나면 뒤쪽 절반 GPU1 · 끝나면 전 프레임 검사 · W25 목록 · 정본 문서 영상 칸		
 W49	lead 11/07 09:5x · I34	P2	at:2026-11-07T15:00	runner	D:/mai-tmp/runner/REPORT-dark-render-diagnostic-1107.md	open	어두운 화면 원인 CPU 로 가르기(수직 가림 · 읽기 지연) · 카드 CARD-runner-dark-next-1107.md · 결측 3 편 카메라 위치		
 W50	lead 11/07 09:5x · I36	P1	at:2026-11-07T12:00	scripter	D:/mai-tmp/scripter/REPORT-ops-check-I36-1107.md	done	ops_check I36 점수 대기 검사 · 1d382122 · 운영 사본 합침 · 실기계 OK	decisions.tsv I36 장치 행	2026-11-07T10:46:27+09:00
+W51	analyst W39 v2 06851dfa	P0	at:2026-11-08T12:00	runner	D:/mai-tmp/lead/CARD-ex42-gates-1107.md	open	G01 전체 관문 33 행 소비(반례: G11 만 열림 → [] 가 [G11] 로) · EX42Runtime 실제 사슬 연결 계획 한 장 · 부모 m12000 SHA 고정		
+W52	analyst W39 v2 06851dfa	P0	at:2026-11-08T12:00	scripter	D:/mai-tmp/lead/CARD-ex42-gates-1107.md	open	G11 W78 반복 자료 지형 동일성 검사(반례 fixture-repeat-wrong-terrain → HOLD)		
+W53	analyst W39 v2 06851dfa	P1	at:2026-11-08T12:00	scripter	D:/mai-tmp/lead/CARD-ex42-gates-1107.md	open	G25 ops_check done 행도 근거 파일 · decided_at 검사(반례 fixture-done-missing → FAIL)		
