@@ -1,6 +1,7 @@
 """CPU-only W15 full/unit audit. Never imports simulator or writes source data."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from collections import Counter
 from datetime import datetime, timezone, timedelta
@@ -51,6 +52,10 @@ def self_test():
 
 def audit():
     full, plan, receipt = read(FULL), read(PLAN), read(RECEIPT)
+    gate_path = Path('D:/mai-wt/foothold-lab/scripter-ex42-w52w53/foothold_s2/eval/ex42_w78_gate.py')
+    spec = importlib.util.spec_from_file_location('w56_g11', gate_path)
+    gate = importlib.util.module_from_spec(spec); spec.loader.exec_module(gate)
+    reported_gate = read(Path('D:/mai-tmp/scripter/W15-G11-gate-1107.json'))
     assert receipt['id'] == 1079 and receipt['rc'] == 0
     assert full['state'] == 'done'
     assert full['run_identity']['code_head'] == plan['code_head']
@@ -65,6 +70,9 @@ def audit():
                   if j['title'].startswith(f'W15 m750 {mode} {case} ')]
         assert len(paths) == 3
         units = [read(p) for p in paths]
+        assert gate.compare_split(units[0], [units[0]])['state'] == 'PASS'
+        gate_result = gate.compare_split(full, [units[0]], repeats=units[1:])
+        assert gate_result == reported_gate[f'{mode}/{case}']
         identity_keys = ['state', 'checkpoint_sha256', 'source_sha256', 'run_identity',
                          'envs', 'dt_s', 'eval_seed', 'levels', 'start_angles_deg',
                          'ex41_environment_preparation', 'ex41_checkpoint_preparation',
@@ -80,9 +88,11 @@ def audit():
         categories = Counter()
         rows = []
         raw_hashes = []
+        denominator_diff_rows = 0
         for key in sorted(expected):
             target = full['modes'][mode][key]
             source = [u['modes'][mode][key] for u in units]
+            denominator_diff_rows += gate._denominators(target) != gate._denominators(source[0])
             for field in ('level', 'stair_start_angle_deg', 'case', 'requested_kinds',
                           'terrain_tiles', 'terrain_assignment_sha256', 'phase_steps'):
                 assert all(target[field] == s[field] for s in source), (key, field)
@@ -108,6 +118,8 @@ def audit():
                     'unit_drag_ratio': b['drag_ratio_of_contact']})
         focus = [r for r in rows if r['focus']]
         groups.append({'mode': mode, 'case': case, 'common_numeric_fields': common,
+            'g11': gate_result, 'g11_same_input_control': 'PASS',
+            'denominator_different_rows': denominator_diff_rows,
             'outside_repeat_envelope': outside, 'repeat_changed_fields': repeat_changed,
             'numeric_key_symmetric_difference': keydiff, 'key_difference_categories': dict(categories),
             'all_kind_cells': len(rows), 'alive_changed_cells': sum(r['full_alive'] != r['unit_alive'] for r in rows),
@@ -123,6 +135,7 @@ def audit():
         'status': 'NOT_EQUIVALENT_IN_TESTED_GROUPS', 'full_rows': 240,
         'duration_s': receipt['ended'] - receipt['started'], 'receipt': receipt,
         'files': files, 'groups': groups,
+        'g11_source': {'path': str(gate_path), 'sha256': sha(gate_path)},
         'scope': 'Two selected mode/case groups, each eight level/angle cells and three unit repeats. No all-group repeat or causal claim.'}
 
 

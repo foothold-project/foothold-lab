@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-07T15:24:48.067521+09:00",
+  "at": "2026-11-07T15:33:07.859061+09:00",
   "status": "DISCUSSION_READY_W15_NOT_EQUIVALENT",
   "files": [
     {
@@ -49,6 +49,18 @@
     {
       "path": "D:\\mai-tmp\\scripter\\w15_noise_1107\\repeat3\\probe_prop_only\\flat_fwd1.0\\terrain_skill_v2.json",
       "sha256": "e5b8fab7f8b1f4ebf4c9a1801053c672ce72922c134fbfa89e13bd49df4ab3c8"
+    },
+    {
+      "path": "D:/mai-tmp/scripter/REPORT-W15-full-unit-1107.md",
+      "sha256": "502680760085a0102acb8a5ed3641a92ce39598dcec4f71d33a5f9ad27c13f58"
+    },
+    {
+      "path": "D:/mai-tmp/scripter/W15-G11-gate-1107.json",
+      "sha256": "f08477d90f1191c219b45034225e4439e31f1104f53e806f6db0f780d275414a"
+    },
+    {
+      "path": "D:/mai-tmp/scripter/W15-same-code-comparison-1107.json",
+      "sha256": "ef6130552873ad931ecf27d2f618890ffc04a9623f94cb7c86a7d92f9e077fbc"
     }
   ],
   "repeat_recomputed": [
@@ -85,8 +97,15 @@
   "W39_not_current_reaudit": true,
   "w15_final": {
     "audit_file": "W15-audit.json",
-    "audit_sha256": "f30ea34466d865c6236b7f6b419b488006449d61b4b85f691c3aa64d60111a7c",
+    "audit_sha256": "eac98da954b936c0cb2d6fcfae80775d1ee784317749e55dc82a7496c7bcc432",
     "result": "NOT_EQUIVALENT_IN_TESTED_GROUPS",
-    "scope": "Two selected mode/case groups, each eight level/angle cells and three unit repeats. No all-group repeat or causal claim."
+    "scope": "Two selected mode/case groups, each eight level/angle cells and three unit repeats. No all-group repeat or causal claim.",
+    "g11": {
+      "state": "HOLD",
+      "reason": "numeric_fields_differ",
+      "groups": 2,
+      "denominator_different_rows": 16,
+      "recomputed": true
+    }
   }
 }

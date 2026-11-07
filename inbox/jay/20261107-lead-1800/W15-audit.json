@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-07T15:23:03.195425+09:00",
+  "at": "2026-11-07T15:32:12.439299+09:00",
   "status": "NOT_EQUIVALENT_IN_TESTED_GROUPS",
   "full_rows": 240,
   "duration_s": 8818.326453924179,
@@ -53,6 +53,12 @@
       "mode": "eval_gt",
       "case": "stairs_side_left",
       "common_numeric_fields": 33878,
+      "g11": {
+        "state": "HOLD",
+        "reason": "numeric_fields_differ"
+      },
+      "g11_same_input_control": "PASS",
+      "denominator_different_rows": 8,
       "outside_repeat_envelope": 28742,
       "repeat_changed_fields": 0,
       "numeric_key_symmetric_difference": 1877,
@@ -889,6 +895,12 @@
       "mode": "probe_prop_only",
       "case": "flat_fwd1.0",
       "common_numeric_fields": 36700,
+      "g11": {
+        "state": "HOLD",
+        "reason": "numeric_fields_differ"
+      },
+      "g11_same_input_control": "PASS",
+      "denominator_different_rows": 8,
       "outside_repeat_envelope": 31565,
       "repeat_changed_fields": 0,
       "numeric_key_symmetric_difference": 2409,
@@ -1722,5 +1734,9 @@
       ]
     }
   ],
+  "g11_source": {
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-ex42-w52w53\\foothold_s2\\eval\\ex42_w78_gate.py",
+    "sha256": "05844a23d13b6942c7885aa806a10d66adb0a69d87ad785b6e03a5c09c4f1bad"
+  },
   "scope": "Two selected mode/case groups, each eight level/angle cells and three unit repeats. No all-group repeat or causal claim."
 }
