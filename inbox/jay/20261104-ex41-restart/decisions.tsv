@@ -261,3 +261,4 @@ ts	phase	decision	why	evidence	result
 2026-11-07T13:23:36+09:00	W51 3 단계 검토	runner a28ec4a4(train_start 호출자 · preparation_only 유지 · 보고 62 passed) · lead 가 test_ex42*.py 전체를 돌리니 88 passed 1 failed(v016 계약 시험이 부모 d5e9ec40 기대 · 팀장 결정은 m12000) · 골라 돌린 시험 묶음이 이 실패를 숨김 → 시험 고치고 전체 숫자로 다시 보고 · push 요청	관문은 깨뜨려 봐야 믿는다	a28ec4a4	open
 2026-11-07T13:28:15+09:00	W51 코드 끝 · W35 runner	runner fc9e5ace 전체 89 passed 재현 · W51 은 Kit 증거만 남김 · runner 다음 W35 runner 행 일곱을 반례 시험부터 한 행씩	보고 받은 회차 안에 답	fc9e5ace	open
 2026-11-07T13:33:04+09:00	W21 자료 · W41 다음	analyst 506d12ee 원격 확인(N2 · N17 · N21 목적 · 코드 · GPU 비용 · 생략 위험 · 권고 없음) · W21 은 팀장 18:00 결정으로 열어 둠 · analyst 다음 W41 이미 결정 / 열림 정리	보고 받은 회차 안에 답	EVIDENCE-W21-N2-N17-N21-1107.md	open
+2026-11-07T13:35:24+09:00	W35 G03	runner b033e24c(시작 전 고정 파일 · detached HEAD · origin ref · 읽기 전용 검사 · 반례: 붙은 가지도 통과하던 것) · lead 깨끗한 사본 90 passed · 다음 G05	보고 받은 회차 안에 답	b033e24c	open
