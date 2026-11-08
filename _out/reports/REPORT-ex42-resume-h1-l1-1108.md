@@ -2,7 +2,7 @@
 > 작성: runner · 2026-11-08
 > 근거: analyst 감사 50e20f66 · EX-42 model_350 재개 경로 · isaac311 CPU 시험
 > 요지: 저장된 지형 원점에 첫 reset의 root pose를 맞추고 startup receipt를 교체 전후 검증
-> 상태: CPU 확인 완료 · analyst 재감사 및 Kit 5 update 확인 대기
+> 상태: CPU · analyst 재감사 · GPU0 Kit 5 update 확인 완료
 
 # EX-42 자기 재개 H1 · L1 수정
 
@@ -27,5 +27,22 @@ CPU 반례는 잘못된 기존 plan SHA를 builder가 덮어써 통과시키려�
 - 재감사 수정 후 EX-42 전체 CPU 시험: `118 passed, 1 skipped in 23.51s`.
 - `compileall` 통과, `git diff --check` 통과.
 - pyflakes에서 이번 변경으로 추가된 미정의 이름은 없었다. 기존 `train_start.py`의 unused import 3건과 중복 `production_launch_allowed` 키 2건은 남아 있다.
-- GPU 및 Kit 실행은 아직 하지 않았다. 새 수정 HEAD를 analyst가 재감사하는 동안 lead 승인으로 GPU0 5 update smoke를 준비한다. smoke 영수증에는 첫 rollout 전 `EX42_SELF_RESUME_ROOT_XY_READBACK`의 `env_count=3072`, `outside_reset_bounds_count=0`, 거리 요약이 있어야 한다.
-- 기존 학습 run과 실행 중인 저장본은 읽기만 했다. 이 커밋은 재개 코드를 바꾸며, 실제 환경에서 root 좌표가 저장된 타일에 맞는다는 Kit 증거는 아직 없다.
+- 이 항목들은 Kit 실행 전 작성한 상태 기록이다. 아래 후속 증거에 재감사와 실제 Kit 결과를 추가했다.
+- 기존 학습 run과 실행 중인 저장본은 읽기만 했다. 실제 환경 확인은 별도 출력 폴더의 5 update Kit smoke로 수행했다.
+
+
+## Follow-up evidence, 2026-11-08 17:12 KST
+
+The H1/H2 follow-up is on fixed HEAD `cc7586db9f58b4bf43ef2ce5658e40bede3e7003`. The analyst re-audit report `D:/mai-wt/foothold-lab/analyst-ex41-score-name-1102/_out/reports/REPORT-analyst-ex42-resume-recheck3-1108.md` records H1/H2 blockers 0 and 22 CPU checks passed, 0 skipped. The analyst's CPU 3072-env reset reproduction found 0 root XY reset-bound violations with the resumed checkpoint; the prior-parent substitution produced 1100 violations.
+
+A separate actual Kit smoke ran from detached, read-only checkout `D:/mai-wt/foothold-lab/runner-ex42-h1l1-cc7586db` at the same HEAD. The source run and active learning process were not modified. The smoke command used GPU0, the `model_350.pt` checkpoint, and a fresh output folder `D:/mai-tmp/runner/w65_resume_20261108_1703kit/`. Source checkpoint SHA256 was `7c01f11657b2d66b5fe3b5324f889aea5749c0cebb00333472fb6322342ca75c`.
+
+Evidence files:
+- Launch receipt: `D:/mai-tmp/runner/w65_resume_20261108_1703kit.launch.json`
+- Kit stdout: `D:/mai-tmp/runner/w65_resume_20261108_1703kit.log`
+- Final checkpoint readback: `D:/mai-tmp/runner/w65_resume_20261108_1703kit/model_355_readback.json`
+- Runner PID 47400 started at 17:09:14.569829 KST, completed with rc 0 at 17:12:15 KST.
+
+Kit output confirms restored terrain was applied before first reset for all 3072 environments. The root XY readback before first rollout reported `outside_reset_bounds_count=0`, distance min 0.0160241 m, mean 0.3856410 m, p95 0.6026241 m, max 0.7016914 m. The resumed range was local 351 through 355, cumulative 12351 through 12355. `model_355.pt` SHA256 is `17da1350d9637799f67e3abd3424f579d21014b4d867e537b238bbbce56c58bc`; CPU readback reports iter 355, manifest SHA match, 17 optimizer state entries, optimizer LR 0.00038443359375000017, RNG keys cuda/numpy/python/torch, and curriculum at local 355, `EX42_0_T0_prime`, DR 1.0, push Vmax 2.0 m/s. The source `model_350.pt` remained at the same SHA after the smoke.
+
+The smoke establishes this five-update resumed path and root placement check only. It is not a production training run and does not establish longer-run training quality.
