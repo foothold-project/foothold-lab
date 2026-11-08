@@ -61,7 +61,10 @@ def test_posix_reads_profile_when_config_has_no_paths(posix, tmp_path, monkeypat
         "s2_lab_root", "mai_tmp_root", "mai_worktree_root"))
     prof = tmp_path / "linux.yaml"
     prof.write_text("format: foothold-machine-profile/1\nmachine_id: test-linux\npaths:\n" + req
-                    + "  telegram_outbox: ${TELEGRAM_OUTBOX}\n  telegram_script: ${TELEGRAM_SCRIPT}\n", encoding="utf-8")
+                        + "  telegram_outbox: ${TELEGRAM_OUTBOX}\n  telegram_script: ${TELEGRAM_SCRIPT}\n"
+                        + "devices:\n  training: {cuda_index: 0, uuid: GPU-test0}\n"
+                        + "  p1_evaluation: {cuda_index: 0, uuid: GPU-test0}\n"
+                        + "  screen: {cuda_index: 1, uuid: GPU-test1}\n", encoding="utf-8")
     monkeypatch.setenv("TELEGRAM_OUTBOX", str(box))
     monkeypatch.setenv("TELEGRAM_SCRIPT", str(script))
     rec = Recorder()
