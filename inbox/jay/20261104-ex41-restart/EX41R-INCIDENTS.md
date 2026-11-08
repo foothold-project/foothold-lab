@@ -95,3 +95,9 @@ lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_ch
 - 무엇: orca-windows-setup(PID 91232 · 17:44:04) 이 resources/bin 을 갈아 끼우는 동안 inbox_wait.py 가 FileNotFoundError(orca) 로 끝남. 17:45 bin 다시 생김 · 기존 Orca 프로세스(11/02 시작) 는 아직 재시작 전.
 - 영향: 학습 PID 93176 · 감시기 둘(hold · map64 등록) 살아 있음(680 회 확인). Orca 재시작 때 작업자 창 · lead 창이 닫힐 수 있음(미확인).
 - 조치: bin 이 생기면 받은편지함 대기를 다시 거는 감시를 걸어 둠. 팀장께 창이 닫혀도 볼 경로 셋을 채팅에 남김. lead 시각 오기 1 건(17:46 이라 적음 · 실제 17:45 이전).
+
+## I50 (11/08 19:2x) lead 기록 커밋 51 개가 원격에 안 올라가 있었다
+
+- 무엇: lead-worklist-1103 이 이름 없는 HEAD(detached)라 11/08 01:xx 이후 decisions · WORKLIST · 사고 · 실패 로그 커밋 51 개가 로컬에만 있었음. 원격 feature/verify-v2-mvp-jay 는 e845bbe2 에 멈춤. 다른 세션 · Linux 로 옮길 때 오늘 기록이 통째로 빠질 뻔함.
+- 원인: 커밋 뒤 push 확인을 하지 않음.
+- 조치: 19:2x fast-forward push(e845bbe2..3df2f41c, 뒤처진 커밋 0 확인). 앞으로 기록 커밋 뒤 origin..HEAD 0 을 본다.
