@@ -136,6 +136,18 @@ def curriculum_update_number(runtime, loop_iteration: int) -> int:
     return loop_iteration + 1 if one_based else loop_iteration
 
 
+def resumed_loop_start(current_learning_iteration: int, resumed: bool, runtime) -> int:
+    """Return the loop index whose mapped update follows a saved checkpoint."""
+    if type(current_learning_iteration) is not int or current_learning_iteration < 0:
+        raise ValueError("saved START iteration must be a nonnegative integer")
+    plan = getattr(runtime, "plan", None)
+    one_based = (getattr(plan, "is_ex41", False)
+                 or getattr(runtime, "uses_one_based_updates", False))
+    if resumed and not one_based:
+        return current_learning_iteration + 1
+    return current_learning_iteration
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -500,8 +512,8 @@ class StartRunner(OnPolicyRunner):
 
         # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
         active_curriculum = getattr(self, "continuous_curriculum", None)
-        ex41_local_index = getattr(getattr(active_curriculum, "plan", None), "is_ex41", False)
-        start_iter = self.current_learning_iteration + (1 if self._resumed and not ex41_local_index else 0)
+        start_iter = resumed_loop_start(
+            self.current_learning_iteration, self._resumed, active_curriculum)
         self.current_learning_iteration = start_iter
         tot_iter = start_iter + num_learning_iterations
         trace = getattr(self, "training_trace", None)

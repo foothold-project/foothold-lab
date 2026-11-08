@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import hashlib
+import json
 
 import pytest
 
@@ -64,6 +66,112 @@ def test_w65_cli_requires_explicit_scope_and_rejects_unbounded_variants(tmp_path
     ):
         with pytest.raises(ValueError, match=message):
             entry.validate_ex42_stage_zero_cli(**(args | change))
+
+    smoke = entry.validate_ex42_stage_zero_cli(
+        **(args | {"device": "cuda:0", "resume_from": "model_350.pt",
+                   "self_resume": True, "resume_smoke": True,
+                   "resume_updates": 5}))
+    assert smoke[3]["resume_smoke"] is True
+    same_run = tmp_path / "same-run"
+    same_run.mkdir()
+    (same_run / "manifest.json").write_text("{}", encoding="utf-8")
+    production_resume = entry.validate_ex42_stage_zero_cli(**(args | {
+        "log_dir": same_run, "resume_from": same_run / "model_350.pt",
+        "self_resume": True,
+    }))
+    assert production_resume[3]["self_resume"] is True
+    with pytest.raises(ValueError, match="must continue in its source run directory"):
+        entry.validate_ex42_stage_zero_cli(**(args | {
+            "resume_from": "C:/other/model_350.pt", "self_resume": True,
+        }))
+    for change, message in (
+        ({"device": "cuda:0", "resume_from": "model_350.pt", "self_resume": True}, "cuda:1"),
+        ({"resume_from": "model_350.pt", "self_resume": True,
+          "resume_smoke": True, "resume_updates": 6}, "one through five"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            entry.validate_ex42_stage_zero_cli(**(args | change))
+
+
+def test_w65_stage_zero_self_resume_is_manifest_pinned_and_maps_350_to_351(tmp_path):
+    import torch
+
+    run = tmp_path / "source"
+    run.mkdir()
+    checkpoint_path = run / "model_350.pt"
+    parent = _receipt()
+    plan_sha = "p" * 64
+    approval_sha = parent["approval"]["approvals_sha256"]
+    checkpoint = {
+        "format": "foothold-start/1", "iter": 350,
+        "model_state_dict": {"actor": torch.tensor([1.0])},
+        "optimizer_state_dict": {"state": {}, "param_groups": []},
+        "ppo_learning_rate": 0.00038443359375,
+        "perception_state_dict": {"encoder": torch.tensor([2.0])},
+        "perception_optimizer_state_dict": {"state": {}, "param_groups": []},
+        "adasmpl": {"p": 0.4},
+        "normalization_state": {"running_buffers": {}},
+        "rng": {"torch": torch.tensor([1]), "numpy": [1], "python": [1]},
+        "map_switch": {"generator_state": torch.tensor([2]), "p_map_off": 0.1},
+        "env_state": {"terrain_levels": torch.tensor([5]), "command_rng": torch.tensor([3])},
+        "continuous_curriculum": {
+            "format": "foothold-ex42-stage-zero-state/1", "iteration": 350,
+            "maximum_updates": 1000, "plan_sha256": plan_sha,
+            "approval_sha256": approval_sha, "parent_sha256": parent["parent_sha256"],
+            "stage_id": "EX42_0_T0_prime", "dr_scale": 1.0, "finished": False,
+        },
+        "ex42_parent_transfer": {
+            "parent_sha256": parent["parent_sha256"], "parent_cumulative_update": 12000,
+            "map_input": "reconstruction", "force_gt": False,
+        },
+    }
+    torch.save(checkpoint, checkpoint_path)
+    checkpoint_sha = hashlib.sha256(checkpoint_path.read_bytes()).hexdigest()
+    manifest_path = run / "manifest.json"
+    manifest_path.write_text(json.dumps({
+        "run": {"log_dir": str(run.resolve())},
+        "progress": {"completed_updates": 400, "total_env_steps": 29_491_200},
+        "checkpoints": {checkpoint_path.name: checkpoint_sha},
+    }), encoding="utf-8")
+
+    proof = entry.validate_ex42_stage_zero_resume(
+        checkpoint_path=checkpoint_path, manifest_path=manifest_path,
+        plan_sha256=plan_sha, approval_sha256=approval_sha,
+        parent_receipt=parent, resume_smoke_updates=5, require_latest=False)
+    assert proof["local_update_origin"] == 350
+    assert proof["first_resumed_local_update"] == 351
+    assert proof["cumulative_update_origin"] == 12350
+    assert proof["first_resumed_cumulative_update"] == 12351
+    assert proof["requested_updates"] == 5
+    assert {"ppo_optimizer", "learning_rate", "normalization", "rng",
+            "curriculum", "map_switch", "environment_terrain_and_command_rng"}.issubset(
+                proof["restored_groups"])
+    with pytest.raises(ValueError, match="not the manifest's latest"):
+        entry.validate_ex42_stage_zero_resume(
+            checkpoint_path=checkpoint_path, manifest_path=manifest_path,
+            plan_sha256=plan_sha, approval_sha256=approval_sha,
+            parent_receipt=parent)
+
+    manifest_path.write_text(json.dumps({
+        "run": {"log_dir": str(run.resolve())},
+        "progress": {"completed_updates": 400, "total_env_steps": 29_491_200},
+        "checkpoints": {checkpoint_path.name: "0" * 64},
+    }), encoding="utf-8")
+    with pytest.raises(ValueError, match="SHA is absent or differs"):
+        entry.validate_ex42_stage_zero_resume(
+            checkpoint_path=checkpoint_path, manifest_path=manifest_path,
+            plan_sha256=plan_sha, approval_sha256=approval_sha,
+            parent_receipt=parent, resume_smoke_updates=5, require_latest=False)
+
+
+def test_resumed_one_based_stage_uses_next_update_without_double_increment():
+    runtime = SimpleNamespace(plan=SimpleNamespace(is_ex41=False),
+                              uses_one_based_updates=True)
+    assert start_runner.resumed_loop_start(350, True, runtime) == 350
+    assert start_runner.curriculum_update_number(runtime, 350) == 351
+    zero_based = SimpleNamespace(plan=SimpleNamespace(is_ex41=False),
+                                 uses_one_based_updates=False)
+    assert start_runner.resumed_loop_start(350, True, zero_based) == 351
 
 
 def test_stage_zero_adapter_uses_t0_prime_and_only_approved_dr_l5():

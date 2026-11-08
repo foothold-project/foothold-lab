@@ -31,24 +31,42 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
                                  task: str, device: str, headless: bool, distributed: bool,
                                  max_iterations: int | None, num_envs: int | None,
                                  map_input: str | None, force_gt: bool,
-                                 approved_switch: bool, resume_from: str | Path | None = None
-                                 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+                                 approved_switch: bool, resume_from: str | Path | None = None,
+                                 self_resume: bool = False, resume_smoke: bool = False,
+                                 resume_updates: int | None = None
+                                 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Validate the explicitly approved stage-zero CLI without importing Kit."""
     if approved_switch is not True:
         raise ValueError("EX-42 stage zero requires its explicit scoped approval switch")
-    if resume_from:
-        raise ValueError("EX-42 stage zero begins from the pinned EX-41 parent, not self-resume")
+    if resume_from and not self_resume:
+        raise ValueError("EX-42 stage zero is not self-resume without its dedicated resume route")
+    if self_resume and not resume_from:
+        raise ValueError("EX-42 self-resume requires a manifest-pinned checkpoint")
+    if resume_smoke and not self_resume:
+        raise ValueError("EX-42 bounded resume smoke requires self-resume")
     if task != STAGE_ZERO_TASK_ID:
         raise ValueError("EX-42 stage-zero task differs from the approved task")
-    if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
-        raise ValueError("EX-42 stage zero requires headless single-process cuda:1")
+    valid_device = (device == STAGE_ZERO_DEVICE
+                    or (resume_smoke and device == "cuda:0"))
+    if not valid_device or headless is not True or distributed is not False:
+        raise ValueError("EX-42 stage zero requires headless single-process cuda:1; only bounded resume smoke may use cuda:0")
     if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
         raise ValueError("EX-42 stage zero is bounded to exactly 1000 updates and 3072 environments")
     if map_input not in (None, "reconstruction") or force_gt is not False:
         raise ValueError("EX-42 stage zero must consume reconstructed maps without forced GT")
+    if resume_smoke:
+        if type(resume_updates) is not int or not 1 <= resume_updates <= 5:
+            raise ValueError("EX-42 resume smoke is bounded to one through five updates")
+    elif resume_updates is not None:
+        raise ValueError("EX-42 resume update override is only valid for bounded smoke")
     output = Path(log_dir).resolve()
     if output.exists():
-        raise ValueError("EX-42 stage-zero output path must be new and empty")
+        same_run_resume = (self_resume and not resume_smoke and resume_from is not None
+                           and output.resolve() == Path(resume_from).resolve().parent)
+        if not same_run_resume or not (output / "manifest.json").is_file():
+            raise ValueError("EX-42 stage-zero output must be new, except same-run manifest-pinned resume")
+    elif self_resume and not resume_smoke:
+        raise ValueError("EX-42 full self-resume must continue in its source run directory")
     plan = EX42Plan.load(plan_path)
     checkpoint, parent_receipt = inspect_ex42_stage_zero_parent(
         plan=plan, approvals_path=approvals_path,
@@ -64,12 +82,126 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
         "force_gt": False, "output_dir": str(output),
         "production_launch_allowed": False,
         "later_stages_authorized": False,
+        "self_resume": bool(self_resume),
+        "resume_smoke": bool(resume_smoke),
+        "resume_updates": resume_updates,
+    }
+
+
+def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
+                                   manifest_path: str | Path,
+                                   plan_sha256: str, approval_sha256: str,
+                                   parent_receipt: dict[str, Any],
+                                   maximum_updates: int = STAGE_ZERO_UPDATES,
+                                   resume_smoke_updates: int | None = None,
+                                   require_latest: bool = True) -> dict[str, Any]:
+    """Validate a self-resume checkpoint against its manifest and W65 pins.
+
+    The checkpoint is read on CPU. The caller must validate a fresh target run
+    directory separately before creating it or starting Kit.
+    """
+    import torch
+
+    path = Path(checkpoint_path).resolve(strict=True)
+    manifest_file = Path(manifest_path).resolve(strict=True)
+    match = re.fullmatch(r"model_(\d+)\.pt", path.name)
+    if not path.is_file() or match is None:
+        raise ValueError("EX-42 self-resume requires a numbered model_N.pt checkpoint")
+    local_iteration = int(match.group(1))
+    if not 0 < local_iteration < maximum_updates:
+        raise ValueError("EX-42 self-resume checkpoint must be inside the approved stage-zero range")
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8-sig"))
+    if not isinstance(manifest, dict):
+        raise ValueError("EX-42 self-resume source manifest is invalid")
+    run = manifest.get("run")
+    manifest_run_dir = run.get("log_dir") if isinstance(run, dict) else None
+    if (not isinstance(manifest_run_dir, str)
+            or Path(manifest_run_dir).resolve() != path.parent.resolve()
+            or manifest_file.parent.resolve() != path.parent.resolve()):
+        raise ValueError("EX-42 self-resume checkpoint and manifest must belong to the same run directory")
+    checkpoints = manifest.get("checkpoints")
+    expected_sha = checkpoints.get(path.name) if isinstance(checkpoints, dict) else None
+    actual_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+    if not isinstance(expected_sha, str) or expected_sha != actual_sha:
+        raise ValueError("EX-42 self-resume checkpoint SHA is absent or differs from its source manifest")
+    progress = manifest.get("progress")
+    if (not isinstance(progress, dict)
+            or type(progress.get("completed_updates")) is not int
+            or progress["completed_updates"] < local_iteration):
+        raise ValueError("EX-42 self-resume source manifest does not publish this checkpoint iteration")
+    if require_latest and progress["completed_updates"] != local_iteration:
+        raise ValueError("EX-42 same-run self-resume checkpoint is not the manifest's latest completed update")
+    saved = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(saved, dict) or saved.get("format") != "foothold-start/1":
+        raise ValueError("EX-42 self-resume file is not a START checkpoint")
+    if saved.get("iter") != local_iteration:
+        raise ValueError("EX-42 self-resume filename and checkpoint iteration differ")
+    required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
+                "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
+                "normalization_state", "rng", "map_switch", "env_state",
+                "continuous_curriculum", "ex42_parent_transfer")
+    missing = [key for key in required if saved.get(key) is None]
+    if missing:
+        raise ValueError("EX-42 self-resume lacks required state: " + ", ".join(missing))
+    curriculum = saved["continuous_curriculum"]
+    transfer = saved["ex42_parent_transfer"]
+    expected_parent = parent_receipt.get("parent_sha256")
+    if (not isinstance(curriculum, dict)
+            or curriculum.get("format") != "foothold-ex42-stage-zero-state/1"
+            or curriculum.get("iteration") != local_iteration
+            or curriculum.get("maximum_updates") != maximum_updates
+            or curriculum.get("plan_sha256") != plan_sha256
+            or curriculum.get("approval_sha256") != approval_sha256
+            or curriculum.get("parent_sha256") != expected_parent
+            or curriculum.get("stage_id") != "EX42_0_T0_prime"
+            or curriculum.get("dr_scale") != 1.0
+            or curriculum.get("finished") is not False):
+        raise ValueError("EX-42 self-resume curriculum pins or stage identity differ")
+    if (not isinstance(transfer, dict)
+            or transfer.get("parent_sha256") != expected_parent
+            or transfer.get("parent_cumulative_update") != 12000
+            or transfer.get("map_input") != "reconstruction"
+            or transfer.get("force_gt") is not False):
+        raise ValueError("EX-42 self-resume pinned EX-41 parent transfer differs")
+    if (not isinstance(saved["map_switch"], dict)
+            or saved["map_switch"].get("generator_state") is None
+            or not isinstance(saved["rng"], dict)
+            or any(key not in saved["rng"] for key in ("torch", "numpy", "python"))):
+        raise ValueError("EX-42 self-resume RNG or map-switch state is incomplete")
+    remaining = maximum_updates - local_iteration
+    if resume_smoke_updates is not None:
+        if (type(resume_smoke_updates) is not int
+                or not 1 <= resume_smoke_updates <= min(5, remaining)):
+            raise ValueError("EX-42 bounded resume updates exceed the five-update or stage limit")
+        updates = resume_smoke_updates
+    else:
+        updates = remaining
+    return {
+        "state": "manifest_checkpoint_self_resume_verified",
+        "checkpoint_path": str(path), "checkpoint_sha256": actual_sha,
+        "source_manifest_path": str(manifest_file),
+        "source_manifest_sha256": hashlib.sha256(manifest_file.read_bytes()).hexdigest(),
+        "source_manifest_completed_updates": progress["completed_updates"],
+        "source_manifest_total_env_steps": int(progress.get("total_env_steps", 0)),
+        "local_update_origin": local_iteration,
+        "first_resumed_local_update": local_iteration + 1,
+        "cumulative_update_origin": 12000 + local_iteration,
+        "first_resumed_cumulative_update": 12001 + local_iteration,
+        "maximum_updates": maximum_updates, "requested_updates": updates,
+        "remaining_after_resume": maximum_updates - local_iteration - updates,
+        "plan_sha256": plan_sha256, "approval_sha256": approval_sha256,
+        "parent_sha256": expected_parent,
+        "restored_groups": ["policy_and_critic", "ppo_optimizer", "learning_rate",
+                            "perception", "perception_optimizer", "adasmpl",
+                            "normalization", "rng", "curriculum", "map_switch",
+                            "environment_terrain_and_command_rng"],
     }
 
 
 def validate_ex42_stage_zero_chain_output(log_dir: str | Path, *,
                                           plan_sha256: str,
-                                          parent_sha256: str) -> dict[str, Any]:
+                                          parent_sha256: str,
+                                          allow_existing_run: bool = False) -> dict[str, Any]:
     """Accept only the startup receipt just written by this validated chain.
 
     The initial CLI preflight requires a nonexistent output directory. Chain
@@ -84,11 +216,16 @@ def validate_ex42_stage_zero_chain_output(log_dir: str | Path, *,
     if not output.is_dir():
         raise ValueError("EX-42 stage-zero chain output is not a real directory")
     entries = list(output.iterdir())
-    if (len(entries) != 1 or entries[0].name != "startup_receipt.json"
-            or not entries[0].is_file() or entries[0].is_symlink()):
+    if (not allow_existing_run and
+            (len(entries) != 1 or entries[0].name != "startup_receipt.json"
+             or not entries[0].is_file() or entries[0].is_symlink())):
         raise ValueError("EX-42 stage-zero chain output has unexpected contents")
+    if (allow_existing_run and not (output / "startup_receipt.json").is_file()):
+        raise ValueError("EX-42 stage-zero chain output has unexpected contents")
+    if (output / "startup_receipt.json").is_symlink():
+        raise ValueError("EX-42 stage-zero startup receipt must not be a symlink")
     try:
-        receipt = json.loads(entries[0].read_text(encoding="utf-8"))
+        receipt = json.loads((output / "startup_receipt.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("EX-42 stage-zero chain startup receipt is unreadable") from exc
     if not isinstance(receipt, dict):

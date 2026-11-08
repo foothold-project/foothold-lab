@@ -16,6 +16,7 @@ import atexit
 import hashlib
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -71,6 +72,12 @@ _pre.add_argument("--ex42_p1_score_argv_json")
 _pre.add_argument("--ex42_source_ref")
 _pre.add_argument("--ex42_stage_zero_approved", action="store_true")
 _pre.add_argument("--ex42_stage_zero_dry_run", action="store_true")
+_pre.add_argument("--ex42_resume_from", type=str, default=None,
+                  help="W65 self-resume from a manifest-pinned EX-42 stage-zero model_N.pt")
+_pre.add_argument("--ex42_resume_smoke", action="store_true",
+                  help="Permit only the bounded one-to-five-update CUDA:0 W65 resume check")
+_pre.add_argument("--ex42_resume_updates", type=int, default=None,
+                  help="Bounded W65 self-resume smoke update count")
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
 _pre.add_argument("--max_iterations", type=int)
@@ -94,6 +101,10 @@ EX42_STAGE_ZERO_PARENT = None
 EX42_STAGE_ZERO_APPROVAL = None
 EX42_STAGE_ZERO_PREFLIGHT = None
 EX42_STAGE_ZERO_REWARD_CONTRACT = None
+EX42_STAGE_ZERO_RESUME = None
+EX42_STAGE_ZERO_RESUME_PROOF = None
+EX42_STAGE_ZERO_RESUME_TARGET = None
+EX42_STAGE_ZERO_RESUME_SAME_RUN = False
 EX41_REHEARSAL = False
 EX41_STAGE_REHEARSAL = None
 EX41_STAGE_REHEARSAL_RECEIPT = None
@@ -429,7 +440,11 @@ _ex42_values = {
     "p1_score_argv_json": _pre_args.ex42_p1_score_argv_json,
     "source_ref": _pre_args.ex42_source_ref,
 }
-_ex42_requested = any(value is not None for value in _ex42_values.values()) or bool(_pre_args.ex42_dispatch_path)
+_ex42_requested = (any(value is not None for value in _ex42_values.values())
+                   or bool(_pre_args.ex42_dispatch_path)
+                   or bool(_pre_args.ex42_resume_from)
+                   or bool(_pre_args.ex42_resume_smoke)
+                   or _pre_args.ex42_resume_updates is not None)
 if _ex42_requested:
     _missing_ex42 = [name for name, value in _ex42_values.items() if not value]
     if _missing_ex42:
@@ -443,12 +458,15 @@ if _ex42_requested:
                                  or _pre_args.ex42_stage_zero_dry_run)
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
-            validate_ex42_stage_zero_cli, load_ex42_stage_zero_source,
+            validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
+            load_ex42_stage_zero_source,
             make_ex42_stage_zero_plan_view,
         )
 
         if not _pre_args.ex42_stage_zero_approved:
             raise ValueError("EX-42 stage-zero dry-run also requires the scoped approval switch")
+        if _pre_args.resume_from:
+            raise ValueError("EX-42 self-resume must use --ex42_resume_from, not --resume_from")
         (EX42_STAGE_ZERO_PLAN, EX42_STAGE_ZERO_CHECKPOINT,
          EX42_STAGE_ZERO_PARENT, EX42_STAGE_ZERO_PREFLIGHT) = (
             validate_ex42_stage_zero_cli(
@@ -461,18 +479,40 @@ if _ex42_requested:
                 max_iterations=_pre_args.max_iterations, num_envs=_pre_args.num_envs,
                 map_input=_pre_args.map_input, force_gt=_pre_args.force_gt,
                 approved_switch=_pre_args.ex42_stage_zero_approved,
-                resume_from=_pre_args.resume_from))
+                resume_from=_pre_args.ex42_resume_from,
+                self_resume=bool(_pre_args.ex42_resume_from),
+                resume_smoke=_pre_args.ex42_resume_smoke,
+                resume_updates=_pre_args.ex42_resume_updates))
         EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE = (
             load_ex42_stage_zero_source(EX42_STAGE_ZERO_PLAN))
         EX42_STAGE_ZERO_APPROVAL = EX42_STAGE_ZERO_PARENT["approval"]
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE,
             EX42_STAGE_ZERO_PARENT)
+        if _pre_args.ex42_resume_from:
+            source_manifest = Path(_pre_args.ex42_resume_from).resolve().parent / "manifest.json"
+            EX42_STAGE_ZERO_RESUME_PROOF = validate_ex42_stage_zero_resume(
+                checkpoint_path=_pre_args.ex42_resume_from,
+                manifest_path=source_manifest,
+                plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
+                approval_sha256=EX42_STAGE_ZERO_APPROVAL["approvals_sha256"],
+                parent_receipt=EX42_STAGE_ZERO_PARENT,
+                resume_smoke_updates=(_pre_args.ex42_resume_updates
+                                      if _pre_args.ex42_resume_smoke else None),
+                require_latest=not _pre_args.ex42_resume_smoke)
+            EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
+            EX42_STAGE_ZERO_RESUME_SAME_RUN = (
+                not _pre_args.ex42_resume_smoke
+                and Path(_pre_args.ex42_log_dir).resolve()
+                == Path(EX42_STAGE_ZERO_RESUME).resolve().parent)
+            if _pre_args.resume_from:
+                raise ValueError("EX-42 self-resume must use --ex42_resume_from, not --resume_from")
         if _pre_args.ex42_stage_zero_dry_run:
             print("EX42_STAGE_ZERO_PREFLIGHT " + json.dumps({
                 **EX42_STAGE_ZERO_PREFLIGHT,
                 "parent": EX42_STAGE_ZERO_PARENT,
                 "approval": EX42_STAGE_ZERO_APPROVAL,
+                "self_resume": EX42_STAGE_ZERO_RESUME_PROOF,
                 "app_launcher_started": False,
             }, ensure_ascii=False, sort_keys=True), flush=True)
             raise SystemExit(0)
@@ -494,7 +534,22 @@ if _ex42_requested:
             _pre_args.ex42_log_dir,
             plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+            allow_existing_run=EX42_STAGE_ZERO_RESUME_SAME_RUN,
         )
+        if EX42_STAGE_ZERO_RESUME:
+            source = Path(EX42_STAGE_ZERO_RESUME)
+            target = Path(_pre_args.ex42_log_dir).resolve() / source.name
+            if not EX42_STAGE_ZERO_RESUME_SAME_RUN:
+                shutil.copyfile(source, target)
+            else:
+                target = source
+            copied_sha = hashlib.sha256(target.read_bytes()).hexdigest()
+            if copied_sha != EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"]:
+                raise ValueError("EX-42 self-resume target checkpoint copy SHA differs")
+            EX42_STAGE_ZERO_RESUME_TARGET = str(target)
+            print("EX42_SELF_RESUME_CHECKPOINT_STAGED " + json.dumps({
+                "source": str(source), "target": str(target), "sha256": copied_sha,
+            }, sort_keys=True), flush=True)
     if not _stage_zero_requested:
         raise RuntimeError(
             "EX-42 preparation_only: full plan is blocked; refusing before AppLauncher"
@@ -553,6 +608,12 @@ parser.add_argument("--ex42_stage_zero_approved", action="store_true",
                     help="W65 scoped approval for EX-42 T0-prime stage zero only")
 parser.add_argument("--ex42_stage_zero_dry_run", action="store_true",
                     help="CPU-only W65 stage-zero preflight; exits before AppLauncher")
+parser.add_argument("--ex42_resume_from", type=str, default=None,
+                    help="W65 self-resume from a manifest-pinned EX-42 model_N.pt")
+parser.add_argument("--ex42_resume_smoke", action="store_true",
+                    help="Bounded one-to-five-update self-resume smoke, cuda:0 only")
+parser.add_argument("--ex42_resume_updates", type=int, default=None,
+                    help="Update count for the bounded self-resume smoke")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -585,6 +646,9 @@ if args_cli.ex42_dispatch_path != _pre_args.ex42_dispatch_path:
     raise ValueError("EX-42 preflight and runtime parser disagree on dispatch path")
 if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_stage_zero_dry_run != _pre_args.ex42_stage_zero_dry_run
+        or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
+        or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
+        or args_cli.ex42_resume_updates != _pre_args.ex42_resume_updates
         or args_cli.max_iterations != _pre_args.max_iterations
         or args_cli.num_envs != _pre_args.num_envs
         or args_cli.map_input != _pre_args.map_input
@@ -707,11 +771,18 @@ def main(env_cfg, agent_cfg):
             with open(os.path.join(log_dir, "manifest.json"), encoding="utf-8-sig") as stream:
                 manifest = json.load(stream)
     elif EX42_STAGE_ZERO_PLAN is not None:
-        resume_path = None
+        resume_path = EX42_STAGE_ZERO_RESUME
         parent_checkpoint_path = EX42_STAGE_ZERO_PARENT["parent_path"]
         log_dir = EX42_STAGE_ZERO_PREFLIGHT["output_dir"]
         agent_cfg.resume = False
         agent_cfg.max_iterations = 1000
+        if EX42_STAGE_ZERO_RESUME_SAME_RUN:
+            source_manifest_path = Path(log_dir) / "manifest.json"
+            if hashlib.sha256(source_manifest_path.read_bytes()).hexdigest() != (
+                    EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"]):
+                raise ValueError("EX-42 same-run source manifest changed after self-resume preflight")
+            with source_manifest_path.open(encoding="utf-8-sig") as stream:
+                manifest = json.load(stream)
     elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
@@ -878,7 +949,8 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.scripts.ex42_training_entry import configure_ex42_stage_zero_train_cfg
 
         train_cfg = configure_ex42_stage_zero_train_cfg(
-            train_cfg, EX42_STAGE_ZERO_CHECKPOINT,
+            train_cfg, (torch.load(EX42_STAGE_ZERO_RESUME, map_location="cpu", weights_only=False)
+                        if EX42_STAGE_ZERO_RESUME else EX42_STAGE_ZERO_CHECKPOINT),
             parent_path=EX42_STAGE_ZERO_PARENT["parent_path"],
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"])
         agent_cfg.max_iterations = 1000
@@ -939,10 +1011,30 @@ def main(env_cfg, agent_cfg):
     if EX42_STAGE_ZERO_PLAN is not None:
         ex42_stage_zero_runtime.attach_runner(runner)
         runner.ex40_dr_runtime = ex42_dr_readback
-        ex42_transfer = runner.load_ex42_stage_zero_parent(
-            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
-        print("EX42_STAGE_ZERO_PARENT_TRANSFER "
-              + json.dumps(ex42_transfer, sort_keys=True), flush=True)
+        if EX42_STAGE_ZERO_RESUME:
+            resume_saved = torch.load(EX42_STAGE_ZERO_RESUME, map_location="cpu", weights_only=False)
+            runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
+            runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
+            ex42_transfer = {
+                "state": "self_resume_restored",
+                "source_checkpoint_sha256": EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"],
+                "source_manifest_sha256": EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"],
+                "local_update_origin": runner.current_learning_iteration,
+                "first_resumed_local_update": runner.current_learning_iteration + 1,
+                "cumulative_update_origin": 12000 + runner.current_learning_iteration,
+                "first_resumed_cumulative_update": 12001 + runner.current_learning_iteration,
+                "restored_groups": EX42_STAGE_ZERO_RESUME_PROOF["restored_groups"],
+            }
+            if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
+                    or runner.continuous_curriculum.state_dict() != resume_saved["continuous_curriculum"]):
+                raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
+            print("EX42_SELF_RESUME_READBACK "
+                  + json.dumps(ex42_transfer, sort_keys=True), flush=True)
+        else:
+            ex42_transfer = runner.load_ex42_stage_zero_parent(
+                EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
+            print("EX42_STAGE_ZERO_PARENT_TRANSFER "
+                  + json.dumps(ex42_transfer, sort_keys=True), flush=True)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
     ex41_end_by_receipt = None
@@ -1102,10 +1194,10 @@ def main(env_cfg, agent_cfg):
 
             ex41_end_by_receipt = install_end_by_warning_watch(
                 ex41_runtime, log_dir, EX41_PLAN)
-    elif resume_path:
+    elif resume_path and EX42_STAGE_ZERO_PLAN is None:
         print(f"[INFO] START 체크포인트에서 이어 감: {resume_path}")
         runner.load(resume_path)
-    if resume_path is None:
+    if resume_path is None or (EX42_STAGE_ZERO_RESUME and not EX42_STAGE_ZERO_RESUME_SAME_RUN):
         dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
         dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
     # SONNET-X11: 실행 시작 manifest(소비 파일 SHA · dirty diff · YAML · 인자 · 모드 · 초기 상태 SHA). 소비 코드가 실행 중 바뀌면 체크포인트 저장 때 멈춘다.
@@ -1156,12 +1248,50 @@ def main(env_cfg, agent_cfg):
                                             if runtime_output_layout else None),
                           "disk_preflight": EX41_DISK_RECEIPT,
                           "local_update_range": [1, ex41_runtime.max_updates]}
-    if resume_path is None:
+    if resume_path is None or (EX42_STAGE_ZERO_RESUME and not EX42_STAGE_ZERO_RESUME_SAME_RUN):
         manifest = run_manifest.build_manifest(
             repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name,
             cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
             runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"),
             agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
+        if EX42_STAGE_ZERO_RESUME:
+            source_manifest_path = Path(EX42_STAGE_ZERO_RESUME).resolve().parent / "manifest.json"
+            local_origin = int(EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"])
+            manifest["progress"] = {
+                "completed_updates": local_origin,
+                "total_env_steps": EX42_STAGE_ZERO_RESUME_PROOF[
+                    "source_manifest_total_env_steps"],
+            }
+            manifest.setdefault("checkpoints", {})[Path(EX42_STAGE_ZERO_RESUME_TARGET).name] = (
+                EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"])
+            manifest["modes"]["ex42_self_resume"] = {
+                **EX42_STAGE_ZERO_RESUME_PROOF,
+                "source_manifest_path": str(source_manifest_path),
+                "target_checkpoint_path": EX42_STAGE_ZERO_RESUME_TARGET,
+                "source_run_dir": str(Path(EX42_STAGE_ZERO_RESUME).resolve().parent),
+            }
+        run_manifest.write_manifest(log_dir, manifest)
+    elif EX42_STAGE_ZERO_RESUME_SAME_RUN:
+        previous_manifest_sha = EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"]
+        segment = run_manifest.rebase_files_for_resume(
+            manifest, captured_at=datetime.now().astimezone().isoformat())
+        segment.update({
+            "process_id": os.getpid(),
+            "source_checkpoint": EX42_STAGE_ZERO_RESUME,
+            "source_checkpoint_sha256": EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"],
+            "source_manifest_sha256": previous_manifest_sha,
+            "local_update_origin": EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"],
+            "cumulative_update_origin": EX42_STAGE_ZERO_RESUME_PROOF["cumulative_update_origin"],
+            "first_local_update": EX42_STAGE_ZERO_RESUME_PROOF["first_resumed_local_update"],
+            "first_cumulative_update": EX42_STAGE_ZERO_RESUME_PROOF["first_resumed_cumulative_update"],
+        })
+        manifest.setdefault("ex42_resume_segments", []).append(segment)
+        manifest.setdefault("modes", {})["ex42_self_resume"] = {
+            **EX42_STAGE_ZERO_RESUME_PROOF,
+            "target_run_dir": log_dir,
+            "same_run_directory": True,
+        }
+        manifest["run"]["pid"] = os.getpid()
         run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
     if EX41_PLAN is not None and ex41_end_by_receipt is not None:
@@ -1241,7 +1371,9 @@ def main(env_cfg, agent_cfg):
         MapStatsRecorder(runner, log_dir).attach()
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
-    if ex41_runtime is not None and ex41_runtime.max_updates is not None:
+    if EX42_STAGE_ZERO_RESUME:
+        remaining = int(EX42_STAGE_ZERO_RESUME_PROOF["requested_updates"])
+    elif ex41_runtime is not None and ex41_runtime.max_updates is not None:
         completed = EX41_RESUME_PREFLIGHT["completed_updates"] if EX41_RESUME_PREFLIGHT else 0
         remaining = max(0, ex41_runtime.max_updates - completed)
     else:
