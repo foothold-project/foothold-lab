@@ -1,0 +1,136 @@
+{
+  "status": "PASS",
+  "producer": "D:\\mai-wt\\foothold-lab\\runner-ex42-w65-7916a52\\foothold_s2\\eval\\map_mode_cells.py",
+  "producer_sha256": "f75f401d1c3979c74f2d64fc3c1aa2ff9d36f4552e5344a3f0ebd1eb01471ddc",
+  "cases": 18,
+  "max_error_mps": 3.0609480783372334e-08,
+  "scope": "six signed command pairs x three envs; actual summarize; post-fall extreme excluded",
+  "results": [
+    {
+      "cx": 0.0,
+      "cy": 0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.30000001192092896
+    },
+    {
+      "cx": 0.0,
+      "cy": 0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.300000011920929
+    },
+    {
+      "cx": 0.0,
+      "cy": 0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.29999999205271405
+    },
+    {
+      "cx": 0.0,
+      "cy": -0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.30000001192092896
+    },
+    {
+      "cx": 0.0,
+      "cy": -0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.300000011920929
+    },
+    {
+      "cx": 0.0,
+      "cy": -0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.29999999205271405
+    },
+    {
+      "cx": 0.5,
+      "cy": 0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.2999999970541203
+    },
+    {
+      "cx": 0.5,
+      "cy": 0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.29999999340678424
+    },
+    {
+      "cx": 0.5,
+      "cy": 0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.3000000090456488
+    },
+    {
+      "cx": 0.5,
+      "cy": -0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.3000000306094808
+    },
+    {
+      "cx": 0.5,
+      "cy": -0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.29999998508549347
+    },
+    {
+      "cx": 0.5,
+      "cy": -0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.3000000256424271
+    },
+    {
+      "cx": -0.5,
+      "cy": 0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.3000000306094808
+    },
+    {
+      "cx": -0.5,
+      "cy": 0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.29999998508549347
+    },
+    {
+      "cx": -0.5,
+      "cy": 0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.3000000256424271
+    },
+    {
+      "cx": -0.5,
+      "cy": -0.5,
+      "env": 0,
+      "expected": -0.3,
+      "actual": -0.2999999970541203
+    },
+    {
+      "cx": -0.5,
+      "cy": -0.5,
+      "env": 1,
+      "expected": 0.3,
+      "actual": 0.29999999340678424
+    },
+    {
+      "cx": -0.5,
+      "cy": -0.5,
+      "env": 2,
+      "expected": -0.3,
+      "actual": -0.3000000090456488
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "known_answer_groups": 8,
+  "status": "PASS",
+  "expected": {
+    "alive": 2,
+    "vx_median": 3.0,
+    "vy": 0.0,
+    "yaw": 0.0,
+    "recovered_signed_vy": -0.3
+  }
+}

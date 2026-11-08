@@ -1,0 +1,242 @@
+diff --git a/foothold_s2/eval/eval_map_modes.py b/foothold_s2/eval/eval_map_modes.py
+index b5ea8dcd..fc4c8beb 100644
+--- a/foothold_s2/eval/eval_map_modes.py
++++ b/foothold_s2/eval/eval_map_modes.py
+@@ -23,0 +24,2 @@ from foothold_s2.eval import map_mode_cells as _command_cells
++from foothold_s2.eval import eval_dr_mode
++from foothold_s2.eval import n21_dr_record
+@@ -31 +33 @@ parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
+-parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3"), default="core")
++parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21"), default="core")
+@@ -34 +36,6 @@ parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terra
+-parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
++parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
++parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
++parser.add_argument("--n21-stage", default=None, help="N21 approved EX-42 stage id")
++parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=None)
++parser.add_argument("--n21-approval", default=str(n21_dr_record.DEFAULT_APPROVAL), help="EX-42 DR approval file, fingerprinted in the receipt")
++eval_dr_mode.add_arguments(parser)
+@@ -40,0 +48,2 @@ parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 case
++parser.add_argument("--terrain-skill-v2-modes", default="all", help="W78 v2 modes: all or one of the three map modes")
++parser.add_argument("--terrain-skill-v2-resume", action="store_true", help="resume only a matching W78 v2 partial receipt")
+@@ -54,0 +64,21 @@ parser_sparse = args.terrain_set == "sparse50"
++parser_n21 = bool(args.n21_record_only)
++if parser_n21:
++    try:
++        n21_dr_record.validate_entrypoint(args)
++        n21_approval = n21_dr_record.approval_record(
++            args.n21_approval, args.n21_stage, args.dr_scale if args.dr_mode == "on" else None,
++            dr_table_path=args.dr_table)
++        n21_table_fingerprint = eval_dr_mode.load_table(args.dr_table)["sha256"]
++        if n21_table_fingerprint != n21_approval["range_source"]["sha256"]:
++            raise ValueError("N21 DR range table changed after the EX-42 plan pin")
++    except (ValueError, OSError) as exc:
++        parser.error(str(exc))
++else:
++    n21_approval = None
++    try:
++        n21_dr_record.validate_entrypoint(args)
++    except ValueError as exc:
++        parser.error(str(exc))
++dr_error = eval_dr_mode.validate_args(args)
++if dr_error:
++    parser.error(dr_error)
+@@ -125,0 +156,4 @@ agent_cfg.device = args.device
++if parser_n21:
++    n21_dr_record.configure_terrain(env_cfg, args.terrain_set, args.eval_seed)
++    env_cfg.seed = args.eval_seed
++    agent_cfg.seed = args.eval_seed
+@@ -142 +176,4 @@ if args.ex39_heading_smoke_guard:
+-dr_off = adapters.disable_eval_randomization(env_cfg)
++dr_mode = eval_dr_mode.DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)
++if parser_n21 and args.dr_mode == "on" and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
++    raise RuntimeError("N21 DR range table differs from the pre-Kit approval fingerprint")
++dr_off = adapters.disable_eval_randomization(env_cfg) if args.dr_mode == "off" else []
+@@ -146 +183 @@ EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B
+-if sorted(dr_off) != sorted(EXPECTED_DR_OFF):
++if args.dr_mode == "off" and sorted(dr_off) != sorted(EXPECTED_DR_OFF):
+@@ -177,2 +214,2 @@ args.ex41_checkpoint_preparation = checkpoint_preparation
+-env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
+-raw = env.unwrapped
++env, raw = eval_dr_mode.make_wrapped_env_after_dr_ready(
++    gym.make, RslRlVecEnvWrapper, args.task, env_cfg, agent_cfg.clip_actions, dr_mode)
+@@ -279,0 +317,8 @@ res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.che
++if args.dr_mode == "on":
++    res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
++                       "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
++elif parser_n21:
++    res["dr_mode"] = n21_dr_record.off_mode_record(dr_off)
++if parser_n21:
++    res["n21_point"] = args.n21_point
++    res["n21_stage"] = args.n21_stage
+@@ -352,0 +398 @@ for mode in args.modes.split(","):
++        rollout_key = "%s/%s" % (mode, cname)
+@@ -355,0 +402 @@ for mode in args.modes.split(","):
++        dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
+@@ -438,0 +486 @@ for mode in args.modes.split(","):
++            dr_mode.step(raw, k)
+@@ -524,0 +573,4 @@ for mode in args.modes.split(","):
++        dr_mode.collect(raw, rollout_key, res, row, arrays={
++            "alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy,
++            "wz": wz, "tilt": tilt, "xy": XY.cpu().numpy(), "cmd": cmd,
++        })
+@@ -531,0 +584,2 @@ for mode in args.modes.split(","):
++            rollout_key = "%s/%s" % (mode, seq_name)
++            dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
+@@ -545,0 +600 @@ for mode in args.modes.split(","):
++            global_step = 0
+@@ -558,0 +614 @@ for mode in args.modes.split(","):
++                    dr_mode.step(raw, global_step)
+@@ -568,0 +625 @@ for mode in args.modes.split(","):
++                    global_step += 1
+@@ -586,0 +644 @@ for mode in args.modes.split(","):
++            dr_mode.collect(raw, rollout_key, res, seq_row)
+@@ -616,0 +675,9 @@ os.replace(out_json + ".tmp", out_json)
++if parser_n21:
++    n21_doc = n21_dr_record.receipt(res, approval=n21_approval, terrain_set=args.terrain_set)
++    n21_json = os.path.join(args.out, "n21_record_only.json")
++    with open(n21_json + ".tmp", "w", encoding="utf-8") as stream:
++        json.dump(n21_doc, stream, ensure_ascii=False, indent=1, allow_nan=False)
++        stream.flush()
++        os.fsync(stream.fileno())
++    os.replace(n21_json + ".tmp", n21_json)
++    print("N21_RECORD_ONLY", n21_json, flush=True)
+diff --git a/foothold_s2/eval/map_mode_cells.py b/foothold_s2/eval/map_mode_cells.py
+index 87adb2cb..aca5fc58 100644
+--- a/foothold_s2/eval/map_mode_cells.py
++++ b/foothold_s2/eval/map_mode_cells.py
+@@ -41,0 +42,10 @@ EX40_B3_COMMANDS = {
++N21_COMMANDS = {
++    "fwd0.5": (0.5, 0.0, 0.0),
++    "fwd1.0": (1.0, 0.0, 0.0),
++    "spin+1.2": (0.0, 0.0, 1.2),
++    "spin-1.2": (0.0, 0.0, -1.2),
++    "back0.5": (-0.5, 0.0, 0.0),
++    "side+0.5": (0.0, 0.5, 0.0),
++    "side-0.5": (0.0, -0.5, 0.0),
++    "stop": (0.0, 0.0, 0.0),
++}
+@@ -69 +79,3 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
+-    raise ValueError("command suite must be core, extended, or ex40_b3")
++    if suite == "n21":
++        return dict(N21_COMMANDS)
++    raise ValueError("command suite must be core, extended, ex40_b3, or n21")
+diff --git a/foothold_s2/runners/start_runner.py b/foothold_s2/runners/start_runner.py
+index 454f4ac8..c6414604 100644
+--- a/foothold_s2/runners/start_runner.py
++++ b/foothold_s2/runners/start_runner.py
+@@ -134 +134,3 @@ def curriculum_update_number(runtime, loop_iteration: int) -> int:
+-    return loop_iteration + 1 if getattr(plan, "is_ex41", False) else loop_iteration
++    one_based = (getattr(plan, "is_ex41", False)
++                 or getattr(runtime, "uses_one_based_updates", False))
++    return loop_iteration + 1 if one_based else loop_iteration
+@@ -453,0 +456,9 @@ class StartRunner(OnPolicyRunner):
++    def attach_ex42_training_chain(self, chain) -> None:
++        """Attach the optional EX-42 boundary/save hooks without approving launch."""
++        plan = getattr(chain, "plan", None)
++        if not getattr(plan, "is_ex42", False):
++            raise ValueError("EX-42 chain requires the pinned EX-42 plan")
++        if plan.document.get("status") != "preparation_only":
++            raise ValueError("EX-42 launch status must remain preparation_only")
++        chain.attach_runner(self)
++
+@@ -536,0 +548,8 @@ class StartRunner(OnPolicyRunner):
++            ex42_chain = getattr(self, "ex42_training_chain", None)
++            if ex42_chain is not None:
++                # Boundary application is training state, so a broken approved
++                # transition fails before collecting this update's rollout.
++                ex42_boundary = ex42_chain.on_runner_update_start(self, curriculum_it)
++                if ex42_boundary is not None:
++                    print("EX42_STAGE_TRANSITION " + json.dumps(
++                        ex42_boundary, ensure_ascii=False, sort_keys=True), flush=True)
+@@ -661 +680,5 @@ class StartRunner(OnPolicyRunner):
+-                        self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
++                        if getattr(self.continuous_curriculum, "is_ex42_stage_zero", False):
++                            self.continuous_curriculum.record_map_reset(
++                                done_ids, self.pstate.use_gt, self.pstate.map_off)
++                        else:
++                            self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
+@@ -745,0 +769,6 @@ class StartRunner(OnPolicyRunner):
++                    ex42_chain = getattr(self, "ex42_training_chain", None)
++                    if ex42_chain is not None:
++                        # P1 admission follows both model_N bytes and manifest SHA.
++                        p1_result = ex42_chain.on_checkpoint_saved(self, it)
++                        print("EX42_P1_ENQUEUE " + json.dumps(
++                            p1_result, ensure_ascii=False, sort_keys=True), flush=True)
+@@ -768,0 +798,6 @@ class StartRunner(OnPolicyRunner):
++                ex42_chain = getattr(self, "ex42_training_chain", None)
++                if ex42_chain is not None:
++                    p1_result = ex42_chain.on_checkpoint_saved(
++                        self, self.current_learning_iteration)
++                    print("EX42_P1_ENQUEUE " + json.dumps(
++                        p1_result, ensure_ascii=False, sort_keys=True), flush=True)
+@@ -774 +809,2 @@ class StartRunner(OnPolicyRunner):
+-                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
++                    from foothold_s2.eval.ex41_w78_video_request import (
++                        publish_stage_end_request as publish_final_stage_end_request)
+@@ -779 +815 @@ class StartRunner(OnPolicyRunner):
+-                        request = publish_stage_end_request(
++                        request = publish_final_stage_end_request(
+@@ -932 +968,4 @@ class StartRunner(OnPolicyRunner):
+-        done = it + 1
++        # EX-42 stage-zero update numbers are one-based and the checkpoint
++        # named model_N.pt contains exactly N completed updates.
++        continuous = getattr(self, "continuous_curriculum", None)
++        done = it if getattr(continuous, "uses_one_based_updates", False) else it + 1
+@@ -1165,0 +1205 @@ class StartRunner(OnPolicyRunner):
++            "ex42_parent_transfer": getattr(self, "ex42_parent_transfer", None),
+@@ -1455,0 +1496,54 @@ class StartRunner(OnPolicyRunner):
++    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict) -> dict:
++        """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
++
++        This starts a new physical environment and a new local curriculum clock.
++        EX-41 environment and continuous-curriculum state are intentionally omitted.
++        """
++        if (self._resumed or self.current_learning_iteration != 0
++                or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
++            raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
++        if (not isinstance(receipt, dict)
++                or receipt.get("state") != "parent_verified_for_stage_zero"
++                or receipt.get("parent_local_update") != 6000
++                or receipt.get("parent_cumulative_update") != 12000
++                or receipt.get("actor_input_dim") != 98
++                or receipt.get("critic_input_dim") != 666
++                or receipt.get("ex41_environment_state_restored") is not False
++                or receipt.get("ex41_curriculum_state_restored") is not False):
++            raise ValueError("EX-42 stage-zero parent receipt is incomplete")
++        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != 6000:
++            raise ValueError("EX-42 stage-zero checkpoint identity differs")
++        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not False:
++            raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
++        saved = checkpoint.get("perception_cfg") or {}
++        for key, default in MODE_DEFAULTS.items():
++            if saved.get(key, default) != self.pcfg[key]:
++                raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
++        if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
++            raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
++        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
++        self.perception.load_state_dict(checkpoint["perception_state_dict"], strict=True)
++        self.adasmpl.load_state_dict(checkpoint["adasmpl"])
++        self._apply_resume_adasmpl()
++        self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
++        self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
++        self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
++        self.load_map_switch_state(checkpoint["map_switch"], 6000)
++        self.set_rng_state(checkpoint["rng"])
++        use_gt_frac = checkpoint.get("last_use_gt_frac")
++        if use_gt_frac is not None:
++            if (not isinstance(use_gt_frac, (int, float))
++                    or not math.isfinite(float(use_gt_frac))
++                    or not 0.0 <= float(use_gt_frac) <= 1.0):
++                raise ValueError("EX-42 stage-zero parent last use_gt_frac is invalid")
++            self._last_use_gt_frac = float(use_gt_frac)
++        self.current_learning_iteration = 0
++        self.ex42_parent_transfer = dict(receipt)
++        self._ex42_parent_loaded = True
++        return {**receipt, "state": "loaded_for_ex42_stage_zero",
++                "local_iteration_origin": 0,
++                "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
++                             "perception", "perception_optimizer", "adasmpl",
++                             "normalization_buffers", "map_switch", "rng"],
++                "not_restored": ["ex41_environment_state", "ex41_curriculum_state"]}
++
