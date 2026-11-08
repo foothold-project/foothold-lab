@@ -65,3 +65,9 @@
 ## 점검 고리
 
 lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_check.py <run_root>` 를 돌리고, FAIL 은 그 회차 안에 고치며, 고친 것은 decisions.tsv 한 줄 + 이 표의 상태 칸을 바꾼다. 텔레그램은 `tg_send.py` 로만 보낸다.
+
+## I45 (11/08 11:08) EX-42 0 단계 첫 기동이 자기 영수증 때문에 죽음
+
+- 무엇: PID 82176 (11:08:22 기동) 이 11:08:35 에 `ValueError: EX-42 stage-zero output path appeared after CPU preflight` 로 끝남. GPU 학습 0 회.
+- 원인: ex42_chain.py 가 startup_receipt.json 을 출력 폴더에 먼저 쓰고(11:08:27), train_start.py:705 가 그 뒤에 폴더 존재를 검사. CPU preflight 는 dry-run 이라 chain 을 거치지 않아 시험에서 안 잡힘(가짜 경로 시험 통과 ≠ 실제).
+- 조치: runner 에 검사 순서 수정 · 실제 순서 회귀시험 · 새 고정 checkout 으로 재기동 지시(11:1x). 빈 폴더는 보존.
