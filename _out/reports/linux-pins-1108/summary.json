@@ -1,0 +1,83 @@
+{
+  "at": "2026-11-08T18:58:25.801240+09:00",
+  "pinned_head": "cc7586db9f58b4bf43ef2ce5658e40bede3e7003",
+  "source_root": "D:\\mai-wt\\foothold-lab\\runner-ex42-resume-w65",
+  "operational_roots": {
+    "O": "D:\\mai-wt\\foothold-lab\\lead-dispatch-measure\\_out\\tools",
+    "ML": "D:\\mai-wt\\foothold-lab\\lead-worklist-1103\\_out\\msgs",
+    "MH": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\_out\\msgs"
+  },
+  "scope_counts": {
+    "S": 680,
+    "O": 28,
+    "ML": 1,
+    "MH": 57
+  },
+  "scanned_counts": {
+    "S": 678,
+    "O": 18,
+    "ML": 1,
+    "MH": 17
+  },
+  "role_hit_counts": {
+    "doc": 24,
+    "runtime/config": 1285,
+    "test": 938,
+    "historical-result": 88
+  },
+  "category_counts": {
+    "drive": 389,
+    "gpu": 560,
+    "exe": 150,
+    "separator": 958,
+    "winenv_binary": 24,
+    "winapi": 84,
+    "permissions": 14,
+    "shell": 16,
+    "line_encoding": 287,
+    "casefold": 112,
+    "msys": 48,
+    "drive_guard": 5,
+    "lock": 17
+  },
+  "hit_lines": 2335,
+  "hit_files": 419,
+  "fixtures": {
+    "drive": true,
+    "msys": true,
+    "exe": true,
+    "shell": true,
+    "winapi": true,
+    "lock": true,
+    "gpu": true,
+    "separator": true,
+    "casefold": true,
+    "line_encoding": true,
+    "drive_guard": true,
+    "permissions": true,
+    "winenv_binary": true
+  },
+  "known_real_line": [
+    [
+      14,
+      "PYTHON = \"C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe\""
+    ]
+  ],
+  "case_collisions": [],
+  "missing_requested_msgs_root": "D:/mai-wt/foothold-lab/lead-dispatch-measure/_out/msgs",
+  "patterns": {
+    "drive": "(?i)(?<![A-Za-z0-9_])[a-z]:[/\\\\]",
+    "drive_guard": "\\.drive\\b|[\\x22\\x27][A-Za-z]:[\\x22\\x27]",
+    "msys": "(?<![A-Za-z0-9_])/[c-z]/",
+    "exe": "(?i)\\b[\\w.-]+\\.exe\\b",
+    "shell": "(?i)\\b(?:cmd\\.exe|powershell(?:\\.exe)?|pwsh|cygpath|wslpath|MSYSTEM|COMSPEC|cmd\\s*/[cCkK])\\b",
+    "winapi": "CREATE_(?:NO_WINDOW|NEW_PROCESS_GROUP)|DETACHED_PROCESS|creationflags|STARTUPINFO|SW_HIDE|ctypes\\.(?:windll|WinDLL)|Win32|Get-CimInstance|wmic|taskkill|tasklist|startfile|winreg|os\\.name|sys\\.platform",
+    "lock": "\\bmsvcrt\\b|\\bfcntl\\b|LOCK_(?:EX|NB)|LockFile|FileShare|CreateFileW",
+    "gpu": "\\bcuda:\\d+\\b|CUDA_VISIBLE_DEVICES|CUDA_DEVICE_ORDER|graphics_device|active_gpu|physics_gpu|device_id|GPU_UUID",
+    "separator": "\\\\|\\bPATH\\b|PYTHONPATH|os\\.pathsep|PureWindowsPath|PurePosixPath",
+    "casefold": "\\.casefold\\(|\\.lower\\(|\\.upper\\(|normcase|re\\.I(?:GNORECASE)?\\b|(?<![A-Za-z])(?i:IGNORECASE)\\b",
+    "line_encoding": "\\\\r(?:\\\\n)?|CRLF|newline\\s*=|dos2unix|unix2dos|utf-8-sig|utf-16|cp949|mbcs",
+    "permissions": "S_IWRITE|os\\.chmod|os\\.access|start_new_session|setsid|Start-Process|shell\\s*=\\s*True",
+    "winenv_binary": "\\b(?:USERPROFILE|LOCALAPPDATA|APPDATA|HOMEDRIVE|HOMEPATH|ProgramFiles|COMSPEC)\\b|(?i:\\.(?:dll|pyd|bat|cmd|ps1)\\b)"
+  }
+}

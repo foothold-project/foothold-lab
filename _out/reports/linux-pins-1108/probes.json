@@ -1,0 +1,100 @@
+{
+  "kind": "Windows-host CPU source/pure-path probes, not Linux or Kit execution",
+  "source_head": "cc7586db9f58b4bf43ef2ce5658e40bede3e7003",
+  "passed": 14,
+  "results": [
+    {
+      "name": "windows_drive_is_relative_on_posix",
+      "observed": "C:/s2_lab/run",
+      "pass": true
+    },
+    {
+      "name": "windows_backslash_is_filename_on_posix",
+      "observed": [
+        "C:\\s2_lab\\run"
+      ],
+      "pass": true
+    },
+    {
+      "name": "casefold_conflates_distinct_posix_paths",
+      "observed": [
+        "/runs/EX42",
+        "/runs/ex42"
+      ],
+      "pass": true
+    },
+    {
+      "name": "windows_manifest_logdir_cannot_equal_relocated_linux_parent",
+      "observed": [
+        "/audit/C:/s2_lab/run",
+        "/data/s2_lab/run"
+      ],
+      "pass": true
+    },
+    {
+      "name": "actual_require_d_rejects_posix_absolute_path",
+      "observed": "EX-41 training output must be an absolute D: path: /data/s2_lab/run",
+      "pass": true
+    },
+    {
+      "name": "actual_profile_requires_explicit_posix_selection",
+      "observed": "FOOTHOLD_MACHINE_PROFILE must select a machine profile on POSIX",
+      "pass": true
+    },
+    {
+      "name": "all_profile_references_resolve",
+      "observed": {
+        "env_count": 27,
+        "paths": 27
+      },
+      "pass": true
+    },
+    {
+      "name": "unused_optional_reference_still_required",
+      "observed": "machine profile path git_bash requires environment variable FOOTHOLD_BASH",
+      "pass": true
+    },
+    {
+      "name": "optional_windows_path_not_rejected_by_profile",
+      "observed": "D:/mai-tmp/gpu/queue.json",
+      "pass": true
+    },
+    {
+      "name": "lock_checkout_leaves_group_write_permission",
+      "observed": "0o464",
+      "pass": true
+    },
+    {
+      "name": "actual_tasklist_fallback_propagates_missing_executable",
+      "observed": "tasklist missing on POSIX fixture",
+      "pass": true
+    },
+    {
+      "name": "actual_queue_desktop_allowlist_windows_only",
+      "observed": {
+        "linux": [
+          false,
+          "gpu_experiment_busy:pid=123 non_desktop_compute_app=chrome"
+        ],
+        "windows": [
+          true,
+          "gpu_idle_or_desktop_only"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "raw_sha_changes_with_crlf",
+      "observed": {
+        "LF": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+        "CRLF": "b35e09fa2ced9ebcad9d16336fb961146fe34bfbebc562679da85f8a314c9dca"
+      },
+      "pass": true
+    },
+    {
+      "name": "normalized_sha_does_not_change_with_crlf",
+      "observed": true,
+      "pass": true
+    }
+  ]
+}
