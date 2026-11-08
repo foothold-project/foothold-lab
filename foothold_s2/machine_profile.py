@@ -23,6 +23,15 @@ REQUIRED_PATHS = (
     "isaaclab_root", "isaac_sim_root", "conda_python", "rsl_rl_module",
     "s2_lab_root", "mai_tmp_root", "mai_worktree_root",
 )
+OPTIONAL_PATHS = (
+    "isaac_cache_root", "git_bash", "gpu_jobs_config", "gpu_queue",
+    "playlist_root", "c_layer_lock", "a_layer_marker",
+    "ex41_stage_video_source", "ex41_stage_video_output", "ex41_w78_video_root",
+    "runner_home", "telegram_outbox", "telegram_script",
+    "gpu0_training_marker", "gpu0_training_marker_alt", "gpu1_training_marker",
+    "gpu0_eval_marker", "gpu1_eval_marker", "ex41_push250_output", "ex42_gate_report",
+)
+DEVICE_ROLES = ("training", "p1_evaluation", "screen")
 _ENV_REF = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
@@ -56,39 +65,71 @@ def load_machine_profile(*, profile: str | Path | None = None,
         raise ValueError(f"machine profile identity or paths missing: {path}")
     paths = doc["paths"]
     resolved: dict[str, str] = {}
-    for key in REQUIRED_PATHS:
-        raw = paths.get(key)
+    def expand_path(key: str, raw: Any, *, required: bool) -> str | None:
+        if not required and (raw is None or isinstance(raw, str) and not raw.strip()):
+            return None
         if not isinstance(raw, str) or not raw.strip():
             raise ValueError(f"machine profile path missing: {key}")
+        missing_optional_ref = False
 
         def replace(match: re.Match[str]) -> str:
+            nonlocal missing_optional_ref
             name = match.group(1)
             result = env.get(name)
             if not result:
+                if not required:
+                    missing_optional_ref = True
+                    return ""
                 raise ValueError(f"machine profile path {key} requires environment variable {name}")
             return result
 
         expanded = _ENV_REF.sub(replace, raw)
+        if missing_optional_ref:
+            return None
         if expanded.startswith("~"):
             expanded = str(Path.home()) + expanded[1:]
         is_absolute = (PureWindowsPath(expanded).is_absolute() if selected_platform == "win32"
                        else PurePosixPath(expanded).is_absolute())
         if not is_absolute:
             raise ValueError(f"machine profile path must be absolute: {key}")
-        resolved[key] = expanded
-    for key, raw in paths.items():
-        if key in resolved or raw is None:
-            continue
-        if not isinstance(raw, str):
-            raise ValueError(f"machine profile optional path invalid: {key}")
-        def replace_optional(match: re.Match[str]) -> str:
-            name = match.group(1)
-            result = env.get(name)
-            if not result:
-                raise ValueError(f"machine profile path {key} requires environment variable {name}")
-            return result
-        resolved[key] = _ENV_REF.sub(replace_optional, raw)
-    return {"machine_id": doc["machine_id"], "profile": str(path), "paths": resolved}
+        return expanded
+
+    for key in REQUIRED_PATHS:
+        resolved[key] = expand_path(key, paths.get(key), required=True)
+    for key in OPTIONAL_PATHS:
+        value = expand_path(key, paths.get(key), required=False)
+        if value is not None:
+            resolved[key] = value
+
+    raw_devices = doc.get("devices")
+    if not isinstance(raw_devices, dict) or set(raw_devices) != set(DEVICE_ROLES):
+        raise ValueError("machine profile devices must define training, p1_evaluation, and screen")
+    devices: dict[str, dict[str, Any]] = {}
+    for role in DEVICE_ROLES:
+        row = raw_devices.get(role)
+        if not isinstance(row, dict):
+            raise ValueError(f"machine profile device role missing: {role}")
+        index, uuid = row.get("cuda_index"), row.get("uuid")
+        if type(index) is not int or index < 0:
+            raise ValueError(f"machine profile CUDA index invalid: {role}")
+        if isinstance(uuid, str):
+            match = _ENV_REF.fullmatch(uuid)
+            if match:
+                uuid = env.get(match.group(1))
+        if not isinstance(uuid, str) or not uuid.strip() or "${" in uuid:
+            raise ValueError(f"machine profile GPU UUID missing: {role}")
+        devices[role] = {"cuda_index": index, "device": f"cuda:{index}", "uuid": uuid.strip()}
+    if devices["training"]["cuda_index"] != 0:
+        raise ValueError("EX-42 training device must be cuda:0")
+    return {"machine_id": doc["machine_id"], "profile": str(path),
+            "paths": resolved, "devices": devices}
+
+
+def validate_training_device(device: str, *, machine_profile: dict[str, Any]) -> None:
+    """Reject a training CLI that disagrees with the selected machine's role map."""
+    expected = machine_profile.get("devices", {}).get("training", {}).get("device")
+    if device != expected or expected != "cuda:0":
+        raise ValueError(f"training device must match the machine profile cuda:0 role, got {device!r}")
 
 
 def machine_path(key: str, *, profile: str | Path | None = None,

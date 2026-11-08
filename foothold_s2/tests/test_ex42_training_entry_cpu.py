@@ -8,10 +8,48 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import torch
 
 from foothold_s2.scripts import ex42_training_entry as entry
 from foothold_s2.tests.test_ex42_chain_cpu import APPROVALS, ROOT, make_chain
 from foothold_s2.runners.start_runner import StartRunner
+
+
+def test_linux_chain_builder_binds_queue_path_to_machine_profile(tmp_path, monkeypatch):
+    plan = SimpleNamespace(document={"status": "preparation_only"})
+    monkeypatch.setattr(entry.EX42Plan, "load", lambda _path: plan)
+    monkeypatch.setattr(entry.EX42Runtime, "training_chain", lambda **kwargs: kwargs)
+    queue_path = tmp_path / "gpu" / "queue.json"
+    profile = {
+        "machine_id": "AI-WS01-linux",
+        "paths": {
+            "conda_python": "/opt/conda/envs/isaac311/bin/python",
+            "gpu_queue": str(queue_path),
+        },
+        "devices": {
+            "training": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "p1_evaluation": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "screen": {"cuda_index": 1, "device": "cuda:1", "uuid": "GPU-test1"},
+        },
+    }
+    argv_template = [
+        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.eval.eval_map_modes",
+        "--task", "FootholdS2-Go2-S2-SB-v0", "--checkpoint",
+        str(tmp_path / "run" / "model_{iteration}.pt"), "--out",
+        str(tmp_path / "scores" / "score_{iteration}"), "--device", "cuda:0",
+        "--envs", "64", "--steps", "300", "--modes",
+        "eval_gt,eval_pred,probe_prop_only", "--headless",
+    ]
+    kwargs = dict(
+        plan_path=tmp_path / "plan.yaml", approvals_path=tmp_path / "approvals.yaml",
+        parent_manifest_path=tmp_path / "parent" / "manifest.json", run_dir=tmp_path / "run",
+        repo_root=tmp_path, queue_path=queue_path, score_argv_json=json.dumps(argv_template),
+        machine_profile=profile,
+    )
+    built = entry.build_ex42_training_chain(**kwargs)
+    assert built["queue_path"] == queue_path
+    with pytest.raises(ValueError, match="queue path differs"):
+        entry.build_ex42_training_chain(**{**kwargs, "queue_path": tmp_path / "other.json"})
 
 
 def test_train_start_caller_builds_parent_verified_chain_and_attaches(tmp_path, monkeypatch):
@@ -381,12 +419,82 @@ def test_stage_zero_config_and_live_reward_match_m6000_parent_contract():
         apply_stage_zero_parent_reward_manager(env, parent_sha256="0" * 64, parent_update=6000)
 
 
-def test_p1_argv_requires_exactly_one_iteration_placeholder():
-    with pytest.raises(ValueError, match="exactly once"):
+def test_p1_argv_requires_an_iteration_placeholder_and_expands_checkpoint_and_output():
+    with pytest.raises(ValueError, match="contain an "):
         entry.make_score_argv_factory('["python", "-m", "known.p1"]')
-    with pytest.raises(ValueError, match="exactly once"):
-        entry.make_score_argv_factory(
-            '["{iteration}", "{iteration}"]')
+    factory = entry.make_score_argv_factory(
+        '["--checkpoint", "model_{iteration}.pt", "--out", "score_{iteration}"]')
+    assert factory(250) == ["--checkpoint", "model_250.pt", "--out", "score_250"]
+
+
+def test_resume_relocation_requires_receipt_and_preserves_manifest_and_checkpoint_sha(tmp_path):
+    source = tmp_path / "windows-export"
+    source.mkdir()
+    target = tmp_path / "linux-import"
+    plan_sha, approval_sha, parent_sha = "a" * 64, "b" * 64, "c" * 64
+    checkpoint = source / "model_50.pt"
+    saved = {
+        "format": "foothold-start/1", "iter": 50,
+        "model_state_dict": {}, "optimizer_state_dict": {}, "ppo_learning_rate": 2e-4,
+        "perception_state_dict": {}, "perception_optimizer_state_dict": {},
+        "adasmpl": {}, "normalization_state": {},
+        "rng": {"torch": torch.get_rng_state(), "numpy": {"state": [1]}, "python": (1, 2, 3)},
+        "map_switch": {"generator_state": torch.tensor([1], dtype=torch.uint8)},
+        "env_state": {},
+        "continuous_curriculum": {
+            "format": "foothold-ex42-stage-zero-state/1", "iteration": 50,
+            "maximum_updates": 1000, "plan_sha256": plan_sha,
+            "approval_sha256": approval_sha, "parent_sha256": parent_sha,
+            "stage_id": "EX42_0_T0_prime", "dr_scale": 1.0, "finished": False,
+        },
+        "ex42_parent_transfer": {
+            "parent_sha256": parent_sha, "parent_cumulative_update": 12000,
+            "map_input": "reconstruction", "force_gt": False,
+        },
+    }
+    torch.save(saved, checkpoint)
+    checkpoint_sha = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    manifest = {
+        "run": {"log_dir": str(source.resolve())},
+        "progress": {"completed_updates": 50, "total_env_steps": 50 * 24 * 3072},
+        "checkpoints": {checkpoint.name: checkpoint_sha},
+    }
+    source_manifest = source / "manifest.json"
+    source_manifest.write_text(json.dumps(manifest), encoding="utf-8")
+    receipt = entry.make_ex42_resume_relocation_receipt(
+        manifest_path=source_manifest, checkpoint_path=checkpoint,
+        target_run_dir=target, plan_sha256=plan_sha,
+        approval_sha256=approval_sha, parent_sha256=parent_sha)
+    target.mkdir()
+    target_checkpoint = target / checkpoint.name
+    target_checkpoint.write_bytes(checkpoint.read_bytes())
+    target_manifest = target / "manifest.json"
+    target_manifest.write_bytes(source_manifest.read_bytes())
+    receipt_path = target / "resume_relocation.json"
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    args = {
+        "checkpoint_path": target_checkpoint, "manifest_path": target_manifest,
+        "plan_sha256": plan_sha, "approval_sha256": approval_sha,
+        "parent_receipt": {"parent_sha256": parent_sha},
+        "resume_smoke_updates": 5, "require_latest": True,
+    }
+    with pytest.raises(ValueError, match="explicit prior relocation receipt"):
+        entry.validate_ex42_stage_zero_resume(**args)
+    verified = entry.validate_ex42_stage_zero_resume(
+        **args, relocation_receipt_path=receipt_path)
+    assert verified["state"] == "manifest_checkpoint_self_resume_verified"
+    assert verified["checkpoint_sha256"] == checkpoint_sha
+    assert verified["source_manifest_sha256"] == receipt["manifest_sha256"]
+    bad_receipt = dict(receipt, target_run_dir=str(tmp_path / "other-import"))
+    receipt_path.write_text(json.dumps(bad_receipt), encoding="utf-8")
+    with pytest.raises(ValueError, match="relocation receipt"):
+        entry.validate_ex42_stage_zero_resume(
+            **args, relocation_receipt_path=receipt_path)
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    target_manifest.write_text(target_manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
+    with pytest.raises(ValueError, match="relocation receipt"):
+        entry.validate_ex42_stage_zero_resume(
+            **args, relocation_receipt_path=receipt_path)
 
 
 def test_train_start_preparation_gate_precedes_kit_and_keeps_attachment_call():

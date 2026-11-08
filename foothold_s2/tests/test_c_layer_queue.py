@@ -593,3 +593,31 @@ def test_c76_continuous_mesh_seed_stays_fixed_across_capture_seeds(tmp_path):
     row["policy"]["geometry_seed"] = 43
     with pytest.raises(ValueError, match="geometry seed"):
         q.validate_plan(plan)
+
+
+def test_linux_c_layer_priority_markers_and_screen_gpu_come_from_profile(tmp_path):
+    plan, _ = fixture(tmp_path)
+    training = "/srv/markers/training0"
+    p1_marker = "/srv/markers/p1_eval0"
+    a_layer = "/srv/markers/a_layer"
+    gate_path = tmp_path / "linux-jobs.json"
+    gate_path.write_text(json.dumps({"sources": {"ex41_p1_marker": p1_marker}}), encoding="utf-8")
+    plan["priority_markers"] = {
+        "training": training, "evaluation": p1_marker, "a_layer": a_layer,
+    }
+    plan["gpu_jobs_config"] = str(gate_path)
+    plan["gpu_jobs_config_sha256"] = q.sha256(gate_path)
+    profile = {
+        "machine_id": "AI-WS01-linux",
+        "paths": {"gpu0_training_marker": training, "gpu0_eval_marker": p1_marker,
+                  "a_layer_marker": a_layer, "gpu_jobs_config": str(gate_path)},
+        "devices": {
+            "training": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "p1_evaluation": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "screen": {"cuda_index": 1, "device": "cuda:1", "uuid": "GPU-test1"},
+        },
+    }
+    assert q.validate_plan(plan, machine_profile=profile)["ready"] == 216
+    plan["priority_markers"]["evaluation"] = "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0"
+    with pytest.raises(ValueError, match="must be absolute paths"):
+        q.validate_plan(plan, machine_profile=profile)

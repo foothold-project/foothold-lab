@@ -28,3 +28,13 @@ paths:
   gpu1_eval_marker: D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1
   ex41_push250_output: D:/mai-tmp/runner/ex41_push250
   ex42_gate_report: D:/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md
+devices:
+  training:
+    cuda_index: 0
+    uuid: c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b
+  p1_evaluation:
+    cuda_index: 1
+    uuid: 315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f
+  screen:
+    cuda_index: 1
+    uuid: 315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f

@@ -123,6 +123,11 @@ def test_rehearsal_plan_uses_machine_tmp_root_and_requires_new_output(tmp_path, 
             "mai_tmp_root": str(configured_tmp_root),
             "mai_worktree_root": str(tmp_path / "worktrees"),
         },
+        "devices": {
+            "training": {"cuda_index": 0, "uuid": "GPU-test-0"},
+            "p1_evaluation": {"cuda_index": 0, "uuid": "GPU-test-0"},
+            "screen": {"cuda_index": 1, "uuid": "GPU-test-1"},
+        },
     }), encoding="utf-8")
     monkeypatch.setattr(ex42_ops, "machine_path",
                         lambda key: resolve_machine_path(key, profile=profile))

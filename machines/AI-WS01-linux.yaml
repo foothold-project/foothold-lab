@@ -30,3 +30,13 @@ paths:
   gpu1_eval_marker: ${GPU1_EVAL_MARKER}
   ex41_push250_output: ${EX41_PUSH250_OUTPUT}
   ex42_gate_report: ${FOOTHOLD_EX42_GATE_REPORT}
+devices:
+  training:
+    cuda_index: 0
+    uuid: ${GPU0_UUID}
+  p1_evaluation:
+    cuda_index: 0
+    uuid: ${GPU0_UUID}
+  screen:
+    cuda_index: 1
+    uuid: ${GPU1_UUID}

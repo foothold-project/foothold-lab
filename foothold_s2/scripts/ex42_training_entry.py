@@ -10,7 +10,10 @@ from __future__ import annotations
 import json
 import hashlib
 import math
+import ntpath
+import posixpath
 from pathlib import Path
+from pathlib import PurePosixPath, PureWindowsPath
 import re
 from types import SimpleNamespace
 from typing import Any
@@ -31,7 +34,9 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
                                  task: str, device: str, headless: bool, distributed: bool,
                                  max_iterations: int | None, num_envs: int | None,
                                  map_input: str | None, force_gt: bool,
+                                 machine_profile: dict[str, Any] | None = None,
                                  approved_switch: bool, resume_from: str | Path | None = None,
+                                 relocation_receipt_path: str | Path | None = None,
                                  self_resume: bool = False, resume_smoke: bool = False,
                                  resume_updates: int | None = None
                                  ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
@@ -42,10 +47,15 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
         raise ValueError("EX-42 stage zero is not self-resume without its dedicated resume route")
     if self_resume and not resume_from:
         raise ValueError("EX-42 self-resume requires a manifest-pinned checkpoint")
+    if relocation_receipt_path is not None and not self_resume:
+        raise ValueError("EX-42 relocation receipt is only valid with a self-resume checkpoint")
     if resume_smoke and not self_resume:
         raise ValueError("EX-42 bounded resume smoke requires self-resume")
     if task != STAGE_ZERO_TASK_ID:
         raise ValueError("EX-42 stage-zero task differs from the approved task")
+    if machine_profile is not None:
+        from foothold_s2.machine_profile import validate_training_device
+        validate_training_device(device, machine_profile=machine_profile)
     if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
         raise ValueError("EX-42 stage zero requires headless single-process cuda:0 for fresh and resume runs")
     if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
@@ -92,7 +102,8 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
                                    parent_receipt: dict[str, Any],
                                    maximum_updates: int = STAGE_ZERO_UPDATES,
                                    resume_smoke_updates: int | None = None,
-                                   require_latest: bool = True) -> dict[str, Any]:
+                                   require_latest: bool = True,
+                                   relocation_receipt_path: str | Path | None = None) -> dict[str, Any]:
     """Validate a self-resume checkpoint against its manifest and W65 pins.
 
     The checkpoint is read on CPU. The caller must validate a fresh target run
@@ -108,15 +119,34 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
     local_iteration = int(match.group(1))
     if not 0 < local_iteration < maximum_updates:
         raise ValueError("EX-42 self-resume checkpoint must be inside the approved stage-zero range")
-    manifest = json.loads(manifest_file.read_text(encoding="utf-8-sig"))
+    manifest_bytes = manifest_file.read_bytes()
+    manifest_sha = hashlib.sha256(manifest_bytes).hexdigest()
+    manifest = json.loads(manifest_bytes.decode("utf-8-sig"))
     if not isinstance(manifest, dict):
         raise ValueError("EX-42 self-resume source manifest is invalid")
     run = manifest.get("run")
     manifest_run_dir = run.get("log_dir") if isinstance(run, dict) else None
-    if (not isinstance(manifest_run_dir, str)
-            or Path(manifest_run_dir).resolve() != path.parent.resolve()
-            or manifest_file.parent.resolve() != path.parent.resolve()):
+    local_artifacts_match = manifest_file.parent.resolve() == path.parent.resolve()
+    if not isinstance(manifest_run_dir, str) or not local_artifacts_match:
         raise ValueError("EX-42 self-resume checkpoint and manifest must belong to the same run directory")
+    if _portable_path_key(manifest_run_dir) != _portable_path_key(str(path.parent)):
+        if relocation_receipt_path is None:
+            raise ValueError("EX-42 relocated resume requires an explicit prior relocation receipt")
+        _validate_ex42_resume_relocation_receipt(
+            relocation_receipt_path, manifest_run_dir=manifest_run_dir,
+            target_run_dir=path.parent, manifest_sha256=manifest_sha,
+            checkpoint_name=path.name,
+            checkpoint_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            plan_sha256=plan_sha256, approval_sha256=approval_sha256,
+            parent_sha256=parent_receipt.get("parent_sha256"))
+    elif relocation_receipt_path is not None:
+        _validate_ex42_resume_relocation_receipt(
+            relocation_receipt_path, manifest_run_dir=manifest_run_dir,
+            target_run_dir=path.parent, manifest_sha256=manifest_sha,
+            checkpoint_name=path.name,
+            checkpoint_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            plan_sha256=plan_sha256, approval_sha256=approval_sha256,
+            parent_sha256=parent_receipt.get("parent_sha256"))
     checkpoints = manifest.get("checkpoints")
     expected_sha = checkpoints.get(path.name) if isinstance(checkpoints, dict) else None
     actual_sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -178,7 +208,7 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
         "state": "manifest_checkpoint_self_resume_verified",
         "checkpoint_path": str(path), "checkpoint_sha256": actual_sha,
         "source_manifest_path": str(manifest_file),
-        "source_manifest_sha256": hashlib.sha256(manifest_file.read_bytes()).hexdigest(),
+        "source_manifest_sha256": manifest_sha,
         "source_manifest_completed_updates": progress["completed_updates"],
         "source_manifest_total_env_steps": int(progress.get("total_env_steps", 0)),
         "local_update_origin": local_iteration,
@@ -194,6 +224,73 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
                             "normalization", "rng", "curriculum", "map_switch",
                             "environment_terrain_and_command_rng"],
     }
+
+
+def _portable_path_key(value: str | Path) -> str:
+    raw = str(value)
+    if PureWindowsPath(raw).is_absolute():
+        return ntpath.normcase(ntpath.normpath(raw))
+    if PurePosixPath(raw).is_absolute():
+        return posixpath.normpath(raw)
+    return raw
+
+
+def make_ex42_resume_relocation_receipt(*, manifest_path: str | Path,
+                                       checkpoint_path: str | Path,
+                                       target_run_dir: str | Path,
+                                       plan_sha256: str,
+                                       approval_sha256: str,
+                                       parent_sha256: str) -> dict[str, Any]:
+    """Create a receipt before copying an unchanged run directory to a new host."""
+    manifest_file = Path(manifest_path).resolve(strict=True)
+    checkpoint = Path(checkpoint_path).resolve(strict=True)
+    if manifest_file.parent != checkpoint.parent or not re.fullmatch(r"model_\d+\.pt", checkpoint.name):
+        raise ValueError("EX-42 relocation receipt requires one source run's manifest and model_N.pt")
+    manifest_bytes = manifest_file.read_bytes()
+    manifest = json.loads(manifest_bytes.decode("utf-8-sig"))
+    run = manifest.get("run") if isinstance(manifest, dict) else None
+    source_run_dir = run.get("log_dir") if isinstance(run, dict) else None
+    if not isinstance(source_run_dir, str) or _portable_path_key(source_run_dir) != _portable_path_key(str(manifest_file.parent)):
+        raise ValueError("EX-42 relocation source manifest log_dir does not match its source directory")
+    checkpoint_sha = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    if manifest.get("checkpoints", {}).get(checkpoint.name) != checkpoint_sha:
+        raise ValueError("EX-42 relocation source checkpoint SHA differs from the manifest")
+    return {
+        "format": "foothold-ex42-resume-relocation/1",
+        "source_run_dir": source_run_dir,
+        "target_run_dir": str(Path(target_run_dir).resolve(strict=False)),
+        "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+        "checkpoint_name": checkpoint.name,
+        "checkpoint_sha256": checkpoint_sha,
+        "plan_sha256": plan_sha256,
+        "approval_sha256": approval_sha256,
+        "parent_sha256": parent_sha256,
+    }
+
+
+def _validate_ex42_resume_relocation_receipt(receipt_path: str | Path, *,
+                                            manifest_run_dir: str,
+                                            target_run_dir: str | Path,
+                                            manifest_sha256: str,
+                                            checkpoint_name: str,
+                                            checkpoint_sha256: str,
+                                            plan_sha256: str,
+                                            approval_sha256: str,
+                                            parent_sha256: str | None) -> None:
+    receipt = json.loads(Path(receipt_path).resolve(strict=True).read_text(encoding="utf-8-sig"))
+    expected = {
+        "format": "foothold-ex42-resume-relocation/1",
+        "source_run_dir": manifest_run_dir,
+        "target_run_dir": str(Path(target_run_dir).resolve()),
+        "manifest_sha256": manifest_sha256,
+        "checkpoint_name": checkpoint_name,
+        "checkpoint_sha256": checkpoint_sha256,
+        "plan_sha256": plan_sha256,
+        "approval_sha256": approval_sha256,
+        "parent_sha256": parent_sha256,
+    }
+    if not isinstance(receipt, dict) or any(receipt.get(key) != value for key, value in expected.items()):
+        raise ValueError("EX-42 relocation receipt does not match source manifest, checkpoint, target, or pins")
 
 
 def validate_ex42_stage_zero_chain_output(log_dir: str | Path, *,
@@ -726,7 +823,7 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
 
 
 def make_score_argv_factory(serialized: str):
-    """Parse a JSON argv vector with one explicit {iteration} placeholder."""
+    """Parse a JSON argv template with explicit checkpoint/output iteration slots."""
     try:
         template = json.loads(serialized)
     except json.JSONDecodeError as exc:
@@ -735,8 +832,8 @@ def make_score_argv_factory(serialized: str):
             or any(not isinstance(part, str) or not part for part in template)):
         raise ValueError("EX-42 P1 score command must be a non-empty string argv array")
     occurrences = sum(part.count("{iteration}") for part in template)
-    if occurrences != 1:
-        raise ValueError("EX-42 P1 score argv must contain {iteration} exactly once")
+    if occurrences < 1:
+        raise ValueError("EX-42 P1 score argv must contain an {iteration} slot")
 
     def build(iteration: int) -> list[str]:
         if type(iteration) is not int or iteration < 0:
@@ -810,6 +907,7 @@ def build_ex42_training_chain(*, plan_path: str | Path,
                               repo_root: str | Path,
                               queue_path: str | Path,
                               score_argv_json: str,
+                              machine_profile: dict[str, Any] | None = None,
                               dispatch_path: str | Path | None = None,
                               boundary_provider: Any = None,
                               p1_interval: int = 250):
@@ -817,6 +915,16 @@ def build_ex42_training_chain(*, plan_path: str | Path,
     plan = EX42Plan.load(plan_path)
     if plan.document.get("status") != "preparation_only":
         raise ValueError("EX-42 plan must remain preparation_only until launch approval")
+    score_argv_factory = make_score_argv_factory(score_argv_json)
+    if machine_profile is not None and machine_profile.get("machine_id") == "AI-WS01-linux":
+        configured_queue = machine_profile.get("paths", {}).get("gpu_queue")
+        if (not configured_queue
+                or Path(queue_path).resolve() != Path(configured_queue).resolve()):
+            raise ValueError("EX-42 Linux P1 queue path differs from the selected machine profile")
+        from foothold_s2.ex42_chain import _validate_p1_score_command
+        _validate_p1_score_command(
+            score_argv_factory(250), machine_profile=machine_profile,
+            iteration=250, checkpoint_path=Path(run_dir) / "model_250.pt")
     return EX42Runtime.training_chain(
         plan=plan,
         approvals_path=approvals_path,
@@ -825,7 +933,8 @@ def build_ex42_training_chain(*, plan_path: str | Path,
         repo_root=repo_root,
         queue_path=queue_path,
         dispatch_path=dispatch_path,
-        score_argv_factory=make_score_argv_factory(score_argv_json),
+        score_argv_factory=score_argv_factory,
+        machine_profile=machine_profile,
         boundary_provider=boundary_provider,
         p1_interval=p1_interval,
     )

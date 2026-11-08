@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.curriculum.ex42_runtime import EX42Runtime
@@ -23,7 +24,7 @@ APPROVALS = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 
 def make_chain(tmp_path, *, alert_sender=None, score_argv_factory=None,
-               boundary_provider=None, p1_interval=250):
+               boundary_provider=None, p1_interval=250, machine_profile=None):
     source_plan = EX42Plan.load(TABLE)
     parent_bytes = b"known EX-41 m12000 parent fixture"
     parent_sha = hashlib.sha256(parent_bytes).hexdigest()
@@ -43,6 +44,7 @@ def make_chain(tmp_path, *, alert_sender=None, score_argv_factory=None,
         parent_manifest_path=parent / "manifest.json", run_dir=run,
         repo_root=ROOT, queue_path=tmp_path / "gpu/queue.json",
         alert_sender=alert_sender, score_argv_factory=score_argv_factory,
+        machine_profile=machine_profile,
         boundary_provider=boundary_provider, p1_interval=p1_interval,
     ), run
 
@@ -536,3 +538,77 @@ def test_start_runner_p1_enqueue_failure_is_recorded_without_stopping_learning(t
     assert calls[-1] == ("learn_returned", 1)
     status = read_status(run / "train_start_status.json")
     assert status["state"] == "read"
+
+
+def _linux_p1_profile():
+    python = "/opt/conda/envs/isaac311/bin/python"
+    return {
+        "machine_id": "AI-WS01-linux",
+        "paths": {"conda_python": python},
+        "devices": {
+            "training": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "p1_evaluation": {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-test0"},
+            "screen": {"cuda_index": 1, "device": "cuda:1", "uuid": "GPU-test1"},
+        },
+    }
+
+
+def _linux_p1_argv(checkpoint: Path, out: Path):
+    return [
+        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.eval.eval_map_modes",
+        "--task", "FootholdS2-Go2-S2-SB-v0", "--checkpoint", str(checkpoint),
+        "--out", str(out), "--device", "cuda:0", "--envs", "64", "--steps", "300",
+        "--modes", "eval_gt,eval_pred,probe_prop_only", "--headless",
+    ]
+
+
+def _manifested_checkpoint(directory: Path, iteration: int):
+    directory.mkdir()
+    data = f"manifest-published model {iteration}".encode()
+    digest = hashlib.sha256(data).hexdigest()
+    checkpoint = directory / f"model_{iteration}.pt"
+    checkpoint.write_bytes(data)
+    (directory / "manifest.json").write_text(json.dumps({
+        "progress": {"completed_updates": iteration},
+        "checkpoints": {checkpoint.name: digest},
+    }), encoding="utf-8")
+    return checkpoint
+
+
+def test_linux_p1_queues_profile_bound_isaac311_command_on_gpu0(tmp_path):
+    chain, _ = make_chain(tmp_path, machine_profile=_linux_p1_profile())
+    checkpoint = _manifested_checkpoint(tmp_path / "linux-checkpoints", 250)
+    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250")
+    queued = chain.register_checkpoint_p1(
+        iteration=250, checkpoint_dir=checkpoint.parent, score_argv=argv)
+    queue = json.loads((tmp_path / "gpu/queue.json").read_text(encoding="utf-8"))
+    assert queued["queue_gpu"] == 0
+    assert queued["queue_gpu_uuid"] == "GPU-test0"
+    assert queue["items"][0]["gpu"] == 0
+    assert queue["items"][0]["argv"] == argv
+
+
+def test_linux_p1_rejects_unprofiled_interpreter_and_eval_command(tmp_path):
+    chain, _ = make_chain(tmp_path, machine_profile=_linux_p1_profile())
+    checkpoint = _manifested_checkpoint(tmp_path / "linux-checkpoints", 250)
+    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250")
+    argv[0] = "python"
+    with pytest.raises(ValueError, match="isaac311 Python"):
+        chain.register_checkpoint_p1(
+            iteration=250, checkpoint_dir=checkpoint.parent, score_argv=argv)
+
+
+def test_windows_profile_keeps_existing_p1_gpu1_assignment(tmp_path):
+    from foothold_s2.machine_profile import load_machine_profile
+
+    profile = load_machine_profile(
+        environ={"FOOTHOLD_MACHINE_PROFILE": "machines/AI-WS01-windows.yaml"},
+        platform="win32")
+    chain, _ = make_chain(tmp_path, machine_profile=profile)
+    checkpoint = _manifested_checkpoint(tmp_path / "windows-checkpoints", 250)
+    event = chain.register_checkpoint_p1(
+        iteration=250, checkpoint_dir=checkpoint.parent,
+        score_argv=["python", "-m", "known.windows_score_command"])
+    queue = json.loads((tmp_path / "gpu/queue.json").read_text(encoding="utf-8"))
+    assert event["queue_gpu"] == 1
+    assert queue["items"][0]["gpu"] == 1

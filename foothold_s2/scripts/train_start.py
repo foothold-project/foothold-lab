@@ -36,7 +36,7 @@ assert_no_undefined_names([
     Path(REPO) / "foothold_s2/eval/ex41_push250_watch.py",
 ])
 from foothold_s2.runtime_environment import current_runtime_identity  # noqa: E402
-from foothold_s2.machine_profile import machine_path  # noqa: E402
+from foothold_s2.machine_profile import load_machine_profile, machine_path  # noqa: E402
 
 # Enforce the measured Python/RSL-RL pair before importing tensors or AppLauncher.
 LAUNCH_RUNTIME_IDENTITY = current_runtime_identity()
@@ -74,6 +74,8 @@ _pre.add_argument("--ex42_stage_zero_approved", action="store_true")
 _pre.add_argument("--ex42_stage_zero_dry_run", action="store_true")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
                   help="W65 self-resume from a manifest-pinned EX-42 stage-zero model_N.pt")
+_pre.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
+                  help="Explicit prior receipt for a run copied unchanged to a new host path")
 _pre.add_argument("--ex42_resume_smoke", action="store_true",
                   help="Permit only the bounded one-to-five-update CUDA:0 W65 resume check")
 _pre.add_argument("--ex42_resume_updates", type=int, default=None,
@@ -444,6 +446,7 @@ _ex42_values = {
 _ex42_requested = (any(value is not None for value in _ex42_values.values())
                    or bool(_pre_args.ex42_dispatch_path)
                    or bool(_pre_args.ex42_resume_from)
+                   or bool(_pre_args.ex42_resume_relocation_receipt)
                    or bool(_pre_args.ex42_resume_smoke)
                    or _pre_args.ex42_resume_updates is not None)
 if _ex42_requested:
@@ -479,8 +482,10 @@ if _ex42_requested:
                 headless=_pre_args.headless, distributed=_pre_args.distributed,
                 max_iterations=_pre_args.max_iterations, num_envs=_pre_args.num_envs,
                 map_input=_pre_args.map_input, force_gt=_pre_args.force_gt,
+                machine_profile=load_machine_profile(),
                 approved_switch=_pre_args.ex42_stage_zero_approved,
                 resume_from=_pre_args.ex42_resume_from,
+                relocation_receipt_path=_pre_args.ex42_resume_relocation_receipt,
                 self_resume=bool(_pre_args.ex42_resume_from),
                 resume_smoke=_pre_args.ex42_resume_smoke,
                 resume_updates=_pre_args.ex42_resume_updates))
@@ -500,7 +505,8 @@ if _ex42_requested:
                 parent_receipt=EX42_STAGE_ZERO_PARENT,
                 resume_smoke_updates=(_pre_args.ex42_resume_updates
                                       if _pre_args.ex42_resume_smoke else None),
-                require_latest=not _pre_args.ex42_resume_smoke)
+                require_latest=not _pre_args.ex42_resume_smoke,
+                relocation_receipt_path=_pre_args.ex42_resume_relocation_receipt)
             EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
             EX42_STAGE_ZERO_RESUME_SAME_RUN = (
                 not _pre_args.ex42_resume_smoke
@@ -530,6 +536,7 @@ if _ex42_requested:
             queue_path=_pre_args.ex42_queue_path,
             dispatch_path=_pre_args.ex42_dispatch_path,
             score_argv_json=_pre_args.ex42_p1_score_argv_json,
+            machine_profile=load_machine_profile(),
         )
 
     if EX42_STAGE_ZERO_PLAN is not None:
@@ -619,6 +626,8 @@ parser.add_argument("--ex42_stage_zero_dry_run", action="store_true",
                     help="CPU-only W65 stage-zero preflight; exits before AppLauncher")
 parser.add_argument("--ex42_resume_from", type=str, default=None,
                     help="W65 self-resume from a manifest-pinned EX-42 model_N.pt")
+parser.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
+                    help="Explicit prior receipt for a run copied unchanged to a new host path")
 parser.add_argument("--ex42_resume_smoke", action="store_true",
                     help="Bounded one-to-five-update self-resume smoke, cuda:0 only")
 parser.add_argument("--ex42_resume_updates", type=int, default=None,
@@ -656,6 +665,7 @@ if args_cli.ex42_dispatch_path != _pre_args.ex42_dispatch_path:
 if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_stage_zero_dry_run != _pre_args.ex42_stage_zero_dry_run
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
+        or args_cli.ex42_resume_relocation_receipt != _pre_args.ex42_resume_relocation_receipt
         or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
         or args_cli.ex42_resume_updates != _pre_args.ex42_resume_updates
         or args_cli.max_iterations != _pre_args.max_iterations

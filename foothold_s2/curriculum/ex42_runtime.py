@@ -168,6 +168,7 @@ class EX42Runtime:
                        dispatch_path: str | Path | None = None,
                        alert_sender: Any = None,
                        score_argv_factory: Any = None,
+                       machine_profile: dict[str, Any] | None = None,
                        boundary_provider: Any = None,
                        p1_interval: int = 250):
         """Build the runner-owned chain adapter without granting launch approval."""
@@ -178,6 +179,7 @@ class EX42Runtime:
             repo_root=repo_root, queue_path=queue_path,
             dispatch_path=dispatch_path, alert_sender=alert_sender,
             score_argv_factory=score_argv_factory,
+            machine_profile=machine_profile,
             boundary_provider=boundary_provider, p1_interval=p1_interval)
 
     def __init__(

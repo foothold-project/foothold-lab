@@ -33,6 +33,52 @@ def _append_jsonl(path: Path, row: dict[str, Any]) -> None:
         os.fsync(stream.fileno())
 
 
+def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, Any],
+                               iteration: int, checkpoint_path: Path) -> int:
+    """Bind Linux P1 to the selected Python, real map evaluator, and profile GPU."""
+    devices = machine_profile.get("devices", {})
+    training = devices.get("training", {})
+    p1 = devices.get("p1_evaluation", {})
+    if training.get("device") != "cuda:0":
+        raise ValueError("EX-42 P1 machine profile violates the cuda:0 training role")
+    index = p1.get("cuda_index")
+    if type(index) is not int or p1.get("device") != f"cuda:{index}":
+        raise ValueError("EX-42 P1 machine profile device mapping is invalid")
+    if machine_profile.get("machine_id") != "AI-WS01-linux":
+        return index
+    paths = machine_profile.get("paths", {})
+    expected_python = paths.get("conda_python")
+    if argv[0] != expected_python:
+        raise ValueError("EX-42 Linux P1 must use machine-profile isaac311 Python")
+    if argv[1:3] != ["-m", "foothold_s2.eval.eval_map_modes"]:
+        raise ValueError("EX-42 Linux P1 must invoke the real map-mode evaluator module")
+
+    def option(name: str) -> str:
+        if argv.count(name) != 1:
+            raise ValueError(f"EX-42 Linux P1 command requires exactly one {name}")
+        offset = argv.index(name)
+        if offset + 1 >= len(argv):
+            raise ValueError(f"EX-42 Linux P1 command is missing the value for {name}")
+        return argv[offset + 1]
+
+    if option("--task") != "FootholdS2-Go2-S2-SB-v0":
+        raise ValueError("EX-42 Linux P1 task differs from the approved stage-zero task")
+    if Path(option("--checkpoint")).resolve() != checkpoint_path.resolve():
+        raise ValueError("EX-42 Linux P1 command does not score this manifest-published checkpoint")
+    output = option("--out")
+    if not Path(output).is_absolute() or str(iteration) not in Path(output).name:
+        raise ValueError("EX-42 Linux P1 output must be an iteration-specific absolute path")
+    if option("--device") != p1["device"]:
+        raise ValueError("EX-42 Linux P1 command device differs from the machine profile")
+    if option("--envs") != "64" or option("--steps") != "300":
+        raise ValueError("EX-42 Linux P1 must retain the 64-environment, 300-step map evaluation")
+    if option("--modes") != "eval_gt,eval_pred,probe_prop_only":
+        raise ValueError("EX-42 Linux P1 must score all three map modes")
+    if "--headless" not in argv:
+        raise ValueError("EX-42 Linux P1 must be headless")
+    return index
+
+
 class EX42TrainingChain:
     """Join pinned parent, approved transitions, score queue, W35, and receipts.
 
@@ -47,6 +93,7 @@ class EX42TrainingChain:
                  dispatch_path: str | Path | None = None,
                  alert_sender: Callable[[dict[str, Any]], Any] | None = None,
                  score_argv_factory: Callable[[int], list[str]] | None = None,
+                 machine_profile: dict[str, Any] | None = None,
                  boundary_provider: Callable[[int, Any], dict[str, Any] | None] | None = None,
                  p1_interval: int = 250):
         self.plan = plan
@@ -57,6 +104,7 @@ class EX42TrainingChain:
         self.queue_path = Path(queue_path)
         self.dispatch_path = Path(dispatch_path or self.repo_root / "_out/tools/gpu_jobs/dispatch.py")
         self.alert_sender = alert_sender
+        self.machine_profile = machine_profile
         if type(p1_interval) is not int or p1_interval <= 0:
             raise ValueError("EX-42 P1 interval must be a positive integer")
         self.score_argv_factory = score_argv_factory
@@ -299,6 +347,13 @@ class EX42TrainingChain:
         if not isinstance(score_argv, list) or not score_argv or any(
                 not isinstance(arg, str) or not arg for arg in score_argv):
             raise ValueError("EX-42 P1 requires the real scoring command; no placeholder is allowed")
+        p1_gpu = 1
+        p1_gpu_uuid = None
+        if self.machine_profile is not None:
+            p1_gpu = _validate_p1_score_command(
+                score_argv, machine_profile=self.machine_profile,
+                iteration=iteration, checkpoint_path=checkpoint)
+            p1_gpu_uuid = self.machine_profile["devices"]["p1_evaluation"]["uuid"]
         transition_path = Path(application_log) if application_log else self.application_path
         transitions = read_transition_rows(transition_path) if transition_path.is_file() else ()
         context = checkpoint_stage_context(
@@ -312,7 +367,7 @@ class EX42TrainingChain:
         spec.loader.exec_module(dispatch)
         args = SimpleNamespace(
             qaction="add", title=f"EX-42 P1 model_{iteration} {checkpoint_sha[:12]}",
-            priority=1, gpu=1, owner="runner-ex42", cond="manifest SHA verified",
+            priority=1, gpu=p1_gpu, owner="runner-ex42", cond="manifest SHA verified",
             start=None, end=None, needs_approval=False, kind="eval",
             argv_json=json.dumps(score_argv), cwd=str(self.repo_root),
             wait_absent=[], wait_pid=[], done_file=[],
@@ -322,7 +377,8 @@ class EX42TrainingChain:
         self._queued_p1_keys.add((iteration, checkpoint_sha))
         event = {**self.identity, **context, "checkpoint_path": str(checkpoint),
                  "checkpoint_sha256": checkpoint_sha, "queue_id": job_id,
-                 "queue_priority": 1, "queue_gpu": 1,
+                 "queue_priority": 1, "queue_gpu": p1_gpu,
+                 "queue_gpu_uuid": p1_gpu_uuid,
                  "queue_receipt": message, "state": "queued"}
         event_receipt = self._record_event({"event": "p1_queued", **event})
         event["event_receipt"] = event_receipt

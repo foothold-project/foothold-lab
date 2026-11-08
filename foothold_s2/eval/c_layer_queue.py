@@ -12,6 +12,7 @@ import json
 import math
 import os
 from pathlib import Path
+from pathlib import PurePosixPath, PureWindowsPath
 import re
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ import subprocess
 from foothold_s2.eval.c_layer_frame_audit import audit_video
 from foothold_s2.eval.c_layer_progress import run_recorder
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
+from foothold_s2.machine_profile import load_machine_profile
 
 
 MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
@@ -83,14 +85,20 @@ def _source(path: str, wanted: str) -> Path:
     return source
 
 
-def validate_plan(plan: dict) -> dict:
+def validate_plan(plan: dict, *, machine_profile: dict | None = None) -> dict:
     """Validate all 216 cells before any GPU attempt."""
     keys = inventory(plan["kinds"])
     if plan.get("target_results", list(ROLES)) not in (list(ROLES), ["success"]):
         raise ValueError("C layer target_results must be success+fail or first-success only")
     markers = plan.get("priority_markers")
+    absolute_path_type = (PurePosixPath if machine_profile is not None
+                          and machine_profile.get("machine_id") == "AI-WS01-linux"
+                          else PureWindowsPath if machine_profile is not None
+                          and machine_profile.get("machine_id") == "AI-WS01-windows"
+                          else Path)
     if (not isinstance(markers, dict) or set(markers) != {"training", "evaluation", "a_layer"}
-            or any(not isinstance(value, str) or not Path(value).is_absolute() for value in markers.values())):
+            or any(not isinstance(value, str) or not absolute_path_type(value).is_absolute()
+                   for value in markers.values())):
         raise ValueError("training, evaluation and A-layer priority markers must be absolute paths")
     if len(keys) != 216:
         raise AssertionError("wrong C layer inventory")
@@ -111,8 +119,31 @@ def validate_plan(plan: dict) -> dict:
     _source(plan["gpu_jobs_tool"], plan["gpu_jobs_tool_sha256"])
     gate_config = _source(plan["gpu_jobs_config"], plan["gpu_jobs_config_sha256"])
     gate = json.loads(gate_config.read_text(encoding="utf-8-sig"))
-    if gate["sources"]["ex41_p1_marker"] != "D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1":
-        raise ValueError("EX-41 P1 marker path differs from approved contract")
+    if machine_profile is not None:
+        paths = machine_profile.get("paths", {})
+        devices = machine_profile.get("devices", {})
+        p1 = devices.get("p1_evaluation", {})
+        p1_index = p1.get("cuda_index")
+        training = devices.get("training", {})
+        screen = devices.get("screen", {})
+        if (type(p1_index) is not int or p1.get("device") != f"cuda:{p1_index}"
+                or training.get("cuda_index") != 0 or training.get("device") != "cuda:0"
+                or type(screen.get("cuda_index")) is not int
+                or screen.get("device") != f"cuda:{screen.get('cuda_index')}"
+                or screen.get("cuda_index") != 1):
+            raise ValueError("machine profile training, P1, or screen GPU mapping is invalid")
+        expected_markers = {
+            "training": paths.get("gpu0_training_marker"),
+            "evaluation": paths.get(f"gpu{p1_index}_eval_marker"),
+            "a_layer": paths.get("a_layer_marker"),
+        }
+        if (any(not isinstance(value, str) or not value for value in expected_markers.values())
+                or markers != expected_markers):
+            raise ValueError("C-layer plan priority markers differ from selected machine profile")
+        if Path(plan["gpu_jobs_config"]).resolve() != Path(paths.get("gpu_jobs_config", "")).resolve():
+            raise ValueError("C-layer GPU job config differs from selected machine profile")
+        if gate.get("sources", {}).get("ex41_p1_marker") != expected_markers["evaluation"]:
+            raise ValueError("EX-41 P1 marker differs from the selected machine profile")
     runtime_sources = plan.get("runtime_sources_sha256")
     expected_sources = {
         str(recorder.parent / "overlay_25e.py"),
@@ -183,6 +214,10 @@ def validate_plan(plan: dict) -> dict:
                 or argv[argv.index("--device") + 1] not in ("cuda:0", "cuda:1")):
             raise ValueError("C76 recorder requires exactly one cuda:0 or cuda:1 --device")
         device = argv[argv.index("--device") + 1]
+        if machine_profile is not None:
+            screen = machine_profile.get("devices", {}).get("screen", {})
+            if device != screen.get("device"):
+                raise ValueError("C76 recorder device differs from machine profile screen GPU")
         if expected_device is None:
             expected_device = device
         elif device != expected_device:
@@ -357,9 +392,10 @@ def publish_playlists(plan: dict, out: Path) -> dict:
 
 
 def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe: str = "ffprobe",
-            only_cell: str | None = None) -> dict:
+            only_cell: str | None = None,
+            machine_profile: dict | None = None) -> dict:
     """Capture one seed for one cell; retain each measured outcome."""
-    summary = validate_plan(plan)
+    summary = validate_plan(plan, machine_profile=machine_profile)
     targets = tuple(plan.get("target_results", ROLES))
     if summary["missing"]:
         raise ValueError("all 216 C-layer cells must be registered before capture")
@@ -553,9 +589,11 @@ def main(argv: list[str] | None = None) -> int:
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8-sig"))
     if args.only_cell and not args.run_one:
         parser.error("--only-cell requires --run-one")
+    machine_profile = load_machine_profile()
     result = (run_one(plan, out=Path(args.out), high_priority_markers=[Path(p) for p in args.high_priority_marker],
-                      ffprobe=args.ffprobe, only_cell=args.only_cell)
-              if args.run_one else validate_plan(plan))
+                      ffprobe=args.ffprobe, only_cell=args.only_cell,
+                      machine_profile=machine_profile)
+              if args.run_one else validate_plan(plan, machine_profile=machine_profile))
     print(json.dumps(result, ensure_ascii=False))
     return 0
 
