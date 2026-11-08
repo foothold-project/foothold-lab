@@ -77,3 +77,9 @@ lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_ch
 - 무엇: PID 82600 (11:19:23 기동, 고정 7916a52) 이 11:20:12 에 `AttributeError: OrderEnforcing has no attribute num_envs` (ex42_training_entry.py:178). 학습 0 회.
 - 원인: env.unwrapped 를 raw 로 받아 놓고 env.num_envs 를 씀. CPU 시험의 가짜 env 는 wrapper 가 없어 통과(I45 와 같은 종류: 가짜 경로 시험 통과 ≠ 실제).
 - 조치: runner 에 178 수정 · EX-42 경로 env 속성 접근 전수 점검 · 가짜 env 를 OrderEnforcing 으로 감싼 회귀시험 · 재기동 지시(11:2x).
+
+## I47 (11/08 12:05~12:15) lead 가 넣은 대기열 항목이 GPU0 배분기를 10 분 멈춤
+
+- 무엇: lead 가 N21 재측정 4 판(1353~1356)을 1339 를 본떠 넣으면서 wait_absent · condition 을 None 으로 비움. GPU0 배분기가 매 회 `TypeError: NoneType is not iterable` 로 돌아 아무것도 띄우지 못함. lead 는 12:05 보고에 「막 시작했다」 고 적었는데 실제 기동은 12:15:48(1353, PID 64340).
+- 원인: 항목 복사 때 목록 칸을 None 으로 비움(I38 규칙은 「None 으로 두되 빼지 않는다」 였지만 목록 칸은 빈 목록이어야 함) · 띄운 뒤 첫 증거를 보기 전에 「시작」 이라고 보고함.
+- 조치: 네 항목에 wait_absent=[TRAINING_BUSY_GPU0] · condition="" 넣음 → 12:15:48 기동 확인. 앞으로 항목을 넣으면 배분기 로그 다음 줄(launched)까지 보고 보고한다.
