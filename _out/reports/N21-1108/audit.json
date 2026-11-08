@@ -1,0 +1,7222 @@
+{
+  "physics": {
+    "flat": {
+      "nominal_base_kg": 6.921000003814697,
+      "base_kg": [
+        6.011161804199219,
+        9.91934585571289
+      ],
+      "mass_add_kg": [
+        -0.9098381996154785,
+        2.9983458518981934
+      ],
+      "total_kg": [
+        14.109161492204294,
+        18.017345543717965
+      ],
+      "static": [
+        0.21620269119739532,
+        1.1811254024505615
+      ],
+      "dynamic": [
+        0.21620269119739532,
+        1.103655219078064
+      ],
+      "restitution": [
+        0,
+        0
+      ],
+      "unique_material_triplets": 64,
+      "startup_unchanged_across_24_cells": true,
+      "terrain_env_counts": {
+        "flat": 64
+      }
+    },
+    "continuous": {
+      "nominal_base_kg": 6.921000003814697,
+      "base_kg": [
+        6.011161804199219,
+        9.91934585571289
+      ],
+      "mass_add_kg": [
+        -0.9098381996154785,
+        2.9983458518981934
+      ],
+      "total_kg": [
+        14.109161492204294,
+        18.017345543717965
+      ],
+      "static": [
+        0.21620269119739532,
+        1.1811254024505615
+      ],
+      "dynamic": [
+        0.21620269119739532,
+        1.103655219078064
+      ],
+      "restitution": [
+        0,
+        0
+      ],
+      "unique_material_triplets": 64,
+      "startup_unchanged_across_24_cells": true,
+      "terrain_env_counts": {
+        "pyramid_stairs": 15,
+        "pyramid_stairs_inv": 15,
+        "boxes": 12,
+        "random_rough": 12,
+        "hf_pyramid_slope": 4,
+        "hf_pyramid_slope_inv": 4,
+        "stage_stairs": 2
+      }
+    }
+  },
+  "protocol_checks": [
+    {
+      "terrain": "flat",
+      "same_assignment_and_protocol": true,
+      "source_fingerprints_changed": [
+        "foothold_s2.eval.eval_map_modes",
+        "foothold_s2.eval.n21_dr_record",
+        "foothold_s2.curriculum.ex40_dr_runtime"
+      ]
+    },
+    {
+      "terrain": "continuous",
+      "same_assignment_and_protocol": true,
+      "source_fingerprints_changed": [
+        "foothold_s2.eval.eval_map_modes",
+        "foothold_s2.eval.n21_dr_record",
+        "foothold_s2.curriculum.ex40_dr_runtime"
+      ]
+    }
+  ],
+  "cells": [
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "baseline": [
+        0.07564911246299744
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07564911246299744
+        ],
+        "realized_median": 2.5754107666015624
+      },
+      "on": {
+        "reached": 15,
+        "alive": 64,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 49,
+        "error_medians": [
+          0.08127160742878914
+        ],
+        "realized_median": 2.610536651611328
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "baseline": [
+        0.08458893373608589
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.08458893373608589
+        ],
+        "realized_median": 5.68734130859375
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.11420434340834618
+        ],
+        "realized_median": 5.5020315551757815
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09077143296599388
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09077143296599388
+        ],
+        "realized_median": 0.9824660917123159
+      },
+      "on": {
+        "reached": 22,
+        "alive": 64,
+        "both": 22,
+        "reach_without_alive": 0,
+        "alive_without_reach": 42,
+        "error_medians": [
+          0.09469480440020561
+        ],
+        "realized_median": 0.9713782866795858
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11459096893668175
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11459096893668175
+        ],
+        "realized_median": 0.9508314232031505
+      },
+      "on": {
+        "reached": 37,
+        "alive": 64,
+        "both": 37,
+        "reach_without_alive": 0,
+        "alive_without_reach": 27,
+        "error_medians": [
+          0.11387030780315399
+        ],
+        "realized_median": 0.9488436579704285
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "baseline": [
+        0.07606427744030952
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07606427744030952
+        ],
+        "realized_median": 2.5759654235839844
+      },
+      "on": {
+        "reached": 27,
+        "alive": 64,
+        "both": 27,
+        "reach_without_alive": 0,
+        "alive_without_reach": 37,
+        "error_medians": [
+          0.08137727156281471
+        ],
+        "realized_median": 2.69302734375
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "baseline": [
+        0.11304370313882828
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11304370313882828
+        ],
+        "realized_median": 2.332368850708008
+      },
+      "on": {
+        "reached": 7,
+        "alive": 64,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 57,
+        "error_medians": [
+          0.1472698450088501
+        ],
+        "realized_median": 2.174853515625
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "baseline": [
+        0.07938681170344353
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07938681170344353
+        ],
+        "realized_median": 2.594661865234375
+      },
+      "on": {
+        "reached": 8,
+        "alive": 64,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 56,
+        "error_medians": [
+          0.11878667771816254
+        ],
+        "realized_median": 2.415983657836914
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "command": "stop",
+      "baseline": [
+        0.032132089138031006,
+        0.07243403419852257
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 18,
+        "alive": 64,
+        "both": 18,
+        "reach_without_alive": 0,
+        "alive_without_reach": 46,
+        "error_medians": [
+          0.032132089138031006,
+          0.07243403419852257
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.0657331570982933,
+          0.07375301420688629
+        ]
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "baseline": [
+        0.07714373245835304
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07714373245835304
+        ],
+        "realized_median": 2.5728691101074217
+      },
+      "on": {
+        "reached": 15,
+        "alive": 64,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 49,
+        "error_medians": [
+          0.08907220140099525
+        ],
+        "realized_median": 2.5768878173828123
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "baseline": [
+        0.08636755496263504
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.08636755496263504
+        ],
+        "realized_median": 5.664911499023438
+      },
+      "on": {
+        "reached": 2,
+        "alive": 64,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 62,
+        "error_medians": [
+          0.10930968821048737
+        ],
+        "realized_median": 5.491688842773438
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09160889312624931
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09160889312624931
+        ],
+        "realized_median": 0.9842812021573385
+      },
+      "on": {
+        "reached": 20,
+        "alive": 64,
+        "both": 20,
+        "reach_without_alive": 0,
+        "alive_without_reach": 44,
+        "error_medians": [
+          0.09622284024953842
+        ],
+        "realized_median": 0.96556156873703
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11629173904657364
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11629173904657364
+        ],
+        "realized_median": 0.9478180110454559
+      },
+      "on": {
+        "reached": 36,
+        "alive": 64,
+        "both": 36,
+        "reach_without_alive": 0,
+        "alive_without_reach": 28,
+        "error_medians": [
+          0.11285903304815292
+        ],
+        "realized_median": 0.9450350205103557
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "baseline": [
+        0.07780614495277405
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07780614495277405
+        ],
+        "realized_median": 2.568911285400391
+      },
+      "on": {
+        "reached": 26,
+        "alive": 64,
+        "both": 26,
+        "reach_without_alive": 0,
+        "alive_without_reach": 38,
+        "error_medians": [
+          0.08685952425003052
+        ],
+        "realized_median": 2.640272979736328
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "baseline": [
+        0.11591878160834312
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11591878160834312
+        ],
+        "realized_median": 2.3109214782714846
+      },
+      "on": {
+        "reached": 5,
+        "alive": 64,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 59,
+        "error_medians": [
+          0.15416434407234192
+        ],
+        "realized_median": 2.2045708465576173
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "baseline": [
+        0.07643884047865868
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.07643884047865868
+        ],
+        "realized_median": 2.6117092895507814
+      },
+      "on": {
+        "reached": 6,
+        "alive": 64,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 58,
+        "error_medians": [
+          0.11626587063074112
+        ],
+        "realized_median": 2.4635926055908204
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "command": "stop",
+      "baseline": [
+        0.03235270641744137,
+        0.0725148618221283
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 19,
+        "alive": 64,
+        "both": 19,
+        "reach_without_alive": 0,
+        "alive_without_reach": 45,
+        "error_medians": [
+          0.03235270641744137,
+          0.0725148618221283
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.068068478256464,
+          0.07465830072760582
+        ]
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "baseline": [
+        0.0732569769024849
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.0732569769024849
+        ],
+        "realized_median": 2.637731170654297
+      },
+      "on": {
+        "reached": 20,
+        "alive": 64,
+        "both": 20,
+        "reach_without_alive": 0,
+        "alive_without_reach": 44,
+        "error_medians": [
+          0.08055577427148819
+        ],
+        "realized_median": 2.686428375244141
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "baseline": [
+        0.09265477582812309
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09265477582812309
+        ],
+        "realized_median": 5.595160217285157
+      },
+      "on": {
+        "reached": 6,
+        "alive": 64,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 58,
+        "error_medians": [
+          0.11492319032549858
+        ],
+        "realized_median": 5.565963439941406
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09212040528655052
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09212040528655052
+        ],
+        "realized_median": 0.9877161681652069
+      },
+      "on": {
+        "reached": 15,
+        "alive": 64,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 49,
+        "error_medians": [
+          0.09738784283399582
+        ],
+        "realized_median": 0.9738302230834961
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11131497099995613
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11131497099995613
+        ],
+        "realized_median": 0.9526529411474864
+      },
+      "on": {
+        "reached": 33,
+        "alive": 64,
+        "both": 33,
+        "reach_without_alive": 0,
+        "alive_without_reach": 31,
+        "error_medians": [
+          0.11069728061556816
+        ],
+        "realized_median": 0.9503138562043508
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "baseline": [
+        0.0845315158367157
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.0845315158367157
+        ],
+        "realized_median": 2.5261723327636716
+      },
+      "on": {
+        "reached": 30,
+        "alive": 64,
+        "both": 30,
+        "reach_without_alive": 0,
+        "alive_without_reach": 34,
+        "error_medians": [
+          0.08568111434578896
+        ],
+        "realized_median": 2.610964813232422
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "baseline": [
+        0.10116836801171303
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.10116836801171303
+        ],
+        "realized_median": 2.416925354003906
+      },
+      "on": {
+        "reached": 6,
+        "alive": 64,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 58,
+        "error_medians": [
+          0.1402692049741745
+        ],
+        "realized_median": 2.2428955078125
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "baseline": [
+        0.06619039922952652
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.06619039922952652
+        ],
+        "realized_median": 2.7092027282714843
+      },
+      "on": {
+        "reached": 6,
+        "alive": 64,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 58,
+        "error_medians": [
+          0.10437960177659988
+        ],
+        "realized_median": 2.56408203125
+      }
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "baseline": [
+        0.031100686639547348,
+        0.0726284459233284
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 17,
+        "alive": 64,
+        "both": 17,
+        "reach_without_alive": 0,
+        "alive_without_reach": 47,
+        "error_medians": [
+          0.031100686639547348,
+          0.0726284459233284
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.06284444034099579,
+          0.07466090098023415
+        ]
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "baseline": [
+        0.08680203557014465
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.08680203557014465
+        ],
+        "realized_median": 2.522765502929688
+      },
+      "on": {
+        "reached": 19,
+        "alive": 64,
+        "both": 19,
+        "reach_without_alive": 0,
+        "alive_without_reach": 45,
+        "error_medians": [
+          0.09980139136314392
+        ],
+        "realized_median": 2.535610885620117
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "baseline": [
+        0.10540224984288216
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 63,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 31,
+        "error_medians": [
+          0.10540224984288216
+        ],
+        "realized_median": 5.577299804687501
+      },
+      "on": {
+        "reached": 6,
+        "alive": 64,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 58,
+        "error_medians": [
+          0.12931789457798004
+        ],
+        "realized_median": 5.436793518066406
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09189889952540398
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09189889952540398
+        ],
+        "realized_median": 0.9820776184399923
+      },
+      "on": {
+        "reached": 19,
+        "alive": 64,
+        "both": 19,
+        "reach_without_alive": 0,
+        "alive_without_reach": 45,
+        "error_medians": [
+          0.09960542991757393
+        ],
+        "realized_median": 0.9641210238138835
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11623107641935349
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11623107641935349
+        ],
+        "realized_median": 0.9479555487632751
+      },
+      "on": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11585083603858948
+        ],
+        "realized_median": 0.9459908803304037
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "baseline": [
+        0.11294674500823021
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 63,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 31,
+        "error_medians": [
+          0.11294674500823021
+        ],
+        "realized_median": 2.387721939086914
+      },
+      "on": {
+        "reached": 27,
+        "alive": 62,
+        "both": 27,
+        "reach_without_alive": 0,
+        "alive_without_reach": 35,
+        "error_medians": [
+          0.12302317470312119
+        ],
+        "realized_median": 2.418869094848633
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "baseline": [
+        0.16357045620679855
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.16357045620679855
+        ],
+        "realized_median": 2.0268460845947267
+      },
+      "on": {
+        "reached": 13,
+        "alive": 64,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 51,
+        "error_medians": [
+          0.19392824918031693
+        ],
+        "realized_median": 1.8601924133300782
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "baseline": [
+        0.12847900390625
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.12847900390625
+        ],
+        "realized_median": 2.2551338195800783
+      },
+      "on": {
+        "reached": 18,
+        "alive": 64,
+        "both": 18,
+        "reach_without_alive": 0,
+        "alive_without_reach": 46,
+        "error_medians": [
+          0.15754170715808868
+        ],
+        "realized_median": 2.143853988647461
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "stop",
+      "baseline": [
+        0.03181634657084942,
+        0.0723554864525795
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 20,
+        "alive": 64,
+        "both": 20,
+        "reach_without_alive": 0,
+        "alive_without_reach": 44,
+        "error_medians": [
+          0.03181634657084942,
+          0.0723554864525795
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.06552396714687347,
+          0.0749635361135006
+        ]
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "baseline": [
+        0.08951079472899437
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.08951079472899437
+        ],
+        "realized_median": 2.5165023803710938
+      },
+      "on": {
+        "reached": 25,
+        "alive": 64,
+        "both": 25,
+        "reach_without_alive": 0,
+        "alive_without_reach": 39,
+        "error_medians": [
+          0.09859789162874222
+        ],
+        "realized_median": 2.610755615234375
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "baseline": [
+        0.10716395452618599
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 62,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 30,
+        "error_medians": [
+          0.10716395452618599
+        ],
+        "realized_median": 5.524932861328125
+      },
+      "on": {
+        "reached": 8,
+        "alive": 64,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 56,
+        "error_medians": [
+          0.12829184532165527
+        ],
+        "realized_median": 5.423654174804687
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09056969732046127
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09056969732046127
+        ],
+        "realized_median": 0.9823739031950633
+      },
+      "on": {
+        "reached": 14,
+        "alive": 64,
+        "both": 14,
+        "reach_without_alive": 0,
+        "alive_without_reach": 50,
+        "error_medians": [
+          0.09834054857492447
+        ],
+        "realized_median": 0.9635342160860698
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11730235442519188
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11730235442519188
+        ],
+        "realized_median": 0.9473815560340881
+      },
+      "on": {
+        "reached": 35,
+        "alive": 64,
+        "both": 35,
+        "reach_without_alive": 0,
+        "alive_without_reach": 29,
+        "error_medians": [
+          0.1170051284134388
+        ],
+        "realized_median": 0.9422114491462708
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "baseline": [
+        0.11446161568164825
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11446161568164825
+        ],
+        "realized_median": 2.3868977355957033
+      },
+      "on": {
+        "reached": 27,
+        "alive": 64,
+        "both": 27,
+        "reach_without_alive": 0,
+        "alive_without_reach": 37,
+        "error_medians": [
+          0.12810813635587692
+        ],
+        "realized_median": 2.363742446899414
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "baseline": [
+        0.1612873151898384
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.1612873151898384
+        ],
+        "realized_median": 2.03383171081543
+      },
+      "on": {
+        "reached": 15,
+        "alive": 63,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 48,
+        "error_medians": [
+          0.19660525768995285
+        ],
+        "realized_median": 1.955660095214844
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "baseline": [
+        0.13063107058405876
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.13063107058405876
+        ],
+        "realized_median": 2.253526153564453
+      },
+      "on": {
+        "reached": 20,
+        "alive": 63,
+        "both": 20,
+        "reach_without_alive": 0,
+        "alive_without_reach": 43,
+        "error_medians": [
+          0.15618009120225906
+        ],
+        "realized_median": 2.2111533355712893
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "stop",
+      "baseline": [
+        0.032135020941495895,
+        0.07247694954276085
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 18,
+        "alive": 64,
+        "both": 18,
+        "reach_without_alive": 0,
+        "alive_without_reach": 46,
+        "error_medians": [
+          0.032135020941495895,
+          0.07247694954276085
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.06739087402820587,
+          0.074530940502882
+        ]
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "baseline": [
+        0.0830034613609314
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.0830034613609314
+        ],
+        "realized_median": 2.6067909240722655
+      },
+      "on": {
+        "reached": 25,
+        "alive": 64,
+        "both": 25,
+        "reach_without_alive": 0,
+        "alive_without_reach": 39,
+        "error_medians": [
+          0.08803164213895798
+        ],
+        "realized_median": 2.7008680725097656
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "baseline": [
+        0.10908782109618187
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 62,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 30,
+        "error_medians": [
+          0.10908782109618187
+        ],
+        "realized_median": 5.553888549804688
+      },
+      "on": {
+        "reached": 13,
+        "alive": 64,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 51,
+        "error_medians": [
+          0.12742579728364944
+        ],
+        "realized_median": 5.49576171875
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "baseline": [
+        0.09167217835783958
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.09167217835783958
+        ],
+        "realized_median": 0.9870852530002594
+      },
+      "on": {
+        "reached": 15,
+        "alive": 64,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 49,
+        "error_medians": [
+          0.09855139255523682
+        ],
+        "realized_median": 0.9703244765599569
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "baseline": [
+        0.11192181333899498
+      ],
+      "unit": "rad/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.11192181333899498
+        ],
+        "realized_median": 0.9514489769935608
+      },
+      "on": {
+        "reached": 34,
+        "alive": 64,
+        "both": 34,
+        "reach_without_alive": 0,
+        "alive_without_reach": 30,
+        "error_medians": [
+          0.11092648282647133
+        ],
+        "realized_median": 0.9521135191122692
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "baseline": [
+        0.1332830935716629
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.1332830935716629
+        ],
+        "realized_median": 2.2388347625732425
+      },
+      "on": {
+        "reached": 35,
+        "alive": 63,
+        "both": 35,
+        "reach_without_alive": 0,
+        "alive_without_reach": 28,
+        "error_medians": [
+          0.13012198358774185
+        ],
+        "realized_median": 2.3769596862792968
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "baseline": [
+        0.1443023681640625
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.1443023681640625
+        ],
+        "realized_median": 2.1499535369873044
+      },
+      "on": {
+        "reached": 12,
+        "alive": 64,
+        "both": 12,
+        "reach_without_alive": 0,
+        "alive_without_reach": 52,
+        "error_medians": [
+          0.18379844725131989
+        ],
+        "realized_median": 1.9695759582519532
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "baseline": [
+        0.1106863021850586
+      ],
+      "unit": "m/s",
+      "off": {
+        "reached": 32,
+        "alive": 64,
+        "both": 32,
+        "reach_without_alive": 0,
+        "alive_without_reach": 32,
+        "error_medians": [
+          0.1106863021850586
+        ],
+        "realized_median": 2.4164870452880858
+      },
+      "on": {
+        "reached": 13,
+        "alive": 63,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 50,
+        "error_medians": [
+          0.1416136398911476
+        ],
+        "realized_median": 2.3123272705078124
+      }
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "baseline": [
+        0.03098198212683201,
+        0.0727289542555809
+      ],
+      "unit": "m/s + rad/s",
+      "off": {
+        "reached": 16,
+        "alive": 64,
+        "both": 16,
+        "reach_without_alive": 0,
+        "alive_without_reach": 48,
+        "error_medians": [
+          0.03098198212683201,
+          0.0727289542555809
+        ]
+      },
+      "on": {
+        "reached": 0,
+        "alive": 64,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 64,
+        "error_medians": [
+          0.06225905381143093,
+          0.0744321160018444
+        ]
+      }
+    }
+  ],
+  "terrain_cells": [
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.08641038462519646
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.0940815806388855
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.08641038462519646
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.0844356007874012
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.0702250711619854
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.0844356007874012
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.06747057661414146
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06652340292930603
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06747057661414146
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.14901374280452728
+      ],
+      "on": {
+        "reached": 12,
+        "alive": 15,
+        "both": 12,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.12229206413030624
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.14901374280452728
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.08365771919488907
+      ],
+      "on": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.09209422767162323
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08365771919488907
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.08377841860055923
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.10256174206733704
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.08377841860055923
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "fwd0.5",
+      "envs": 2,
+      "baseline": [
+        0.1551414206624031
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.13596711307764053
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.1551414206624031
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.10586192831397057
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 12,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.11737391352653503
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10586192831397057
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.09600218385457993
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.1138964332640171
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09600218385457993
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.08568137884140015
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.1357434019446373
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08568137884140015
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.14998120069503784
+      ],
+      "on": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.13698460161685944
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.14998120069503784
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.10563314706087112
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.13978205621242523
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 14,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10563314706087112
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.09168241918087006
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.12768813967704773
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09168241918087006
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "envs": 2,
+      "baseline": [
+        0.21883047372102737
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.1727578267455101
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.21883047372102737
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09354149550199509
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 12,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.09072982147336006
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09354149550199509
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.09412110596895218
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.0885620042681694
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09412110596895218
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.09190686419606209
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.10515191033482552
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09190686419606209
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.0890553817152977
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 15,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.09688340872526169
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.0890553817152977
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.0908488854765892
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 15,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 13,
+        "error_medians": [
+          0.09842505306005478
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.0908488854765892
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09568781778216362
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.11102373525500298
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09568781778216362
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "spin+1.2",
+      "envs": 2,
+      "baseline": [
+        0.09034944698214531
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.1103377491235733
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.09034944698214531
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.11563491076231003
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 12,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.11045490577816963
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.11563491076231003
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.11295583844184875
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.10827021300792694
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11295583844184875
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.11606675386428833
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11011026799678802
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11606675386428833
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.11942125856876373
+      ],
+      "on": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11762627959251404
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11942125856876373
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.11352310329675674
+      ],
+      "on": {
+        "reached": 9,
+        "alive": 15,
+        "both": 9,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10983659327030182
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11352310329675674
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.12615615874528885
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 12,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.14221332222223282
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.12615615874528885
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "spin-1.2",
+      "envs": 2,
+      "baseline": [
+        0.11443489044904709
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11874066293239594
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11443489044904709
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.10925201699137688
+      ],
+      "on": {
+        "reached": 5,
+        "alive": 12,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11133123189210892
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10925201699137688
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.1094043217599392
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.10359570756554604
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.1094043217599392
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.06072493828833103
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06085371598601341
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06072493828833103
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.18589048087596893
+      ],
+      "on": {
+        "reached": 14,
+        "alive": 15,
+        "both": 14,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.16224068403244019
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18589048087596893
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.11433456093072891
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 13,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.13308964669704437
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11433456093072891
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.08873207494616508
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 12,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.09688159078359604
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.08873207494616508
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "envs": 2,
+      "baseline": [
+        0.25671132653951645
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.21020837873220444
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 1,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.25671132653951645
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.15573084354400635
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.18693161010742188
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.15573084354400635
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.11844034492969513
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.16558776795864105
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11844034492969513
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.10768115893006325
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10981035232543945
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10768115893006325
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.2283705174922943
+      ],
+      "on": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.2380162626504898
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.2283705174922943
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.18014279007911682
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 15,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.21038803458213806
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18014279007911682
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.1304338425397873
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.17362118512392044
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.1304338425397873
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "side+0.5",
+      "envs": 2,
+      "baseline": [
+        0.3212319016456604
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.2786397635936737
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.3212319016456604
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.11017996072769165
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.12956994399428368
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.11017996072769165
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.07643423229455948
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.1213151291012764
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07643423229455948
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.08057890832424164
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.12062979117035866
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08057890832424164
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.21923601627349854
+      ],
+      "on": {
+        "reached": 12,
+        "alive": 15,
+        "both": 12,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.18208695948123932
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.21923601627349854
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.23441095650196075
+      ],
+      "on": {
+        "reached": 12,
+        "alive": 15,
+        "both": 12,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.19828206300735474
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.23441095650196075
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.09063009917736053
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.15782533586025238
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09063009917736053
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "side-0.5",
+      "envs": 2,
+      "baseline": [
+        0.19520139694213867
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.15456976741552353
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.19520139694213867
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.030755434185266495,
+        0.07290874049067497
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.061908528208732605,
+          0.07148310542106628
+        ]
+      },
+      "off": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.030755434185266495,
+          0.07290874049067497
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.03531788848340511,
+        0.07489785924553871
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.05147910304367542,
+          0.06905736401677132
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.03531788848340511,
+          0.07489785924553871
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.0316232331097126,
+        0.07148292660713196
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.06909722276031971,
+          0.08154380694031715
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.0316232331097126,
+          0.07148292660713196
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03269075229763985,
+        0.07126618176698685
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.05963890627026558,
+          0.07463032007217407
+        ]
+      },
+      "off": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.03269075229763985,
+          0.07126618176698685
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03139633312821388,
+        0.07139240205287933
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.0644894540309906,
+          0.06917177885770798
+        ]
+      },
+      "off": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.03139633312821388,
+          0.07139240205287933
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.032487623393535614,
+        0.07530734688043594
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.06905588507652283,
+          0.08396300673484802
+        ]
+      },
+      "off": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.032487623393535614,
+          0.07530734688043594
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_gt",
+      "command": "stop",
+      "envs": 2,
+      "baseline": [
+        0.03466784954071045,
+        0.07417440414428711
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07513408735394478,
+          0.07857885584235191
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.03466784954071045,
+          0.07417440414428711
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.09293948113918304
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 12,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.08896408602595329
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09293948113918304
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.08408740907907486
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.07344240695238113
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08408740907907486
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.0658576749265194
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.07336463779211044
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.0658576749265194
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.17181724309921265
+      ],
+      "on": {
+        "reached": 15,
+        "alive": 15,
+        "both": 15,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.13024960458278656
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.17181724309921265
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.08509527891874313
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 15,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 14,
+        "error_medians": [
+          0.10052721947431564
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08509527891874313
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.0849517323076725
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.08693266659975052
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.0849517323076725
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "fwd0.5",
+      "envs": 2,
+      "baseline": [
+        0.1552363485097885
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.12373169884085655
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.1552363485097885
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.10774455964565277
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.11818361654877663
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10774455964565277
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.09767420217394829
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.10544158890843391
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09767420217394829
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.08728666603565216
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.11388253048062325
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08728666603565216
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.1654823124408722
+      ],
+      "on": {
+        "reached": 12,
+        "alive": 15,
+        "both": 12,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.15255668759346008
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.1654823124408722
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.10909056663513184
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 15,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 14,
+        "error_medians": [
+          0.15226498246192932
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 13,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.10909056663513184
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.09443601593375206
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.12666207924485207
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09443601593375206
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "envs": 2,
+      "baseline": [
+        0.1763371303677559
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.16493970900774002
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.1763371303677559
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09060817211866379
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.09525123983621597
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09060817211866379
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.09306370466947556
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.08930375427007675
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09306370466947556
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.08917190507054329
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.09423873573541641
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08917190507054329
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.08898920565843582
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 15,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.0983048751950264
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08898920565843582
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.08972642570734024
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 15,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.09877827018499374
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08972642570734024
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09706856310367584
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.11474693194031715
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09706856310367584
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "spin+1.2",
+      "envs": 2,
+      "baseline": [
+        0.09051481634378433
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.10467448085546494
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.09051481634378433
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.11716212332248688
+      ],
+      "on": {
+        "reached": 9,
+        "alive": 12,
+        "both": 9,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.11306790634989738
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.11716212332248688
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.115739356726408
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.09913768991827965
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.115739356726408
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.11639349162578583
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11255739629268646
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11639349162578583
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.11656580865383148
+      ],
+      "on": {
+        "reached": 6,
+        "alive": 15,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.11711953580379486
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11656580865383148
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.11413576453924179
+      ],
+      "on": {
+        "reached": 6,
+        "alive": 15,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.11519739776849747
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11413576453924179
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.12868686020374298
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.14429150521755219
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.12868686020374298
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "spin-1.2",
+      "envs": 2,
+      "baseline": [
+        0.11160127073526382
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.13008636608719826
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11160127073526382
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.10526818782091141
+      ],
+      "on": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10543585568666458
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10526818782091141
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.10438353195786476
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 4,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.09027295187115669
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10438353195786476
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.06589430570602417
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06553721614181995
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06589430570602417
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.19547605514526367
+      ],
+      "on": {
+        "reached": 13,
+        "alive": 15,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.1502745896577835
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.19547605514526367
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.14193591475486755
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 15,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.15073513984680176
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.14193591475486755
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.0909433662891388
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.11289632692933083
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.0909433662891388
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "back0.5",
+      "envs": 2,
+      "baseline": [
+        0.21988538652658463
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.16416528820991516
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.21988538652658463
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.1461094319820404
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.17231406271457672
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.1461094319820404
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.11688172072172165
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.152092806994915
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11688172072172165
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.11158537864685059
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.12855735421180725
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11158537864685059
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.22728873789310455
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 15,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.24914759397506714
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.22728873789310455
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.18580248951911926
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 14,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.21107317507266998
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18580248951911926
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.1365383192896843
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.18500636518001556
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.1365383192896843
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "envs": 2,
+      "baseline": [
+        0.3256058245897293
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.3123325854539871
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.3256058245897293
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.10060936585068703
+      ],
+      "on": {
+        "reached": 5,
+        "alive": 12,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11839568242430687
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10060936585068703
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.07779782265424728
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.11161167919635773
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07779782265424728
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.0871879830956459
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.10230126231908798
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.0871879830956459
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.2133520543575287
+      ],
+      "on": {
+        "reached": 13,
+        "alive": 15,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.1853260099887848
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.2133520543575287
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.2039540559053421
+      ],
+      "on": {
+        "reached": 10,
+        "alive": 14,
+        "both": 9,
+        "reach_without_alive": 1,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.17869479954242706
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.2039540559053421
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.08928628638386726
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.1399451345205307
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.08928628638386726
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "envs": 2,
+      "baseline": [
+        0.19403626024723053
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.16037991642951965
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.19403626024723053
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.03102373704314232,
+        0.07285282760858536
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.06425407901406288,
+          0.07221115753054619
+        ]
+      },
+      "off": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.03102373704314232,
+          0.07285282760858536
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.03570275567471981,
+        0.07479755207896233
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.07078306376934052,
+          0.07357461377978325
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.03570275567471981,
+          0.07479755207896233
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.031631842255592346,
+        0.07169576361775398
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.08722018823027611,
+          0.08153090626001358
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.031631842255592346,
+          0.07169576361775398
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03298431634902954,
+        0.07164537161588669
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.06336628645658493,
+          0.0744776800274849
+        ]
+      },
+      "off": {
+        "reached": 4,
+        "alive": 15,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.03298431634902954,
+          0.07164537161588669
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03161520138382912,
+        0.07128462940454483
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.06946928799152374,
+          0.07202617824077606
+        ]
+      },
+      "off": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.03161520138382912,
+          0.07128462940454483
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.03296912461519241,
+        0.07461907714605331
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.07282615453004837,
+          0.07520516216754913
+        ]
+      },
+      "off": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.03296912461519241,
+          0.07461907714605331
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "eval_pred",
+      "command": "stop",
+      "envs": 2,
+      "baseline": [
+        0.03478289768099785,
+        0.07442665100097656
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07343136891722679,
+          0.07679654285311699
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.03478289768099785,
+          0.07442665100097656
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.07752478122711182
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.08879376575350761
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.07752478122711182
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.0695435144007206
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.07345134019851685
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.0695435144007206
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 4,
+      "baseline": [
+        0.07104771956801414
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07198566943407059
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07104771956801414
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.09547218680381775
+      ],
+      "on": {
+        "reached": 10,
+        "alive": 15,
+        "both": 10,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.08600419014692307
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.09547218680381775
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 15,
+      "baseline": [
+        0.08487731963396072
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 15,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.1159096285700798
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08487731963396072
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 12,
+      "baseline": [
+        0.07859110459685326
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.09003698825836182
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.07859110459685326
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "fwd0.5",
+      "envs": 2,
+      "baseline": [
+        0.11571349948644638
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.1007765457034111
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11571349948644638
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.10099546983838081
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.11809692904353142
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10099546983838081
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.09608800709247589
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.11297137290239334
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09608800709247589
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 4,
+      "baseline": [
+        0.08082350715994835
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.11701719090342522
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.08082350715994835
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.13065001368522644
+      ],
+      "on": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.12770499289035797
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.13065001368522644
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 15,
+      "baseline": [
+        0.1232551857829094
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 15,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.13863708078861237
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 13,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.1232551857829094
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 12,
+      "baseline": [
+        0.09453335776925087
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.12135906890034676
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09453335776925087
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "envs": 2,
+      "baseline": [
+        0.16469347476959229
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.14881090074777603
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.16469347476959229
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09097663685679436
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.0932193361222744
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09097663685679436
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.09184635803103447
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.0890670195221901
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09184635803103447
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 4,
+      "baseline": [
+        0.09183895215392113
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.08951646834611893
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09183895215392113
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.08961173892021179
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 15,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 14,
+        "error_medians": [
+          0.09771737456321716
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.08961173892021179
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 15,
+      "baseline": [
+        0.09208644181489944
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 15,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.09717489778995514
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.09208644181489944
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 12,
+      "baseline": [
+        0.09876067563891411
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.11119454726576805
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09876067563891411
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "spin+1.2",
+      "envs": 2,
+      "baseline": [
+        0.0935688205063343
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10434845462441444
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.0935688205063343
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.11066567152738571
+      ],
+      "on": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.10885545238852501
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.11066567152738571
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.11299830302596092
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.10217371210455894
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11299830302596092
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 4,
+      "baseline": [
+        0.11209983378648758
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11463377997279167
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.11209983378648758
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.11081303656101227
+      ],
+      "on": {
+        "reached": 10,
+        "alive": 15,
+        "both": 10,
+        "reach_without_alive": 0,
+        "alive_without_reach": 5,
+        "error_medians": [
+          0.10796685516834259
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.11081303656101227
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 15,
+      "baseline": [
+        0.1050364077091217
+      ],
+      "on": {
+        "reached": 6,
+        "alive": 15,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.1059238463640213
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.1050364077091217
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 12,
+      "baseline": [
+        0.1241077147424221
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.14378269016742706
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.1241077147424221
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "spin-1.2",
+      "envs": 2,
+      "baseline": [
+        0.11482353881001472
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.12578200921416283
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.11482353881001472
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.12706308811903
+      ],
+      "on": {
+        "reached": 9,
+        "alive": 12,
+        "both": 9,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.11602335423231125
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.12706308811903
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.09937149658799171
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 4,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.09376587718725204
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09937149658799171
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 4,
+      "baseline": [
+        0.06747678481042385
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06838588044047356
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06747678481042385
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.18179339170455933
+      ],
+      "on": {
+        "reached": 13,
+        "alive": 15,
+        "both": 13,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.16066884994506836
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18179339170455933
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 15,
+      "baseline": [
+        0.18332970142364502
+      ],
+      "on": {
+        "reached": 12,
+        "alive": 14,
+        "both": 11,
+        "reach_without_alive": 1,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.16012439131736755
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18332970142364502
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 12,
+      "baseline": [
+        0.09549061581492424
+      ],
+      "on": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.12053199112415314
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09549061581492424
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "envs": 2,
+      "baseline": [
+        0.29575493931770325
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.1582057625055313
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.29575493931770325
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.1304321512579918
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 12,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.18457605689764023
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.1304321512579918
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.10398511961102486
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.13399798423051834
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10398511961102486
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 4,
+      "baseline": [
+        0.09724607691168785
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.10301682725548744
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.09724607691168785
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.18924392759799957
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 15,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.19192908704280853
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18924392759799957
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 15,
+      "baseline": [
+        0.19183076918125153
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 15,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.19299550354480743
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.19183076918125153
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 12,
+      "baseline": [
+        0.11405559256672859
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.16926705092191696
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.11405559256672859
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "side+0.5",
+      "envs": 2,
+      "baseline": [
+        0.28208261728286743
+      ],
+      "on": {
+        "reached": 2,
+        "alive": 2,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 0,
+        "error_medians": [
+          0.2549811750650406
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.28208261728286743
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.09314285218715668
+      ],
+      "on": {
+        "reached": 4,
+        "alive": 12,
+        "both": 4,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.12083934247493744
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.09314285218715668
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.0664791613817215
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.08835603669285774
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.0664791613817215
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 4,
+      "baseline": [
+        0.07643330097198486
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.10855421051383018
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.07643330097198486
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.1354924589395523
+      ],
+      "on": {
+        "reached": 7,
+        "alive": 15,
+        "both": 7,
+        "reach_without_alive": 0,
+        "alive_without_reach": 8,
+        "error_medians": [
+          0.14402742683887482
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.1354924589395523
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 15,
+      "baseline": [
+        0.19311441481113434
+      ],
+      "on": {
+        "reached": 8,
+        "alive": 14,
+        "both": 7,
+        "reach_without_alive": 1,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.18647333979606628
+        ]
+      },
+      "off": {
+        "reached": 8,
+        "alive": 15,
+        "both": 8,
+        "reach_without_alive": 0,
+        "alive_without_reach": 7,
+        "error_medians": [
+          0.19311441481113434
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 12,
+      "baseline": [
+        0.08712636679410934
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 12,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 11,
+        "error_medians": [
+          0.1416136398911476
+        ]
+      },
+      "off": {
+        "reached": 6,
+        "alive": 12,
+        "both": 6,
+        "reach_without_alive": 0,
+        "alive_without_reach": 6,
+        "error_medians": [
+          0.08712636679410934
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "envs": 2,
+      "baseline": [
+        0.17426030337810516
+      ],
+      "on": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.14663593471050262
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.17426030337810516
+        ]
+      }
+    },
+    {
+      "terrain": "boxes",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.03019493632018566,
+        0.0727924145758152
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.062027256935834885,
+          0.06962642818689346
+        ]
+      },
+      "off": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.03019493632018566,
+          0.0727924145758152
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.033923082053661346,
+        0.07502346858382225
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.05181240476667881,
+          0.06738190352916718
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 4,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 3,
+        "error_medians": [
+          0.033923082053661346,
+          0.07502346858382225
+        ]
+      }
+    },
+    {
+      "terrain": "hf_pyramid_slope_inv",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 4,
+      "baseline": [
+        0.031334420666098595,
+        0.07149093598127365
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 4,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 4,
+        "error_medians": [
+          0.062023939564824104,
+          0.07819966971874237
+        ]
+      },
+      "off": {
+        "reached": 2,
+        "alive": 4,
+        "both": 2,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.031334420666098595,
+          0.07149093598127365
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03193993866443634,
+        0.07144837826490402
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.0665280818939209,
+          0.07843224704265594
+        ]
+      },
+      "off": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.03193993866443634,
+          0.07144837826490402
+        ]
+      }
+    },
+    {
+      "terrain": "pyramid_stairs_inv",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 15,
+      "baseline": [
+        0.03008282370865345,
+        0.07130628079175949
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 15,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 15,
+        "error_medians": [
+          0.0634150579571724,
+          0.07387647032737732
+        ]
+      },
+      "off": {
+        "reached": 5,
+        "alive": 15,
+        "both": 5,
+        "reach_without_alive": 0,
+        "alive_without_reach": 10,
+        "error_medians": [
+          0.03008282370865345,
+          0.07130628079175949
+        ]
+      }
+    },
+    {
+      "terrain": "random_rough",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 12,
+      "baseline": [
+        0.030949090607464314,
+        0.07625983655452728
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 12,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 12,
+        "error_medians": [
+          0.062304308637976646,
+          0.07580146193504333
+        ]
+      },
+      "off": {
+        "reached": 3,
+        "alive": 12,
+        "both": 3,
+        "reach_without_alive": 0,
+        "alive_without_reach": 9,
+        "error_medians": [
+          0.030949090607464314,
+          0.07625983655452728
+        ]
+      }
+    },
+    {
+      "terrain": "stage_stairs",
+      "mode": "probe_prop_only",
+      "command": "stop",
+      "envs": 2,
+      "baseline": [
+        0.033466074615716934,
+        0.0741364099085331
+      ],
+      "on": {
+        "reached": 0,
+        "alive": 2,
+        "both": 0,
+        "reach_without_alive": 0,
+        "alive_without_reach": 2,
+        "error_medians": [
+          0.06437693350017071,
+          0.0775199756026268
+        ]
+      },
+      "off": {
+        "reached": 1,
+        "alive": 2,
+        "both": 1,
+        "reach_without_alive": 0,
+        "alive_without_reach": 1,
+        "error_medians": [
+          0.033466074615716934,
+          0.0741364099085331
+        ]
+      }
+    }
+  ],
+  "stop_window": [
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_gt",
+      "condition": "on",
+      "stationary": 3,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "flat",
+      "mode": "eval_pred",
+      "condition": "on",
+      "stationary": 2,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "flat",
+      "mode": "probe_prop_only",
+      "condition": "on",
+      "stationary": 2,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "condition": "on",
+      "stationary": 3,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "condition": "on",
+      "stationary": 2,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "condition": "off",
+      "stationary": 64,
+      "window_envs": 64,
+      "alive_end": 64
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "condition": "on",
+      "stationary": 3,
+      "window_envs": 64,
+      "alive_end": 64
+    }
+  ],
+  "failures": [
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "fwd1.0",
+      "condition": "off",
+      "env": 29,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 101,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "condition": "off",
+      "env": 45,
+      "kind": "stage_stairs",
+      "first_done_step": 285,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "condition": "on",
+      "env": 51,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 118,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_gt",
+      "command": "back0.5",
+      "condition": "on",
+      "env": 52,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 145,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "condition": "off",
+      "env": 8,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 188,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "fwd1.0",
+      "condition": "off",
+      "env": 9,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 145,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "side+0.5",
+      "condition": "on",
+      "env": 29,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 116,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "eval_pred",
+      "command": "side-0.5",
+      "condition": "on",
+      "env": 9,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 254,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "condition": "off",
+      "env": 8,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 182,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "fwd1.0",
+      "condition": "off",
+      "env": 30,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 247,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "back0.5",
+      "condition": "on",
+      "env": 32,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 123,
+      "end_reason": "terminated"
+    },
+    {
+      "terrain": "continuous",
+      "mode": "probe_prop_only",
+      "command": "side-0.5",
+      "condition": "on",
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "first_done_step": 128,
+      "end_reason": "terminated"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\n21_record_only.json",
+      "sha256": "7ea1f38de01b9b2a27a298a7126cf73efe4d22ea1d4a0cf9eeac5b07a4c8ceae",
+      "code_head": "d1dfd4f986ce9c45f0f761f6494a0792af718063",
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "03604840095cda673d8fca580d3ce1cedd598a184f05b6a5e5a7f148a6b4d6d1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "9c5f31c8524a698ac5dd8a0c112df2f98314b367be91ea6e1482951a242791bf"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "1590baa436db6bad7f4c9ec1256b1db1f41e574417fc0c730314374031a10e9d"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "1e3c0d29c7b9a483cda959193c2a3e96e656b257b865756ac61a8d0dc58ba1f1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "a13e9d176843302e34800cf1256f1180a0114ae3dac37aa69a125fde6c18eb84"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "68f5b80816625e56e53ab709c803a1f7664e2d71b58466fc683310a38a799b56"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "1ecc6074e266bc60f754523683d507e78aa5fcd424aea93375c9e420a531a2a2"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_gt_stop.npz",
+      "sha256": "7d2c573afa10ea308288eb76d51be2ac0b030ad001bde9c7adfb4e369eb8d8e5"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "8b00821d5603358858e9d146443425faefa166f23ac4a323841693fe886ca03b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "49d831bebeb38a4b413e67b941cb107e37b5e91d1fac49721c092d09e687ca77"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "4b95b637991303fadcb94410420e027a87b20344da104e13ac1e46e7a7a3a652"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "dc57a85d5038f8db267710a8f032bd4788bdade4670b152a159212d2e9be1ed8"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "ad591dbcb4022a9931a7918cc94901a7e2107d0b14bcfd03448df56710db2ce3"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "204c99c40b2624f5b9ec25bc3d2c6eccadcbe5e1debe6df0e3514a1343a25430"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "d5856daed2bec2c12c6e4abce465f95803346b383ff69b3290908ac1318ad05d"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_eval_pred_stop.npz",
+      "sha256": "7019e5b3d630f06eec9ac6b1a4536f35b4a5dc6f2f04cc773d52797d2f5bc467"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "179a0470fd1238c7208a14a2b11dd893702fd704bbba22a4d6573a223fe096e0"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "b4a5b7da5bdf662235f9683ebcce7c1a30a84307c939faa55c866f27fc2f757c"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "e2ee6dc00066e2ec59dfa86187c950448b02054ab5084d98106b76eaf115af48"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "554720b355e1a52928cca64b82b6df8f68a0e701f37a09c02b6633774ec68198"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "47e294faebc7061c109e6537c5019cc010fca14b4c5f93ea1af88449210cc900"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "a14fde8ba2f0a0ec0d39293e8e9864b941a967eeeb8f6ca6cfd12e029f66da3a"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "804f3f55f9e9e8e5d6c90cf521d8d5cc4e1847b63209869eba59d8ad586ebb32"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-flat-300\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "faff6f245b47fbcb4e559c4c945034955548092d6a976c2e42076ae49976859f"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\curriculum\\ex41-fixed5000.yaml",
+      "sha256": "92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c",
+      "preserved_startup": {
+        "friction_static_dynamic": [
+          0.2,
+          1.2
+        ],
+        "base_mass_add_kg": [
+          -1.0,
+          3.0
+        ]
+      }
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\n21_record_only.json",
+      "sha256": "22c0a09207424a179253ad95db4c3aa7114d2dfbc7b7fc4860117e5f7d0307ca",
+      "code_head": "1771ee0416119e2f7ea5a144e4a7b72a8a6d8d43",
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "620116f3b534809d9c64df487c120329aba1d619ee8c49e31c9439b5ca1c33a5"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "80bbcc3a58c5504664dca13949e6cb9e339d73a1f8f294825f18f58b9de07da1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "0476e322a28a1b82c7ba4e40f13120a02177fb0d2fe369f1181b585a258a7660"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "9077a3894fe06835b0d4e1d875d0d33cea320e658befaabf0682cf3654fb0891"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "c37b719643f4cb97f73c8adbe283a5c3c05020ed2c0b396dc35f0fad7f247c06"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "e2a11c218acb4a777d72fe43c1df55a56dc0a98038de3753031aa7521596cde1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "8667b6428a8694b2c30ca68a9ceea7e273a4674f1409a66655f4f0d5eb301b1b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_gt_stop.npz",
+      "sha256": "fb63b04085f1bea951fe5656620e0f1fe1244b23b7365853c1297cb56bd444ce"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "59b06c10348b7afe733c8dc092a5505ecc1c79762ae2ebb924036d796bef581b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "ee09947139fd40b1767d8f935cf795f2ba80b4081d20890a0c592bcfa758bb16"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "b05bb3adbf2e4a8e3fd6d2bde0fcda1565a34f26e088dfde61ac74b41c082385"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "a060619a4ce4fdb6600e47ca1966e1b0493ecad9448e77652a1d737229dcd499"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "54c9b5e183b8c9d8979e3202f56bb815d5c7d85f76ea58af56997437a85359bf"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "415150fb821b6b823f9dbea599444470a63438f84ab177fd457a5a18a6971b25"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "eb710dc2545d4677f7c3f401ef93368c1aeddffdc2181ffe14350a51c36894aa"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_eval_pred_stop.npz",
+      "sha256": "bfab59b551be79d89a3c98fafa135b0e34dc4e5e7222d17f33e2f1b66d9bbbbd"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "badd6b7f961e00388c04892e2401b93521c6391e5d8564a3a51620a74f1b4609"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "337943983c43916410835b2a25ef2987e5c0d97a471accf7cb57ad54638ead05"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "481ac0daa01f09243bfb0066702cb6abbd8468b70195ce9204079cfd6133d53a"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "0eb2feabf0c56122dd67b76573d3bfa627bded681fd1b325bacd7221024535e3"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "c3a63e3e7d5bbf9261b9e4029c236926b6b0dad873e211cf2d02b09abb8411d0"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "6bc9b709fe71dbcc568a7f59d94604fea69775f7ca96d7df2c5e347ac6a06818"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "717f0ca42f4ee36c3efd505d56556098d140aa7bf4520bfc4592ecfffd23b0d4"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu1-flat-300-off\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "5cb21ca2dc3770d7c476a174fcdc4c7133e3b839d01e1c72c05d23d2edff42a3"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\n21_record_only.json",
+      "sha256": "972bdb33fd6f3f2ae6228cf29448e614977cd3af40446cb2d28d4cfb207716a1",
+      "code_head": "d1dfd4f986ce9c45f0f761f6494a0792af718063",
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "8caf1d3779c4fd83c91dd2f74e97b7b57a1322b22898f318b4be5d8064283e6b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "44eef83850cdcab67df9d03118d49eec20e5355f86728b6e72970b7f4fa92cc4"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "5ee817bb8efaa6900df646bc36f810bf9e1c42b408655c66630704f4eff1c3dd"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "98c4fe5af9b56dfebde66755ea74ca58ee19c2365217fa6244f761e806fb628c"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "2e25472d6545237f0e04c03211d901678b4e47a42ba1a84eaf0f60a6b86ceaab"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "a90f2ca1f854c0c345f54b5cf742329efc922509a54432d663e62f8fb7adb805"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "aff39236bb916bab78d0edda8d73e4499b805b49d6ef121f86093536411fc61b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_gt_stop.npz",
+      "sha256": "26631ebc41855cd40446f5b45fb73799867ad95787aa72c437c9195305035371"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "66605669fc082bbe29a0e05ea32262a43b723219987ef7cffc2e50d209ab4332"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "480e20f6b0ff5f4eeba995ff11b4b0bcc97bb157d42dd95a2d8c8577adc1acbd"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "491fe45b74581f52db1ef8dcdd744c9134c7a3ed051b600c7b5cdbd6d578a843"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "95101f5fa17a47b93e743a03940196d9d94f631a764a8912022470c2932abad3"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "54383cccbbbc11f6c7503336f4e0716dcfefe8bda3f5b9f2d3d1d4f5ea0b1e14"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "b168487247945ff197b0e919eab0ec14ae8a5d244daad6e1c7b1466c9a7ebf4a"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "c4d8507a5e107426ca1d639ff4a71cb518aa27ced8d8f8230c1a13e110a841a3"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_eval_pred_stop.npz",
+      "sha256": "5c6a9425a263e7e441dcd30c08646ffa82f39047197f8f288ba24e55e8b528d1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "ea07a32f3336316244a8075ee29a950fd96fbe6256cbed6a16be7bb7ff0b8cf5"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "0f81f832997772c786965e28313ef0050bcd413cf46a887f8e4fdab90691100f"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "26662407017175baa4fcdca170fad1f9ae8b99b34ef82fdef789315438561dbc"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "dd422a01d20fb097ca1944f4d8d5b873a6ca7fcef2e355255a46bc36e3d4831b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "7f1b654a1422a486f77b383d685fa738e74791379b42b40f7879e7cd943a0871"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "6f8df40d7ebb18136d736e6a529f450aae8df41c7f9f2e05a896fcb7904beb73"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "a5243f341f6e1794f4245bb22042e9b0099f11799e5b93c49b594adb27ab43fb"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "f395961296180da846a71e40a915aab13050583bd9f35a873cec99cbc760eb9e"
+    },
+    {
+      "path": "D:\\mai-wt\\foothold-lab\\runner-ex42-v016\\foothold_s2\\curriculum\\ex41-fixed5000.yaml",
+      "sha256": "92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c",
+      "preserved_startup": {
+        "friction_static_dynamic": [
+          0.2,
+          1.2
+        ],
+        "base_mass_add_kg": [
+          -1.0,
+          3.0
+        ]
+      }
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\n21_record_only.json",
+      "sha256": "befedb9ff9e9e02dbdf80899cf576f10f4900add19c701a70f1731e177c8b316",
+      "code_head": "1771ee0416119e2f7ea5a144e4a7b72a8a6d8d43",
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_fwd0.5.npz",
+      "sha256": "dc0219ec61faee3309ae3d41f6b1fc9556d721c42e62bc352103b69885ae4517"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_fwd1.0.npz",
+      "sha256": "81304151bfa596cce331bff9bab50b12ce0546fdf11535ffbebace4521f7a937"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_spin+1.2.npz",
+      "sha256": "0b28c0ee8111b80868972e0ba66a9fb9ae91a50d393acb0ec65561c2cdd09fe8"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_spin-1.2.npz",
+      "sha256": "9df8a8f19c91122ce1fb23901898f68f164a9a1c66f0d6cb7b3db9bf40969800"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_back0.5.npz",
+      "sha256": "3c4fe1db8825abc23c8720622b0a79a4e0abb734ec1742873d24290c8eed4202"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_side+0.5.npz",
+      "sha256": "ae55285d9d8e3f2afacb08e0d322383c5640609b4ea6f5f25f1cc525404b4e83"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_side-0.5.npz",
+      "sha256": "64a1d5dbc2cf6842a426fc7c13e7c94580d5b423cac976a300403bd6cf6941c7"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_gt_stop.npz",
+      "sha256": "18a779129155d22e89e1d820c2a67e0d748135e6e51f7310ec381ee13100ea20"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_fwd0.5.npz",
+      "sha256": "983ebbea90c4b59404db633f70a1ca01426da01f7b903a20b92f98c205a2b381"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_fwd1.0.npz",
+      "sha256": "d7606c80d77bdffda5aa218ad6f1e43964f46036b0661939263eaa1046f2bc6d"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_spin+1.2.npz",
+      "sha256": "dace7fd4bfd55486c8c8ee7c6fc28984f12c2ca4423fe18a0ceed9d174ab9fec"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_spin-1.2.npz",
+      "sha256": "4b9f780238727511c787a001677ba7bd9beb5a22caebea06fd1adea092359843"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_back0.5.npz",
+      "sha256": "5062cd916585d6ec14d8117b20f38cdc0251e17249ad039a38037ae898cff484"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_side+0.5.npz",
+      "sha256": "4671be5b435dc49fa965784e589e90b141fca6aa015a03eeec28e00288585c40"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_side-0.5.npz",
+      "sha256": "5886327faa8efe43be3171bc42a44dbc4f2dee2d0f43e879559318c06b8dc2b4"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_eval_pred_stop.npz",
+      "sha256": "2f123f4f5f0648f63e3516fcb700863fc923ec945c8e82f202665bf250bffd61"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_fwd0.5.npz",
+      "sha256": "3a574303a71e7e57a36251ae133c5e628d8d136276ca7117d5d70960d38756e8"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_fwd1.0.npz",
+      "sha256": "08abf247d5ddcb2a36a686bc0203961cc99d8f29f707075de85393b0e59863d1"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_spin+1.2.npz",
+      "sha256": "cb4c644034b08624352246be24daaa6978d2a45a266485f31d39b463e243de75"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_spin-1.2.npz",
+      "sha256": "5fcd7ed13109a85e1eed3b8746e696f0735e47382ddae1ae7343f1baeef66552"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_back0.5.npz",
+      "sha256": "80c05c291f3048e6d04ceb38cf92dc735a05100d5ace6e3ffddf5543f74adc08"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_side+0.5.npz",
+      "sha256": "c7980984fe07a9655321da140b65e10f73f2dec6228f0e58f749d2676360dae8"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_side-0.5.npz",
+      "sha256": "3e99f476166f6eda0d68455277294cc1d4b07ec7cddf7d0aec6c4ac4a8f89e2e"
+    },
+    {
+      "path": "D:\\mai-tmp\\runner\\ex42_n21_w63_20261108\\gpu0-continuous-300-off\\env_arrays_probe_prop_only_stop.npz",
+      "sha256": "1fe9182947b1665b276e1dd45e50873fe1c82c5b2b982230c64a796cd9333d46"
+    }
+  ],
+  "npz_count_checked": 96,
+  "known_answer_tests": 5,
+  "nominal_usd": {
+    "path": "D:\\mai-tmp\\analyst\\jump-physics-1104\\go2.usd",
+    "sha256": "ba171c972b987d8c8fb7157ccad2ba9c0c1fed105755d2d8af46bef96cc11c6d",
+    "masses": {
+      "base": 6.921000003814697,
+      "FL_hip": 0.6779999732971191,
+      "FL_thigh": 1.1519999504089355,
+      "FL_calf": 0.15399999916553497,
+      "FL_foot": 0.03999999910593033,
+      "FR_hip": 0.6779999732971191,
+      "FR_thigh": 1.1519999504089355,
+      "FR_calf": 0.15399999916553497,
+      "FR_foot": 0.03999999910593033,
+      "Head_upper": 0.0010000000474974513,
+      "Head_lower": 0.0010000000474974513,
+      "RL_hip": 0.6779999732971191,
+      "RL_thigh": 1.1519999504089355,
+      "RL_calf": 0.15399999916553497,
+      "RL_foot": 0.03999999910593033,
+      "RR_hip": 0.6779999732971191,
+      "RR_thigh": 1.1519999504089355,
+      "RR_calf": 0.15399999916553497,
+      "RR_foot": 0.03999999910593033
+    }
+  },
+  "runtime_source_presence": {
+    "flat": {
+      "on": "61fb699002073fb2",
+      "off": null
+    },
+    "continuous": {
+      "on": "61fb699002073fb2",
+      "off": null
+    }
+  }
+}

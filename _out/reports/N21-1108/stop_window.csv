@@ -1,0 +1,13 @@
+﻿terrain,mode,condition,stationary,window_envs,alive_end
+flat,eval_gt,off,64,64,64
+flat,eval_gt,on,3,64,64
+flat,eval_pred,off,64,64,64
+flat,eval_pred,on,2,64,64
+flat,probe_prop_only,off,64,64,64
+flat,probe_prop_only,on,2,64,64
+continuous,eval_gt,off,64,64,64
+continuous,eval_gt,on,3,64,64
+continuous,eval_pred,off,64,64,64
+continuous,eval_pred,on,2,64,64
+continuous,probe_prop_only,off,64,64,64
+continuous,probe_prop_only,on,3,64,64
