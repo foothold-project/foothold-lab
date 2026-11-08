@@ -333,3 +333,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08 11:4x	lead	W65: analyst 점검 d73d1aca 로 Kit 전 막음 3(H1~H3) · 부모 조건 불일치 2(H4 lin_vel_z −2 대 0 · H5 밀기 분기) · model_50 회차 off-by-one 확인. 모두 고친 뒤 analyst 재점검 막음 0 이면 재기동으로 정함. 부모 조건과 다르게 돌았으면 0 단계 결과를 EX-41 과 이어 볼 수 없었음	I45 I46
 2026-11-08 12:0x	lead	GPU0 빔 채움: N21 m12000 DR-on 평지·연속을 시드 43·44 로 다시 재는 4 판(1353~1356, 고정 7916a52, record_only) · 목적은 analyst 가 짚은 「재측정 폭 없음」 · 계획 안 · 로컬 GPU · 설정 변경 없음이라 lead 결정	M90
 2026-11-08 12:1x	lead	W65: analyst 재점검 79313207 막음 0(H1~H5 · model_50 닫힘 16 PASS) → eae0bed7 로 GPU1 기동 지시	I45 I46
+2026-11-08 12:4x	lead	W65 기동 확인(lead 직접): PID 93176 · 12:39:16 · 고정 eae0bed7 · source audit writable 0 · 첫 update 줄 Learning iteration 1/1000 (2213 steps/s · 수집 12.6 s · 학습 20.7 s) · 다음 증거 model_50 저장 · 되읽기	-
