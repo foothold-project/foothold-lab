@@ -105,6 +105,8 @@ EX42_STAGE_ZERO_RESUME = None
 EX42_STAGE_ZERO_RESUME_PROOF = None
 EX42_STAGE_ZERO_RESUME_TARGET = None
 EX42_STAGE_ZERO_RESUME_SAME_RUN = False
+EX42_STAGE_ZERO_CHAIN_RECEIPT = None
+EX42_STAGE_ZERO_ROOT_XY_READBACK = None
 EX41_REHEARSAL = False
 EX41_STAGE_REHEARSAL = None
 EX41_STAGE_REHEARSAL_RECEIPT = None
@@ -450,7 +452,7 @@ if _ex42_requested:
     if _missing_ex42:
         raise ValueError("EX-42 caller inputs are incomplete: " + ", ".join(_missing_ex42))
     from foothold_s2.scripts.ex42_training_entry import (
-        build_ex42_training_chain, validate_ex42_stage_zero_chain_output,
+        build_ex42_training_chain, build_stage_zero_chain_with_receipt_checks,
     )
     from foothold_s2.ex42_gate_checks import audit_ex42_launch_source
 
@@ -519,23 +521,29 @@ if _ex42_requested:
 
     EX42_SOURCE_LOCK_RECEIPT = audit_ex42_launch_source(REPO, remote_ref=_pre_args.ex42_source_ref)
 
-    EX42_TRAINING_CHAIN = build_ex42_training_chain(
-        plan_path=_pre_args.ex42_plan,
-        approvals_path=_pre_args.ex42_approvals,
-        parent_manifest_path=_pre_args.ex42_parent_manifest,
-        run_dir=_pre_args.ex42_log_dir,
-        repo_root=REPO,
-        queue_path=_pre_args.ex42_queue_path,
-        dispatch_path=_pre_args.ex42_dispatch_path,
-        score_argv_json=_pre_args.ex42_p1_score_argv_json,
-    )
-    if EX42_STAGE_ZERO_PLAN is not None:
-        validate_ex42_stage_zero_chain_output(
-            _pre_args.ex42_log_dir,
-            plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
-            parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            allow_existing_run=EX42_STAGE_ZERO_RESUME_SAME_RUN,
+    def _build_ex42_chain():
+        return build_ex42_training_chain(
+            plan_path=_pre_args.ex42_plan,
+            approvals_path=_pre_args.ex42_approvals,
+            parent_manifest_path=_pre_args.ex42_parent_manifest,
+            run_dir=_pre_args.ex42_log_dir,
+            repo_root=REPO,
+            queue_path=_pre_args.ex42_queue_path,
+            dispatch_path=_pre_args.ex42_dispatch_path,
+            score_argv_json=_pre_args.ex42_p1_score_argv_json,
         )
+
+    if EX42_STAGE_ZERO_PLAN is not None:
+        EX42_TRAINING_CHAIN, EX42_STAGE_ZERO_CHAIN_RECEIPT = (
+            build_stage_zero_chain_with_receipt_checks(
+                _pre_args.ex42_log_dir,
+                plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
+                parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+                allow_existing_run=EX42_STAGE_ZERO_RESUME_SAME_RUN,
+                builder=_build_ex42_chain,
+            ))
+        print("EX42_STAGE_ZERO_CHAIN_RECEIPT "
+              + json.dumps(EX42_STAGE_ZERO_CHAIN_RECEIPT, sort_keys=True), flush=True)
         if EX42_STAGE_ZERO_RESUME:
             source = Path(EX42_STAGE_ZERO_RESUME)
             target = Path(_pre_args.ex42_log_dir).resolve() / source.name
@@ -550,6 +558,8 @@ if _ex42_requested:
             print("EX42_SELF_RESUME_CHECKPOINT_STAGED " + json.dumps({
                 "source": str(source), "target": str(target), "sha256": copied_sha,
             }, sort_keys=True), flush=True)
+    else:
+        EX42_TRAINING_CHAIN = _build_ex42_chain()
     if not _stage_zero_requested:
         raise RuntimeError(
             "EX-42 preparation_only: full plan is blocked; refusing before AppLauncher"
@@ -898,6 +908,7 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.scripts.ex42_training_entry import (
             EX42StageZeroDRReadback, EX42StageZeroRuntime,
             apply_stage_zero_parent_reward_manager, build_stage_zero_reset_readback,
+            restore_stage_zero_resume_terrain_before_reset,
         )
 
         stand_data_receipt = attach_ex41_stand_runtime_data(env)
@@ -930,6 +941,11 @@ def main(env_cfg, agent_cfg):
             parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
         print("EX42_STAGE_ZERO_REWARD_MANAGER "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
+        if EX42_STAGE_ZERO_RESUME:
+            terrain_restore = restore_stage_zero_resume_terrain_before_reset(
+                env, EX42_STAGE_ZERO_CHECKPOINT)
+            print("EX42_SELF_RESUME_TERRAIN_BEFORE_RESET "
+                  + json.dumps(terrain_restore, sort_keys=True), flush=True)
         env.reset()
         ex42_stage_zero_reset_readback = build_stage_zero_reset_readback(
             env, ex42_dr_readback, EX42_STAGE_ZERO_ENV_CONTRACT)
@@ -1012,6 +1028,8 @@ def main(env_cfg, agent_cfg):
         ex42_stage_zero_runtime.attach_runner(runner)
         runner.ex40_dr_runtime = ex42_dr_readback
         if EX42_STAGE_ZERO_RESUME:
+            from foothold_s2.scripts.ex42_training_entry import build_stage_zero_resume_root_xy_readback
+
             resume_saved = torch.load(EX42_STAGE_ZERO_RESUME, map_location="cpu", weights_only=False)
             runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
             runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
@@ -1028,8 +1046,15 @@ def main(env_cfg, agent_cfg):
             if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
                     or runner.continuous_curriculum.state_dict() != resume_saved["continuous_curriculum"]):
                 raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
+            EX42_STAGE_ZERO_ROOT_XY_READBACK = build_stage_zero_resume_root_xy_readback(
+                env, pose_range=env_cfg.events.reset_base.params["pose_range"])
+            ex42_transfer["root_xy_readback"] = EX42_STAGE_ZERO_ROOT_XY_READBACK
+            if EX42_STAGE_ZERO_ROOT_XY_READBACK["outside_reset_bounds_count"] != 0:
+                raise ValueError("EX-42 resumed root XY is outside reset bounds from restored env origins")
             print("EX42_SELF_RESUME_READBACK "
                   + json.dumps(ex42_transfer, sort_keys=True), flush=True)
+            print("EX42_SELF_RESUME_ROOT_XY_READBACK "
+                  + json.dumps(EX42_STAGE_ZERO_ROOT_XY_READBACK, sort_keys=True), flush=True)
         else:
             ex42_transfer = runner.load_ex42_stage_zero_parent(
                 EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
@@ -1248,6 +1273,11 @@ def main(env_cfg, agent_cfg):
                                             if runtime_output_layout else None),
                           "disk_preflight": EX41_DISK_RECEIPT,
                           "local_update_range": [1, ex41_runtime.max_updates]}
+    if EX42_STAGE_ZERO_PLAN is not None:
+        modes["ex42_stage_zero"] = {
+            "chain_startup_receipt": EX42_STAGE_ZERO_CHAIN_RECEIPT,
+            "resume_root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
+        }
     if resume_path is None or (EX42_STAGE_ZERO_RESUME and not EX42_STAGE_ZERO_RESUME_SAME_RUN):
         manifest = run_manifest.build_manifest(
             repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name,
@@ -1266,6 +1296,7 @@ def main(env_cfg, agent_cfg):
                 EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"])
             manifest["modes"]["ex42_self_resume"] = {
                 **EX42_STAGE_ZERO_RESUME_PROOF,
+                "root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
                 "source_manifest_path": str(source_manifest_path),
                 "target_checkpoint_path": EX42_STAGE_ZERO_RESUME_TARGET,
                 "source_run_dir": str(Path(EX42_STAGE_ZERO_RESUME).resolve().parent),
@@ -1288,6 +1319,7 @@ def main(env_cfg, agent_cfg):
         manifest.setdefault("ex42_resume_segments", []).append(segment)
         manifest.setdefault("modes", {})["ex42_self_resume"] = {
             **EX42_STAGE_ZERO_RESUME_PROOF,
+            "root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
             "target_run_dir": log_dir,
             "same_run_directory": True,
         }

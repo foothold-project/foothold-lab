@@ -239,8 +239,161 @@ def validate_ex42_stage_zero_chain_output(log_dir: str | Path, *,
             or parent.get("checkpoint_sha256") != parent_sha256):
         raise ValueError("EX-42 stage-zero startup receipt identity differs")
     return {"state": "chain_startup_receipt_verified",
-            "path": str(entries[0]), "plan_sha256": plan_sha256,
+            "path": str(output / "startup_receipt.json"), "plan_sha256": plan_sha256,
             "parent_sha256": parent_sha256}
+
+
+def build_stage_zero_chain_with_receipt_checks(log_dir: str | Path, *,
+                                               plan_sha256: str,
+                                               parent_sha256: str,
+                                               allow_existing_run: bool,
+                                               builder: Any) -> tuple[Any, dict[str, Any]]:
+    """Validate an existing receipt before chain construction and its output after.
+
+    Same-run self-resume reuses a directory whose receipt predates this process.
+    Validate that receipt before the chain constructor can atomically replace it,
+    then validate the resulting receipt again before AppLauncher is imported.
+    """
+    receipt_path = Path(log_dir).resolve() / "startup_receipt.json"
+    previous = None
+    previous_sha256 = None
+    if allow_existing_run:
+        previous = validate_ex42_stage_zero_chain_output(
+            log_dir, plan_sha256=plan_sha256, parent_sha256=parent_sha256,
+            allow_existing_run=True)
+        previous_sha256 = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+    chain = builder()
+    current = validate_ex42_stage_zero_chain_output(
+        log_dir, plan_sha256=plan_sha256, parent_sha256=parent_sha256,
+        allow_existing_run=allow_existing_run)
+    current_sha256 = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+    return chain, {
+        "state": "startup_receipt_checked_before_and_after_chain_construction",
+        "previous": previous,
+        "previous_sha256": previous_sha256,
+        "current": current,
+        "current_sha256": current_sha256,
+        "receipt_changed": previous_sha256 is not None and previous_sha256 != current_sha256,
+    }
+
+
+def restore_stage_zero_resume_terrain_before_reset(env: Any,
+                                                   checkpoint: dict[str, Any]) -> dict[str, Any]:
+    """Install checkpoint terrain selection before the env's real reset event.
+
+    Isaac Lab's reset_root_state_uniform reads scene.env_origins while placing
+    the robot. Restoring levels/origins only later in StartRunner.load leaves
+    every root pose at the first-reset origin, so the saved terrain and pose
+    disagree. This pre-reset restore makes the existing reset event authoritative.
+    """
+    import torch
+
+    raw = getattr(env, "unwrapped", env)
+    scene = getattr(raw, "scene", None)
+    terrain = getattr(scene, "terrain", None)
+    saved = checkpoint.get("env_state") if isinstance(checkpoint, dict) else None
+    if terrain is None or not isinstance(saved, dict):
+        raise ValueError("EX-42 resume cannot restore terrain before reset")
+    levels_dst = getattr(terrain, "terrain_levels", None)
+    types_dst = getattr(terrain, "terrain_types", None)
+    origins_grid = getattr(terrain, "terrain_origins", None)
+    active_origins = getattr(terrain, "env_origins", None)
+    if any(value is None for value in (levels_dst, types_dst, origins_grid, active_origins)):
+        raise ValueError("EX-42 resume terrain selection tensors are unavailable")
+    levels_src = saved.get("terrain_levels")
+    types_src = saved.get("terrain_types")
+    if levels_src is None or types_src is None:
+        raise ValueError("EX-42 resume checkpoint lacks saved terrain levels/types")
+    levels_src = torch.as_tensor(levels_src)
+    types_src = torch.as_tensor(types_src)
+    if levels_src.ndim != 1 or types_src.ndim != 1 or levels_src.shape != types_src.shape:
+        raise ValueError("EX-42 resume checkpoint terrain levels/types have invalid shapes")
+    count = int(levels_dst.numel())
+    if levels_src.numel() != count:
+        raise ValueError("EX-42 resume terrain selection env count differs")
+    levels = levels_src.to(device=levels_dst.device, dtype=levels_dst.dtype)
+    terrain_types = types_src.to(device=types_dst.device, dtype=types_dst.dtype)
+    if (bool((levels < 0).any()) or bool((levels >= origins_grid.shape[0]).any())
+            or bool((terrain_types < 0).any())
+            or bool((terrain_types >= origins_grid.shape[1]).any())):
+        raise ValueError("EX-42 resume checkpoint terrain selection is out of bounds")
+    levels_dst.copy_(levels)
+    types_dst.copy_(terrain_types)
+    restored_origins = origins_grid[levels, terrain_types].to(
+        device=active_origins.device, dtype=active_origins.dtype)
+    active_origins.copy_(restored_origins)
+    scene_origins = getattr(scene, "env_origins", None)
+    if scene_origins is None:
+        raise ValueError("EX-42 resume scene origins are unavailable before reset")
+    if not torch.equal(scene_origins, restored_origins):
+        try:
+            scene_origins.copy_(restored_origins)
+        except (AttributeError, RuntimeError) as exc:
+            raise ValueError("EX-42 resume scene origins cannot be aligned before reset") from exc
+    if not torch.equal(scene_origins, restored_origins):
+        raise ValueError("EX-42 resume scene origins differ before reset")
+    levels_cpu = levels.detach().to("cpu", dtype=torch.int64)
+    types_cpu = terrain_types.detach().to("cpu", dtype=torch.int64)
+    level_values, level_counts = torch.unique(levels_cpu, return_counts=True)
+    type_values, type_counts = torch.unique(types_cpu, return_counts=True)
+    return {
+        "state": "checkpoint_terrain_selection_applied_before_reset",
+        "restored_before_reset": True,
+        "env_count": count,
+        "level_counts": {str(int(k)): int(v) for k, v in zip(level_values.tolist(), level_counts.tolist())},
+        "type_counts": {str(int(k)): int(v) for k, v in zip(type_values.tolist(), type_counts.tolist())},
+    }
+
+
+def build_stage_zero_resume_root_xy_readback(env: Any, *,
+                                             pose_range: dict[str, tuple[float, float]]) -> dict[str, Any]:
+    """Measure all resumed roots against their selected tile origins before rollout."""
+    import torch
+
+    raw = getattr(env, "unwrapped", env)
+    scene = getattr(raw, "scene", None)
+    robot = None
+    try:
+        robot = scene["robot"]
+    except (TypeError, KeyError, AttributeError):
+        robot = getattr(scene, "robot", None)
+    origins = getattr(scene, "env_origins", None)
+    root = getattr(getattr(robot, "data", None), "root_pos_w", None)
+    if origins is None or root is None or root.ndim != 2 or root.shape[1] < 2:
+        raise ValueError("EX-42 resume root/origin readback is unavailable")
+    if origins.ndim != 2 or origins.shape[1] < 2 or origins.shape[0] != root.shape[0]:
+        raise ValueError("EX-42 resume root/origin readback shapes differ")
+    if not {"x", "y"}.issubset(pose_range):
+        raise ValueError("EX-42 reset pose ranges must include x and y")
+    delta = (root[:, :2] - origins[:, :2]).detach()
+    distance = torch.linalg.vector_norm(delta, dim=1)
+    if not bool(torch.isfinite(distance).all()):
+        raise ValueError("EX-42 resume root/origin distances are not finite")
+    x_bounds = tuple(float(value) for value in pose_range["x"])
+    y_bounds = tuple(float(value) for value in pose_range["y"])
+    if len(x_bounds) != 2 or len(y_bounds) != 2:
+        raise ValueError("EX-42 reset pose ranges must be two-value bounds")
+    tolerance = 1e-4
+    outside = ((delta[:, 0] < x_bounds[0] - tolerance)
+               | (delta[:, 0] > x_bounds[1] + tolerance)
+               | (delta[:, 1] < y_bounds[0] - tolerance)
+               | (delta[:, 1] > y_bounds[1] + tolerance))
+    sorted_distances = distance.sort().values
+    p95_index = max(0, int(0.95 * (sorted_distances.numel() - 1)))
+    root_ids = torch.nonzero(outside, as_tuple=False).flatten().detach().to("cpu").tolist()
+    return {
+        "state": "root_xy_checked_against_restored_env_origins",
+        "env_count": int(root.shape[0]),
+        "distance_xy_m": {
+            "min": float(sorted_distances[0].item()),
+            "mean": float(distance.mean().item()),
+            "p95": float(sorted_distances[p95_index].item()),
+            "max": float(sorted_distances[-1].item()),
+        },
+        "reset_pose_bounds_xy_m": {"x": list(x_bounds), "y": list(y_bounds)},
+        "outside_reset_bounds_count": len(root_ids),
+        "outside_reset_bounds_env_ids_first_16": root_ids[:16],
+    }
 
 
 def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):

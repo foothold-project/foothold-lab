@@ -276,3 +276,59 @@ def test_real_start_runner_parent_transfer_uses_strict_models_and_saved_training
     assert runner._last_use_gt_frac == 0.2
     assert runner.alg.policy.calls[0][1] == {"strict": True}
     assert "ex41_environment_state" in result["not_restored"]
+
+
+def test_resume_terrain_selection_is_applied_before_reset_and_all_roots_follow_saved_origins():
+    import torch
+
+    count = 3072
+    terrain_origins = torch.zeros((6, 4, 3), dtype=torch.float32)
+    for level in range(6):
+        for terrain_type in range(4):
+            terrain_origins[level, terrain_type] = torch.tensor(
+                [100.0 + level * 10.0 + terrain_type,
+                 -100.0 + terrain_type * 20.0 + level, 0.0])
+    levels = torch.arange(count, dtype=torch.int64) % 6
+    terrain_types = torch.arange(count, dtype=torch.int64) % 4
+    initial_origins = torch.zeros((count, 3), dtype=torch.float32)
+    root_positions = initial_origins.clone()
+    terrain = SimpleNamespace(
+        terrain_levels=torch.zeros(count, dtype=torch.int64),
+        terrain_types=torch.zeros(count, dtype=torch.int64),
+        terrain_origins=terrain_origins,
+        env_origins=initial_origins.clone(),
+    )
+    scene = SimpleNamespace(terrain=terrain, env_origins=terrain.env_origins)
+
+    class FakeEnv:
+        unwrapped = None
+
+        def __init__(self):
+            self.scene = scene
+            self.robot = SimpleNamespace(data=SimpleNamespace(root_pos_w=root_positions))
+            self.scene.robot = self.robot
+            self.unwrapped = self
+
+        def reset(self):
+            # Mirror reset_root_state_uniform: default root pose + selected scene origin.
+            offset = torch.tensor([0.1, -0.2, 0.0]).expand(count, 3)
+            self.robot.data.root_pos_w.copy_(self.scene.env_origins + offset)
+
+    env = FakeEnv()
+    saved = {"env_state": {"terrain_levels": levels, "terrain_types": terrain_types}}
+    expected_saved_origins = terrain_origins[levels, terrain_types, :2]
+    before_distance = torch.linalg.vector_norm(root_positions[:, :2] - expected_saved_origins, dim=1)
+    assert int((before_distance > 1.0).sum()) == count
+
+    prepared = entry.restore_stage_zero_resume_terrain_before_reset(env, saved)
+    assert prepared["restored_before_reset"] is True
+    assert prepared["env_count"] == count
+    assert torch.equal(terrain.env_origins, terrain_origins[levels, terrain_types])
+    env.reset()
+    after = entry.build_stage_zero_resume_root_xy_readback(
+        env, pose_range={"x": (-0.5, 0.5), "y": (-0.5, 0.5)})
+    assert after["env_count"] == count
+    assert after["outside_reset_bounds_count"] == 0
+    expected_distance = (0.1**2 + 0.2**2) ** 0.5
+    assert after["distance_xy_m"]["mean"] == pytest.approx(expected_distance, rel=1e-4)
+    assert after["distance_xy_m"]["max"] == pytest.approx(expected_distance, rel=1e-4)

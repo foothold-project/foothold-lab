@@ -75,14 +75,63 @@ def test_chain_startup_receipt_is_the_only_output_allowed_after_chain_creation(t
         )
 
 
-def test_chain_receipt_validation_is_before_kit_and_main_does_not_reject_it():
+def test_existing_chain_receipt_is_checked_before_a_builder_can_replace_it(tmp_path):
+    chain, run = make_chain(tmp_path)
+    receipt_path = run / "startup_receipt.json"
+    original = json.loads(receipt_path.read_text(encoding="utf-8"))
+    bad = dict(original, plan_sha256="bad")
+    receipt_path.write_text(json.dumps(bad), encoding="utf-8")
+    called = []
+
+    with pytest.raises(ValueError, match="identity differs"):
+        entry.build_stage_zero_chain_with_receipt_checks(
+            run, plan_sha256=chain.plan.sha256,
+            parent_sha256=chain.parent["checkpoint_sha256"],
+            allow_existing_run=True, builder=lambda: called.append(True))
+
+    assert called == []
+    assert json.loads(receipt_path.read_text(encoding="utf-8"))["plan_sha256"] == "bad"
+
+
+def test_chain_receipt_is_revalidated_after_builder_replacement(tmp_path):
+    chain, run = make_chain(tmp_path)
+
+    def replace_receipt():
+        row = json.loads((run / "startup_receipt.json").read_text(encoding="utf-8"))
+        row["parent"] = dict(row["parent"], checkpoint_sha256="0" * 64)
+        (run / "startup_receipt.json").write_text(json.dumps(row), encoding="utf-8")
+        return chain
+
+    with pytest.raises(ValueError, match="identity differs"):
+        entry.build_stage_zero_chain_with_receipt_checks(
+            run, plan_sha256=chain.plan.sha256,
+            parent_sha256=chain.parent["checkpoint_sha256"],
+            allow_existing_run=True, builder=replace_receipt)
+
+
+def test_chain_receipt_validation_brackets_builder_before_kit():
     source = ROOT / "foothold_s2/scripts/train_start.py"
     text = source.read_text(encoding="utf-8")
-    chain_build = text.index("EX42_TRAINING_CHAIN = build_ex42_training_chain(")
-    receipt_check = text.index("validate_ex42_stage_zero_chain_output(")
+    chain_build = text.index("build_stage_zero_chain_with_receipt_checks(")
     app_launcher = text.index("from isaaclab.app import AppLauncher")
-    assert chain_build < receipt_check < app_launcher
+    assert chain_build < app_launcher
+    assert "EX42_TRAINING_CHAIN, EX42_STAGE_ZERO_CHAIN_RECEIPT = (" in text
+    assert 'print("EX42_STAGE_ZERO_CHAIN_RECEIPT "' in text
+    assert '"chain_startup_receipt": EX42_STAGE_ZERO_CHAIN_RECEIPT' in text
+    assert '"resume_root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK' in text
+    assert "allow_existing_run=EX42_STAGE_ZERO_RESUME_SAME_RUN" in text
     assert "EX-42 stage-zero output path appeared after CPU preflight" not in text
+
+
+def test_resume_terrain_restore_precedes_the_real_reset_and_root_readback_follows_load():
+    text = (ROOT / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    restore = text.index("terrain_restore = restore_stage_zero_resume_terrain_before_reset(")
+    reset = text.index("env.reset()", restore)
+    load = text.index("runner.load(EX42_STAGE_ZERO_RESUME, map_location=\"cpu\")", reset)
+    root_readback = text.index("build_stage_zero_resume_root_xy_readback(", load)
+    learn = text.index("runner.learn(", root_readback)
+    assert restore < reset < load < root_readback < learn
+    assert "EX42_SELF_RESUME_ROOT_XY_READBACK" in text
 
 
 def test_stage_zero_runtime_reads_vector_fields_from_gym_unwrapped_env():
