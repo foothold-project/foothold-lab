@@ -9,6 +9,7 @@ Usage: python tg_send.py <message.txt>
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import subprocess
 import sys
@@ -29,7 +30,29 @@ def prepare(text: str) -> str:
     return text
 
 
-def send(text: str, outbox: Path = OUTBOX, sender: Path = SENDER, run=subprocess.run) -> str:
+def posix_paths(environ=os.environ) -> tuple[Path, Path]:
+    """Linux pins (7): outbox and sender come from the machine profile, never from the C: constants above.
+
+    The Linux profile (machines/AI-WS01-linux.yaml) fills telegram_outbox / telegram_script from TELEGRAM_OUTBOX /
+    TELEGRAM_SCRIPT. This ops branch has no machine_profile module, so it reads the profile when it can import it and
+    the same two variables otherwise. The sender is the Python one (mai-tools tools/tg-send/tg_send.py)."""
+    try:
+        from foothold_s2.machine_profile import machine_path
+        return machine_path("telegram_outbox"), machine_path("telegram_script")
+    except ImportError:
+        pass
+    out, script = environ.get("TELEGRAM_OUTBOX"), environ.get("TELEGRAM_SCRIPT")
+    if not out or not script:
+        raise RuntimeError("TELEGRAM_OUTBOX and TELEGRAM_SCRIPT must be set off Windows (machine profile)")
+    return Path(out), Path(script)
+
+
+def send(text: str, outbox: Path | None = None, sender: Path | None = None, run=subprocess.run,
+         platform: str = sys.platform) -> str:
+    if platform != "win32":
+        return send_posix(text, outbox, sender, run)
+    outbox = OUTBOX if outbox is None else outbox
+    sender = SENDER if sender is None else sender
     body = prepare(text)
     outbox.write_text(body, encoding="utf-8", newline="\n")
     back = outbox.read_text(encoding="utf-8")
@@ -38,6 +61,25 @@ def send(text: str, outbox: Path = OUTBOX, sender: Path = SENDER, run=subprocess
     r = run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(sender)],
             capture_output=True, text=True)
     if "ok=True" not in (r.stdout or ""):
+        raise RuntimeError(f"send failed: {r.stdout!r} {r.stderr!r}")
+    return body.splitlines()[0]
+
+
+def send_posix(text: str, outbox: Path | None, sender: Path | None, run=subprocess.run) -> str:
+    """Same checks as the Windows path (layout, read-back SHA, "ok=True"), then the Python sender, no powershell."""
+    if outbox is None or sender is None:
+        p_out, p_sender = posix_paths()
+        outbox, sender = outbox or p_out, sender or p_sender
+    if Path(sender).suffix != ".py":
+        raise RuntimeError(f"sender must be the Python tg_send.py off Windows, got {sender}")
+    body = prepare(text)
+    Path(outbox).parent.mkdir(parents=True, exist_ok=True)
+    Path(outbox).write_text(body, encoding="utf-8", newline="\n")
+    back = Path(outbox).read_text(encoding="utf-8")
+    if hashlib.sha256(back.encode()).hexdigest() != hashlib.sha256(body.encode()).hexdigest():
+        raise RuntimeError("outbox read-back differs; not sending")
+    r = run([sys.executable, str(sender), "--outbox", str(outbox)], capture_output=True, text=True)
+    if r.returncode != 0 or "ok=True" not in (r.stdout or ""):
         raise RuntimeError(f"send failed: {r.stdout!r} {r.stderr!r}")
     return body.splitlines()[0]
 
