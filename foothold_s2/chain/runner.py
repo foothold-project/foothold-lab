@@ -174,7 +174,12 @@ def tg_escape(text):
 
 
 def default_tg_sender(tg_cfg, text):
-    """outbox 파일에 UTF-8 로 쓰고 tg-send.ps1 을 창 없이 부른다. 성공하면 True (토큰은 만지지 않는다)."""
+    """outbox 파일에 UTF-8 로 쓰고 tg-send.ps1 을 창 없이 부른다. 성공하면 True (토큰은 만지지 않는다).
+
+    Windows 가 아니면 posix_tg_sender 로 간다 (Linux 이전 (7)). Windows 동작은 이 아래 그대로다.
+    """
+    if not IS_WIN:
+        return posix_tg_sender(tg_cfg, text)
     outbox = tg_cfg.get("outbox", "C:/ssd-cleanup-logs/tg-outbox.txt")
     script = tg_cfg.get("script", "C:/ssd-cleanup-logs/tg-send.ps1")
 
@@ -188,6 +193,31 @@ def default_tg_sender(tg_cfg, text):
 
         return done.returncode == 0
     except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def posix_tg_sender(tg_cfg, text, run=None, profile_path=None):
+    """Linux 송신: 기기 프로필의 telegram_outbox · telegram_script (mai-tools tools/tg-send/tg_send.py) 를 쓴다.
+
+    - 경로는 tg_cfg 에 있으면 그것, 없으면 machine_profile 의 두 칸. C: 기본값으로 떨어지지 않는다.
+    - 파이썬 송신기만 부른다. .ps1 이 오면 powershell 을 찾지 않고 False (그 이름이 Linux 에 있어도 같은 계약이 아니다).
+    - 성공 = 종료값 0 이고 stdout 에 「ok=True」. ps1 은 실패해도 0 을 돌려줘서 종료값만으로는 실패를 성공으로 읽었다.
+    """
+    try:
+        outbox, script = tg_cfg.get("outbox"), tg_cfg.get("script")
+        if not outbox or not script:
+            from foothold_s2.machine_profile import machine_path
+            outbox = outbox or str(machine_path("telegram_outbox", profile=profile_path))
+            script = script or str(machine_path("telegram_script", profile=profile_path))
+        if not str(script).endswith(".py"):
+            return False
+        os.makedirs(os.path.dirname(os.path.abspath(outbox)), exist_ok=True)
+        with open(outbox, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        done = (run or subprocess.run)([sys.executable, str(script), "--outbox", str(outbox)],
+                   timeout=90, capture_output=True, text=True)
+        return done.returncode == 0 and "ok=True" in (done.stdout or "")
+    except (OSError, ValueError, ImportError, subprocess.SubprocessError):
         return False
 
 
