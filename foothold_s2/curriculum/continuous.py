@@ -66,7 +66,8 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
                  allow_w71_unverified: bool = False,
                  ex42_approvals_path: str | Path | None = None,
                  ex42_graduation_path: str | Path | None = None,
-                 ex42_terrain_manifest_path: str | Path | None = None):
+                 ex42_terrain_manifest_path: str | Path | None = None,
+                 ex42_gate_report_path: str | Path | None = None):
     """Return the experiment-specific runtime or fail closed.
 
     EX41 uses local completed update n (parent m7500 is recorded separately).
@@ -83,6 +84,7 @@ def make_runtime(plan, env_count: int, device: str, log_dir: str | Path,
             approvals_path=approvals_path,
             graduation_path=ex42_graduation_path,
             terrain_manifest_path=ex42_terrain_manifest_path,
+            gate_report_path=ex42_gate_report_path,
             score_dir=score_dir,
             terrain_policy=terrain_policy,
             segment_index=segment_index,

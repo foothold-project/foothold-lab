@@ -69,14 +69,45 @@ def test_parent_manifest_identity_resolves_real_name_by_sha(tmp_path):
 def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_path):
     plan = EX42Plan.load(TABLE)
     assert plan.document["status"] == "preparation_only"
+    gate_report = tmp_path / "gates-closed.md"
+    rows = ["| Gate | Issue | Risk | Guard | State | Owner |", "|---|---|---|---|---|---|"]
+    rows.extend(f"| G{index:02d} | x | x | x | 검증 완료 | fixture |" for index in range(1, 34))
+    gate_report.write_text("\n".join(rows), encoding="utf-8")
     try:
         EX42Runtime(plan, 3072, "cuda:0", tmp_path,
                     approvals_path=APPROVALS, graduation_path=None,
-                    terrain_manifest_path=None)
+                    terrain_manifest_path=None, gate_report_path=gate_report)
     except ValueError as exc:
         assert "preparation-only runtime is blocked" in str(exc)
     else:
         raise AssertionError("EX-42 preparation-only plan unexpectedly opened runtime launch")
+
+
+def test_runtime_consumes_all_33_gate_rows_and_blocks_g11_only_counterexample(tmp_path):
+    plan = EX42Plan.load(TABLE)
+    gate_report = tmp_path / "analyst-register.md"
+    rows = ["| Gate | Risk | Guard | Evidence | State | Owner |",
+            "|---|---|---|---|---|---|"]
+    rows.extend(
+        f"| G{index:02d} · R{index} incident | x | x | x | "
+        f"{'예행 대기' if index == 11 else '검증 완료'} | fixture |"
+        for index in range(1, 34))
+    gate_report.write_text("\n".join(rows), encoding="utf-8")
+    from foothold_s2.ex42_gate_checks import open_gate_rows
+
+    # The exact 33-row analyst counterexample must be consumed by EX42Runtime,
+    # not only by the separate ops-check command.
+    assert len(gate_report.read_text(encoding="utf-8").splitlines()) - 2 == 33
+    assert open_gate_rows(gate_report) == ["G11"]
+    try:
+        EX42Runtime(plan, 3072, "cuda:0", tmp_path,
+                    approvals_path=APPROVALS, graduation_path=None,
+                    terrain_manifest_path=None, gate_report_path=gate_report)
+    except ValueError as exc:
+        assert "33-row gate register" in str(exc)
+        assert "G11" in str(exc)
+    else:
+        raise AssertionError("EX-42 runtime ignored the open G11 launch gate")
 
 
 def test_transition_gap_applies_approved_dr_and_registers_priority_one(tmp_path):

@@ -77,12 +77,17 @@ def test_w65_stage_zero_scope_rejects_stale_pin_and_any_later_stage(tmp_path):
         validate_stage_zero_authorization(plan_with_mutation_pin, altered)
 
 
-def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed():
+def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed(tmp_path):
     plan = load_plan(TABLE)
     assert plan.is_ex42
     from foothold_s2.curriculum.continuous import make_runtime
+    gate_report = tmp_path / "gates-closed.md"
+    rows = ["| Gate | Issue | Risk | Guard | State | Owner |", "|---|---|---|---|---|---|"]
+    rows.extend(f"| G{index:02d} | x | x | x | 검증 완료 | fixture |" for index in range(1, 34))
+    gate_report.write_text("\n".join(rows), encoding="utf-8")
     with pytest.raises(ValueError, match="preparation-only"):
-        make_runtime(plan, 3072, "cuda:0", REPO / "outputs")
+        make_runtime(plan, 3072, "cuda:0", REPO / "outputs",
+                     ex42_gate_report_path=gate_report)
 
 
 def test_terrain_manifest_measured_contract_and_larger_evaluation_requirement():

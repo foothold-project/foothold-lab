@@ -12,7 +12,7 @@ from foothold_s2.ex42_gate_checks import (
     EX42_LOCKED_SOURCE_PATHS, REQUIRED_GATE_ROWS, audit_ex42_launch_source,
     audit_locked_checkout, checkpoint_ready, extract_realized_config,
     launch_argv_sha256, locked_source_contract, open_gate_rows,
-    process_score_batch, validate_automatic_rule, validate_ex42_map_score, validate_map_matrix,
+    process_score_batch, validate_automatic_rule, validate_ex42_map_score,
     validate_score_pair, verify_launch_argv,
 )
 from foothold_s2.ex42_status import read_status, write_status
@@ -40,6 +40,18 @@ def test_g01_ops_gate_table_fails_closed_on_any_open_row(tmp_path):
 def test_g01_analyst_33_row_counterexample_blocks_g11():
     fixture = Path(__file__).with_name("fixtures") / "ex42-gate-g11-open.md"
     assert open_gate_rows(fixture) == ["G11"]
+
+
+def test_g01_parses_analyst_register_cells_with_incident_suffix(tmp_path):
+    path = tmp_path / "analyst-register.md"
+    rows = ["| Gate | Risk | Guard | Evidence | State | Owner |",
+            "|---|---|---|---|---|---|"]
+    rows.extend(
+        f"| G{index:02d} · R{index} incident | x | x | x | "
+        f"{'예행 대기' if index == 11 else '검증 완료'} | runner |"
+        for index in range(1, 34))
+    path.write_text("\n".join(rows), encoding="utf-8")
+    assert open_gate_rows(path) == ["G11"]
 
 
 def test_g01_missing_and_unregistered_ids_are_blockers(tmp_path):

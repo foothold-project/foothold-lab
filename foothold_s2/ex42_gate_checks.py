@@ -12,6 +12,7 @@ from typing import Any, Callable, Iterable
 
 _GATE_SCHEMA_PATH = Path(__file__).with_name("curriculum") / "ex42_gate_schema.json"
 _GATE_ID = re.compile(r"G[0-9]{2}")
+_GATE_ID_CELL = re.compile(r"^(G[0-9]{2})(?:\s+·\s+.*)?$")
 _GATE_ROW_PREFIX = re.compile(r"G[^\s|]*", re.IGNORECASE)
 _OPEN_MARKERS = ("없음 · 막음", "예행 대기", "미확인")
 
@@ -76,12 +77,18 @@ def open_gate_rows(path: str | Path) -> list[str]:
         if not cells or cells[0].lower() == "gate" or all(set(cell) <= {"-", ":"} for cell in cells):
             continue
         match = _GATE_ID.fullmatch(cells[0])
-        if match is None:
+        row_id = match.group(0) if match is not None else None
+        if row_id is None:
+            # The analyst register appends incident references to the first
+            # cell, e.g. "G11 · I24 PM:N1". The leading canonical ID is the
+            # row key; the suffix is not an unregistered gate.
+            composite = _GATE_ID_CELL.fullmatch(cells[0])
+            row_id = composite.group(1) if composite is not None else None
+        if row_id is None:
             prefix = _GATE_ROW_PREFIX.match(cells[0])
             if prefix:
                 unregistered.add("UNREGISTERED_" + re.sub(r"[^A-Za-z0-9]+", "_", prefix.group(0)).upper())
             continue
-        row_id = match.group(0)
         if row_id not in required:
             unregistered.add(row_id)
         if len(cells) < 5:

@@ -185,7 +185,22 @@ class EX42Runtime:
         *, approvals_path: str | Path, graduation_path: str | Path | None,
         terrain_manifest_path: str | Path | None, score_dir: str | Path | None = None,
         terrain_policy: dict[str, Any] | None = None, segment_index: int = 0,
+        gate_report_path: str | Path | None = None,
     ) -> None:
+        if gate_report_path is None:
+            from foothold_s2.machine_profile import machine_path
+            gate_report_path = machine_path("ex42_gate_report")
+        from foothold_s2.ex42_gate_checks import REQUIRED_GATE_ROWS, open_gate_rows
+        open_rows = open_gate_rows(gate_report_path)
+        self.gate_register_receipt = {
+            "path": str(Path(gate_report_path)),
+            "required_row_count": len(REQUIRED_GATE_ROWS),
+            "open_rows": list(open_rows),
+        }
+        if open_rows:
+            raise ValueError(
+                "EX-42 runtime blocked by 33-row gate register: " + ", ".join(open_rows)
+            )
         if plan.document.get("status") != "preparation_only":
             raise ValueError("EX-42 plan status must remain preparation_only until lead approval")
         if env_count != plan.document["environment"]["num_envs"]:
