@@ -1,0 +1,97 @@
+﻿terrain,dr,mode,command,thresholds_parent_off,parent_reached,parent_alive,parent_both,endpoint_reached,endpoint_alive,endpoint_both
+flat,off,eval_gt,fwd0.5,[0.07564911246299744],32,64,32,64,64,64
+flat,off,eval_gt,fwd1.0,[0.08458893373608589],32,64,32,0,64,0
+flat,off,eval_gt,spin+1.2,[0.09077143296599388],32,64,32,61,64,61
+flat,off,eval_gt,spin-1.2,[0.11459096893668175],32,64,32,28,64,28
+flat,off,eval_gt,back0.5,[0.07606427744030952],32,64,32,0,64,0
+flat,off,eval_gt,side+0.5,[0.11304370313882828],32,64,32,0,64,0
+flat,off,eval_gt,side-0.5,[0.07938681170344353],32,64,32,0,64,0
+flat,off,eval_gt,stop,"[0.032132089138031006, 0.07243403419852257]",18,64,18,2,64,2
+flat,off,eval_pred,fwd0.5,[0.07714373245835304],32,64,32,64,64,64
+flat,off,eval_pred,fwd1.0,[0.08636755496263504],32,64,32,0,64,0
+flat,off,eval_pred,spin+1.2,[0.09160889312624931],32,64,32,64,64,64
+flat,off,eval_pred,spin-1.2,[0.11629173904657364],32,64,32,38,64,38
+flat,off,eval_pred,back0.5,[0.07780614495277405],32,64,32,0,64,0
+flat,off,eval_pred,side+0.5,[0.11591878160834312],32,64,32,0,64,0
+flat,off,eval_pred,side-0.5,[0.07643884047865868],32,64,32,0,64,0
+flat,off,eval_pred,stop,"[0.03235270641744137, 0.0725148618221283]",19,64,19,1,64,1
+flat,off,probe_prop_only,fwd0.5,[0.0732569769024849],32,64,32,64,64,64
+flat,off,probe_prop_only,fwd1.0,[0.09265477582812309],32,64,32,60,64,60
+flat,off,probe_prop_only,spin+1.2,[0.09212040528655052],32,64,32,62,64,62
+flat,off,probe_prop_only,spin-1.2,[0.11131497099995613],32,64,32,40,64,40
+flat,off,probe_prop_only,back0.5,[0.0845315158367157],32,64,32,0,64,0
+flat,off,probe_prop_only,side+0.5,[0.10116836801171303],32,64,32,0,64,0
+flat,off,probe_prop_only,side-0.5,[0.06619039922952652],32,64,32,0,64,0
+flat,off,probe_prop_only,stop,"[0.031100686639547348, 0.0726284459233284]",17,64,17,1,64,1
+flat,on,eval_gt,fwd0.5,[0.07564911246299744],15,64,15,30,64,30
+flat,on,eval_gt,fwd1.0,[0.08458893373608589],0,64,0,1,64,1
+flat,on,eval_gt,spin+1.2,[0.09077143296599388],22,64,22,39,64,39
+flat,on,eval_gt,spin-1.2,[0.11459096893668175],37,64,37,44,64,44
+flat,on,eval_gt,back0.5,[0.07606427744030952],27,64,27,15,64,15
+flat,on,eval_gt,side+0.5,[0.11304370313882828],7,64,7,2,64,2
+flat,on,eval_gt,side-0.5,[0.07938681170344353],8,64,8,3,64,3
+flat,on,eval_gt,stop,"[0.032132089138031006, 0.07243403419852257]",0,64,0,0,64,0
+flat,on,eval_pred,fwd0.5,[0.07714373245835304],15,64,15,28,64,28
+flat,on,eval_pred,fwd1.0,[0.08636755496263504],2,64,2,3,64,3
+flat,on,eval_pred,spin+1.2,[0.09160889312624931],20,64,20,36,64,36
+flat,on,eval_pred,spin-1.2,[0.11629173904657364],36,64,36,47,64,47
+flat,on,eval_pred,back0.5,[0.07780614495277405],26,64,26,14,64,14
+flat,on,eval_pred,side+0.5,[0.11591878160834312],5,64,5,3,62,3
+flat,on,eval_pred,side-0.5,[0.07643884047865868],6,64,6,2,64,2
+flat,on,eval_pred,stop,"[0.03235270641744137, 0.0725148618221283]",0,64,0,1,64,1
+flat,on,probe_prop_only,fwd0.5,[0.0732569769024849],20,64,20,31,64,31
+flat,on,probe_prop_only,fwd1.0,[0.09265477582812309],6,64,6,11,64,11
+flat,on,probe_prop_only,spin+1.2,[0.09212040528655052],15,64,15,37,64,37
+flat,on,probe_prop_only,spin-1.2,[0.11131497099995613],33,64,33,41,63,41
+flat,on,probe_prop_only,back0.5,[0.0845315158367157],30,64,30,24,64,24
+flat,on,probe_prop_only,side+0.5,[0.10116836801171303],6,64,6,0,64,0
+flat,on,probe_prop_only,side-0.5,[0.06619039922952652],6,64,6,1,64,1
+flat,on,probe_prop_only,stop,"[0.031100686639547348, 0.0726284459233284]",0,64,0,0,64,0
+continuous,off,eval_gt,fwd0.5,[0.08680203557014465],32,64,32,39,64,39
+continuous,off,eval_gt,fwd1.0,[0.10540224984288216],32,63,32,21,64,21
+continuous,off,eval_gt,spin+1.2,[0.09189889952540398],32,64,32,58,64,58
+continuous,off,eval_gt,spin-1.2,[0.11623107641935349],32,64,32,36,64,36
+continuous,off,eval_gt,back0.5,[0.11294674500823021],32,63,32,16,64,16
+continuous,off,eval_gt,side+0.5,[0.16357045620679855],32,64,32,32,64,32
+continuous,off,eval_gt,side-0.5,[0.12847900390625],32,64,32,12,64,12
+continuous,off,eval_gt,stop,"[0.03181634657084942, 0.0723554864525795]",20,64,20,2,64,2
+continuous,off,eval_pred,fwd0.5,[0.08951079472899437],32,64,32,42,64,42
+continuous,off,eval_pred,fwd1.0,[0.10716395452618599],32,62,32,29,64,29
+continuous,off,eval_pred,spin+1.2,[0.09056969732046127],32,64,32,56,64,56
+continuous,off,eval_pred,spin-1.2,[0.11730235442519188],32,64,32,36,64,36
+continuous,off,eval_pred,back0.5,[0.11446161568164825],32,64,32,19,64,19
+continuous,off,eval_pred,side+0.5,[0.1612873151898384],32,64,32,34,64,34
+continuous,off,eval_pred,side-0.5,[0.13063107058405876],32,64,32,16,64,16
+continuous,off,eval_pred,stop,"[0.032135020941495895, 0.07247694954276085]",18,64,18,2,64,2
+continuous,off,probe_prop_only,fwd0.5,[0.0830034613609314],32,64,32,55,64,55
+continuous,off,probe_prop_only,fwd1.0,[0.10908782109618187],32,62,32,41,64,41
+continuous,off,probe_prop_only,spin+1.2,[0.09167217835783958],32,64,32,58,64,58
+continuous,off,probe_prop_only,spin-1.2,[0.11192181333899498],32,64,32,38,64,38
+continuous,off,probe_prop_only,back0.5,[0.1332830935716629],32,64,32,29,64,29
+continuous,off,probe_prop_only,side+0.5,[0.1443023681640625],32,64,32,22,64,22
+continuous,off,probe_prop_only,side-0.5,[0.1106863021850586],32,64,32,1,63,1
+continuous,off,probe_prop_only,stop,"[0.03098198212683201, 0.0727289542555809]",16,64,16,1,64,1
+continuous,on,eval_gt,fwd0.5,[0.08680203557014465],19,64,19,31,64,31
+continuous,on,eval_gt,fwd1.0,[0.10540224984288216],6,64,6,7,64,7
+continuous,on,eval_gt,spin+1.2,[0.09189889952540398],19,64,19,36,64,36
+continuous,on,eval_gt,spin-1.2,[0.11623107641935349],32,64,32,43,64,43
+continuous,on,eval_gt,back0.5,[0.11294674500823021],27,62,27,30,64,30
+continuous,on,eval_gt,side+0.5,[0.16357045620679855],13,64,13,15,63,15
+continuous,on,eval_gt,side-0.5,[0.12847900390625],18,64,18,5,63,5
+continuous,on,eval_gt,stop,"[0.03181634657084942, 0.0723554864525795]",0,64,0,0,64,0
+continuous,on,eval_pred,fwd0.5,[0.08951079472899437],25,64,25,35,64,35
+continuous,on,eval_pred,fwd1.0,[0.10716395452618599],8,64,8,11,64,11
+continuous,on,eval_pred,spin+1.2,[0.09056969732046127],14,64,14,33,63,33
+continuous,on,eval_pred,spin-1.2,[0.11730235442519188],35,64,35,40,63,40
+continuous,on,eval_pred,back0.5,[0.11446161568164825],27,64,27,30,62,30
+continuous,on,eval_pred,side+0.5,[0.1612873151898384],15,63,15,9,63,9
+continuous,on,eval_pred,side-0.5,[0.13063107058405876],20,63,20,5,63,5
+continuous,on,eval_pred,stop,"[0.032135020941495895, 0.07247694954276085]",0,64,0,1,64,1
+continuous,on,probe_prop_only,fwd0.5,[0.0830034613609314],25,64,25,36,64,36
+continuous,on,probe_prop_only,fwd1.0,[0.10908782109618187],13,64,13,17,64,17
+continuous,on,probe_prop_only,spin+1.2,[0.09167217835783958],15,64,15,29,64,29
+continuous,on,probe_prop_only,spin-1.2,[0.11192181333899498],34,64,34,33,64,33
+continuous,on,probe_prop_only,back0.5,[0.1332830935716629],35,63,35,41,64,41
+continuous,on,probe_prop_only,side+0.5,[0.1443023681640625],12,64,12,11,64,11
+continuous,on,probe_prop_only,side-0.5,[0.1106863021850586],13,63,13,2,63,2
+continuous,on,probe_prop_only,stop,"[0.03098198212683201, 0.0727289542555809]",0,64,0,0,64,0
