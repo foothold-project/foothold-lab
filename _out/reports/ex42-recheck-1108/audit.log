@@ -1,31 +1,31 @@
-{
-  "head": "eae0bed799dce0e39b04d157ad4e3e79ecb87653",
-  "parent_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
-  "h1_counts": [
-    702,
-    199,
-    200,
-    272,
-    259,
-    321,
-    437,
-    205,
-    205,
-    65,
-    54,
-    75,
-    78
-  ],
-  "h3_counts": {
-    "pre": 1200,
-    "post": 1200
-  },
-  "h4_weight": 0.0,
-  "radial_sample_max": 1.9996088743209839,
-  "model50_manifest": {
-    "completed": 50,
-    "steps": 3686400
-  },
-  "state_roundtrip": true,
-  "scope": "CPU helpers and callbacks only; no actual physics, PPO update or model50 save"
-}
+{
+  "head": "eae0bed799dce0e39b04d157ad4e3e79ecb87653",
+  "parent_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+  "h1_counts": [
+    702,
+    199,
+    200,
+    272,
+    259,
+    321,
+    437,
+    205,
+    205,
+    65,
+    54,
+    75,
+    78
+  ],
+  "h3_counts": {
+    "pre": 1200,
+    "post": 1200
+  },
+  "h4_weight": 0.0,
+  "radial_sample_max": 1.9996088743209839,
+  "model50_manifest": {
+    "completed": 50,
+    "steps": 3686400
+  },
+  "state_roundtrip": true,
+  "scope": "CPU helpers and callbacks only; no actual physics, PPO update or model50 save"
+}

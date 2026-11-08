@@ -1,29 +1,29 @@
-F                                                                        [100%]
-================================== FAILURES ===================================
-__ test_ex42_definition_points_at_preparation_contract_and_approved_schedule __
-
-    def test_ex42_definition_points_at_preparation_contract_and_approved_schedule():
-        exp = load_experiment("EX-42")
-        plan = yaml.safe_load(source_path(exp, "curriculum").read_text(encoding="utf-8"))
-        approvals = yaml.safe_load(source_path(exp, "approvals").read_text(encoding="utf-8"))
-        assert exp["status"] == "preparation_only"
-        assert exp["operational_values"]["operations_enabled"] is False
-        assert exp["operational_values"]["training"]["stages_from"] == exp["files"]["curriculum"]
-        assert plan["status"] == "preparation_only"
-        assert approvals["domain_randomization"]["decision_id"] == "lead-relay-teamlead-20261106-1725-dr-1.0-fixed"
-        parent = exp["operational_values"]["parent"]
->       assert parent == plan["stage_zero"]["parent"]
-E       AssertionError: assert {'update': 60...730eecd6b6f5'} == {'cumulative_...aab3b6f1e613'}
-E         
-E         Differing items:
-E         {'sha256': 'd5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5'} != {'sha256': '1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613'}
-E         Left contains 1 more item:
-E         {'update': 6000}
-E         Right contains 2 more items:
-E         {'cumulative_update': 12000, 'manifest_local_update': 6000}
-E         Use -v to get more diff
-
-foothold_s2\tests\test_experiment_registry_cpu.py:63: AssertionError
-=========================== short test summary info ===========================
-FAILED foothold_s2/tests/test_experiment_registry_cpu.py::test_ex42_definition_points_at_preparation_contract_and_approved_schedule
-1 failed in 0.21s
+F                                                                        [100%]
+================================== FAILURES ===================================
+__ test_ex42_definition_points_at_preparation_contract_and_approved_schedule __
+
+    def test_ex42_definition_points_at_preparation_contract_and_approved_schedule():
+        exp = load_experiment("EX-42")
+        plan = yaml.safe_load(source_path(exp, "curriculum").read_text(encoding="utf-8"))
+        approvals = yaml.safe_load(source_path(exp, "approvals").read_text(encoding="utf-8"))
+        assert exp["status"] == "preparation_only"
+        assert exp["operational_values"]["operations_enabled"] is False
+        assert exp["operational_values"]["training"]["stages_from"] == exp["files"]["curriculum"]
+        assert plan["status"] == "preparation_only"
+        assert approvals["domain_randomization"]["decision_id"] == "lead-relay-teamlead-20261106-1725-dr-1.0-fixed"
+        parent = exp["operational_values"]["parent"]
+>       assert parent == plan["stage_zero"]["parent"]
+E       AssertionError: assert {'update': 60...730eecd6b6f5'} == {'cumulative_...aab3b6f1e613'}
+E
+E         Differing items:
+E         {'sha256': 'd5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5'} != {'sha256': '1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613'}
+E         Left contains 1 more item:
+E         {'update': 6000}
+E         Right contains 2 more items:
+E         {'cumulative_update': 12000, 'manifest_local_update': 6000}
+E         Use -v to get more diff
+
+foothold_s2\tests\test_experiment_registry_cpu.py:63: AssertionError
+=========================== short test summary info ===========================
+FAILED foothold_s2/tests/test_experiment_registry_cpu.py::test_ex42_definition_points_at_preparation_contract_and_approved_schedule
+1 failed in 0.21s
