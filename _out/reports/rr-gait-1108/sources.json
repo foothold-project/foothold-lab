@@ -1,0 +1,1218 @@
+[
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-hf_pyramid_slope_L1_env41-m6000-slope_fwd_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-hf_pyramid_slope_L1_env41-m6000-slope_fwd_eval_gt-1x\\review_feet.npz",
+    "sha256": "c7d0cf40076916caad031ea68f417cf43606f51a881ae817e7f881a4dd90b1d3",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "hf_pyramid_slope",
+    "tile": {
+      "env": 41,
+      "kind": "hf_pyramid_slope",
+      "level": 1,
+      "col": 18
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_eval_gt-1x\\review_feet.npz",
+    "sha256": "92a2adb4a4097a3de4d5dd1b127291378c45e0a671f22b036686ee2b00aec539",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_eval_pred-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_eval_pred-1x\\review_feet.npz",
+    "sha256": "633a5c110b8c58db79f88b21abfc3aa48224f281715fed120630db80d36416d2",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_probe_prop_only-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-fwd_back_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "ec8e1785a8491f60c299f66f56a9f52f23d376a0cf2cab5018944b2502732855",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_eval_gt-1x\\review_feet.npz",
+    "sha256": "b0e0e266c6225eef790bc45b3d906ad9eae790664f76482971a9aea20494e49b",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_eval_pred-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_eval_pred-1x\\review_feet.npz",
+    "sha256": "00a2965e3633755ca402108166f2932222d08bebf70e71df05ab789afdf2187f",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_probe_prop_only-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_inv_L1_env28-m6000-side_diag_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "08919805419b054b9d98c14db6e4cffbaafa782a6d96edf450fc87868423248f",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 28,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_eval_gt-1x\\review_feet.npz",
+    "sha256": "b27dec69a6c3398ee352d621f52f42bf3c9ea23e7c493e4c41f7233a1fb08167",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_eval_pred-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_eval_pred-1x\\review_feet.npz",
+    "sha256": "f19d6829832d9f5fbee51ebbd2d2b1fcadc0cbf21c1f4b791ef0448d7d3c6d20",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_probe_prop_only-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-fwd_back_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "419a97167fdc6de1089a7afdc12ed878eb223d15da3168beead6c5e58025b28a",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_eval_gt-1x\\review_feet.npz",
+    "sha256": "eb4ba41ca904855ff5ba6c6bba3562d1b97b3d9c66c5cf0e68be4e66522a06f1",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_eval_pred-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_eval_pred-1x\\review_feet.npz",
+    "sha256": "7ed6680422aab1a23e9facbec42443408e7933f03560bcb43a02794cb23556b1",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_probe_prop_only-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-side_diag_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "cbf1a1973fcb516d15ec75f4ee3410491da5095958a1762de1a6a651c424407a",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_eval_gt-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_eval_gt-1x\\review_feet.npz",
+    "sha256": "69427e69405180afb4dcd544495e527d8812fa8c0f1c6d38dfca48c492a15c70",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_eval_pred-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_eval_pred-1x\\review_feet.npz",
+    "sha256": "5dbd071bb3d6e18a9502924be7db46d1cca744c43e79702f6b5ee7008db3d9cd",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX40_m6000",
+    "review": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_probe_prop_only-1x\\review.json",
+    "npz": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\video_a\\ex40_m6000\\EX40-B-pyramid_stairs_L1_env23-m6000-spin_restart_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "7dcc3bc49ab253999f898e2e819ebabbe1f8035d9854c92556744cfafbee315c",
+    "receipt": null,
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "seed": 42,
+    "terrain": "pyramid_stairs",
+    "tile": {
+      "env": 23,
+      "kind": "pyramid_stairs",
+      "level": 1,
+      "col": 0
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\054d39431e21f4696950278483b854e6d51b89facb33aff98073289001a516d2\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\054d39431e21f4696950278483b854e6d51b89facb33aff98073289001a516d2\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_eval_pred-1x\\review_feet.npz",
+    "sha256": "8a017b956337c288474267b54b02c0a1b0f298c8283b323634df7887839ef609",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\054d39431e21f4696950278483b854e6d51b89facb33aff98073289001a516d2.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0de0591fbeb264b5f53b78f08d6ea63cc0c2260408e51f56b993553db7baae63\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back10_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0de0591fbeb264b5f53b78f08d6ea63cc0c2260408e51f56b993553db7baae63\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back10_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "2975be348d02970aea37c903b54fcc9cc60e08499f69c49889adc08988464e46",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\0de0591fbeb264b5f53b78f08d6ea63cc0c2260408e51f56b993553db7baae63.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0e3eeca80c9857c60e6f0fd1bdbf8cdc5b8464afa459c3d2db4af7b819545739\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0e3eeca80c9857c60e6f0fd1bdbf8cdc5b8464afa459c3d2db4af7b819545739\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "c85d4ba38d5bce31ece53cd0761ae66cf4c13996ee3fe4a84dda9984ee1d5515",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\0e3eeca80c9857c60e6f0fd1bdbf8cdc5b8464afa459c3d2db4af7b819545739.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0e4f78e102d1bdbc3ef0bc1549d525c7bb47eda245d8e10325f0b00be5123391\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\0e4f78e102d1bdbc3ef0bc1549d525c7bb47eda245d8e10325f0b00be5123391\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "7119332ee4357e0f4a5ebc8f08c6d7805709b10eb9938ef4d572fa371ecf74d4",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\0e4f78e102d1bdbc3ef0bc1549d525c7bb47eda245d8e10325f0b00be5123391.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\178dfe9b09f87e74d54c6c22bd9649cbc0c34dcb74e666422fac39ed6f024d2b\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\178dfe9b09f87e74d54c6c22bd9649cbc0c34dcb74e666422fac39ed6f024d2b\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_eval_pred-1x\\review_feet.npz",
+    "sha256": "c0676c2f925927dbd3b9e916c966abfb519d98f6db78a7163dc83ba97f7fab11",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\178dfe9b09f87e74d54c6c22bd9649cbc0c34dcb74e666422fac39ed6f024d2b.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\1dd548a52d204ef4884d6defa17cd3999404e10e0ab209c1b2a431533d2a2abb\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidep05_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\1dd548a52d204ef4884d6defa17cd3999404e10e0ab209c1b2a431533d2a2abb\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidep05_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "46b6374e273dcc8f84500b1a381d9be56b692aad0b33c3a14d21403cc00ccf05",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\1dd548a52d204ef4884d6defa17cd3999404e10e0ab209c1b2a431533d2a2abb.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\1f76bef2944dfe5049bc03f97d56a1cb2946d2832298cfb03b55f999ac3e48be\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\1f76bef2944dfe5049bc03f97d56a1cb2946d2832298cfb03b55f999ac3e48be\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "56cdb0c2ea4e409977eca81f134711e00730c55ead4d855a18cd00241cac0946",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\1f76bef2944dfe5049bc03f97d56a1cb2946d2832298cfb03b55f999ac3e48be.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2388508d6abb33033a0342bf060c264ec1a77dcd906da8d62573cbb4282e695d\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2388508d6abb33033a0342bf060c264ec1a77dcd906da8d62573cbb4282e695d\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_eval_gt-1x\\review_feet.npz",
+    "sha256": "074974804c4c34a931f46ab61d0669056a980fd7a658bad3eec972615dd1ff0b",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\2388508d6abb33033a0342bf060c264ec1a77dcd906da8d62573cbb4282e695d.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\28decf5471f973e6cb93a1bb8b23e57b45d8a43154324aa9697c32e3b6cbeef4\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\28decf5471f973e6cb93a1bb8b23e57b45d8a43154324aa9697c32e3b6cbeef4\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "50fc91b7b81405acf5600fb68113314d646b01223f5b3dd1b0f9e93ba71d0e2d",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\28decf5471f973e6cb93a1bb8b23e57b45d8a43154324aa9697c32e3b6cbeef4.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2bf1f11e584c694fe9b85cfb4c7bfedbb960dd3d485daef35e2dcd870f9390aa\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2bf1f11e584c694fe9b85cfb4c7bfedbb960dd3d485daef35e2dcd870f9390aa\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_eval_gt-1x\\review_feet.npz",
+    "sha256": "1717bd77cffe4829f588b82a1c27bada721b674e735330f07b407a35b0b05304",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\2bf1f11e584c694fe9b85cfb4c7bfedbb960dd3d485daef35e2dcd870f9390aa.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2c497ef3752f374f28cd0dc2409f61f354b80f745e60a6949c716d062b10cd95\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\2c497ef3752f374f28cd0dc2409f61f354b80f745e60a6949c716d062b10cd95\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_eval_pred-1x\\review_feet.npz",
+    "sha256": "8f3ef18af16c1ac225e1b5ac4a46949e4cfbf19424d8f71bb25a7b500d405b13",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\2c497ef3752f374f28cd0dc2409f61f354b80f745e60a6949c716d062b10cd95.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\329874d9ea5451243fe4c8e407e0aa2d5a62bbc49d96b8dc04f9113d3a57fe11\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\329874d9ea5451243fe4c8e407e0aa2d5a62bbc49d96b8dc04f9113d3a57fe11\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "5e894d50fb3dfcf7742c059be84fbe171ae6428f9fd4fded6814f5970d80e870",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\329874d9ea5451243fe4c8e407e0aa2d5a62bbc49d96b8dc04f9113d3a57fe11.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\38b971f7d184be7ef4baa9cbcd4aca5070b3395da172833620501f0790aa0fbd\\03\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\38b971f7d184be7ef4baa9cbcd4aca5070b3395da172833620501f0790aa0fbd\\03\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_eval_pred-1x\\review_feet.npz",
+    "sha256": "48b97d54f60e0d9310f7bb869d5ee0e5c9752228d77ea65536a7a0fc015c9030",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\38b971f7d184be7ef4baa9cbcd4aca5070b3395da172833620501f0790aa0fbd.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\3929d9a18b676ef453b798fad62e3741ad6c4b959b5749a3e76c324038038617\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\3929d9a18b676ef453b798fad62e3741ad6c4b959b5749a3e76c324038038617\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "3c5c3cc0dfcc036d02a1c78ee78bd10fd936b9919c36ef514670c89fba7baca2",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\3929d9a18b676ef453b798fad62e3741ad6c4b959b5749a3e76c324038038617.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\3ca6aea9852cd83cec94a10c0fa07e7f5ae183df04243e2d342f65490fbc8d0f\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\3ca6aea9852cd83cec94a10c0fa07e7f5ae183df04243e2d342f65490fbc8d0f\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinm12_eval_pred-1x\\review_feet.npz",
+    "sha256": "488371cb179998a5c61bc27d8102175dff701832f1f8638c8cb0159bda556d42",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\3ca6aea9852cd83cec94a10c0fa07e7f5ae183df04243e2d342f65490fbc8d0f.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\40891cd4797ca7f3ee2dc5eaa04378aacacb4b5930c50be27d36f506775164a9\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\40891cd4797ca7f3ee2dc5eaa04378aacacb4b5930c50be27d36f506775164a9\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "15d48faf07c351191aaac4a95ae6cf0d495b320c8d5610f6de481c7d321709ba",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\40891cd4797ca7f3ee2dc5eaa04378aacacb4b5930c50be27d36f506775164a9.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\40ca8b8338fea10811a9d9b057e388c473ff98b2da639b00f258654bc60bb3eb\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\40ca8b8338fea10811a9d9b057e388c473ff98b2da639b00f258654bc60bb3eb\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd05_eval_gt-1x\\review_feet.npz",
+    "sha256": "036e6dd173fcfe5376b69cd10e8b230f17396428f833c610309c64666b07439a",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\40ca8b8338fea10811a9d9b057e388c473ff98b2da639b00f258654bc60bb3eb.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\44e59ce5feb4a463f88711395570ca22a994e8b695e116341abc76806af845ec\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\44e59ce5feb4a463f88711395570ca22a994e8b695e116341abc76806af845ec\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_eval_pred-1x\\review_feet.npz",
+    "sha256": "a8da3e6d4b2aa2c24f192c23f8fb754c8d2950f3ab5e228f1a3f69e9a99f2c14",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\44e59ce5feb4a463f88711395570ca22a994e8b695e116341abc76806af845ec.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\496c4febabd15d71c1e49b194315cfa7c5eaf9f5c43e2c6e901bac21265776dd\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\496c4febabd15d71c1e49b194315cfa7c5eaf9f5c43e2c6e901bac21265776dd\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_eval_pred-1x\\review_feet.npz",
+    "sha256": "d3daa2af5f2d846781d7e7fd6e47630d346e1e822b8221e7d6a02ac50cbddd86",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\496c4febabd15d71c1e49b194315cfa7c5eaf9f5c43e2c6e901bac21265776dd.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\4a353c37da59dd0d24d94a1afc4411db94ec0444646e9c12cb0fdefd9840e938\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\4a353c37da59dd0d24d94a1afc4411db94ec0444646e9c12cb0fdefd9840e938\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_eval_pred-1x\\review_feet.npz",
+    "sha256": "5b5adecfd7ba7f08815f8b00a604ad45af59bdae18c1480f1b64e2c1cd597c1f",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\4a353c37da59dd0d24d94a1afc4411db94ec0444646e9c12cb0fdefd9840e938.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\5a5ec3b0001e3824fa19543228fc1b7aae0157860846e04eae0f1eb08a8651b8\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\5a5ec3b0001e3824fa19543228fc1b7aae0157860846e04eae0f1eb08a8651b8\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_eval_gt-1x\\review_feet.npz",
+    "sha256": "5400278a4e7e7341abe8586f977983c590287da21ac4028c3eb3a975ea6b8a61",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\5a5ec3b0001e3824fa19543228fc1b7aae0157860846e04eae0f1eb08a8651b8.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\6929329c023ea3d97c6e7d59d5013be0a167b57ac7991f31198ec519fdd8fcb6\\03\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\6929329c023ea3d97c6e7d59d5013be0a167b57ac7991f31198ec519fdd8fcb6\\03\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_eval_pred-1x\\review_feet.npz",
+    "sha256": "a1384d470fe3e0bf079014e888bc437c50ea2468934468321d0a12692b3d7aa9",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\6929329c023ea3d97c6e7d59d5013be0a167b57ac7991f31198ec519fdd8fcb6.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\78fbf12fad3cd7bfe67c474603733b4b4015d8b37ec7a028171cc5e97818898b\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\78fbf12fad3cd7bfe67c474603733b4b4015d8b37ec7a028171cc5e97818898b\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_eval_pred-1x\\review_feet.npz",
+    "sha256": "199b1674a5f0c436ae09026c5d015a7c47c4eafc0fecabd71d44a30d93346dd6",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\78fbf12fad3cd7bfe67c474603733b4b4015d8b37ec7a028171cc5e97818898b.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\7b0c0edbb90e042ef82d369285068d073cbc7b14826386aac72de7dacbd04b10\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\7b0c0edbb90e042ef82d369285068d073cbc7b14826386aac72de7dacbd04b10\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_eval_gt-1x\\review_feet.npz",
+    "sha256": "616ea2adaf2f5fd9786a58e937a485172a4a1b7065cf46b66d066b93441ac303",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\7b0c0edbb90e042ef82d369285068d073cbc7b14826386aac72de7dacbd04b10.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\7fcbcb8e88fe0eb80bd8f90b83ed566545d7be2b94928d8155b06377cda8f2a1\\03\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\7fcbcb8e88fe0eb80bd8f90b83ed566545d7be2b94928d8155b06377cda8f2a1\\03\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidem_eval_gt-1x\\review_feet.npz",
+    "sha256": "da209867478a73d576ab0015c08d6ea96d69b99ae7e34715153238d3178caf96",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\7fcbcb8e88fe0eb80bd8f90b83ed566545d7be2b94928d8155b06377cda8f2a1.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\8390ea96d147ec42bf1ac84c12812b94768c8de388443116a4fd842f70f29264\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\8390ea96d147ec42bf1ac84c12812b94768c8de388443116a4fd842f70f29264\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "90ca37556b72cf85e03f75c0c37265c332818d9024bdabff26775c0f96c4b0d0",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\8390ea96d147ec42bf1ac84c12812b94768c8de388443116a4fd842f70f29264.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\843a6e106746a3f9d2d3e5122a28a76b750647b61bc36389b99f711aa09d93fc\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back10_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\843a6e106746a3f9d2d3e5122a28a76b750647b61bc36389b99f711aa09d93fc\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back10_eval_gt-1x\\review_feet.npz",
+    "sha256": "98c63fdd785d5cffdcc2bec8e7658e86609cb6a30844dd222448ac3b44947df3",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\843a6e106746a3f9d2d3e5122a28a76b750647b61bc36389b99f711aa09d93fc.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\85160d0d19536812ddea3066d3af814b0451a3e30a923cd48ea4e0e809285c80\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\85160d0d19536812ddea3066d3af814b0451a3e30a923cd48ea4e0e809285c80\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "f05eece06f5304997856c25f31fee4ca01760bd2044efdf4278fb5e350488ad9",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\85160d0d19536812ddea3066d3af814b0451a3e30a923cd48ea4e0e809285c80.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\867c1bf59d77935bb5d8ed769e4cdbd34f007295d07d517a60bc899a7834d502\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidep05_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\867c1bf59d77935bb5d8ed769e4cdbd34f007295d07d517a60bc899a7834d502\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidep05_eval_gt-1x\\review_feet.npz",
+    "sha256": "6b7cd3d111c5e1058186fe895e3fa9d39777edd2dbda878a6a1a58f2cf1bf9e7",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\867c1bf59d77935bb5d8ed769e4cdbd34f007295d07d517a60bc899a7834d502.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\8779d57c0f3372daa32a215d68dd1062a85176811ff9e8d5db262b037b34043f\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\8779d57c0f3372daa32a215d68dd1062a85176811ff9e8d5db262b037b34043f\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_fwd10_eval_gt-1x\\review_feet.npz",
+    "sha256": "261cc24583aaa7bd032602a9b1129721a5271363d964fae9e3ad7028d0bd626e",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\8779d57c0f3372daa32a215d68dd1062a85176811ff9e8d5db262b037b34043f.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\894ff351b27ac8c3115a03a0fe0ea8ece8bee07d3637ab15f825a1b975d813aa\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\894ff351b27ac8c3115a03a0fe0ea8ece8bee07d3637ab15f825a1b975d813aa\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "9cce55ceb6626f98c0ef4c0d642f51ea10213b10c8affe43c8e25793f1688920",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\894ff351b27ac8c3115a03a0fe0ea8ece8bee07d3637ab15f825a1b975d813aa.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\91fdc877a41b8c07e066df5c41f4f324664bd1dca7c507d29a37bb1fbffce8b4\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\91fdc877a41b8c07e066df5c41f4f324664bd1dca7c507d29a37bb1fbffce8b4\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "58ca8005e2eccd5495b88a76c49c0c03db98984df33c5e9dafa164437983ef10",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\91fdc877a41b8c07e066df5c41f4f324664bd1dca7c507d29a37bb1fbffce8b4.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\9a34381bb0c2f2ad553f0bbc323a50ba03bfec6a97240cc9d637d23c21276ed0\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\9a34381bb0c2f2ad553f0bbc323a50ba03bfec6a97240cc9d637d23c21276ed0\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_left_eval_pred-1x\\review_feet.npz",
+    "sha256": "918740bbc863cf7fef1565bd50259a4d48f71931a647833f605e8e3cf4083219",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\9a34381bb0c2f2ad553f0bbc323a50ba03bfec6a97240cc9d637d23c21276ed0.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\9b0e2b9051a319bee2dd6c617990cb0d7e888741ba84d679ba7050f8103dd1c4\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidep_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\9b0e2b9051a319bee2dd6c617990cb0d7e888741ba84d679ba7050f8103dd1c4\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidep_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "3232c933def5bcbb7bbb91a1bfdcf5290fd9519c8606f0cc1ec8fa6a232a3e5b",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\9b0e2b9051a319bee2dd6c617990cb0d7e888741ba84d679ba7050f8103dd1c4.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\a252ec8060414b040f14f1620096b8ed0dbd5779254bfb7855183f05c8983f16\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\a252ec8060414b040f14f1620096b8ed0dbd5779254bfb7855183f05c8983f16\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "dd638c4e1632c22fb9679f8281f4f533b1ad5f2d549703ad00ecb5093e2b3d69",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\a252ec8060414b040f14f1620096b8ed0dbd5779254bfb7855183f05c8983f16.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\a7b4f18c14a69e48018328b219f0a6e00f9f4a2023e9e33562b4cc6246fdfa78\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidep_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\a7b4f18c14a69e48018328b219f0a6e00f9f4a2023e9e33562b4cc6246fdfa78\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmfwdpsidep_eval_pred-1x\\review_feet.npz",
+    "sha256": "c224431f2eca5365b63d6d828e16d77620611a067bec159b5925f59ed939cc2e",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\a7b4f18c14a69e48018328b219f0a6e00f9f4a2023e9e33562b4cc6246fdfa78.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ab043e010c6ada45523b67f0fe08e52fb02cd815057bce07e71aa3bdcdbc9dc3\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ab043e010c6ada45523b67f0fe08e52fb02cd815057bce07e71aa3bdcdbc9dc3\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_eval_gt-1x\\review_feet.npz",
+    "sha256": "2372eea321356b345490d027abfb1ee196b869b0cda0fd1e578ed18e747e23cb",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\ab043e010c6ada45523b67f0fe08e52fb02cd815057bce07e71aa3bdcdbc9dc3.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ad144387cf7a228f03494bea68d3329297013041a36ef5b5c744b2bbf690a2ce\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ad144387cf7a228f03494bea68d3329297013041a36ef5b5c744b2bbf690a2ce\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_eval_pred-1x\\review_feet.npz",
+    "sha256": "821a3329c1d4965089a4fe1806e07e29e005195211d352fc3a67cc251e5d03ab",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\ad144387cf7a228f03494bea68d3329297013041a36ef5b5c744b2bbf690a2ce.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ad5449c55f6919b2c7a9d68b3acf5f14417c5afccd8cd7a5ea885a46a522009f\\02\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ad5449c55f6919b2c7a9d68b3acf5f14417c5afccd8cd7a5ea885a46a522009f\\02\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_eval_gt-1x\\review_feet.npz",
+    "sha256": "0d5ab397bba826edcf66ce46c90ce3f1fe66e6b3d6419a944534b65525515e73",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\ad5449c55f6919b2c7a9d68b3acf5f14417c5afccd8cd7a5ea885a46a522009f.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\b8c66642f9fd4543547cd43a010ffa3d608ac366c7398a70b3291330e4a7b4d7\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\b8c66642f9fd4543547cd43a010ffa3d608ac366c7398a70b3291330e4a7b4d7\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_side_right_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "bcdad1cac56353d4ce58e927ba2e3ecfde81c1bc4ee61f49c30aeb40bd54fbe2",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\b8c66642f9fd4543547cd43a010ffa3d608ac366c7398a70b3291330e4a7b4d7.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\bc2a973fe0d169b8a04d9522021fc31b43402902522b89b7173e4eaf0d3f6c2a\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\bc2a973fe0d169b8a04d9522021fc31b43402902522b89b7173e4eaf0d3f6c2a\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_back_eval_gt-1x\\review_feet.npz",
+    "sha256": "0f70e23b0737662727bcec8b234dd8e9e34022318c1b924da17467d08dbb37d2",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\bc2a973fe0d169b8a04d9522021fc31b43402902522b89b7173e4eaf0d3f6c2a.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\be075cc9e8e4c36772884020e28b7e4e124c289b88d98c708c63e017b35a447a\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\be075cc9e8e4c36772884020e28b7e4e124c289b88d98c708c63e017b35a447a\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_sidem05_eval_gt-1x\\review_feet.npz",
+    "sha256": "265f4dbb77f43fcf609d786129d0e141a055ef457c1ad72fdf5e6ff80c35aa9d",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\be075cc9e8e4c36772884020e28b7e4e124c289b88d98c708c63e017b35a447a.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\c17dc2866bc9f42edc2c8f5eaae9cb25adfbfdb3484281e06491e5ee97be8dfa\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\c17dc2866bc9f42edc2c8f5eaae9cb25adfbfdb3484281e06491e5ee97be8dfa\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidem_eval_gt-1x\\review_feet.npz",
+    "sha256": "d406fc69026e29fbcd8f104ce9734086303fab76c23080947922115b484caa19",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\c17dc2866bc9f42edc2c8f5eaae9cb25adfbfdb3484281e06491e5ee97be8dfa.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\c9728a2c8022c993bdf43021d8921699adb9bd50020f288576b454893fecd046\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\c9728a2c8022c993bdf43021d8921699adb9bd50020f288576b454893fecd046\\02\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_spinp12_eval_pred-1x\\review_feet.npz",
+    "sha256": "e4906a27b4bdb56f31972132bdeb8f68f5ca977668aaf0d1b9d1f1630b460c93",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\c9728a2c8022c993bdf43021d8921699adb9bd50020f288576b454893fecd046.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ce12e8cb5c31c615bdfeb595cf02132cca41df065963c693833c300f460535c8\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_probe_prop_only-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ce12e8cb5c31c615bdfeb595cf02132cca41df065963c693833c300f460535c8\\01\\EX41-pyramid_stairs_inv_L2_env5-m6000-w80_stairs_fwd_probe_prop_only-1x\\review_feet.npz",
+    "sha256": "03a2fd0d3b1dccd612fbfbf431312ea79344290b82c46ac479e2ec97eefbf33d",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\ce12e8cb5c31c615bdfeb595cf02132cca41df065963c693833c300f460535c8.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 2,
+      "col": 5
+    },
+    "mode": "probe_prop_only",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\cf332cb0dfdd39543825422032f8343b65ff6ee6e322a017af2a36394b00c2d1\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_eval_pred-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\cf332cb0dfdd39543825422032f8343b65ff6ee6e322a017af2a36394b00c2d1\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_diagmbackpsidep_eval_pred-1x\\review_feet.npz",
+    "sha256": "55d12f9615e4ade4885bc984b94401b1e137fbbf260383ef4a754aae224df36b",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\cf332cb0dfdd39543825422032f8343b65ff6ee6e322a017af2a36394b00c2d1.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_pred",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ea7cb64bff3f4379abcc11c3dcf564db78bd410a09de0603ce938cff61ceb540\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\ea7cb64bff3f4379abcc11c3dcf564db78bd410a09de0603ce938cff61ceb540\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_back05_eval_gt-1x\\review_feet.npz",
+    "sha256": "ca7de70308344f3aa7cd7589e4d758a5d57f5b7a7c683c47a009b31c0200ea0f",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\ea7cb64bff3f4379abcc11c3dcf564db78bd410a09de0603ce938cff61ceb540.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  },
+  {
+    "model": "EX41_m12000",
+    "review": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\f32bd51243b950b57d55e5d9bf5ae5afc324bf8870cbcdd4ace29a1e1b40e8b4\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_eval_gt-1x\\review.json",
+    "npz": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\attempts\\f32bd51243b950b57d55e5d9bf5ae5afc324bf8870cbcdd4ace29a1e1b40e8b4\\01\\EX41-pyramid_stairs_inv_L1_env5-m6000-w57_stop_eval_gt-1x\\review_feet.npz",
+    "sha256": "3b51de30d2bb35aa5c5988cb54c86d2dfce8c53d48febe780898dffca24bf96d",
+    "receipt": "D:\\mai-tmp\\runner\\ex41_stage_video\\model_6000_1c6af6319c82\\receipts\\f32bd51243b950b57d55e5d9bf5ae5afc324bf8870cbcdd4ace29a1e1b40e8b4.json",
+    "receipt_hash_match": true,
+    "checkpoint_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+    "seed": 42,
+    "terrain": "pyramid_stairs_inv",
+    "tile": {
+      "env": 5,
+      "kind": "pyramid_stairs_inv",
+      "level": 1,
+      "col": 5
+    },
+    "mode": "eval_gt",
+    "raw_force_present": false
+  }
+]

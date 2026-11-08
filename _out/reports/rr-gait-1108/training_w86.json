@@ -1,0 +1,64 @@
+{
+  "path": "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522\\eval\\score-watch\\model_6000_1c6af6319c82\\training\\w86_6000_7b74699e5de6.json",
+  "sha256": "7b74699e5de6ea1aaf95112a33700cfc0cf1bd8532c3ea8e6bcb91618aa78342",
+  "record_iteration": 6000,
+  "env_frames": 73728,
+  "feet": [
+    {
+      "foot": "FL_foot",
+      "valid_frames": 73728,
+      "drag_frames": 26985,
+      "contact_moving_frames": 46219,
+      "drag_all_fraction": 0.3660074869791667,
+      "drag_contact_fraction": 0.5838507972911573,
+      "contact_ratio": 0.7074245876736112,
+      "swing_all_fraction": 0.2733289930555556,
+      "swing_height_m": 0.04425843372544863,
+      "mean_force_n": 45.94736584717889,
+      "contact_force_lower_n": 64.53661807965959,
+      "contact_force_upper_n": 64.95019631460407
+    },
+    {
+      "foot": "FR_foot",
+      "valid_frames": 73728,
+      "drag_frames": 25530,
+      "contact_moving_frames": 44360,
+      "drag_all_fraction": 0.3462727864583333,
+      "drag_contact_fraction": 0.5755184851217313,
+      "contact_ratio": 0.6828070746527778,
+      "swing_all_fraction": 0.2985432942708333,
+      "swing_height_m": 0.051972948790267114,
+      "mean_force_n": 44.78605777907338,
+      "contact_force_lower_n": 65.12654379912443,
+      "contact_force_upper_n": 65.59108632822539
+    },
+    {
+      "foot": "RL_foot",
+      "valid_frames": 73728,
+      "drag_frames": 23903,
+      "contact_moving_frames": 39029,
+      "drag_all_fraction": 0.3242051866319444,
+      "drag_contact_fraction": 0.6124420302851725,
+      "contact_ratio": 0.59912109375,
+      "swing_all_fraction": 0.370849609375,
+      "swing_height_m": 0.05179371227224902,
+      "mean_force_n": 33.20317942526863,
+      "contact_force_lower_n": 54.75070208879393,
+      "contact_force_upper_n": 55.41981374323566
+    },
+    {
+      "foot": "RR_foot",
+      "valid_frames": 73728,
+      "drag_frames": 23818,
+      "contact_moving_frames": 36497,
+      "drag_all_fraction": 0.3230523003472222,
+      "drag_contact_fraction": 0.6526015836918103,
+      "contact_ratio": 0.5611029730902778,
+      "swing_all_fraction": 0.4051920572916667,
+      "swing_height_m": 0.05799065866507153,
+      "mean_force_n": 31.225978155603553,
+      "contact_force_lower_n": 54.86886116310133,
+      "contact_force_upper_n": 55.65106522894773
+    }
+  ]
+}
