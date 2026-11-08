@@ -1100,7 +1100,8 @@ def normalize_ex41_dr_baselines(env: Any, *, additional_envs=(),
     return {"device": str(device), **primary_receipt, "owners": owner_receipts}
 
 
-def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
+def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
+                         stage_zero_approval: dict[str, Any] | None = None) -> dict[str, Any]:
     """Install EX-41-only pose observations, terrain, DR consumers, and W86 before gym.make."""
     from foothold_s2.rewards.basic_gait_bundle import (
         apply_ex39_settings, apply_ex40_stand_settings, apply_settings, validate_settings,
@@ -1123,8 +1124,12 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan) -> dict[str, Any]:
     event_receipt = install_runtime_events(
         env_cfg, ranges, tuple(dr["push_interval_s"]),
         delay_max_s=float(ranges["delay_s"][1]))
-    dr_receipt = install_initial_dr_scale(env_cfg, plan.initial_dr_scale)
-    terrain_receipt = prepare_terrain_cfg(env_cfg, plan)
+    dr_receipt = install_initial_dr_scale(
+        env_cfg, plan.initial_dr_scale, scoped_approval=stage_zero_approval)
+    terrain_receipt = prepare_terrain_cfg(
+        env_cfg, plan,
+        initial_policy="performance" if stage_zero_approval is not None else None,
+        initial_level_cap=5 if stage_zero_approval is not None else None)
     w86_receipt = prepare_env_cfg(env_cfg, plan)
     return {"events": event_receipt, "initial_dr": dr_receipt,
             "terrain": terrain_receipt, "w86": w86_receipt,
@@ -1182,15 +1187,39 @@ def capture_first_observation(env: Any):
         env.get_observations = original
 
 
-def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
+def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] | None) -> bool:
+    if type(scale) not in (int, float) or not math.isfinite(float(scale)):
+        return False
+    if float(scale) == 0.5:
+        return scoped_approval is None
+    if float(scale) != 1.0 or not isinstance(scoped_approval, dict):
+        return False
+    scope = scoped_approval.get("scope")
+    return (scoped_approval.get("state") == "stage_zero_only_authorized"
+            and scoped_approval.get("production_launch_allowed") is False
+            and scoped_approval.get("later_stages_authorized") is False
+            and isinstance(scope, dict)
+            and scope.get("stage_id") == "EX42_0_T0_prime"
+            and scope.get("source_stage_id") == "T0_prime"
+            and scope.get("start_update") == 0
+            and scope.get("maximum_updates") == 1000
+            and scope.get("later_stages_authorized") is False
+            and re.fullmatch(r"[0-9a-f]{64}", str(scope.get("parent_sha256", "")))
+            and re.fullmatch(r"[0-9a-f]{64}", str(scoped_approval.get("approvals_sha256", ""))))
+
+
+def install_initial_dr_scale(env_cfg: Any, scale: float, *,
+                             scoped_approval: dict[str, Any] | None = None) -> dict[str, Any]:
     """Seed the existing EX40 reset terms before the environment's first reset.
 
     Isaac's reset manager calls these configured functions with the environment
     and env_ids. Wrapping the actual registered functions makes the initial
     scale visible to the existing DR consumers without replacing their logic.
     """
-    if type(scale) not in (int, float) or float(scale) != 0.5:
-        raise ValueError("EX-41 initial DR scale must be the approved 0.5")
+    if not _authorized_initial_dr_scale(scale, scoped_approval):
+        raise ValueError("Initial DR scale requires EX-41 0.5 or a bounded EX-42 stage-zero approval")
+    scale = float(scale)
+    stage_zero = scoped_approval is not None
     events = getattr(env_cfg, "events", None)
     names = ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")
     rows = {}
@@ -1204,9 +1233,11 @@ def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
         def seeded(env, *args, _func=func, _name=name, **kwargs):
             # Seed only at the first reset. Stage progression owns subsequent
             # scale changes, and later environment resets must preserve them.
-            if getattr(env, "_ex41_initial_dr_scale_applied", None) is None:
-                env._ex40_dr_scale = 0.5
-                env._ex41_initial_dr_scale_applied = 0.5
+            marker = ("_ex42_stage_zero_initial_dr_scale_applied" if stage_zero
+                      else "_ex41_initial_dr_scale_applied")
+            if getattr(env, marker, None) is None:
+                env._ex40_dr_scale = scale
+                setattr(env, marker, scale)
             device_receipt = normalize_ex41_dr_baselines(env)
             device_receipt["reset_term"] = _name
             env._ex41_dr_device_guard = device_receipt
@@ -1220,17 +1251,20 @@ def install_initial_dr_scale(env_cfg: Any, scale: float) -> dict[str, Any]:
 
         term.func = seeded
         rows[name] = "wrapped-existing-reset-consumer"
-    return {"scale": 0.5, "before_first_reset": True, "reset_terms": rows}
+    return {"scale": scale, "scope": "ex42_stage_zero_only" if stage_zero else "ex41_initial",
+            "before_first_reset": True, "reset_terms": rows}
 
 
-def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float) -> dict[str, Any]:
+def set_live_initial_dr_scale(dr_runtime: Any, env: Any, scale: float, *,
+                              scoped_approval: dict[str, Any] | None = None) -> dict[str, Any]:
     """Align the existing runtime readback and env before the first rollout."""
-    if type(scale) not in (int, float) or float(scale) != 0.5:
-        raise ValueError("EX-41 initial DR scale must be the approved 0.5")
-    dr_runtime.scale = 0.5
-    env._ex40_dr_scale = 0.5
-    if getattr(env, "_ex40_dr_scale", None) != 0.5 or dr_runtime.scale != 0.5:
-        raise ValueError("EX-41 initial DR readback did not apply")
+    if not _authorized_initial_dr_scale(scale, scoped_approval):
+        raise ValueError("Initial DR scale requires EX-41 0.5 or a bounded EX-42 stage-zero approval")
+    scale = float(scale)
+    dr_runtime.scale = scale
+    env._ex40_dr_scale = scale
+    if getattr(env, "_ex40_dr_scale", None) != scale or dr_runtime.scale != scale:
+        raise ValueError("Initial DR readback did not apply")
     return {"runtime_scale": dr_runtime.scale, "env_scale": env._ex40_dr_scale}
 
 

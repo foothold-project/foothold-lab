@@ -771,14 +771,21 @@ class EX41DRReadback:
             b.env._ex40_dr_motor_baselines={k:{n:torch.as_tensor(v).to(device).clone() for n,v in vs.items()} for k,vs in state['motor_baselines'].items()}
 
 
-def prepare_terrain_cfg(env_cfg,plan):
+def prepare_terrain_cfg(env_cfg,plan,*,initial_policy=None,initial_level_cap=None):
     """Register at n0; fixed5000 enables performance at S2d, by runtime policy."""
     from isaaclab.managers import CurriculumTermCfg
     env_cfg.scene.terrain.max_init_terrain_level=2
-    env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,
-        params={'command_name':'base_velocity','resample_s':4.,'world_frame':True})
-    return {'policy':'fixed_l02','max_init_terrain_level':2,'promotion_enabled':False,
-            'registered_performance_term':'ex41_terrain_levels','world_frame':True}
+    params={'command_name':'base_velocity','resample_s':4.,'world_frame':True}
+    if initial_policy is not None:
+        if initial_policy!='performance' or type(initial_level_cap) is not int or initial_level_cap!=5:
+            raise ValueError('EX-41 initial terrain override is reserved for approved EX-42 stage zero L5')
+        params.update(initial_policy=initial_policy,initial_level_cap=initial_level_cap)
+    env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,params=params)
+    return {'policy':initial_policy or 'fixed_l02','max_init_terrain_level':2,
+            'promotion_enabled':initial_policy=='performance',
+            'registered_performance_term':'ex41_terrain_levels','world_frame':True,
+            'initial_policy':initial_policy or 'fixed_l02',
+            'initial_level_cap':initial_level_cap if initial_policy else 2}
 
 
 def capped_moves(levels,moves,cap):
@@ -786,7 +793,8 @@ def capped_moves(levels,moves,cap):
     return torch.where(((moves>0)&(levels>=cap))|((moves<0)&(levels<=0)),torch.zeros_like(moves),moves)
 
 
-def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,world_frame=True):
+def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,world_frame=True,
+                        initial_policy=None,initial_level_cap=None):
     """Existing judge_free world displacement, with explicit upper cap.
 
     Term runs before reset events/command reset. Pure spin/stand have zero
@@ -794,7 +802,10 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     """
     from foothold_s2.curriculum import rules
     terrain=env.scene.terrain
-    settings=getattr(env,'_ex41_terrain',{'policy':'fixed_l02','level_cap':2})
+    settings=getattr(env,'_ex41_terrain',None)
+    if settings is None:
+        settings={'policy':initial_policy or 'fixed_l02',
+                  'level_cap':initial_level_cap if initial_policy else 2}
     ids=torch.as_tensor(env_ids,device=env.device,dtype=torch.long)
     if not hasattr(env,'_ex41_terrain_diagnostics'):
         env._ex41_terrain_diagnostics=torch.zeros(6,device=env.device,dtype=torch.long)

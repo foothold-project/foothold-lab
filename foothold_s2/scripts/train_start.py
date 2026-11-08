@@ -69,8 +69,14 @@ _pre.add_argument("--ex42_queue_path")
 _pre.add_argument("--ex42_dispatch_path")
 _pre.add_argument("--ex42_p1_score_argv_json")
 _pre.add_argument("--ex42_source_ref")
+_pre.add_argument("--ex42_stage_zero_approved", action="store_true")
+_pre.add_argument("--ex42_stage_zero_dry_run", action="store_true")
 _pre.add_argument("--resume_from")
 _pre.add_argument("--device")
+_pre.add_argument("--max_iterations", type=int)
+_pre.add_argument("--num_envs", type=int)
+_pre.add_argument("--map_input")
+_pre.add_argument("--force_gt", action="store_true")
 _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
@@ -78,6 +84,15 @@ EX41_PLAN = None
 EX41_AUTHORIZATION = None
 EX41_PARENT_RECEIPT = None
 EX41_DISK_RECEIPT = None
+EX42_STAGE_ZERO = None
+EX42_STAGE_ZERO_PLAN = None
+EX42_STAGE_ZERO_SOURCE_PLAN = None
+EX42_STAGE_ZERO_SOURCE_STAGE = None
+EX42_STAGE_ZERO_PLAN_VIEW = None
+EX42_STAGE_ZERO_CHECKPOINT = None
+EX42_STAGE_ZERO_PARENT = None
+EX42_STAGE_ZERO_APPROVAL = None
+EX42_STAGE_ZERO_PREFLIGHT = None
 EX41_REHEARSAL = False
 EX41_STAGE_REHEARSAL = None
 EX41_STAGE_REHEARSAL_RECEIPT = None
@@ -402,9 +417,8 @@ elif (_pre_args.ex41_parent_checkpoint or _pre_args.ex41_score_dir or _pre_args.
       or _pre_args.ex41_production_launch_approved):
     raise ValueError("EX-41 options require --ex41_table")
 
-# EX-42 remains preparation-only. Validate the same approved plan, approval
-# file, parent manifest SHA, run directory, and explicit P1 argv template
-# before AppLauncher. This path intentionally refuses before Kit is started.
+# EX-42 remains preparation-only. A separate W65 approval permits only the
+# bounded T0-prime stage-zero bridge; the full-plan guard and E0+ remain blocked.
 _ex42_values = {
     "plan": _pre_args.ex42_plan,
     "approvals": _pre_args.ex42_approvals,
@@ -422,6 +436,44 @@ if _ex42_requested:
     from foothold_s2.scripts.ex42_training_entry import build_ex42_training_chain
     from foothold_s2.ex42_gate_checks import audit_ex42_launch_source
 
+    _stage_zero_requested = bool(_pre_args.ex42_stage_zero_approved
+                                 or _pre_args.ex42_stage_zero_dry_run)
+    if _stage_zero_requested:
+        from foothold_s2.scripts.ex42_training_entry import (
+            validate_ex42_stage_zero_cli, load_ex42_stage_zero_source,
+            make_ex42_stage_zero_plan_view,
+        )
+
+        if not _pre_args.ex42_stage_zero_approved:
+            raise ValueError("EX-42 stage-zero dry-run also requires the scoped approval switch")
+        (EX42_STAGE_ZERO_PLAN, EX42_STAGE_ZERO_CHECKPOINT,
+         EX42_STAGE_ZERO_PARENT, EX42_STAGE_ZERO_PREFLIGHT) = (
+            validate_ex42_stage_zero_cli(
+                plan_path=_pre_args.ex42_plan,
+                approvals_path=_pre_args.ex42_approvals,
+                parent_manifest_path=_pre_args.ex42_parent_manifest,
+                log_dir=_pre_args.ex42_log_dir,
+                task=_pre_args.task, device=_pre_args.device,
+                headless=_pre_args.headless, distributed=_pre_args.distributed,
+                max_iterations=_pre_args.max_iterations, num_envs=_pre_args.num_envs,
+                map_input=_pre_args.map_input, force_gt=_pre_args.force_gt,
+                approved_switch=_pre_args.ex42_stage_zero_approved,
+                resume_from=_pre_args.resume_from))
+        EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE = (
+            load_ex42_stage_zero_source(EX42_STAGE_ZERO_PLAN))
+        EX42_STAGE_ZERO_APPROVAL = EX42_STAGE_ZERO_PARENT["approval"]
+        EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
+            EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE,
+            EX42_STAGE_ZERO_PARENT)
+        if _pre_args.ex42_stage_zero_dry_run:
+            print("EX42_STAGE_ZERO_PREFLIGHT " + json.dumps({
+                **EX42_STAGE_ZERO_PREFLIGHT,
+                "parent": EX42_STAGE_ZERO_PARENT,
+                "approval": EX42_STAGE_ZERO_APPROVAL,
+                "app_launcher_started": False,
+            }, ensure_ascii=False, sort_keys=True), flush=True)
+            raise SystemExit(0)
+
     EX42_SOURCE_LOCK_RECEIPT = audit_ex42_launch_source(REPO, remote_ref=_pre_args.ex42_source_ref)
 
     EX42_TRAINING_CHAIN = build_ex42_training_chain(
@@ -434,9 +486,10 @@ if _ex42_requested:
         dispatch_path=_pre_args.ex42_dispatch_path,
         score_argv_json=_pre_args.ex42_p1_score_argv_json,
     )
-    raise RuntimeError(
-        "EX-42 preparation_only: chain validated and receipt written; refusing before AppLauncher"
-    )
+    if not _stage_zero_requested:
+        raise RuntimeError(
+            "EX-42 preparation_only: full plan is blocked; refusing before AppLauncher"
+        )
 
 from isaaclab.app import AppLauncher  # noqa: E402
 
@@ -487,6 +540,10 @@ parser.add_argument("--ex42_p1_score_argv_json", type=str, default=None,
                     help="Explicit JSON argv template; exactly one {iteration} placeholder is required")
 parser.add_argument("--ex42_source_ref", type=str, default=None,
                     help="Pinned origin tracking ref for the detached, read-only EX-42 checkout")
+parser.add_argument("--ex42_stage_zero_approved", action="store_true",
+                    help="W65 scoped approval for EX-42 T0-prime stage zero only")
+parser.add_argument("--ex42_stage_zero_dry_run", action="store_true",
+                    help="CPU-only W65 stage-zero preflight; exits before AppLauncher")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -517,6 +574,13 @@ for _ex42_name in _ex42_values:
         raise ValueError(f"EX-42 preflight and runtime parser disagree on {_ex42_name}")
 if args_cli.ex42_dispatch_path != _pre_args.ex42_dispatch_path:
     raise ValueError("EX-42 preflight and runtime parser disagree on dispatch path")
+if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
+        or args_cli.ex42_stage_zero_dry_run != _pre_args.ex42_stage_zero_dry_run
+        or args_cli.max_iterations != _pre_args.max_iterations
+        or args_cli.num_envs != _pre_args.num_envs
+        or args_cli.map_input != _pre_args.map_input
+        or args_cli.force_gt != _pre_args.force_gt):
+    raise ValueError("EX-42 stage-zero preflight and runtime parser disagree")
 if EX41_REHEARSAL:
     from foothold_s2.scripts.ex41_startup import (
         validate_rehearsal_request, validate_rehearsal_resume_request,
@@ -599,6 +663,12 @@ def main(env_cfg, agent_cfg):
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
     agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+    if EX42_STAGE_ZERO_PLAN is not None:
+        parent_seed = EX42_STAGE_ZERO_CHECKPOINT.get("env_seed")
+        if type(parent_seed) is not int:
+            raise ValueError("EX-42 stage-zero parent environment seed is missing")
+        agent_cfg.seed = parent_seed
+        agent_cfg.max_iterations = 1000
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
     env_cfg.seed = agent_cfg.seed
@@ -627,6 +697,14 @@ def main(env_cfg, agent_cfg):
         if resume_path is not None:
             with open(os.path.join(log_dir, "manifest.json"), encoding="utf-8-sig") as stream:
                 manifest = json.load(stream)
+    elif EX42_STAGE_ZERO_PLAN is not None:
+        resume_path = None
+        parent_checkpoint_path = EX42_STAGE_ZERO_PARENT["parent_path"]
+        log_dir = EX42_STAGE_ZERO_PREFLIGHT["output_dir"]
+        if Path(log_dir).exists():
+            raise ValueError("EX-42 stage-zero output path appeared after CPU preflight")
+        agent_cfg.resume = False
+        agent_cfg.max_iterations = 1000
     elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
@@ -659,6 +737,12 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.scripts.ex41_startup import prepare_ex41_env_cfg
 
         ex41_cfg_contract = prepare_ex41_env_cfg(env_cfg, EX41_PLAN)
+    elif EX42_STAGE_ZERO_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import prepare_ex41_env_cfg
+
+        EX42_STAGE_ZERO_ENV_CONTRACT = prepare_ex41_env_cfg(
+            env_cfg, EX42_STAGE_ZERO_PLAN_VIEW,
+            stage_zero_approval=EX42_STAGE_ZERO_APPROVAL)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
@@ -667,8 +751,12 @@ def main(env_cfg, agent_cfg):
                                EX41_LAUNCH_DECISION and EX41_LAUNCH_DECISION.get("production_launch_allowed")),
                            "production_launch_receipt": (str(EX41_LAUNCH_RECEIPT)
                                if EX41_LAUNCH_RECEIPT else None),
-                            "max_updates": (args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else
-                                            args_cli.ex41_startup_smoke_updates if EX41_STARTUP_SMOKE else None)})
+                             "max_updates": (args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else
+                                             args_cli.ex41_startup_smoke_updates if EX41_STARTUP_SMOKE else
+                                             1000 if EX42_STAGE_ZERO_PLAN is not None else None),
+                             "ex42_stage_zero": (EX42_STAGE_ZERO_PREFLIGHT
+                                                 if EX42_STAGE_ZERO_PLAN is not None else None),
+                             "production_launch_allowed": False})
     if EX41_PLAN is not None and resume_path is None:
         from foothold_s2.scripts.ex41_startup import write_ex41_disk_preflight
 
@@ -679,6 +767,8 @@ def main(env_cfg, agent_cfg):
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None
+    ex42_stage_zero_runtime = None
+    ex42_stage_zero_reset_readback = None
     if EX41_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import attach_ex41_stand_runtime_data
 
@@ -714,11 +804,67 @@ def main(env_cfg, agent_cfg):
             print("EX41_REHEARSAL_DR_PROOF "
                   + json.dumps(ex41_rehearsal_dr_proof, sort_keys=True), flush=True)
         ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
+    elif EX42_STAGE_ZERO_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import (
+            attach_ex41_stand_runtime_data, set_live_initial_dr_scale,
+        )
+        from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
+        from foothold_s2.rewards.w86_runtime import attach_runtime
+        from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
+
+        stand_data_receipt = attach_ex41_stand_runtime_data(env)
+        print("EX42_STAGE_ZERO_STAND_READBACK "
+              + json.dumps(stand_data_receipt, sort_keys=True), flush=True)
+        dr_cfg = EX42_STAGE_ZERO_SOURCE_PLAN.domain_randomization
+        ex41_dr_readback = RuntimeReadback(
+            env.unwrapped, dr_cfg["full_ranges"],
+            float(dr_cfg["full_ranges"]["delay_s"][1]),
+            EX42_STAGE_ZERO_SOURCE_PLAN.sha256)
+        set_live_initial_dr_scale(
+            ex41_dr_readback, env.unwrapped, 1.0,
+            scoped_approval=EX42_STAGE_ZERO_APPROVAL)
+        stage_zero_w86_receipt = attach_runtime(
+            env.unwrapped, EX42_STAGE_ZERO_PLAN_VIEW, log_dir)
+        command_term = env.unwrapped.command_manager.get_term("base_velocity")
+        ex42_stage_zero_runtime = EX42StageZeroRuntime(
+            stage_zero_plan=EX42_STAGE_ZERO_PLAN_VIEW,
+            plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
+            approval_sha256=EX42_STAGE_ZERO_APPROVAL["approvals_sha256"],
+            parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+            maximum_updates=1000)
+        ex42_stage_zero_runtime.attach_environment(env, command_term)
+        env.reset()
+        ex42_stage_zero_reset_readback = {
+            "stage_id": env.unwrapped._ex42_stage_id,
+            "dr_scale": env.unwrapped._ex40_dr_scale,
+            "runtime_dr_scale": ex41_dr_readback.scale,
+            "initial_scale_wrapper": EX42_STAGE_ZERO_ENV_CONTRACT["initial_dr"],
+            "terrain": EX42_STAGE_ZERO_ENV_CONTRACT["terrain"],
+            "w86": stage_zero_w86_receipt,
+            "pose_cmd_configured": True,
+            "map_input": "reconstruction",
+            "force_gt": False,
+            "reset_event_samples": getattr(env.unwrapped, "_ex40_dr_samples", {}),
+        }
+        if (env.unwrapped._ex40_dr_scale != 1.0 or ex41_dr_readback.scale != 1.0
+                or env.unwrapped._ex42_stage_id != "EX42_0_T0_prime"):
+            raise ValueError("EX-42 stage-zero first reset readback differs")
+        print("EX42_STAGE_ZERO_FIRST_RESET "
+              + json.dumps(ex42_stage_zero_reset_readback, sort_keys=True), flush=True)
     if resume_path is None and agent_cfg.resume and EX41_PLAN is None:
         resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
 
     train_cfg = agent_cfg.to_dict()
+    if EX42_STAGE_ZERO_PLAN is not None:
+        from foothold_s2.scripts.ex42_training_entry import configure_ex42_stage_zero_train_cfg
+
+        train_cfg = configure_ex42_stage_zero_train_cfg(
+            train_cfg, EX42_STAGE_ZERO_CHECKPOINT,
+            parent_path=EX42_STAGE_ZERO_PARENT["parent_path"],
+            parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"])
+        agent_cfg.max_iterations = 1000
+        agent_cfg.seed = int(EX42_STAGE_ZERO_CHECKPOINT["env_seed"])
     pc = dict(train_cfg.get("perception", {}) or {})
     if args_cli.map_input:
         pc["map_input"] = args_cli.map_input
@@ -756,12 +902,28 @@ def main(env_cfg, agent_cfg):
         if not ex41_first_observation:
             raise RuntimeError("EX-41 StartRunner did not expose its first observation readback")
         print("EX41_FIRST_OBSERVATION " + json.dumps(ex41_first_observation, sort_keys=True), flush=True)
+    elif EX42_STAGE_ZERO_PLAN is not None:
+        from foothold_s2.scripts.ex41_startup import capture_first_observation
+
+        ex42_stage_zero_first_observation = None
+        with capture_first_observation(env) as ex42_stage_zero_first_observation:
+            runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
+        if not ex42_stage_zero_first_observation:
+            raise RuntimeError("EX-42 stage-zero StartRunner did not expose its first observation")
+        print("EX42_STAGE_ZERO_FIRST_OBSERVATION "
+              + json.dumps(ex42_stage_zero_first_observation, sort_keys=True), flush=True)
     else:
         runner = StartRunner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)
     if EX42_TRAINING_CHAIN is not None:
         from foothold_s2.scripts.ex42_training_entry import attach_ex42_training_chain
 
         attach_ex42_training_chain(runner, EX42_TRAINING_CHAIN)
+    if EX42_STAGE_ZERO_PLAN is not None:
+        ex42_stage_zero_runtime.attach_runner(runner)
+        ex42_transfer = runner.load_ex42_stage_zero_parent(
+            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
+        print("EX42_STAGE_ZERO_PARENT_TRANSFER "
+              + json.dumps(ex42_transfer, sort_keys=True), flush=True)
     runner.add_git_repo_to_log(__file__)
     ex41_runtime = None
     ex41_end_by_receipt = None

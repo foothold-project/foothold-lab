@@ -41,6 +41,60 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return value
 
 
+def validate_stage_zero_authorization(plan: "EX42Plan", approvals_path: str | Path) -> dict[str, Any]:
+    """Validate the separately approved, bounded T0-prime bridge only.
+
+    This does not change the full-plan launch blockers or grant authorization
+    to E0 and later. The approval bytes are pinned by the curriculum table.
+    """
+    path = Path(approvals_path).resolve(strict=True)
+    raw = path.read_bytes()
+    actual_sha = hashlib.sha256(raw).hexdigest()
+    expected_sha = plan.document["stage_zero"].get("approval_sha256")
+    if not isinstance(expected_sha, str) or actual_sha != expected_sha:
+        raise ValueError("EX-42 stage-zero approval SHA256 differs from pinned table")
+    approvals = _read_yaml(path)
+    if (approvals.get("format") != APPROVAL_FORMAT
+            or approvals.get("status") != "blocked"
+            or approvals.get("production_launch_allowed") is not False
+            or approvals.get("automatic_launch_allowed") is not False):
+        raise ValueError("EX-42 full-plan launch guard must remain blocked")
+    scoped = approvals.get("stage_zero_authorization")
+    if not isinstance(scoped, dict) or scoped.get("approved") is not True:
+        raise ValueError("EX-42 stage-zero authorization is missing")
+    expected_scope = {
+        "stage_id": STAGE_ZERO_ID,
+        "source_stage_id": "T0_prime",
+        "start_update": 0,
+        "maximum_updates": 1000,
+        "parent_sha256": plan.document["stage_zero"]["parent"]["sha256"],
+        "later_stages_authorized": False,
+    }
+    if scoped.get("scope") != expected_scope:
+        raise ValueError("EX-42 stage-zero approval scope differs from the bounded bridge")
+    evidence = scoped.get("evidence")
+    if (not isinstance(evidence, dict)
+            or evidence.get("ex41_graduated") is not False
+            or evidence.get("ex41_requires_review") is not True
+            or evidence.get("human_review_complete") is not True
+            or evidence.get("adopted_parent_decision") != "teamlead-2026-11-07-m12000"
+            or evidence.get("stage_zero_decision") != "teamlead-2026-11-08-m13000"):
+        raise ValueError("EX-42 stage-zero approval evidence is incomplete")
+    decision_id = scoped.get("decision_id")
+    approved_at = scoped.get("approved_at")
+    if (not isinstance(decision_id, str) or not decision_id.strip()
+            or approved_at != "2026-11-08T00:25:58Z"):
+        raise ValueError("EX-42 stage-zero approval identity or timestamp is invalid")
+    dr = approvals.get("domain_randomization", {})
+    if (not isinstance(dr, dict) or dr.get("approved") is not True
+            or dr.get("stage_scales", {}).get(STAGE_ZERO_ID) != 1.0):
+        raise ValueError("EX-42 stage-zero DR scale must be explicitly approved as 1.0")
+    return {"state": "stage_zero_only_authorized", "scope": expected_scope,
+            "decision_id": decision_id, "approved_at": approved_at,
+            "approvals_path": str(path), "approvals_sha256": actual_sha,
+            "production_launch_allowed": False, "later_stages_authorized": False}
+
+
 @dataclass(frozen=True)
 class EX42Plan:
     path: Path

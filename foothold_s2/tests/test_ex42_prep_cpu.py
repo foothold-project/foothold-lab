@@ -12,6 +12,7 @@ from foothold_s2.curriculum.ex42_prep import (
     read_committed_boundary_pair,
     score_cell_roles,
     validate_boundary_transition,
+    validate_stage_zero_authorization,
 )
 from foothold_s2.scripts.ex42_preflight import (
     build_parser,
@@ -44,6 +45,36 @@ def test_known_ex42_table_is_design_only_and_preserves_all_unresolved_fields():
     assert "ex41_graduation_receipt_missing" in blockers
     assert "terrain_manifest_missing" in blockers
     assert "design_assumptions_pending" in blockers
+
+
+def test_w65_stage_zero_scope_is_pinned_without_opening_the_full_plan():
+    plan = EX42Plan.load(TABLE)
+    receipt = validate_stage_zero_authorization(plan, APPROVALS)
+    assert receipt["state"] == "stage_zero_only_authorized"
+    assert receipt["scope"]["stage_id"] == "EX42_0_T0_prime"
+    assert receipt["scope"]["maximum_updates"] == 1000
+    assert receipt["scope"]["later_stages_authorized"] is False
+    assert receipt["production_launch_allowed"] is False
+    assert plan.launch_blockers(APPROVALS, None, None)
+
+
+def test_w65_stage_zero_scope_rejects_stale_pin_and_any_later_stage(tmp_path):
+    plan = EX42Plan.load(TABLE)
+    altered = tmp_path / "approvals.yaml"
+    altered.write_bytes(APPROVALS.read_bytes().replace(
+        b"later_stages_authorized: false", b"later_stages_authorized: true"))
+    with pytest.raises(ValueError, match="approval SHA256"):
+        validate_stage_zero_authorization(plan, altered)
+
+    import hashlib
+    updated_doc = dict(plan.document)
+    updated_zero = dict(updated_doc["stage_zero"])
+    updated_zero["approval_sha256"] = hashlib.sha256(altered.read_bytes()).hexdigest()
+    updated_doc["stage_zero"] = updated_zero
+    from dataclasses import replace
+    plan_with_mutation_pin = replace(plan, document=updated_doc)
+    with pytest.raises(ValueError, match="scope differs"):
+        validate_stage_zero_authorization(plan_with_mutation_pin, altered)
 
 
 def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed():

@@ -8,6 +8,29 @@ requirements:
   - resolved_assumptions
   - terrain_manifest_with_measurements
 fields: {}
+stage_zero_authorization:
+  approved: true
+  decision_id: lead-w65-ex42-stage-zero-20261108
+  approved_at: '2026-11-08T00:25:58Z'
+  approver: lead
+  scope:
+    stage_id: EX42_0_T0_prime
+    source_stage_id: T0_prime
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
+    later_stages_authorized: false
+  evidence:
+    ex41_graduated: false
+    ex41_requires_review: true
+    human_review_complete: true
+    adopted_parent_decision: teamlead-2026-11-07-m12000
+    stage_zero_decision: teamlead-2026-11-08-m13000
+    rationale: >-
+      EX-41 graduated=false and requires_review=true remain recorded. Human review
+      was completed; the team lead adopted m12000 on 2026-11-07 and accepted
+      m13000 as EX-42 stage zero on 2026-11-08. This grants only the bounded
+      T0-prime stage-zero bridge and does not authorize E0 or later.
 domain_randomization:
   approved: true
   decision_id: lead-relay-teamlead-20261106-1725-dr-1.0-fixed

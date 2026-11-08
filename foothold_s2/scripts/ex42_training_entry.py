@@ -8,11 +8,245 @@ preparation_only and train_start rejects it before AppLauncher is created.
 from __future__ import annotations
 
 import json
+import hashlib
+import math
 from pathlib import Path
+import re
+from types import SimpleNamespace
 from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.curriculum.ex42_runtime import EX42Runtime
+from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization
+
+
+STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
+STAGE_ZERO_UPDATES = 1000
+STAGE_ZERO_NUM_ENVS = 3072
+STAGE_ZERO_DEVICE = "cuda:1"
+
+
+def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str | Path,
+                                 parent_manifest_path: str | Path, log_dir: str | Path,
+                                 task: str, device: str, headless: bool, distributed: bool,
+                                 max_iterations: int | None, num_envs: int | None,
+                                 map_input: str | None, force_gt: bool,
+                                 approved_switch: bool, resume_from: str | Path | None = None
+                                 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Validate the explicitly approved stage-zero CLI without importing Kit."""
+    if approved_switch is not True:
+        raise ValueError("EX-42 stage zero requires its explicit scoped approval switch")
+    if resume_from:
+        raise ValueError("EX-42 stage zero begins from the pinned EX-41 parent, not self-resume")
+    if task != STAGE_ZERO_TASK_ID:
+        raise ValueError("EX-42 stage-zero task differs from the approved task")
+    if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
+        raise ValueError("EX-42 stage zero requires headless single-process cuda:1")
+    if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
+        raise ValueError("EX-42 stage zero is bounded to exactly 1000 updates and 3072 environments")
+    if map_input not in (None, "reconstruction") or force_gt is not False:
+        raise ValueError("EX-42 stage zero must consume reconstructed maps without forced GT")
+    output = Path(log_dir).resolve()
+    if output.exists():
+        raise ValueError("EX-42 stage-zero output path must be new and empty")
+    plan = EX42Plan.load(plan_path)
+    checkpoint, parent_receipt = inspect_ex42_stage_zero_parent(
+        plan=plan, approvals_path=approvals_path,
+        parent_manifest_path=parent_manifest_path,
+        expected_sha256=plan.document["stage_zero"]["parent"]["sha256"])
+    if (parent_receipt["approval"]["state"] != "stage_zero_only_authorized"
+            or parent_receipt["approval"]["later_stages_authorized"] is not False):
+        raise ValueError("EX-42 stage-zero approval is not bounded to stage zero")
+    return plan, checkpoint, parent_receipt, {
+        "state": "stage_zero_preflight_passed",
+        "task": task, "device": device, "num_envs": num_envs,
+        "max_iterations": max_iterations, "map_input": "reconstruction",
+        "force_gt": False, "output_dir": str(output),
+        "production_launch_allowed": False,
+        "later_stages_authorized": False,
+    }
+
+
+def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
+    """Read the pinned EX-41 T0-prime stage as the stage-zero config source."""
+    from foothold_s2.curriculum.continuous import load_plan
+
+    source_path = plan.path.parent / plan.document["stage_zero"]["source"]["path"]
+    source = load_plan(source_path, arm=arm)
+    if not getattr(source, "is_ex41", False):
+        raise ValueError("EX-42 stage-zero source did not load as an EX-41 plan")
+    stage = next((row for row in source.stages if row.id == "T0_prime"), None)
+    if stage is None:
+        raise ValueError("EX-42 T0-prime source stage is absent")
+    zero = plan.document["stage_zero"]
+    comparisons = {
+        "shares": (stage.shares, zero["shares"]),
+        "ranges": ({key: tuple(value) for key, value in stage.ranges.items()},
+                   {key: tuple(value) for key, value in zero["ranges"].items()}),
+        "force_gt": (stage.force_gt, zero["force_gt"]),
+    }
+    for name, (actual, expected) in comparisons.items():
+        if actual != expected:
+            raise ValueError(f"EX-42 stage-zero source {name} changed after plan validation")
+    return source, stage
+
+
+def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
+                                   parent_receipt: dict[str, Any]):
+    """Provide EX-41's existing config adapters the approved single T0-prime stage."""
+    return SimpleNamespace(
+        is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
+        initial_dr_scale=1.0, stand_cfg=source_plan.stand_cfg,
+        heading_cfg=source_plan.heading_cfg, terrain_curriculum="performance",
+        fixed_schedule=source_plan.fixed_schedule,
+        parent_sha256=parent_receipt["parent_sha256"], parent_update=12000,
+        ex42_stage_zero=True, parent_receipt=dict(parent_receipt),
+    )
+
+
+class EX42StageZeroRuntime:
+    """Single bounded T0-prime runtime, with explicit saved continuation identity."""
+
+    uses_one_based_updates = True
+    is_ex42_stage_zero = True
+
+    def __init__(self, *, stage_zero_plan: Any, plan_sha256: str,
+                 approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000):
+        if maximum_updates != STAGE_ZERO_UPDATES:
+            raise ValueError("EX-42 stage-zero runtime must remain bounded to 1000 updates")
+        self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
+        self.plan_sha256 = plan_sha256
+        self.approval_sha256 = approval_sha256
+        self.parent_sha256 = parent_sha256
+        self.maximum_updates = maximum_updates
+        self.stage_id = "EX42_0_T0_prime"
+        self.stage_config = stage_zero_plan.stages[0]
+        self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
+                          "terrain": {"policy": "performance", "level_cap": 5}}
+        self.iteration = 0
+        self._last_boundary = None
+        self.finished = False
+        self.command_samples = 0
+        self.map_reset_counts: dict[str, int] = {"gt": 0, "pred": 0, "off": 0}
+        self.runner = None
+        self.env = None
+
+    def attach_environment(self, env: Any, command_term: Any) -> None:
+        import torch
+
+        raw = getattr(env, "unwrapped", env)
+        self.env = raw
+        self.env_stage = torch.zeros(env.num_envs, dtype=torch.long,
+                                     device=getattr(env, "device", getattr(raw, "device", "cpu")))
+        command_term.stage_runtime = self
+        raw._ex42_stage_id = self.stage_id
+        raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}
+        raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
+        raw._ex40_dr_scale = 1.0
+
+    def attach_runner(self, runner: Any) -> None:
+        if runner.log_dir is None or self.env is None:
+            raise ValueError("EX-42 stage-zero runtime requires its environment and run directory")
+        self.runner = runner
+        runner.continuous_curriculum = self
+
+    def on_reset(self, env_ids: Any) -> None:
+        return None
+
+    def record_command_sample(self, env_ids: Any, commands: Any, slots: Any,
+                              heading: Any) -> None:
+        self.command_samples += int(len(env_ids))
+
+    def on_update_start(self, update: int) -> None:
+        if type(update) is not int or not 1 <= update <= self.maximum_updates:
+            raise ValueError("EX-42 stage-zero update is outside its approved 1..1000 range")
+        self.iteration = update
+        if self.env is not None:
+            raw = self.env
+            raw._ex42_stage_id = self.stage_id
+            raw._ex40_dr_scale = 1.0
+
+    def flush_consumption(self, update: int) -> None:
+        if update != self.iteration:
+            raise ValueError("EX-42 stage-zero command consumption iteration differs")
+
+    def record_map_reset(self, env_ids: Any, use_gt: Any, map_off: Any = None) -> None:
+        import torch
+
+        values = torch.as_tensor(use_gt).detach().to(device="cpu", dtype=torch.bool).flatten()
+        off = (torch.zeros_like(values) if map_off is None else
+               torch.as_tensor(map_off).detach().to(device="cpu", dtype=torch.bool).flatten())
+        if off.shape != values.shape:
+            raise ValueError("EX-42 stage-zero map source vectors differ")
+        self.map_reset_counts["off"] += int(off.sum())
+        self.map_reset_counts["gt"] += int((values & ~off).sum())
+        self.map_reset_counts["pred"] += int((~values & ~off).sum())
+
+    def state_dict(self) -> dict[str, Any]:
+        return {"format": "foothold-ex42-stage-zero-state/1",
+                "stage_id": self.stage_id, "iteration": self.iteration,
+                "maximum_updates": self.maximum_updates, "dr_scale": 1.0,
+                "plan_sha256": self.plan_sha256,
+                "approval_sha256": self.approval_sha256,
+                "parent_sha256": self.parent_sha256,
+                "terrain": {"policy": "performance", "level_cap": 5},
+                "command_samples": self.command_samples,
+                "map_reset_counts": dict(self.map_reset_counts),
+                "finished": False}
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        expected = self.state_dict()
+        for key in ("format", "stage_id", "maximum_updates", "plan_sha256",
+                    "approval_sha256", "parent_sha256", "dr_scale", "terrain"):
+            if state.get(key) != expected[key]:
+                raise ValueError(f"EX-42 stage-zero continuation {key} differs")
+        iteration = state.get("iteration")
+        if type(iteration) is not int or not 0 <= iteration <= self.maximum_updates:
+            raise ValueError("EX-42 stage-zero continuation iteration is invalid")
+        self.iteration = iteration
+        self.command_samples = int(state.get("command_samples", 0))
+        counts = state.get("map_reset_counts")
+        if not isinstance(counts, dict) or set(counts) != {"gt", "pred", "off"}:
+            raise ValueError("EX-42 stage-zero map reset counts are invalid")
+        self.map_reset_counts = {key: int(counts[key]) for key in ("gt", "pred", "off")}
+
+    def on_resume_checkpoint(self, path: str | Path, iteration: int) -> None:
+        if iteration != self.iteration:
+            raise ValueError("EX-42 stage-zero checkpoint iteration differs from saved curriculum")
+
+    def on_checkpoint(self, iteration: int, checkpoint: str | Path) -> None:
+        if iteration != self.iteration:
+            raise ValueError("EX-42 stage-zero checkpoint did not consume the latest update")
+        self.last_checkpoint = {"path": str(Path(checkpoint).resolve()), "iteration": iteration}
+
+
+def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
+                                         checkpoint: dict[str, Any], *,
+                                         parent_path: str | Path,
+                                         parent_sha256: str) -> dict[str, Any]:
+    """Match the saved learner/perception contract while bounding stage zero."""
+    saved_cfg = checkpoint.get("perception_cfg")
+    if not isinstance(saved_cfg, dict):
+        raise ValueError("EX-42 stage-zero parent perception config is missing")
+    if saved_cfg.get("map_input") != "reconstruction" or saved_cfg.get("force_gt") is not False:
+        raise ValueError("EX-42 stage zero requires the saved reconstruction/PRED mode")
+    cfg = dict(train_cfg)
+    cfg["perception"] = dict(saved_cfg)
+    cfg["ex41_pose_commands"] = True
+    cfg["ex41_w86_required"] = True
+    cfg["ex41_critic_mirror"] = False
+    cfg["ex42_stage_zero_parent"] = {"path": str(Path(parent_path).resolve()),
+                                    "sha256": parent_sha256,
+                                    "local_update": 6000,
+                                    "cumulative_update": 12000}
+    cfg["max_iterations"] = STAGE_ZERO_UPDATES
+    cfg["save_interval"] = 50
+    parent_sha = cfg["ex42_stage_zero_parent"]["sha256"]
+    if parent_sha is not None and not re.fullmatch(r"[0-9a-f]{64}", parent_sha):
+        raise ValueError("EX-42 stage-zero parent transfer SHA is malformed")
+    if not math.isfinite(float(checkpoint.get("ppo_learning_rate", float("nan")))):
+        raise ValueError("EX-42 stage-zero parent learning rate is invalid")
+    return cfg
 
 
 def make_score_argv_factory(serialized: str):
@@ -34,6 +268,63 @@ def make_score_argv_factory(serialized: str):
         return [part.replace("{iteration}", str(iteration)) for part in template]
 
     return build
+
+
+def inspect_ex42_stage_zero_parent(*, plan: EX42Plan, approvals_path: str | Path,
+                                   parent_manifest_path: str | Path,
+                                   expected_sha256: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load and validate the exact EX-41 pose_cmd parent for EX-42 stage zero.
+
+    The EX-41 physical environment and curriculum clock are intentionally not
+    restored. Policy, optimizers, LR, perception, AdaSmpl, map switch, RNG and
+    normalization state are retained for the new EX-42 environment.
+    """
+    import torch
+
+    approval = validate_stage_zero_authorization(plan, approvals_path)
+    parent = plan.verify_parent_manifest(parent_manifest_path)
+    path = Path(parent["checkpoint_path"]).resolve(strict=True)
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    pinned = plan.document["stage_zero"]["parent"]["sha256"]
+    if digest != pinned or (expected_sha256 is not None and expected_sha256 != pinned):
+        raise ValueError("EX-42 stage-zero parent checkpoint SHA differs from the pinned approval")
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    if (not isinstance(checkpoint, dict)
+            or checkpoint.get("format") != "foothold-start/1"
+            or checkpoint.get("iter") != 6000
+            or checkpoint.get("ex41_pose_commands") is not True
+            or checkpoint.get("ex41_critic_mirror") is not False):
+        raise ValueError("EX-42 stage-zero parent is not the reviewed EX-41 pose_cmd m6000 checkpoint")
+    cfg = checkpoint.get("perception_cfg") or {}
+    if cfg.get("map_input") != "reconstruction" or cfg.get("force_gt") is not False:
+        raise ValueError("EX-42 stage-zero parent must consume reconstructed maps without GT forcing")
+    required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
+                "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
+                "normalization_state", "rng", "map_switch", "continuous_curriculum")
+    missing = [key for key in required if key not in checkpoint or checkpoint[key] is None]
+    if missing:
+        raise ValueError("EX-42 stage-zero parent lacks continuation state: " + ", ".join(missing))
+    model = checkpoint["model_state_dict"]
+    actor = model.get("actor.0.weight")
+    critic = model.get("critic.0.weight")
+    if (actor is None or tuple(actor.shape) != (512, 98)
+            or critic is None or tuple(critic.shape) != (512, 666)):
+        raise ValueError("EX-42 stage-zero parent actor/critic dimensions must be 98/666")
+    receipt = {
+        "state": "parent_verified_for_stage_zero",
+        "parent_path": str(path), "manifest_path": str(Path(parent_manifest_path).resolve()),
+        "parent_sha256": digest, "parent_local_update": 6000,
+        "parent_cumulative_update": 12000,
+        "actor_input_dim": 98, "critic_input_dim": 666,
+        "pose_cmd": {"present": True, "width": 2, "zero_on_first_stage": True},
+        "map_input": cfg["map_input"], "force_gt": cfg["force_gt"],
+        "parent_p_map_off": checkpoint["map_switch"].get("p_map_off"),
+        "continuation_state_fields": list(required),
+        "ex41_environment_state_restored": False,
+        "ex41_curriculum_state_restored": False,
+        "approval": approval,
+    }
+    return checkpoint, receipt
 
 
 def build_ex42_training_chain(*, plan_path: str | Path,
