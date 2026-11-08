@@ -1,0 +1,100 @@
+{
+  "head": "86120a5ea6aa2a4a070a4cd92501daa7161a992a",
+  "scope": "CPU, no Kit/physics/training; actual checkpoints and caller AST",
+  "checkpoint_sha256": "7c01f11657b2d66b5fe3b5324f889aea5749c0cebb00333472fb6322342ca75c",
+  "parent_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+  "tests": [
+    {
+      "test": "actual_cli_checkpoint_source",
+      "returned_iter": 6000,
+      "resume_iter": 350,
+      "level_differences": 1100,
+      "type_differences": 0
+    },
+    {
+      "test": "actual_caller_parent_reset_then_m350_load",
+      "state": "root_xy_checked_against_restored_env_origins",
+      "env_count": 3072,
+      "distance_xy_m": {
+        "min": 0.0,
+        "mean": 4.315104007720947,
+        "p95": 16.0,
+        "max": 32.0
+      },
+      "reset_pose_bounds_xy_m": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ]
+      },
+      "outside_reset_bounds_count": 1100,
+      "outside_reset_bounds_env_ids_first_16": [
+        0,
+        2,
+        4,
+        6,
+        12,
+        15,
+        18,
+        38,
+        39,
+        44,
+        48,
+        50,
+        51,
+        60,
+        63,
+        66
+      ]
+    },
+    {
+      "test": "helper_control_with_m350",
+      "state": "root_xy_checked_against_restored_env_origins",
+      "env_count": 3072,
+      "distance_xy_m": {
+        "min": 0.0,
+        "mean": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "reset_pose_bounds_xy_m": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ]
+      },
+      "outside_reset_bounds_count": 0,
+      "outside_reset_bounds_env_ids_first_16": []
+    },
+    {
+      "test": "fresh_start_readback_local_scope",
+      "exception": "UnboundLocalError",
+      "message": "cannot access local variable 'EX42_STAGE_ZERO_ROOT_XY_READBACK' where it is not associated with a value"
+    },
+    {
+      "test": "L1_invalid_previous_before_builder",
+      "rejected": true,
+      "builder_calls": 0,
+      "message": "EX-42 stage-zero startup receipt identity differs"
+    },
+    {
+      "test": "L1_valid_receipt_provenance",
+      "marker_preserved": false,
+      "previous_sha_recorded": true,
+      "receipt_changed": true
+    }
+  ],
+  "source_hashes": {
+    "foothold_s2\\scripts\\train_start.py": "745c720cf8a55267a52014b566a5037a9f4bd7bb79d21b9a0cc8269ea7ae9c02",
+    "foothold_s2\\scripts\\ex42_training_entry.py": "e5ffa4451423e1f8c0f1788c18c6b33019edb816a455863dc5e1466c28b0c3df",
+    "foothold_s2\\ex42_chain.py": "7b09bac9363eb726665b514e14a775e4323b623758bb15e9233dbc6ade58c438"
+  }
+}
