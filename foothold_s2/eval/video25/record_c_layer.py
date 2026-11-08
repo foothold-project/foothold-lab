@@ -20,6 +20,8 @@ import sys
 import time
 from typing import Any
 
+from foothold_s2.eval.c_layer_outcome import foot_contact_and_force
+
 # C_LAYER_SEED_V1: C-layer outcomes are observed in this recording's resets.
 # They are never selected from an evaluation receipt. The frozen D51 recorder
 # and live training code are unchanged.
@@ -1813,7 +1815,7 @@ def _capture(spec: dict[str, Any]) -> None:
         stream.options = {"crf": "20", "preset": "medium"}
         frame_count = 0
         capture_wall_start = time.monotonic()
-        data = {key: [] for key in ("t", "seg", "foot_xyz", "foot_contact", "joint_pos",
+        data = {key: [] for key in ("t", "seg", "foot_xyz", "foot_contact", "foot_force_w_n", "joint_pos",
                                     "root_pos_w", "root_quat_w", "body_height_foot_center_m",
                                     "policy_action", "joint_pos_target_last_substep",
                                     "applied_torque_last_substep", "joint_target_valid",
@@ -1945,8 +1947,8 @@ def _capture(spec: dict[str, Any]) -> None:
             roll = math.atan2(2 * (quat[0] * quat[1] + quat[2] * quat[3]), 1 - 2 * (quat[1] ** 2 + quat[2] ** 2))
             pitch = math.asin(max(-1.0, min(1.0, 2 * (quat[0] * quat[2] - quat[3] * quat[1]))))
             foot_xyz = robot.data.body_pos_w[capture_env_id, foot_robot_ids].detach().cpu().numpy()
-            forces = sensor.data.net_forces_w[capture_env_id, foot_sensor_ids].detach()
-            contact = (torch.linalg.vector_norm(forces, dim=-1) > 1.0).cpu().numpy()
+            forces = sensor.data.net_forces_w[capture_env_id, foot_sensor_ids].detach().cpu().numpy()
+            force_w_n, contact = foot_contact_and_force(forces)
             overlay.record_step(foot_xyz, contact)
             cmd_now = (command_term.commands if hasattr(command_term, "commands") else command_term.vel_command_b)[capture_env_id, :3].detach().cpu().numpy()
             root_v = robot.data.root_lin_vel_b[capture_env_id].detach().cpu().numpy()
@@ -1994,6 +1996,7 @@ def _capture(spec: dict[str, Any]) -> None:
             data["seg"].append(seg)
             data["foot_xyz"].append(foot_xyz)
             data["foot_contact"].append(contact)
+            data["foot_force_w_n"].append(force_w_n)
             data["joint_pos"].append(joint_pos)
             data["root_pos_w"].append(root_pos_w)
             data["root_quat_w"].append(quat)
@@ -2049,6 +2052,7 @@ def _capture(spec: dict[str, Any]) -> None:
                             seg_s=np.float64(active_commands[0][2]), foot_z=np.asarray(data["foot_xyz"])[:, :, 2],
                             foot_xy=np.asarray(data["foot_xyz"])[:, :, :2],
                             foot_contact=np.asarray(data["foot_contact"], dtype=np.bool_),
+                             foot_force_w_n=np.asarray(data["foot_force_w_n"], dtype=np.float32),
                             **measurement_arrays(data, foot_names, robot.joint_names, step_count),
                             joint_pos=np.asarray(data["joint_pos"]), roll=np.asarray(data["roll"]),
                             pitch=np.asarray(data["pitch"]), vx=np.asarray(data["vx"]),
@@ -2173,6 +2177,9 @@ def _capture(spec: dict[str, Any]) -> None:
             "render_retry_method": "sim.render then raw.render(recompute=True)",
             "render_retry_checks": render_retry_checks,
             "termination_semantics": "reset is recorded with active termination items; no automatic fall label",
+            "foot_force_w_n": {"source": "contact_forces.data.net_forces_w", "unit": "N",
+                               "frame": "world", "sample": "pre-step", "shape": [step_count, 4, 3],
+                               "order": list(foot_names)},
             "map_image": ({"name": map_png.name, "receipt_included": False} if map_rows else None),
             "map_arrays": "aligned by map_t in the feet NPZ; empty for checkpoints without reconstruction maps",
             "overlay_25e": {"legend": LEGEND, "scene_foot_scan_visible": False,

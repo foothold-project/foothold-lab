@@ -19,6 +19,7 @@ import subprocess
 
 from foothold_s2.eval.c_layer_frame_audit import audit_video
 from foothold_s2.eval.c_layer_progress import run_recorder
+from foothold_s2.eval.c_layer_outcome import classify_capture
 from foothold_s2.eval.video_rule import VIDEO_RULE_VERSION, composer_version, require_video_rule
 from foothold_s2.machine_profile import load_machine_profile
 
@@ -231,7 +232,7 @@ def validate_plan(plan: dict, *, machine_profile: dict | None = None) -> dict:
 
 
 def actual_result(metadata: dict, npz: Path, row: dict | None = None) -> str:
-    """D48 result from this clip's reset count, never an evaluation role."""
+    """Legacy acquisition role from reset count, never the new video name."""
     import numpy as np
 
     with np.load(npz, allow_pickle=False) as data:
@@ -471,6 +472,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if child_log_has_traceback(attempt_root / "child.log"):
                     raise ValueError("recorder child logged a Traceback despite exit 0")
                 meta, own_result = verify_attempt(mp4, row, plan, ffprobe=ffprobe, seed=seed)
+                outcome = classify_capture(meta, mp4.with_name("review_feet.npz"))
                 mask_evidence = meta.get("robot_instance_evidence")
                 if (not isinstance(mask_evidence, list) or len(mask_evidence) != 450
                         or any(item.get("selected_robot_pixels", 0) < 80
@@ -519,7 +521,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 if not styled_audit["pass"]:
                     raise ValueError("C76 styled full-frame audit failed")
                 evidence = {"format": "foothold-c-layer-attempt/1", "cell": cell["cell"],
-                            "ordinal": ordinal, "seed": seed, "result": own_result,
+                             "ordinal": ordinal, "seed": seed, "result": own_result,
+                             "own_outcome": outcome,
                             "files": capture_files, "frames": meta["frames"],
                             "styled_sha256": sha256(styled), "composer_sha256": plan["composer_sha256"],
                             "video_rule_version": VIDEO_RULE_VERSION,
@@ -529,7 +532,7 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                 receipt_path = out / "receipts" / (cell["cell"] + "_" + own_result + ".json")
                 if own_result in targets and not receipt_path.exists():
                     name = _video_style().video_name(plan["canon_label"], row["kind"], row["level"],
-                                                     plan["iteration"], own_result, segment=row["map_mode"])
+                                                      plan["iteration"], outcome["outcome"], segment=row["map_mode"])
                     target = out / (name + ".mp4")
                     if target.exists():
                         raise ValueError("final video name already exists")
@@ -537,7 +540,8 @@ def run_one(plan: dict, *, out: Path, high_priority_markers: list[Path], ffprobe
                     shutil.copyfile(styled, temporary)
                     os.replace(temporary, target)
                     _write(receipt_path, {"format": "foothold-c-layer-canonical/1", "canonical": True,
-                                          "cell": cell["cell"], "own_result": own_result, "seed": seed,
+                                           "cell": cell["cell"], "own_result": own_result,
+                                           "own_outcome": outcome, "seed": seed,
                                           "ordinal": ordinal, "checkpoint_sha256": plan["checkpoint_sha256"],
                                           "recorder_sha256": plan["recorder_sha256"], "video": str(target),
                                           "video_sha256": sha256(target), "attempt_dir": str(attempt_root),

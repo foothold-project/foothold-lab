@@ -35,9 +35,9 @@ _CANON = r"[A-Za-z0-9][A-Za-z0-9.-]*"
 _KIND = r"[A-Za-z0-9][A-Za-z0-9+]*(?:_[A-Za-z0-9+]+)*"
 # 촬영 작업 이름(폴더 · --label): env 번호가 들어가고 결과 낱말은 없다. 같은 칸의 성공 env 와 실패 env 를 가르는 용도라 최종 이름이 아니다.
 CAPTURE_NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+_env[0-9]+-m[0-9]+-[a-z0-9_]+-1x$")
-# 최종 영상 이름(D48, 팀장 10/29): <정본>-<지형>_L<레벨>-m<회차>-<구간>-<배속>-<영상 안 결과>[-eval<평가 결과>][-<2 이상 번호>]. env 번호 없음.
+# 최종 영상 이름(D48): 옛 success/fail 이름을 읽고 새 C층 cross/survive/fall 이름을 낸다. env 번호 없음.
 # 평가 결과가 영상 안 결과와 같으면 -eval 꼬리 없음. 한 칸에 같은 이름이 둘이면 -2, -3.
-NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+-m[0-9]+-[a-z0-9_]+-1x-(?:success|fail)(?:-eval(?:success|fail))?(?:-[2-9][0-9]*)?$")
+NAME_RE = re.compile(r"^" + _CANON + "-" + _KIND + r"_L[0-9]+-m[0-9]+-[a-z0-9_]+-1x-(?:success|fail|cross|survive|fall)(?:-eval(?:success|fail))?(?:-[2-9][0-9]*)?$")
 
 
 def add_style_args(parser: argparse.ArgumentParser) -> None:
@@ -131,7 +131,9 @@ def capture_name(canon_label: str, set_kind: str, level: int, env: int, iteratio
 
 
 def result_word(verdict_or_role: str) -> str:
-    """영상 안 판정(success · fail_terminated · fail_short) 또는 평가 역할(success · fail · fell)을 이름 낱말 success | fail 로."""
+    """Keep old names readable while new C-layer clips use cross/survive/fall."""
+    if verdict_or_role in ("cross", "survive", "fall"):
+        return verdict_or_role
     if verdict_or_role == "success":
         return "success"
     if verdict_or_role in ("fail", "fell", "fail_terminated", "fail_short"):
