@@ -9,8 +9,16 @@ import glob, json, statistics as st, sys
 
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import load_linux_profile, require_linux_profile
+
+OPS_PROFILE = load_linux_profile()
+require_linux_profile(OPS_PROFILE)
+
 RUN = Path(sys.argv[1]).as_posix().rstrip('/')
 M6000 = r'C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json'
+if OPS_PROFILE:
+    M6000 = OPS_PROFILE["paths"]["baseline_m6000"]
 KEY = {'vx': 'vx_abs_error_mean_alive_mps', 'vy': 'vy_abs_error_mean_alive_mps', 'wz': 'wz_abs_error_mean_alive_radps'}
 
 

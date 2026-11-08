@@ -11,11 +11,18 @@ import argparse
 import contextlib
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
 import re
 from datetime import datetime, timezone
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import (PROFILE_ENV, PROFILE_PIN_ENV, bind_registry, gpu_path,
+                                 load_linux_profile, orca_executable, require_linux_profile)
+
+OPS_PROFILE = load_linux_profile()
 
 try:
     import psutil
@@ -243,6 +250,18 @@ LIVE = {
     "c_layer_total_cells": 81,
     "c_layer_manifest": "D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/cap2/remaining.json",
 }
+if OPS_PROFILE:
+    paths = OPS_PROFILE["paths"]
+    LIVE.update(
+        markers=[paths["gpu_root"], paths["c_layer_priority"]],
+        ledgers=[paths["c_layer_ledger"]],
+        train_marker=gpu_path(OPS_PROFILE, "TRAINING_BUSY_GPU0"),
+        idle_state=gpu_path(OPS_PROFILE, "idle_since.json"),
+        queue=gpu_path(OPS_PROFILE, "queue.json"),
+        stage_table=paths["stage_table"],
+        eval_root=paths["eval_root"],
+        c_layer_manifest=paths["c_layer_manifest"],
+    )
 KINDS = (("guard", ("score_watch", "mirror_guard", "auto_guard", "inbox_wait")),
          ("training", ("train_start.py", "train.py")),
          ("render", ("c_layer", "c76_vis", "vis_loop", "remainder", "render", "play.py")),
@@ -1186,6 +1205,16 @@ DISPATCH = {
     "interval": 10,
     "requeue_after_s": 60,
 }
+if OPS_PROFILE:
+    DISPATCH.update(
+        results=gpu_path(OPS_PROFILE, "results"),
+        logs=gpu_path(OPS_PROFILE, "logs"),
+        idle_log=gpu_path(OPS_PROFILE, "idle_log.jsonl"),
+        state=gpu_path(OPS_PROFILE, "dispatch_state.json"),
+        p1_markers=[gpu_path(OPS_PROFILE, "PRIORITY_BUSY_GPU1")],
+        p1_attempt_globs=[OPS_PROFILE["paths"]["p1_attempt_glob"]],
+        lead=OPS_PROFILE["lead_mailbox"],
+    )
 ALLOWED_KINDS = frozenset({"eval", "probe", "render"})
 # Same as the training launch script: Kit must not stop at the EULA prompt (stdin is closed).
 KIT_ENV = {"OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUTF8": "1", "PYTHONUNBUFFERED": "1"}
@@ -1369,18 +1398,22 @@ def spawn_wrapper(item_id: int, log: str) -> int:
         flags = (subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
                  | getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0))
     Path(log).parent.mkdir(parents=True, exist_ok=True)
-    fh = open(log, "ab")
-    try:
-        p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)],
-                             stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT,
-                             creationflags=flags, close_fds=True)
-    except OSError:
-        # Some hosts refuse BREAKAWAY; retry without it (still no window).
-        p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)],
-                             stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT,
-                             creationflags=flags & ~getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0),
-                             close_fds=True)
-    fh.close()
+    argv = [sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)]
+    with open(log, "ab") as fh:
+        kwargs = dict(stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT, close_fds=True)
+        if os.name == "posix":
+            if OPS_PROFILE:
+                # The same item ID in another queue must never be launched.
+                kwargs["env"] = dict(os.environ, **{
+                    PROFILE_ENV: OPS_PROFILE["file"], PROFILE_PIN_ENV: OPS_PROFILE["sha256"]})
+            p = subprocess.Popen(argv, start_new_session=True, **kwargs)
+        else:
+            try:
+                p = subprocess.Popen(argv, creationflags=flags, **kwargs)
+            except OSError:
+                # Some Windows hosts refuse BREAKAWAY; preserve the old fallback.
+                p = subprocess.Popen(argv, creationflags=flags & ~getattr(
+                    subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0), **kwargs)
     return p.pid
 
 
@@ -1427,8 +1460,11 @@ def runwrap(item_id: int, cfg=LIVE) -> int:
 
 def notify_lead(subject: str, body: str) -> None:
     import subprocess
+    if OPS_PROFILE and not DISPATCH["lead"]:
+        return  # Linux host has no verified receiver configured yet.
     try:
-        subprocess.run(["orca", "orchestration", "send", "--to", DISPATCH["lead"], "--type", "status",
+        subprocess.run([orca_executable() if OPS_PROFILE else "orca",
+                        "orchestration", "send", "--to", DISPATCH["lead"], "--type", "status",
                         "--subject", subject, "--body", body], capture_output=True, timeout=30,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.SubprocessError):
@@ -1684,6 +1720,7 @@ def main(argv: list[str] | None = None) -> int:
     gate = sub.add_parser("gate")
     gate.add_argument("job_id")
     args = parser.parse_args(argv)
+    require_linux_profile(OPS_PROFILE)
     if args.action == "dispatch":
         return dispatch_loop(args.once)
     if args.action == "runwrap":
@@ -1696,10 +1733,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.action == "status":
         print(live_status())
         if args.registry:
-            config = read_json(args.config)
-            print(status(config, live_sources(config)))
+            config = bind_registry(read_json(args.config), OPS_PROFILE)
+            if OPS_PROFILE and config.get("schema") == "foothold-gpu-jobs-v2":
+                from gpu_jobs import registry_status
+                print(json.dumps(registry_status(config), ensure_ascii=False))
+            else:
+                print(status(config, live_sources(config)))
         return 0
-    config = read_json(args.config)
+    config = bind_registry(read_json(args.config), OPS_PROFILE)
+    if OPS_PROFILE and config.get("schema") == "foothold-gpu-jobs-v2":
+        from gpu_jobs import admission as p4_admission
+        result = p4_admission(config, args.job_id)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result["admit_next_unit"] else 3
     live = live_sources(config)
     allowed, reason = admission(config, args.job_id, live)
     print(json.dumps({"job": args.job_id, "admit_next_unit": allowed, "reason": reason}, ensure_ascii=False))

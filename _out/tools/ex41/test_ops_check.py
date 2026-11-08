@@ -10,6 +10,10 @@ import ops_check  # noqa: E402
 
 RUN = Path("C:/Users/AI-WS01/s2_lab/ex41_main_20261104_235522")
 RUN_W = "C:\\Users\\AI-WS01\\s2_lab\\ex41_main_20261104_235522"
+RUN_LEAF = RUN_W + "\\main\\x"
+if os.name == "posix":
+    RUN = Path("/fixture/ex41_main_20261104_235522")
+    RUN_LEAF = str(RUN / "main/x")
 
 
 class P:
@@ -19,11 +23,11 @@ class P:
 
 
 def procs(push=True, stray=False, loop_ct=9e12):
-    out = [(P(), f"python train_start.py --ex41_log_root={RUN_W}\\main\\x"),
-           (P(), f"python -m foothold_s2.ex41_score_watch --run-dir {RUN_W}\\main\\x"),
+    out = [(P(), f"python train_start.py --ex41_log_root={RUN_LEAF}"),
+           (P(), f"python -m foothold_s2.ex41_score_watch --run-dir {RUN_LEAF}"),
            (P(loop_ct), "python D:/x/_out/tools/gpu_jobs/dispatch.py dispatch")]
     if push:
-        out.append((P(), f"python -m foothold_s2.eval.ex41_push250_watch --run-dir {RUN_W}\\main\\x"))
+        out.append((P(), f"python -m foothold_s2.eval.ex41_push250_watch --run-dir {RUN_LEAF}"))
     if stray:
         out.append((P(), "python -m foothold_s2.ex41_score_watch --run-dir D:\\mai-tmp\\runner\\s2_lab\\ex41_rehearsal_1"))
     return out

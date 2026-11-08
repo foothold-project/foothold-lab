@@ -13,6 +13,8 @@ Each check names the incident it prevents (EX41R-INCIDENTS.md):
 from __future__ import annotations
 
 import json
+import os
+import shlex
 import subprocess
 import sys
 import time
@@ -20,10 +22,19 @@ from pathlib import Path
 
 import psutil
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import gpu_path, load_linux_profile, require_linux_profile
+
+OPS_PROFILE = load_linux_profile()
+
 QUEUE = Path("D:/mai-tmp/gpu/queue.json")
 FINAL_ITER = 6000  # lead decision 11/06: EX-41 ends at 6000
 P1_MARKER = Path("D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1")
 TRAIN_MARKER = Path("D:/mai-tmp/gpu/TRAINING_BUSY_GPU0")
+if OPS_PROFILE:
+    QUEUE = Path(gpu_path(OPS_PROFILE, "queue.json"))
+    P1_MARKER = Path(gpu_path(OPS_PROFILE, "PRIORITY_BUSY_GPU1"))
+    TRAIN_MARKER = Path(gpu_path(OPS_PROFILE, "TRAINING_BUSY_GPU0"))
 DISPATCH = Path(__file__).resolve().parents[1] / "gpu_jobs" / "dispatch.py"
 GPU1 = "1"
 P1_IDLE_MINUTES = 10       # a P1 owner that keeps GPU1 under 5 % this long is stuck (I11: 30 min)
@@ -39,7 +50,8 @@ I36_CPU_DELTA_MAX = 0.10
 
 def _cmd(p: psutil.Process) -> str:
     try:
-        return " ".join(p.cmdline())
+        argv = p.cmdline()
+        return shlex.join(argv) if os.name == "posix" else " ".join(argv)
     except (psutil.Error, OSError):
         return ""
 
@@ -109,13 +121,39 @@ def _latest_output_file(path: Path) -> float | None:
         return None
 
 
+def _under_run(path: str | Path, run_root: Path) -> bool:
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        return False
+    try:
+        return candidate.resolve().is_relative_to(run_root.resolve())
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+def _posix_command_in_run(cmd: str, run_root: Path, option: str) -> bool:
+    try:
+        argv = shlex.split(cmd)
+    except ValueError:
+        return False
+    values = []
+    for i, arg in enumerate(argv):
+        if arg == option:
+            values.append(argv[i + 1] if i + 1 < len(argv) else "")
+        elif arg.startswith(option + "="):
+            values.append(arg.split("=", 1)[1])
+    return len(values) == 1 and _under_run(values[0], run_root)
+
+
 def score_attempt_wait(run_root: Path, now: float, procs, items,
                        cpu_delta=None) -> tuple[str, str, str]:
     """I36: check active score-watch attempts and its running evaluation queue jobs."""
     cpu_delta = cpu_delta or _cpu_tree_delta
     run_norm = str(run_root).replace('\\', '/').casefold()
     owners = [(p, c) for p, c in procs
-              if 'ex41_score_watch' in c and run_norm in c.replace('\\', '/').casefold()]
+              if 'ex41_score_watch' in c and (
+                  _posix_command_in_run(c, run_root, "--run-dir") if os.name == "posix"
+                  else run_norm in c.replace('\\', '/').casefold())]
     owner_pid = getattr(owners[0][0], 'pid', None) if owners else None
     candidates = []
     for job in items:
@@ -124,10 +162,12 @@ def score_attempt_wait(run_root: Path, now: float, procs, items,
                 or job.get('owner') != 'ex41_score_watch'):
             continue
         args = job.get('argv') or []
-        if '--out' not in args:
+        if '--out' not in args[:-1]:
             continue
         output = Path(args[args.index('--out') + 1])
-        if run_norm not in str(output).replace('\\', '/').casefold():
+        belongs = (_under_run(output, run_root) if os.name == "posix"
+                   else run_norm in str(output).replace('\\', '/').casefold())
+        if not belongs:
             continue
         candidates.append((f"queue {job.get('id')}", job.get('run_at'), output, job.get('pid')))
     for receipt in (run_root / 'eval' / 'score-watch').glob('model_*/attempt.json'):
@@ -164,12 +204,14 @@ def check(run_root: Path, now: float | None = None, procs=None, queue=None, util
     run_s = str(run_root).replace("/", "\\").casefold()
     run_f = str(run_root).replace("\\", "/").casefold()
 
-    def mine(c: str) -> bool:
+    def mine(c: str, option: str = "--run-dir") -> bool:
+        if os.name == "posix":
+            return _posix_command_in_run(c, run_root, option)
         low = c.casefold()
         return run_s in low or run_f in low
 
     # training and its watchers
-    train = [c for _, c in procs if "train_start.py" in c and mine(c)]
+    train = [c for _, c in procs if "train_start.py" in c and mine(c, "--ex41_log_root")]
     final = sorted(Path(run_root).glob(f"main/*/model_{FINAL_ITER}.pt"))
     if train:
         out.append(("OK", "train", f"{len(train)} train_start for this run"))
@@ -269,6 +311,8 @@ def next_boundary_score(run_root: Path, now: float, it: int | None = None,
 
 
 WORKLIST = Path("D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/WORKLIST.tsv")
+if OPS_PROFILE:
+    WORKLIST = Path(OPS_PROFILE["paths"]["worklist"])
 PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 
 
@@ -323,6 +367,7 @@ def _train_iter(run_root: Path) -> int | None:
 
 
 def main(argv: list[str]) -> int:
+    require_linux_profile(OPS_PROFILE)
     run_root = Path(argv[0])
     rows = check(run_root)
     rows += worklist(WORKLIST, time.time(), _train_iter(run_root))
