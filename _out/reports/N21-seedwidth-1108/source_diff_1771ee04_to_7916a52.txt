@@ -1,0 +1,73 @@
+diff --git a/foothold_s2/runners/start_runner.py b/foothold_s2/runners/start_runner.py
+index 61192de5..6c234a2f 100644
+--- a/foothold_s2/runners/start_runner.py
++++ b/foothold_s2/runners/start_runner.py
+@@ -134 +134,3 @@ def curriculum_update_number(runtime, loop_iteration: int) -> int:
+-    return loop_iteration + 1 if getattr(plan, "is_ex41", False) else loop_iteration
++    one_based = (getattr(plan, "is_ex41", False)
++                 or getattr(runtime, "uses_one_based_updates", False))
++    return loop_iteration + 1 if one_based else loop_iteration
+@@ -678 +680,5 @@ class StartRunner(OnPolicyRunner):
+-                        self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
++                        if getattr(self.continuous_curriculum, "is_ex42_stage_zero", False):
++                            self.continuous_curriculum.record_map_reset(
++                                done_ids, self.pstate.use_gt, self.pstate.map_off)
++                        else:
++                            self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
+@@ -1195,0 +1202 @@ class StartRunner(OnPolicyRunner):
++            "ex42_parent_transfer": getattr(self, "ex42_parent_transfer", None),
+@@ -1485,0 +1493,54 @@ class StartRunner(OnPolicyRunner):
++    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict) -> dict:
++        """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
++
++        This starts a new physical environment and a new local curriculum clock.
++        EX-41 environment and continuous-curriculum state are intentionally omitted.
++        """
++        if (self._resumed or self.current_learning_iteration != 0
++                or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
++            raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
++        if (not isinstance(receipt, dict)
++                or receipt.get("state") != "parent_verified_for_stage_zero"
++                or receipt.get("parent_local_update") != 6000
++                or receipt.get("parent_cumulative_update") != 12000
++                or receipt.get("actor_input_dim") != 98
++                or receipt.get("critic_input_dim") != 666
++                or receipt.get("ex41_environment_state_restored") is not False
++                or receipt.get("ex41_curriculum_state_restored") is not False):
++            raise ValueError("EX-42 stage-zero parent receipt is incomplete")
++        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != 6000:
++            raise ValueError("EX-42 stage-zero checkpoint identity differs")
++        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not False:
++            raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
++        saved = checkpoint.get("perception_cfg") or {}
++        for key, default in MODE_DEFAULTS.items():
++            if saved.get(key, default) != self.pcfg[key]:
++                raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
++        if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
++            raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
++        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
++        self.perception.load_state_dict(checkpoint["perception_state_dict"], strict=True)
++        self.adasmpl.load_state_dict(checkpoint["adasmpl"])
++        self._apply_resume_adasmpl()
++        self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
++        self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
++        self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
++        self.load_map_switch_state(checkpoint["map_switch"], 6000)
++        self.set_rng_state(checkpoint["rng"])
++        use_gt_frac = checkpoint.get("last_use_gt_frac")
++        if use_gt_frac is not None:
++            if (not isinstance(use_gt_frac, (int, float))
++                    or not math.isfinite(float(use_gt_frac))
++                    or not 0.0 <= float(use_gt_frac) <= 1.0):
++                raise ValueError("EX-42 stage-zero parent last use_gt_frac is invalid")
++            self._last_use_gt_frac = float(use_gt_frac)
++        self.current_learning_iteration = 0
++        self.ex42_parent_transfer = dict(receipt)
++        self._ex42_parent_loaded = True
++        return {**receipt, "state": "loaded_for_ex42_stage_zero",
++                "local_iteration_origin": 0,
++                "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
++                             "perception", "perception_optimizer", "adasmpl",
++                             "normalization_buffers", "map_switch", "rng"],
++                "not_restored": ["ex41_environment_state", "ex41_curriculum_state"]}
++

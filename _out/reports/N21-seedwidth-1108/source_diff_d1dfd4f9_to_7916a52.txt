@@ -1,0 +1,163 @@
+diff --git a/foothold_s2/eval/eval_map_modes.py b/foothold_s2/eval/eval_map_modes.py
+index b43c3e61..fc4c8beb 100644
+--- a/foothold_s2/eval/eval_map_modes.py
++++ b/foothold_s2/eval/eval_map_modes.py
+@@ -69 +69,2 @@ if parser_n21:
+-            args.n21_approval, args.n21_stage, args.dr_scale, dr_table_path=args.dr_table)
++            args.n21_approval, args.n21_stage, args.dr_scale if args.dr_mode == "on" else None,
++            dr_table_path=args.dr_table)
+@@ -176 +177 @@ dr_mode = eval_dr_mode.DRMode.from_args(args, env_cfg, capture_per_env=parser_n2
+-if parser_n21 and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
++if parser_n21 and args.dr_mode == "on" and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
+@@ -318,0 +320,2 @@ if args.dr_mode == "on":
++elif parser_n21:
++    res["dr_mode"] = n21_dr_record.off_mode_record(dr_off)
+diff --git a/foothold_s2/eval/n21_dr_record.py b/foothold_s2/eval/n21_dr_record.py
+index f386a69f..2b17a1ea 100644
+--- a/foothold_s2/eval/n21_dr_record.py
++++ b/foothold_s2/eval/n21_dr_record.py
+@@ -27,0 +28,5 @@ N21_SCHEMA = "foothold-ex42-n21-dr-record-only/1"
++N21_DR_OFF_EVENTS = ("physics_material", "add_base_mass")
++N21_RUNTIME_EVENTS = (
++    "base_com", "actuator_gains", "motor_strength", "push", "push_events",
++    "delay_reset_samples", "delay_observed_max_substeps",
++)
+@@ -33,4 +38,5 @@ def validate_request(args) -> None:
+-    if args.dr_mode != "on":
+-        raise ValueError("N21 record-only requires --dr-mode on")
+-    if args.dr_scale != 1.0:
+-        raise ValueError("N21 requires approved DR scale 1.0")
++    if args.dr_mode not in ("on", "off"):
++        raise ValueError("N21 record-only requires --dr-mode on or off")
++    expected_scale = 1.0 if args.dr_mode == "on" else 0.0
++    if args.dr_scale != expected_scale:
++        raise ValueError("N21 %s requires effective DR scale %.1f" % (args.dr_mode, expected_scale))
+@@ -58 +64 @@ def validate_entrypoint(args) -> None:
+-    """Keep every DR-on map evaluation in the isolated N21 record-only lane."""
++    """Keep DR-on maps and N21 selectors in the isolated record-only lane."""
+@@ -69 +75 @@ def validate_entrypoint(args) -> None:
+-def approval_record(path: str | Path, stage: str, scale: float,
++def approval_record(path: str | Path, stage: str, scale: float | None,
+@@ -82 +88,2 @@ def approval_record(path: str | Path, stage: str, scale: float,
+-    if isinstance(approved_scale, bool) or not isinstance(approved_scale, (int, float)) or float(approved_scale) != float(scale):
++    if (isinstance(approved_scale, bool) or not isinstance(approved_scale, (int, float))
++            or (scale is not None and float(approved_scale) != float(scale))):
+@@ -134,0 +142,12 @@ def terrain_spec(terrain_set: str) -> dict[str, Any]:
++def off_mode_record(disabled_events: list[str]) -> dict[str, Any]:
++    """Describe the effective DR-off lane without creating a DR readback block."""
++    if sorted(disabled_events) != sorted(N21_DR_OFF_EVENTS):
++        raise ValueError("N21 DR-off requires exactly the configured startup events disabled")
++    return {
++        "mode": "off",
++        "scale": 0.0,
++        "startup_events_disabled": list(disabled_events),
++        "runtime_events_fired": {name: 0 for name in N21_RUNTIME_EVENTS},
++    }
++
++
+@@ -152,3 +171,20 @@ def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set:
+-    """Wrap a DR-on evaluation document in an unmistakable record-only contract."""
+-    if not isinstance(document, dict) or "dr" not in document or document["dr"].get("mode") != "on":
+-        raise ValueError("N21 receipt requires a completed DR-on result")
++    """Wrap DR-on or DR-off evaluation in the same isolated record-only contract."""
++    if not isinstance(document, dict):
++        raise ValueError("N21 receipt requires a completed result document")
++    mode_record = document.get("dr_mode")
++    mode = mode_record.get("mode") if isinstance(mode_record, dict) else None
++    if mode == "on":
++        dr = document.get("dr")
++        if not isinstance(dr, dict) or dr.get("mode") != "on":
++            raise ValueError("N21 DR-on receipt requires a completed DR-on block")
++        effective_scale = dr.get("scale")
++        if float(mode_record.get("scale", -1.0)) != float(effective_scale):
++            raise ValueError("N21 DR-on mode metadata differs from its runtime block")
++    elif mode == "off":
++        if "dr" in document:
++            raise ValueError("N21 DR-off receipt cannot contain a DR runtime block")
++        if mode_record != off_mode_record(document.get("dr_off", [])):
++            raise ValueError("N21 DR-off receipt must record zero runtime events and disabled startup events")
++        effective_scale = 0.0
++    else:
++        raise ValueError("N21 receipt requires an explicit DR-on or DR-off mode")
+@@ -167 +203 @@ def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set:
+-    dr = document["dr"]
++    approved_scale_matches = (mode == "off" or float(approval.get("scale", -1.0)) == float(effective_scale)) if isinstance(approval, dict) else False
+@@ -169 +205 @@ def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set:
+-            or float(approval.get("scale", -1.0)) != float(dr.get("scale", -2.0))
++            or not approved_scale_matches
+@@ -172 +208 @@ def receipt(document: dict[str, Any], *, approval: dict[str, Any], terrain_set:
+-        raise ValueError("N21 receipt approval does not match its stage/scale or range source")
++        raise ValueError("N21 receipt approval does not match its stage or range source")
+diff --git a/foothold_s2/runners/start_runner.py b/foothold_s2/runners/start_runner.py
+index 61192de5..6c234a2f 100644
+--- a/foothold_s2/runners/start_runner.py
++++ b/foothold_s2/runners/start_runner.py
+@@ -134 +134,3 @@ def curriculum_update_number(runtime, loop_iteration: int) -> int:
+-    return loop_iteration + 1 if getattr(plan, "is_ex41", False) else loop_iteration
++    one_based = (getattr(plan, "is_ex41", False)
++                 or getattr(runtime, "uses_one_based_updates", False))
++    return loop_iteration + 1 if one_based else loop_iteration
+@@ -678 +680,5 @@ class StartRunner(OnPolicyRunner):
+-                        self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
++                        if getattr(self.continuous_curriculum, "is_ex42_stage_zero", False):
++                            self.continuous_curriculum.record_map_reset(
++                                done_ids, self.pstate.use_gt, self.pstate.map_off)
++                        else:
++                            self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
+@@ -1195,0 +1202 @@ class StartRunner(OnPolicyRunner):
++            "ex42_parent_transfer": getattr(self, "ex42_parent_transfer", None),
+@@ -1485,0 +1493,54 @@ class StartRunner(OnPolicyRunner):
++    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict) -> dict:
++        """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
++
++        This starts a new physical environment and a new local curriculum clock.
++        EX-41 environment and continuous-curriculum state are intentionally omitted.
++        """
++        if (self._resumed or self.current_learning_iteration != 0
++                or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
++            raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
++        if (not isinstance(receipt, dict)
++                or receipt.get("state") != "parent_verified_for_stage_zero"
++                or receipt.get("parent_local_update") != 6000
++                or receipt.get("parent_cumulative_update") != 12000
++                or receipt.get("actor_input_dim") != 98
++                or receipt.get("critic_input_dim") != 666
++                or receipt.get("ex41_environment_state_restored") is not False
++                or receipt.get("ex41_curriculum_state_restored") is not False):
++            raise ValueError("EX-42 stage-zero parent receipt is incomplete")
++        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != 6000:
++            raise ValueError("EX-42 stage-zero checkpoint identity differs")
++        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not False:
++            raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
++        saved = checkpoint.get("perception_cfg") or {}
++        for key, default in MODE_DEFAULTS.items():
++            if saved.get(key, default) != self.pcfg[key]:
++                raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
++        if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
++            raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
++        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
++        self.perception.load_state_dict(checkpoint["perception_state_dict"], strict=True)
++        self.adasmpl.load_state_dict(checkpoint["adasmpl"])
++        self._apply_resume_adasmpl()
++        self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
++        self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
++        self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
++        self.load_map_switch_state(checkpoint["map_switch"], 6000)
++        self.set_rng_state(checkpoint["rng"])
++        use_gt_frac = checkpoint.get("last_use_gt_frac")
++        if use_gt_frac is not None:
++            if (not isinstance(use_gt_frac, (int, float))
++                    or not math.isfinite(float(use_gt_frac))
++                    or not 0.0 <= float(use_gt_frac) <= 1.0):
++                raise ValueError("EX-42 stage-zero parent last use_gt_frac is invalid")
++            self._last_use_gt_frac = float(use_gt_frac)
++        self.current_learning_iteration = 0
++        self.ex42_parent_transfer = dict(receipt)
++        self._ex42_parent_loaded = True
++        return {**receipt, "state": "loaded_for_ex42_stage_zero",
++                "local_iteration_origin": 0,
++                "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
++                             "perception", "perception_optimizer", "adasmpl",
++                             "normalization_buffers", "map_switch", "rng"],
++                "not_restored": ["ex41_environment_state", "ex41_curriculum_state"]}
++
