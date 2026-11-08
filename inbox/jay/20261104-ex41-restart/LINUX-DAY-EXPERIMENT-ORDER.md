@@ -16,6 +16,7 @@
 | K2 | Isaac Sim 5.1 · Isaac Lab 환경 (런북 L-6 ~ L-8 · mai-os PR #59 초안의 절차) | `python -c "import isaaclab"` 성공 · `nvidia-smi` 두 장 | PR #59 초안이 막히면 그 자리를 적고 super2 · pipeline 과 고친다 (추측으로 다른 판을 깔지 않는다) | 30 ~ 60 분 | L-6 ~ L-8 |
 | K3 | 기기 설정: runner 의 `machines/AI-WS01-linux.yaml` 로 Kit 캐시 · bash · python 자리 지정 | 경로 검사 통과 (비 ASCII 0) | Windows 고정 자리가 남아 있으면 런북 L-15 의 0 표대로 주인 세션이 고침 | 10 분 | L-15 의 0 |
 | K4 | 정본 저장본 옮기기: EX-41 `model_6000.pt`(= 누적 m12000) | `sha256sum` 이 `1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613` | 다르면 다시 복사 (다른 저장본으로 시작하지 않는다) | 5 분 | 정본 문서 v1.3 |
+| K4b | **E1 출발 저장본 옮기기 (lead 11/09 01:2x 덧붙임)**: EX-42 0 단계 `model_1000.pt` (= 누적 m13000). Windows 자리 `C:\Users\AI-WS01\s2_lab\ex42_main_20261108_123914\main\EX-42-B-stagezero_20261108_123914\model_1000.pt` (24,964,922 바이트) -> Linux `~/data/foothold/s2_lab/` 아래 같은 하위 경로 | `sha256sum` 이 `20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768` (super2 11/09 01:3x 실측) | 다르면 다시 복사. E1 은 이 저장본에서 출발하므로 다른 저장본으로 시작하지 않는다 | 5 분 | 대기열 1391 「EX-42 P1 model_1000 20365a2c6d70」 |
 
 ## L. GPU · 같은 저장본 확인 (lead 가 띄움) · 약 1 시간
 
