@@ -93,6 +93,7 @@ def make_capture(mp4: Path, plan: dict, row: dict, seed: int, resets: int):
     mp4.with_name("review.json").write_text(json.dumps({
         "checkpoint_sha256": plan["checkpoint_sha256"], "label": row["label"], "seed": seed,
         "selected_environment": {"env_id": 7, "kind": row["kind"], "level": row["level"]},
+        "task_selection": {"fixed_level": row["level"], "col": 4},
         "map_modes": {"map_mode": {"requested": row["map_mode"]}},
         "style": {"style_id": video_style.STYLE_ID},
         "frames": 450, "fps": 25, "duration_s": 18.0, "resets": resets,
@@ -101,7 +102,10 @@ def make_capture(mp4: Path, plan: dict, row: dict, seed: int, resets: int):
     }), encoding="utf-8")
     done = np.zeros(900, dtype=bool)
     done[:resets] = True
-    np.savez(mp4.with_name("review_feet.npz"), t=np.arange(900) * .02, dt=.02, done=done)
+    root_pos = np.zeros((900, 3), dtype=np.float32)
+    root_pos[:, 0] = row["level"] * 8 - 40 + 6.0
+    np.savez(mp4.with_name("review_feet.npz"), t=np.arange(900) * .02, dt=.02,
+             done=done, time_out=np.zeros(900, bool), root_pos_w=root_pos)
 
 
 def fake_capture(plan: dict, outcomes: list[int]):
@@ -352,6 +356,7 @@ def test_two_outcomes_publish_canonical_without_eval_suffix(tmp_path, monkeypatc
     assert len(receipts) == 2
     assert all(json.loads(p.read_text(encoding="utf-8"))["canonical"] is True for p in receipts)
     assert all("evalfail" not in p.name for p in out.glob("*.mp4"))
+    assert sorted(p.stem.rsplit("-", 1)[-1] for p in out.glob("*.mp4")) == ["fall", "survive"]
     assert not (out / "attempts" / first["cell"] / "03").exists()
     assert rows[0]["label"] not in [p.stem for p in out.glob("*.mp4")]
 
