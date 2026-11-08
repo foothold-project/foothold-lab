@@ -1,0 +1,42 @@
+{
+  "manifest_cpu": {
+    "input_completed": 50,
+    "published_completed": 51,
+    "published_steps": 3760128,
+    "actual_steps": 3686400
+  },
+  "missing_runtime_methods": {
+    "record_pre_step": "'EX42StageZeroRuntime' object has no attribute 'record_pre_step'",
+    "record_post_step": "'EX42StageZeroRuntime' object has no attribute 'record_post_step'"
+  },
+  "parent_train_extra_line": 6000,
+  "parent_update": 6000,
+  "parent_push_schedule": {
+    "stage_id": "T0_prime",
+    "vmax_mps": 2.0,
+    "independent_of_dr_scale": true,
+    "sampling": "magnitude U[0,Vmax] m/s; direction U[0,360) degrees; horizontal radial vector"
+  },
+  "parent_push_actual": {
+    "push_velocity_delta": {
+      "count": 360,
+      "min": -1.84639310836792,
+      "max": 1.9499186277389526,
+      "mean": 0.018906120138449802,
+      "target_envs": 60
+    },
+    "push_radial_magnitude_mps": {
+      "count": 60,
+      "min": 0.018844125792384148,
+      "max": 1.9838616847991943,
+      "mean": 1.0857612936136622,
+      "target_envs": 60
+    }
+  },
+  "source_sha256": {
+    "foothold_s2\\scripts\\ex42_training_entry.py": "6a1a8231a9da6839651113ab231ab9a979ea4aebfc6bb5d860421eea3a3fdb7e",
+    "foothold_s2\\scripts\\train_start.py": "2dfcec9a34542c2653758d2fca26fdcda81dc3dc29ca3a95e5c067eb38e60ac4",
+    "foothold_s2\\ex42_chain.py": "7b09bac9363eb726665b514e14a775e4323b623758bb15e9233dbc6ade58c438",
+    "foothold_s2\\runners\\start_runner.py": "74020e02bba539708bb3bbbdcc5c1f5e3935b365fc9a57bd14d44f7c1213696c"
+  }
+}

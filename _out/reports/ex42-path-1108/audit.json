@@ -1,0 +1,247 @@
+{
+  "source_head": "7916a52fa07c6774eb59db2b69f4b7a5068cea63",
+  "torch": "2.7.0+cu128",
+  "rsl": "3.1.2",
+  "ppo_source": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\rsl_rl\\algorithms\\ppo.py",
+  "ppo_signature": "(policy: 'ActorCritic | ActorCriticRecurrent', num_learning_epochs: 'int' = 5, num_mini_batches: 'int' = 4, clip_param: 'float' = 0.2, gamma: 'float' = 0.99, lam: 'float' = 0.95, value_loss_coef: 'float' = 1.0, entropy_coef: 'float' = 0.01, learning_rate: 'float' = 0.001, max_grad_norm: 'float' = 1.0, use_clipped_value_loss: 'bool' = True, schedule: 'str' = 'adaptive', desired_kl: 'float' = 0.01, device: 'str' = 'cpu', normalize_advantage_per_mini_batch: 'bool' = False, rnd_cfg: 'dict | None' = None, symmetry_cfg: 'dict | None' = None, multi_gpu_cfg: 'dict | None' = None) -> 'None'",
+  "init_storage": "(self, training_type: 'str', num_envs: 'int', num_transitions_per_env: 'int', obs: 'TensorDict', actions_shape: 'tuple[int] | list[int]') -> 'None'",
+  "wt_slots": [
+    "forward",
+    "walk_left",
+    "walk_right",
+    "spin_left",
+    "spin_right"
+  ],
+  "ex41_slots": [
+    "forward",
+    "walk_left",
+    "walk_right",
+    "spin_left",
+    "spin_right",
+    "stand",
+    "reverse",
+    "side_left",
+    "side_right",
+    "diag_fwd_left",
+    "diag_fwd_right",
+    "diag_back_left",
+    "diag_back_right"
+  ],
+  "sample_max": 12,
+  "sample_counts": [
+    702,
+    199,
+    200,
+    272,
+    259,
+    321,
+    437,
+    205,
+    205,
+    65,
+    54,
+    75,
+    78
+  ],
+  "slot_error": "RuntimeError: The size of tensor a (5) must match the size of tensor b (13) at non-singleton dimension 0",
+  "json_error": "TypeError: Object of type W86Runtime is not JSON serializable",
+  "parent_sha": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+  "parent_keys": [
+    "format",
+    "ex41_pose_commands",
+    "ex41_critic_mirror",
+    "ex41_mirror_approval",
+    "ex41_mirror_hold_reason",
+    "ex41_parent_transfer",
+    "model_state_dict",
+    "optimizer_state_dict",
+    "ppo_learning_rate",
+    "perception_state_dict",
+    "perception_optimizer_state_dict",
+    "perception_cfg",
+    "adasmpl",
+    "env_state",
+    "env_seed",
+    "iter",
+    "last_use_gt_frac",
+    "normalization_state",
+    "ex41_w86_reward_weights",
+    "rng",
+    "map_switch",
+    "infos",
+    "continuous_curriculum",
+    "ex41_resume"
+  ],
+  "model_shapes": {
+    "std": [
+      12
+    ],
+    "actor.0.weight": [
+      512,
+      98
+    ],
+    "actor.0.bias": [
+      512
+    ],
+    "actor.2.weight": [
+      256,
+      512
+    ],
+    "actor.2.bias": [
+      256
+    ],
+    "actor.4.weight": [
+      128,
+      256
+    ],
+    "actor.4.bias": [
+      128
+    ],
+    "actor.6.weight": [
+      12,
+      128
+    ],
+    "actor.6.bias": [
+      12
+    ],
+    "critic.0.weight": [
+      512,
+      666
+    ],
+    "critic.0.bias": [
+      512
+    ],
+    "critic.2.weight": [
+      256,
+      512
+    ],
+    "critic.2.bias": [
+      256
+    ],
+    "critic.4.weight": [
+      128,
+      256
+    ],
+    "critic.4.bias": [
+      128
+    ],
+    "critic.6.weight": [
+      1,
+      128
+    ],
+    "critic.6.bias": [
+      1
+    ]
+  },
+  "optimizer_groups": 1,
+  "ppo_learning_rate": 0.00038443359375000017,
+  "optimizer_lr": [
+    0.00038443359375000017
+  ],
+  "perception_lr": [
+    0.0005
+  ],
+  "rng_keys": [
+    "torch",
+    "numpy",
+    "python",
+    "cuda"
+  ],
+  "rng_cuda_count": 2,
+  "parent_pose": true,
+  "normalization": {
+    "actor_obs_enabled": false,
+    "critic_obs_enabled": false,
+    "reward_enabled": false
+  },
+  "normalization_buffer_keys": [],
+  "map_switch_p": 0.1,
+  "parent_cfg": {
+    "policy": {
+      "init_noise_std": 1.0,
+      "noise_std_type": "scalar",
+      "state_dependent_std": false,
+      "actor_obs_normalization": false,
+      "critic_obs_normalization": false,
+      "actor_hidden_dims": [
+        512,
+        256,
+        128
+      ],
+      "critic_hidden_dims": [
+        512,
+        256,
+        128
+      ],
+      "activation": "elu"
+    },
+    "algorithm": {
+      "class_name": "PPO",
+      "num_learning_epochs": 5,
+      "num_mini_batches": 4,
+      "learning_rate": 0.001,
+      "schedule": "adaptive",
+      "gamma": 0.99,
+      "lam": 0.95,
+      "entropy_coef": 0.01,
+      "desired_kl": 0.01,
+      "max_grad_norm": 1.0,
+      "value_loss_coef": 1.0,
+      "use_clipped_value_loss": true,
+      "clip_param": 0.2,
+      "normalize_advantage_per_mini_batch": false,
+      "rnd_cfg": null,
+      "symmetry_cfg": null
+    },
+    "num_steps_per_env": 24,
+    "save_interval": 50
+  },
+  "parent_perception": {
+    "fast_gt_only": false,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.0,
+    "num_learning_epochs": 5,
+    "num_mini_batches": 4,
+    "microbatch_envs": 64,
+    "max_grad_norm": 1.0,
+    "depth_dtype": "float16",
+    "replay_impl": "a3",
+    "replay_autocast": "none",
+    "kl_fp32": false,
+    "latest_interval": 100,
+    "status_interval": 10,
+    "est_mode": "learned",
+    "oracle_vel_noise": 0.1,
+    "critic_mode": "clean52",
+    "log_action_stats": true,
+    "log_reward_split": true,
+    "log_kl": true,
+    "kl_probe_envs": 256,
+    "contract": "start",
+    "stop_on_nonfinite": true,
+    "p_map_off": 0.1,
+    "p_map_off_change": null,
+    "resume_adasmpl": null,
+    "map_switch_seed": 20251025,
+    "map_input": "reconstruction",
+    "log_map_stats": true,
+    "force_gt": false
+  },
+  "source_stage_rewards": {
+    "track_ang_vel": 1.0,
+    "track_lin_vel": 2.0,
+    "joint_acc": -1e-07,
+    "hip_pos_penalty": -0.05,
+    "thigh_calf_pos_l1": -0.01,
+    "four_foot_contact_at_stop": 0.1,
+    "stand_gap": -0.2,
+    "stand_load": -0.1,
+    "zero_yaw": -0.5,
+    "swing": -10.0,
+    "stumble": -2.0,
+    "knee_effort_margin": 0.0,
+    "joint_limit_margin": 0.0,
+    "feet_air_time": 0.0,
+    "foot_slip": 0.0
+  }
+}
