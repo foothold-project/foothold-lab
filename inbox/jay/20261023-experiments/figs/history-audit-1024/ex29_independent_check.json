@@ -1,0 +1,1713 @@
+{
+  "scope": "CPU saved records; selected transitions, not a causal intervention",
+  "sources": {
+    "C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_topdown/2026-10-24_08-20-33_ex29-td-main/step_evidence.jsonl": "b0ca67092f6302253cb3e136faa587a1463ce357b5c5870f700c1296490351b5",
+    "C:/Users/AI-WS01/s2_lab/run_20261024/td_main_segment1/run.log": "573161d47e54200bfe8a9d336711cc075bc8c7c528eb20687ddbf8d9dfa2161b"
+  },
+  "orientation_counts": {
+    "0:0": 0,
+    "1:1": 18,
+    "0:9": 739,
+    "0:24": 1196,
+    "100:124": 60676,
+    "175:199": 105201
+  },
+  "log_rows": {
+    "0": {
+      "episode_length_steps": 12.86,
+      "mean_reward": -1.22,
+      "terrain_level": 0.9747,
+      "bad_orientation_ratio": 0.0,
+      "gt_fraction": 1.0
+    },
+    "1": {
+      "episode_length_steps": 38.6,
+      "mean_reward": -3.3,
+      "terrain_level": 0.9637,
+      "bad_orientation_ratio": 0.0012,
+      "gt_fraction": 0.9957
+    },
+    "2": {
+      "episode_length_steps": 64.85,
+      "mean_reward": -5.76,
+      "terrain_level": 0.944,
+      "bad_orientation_ratio": 0.0173,
+      "gt_fraction": 0.9773
+    },
+    "3": {
+      "episode_length_steps": 89.1,
+      "mean_reward": -8.07,
+      "terrain_level": 0.9184,
+      "bad_orientation_ratio": 0.0425,
+      "gt_fraction": 0.9533
+    },
+    "4": {
+      "episode_length_steps": 111.29,
+      "mean_reward": -8.72,
+      "terrain_level": 0.892,
+      "bad_orientation_ratio": 0.0769,
+      "gt_fraction": 0.9279
+    },
+    "5": {
+      "episode_length_steps": 133.23,
+      "mean_reward": -10.25,
+      "terrain_level": 0.8671,
+      "bad_orientation_ratio": 0.1098,
+      "gt_fraction": 0.9073
+    },
+    "6": {
+      "episode_length_steps": 150.9,
+      "mean_reward": -12.72,
+      "terrain_level": 0.8449,
+      "bad_orientation_ratio": 0.1355,
+      "gt_fraction": 0.8858
+    },
+    "7": {
+      "episode_length_steps": 165.83,
+      "mean_reward": -11.9,
+      "terrain_level": 0.8187,
+      "bad_orientation_ratio": 0.1621,
+      "gt_fraction": 0.8667
+    },
+    "8": {
+      "episode_length_steps": 187.2,
+      "mean_reward": -13.59,
+      "terrain_level": 0.7909,
+      "bad_orientation_ratio": 0.1872,
+      "gt_fraction": 0.846
+    },
+    "9": {
+      "episode_length_steps": 196.96,
+      "mean_reward": -13.26,
+      "terrain_level": 0.7672,
+      "bad_orientation_ratio": 0.207,
+      "gt_fraction": 0.8355
+    },
+    "10": {
+      "episode_length_steps": 220.03,
+      "mean_reward": -13.8,
+      "terrain_level": 0.7458,
+      "bad_orientation_ratio": 0.22,
+      "gt_fraction": 0.8254
+    },
+    "11": {
+      "episode_length_steps": 241.82,
+      "mean_reward": -18.17,
+      "terrain_level": 0.7263,
+      "bad_orientation_ratio": 0.2324,
+      "gt_fraction": 0.8134
+    },
+    "12": {
+      "episode_length_steps": 275.11,
+      "mean_reward": -17.05,
+      "terrain_level": 0.7088,
+      "bad_orientation_ratio": 0.2411,
+      "gt_fraction": 0.8071
+    },
+    "13": {
+      "episode_length_steps": 281.16,
+      "mean_reward": -21.39,
+      "terrain_level": 0.6916,
+      "bad_orientation_ratio": 0.2496,
+      "gt_fraction": 0.8002
+    },
+    "14": {
+      "episode_length_steps": 310.88,
+      "mean_reward": -21.74,
+      "terrain_level": 0.6769,
+      "bad_orientation_ratio": 0.255,
+      "gt_fraction": 0.7971
+    },
+    "15": {
+      "episode_length_steps": 314.73,
+      "mean_reward": -20.82,
+      "terrain_level": 0.6616,
+      "bad_orientation_ratio": 0.2596,
+      "gt_fraction": 0.7938
+    },
+    "16": {
+      "episode_length_steps": 328.5,
+      "mean_reward": -20.93,
+      "terrain_level": 0.6447,
+      "bad_orientation_ratio": 0.2648,
+      "gt_fraction": 0.7906
+    },
+    "17": {
+      "episode_length_steps": 353.31,
+      "mean_reward": -22.55,
+      "terrain_level": 0.6278,
+      "bad_orientation_ratio": 0.2685,
+      "gt_fraction": 0.7875
+    },
+    "18": {
+      "episode_length_steps": 408.03,
+      "mean_reward": -24.84,
+      "terrain_level": 0.614,
+      "bad_orientation_ratio": 0.2706,
+      "gt_fraction": 0.7824
+    },
+    "19": {
+      "episode_length_steps": 403.24,
+      "mean_reward": -25.8,
+      "terrain_level": 0.5966,
+      "bad_orientation_ratio": 0.2756,
+      "gt_fraction": 0.7779
+    },
+    "20": {
+      "episode_length_steps": 434.63,
+      "mean_reward": -23.54,
+      "terrain_level": 0.5796,
+      "bad_orientation_ratio": 0.2783,
+      "gt_fraction": 0.7762
+    },
+    "21": {
+      "episode_length_steps": 457.82,
+      "mean_reward": -30.72,
+      "terrain_level": 0.5648,
+      "bad_orientation_ratio": 0.2797,
+      "gt_fraction": 0.773
+    },
+    "22": {
+      "episode_length_steps": 475.11,
+      "mean_reward": -35.78,
+      "terrain_level": 0.5502,
+      "bad_orientation_ratio": 0.2825,
+      "gt_fraction": 0.7678
+    },
+    "23": {
+      "episode_length_steps": 504.16,
+      "mean_reward": -34.71,
+      "terrain_level": 0.534,
+      "bad_orientation_ratio": 0.2853,
+      "gt_fraction": 0.7635
+    },
+    "24": {
+      "episode_length_steps": 514.84,
+      "mean_reward": -42.46,
+      "terrain_level": 0.5188,
+      "bad_orientation_ratio": 0.2874,
+      "gt_fraction": 0.7587
+    },
+    "25": {
+      "episode_length_steps": 541.14,
+      "mean_reward": -34.77,
+      "terrain_level": 0.5065,
+      "bad_orientation_ratio": 0.2878,
+      "gt_fraction": 0.7563
+    },
+    "26": {
+      "episode_length_steps": 529.21,
+      "mean_reward": -32.97,
+      "terrain_level": 0.4957,
+      "bad_orientation_ratio": 0.2896,
+      "gt_fraction": 0.7522
+    },
+    "27": {
+      "episode_length_steps": 535.73,
+      "mean_reward": -28.64,
+      "terrain_level": 0.4807,
+      "bad_orientation_ratio": 0.292,
+      "gt_fraction": 0.7476
+    },
+    "28": {
+      "episode_length_steps": 552.77,
+      "mean_reward": -32.17,
+      "terrain_level": 0.4689,
+      "bad_orientation_ratio": 0.2939,
+      "gt_fraction": 0.7426
+    },
+    "29": {
+      "episode_length_steps": 565.14,
+      "mean_reward": -45.58,
+      "terrain_level": 0.4577,
+      "bad_orientation_ratio": 0.2964,
+      "gt_fraction": 0.7404
+    },
+    "30": {
+      "episode_length_steps": 588.33,
+      "mean_reward": -43.83,
+      "terrain_level": 0.4473,
+      "bad_orientation_ratio": 0.2995,
+      "gt_fraction": 0.7392
+    },
+    "31": {
+      "episode_length_steps": 611.51,
+      "mean_reward": -42.68,
+      "terrain_level": 0.4347,
+      "bad_orientation_ratio": 0.3032,
+      "gt_fraction": 0.74
+    },
+    "32": {
+      "episode_length_steps": 624.01,
+      "mean_reward": -49.95,
+      "terrain_level": 0.423,
+      "bad_orientation_ratio": 0.3057,
+      "gt_fraction": 0.7398
+    },
+    "33": {
+      "episode_length_steps": 639.4,
+      "mean_reward": -49.04,
+      "terrain_level": 0.4114,
+      "bad_orientation_ratio": 0.3086,
+      "gt_fraction": 0.7395
+    },
+    "34": {
+      "episode_length_steps": 634.1,
+      "mean_reward": -35.8,
+      "terrain_level": 0.3984,
+      "bad_orientation_ratio": 0.3141,
+      "gt_fraction": 0.7424
+    },
+    "35": {
+      "episode_length_steps": 588.98,
+      "mean_reward": -36.89,
+      "terrain_level": 0.3862,
+      "bad_orientation_ratio": 0.3199,
+      "gt_fraction": 0.7406
+    },
+    "36": {
+      "episode_length_steps": 613.56,
+      "mean_reward": -46.22,
+      "terrain_level": 0.372,
+      "bad_orientation_ratio": 0.3255,
+      "gt_fraction": 0.7379
+    },
+    "37": {
+      "episode_length_steps": 678.26,
+      "mean_reward": -60.52,
+      "terrain_level": 0.3595,
+      "bad_orientation_ratio": 0.3277,
+      "gt_fraction": 0.7365
+    },
+    "38": {
+      "episode_length_steps": 627.71,
+      "mean_reward": -41.25,
+      "terrain_level": 0.3477,
+      "bad_orientation_ratio": 0.3319,
+      "gt_fraction": 0.7383
+    },
+    "39": {
+      "episode_length_steps": 617.95,
+      "mean_reward": -39.43,
+      "terrain_level": 0.334,
+      "bad_orientation_ratio": 0.3381,
+      "gt_fraction": 0.7382
+    },
+    "40": {
+      "episode_length_steps": 712.36,
+      "mean_reward": -43.6,
+      "terrain_level": 0.3234,
+      "bad_orientation_ratio": 0.3428,
+      "gt_fraction": 0.7359
+    },
+    "41": {
+      "episode_length_steps": 756.91,
+      "mean_reward": -56.23,
+      "terrain_level": 0.3141,
+      "bad_orientation_ratio": 0.348,
+      "gt_fraction": 0.736
+    },
+    "42": {
+      "episode_length_steps": 788.95,
+      "mean_reward": -53.28,
+      "terrain_level": 0.3049,
+      "bad_orientation_ratio": 0.3498,
+      "gt_fraction": 0.7348
+    },
+    "43": {
+      "episode_length_steps": 773.49,
+      "mean_reward": -40.75,
+      "terrain_level": 0.2946,
+      "bad_orientation_ratio": 0.3502,
+      "gt_fraction": 0.7368
+    },
+    "44": {
+      "episode_length_steps": 808.12,
+      "mean_reward": -42.87,
+      "terrain_level": 0.283,
+      "bad_orientation_ratio": 0.3473,
+      "gt_fraction": 0.7443
+    },
+    "45": {
+      "episode_length_steps": 789.83,
+      "mean_reward": -58.59,
+      "terrain_level": 0.271,
+      "bad_orientation_ratio": 0.3399,
+      "gt_fraction": 0.7497
+    },
+    "46": {
+      "episode_length_steps": 740.72,
+      "mean_reward": -56.69,
+      "terrain_level": 0.2599,
+      "bad_orientation_ratio": 0.3332,
+      "gt_fraction": 0.7565
+    },
+    "47": {
+      "episode_length_steps": 816.01,
+      "mean_reward": -54.66,
+      "terrain_level": 0.2466,
+      "bad_orientation_ratio": 0.3263,
+      "gt_fraction": 0.7647
+    },
+    "48": {
+      "episode_length_steps": 845.9,
+      "mean_reward": -66.64,
+      "terrain_level": 0.2344,
+      "bad_orientation_ratio": 0.3153,
+      "gt_fraction": 0.7751
+    },
+    "49": {
+      "episode_length_steps": 781.49,
+      "mean_reward": -63.01,
+      "terrain_level": 0.223,
+      "bad_orientation_ratio": 0.3009,
+      "gt_fraction": 0.7868
+    },
+    "50": {
+      "episode_length_steps": 876.48,
+      "mean_reward": -50.24,
+      "terrain_level": 0.2136,
+      "bad_orientation_ratio": 0.2857,
+      "gt_fraction": 0.7958
+    },
+    "51": {
+      "episode_length_steps": 816.35,
+      "mean_reward": -56.14,
+      "terrain_level": 0.2026,
+      "bad_orientation_ratio": 0.2709,
+      "gt_fraction": 0.8
+    },
+    "52": {
+      "episode_length_steps": 810.43,
+      "mean_reward": -54.82,
+      "terrain_level": 0.1918,
+      "bad_orientation_ratio": 0.2627,
+      "gt_fraction": 0.8066
+    },
+    "53": {
+      "episode_length_steps": 828.57,
+      "mean_reward": -55.56,
+      "terrain_level": 0.1858,
+      "bad_orientation_ratio": 0.2549,
+      "gt_fraction": 0.8089
+    },
+    "54": {
+      "episode_length_steps": 769.32,
+      "mean_reward": -39.33,
+      "terrain_level": 0.1808,
+      "bad_orientation_ratio": 0.2522,
+      "gt_fraction": 0.8121
+    },
+    "55": {
+      "episode_length_steps": 830.16,
+      "mean_reward": -55.88,
+      "terrain_level": 0.1748,
+      "bad_orientation_ratio": 0.2494,
+      "gt_fraction": 0.8113
+    },
+    "56": {
+      "episode_length_steps": 799.41,
+      "mean_reward": -44.71,
+      "terrain_level": 0.1694,
+      "bad_orientation_ratio": 0.2489,
+      "gt_fraction": 0.8119
+    },
+    "57": {
+      "episode_length_steps": 847.07,
+      "mean_reward": -54.82,
+      "terrain_level": 0.1647,
+      "bad_orientation_ratio": 0.2457,
+      "gt_fraction": 0.8144
+    },
+    "58": {
+      "episode_length_steps": 764.75,
+      "mean_reward": -42.36,
+      "terrain_level": 0.1607,
+      "bad_orientation_ratio": 0.242,
+      "gt_fraction": 0.8137
+    },
+    "59": {
+      "episode_length_steps": 782.34,
+      "mean_reward": -50.6,
+      "terrain_level": 0.1571,
+      "bad_orientation_ratio": 0.2412,
+      "gt_fraction": 0.8122
+    },
+    "60": {
+      "episode_length_steps": 826.99,
+      "mean_reward": -49.95,
+      "terrain_level": 0.1518,
+      "bad_orientation_ratio": 0.2424,
+      "gt_fraction": 0.81
+    },
+    "61": {
+      "episode_length_steps": 784.33,
+      "mean_reward": -56.07,
+      "terrain_level": 0.1456,
+      "bad_orientation_ratio": 0.2401,
+      "gt_fraction": 0.8114
+    },
+    "62": {
+      "episode_length_steps": 824.24,
+      "mean_reward": -48.23,
+      "terrain_level": 0.1393,
+      "bad_orientation_ratio": 0.2393,
+      "gt_fraction": 0.8119
+    },
+    "63": {
+      "episode_length_steps": 759.39,
+      "mean_reward": -47.18,
+      "terrain_level": 0.1337,
+      "bad_orientation_ratio": 0.2393,
+      "gt_fraction": 0.8143
+    },
+    "64": {
+      "episode_length_steps": 799.24,
+      "mean_reward": -43.47,
+      "terrain_level": 0.1286,
+      "bad_orientation_ratio": 0.2403,
+      "gt_fraction": 0.8152
+    },
+    "65": {
+      "episode_length_steps": 777.72,
+      "mean_reward": -55.12,
+      "terrain_level": 0.1273,
+      "bad_orientation_ratio": 0.2402,
+      "gt_fraction": 0.8131
+    },
+    "66": {
+      "episode_length_steps": 780.5,
+      "mean_reward": -55.93,
+      "terrain_level": 0.1219,
+      "bad_orientation_ratio": 0.2402,
+      "gt_fraction": 0.8118
+    },
+    "67": {
+      "episode_length_steps": 784.21,
+      "mean_reward": -45.38,
+      "terrain_level": 0.1187,
+      "bad_orientation_ratio": 0.2417,
+      "gt_fraction": 0.8121
+    },
+    "68": {
+      "episode_length_steps": 753.12,
+      "mean_reward": -46.6,
+      "terrain_level": 0.1177,
+      "bad_orientation_ratio": 0.2446,
+      "gt_fraction": 0.8112
+    },
+    "69": {
+      "episode_length_steps": 781.9,
+      "mean_reward": -49.25,
+      "terrain_level": 0.116,
+      "bad_orientation_ratio": 0.2471,
+      "gt_fraction": 0.8105
+    },
+    "70": {
+      "episode_length_steps": 692.63,
+      "mean_reward": -49.18,
+      "terrain_level": 0.1133,
+      "bad_orientation_ratio": 0.2475,
+      "gt_fraction": 0.811
+    },
+    "71": {
+      "episode_length_steps": 761.7,
+      "mean_reward": -47.9,
+      "terrain_level": 0.108,
+      "bad_orientation_ratio": 0.2496,
+      "gt_fraction": 0.8113
+    },
+    "72": {
+      "episode_length_steps": 739.08,
+      "mean_reward": -43.05,
+      "terrain_level": 0.1041,
+      "bad_orientation_ratio": 0.2503,
+      "gt_fraction": 0.8119
+    },
+    "73": {
+      "episode_length_steps": 735.44,
+      "mean_reward": -60.46,
+      "terrain_level": 0.101,
+      "bad_orientation_ratio": 0.2519,
+      "gt_fraction": 0.8114
+    },
+    "74": {
+      "episode_length_steps": 724.69,
+      "mean_reward": -41.77,
+      "terrain_level": 0.0998,
+      "bad_orientation_ratio": 0.2538,
+      "gt_fraction": 0.8105
+    },
+    "75": {
+      "episode_length_steps": 708.22,
+      "mean_reward": -32.0,
+      "terrain_level": 0.0984,
+      "bad_orientation_ratio": 0.2565,
+      "gt_fraction": 0.8099
+    },
+    "76": {
+      "episode_length_steps": 726.37,
+      "mean_reward": -35.33,
+      "terrain_level": 0.0972,
+      "bad_orientation_ratio": 0.2574,
+      "gt_fraction": 0.8066
+    },
+    "77": {
+      "episode_length_steps": 766.02,
+      "mean_reward": -55.79,
+      "terrain_level": 0.094,
+      "bad_orientation_ratio": 0.2559,
+      "gt_fraction": 0.805
+    },
+    "78": {
+      "episode_length_steps": 755.34,
+      "mean_reward": -47.96,
+      "terrain_level": 0.0905,
+      "bad_orientation_ratio": 0.2539,
+      "gt_fraction": 0.8051
+    },
+    "79": {
+      "episode_length_steps": 748.82,
+      "mean_reward": -50.78,
+      "terrain_level": 0.0876,
+      "bad_orientation_ratio": 0.2531,
+      "gt_fraction": 0.805
+    },
+    "80": {
+      "episode_length_steps": 745.59,
+      "mean_reward": -45.35,
+      "terrain_level": 0.0868,
+      "bad_orientation_ratio": 0.2526,
+      "gt_fraction": 0.8056
+    },
+    "81": {
+      "episode_length_steps": 757.74,
+      "mean_reward": -41.52,
+      "terrain_level": 0.0854,
+      "bad_orientation_ratio": 0.2522,
+      "gt_fraction": 0.809
+    },
+    "82": {
+      "episode_length_steps": 701.46,
+      "mean_reward": -36.0,
+      "terrain_level": 0.0847,
+      "bad_orientation_ratio": 0.2516,
+      "gt_fraction": 0.8127
+    },
+    "83": {
+      "episode_length_steps": 672.52,
+      "mean_reward": -44.42,
+      "terrain_level": 0.0831,
+      "bad_orientation_ratio": 0.2524,
+      "gt_fraction": 0.8134
+    },
+    "84": {
+      "episode_length_steps": 664.71,
+      "mean_reward": -35.11,
+      "terrain_level": 0.0804,
+      "bad_orientation_ratio": 0.2567,
+      "gt_fraction": 0.8154
+    },
+    "85": {
+      "episode_length_steps": 764.13,
+      "mean_reward": -37.93,
+      "terrain_level": 0.0794,
+      "bad_orientation_ratio": 0.2609,
+      "gt_fraction": 0.8175
+    },
+    "86": {
+      "episode_length_steps": 745.09,
+      "mean_reward": -44.85,
+      "terrain_level": 0.077,
+      "bad_orientation_ratio": 0.2636,
+      "gt_fraction": 0.8165
+    },
+    "87": {
+      "episode_length_steps": 721.6,
+      "mean_reward": -37.24,
+      "terrain_level": 0.075,
+      "bad_orientation_ratio": 0.2666,
+      "gt_fraction": 0.8207
+    },
+    "88": {
+      "episode_length_steps": 684.48,
+      "mean_reward": -32.02,
+      "terrain_level": 0.074,
+      "bad_orientation_ratio": 0.272,
+      "gt_fraction": 0.8245
+    },
+    "89": {
+      "episode_length_steps": 718.99,
+      "mean_reward": -39.74,
+      "terrain_level": 0.0742,
+      "bad_orientation_ratio": 0.2811,
+      "gt_fraction": 0.8249
+    },
+    "90": {
+      "episode_length_steps": 593.38,
+      "mean_reward": -29.24,
+      "terrain_level": 0.0742,
+      "bad_orientation_ratio": 0.2998,
+      "gt_fraction": 0.8244
+    },
+    "91": {
+      "episode_length_steps": 606.69,
+      "mean_reward": -35.39,
+      "terrain_level": 0.0713,
+      "bad_orientation_ratio": 0.3219,
+      "gt_fraction": 0.8259
+    },
+    "92": {
+      "episode_length_steps": 475.69,
+      "mean_reward": -21.11,
+      "terrain_level": 0.0707,
+      "bad_orientation_ratio": 0.3446,
+      "gt_fraction": 0.8317
+    },
+    "93": {
+      "episode_length_steps": 480.92,
+      "mean_reward": -28.98,
+      "terrain_level": 0.0685,
+      "bad_orientation_ratio": 0.3818,
+      "gt_fraction": 0.8333
+    },
+    "94": {
+      "episode_length_steps": 432.15,
+      "mean_reward": -21.88,
+      "terrain_level": 0.0629,
+      "bad_orientation_ratio": 0.4272,
+      "gt_fraction": 0.8311
+    },
+    "95": {
+      "episode_length_steps": 318.99,
+      "mean_reward": -15.38,
+      "terrain_level": 0.0594,
+      "bad_orientation_ratio": 0.4872,
+      "gt_fraction": 0.8391
+    },
+    "96": {
+      "episode_length_steps": 288.18,
+      "mean_reward": -13.59,
+      "terrain_level": 0.0549,
+      "bad_orientation_ratio": 0.5616,
+      "gt_fraction": 0.8366
+    },
+    "97": {
+      "episode_length_steps": 215.61,
+      "mean_reward": -11.86,
+      "terrain_level": 0.049,
+      "bad_orientation_ratio": 0.6503,
+      "gt_fraction": 0.8339
+    },
+    "98": {
+      "episode_length_steps": 135.25,
+      "mean_reward": -8.55,
+      "terrain_level": 0.0425,
+      "bad_orientation_ratio": 0.7405,
+      "gt_fraction": 0.8505
+    },
+    "99": {
+      "episode_length_steps": 123.22,
+      "mean_reward": -6.43,
+      "terrain_level": 0.0356,
+      "bad_orientation_ratio": 0.8163,
+      "gt_fraction": 0.8798
+    },
+    "100": {
+      "episode_length_steps": 83.83,
+      "mean_reward": -6.14,
+      "terrain_level": 0.0283,
+      "bad_orientation_ratio": 0.8771,
+      "gt_fraction": 0.9242
+    },
+    "101": {
+      "episode_length_steps": 113.23,
+      "mean_reward": -6.93,
+      "terrain_level": 0.0208,
+      "bad_orientation_ratio": 0.9176,
+      "gt_fraction": 0.9447
+    },
+    "102": {
+      "episode_length_steps": 81.18,
+      "mean_reward": -5.72,
+      "terrain_level": 0.0175,
+      "bad_orientation_ratio": 0.9421,
+      "gt_fraction": 0.9606
+    },
+    "103": {
+      "episode_length_steps": 63.41,
+      "mean_reward": -4.88,
+      "terrain_level": 0.0154,
+      "bad_orientation_ratio": 0.9558,
+      "gt_fraction": 0.9746
+    },
+    "104": {
+      "episode_length_steps": 42.13,
+      "mean_reward": -4.17,
+      "terrain_level": 0.0126,
+      "bad_orientation_ratio": 0.9619,
+      "gt_fraction": 0.9781
+    },
+    "105": {
+      "episode_length_steps": 38.98,
+      "mean_reward": -3.57,
+      "terrain_level": 0.0103,
+      "bad_orientation_ratio": 0.9669,
+      "gt_fraction": 0.9817
+    },
+    "106": {
+      "episode_length_steps": 38.21,
+      "mean_reward": -3.5,
+      "terrain_level": 0.0087,
+      "bad_orientation_ratio": 0.9711,
+      "gt_fraction": 0.9857
+    },
+    "107": {
+      "episode_length_steps": 34.13,
+      "mean_reward": -3.19,
+      "terrain_level": 0.0078,
+      "bad_orientation_ratio": 0.9748,
+      "gt_fraction": 0.9838
+    },
+    "108": {
+      "episode_length_steps": 31.47,
+      "mean_reward": -3.07,
+      "terrain_level": 0.0067,
+      "bad_orientation_ratio": 0.9776,
+      "gt_fraction": 0.9816
+    },
+    "109": {
+      "episode_length_steps": 31.36,
+      "mean_reward": -2.9,
+      "terrain_level": 0.0052,
+      "bad_orientation_ratio": 0.9796,
+      "gt_fraction": 0.9865
+    },
+    "110": {
+      "episode_length_steps": 28.49,
+      "mean_reward": -2.64,
+      "terrain_level": 0.0045,
+      "bad_orientation_ratio": 0.981,
+      "gt_fraction": 0.9845
+    },
+    "111": {
+      "episode_length_steps": 29.31,
+      "mean_reward": -2.95,
+      "terrain_level": 0.004,
+      "bad_orientation_ratio": 0.9817,
+      "gt_fraction": 0.9846
+    },
+    "112": {
+      "episode_length_steps": 29.27,
+      "mean_reward": -2.79,
+      "terrain_level": 0.0038,
+      "bad_orientation_ratio": 0.9842,
+      "gt_fraction": 0.9885
+    },
+    "113": {
+      "episode_length_steps": 26.14,
+      "mean_reward": -2.76,
+      "terrain_level": 0.0031,
+      "bad_orientation_ratio": 0.9863,
+      "gt_fraction": 0.9903
+    },
+    "114": {
+      "episode_length_steps": 30.22,
+      "mean_reward": -3.39,
+      "terrain_level": 0.0029,
+      "bad_orientation_ratio": 0.9875,
+      "gt_fraction": 0.9924
+    },
+    "115": {
+      "episode_length_steps": 26.71,
+      "mean_reward": -2.75,
+      "terrain_level": 0.0029,
+      "bad_orientation_ratio": 0.9873,
+      "gt_fraction": 0.9906
+    },
+    "116": {
+      "episode_length_steps": 36.99,
+      "mean_reward": -6.47,
+      "terrain_level": 0.0029,
+      "bad_orientation_ratio": 0.9885,
+      "gt_fraction": 0.9818
+    },
+    "117": {
+      "episode_length_steps": 24.83,
+      "mean_reward": -2.56,
+      "terrain_level": 0.0025,
+      "bad_orientation_ratio": 0.9901,
+      "gt_fraction": 0.9873
+    },
+    "118": {
+      "episode_length_steps": 24.05,
+      "mean_reward": -2.54,
+      "terrain_level": 0.0023,
+      "bad_orientation_ratio": 0.99,
+      "gt_fraction": 0.9728
+    },
+    "119": {
+      "episode_length_steps": 23.79,
+      "mean_reward": -2.54,
+      "terrain_level": 0.0021,
+      "bad_orientation_ratio": 0.9915,
+      "gt_fraction": 0.943
+    },
+    "120": {
+      "episode_length_steps": 22.37,
+      "mean_reward": -2.35,
+      "terrain_level": 0.0017,
+      "bad_orientation_ratio": 0.9923,
+      "gt_fraction": 0.9632
+    },
+    "121": {
+      "episode_length_steps": 26.35,
+      "mean_reward": -3.19,
+      "terrain_level": 0.0016,
+      "bad_orientation_ratio": 0.9931,
+      "gt_fraction": 0.992
+    },
+    "122": {
+      "episode_length_steps": 23.06,
+      "mean_reward": -2.29,
+      "terrain_level": 0.0016,
+      "bad_orientation_ratio": 0.9928,
+      "gt_fraction": 0.9834
+    },
+    "123": {
+      "episode_length_steps": 21.12,
+      "mean_reward": -2.32,
+      "terrain_level": 0.0013,
+      "bad_orientation_ratio": 0.9937,
+      "gt_fraction": 0.9867
+    },
+    "124": {
+      "episode_length_steps": 20.81,
+      "mean_reward": -2.26,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9938,
+      "gt_fraction": 0.9793
+    },
+    "125": {
+      "episode_length_steps": 23.49,
+      "mean_reward": -2.2,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9943,
+      "gt_fraction": 0.9783
+    },
+    "126": {
+      "episode_length_steps": 21.35,
+      "mean_reward": -2.28,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.995,
+      "gt_fraction": 0.9924
+    },
+    "127": {
+      "episode_length_steps": 21.56,
+      "mean_reward": -2.27,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9955,
+      "gt_fraction": 0.997
+    },
+    "128": {
+      "episode_length_steps": 24.8,
+      "mean_reward": -3.14,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9966,
+      "gt_fraction": 0.9957
+    },
+    "129": {
+      "episode_length_steps": 20.59,
+      "mean_reward": -1.98,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9962,
+      "gt_fraction": 0.9634
+    },
+    "130": {
+      "episode_length_steps": 19.84,
+      "mean_reward": -2.14,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9973,
+      "gt_fraction": 0.9579
+    },
+    "131": {
+      "episode_length_steps": 19.62,
+      "mean_reward": -1.98,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9976,
+      "gt_fraction": 0.9871
+    },
+    "132": {
+      "episode_length_steps": 21.11,
+      "mean_reward": -1.97,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9981,
+      "gt_fraction": 0.9923
+    },
+    "133": {
+      "episode_length_steps": 19.06,
+      "mean_reward": -1.84,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9978,
+      "gt_fraction": 0.9951
+    },
+    "134": {
+      "episode_length_steps": 29.8,
+      "mean_reward": -5.02,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9986,
+      "gt_fraction": 0.996
+    },
+    "135": {
+      "episode_length_steps": 21.05,
+      "mean_reward": -2.41,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9987,
+      "gt_fraction": 0.9974
+    },
+    "136": {
+      "episode_length_steps": 19.22,
+      "mean_reward": -1.75,
+      "terrain_level": 0.001,
+      "bad_orientation_ratio": 0.9987,
+      "gt_fraction": 0.992
+    },
+    "137": {
+      "episode_length_steps": 19.73,
+      "mean_reward": -1.81,
+      "terrain_level": 0.0008,
+      "bad_orientation_ratio": 0.9986,
+      "gt_fraction": 0.9949
+    },
+    "138": {
+      "episode_length_steps": 19.32,
+      "mean_reward": -1.96,
+      "terrain_level": 0.0007,
+      "bad_orientation_ratio": 0.999,
+      "gt_fraction": 0.9994
+    },
+    "139": {
+      "episode_length_steps": 18.99,
+      "mean_reward": -1.76,
+      "terrain_level": 0.0004,
+      "bad_orientation_ratio": 0.9985,
+      "gt_fraction": 0.9994
+    },
+    "140": {
+      "episode_length_steps": 19.17,
+      "mean_reward": -1.7,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9991,
+      "gt_fraction": 0.9994
+    },
+    "141": {
+      "episode_length_steps": 18.54,
+      "mean_reward": -1.73,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9994,
+      "gt_fraction": 0.9997
+    },
+    "142": {
+      "episode_length_steps": 18.22,
+      "mean_reward": -1.66,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9988,
+      "gt_fraction": 0.6506
+    },
+    "143": {
+      "episode_length_steps": 18.88,
+      "mean_reward": -1.79,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.999,
+      "gt_fraction": 0.7532
+    },
+    "144": {
+      "episode_length_steps": 18.11,
+      "mean_reward": -1.54,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9488
+    },
+    "145": {
+      "episode_length_steps": 18.88,
+      "mean_reward": -1.59,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9603
+    },
+    "146": {
+      "episode_length_steps": 18.06,
+      "mean_reward": -1.63,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9991,
+      "gt_fraction": 0.9975
+    },
+    "147": {
+      "episode_length_steps": 18.83,
+      "mean_reward": -1.68,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9991,
+      "gt_fraction": 0.9996
+    },
+    "148": {
+      "episode_length_steps": 17.79,
+      "mean_reward": -1.53,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9995,
+      "gt_fraction": 0.9986
+    },
+    "149": {
+      "episode_length_steps": 17.71,
+      "mean_reward": -1.52,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9987
+    },
+    "150": {
+      "episode_length_steps": 16.99,
+      "mean_reward": -1.57,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9995,
+      "gt_fraction": 0.9048
+    },
+    "151": {
+      "episode_length_steps": 17.95,
+      "mean_reward": -1.54,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9335
+    },
+    "152": {
+      "episode_length_steps": 17.36,
+      "mean_reward": -1.5,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9979
+    },
+    "153": {
+      "episode_length_steps": 16.74,
+      "mean_reward": -1.36,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.999
+    },
+    "154": {
+      "episode_length_steps": 17.99,
+      "mean_reward": -1.51,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.9951
+    },
+    "155": {
+      "episode_length_steps": 17.9,
+      "mean_reward": -1.44,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7067
+    },
+    "156": {
+      "episode_length_steps": 17.94,
+      "mean_reward": -1.36,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7937
+    },
+    "157": {
+      "episode_length_steps": 17.62,
+      "mean_reward": -1.33,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.992
+    },
+    "158": {
+      "episode_length_steps": 17.29,
+      "mean_reward": -1.53,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.9981
+    },
+    "159": {
+      "episode_length_steps": 17.55,
+      "mean_reward": -1.41,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9662
+    },
+    "160": {
+      "episode_length_steps": 17.63,
+      "mean_reward": -1.39,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.9772
+    },
+    "161": {
+      "episode_length_steps": 17.77,
+      "mean_reward": -1.33,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.6494
+    },
+    "162": {
+      "episode_length_steps": 17.74,
+      "mean_reward": -1.36,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.7244
+    },
+    "163": {
+      "episode_length_steps": 18.41,
+      "mean_reward": -1.53,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9993,
+      "gt_fraction": 0.967
+    },
+    "164": {
+      "episode_length_steps": 17.04,
+      "mean_reward": -1.42,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9986
+    },
+    "165": {
+      "episode_length_steps": 17.43,
+      "mean_reward": -1.38,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9993
+    },
+    "166": {
+      "episode_length_steps": 18.51,
+      "mean_reward": -1.66,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.9924
+    },
+    "167": {
+      "episode_length_steps": 18.34,
+      "mean_reward": -1.43,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7017
+    },
+    "168": {
+      "episode_length_steps": 17.49,
+      "mean_reward": -1.3,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9994,
+      "gt_fraction": 0.4519
+    },
+    "169": {
+      "episode_length_steps": 17.46,
+      "mean_reward": -1.23,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7643
+    },
+    "170": {
+      "episode_length_steps": 17.42,
+      "mean_reward": -1.27,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.7723
+    },
+    "171": {
+      "episode_length_steps": 17.0,
+      "mean_reward": -1.32,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.8487
+    },
+    "172": {
+      "episode_length_steps": 17.99,
+      "mean_reward": -1.32,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9993,
+      "gt_fraction": 0.997
+    },
+    "173": {
+      "episode_length_steps": 17.0,
+      "mean_reward": -1.3,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9982
+    },
+    "174": {
+      "episode_length_steps": 17.1,
+      "mean_reward": -1.28,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7167
+    },
+    "175": {
+      "episode_length_steps": 17.03,
+      "mean_reward": -1.33,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.8271
+    },
+    "176": {
+      "episode_length_steps": 17.56,
+      "mean_reward": -1.16,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.7372
+    },
+    "177": {
+      "episode_length_steps": 18.26,
+      "mean_reward": -1.29,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.8231
+    },
+    "178": {
+      "episode_length_steps": 16.79,
+      "mean_reward": -1.2,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.9982
+    },
+    "179": {
+      "episode_length_steps": 17.26,
+      "mean_reward": -1.24,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.6966
+    },
+    "180": {
+      "episode_length_steps": 17.2,
+      "mean_reward": -1.19,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7069
+    },
+    "181": {
+      "episode_length_steps": 18.73,
+      "mean_reward": -1.36,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.6692
+    },
+    "182": {
+      "episode_length_steps": 17.06,
+      "mean_reward": -1.17,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5483
+    },
+    "183": {
+      "episode_length_steps": 17.04,
+      "mean_reward": -1.09,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.4705
+    },
+    "184": {
+      "episode_length_steps": 16.99,
+      "mean_reward": -1.14,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7812
+    },
+    "185": {
+      "episode_length_steps": 17.34,
+      "mean_reward": -1.15,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7543
+    },
+    "186": {
+      "episode_length_steps": 17.65,
+      "mean_reward": -1.03,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.8391
+    },
+    "187": {
+      "episode_length_steps": 17.14,
+      "mean_reward": -1.08,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9985
+    },
+    "188": {
+      "episode_length_steps": 17.74,
+      "mean_reward": -1.15,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.655
+    },
+    "189": {
+      "episode_length_steps": 16.98,
+      "mean_reward": -1.03,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.7759
+    },
+    "190": {
+      "episode_length_steps": 17.82,
+      "mean_reward": -1.13,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.8083
+    },
+    "191": {
+      "episode_length_steps": 17.93,
+      "mean_reward": -1.14,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5337
+    },
+    "192": {
+      "episode_length_steps": 17.79,
+      "mean_reward": -1.08,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4886
+    },
+    "193": {
+      "episode_length_steps": 17.67,
+      "mean_reward": -1.03,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4613
+    },
+    "194": {
+      "episode_length_steps": 17.73,
+      "mean_reward": -1.07,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4322
+    },
+    "195": {
+      "episode_length_steps": 16.9,
+      "mean_reward": -1.08,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4383
+    },
+    "196": {
+      "episode_length_steps": 16.93,
+      "mean_reward": -1.08,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4218
+    },
+    "197": {
+      "episode_length_steps": 27.52,
+      "mean_reward": -4.45,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.4385
+    },
+    "198": {
+      "episode_length_steps": 16.94,
+      "mean_reward": -1.07,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.7825
+    },
+    "199": {
+      "episode_length_steps": 17.19,
+      "mean_reward": -1.07,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.9297
+    },
+    "200": {
+      "episode_length_steps": 17.37,
+      "mean_reward": -1.06,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.8712
+    },
+    "201": {
+      "episode_length_steps": 17.38,
+      "mean_reward": -0.93,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9411
+    },
+    "202": {
+      "episode_length_steps": 17.38,
+      "mean_reward": -0.97,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.6786
+    },
+    "203": {
+      "episode_length_steps": 18.14,
+      "mean_reward": -0.93,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.4579
+    },
+    "204": {
+      "episode_length_steps": 17.47,
+      "mean_reward": -0.93,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.7838
+    },
+    "205": {
+      "episode_length_steps": 18.5,
+      "mean_reward": -0.95,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.9985
+    },
+    "206": {
+      "episode_length_steps": 18.06,
+      "mean_reward": -1.0,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.6953
+    },
+    "207": {
+      "episode_length_steps": 19.54,
+      "mean_reward": -0.94,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.4697
+    },
+    "208": {
+      "episode_length_steps": 19.03,
+      "mean_reward": -0.9,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9996,
+      "gt_fraction": 0.7649
+    },
+    "209": {
+      "episode_length_steps": 18.64,
+      "mean_reward": -0.84,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.9978
+    },
+    "210": {
+      "episode_length_steps": 18.47,
+      "mean_reward": -0.9,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9999,
+      "gt_fraction": 0.7065
+    },
+    "211": {
+      "episode_length_steps": 19.88,
+      "mean_reward": -0.89,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9998,
+      "gt_fraction": 0.7801
+    },
+    "212": {
+      "episode_length_steps": 19.63,
+      "mean_reward": -0.92,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7755
+    },
+    "213": {
+      "episode_length_steps": 19.43,
+      "mean_reward": -0.87,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.6036
+    },
+    "214": {
+      "episode_length_steps": 20.03,
+      "mean_reward": -0.89,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.8093
+    },
+    "215": {
+      "episode_length_steps": 20.41,
+      "mean_reward": -0.81,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.7478
+    },
+    "216": {
+      "episode_length_steps": 21.23,
+      "mean_reward": -0.78,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.6089
+    },
+    "217": {
+      "episode_length_steps": 21.15,
+      "mean_reward": -0.8,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.584
+    },
+    "218": {
+      "episode_length_steps": 21.09,
+      "mean_reward": -0.89,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5228
+    },
+    "219": {
+      "episode_length_steps": 21.58,
+      "mean_reward": -0.87,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5316
+    },
+    "220": {
+      "episode_length_steps": 21.71,
+      "mean_reward": -0.81,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5323
+    },
+    "221": {
+      "episode_length_steps": 21.27,
+      "mean_reward": -0.86,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5374
+    },
+    "222": {
+      "episode_length_steps": 21.09,
+      "mean_reward": -0.9,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5215
+    },
+    "223": {
+      "episode_length_steps": 21.63,
+      "mean_reward": -0.97,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5296
+    },
+    "224": {
+      "episode_length_steps": 22.17,
+      "mean_reward": -0.81,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 0.9997,
+      "gt_fraction": 0.579
+    },
+    "225": {
+      "episode_length_steps": 21.81,
+      "mean_reward": -0.85,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7488
+    },
+    "226": {
+      "episode_length_steps": 21.91,
+      "mean_reward": -0.83,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.7678
+    },
+    "227": {
+      "episode_length_steps": 21.94,
+      "mean_reward": -0.77,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.6152
+    },
+    "228": {
+      "episode_length_steps": 21.58,
+      "mean_reward": -0.79,
+      "terrain_level": 0.0,
+      "bad_orientation_ratio": 1.0,
+      "gt_fraction": 0.5679
+    }
+  },
+  "trace_groups": {
+    "0:24": {
+      "roll_mean": 0.08105303354561329,
+      "hip_right_minus_left": 0.06137885233387351,
+      "calf_right_minus_left": 0.03159497428685427
+    },
+    "100:124": {
+      "roll_mean": -0.26117526888847353,
+      "hip_right_minus_left": 1.2255416560173034,
+      "calf_right_minus_left": 0.4366073054075241
+    },
+    "200:224": {
+      "roll_mean": -0.6107534050941468,
+      "hip_right_minus_left": 1.0296179819107056,
+      "calf_right_minus_left": 1.2545679831504821
+    }
+  },
+  "evals": [
+    {
+      "terrain": "flat",
+      "map": "gt",
+      "ticks": 600,
+      "done_count": 34,
+      "first_done": 16,
+      "all_reasons": [
+        "termination_terms"
+      ],
+      "all_terms": [
+        "bad_orientation"
+      ],
+      "mean_abs_roll_at_pretermination": 1.450544494756586,
+      "mean_abs_pitch_at_pretermination": 0.06121346159594913,
+      "actual_gt_fraction": 1.0,
+      "sha256": "be13b1e8bec0f19a94fb5be19920751a807fcabff8dfd1dbfd637e1caef57e30"
+    },
+    {
+      "terrain": "flat",
+      "map": "pred",
+      "ticks": 600,
+      "done_count": 34,
+      "first_done": 16,
+      "all_reasons": [
+        "termination_terms"
+      ],
+      "all_terms": [
+        "bad_orientation"
+      ],
+      "mean_abs_roll_at_pretermination": 1.4540427585144888,
+      "mean_abs_pitch_at_pretermination": 0.06149670641637415,
+      "actual_gt_fraction": 0.0,
+      "sha256": "200dfadadd85f2243560dd9d763234ddce7cd55e9ab11377e5d6a6ea6c95e7e9"
+    },
+    {
+      "terrain": "stepping_stones_low",
+      "map": "gt",
+      "ticks": 600,
+      "done_count": 34,
+      "first_done": 16,
+      "all_reasons": [
+        "termination_terms"
+      ],
+      "all_terms": [
+        "bad_orientation"
+      ],
+      "mean_abs_roll_at_pretermination": 1.4539893520885445,
+      "mean_abs_pitch_at_pretermination": 0.05736838107126017,
+      "actual_gt_fraction": 1.0,
+      "sha256": "590c272fa2c91d58174779b6e5ffbf683d15d5bdf3e7867ae312711e68dc18f3"
+    },
+    {
+      "terrain": "stepping_stones_low",
+      "map": "pred",
+      "ticks": 600,
+      "done_count": 34,
+      "first_done": 16,
+      "all_reasons": [
+        "termination_terms"
+      ],
+      "all_terms": [
+        "bad_orientation"
+      ],
+      "mean_abs_roll_at_pretermination": 1.4537674964572478,
+      "mean_abs_pitch_at_pretermination": 0.05732776966387506,
+      "actual_gt_fraction": 0.0,
+      "sha256": "8b98457016a4bbe7759722f3483fca692abdfe1801ed21f814954bd3dbbc8a64"
+    }
+  ],
+  "checks": {
+    "known_input_quaternion": 2,
+    "log_rows_crosschecked": 229,
+    "trace_rows_crosschecked": 75,
+    "evaluations": 4
+  }
+}

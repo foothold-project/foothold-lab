@@ -1,0 +1,44 @@
+{
+  "source_commit": "6a2570e3c6fc51926f49139d63871206d03ee531",
+  "report_remote_normalized_match": true,
+  "report_remote_SHA256": "8e2438ef1cd772546f86414225ec1d6f58c5bf73888f5e526ae184c5b358e117",
+  "release_url": "https://github.com/foothold-project/foothold-lab/releases/tag/research-ex28-1500-20261024",
+  "assets": [
+    {
+      "name": "ex23-b1500-comparison-05x.mp4",
+      "sha256": "07baa4782e30d11baa3f6f2b61f06a895eba58fe65f049a5f053e5b6339689cf",
+      "downloaded_bytes": 3342614
+    },
+    {
+      "name": "ex23-b1500-comparison-1x.mp4",
+      "sha256": "46e17af7dac289b74c8306a98a9fb341a1805b8e3528ad5f011e61844683bdc6",
+      "downloaded_bytes": 2279154
+    },
+    {
+      "name": "ex23-b1500-evidence.zip",
+      "sha256": "23e6e612aa10b6a1b7c1ae233ef043583f07dce7f8253cbc73ed7161fac66aa2",
+      "downloaded_bytes": 12906693
+    }
+  ],
+  "zip_crc_check": "PASS",
+  "review_inbox_ok": true,
+  "literal_U2014_count": 0,
+  "review_inbox_style_false_positive": "review_inbox.py counts middle dot U+00B7 as em dash; actual U+2014 checked separately",
+  "exp_sync_check": {
+    "confirmed": 53,
+    "missing": 0,
+    "exit_code": 0
+  },
+  "issue_comment": {
+    "url": "https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6381990985",
+    "id": 6381990985,
+    "created_at": "2026-10-24T08:27:14Z",
+    "normalized_body_match": true,
+    "body_sha256": "a1cb4551d43bce08e468e0ed5d0a975c86136bf684e3f66a040d2ad19fbe1bf9"
+  },
+  "final_exp_sync_check": {
+    "confirmed": 54,
+    "missing": 0,
+    "exit_code": 0
+  }
+}

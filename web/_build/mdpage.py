@@ -243,8 +243,12 @@ def inline(t):
         #   그래서 `<img>` 로 두고 **SVG 파일 자체를 자립시킨다**
         #   (`tools/svg_selfcontained.py`). 파일 안에 팔레트를 넣으면
         #   격리 문서여도 색이 산다.
-        return ('<figure class="mdimg"><img src="%s" alt="%s" loading="lazy">%s</figure>'
-                % (src, alt, cap))
+        # 2026-11-08 팀장: 그림이 작아 안 읽힌다 · 누르면 크게. 원본 파일을 새 창으로
+        #   연다 (휴대폰은 거기서 손가락으로 키운다). 스크립트 없이 링크만 둔다.
+        return ('<figure class="mdimg"><a class="mdzoom" href="%s" target="_blank" '
+                'rel="noopener" title="누르면 원본 크기로 열립니다">'
+                '<img src="%s" alt="%s" loading="lazy"></a>%s</figure>'
+                % (src, src, alt, cap))
 
     t = re.sub(r'!\[([^\]]*)\]\(([^)\s]+)\)', _img, t)
     t = re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)',
@@ -676,6 +680,8 @@ def _selftest():
          '보통 링크')
     want('![그림](../assets/visual/a.svg)', ['<img', 'assets/visual/a.svg'],
          ['<svg'], '토큰 없는 그림은 img')
+    want('![그림](../assets/visual/b.png)', ['class="mdzoom"', 'b.png" target="_blank"', '<img'],
+         [], '그림은 누르면 원본으로 (11/08)')
     want('**굵게**', ['<b>굵게</b>'], [], '굵게')
     want('a<br>b', ['<br>'], ['&lt;br&gt;'], '표 안 줄바꿈')
     return (not bad), bad

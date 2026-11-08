@@ -258,6 +258,7 @@ section .addr .big{font-size:1.2rem}
 
 /* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
 .mdimg{margin:1.5rem 0;padding:0}
+.mdimg a.mdzoom{display:block;cursor:zoom-in}
 .mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
   border-radius:4px;background:var(--card)}
 .mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);

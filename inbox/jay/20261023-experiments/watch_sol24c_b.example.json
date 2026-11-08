@@ -1,0 +1,14 @@
+{
+  "schema": "sol24c-b-watch/1",
+  "deadline": "2026-10-24T22:30:00+09:00",
+  "run_name": "ex28-b-main",
+  "target_updates": 1501,
+  "process_file": "C:/Users/AI-WS01/s2_lab/run_20261024/b_main/process.json",
+  "manifest_file": "C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/manifest.json",
+  "state_file": "C:/Users/AI-WS01/s2_lab/run_20261024/watch_sol24c_b/state.json",
+  "target": "term_d0d6549f-2da1-433c-9d05-58ce534224d7",
+  "sender_python": "C:/Users/AI-WS01/anaconda3/python.exe",
+  "sender_cwd": "C:/mai/mai-tools/tools/mai-resume",
+  "poll_s": 30,
+  "max_heartbeat_age_s": 120
+}

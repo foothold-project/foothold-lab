@@ -1,0 +1,14 @@
+ex31_m1550|C:/mai/wt/foothold-lab/impl-ex30-31/logs/rsl_rl/foothold_s2_ex3031_w1/2026-10-25_05-55-38_ex-31-w1/model_1550.pt
+ex31_m1600|C:/mai/wt/foothold-lab/impl-ex30-31/logs/rsl_rl/foothold_s2_ex3031_w1/2026-10-25_05-55-38_ex-31-w1/model_1600.pt
+ex31_m1650|C:/mai/wt/foothold-lab/impl-ex30-31/logs/rsl_rl/foothold_s2_ex3031_w1/2026-10-25_05-55-38_ex-31-w1/model_1650.pt
+ex31_m1700|C:/mai/wt/foothold-lab/impl-ex30-31/logs/rsl_rl/foothold_s2_ex3031_w1/2026-10-25_05-55-38_ex-31-w1/model_1700.pt
+ex31_m1800|C:/mai/wt/foothold-lab/impl-w2/logs/rsl_rl/foothold_s2_ex3031_w2/2026-10-25_09-22-46_ex-31-w2/model_1800.pt
+ex31_m1850|C:/mai/wt/foothold-lab/impl-w2/logs/rsl_rl/foothold_s2_ex3031_w2/2026-10-25_09-22-46_ex-31-w2/model_1850.pt
+ex31_m1900|C:/mai/wt/foothold-lab/impl-w2/logs/rsl_rl/foothold_s2_ex3031_w2/2026-10-25_09-22-46_ex-31-w2/model_1900.pt
+ex31_m1950|C:/mai/wt/foothold-lab/impl-w2/logs/rsl_rl/foothold_s2_ex3031_w2/2026-10-25_09-22-46_ex-31-w2/model_1950.pt
+b_m1000|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1000.pt
+b_m1100|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1100.pt
+b_m1200|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1200.pt
+b_m1300|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1300.pt
+b_m1400|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1400.pt
+b_m1450|C:/mai/wt/foothold-lab/lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1450.pt

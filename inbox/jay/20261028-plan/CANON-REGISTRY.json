@@ -1,0 +1,176 @@
+{
+ "schema": "foothold-canon-registry/v1",
+ "note": "W27. 정본 · 단계 · 부모 sha 의 한 곳. 기동기 · 평가 · 촬영은 여기서 읽는다(W50 연결 전까지는 사람이 대조). 값은 각 run 의 resume_parent.json 과 checkpoint sha 실측(10/29 22:2x). physics_from_env_yaml 은 각 run 의 params/env.yaml 에서 dr_extract.py 로 뽑은 값(10/29 23:0x). 손으로 쓰지 않는다.",
+ "current": {
+  "stage": "basic_gait_L0-2",
+  "canon": "EX-38_m3001",
+  "baseline_policy": "S-B10_m1500",
+  "ex41_parent": "EX-40_m6000",
+  "c_layer_canon": "EX-40_m6000"
+ },
+ "entries": [
+  {
+   "id": "S-B10_m1500",
+   "role": "기준 정책(기본 보행 단계) · 1 차 출발점",
+   "decision": "FLOW 3 절(기준 정책 S-B10 m1500)",
+   "checkpoint": "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main/model_1500.pt",
+   "sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+   "completed_update": 1500,
+   "parent": null,
+   "terrain": "S-B 판(L0~2 고정 아님, 원 설정은 run env.yaml)",
+   "physics_from_env_yaml": {
+    "env_yaml": "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main/params/env.yaml",
+    "env_yaml_sha256": "4f5edb6aca03c27a6c9085c76b40772415f1970be6049e1126708b5d12639901",
+    "action_class": "isaaclab.envs.mdp.actions.joint_actions:JointPositionAction",
+    "friction_static": [
+     0.2,
+     1.2
+    ],
+    "base_mass_add_kg": [
+     -1.0,
+     3.0
+    ],
+    "base_com": "off(null)",
+    "actuator_gains": "off(null)",
+    "motor_strength": "off(null)",
+    "push_robot": null,
+    "actuator_classes": [
+     "isaaclab.actuators.actuator_pd:DCMotor"
+    ]
+   }
+  },
+  {
+   "id": "EX-38_m2709",
+   "role": "중간 저장본(12:30 이어 학습 실패 뒤 재출발점)",
+   "checkpoint": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_040521_60072/model_2709.pt",
+   "sha256": "b9db93b125ab53eb56a032676950a7c509da49643753b34a915dff559f7b7cd3",
+   "completed_update": 2709,
+   "parent": "S-B10_m1500",
+   "segment": "m1501~m2709 · EX-38 보상(E1 후보 다섯 항) · 명령 basic share 0.30 · L0~2",
+   "physics_from_env_yaml": {
+    "env_yaml": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_040521_60072/params/env.yaml",
+    "env_yaml_sha256": "1f88ef8e4010fd333affca100ba1d215999ffa11fa378eb138fbf3b16fb3232f",
+    "action_class": "isaaclab.envs.mdp.actions.joint_actions:JointPositionAction",
+    "friction_static": [
+     0.2,
+     1.2
+    ],
+    "base_mass_add_kg": [
+     -1.0,
+     3.0
+    ],
+    "base_com": "off(null)",
+    "actuator_gains": "off(null)",
+    "motor_strength": "off(null)",
+    "push_robot": null,
+    "actuator_classes": [
+     "isaaclab.actuators.actuator_pd:DCMotor"
+    ]
+   }
+  },
+  {
+   "id": "EX-38_m3001",
+   "role": "2 차 정본 (기본 보행)",
+   "decision": "D54 (10/29 21:1x)",
+   "checkpoint": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt",
+   "sha256": "7ff575f356c27ab6280fa2e01dce40f806bbfdd89d4306ae63c827b3ff16706c",
+   "completed_update": 3001,
+   "parent": "EX-38_m2709",
+   "segment": "m2710~m3001 이어 학습 (physical_resume_identical false)",
+   "eval": "W15 13 명령 · 64 env · 지도 셋: C:/Users/AI-WS01/s2_lab/basic_gait_runs/eval_w15/ex38/m3001/",
+   "physics_from_env_yaml": {
+    "env_yaml": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_123840_163180/params/env.yaml",
+    "env_yaml_sha256": "f79cd6493b4ca21cd02897173894cbfe077dca604342e128731e918e334bae1e",
+    "action_class": "isaaclab.envs.mdp.actions.joint_actions:JointPositionAction",
+    "friction_static": [
+     0.2,
+     1.2
+    ],
+    "base_mass_add_kg": [
+     -1.0,
+     3.0
+    ],
+    "base_com": "off(null)",
+    "actuator_gains": "off(null)",
+    "motor_strength": "off(null)",
+    "push_robot": null,
+    "actuator_classes": [
+     "isaaclab.actuators.actuator_pd:DCMotor"
+    ]
+   }
+  },
+  {
+   "id": "EX-40_m6000",
+   "role": "3 차 정본 (기본 보행 구간 1 끝, EX-41 부모 · C층 정본 영상 대상)",
+   "decision": "D124 (11/02 13시 부모) · D131 (11/02 14:2x C층 정본) · 등록 11/02 15:2x lead (G16)",
+   "checkpoint": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/model_6000.pt",
+   "sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+   "completed_update": 6000,
+   "parent": null,
+   "segment": "EX-40 처음부터 학습(start_receipt parent null, EX-38 계승 아님). 단계 B3c 끝(B1~B3c 1501~6000 DR 0→0.5 선형), D 단계 DR 1.0 계단(6001) 직전",
+   "source": {
+    "git_head": "2df419b0a4278981f6bd26e5eaedecbf7e8458db",
+    "dirty_diff_bytes": 0,
+    "manifest": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/manifest.json"
+   },
+   "params": {
+    "env_yaml": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/params/env.yaml",
+    "env_yaml_sha256": "f2e7b7651fe0d7ee4a63141f2d432f52d8067ea336aa90d5661685c759c52a82",
+    "agent_yaml": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/main/EX-40-B-main_20261031_041337_26240/params/agent.yaml",
+    "agent_yaml_sha256": "5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd"
+   },
+   "map_state": {
+    "force_gt": true,
+    "adasmpl_p": 1.0,
+    "p_map_off": 0.1,
+    "note": "정책은 복원 지도로 학습한 적 없음(force_gt true, checkpoint adasmpl 상태 p 1.0). TR-Net 은 정답 지도를 목표로 계속 학습됨. 복원 지도 평가(eval_pred)는 써 보지 않은 입력 시험"
+   },
+   "terrain": "fixed_l02 (레벨 0~2, 승급 없음, 3072 env)",
+   "baseline_score": {
+    "path": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/scores-b/score_6000_d5e9ec400f33.json",
+    "sha256": "a1457a3d9ff780bac2804f0949875e305559fa761dc609be09c33ee9a19b85a6",
+    "verdict": "HOLD",
+    "why": "W57 axis_v2.json 없음(창 없는 하위 프로세스의 sha256sum 고장, G14 · M85). 48 칸, W57 칸 없음. EX-41 유지 기준은 이 파일의 eval_gt 13 + probe_prop_only 13 칸(D133), eval_pred 13 칸은 기록만",
+    "evaluator_heads": {
+     "main": "38ee51df",
+     "w57_retry": "5c160641"
+    },
+    "w57_retry_result": "C:/Users/AI-WS01/s2_lab/ex40_w57_retry_separate_20261031/ (model_6000 폴더 axis_v2/axis_v2.json, 영수증 0 바이트)"
+   },
+   "headline": {
+    "back1.0_vx_err_mps": {
+     "eval_gt": 0.149,
+     "eval_pred": 0.157,
+     "probe_prop_only": 0.151
+    },
+    "w57_fwd1.0_yaw_deg": {
+     "eval_gt": -0.94,
+     "eval_pred": 0.05,
+     "probe_prop_only": -2.87
+    }
+   },
+   "videos": "C:/Users/AI-WS01/s2_lab/ex40_main_20261031_041313/video_a/final/ex40_m6000 (review.json 에 저장본 SHA · code_sha256). C층은 W76 대기열(scripter-w75-w76) 첫 편 확인 뒤",
+   "open_items": [
+    "agent.yaml · env.yaml SHA 는 lead 실측(11/02 15:2x)",
+    "AdaSmpl p 는 checkpoint 의 adasmpl 상태값",
+    "W57 영수증 없는 것은 G14 고친 뒤 다시 찍지 않음(결과 자료는 retry 폴더)"
+   ]
+  }
+ ],
+ "next": [
+  {
+   "id": "EX-39A",
+   "parent": "EX-38_m3001",
+   "status": "준비 · Kit 확인 try01 FAIL(명령 계약 범위) · 기동 전"
+  },
+  {
+   "id": "EX-39B",
+   "parent": "EX-38_m3001",
+   "status": "준비 · Kit 확인 try01 FAIL(명령 계약 범위) · 기동 전"
+  }
+ ],
+ "design_refs": {
+  "dr_stage_plan": "fable-25a b9a45acb inbox/jay/20261026-experiments/CURRICULUM-GATES.md §2b C7a(COM · 이득) → C7b(모터 세기 · 밀기) → C7c(지연 · 관측 잡음), C4b 험지 뒤 (D18 · D19)",
+  "approved_values": "inbox/jay/20261019-design/17-GO2-MODEL.md 73(짐 −1~2 kg) · 78(지연 0~15 ms)"
+ }
+}

@@ -1,0 +1,884 @@
+{
+  "height_definition": "root z - (mean contacting foot-center z - 0.022 m); nonfinite excluded",
+  "segment_definition": "0:.5 m/s; 1:1 m/s; 2:+1.2 rad/s; 3:-1.2 rad/s; each 3 s",
+  "velocity_summary": "last 1.5 s of each segment",
+  "ex23": [
+    {
+      "label": "EX-23",
+      "iteration": 500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_flat_feet.npz",
+      "sha256": "10a4993d3272c08206c32f22eb32f12194a23b0646dfa5bccebdcef8b17350eb",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_flat.json",
+      "metadata_sha256": "4eef9f5eb989f086b8c893bac34f91df43da7f7307257ce046140547b840d69d",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x23/2026-10-22_21-52-26_ex23-g1/model_500.pt",
+      "restored_modes": {
+        "est_mode": "learned · 정답 지도",
+        "critic_mode": "clean52",
+        "map_input": "reconstruction"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.23503246729075908,
+          "height_valid_n": 147,
+          "vx_tail": 0.44855440894762677,
+          "wz_tail": 0.05173865064900989
+        },
+        {
+          "segment": 1,
+          "height_m": 0.2488866468220949,
+          "height_valid_n": 150,
+          "vx_tail": 0.9257178115844726,
+          "wz_tail": 0.021354744335015614
+        },
+        {
+          "segment": 2,
+          "height_m": 0.20846489549428224,
+          "height_valid_n": 150,
+          "vx_tail": 0.00029482056736014785,
+          "wz_tail": 0.0029454579312975207
+        },
+        {
+          "segment": 3,
+          "height_m": 0.2227208438590169,
+          "height_valid_n": 150,
+          "vx_tail": -0.0006763952559170624,
+          "wz_tail": -0.0017865971504943444
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.05,
+        "rear_equal": 0.6,
+        "all_air": 0.0,
+        "all_stance": 0.05
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "label": "EX-23",
+      "iteration": 1000,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000\\run_flat_feet.npz",
+      "sha256": "485c401376fa1ca232d28dd29d108baa01bf3bb873943ab4af5c0e796bbed5be",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000\\run_flat.json",
+      "metadata_sha256": "9940da1cfe7d495c46e1753162b0a20f05e25a96389883f27489612a7209b243",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x23/2026-10-22_21-52-26_ex23-g1/model_1000.pt",
+      "restored_modes": {
+        "est_mode": "learned · 정답 지도",
+        "critic_mode": "clean52",
+        "map_input": "reconstruction"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.32170804508775475,
+          "height_valid_n": 148,
+          "vx_tail": 0.4891256272792816,
+          "wz_tail": -0.038554583562848466
+        },
+        {
+          "segment": 1,
+          "height_m": 0.3429907086566091,
+          "height_valid_n": 150,
+          "vx_tail": 0.9313529411951701,
+          "wz_tail": -0.048816491294031344
+        },
+        {
+          "segment": 2,
+          "height_m": 0.3341632179245353,
+          "height_valid_n": 150,
+          "vx_tail": 0.02299693428600828,
+          "wz_tail": -0.19067169251230856
+        },
+        {
+          "segment": 3,
+          "height_m": 0.30791284155845644,
+          "height_valid_n": 150,
+          "vx_tail": -0.006920922245675077,
+          "wz_tail": -0.028772396761147925
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.12,
+        "rear_equal": 0.12,
+        "all_air": 0.0,
+        "all_stance": 0.03
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "label": "EX-23",
+      "iteration": 1500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat_feet.npz",
+      "sha256": "cd813725c389da044303c65accf7a4c21c0b2000139ddd27ba9c81e521c0e39d",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat.json",
+      "metadata_sha256": "1aa822a82526df189b3541c358a853afdedf473b408ddb6646b1f5fe9daa451e",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x23/2026-10-22_21-52-26_ex23-g1/model_1500.pt",
+      "restored_modes": {
+        "est_mode": "learned · 정답 지도",
+        "critic_mode": "clean52",
+        "map_input": "reconstruction"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.33299736224859955,
+          "height_valid_n": 148,
+          "vx_tail": 0.5379957707722982,
+          "wz_tail": -0.04423880721675232
+        },
+        {
+          "segment": 1,
+          "height_m": 0.3494679696187377,
+          "height_valid_n": 150,
+          "vx_tail": 1.0171729493141175,
+          "wz_tail": -0.009736164063215256
+        },
+        {
+          "segment": 2,
+          "height_m": 0.33386739169061186,
+          "height_valid_n": 150,
+          "vx_tail": 0.036066642552614214,
+          "wz_tail": 0.8507144172986348
+        },
+        {
+          "segment": 3,
+          "height_m": 0.309233617156744,
+          "height_valid_n": 150,
+          "vx_tail": 0.06183871554521223,
+          "wz_tail": -0.5855121183395385
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.17,
+        "rear_equal": 0.13,
+        "all_air": 0.0,
+        "all_stance": 0.0
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            0,
+            1,
+            1,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "ex11": {
+    "label": "EX-11",
+    "iteration": 1500,
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\joint_1022\\ex11_flat_feet.npz",
+    "sha256": "93ceaa2a2c23bca77e10462b4a9465bf8617998d1fa8924793e6ccaeda362d89",
+    "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\joint_1022\\ex11_flat.json",
+    "metadata_sha256": "e4f273482778365510391f41e19cabb181bc8804f4a08d546001eb187c099f5d",
+    "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x11/2026-10-22_01-33-36_ex11-est-zero/model_1500.pt",
+    "restored_modes": {
+      "est_mode": "zero",
+      "critic_mode": "clean52",
+      "map_input": "none"
+    },
+    "segments": [
+      {
+        "segment": 0,
+        "height_m": 0.2469951735138893,
+        "height_valid_n": 147,
+        "vx_tail": 0.4742432947953542,
+        "wz_tail": 0.022711673110413055
+      },
+      {
+        "segment": 1,
+        "height_m": 0.24109989323467015,
+        "height_valid_n": 150,
+        "vx_tail": 1.0137824010849,
+        "wz_tail": 0.02101410654839128
+      },
+      {
+        "segment": 2,
+        "height_m": 0.2772529349923134,
+        "height_valid_n": 150,
+        "vx_tail": 0.000629193669022546,
+        "wz_tail": 0.007213251708696286
+      },
+      {
+        "segment": 3,
+        "height_m": 0.2551860112026334,
+        "height_valid_n": 150,
+        "vx_tail": 0.0001535876093112165,
+        "wz_tail": -0.0001654623870854266
+      }
+    ],
+    "contact_4to6": {
+      "n": 100,
+      "front_equal": 0.06,
+      "rear_equal": 0.79,
+      "all_air": 0.0,
+      "all_stance": 0.06
+    },
+    "examples": [
+      {
+        "t": 4.04,
+        "contact": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "t": 4.0600000000000005,
+        "contact": [
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "t": 4.08,
+        "contact": [
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "t": 4.1,
+        "contact": [
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "t": 4.12,
+        "contact": [
+          1,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "t": 4.14,
+        "contact": [
+          1,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "t": 4.16,
+        "contact": [
+          1,
+          0,
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  "ex12": {
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\x11_1022\\clips\\ex12_flat.json",
+    "sha256": "08619f901f2e340a883dbd8a34badd0e39ae868fb4a50c4da21bc6bed33b1658",
+    "record_type": "existing capture summary, no per-step NPZ",
+    "segments": {
+      "전진 0.5": {
+        "cmd": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "vx_mean_second_half": 0.46452087998390196,
+        "wz_mean_second_half": 0.004657052628075083,
+        "forward_progress_m": 1.1960739688575268,
+        "height_median_m": 0.1871080660521984,
+        "base_contact_frac": 0.0
+      },
+      "전진 1.0": {
+        "cmd": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "vx_mean_second_half": 0.9987739221254984,
+        "wz_mean_second_half": 0.008437404644985994,
+        "forward_progress_m": 2.9398394799232483,
+        "height_median_m": 0.17419988767057656,
+        "base_contact_frac": 0.0
+      },
+      "회전 +1.2": {
+        "cmd": [
+          0.0,
+          0.0,
+          1.2
+        ],
+        "vx_mean_second_half": 0.002207570127211511,
+        "wz_mean_second_half": 0.0040694620444749795,
+        "forward_progress_m": 0.1087322390038753,
+        "height_median_m": 0.2440788663253188,
+        "base_contact_frac": 0.0
+      },
+      "회전 -1.2": {
+        "cmd": [
+          0.0,
+          0.0,
+          -1.2
+        ],
+        "vx_mean_second_half": 0.0002186021915016075,
+        "wz_mean_second_half": -0.0002371311467140913,
+        "forward_progress_m": -0.04981006659159903,
+        "height_median_m": 0.2393914574086666,
+        "base_contact_frac": 0.0
+      }
+    }
+  },
+  "ex15": [
+    {
+      "label": "EX-15",
+      "iteration": 500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15\\run_flat_feet.npz",
+      "sha256": "b03156299f196c5c91825ef73ea61e7d821ca0bf7ba016eae14ef7b6db7841f2",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15\\run_flat.json",
+      "metadata_sha256": "1689406a80874f7e869daa4a76905ab6995c924ecfa43fd47949bd708462ebb1",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x15/2026-10-22_14-21-50_ex15-lgA1/model_500.pt",
+      "restored_modes": {
+        "est_mode": "zero",
+        "critic_mode": "clean52",
+        "map_input": "none"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.2917264198213816,
+          "height_valid_n": 139,
+          "vx_tail": 0.41612422207991284,
+          "wz_tail": -0.02485586056485772
+        },
+        {
+          "segment": 1,
+          "height_m": 0.2902887800037861,
+          "height_valid_n": 127,
+          "vx_tail": 0.9680643312136332,
+          "wz_tail": -0.046567320159326
+        },
+        {
+          "segment": 2,
+          "height_m": 0.2767457404434681,
+          "height_valid_n": 149,
+          "vx_tail": -0.0017920940194744617,
+          "wz_tail": 0.001405832875170745
+        },
+        {
+          "segment": 3,
+          "height_m": 0.24885376554727553,
+          "height_valid_n": 150,
+          "vx_tail": 0.005417330836256345,
+          "wz_tail": 0.011109257079660893
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.91,
+        "rear_equal": 0.97,
+        "all_air": 0.17,
+        "all_stance": 0.65
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "label": "EX-15",
+      "iteration": 1000,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15_1000\\run_flat_feet.npz",
+      "sha256": "9a44f2a69fd149400d1dd6381745ac7678f600e66188aedacf0b4f5b6ff823bf",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15_1000\\run_flat.json",
+      "metadata_sha256": "70f76054174521e274386249ee6e08ebe35810ef99b8654a389d2e6d507cd7f3",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x15/2026-10-22_14-21-50_ex15-lgA1/model_1000.pt",
+      "restored_modes": {
+        "est_mode": "zero",
+        "critic_mode": "clean52",
+        "map_input": "none"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.26464918453991415,
+          "height_valid_n": 135,
+          "vx_tail": 0.45720992803573607,
+          "wz_tail": -0.0660852319188416
+        },
+        {
+          "segment": 1,
+          "height_m": 0.2620495503097773,
+          "height_valid_n": 121,
+          "vx_tail": 0.9495694017410279,
+          "wz_tail": -0.03437883916931848
+        },
+        {
+          "segment": 2,
+          "height_m": 0.27501940832287075,
+          "height_valid_n": 148,
+          "vx_tail": 0.10100561221440633,
+          "wz_tail": 0.9006295231978099
+        },
+        {
+          "segment": 3,
+          "height_m": 0.27956272953003647,
+          "height_valid_n": 150,
+          "vx_tail": 0.007041609495257338,
+          "wz_tail": -0.9663081188996633
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.97,
+        "rear_equal": 0.93,
+        "all_air": 0.18,
+        "all_stance": 0.6
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "label": "EX-15",
+      "iteration": 1500,
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15_1500\\run_flat_feet.npz",
+      "sha256": "1275f8571ec4049fd12c4fc0c17ff2f988629968afcd53363f073ebfbef1a91a",
+      "metadata_path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex15_1500\\run_flat.json",
+      "metadata_sha256": "d0f407817d52a65592feb404caacebcaadd38c8c0386f0da35dfebf27d5da579",
+      "checkpoint": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2_x15/2026-10-22_14-21-50_ex15-lgA1/model_1500.pt",
+      "restored_modes": {
+        "est_mode": "zero",
+        "critic_mode": "clean52",
+        "map_input": "none"
+      },
+      "segments": [
+        {
+          "segment": 0,
+          "height_m": 0.27752493147552015,
+          "height_valid_n": 133,
+          "vx_tail": 0.43809784015019737,
+          "wz_tail": 0.024508184242683154
+        },
+        {
+          "segment": 1,
+          "height_m": 0.272313563272357,
+          "height_valid_n": 127,
+          "vx_tail": 0.8997596661249797,
+          "wz_tail": 0.008791210670024157
+        },
+        {
+          "segment": 2,
+          "height_m": 0.28446310863643887,
+          "height_valid_n": 150,
+          "vx_tail": 0.03157996326684952,
+          "wz_tail": 1.0644611163934072
+        },
+        {
+          "segment": 3,
+          "height_m": 0.29463387106359007,
+          "height_valid_n": 150,
+          "vx_tail": -0.006098406898478667,
+          "wz_tail": -0.9144643704096477
+        }
+      ],
+      "contact_4to6": {
+        "n": 100,
+        "front_equal": 0.94,
+        "rear_equal": 0.9,
+        "all_air": 0.16,
+        "all_stance": 0.53
+      },
+      "examples": [
+        {
+          "t": 4.04,
+          "contact": [
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "t": 4.0600000000000005,
+          "contact": [
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.08,
+          "contact": [
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.1,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.12,
+          "contact": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "t": 4.14,
+          "contact": [
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "t": 4.16,
+          "contact": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  ],
+  "stationary_yaw_example": {
+    "command_wz": 1.2,
+    "std": 0.5,
+    "linear_weight": 1.5,
+    "yaw_weight": 0.5,
+    "yaw_term": 0.0015755557992222207,
+    "note": "formula illustration, not measured total reward; before dt scaling"
+  }
+}

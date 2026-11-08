@@ -1,0 +1,26 @@
+{
+  "sources": [
+    {
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\ex29_model200_flat_pred\\review_feet.npz",
+      "sha256": "200dfadadd85f2243560dd9d763234ddce7cd55e9ab11377e5d6a6ea6c95e7e9",
+      "index": 8,
+      "time": 0.16
+    },
+    {
+      "source": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\ex29_model200_stepping_stones_low_pred\\review_feet.npz",
+      "sha256": "8b98457016a4bbe7759722f3483fca692abdfe1801ed21f814954bd3dbbc8a64",
+      "index": 8,
+      "time": 0.16
+    }
+  ],
+  "height_display_range": [
+    -1,
+    1
+  ],
+  "height_units": "m relative to root; clipped [-1,1]; no hit=-1",
+  "depth_display_range": [
+    0,
+    3
+  ],
+  "display_only": true
+}

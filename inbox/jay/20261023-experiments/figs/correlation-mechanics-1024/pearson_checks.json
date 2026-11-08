@@ -1,0 +1,306 @@
+{
+  "schema": "foothold-descriptive-correlation/1",
+  "self_check": "passed",
+  "sources": [
+    {
+      "path": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261023-experiments\\EVIDENCE-sol-24e-ex29-runlog.csv",
+      "sha256": "e2da6c5eb1918bee4d335af56a6266e2083436988ebecccef947e901f0bb2715",
+      "rows": 229
+    },
+    {
+      "path": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261023-experiments\\EVIDENCE-sol-24e-ex29-trace8.csv",
+      "sha256": "72581fbca6e015047c70897ebd837370c96d8785eb450eb613624d521903bd2d",
+      "rows": 75
+    }
+  ],
+  "pairs": {
+    "episode_reward": {
+      "n_update_rows": 229,
+      "excluded_nonfinite_updates": [],
+      "r": -0.9808256378038833,
+      "adjacent_difference_pairs": 228,
+      "r_adjacent_first_differences": -0.3842643445995046,
+      "r_centered_within_25update_blocks": -0.8640004501378512,
+      "blocks": [
+        {
+          "from": 0,
+          "to": 24,
+          "n": 25,
+          "r": -0.9715704924085883
+        },
+        {
+          "from": 25,
+          "to": 49,
+          "n": 25,
+          "r": -0.753356609781375
+        },
+        {
+          "from": 50,
+          "to": 74,
+          "n": 25,
+          "r": -0.3154223702585901
+        },
+        {
+          "from": 75,
+          "to": 99,
+          "n": 25,
+          "r": -0.9319582032545148
+        },
+        {
+          "from": 100,
+          "to": 124,
+          "n": 25,
+          "r": -0.8765195509264355
+        },
+        {
+          "from": 125,
+          "to": 149,
+          "n": 25,
+          "r": -0.9548952217624216
+        },
+        {
+          "from": 150,
+          "to": 174,
+          "n": 25,
+          "r": -0.3975419534265238
+        },
+        {
+          "from": 175,
+          "to": 199,
+          "n": 25,
+          "r": -0.9754418973777852
+        },
+        {
+          "from": 200,
+          "to": 224,
+          "n": 25,
+          "r": 0.6596331912536263
+        },
+        {
+          "from": 225,
+          "to": 228,
+          "n": 4,
+          "r": -0.07836039099693445
+        }
+      ],
+      "r_adjacent_x_with_previous_x": 0.9957047501775397,
+      "r_adjacent_y_with_previous_y": 0.9680216430649452,
+      "leave_one_out_r_range": [
+        -0.9821188464679999,
+        -0.9805338142498616
+      ],
+      "largest_single_row_influence": {
+        "update": 37,
+        "r_without_row": -0.9821188464679999
+      },
+      "influential_row_and_neighbors": [
+        {
+          "update": 35,
+          "x": 11.7796,
+          "y": -36.89
+        },
+        {
+          "update": 36,
+          "x": 12.271199999999999,
+          "y": -46.22
+        },
+        {
+          "update": 37,
+          "x": 13.5652,
+          "y": -60.52
+        },
+        {
+          "update": 38,
+          "x": 12.554200000000002,
+          "y": -41.25
+        },
+        {
+          "update": 39,
+          "x": 12.359000000000002,
+          "y": -39.43
+        }
+      ]
+    },
+    "gt_termination": {
+      "n_update_rows": 229,
+      "excluded_nonfinite_updates": [],
+      "r": 0.059656379853580244,
+      "adjacent_difference_pairs": 228,
+      "r_adjacent_first_differences": 0.015452095511251648,
+      "r_centered_within_25update_blocks": -0.07962914353770477,
+      "blocks": [
+        {
+          "from": 0,
+          "to": 24,
+          "n": 25,
+          "r": -0.9985607281480802
+        },
+        {
+          "from": 25,
+          "to": 49,
+          "n": 25,
+          "r": -0.3101207560913343
+        },
+        {
+          "from": 50,
+          "to": 74,
+          "n": 25,
+          "r": -0.9184043936082505
+        },
+        {
+          "from": 75,
+          "to": 99,
+          "n": 25,
+          "r": 0.8948080121868517
+        },
+        {
+          "from": 100,
+          "to": 124,
+          "n": 25,
+          "r": 0.7369297562443068
+        },
+        {
+          "from": 125,
+          "to": 149,
+          "n": 25,
+          "r": -0.12241781372052309
+        },
+        {
+          "from": 150,
+          "to": 174,
+          "n": 25,
+          "r": 0.11829071771525908
+        },
+        {
+          "from": 175,
+          "to": 199,
+          "n": 25,
+          "r": -0.6253601120534242
+        },
+        {
+          "from": 200,
+          "to": 224,
+          "n": 25,
+          "r": -0.33180782511837564
+        },
+        {
+          "from": 225,
+          "to": 228,
+          "n": 4,
+          "r": null
+        }
+      ],
+      "r_adjacent_x_with_previous_x": 0.7532422028254504,
+      "r_adjacent_y_with_previous_y": 0.999258231988927,
+      "leave_one_out_r_range": [
+        0.055138841652903,
+        0.07159411674237362
+      ],
+      "largest_single_row_influence": {
+        "update": 196,
+        "r_without_row": 0.07159411674237362
+      },
+      "influential_row_and_neighbors": [
+        {
+          "update": 194,
+          "x": 0.4322,
+          "y": 1.0
+        },
+        {
+          "update": 195,
+          "x": 0.4383,
+          "y": 1.0
+        },
+        {
+          "update": 196,
+          "x": 0.4218,
+          "y": 1.0
+        },
+        {
+          "update": 197,
+          "x": 0.4385,
+          "y": 0.9999
+        },
+        {
+          "update": 198,
+          "x": 0.7825,
+          "y": 0.9997
+        }
+      ]
+    },
+    "hip_roll": {
+      "n_update_rows": 75,
+      "excluded_nonfinite_updates": [],
+      "r": -0.7193815532929769,
+      "adjacent_difference_pairs": 72,
+      "r_adjacent_first_differences": 0.20885485975522405,
+      "r_centered_within_25update_blocks": -0.170385080388418,
+      "blocks": [
+        {
+          "from": 0,
+          "to": 24,
+          "n": 25,
+          "r": -0.13794564976055024
+        },
+        {
+          "from": 100,
+          "to": 124,
+          "n": 25,
+          "r": -0.3379119027860429
+        },
+        {
+          "from": 200,
+          "to": 224,
+          "n": 25,
+          "r": 0.24576380448291663
+        }
+      ],
+      "r_adjacent_x_with_previous_x": 0.9466407717504801,
+      "r_adjacent_y_with_previous_y": 0.9627024777562165,
+      "leave_one_out_r_range": [
+        -0.7402599554873509,
+        -0.7104380841114687
+      ],
+      "largest_single_row_influence": {
+        "update": 119,
+        "r_without_row": -0.7402599554873509
+      },
+      "influential_row_and_neighbors": [
+        {
+          "update": 117,
+          "x": 1.1816205978393555,
+          "y": -0.2556360960006714
+        },
+        {
+          "update": 118,
+          "x": 1.6081836223602295,
+          "y": -0.3777580261230469
+        },
+        {
+          "update": 119,
+          "x": 1.5588867664337158,
+          "y": -0.12906838953495026
+        },
+        {
+          "update": 120,
+          "x": 1.2234739065170288,
+          "y": -0.37871241569519043
+        },
+        {
+          "update": 121,
+          "x": 1.298239827156067,
+          "y": -0.19795215129852295
+        }
+      ]
+    }
+  },
+  "interpretation_limits": [
+    "serially dependent update summaries",
+    "single run and seed",
+    "no p-values or independent-trial confidence intervals",
+    "no causal effect estimated",
+    "no outlier deleted",
+    "hip coordinate difference is not a mirror-aware physical asymmetry measure",
+    "block centering and differencing are sensitivity checks only"
+  ]
+}

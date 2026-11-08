@@ -1,0 +1,145 @@
+{
+ "part": "reload",
+ "wall_start": 1791357817.5695086,
+ "env": {
+  "ROS_DOMAIN_ID": "58",
+  "GZ_PARTITION": "fh-app-2556192"
+ },
+ "checks": {
+  "R1 저장본 불러오기 → 정지·지금 지도": {
+   "ok": true,
+   "current": {
+    "name": "slamr6",
+    "version": 1,
+    "file": "<workspace>/control-app/test/results/gz-20261007/maps-slam/slamr6/v1.yaml"
+   },
+   "map_ver": "m-09ca374a654b",
+   "state": {
+    "mode": "STOPPED",
+    "stop": "map",
+    "msg": "지도가 바뀌어 정지 - 옛 목표는 취소됨. 새 지도에서 위치를 맞춘 뒤 「정지 해제」",
+    "loc": {
+     "mode": "amcl",
+     "ok": false,
+     "why": "지도가 바뀜 - 「위치 맞추기」로 새 지도 위 위치를 알려 주세요",
+     "std": [
+      0.49,
+      15.0
+     ]
+    },
+    "map_ver": "m-09ca374a654b",
+    "loc_epoch": 2,
+    "pose": [
+     -1.971,
+     -0.514,
+     -0.002,
+     0.03
+    ],
+    "res": null,
+    "gt": [
+     -2.0005183363190366,
+     -0.500000124246168,
+     -6.282285817046103e-06
+    ]
+   }
+  },
+  "R2 위치 맞추기 → 수렴": {
+   "ok": true,
+   "sec": 2.87,
+   "set": [
+    -0.001,
+    -0.0,
+    -0.001
+   ],
+   "loc": {
+    "mode": "amcl",
+    "ok": true,
+    "why": "",
+    "std": [
+     0.27,
+     12.8
+    ]
+   },
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "loc": {
+     "mode": "amcl",
+     "ok": true,
+     "why": "",
+     "std": [
+      0.27,
+      12.8
+     ]
+    },
+    "map_ver": "m-09ca374a654b",
+    "loc_epoch": 2,
+    "pose": [
+     0.03,
+     -0.003,
+     1.442,
+     0.01
+    ],
+    "res": null,
+    "gt": [
+     -2.0081934420110774,
+     -0.503399803775743,
+     1.441612505727069
+    ]
+   }
+  },
+  "R3 저장본 위 목표 SUCCEEDED": {
+   "ok": true,
+   "goal": [
+    0.133,
+    0.79,
+    1.442
+   ],
+   "res": {
+    "gen": 1,
+    "status": "SUCCEEDED",
+    "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+   },
+   "gt_err_diag": 0.21,
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "msg": "목표에 도착했습니다 (SUCCEEDED 0)",
+    "loc": {
+     "mode": "amcl",
+     "ok": true,
+     "why": "",
+     "std": [
+      0.28,
+      16.8
+     ]
+    },
+    "map_ver": "m-09ca374a654b",
+    "loc_epoch": 2,
+    "pose": [
+     0.042,
+     0.594,
+     1.496,
+     0.01
+    ],
+    "res": {
+     "gen": 1,
+     "status": "SUCCEEDED",
+     "why": "목표에 도착했습니다 (SUCCEEDED 0)"
+    },
+    "gt": [
+     -1.9907132550373343,
+     0.11969304155449594,
+     1.5224097785603619
+    ]
+   }
+  }
+ },
+ "offset_from_make": [
+  2.0,
+  0.5,
+  -0.001
+ ],
+ "verdict": "PASS"
+}
