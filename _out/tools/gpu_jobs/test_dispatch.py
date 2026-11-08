@@ -574,11 +574,13 @@ class WatchTests(unittest.TestCase):
     def test_watch_default_interval_is_one_second(self):
         import io
         from contextlib import redirect_stderr
+        from unittest import mock
         p = []
         orig = board.watch
         try:
             board.watch = lambda args, **k: p.append(args) or 0
-            board.main(["board", "--watch"])
+            with mock.patch.object(board, "OPS_PROFILE", {}):
+                board.main(["board", "--watch"])
         finally:
             board.watch = orig
         self.assertEqual((p[0].watch, p[0].slow_every), (1.0, 10.0))

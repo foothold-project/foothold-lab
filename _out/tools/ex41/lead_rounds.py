@@ -17,6 +17,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import gpu_path, load_linux_profile, orca_executable, require_linux_profile
+
+OPS_PROFILE = load_linux_profile()
+
 ORCA = r"C:\Users\AI-WS01\AppData\Local\Programs\orca\resources\bin"
 WORKERS = {  # owner name in WORKLIST -> terminal handle prefix
     "runner": "term_b53e5aa0",
@@ -26,14 +31,21 @@ WORKERS = {  # owner name in WORKLIST -> terminal handle prefix
 }
 WORKLIST = Path("D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/WORKLIST.tsv")
 QUEUE = Path("D:/mai-tmp/gpu/queue.json")
+CANON_RETRY = r"C:\Users\AI-WS01\.claude\jobs\781698cc\tmp\canon_retry.py"
+if OPS_PROFILE:
+    WORKLIST = Path(OPS_PROFILE["paths"]["worklist"])
+    QUEUE = Path(gpu_path(OPS_PROFILE, "queue.json"))
+    CANON_RETRY = OPS_PROFILE["paths"]["canon_retry"]
+    WORKERS = {name: OPS_PROFILE["worker_handles"].get(name) for name in WORKERS}
 BUSY = re.compile(r"Working \(|esc to interrupt|Running…|Polishing…|Fluttering…|Cogitat|Crunch|Churn|·\s*\(\d+[ms]")
 REPORT = re.compile(r"\[(runner|scripter|analyst|super2)\][^\n]{0,160}|끝 ·[^\n]{0,160}|lead 검토 대기[^\n]{0,80}")
 DONE_AT = re.compile(r"(Worked for [^•]+• [0-9:]+ ?[AP]M|done 오전 [0-9:]+|done 오후 [0-9:]+)")
 
 
 def orca(*args: str) -> dict:
-    env = dict(os.environ, PATH=os.environ.get("PATH", "") + os.pathsep + ORCA)
-    r = subprocess.run(["orca", *args, "--json"], capture_output=True, text=True,
+    env = (dict(os.environ) if OPS_PROFILE
+           else dict(os.environ, PATH=os.environ.get("PATH", "") + os.pathsep + ORCA))
+    r = subprocess.run([orca_executable() if OPS_PROFILE else "orca", *args, "--json"], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", env=env, shell=False)
     try:
         return json.loads(r.stdout)
@@ -48,7 +60,7 @@ def handles() -> dict[str, str]:
     for t in rows:
         h = t.get("handle") or t.get("id") or ""
         for name, prefix in WORKERS.items():
-            if h.startswith(prefix):
+            if prefix and h.startswith(prefix):
                 out[name] = h
     return out
 
@@ -60,6 +72,7 @@ def read_tail(handle: str) -> list[str]:
 
 
 def main() -> int:
+    require_linux_profile(OPS_PROFILE)
     acts = []
     rows = list(csv.DictReader(WORKLIST.open(encoding="utf-8"), delimiter="\t"))
     open_by = {}
@@ -69,7 +82,7 @@ def main() -> int:
     hs = handles()
     box = orca("orchestration", "inbox", "--limit", "200")
     msgs = (box.get("result") or {}).get("messages") or []
-    sent = {name: [m.get("subject", "") for m in msgs if (m.get("from") or "").startswith(prefix)]
+    sent = {name: [m.get("subject", "") for m in msgs if prefix and (m.get("from") or "").startswith(prefix)]
             for name, prefix in WORKERS.items()}
     print("== 작업자")
     for name in WORKERS:
@@ -114,7 +127,7 @@ def main() -> int:
             acts.append(f"ACT GPU{g}: 다음 일 없음 · 지금 일 끝나기 전에 걸기")
     print("== 정본 216")
     for extra, label in (([], "GPU0"), (["--gpu1"], "GPU1")):
-        r = subprocess.run([sys.executable, r"C:\Users\AI-WS01\.claude\jobs\781698cc\tmp\canon_retry.py", *extra],
+        r = subprocess.run([sys.executable, CANON_RETRY, *extra],
                            capture_output=True, text=True, encoding="utf-8", errors="replace")
         print(label, r.stdout.strip())
         if "retry 0" not in r.stdout:

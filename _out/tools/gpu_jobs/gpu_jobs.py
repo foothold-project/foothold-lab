@@ -4,6 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import bind_registry, load_linux_profile, require_linux_profile
 
 try:
     import psutil
@@ -47,6 +51,11 @@ def admission(config: dict, job_id: str) -> dict:
             "reason": "ex41_p1_" + marker["state"], "marker": marker}
 
 
+def registry_status(config: dict) -> dict:
+    return {"jobs": config["jobs"],
+            "ex41_p1": marker_state(Path(config["sources"]["ex41_p1_marker"]))}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=Path(__file__).with_name("jobs.json"))
@@ -54,10 +63,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     sub.add_parser("gate").add_argument("job_id")
     args = parser.parse_args(argv)
-    config = json.loads(args.config.read_text(encoding="utf-8-sig"))
+    profile = load_linux_profile()
+    require_linux_profile(profile)
+    config = bind_registry(json.loads(args.config.read_text(encoding="utf-8-sig")), profile)
     if args.command == "status":
-        print(json.dumps({"jobs": config["jobs"],
-                          "ex41_p1": marker_state(Path(config["sources"]["ex41_p1_marker"]))}, ensure_ascii=False))
+        print(json.dumps(registry_status(config), ensure_ascii=False))
         return 0
     result = admission(config, args.job_id)
     print(json.dumps(result, ensure_ascii=False))

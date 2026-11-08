@@ -14,9 +14,15 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 from typing import Callable
 from uuid import uuid4
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import gpu_path, load_linux_profile, require_linux_profile
+
+OPS_PROFILE = load_linux_profile()
 
 
 STATES = {"waiting", "running", "done", "failed", "hold"}
@@ -35,6 +41,9 @@ DESKTOP_PROCESS_NAMES = {
     "windowsterminal.exe", "logioptionsplus_agent.exe", "logioverlay.exe",
     "orca.exe", "code.exe",
 }
+if OPS_PROFILE:
+    # Exact executable basenames only. Do not admit generic Python or Kit.
+    DESKTOP_PROCESS_NAMES = {"chrome", "chromium", "firefox", "msedge"}
 
 
 def now() -> str:
@@ -182,6 +191,10 @@ def _device_arg(cmdline: list[str]) -> str | None:
     return None
 
 
+def _process_basename(name: str) -> str:
+    return Path(name).name if OPS_PROFILE else name.replace("/", "\\").rsplit("\\", 1)[-1].casefold()
+
+
 def compute_rows_busy(gpu: int, rows: list[str], process_lookup) -> tuple[bool, str]:
     """Ignore desktop compositor clients; conservatively gate Isaac/Python/unknown apps."""
     expected = GPU_UUIDS[gpu]
@@ -194,16 +207,16 @@ def compute_rows_busy(gpu: int, rows: list[str], process_lookup) -> tuple[bool, 
             pid = int(fields[1])
             name, cmdline = process_lookup(pid)
         except Exception:
-            basename = fields[2].replace("/", "\\").rsplit("\\", 1)[-1].casefold()
+            basename = _process_basename(fields[2])
             if basename in DESKTOP_PROCESS_NAMES:
                 continue
             busy.append(f"pid={fields[1]} process_identity_unknown")
             continue
-        basename = str(name).replace("/", "\\").rsplit("\\", 1)[-1].casefold()
+        basename = _process_basename(str(name))
         if basename in DESKTOP_PROCESS_NAMES:
             continue
         low = (basename + " " + " ".join(cmdline)).casefold()
-        if "python" in basename or "kit" in low or "isaac" in low:
+        if "python" in basename.casefold() or "kit" in low or "isaac" in low:
             assigned = _device_arg(list(cmdline))
             if assigned and assigned.casefold() != f"cuda:{gpu}":
                 continue
@@ -424,6 +437,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     gpu = None if args.gpu == "cpu" else int(args.gpu)
     sources = json.loads(args.sources.read_text(encoding="utf-8-sig")) if args.sources else {}
+    if gpu is not None:
+        require_linux_profile(OPS_PROFILE)
+    if OPS_PROFILE:
+        sources["priority_busy"] = gpu_path(OPS_PROFILE, "PRIORITY_BUSY_GPU1")
     while True:
         state, detail = one(args.queue, gpu, sources=sources)
         print(json.dumps({"state": state, "detail": detail, "at": now()}, ensure_ascii=False), flush=True)
