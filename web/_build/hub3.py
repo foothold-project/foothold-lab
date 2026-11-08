@@ -8,8 +8,8 @@
   「세로 나열」이 된다 (철칙 3 위반 · 팀장 지적 2026-08-30).
 
   일정   시간      이번 주([주간] 이슈) -> 관문 다섯(같은 골격) -> WBS·기록
-  연구   근거 출처  출발선(열린 이슈가 걸린 실측) -> 실패 험지 5종 카드(#179)
-                   -> 잰 것(본PoC 먼저) -> 읽은 것
+  연구   지금 기준  지금 기준 셋 -> 실험 계보([계보 N] 가로 줄) -> 재는 법 · 열린 문제
+                   -> 자료실(MVP 이전: 옛 배포 요약 · 출발선 · 험지 5종 · 여섯 입구 · 전체 목록)
   회의   시간·자리  타임라인 + 자리 필터 칩 (자리는 렌즈, 쪼개지 않는다)
   기획   안/밖     밖 3 크게 · 안 3 줄
   기술   순서      01->02->03 경로 (번호가 순서인 유일한 자리)
@@ -27,6 +27,62 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 BOARD = 'https://github.com/orgs/foothold-project/projects/1'
+
+# ── 연구 허브 머리 · 손으로 고치는 자리는 여기 둘뿐이다 ─────────────────
+# ★ 2026-11-09 팀장 확정 (가)안 (inbox/jay/20261104-ex41-restart/decisions.tsv
+#   380 줄 · 목업 Main.dc.html · Phone.dc.html). 허브 맨 위가 9/25 평가(v2 · MVP 이전)
+#   에 머물러 있어 「지금 어디까지」 가 틀린 말이 됐다. 지금 기준을 위로 올리고
+#   옛 덩이는 아래 「자료실 · MVP 이전」 으로 내린다.
+#
+#   지금 기준 셋은 원장(research-catalog.json)이 계산하지 않는 «사람의 결정» 이다.
+#   그래서 코드 곳곳에 흩지 않고 이 한 사전에만 적는다. 결정이 바뀌면 여기만 고친다.
+#     정본 정책 m12000   inbox/jay/20261104-ex41-restart/decisions.tsv 323 줄
+#                        (팀장 정본 채택 11/07 08:5x) · 정본 문서 머리 「상태」 줄
+#     진행 중 EX-42 · E1  같은 파일 360 · 372 줄 (E1 부터 L5 -> L9 한 단계씩)
+#     학습 마감 11/25    같은 파일 374 줄 (11/08 23:1x 팀장 W41 ok · 더 빨리
+#                        끝나면 앞당김)
+#   정본 문서 링크는 파일 이름을 적지 않고 «계보 번호» 로 찾는다. 이름이 바뀌어도
+#   제목의 [계보 N] 이 같으면 길이 안 끊긴다. 못 찾으면 링크를 안 그린다.
+RESEARCH_NOW = {
+    'asof': '2026-11-09',
+    'canon_series': 3,
+    'cards': [
+        ('정본 정책', 'm12000', 'EX-41 끝 · DR 1.0 · 학습 상한 L5 · 복원 지도'),
+        ('진행 중', 'EX-42 · E1', '0 단계 끝 · 지형 상한 L5 → L9 를 한 단계씩'),
+        ('학습 마감', '11/25 09:00', '더 빨리 끝나면 앞당김'),
+    ],
+}
+
+# 「어떻게 재나」 · 「열린 문제」 두 표. 글은 팀장이 확정한 목업 그대로다.
+#   출처 (전부 lab 저장소 안):
+#     쉬운 지형 · 어려운 지형 · 무게 마찰   docs/research/20261108-lineage-4-ex42-stage0.md
+#                                         (map64 쉬운 지형 · L3~L5 어려운 지형 · DR 켬/끔)
+#     영상 216 칸                         docs/research/20261108-lineage-1-ex40.md (C층 216 칸)
+#                                         · decisions.tsv 377 줄 (cross · survive · fall)
+#     지도 · 틈                           docs/research/20261108-lineage-4-ex42-stage0.md 9 절
+#                                         · decisions.tsv 374 줄 (틈 진단은 E1 과 함께)
+#     보행 · 오른 뒷다리                  목업 문구 그대로. 이 판정을 적은 원자료 줄은
+#                                         이 파일을 쓸 때 못 찾았다(미확인). 관련 기록은
+#                                         decisions.tsv 379 줄 (W86 발별 접촉 힘 기록 시작)
+#     측정 · 시드 하나                    계보 4 요지 · decisions.tsv 372 줄
+#     영상 이름 · 40 %                    decisions.tsv 377 줄 (옛 success 182 중 survive 73)
+#   표 머리 오른쪽 «평가 기준 N 편» 의 N 은 여기 적지 않는다. 원장 입구
+#   `protocol` 에 든 문서를 화면에서 센다 (_doors 와 같은 셈).
+RESEARCH_ROWS = {
+    'how': ('어떻게 재나', [
+        ('쉬운 지형', '연속 지형 L0~2 · 지도 정답 / 복원 / 끔'),
+        ('어려운 지형', '레벨 고정 L3 · L4 · L5 · core 명령'),
+        ('무게 · 마찰', '같은 저장본을 DR 켬 · 끔으로 나란히'),
+        ('영상 216 칸', '건넘 · 생존만 · 넘어짐 셋으로 판정'),
+    ]),
+    'open': ('열린 문제', [
+        ('지도', '복원 지도가 좁은 틈을 거의 못 그린다'),
+        ('보행', '오른 뒷다리가 덜 딛고 딛는 동안 더 끌린다'),
+        ('측정', '0 단계 비교는 시드 하나 · 반복은 E1 과 나란히'),
+        ('영상 이름', '옛 success 중 40 % 는 건너지 못함'),
+    ]),
+    'open_meta': 'E1 에서 다룸',
+}
 
 _LAB = None
 _ISSUES = None
@@ -47,7 +103,8 @@ def esc(s):
 
 
 def meta(path, fields=('분류', '작성', '근거', '요지', '상태', '판', '자리',
-                       '담당', '언제 보나', '차례', '결론', '지위')):
+                       '담당', '언제 보나', '차례', '결론', '지위', '연재',
+                       '연재 제목', '연재 설명')):
     try:
         t = io.open(path, encoding='utf-8', errors='replace').read()
     except OSError:
@@ -1224,6 +1281,179 @@ def _release_block():
                grid, links))
 
 
+def research_head():
+    """연구 허브 머리. 다른 허브의 「연구 RESEARCH」 h1 + 한 줄 설명 자리를 대신한다.
+
+    ★ 2026-11-09 (가)안. 머리가 «허브 이름» 이 아니라 «이 연구가 무엇을 만드나» 를
+      말한다. h1 은 한 페이지에 하나라 build() 가 이것을 쓰면 일반 머리는 안 낸다.
+      문단 폭을 줄이지 않는다 (AGENTS.md 「본문 폭을 줄이지 않는다」 · widthcheck).
+      목업은 문단을 720 px 로 묶었지만 그 규칙이 이긴다.
+    """
+    return ('<div class="rxh3">'
+            '<div class="rxe3">RESEARCH · Go2 미경험 험지 보행</div>'
+            '<h1 class="rxt3">처음 보는 험지에서도 무너지지 않고 명령대로 걷는 '
+            'Go2 정책</h1>'
+            '<p class="rxp3">Isaac Lab 에서 PPO 로 학습한 Unitree Go2 보행 '
+            '정책입니다. 높이 지도는 깊이 카메라로 복원한 것을 씁니다. 지금 기준이 '
+            '되는 결과, 거기까지 온 실험 순서, 재는 방법, 열린 문제 순으로 읽습니다.'
+            '</p></div>')
+
+
+def _rx_head(title, meta, hid):
+    """절 머리 한 모양. 제목 + 오른쪽 메타 + 밑줄.
+
+    ★ 팀장 11/09 「정렬이 들쭉날쭉 · AI Slop」. 절마다 머리를 따로 짜면 높이 ·
+      글자 크기 · 밑줄 위치가 조금씩 달라진다. 새 절은 전부 이 함수 하나로 낸다.
+      `meta` 는 이미 이스케이프한 HTML 이다 (링크 · 단추가 들어간다).
+    """
+    return ('<div class="rxk3"><h2 id="%s">%s</h2>'
+            '<div class="rxm3">%s</div></div>' % (hid, esc(title), meta))
+
+
+def _lineage(docs):
+    """제목이 `[계보 N]` 인 연구 문서 -> [(N, 문서 meta, 페이지, 나머지 제목)] N 순.
+
+    규칙은 한 곳에만 둔다. 문서 페이지의 「연재 순서」 절을 만드는
+    `docs_pages._series_of` 를 그대로 불러 쓴다 (같은 SERIES_RE). 여기서 정규식을
+    다시 쓰면 둘이 갈라진다 (이 파일 `_with_live_doors` 주석의 네 번 당한 부류).
+    게시된 문서(`_research_docs` 가 고른 것)만 낸다. 안 나가는 문서를 링크하면 죽은
+    링크가 된다.
+    """
+    import docs_pages
+    root = os.path.join(lab(), 'docs', 'research')
+    by = dict((rel.rsplit('/', 1)[-1][:-3], (m, page))
+              for rel, m, page, _g in docs)
+    paths = dict((s + '.md', os.path.join(root, s + '.md')) for s in by)
+    out = []
+    for n, slug, _t, rest in docs_pages._series_of(paths):
+        m, page = by[slug]
+        out.append((n, m, page, rest))
+    return out
+
+
+def _rx_rows(rows):
+    """표처럼 읽히는 목록. 행 높이 고정 · 머리 열 112 px (「어떻게 재나」 · 「열린 문제」)."""
+    return '<div class="rxtb3">%s</div>' % ''.join(
+        '<div class="rxq3"><b>%s</b><span>%s</span></div>' % (esc(k), esc(v))
+        for k, v in rows)
+
+
+# 계보 줄 좌우 단추. 스크립트가 없으면 단추는 «숨은 채» 이고 줄은 그냥
+# 가로로 밀리는 목록이다. 그래서 단추를 hidden 으로 내고 스크립트가 연다.
+# 한 칸 = 첫 카드 폭 + 줄 간격. 숫자를 박지 않고 화면에서 잰다 (폰과 PC 카드 폭이
+# 다르다). 움직임 줄이기 설정이면 부드러운 이동을 끈다.
+RX_LIN_JS = (
+    '<script>(function(){'
+    'var r=document.getElementById("rx-lin-row");if(!r)return;'
+    'var bs=[].slice.call(document.querySelectorAll("[data-rxgo]"));'
+    'var mq=window.matchMedia?window.matchMedia('
+    '"(prefers-reduced-motion: reduce)"):null;'
+    'function step(){var c=r.querySelector(".rxa3");'
+    'if(!c)return r.clientWidth;'
+    'var g=parseFloat(getComputedStyle(r).columnGap)||0;'
+    'return c.getBoundingClientRect().width+g;}'
+    'function upd(){var max=r.scrollWidth-r.clientWidth-1;'
+    'bs.forEach(function(b){var d=+b.getAttribute("data-rxgo");'
+    'b.disabled=d<0?r.scrollLeft<=0:r.scrollLeft>=max;});}'
+    'bs.forEach(function(b){b.hidden=false;'
+    'b.addEventListener("click",function(){'
+    'var d=+b.getAttribute("data-rxgo");'
+    'r.scrollBy({left:d*step(),behavior:(mq&&mq.matches)?"auto":"smooth"});});});'
+    'r.addEventListener("scroll",upd,{passive:true});'
+    'window.addEventListener("resize",upd);upd();'
+    '}());</script>')
+
+
+def research_top(docs, skip=()):
+    """(가)안의 위쪽 넷 · 지금 기준 · 실험 계보 · 재는 법과 열린 문제 · 자료실 머리.
+
+    한 그릇(.rxw3) 안에서 절 간격 하나로 쌓는다. 폭은 셸의 .wrap(1040) 그대로다.
+    여기서 폭을 새로 정하지 않는다 (PRD §4-1 · 바깥 컨테이너 한 벌).
+    """
+    now = RESEARCH_NOW
+    lin = _lineage(docs)
+    canon = next((p for n, _m, p, _r in lin if n == now.get('canon_series')), '')
+    meta_now = esc(now.get('asof') or '')
+    if canon:
+        meta_now += (' · <a href="%s">정본 문서 [계보 %d]</a>'
+                     % (esc(canon), now['canon_series']))
+    cards = ''.join(
+        '<div class="rxc3"><span class="rxl3">%s</span><b class="rxv3">%s</b>'
+        '<span class="rxd3">%s</span></div>' % (esc(k), esc(v), esc(d))
+        for k, v, d in now.get('cards') or [])
+    out = ['<div class="rxw3">',
+           '<section class="rxs3" aria-labelledby="rx-now">%s'
+           '<div class="rxn3">%s</div></section>'
+           % (_rx_head('지금 기준', meta_now, 'rx-now'), cards)]
+
+    # 실험 계보. 왼쪽이 처음, 새 편은 오른쪽 끝에 붙는다 (N 오름차순).
+    if lin:
+        items = []
+        for n, m, page, rest in lin:
+            # 11/09 팀장 시안 수정: 위 줄 왼쪽 [계보 N] · 오른쪽 끝 기간 한 줄.
+            #   제목 · 한 줄은 문서 머리 `> 연재 제목:` · `> 연재 설명:` 이 있으면
+            #   그것을, 없으면 문서 제목 · 요지를 쓴다 (긴 제목은 두 줄에서 잘린다).
+            tag = (m.get('연재') or '').strip()
+            ttl = (m.get('연재 제목') or '').strip() or rest
+            sub = (m.get('연재 설명') or '').strip() or _gist(m)
+            items.append(
+                '<a class="rxa3%s" href="%s"><span class="rxi3"><span>[계보 %d]'
+                '</span>%s</span><b class="rxat3">%s</b>'
+                '<span class="rxag3" title="%s">%s</span></a>'
+                % (' on' if n == now.get('canon_series') else '', esc(page), n,
+                   ('<span>%s</span>' % esc(tag)) if tag else '',
+                   esc(ttl), esc(sub), esc(sub)))
+        btns = ('<span class="rxmw3">왼쪽이 처음 · 오른쪽으로 쌓임</span>'
+                '<span class="rxmn3">옆으로 밀어 넘김</span>'
+                '<button type="button" class="rxg3" data-rxgo="-1" '
+                'aria-controls="rx-lin-row" aria-label="이전" hidden>&#8592;</button>'
+                '<button type="button" class="rxg3" data-rxgo="1" '
+                'aria-controls="rx-lin-row" aria-label="다음" hidden>&#8594;</button>')
+        out.append('<section class="rxs3" aria-labelledby="rx-lin">%s'
+                   '<div class="rxr3" id="rx-lin-row" tabindex="0" role="region" '
+                   'aria-label="실험 계보 · 옆으로 넘김">%s</div></section>%s'
+                   % (_rx_head('실험 계보', btns, 'rx-lin'), ''.join(items),
+                      RX_LIN_JS))
+
+    # 재는 법 · 열린 문제. «평가 기준 N 편» 은 원장 입구 protocol 을 센 값이다.
+    # 누르면 같은 페이지 아래 자료실 목록이 그 입구로 걸러진다 (_doors 의 ?fn=).
+    skip = set(skip)
+    n_proto = sum(1 for rel, _m, _p, _g in docs
+                  if rel not in skip and _fn_of(rel) == 'protocol')
+    rr = RESEARCH_ROWS
+    # ★ class 를 href «앞» 에 둔다. tools/verify_live.py 가 `<a href="?fn=` 를
+    #   «여섯 입구» 로 세어 정확히 6 을 요구한다. 이 링크가 일곱째로 잡히면 안 된다.
+    how_meta = (('<a class="rxml3" href="?fn=protocol#rx-arc">평가 기준 %d 편</a>'
+                 % n_proto) if n_proto else '')
+    out.append('<div class="rx23">'
+               '<section class="rxs3" aria-labelledby="rx-how">%s%s</section>'
+               '<section class="rxs3" aria-labelledby="rx-open">%s%s</section>'
+               '</div>'
+               % (_rx_head(rr['how'][0], how_meta, 'rx-how'), _rx_rows(rr['how'][1]),
+                  _rx_head(rr['open'][0], esc(rr.get('open_meta') or ''), 'rx-open'),
+                  _rx_rows(rr['open'][1])))
+
+    # 자료실 머리. 아래로 옛 덩이(먼저 읽을 것 · 9/25 배포 요약 · 출발선 ·
+    # 험지 5종)와 여섯 입구 · 전체 목록이 이어진다. 목록에는 지금 문서도 들어
+    # 있으므로 «근거가 아닌 문서» 라고 하지 않는다 (목업 문구에서 고친 자리).
+    #
+    # ★ 허브 머리 오른쪽의 「연구 기록 바로 가기」 상자(HUB_ACTION · 9/18 팀장
+    #   요청)를 여기로 옮긴다. 새 h1 이 한 줄을 다 써서 상자가 머리 아래로 떨어져
+    #   혼자 떠 있었다 (1366 화면 실측). 길은 남기고 자리만 «목록 머리» 로 바꾼다.
+    #   주소는 HUB_ACTION 한 곳에서 읽는다. 폰에서는 짧은 말을 쓴다 (넘침 방지 ·
+    #   390 실측에서 긴 메타가 화면을 425 px 로 밀었다).
+    act = HUB_ACTION.get('research')
+    lk = ('<a href="%s">%%s</a>' % esc(act[0])) if act else ''
+    meta_arc = ('<span class="rxmw3">8월 ~ 10월 초 결과%s</span>'
+                '<span class="rxmn3">8월 ~ 10월 초%s</span>'
+                % ((' · ' + lk % '같은 문서 한 줄 목록') if lk else '',
+                   (' · ' + lk % '한 줄 목록') if lk else ''))
+    out.append('<section class="rxs3 rxarc3" aria-labelledby="rx-arc">%s</section>'
+               % _rx_head('자료실 · MVP 이전', meta_arc, 'rx-arc'))
+    out.append('</div>')
+    return ''.join(out)
+
+
 def research_html(site):
     docs = _research_docs()
     meas = [d for d in docs if ev_short(d[1].get('근거')) == '실측']
@@ -1247,7 +1477,11 @@ def research_html(site):
     #
     #   고르는 방법: 문서가 스스로 «> 지위: 먼저 읽을 것» 을 선언한다.
     #   파일 이름을 여기 적지 않는다. 적으면 그 이름이 바뀌는 날 조용히 사라진다.
-    parts = []
+    #
+    # ★ 2026-11-09 (가)안. 맨 위는 «지금 기준» 넷(research_top)이다. 아래의
+    #   먼저 읽을 것 · 9/25 배포 요약 · 출발선 · 험지 5종은 MVP 이전 결과라
+    #   «자료실 · MVP 이전» 머리 밑으로 내려간다. 지우지 않는다. 순서만 바뀐다.
+    parts = [research_top(docs, skip=[hero[2]] if hero else [])]
     first3 = [d for d in docs if '먼저 읽을' in (d[1].get('지위') or '')]
     if len(first3) > 1:
         print('  [!] 「먼저 읽을 것」을 선언한 문서가 %d개다. 하나여야 한다: %s'
@@ -1673,7 +1907,8 @@ def state_lines():
         out['schedule'] = ('관문 다섯', False)
     docs = _research_docs()
     meas = [d for d in docs if ev_short(d[1].get('근거')) == '실측']
-    out['research'] = ('실측 %d · 조사 %d · 출발선이 맨 위'
+    # ★ 2026-11-09 (가)안부터 맨 위는 출발선이 아니라 «지금 기준» 이다.
+    out['research'] = ('실측 %d · 조사 %d · 지금 기준이 맨 위'
                        % (len(meas), len(docs) - len(meas)), False)
     root = os.path.join(lab(), 'docs', 'meetings')
     ms = sorted([f for f in os.listdir(root)
@@ -2242,9 +2477,111 @@ CSS = '''<style id="hub3-css">
 }
 @media (max-width:460px){.tkrow3{grid-template-columns:1fr}}
 @media (max-width:640px){
- 
+
  .ev3{grid-template-columns:4rem 1fr}
  .rr3 b{white-space:normal}
+}
+/* ★ 2026-11-09 연구 허브 (가)안 · 지금 기준 · 실험 계보 · 재는 법 · 열린 문제.
+   팀장 지적 「정렬이 들쭉날쭉」 의 답으로 규칙 넷을 지킨다.
+     ① 폭은 셸 .wrap 하나. 여기서 max-width 를 새로 걸지 않는다
+     ② 절 머리는 .rxk3 한 모양 (제목 + 오른쪽 메타 + 밑줄 · 높이 40)
+     ③ 한 줄에 선 카드는 높이를 고정하고 안쪽 행 위치를 격자로 맞춘다
+     ④ 색은 토큰만 (다크는 토큰이 따라 바뀐다 · brandcheck ④)
+   목업은 계보 카드 위에 3px 띠를 얹었지만 «위/왼쪽만 두꺼운 강조 바» 는
+   brandcheck ⑤ 가 막는다. 정본 카드는 테두리 «전체» 색으로 가른다.
+   보조 글씨는 --ink-2 다. --ink-3 은 흰 바탕 대비가 4.5:1 에 못 미친다
+   (AGENTS.md 「옅은 회색 글씨를 쓰지 않는다」). */
+.rxh3{display:flex;flex-direction:column;gap:16px}
+.rxe3{font-size:12px;line-height:16px;letter-spacing:.12em;font-weight:700;
+ color:var(--dim)}
+.rxt3{margin:0;font-size:36px;line-height:1.3;font-weight:700;letter-spacing:-.01em;
+ word-break:keep-all}
+.rxp3{margin:0;font-size:16px;line-height:1.75;color:var(--ink-2);word-break:keep-all}
+.rxw3{display:flex;flex-direction:column;gap:48px;margin:48px 0 16px}
+.rxs3{display:flex;flex-direction:column;gap:16px;margin:0;min-width:0}
+.rxk3{height:40px;display:flex;justify-content:space-between;align-items:center;
+ gap:12px;border-bottom:1px solid var(--rule);padding-bottom:8px}
+.rxk3 h2{margin:0;padding:0;border:0;font-size:20px;line-height:32px;font-weight:700;
+ white-space:nowrap}
+.rxarc3 .rxk3 h2{color:var(--ink-2)}
+.rxm3{display:flex;align-items:center;gap:8px;font-size:13px;line-height:20px;
+ color:var(--ink-2);white-space:nowrap;min-width:0}
+.rxm3 a,.rxml3{color:var(--dim)}
+.rxmn3{display:none}
+.rxmw3,.rxmn3{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rxmn3+.rxg3{margin-left:8px}
+.rxg3{width:32px;height:32px;display:inline-grid;place-items:center;padding:0;
+ border:1px solid var(--rule);border-radius:6px;background:var(--card);
+ color:var(--ink);font:inherit;font-size:16px;line-height:1;cursor:pointer}
+.rxg3:hover:not(:disabled),.rxg3:focus-visible{border-color:var(--dim);outline:none}
+.rxg3:disabled{color:var(--ink-3);cursor:default}
+.rxg3[hidden]{display:none!important}
+/* 지금 기준 · 같은 폭 셋 · 높이 128 · 안쪽 세 행 16 / 36 / 40 */
+.rxn3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.rxc3{height:128px;background:var(--card);border:1px solid var(--rule);
+ border-radius:var(--p-radius);padding:20px 24px;display:grid;
+ grid-template-rows:16px 36px 40px;row-gap:6px;min-width:0}
+.rxl3{font-size:12px;line-height:16px;color:var(--ink-2)}
+.rxv3{font-family:ui-monospace,Consolas,monospace;font-size:26px;line-height:36px;
+ font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;
+ text-overflow:ellipsis}
+.rxd3{font-size:13px;line-height:20px;color:var(--ink-2);display:-webkit-box;
+ -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+/* 실험 계보 · 가로 줄. 스크립트 없이도 손으로 밀린다. 단추는 거들 뿐이다 */
+.rxr3{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;
+ overscroll-behavior-x:contain;padding:0 0 8px;scrollbar-width:thin;outline:none;
+ scrollbar-color:var(--rule) transparent}
+/* 스크롤 막대도 토큰 색. 기본 막대는 다크에서 흰 띠로 떴다 (1366 실측) */
+.rxr3:focus-visible{outline:2px solid var(--dim);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.rxr3{scroll-behavior:smooth}}
+.rxa3{flex:none;width:236px;height:132px;scroll-snap-align:start;
+ background:var(--card);border:1px solid var(--rule);border-radius:var(--p-radius);
+ padding:16px 18px;display:grid;grid-template-rows:17px 44px 20px;row-gap:10px;
+ color:var(--ink);text-decoration:none}
+.rxa3:hover,.rxa3:focus-visible{border-color:var(--dim);outline:none}
+.rxa3.on{border-color:var(--dim)}
+.rxi3{display:flex;justify-content:space-between;gap:8px;font-family:ui-monospace,Consolas,monospace;
+ font-size:12px;line-height:17px;color:var(--dim);white-space:nowrap;overflow:hidden}
+.rxat3{font-size:16px;line-height:22px;font-weight:700;display:-webkit-box;
+ -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.rxag3{font-size:13px;line-height:20px;color:var(--ink-2);white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis}
+/* 재는 법 · 열린 문제 · 두 칸 같은 모양 · 행 56 · 머리 열 112 */
+.rx23{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.rxtb3{background:var(--card);border:1px solid var(--rule);border-radius:var(--p-radius);
+ display:flex;flex-direction:column}
+.rxq3{height:56px;display:grid;grid-template-columns:112px minmax(0,1fr);
+ align-items:center;padding:0 20px;border-bottom:1px solid var(--rule);
+ font-size:14px;line-height:20px}
+.rxq3:last-child{border-bottom:0}
+.rxq3 b{font-weight:700}
+.rxq3 span{color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;
+ -webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+/* 폰 (Phone.dc.html). 지금 기준 셋은 세 행짜리 표가 되고, 두 칸은 쌓인다 */
+@media (max-width:640px){
+ .rxw3{gap:32px;margin-top:32px}
+ .rxh3{gap:12px}
+ .rxt3{font-size:24px;line-height:1.35}
+ .rxp3{font-size:15px}
+ .rxk3{height:36px}
+ .rxk3 h2{font-size:18px;line-height:28px}
+ .rxm3{font-size:12px}
+ .rxmw3,.rxg3{display:none!important}
+ .rxmn3{display:block}
+ .rxn3{grid-template-columns:1fr;gap:0;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius)}
+ .rxc3{height:64px;border:0;border-radius:0;border-bottom:1px solid var(--rule);
+  background:none;padding:0 16px;grid-template-rows:none;
+  grid-template-columns:88px minmax(0,1fr);align-items:center;row-gap:0}
+ .rxc3:last-child{border-bottom:0}
+ .rxv3{font-size:20px;line-height:28px}
+ .rxd3{display:none}
+ .rxr3{gap:12px}
+ .rxa3{width:min(280px,calc(100% - 40px));padding:16px}
+ .rx23{grid-template-columns:1fr;gap:32px}
+ .rxq3{height:auto;min-height:52px;padding:8px 16px;grid-template-columns:88px minmax(0,1fr);
+  font-size:13px}
+ .rxq3 span{display:block;-webkit-line-clamp:unset;overflow:visible}
 }
 </style>'''
 
@@ -2262,6 +2599,12 @@ HUB_ACTION = {
                  '같은 문서를 한 줄 목록으로'),
 }
 
+# 허브 이름 h1 대신 제 머리를 쓰는 허브. 여기 없는 허브는 예전 그대로다.
+#   연구: 2026-11-09 (가)안 · 「처음 보는 험지에서도 ...」 머리.
+HUB_HEAD = {
+    'research': research_head,
+}
+
 
 def build(assigned, vault, shell, site):
     """여섯 허브를 v3 뼈대로 쓴다. hubgen.main 이 부른다."""
@@ -2276,7 +2619,11 @@ def build(assigned, vault, shell, site):
         head = ('<h1>%s <span style="font-size:.6em;color:var(--ink-3);'
                 'font-weight:600">%s</span></h1>\n<p class="lede">%s</p>'
                 % (ko, en, lede))
-        act = HUB_ACTION.get(key)
+        # 제 머리를 가진 허브는 그것을 쓴다 (h1 은 한 페이지에 하나).
+        if key in HUB_HEAD:
+            head = HUB_HEAD[key]()
+        # 제 머리를 가진 허브는 바로 가기를 본문 안(연구: 자료실 머리)에 둔다.
+        act = None if key in HUB_HEAD else HUB_ACTION.get(key)
         if act:
             head = ('<div class="hd3r"><div class="hd3t">%s</div>'
                     '<a class="hd3a" href="%s">%s<span>%s</span></a></div>'
