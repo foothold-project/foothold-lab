@@ -71,3 +71,9 @@ lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_ch
 - 무엇: PID 82176 (11:08:22 기동) 이 11:08:35 에 `ValueError: EX-42 stage-zero output path appeared after CPU preflight` 로 끝남. GPU 학습 0 회.
 - 원인: ex42_chain.py 가 startup_receipt.json 을 출력 폴더에 먼저 쓰고(11:08:27), train_start.py:705 가 그 뒤에 폴더 존재를 검사. CPU preflight 는 dry-run 이라 chain 을 거치지 않아 시험에서 안 잡힘(가짜 경로 시험 통과 ≠ 실제).
 - 조치: runner 에 검사 순서 수정 · 실제 순서 회귀시험 · 새 고정 checkout 으로 재기동 지시(11:1x). 빈 폴더는 보존.
+
+## I46 (11/08 11:20) EX-42 0 단계 두 번째 기동이 wrapper 속성으로 죽음
+
+- 무엇: PID 82600 (11:19:23 기동, 고정 7916a52) 이 11:20:12 에 `AttributeError: OrderEnforcing has no attribute num_envs` (ex42_training_entry.py:178). 학습 0 회.
+- 원인: env.unwrapped 를 raw 로 받아 놓고 env.num_envs 를 씀. CPU 시험의 가짜 env 는 wrapper 가 없어 통과(I45 와 같은 종류: 가짜 경로 시험 통과 ≠ 실제).
+- 조치: runner 에 178 수정 · EX-42 경로 env 속성 접근 전수 점검 · 가짜 env 를 OrderEnforcing 으로 감싼 회귀시험 · 재기동 지시(11:2x).
