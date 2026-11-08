@@ -40,6 +40,48 @@ def test_train_start_caller_builds_parent_verified_chain_and_attaches(tmp_path, 
     assert receipt["production_launch_allowed"] is False
 
 
+def test_chain_startup_receipt_is_the_only_output_allowed_after_chain_creation(tmp_path):
+    run = tmp_path / "run"
+    assert not run.exists()
+
+    # make_chain constructs the real EX42TrainingChain, which creates the run
+    # directory and writes startup_receipt.json before train_start's main().
+    chain, actual_run = make_chain(tmp_path)
+    assert actual_run == run
+    receipt = entry.validate_ex42_stage_zero_chain_output(
+        run,
+        plan_sha256=chain.plan.sha256,
+        parent_sha256=chain.parent["checkpoint_sha256"],
+    )
+    assert receipt["state"] == "chain_startup_receipt_verified"
+    assert receipt["plan_sha256"] == chain.plan.sha256
+    assert receipt["parent_sha256"] == chain.parent["checkpoint_sha256"]
+    with pytest.raises(ValueError, match="identity differs"):
+        entry.validate_ex42_stage_zero_chain_output(
+            run,
+            plan_sha256="0" * 64,
+            parent_sha256=chain.parent["checkpoint_sha256"],
+        )
+
+    (run / "unexpected.txt").write_text("not this launch's receipt", encoding="utf-8")
+    with pytest.raises(ValueError, match="unexpected contents"):
+        entry.validate_ex42_stage_zero_chain_output(
+            run,
+            plan_sha256=chain.plan.sha256,
+            parent_sha256=chain.parent["checkpoint_sha256"],
+        )
+
+
+def test_chain_receipt_validation_is_before_kit_and_main_does_not_reject_it():
+    source = ROOT / "foothold_s2/scripts/train_start.py"
+    text = source.read_text(encoding="utf-8")
+    chain_build = text.index("EX42_TRAINING_CHAIN = build_ex42_training_chain(")
+    receipt_check = text.index("validate_ex42_stage_zero_chain_output(")
+    app_launcher = text.index("from isaaclab.app import AppLauncher")
+    assert chain_build < receipt_check < app_launcher
+    assert "EX-42 stage-zero output path appeared after CPU preflight" not in text
+
+
 def test_p1_argv_requires_exactly_one_iteration_placeholder():
     with pytest.raises(ValueError, match="exactly once"):
         entry.make_score_argv_factory('["python", "-m", "known.p1"]')

@@ -67,6 +67,45 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
     }
 
 
+def validate_ex42_stage_zero_chain_output(log_dir: str | Path, *,
+                                          plan_sha256: str,
+                                          parent_sha256: str) -> dict[str, Any]:
+    """Accept only the startup receipt just written by this validated chain.
+
+    The initial CLI preflight requires a nonexistent output directory. Chain
+    construction then creates that directory and writes this single receipt
+    before Kit starts, so the post-chain guard must validate that exact file
+    rather than treating the expected directory as stale output.
+    """
+    source = Path(log_dir)
+    if source.is_symlink():
+        raise ValueError("EX-42 stage-zero chain output is not a real directory")
+    output = source.resolve(strict=True)
+    if not output.is_dir():
+        raise ValueError("EX-42 stage-zero chain output is not a real directory")
+    entries = list(output.iterdir())
+    if (len(entries) != 1 or entries[0].name != "startup_receipt.json"
+            or not entries[0].is_file() or entries[0].is_symlink()):
+        raise ValueError("EX-42 stage-zero chain output has unexpected contents")
+    try:
+        receipt = json.loads(entries[0].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("EX-42 stage-zero chain startup receipt is unreadable") from exc
+    if not isinstance(receipt, dict):
+        raise ValueError("EX-42 stage-zero chain startup receipt is not an object")
+    parent = receipt.get("parent")
+    if (receipt.get("state") != "chain_ready_not_launch_authorized"
+            or receipt.get("experiment") != "EX-42"
+            or receipt.get("production_launch_allowed") is not False
+            or receipt.get("plan_sha256") != plan_sha256
+            or not isinstance(parent, dict)
+            or parent.get("checkpoint_sha256") != parent_sha256):
+        raise ValueError("EX-42 stage-zero startup receipt identity differs")
+    return {"state": "chain_startup_receipt_verified",
+            "path": str(entries[0]), "plan_sha256": plan_sha256,
+            "parent_sha256": parent_sha256}
+
+
 def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
     """Read the pinned EX-41 T0-prime stage as the stage-zero config source."""
     from foothold_s2.curriculum.continuous import load_plan

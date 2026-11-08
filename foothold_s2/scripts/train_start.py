@@ -433,7 +433,9 @@ if _ex42_requested:
     _missing_ex42 = [name for name, value in _ex42_values.items() if not value]
     if _missing_ex42:
         raise ValueError("EX-42 caller inputs are incomplete: " + ", ".join(_missing_ex42))
-    from foothold_s2.scripts.ex42_training_entry import build_ex42_training_chain
+    from foothold_s2.scripts.ex42_training_entry import (
+        build_ex42_training_chain, validate_ex42_stage_zero_chain_output,
+    )
     from foothold_s2.ex42_gate_checks import audit_ex42_launch_source
 
     _stage_zero_requested = bool(_pre_args.ex42_stage_zero_approved
@@ -486,6 +488,12 @@ if _ex42_requested:
         dispatch_path=_pre_args.ex42_dispatch_path,
         score_argv_json=_pre_args.ex42_p1_score_argv_json,
     )
+    if EX42_STAGE_ZERO_PLAN is not None:
+        validate_ex42_stage_zero_chain_output(
+            _pre_args.ex42_log_dir,
+            plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
+            parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+        )
     if not _stage_zero_requested:
         raise RuntimeError(
             "EX-42 preparation_only: full plan is blocked; refusing before AppLauncher"
@@ -701,8 +709,6 @@ def main(env_cfg, agent_cfg):
         resume_path = None
         parent_checkpoint_path = EX42_STAGE_ZERO_PARENT["parent_path"]
         log_dir = EX42_STAGE_ZERO_PREFLIGHT["output_dir"]
-        if Path(log_dir).exists():
-            raise ValueError("EX-42 stage-zero output path appeared after CPU preflight")
         agent_cfg.resume = False
         agent_cfg.max_iterations = 1000
     elif args_cli.resume_from:
