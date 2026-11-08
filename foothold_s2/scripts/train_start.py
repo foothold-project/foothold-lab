@@ -106,7 +106,6 @@ EX42_STAGE_ZERO_RESUME_PROOF = None
 EX42_STAGE_ZERO_RESUME_TARGET = None
 EX42_STAGE_ZERO_RESUME_SAME_RUN = False
 EX42_STAGE_ZERO_CHAIN_RECEIPT = None
-EX42_STAGE_ZERO_ROOT_XY_READBACK = None
 EX41_REHEARSAL = False
 EX41_STAGE_REHEARSAL = None
 EX41_STAGE_REHEARSAL_RECEIPT = None
@@ -742,6 +741,8 @@ RSL_RL_PIN = "3.1.2"  # Isaac Lab setup.py 49 행 · 18 §5.1: 환경 이름 없
 @hydra_task_config(args_cli.task, args_cli.agent)
 def main(env_cfg, agent_cfg):
     runtime_output_layout = None
+    ex42_resume_saved = None
+    ex42_stage_zero_root_xy_readback = None
     installed = metadata.version("rsl-rl-lib")
     if installed != RSL_RL_PIN:
         raise RuntimeError(f"rsl-rl-lib {installed} 은 계약 {RSL_RL_PIN} 이 아니다 (환경: {sys.prefix})")
@@ -942,8 +943,10 @@ def main(env_cfg, agent_cfg):
         print("EX42_STAGE_ZERO_REWARD_MANAGER "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
         if EX42_STAGE_ZERO_RESUME:
+            ex42_resume_saved = torch.load(
+                EX42_STAGE_ZERO_RESUME, map_location="cpu", weights_only=False)
             terrain_restore = restore_stage_zero_resume_terrain_before_reset(
-                env, EX42_STAGE_ZERO_CHECKPOINT)
+                env, ex42_resume_saved)
             print("EX42_SELF_RESUME_TERRAIN_BEFORE_RESET "
                   + json.dumps(terrain_restore, sort_keys=True), flush=True)
         env.reset()
@@ -1030,7 +1033,9 @@ def main(env_cfg, agent_cfg):
         if EX42_STAGE_ZERO_RESUME:
             from foothold_s2.scripts.ex42_training_entry import build_stage_zero_resume_root_xy_readback
 
-            resume_saved = torch.load(EX42_STAGE_ZERO_RESUME, map_location="cpu", weights_only=False)
+            if ex42_resume_saved is None:
+                raise RuntimeError("EX-42 self-resume checkpoint was not loaded before reset")
+            resume_saved = ex42_resume_saved
             runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
             runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
             ex42_transfer = {
@@ -1046,15 +1051,15 @@ def main(env_cfg, agent_cfg):
             if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
                     or runner.continuous_curriculum.state_dict() != resume_saved["continuous_curriculum"]):
                 raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
-            EX42_STAGE_ZERO_ROOT_XY_READBACK = build_stage_zero_resume_root_xy_readback(
+            ex42_stage_zero_root_xy_readback = build_stage_zero_resume_root_xy_readback(
                 env, pose_range=env_cfg.events.reset_base.params["pose_range"])
-            ex42_transfer["root_xy_readback"] = EX42_STAGE_ZERO_ROOT_XY_READBACK
-            if EX42_STAGE_ZERO_ROOT_XY_READBACK["outside_reset_bounds_count"] != 0:
+            ex42_transfer["root_xy_readback"] = ex42_stage_zero_root_xy_readback
+            if ex42_stage_zero_root_xy_readback["outside_reset_bounds_count"] != 0:
                 raise ValueError("EX-42 resumed root XY is outside reset bounds from restored env origins")
             print("EX42_SELF_RESUME_READBACK "
                   + json.dumps(ex42_transfer, sort_keys=True), flush=True)
             print("EX42_SELF_RESUME_ROOT_XY_READBACK "
-                  + json.dumps(EX42_STAGE_ZERO_ROOT_XY_READBACK, sort_keys=True), flush=True)
+                  + json.dumps(ex42_stage_zero_root_xy_readback, sort_keys=True), flush=True)
         else:
             ex42_transfer = runner.load_ex42_stage_zero_parent(
                 EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
@@ -1276,7 +1281,7 @@ def main(env_cfg, agent_cfg):
     if EX42_STAGE_ZERO_PLAN is not None:
         modes["ex42_stage_zero"] = {
             "chain_startup_receipt": EX42_STAGE_ZERO_CHAIN_RECEIPT,
-            "resume_root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
+            "resume_root_xy_readback": ex42_stage_zero_root_xy_readback,
         }
     if resume_path is None or (EX42_STAGE_ZERO_RESUME and not EX42_STAGE_ZERO_RESUME_SAME_RUN):
         manifest = run_manifest.build_manifest(
@@ -1296,7 +1301,7 @@ def main(env_cfg, agent_cfg):
                 EX42_STAGE_ZERO_RESUME_PROOF["checkpoint_sha256"])
             manifest["modes"]["ex42_self_resume"] = {
                 **EX42_STAGE_ZERO_RESUME_PROOF,
-                "root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
+                "root_xy_readback": ex42_stage_zero_root_xy_readback,
                 "source_manifest_path": str(source_manifest_path),
                 "target_checkpoint_path": EX42_STAGE_ZERO_RESUME_TARGET,
                 "source_run_dir": str(Path(EX42_STAGE_ZERO_RESUME).resolve().parent),
@@ -1319,7 +1324,7 @@ def main(env_cfg, agent_cfg):
         manifest.setdefault("ex42_resume_segments", []).append(segment)
         manifest.setdefault("modes", {})["ex42_self_resume"] = {
             **EX42_STAGE_ZERO_RESUME_PROOF,
-            "root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK,
+            "root_xy_readback": ex42_stage_zero_root_xy_readback,
             "target_run_dir": log_dir,
             "same_run_directory": True,
         }

@@ -118,19 +118,24 @@ def test_chain_receipt_validation_brackets_builder_before_kit():
     assert "EX42_TRAINING_CHAIN, EX42_STAGE_ZERO_CHAIN_RECEIPT = (" in text
     assert 'print("EX42_STAGE_ZERO_CHAIN_RECEIPT "' in text
     assert '"chain_startup_receipt": EX42_STAGE_ZERO_CHAIN_RECEIPT' in text
-    assert '"resume_root_xy_readback": EX42_STAGE_ZERO_ROOT_XY_READBACK' in text
+    assert '"resume_root_xy_readback": ex42_stage_zero_root_xy_readback' in text
     assert "allow_existing_run=EX42_STAGE_ZERO_RESUME_SAME_RUN" in text
     assert "EX-42 stage-zero output path appeared after CPU preflight" not in text
 
 
 def test_resume_terrain_restore_precedes_the_real_reset_and_root_readback_follows_load():
     text = (ROOT / "foothold_s2/scripts/train_start.py").read_text(encoding="utf-8")
+    local_init = text.index("ex42_stage_zero_root_xy_readback = None", text.index("def main("))
+    checkpoint_load = text.index(
+        "ex42_resume_saved = torch.load(\n                EX42_STAGE_ZERO_RESUME", local_init)
     restore = text.index("terrain_restore = restore_stage_zero_resume_terrain_before_reset(")
     reset = text.index("env.reset()", restore)
     load = text.index("runner.load(EX42_STAGE_ZERO_RESUME, map_location=\"cpu\")", reset)
     root_readback = text.index("build_stage_zero_resume_root_xy_readback(", load)
     learn = text.index("runner.learn(", root_readback)
-    assert restore < reset < load < root_readback < learn
+    assert local_init < checkpoint_load < restore < reset < load < root_readback < learn
+    assert "restore_stage_zero_resume_terrain_before_reset(\n                env, ex42_resume_saved)" in text
+    assert "terrain_restore = restore_stage_zero_resume_terrain_before_reset(\n                env, EX42_STAGE_ZERO_CHECKPOINT)" not in text
     assert "EX42_SELF_RESUME_ROOT_XY_READBACK" in text
 
 

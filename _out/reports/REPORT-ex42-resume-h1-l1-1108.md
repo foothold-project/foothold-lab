@@ -22,8 +22,10 @@ CPU 반례는 잘못된 기존 plan SHA를 builder가 덮어써 통과시키려�
 
 ## 확인 결과와 미확인
 
+- analyst 재감사 지적을 반영했다. reset 전 원점 복원에는 부모 model_6000 대신 self-resume 대상 checkpoint(model_350)를 로드해 전달한다. root XY 결과 변수는 `main()`에서 기본 `None`으로 초기화해 새 stage-zero 시작 경로에서도 manifest 작성이 정의되지 않은 지역 변수에 접근하지 않는다.
 - EX-42 전체 CPU 시험: `118 passed, 1 skipped in 27.55s`.
+- 재감사 수정 후 EX-42 전체 CPU 시험: `118 passed, 1 skipped in 23.51s`.
 - `compileall` 통과, `git diff --check` 통과.
 - pyflakes에서 이번 변경으로 추가된 미정의 이름은 없었다. 기존 `train_start.py`의 unused import 3건과 중복 `production_launch_allowed` 키 2건은 남아 있다.
-- GPU 및 Kit 실행은 하지 않았다. analyst 재감사에서 막음 0을 확인한 뒤 lead가 GPU0 대기열에 올릴 5 update smoke가 필요하다. smoke 영수증에는 첫 rollout 전 `EX42_SELF_RESUME_ROOT_XY_READBACK`의 `env_count=3072`, `outside_reset_bounds_count=0`, 거리 요약이 있어야 한다.
+- GPU 및 Kit 실행은 아직 하지 않았다. 새 수정 HEAD를 analyst가 재감사하는 동안 lead 승인으로 GPU0 5 update smoke를 준비한다. smoke 영수증에는 첫 rollout 전 `EX42_SELF_RESUME_ROOT_XY_READBACK`의 `env_count=3072`, `outside_reset_bounds_count=0`, 거리 요약이 있어야 한다.
 - 기존 학습 run과 실행 중인 저장본은 읽기만 했다. 이 커밋은 재개 코드를 바꾸며, 실제 환경에서 root 좌표가 저장된 타일에 맞는다는 Kit 증거는 아직 없다.
