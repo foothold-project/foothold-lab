@@ -330,3 +330,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08 10:3x	lead	W65 인계 8d447a16(CPU 20 passed · 양성/음성 preflight) 확인 · runner 에 push → 고정 checkout → GPU0 Kit 예행 50 회(m12050 저장 · 되읽기) → 통과 시 GPU1 본 학습 1000 회 지시. lead 결정(M90 기준)	M90
 2026-11-08 10:5x	lead	W65: runner 가 GPU0 · 50 회 예행을 시작 계약(cuda:1 · 1000 고정) 때문에 거절 · 새 예행 프로필 대신 승인 경로 그대로 GPU1 본 학습으로 띄우고 첫 몇 분 · m12050 저장 · 되읽기로 예행을 대신하기로 lead 가 정함(M90). 실패하면 그 프로세스만 멈춤	M90
 2026-11-08 11:3x	lead	W65: analyst 가 Kit 전에 결함 2 곳 더 CPU 재현(명령 칸 5 vs 13 · W86Runtime json). runner 에 전달 · analyst 저장 경로 점검(11:50) 까지 모아 한 번에 고친 뒤 재기동으로 정함(한 줄씩 띄우고 죽는 것 반복 금지)	I45 I46
+2026-11-08 11:4x	lead	W65: analyst 점검 d73d1aca 로 Kit 전 막음 3(H1~H3) · 부모 조건 불일치 2(H4 lin_vel_z −2 대 0 · H5 밀기 분기) · model_50 회차 off-by-one 확인. 모두 고친 뒤 analyst 재점검 막음 0 이면 재기동으로 정함. 부모 조건과 다르게 돌았으면 0 단계 결과를 EX-41 과 이어 볼 수 없었음	I45 I46
