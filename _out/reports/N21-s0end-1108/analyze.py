@@ -217,7 +217,7 @@ def run(out, scratch):
            'parent_recheck':{'known_answers':parent['known_answer_tests'],'npz_count':parent['npz_count'],
                             'all_seed_trajectory_pairs_different':all(not x['vx_equal'] for x in parent['array_seed_checks'])}}
     out.mkdir(parents=True,exist_ok=True)
-    (out/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
+    (out/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8',newline='\n')
     for name,rows in [('cells',cells),('comparison',comparisons),('all_axis_components',all_components),
                       ('reach_survival',reaches),('dr_gaps',gaps),('target18',targets),('protocol',protocol)]:
         old.csvout(out/(name+'.csv'),rows)

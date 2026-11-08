@@ -144,14 +144,14 @@ def main():
     for terrain in T: direction(terrain,['fwd1.0'],['off','on'],['probe_prop_only'],-1)
     text='\n'.join(lines)
     assert '\u2014' not in text
-    OUT.write_text(text,encoding='utf-8')
+    OUT.write_text(text,encoding='utf-8',newline='\n')
     src=Path('D:/mai-wt/foothold-lab/lead-worklist-1103/inbox/jay/20261104-ex41-restart/decisions.tsv')
     selected=[(n,x) for n,x in enumerate(src.read_text(encoding='utf-8-sig').splitlines(),1) if '20:2x' in x or '20:3x' in x]
     selected=[(n,x) for n,x in selected if 'm13000' in x]
-    (HERE/'lead_context.txt').write_text('Source: '+str(src)+'\nSHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n'+'\n'.join(str(n)+': '+x for n,x in selected)+'\n',encoding='utf-8')
+    (HERE/'lead_context.txt').write_text('Source: '+str(src)+'\nSHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n'+'\n'.join(str(n)+': '+x for n,x in selected)+'\n',encoding='utf-8',newline='\n')
     assert len(selected)==2,selected
     files=[p for p in HERE.iterdir() if p.is_file() and p.name!='SHA256SUMS']+[OUT]
-    (HERE/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(HERE.parent).as_posix()+'\n' for p in sorted(files)),encoding='utf-8')
+    (HERE/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(HERE.parent).as_posix()+'\n' for p in sorted(files)),encoding='utf-8',newline='\n')
     print(json.dumps({'report':str(OUT),'lines':len(lines),'primary_error_rows':len(errors),'survival_rows':len(alive),'prose_direction_assertions':'PASS'},ensure_ascii=False))
 
 
