@@ -23,7 +23,7 @@ from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization
 STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
 STAGE_ZERO_UPDATES = 1000
 STAGE_ZERO_NUM_ENVS = 3072
-STAGE_ZERO_DEVICE = "cuda:1"
+STAGE_ZERO_DEVICE = "cuda:0"
 
 
 def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str | Path,
@@ -46,10 +46,8 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
         raise ValueError("EX-42 bounded resume smoke requires self-resume")
     if task != STAGE_ZERO_TASK_ID:
         raise ValueError("EX-42 stage-zero task differs from the approved task")
-    valid_device = (device == STAGE_ZERO_DEVICE
-                    or (resume_smoke and device == "cuda:0"))
-    if not valid_device or headless is not True or distributed is not False:
-        raise ValueError("EX-42 stage zero requires headless single-process cuda:1; only bounded resume smoke may use cuda:0")
+    if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
+        raise ValueError("EX-42 stage zero requires headless single-process cuda:0 for fresh and resume runs")
     if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
         raise ValueError("EX-42 stage zero is bounded to exactly 1000 updates and 3072 environments")
     if map_input not in (None, "reconstruction") or force_gt is not False:

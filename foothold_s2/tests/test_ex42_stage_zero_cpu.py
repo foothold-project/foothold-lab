@@ -45,11 +45,12 @@ def test_w65_cli_requires_explicit_scope_and_rejects_unbounded_variants(tmp_path
     args = dict(
         plan_path=TABLE, approvals_path=APPROVALS,
         parent_manifest_path=tmp_path / "manifest.json", log_dir=tmp_path / "new-run",
-        task=entry.STAGE_ZERO_TASK_ID, device="cuda:1", headless=True, distributed=False,
+        task=entry.STAGE_ZERO_TASK_ID, device="cuda:0", headless=True, distributed=False,
         max_iterations=1000, num_envs=3072, map_input="reconstruction", force_gt=False,
         approved_switch=True,
     )
     loaded_plan, loaded_ckpt, parent, request = entry.validate_ex42_stage_zero_cli(**args)
+    assert entry.STAGE_ZERO_DEVICE == "cuda:0"
     assert loaded_plan.sha256 == plan.sha256
     assert loaded_ckpt is checkpoint
     assert parent["parent_cumulative_update"] == 12000
@@ -60,7 +61,7 @@ def test_w65_cli_requires_explicit_scope_and_rejects_unbounded_variants(tmp_path
     for change, message in (
         ({"approved_switch": False}, "explicit scoped approval"),
         ({"max_iterations": 1001}, "bounded to exactly 1000"),
-        ({"device": "cuda:0"}, "cuda:1"),
+        ({"device": "cuda:1"}, "cuda:0"),
         ({"force_gt": True}, "without forced GT"),
         ({"resume_from": "model_6000.pt"}, "not self-resume"),
     ):
@@ -85,7 +86,9 @@ def test_w65_cli_requires_explicit_scope_and_rejects_unbounded_variants(tmp_path
             "resume_from": "C:/other/model_350.pt", "self_resume": True,
         }))
     for change, message in (
-        ({"device": "cuda:0", "resume_from": "model_350.pt", "self_resume": True}, "cuda:1"),
+        ({"device": "cuda:1", "resume_from": "model_350.pt", "self_resume": True}, "cuda:0"),
+        ({"device": "cuda:1", "resume_from": "model_350.pt", "self_resume": True,
+          "resume_smoke": True, "resume_updates": 5}, "cuda:0"),
         ({"resume_from": "model_350.pt", "self_resume": True,
           "resume_smoke": True, "resume_updates": 6}, "one through five"),
     ):
