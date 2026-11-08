@@ -101,3 +101,9 @@ lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_ch
 - 무엇: lead-worklist-1103 이 이름 없는 HEAD(detached)라 11/08 01:xx 이후 decisions · WORKLIST · 사고 · 실패 로그 커밋 51 개가 로컬에만 있었음. 원격 feature/verify-v2-mvp-jay 는 e845bbe2 에 멈춤. 다른 세션 · Linux 로 옮길 때 오늘 기록이 통째로 빠질 뻔함.
 - 원인: 커밋 뒤 push 확인을 하지 않음.
 - 조치: 19:2x fast-forward push(e845bbe2..3df2f41c, 뒤처진 커밋 0 확인). 앞으로 기록 커밋 뒤 origin..HEAD 0 을 본다.
+
+## I51 (11/08 18:55~19:2x) 어려운 지형 평가 5 판이 오류를 내고도 「끝 · rc 0」
+
+- 무엇: lead 가 건 map64 --fixed-level 3/4/5 (1373~1377) 가 extended 명령 묶음의 연속 명령 단계에서 `RuntimeError: sequence terrain assignment changed`(eval_map_modes.py:593) 로 끝남. Isaac 이 예외 뒤에도 0 을 돌려줘 대기열은 「끝 0」. map_modes.json 없음 · eval_gt 일부 NPZ 만.
+- 원인: --fixed-level 과 extended 묶음의 연속 명령 지형 검사가 맞지 않음(N21 은 n21 묶음이라 통과). 띄우기 전 짧은 실제 시험 없이 6 판을 한꺼번에 검(M14 · M90 과 같은 종류).
+- 조치: n21 묶음(대표 8 명령 × 지도 3)으로 다시 걸음(1379~1384) · 첫 판 끝에서 map_modes.json · Traceback 0 확인 감시 · 0 단계 끝 등록기도 같은 수정(들여쓰기 오류 한 번 → 고쳐 재기동). 1378 은 같은 이유로 실패할 것.
