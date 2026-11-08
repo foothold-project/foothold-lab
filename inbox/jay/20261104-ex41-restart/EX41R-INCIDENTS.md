@@ -107,3 +107,9 @@ lead 점검 cron(7 · 27 · 47 분)은 매 회차 `python _out/tools/ex41/ops_ch
 - 무엇: lead 가 건 map64 --fixed-level 3/4/5 (1373~1377) 가 extended 명령 묶음의 연속 명령 단계에서 `RuntimeError: sequence terrain assignment changed`(eval_map_modes.py:593) 로 끝남. Isaac 이 예외 뒤에도 0 을 돌려줘 대기열은 「끝 0」. map_modes.json 없음 · eval_gt 일부 NPZ 만.
 - 원인: --fixed-level 과 extended 묶음의 연속 명령 지형 검사가 맞지 않음(N21 은 n21 묶음이라 통과). 띄우기 전 짧은 실제 시험 없이 6 판을 한꺼번에 검(M14 · M90 과 같은 종류).
 - 조치: n21 묶음(대표 8 명령 × 지도 3)으로 다시 걸음(1379~1384) · 첫 판 끝에서 map_modes.json · Traceback 0 확인 감시 · 0 단계 끝 등록기도 같은 수정(들여쓰기 오류 한 번 → 고쳐 재기동). 1378 은 같은 이유로 실패할 것.
+
+## I52 (11/08 20:0x) lead 의 실제 사이트 빌드를 timeout 900 이 중간에 끊음
+
+- 무엇: fl-s2 에서 build.py --skip-secure 를 timeout 900 으로 감싸 돌려 [1.898] 단계에서 rc 124 로 끊김. 그 사이 foothold-site 작업 사본에 생성 파일 259 개가 바뀐 채 남음(커밋 · push 없음).
+- 원인: 빌드 시간을 재지 않고 상한을 짐작으로 둠(super2 재현 빌드 시간 미확인).
+- 조치: 상한 없이 다시 실행(20:16). 끝까지 돌고 [3.x] · [4] 관문 · 사라지는 파일 0 을 확인한 뒤에만 커밋 · push.
