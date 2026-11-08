@@ -1,0 +1,114 @@
+[
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\eval\\start_sheet.py",
+    "sha256": "15e830bda3fc5ed7f106074d415b30e6ca5334887a9f1b011d980ffce018d9ec",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\terrains\\sparse_terrains.py",
+    "sha256": "5f296cf750609b83d99c46d6f730716d2f58532f436fae0dc3b776be7737b522",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\terrains\\rough_go2_cfg.py",
+    "sha256": "cb2541ccc1148e128023d810bb87d8f8be56440a6d3f4c2e529a687871641610",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\sensors\\start_obs.py",
+    "sha256": "d64f8299648b4ef58c4a414750196f1a9a13024ea6ae12e682f6b00fde989731",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\models\\start_perception.py",
+    "sha256": "b756c646469beeb54ee09c9960e0e447d8592a45ad2c9b29eb43de1d3bb913f6",
+    "receipt_sha256": "b756c646469beeb54ee09c9960e0e447d8592a45ad2c9b29eb43de1d3bb913f6",
+    "receipt_match": true
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\eval\\adapters.py",
+    "sha256": "81302185a9fcd9d73f1ffb41f3811f2788e1f025258e7cb4f87fb74bc0d9b851",
+    "receipt_sha256": "81302185a9fcd9d73f1ffb41f3811f2788e1f025258e7cb4f87fb74bc0d9b851",
+    "receipt_match": true
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\eval\\video25\\record_c_layer.py",
+    "sha256": "9ee2f6bc235fe37ea734dacee9b13a844d7ed5356e5570d7a8316ba9924c1c32",
+    "receipt_sha256": "9ee2f6bc235fe37ea734dacee9b13a844d7ed5356e5570d7a8316ba9924c1c32",
+    "receipt_match": true
+  },
+  {
+    "model": "EX40_m6000",
+    "path": "D:\\mai-wt\\foothold-lab\\scripter-c76-l3-mask\\foothold_s2\\eval\\video25\\compose_25e_v2style10.py",
+    "sha256": "6218c685975d30fd17ac0cd75f37828b0356b394e80cc3f89c2be38aa9baf6ae",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\eval\\start_sheet.py",
+    "sha256": "15e830bda3fc5ed7f106074d415b30e6ca5334887a9f1b011d980ffce018d9ec",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\terrains\\sparse_terrains.py",
+    "sha256": "5f296cf750609b83d99c46d6f730716d2f58532f436fae0dc3b776be7737b522",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\terrains\\rough_go2_cfg.py",
+    "sha256": "cb2541ccc1148e128023d810bb87d8f8be56440a6d3f4c2e529a687871641610",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\sensors\\start_obs.py",
+    "sha256": "d64f8299648b4ef58c4a414750196f1a9a13024ea6ae12e682f6b00fde989731",
+    "receipt_sha256": null,
+    "receipt_match": null
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\models\\start_perception.py",
+    "sha256": "b756c646469beeb54ee09c9960e0e447d8592a45ad2c9b29eb43de1d3bb913f6",
+    "receipt_sha256": "b756c646469beeb54ee09c9960e0e447d8592a45ad2c9b29eb43de1d3bb913f6",
+    "receipt_match": true
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\eval\\adapters.py",
+    "sha256": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+    "receipt_sha256": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+    "receipt_match": true
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\eval\\video25\\record_c_layer.py",
+    "sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "receipt_sha256": "bd97d15e9593e857086fa63bfcf839bb445d030d35a326fcfab30c8eca4e2219",
+    "receipt_match": true
+  },
+  {
+    "model": "EX41_m12000",
+    "path": "D:\\mai-wt\\foothold-lab\\canon216-m12000-gpu0\\foothold_s2\\eval\\video25\\compose_25e_v2style10.py",
+    "sha256": "6218c685975d30fd17ac0cd75f37828b0356b394e80cc3f89c2be38aa9baf6ae",
+    "receipt_sha256": null,
+    "receipt_match": null
+  }
+]
