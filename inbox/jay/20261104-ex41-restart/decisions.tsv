@@ -339,3 +339,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08 13:2x	lead	W65 LR: 부모 lr 복원 확인(update 1 5.77e-4) · 첫 하한 update 25 · runner 비교표가 정본 아닌 11/03 EX-41 을 써서 「EX-41 model_50 도 1e-5」 로 잘못 결론 → 정본 model_50 은 1.14e-4(lead CPU) · 정정 요청. 판단: 하한 도달은 정본보다 빠름 · m100 · m250 에서 다시 봄	-
 2026-11-08 13:3x	lead	GPU0 N21 재측정 8 판 끝(13:3x) · 다음 GPU0 일은 m12250 P1 경계 평가(14:35 무렵, ex42_chain 자동 등록) · 그 사이 약 1 시간 빔: 계획 안에서 GPU0 에 걸 일 없음(정본 216 남은 결측 3 칸은 마스크 기록 보강 전 재촬영 안 함) · 이유를 적고 둠	-
 2026-11-08 13:4x	lead	W65 P1: 체인이 250 경계 평가를 gpu=1 · 해석기 python(isaac311 아님) · 장치 없음으로 등록함(runner CPU 확인). 학습 유지 · runner 가 14:25 까지 올바른 GPU0 평가 항목과 체인 행 막는 감시기를 준비(lead 결정). 원인: 체인 시험이 복사 큐 · 가짜 배분기로만 돌았음(I45 · I46 과 같은 종류)	I47
+2026-11-08 13:5x	lead	W65 P1: 체인 P1 행(gpu=1 · base python)을 lead 감시기 hold_ex42_p1.py 가 needs_approval=true 로 막음(복사 큐 시험 통과 · 학습 PID 끝까지) · 경계 점수는 저장본을 나중에 GPU0 에서 채점 · runner 가 EX-41 정본과 같은 채점기 명령 준비(15:30)	I47
