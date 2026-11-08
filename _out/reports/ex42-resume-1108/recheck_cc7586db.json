@@ -1,0 +1,130 @@
+{
+  "head": "cc7586db9f58b4bf43ef2ce5658e40bede3e7003",
+  "scope": "CPU, actual checkpoint/caller AST/installed reset event; no Kit or training",
+  "checkpoint_sha256": "7c01f11657b2d66b5fe3b5324f889aea5749c0cebb00333472fb6322342ca75c",
+  "parent_sha256": "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613",
+  "fixture_source_sha256": "b5b1342f153650bedda9f7caeee5e2fbf68bd0b27d4fec78fda5c82820e99fe2",
+  "tests": [
+    {
+      "test": "actual_cli_checkpoint_source",
+      "returned_iter": 6000,
+      "resume_iter": 350,
+      "level_differences": 1100,
+      "type_differences": 0
+    },
+    {
+      "test": "H1_actual_caller_m350_before_installed_reset",
+      "source_iteration": 350,
+      "caller_line": 945,
+      "state": "root_xy_checked_against_restored_env_origins",
+      "env_count": 3072,
+      "distance_xy_m": {
+        "min": 0.0,
+        "mean": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "reset_pose_bounds_xy_m": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ]
+      },
+      "outside_reset_bounds_count": 0,
+      "outside_reset_bounds_env_ids_first_16": []
+    },
+    {
+      "test": "H1_old_parent_argument_mutation_detected",
+      "state": "root_xy_checked_against_restored_env_origins",
+      "env_count": 3072,
+      "distance_xy_m": {
+        "min": 0.0,
+        "mean": 4.315104007720947,
+        "p95": 16.0,
+        "max": 32.0
+      },
+      "reset_pose_bounds_xy_m": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ]
+      },
+      "outside_reset_bounds_count": 1100,
+      "outside_reset_bounds_env_ids_first_16": [
+        0,
+        2,
+        4,
+        6,
+        12,
+        15,
+        18,
+        38,
+        39,
+        44,
+        48,
+        50,
+        51,
+        60,
+        63,
+        66
+      ]
+    },
+    {
+      "test": "H1_post_reset_validation_reuses_loaded_state",
+      "line": 1038,
+      "same_object": true
+    },
+    {
+      "test": "H2_fresh_start_manifest_local_scope",
+      "init_line": 745,
+      "mode_line": 1281,
+      "readback": null,
+      "exception": null
+    },
+    {
+      "test": "H2_resume_manifest_local_scope",
+      "readback_env_count": 3072,
+      "exception": null
+    },
+    {
+      "test": "H2_removed_initializer_mutation_detected",
+      "exception": "UnboundLocalError",
+      "message": "cannot access local variable 'ex42_stage_zero_root_xy_readback' where it is not associated with a value"
+    },
+    {
+      "test": "all_manifest_readback_consumers_use_initialized_local",
+      "fields": [
+        {
+          "key": "resume_root_xy_readback",
+          "line": 1284
+        },
+        {
+          "key": "root_xy_readback",
+          "line": 1304
+        },
+        {
+          "key": "root_xy_readback",
+          "line": 1327
+        }
+      ]
+    }
+  ],
+  "source_hashes": {
+    "foothold_s2\\scripts\\train_start.py": "c4b923d026453d155831a5c3f3d3874ea4bef8fec26b89f725778203e6caf7a7",
+    "foothold_s2\\scripts\\ex42_training_entry.py": "e5ffa4451423e1f8c0f1788c18c6b33019edb816a455863dc5e1466c28b0c3df",
+    "foothold_s2\\ex42_chain.py": "7b09bac9363eb726665b514e14a775e4323b623758bb15e9233dbc6ade58c438",
+    "foothold_s2\\runners\\start_runner.py": "ab717adb4b6024a8627647ca134dfb22649efabdfc794077c6491d65d767dc57"
+  },
+  "new_blockers_in_changed_paths": 0,
+  "H1": "closed_in_CPU_consumer_replay",
+  "H2": "closed_in_CPU_local_scope_replay",
+  "Kit_first_rollout": "not_measured_by_this_audit"
+}
