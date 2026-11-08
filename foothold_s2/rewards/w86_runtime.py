@@ -153,15 +153,22 @@ class PhysicalSource:
         hits=self.cast(safe_starts,directions,self.mesh,max_dist=50.)[0][...,2]
         ground=torch.where(finite_rays,hits,torch.full_like(hits,float('inf')))
         forces=self.sensor.data.net_forces_w[:,self.force_ids]
+        command_slot_names=tuple(getattr(term,'slot_names',()))
+        command_slot=getattr(term,'slot_current',None)
+        command_is_flag=getattr(term,'is_flag_env',None)
         physical_valid=torch.ones(env.num_envs,device=env.device,dtype=torch.bool)
         for x in (d.root_state_w,d.body_state_w,d.joint_pos,d.joint_vel,d.applied_torque,
                   self.sensor.data.net_forces_w,env.action_manager.action,command):
             physical_valid &= torch.isfinite(x).flatten(1).all(-1)
-        return dict(sole_z=sole,velocity_xy=d.body_lin_vel_w[:,f,:2],ground_z=ground,
+        result=dict(sole_z=sole,velocity_xy=d.body_lin_vel_w[:,f,:2],ground_z=ground,
             forces=forces,command=command,heading=term.heading,yaw=d.root_ang_vel_b[:,2],
             joint_pos=d.joint_pos,torque=d.applied_torque,effort_limits=actuator_effort_limits(self.robot),
             joint_limits=d.soft_joint_pos_limits,physical_valid=physical_valid,knee_ids=self.knees,
             all_link_names=self.link_names,all_forces=self.sensor.data.net_forces_w)
+        if command_slot is not None and command_is_flag is not None and command_slot_names:
+            result.update(command_slot_names=command_slot_names,command_slot=command_slot,
+                          command_is_flag=command_is_flag)
+        return result
 
 
 def _safe(x):
@@ -180,6 +187,7 @@ class W86Runtime:
         self.air_time=torch.zeros(n,4,device=dev); self.peak=torch.zeros_like(self.air_time)
         self.cache=None; self.key=None; self.count=0; self.sums={}; self.quarantine_count=0
         self.link_names=None; self.link_peak=None
+        self.command_slot_names=None
 
     def mark(self,bad,reason):
         bad=bad.to(self.pending.device).bool()
@@ -275,6 +283,26 @@ class W86Runtime:
         self._sum('knee_abs_torque_sum_nm',torch.where(~bad[:,None],_safe(d['torque'])[:,knee_ids].abs(),0.))
         self._sum('knee_effort_limit_sum_nm',torch.where(~bad[:,None],effort,0.))
         self._sum('knee_detail_valid_frames',(~bad[:,None]).expand(-1,4))
+        if all(key in d for key in ('command_slot_names','command_slot','command_is_flag')):
+            names=tuple(d['command_slot_names'])
+            slots=d['command_slot']; flags=d['command_is_flag']
+            if (not names or len(set(names))!=len(names) or any(not isinstance(name,str) or not name for name in names)
+                    or slots.shape!=(n,) or flags.shape!=(n,)):
+                raise ValueError('W86 command slot labels/shape differ')
+            if self.command_slot_names not in (None,names):
+                raise ValueError('W86 command slot order changed')
+            self.command_slot_names=names
+            slots=slots.to(device=bad.device,dtype=torch.long)
+            flags=flags.to(device=bad.device,dtype=torch.bool)
+            valid_slot=(slots>=0)&(slots<len(names))&~flags
+            group=torch.where(flags,torch.full_like(slots,len(names)),
+                              torch.where(valid_slot,slots,torch.full_like(slots,len(names)+1)))
+            contact_valid=contact&~bad[:,None]
+            force_n=torch.linalg.vector_norm(_safe(d['forces']).double(),dim=-1)
+            for index in range(len(names)+2):
+                selected=(group==index)[:,None]
+                self._sum(f'command_force_sum/{index}',torch.where(contact_valid&selected,force_n,0.))
+                self._sum(f'command_contact_frames/{index}',(contact_valid&selected).long())
         if 'all_forces' in d:
             force=torch.linalg.vector_norm(_safe(d['all_forces']).double(),dim=-1)
             valid=(~bad[:,None]).expand_as(force)
@@ -298,8 +326,32 @@ class W86Runtime:
         row={'format':'ex41-w86-metrics/1','iteration':int(iteration),'env_frames':self.count,
              'control_dt_s':float(self.env.step_dt),
              'feet_order':list(FEET),'knee_order':list(KNEES),'feet':{},'terms':{},'quarantine_env_count':self.quarantine_count}
+        row['foot_contact_force_by_command']={'status':'unavailable',
+            'reason':'source_has_no_command_slot_labels'}
+        if self.command_slot_names is not None:
+            groups=(*self.command_slot_names,'flag','unclassified')
+            by_command={}
+            for index,name in enumerate(groups):
+                force_sum=self.sums.get(f'command_force_sum/{index}',torch.zeros(4,dtype=torch.float64))
+                frames=self.sums.get(f'command_contact_frames/{index}',torch.zeros(4,dtype=torch.int64))
+                foot_rows={}
+                for foot_index,foot in enumerate(FEET):
+                    denominator=int(frames[foot_index])
+                    total=float(force_sum[foot_index])
+                    foot_rows[foot]={'contact_frames':denominator,
+                        'contact_time_s':denominator*float(self.env.step_dt),
+                        'force_sum_n':total,
+                        'mean_force_n':total/denominator if denominator else None}
+                by_command[name]={'feet':foot_rows}
+            row['foot_contact_force_by_command']={
+                'status':'measured','source':'contact_forces.net_forces_w',
+                'group_by':'MixedVelocityCommand.slot_current; flag and invalid slots separate',
+                'contact_threshold_n':1.0,
+                'mean_definition':'vector-norm force averaged only over frames whose same foot exceeds the contact threshold',
+                'record_only':True,'feet_order':list(FEET),'commands':by_command}
         for name,value in self.sums.items():
             if name.startswith('links/'):continue
+            if name.startswith(('command_force_sum/','command_contact_frames/')):continue
             if name.startswith('term/'):
                 row['terms'][name[5:]]={'sum':float(value.cpu()),'denominator':self.count,
                                        'mean':float(value.cpu())/self.count if self.count else None}
@@ -342,6 +394,7 @@ class W86Runtime:
     def state_dict(self):
         return dict(format='ex41-w86/1',count=self.count,quarantine_count=self.quarantine_count,
                     sums={k:v.cpu().clone() for k,v in self.sums.items()},
+                    command_slot_names=self.command_slot_names,
                     link_names=self.link_names,link_peak=None if self.link_peak is None else self.link_peak.cpu().clone(),
                     physical_episode_reset_on_resume=True)
 
@@ -349,6 +402,11 @@ class W86Runtime:
         if state.get('format')!='ex41-w86/1': raise ValueError('W86 resume schema differs')
         self.count=int(state['count']); self.quarantine_count=int(state['quarantine_count'])
         self.sums={k:v.to(self.pending.device).clone() for k,v in state['sums'].items()}
+        saved_commands=state.get('command_slot_names')
+        self.command_slot_names=None if saved_commands is None else tuple(saved_commands)
+        if self.command_slot_names is not None and (not self.command_slot_names
+                or len(set(self.command_slot_names))!=len(self.command_slot_names)):
+            raise ValueError('W86 saved command slot names invalid')
         self.link_names=None if state.get('link_names') is None else tuple(state['link_names'])
         self.link_peak=state.get('link_peak')
         if self.link_peak is not None:self.link_peak=self.link_peak.to(self.pending.device).clone()

@@ -166,6 +166,7 @@ class EX42TrainingChain:
             expected_score_iteration=boundary["expected_score_iteration"],
             observed_score_iteration=boundary["observed_score_iteration"],
             checkpoint_sha256=boundary["checkpoint_sha256"],
+            runner=runner,
         )
         return result
 
@@ -300,7 +301,7 @@ class EX42TrainingChain:
     def transition(self, env: Any, next_stage_id: str, *, boundary_iteration: int,
                    expected_score_iteration: int,
                    observed_score_iteration: int | None,
-                   checkpoint_sha256: str) -> dict[str, Any]:
+                   checkpoint_sha256: str, runner: Any = None) -> dict[str, Any]:
         """Apply only the next approved stage and keep missing scores as gaps."""
         if len(checkpoint_sha256) != 64 or any(c not in "0123456789abcdef" for c in checkpoint_sha256):
             raise ValueError("EX-42 boundary checkpoint SHA is required")
@@ -308,6 +309,7 @@ class EX42TrainingChain:
             env, next_stage_id, boundary_iteration=boundary_iteration,
             expected_score_iteration=expected_score_iteration,
             observed_score_iteration=observed_score_iteration,
+            runner=runner,
         )
         row = {**self.identity, "checkpoint_sha256": checkpoint_sha256,
                "score_checkpoint_iteration": expected_score_iteration, **row}

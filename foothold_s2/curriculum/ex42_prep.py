@@ -175,6 +175,19 @@ class EX42Plan:
             expected_floors = {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}
             if row.get("terrain", {}).get("floors", {}).get("global_command_floor") != expected_floors:
                 raise ValueError(f"EX-42 stage global command floors differ from D176: {row.get('id')}")
+            if "critic_mirror" in row and (row.get("id") != "E1" or row["critic_mirror"] is not True):
+                raise ValueError("EX-42 critic mirror may be enabled only at E1")
+        if next(row for row in stages if row.get("id") == "E1").get("critic_mirror") is not True:
+            raise ValueError("EX-42 E1 must enable the approved D174 critic mirror")
+        if stage_zero.get("critic_mirror", False) is not False:
+            raise ValueError("EX-42 stage zero critic mirror must remain off")
+        mirror_approval = (doc.get("approval_file") and
+                           _read_yaml(plan_path.parent / doc["approval_file"]).get("fields", {}).get("critic_mirror"))
+        if (not isinstance(mirror_approval, dict) or mirror_approval.get("approved") is not True
+                or mirror_approval.get("decision_id") != "D174"
+                or mirror_approval.get("choices") != [True]
+                or mirror_approval.get("boundaries") != ["E1"]):
+            raise ValueError("EX-42 E1 critic mirror requires its explicit D174 approval")
         evaluation = doc.get("evaluation", {})
         if (evaluation.get("judge_cells") != 26 or evaluation.get("record_only_cells") != 13
                 or evaluation.get("total_cells") != 39
@@ -214,7 +227,8 @@ class EX42Plan:
                               "maximum_updates": zero["maximum_updates"],
                               "extension_updates": zero["extension_updates"]},
                  "shares": zero["shares"], "ranges": zero["ranges"],
-                 "force_gt": zero["force_gt"], "terrain": zero["terrain"]}
+                 "force_gt": zero["force_gt"], "terrain": zero["terrain"],
+                 "critic_mirror": False}
         return (first, *tuple(self.document["stages"]))
 
     @property

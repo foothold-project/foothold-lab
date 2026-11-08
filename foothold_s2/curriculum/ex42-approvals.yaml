@@ -7,7 +7,12 @@ requirements:
   - explicit_lead_approval
   - resolved_assumptions
   - terrain_manifest_with_measurements
-fields: {}
+fields:
+  critic_mirror:
+    approved: true
+    decision_id: D174
+    choices: [true]
+    boundaries: [E1]
 stage_zero_authorization:
   approved: true
   decision_id: lead-w65-ex42-stage-zero-20261108

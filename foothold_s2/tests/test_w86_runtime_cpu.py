@@ -2,6 +2,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import math
+import json
 import pytest
 import torch
 from foothold_s2.rewards import w86_runtime as wr
@@ -82,6 +83,36 @@ def test_complete_swing_cycles_ignore_reset_truncation(tmp_path):
     assert a.flush(5)['feet']['complete_swing_count']==[0]*4
 
 
+def test_contact_force_is_averaged_per_foot_and_command_only_while_in_contact(tmp_path):
+    env=SimpleNamespace(num_envs=3,device='cpu',step_dt=.02,common_step_counter=1)
+    d=sample(3)
+    d['command_slot_names']=('walk','stand')
+    d['command_slot']=torch.tensor([0,0,1])
+    d['command_is_flag']=torch.zeros(3,dtype=torch.bool)
+    # Rows are envs, columns are feet. Exactly 1 N is outside the >1 N contact rule.
+    d['forces'][:,:,2]=torch.tensor([[2.,0.,3.,5.],[4.,6.,0.,1.],[100.,2.,2.,0.]])
+    recorder=wr.W86Runtime(env,tmp_path,source=lambda:d)
+    recorder.refresh()
+    restored=wr.W86Runtime(env,tmp_path/'restored',source=lambda:d)
+    restored.load_state_dict(recorder.state_dict())
+    row=recorder.flush(1)
+    metric=row['foot_contact_force_by_command']
+    assert metric['status']=='measured'
+    assert metric['source']=='contact_forces.net_forces_w'
+    walk=metric['commands']['walk']['feet']
+    assert walk['FL_foot']=={'contact_frames':2,'contact_time_s':pytest.approx(.04),
+                             'force_sum_n':6.0,'mean_force_n':3.0}
+    assert walk['FR_foot']['contact_frames']==1 and walk['FR_foot']['mean_force_n']==6.0
+    assert walk['RL_foot']['contact_frames']==1 and walk['RL_foot']['mean_force_n']==3.0
+    assert walk['RR_foot']['contact_frames']==1 and walk['RR_foot']['mean_force_n']==5.0
+    stand=metric['commands']['stand']['feet']
+    assert stand['FL_foot']['mean_force_n']==100.0
+    assert stand['RR_foot']['contact_frames']==0 and stand['RR_foot']['mean_force_n'] is None
+    assert restored.flush(1)['foot_contact_force_by_command']==metric
+    saved=json.loads((tmp_path/'ex41_w86.jsonl').read_text(encoding='utf-8').splitlines()[0])
+    assert saved['foot_contact_force_by_command']==metric
+
+
 def test_quarantine_only_bad_rows_and_transition_std(tmp_path):
     env=SimpleNamespace(num_envs=3,device='cpu',step_dt=.02,common_step_counter=0)
     a=wr.W86Runtime(env,tmp_path,source=lambda:sample()); env._ex41_w86=a
@@ -115,9 +146,11 @@ def test_physical_source_ray_geometry_rotation_and_names():
         body_state_w=torch.zeros(1,4,13),joint_pos=torch.zeros(1,12),joint_vel=torch.zeros(1,12),
         applied_torque=torch.zeros(1,12),body_lin_vel_w=torch.zeros(1,4,3),root_ang_vel_b=torch.zeros(1,3),
         joint_effort_limits=torch.ones(1,12)*1e9,soft_joint_pos_limits=torch.tensor([[[-1.,1.]]*12]))
+    term=SimpleNamespace(heading=torch.zeros(1,dtype=torch.bool),slot_names=('forward',),
+                         slot_current=torch.tensor([0]),is_flag_env=torch.zeros(1,dtype=torch.bool))
     env=SimpleNamespace(num_envs=1,device='cpu',action_manager=SimpleNamespace(action=torch.zeros(1,12)),
         command_manager=SimpleNamespace(get_command=lambda n:torch.tensor([[.5,0.,0.]]),
-                                        get_term=lambda n:SimpleNamespace(heading=torch.zeros(1,dtype=torch.bool))))
+                                        get_term=lambda n:term))
     s=wr.PhysicalSource.__new__(wr.PhysicalSource); s.env=env; s.robot=SimpleNamespace(data=d,
         actuators={'motor':SimpleNamespace(joint_indices=slice(None),effort_limit=torch.ones(1,12)*45.43)})
     s.sensor=SimpleNamespace(data=SimpleNamespace(net_forces_w=torch.zeros(1,4,3)))
@@ -130,6 +163,8 @@ def test_physical_source_ray_geometry_rotation_and_names():
     s.cast=cast; r=s()
     torch.testing.assert_close(r['effort_limits'],torch.ones(1,12)*45.43)
     assert r['all_link_names']==wr.FEET and r['all_forces'].shape==(1,4,3)
+    assert r['command_slot_names']==('forward',) and r['command_slot'].tolist()==[0]
+    assert r['command_is_flag'].tolist()==[False]
     assert seen['starts'].shape==(1,4,3,3)
     torch.testing.assert_close(seen['starts'][0,0,1]-seen['starts'][0,0,0],torch.tensor([0.,.05,0.]),atol=1e-6,rtol=0)
     torch.testing.assert_close(r['sole_z'],torch.full((1,4),3.))

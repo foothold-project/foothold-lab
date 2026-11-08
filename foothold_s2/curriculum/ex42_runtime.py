@@ -7,7 +7,9 @@ an approved runtime schedule all exist.
 from __future__ import annotations
 
 import math
+import hashlib
 from pathlib import Path
+import subprocess
 from typing import Any
 
 import yaml
@@ -101,6 +103,7 @@ class EX42StageTransitionConsumer:
                 or len(set(self.stage_ids)) != len(self.stage_ids)):
             raise ValueError("EX-42 stage IDs are missing or duplicated")
         self.approvals_path = Path(approvals_path).resolve(strict=True)
+        self.plan = plan
         self.approval_doc = yaml.safe_load(self.approvals_path.read_text(encoding="utf-8-sig"))
         self.stage_scales, self.decision_id = read_approved_dr_schedule(self.approvals_path, self.stage_ids)
         self.stage_index = 0
@@ -115,7 +118,8 @@ class EX42StageTransitionConsumer:
 
     def transition(self, env: Any, next_stage_id: str, *, boundary_iteration: int,
                    expected_score_iteration: int,
-                   observed_score_iteration: int | None) -> dict[str, Any]:
+                   observed_score_iteration: int | None,
+                   runner: Any = None) -> dict[str, Any]:
         next_index = self.stage_index + 1
         if next_index >= len(self.stage_ids) or next_stage_id != self.stage_ids[next_index]:
             raise ValueError("EX-42 transition must advance exactly one planned stage")
@@ -131,9 +135,41 @@ class EX42StageTransitionConsumer:
             expected_score_iteration=expected_score_iteration,
             observed_score_iteration=observed_score_iteration,
         )
+        stage = self.stages[next_index]
+        mirror_enabled = stage.get("critic_mirror", False)
+        if type(mirror_enabled) is not bool:
+            raise ValueError("EX-42 stage critic mirror must be a bool")
+        mirror_receipt = {"stage_id": next_stage_id, "enabled": mirror_enabled,
+                          "decision_id": None, "applied": False}
+        setter = getattr(runner, "set_ex41_critic_mirror", None) if runner is not None else None
+        if mirror_enabled:
+            rule = {"field": "critic_mirror", "decision_id": "D174",
+                    "choices": [True], "boundaries": ["E1"]}
+            from foothold_s2.ex42_gate_checks import validate_automatic_rule
+            validate_automatic_rule(rule=rule, approval=self.approval_doc,
+                                    value=True, boundary=next_stage_id)
+            if next_stage_id != "E1" or not callable(setter):
+                raise ValueError("EX-42 E1 critic mirror needs the existing StartRunner setter")
+            commit = subprocess.check_output(
+                ["git", "-C", str(self.plan.path.parent), "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL).decode().strip()
+            proof = {"format": "foothold-ex42-critic-mirror-approval/1",
+                     "stage_id": "E1", "decision_id": "D174",
+                     "plan_path": str(self.plan.path), "plan_sha256": self.plan.sha256,
+                     "approval_path": str(self.approvals_path),
+                     "approval_sha256": hashlib.sha256(self.approvals_path.read_bytes()).hexdigest(),
+                     "config_commit": commit}
+            setter(True, approval=proof)
+            mirror_receipt.update(decision_id="D174", applied=True,
+                                  authorization={"plan_sha256": proof["plan_sha256"],
+                                                 "approval_sha256": proof["approval_sha256"],
+                                                 "config_commit": commit})
+        elif callable(setter) and getattr(runner, "ex41_critic_mirror", False) is not False:
+            setter(False, approval=None)
+            mirror_receipt["applied"] = True
         target = getattr(env, "unwrapped", env)
         target._ex42_stage_id = next_stage_id
-        target._ex42_stage_config = self.stages[next_index]
+        target._ex42_stage_config = stage
         target._ex40_dr_scale = evidence["applied_scale"]
         self.stage_index = next_index
         return {
@@ -147,6 +183,7 @@ class EX42StageTransitionConsumer:
                 "value": evidence["applied_scale"], "approval_validated": True,
                 "runtime_application": "not_implemented_preparation_only",
             },
+            "critic_mirror_receipt": mirror_receipt,
             **evidence,
         }
 

@@ -157,6 +157,7 @@ stages:
   minimum_updates: 1000
   maximum_updates: 2000
   extension_updates: 500
+  critic_mirror: true
   boundary_axes:
   - terrain_level_cap
   enabled: true

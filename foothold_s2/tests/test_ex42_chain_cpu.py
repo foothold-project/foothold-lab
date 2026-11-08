@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -66,6 +67,71 @@ def test_parent_manifest_identity_resolves_real_name_by_sha(tmp_path):
     assert start["parent"]["manifest_checkpoint_key"] == "model_6000.pt"
     assert start["parent"]["cumulative_update"] == 12000
     assert start["parent"]["checkpoint_sha256"] == chain.parent["checkpoint_sha256"]
+
+
+def test_critic_mirror_is_off_at_zero_and_enabled_only_at_e1_start(tmp_path):
+    plan=EX42Plan.load(TABLE)
+    stages=plan.runtime_stages
+    assert stages[0]["critic_mirror"] is False
+    assert next(row for row in stages if row["id"]=="E1")["critic_mirror"] is True
+    assert all(row.get("critic_mirror",False) is False for row in stages
+               if row["id"] not in ("EX42_0_T0_prime","E1"))
+    consumer=EX42Runtime.transition_consumer(plan,APPROVALS)
+    env=SimpleNamespace()
+    consumer.transition(env,"E0",boundary_iteration=1001,
+        expected_score_iteration=1000,observed_score_iteration=None)
+    calls=[]
+    runner=SimpleNamespace(ex41_critic_mirror=False)
+    def apply(enabled,approval=None):
+        calls.append((enabled,approval))
+        runner.ex41_critic_mirror=enabled
+    runner.set_ex41_critic_mirror=apply
+    result=consumer.transition(env,"E1",boundary_iteration=1251,
+        expected_score_iteration=1250,observed_score_iteration=None,runner=runner)
+    assert runner.ex41_critic_mirror is True
+    assert len(calls)==1 and calls[0][0] is True
+    assert calls[0][1]["decision_id"]=="D174"
+    assert calls[0][1]["stage_id"]=="E1"
+    assert result["critic_mirror_receipt"]["applied"] is True
+    assert result["critic_mirror_receipt"]["decision_id"]=="D174"
+    assert env._ex42_stage_config["critic_mirror"] is True
+
+
+def test_existing_runner_mirror_setter_accepts_committed_e1_d174_only(tmp_path):
+    root=tmp_path/'repo'; curriculum=root/'foothold_s2'/'curriculum'
+    curriculum.mkdir(parents=True)
+    plan_path=curriculum/'ex42-prep.yaml'
+    approvals_path=curriculum/'ex42-approvals.yaml'
+    plan_path.write_bytes(
+        "format: foothold-ex42-curriculum/1\nstage_zero: {critic_mirror: false}\n"
+        "stages:\n  - {id: E1, critic_mirror: true}\n".encode('utf-8'))
+    approvals_path.write_bytes(
+        "format: foothold-ex42-approvals/1\nfields:\n  critic_mirror:\n"
+        "    approved: true\n    decision_id: D174\n    choices: [true]\n"
+        "    boundaries: [E1]\n".encode('utf-8'))
+    subprocess.run(['git','init',str(root)],check=True,capture_output=True)
+    subprocess.run(['git','-C',str(root),'config','user.name','CPU Test'],check=True,capture_output=True)
+    subprocess.run(['git','-C',str(root),'config','user.email','cpu-test@example.invalid'],check=True,capture_output=True)
+    subprocess.run(['git','-C',str(root),'config','core.autocrlf','false'],check=True,capture_output=True)
+    subprocess.run(['git','-C',str(root),'add','.'],check=True,capture_output=True)
+    subprocess.run(['git','-C',str(root),'commit','-m','fixture'],check=True,capture_output=True)
+    commit=subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip()
+    proof={"format":"foothold-ex42-critic-mirror-approval/1","stage_id":"E1",
+        "decision_id":"D174","plan_path":str(plan_path),
+        "plan_sha256":hashlib.sha256(plan_path.read_bytes()).hexdigest(),
+        "approval_path":str(approvals_path),
+        "approval_sha256":hashlib.sha256(approvals_path.read_bytes()).hexdigest(),
+        "config_commit":commit}
+    runner=StartRunner.__new__(StartRunner)
+    runner.ex41_pose_commands=True; runner.ex41_critic_mirror=False
+    runner.ex41_mirror_approval=None; runner.alg=SimpleNamespace(mirror_enabled=False)
+    runner._assert_ex41_joint_order=lambda:None
+    runner.set_ex41_critic_mirror(True,approval=proof)
+    assert runner.ex41_critic_mirror and runner.alg.mirror_enabled
+    invalid={**proof,"stage_id":"E0"}
+    with pytest.raises(ValueError,match='W72 HOLD'):
+        runner.set_ex41_critic_mirror(True,approval=invalid)
+    assert runner.ex41_critic_mirror is False and runner.alg.mirror_enabled is False
 
 
 def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_path):

@@ -399,11 +399,59 @@ class StartRunner(OnPolicyRunner):
             return False
         return True
 
+    @staticmethod
+    def _valid_ex42_mirror_approval(receipt: dict | None) -> bool:
+        """Validate the EX-42 E1 D174 grant against committed source bytes."""
+        if (not isinstance(receipt, dict) or receipt.get("format") != "foothold-ex42-critic-mirror-approval/1"
+                or receipt.get("stage_id") != "E1" or receipt.get("decision_id") != "D174"):
+            return False
+        try:
+            plan_path = Path(receipt["plan_path"]).resolve(strict=True)
+            approval_path = Path(receipt["approval_path"]).resolve(strict=True)
+            commit = receipt["config_commit"]
+            if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+                return False
+            root_text = subprocess.check_output(
+                ["git", "-C", str(plan_path.parent), "rev-parse", "--show-toplevel"],
+                stderr=subprocess.DEVNULL)
+            root = Path(root_text.decode().strip()).resolve(strict=True)
+            if any(root not in path.parents for path in (plan_path, approval_path)):
+                return False
+            import yaml
+            parsed = []
+            for path, digest in ((plan_path, receipt["plan_sha256"]),
+                                 (approval_path, receipt["approval_sha256"])):
+                rel = path.relative_to(root).as_posix()
+                committed = subprocess.check_output(
+                    ["git", "-C", str(root), "show", f"{commit}:{rel}"],
+                    stderr=subprocess.DEVNULL)
+                current = path.read_bytes()
+                if (not isinstance(digest, str) or hashlib.sha256(committed).hexdigest() != digest
+                        or hashlib.sha256(current).hexdigest() != digest):
+                    return False
+                parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
+            plan, approvals = parsed
+            field = approvals.get("fields", {}).get("critic_mirror")
+            e1 = next(row for row in plan.get("stages", []) if row.get("id") == "E1")
+            zero = plan.get("stage_zero", {})
+            return (plan.get("format") == "foothold-ex42-curriculum/1"
+                    and e1.get("critic_mirror") is True
+                    and zero.get("critic_mirror", False) is False
+                    and approvals.get("format") == "foothold-ex42-approvals/1"
+                    and isinstance(field, dict) and field.get("approved") is True
+                    and field.get("decision_id") == "D174"
+                    and field.get("choices") == [True]
+                    and field.get("boundaries") == ["E1"])
+        except (OSError, ValueError, KeyError, StopIteration,
+                UnicodeDecodeError, subprocess.CalledProcessError):
+            return False
+
     def set_ex41_critic_mirror(self, enabled: bool, approval: dict | None = None) -> None:
-        """Called only after analyst's W72 stage gate has validated a receipt."""
+        """Apply the existing mirror switch only with a committed W72 or EX42 grant."""
         if not self.ex41_pose_commands or not isinstance(enabled, bool):
             raise ValueError("EX-41 critic mirror transition needs the pose runner and bool value")
-        if enabled and not self._valid_ex41_mirror_approval(approval):
+        if enabled and not (self._valid_ex41_mirror_approval(approval)
+                            or self._valid_ex42_mirror_approval(approval)):
             self.ex41_critic_mirror = False
             self.ex41_mirror_approval = None
             self.alg.mirror_enabled = False
