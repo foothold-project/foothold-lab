@@ -334,3 +334,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08 12:0x	lead	GPU0 빔 채움: N21 m12000 DR-on 평지·연속을 시드 43·44 로 다시 재는 4 판(1353~1356, 고정 7916a52, record_only) · 목적은 analyst 가 짚은 「재측정 폭 없음」 · 계획 안 · 로컬 GPU · 설정 변경 없음이라 lead 결정	M90
 2026-11-08 12:1x	lead	W65: analyst 재점검 79313207 막음 0(H1~H5 · model_50 닫힘 16 PASS) → eae0bed7 로 GPU1 기동 지시	I45 I46
 2026-11-08 12:4x	lead	W65 기동 확인(lead 직접): PID 93176 · 12:39:16 · 고정 eae0bed7 · source audit writable 0 · 첫 update 줄 Learning iteration 1/1000 (2213 steps/s · 수집 12.6 s · 학습 20.7 s) · 다음 증거 model_50 저장 · 되읽기	-
+2026-11-08 12:5x	lead	GPU0: N21 DR-on 시드 43·44 4 판 끝(결과 파일 확인) · DR-off 시드 43·44 4 판(1358~1361) 이어서 걸고 1358 기동 12:55:41 확인 · analyst 에 시드 폭 판독(14:00). GPU0 은 그 뒤 EX-42 250 경계 평가 자리. EX-42 34/1000 회 · 27.4 s/회	M90
