@@ -325,3 +325,4 @@ ts	phase	decision	why	evidence	result
 2026-11-08 09:4x	lead	10 분 점검: scripter 에 정본 216 결측 13 칸 원인 판독(CPU · 11:30) · analyst 컨텍스트 9%(일 끝나면 /compact) · GPU 는 W65 0 단계 경로(runner 승인 범위 CPU 관문 진행) 대기	-
 2026-11-08 09:5x	lead	analyst N21 판독(7809d650) 받음: 질량·마찰 범위 안 · 평지 생존 전부 64/64 · DR 켜면 전진 1.0 · 옆걸음 추종 오차 커짐 · DR-off 물리값 기록 없음(다음 N21 때 보완) · record_only 라 판정 없음 · analyst /compact	-
 2026-11-08 09:5x	lead	정본 216 미확보 9 칸 재촬영을 GPU0 에 걸음(1342~1350 · GPU1 몫 6 칸도 GPU0 으로 · GPU1 은 W65 학습용으로 비움). 근거: scripter 결측 원인(검정 13 · 마스크 26) 이 나중에 완료된 68 칸에도 85 번 있었던 우연 실패 · 계획 안(W48) · 로컬 GPU · 설정 변경 없음이라 M90 기준으로 lead 가 정함. 1342 runwrap 09:51:56 기동	M90
+2026-11-08 10:0x	lead	재촬영 첫 결과: stage_stairs_L0_eval_gt 완료(450 프레임 1920x1080 확인) · stepping_stones_low_L3_eval_gt 는 검증된 낙상 1 회라 둘째 시드 1351 을 손으로 걸음(canon_retry 는 기술 실패 3 회 칸을 결측으로 먼저 빼므로 안 걸림)	-
