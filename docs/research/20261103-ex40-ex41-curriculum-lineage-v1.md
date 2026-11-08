@@ -117,3 +117,7 @@ C:/Users/AI-WS01/anaconda3/python.exe inbox/jay/20261103-curriculum-lineage/make
 ```
 
 EX-40 yaml sha 가 실행 때와 다르면 멈춘다. 밀기 사다리 · m6000 점수 · EX-41 부모 sha 셋이 같은지도 확인한다.
+
+## 판 이력
+
+- v1.0 (2026-11-03 21:15 · 사이트 게시 2026-11-08): EX-41 시작 때 쓴 첫 계보. inbox/jay/20261103-curriculum-lineage 의 본문과 그림 다섯 장을 그대로 옮겼고, 머리와 「이 판의 자리」 절만 더했다. 내용 수정 없음.
