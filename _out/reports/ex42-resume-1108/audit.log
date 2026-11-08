@@ -1,0 +1,43 @@
+{"test": "actual_checkpoint_smoke_preflight", "result": "PASS", "value": {"local_update_origin": 350, "first_resumed_local_update": 351, "first_resumed_cumulative_update": 12351, "requested_updates": 5}}
+{"test": "real_bytes_frozen_350_manifest_remaining", "result": "PASS", "value": 650}
+{"test": "wrong_sha", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 self-resume checkpoint SHA is absent or differs from its source manifest"}
+{"test": "manifest_behind", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 self-resume source manifest does not publish this checkpoint iteration"}
+{"test": "manifest_ahead", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 same-run self-resume checkpoint is not the manifest's latest completed update"}
+{"test": "wrong_run", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 self-resume checkpoint and manifest must belong to the same run directory"}
+{"test": "wrong_plan_sha", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 self-resume curriculum pins or stage identity differ"}
+{"test": "smoke_six_updates", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 bounded resume updates exceed the five-update or stage limit"}
+Actor MLP: MLP(
+  (0): Linear(in_features=98, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=666, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+RESUME_ADASMPL {"kind": "resume_adasmpl", "applied": false, "saved": {"force_gt": false, "p": 0.25609567939463873}, "configured_force_gt": false}
+{"test": "actual_nn_adam_runtime_restore", "result": "PASS", "value": {"model_state_dict": true, "optimizer_state_dict": true, "perception_state_dict": true, "perception_optimizer_state_dict": true, "ppo_learning_rate": true, "adasmpl": true, "map_switch": true, "env_state": true, "continuous_curriculum": true, "iter": true, "last_use_gt_frac": true, "ex42_parent_transfer": true}}
+{"test": "cpu_rng_restore", "result": "PASS", "value": {"torch": true, "numpy": true, "python": true}}
+{"test": "cuda_rng_call_payload_only", "result": "PASS", "value": true}
+{"test": "local_cumulative_bounds", "result": "PASS", "value": {"first": 351, "cumulative_first": 12351, "last": 1000, "count": 650}}
+{"test": "runtime_rejects_1001", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 stage-zero update is outside its approved 1..1000 range"}
+{"test": "manifest_400_consumed_args", "result": "PASS", "value": [400, 29491200]}
+{"test": "post_load_robot_vs_restored_origin", "result": "PASS", "value": {"displaced_envs": 3072, "max_m": 40.0, "note": "CPU fixture of reset-before-load order; no physical reset after restoration"}}
+{"test": "manifest_segment_preserves_old_baseline", "result": "PASS", "value": {"previous_equal": true, "active_files": 51, "progress_unchanged": true, "checkpoint_map_unchanged": true}}
+{"test": "installed_reset_body_cpu_pose_write", "result": "PASS", "value": {"before_displaced": 3072, "before_max_m": 40.0, "after_max_m": 0.0, "pose_write_calls": 1, "fixture": "zero-noise CPU scene, installed events.py AST; not physical simulation"}}
+RESUME_ADASMPL {"kind": "resume_adasmpl", "applied": false, "saved": {"force_gt": false, "p": 0.25609567939463873}, "configured_force_gt": false}
+EX42_SELF_RESUME_READBACK {"cumulative_update_origin": 12350, "first_resumed_cumulative_update": 12351, "first_resumed_local_update": 351, "local_update_origin": 350, "restored_groups": ["policy_and_critic", "ppo_optimizer", "learning_rate", "perception", "perception_optimizer", "adasmpl", "normalization", "rng", "curriculum", "map_switch", "environment_terrain_and_command_rng"], "source_checkpoint_sha256": "7c01f11657b2d66b5fe3b5324f889aea5749c0cebb00333472fb6322342ca75c", "source_manifest_sha256": "5d372d2a2810af8416a3d89367c1c8e3a0385666080d43278bde495136bc31b4", "state": "self_resume_restored"}
+{"test": "actual_cli_resume_branch_not_parent", "result": "PASS", "value": {"local": 350, "first": 351, "parent_transplant_calls": 0}}
+{"test": "runtime_configuration_1001", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 stage-zero runtime must remain bounded to 1000 updates"}
+{"test": "old_startup_receipt_rejected_before_constructor", "result": "REJECTED", "exception": "ValueError", "detail": "EX-42 stage-zero startup receipt identity differs"}
+{"test": "old_startup_receipt_replaced_before_validation", "result": "PASS", "value": {"state": "chain_startup_receipt_verified", "old_marker_preserved": false}}
+AUDIT_WRITTEN D:\mai-tmp\analyst\ex42-resume-2b3e504f\audit.json
