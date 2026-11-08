@@ -150,7 +150,8 @@ class EX42StageZeroRuntime:
     is_ex42_stage_zero = True
 
     def __init__(self, *, stage_zero_plan: Any, plan_sha256: str,
-                 approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000):
+                 approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000,
+                 push_vmax_mps: float):
         if maximum_updates != STAGE_ZERO_UPDATES:
             raise ValueError("EX-42 stage-zero runtime must remain bounded to 1000 updates")
         self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
@@ -158,6 +159,10 @@ class EX42StageZeroRuntime:
         self.approval_sha256 = approval_sha256
         self.parent_sha256 = parent_sha256
         self.maximum_updates = maximum_updates
+        if (not isinstance(push_vmax_mps, (int, float))
+                or not math.isfinite(float(push_vmax_mps)) or float(push_vmax_mps) <= 0):
+            raise ValueError("EX-42 stage-zero parent push Vmax is invalid")
+        self.push_vmax_mps = float(push_vmax_mps)
         self.stage_id = "EX42_0_T0_prime"
         self.stage_config = stage_zero_plan.stages[0]
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
@@ -169,19 +174,22 @@ class EX42StageZeroRuntime:
         self.map_reset_counts: dict[str, int] = {"gt": 0, "pred": 0, "off": 0}
         self.runner = None
         self.env = None
+        self.pre_step_count = 0
+        self.post_step_count = 0
+        self._step_pending = False
 
     def attach_environment(self, env: Any, command_term: Any) -> None:
         import torch
 
         raw = getattr(env, "unwrapped", env)
         self.env = raw
-        self.env_stage = torch.zeros(env.num_envs, dtype=torch.long,
-                                     device=getattr(env, "device", getattr(raw, "device", "cpu")))
+        self.env_stage = torch.zeros(raw.num_envs, dtype=torch.long, device=raw.device)
         command_term.stage_runtime = self
         raw._ex42_stage_id = self.stage_id
         raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}
         raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
         raw._ex40_dr_scale = 1.0
+        raw._ex41_push_vmax_mps = self.push_vmax_mps
 
     def attach_runner(self, runner: Any) -> None:
         if runner.log_dir is None or self.env is None:
@@ -204,6 +212,24 @@ class EX42StageZeroRuntime:
             raw = self.env
             raw._ex42_stage_id = self.stage_id
             raw._ex40_dr_scale = 1.0
+            raw._ex41_push_vmax_mps = self.push_vmax_mps
+
+    def record_pre_step(self) -> None:
+        if self.env is None or self.runner is None:
+            raise RuntimeError("EX-42 stage-zero step recorder is not attached")
+        if self._step_pending:
+            raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
+        self._step_pending = True
+        self.pre_step_count += 1
+
+    def record_post_step(self, done: Any) -> None:
+        if not self._step_pending:
+            raise RuntimeError("EX-42 stage-zero post-step has no matching pre-step")
+        shape = getattr(done, "shape", None)
+        if shape is None or len(shape) != 1 or int(shape[0]) != int(self.env.num_envs):
+            raise ValueError("EX-42 stage-zero done vector must match the environment batch")
+        self._step_pending = False
+        self.post_step_count += 1
 
     def flush_consumption(self, update: int) -> None:
         if update != self.iteration:
@@ -230,13 +256,17 @@ class EX42StageZeroRuntime:
                 "parent_sha256": self.parent_sha256,
                 "terrain": {"policy": "performance", "level_cap": 5},
                 "command_samples": self.command_samples,
+                "push_vmax_mps": self.push_vmax_mps,
+                "pre_step_count": self.pre_step_count,
+                "post_step_count": self.post_step_count,
                 "map_reset_counts": dict(self.map_reset_counts),
                 "finished": False}
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
         expected = self.state_dict()
         for key in ("format", "stage_id", "maximum_updates", "plan_sha256",
-                    "approval_sha256", "parent_sha256", "dr_scale", "terrain"):
+                    "approval_sha256", "parent_sha256", "dr_scale", "terrain",
+                    "push_vmax_mps"):
             if state.get(key) != expected[key]:
                 raise ValueError(f"EX-42 stage-zero continuation {key} differs")
         iteration = state.get("iteration")
@@ -244,6 +274,10 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero continuation iteration is invalid")
         self.iteration = iteration
         self.command_samples = int(state.get("command_samples", 0))
+        self.pre_step_count = int(state.get("pre_step_count", 0))
+        self.post_step_count = int(state.get("post_step_count", 0))
+        if self.pre_step_count != self.post_step_count:
+            raise ValueError("EX-42 stage-zero continuation has an incomplete environment step")
         counts = state.get("map_reset_counts")
         if not isinstance(counts, dict) or set(counts) != {"gt", "pred", "off"}:
             raise ValueError("EX-42 stage-zero map reset counts are invalid")
@@ -257,6 +291,115 @@ class EX42StageZeroRuntime:
         if iteration != self.iteration:
             raise ValueError("EX-42 stage-zero checkpoint did not consume the latest update")
         self.last_checkpoint = {"path": str(Path(checkpoint).resolve()), "iteration": iteration}
+
+
+def build_stage_zero_reset_readback(env: Any, dr_runtime: Any,
+                                   env_contract: dict[str, Any]) -> dict[str, Any]:
+    """Build JSON-safe first-reset evidence from the live env and config contract.
+
+    ``attach_runtime`` returns a W86Runtime adapter, which is intentionally not
+    serialized. Its JSON-safe registration contract comes from
+    ``prepare_ex41_env_cfg``; the live attachment is reported separately.
+    """
+    raw = getattr(env, "unwrapped", env)
+    w86_contract = env_contract.get("w86")
+    if not isinstance(w86_contract, dict):
+        raise ValueError("EX-42 stage-zero W86 registration contract is missing")
+    if getattr(raw, "_ex41_w86", None) is None:
+        raise ValueError("EX-42 stage-zero W86 runtime is not attached")
+    return {
+        "stage_id": raw._ex42_stage_id,
+        "dr_scale": raw._ex40_dr_scale,
+        "runtime_dr_scale": float(dr_runtime.scale),
+        "initial_scale_wrapper": env_contract["initial_dr"],
+        "terrain": env_contract["terrain"],
+        "w86": w86_contract,
+        "w86_attached": True,
+        "pose_cmd_configured": True,
+        "map_input": "reconstruction",
+        "force_gt": False,
+        "reset_event_samples": getattr(raw, "_ex40_dr_samples", {}),
+        "push_vmax_mps": getattr(raw, "_ex41_push_vmax_mps", None),
+        "lin_vel_z_weight": _runtime_reward_weight(raw, "lin_vel_z"),
+    }
+
+
+def _runtime_reward_weight(env: Any, name: str) -> float:
+    manager = getattr(env, "reward_manager", None)
+    if manager is None:
+        raise ValueError("EX-42 stage-zero reward manager is unavailable")
+    return float(manager.get_term_cfg(name).weight)
+
+
+def apply_stage_zero_parent_reward_contract(env_cfg: Any, *,
+                                           parent_sha256: str,
+                                           parent_update: int) -> dict[str, Any]:
+    """Keep the approved EX-41 m6000 parent reward term unchanged for stage zero."""
+    if parent_sha256 != "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613" or parent_update != 6000:
+        raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
+    term = getattr(getattr(env_cfg, "rewards", None), "lin_vel_z", None)
+    if term is None or not hasattr(term, "weight"):
+        raise ValueError("EX-42 stage-zero config lacks the parent lin_vel_z reward term")
+    term.weight = 0.0
+    return {"term": "lin_vel_z", "weight": 0.0,
+            "source": "EX-41 m6000 runtime readback", "parent_sha256": parent_sha256}
+
+
+def apply_stage_zero_parent_reward_manager(env: Any, *,
+                                           parent_sha256: str,
+                                           parent_update: int) -> dict[str, Any]:
+    """Apply the same parent reward term to the live manager before first reset."""
+    if parent_sha256 != "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613" or parent_update != 6000:
+        raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
+    raw = getattr(env, "unwrapped", env)
+    manager = getattr(raw, "reward_manager", None)
+    if manager is None:
+        raise ValueError("EX-42 stage-zero live reward manager is unavailable")
+    cfg = manager.get_term_cfg("lin_vel_z")
+    cfg.weight = 0.0
+    manager.set_term_cfg("lin_vel_z", cfg)
+    actual = float(manager.get_term_cfg("lin_vel_z").weight)
+    if actual != 0.0:
+        raise ValueError("EX-42 stage-zero live lin_vel_z reward did not match parent")
+    return {"term": "lin_vel_z", "weight": actual,
+            "source": "EX-41 m6000 runtime readback", "parent_sha256": parent_sha256}
+
+
+class EX42StageZeroDRReadback:
+    """EX-40 event readback fixed at the approved EX-42 stage-zero DR scale."""
+
+    def __init__(self, base: Any, push_vmax_mps: float):
+        if (not isinstance(push_vmax_mps, (int, float))
+                or not math.isfinite(float(push_vmax_mps)) or float(push_vmax_mps) <= 0):
+            raise ValueError("EX-42 stage-zero push Vmax is invalid")
+        self.base = base
+        self.env = base.env
+        self.ranges = base.ranges
+        self.push_vmax_mps = float(push_vmax_mps)
+        self.scale = 1.0
+        self.env._ex40_dr_scale = 1.0
+        self.env._ex41_push_vmax_mps = self.push_vmax_mps
+
+    def update_start(self, update: int) -> None:
+        if type(update) is not int or update < 1:
+            raise ValueError("EX-42 stage-zero DR update must be a positive integer")
+        self.base.update_start(update)
+        self.base.scale = 1.0
+        self.scale = 1.0
+        self.env._ex40_dr_scale = 1.0
+        self.env._ex41_push_vmax_mps = self.push_vmax_mps
+
+    def summary(self) -> dict[str, Any]:
+        result = self.base.summary()
+        result["scale"] = 1.0
+        result["target_ranges"]["push_velocity"] = {
+            "mode": "radial_magnitude_and_heading", "vmax_mps": self.push_vmax_mps,
+            "legacy_axis_ranges_ignored": True}
+        result["target_ranges"]["push_vmax_mps"] = self.push_vmax_mps
+        result["push_schedule"] = {"stage_id": "T0_prime", "vmax_mps": self.push_vmax_mps,
+                                    "independent_of_dr_scale": True,
+                                    "source": "pinned EX-41 m6000 checkpoint"}
+        return result
 
 
 def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
@@ -285,6 +428,12 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
         raise ValueError("EX-42 stage-zero parent transfer SHA is malformed")
     if not math.isfinite(float(checkpoint.get("ppo_learning_rate", float("nan")))):
         raise ValueError("EX-42 stage-zero parent learning rate is invalid")
+    curriculum_state = checkpoint.get("continuous_curriculum")
+    push_vmax = curriculum_state.get("push_vmax_mps") if isinstance(curriculum_state, dict) else None
+    if (not isinstance(push_vmax, (int, float)) or not math.isfinite(float(push_vmax))
+            or float(push_vmax) <= 0):
+        raise ValueError("EX-42 stage-zero parent push Vmax is missing or invalid")
+    cfg["ex42_stage_zero_push_vmax_mps"] = float(push_vmax)
     return cfg
 
 

@@ -965,7 +965,10 @@ class StartRunner(OnPolicyRunner):
         if self.manifest is None:
             return
         self._check_code(it)
-        done = it + 1
+        # EX-42 stage-zero update numbers are one-based and the checkpoint
+        # named model_N.pt contains exactly N completed updates.
+        continuous = getattr(self, "continuous_curriculum", None)
+        done = it if getattr(continuous, "uses_one_based_updates", False) else it + 1
         run_manifest.update_progress(self.manifest_dir, self.manifest, done, done * self.num_steps_per_env * num_envs * self.gpu_world_size,
                                      (name, os.path.join(self.log_dir, name)))
 

@@ -93,6 +93,7 @@ EX42_STAGE_ZERO_CHECKPOINT = None
 EX42_STAGE_ZERO_PARENT = None
 EX42_STAGE_ZERO_APPROVAL = None
 EX42_STAGE_ZERO_PREFLIGHT = None
+EX42_STAGE_ZERO_REWARD_CONTRACT = None
 EX41_REHEARSAL = False
 EX41_STAGE_REHEARSAL = None
 EX41_STAGE_REHEARSAL_RECEIPT = None
@@ -745,10 +746,16 @@ def main(env_cfg, agent_cfg):
         ex41_cfg_contract = prepare_ex41_env_cfg(env_cfg, EX41_PLAN)
     elif EX42_STAGE_ZERO_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import prepare_ex41_env_cfg
+        from foothold_s2.scripts.ex42_training_entry import apply_stage_zero_parent_reward_contract
 
         EX42_STAGE_ZERO_ENV_CONTRACT = prepare_ex41_env_cfg(
             env_cfg, EX42_STAGE_ZERO_PLAN_VIEW,
             stage_zero_approval=EX42_STAGE_ZERO_APPROVAL)
+        EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_contract(
+            env_cfg, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
+        print("EX42_STAGE_ZERO_REWARD_CONFIG "
+              + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
@@ -812,11 +819,15 @@ def main(env_cfg, agent_cfg):
         ex41_w86_receipt = attach_runtime(env.unwrapped, EX41_PLAN, log_dir)
     elif EX42_STAGE_ZERO_PLAN is not None:
         from foothold_s2.scripts.ex41_startup import (
-            attach_ex41_stand_runtime_data, set_live_initial_dr_scale,
+            attach_ex41_stand_runtime_data, configure_ex41_command_slots,
+            set_live_initial_dr_scale,
         )
         from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
         from foothold_s2.rewards.w86_runtime import attach_runtime
-        from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
+        from foothold_s2.scripts.ex42_training_entry import (
+            EX42StageZeroDRReadback, EX42StageZeroRuntime,
+            apply_stage_zero_parent_reward_manager, build_stage_zero_reset_readback,
+        )
 
         stand_data_receipt = attach_ex41_stand_runtime_data(env)
         print("EX42_STAGE_ZERO_STAND_READBACK "
@@ -829,30 +840,31 @@ def main(env_cfg, agent_cfg):
         set_live_initial_dr_scale(
             ex41_dr_readback, env.unwrapped, 1.0,
             scoped_approval=EX42_STAGE_ZERO_APPROVAL)
-        stage_zero_w86_receipt = attach_runtime(
-            env.unwrapped, EX42_STAGE_ZERO_PLAN_VIEW, log_dir)
+        attach_runtime(env.unwrapped, EX42_STAGE_ZERO_PLAN_VIEW, log_dir)
         command_term = env.unwrapped.command_manager.get_term("base_velocity")
+        slot_receipt = configure_ex41_command_slots(command_term)
+        print("EX42_COMMAND_SLOT_READBACK "
+              + json.dumps(slot_receipt, sort_keys=True), flush=True)
+        push_vmax = float(EX42_STAGE_ZERO_CHECKPOINT["continuous_curriculum"]["push_vmax_mps"])
+        ex42_dr_readback = EX42StageZeroDRReadback(ex41_dr_readback, push_vmax)
         ex42_stage_zero_runtime = EX42StageZeroRuntime(
             stage_zero_plan=EX42_STAGE_ZERO_PLAN_VIEW,
             plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
             approval_sha256=EX42_STAGE_ZERO_APPROVAL["approvals_sha256"],
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            maximum_updates=1000)
+            maximum_updates=1000, push_vmax_mps=push_vmax)
         ex42_stage_zero_runtime.attach_environment(env, command_term)
+        EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_manager(
+            env, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
+            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
+        print("EX42_STAGE_ZERO_REWARD_MANAGER "
+              + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
         env.reset()
-        ex42_stage_zero_reset_readback = {
-            "stage_id": env.unwrapped._ex42_stage_id,
-            "dr_scale": env.unwrapped._ex40_dr_scale,
-            "runtime_dr_scale": ex41_dr_readback.scale,
-            "initial_scale_wrapper": EX42_STAGE_ZERO_ENV_CONTRACT["initial_dr"],
-            "terrain": EX42_STAGE_ZERO_ENV_CONTRACT["terrain"],
-            "w86": stage_zero_w86_receipt,
-            "pose_cmd_configured": True,
-            "map_input": "reconstruction",
-            "force_gt": False,
-            "reset_event_samples": getattr(env.unwrapped, "_ex40_dr_samples", {}),
-        }
-        if (env.unwrapped._ex40_dr_scale != 1.0 or ex41_dr_readback.scale != 1.0
+        ex42_stage_zero_reset_readback = build_stage_zero_reset_readback(
+            env, ex42_dr_readback, EX42_STAGE_ZERO_ENV_CONTRACT)
+        if (env.unwrapped._ex40_dr_scale != 1.0 or ex42_dr_readback.scale != 1.0
+                or env.unwrapped._ex41_push_vmax_mps != push_vmax
+                or float(env.unwrapped.reward_manager.get_term_cfg("lin_vel_z").weight) != 0.0
                 or env.unwrapped._ex42_stage_id != "EX42_0_T0_prime"):
             raise ValueError("EX-42 stage-zero first reset readback differs")
         print("EX42_STAGE_ZERO_FIRST_RESET "
@@ -926,6 +938,7 @@ def main(env_cfg, agent_cfg):
         attach_ex42_training_chain(runner, EX42_TRAINING_CHAIN)
     if EX42_STAGE_ZERO_PLAN is not None:
         ex42_stage_zero_runtime.attach_runner(runner)
+        runner.ex40_dr_runtime = ex42_dr_readback
         ex42_transfer = runner.load_ex42_stage_zero_parent(
             EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
         print("EX42_STAGE_ZERO_PARENT_TRANSFER "

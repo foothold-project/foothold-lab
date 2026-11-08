@@ -83,7 +83,8 @@ def test_stage_zero_runtime_is_bounded_and_continuable_only_under_same_pins():
     plan_view = SimpleNamespace(stages=[stage])
     runtime = entry.EX42StageZeroRuntime(
         stage_zero_plan=plan_view, plan_sha256="p" * 64,
-        approval_sha256="a" * 64, parent_sha256="b" * 64)
+        approval_sha256="a" * 64, parent_sha256="b" * 64,
+        push_vmax_mps=2.0)
     assert runtime.uses_one_based_updates is True
     runtime.on_update_start(1)
     runtime.on_update_start(1000)
@@ -92,7 +93,8 @@ def test_stage_zero_runtime_is_bounded_and_continuable_only_under_same_pins():
     state = runtime.state_dict()
     restored = entry.EX42StageZeroRuntime(
         stage_zero_plan=plan_view, plan_sha256="p" * 64,
-        approval_sha256="a" * 64, parent_sha256="b" * 64)
+        approval_sha256="a" * 64, parent_sha256="b" * 64,
+        push_vmax_mps=2.0)
     restored.load_state_dict(state)
     restored.on_resume_checkpoint("model_1000.pt", 1000)
     assert restored.state_dict() == state
@@ -105,7 +107,8 @@ def test_stage_zero_train_cfg_carries_parent_perception_and_save_interval():
     cfg = entry.configure_ex42_stage_zero_train_cfg(
         {"policy": {"class_name": "ActorCritic"}, "perception": {"force_gt": True}},
         {"perception_cfg": {"map_input": "reconstruction", "force_gt": False,
-                            "p_map_off": 0.1}, "ppo_learning_rate": 0.00038},
+                            "p_map_off": 0.1}, "ppo_learning_rate": 0.00038,
+         "continuous_curriculum": {"push_vmax_mps": 2.0}},
         parent_path="C:/parent/model_6000.pt", parent_sha256="b" * 64)
     assert cfg["max_iterations"] == 1000
     assert cfg["save_interval"] == 50
