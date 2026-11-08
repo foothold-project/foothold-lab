@@ -11,11 +11,18 @@ import argparse
 import contextlib
 import json
 import os
+import sys
 from pathlib import Path
 import re
 from datetime import datetime, timezone
 import time
 import uuid
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import (PROFILE_ENV, PROFILE_PIN_ENV, bind_registry, gpu_path,
+                                 load_linux_profile, orca_executable, require_linux_profile)
+
+OPS_PROFILE = load_linux_profile()
 
 try:
     import psutil
@@ -243,6 +250,18 @@ LIVE = {
     "c_layer_total_cells": 81,
     "c_layer_manifest": "D:/mai-tmp/c_layer_m6000_gpu1_remainder_v34/cap2/remaining.json",
 }
+if OPS_PROFILE:
+    paths = OPS_PROFILE["paths"]
+    LIVE.update(
+        markers=[paths["gpu_root"], paths["c_layer_priority"]],
+        ledgers=[paths["c_layer_ledger"]],
+        train_marker=gpu_path(OPS_PROFILE, "TRAINING_BUSY_GPU0"),
+        idle_state=gpu_path(OPS_PROFILE, "idle_since.json"),
+        queue=gpu_path(OPS_PROFILE, "queue.json"),
+        stage_table=paths["stage_table"],
+        eval_root=paths["eval_root"],
+        c_layer_manifest=paths["c_layer_manifest"],
+    )
 KINDS = (("guard", ("score_watch", "mirror_guard", "auto_guard", "inbox_wait")),
          ("training", ("train_start.py", "train.py")),
          ("render", ("c_layer", "c76_vis", "vis_loop", "remainder", "render", "play.py")),
@@ -418,7 +437,8 @@ def read_queue(path: str) -> dict:
 
 
 def write_queue(path: str, q: dict) -> None:
-    # Each writer owns a unique temp file; queue.json is shared by the CLI and loop.
+    # A private temp file per writer (I31 11/05 21:42: two writers shared queue.tmp and
+    # left two JSON documents spliced in queue.json).
     tmp = Path(path).with_name(f"{Path(path).name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
     tmp.write_text(json.dumps(q, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(path)
@@ -1175,6 +1195,9 @@ DISPATCH = {
     "idle_log": "D:/mai-tmp/gpu/idle_log.jsonl",
     "state": "D:/mai-tmp/gpu/dispatch_state.json",
     "p1_markers": ["D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1"],
+    # A periodic score attempt waiting for GPU1 (I24 · 11/05 09:4x: the gap between one P1 owner
+    # releasing the marker and the waiting score watch claiming it let a P2 unit start first).
+    "p1_attempt_globs": ["C:/Users/AI-WS01/s2_lab/ex41_main_*/eval/score-watch/model_*/attempt.json"],
     "lead": "term_37f1d02b-35f8-435d-940e-d43a8a5be1de",
     "notify_every": 300,
     "train_limit_s": 29.7,
@@ -1182,6 +1205,16 @@ DISPATCH = {
     "interval": 10,
     "requeue_after_s": 60,
 }
+if OPS_PROFILE:
+    DISPATCH.update(
+        results=gpu_path(OPS_PROFILE, "results"),
+        logs=gpu_path(OPS_PROFILE, "logs"),
+        idle_log=gpu_path(OPS_PROFILE, "idle_log.jsonl"),
+        state=gpu_path(OPS_PROFILE, "dispatch_state.json"),
+        p1_markers=[gpu_path(OPS_PROFILE, "PRIORITY_BUSY_GPU1")],
+        p1_attempt_globs=[OPS_PROFILE["paths"]["p1_attempt_glob"]],
+        lead=OPS_PROFILE["lead_mailbox"],
+    )
 ALLOWED_KINDS = frozenset({"eval", "probe", "render"})
 # Same as the training launch script: Kit must not stop at the EULA prompt (stdin is closed).
 KIT_ENV = {"OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUTF8": "1", "PYTHONUNBUFFERED": "1"}
@@ -1270,17 +1303,36 @@ def train_mean(state: dict, train: dict | None, window: int) -> float | None:
     That file is rewritten every 10 updates, so a sample is one 10-update block and the guard
     acts from the first sample (no warm-up gap)."""
     hist = state.setdefault("train_hist", [])
-    if train and type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
+    if train is None:
+        # No training marker: old samples belong to a finished run or rehearsal (11/04 23:3x they
+        # held GPU1 idle via train_protect with nothing training).
+        hist.clear()
+        return None
+    if type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
         if not hist or hist[-1][0] != train["iter"]:
             hist.append([train["iter"], float(train["iter_s"])])
             del hist[:-window]
     return sum(s for _, s in hist) / len(hist) if hist else None
 
 
+def p1_waiting(globs: list[str]) -> str | None:
+    import glob as _glob
+    for g in globs:
+        for f in _glob.glob(g):
+            try:
+                if json.loads(Path(f).read_text(encoding="utf-8")).get("state") == "running":
+                    return f"p1_attempt:{f}"
+            except (OSError, ValueError):
+                continue
+    return None
+
+
 def p1_busy(jobs: list[dict], ours: set[int], markers: list[str]) -> str | None:
     for m in markers:
         if marker_state(Path(m))["present"]:
             return f"marker:{m}"
+    if (why := p1_waiting(DISPATCH.get("p1_attempt_globs", []))):
+        return why
     for j in jobs:
         if j["kind"] != "guard" and on_gpu(j, DISPATCH["gpu"]) and j["pid"] not in ours:
             return f"gpu1_process:{j['pid']}:{j['script']}"
@@ -1346,18 +1398,22 @@ def spawn_wrapper(item_id: int, log: str) -> int:
         flags = (subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
                  | getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0))
     Path(log).parent.mkdir(parents=True, exist_ok=True)
-    fh = open(log, "ab")
-    try:
-        p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)],
-                             stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT,
-                             creationflags=flags, close_fds=True)
-    except OSError:
-        # Some hosts refuse BREAKAWAY; retry without it (still no window).
-        p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)],
-                             stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT,
-                             creationflags=flags & ~getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0),
-                             close_fds=True)
-    fh.close()
+    argv = [sys.executable, str(Path(__file__).resolve()), "runwrap", str(item_id)]
+    with open(log, "ab") as fh:
+        kwargs = dict(stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT, close_fds=True)
+        if os.name == "posix":
+            if OPS_PROFILE:
+                # The same item ID in another queue must never be launched.
+                kwargs["env"] = dict(os.environ, **{
+                    PROFILE_ENV: OPS_PROFILE["file"], PROFILE_PIN_ENV: OPS_PROFILE["sha256"]})
+            p = subprocess.Popen(argv, start_new_session=True, **kwargs)
+        else:
+            try:
+                p = subprocess.Popen(argv, creationflags=flags, **kwargs)
+            except OSError:
+                # Some Windows hosts refuse BREAKAWAY; preserve the old fallback.
+                p = subprocess.Popen(argv, creationflags=flags & ~getattr(
+                    subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0), **kwargs)
     return p.pid
 
 
@@ -1369,8 +1425,13 @@ def runwrap(item_id: int, cfg=LIVE) -> int:
     it = next(i for i in q["items"] if i["id"] == item_id)
     env = unit_env(it, dict(os.environ))
     # Evaluators write into the done-file folder without creating it (items 81 · 114 · 115 failed so).
+    # But an evaluator that demands a fresh --out folder refuses one that exists (11/05 06:45 item 411
+    # ex41_eval_once "fresh evaluation output required"), so create only the folder above --out.
+    argv = it.get("argv") or []
+    out = Path(argv[argv.index("--out") + 1]).resolve() if "--out" in argv[:-1] else None
     for p in it.get("done_files", []):
-        Path(p).parent.mkdir(parents=True, exist_ok=True)
+        parent = Path(p).parent
+        (parent.parent if out is not None and parent.resolve() == out else parent).mkdir(parents=True, exist_ok=True)
     started = datetime.now().timestamp()
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     last_json = None
@@ -1399,8 +1460,11 @@ def runwrap(item_id: int, cfg=LIVE) -> int:
 
 def notify_lead(subject: str, body: str) -> None:
     import subprocess
+    if OPS_PROFILE and not DISPATCH["lead"]:
+        return  # Linux host has no verified receiver configured yet.
     try:
-        subprocess.run(["orca", "orchestration", "send", "--to", DISPATCH["lead"], "--type", "status",
+        subprocess.run([orca_executable() if OPS_PROFILE else "orca",
+                        "orchestration", "send", "--to", DISPATCH["lead"], "--type", "status",
                         "--subject", subject, "--body", body], capture_output=True, timeout=30,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.SubprocessError):
@@ -1453,6 +1517,37 @@ def notify_launch(state: dict, it: dict, pid: int, log: str, now: float, notify)
                + (f" · 지난 알림 뒤 {n} 건" if n > 1 else ""))
         state["last_launch_notice"] = now
         state["launches_since_notice"] = 0
+
+
+# Minutes a unit is expected to hold GPU1 (11/05 measured: w78_v2 stage-end 2 h 32 min,
+# push_ladder 64 min, periodic P1 45 min, C-layer cell 4 min, video clip about 5 min).
+EST_MINUTES = (("w78_v2", 160), ("push_ladder", 70), ("axis_v2", 45), ("a_push_video", 20),
+               ("stage-video", 8), ("C76", 6), ("Kit probe", 15))
+P1_START_AFTER = 50      # the score watch starts m(N) after the N+50 save (M3, ex40_score_watch.py:100)
+P1_SLACK_MIN = 5
+
+
+def est_minutes(it: dict) -> float:
+    if isinstance(it.get("est_min"), (int, float)):
+        return float(it["est_min"])
+    title = it.get("title") or ""
+    for key, minutes in EST_MINUTES:
+        if key in title:
+            return float(minutes)
+    return 30.0
+
+
+def p1_window_minutes(train: dict | None, boundary: int = 250) -> float | None:
+    """Minutes until the next periodic score evaluation will want GPU1, from the live trainer."""
+    if not train or train.get("state") != "running":
+        return None
+    it, sec = train.get("iter"), train.get("iter_s")
+    if type(it) is not int or not isinstance(sec, (int, float)) or sec <= 0:
+        return None
+    nxt = (it // boundary) * boundary + P1_START_AFTER
+    if nxt <= it:
+        nxt += boundary
+    return (nxt - it) * sec / 60 - P1_SLACK_MIN
 
 
 def fresh_p1(ours: set[int]) -> str | None:
@@ -1510,6 +1605,15 @@ def _dispatch_step(cfg=LIVE, now=None, smi=None, procs=None, spawn=spawn_wrapper
         ready = sorted((it for it in items if item_ready(it, now, exists, alive, blocked)[0]
                         and item_group(it) not in held_groups),
                        key=lambda it: (it["priority"], it["id"]))
+        # P1 first (팀장 11/05 12:1x): a unit starts only if it can end before the next periodic
+        # score evaluation needs GPU1 (I24: a 2.5 h stage-end w78 delayed m1000 past 1251).
+        window = p1_window_minutes(train)
+        if window is not None:
+            fits = [it for it in ready if it.get("priority", 9) <= 1 or est_minutes(it) <= window]
+            if ready and not fits:
+                result["deferred"] = [(it["id"], est_minutes(it)) for it in ready[:3]]
+                result["window_min"] = round(window, 1)
+            ready = fits
         late = recheck(ours) if ready else None
         if ready and late:
             result.update(action="yield_p1", reason=f"recheck:{late}")
@@ -1618,6 +1722,7 @@ def main(argv: list[str] | None = None) -> int:
     gate = sub.add_parser("gate")
     gate.add_argument("job_id")
     args = parser.parse_args(argv)
+    require_linux_profile(OPS_PROFILE)
     if args.action == "dispatch":
         return dispatch_loop(args.once)
     if args.action == "runwrap":
@@ -1631,10 +1736,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.action == "status":
         print(live_status())
         if args.registry:
-            config = read_json(args.config)
-            print(status(config, live_sources(config)))
+            config = bind_registry(read_json(args.config), OPS_PROFILE)
+            if OPS_PROFILE and config.get("schema") == "foothold-gpu-jobs-v2":
+                from gpu_jobs import registry_status
+                print(json.dumps(registry_status(config), ensure_ascii=False))
+            else:
+                print(status(config, live_sources(config)))
         return 0
-    config = read_json(args.config)
+    config = bind_registry(read_json(args.config), OPS_PROFILE)
+    if OPS_PROFILE and config.get("schema") == "foothold-gpu-jobs-v2":
+        from gpu_jobs import admission as p4_admission
+        result = p4_admission(config, args.job_id)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result["admit_next_unit"] else 3
     live = live_sources(config)
     allowed, reason = admission(config, args.job_id, live)
     print(json.dumps({"job": args.job_id, "admit_next_unit": allowed, "reason": reason}, ensure_ascii=False))

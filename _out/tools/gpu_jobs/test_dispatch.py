@@ -574,11 +574,13 @@ class WatchTests(unittest.TestCase):
     def test_watch_default_interval_is_one_second(self):
         import io
         from contextlib import redirect_stderr
+        from unittest import mock
         p = []
         orig = board.watch
         try:
             board.watch = lambda args, **k: p.append(args) or 0
-            board.main(["board", "--watch"])
+            with mock.patch.object(board, "OPS_PROFILE", {}):
+                board.main(["board", "--watch"])
         finally:
             board.watch = orig
         self.assertEqual((p[0].watch, p[0].slow_every), (1.0, 10.0))
@@ -646,7 +648,7 @@ class DispatchTests(unittest.TestCase):
         patch = mock.patch.dict(board.DISPATCH, {"results": str(root / "res"), "logs": str(root / "logs"),
                                                  "idle_log": str(root / "idle.jsonl"),
                                                  "state": str(root / "state.json"),
-                                                 "p1_markers": [str(root / "PRIORITY_BUSY_GPU1")]})
+                                                 "p1_markers": [str(root / "PRIORITY_BUSY_GPU1")], "p1_attempt_globs": []})
         patch.start()
         self.addCleanup(patch.stop)
         self.smi = {"gpus": {0: {"util": 80, "mib": 1}, 1: {"util": 0, "mib": 1}}, "apps": {}}
@@ -845,6 +847,48 @@ class DispatchTests(unittest.TestCase):
         res = json.loads(Path(board.DISPATCH["results"], "item_1.json").read_text(encoding="utf-8"))
         self.assertEqual(res["last_json"], {"eula": "YES"})
 
+    def test_runwrap_leaves_fresh_out_folder_absent(self):
+        import sys
+        from unittest import mock
+        d = Path(self.temp.name)
+        out = d / "stage" / "axis_v2"
+        board.write_queue(self.cfg["queue"], {"format": board.QUEUE_FORMAT, "items": [
+            {"id": 1, "state": "실행", "cwd": str(d), "done_files": [str(out / "eval_receipt.json")],
+             "argv": [sys.executable, "-c",
+                      "import sys, os, json; print(json.dumps({'existed': os.path.exists(sys.argv[2])}))",
+                      "--out", str(out)]}]})
+        with mock.patch("builtins.print"):
+            board.runwrap(1, self.cfg)
+        res = json.loads(Path(board.DISPATCH["results"], "item_1.json").read_text(encoding="utf-8"))
+        self.assertEqual(res["last_json"], {"existed": False})
+        self.assertTrue((d / "stage").is_dir())
+
+    def test_waiting_score_attempt_blocks_new_units(self):
+        from unittest import mock
+        a = self.add("stage-end push ladder", 2)
+        att = Path(self.temp.name) / "model_1000_x" / "attempt.json"
+        att.parent.mkdir(parents=True)
+        att.write_text(json.dumps({"state": "running", "iteration": 1000}), encoding="utf-8")
+        with mock.patch.dict(board.DISPATCH, {"p1_attempt_globs": [str(Path(self.temp.name) / "model_*" / "attempt.json")]}):
+            r = self.step()
+            self.assertEqual((r["action"], self.spawned), ("yield_p1", []))
+            att.write_text(json.dumps({"state": "complete"}), encoding="utf-8")
+            self.assertEqual(self.step()["action"], "launched")
+
+    def test_unit_that_would_overrun_next_p1_waits(self):
+        from unittest import mock
+        long = self.add("ex41-stage-750-x-w78_v2", 2)
+        short = self.add("ex41-stage-video-750-x-W57", 3)
+        with mock.patch.object(board, "current_training", lambda cfg=None: {"state": "running", "iter": 1260, "iter_s": 27.0}):
+            r = self.step()
+        self.assertEqual((r["action"], self.spawned), ("launched", [short]))
+        self.assertEqual(self.items()[long]["state"], "대기")
+
+    def test_window_math(self):
+        self.assertAlmostEqual(board.p1_window_minutes({"state": "running", "iter": 1260, "iter_s": 30.0}), 40 * 30 / 60 - 5)
+        self.assertAlmostEqual(board.p1_window_minutes({"state": "running", "iter": 1300, "iter_s": 30.0}), 250 * 30 / 60 - 5)
+        self.assertIsNone(board.p1_window_minutes(None))
+
     def test_no_new_unit_while_training_is_not_running(self):
         self.add("baseline eval", 3)
         for state in ("failed", "starting"):
@@ -972,3 +1016,10 @@ class DispatchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_train_mean_ignores_stale_samples_without_training():
+    state = {"train_hist": [[10, 29.8], [20, 29.9]]}
+    assert board.train_mean(state, None, 10) is None
+    assert state["train_hist"] == []
+    assert board.train_mean(state, {"iter": 30, "iter_s": 12.0}, 10) == 12.0

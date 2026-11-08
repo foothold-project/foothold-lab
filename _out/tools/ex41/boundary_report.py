@@ -1,6 +1,7 @@
 """EX-41 per-boundary checklist numbers (EX41-250-LOG rule): vs parent checkpoint and previous boundary.
 
-Usage: python boundary_report.py <run_root> <local_iter>
+Usage: python boundary_report.py [--exp EX-41] <run_root> <local_iter>
+  (without --exp the legacy positional form reads the EX-41 registry entry)
   run_root = the s2_lab/ex41_main_<stamp> folder (holds eval/ and main/<run>/).
 Prints the 10-item table plus the boundary application row (DR scale · stage · reason) so the
 report always shows whether DR moved as planned (11/04: DR sat at 0.575 for 750 updates unread).
@@ -12,19 +13,31 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 from foothold_s2.experiment_registry import operational_definition, source_path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ops_machine_profile import load_linux_profile
+
+# Registry form: boundary_report.py --exp <ID> <run_root> <local_iter>.
+# Legacy form (ops tools, pipeline 89db2513): boundary_report.py <run_root> <local_iter>, read as EX-41.
 parser = argparse.ArgumentParser()
-parser.add_argument('--exp', required=True)
+parser.add_argument('--exp', default='EX-41')
 parser.add_argument('run_root', type=Path)
 parser.add_argument('local_iteration', type=int)
 args = parser.parse_args()
 DEFINITION = operational_definition(args.exp)
-RUN = args.run_root.resolve(strict=True).as_posix().rstrip('/')
+args.run_root.resolve(strict=True)  # must exist; RUN keeps the caller's spelling (no symlink rewrite)
+RUN = args.run_root.absolute().as_posix().rstrip('/')
 PATHS = DEFINITION['paths']['directories']
 PARENT_UPDATE = int(DEFINITION['operational_values']['parent']['update'])
 INTERVAL = int(DEFINITION['operational_values']['training']['interval_updates'])
-PARENT_MAP = source_path(DEFINITION, 'maintenance_map64')
 EXP_LABEL = DEFINITION['experiment_id']
 APPLICATION_LOG = DEFINITION.get('operations', {}).get('application_log', 'application.jsonl')
+# A Linux ops machine profile names the m6000 parent map directly (baseline_m6000). It applies only
+# when the selected experiment's parent is update 6000; otherwise the registry path is used.
+OPS_PROFILE = load_linux_profile()
+if OPS_PROFILE and PARENT_UPDATE == 6000:
+    PARENT_MAP = Path(OPS_PROFILE['paths']['baseline_m6000'])
+else:
+    PARENT_MAP = source_path(DEFINITION, 'maintenance_map64')
 KEY = {'vx': 'vx_abs_error_mean_alive_mps', 'vy': 'vy_abs_error_mean_alive_mps', 'wz': 'wz_abs_error_mean_alive_radps'}
 
 
@@ -82,6 +95,18 @@ for c in ('back0.5', 'back1.0', 'side+0.5', 'side-0.5', 'spin+1.2', 'spin-1.2', 
     row = [f"{m[:8]} {f(base.get((m,c),{}).get('err'))}→{f(pc.get((m,c),{}).get('err'))}→{f(cur[(m,c)]['err'])} ({cur[(m,c)]['alive']})"
            for m in ('eval_gt', 'eval_pred', 'probe_prop_only')]
     print(f'  {c:9s}', ' | '.join(row))
+# 지도 셋(정답 eval_gt · 복원 eval_pred · 끔 probe_prop_only) 비교 · 팀장 11/06 17:2x 「지도 켬 · 끔 · 복원은 EX-41 핵심」
+cmds = sorted({c for (m, c) in cur if m == 'eval_gt'})
+for other, name in (('eval_pred', '복원'), ('probe_prop_only', '끔')):
+    d = [(cur[(other, c)]['err'] - cur[('eval_gt', c)]['err'], c) for c in cmds
+         if (other, c) in cur and cur[(other, c)]['err'] is not None and cur[('eval_gt', c)]['err'] is not None]
+    if d:
+        big = max(d, key=lambda x: abs(x[0]))
+        alive = sum(cur[(other, c)]['alive'] for c in cmds if (other, c) in cur) - sum(cur[('eval_gt', c)]['alive'] for c in cmds)
+        print(f'M 지도 {name} - 정답: 오차 차 평균 {sum(x[0] for x in d)/len(d):+.3f} · 가장 큰 차 {big[1]} {big[0]:+.3f} · 생존 합 차 {alive:+d}')
+for m in ('eval_gt', 'eval_pred', 'probe_prop_only'):
+    over = [c for c in cmds if (m, c) in cur and cur[(m, c)]['err'] and cur[(m, c)]['err'] > 0.15]
+    print(f'M {m:15s} 판정선 넘은 명령 {len(over)} {over} · 생존 최저 {min(cur[(m, c)]["alive"] for c in cmds if (m, c) in cur)}/64')
 print('5 회전 앞뒤 흔들림 vx(정답)', [f"{c} {f(base[('eval_gt',c)]['vx'])}→{f(pc.get(('eval_gt',c),{}).get('vx'))}→{f(cur[('eval_gt',c)]['vx'])}" for c in ('spin+1.2', 'spin-1.2')])
 sym = sc['metrics'].get('critic_mirror_symmetry', {}).get('modes', {})
 for m, rows in sym.items():
@@ -96,10 +121,24 @@ if w is None:
 else:
     L = [v[0] for k, v in w.items() if 'left' in k]; R = [v[0] for k, v in w.items() if 'right' in k]
     print(f'7 계단 옆 발 끌림 왼 {min(L):.3f}~{max(L):.3f} 오른 {min(R):.3f}~{max(R):.3f} · 생존 최저', min((v[1], k) for k, v in w.items()))
+def push_line(k):
+    """Item 8 (I30: m7000 · m7750 stairs push misses went unreported because this line was missing)."""
+    p = Path(f"{RUN}/{PATHS['push250']}/{PARENT_UPDATE + k}.json")
+    if not p.is_file():
+        return f'8 밀림 m{PARENT_UPDATE + k}: 아직 없음(밀기 감시기 대기 · 다음 점검에서 다시 볼 것)'
+    d = json.load(open(p, encoding='utf-8'))
+    parts = [f"{c['terrain']} {c['summary']['d171_1_5_worst_direction']['survival_fraction']:.3f}"
+             f"{'' if c['summary']['d171_1_5_worst_direction']['passed'] else ' 미달'}" for c in d['children']]
+    return f"8 밀림 m{PARENT_UPDATE + k} {'통과' if d.get('d171_all_terrains_passed') else '미달'} · 1.5 최악 방향 " + ' · '.join(parts)
+
+
+print(push_line(n))
+if Path(f"{RUN}/{PATHS['push250']}/{PARENT_UPDATE + prev}.json").is_file():
+    print('  직전', push_line(prev)[2:])
 print('9 서기', sc['metrics'].get('stand_counts'), '· 무릎', [round(j['ratio'] * 100, 2) for j in sc['metrics'].get('training_knee_effort', {}).get('joints', {}).values()], '%')
 RUNDIR = Path(glob.glob(f"{RUN}/{PATHS['main'].split('{run}')[0]}*/train_start_status.json")[0]).parent.as_posix()
 st_ = json.load(open(f'{RUNDIR}/train_start_status.json'))
-print('10 학습', st_['iter'], round(st_['iter_s'], 1), 's · 보상', round(st_['mean_reward'], 1), '· 길이', round(st_['mean_episode_length'], 1))
+print('10 학습', st_.get('iter'), *(f"{round(st_[k], 1)}{u}" for k, u in (('iter_s', ' s'), ('mean_reward', ' 보상'), ('mean_episode_length', ' 길이')) if isinstance(st_.get(k), (int, float))), '· 상태', st_.get('state', ''))
 app = [json.loads(l) for l in open(f'{RUNDIR}/{APPLICATION_LOG}', encoding='utf-8') if l.strip()]
 row = next((r for r in reversed(app) if r.get('iteration') == n + 1), None)
 if row is None:
