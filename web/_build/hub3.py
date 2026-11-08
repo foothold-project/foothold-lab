@@ -938,6 +938,19 @@ def _with_live_doors(d, root):
     return d
 
 
+def _series_first(m):
+    """묶음 안 정렬 열쇠. 2026-11-08 팀장 「웹에서 보기에도 순서대로」.
+
+    제목이 `[계보 N]` 으로 시작하는 연재는 묶음 맨 위에 N 이 작은 것부터 선다.
+    나머지는 예전처럼 날짜 최신순이다 (부르는 쪽이 reverse=True 로 정렬한다).
+    """
+    t = (m.get('제목') or '').strip()
+    hit = re.match(r'^\[계보\s*(\d+)\]', t)
+    if hit:
+        return (1, 1000 - int(hit.group(1)))
+    return (0, _newest_first(m))
+
+
 def _fn_of(rel):
     """문서 경로 -> 입구 열쇠. 원장이 정한다. 없으면 빈 문자열."""
     name = rel.rsplit('/', 1)[-1]
@@ -1325,7 +1338,7 @@ def research_html(site):
                       % (AREA_HUE.get(a, 'x'), esc(a))
                       for a in (g.get('areas') or [])[:2])
         who, when = _who_when(m)
-        cards.setdefault(_fn_of(rel) or '', []).append((_newest_first(m),
+        cards.setdefault(_fn_of(rel) or '', []).append((_series_first(m),
             ('<a class="ev3" data-fn="%s" href="%s"><span class="ex3">\x00N\x00</span>'
              '<span class="en3">%s</span>'
              '<span class="eb3"><b>%s</b><span>%s</span>'
@@ -1339,7 +1352,7 @@ def research_html(site):
     #   못 받았다). 이제 두 종류가 같은 묶음 통에 들어간다. 표식은 그대로 단다.
     for _rel, m, page, _g in read:
         who, when = _who_when(m)
-        cards.setdefault(_fn_of(_rel) or '', []).append((_newest_first(m),
+        cards.setdefault(_fn_of(_rel) or '', []).append((_series_first(m),
             ('<a class="ev3" data-fn="%s" href="%s">'
              '<span class="ex3">\x00N\x00</span>'
              '<span class="en3 src s-%s">%s</span>'
