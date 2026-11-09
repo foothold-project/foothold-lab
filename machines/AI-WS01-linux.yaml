@@ -34,9 +34,11 @@ devices:
   training:
     cuda_index: 0
     uuid: ${GPU0_UUID}
+  # Team lead 2026-11-09 10:0x: evaluation on GPU1 for now, same as Windows (screen and
+  # evaluation share GPU1). Revisit after dual-GPU training is measured on Linux.
   p1_evaluation:
-    cuda_index: 0
-    uuid: ${GPU0_UUID}
+    cuda_index: 1
+    uuid: ${GPU1_UUID}
   screen:
     cuda_index: 1
     uuid: ${GPU1_UUID}

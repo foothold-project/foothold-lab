@@ -61,6 +61,14 @@ def test_ex42_definition_points_at_preparation_contract_and_approved_schedule():
     assert approvals["domain_randomization"]["decision_id"] == "lead-relay-teamlead-20261106-1725-dr-1.0-fixed"
     parent = exp["operational_values"]["parent"]
     assert parent == plan["stage_zero"]["parent"]
+    # E0 and later start from m13000 = stage-zero model_1000.pt, not from the stage-zero parent.
+    e_parent = exp["operational_values"]["e_stage_parent"]
+    assert e_parent["cumulative_update"] == (parent["cumulative_update"]
+                                             + plan["stage_zero"]["maximum_updates"]) == 13000
+    assert e_parent["manifest_local_update"] == plan["stage_zero"]["maximum_updates"]
+    assert e_parent["checkpoint_key"] == "model_1000.pt"
+    assert e_parent["sha256"] == "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
+    assert e_parent["sha256"] != parent["sha256"]
     assert exp["operational_values"]["training"]["initial_stage"] == plan["stage_zero"]["id"]
     assert exp["operational_values"]["training"]["initial_stage_updates"] == 1000
     assert approvals["domain_randomization"]["stage_scales"]["EX42_0_T0_prime"] == 1.0

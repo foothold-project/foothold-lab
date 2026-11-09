@@ -78,7 +78,8 @@ def test_linux_profile_requires_explicitly_bound_machine_values():
     assert all(PurePosixPath(value).is_absolute() for value in loaded["paths"].values())
     assert loaded["devices"] == {
         "training": {"cuda_index": 0, "device": "cuda:0", "uuid": values["GPU0_UUID"]},
-        "p1_evaluation": {"cuda_index": 0, "device": "cuda:0", "uuid": values["GPU0_UUID"]},
+        # Team lead 2026-11-09 10:0x: Linux evaluation shares GPU1 with the screen, as on Windows.
+        "p1_evaluation": {"cuda_index": 1, "device": "cuda:1", "uuid": values["GPU1_UUID"]},
         "screen": {"cuda_index": 1, "device": "cuda:1", "uuid": values["GPU1_UUID"]},
     }
     validate_training_device("cuda:0", machine_profile=loaded)
