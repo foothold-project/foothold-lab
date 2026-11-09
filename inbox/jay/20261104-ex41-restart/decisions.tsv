@@ -398,3 +398,4 @@ ts	phase	decision	why	evidence	result
 2026-11-09 11:5x	lead	마지막 점검 F (D:/mai/tmp/lead/briefing-1109/F-final-check.md): 막힘 여섯 · 설치 USB 증거 없음 (꽂힌 USB 0 · ISO 0) · A6b BCD 잠김과 BOOTSTAT.DAT · E1 명령 전문 · G3 한 대라 Windows 에서 ssh 못함 → 자기 자신에 ssh · G5 런북 1360 줄 글자 깨짐 → 드라이버 전 확인으로 갈음 · 세션 해시는 Linux 에서 원본 대 사본 · 작은 것 19 · 통합 가지에 feature 병합 a1c3cf89 (CPU 31 통과) · 점심 뒤 순서 한 장 https://claude.ai/artifact/RSm2mUSC6KaggtyQfsnhbY
 2026-11-09 12:5x	lead	사고: 채팅 머리 시각을 date 없이 적어 13:0x · 13:1x · 13:2x 로 미래를 씀 (실제 12:5x 에 date 로 처음 잼) · 이슈 #591 측정 댓글의 13:1x 도 12:4x 로 고침 · 원인: 점심 뒤라는 말로 시각을 짐작 · 막음: 채팅 첫 줄 전에 date
 2026-11-09 15:2x	lead	팀장: Linux 전환 시작 (페이지 RSm2mUSC 4 번부터 · Windows 끔) · 안전 확인 15:20 boot-backup · secrets 17 · lab · mai-os 원격과 같음 · GPU 학습 0 · Linux 첫 로그인 뒤 18 번으로 lead 781698cc 이어 붙임
+2026-11-09 20:0x	lead	관측: 디스크 4 (990 EVO Plus) 파티션 2 개 (System 1.07 GB · Linux 3.64 TB) = Ubuntu 설치됨 · Windows 19:53 부팅 (F3 Windows 부팅 영역 대조 단계로 보임) · 팀장 보고 전이라 lead 판정은 아직
