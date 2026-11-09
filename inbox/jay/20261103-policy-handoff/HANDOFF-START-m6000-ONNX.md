@@ -2,7 +2,7 @@
 > 작성: 오흥재 · lead 세션 · 2026-11-03 16:3x v0.1
 > 근거: 조건표 정본 `inbox/jay/20261101-app/APP-POLICY-CONTRACT-m6000.md` v0.3.1 (lead 가지 dc81513c) · 묶음 `D:/mai-tmp/lead/start-demo-onnx/` (scripter 34982e13 묶음을 D169 이름으로 바꾼 사본, ONNX 바이트 같음) · scripter `REPORT-W89-m6000-ONNX-CPU-1102.md` · 내보내기 `foothold_s2/deploy/export_ex40_w89.py`
 > 요지: m6000 은 지각(TR-Net · I-E, GRU 둘) + actor 를 ONNX 두 파일(지도 켬 · 끔)로 내보냈고, 합성 입력으로 PyTorch 와 최대 5e-6 차이다. **아직 팀원에게 넘기지 않았다.** 넘기기 전에 실제 학습 기록 입력으로 같은 출력 확인 · 시험 벡터 · ORT Web 확인 · 묶음 파일 셋이 남았다
-> 상태: v0.2 · **전달 완료**(lab PR #571 머지 · foothold-app#259 에 알림) · 실제 Isaac 입력 20 스텝 상태 되먹임 최대 차이 3.46e-6 · 남은 것 없음(앱 적용은 현민 님)
+> 상태: v0.2 · **전달 완료**(lab PR #571 머지 · foothold-app#259 에 알림) · 실제 Isaac 입력 20 스텝 상태 되먹임 최대 차이 3.46e-6 · 남은 것 없음(앱 적용은 현민 님) · **2026-11-09: start 새 판은 `start-m13000-app/` (m6000 에서 바뀐 것은 그 폴더 `CONTRACT.md` §1 · 만드는 명령 `MAKE-APP-BUNDLE.md`). 이 문서는 m6000 기록으로 남긴다**
 
 # START m6000 ONNX 전달 파악
 

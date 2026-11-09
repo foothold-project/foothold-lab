@@ -12,10 +12,11 @@
 
 | # | ① 할 일 | ② 정상 | ③ 안 되면 | ④ 시간 | 근거 |
 |---|---|---|---|---|---|
-| K1 | `~/mai/projects/` 에 foothold-lab clone · `git lfs install` · 실험 가지 셋(main · runner/ex42-v016 · feature/verify-v2-mvp-jay) 받기 | 원격 HEAD 가 런북 다4 census 와 같음 | 다르면 멈추고 census 다시 | 15 분 | 런북 다0a · 다4 |
+| K1 | `~/mai/projects/` 에 foothold-lab clone · `git lfs install` · 가지 받기. **Linux 에서 쓰는 가지는 `lead/linux-integration-1109`** (11/09 03:2x 기준 9304a1be 이후: 연구 · 운영 · runner E1 코드를 합친 것) · 옛 사본 커밋은 꾸러미 `C:/mai-carry/repos/carry-foothold-lab/carry.bundle` 로 (carry-keep/1109/* 18 개) | 원격 `lead/linux-integration-1109` HEAD 가 decisions.tsv 마지막 통합 줄의 해시와 같음 | 다르면 멈추고 census 다시 | 15 분 | 런북 다0a · 다4 |
 | K2 | Isaac Sim 5.1 · Isaac Lab 환경 (런북 L-6 ~ L-8 · mai-os PR #59 초안의 절차) | `python -c "import isaaclab"` 성공 · `nvidia-smi` 두 장 | PR #59 초안이 막히면 그 자리를 적고 super2 · pipeline 과 고친다 (추측으로 다른 판을 깔지 않는다) | 30 ~ 60 분 | L-6 ~ L-8 |
 | K3 | 기기 설정: runner 의 `machines/AI-WS01-linux.yaml` 로 Kit 캐시 · bash · python 자리 지정 | 경로 검사 통과 (비 ASCII 0) | Windows 고정 자리가 남아 있으면 런북 L-15 의 0 표대로 주인 세션이 고침 | 10 분 | L-15 의 0 |
 | K4 | 정본 저장본 옮기기: EX-41 `model_6000.pt`(= 누적 m12000) | `sha256sum` 이 `1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613` | 다르면 다시 복사 (다른 저장본으로 시작하지 않는다) | 5 분 | 정본 문서 v1.3 |
+| K4b | **E1 출발 저장본 옮기기 (lead 11/09 01:2x 덧붙임)**: EX-42 0 단계 `model_1000.pt` (= 누적 m13000). 원본은 D: (11/09 D: 정리 뒤 `C:\Users\AI-WS01\s2_lab` 은 `D:\mai\data\foothold\s2_lab` 정션) 이라 Linux 에서는 `/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/model_1000.pt` (24,964,922 바이트, 읽기 전용) -> Linux `~/data/foothold/s2_lab/` 아래 같은 하위 경로 | `sha256sum` 이 `20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768` (super2 11/09 01:3x 실측) | 다르면 다시 복사. E1 은 이 저장본에서 출발하므로 다른 저장본으로 시작하지 않는다 | 5 분 | 대기열 1391 「EX-42 P1 model_1000 20365a2c6d70」 |
 
 ## L. GPU · 같은 저장본 확인 (lead 가 띄움) · 약 1 시간
 
@@ -51,7 +52,7 @@
 | N1 | Kit 예행 (W51): runner 관문 연결 계획대로 짧은 판 · 무게 · 마찰 무작위 평가(N21) 한 판 포함 | 영수증에 실제 질량 · 마찰 값이 env 마다 다르게 찍힘 · 유지 판정 쪽은 그 영수증을 거절 | W51 · W59 (16fb2014) |
 | N2 | 출발 막음 관문 26 개 닫기 (W35): 실제 예행 영수증으로 닫히는 것 | 막음 0 · analyst 재감사 | W35 · W39 |
 | N3 | 판단 사전 알림 도구(W58) 를 텔레그램에 연결 · 시험 알림 1 통 | 팀장 폰에 도착 | W58 (c6d5a033) |
-| N4 | EX-42 시작 · 첫 update 줄 · 첫 250 경계 점수 확인 | 「돌았다」 세 줄(띄움 · 첫 증거 · 끝남) | foothold-lead-style 2 절 |
+| N4 | EX-42 시작은 **E0** (부모 · 지형 메시 확인 250 회, ex42-prep.yaml 140 줄) 부터. 승인 파일 ex42-approvals.yaml 이 지금 `status: blocked` (승인 범위 0 단계뿐) 이라 팀장 E0 승인 뒤 · 첫 update 줄 · 첫 250 경계 점수 확인 · E1 은 E0 경계 판정 뒤 | 「돌았다」 세 줄(띄움 · 첫 증거 · 끝남) | foothold-lead-style 2 절 |
 
 ## 팀장이 정할 것 (설치 전)
 
@@ -60,3 +61,7 @@
 | 1 | super2 장 0 절 「EX-41 끝 · D: 정리 끝」 을 설치 전 조건으로 둘지 | **설치 전 조건에서 뺀다.** 설치는 비어 있는 990 EVO Plus 에만 하고 D:(SN850X) 는 건드리지 않는다. D: 정리는 EX-42 가 돌기 시작한 뒤(11/09~10)에 한다 (11/07 22:5x 권고와 같음) |
 | 2 | 런북 0-5: 설치하는 동안 C: NVMe 를 뺄지 | super2 · 런북은 「뺀다」 제안. GPU 두 장 아래 슬롯이면 빼는 일이 더 위험할 수 있어 **현장에서 보고 정함** (super2 U5) |
 | 3 | `C:\mai-carry` 꾸러미를 만들지 | 만든다. 11/08 낮에 super2 가 만들고 SHA 목록까지 (설치 날 G · H 를 원격 없이 하려면 필요) |
+
+## 판 이력 (덧붙임)
+
+- 11/09 03:2x lead: 재귀 점검 반영. K1 가지를 lead/linux-integration-1109 와 carry.bundle 로 · K4b 원본을 /mnt/win-d 로 · N4 를 「E0 승인 → E0 → E1」 로.
