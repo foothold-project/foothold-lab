@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -102,11 +103,56 @@ def observed_child_identity(output, name, expected):
     return {"device": identity["device"], "gpu_uuid": observed}
 
 
-def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None):
+def manifest_checkpoint_sha(checkpoint):
+    checkpoint = Path(checkpoint).resolve(strict=True)
+    match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
+    if not match:
+        raise ValueError("EX-42 P1 checkpoint must be a named model_N.pt")
+    iteration = int(match.group(1))
+    manifest = json.loads((checkpoint.parent / "manifest.json").read_text(encoding="utf-8-sig"))
+    sha = digest(checkpoint)
+    from foothold_s2.ex42_gate_checks import checkpoint_ready
+    if not checkpoint_ready(manifest, iteration=iteration,
+                            checkpoint_exists=True, checkpoint_sha256=sha):
+        raise ValueError("EX-42 P1 checkpoint differs from the published manifest SHA")
+    return sha, iteration
+
+
+def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_path, output):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_score_watch import checkpoint_stage_context, read_transition_rows
+    from foothold_s2.ex42_gate_checks import validate_ex42_map_score
+
+    if score.get("checkpoint_sha256") != digest(checkpoint):
+        raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
+    plan = EX42Plan.load(plan_path)
+    application = Path(checkpoint).parent / "ex42_application.jsonl"
+    context = checkpoint_stage_context(
+        plan, approvals_path, iteration,
+        transition_rows=read_transition_rows(application) if application.exists() else ())
+    roles = {"eval_gt": "judge", "eval_pred": "judge", "probe_prop_only": "record_only"}
+    matrix = [{"map_mode": mode, "command": command, "role": roles[mode], **row}
+              for mode, commands in score["map64"].items()
+              for command, row in commands.items()]
+    result = {"state": "complete", "checkpoint_sha256": score["checkpoint_sha256"],
+              "checkpoint_iteration": iteration, "plan_sha256": plan.sha256,
+              "stage_id": context["stage_id"], "judgment": "HOLD",
+              "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
+              "measurement": str(Path(output) / "ex42_score.json"),
+              "measurement_sha256": digest(Path(output) / "ex42_score.json")}
+    validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
+    return result
+
+
+def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
+        expected_mesh_sha256=None, p1_plan=None, p1_approvals=None, checkpoint_iteration=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
         raise ValueError("EX-42 checkpoint SHA differs")
+    if p1_plan is not None and (p1_approvals is None or checkpoint_iteration is None
+                                or mesh_dir is None or expected_mesh_sha256 is None):
+        raise ValueError("EX-42 P1 requires plan, approvals, iteration and pinned mesh")
     if output.exists():
         raise ValueError("EX-42 evaluation requires fresh output directory")
     if Path(sys.executable).resolve() != machine_path("conda_python").resolve():
@@ -122,6 +168,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
     if mesh_dir is not None:
         from foothold_s2.eval.ex42_mesh_eval import preflight
         mesh = preflight(mesh_dir)
+        if expected_mesh_sha256 is not None and mesh["mesh_sha256"] != expected_mesh_sha256:
+            raise ValueError("EX-42 P1 E0 mesh SHA differs")
     output.mkdir(parents=True)
     row = {"format": "foothold-ex42-eval/1", "state": "running", "source_git_head": head,
            "checkpoint": str(checkpoint), "checkpoint_sha256": expected_sha256,
@@ -154,6 +202,12 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None)
         _atomic(output / "ex42_score.json", score)
+        if p1_plan is not None:
+            p1 = p1_score_from_measure(
+                score, checkpoint=checkpoint, iteration=checkpoint_iteration,
+                plan_path=p1_plan, approvals_path=p1_approvals, output=output)
+            _atomic(output / "p1_score.json", p1)
+            row["p1_score"] = str(output / "p1_score.json")
         row.update(state="done", score=str(output / "ex42_score.json"), judgement="HOLD")
     except (ValueError, KeyError, OSError) as exc:
         row.update(state="HOLD", reason=f"EX-42 evidence invalid: {exc}")
@@ -164,24 +218,41 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument("--expected-sha256", required=True)
+    sha_group = parser.add_mutually_exclusive_group(required=True)
+    sha_group.add_argument("--expected-sha256")
+    sha_group.add_argument("--sha-from-manifest", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
     parser.add_argument("--eval-seed", type=int, default=None)
     parser.add_argument("--mesh-dir", type=Path, default=None)
+    parser.add_argument("--expected-mesh-sha256")
+    parser.add_argument("--p1-plan", type=Path)
+    parser.add_argument("--p1-approvals", type=Path)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
     if args.execute and args.score_existing:
         parser.error("select either --execute or --score-existing")
-    if not args.checkpoint.is_file() or digest(args.checkpoint) != args.expected_sha256:
+    if (args.p1_plan is None) != (args.p1_approvals is None):
+        parser.error("P1 plan and approvals must be supplied together")
+    if args.p1_plan is not None and (not args.sha_from_manifest or not args.mesh_dir
+                                      or not args.expected_mesh_sha256 or args.eval_seed != 42):
+        parser.error("P1 requires manifest SHA, pinned E0 mesh and eval seed 42")
+    try:
+        expected_sha, iteration = (manifest_checkpoint_sha(args.checkpoint) if args.sha_from_manifest
+                                   else (args.expected_sha256, None))
+    except (OSError, ValueError, KeyError) as exc:
+        parser.error(str(exc))
+    if not args.checkpoint.is_file() or digest(args.checkpoint) != expected_sha:
         parser.error("checkpoint missing or SHA differs")
     if args.eval_seed is not None and args.eval_seed < 0:
         parser.error("evaluation seed must be nonnegative")
     if args.mesh_dir is not None:
         from foothold_s2.eval.ex42_mesh_eval import preflight
         try:
-            preflight(args.mesh_dir)
+            mesh = preflight(args.mesh_dir)
+            if args.expected_mesh_sha256 is not None and mesh["mesh_sha256"] != args.expected_mesh_sha256:
+                parser.error("EX-42 P1 E0 mesh SHA differs")
         except (OSError, ValueError, KeyError) as exc:
             parser.error(str(exc))
     if args.score_existing:
@@ -196,8 +267,11 @@ def main(argv=None):
                           "commands": commands(args.checkpoint, args.out, args.device,
                                                eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)}))
         return 0
-    return run(args.checkpoint, args.expected_sha256, args.out, args.device,
-               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)
+    return run(args.checkpoint, expected_sha, args.out, args.device,
+               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir,
+               expected_mesh_sha256=args.expected_mesh_sha256,
+               p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
+               checkpoint_iteration=iteration)
 
 
 if __name__ == "__main__":
