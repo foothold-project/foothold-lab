@@ -17,10 +17,11 @@ PRESET = "ame2_go2_mix_v1"
 KINDS = ("stair_up", "stair_down", "rough", "boxes", "climb_up",
          "climb_down", "gap", "pallets", "stones", "beam", "consecutive",
          "obstacles")
-SAFE_ENTRY_KINDS = frozenset(("stair_up", "stair_down", "pallets", "stones", "beam"))
+SAFE_ENTRY_KINDS = frozenset(("stair_up", "stair_down", "rough", "boxes",
+                              "pallets", "stones", "beam", "consecutive", "obstacles"))
 # The actual column number is supplied by the combined mesh, never inferred
-# from an env ID. These five kinds use the certified entry anchor without XY
-# or yaw jitter; all other B kinds retain the caller's existing reset range.
+# from an env ID. These nine kinds use a checked entry anchor without XY
+# or yaw jitter; the three remaining B kinds retain the existing reset range.
 RESET_RANGES = {kind: {axis: (0., 0.) for axis in ("x", "y", "yaw")}
                 for kind in sorted(SAFE_ENTRY_KINDS)}
 PROPORTIONS = {kind: (.20 if kind == "climb_up" else .30 if kind == "stones" else .05)
@@ -132,10 +133,16 @@ def build_tile(kind: str, level: int, seed: int) -> Tile:
 
     if kind in ("stair_up", "stair_down"):
         step, tread = d["step_height_m"], d["tread_m"]
-        for i in range(int(SIZE / tread)):
-            x0, x1 = i * tread, min(SIZE, (i + 1) * tread)
-            h = (min(i, 6) if kind == "stair_up" else -min(i, 6)) * step
-            boxes.append(_box(x0, x1, 1., 11., h, z0=min(-.2, h - .2)))
+        # A supported entry precedes the stairs in the +x travel direction.
+        entry_end = 1.5
+        boxes.append(_box(0., entry_end, 1., 11., 0.))
+        for i in range(6):
+            x0 = entry_end + i * tread
+            h = (i + 1 if kind == "stair_up" else -(i + 1)) * step
+            boxes.append(_box(x0, x0 + tread, 1., 11., h, z0=min(-.2, h - .2)))
+        final_h = (6 if kind == "stair_up" else -6) * step
+        boxes.append(_box(entry_end + 6 * tread, SIZE, 1., 11., final_h,
+                          z0=min(-.2, final_h - .2)))
     elif kind == "rough":
         n = int(SIZE / HORIZONTAL_SCALE) + 1
         axis = np.linspace(0, SIZE, n)
@@ -146,6 +153,11 @@ def build_tile(kind: str, level: int, seed: int) -> Tile:
         slope = math.tan(math.radians(d["undulation_slope_deg"]))
         wave = slope * period / (2 * math.pi) * np.sin(2 * math.pi * axis / period)
         rough = noise + wave[:, None]
+        # An entry landing clears the sampled rough surface under the reset
+        # footprint. The original rough field and its declared range remain.
+        entry_top = max(0., float(rough[:11, 49:72].max())) + .02
+        boxes.append(_box(0., .95, 5., 7., entry_top,
+                          z0=min(-.2, entry_top - .2)))
     elif kind == "boxes":
         boxes.append(_box(0, SIZE, 0, SIZE, 0))
         for _ in range(20):
@@ -253,37 +265,47 @@ def reset_ranges_by_column(column_kinds):
 
 
 def spawn_origin(tile: Tile) -> np.ndarray:
-    """Return a supported entry anchor for the five B kinds failing mount v3.
+    """Return a 0.70 x 0.50 m supported entry before the obstacle run.
 
-    The anchor has a 0.70 x 0.50 m footprint on actual box tops. Staircases
-    already have a final entry plateau near the old x=2 origin; beam has a
-    full-width entrance platform. Pallets and stones use the new landing.
     The 0.15 m relief bound is our reset contract, not a paper success bar.
     """
     if tile.kind not in SAFE_ENTRY_KINDS:
         return tile.origin.copy()
-    x, y = ({"stair_up": (2.4, 6.), "stair_down": (2.4, 6.),
-             "pallets": (.5, 6.), "stones": (.5, 6.), "beam": (1., 6.)}[tile.kind])
+    anchors = {"stair_up": (.5, 6.), "stair_down": (.5, 6.),
+               "rough": (.5, 6.), "consecutive": (.5, 6.),
+               "pallets": (.5, 6.), "stones": (.5, 6.), "beam": (1., 6.)}
     # The sparse physical floor is a fall surface, not a valid reset support.
     supports = [box for box in tile.boxes
                 if tile.floor_height_m is None or box.z1 > tile.floor_height_m + .2]
-    heights = []
-    for px in np.linspace(x - .35, x + .35, 7):
-        for py in np.linspace(y - .25, y + .25, 7):
-            covers = [box.z1 for box in supports
-                      if box.x0 - 1e-9 <= px <= box.x1 + 1e-9
-                      and box.y0 - 1e-9 <= py <= box.y1 + 1e-9]
-            if not covers:
-                raise ValueError(f"AME-2 no safe entry support: {tile.kind} L{tile.level}")
-            heights.append(max(covers))
-    if np.ptp(heights) > .15 + 1e-9:
-        raise ValueError(f"AME-2 entry support relief too large: {tile.kind} L{tile.level}")
-    centre = [box.z1 for box in supports
-              if box.x0 - 1e-9 <= x <= box.x1 + 1e-9
-              and box.y0 - 1e-9 <= y <= box.y1 + 1e-9]
-    if not centre:
-        raise ValueError(f"AME-2 no support under entry centre: {tile.kind} L{tile.level}")
-    return np.array([x, y, max(centre)], dtype=float)
+    def top(px, py):
+        covers = [box.z1 for box in supports
+                  if box.x0 - 1e-9 <= px <= box.x1 + 1e-9
+                  and box.y0 - 1e-9 <= py <= box.y1 + 1e-9]
+        return max(covers) if covers else None
+
+    def supported(x, y):
+        heights = [top(px, py)
+                   for px in np.linspace(x - .35, x + .35, 7)
+                   for py in np.linspace(y - .25, y + .25, 7)]
+        if any(z is None for z in heights) or np.ptp(heights) > .15 + 1e-9:
+            return None
+        centre = top(x, y)
+        return centre if centre is not None and abs(centre - max(heights)) <= .15 else None
+
+    if tile.kind in {"boxes", "obstacles"}:
+        # Search an actual level-zero entrance cell, never a pillar or pit.
+        candidates = ((x, y) for x in (.5, 1.5)
+                      for y in (6.5, 5.5, 7.5, 4.5, 8.5, 3.5, 9.5, 2.5, 10.5, 1.5))
+        for x, y in candidates:
+            z = supported(x, y)
+            if z is not None and abs(z) <= 1e-9:
+                return np.array([x, y, z], dtype=float)
+        raise ValueError(f"AME-2 no level-zero safe entry support: {tile.kind} L{tile.level}")
+    x, y = anchors[tile.kind]
+    z = supported(x, y)
+    if z is None:
+        raise ValueError(f"AME-2 no safe entry support: {tile.kind} L{tile.level}")
+    return np.array([x, y, z], dtype=float)
 
 
 def validate_tile(tile: Tile):

@@ -32,8 +32,8 @@ def mesh_top_heights(tile, points):
 
 
 @pytest.mark.parametrize('kind', sorted(p.SAFE_ENTRY_KINDS))
-@pytest.mark.parametrize('level', (0, 3, 6, 9))
-@pytest.mark.parametrize('seed_mode', ('42', '43', 'adapter42'))
+@pytest.mark.parametrize('level', range(10))
+@pytest.mark.parametrize('seed_mode', ('0', '42', '43', '2026', 'adapter42'))
 def test_safe_entry_is_supported_by_generated_triangles(kind, level, seed_mode):
     seed = (p._tile_seed(kind, level / 10, 42) if seed_mode == 'adapter42'
             else int(seed_mode))
@@ -44,6 +44,9 @@ def test_safe_entry_is_supported_by_generated_triangles(kind, level, seed_mode):
     assert np.ptp(heights) <= .15 + 1e-7
     assert np.max(np.abs(heights - origin[2])) <= .15 + 1e-7
     assert np.isfinite(origin).all()
+    if kind in ('boxes', 'obstacles'):
+        assert origin[2] == 0  # never a pillar top or pit floor
+        assert origin[0] <= 1.5  # enter before the obstacle run
 
 
 @pytest.mark.parametrize('kind', ('pallets', 'stones'))
@@ -52,6 +55,34 @@ def test_missing_entry_landing_is_rejected(kind):
     damaged = replace(tile, boxes=tile.boxes[:-1])
     with pytest.raises(ValueError, match='safe entry support'):
         p.spawn_origin(damaged)
+
+
+def test_rough_landing_is_required_and_original_noise_is_preserved():
+    tile = p.build_tile('rough', 9, 42)
+    damaged = replace(tile, boxes=())
+    with pytest.raises(ValueError, match='safe entry support'):
+        p.spawn_origin(damaged)
+    assert tile.rough_height_m is not None
+    assert p.spawn_origin(tile)[0] < 1.
+
+
+@pytest.mark.parametrize('kind', ('boxes', 'obstacles'))
+def test_flat_entry_search_rejects_pillar_only_support(kind):
+    tile = p.build_tile(kind, 9, 42)
+    pillar = p._box(0, p.SIZE, 0, p.SIZE, 2.)
+    with pytest.raises(ValueError, match='level-zero safe entry'):
+        p.spawn_origin(replace(tile, boxes=(pillar,)))
+
+
+@pytest.mark.parametrize('kind', ('stair_up', 'stair_down'))
+def test_stairs_are_ahead_of_entry_and_keep_six_declared_risers(kind):
+    tile = p.build_tile(kind, 9, 42)
+    entry = p.spawn_origin(tile)
+    assert entry[0] < tile.boxes[1].x0
+    heights = mesh_top_heights(tile, [(1.5 + .3 * i + .15, 6.) for i in range(6)])
+    step = p.dimensions(kind, 9)['step_height_m']
+    expected = np.arange(1, 7) * step * (1 if kind == 'stair_up' else -1)
+    np.testing.assert_allclose(heights, expected, atol=1e-9)
 
 
 def test_adapter_returns_safe_anchor_and_other_kinds_keep_old_origin():
@@ -66,9 +97,9 @@ def test_adapter_returns_safe_anchor_and_other_kinds_keep_old_origin():
 
 def test_reset_table_uses_actual_B_columns_and_only_target_kinds():
     table = p.reset_ranges_by_column({50 + i: kind for i, kind in enumerate(p.KINDS)})
-    for col in (50, 51, 57, 58, 59):
+    for col in (50, 51, 52, 53, 57, 58, 59, 60, 61):
         assert table[col] == {'x': (0., 0.), 'y': (0., 0.), 'yaw': (0., 0.)}
-    for col in set(range(50, 62)) - {50, 51, 57, 58, 59}:
+    for col in set(range(50, 62)) - {50, 51, 52, 53, 57, 58, 59, 60, 61}:
         assert table[col] == {'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}
     table[50]['x'] = (-.5, .5)
     assert p.RESET_RANGES['stair_up']['x'] == (0., 0.)
