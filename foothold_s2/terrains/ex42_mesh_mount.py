@@ -94,23 +94,38 @@ def local_mesh_heights(vertices: np.ndarray, faces: np.ndarray, points_xy: np.nd
     return MeshHeights(vertices, faces).at(points_xy, radius)
 
 
-def column_tile_sizes(origins) -> tuple[np.ndarray, float]:
-    """(tile_x per column, tile_y) of the joined grid, from the origin spacing (rows run along x).
+TILE_PITCH_TOLERANCE_M = 0.10      # row spacing that differs from the column's median by more is reported
+TILE_PITCH_LIMIT_FRACTION = 0.25   # ... and one that differs by more than this share of the tile is an error
 
-    Row pitch of one column = that family's tile length along x; it must be one positive number per
-    column. The y value is the median positive spacing between neighbouring columns of the same
-    kind of tile (borders between families are larger and are ignored by the median).
+
+def column_tile_sizes(origins) -> tuple[np.ndarray, float, list[dict[str, float]]]:
+    """(tile_x per column, tile_y, irregular columns) of the joined grid, from the origin spacing.
+
+    Rows run along x. The tile length of a column is the MEDIAN spacing between its origins: a
+    family generator may move the origin inside its tile to the safe support patch (real C meshes
+    show 8.92 / 9.08 m next to 9 m), so the spacing is not exactly equal to the tile length.
+    Columns whose spacing strays from the median by more than TILE_PITCH_TOLERANCE_M are returned in
+    the third value ({column, median, max_deviation}); a deviation over a quarter tile means the
+    origins are not one row per tile and raises. tile_y is the median positive spacing between
+    neighbouring columns (borders between families are larger and are ignored by the median).
     """
     o = np.asarray(origins, dtype=np.float64)
     if o.ndim != 3 or o.shape[0] < 2 or o.shape[1] < 1:
         raise ValueError("tile sizes need origins of shape (rows >= 2, columns, 3)")
+    if not np.isfinite(o).all():
+        raise ValueError("origins must be finite")
     pitch = np.diff(o[:, :, 0], axis=0)                       # (rows-1, cols)
-    tile_x = pitch.mean(axis=0)
-    if not np.isfinite(tile_x).all() or (tile_x <= 0).any() or not np.allclose(pitch, tile_x[None], atol=1e-4):
-        raise ValueError("origin row spacing must be one positive tile length per column")
+    tile_x = np.median(pitch, axis=0)
+    if (tile_x <= 0).any():
+        raise ValueError("origin row spacing must be positive: the rows of a column are not ordered along x")
+    deviation = np.abs(pitch - tile_x[None]).max(axis=0)
+    if (deviation > TILE_PITCH_LIMIT_FRACTION * tile_x).any():
+        raise ValueError("origin row spacing varies by more than a quarter tile: not one origin per tile row")
+    irregular = [{"column": int(c), "median": float(tile_x[c]), "max_deviation": float(deviation[c])}
+                 for c in np.nonzero(deviation > TILE_PITCH_TOLERANCE_M)[0]]
     dy = np.diff(o[0, :, 1]) if o.shape[1] > 1 else np.array([tile_x.mean()])
     dy = dy[dy > 0]
-    return tile_x, float(np.median(dy)) if len(dy) else float(tile_x.mean())
+    return tile_x, (float(np.median(dy)) if len(dy) else float(tile_x.mean())), irregular
 
 
 def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None):
@@ -118,7 +133,7 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
     from isaaclab.utils import configclass
 
     loaded = load_combined_mesh(npz_path, mesh_sha256)
-    tile_x, tile_y = column_tile_sizes(loaded["origins"])
+    tile_x, tile_y, irregular = column_tile_sizes(loaded["origins"])
 
     class CombinedMeshGenerator:
         def __init__(self, cfg, device="cpu"):
@@ -143,6 +158,7 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
         # tile; the promotion rule reads the per-column table (rules.promotion_size_x).
         size: tuple = (float(np.median(tile_x)), tile_y)
         tile_x_by_column: tuple = tuple(float(v) for v in tile_x)
+        tile_x_irregular_columns: tuple = tuple((r["column"], r["max_deviation"]) for r in irregular)
         seed: int = 0
         curriculum: bool = True
         use_cache: bool = False

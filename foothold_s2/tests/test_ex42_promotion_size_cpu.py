@@ -55,24 +55,60 @@ def test_judge_with_a_per_env_size_keeps_the_flag_envs_untouched():
     assert out.tolist() == [1, 0]
 
 
-def test_tile_sizes_come_from_the_origin_spacing():
+def test_tile_sizes_are_the_median_origin_spacing_and_irregular_columns_are_reported():
     o = np.zeros((10, 5, 3))
     pitch = np.array([8.0, 8.0, 12.0, 9.0, 9.0])
     for c in range(5):
         o[:, c, 0] = np.arange(10) * pitch[c]
         o[:, c, 1] = c * 9.0
-    tile_x, tile_y = column_tile_sizes(o)
-    assert tile_x.tolist() == pitch.tolist() and tile_y == 9.0
+    tile_x, tile_y, irregular = column_tile_sizes(o)
+    assert tile_x.tolist() == pitch.tolist() and tile_y == 9.0 and irregular == []
+    wobbly = o.copy()
+    wobbly[4:, 3, 0] += 0.16                                  # an origin moved to a support patch (8.92 / 9.16 style)
+    tile_x, _ty, irregular = column_tile_sizes(wobbly)
+    assert tile_x[3] == 9.0 and [r["column"] for r in irregular] == [3]
+    assert irregular[0]["max_deviation"] == pytest.approx(0.16) and irregular[0]["median"] == 9.0
+    small = o.copy()
+    small[4:, 3, 0] += 0.05                                   # inside the tolerance: not reported
+    assert column_tile_sizes(small)[2] == []
     bad = o.copy()
-    bad[3, 2, 0] += 1.0
-    with pytest.raises(ValueError, match="one positive tile length"):
+    bad[3:, 2, 0] += 5.0                                      # origins no longer one per tile row
+    with pytest.raises(ValueError, match="quarter tile"):
         column_tile_sizes(bad)
     with pytest.raises(ValueError):
         column_tile_sizes(o[:1])
     flat = o.copy()
     flat[:, 0, 0] = 0.0
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="positive"):
         column_tile_sizes(flat)
+    nan = o.copy()
+    nan[2, 1, 0] = np.nan
+    with pytest.raises(ValueError, match="finite"):
+        column_tile_sizes(nan)
+
+
+MESH_ROOT = "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111"
+REAL_MESHES = ("seed42_ABCDE", "seed42_ABCDE_b613", "seed42_ABCDE_v2", "seed42_ABCDE_v3")
+
+
+@pytest.mark.parametrize("name", REAL_MESHES)
+def test_real_combined_meshes_give_the_expected_tile_length_per_family(name):
+    import pathlib
+    path = pathlib.Path(MESH_ROOT) / name / "terrain_mesh.npz"
+    if not path.is_file():
+        pytest.skip(f"{path} not on this machine")
+    data = np.load(path, allow_pickle=True)
+    fam = list(data["column_family"])
+    tile_x, tile_y, irregular = column_tile_sizes(data["origins"])           # used to raise ValueError on the C columns
+    expected = {"A": 8.0, "B": 12.0, "C": 9.0, "D": 8.0, "E": 8.0}
+    for family, length in expected.items():
+        got = [float(v) for v, f in zip(tile_x, fam) if f == family]
+        assert got and all(abs(v - length) < 0.01 for v in got), (name, family, got)   # B has one column at 12.0033
+    assert tile_y > 0 and all(r["column"] < len(fam) for r in irregular)
+    assert {fam[r["column"]] for r in irregular} <= {"B", "C"}                # only the columns that really wobble
+    terrain = _terrain(tile_x_by_column=tuple(tile_x), types_=(0, 55, 62, 70, 74))
+    size = rules.promotion_size_x(terrain, [0, 1, 2, 3, 4])
+    assert size.tolist() == [tile_x[c] for c in (0, 55, 62, 70, 74)]
 
 
 def test_call_sites_use_the_shared_helper_not_the_scalar():
