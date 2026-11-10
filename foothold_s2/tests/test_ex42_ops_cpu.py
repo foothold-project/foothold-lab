@@ -17,20 +17,21 @@ from foothold_s2.scripts.ex42_ops import (
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
 APPROVALS = REPO / "foothold_s2/curriculum/ex42-approvals.yaml"
+GATE_FIXTURE = Path(__file__).with_name("fixtures") / "ex42-gate-g11-open.md"
 
 
 def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
-    result = ops_check(TABLE, APPROVALS)
+    result = ops_check(TABLE, APPROVALS, gate_report=GATE_FIXTURE)
     assert result["state"] == "blocked"
     assert result["production_launch_allowed"] is False
     assert "runtime_integration_pending" in result["blockers"]
     assert "explicit_lead_approval_missing" in result["blockers"]
     assert "terrain_manifest_missing" in result["blockers"]
     assert "environment_import_unavailable" in result["blockers"]
-    assert "gate_open:G01" in result["blockers"]
-    assert "gate_open:G33" in result["blockers"]
+    assert "gate_open:G11" in result["blockers"]
     assert result["train_entry"]["training_started"] is False
-    assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE), "--approvals", str(APPROVALS)]) == 2
+    assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE), "--approvals", str(APPROVALS),
+                 "--gate-report", str(GATE_FIXTURE)]) == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["production_launch_allowed"] is False
     if payload["train_entry"].get("final_argv_sha256"):
@@ -64,7 +65,7 @@ def test_ops_check_collects_environment_blockers_when_train_import_is_missing(mo
     monkeypatch.setattr(ex42_ops, "verify_train_entry_contract", missing_train_entry)
     monkeypatch.setattr(ex42_ops, "verify_env_cfg_import", missing_environment)
     assert ex42_ops.main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE),
-                          "--approvals", str(APPROVALS)]) == 2
+        "--approvals", str(APPROVALS), "--gate-report", str(GATE_FIXTURE)]) == 2
     payload = json.loads(capsys.readouterr().out)
     assert called["env"] is True
     assert payload["state"] == "blocked"
@@ -78,7 +79,7 @@ def test_ops_check_collects_environment_blockers_when_train_import_is_missing(mo
 
 def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
     assert main(["--production", "--exp", "EX-42", "--production-launch-approved", "--table", str(TABLE),
-                 "--approvals", str(APPROVALS)]) == 2
+                 "--approvals", str(APPROVALS), "--gate-report", str(GATE_FIXTURE)]) == 2
     result = json.loads(capsys.readouterr().out)
     assert result["state"] == "blocked"
     assert "runtime_integration_pending" in result["blockers"]
@@ -171,7 +172,7 @@ def test_missing_gymnasium_still_emits_blocker_json_and_rc2(monkeypatch, capsys)
         return original_import(name, *args, **kwargs)
     monkeypatch.setattr(builtins, "__import__", import_without_gym)
     assert main(["--ops-check", "--exp", "EX-42", "--table", str(TABLE),
-                 "--approvals", str(APPROVALS)]) == 2
+                 "--approvals", str(APPROVALS), "--gate-report", str(GATE_FIXTURE)]) == 2
     result = json.loads(capsys.readouterr().out)
     assert result["state"] == "blocked"
     assert result["kit_started"] is False and result["training_started"] is False

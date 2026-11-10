@@ -33,11 +33,14 @@ design:
       one_axis_per_boundary: true
 launch:
   automatic: false
-  require_ex41_graduation: true
+  require_ex41_graduation: false
+  parent_adoption:
+    decision: 285348de
+    checkpoints: [m12000_20261107, m13000_20261108]
   require_explicit_lead_approval: true
   require_resolved_assumptions: true
 environment:
-  num_envs: 3072
+  num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
   training_presets:
     A: start_go2_v2
@@ -64,7 +67,13 @@ environment:
     - peak_memory_gib
     - generation_seconds
     - ray_count_per_second
-    values: null
+    values:
+      peak_memory_gib: 0.90625
+      generation_seconds: 7.346669879999354
+      ray_count_per_second: 675841254.9544429
+      source: s2_lab/ex42_mesh_1111/seed42_ABCDE/aggregate_measurements.json
+      kind: proxy_downward_grid_rays
+      replace_with: real_sensor_patterns_later
   terrain_manifest:
     path: terrain_manifest.json
     status: not_generated
@@ -73,17 +82,24 @@ environment:
       balance_beams_l9_width_m: 0.09
     B:
       climb_up_l9_m: 0.53
+      rough:
+        undulation_slope_deg: 20
+        roughness_m: 0.16
     E:
       slope_steep:
+        slope_l0_ratio: 0.4
         slope_l9_ratio: 0.7
         angle_deg: 35.0
       slope_steep_inv:
+        slope_l0_ratio: 0.4
         slope_l9_ratio: 0.7
         angle_deg: 35.0
       stairs_high:
+        height_l0_m: 0.23
         height_l9_m: 0.3
         run_m: 0.3
       stairs_high_inv:
+        height_l0_m: 0.23
         height_l9_m: 0.3
         run_m: 0.3
       exposure_at_E0: 0.0
@@ -139,6 +155,11 @@ stage_zero:
 stages:
 - id: E0
   name: parent_and_mesh_check
+  parent:
+    cumulative_update: 13000
+    manifest_local_update: 1000
+    checkpoint_key: model_1000.pt
+    sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
   minimum_updates: 250
   maximum_updates: 250
   extension_updates: 0
@@ -147,6 +168,74 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    kind_task:
+      A:
+        stepping_stones_low: {push: off}
+        stepping_stones_high: {push: off}
+        balance_beams: {push: off}
+        stepping_beams: {push: off}
+        gaps: {push: off}
+        pyramid_stairs: {push: on}
+        pyramid_stairs_inv: {push: on}
+        boxes: {push: on}
+        random_rough: {push: on}
+        hf_pyramid_slope: {push: on}
+        hf_pyramid_slope_inv: {push: on}
+        stage_stairs: {push: on}
+        flat: {push: on}
+      B:
+        stones: {push: off}
+        beam: {push: off}
+        pallets: {push: off}
+        gap: {push: off}
+        consecutive: {push: off}
+        climb_up: {push: off}
+        climb_down: {push: off}
+        rough: {push: on}
+        stair_up: {push: on}
+        stair_down: {push: on}
+        boxes: {push: on}
+        obstacles: {push: on}
+      C:
+        gap: {push: off}
+        discrete_obstacles: {push: off}
+        box: {push: off}
+        flat: {push: on}
+        discrete_grid: {push: on}
+        pyramid_stairs: {push: on}
+        inverted_pyramid_stairs: {push: on}
+      D:
+        crawl: {push: off}
+        high_ledge: {push: off}
+        wall: {push: off}
+      E:
+        slope_steep: {push: on}
+        slope_steep_inv: {push: on}
+        stairs_high: {push: on}
+        stairs_high_inv: {push: on}
+      continuous:
+        pyramid_stairs: {push: on}
+        pyramid_stairs_inv: {push: on}
+        boxes: {push: on}
+        random_rough: {push: on}
+        hf_pyramid_slope: {push: on}
+        hf_pyramid_slope_inv: {push: on}
+        stage_stairs: {push: on}
+      evaluation:
+        start_go2_eval_gap115: {push: off}
+        start_go2_eval_sup085: {push: off}
+        start_go2_eval_both: {push: off}
+        eval_slope_30: {push: on}
+        eval_slope_35: {push: on}
+        eval_slope_45: {push: on}
+        eval_stairs_015: {push: on}
+        eval_stairs_020: {push: on}
+        eval_stairs_025: {push: on}
+        eval_stairs_010: {push: on}
+        eval_stairs_015_reverse: {push: on}
+        eval_stairs_020_reverse: {push: on}
+        eval_stairs_landing_016: {push: on}
+        eval_stair_surface_spin: {push: on}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -339,6 +428,7 @@ evaluation:
   interval_updates: 250
   policy_failure_in_denominator: true
   sparse_off_role: record
+  push_cells: {role: record, mask: same_as_training, off_kinds_value: n/a}
   paper_cells:
     judge_from_stage: E4
     slope:
@@ -386,12 +476,6 @@ evaluation:
       - 0.4
       crawl_m:
       - 0.2
-      beam_width_m:
-      - 0.09
-      - 0.0765
-      stairs_m:
-      - 0.27
-      - 0.3
     friction_record: true
   stairs_dimensions_w48: &id001
     height_m: 0.16
@@ -451,25 +535,49 @@ terrain_manifest_contract:
     - crawl_020
 assumptions_pending_lead:
   evaluation_friction:
-    value: null
-    class: unmeasured
-    approved: false
+    value: {static: 0.8, dynamic: 0.6}
+    class: approved_value
+    approved: true
+    decision: teamlead-2026-11-11-0150-71a3d51f
+    basis: static 0.7 = tan35 static limit (CG:589) -> 0.8; dynamic 0.6 = record_sol23f.py:82-83
   q4_two_window_range:
-    value: null
-    class: calibration
-    approved: false
+    value:
+      rule: max(assumed, 2*repeat_width)
+      assumed: {survival_drop_envs: 3, error_rise_vx_vy_mps: 0.03, error_rise_wz_radps: 0.05, foot_drag_frac: 0.25, window_episodes: 64, windows: 2, success_min: 52, survival_min: 60}
+      measured: null
+      fixed_before: E1_entry
+    class: calibration_rule_approved
+    approved: true
+    decision: teamlead-2026-11-11-0150-71a3d51f
+    basis: CG:401 D176-2; numbers from E0 calibration.json before E1
   next_jump_study_start:
-    value: null
-    class: lead_decision
-    approved: false
+    value:
+      trigger: stage_condition
+      J0_J3_after: E4 exit (CG:300, two windows, maintenance pass)
+      J4_after: E6b judge (high_ledge 0.6 landing_0.5s, crawl tunnel_exit, CG:367)
+      common: D183 20000 block done; verified parent (PRED use, 26 cells, measured dims, DESIGN-JUMP s5 1-2)
+    class: approved_condition
+    approved: true
+    decision: teamlead-2026-11-11-0150-71a3d51f
   terrain_manifest_measurements:
-    value: null
-    class: unmeasured
-    approved: false
+    value:
+      peak_memory_gib: 0.90625
+      generation_seconds: 7.346669879999354
+      ray_count_per_second: 675841254.9544429
+      source: s2_lab/ex42_mesh_1111/seed42_ABCDE/aggregate_measurements.json
+      mesh_sha256: 6732b8886029032a853f88daeb3180cd265edbe7afad645eca6226b2434c1dfd
+      device: cuda:0
+      envs: 3072
+      kind: proxy_downward_grid_rays
+      replace_with: real_sensor_patterns_later
+    class: proxy_measured_approved
+    approved: true
+    decision: teamlead-2026-11-11-0150-71a3d51f
   runtime_integration:
-    value: null
-    class: implementation_pending
-    approved: false
+    value: {pr: 600, head: 2c64ef11e892ead8dfc8deb159f80d857dc75af7, base: lead/linux-integration-1109, merged: null}
+    class: implementation_approved
+    approved: true
+    decision: teamlead-2026-11-11-0150-71a3d51f
 boundary_file: ex42-boundary.yaml
 approval_file: ex42-approvals.yaml
 maintenance:
@@ -553,7 +661,7 @@ promotion:
   stairs_dimensions_w48: *id001
 command_allocation:
   conditional_denominator: continuous_environments
-  total_denominator: 3072
+  total_denominator: 6144
   continuous_share_min: 0.43
   global_command_floor:
     reverse: 0.05

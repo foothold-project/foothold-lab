@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 from typing import Any
@@ -230,8 +231,14 @@ class EX42Runtime:
     ) -> None:
         if plan.document.get("status") != "preparation_only":
             raise ValueError("EX-42 plan status must remain preparation_only until lead approval")
-        if env_count != plan.document["environment"]["num_envs"]:
-            raise ValueError("EX-42 runtime environment count differs from the pinned table")
+        # torchrun creates one environment per rank. The table records the
+        # whole M3 allocation, while env_count is local to this rank.
+        world_size = int(os.environ.get("WORLD_SIZE", "1"))
+        rank = int(os.environ.get("RANK", "0"))
+        planned = plan.document["environment"]["num_envs"]
+        if (planned != 6144 or world_size != 2 or not 0 <= rank < world_size
+                or env_count != 3072 or env_count * world_size != planned):
+            raise ValueError("EX-42 runtime requires 3072 env per rank x 2 ranks = 6144 total")
         if device not in {"cuda:0", "cuda:1"}:
             raise ValueError("EX-42 runtime device must be explicit")
         blockers = plan.launch_blockers(

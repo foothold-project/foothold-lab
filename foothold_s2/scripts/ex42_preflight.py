@@ -21,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EX-42 design and launch-gate preflight")
     parser.add_argument("--table", type=Path, default=DEFAULT_TABLE)
     parser.add_argument("--approvals", type=Path, default=DEFAULT_APPROVALS)
-    parser.add_argument("--graduation", type=Path)
+    parser.add_argument("--e0-parent-manifest", "--graduation", dest="graduation", type=Path)
     parser.add_argument("--terrain-manifest", type=Path)
     parser.add_argument("--check-env-registration", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

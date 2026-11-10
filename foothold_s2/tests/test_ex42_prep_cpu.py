@@ -28,13 +28,13 @@ TABLE = REPO / "foothold_s2/curriculum/ex42-prep.yaml"
 APPROVALS = REPO / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 
-def test_known_ex42_table_is_design_only_and_preserves_all_unresolved_fields():
+def test_known_ex42_table_is_design_only_with_approved_assumptions():
     plan = EX42Plan.load(TABLE)
     assert plan.is_ex42 is True
     assert [stage["id"] for stage in plan.document["stages"]] == [
         "E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"
     ]
-    assert plan.document["environment"]["num_envs"] == 3072
+    assert plan.document["environment"]["num_envs"] == 6144
     assert plan.document["evaluation"]["judge_cells"] == 26
     assert plan.document["evaluation"]["record_only_cells"] == 13
     assert plan.document["environment"]["evaluation"]["scale_multiplier"] == {
@@ -42,9 +42,9 @@ def test_known_ex42_table_is_design_only_and_preserves_all_unresolved_fields():
     }
     blockers = plan.launch_blockers(APPROVALS, None, None)
     assert "explicit_lead_approval_missing" in blockers
-    assert "ex41_graduation_receipt_missing" in blockers
+    assert "e0_parent_manifest_missing" in blockers
     assert "terrain_manifest_missing" in blockers
-    assert "design_assumptions_pending" in blockers
+    assert "design_assumptions_pending" not in blockers
 
 
 def test_w65_stage_zero_scope_is_pinned_without_opening_the_full_plan():
@@ -77,10 +77,12 @@ def test_w65_stage_zero_scope_rejects_stale_pin_and_any_later_stage(tmp_path):
         validate_stage_zero_authorization(plan_with_mutation_pin, altered)
 
 
-def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed():
+def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed(monkeypatch):
     plan = load_plan(TABLE)
     assert plan.is_ex42
     from foothold_s2.curriculum.continuous import make_runtime
+    monkeypatch.setenv("WORLD_SIZE", "2")
+    monkeypatch.setenv("RANK", "0")
     with pytest.raises(ValueError, match="preparation-only"):
         make_runtime(plan, 3072, "cuda:0", REPO / "outputs")
 

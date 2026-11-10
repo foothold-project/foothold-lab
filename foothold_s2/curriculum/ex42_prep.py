@@ -167,8 +167,8 @@ class EX42Plan:
                 or design.get("d182_decisions") != EXPECTED_D182):
             raise ValueError("EX-42 table must match canonical v0.16 and D182")
         env = doc.get("environment")
-        if not isinstance(env, dict) or env.get("num_envs") != 3072:
-            raise ValueError("EX-42 requires the preregistered 3072 environment count")
+        if not isinstance(env, dict) or env.get("num_envs") != 6144:
+            raise ValueError("EX-42 full plan requires 6144 environments")
         if tuple(env.get("training_presets", {}).keys()) != FAMILIES:
             raise ValueError("EX-42 terrain preset families/order differ from the contract")
         stages = doc.get("stages")
@@ -256,7 +256,7 @@ class EX42Plan:
                             "runtime_integration"}:
             raise ValueError("EX-42 unresolved items must match the current measured gaps")
         allocation = doc.get("command_allocation", {})
-        if (allocation.get("total_denominator") != 3072
+        if (allocation.get("total_denominator") != env["num_envs"]
                 or allocation.get("conditional_denominator") != "continuous_environments"
                 or allocation.get("continuous_share_min") != 0.43
                 or allocation.get("global_command_floor") != {
@@ -376,13 +376,19 @@ class EX42Plan:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
 
     def verify_parent_manifest(self, manifest_path: str | Path, *,
+                               stage_id: str = STAGE_ZERO_ID,
                                parent_pin: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Resolve the parent checkpoint by its pinned manifest SHA, not by filename.
-
-        ``parent_pin`` (cumulative_update, manifest_local_update, sha256) replaces the stage-zero
-        parent pin; only the E0 path passes it (m13000). The default is the stage-zero parent.
-        """
-        pin = self.document["stage_zero"]["parent"] if parent_pin is None else parent_pin
+        """Resolve the stage-zero or E0 parent by its pinned manifest SHA."""
+        if stage_id == STAGE_ZERO_ID:
+            selected = self.document["stage_zero"]["parent"]
+        elif stage_id == "E0":
+            selected = next(row for row in self.document["stages"] if row["id"] == "E0")["parent"]
+        else:
+            raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
+        if parent_pin is not None and any(selected.get(key) != value
+                                          for key, value in parent_pin.items()):
+            raise ValueError(f"EX-42 {stage_id} parent override differs from the pinned table")
+        pin = selected if parent_pin is None else parent_pin
         path = Path(manifest_path).resolve(strict=True)
         try:
             manifest = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -402,6 +408,8 @@ class EX42Plan:
         matches = [name for name, digest in checkpoints.items() if digest == expected]
         if len(matches) != 1:
             raise ValueError("EX-42 parent manifest must contain exactly one checkpoint with the pinned SHA")
+        if pin.get("checkpoint_key") is not None and matches[0] != pin["checkpoint_key"]:
+            raise ValueError("EX-42 parent checkpoint key differs from the pinned E0 parent")
         checkpoint = (path.parent / matches[0]).resolve(strict=True)
         if checkpoint.parent != path.parent or not checkpoint.is_file():
             raise ValueError("EX-42 parent checkpoint must be a file beside its manifest")
@@ -431,15 +439,32 @@ class EX42Plan:
                         graduation_path: str | Path | None,
                         terrain_manifest_path: str | Path | None) -> list[str]:
         approvals = _read_yaml(Path(approvals_path).resolve(strict=True))
-        blockers = ["runtime_integration_pending"]
+        blockers = []
+        runtime = self.document["assumptions_pending_lead"]["runtime_integration"]
+        if runtime.get("approved") is not True or runtime.get("value", {}).get("merged") is not True:
+            blockers.append("runtime_integration_pending")
         if approvals.get("format") != APPROVAL_FORMAT:
             blockers.append("approval_format_invalid")
         if approvals.get("production_launch_allowed") is not True:
             blockers.append("explicit_lead_approval_missing")
         if approvals.get("automatic_launch_allowed") is not False:
             blockers.append("automatic_launch_must_remain_disabled")
+        adoption = self.document["launch"].get("parent_adoption")
+        if (self.document["launch"].get("require_ex41_graduation") is not False
+                or adoption != {"decision": "285348de", "checkpoints": ["m12000_20261107", "m13000_20261108"]}):
+            blockers.append("parent_adoption_decision_missing")
+        e_parent = next(row for row in self.document["stages"] if row["id"] == "E0").get("parent")
+        if e_parent != {"cumulative_update": 13000, "manifest_local_update": 1000,
+                        "checkpoint_key": "model_1000.pt",
+                        "sha256": "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"}:
+            blockers.append("e0_parent_pin_mismatch")
         if graduation_path is None or not Path(graduation_path).is_file():
-            blockers.append("ex41_graduation_receipt_missing")
+            blockers.append("e0_parent_manifest_missing")
+        else:
+            try:
+                self.verify_parent_manifest(graduation_path, stage_id="E0")
+            except (OSError, KeyError, TypeError, ValueError):
+                blockers.append("e0_parent_manifest_invalid")
         if terrain_manifest_path is None or not Path(terrain_manifest_path).is_file():
             blockers.append("terrain_manifest_missing")
         else:
@@ -543,10 +568,10 @@ def score_cell_roles(judge_cells: dict[str, Any], record_cells: dict[str, Any]) 
 def validate_command_shares(continuous_share: float,
                             conditional_shares: dict[str, float], *,
                             floors: dict[str, float] | None = None,
-                            total_envs: int = 3072) -> dict[str, float]:
+                            total_envs: int = 6144) -> dict[str, float]:
     """Validate conditional command shares against whole-environment floors."""
-    if type(total_envs) is not int or total_envs != 3072:
-        raise ValueError("EX-42 command denominator must remain 3072 environments")
+    if type(total_envs) is not int or total_envs != 6144:
+        raise ValueError("EX-42 command denominator must be 6144 environments")
     values = [continuous_share, *conditional_shares.values()]
     if any(type(value) not in (int, float) or isinstance(value, bool)
            or not math.isfinite(float(value)) or not 0.0 <= value <= 1.0
