@@ -41,16 +41,37 @@ STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323
 REWARD_CONTRACT_PARENTS = ((STAGE_ZERO_PARENT_SHA256, 6000), (E0_PARENT_SHA256, 1000))
 
 
-def e0_terrain_mesh_swap_receipt() -> dict[str, Any]:
-    """E0 axis ``terrain_mesh_swap`` (ex42-prep.yaml stages E0) is NOT implemented.
+def e0_terrain_mesh_swap_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    """E0 axis ``terrain_mesh_swap`` (ex42-prep.yaml stages E0): the single E0 change.
 
-    The EX-42 terrain manifest is not generated (ex42-prep.yaml terrain_manifest.status
-    not_generated) and planner-lx is still deciding whether E0 may run without the mesh swap.
-    This is only a place to hook the swap in later; it changes nothing and builds no feature.
+    The swap itself is NOT implemented: no importer adapter mounts the combined mesh
+    (foothold_s2/terrains/ex42_combined.py joins it; the training env still builds its own
+    generator). Training therefore stops at ``mount_e0_terrain_mesh`` and never runs on the
+    stage-zero mesh under the name E0 (planner-lx D1/D2, lead 23:56).
     """
     return {"axis": "terrain_mesh_swap", "state": "not_implemented",
-            "reason": "terrain manifest not generated; planner decision pending",
-            "environment": "same as stage zero (performance policy, level cap 5)"}
+            "reason": "mesh mount adapter not written; terrain manifest required before E0 trains",
+            "terrain_manifest": manifest if manifest is not None else {"state": "missing"}}
+
+
+def read_e0_terrain_manifest(plan: EX42Plan, path: str | Path | None) -> dict[str, Any]:
+    """Fail closed unless a measured terrain manifest exists and passes the plan contract."""
+    if path is None or not Path(path).is_file():
+        raise ValueError("EX-42 E0 requires terrain_manifest.json (terrain_manifest_missing)")
+    raw = Path(path).read_bytes()
+    manifest = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(manifest, dict):
+        raise ValueError("EX-42 terrain manifest must be a JSON object")
+    plan.validate_terrain_manifest(manifest)       # raises unless status measured and complete
+    return {"state": "measured", "path": str(Path(path).resolve()),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "kinds": len(manifest["kinds"]), "receipt_ids": manifest.get("receipt_ids", [])}
+
+
+def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
+    """Place for the E0 mesh swap. Intentionally not implemented (see the receipt)."""
+    raise NotImplementedError(
+        "EX-42 E0 terrain_mesh_swap is not implemented: training stops before the environment is built")
 
 
 def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:
@@ -236,19 +257,34 @@ def validate_speed_probe_switches(*, speed_probe: bool, stage_zero_requested: bo
 
 
 def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume_requested: bool,
-                            e0_approved: bool, **cli: Any) -> dict[str, Any]:
+                            e0_approved: bool, terrain_manifest_path: str | Path | None = None,
+                            **cli: Any) -> dict[str, Any]:
     """E0 entry as train_start calls it: validates the CLI and returns the request.
 
-    Dry-run exits after this; otherwise train_start continues into the stage-zero training path.
-    A missing or incomplete E0 approval cell still fails closed inside validate_ex42_stage_e_cli.
+    Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
+    A real run needs a measured manifest (else ValueError) and then stops at the unimplemented
+    mesh mount. A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
     """
     if stage_zero_requested or resume_requested:
         raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
     if not e0_approved:
         raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
-    _plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
-    request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt()
-    request["training_requested"] = not dry_run
+    plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
+    if dry_run:
+        try:
+            manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)
+        except (ValueError, OSError) as exc:
+            manifest = {"state": "missing_or_invalid", "reason": str(exc)}
+        request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
+        request["training_requested"] = False
+        request["training_blockers"] = [
+            "terrain_mesh_swap_not_implemented",
+            *([] if manifest.get("state") == "measured" else ["terrain_manifest_missing_or_invalid"])]
+        return request
+    manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)    # raises: fail closed
+    request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
+    request["training_requested"] = True
+    mount_e0_terrain_mesh(manifest)                                      # raises NotImplementedError today
     return request
 
 

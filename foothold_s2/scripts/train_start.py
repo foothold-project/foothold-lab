@@ -75,6 +75,7 @@ _pre.add_argument("--ex42_stage_zero_dry_run", action="store_true")
 _pre.add_argument("--ex42_speed_probe", action="store_true")
 _pre.add_argument("--ex42_stage_e0_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e0_dry_run", action="store_true")
+_pre.add_argument("--ex42_terrain_manifest")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
                   help="W65 self-resume from a manifest-pinned EX-42 stage-zero model_N.pt")
 _pre.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -483,6 +484,7 @@ if _ex42_requested:
             dry_run=_pre_args.ex42_stage_e0_dry_run, stage_zero_requested=_stage_zero_requested,
             resume_requested=bool(_pre_args.ex42_resume_from or _pre_args.ex42_resume_smoke),
             e0_approved=_pre_args.ex42_stage_e0_approved, stage_id="E0",
+            terrain_manifest_path=_pre_args.ex42_terrain_manifest,
             plan_path=_pre_args.ex42_plan, approvals_path=_pre_args.ex42_approvals,
             experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
             parent_checkpoint_path=os.path.join(os.path.dirname(os.path.abspath(
@@ -494,7 +496,9 @@ if _ex42_requested:
             force_gt=_pre_args.force_gt, speed_probe=_pre_args.ex42_speed_probe)
         print("EX42_STAGE_E0_PREFLIGHT " + json.dumps({
             **_e0_preflight, "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
-        raise SystemExit(0)
+        # A real E0 run never gets here today: run_ex42_stage_e0_entry needs a measured terrain
+        # manifest and then stops at the unimplemented mesh mount (raises). Dry-run exits 0.
+        raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
             validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
@@ -669,6 +673,8 @@ parser.add_argument("--ex42_stage_e0_approved", action="store_true",
                     help="Scoped approval for EX-42 E0 only (m13000, 250 updates)")
 parser.add_argument("--ex42_stage_e0_dry_run", action="store_true",
                     help="CPU-only E0 preflight; exits before AppLauncher")
+parser.add_argument("--ex42_terrain_manifest", type=str, default=None,
+                    help="Measured EX-42 terrain_manifest.json; a real E0 run needs it (fails closed)")
 parser.add_argument("--ex42_resume_from", type=str, default=None,
                     help="W65 self-resume from a manifest-pinned EX-42 model_N.pt")
 parser.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -715,6 +721,7 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_speed_probe != _pre_args.ex42_speed_probe
         or args_cli.ex42_stage_e0_approved != _pre_args.ex42_stage_e0_approved
         or args_cli.ex42_stage_e0_dry_run != _pre_args.ex42_stage_e0_dry_run
+        or args_cli.ex42_terrain_manifest != _pre_args.ex42_terrain_manifest
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
         or args_cli.ex42_resume_relocation_receipt != _pre_args.ex42_resume_relocation_receipt
         or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
