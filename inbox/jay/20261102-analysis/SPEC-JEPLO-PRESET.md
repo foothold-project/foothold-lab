@@ -72,3 +72,15 @@ python tools/verify_jeplo_cpu.py --source <JEPLO-460e2272-clone> --output <새-�
 ```
 
 원자료: [실행 preset](https://github.com/ASIG-X/JEPLO/blob/460e2272907af053d6e66b57fec71fdbe6ca1774/training/go2_parkour/go2_parkour/terrain/parkour_terrains_cfg.py) :15~167 · `parkour_sub_terrains_cfg.py`:21~168 · `parkour_sub_terrians.py`:22~154,158~334,613~720,803~982 · `utils.py`:28~103 · `parkour_terrain_generator.py`:80~139. GPL 라이선스는 같은 커밋의 LICENSE.
+
+## 6. 11/11 시작점 정정: 수치 형상과 로봇 reset은 별개
+
+`확인됨`: 원본의 `utils.py` 중앙 origin과 실제 로봇 시작점은 다르다. 원본 `tasks/go2_loco_env.py:55~60`의 direct-command 4종(flat · discrete_grid · pyramid_stairs · inverted_pyramid_stairs)만 중앙 origin을 쓴다. 나머지 gap · box · discrete_obstacles는 `tasks/go2_loco_events.py:47~69`에서 첫 waypoint로 옮기고 XY·yaw 표본을 0으로 만든다. 이전 §5의 origin 최대 오차 0은 **wrapper 중앙 좌표만** 검증한 것이다. 실제 reset 안전성을 검증한 것이 아니며, 11/11 장착 실패가 이 누락을 드러냈다.
+
+lead 01:44 결정: 위 세 종류는 안전 지지 패치에서 XY·yaw 흔들림 0, 다른 종류는 기존 XY ±0.5 m · yaw ±3.14 rad 유지. `jeplo_preset.RESET_RANGES`는 이 세 종류만 선언한다. `reset_ranges_by_column({실제 전역 열번호: KINDS 이름})`은 C 열별 표를 만든다. 열 50 또는 env 번호를 고정값으로 쓰지 않는다. JSON에 저장한 열번호는 소비자가 정수로 되읽어야 한다. sonnet의 `ex42_column_reset`이 장착·훈련 reset 양쪽에서 이 선언을 첫 reset 전에 소비한다. 선언만 있고 소비하지 않으면 이 수정은 완료되지 않는다.
+
+`tile_function`은 변경한 `spawn_origin`을 반환한다. 세 종류의 앞쪽 x=0.4~1.6 m · y=4.08~4.88 m에서 실제 절벽 보정 후 삼각형 메시를 조회한다. 0.70×0.50 m 발 주변 직사각형을 가로지르는 삼각형 전체의 높이 범위가 −0.10~0.15 m, 높이차 0.15 m 이내인 후보만 선택한다. 중심 z도 그 메시와 수직선 교차로 구한다. 수치는 **우리 시작점 계약의 가정**이며 논문의 성공 문턱이 아니다. 현재 기본 Go2 관절 자세와 yaw=0용이다. 초기 관절·몸 크기·roll/pitch·jitter를 바꾸면 다시 검증해야 한다. 후보가 없으면 오류를 낸다. 틈 바닥이나 먼 끝 플랫폼으로 몰래 옮기지 않는다.
+
+높이장 · 메시 정점 · 삼각형 · 치수 · 레벨 식은 그대로다. `HeightTile.origin`은 원본 wrapper 중앙값을 대조하기 위해 남긴 **참고 좌표**이고 reset에 사용하지 않는다. 새 시작점을 JEPLO 첫 waypoint와 수치적으로 동일하다고 부르지 않는다. 앞쪽 안전 패치를 우리 명령 환경에 맞춰 선택한 것이다.
+
+CPU 140개 통과 · 원본 형상 oracle 420개 차이 0. 실제 실패 메시의 변경 대상 30칸에서 1,470개 지지 조회점을 확인했다. 이 결과는 동적 접촉·장착 PASS가 아니다. 소비자 연결 뒤 모든 C 열에서 네 발 아래 지지면과 clearance를 다시 재야 한다. 근거와 소비자 호출 시험은 [정정 보고](../20261111-analysis/REPORT-JEPLO-C-SPAWN-1111.md).

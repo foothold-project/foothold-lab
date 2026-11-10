@@ -63,7 +63,7 @@ def test_measurement_factory_keeps_nine_metre_layout_and_real_geometry(kind, cfg
     cfg.seed = measured.seed  # TerrainGenerator._get_terrain_mesh assigns it.
     meshes, origin = cfg.function(0.91, cfg)
     tile = jp.build_heightfield(kind, 9, jp.adapter_seed(kind, 0.91, 44))
-    np.testing.assert_array_equal(origin, tile.origin)
+    np.testing.assert_array_equal(origin, jp.spawn_origin(tile))
     import trimesh
     vertices, faces = jp.mesh_arrays(tile)
     expected = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)

@@ -56,10 +56,10 @@ def test_adapter_returns_mesh_and_origin_at_exact_explicit_level():
     cfg = SimpleNamespace(size=(9, 9), kind='box', seed=42, jeplo_level=9)
     with pytest.warns(RuntimeWarning, match='explicit'):
         meshes, origin = tile_function(0.2, cfg)
-    from foothold_s2.terrains.jeplo_preset import adapter_seed
+    from foothold_s2.terrains.jeplo_preset import adapter_seed, spawn_origin
     tile = build_heightfield('box', 9, adapter_seed('box', 0.2, 42))
     assert len(meshes) == 1
-    np.testing.assert_array_equal(origin, tile.origin)
+    np.testing.assert_array_equal(origin, spawn_origin(tile))
     assert meshes[0].bounds[1, 0] == 9.0
 
 
