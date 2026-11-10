@@ -39,6 +39,14 @@ def foot_ids(raw):
     return sensor, ids
 
 
+def robot_foot_ids(robot):
+    """Match the contact sensor's named feet to articulation link velocity rows."""
+    names = list(robot.body_names)
+    if len(set(names)) != len(names) or any(names.count(name) != 1 for name in cells.FOOT_NAMES):
+        raise RuntimeError(f"EX-42 robot foot links missing or duplicated: {names}")
+    return [names.index(name) for name in cells.FOOT_NAMES]
+
+
 def _finite(value):
     value = float(value)
     return value if math.isfinite(value) else None
@@ -61,7 +69,7 @@ def directional_slope_kinds(tiles, require: bool):
 
 
 def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, steps,
-                      *, verify_pose_cmd: bool = False):
+                      *, verify_pose_cmd: bool = False, foot_body_ids=None):
     """Execute the real per-step command boundary; also exercised with a CPU env."""
     n = env.num_envs
     goal_turn = spec["kind"] == "goal_turn_stop"
@@ -73,6 +81,8 @@ def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target,
     root_xy = torch.zeros(steps, n, 2, device=raw.device)
     valid = torch.zeros(steps, n, dtype=torch.bool, device=raw.device)
     contact = torch.zeros(steps, n, 4, dtype=torch.bool, device=raw.device)
+    foot_xy_speed = (torch.zeros(steps, n, 4, device=raw.device)
+                     if foot_body_ids is not None else None)
     done_rows = torch.zeros_like(valid)
     cmd_pre = torch.zeros(steps, n, 3, device=raw.device)
     cmd_post = torch.zeros_like(cmd_pre)
@@ -122,10 +132,16 @@ def execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target,
         wz[step] = data.root_ang_vel_b[:, 2]
         root_xy[step] = data.root_pos_w[:, :2]
         contact[step] = torch.linalg.vector_norm(sensor.data.net_forces_w[:, feet], dim=-1) > cells.CONTACT_N
-    return {"yaw": yaw, "vx": vx, "vy": vy, "wz": wz, "root_xy": root_xy, "valid": valid,
+        if foot_xy_speed is not None:
+            foot_xy_speed[step] = torch.linalg.vector_norm(
+                data.body_lin_vel_w[:, foot_body_ids, :2], dim=-1)
+    result = {"yaw": yaw, "vx": vx, "vy": vy, "wz": wz, "root_xy": root_xy, "valid": valid,
             "contact": contact, "done": done_rows, "cmd_pre": cmd_pre, "cmd_post": cmd_post,
             "heading_pre": heading_pre, "stand_pre": stand_pre, "reached_step": reached,
             "stop_steps": stop_steps}
+    if foot_xy_speed is not None:
+        result["foot_xy_speed_mps"] = foot_xy_speed
+    return result
 
 
 def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
@@ -143,6 +159,8 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
     if not args.fixed_terrain or args.fixed_level is None:
         raise ValueError("W57 requires a fixed terrain level")
     sensor, feet = foot_ids(raw)
+    ex42_maintenance = bool(getattr(args, "ex42_maintenance", False))
+    body_feet = robot_foot_ids(robot) if ex42_maintenance else None
     if bool(term.is_flag_env.any()):
         raise RuntimeError("W57 fixed command suite requires no flag environments")
     source_paths = (Path(__file__), Path(cells.__file__), Path(sys.modules["__main__"].__file__),
@@ -157,6 +175,14 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "foot_order": cells.FOOT_NAMES, "foot_contact_threshold_n": cells.CONTACT_N,
               "cases": cells.case_specs(), "modes": {}, "terrain_tiles": None,
               "measurement_note": "alive samples exclude post-reset state; goal offsets use reset body yaw; complete stop windows only; no pass threshold"}
+    if ex42_maintenance:
+        result["ex42_maintenance"] = {
+            "schema": "foothold-ex42-foot-xy/1", "foot_order": list(cells.FOOT_NAMES),
+            "foot_body_ids": body_feet, "sample": "post-step only while valid before any reset jump",
+            "speed": "foot articulation link center world XY speed; static terrain reference",
+            "contact_threshold_n": cells.CONTACT_N,
+            "drag": "sum(contact and valid * foot_center_xy_speed_mps * dt), proxy not contact-point slip",
+        }
     result["reverse_stop_lateral_metric"] = {
         "status": "not_exercised_by_current_cases",
         "reason": "W57 currently has no reverse-to-stop command case; no command schedule was inferred",
@@ -218,7 +244,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
             samples = execute_case_loop(
                 env, raw, robot, term, policy, sensor, feet, spec, target, steps,
                 verify_pose_cmd=bool(getattr(args, "ex41_checkpoint_preparation", {}).get(
-                    "checkpoint_pose_commands", False)))
+                    "checkpoint_pose_commands", False)), foot_body_ids=body_feet)
             if counts["total"] != n * steps:
                 raise RuntimeError(f"W57 policy perception step count invalid: {counts}")
             if (mode == "eval_gt" and counts["gt"] != counts["total"]) or (mode != "eval_gt" and counts["gt"] != 0):
@@ -265,6 +291,8 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                                  "yaw_absolute_accum_median_rad": cells.finite_median(
                                      [r["yaw_absolute_accum_rad"] for r in selected])}
             filename = f"axis_v2_{mode}_{spec['name']}.npz"
+            extra = ({"foot_xy_speed_mps": samples["foot_xy_speed_mps"].cpu().numpy()}
+                     if ex42_maintenance else {})
             np.savez_compressed(out_dir / filename, yaw=y, vx=x, vy=side, wz=turn, alive=al,
                                 root_xy=samples["root_xy"].cpu().numpy(),
                                 contact=feet_on, done=samples["done"].cpu().numpy(),
@@ -275,7 +303,7 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
                                 reached_step=reached, stop_steps=samples["stop_steps"],
                                 start_yaw=starts, target_yaw=targets, start_xy=start_xy.cpu().numpy(),
                                 terrain_level=np.array([r["level"] for r in tiles]),
-                                terrain_kind=np.array([r["kind"] for r in tiles]), dt=dt)
+                                terrain_kind=np.array([r["kind"] for r in tiles]), dt=dt, **extra)
             result["modes"][mode][spec["name"]] = {
                 "kind": spec["kind"], "goal_delta_deg": spec["goal_delta_deg"],
                 "start_offset_max_m": start_offset,

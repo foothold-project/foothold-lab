@@ -76,6 +76,9 @@ def test_real_case_loop_command_boundary_observation_feet_and_reset(sign, reset_
     robot = Robot()
     robot.data.root_lin_vel_b = torch.zeros(2, 3)
     robot.data.root_ang_vel_b = torch.zeros(2, 3)
+    robot.body_names = ["base", "FR_foot", "RR_foot", "FL_foot", "RL_foot"]
+    robot.data.body_lin_vel_w = torch.zeros(2, 5, 3)
+    robot.data.body_lin_vel_w[:, 3, :2] = torch.tensor([3.0, 4.0])
     term = SimpleNamespace(vel_command_b=torch.zeros(2, 3), heading=torch.ones(2, dtype=torch.bool),
                            stand=torch.zeros(2, dtype=torch.bool), psi_star=torch.zeros(2))
     forces = torch.zeros(2, 5, 3)
@@ -123,7 +126,8 @@ def test_real_case_loop_command_boundary_observation_feet_and_reset(sign, reset_
     env, policy = Env(), Policy()
     target = torch.full((2,), float(sign))
     spec = {"kind": "goal_turn_stop", "command": (0.0, 0.0, float(sign))}
-    receipt = R.execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, 6)
+    receipt = R.execute_case_loop(env, raw, robot, term, policy, sensor, feet, spec, target, 6,
+                                  foot_body_ids=R.robot_foot_ids(robot))
     assert receipt["root_xy"].shape == (6, 2, 2)
     assert receipt["reached_step"].tolist() == [1, 1]
     assert receipt["cmd_pre"][0, 0, 2].item() == pytest.approx(sign)
@@ -132,6 +136,7 @@ def test_real_case_loop_command_boundary_observation_feet_and_reset(sign, reset_
                                                      if reset_at is None else [False, True, True, False])
     assert not receipt["heading_pre"].any()
     assert receipt["contact"][0, 0].tolist() == [True, False, False, False]
+    assert receipt["foot_xy_speed_mps"][0, 0].tolist() == pytest.approx([5.0, 0.0, 0.0, 0.0])
     assert env.observations == 6
     assert torch.equal(torch.stack(policy.seen), receipt["cmd_pre"])
     assert torch.equal(receipt["cmd_pre"], receipt["cmd_post"])

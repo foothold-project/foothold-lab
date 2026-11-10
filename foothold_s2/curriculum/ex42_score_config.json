@@ -1,0 +1,23 @@
+{
+  "format": "foothold-ex42-score-config/1",
+  "status": "measurement_ready_baseline_unpinned",
+  "task": "FootholdS2-Go2-S2-SB-v0",
+  "envs": 64,
+  "steps": 300,
+  "stand_seconds": 3.0,
+  "stand_skip_seconds": 1.0,
+  "stand_contact_n": 1.0,
+  "eval_seed": 42,
+  "modes": ["eval_gt", "probe_prop_only", "eval_pred"],
+  "map_command_suite": "extended",
+  "axis_fixed_level": 2,
+  "axis_foot_xy": true,
+  "maintenance_source": "foothold_s2/curriculum/ex42-prep.yaml",
+  "maintenance_ids": [
+    "survival", "tracking_vx_vy", "tracking_wz", "command_projection",
+    "per_foot_contact", "gait_phase_and_duty", "foot_drag_m", "yaw_integral",
+    "W57_spin_survival", "parent_cumulative_drop", "calibration_repeat_width"
+  ],
+  "baseline": null,
+  "verdict_when_baseline_absent": "HOLD"
+}
