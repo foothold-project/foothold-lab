@@ -17,6 +17,8 @@ from foothold_s2.curriculum.ex42_prep import EX42Plan
 
 RECEIPT_FORMAT = "foothold-ex42-kind-measurement/1"
 MANIFEST_FORMAT = "foothold-ex42-terrain-manifest/1"
+# Linux ai-lx01 has two cards and lead assigns the idle one; the receipt records the real device.
+MEASURE_DEVICES = ("cuda:0", "cuda:1")
 
 
 def measure_kind_with_kit(
@@ -24,7 +26,7 @@ def measure_kind_with_kit(
     subterrain_cfg: Any, original_dimensions_m: dict[str, float],
     training_dimensions_m: dict[str, float], evaluation_dimensions_m: dict[str, float],
     evaluation_axis_directions: dict[str, str], paper_reference: str,
-    physical_flag: bool, source_head: str, seed: int,
+    physical_flag: bool, source_head: str, seed: int, device: str = "cuda:1",
 ) -> tuple[dict[str, Any], float]:
     """Generate one isolated tile in Kit, hash raw geometry, and return its row."""
     if (not isinstance(family, str) or not family
@@ -77,7 +79,7 @@ def measure_kind_with_kit(
         "paper_reference": paper_reference,
         "physical_flag": physical_flag,
         "measurement_provenance": {
-            "source_head": source_head, "seed": seed, "device": "cuda:1",
+            "source_head": source_head, "seed": seed, "device": device,
             "vertex_count": int(len(vertices)), "face_count": int(len(faces)),
             "generation_seconds": elapsed,
         },
@@ -91,8 +93,8 @@ def build_family_receipt(
     """Seal Kit-generated rows as a non-training family measurement receipt."""
     if not rows or any(row.get("family") != family for row in rows):
         raise ValueError("EX-42 family receipt rows must all belong to its family")
-    if device != "cuda:1":
-        raise ValueError("EX-42 terrain measurement device must be cuda:1")
+    if device not in MEASURE_DEVICES:
+        raise ValueError(f"EX-42 terrain measurement device must be one of {MEASURE_DEVICES}")
     if (not receipt_id or len(source_head) != 40
             or any(c not in "0123456789abcdef" for c in source_head)
             or type(seed) is not int):
@@ -133,7 +135,7 @@ def _validate_kind_row(row: dict[str, Any]) -> None:
         raise ValueError("EX-42 kind identity, source, physical flag, or geometry SHA invalid")
     if (not isinstance(provenance, dict) or provenance.get("kit_receipt_state") != "passed"
             or provenance.get("training_started") is not False
-            or provenance.get("device") != "cuda:1"
+            or provenance.get("device") not in MEASURE_DEVICES
             or not isinstance(provenance.get("source_head"), str)
             or len(provenance["source_head"]) != 40
             or any(c not in "0123456789abcdef" for c in provenance["source_head"])
@@ -183,7 +185,7 @@ def assemble_manifest(
                 or any(c not in "0123456789abcdef" for c in source_head)):
             raise ValueError("EX-42 measurement receipt source_head missing or invalid")
         if (receipt.get("training_started") is not False
-                or receipt.get("device") != "cuda:1" or receipt.get("kit_started") is not True):
+                or receipt.get("device") not in MEASURE_DEVICES or receipt.get("kit_started") is not True):
             raise ValueError("EX-42 measurement must be a queued non-training Kit probe")
         family = receipt.get("family")
         if family not in expected_counts:
