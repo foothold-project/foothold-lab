@@ -1,0 +1,1297 @@
+{
+  "continuous": {
+    "pyramid_stairs": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "pyramid_stairs_inv": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "boxes": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "training_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "evaluation_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "evaluation_axis_directions": {
+        "grid_width_m": "same",
+        "grid_height_l9_m": "same",
+        "platform_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "random_rough": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "noise_l9_m": "same",
+        "noise_step_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "hf_pyramid_slope": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "hf_pyramid_slope_inv": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "stage_stairs": {
+      "preset_id": "rough_go2_cfg",
+      "original_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    }
+  },
+  "E": {
+    "slope_steep": {
+      "preset_id": "paper_ext_v1",
+      "original_dimensions_m": {
+        "slope_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.7,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.7,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false
+    },
+    "slope_steep_inv": {
+      "preset_id": "paper_ext_v1",
+      "original_dimensions_m": {
+        "slope_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.7,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.7,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false
+    },
+    "stairs_high": {
+      "preset_id": "paper_ext_v1",
+      "original_dimensions_m": {
+        "step_height_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false
+    },
+    "stairs_high_inv": {
+      "preset_id": "paper_ext_v1",
+      "original_dimensions_m": {
+        "step_height_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false
+    }
+  },
+  "A": {
+    "pyramid_stairs": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "pyramid_stairs_inv": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "boxes": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "training_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "evaluation_dimensions_m": {
+        "grid_width_m": 0.45,
+        "grid_height_l9_m": 0.1,
+        "platform_width_m": 2.0
+      },
+      "evaluation_axis_directions": {
+        "grid_width_m": "same",
+        "grid_height_l9_m": "same",
+        "platform_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "random_rough": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "noise_l9_m": "same",
+        "noise_step_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "hf_pyramid_slope": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "hf_pyramid_slope_inv": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "training_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_dimensions_m": {
+        "slope_l9_ratio": 0.4,
+        "platform_width_m": 2.0,
+        "border_width_m": 0.25
+      },
+      "evaluation_axis_directions": {
+        "slope_l9_ratio": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "stage_stairs": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "training_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_m": 0.15,
+        "step_width_m": 0.3,
+        "platform_width_m": 3.0,
+        "border_width_m": 1.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_m": "same",
+        "step_width_m": "same",
+        "platform_width_m": "same",
+        "border_width_m": "same"
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false
+    },
+    "stepping_stones_low": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "stone_x_m": 0.2,
+        "stone_y_m": 0.2,
+        "gap_x_m": 0.25,
+        "gap_y_m": 0.175,
+        "stone_height_m": 0.05
+      },
+      "training_dimensions_m": {
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.177,
+        "gap_x_m": 0.277,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05
+      },
+      "evaluation_dimensions_m": {
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.1505,
+        "gap_x_m": 0.3186,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05
+      },
+      "evaluation_axis_directions": {
+        "stone_x_m": "same",
+        "stone_y_m": "lower",
+        "gap_x_m": "higher",
+        "gap_y_m": "same",
+        "stone_height_m": "same"
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false
+    },
+    "stepping_stones_high": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "stone_x_m": 0.2,
+        "stone_y_m": 0.2,
+        "gap_x_m": 0.25,
+        "gap_y_m": 0.175,
+        "stone_height_m": 0.05,
+        "random_ratio_l9": 1.0
+      },
+      "training_dimensions_m": {
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.177,
+        "gap_x_m": 0.277,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05,
+        "random_ratio_l9": 1.0
+      },
+      "evaluation_dimensions_m": {
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.1505,
+        "gap_x_m": 0.3186,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05,
+        "random_ratio_l9": 1.0
+      },
+      "evaluation_axis_directions": {
+        "stone_x_m": "same",
+        "stone_y_m": "lower",
+        "gap_x_m": "higher",
+        "gap_y_m": "same",
+        "stone_height_m": "same",
+        "random_ratio_l9": "same"
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false
+    },
+    "balance_beams": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "beam_width_y_m": 0.175
+      },
+      "training_dimensions_m": {
+        "beam_width_y_m": 0.09
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_y_m": 0.0765
+      },
+      "evaluation_axis_directions": {
+        "beam_width_y_m": "lower"
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false
+    },
+    "stepping_beams": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "beam_thickness_x_m": 0.15,
+        "gap_x_m": 0.275
+      },
+      "training_dimensions_m": {
+        "beam_thickness_x_m": 0.1662,
+        "gap_x_m": 0.3047
+      },
+      "evaluation_dimensions_m": {
+        "beam_thickness_x_m": 0.1413,
+        "gap_x_m": 0.3504
+      },
+      "evaluation_axis_directions": {
+        "beam_thickness_x_m": "lower",
+        "gap_x_m": "higher"
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false
+    },
+    "gaps": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "gap_x_m": 0.7,
+        "depth_min_m": 0.2,
+        "depth_max_m": 0.7
+      },
+      "training_dimensions_m": {
+        "gap_x_m": 0.7756,
+        "depth_min_m": 0.2,
+        "depth_max_m": 0.7
+      },
+      "evaluation_dimensions_m": {
+        "gap_x_m": 0.8919,
+        "depth_min_m": 0.2,
+        "depth_max_m": 0.7
+      },
+      "evaluation_axis_directions": {
+        "gap_x_m": "higher",
+        "depth_min_m": "same",
+        "depth_max_m": "same"
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false
+    },
+    "flat": {
+      "preset_id": "start_go2_v2",
+      "original_dimensions_m": {
+        "tile_size_m": 8.0
+      },
+      "training_dimensions_m": {
+        "tile_size_m": 8.0
+      },
+      "evaluation_dimensions_m": {
+        "tile_size_m": 8.0
+      },
+      "evaluation_axis_directions": {
+        "tile_size_m": "same"
+      },
+      "paper_reference": "15-TERRAIN v1.4 §5 보조 평지 (DT:110) · 칸 8 × 8 m (rough_go2_cfg.py:42 · DT:214)",
+      "physical_flag": false
+    }
+  },
+  "C": {
+    "gap": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "gap_l9_m": 0.64,
+        "depth_min_m": 1.0,
+        "depth_max_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "gap_l9_m": 0.64,
+        "depth_min_m": 1.0,
+        "depth_max_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "gap_l9_m": 0.64,
+        "depth_min_m": 1.0,
+        "depth_max_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "gap_l9_m": "same",
+        "depth_min_m": "same",
+        "depth_max_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "flat": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "tile_size_m": 9.0,
+        "roughness_l9_m": 0.06
+      },
+      "training_dimensions_m": {
+        "tile_size_m": 9.0,
+        "roughness_l9_m": 0.06
+      },
+      "evaluation_dimensions_m": {
+        "tile_size_m": 9.0,
+        "roughness_l9_m": 0.06
+      },
+      "evaluation_axis_directions": {
+        "tile_size_m": "same",
+        "roughness_l9_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "box": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "step_l9_m": 0.5,
+        "center_height_l9_m": 1.5,
+        "length_min_m": 0.8,
+        "length_max_m": 1.5,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "step_l9_m": 0.5,
+        "center_height_l9_m": 1.5,
+        "length_min_m": 0.8,
+        "length_max_m": 1.5,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "step_l9_m": 0.5,
+        "center_height_l9_m": 1.5,
+        "length_min_m": 0.8,
+        "length_max_m": 1.5,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "step_l9_m": "same",
+        "center_height_l9_m": "same",
+        "length_min_m": "same",
+        "length_max_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "discrete_obstacles": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.1,
+        "box_height_l9_m": 0.4,
+        "box_size_min_m": 0.8,
+        "box_size_max_m": 1.25,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.1,
+        "box_height_l9_m": 0.4,
+        "box_size_min_m": 0.8,
+        "box_size_max_m": 1.25,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.1,
+        "box_height_l9_m": 0.4,
+        "box_size_min_m": 0.8,
+        "box_size_max_m": 1.25,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "grid_m": "same",
+        "grid_height_l9_m": "same",
+        "box_height_l9_m": "same",
+        "box_size_min_m": "same",
+        "box_size_max_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "discrete_grid": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.2,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.2,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "grid_m": 0.5,
+        "grid_height_l9_m": 0.2,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "grid_m": "same",
+        "grid_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "pyramid_stairs": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_min_m": "same",
+        "step_width_max_m": "same",
+        "platform_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    },
+    "inverted_pyramid_stairs": {
+      "preset_id": "jeplo_preset_v1",
+      "original_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "training_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l9_m": 0.2,
+        "step_width_min_m": 0.25,
+        "step_width_max_m": 0.35,
+        "platform_m": 2.0,
+        "tile_size_m": 9.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l9_m": "same",
+        "step_width_min_m": "same",
+        "step_width_max_m": "same",
+        "platform_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false
+    }
+  },
+  "B": {
+    "stair_up": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "stair_slope_l0_deg": 5.0,
+        "stair_slope_l9_deg": 45.0
+      },
+      "training_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tread_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tread_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l0_m": "same",
+        "step_height_l9_m": "same",
+        "tread_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문(ANYmal-D · TRON1 같음): 경사 5° → 45° (단 높이 아님) · G1 코드: step 0.05 → 0.27 · 폭 0.27~0.35 (TR:41~70) · 학습 = G1 값 그대로 (CG:294 에 명시 없음 · 코드 실제값 · 등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "stair_down": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "stair_slope_l0_deg": 5.0,
+        "stair_slope_l9_deg": 45.0
+      },
+      "training_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tread_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tread_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "step_height_l0_m": "same",
+        "step_height_l9_m": "same",
+        "tread_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문(ANYmal-D · TRON1 같음): 경사 5° → 45° · G1 코드 step 0.05 → 0.27 (TR:41~70) · 학습 = G1 값 (등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "rough": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "noise_amplitude_l9_m": 0.2
+      },
+      "training_dimensions_m": {
+        "noise_amplitude_l9_m": 0.08,
+        "undulation_slope_l9_deg": 20.0,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "noise_amplitude_l9_m": 0.08,
+        "undulation_slope_l9_deg": 20.0,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "noise_amplitude_l9_m": "same",
+        "undulation_slope_l9_deg": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D: 잡음 ±0 → ±0.2 m · TRON1 ±0.15 (경사 성분은 원문에 없음) · G1 코드: 거칠기 0 → 0.16 (= 진폭 ±0.08 · CG E3 G1 전폭) + 3 m 굴곡 경사 0 → 20° (TR:24~40 · CT:105~156) · 학습 = G1 값 (CG:294 · prep:95~97 undulation 20 · roughness 0.16 · lead 01:42 정정 · 등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "boxes": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.4
+      },
+      "training_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "box_height_l0_m": "same",
+        "box_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 0.05 → 0.4 · TRON1 0.05 → 0.3 · G1 코드 0.05 → 0.3 · 20 상자 0.8~2.0 m (TR:71~89) · 학습 = TRON1 = G1 값 (등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "obstacles": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "density_l9_per_m2": 0.5
+      },
+      "training_dimensions_m": {
+        "density_l9_per_m2": 0.5,
+        "obstacle_height_min_m": 0.2,
+        "obstacle_height_max_m": 2.0,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "density_l9_per_m2": 0.5,
+        "obstacle_height_min_m": 0.2,
+        "obstacle_height_max_m": 2.0,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "density_l9_per_m2": "same",
+        "obstacle_height_min_m": "same",
+        "obstacle_height_max_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 밀도 0 → 0.5 m⁻² (ANYmal-D · TRON1 같음) · 높이 0.2~2.0 · 크기 0.3~0.8 은 G1 코드 (TR:90~109) · CG:294 「밀도 0 → 0.5 · 높이 0.2~2.0」 · 등급 원문(밀도) · 코드(높이) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "climb_up": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 1.0
+      },
+      "training_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 0.53,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 0.53,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "ledge_height_l0_m": "same",
+        "ledge_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 0.1 → 1.0 · TRON1 0.1 → 0.48 · G1 코드 0.1 → 0.65 (TR:110~126) · 학습 0.53 = CG:294 결정 (D159 0.32 → JEPLO Go2 실기 상자 0.53 · v0.15) · prep:94 climb_up_l9_m 0.53 · 물리 표시: 턱 0.60 판정 (E6b high_ledge) · 0.75 기록 열 (CG:593 · 625 · prep:468) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true
+    },
+    "climb_down": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 1.0
+      },
+      "training_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 0.6,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 0.6,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "ledge_height_l0_m": "same",
+        "ledge_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 0.2 → 1.0 · TRON1 0.2 → 0.88 · G1 코드 0.2 → 0.88 (TR:127~143) · 학습 0.6 = CG:294 · 물리 표시: 0.6 판정 · 0.75 · 0.88 기록 열 (CG:594 · 625 · prep:473) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true
+    },
+    "gap": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "gap_l0_m": 0.1,
+        "gap_l9_m": 1.1
+      },
+      "training_dimensions_m": {
+        "gap_l0_m": 0.18,
+        "gap_l9_m": 0.7,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "gap_l0_m": 0.18,
+        "gap_l9_m": 0.7,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 0.1 → 1.1 (양쪽 높이차 ±30 %) · TRON1 0.1 → 0.6 · G1 코드 0.18 → 1.2 (TR:162~178) · 학습 0.18 → 0.70 = CG:294 결정 · 틈 0.90 · 1.00 기록 열은 START 평가 전용 열 쪽 (CG:592 start_go2_eval_gap115 행) 이라 이 종 flag 는 false · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "pallets": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3
+      },
+      "training_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "beam_width_l0_m": "same",
+        "beam_width_l9_m": "same",
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "height_difference_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 폭 0.4 → 0.16 · 틈 0.08 → 0.35 · 높이차 0 → 0.3 · TRON1 틈 0.08 → 0.2 · 높이차 0 → 0.2 · G1 코드 폭 0.4 → 0.16 · 틈 0.16 → 0.24 · 높이 0 → 0.2 (TR:179~196) · 학습 = ANYmal-D 원문값 = CG:294 v0.16 결정 (§E.10 6 · 틈 0.35 · 높이차 0.30 · 서로 다른 경계) · prep:30~33 · 등급 원문 = 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "stones": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12
+      },
+      "training_dimensions_m": {
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "stone_side_l0_m": "same",
+        "stone_side_l9_m": "same",
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문: 「StonesEverywhere」 [26][15] 인용만 · 수치 없음 → original = G1 코드값 상자 0.71 → 0.41 · 틈 0.08 → 0.12 · 높이 0.06 (TR:211~231 · 등급 코드 원문) · 학습 = 같은 값 = CG:294 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "beam": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "max_rpy_rad": 0.1,
+        "height_difference_l9_m": 0.2
+      },
+      "training_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "max_rpy_rad": 0.1,
+        "height_difference_l9_m": 0.2,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "max_rpy_rad": 0.1,
+        "height_difference_l9_m": 0.2,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "beam_width_l0_m": "same",
+        "beam_width_l9_m": "same",
+        "max_rpy_rad": "same",
+        "height_difference_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D · TRON1: 폭 0.9 → 0.18 · rpy ±0.1 rad · 높이차 ±0.2 · G1 코드 폭 0.5 → 0.17 · max_rpy 0.087 · 높이차 ±0.05·난이도 (TR:197~210) · 학습 = 원문값 (CG:294 「beam 폭 0.9 → 0.18」) · 등급 원문 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false
+    },
+    "consecutive": {
+      "preset_id": "ame2_go2_mix_v1",
+      "original_dimensions_m": {
+        "first_ring_height_l9_m": 0.5,
+        "second_ring_height_l9_m": 0.4
+      },
+      "training_dimensions_m": {
+        "first_ring_height_l0_m": 0.05,
+        "first_ring_height_l9_m": 0.3,
+        "second_ring_height_l0_m": 0.05,
+        "second_ring_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_dimensions_m": {
+        "first_ring_height_l0_m": 0.05,
+        "first_ring_height_l9_m": 0.3,
+        "second_ring_height_l0_m": 0.05,
+        "second_ring_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "evaluation_axis_directions": {
+        "first_ring_height_l0_m": "same",
+        "first_ring_height_l9_m": "same",
+        "second_ring_height_l0_m": "same",
+        "second_ring_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "paper_reference": "원문 ANYmal-D 1 층 0.05 → 0.5 · 2 층 0.05 → 0.4 · TRON1 0.05 → 0.3 · 0.3 · G1 코드 0.05 → 0.35 · 0.35 (TR:144~161) · 학습 0.05 → 0.30 = TRON1 = CG:294 · 물리 표시: 0.30 판정 · 0.40 기록 열 (CG:598 · 625 · prep:475) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true
+    }
+  },
+  "D": {
+    "high_ledge": {
+      "preset_id": "posture_go2_v1",
+      "original_dimensions_m": {
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "training_dimensions_m": {
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_dimensions_m": {
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_axis_directions": {
+        "ledge_height_l0_m": "same",
+        "ledge_height_l1_m": "same",
+        "ledge_height_l2_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same",
+        "floor_thickness_m": "same"
+      },
+      "paper_reference": "original 등급 **위임 추정** (논문 수치 없음 · 값 = CG:362 W73 프로젝트 결정 0.3 → 0.45 → 0.6 세 레벨 · LEVEL_COUNTS 3) · 다른 논문 증거 MOVE 0.60 · PIE 0.75 · JEPLO Go2 0.53 (CG:593) · 물리 표시: 0.60 판정 · 0.75 기록 열 (CG:625 · prep:468) · 턱은 뒤쪽 절반 (hipan_posture.py:80~81) · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": true
+    },
+    "crawl": {
+      "preset_id": "posture_go2_v1",
+      "original_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "training_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_axis_directions": {
+        "ceiling_clearance_l0_m": "same",
+        "ceiling_clearance_l9_m": "same",
+        "roof_thickness_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same",
+        "floor_thickness_m": "same"
+      },
+      "paper_reference": "original 등급 **위임 추정** (HiPAN 수치 미기재 CG:599 · 값 = CG:362 W73 천장 여유 0.30 → 0.25 · 10 레벨 linspace 는 코드 배치 관행 hipan_posture.py:83~88) · MOVE Lite3 전진 0.20 · 물리 표시: 0.25 판정 · 0.20 기록 열 (CG:599 · 625 · prep:477) · 천장 슬래브는 가운데 절반 · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": true
+    },
+    "wall": {
+      "preset_id": "posture_go2_v1",
+      "original_dimensions_m": {
+        "wall_height_m": 1.2,
+        "corridor_width_m": 0.8,
+        "wall_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "training_dimensions_m": {
+        "wall_height_m": 1.2,
+        "corridor_width_m": 0.8,
+        "wall_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_dimensions_m": {
+        "wall_height_m": 1.2,
+        "corridor_width_m": 0.8,
+        "wall_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "floor_thickness_m": 0.1
+      },
+      "evaluation_axis_directions": {
+        "wall_height_m": "same",
+        "corridor_width_m": "same",
+        "wall_thickness_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same",
+        "floor_thickness_m": "same"
+      },
+      "paper_reference": "original 등급 **팀장 위임 추정** (논문 수치 없음 · 그림만 · CG:362 「wall 높이 · 우회 통로 폭 미정」 → 코드 project choice: 높이 1.20 = 3 × Go2 서 있는 높이 0.40 · 통로 0.80 = Go2 폭 0.31 + 양쪽 0.245 · hipan_posture.py:22~23 · 레벨 1 개) · 벽은 +y 쪽 우회 통로를 남기고 중심선 막음 (hipan_posture.py:90~98) · 넘을 수 없는 벽 = 등반 목표 아님 (CG:362) · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": false
+    }
+  }
+}

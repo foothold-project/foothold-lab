@@ -1,0 +1,53 @@
+{
+  "app_launcher_started": false,
+  "approval": {
+    "approvals_path": "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/foothold_s2/curriculum/ex42-approvals.yaml",
+    "approvals_sha256": "c4c76916f8d126694c7c8c9be81430919d99cf09a27375379f727cc19c24f680",
+    "approved_at": "2026-11-11 01:5x KST (original decision time notation)",
+    "decision_id": "teamlead-2026-11-11-015x-e0-prior-approval-b",
+    "later_stages_authorized": false,
+    "production_launch_allowed": false,
+    "scope": {
+      "later_stages_authorized": false,
+      "maximum_updates": 250,
+      "parent_sha256": "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768",
+      "stage_id": "E0",
+      "start_update": 0
+    },
+    "state": "stage_e0_only_authorized"
+  },
+  "device": "cuda:0",
+  "force_gt": false,
+  "later_stages_authorized": false,
+  "map_input": "reconstruction",
+  "max_iterations": 250,
+  "num_envs": 3072,
+  "output_dir": "/home/jay/mai/tmp/analyst-lx/terrain-manifest-1111/not-created-run",
+  "parent_cumulative_update": 13000,
+  "parent_path": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/model_1000.pt",
+  "parent_sha256": "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768",
+  "production_launch_allowed": false,
+  "rank": 0,
+  "stage_id": "E0",
+  "state": "stage_e0_preflight_passed",
+  "task": "FootholdS2-Go2-S2-SB-v0",
+  "terrain_mesh_swap": {
+    "axis": "terrain_mesh_swap",
+    "reason": "prepare_e0_env_cfg + apply_e0_exposure (train_start); needs --ex42_terrain_mesh_dir",
+    "state": "mounted_at_env_build",
+    "terrain_manifest": {
+      "kinds": 46,
+      "path": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_manifest.json",
+      "receipt_ids": [
+        "combined-mesh:88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "aggregate:27f05942b1f2437ec6c22f46de76edb01f17c4ac8e4d176ecbc2f6da6aa24f84"
+      ],
+      "sha256": "39145e734002859dfc384d3e010c6d3115056d8ce01b341d561499b23a7f50bd",
+      "state": "measured"
+    }
+  },
+  "total_envs": 6144,
+  "training_blockers": [],
+  "training_requested": false,
+  "world_size": 2
+}

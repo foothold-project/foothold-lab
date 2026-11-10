@@ -46,7 +46,7 @@ environment:
     A: start_go2_v2
     B: ame2_go2_mix_v1
     C: jeplo_preset_v1
-    D: null
+    D: posture_go2_v1
     E: paper_ext_v1
     continuous: rough_go2_cfg
   evaluation:
