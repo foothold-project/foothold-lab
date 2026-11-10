@@ -8,7 +8,7 @@ import trimesh
 from foothold_s2.terrains import start_go2_v2 as g
 from foothold_s2.tests.test_jeplo_spawn_cpu import vertical_hits
 
-KINDS = ('stepping_stones_low', 'stepping_stones_high', 'balance_beams', 'stepping_beams')
+KINDS = ('stepping_stones_low', 'stepping_stones_high', 'balance_beams', 'stepping_beams', 'gaps')
 
 
 def test_ray_oracle_known_sloping_triangle():
@@ -43,12 +43,21 @@ def test_old_reset_crosses_real_mesh_pit():
     assert heights[1] < -.2
 
 
+def test_old_gaps_reset_can_leave_the_entry_tile():
+    meshes, origin = g._tile_function(.95, SimpleNamespace(kind='gaps'))
+    mesh = trimesh.util.concatenate(meshes)
+    # Reset x=-0.5 plus rear footprint x=-0.35 crosses the first tile boundary.
+    with pytest.raises(AssertionError, match='no support'):
+        vertical_hits(mesh.vertices, mesh.faces, origin[:2] + [[-.85, 0.]])
+
+
 def test_reset_mapping_is_explicit_and_detached():
     assert set(g.RESET_RANGES) == set(KINDS)
     table = g.reset_ranges_by_column({23: KINDS[0], 38: KINDS[2], 47: 'gaps', 49: 'flat'})
     assert set(table) == {23, 38, 47, 49}
     assert table[23] == {'x': (0., 0.), 'y': (0., 0.), 'yaw': (0., 0.)}
-    assert table[47] == table[49] == {'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}
+    assert table[47] == table[23]
+    assert table[49] == {'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}
     table[23]['x'] = (-.5, .5)
     assert g.RESET_RANGES[KINDS[0]]['x'] == (0., 0.)
 
@@ -59,9 +68,10 @@ def test_reset_mapping_rejects_ambiguous_inputs(mapping):
         g.reset_ranges_by_column(mapping)
 
 
-def test_missing_or_pit_support_fails_without_origin_fallback():
-    tile = g.build_tile(KINDS[0], .95)
-    meshes, _ = g._tile_function(.95, SimpleNamespace(kind=KINDS[0]))
+@pytest.mark.parametrize('kind', KINDS)
+def test_missing_or_pit_support_fails_without_origin_fallback(kind):
+    tile = g.build_tile(kind, .95)
+    meshes, _ = g._tile_function(.95, SimpleNamespace(kind=kind))
     for damaged in ([], meshes[1:]):
         with pytest.raises(ValueError, match='support'):
             g.spawn_origin(tile, meshes=damaged)
@@ -90,12 +100,12 @@ def test_origin_verifier_is_consumed_by_mesh_callback(monkeypatch):
         g._tile_function(.95, SimpleNamespace(kind=KINDS[0]))
 
 
-def test_actual_reset_consumer_reads_a_declaration_only_for_four_kinds():
+def test_actual_reset_consumer_reads_a_declaration_only_for_sparse_kinds():
     from foothold_s2.terrains.ex42_column_reset import build_column_table, kind_ranges_of, DEFAULT_RANGES
     assert kind_ranges_of('A') == g.RESET_RANGES
     table = build_column_table(['A'] * 50)
     declared = [row for row in table if row['from_declaration']]
-    assert len(declared) == 22  # 7 low + 5 high + 5 balance + 5 stepping beams
+    assert len(declared) == 25  # 7 low + 5 high + 5 balance + 5 stepping beams + 3 gaps
     for row in table:
         expected = g.RESET_RANGES.get(row['kind'], DEFAULT_RANGES)
         assert row['ranges'] == expected
@@ -109,4 +119,4 @@ def test_actual_reset_consumer_reads_a_declaration_only_for_four_kinds():
     mask = torch.tensor([row['from_declaration'] for row in table])
     base = env.scene.env_origins + torch.tensor([0., 0., .4])
     assert torch.equal(asset.pose[mask, :3], base[mask])
-    assert torch.equal(asset.pose[mask, 3:], torch.tensor([1., 0., 0., 0.]).expand(22, 4))
+    assert torch.equal(asset.pose[mask, 3:], torch.tensor([1., 0., 0., 0.]).expand(25, 4))

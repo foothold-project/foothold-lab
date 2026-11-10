@@ -61,7 +61,7 @@ def audit(mesh_path, mount_path):
             rows.append({'level': level, 'column': int(column), 'kind': kinds[column],
                          'origin_world': checked.tolist(), 'rays': len(z),
                          'z_min': float(z.min()), 'z_max': float(z.max())})
-    if len(rows) != 220:
+    if len(rows) != 250:  # 22 previous columns + 3 gaps, all ten levels
         raise ValueError('incomplete A support audit')
     return {'schema': 'start-go2-spawn-cpu/1', 'cpu_only': True, 'kit_reset_verified': False,
             'mesh_path': str(mesh_path), 'mesh_file_sha256': hashlib.sha256(mesh_path.read_bytes()).hexdigest(),
