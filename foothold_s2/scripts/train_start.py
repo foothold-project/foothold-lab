@@ -94,6 +94,9 @@ _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
 EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if _pre_args.ex42_speed_probe else 0
+if _pre_args.ex42_speed_probe and _pre_args.distributed:
+    # Linux L1 measured NCCL shared-memory failure; scope the workaround to the two-rank probe.
+    os.environ.setdefault("NCCL_SHM_DISABLE", "1")
 if _pre_args.ex42_speed_probe and _pre_args.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
     # Speed probe: only rank 0 writes into the shared run directory; the others get a private scratch directory.
     from foothold_s2.scripts.ex42_training_entry import speed_probe_rank_log_dir

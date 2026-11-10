@@ -1,0 +1,15 @@
+{
+  "cases": 420,
+  "failures": 0,
+  "source_revision": "460e2272907af053d6e66b57fec71fdbe6ca1774",
+  "source_hashes": {
+    "parkour_terrain_generator_cfg.py": "63fc4b5a74906ff74eb97d47bc8c47c02d183126b8edbd87696279338f1e5722",
+    "parkour_sub_terrains_cfg.py": "a7b72d99c2d41064560257a6f132e41dfa570506454c8cafcc4afb7be56d5d5a",
+    "parkour_terrains_cfg.py": "2fa06a5be47d845d8c4bae19644d4921ae98549dba113688799a9cd5bdb16ef2",
+    "parkour_sub_terrians.py": "4c56a95fe56d2e4818f6bc3dee63d914e569806dc0a41008aedb366d94258fad",
+    "utils.py": "b96be2b0c163ce14bfc23ecc113ec9190f59aadf287a8ecc23a9f5afb82e0ea8"
+  },
+  "full_oracle_json": "/home/jay/mai/tmp/analyst-lx/jeplo-spawn-1111/oracle.json",
+  "full_oracle_sha256": "b32dc1113284e90eb444043e2111267f6ceda731e275bf273fb1a4e7e681ac54",
+  "note": "origin comparison uses HeightTile.origin reference centre, NOT the intentionally changed runtime spawn_origin; heightfield and triangle geometry are unchanged"
+}
