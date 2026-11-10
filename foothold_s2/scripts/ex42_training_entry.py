@@ -125,13 +125,28 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> di
     if undeclared:
         raise ValueError(f"EX-42 E0 mesh columns without a kind_task row: {undeclared}")
     # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
+    from foothold_s2.terrains.ex42_exposure import exposure_by_column
+    stage_terrain = _e0_stage(plan)["terrain"]
+    exposure, level_caps = exposure_by_column(stage_terrain, table)       # plan values; raises if none positive
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+            "exposure": exposure, "level_caps": level_caps,
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
+
+
+def _e0_stage(plan: EX42Plan) -> dict[str, Any]:
+    return next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
+
+
+def apply_e0_exposure(env: Any, contract: dict[str, Any]) -> dict[str, Any]:
+    """After gym.make: envs only on exposed columns, levels cut at the column caps (Kit side)."""
+    from foothold_s2.terrains.ex42_exposure import apply_exposure
+
+    return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"])
 
 
 def _kind_task(plan: EX42Plan) -> dict[str, Any]:

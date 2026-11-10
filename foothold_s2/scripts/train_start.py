@@ -946,6 +946,10 @@ def main(env_cfg, agent_cfg):
 
     _write_ex41_gpu0_marker_receipt(log_dir)
     env = gym.make(args_cli.task, cfg=env_cfg)
+    if EX42_E0_ENV_CONTRACT is not None:
+        from foothold_s2.scripts.ex42_training_entry import apply_e0_exposure
+
+        print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(env, EX42_E0_ENV_CONTRACT), sort_keys=True), flush=True)
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None

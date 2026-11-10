@@ -168,6 +168,11 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    exposure_at_E0:
+      # lead-lx 04:58 decision: columns with exposure 0 get no env at all; a column's levels stop at its cap.
+      default: {exposure: 0.0, level_cap: 0}
+      positive:
+      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}
     kind_task:
       A:
         stepping_stones_low: {push: off}
