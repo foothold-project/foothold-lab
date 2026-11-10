@@ -12,6 +12,7 @@ set -a
 # shellcheck disable=SC1090
 source "$profile"
 set +a
+export PYTHONPATH="$source_root${PYTHONPATH:+:$PYTHONPATH}"
 
 : "${ISAAC311_PYTHON:?ISAAC311_PYTHON is required}"
 : "${GPU_JOBS_QUEUE:?GPU_JOBS_QUEUE is required}"

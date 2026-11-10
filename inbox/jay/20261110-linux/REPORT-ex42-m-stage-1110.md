@@ -4,7 +4,7 @@
 > 작성: 오흥재 (lead · scripter-lx 반영) · 2026-11-10
 > 근거: `LINUX-DAY-EXPERIMENT-ORDER.md` M절 · lead-lx 의뢰 카드 · PR #593의 `--ex42_speed_probe` · Linux L1 NCCL 실측
 > 요지: 20·50회 제한 경로로 M1~M4를 순서대로 재고 원자료에서 속도 표를 만든다.
-> 상태: 실제 train_start CPU 사전검사 9건 통과 · GPU 미실행 · 실제 시작은 lead-lx 담당
+> 상태: 실제 train_start CPU 사전검사 9건 통과 · 셸 진입 import 결함 고침 · 내 GPU 미실행 · 실제 시작은 lead-lx 담당
 
 ## 구현
 
@@ -15,12 +15,18 @@
 
 ## CPU 증거
 
-- `CUDA_VISIBLE_DEVICES=`에서 `test_ex42_m_stage_linux_cpu.py`와 기존 `test_ex42_speed_probe_e0_cpu.py`: **73 passed**. 실제 전처리 스위치, 가짜 `nvidia-smi`, 설치 모듈 `find_spec`, 300초 무응답, 두 rank 가짜 자식 완주, 손으로 만든 로그의 중앙값·정규화·OOM을 시험했다.
+- `CUDA_VISIBLE_DEVICES=`에서 `test_ex42_m_stage_linux_cpu.py`와 기존 `test_ex42_speed_probe_e0_cpu.py`: **74 passed in 2.35s**. 실제 전처리 스위치, 가짜 `nvidia-smi`, 설치 모듈 `find_spec`, 300초 무응답, 두 rank 가짜 자식 완주, 손으로 만든 로그의 중앙값·정규화·OOM을 시험했다.
 - `bash -n` 통과. `LIVE=0` 셸 DRY는 6판을 출력했고 산출 디렉터리를 만들지 않았다.
 - 실제 m12000 `model_6000.pt` SHA는 `1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613`으로 확인했다.
 - 첫 CPU 사전검사는 `/home/jay/mai/tmp/runner` 기준 자료가 없어 rc1이었다. 원문: `/home/jay/mai/tmp/scripter-lx/m-actual-preflight.log`.
 - lead-lx가 `~/data/foothold`와 `~/mai/tmp/runner`를 D: 자료에 심볼릭 링크로 연결한 뒤 실제 `train_start.py --ex42_stage_zero_dry_run`을 재실행했다. M1~M4의 rank 조합 **9건 모두 rc0**, 각 로그에 `EX42_STAGE_ZERO_PREFLIGHT` 및 `app_launcher_started=false`가 있다. 영수증: `/home/jay/mai/tmp/scripter-lx/m-actual-preflights-6/preflight/receipt.json`. GPU·Kit은 실행하지 않았다.
 - `~/mai/wt/foothold-lab/m-probe-locked`를 원격 `ad0bf751`에서 detached로 만들고 잠갔다. 소스 감사 실측: detached=true · clean=true · writable_count=0 · 보호 파일 15개. 이 잠긴 사본의 `LIVE=0` DRY도 6판을 출력했다.
+
+## LIVE 진입 import 고침
+
+- lead-lx의 첫 `LIVE=1` 실행은 `ex42_m_stage_linux.py:107`의 `foothold_s2.ex42_gate_checks` import에서 `ModuleNotFoundError`로 끝났다. 파일 경로로 Python을 실행할 때 `sys.path[0]`은 `foothold_s2/scripts`이고, 셸이 저장소 뿌리를 `PYTHONPATH`에 넣지 않았다. lead-lx는 셸 밖에서 `PYTHONPATH`를 주어 재기동했고, 나는 진행 중인 `m-probe-locked` 사본을 수정하지 않았다.
+- 기존 CPU 시험은 `pytest`가 저장소 뿌리에서 모듈을 import했고, `LIVE=0` 셸 시험은 import가 있는 `verify_launch()`를 지나지 않았다. 실제 `train_start.py` 사전검사도 실행기 자신의 import 경로를 검사하지 않아 이 결함을 못 잡았다.
+- 셸이 프로필을 읽은 직후 `PYTHONPATH` 앞에 `source_root`를 넣도록 고쳤다. 새 시험은 외부 `PYTHONPATH`를 지우고 셸을 `LIVE=1`로 실행하며, GPU 전에 존재하지 않는 queue 디렉터리 관문에서 멈춘다. 수정 전 `ModuleNotFoundError`로 FAIL, 수정 뒤 기대한 `configured Python or GPU queue directory missing`에서 멈추고 **1 passed**. 산출 폴더는 생성되지 않았으며 GPU·Kit은 부르지 않았다. 관련 시험 묶음 **74 passed in 2.35s**, `bash -n` 통과.
 
 ## 실제 시작 계약
 

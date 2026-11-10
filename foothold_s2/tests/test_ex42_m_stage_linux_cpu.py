@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 import threading
 
@@ -15,6 +17,31 @@ from foothold_s2.scripts import ex42_m_table as table
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "foothold_s2/scripts/train_start.py"
+SHELL = ROOT / "foothold_s2/scripts/ex42_m_stage_linux.sh"
+
+
+def test_shell_live_entry_reaches_real_preflight_without_inherited_pythonpath(tmp_path):
+    """Exercise the exact file-path entry; stop at a known CPU gate before GPU use."""
+    profile = tmp_path / "machine.env"
+    queue = tmp_path / "absent_queue_directory" / "queue.json"
+    profile.write_text(
+        f"ISAAC311_PYTHON={sys.executable}\nGPU_JOBS_QUEUE={queue}\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    env.update({
+        "LIVE": "1",
+        "FOOTHOLD_LINUX_ENV": str(profile),
+        "EX42_M_PARENT_MANIFEST": str(tmp_path / "absent_manifest.json"),
+        "EX42_M_OUT_ROOT": str(tmp_path / "output"),
+    })
+    result = subprocess.run(["bash", str(SHELL)], cwd=tmp_path, env=env,
+                            capture_output=True, text=True, timeout=30)
+    assert result.returncode != 0
+    assert "configured Python or GPU queue directory missing" in result.stderr
+    assert "ModuleNotFoundError" not in result.stderr
+    assert not (tmp_path / "output").exists()
 
 
 def test_preparser_sets_nccl_only_for_distributed_probe(monkeypatch):
