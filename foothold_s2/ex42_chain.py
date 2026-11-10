@@ -95,10 +95,12 @@ class EX42TrainingChain:
                  score_argv_factory: Callable[[int], list[str]] | None = None,
                  machine_profile: dict[str, Any] | None = None,
                  boundary_provider: Callable[[int, Any], dict[str, Any] | None] | None = None,
-                 p1_interval: int = 250):
+                 p1_interval: int = 250,
+                 parent_pin: dict[str, Any] | None = None,
+                 current_stage_id: str | None = None):
         self.plan = plan
         self.approvals_path = Path(approvals_path).resolve(strict=True)
-        self.parent = plan.verify_parent_manifest(parent_manifest_path)
+        self.parent = plan.verify_parent_manifest(parent_manifest_path, parent_pin=parent_pin)
         self.run_dir = Path(run_dir)
         self.repo_root = Path(repo_root).resolve(strict=True)
         self.queue_path = Path(queue_path)
@@ -122,7 +124,8 @@ class EX42TrainingChain:
                 and type(row.get("checkpoint_iteration")) is int
                 and isinstance(row.get("checkpoint_sha256"), str)
             }
-        self.consumer = EX42Runtime.transition_consumer(plan, self.approvals_path)
+        self.consumer = EX42Runtime.transition_consumer(
+            plan, self.approvals_path, current_stage_id=current_stage_id)
         self._write_receipt("startup_receipt.json", {
             "state": "chain_ready_not_launch_authorized",
             "experiment": "EX-42",

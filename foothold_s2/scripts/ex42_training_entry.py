@@ -32,6 +32,51 @@ SPEED_PROBE_UPDATES = (20, 50)
 SPEED_PROBE_ENVS = (1536, 3072)
 STAGE_E0_ID = "E0"
 STAGE_E0_DEVICE = "cuda:0"
+STAGE_E0_UPDATES = 250
+# m13000 = stage-zero model_1000.pt (experiments/EX-42.yaml operational_values.e_stage_parent; a test keeps both equal).
+E0_PARENT_SHA256 = "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
+STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613"
+# Reward contract parents: (sha256, local update). Stage zero starts from m12000 (EX-41 local 6000);
+# E0 starts from m13000 (stage-zero local 1000), which was trained with the same lin_vel_z = 0 term.
+REWARD_CONTRACT_PARENTS = ((STAGE_ZERO_PARENT_SHA256, 6000), (E0_PARENT_SHA256, 1000))
+
+
+def e0_terrain_mesh_swap_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    """E0 axis ``terrain_mesh_swap`` (ex42-prep.yaml stages E0): the single E0 change.
+
+    The swap itself is NOT implemented: no importer adapter mounts the combined mesh
+    (foothold_s2/terrains/ex42_combined.py joins it; the training env still builds its own
+    generator). Training therefore stops at ``mount_e0_terrain_mesh`` and never runs on the
+    stage-zero mesh under the name E0 (planner-lx D1/D2, lead 23:56).
+    """
+    return {"axis": "terrain_mesh_swap", "state": "not_implemented",
+            "reason": "mesh mount adapter not written; terrain manifest required before E0 trains",
+            "terrain_manifest": manifest if manifest is not None else {"state": "missing"}}
+
+
+def read_e0_terrain_manifest(plan: EX42Plan, path: str | Path | None) -> dict[str, Any]:
+    """Fail closed unless a measured terrain manifest exists and passes the plan contract."""
+    if path is None or not Path(path).is_file():
+        raise ValueError("EX-42 E0 requires terrain_manifest.json (terrain_manifest_missing)")
+    raw = Path(path).read_bytes()
+    manifest = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(manifest, dict):
+        raise ValueError("EX-42 terrain manifest must be a JSON object")
+    plan.validate_terrain_manifest(manifest)       # raises unless status measured and complete
+    return {"state": "measured", "path": str(Path(path).resolve()),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "kinds": len(manifest["kinds"]), "receipt_ids": manifest.get("receipt_ids", [])}
+
+
+def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
+    """Place for the E0 mesh swap. Still stops here on purpose.
+
+    The mount adapter exists (terrains/ex42_mesh_mount.py, Kit check scripts/ex42_mesh_mount_check.py),
+    but E0 also needs the complete 39-kind mesh (B and D generators are missing) and the column
+    exposure rule (new kinds share 0, level cap 0, continuous 7 only at cap 5) wired into the env.
+    """
+    raise NotImplementedError(
+        "EX-42 E0 terrain_mesh_swap is not implemented: training stops before the environment is built")
 
 
 def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:
@@ -217,15 +262,34 @@ def validate_speed_probe_switches(*, speed_probe: bool, stage_zero_requested: bo
 
 
 def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume_requested: bool,
-                            e0_approved: bool, **cli: Any) -> dict[str, Any]:
-    """E0 entry as train_start calls it: preflight only. Returns the request; never starts training."""
+                            e0_approved: bool, terrain_manifest_path: str | Path | None = None,
+                            **cli: Any) -> dict[str, Any]:
+    """E0 entry as train_start calls it: validates the CLI and returns the request.
+
+    Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
+    A real run needs a measured manifest (else ValueError) and then stops at the unimplemented
+    mesh mount. A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
+    """
     if stage_zero_requested or resume_requested:
         raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
     if not e0_approved:
         raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
-    _plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
-    if not dry_run:
-        raise ValueError("EX-42 E0 training runtime is not wired: only the preflight (--ex42_stage_e0_dry_run) can run")
+    plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
+    if dry_run:
+        try:
+            manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)
+        except (ValueError, OSError) as exc:
+            manifest = {"state": "missing_or_invalid", "reason": str(exc)}
+        request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
+        request["training_requested"] = False
+        request["training_blockers"] = [
+            "terrain_mesh_swap_not_implemented",
+            *([] if manifest.get("state") == "measured" else ["terrain_manifest_missing_or_invalid"])]
+        return request
+    manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)    # raises: fail closed
+    request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
+    request["training_requested"] = True
+    mount_e0_terrain_mesh(manifest)                                      # raises NotImplementedError today
     return request
 
 
@@ -649,14 +713,14 @@ def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
 
 
 def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
-                                   parent_receipt: dict[str, Any]):
+                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000):
     """Provide EX-41's existing config adapters the approved single T0-prime stage."""
     return SimpleNamespace(
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
         initial_dr_scale=1.0, stand_cfg=source_plan.stand_cfg,
         heading_cfg=source_plan.heading_cfg, terrain_curriculum="performance",
         fixed_schedule=source_plan.fixed_schedule,
-        parent_sha256=parent_receipt["parent_sha256"], parent_update=12000,
+        parent_sha256=parent_receipt["parent_sha256"], parent_update=parent_update,
         ex42_stage_zero=True, parent_receipt=dict(parent_receipt),
     )
 
@@ -669,10 +733,14 @@ class EX42StageZeroRuntime:
 
     def __init__(self, *, stage_zero_plan: Any, plan_sha256: str,
                  approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000,
-                 push_vmax_mps: float, speed_probe: bool = False):
-        if maximum_updates != STAGE_ZERO_UPDATES and not (
+                 push_vmax_mps: float, speed_probe: bool = False, stage_id: str = "EX42_0_T0_prime"):
+        # E0 (m13000 -> 250 updates) reuses this single-stage runtime with its own id and bound.
+        bound = STAGE_E0_UPDATES if stage_id == STAGE_E0_ID else STAGE_ZERO_UPDATES
+        if stage_id not in ("EX42_0_T0_prime", STAGE_E0_ID):
+            raise ValueError("EX-42 single-stage runtime accepts stage zero or E0 only")
+        if maximum_updates != bound and not (
                 speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
-            raise ValueError("EX-42 stage-zero runtime must remain bounded to 1000 updates")
+            raise ValueError(f"EX-42 stage-zero runtime must remain bounded to {bound} updates")
         self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
         self.plan_sha256 = plan_sha256
         self.approval_sha256 = approval_sha256
@@ -682,7 +750,7 @@ class EX42StageZeroRuntime:
                 or not math.isfinite(float(push_vmax_mps)) or float(push_vmax_mps) <= 0):
             raise ValueError("EX-42 stage-zero parent push Vmax is invalid")
         self.push_vmax_mps = float(push_vmax_mps)
-        self.stage_id = "EX42_0_T0_prime"
+        self.stage_id = stage_id
         self.stage_config = stage_zero_plan.stages[0]
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
                           "terrain": {"policy": "performance", "level_cap": 5}}
@@ -705,7 +773,7 @@ class EX42StageZeroRuntime:
         self.env_stage = torch.zeros(raw.num_envs, dtype=torch.long, device=raw.device)
         command_term.stage_runtime = self
         raw._ex42_stage_id = self.stage_id
-        raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}
+        raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 uses the same environment as stage zero
         raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
         raw._ex40_dr_scale = 1.0
         raw._ex41_push_vmax_mps = self.push_vmax_mps
@@ -725,7 +793,7 @@ class EX42StageZeroRuntime:
 
     def on_update_start(self, update: int) -> None:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
-            raise ValueError("EX-42 stage-zero update is outside its approved 1..1000 range")
+            raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
         if self.env is not None:
             raw = self.env
@@ -854,21 +922,23 @@ def apply_stage_zero_parent_reward_contract(env_cfg: Any, *,
                                            parent_sha256: str,
                                            parent_update: int) -> dict[str, Any]:
     """Keep the approved EX-41 m6000 parent reward term unchanged for stage zero."""
-    if parent_sha256 != "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613" or parent_update != 6000:
+    if (parent_sha256, parent_update) not in REWARD_CONTRACT_PARENTS:
         raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
     term = getattr(getattr(env_cfg, "rewards", None), "lin_vel_z", None)
     if term is None or not hasattr(term, "weight"):
         raise ValueError("EX-42 stage-zero config lacks the parent lin_vel_z reward term")
     term.weight = 0.0
     return {"term": "lin_vel_z", "weight": 0.0,
-            "source": "EX-41 m6000 runtime readback", "parent_sha256": parent_sha256}
+            "source": ("EX-41 m6000 runtime readback" if parent_update == 6000
+                       else "EX-42 stage-zero m13000 runtime readback"),
+            "parent_sha256": parent_sha256}
 
 
 def apply_stage_zero_parent_reward_manager(env: Any, *,
                                            parent_sha256: str,
                                            parent_update: int) -> dict[str, Any]:
     """Apply the same parent reward term to the live manager before first reset."""
-    if parent_sha256 != "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613" or parent_update != 6000:
+    if (parent_sha256, parent_update) not in REWARD_CONTRACT_PARENTS:
         raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
     raw = getattr(env, "unwrapped", env)
     manager = getattr(raw, "reward_manager", None)
@@ -881,7 +951,9 @@ def apply_stage_zero_parent_reward_manager(env: Any, *,
     if actual != 0.0:
         raise ValueError("EX-42 stage-zero live lin_vel_z reward did not match parent")
     return {"term": "lin_vel_z", "weight": actual,
-            "source": "EX-41 m6000 runtime readback", "parent_sha256": parent_sha256}
+            "source": ("EX-41 m6000 runtime readback" if parent_update == 6000
+                       else "EX-42 stage-zero m13000 runtime readback"),
+            "parent_sha256": parent_sha256}
 
 
 class EX42StageZeroDRReadback:
@@ -925,9 +997,13 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
                                          checkpoint: dict[str, Any], *,
                                          parent_path: str | Path,
                                          parent_sha256: str,
-                                         updates: int = STAGE_ZERO_UPDATES) -> dict[str, Any]:
-    """Match the saved learner/perception contract while bounding stage zero."""
-    if updates != STAGE_ZERO_UPDATES and updates not in SPEED_PROBE_UPDATES:
+                                         updates: int = STAGE_ZERO_UPDATES,
+                                         parent_local_update: int = 6000,
+                                         parent_cumulative_update: int = 12000,
+                                         stage_e0: bool = False) -> dict[str, Any]:
+    """Match the saved learner/perception contract while bounding stage zero (or E0 with stage_e0)."""
+    approved_updates = STAGE_E0_UPDATES if stage_e0 else STAGE_ZERO_UPDATES
+    if updates != approved_updates and updates not in SPEED_PROBE_UPDATES:
         raise ValueError("EX-42 stage-zero update bound is not an approved value")
     saved_cfg = checkpoint.get("perception_cfg")
     if not isinstance(saved_cfg, dict):
@@ -941,8 +1017,8 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
     cfg["ex41_critic_mirror"] = False
     cfg["ex42_stage_zero_parent"] = {"path": str(Path(parent_path).resolve()),
                                     "sha256": parent_sha256,
-                                    "local_update": 6000,
-                                    "cumulative_update": 12000}
+                                    "local_update": parent_local_update,
+                                    "cumulative_update": parent_cumulative_update}
     cfg["max_iterations"] = updates
     cfg["save_interval"] = 50
     parent_sha = cfg["ex42_stage_zero_parent"]["sha256"]
@@ -1037,6 +1113,78 @@ def inspect_ex42_stage_zero_parent(*, plan: EX42Plan, approvals_path: str | Path
     return checkpoint, receipt
 
 
+def e0_parent_pin(parent: dict[str, Any]) -> dict[str, Any]:
+    """The E-stage parent record as the pin verify_parent_manifest expects."""
+    return {"cumulative_update": parent["cumulative_update"],
+            "manifest_local_update": parent["manifest_local_update"],
+            "sha256": parent["sha256"]}
+
+
+def inspect_ex42_stage_e0_parent(*, plan: EX42Plan, approvals_path: str | Path,
+                                 experiment_path: str | Path,
+                                 parent_manifest_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load and validate m13000 (stage-zero model_1000.pt) as the E0 parent.
+
+    Same continuation contract as the stage-zero parent: learner, perception, AdaSmpl, map switch,
+    RNG and normalization state carry over; the physical environment and curriculum clock do not.
+    The approval cell is read through validate_stage_e0_authorization and fails closed.
+    """
+    import torch
+
+    pinned = read_e_stage_parent(experiment_path)
+    if pinned["sha256"] != E0_PARENT_SHA256:
+        raise ValueError("EX-42 E0 parent pin in EX-42.yaml differs from the reviewed m13000")
+    approval = validate_stage_e0_authorization(plan, approvals_path, pinned["sha256"])
+    parent = plan.verify_parent_manifest(parent_manifest_path, parent_pin=e0_parent_pin(pinned))
+    path = Path(parent["checkpoint_path"]).resolve(strict=True)
+    if path.name != pinned["checkpoint_key"]:
+        raise ValueError("EX-42 E0 parent checkpoint is not the pinned model_1000.pt")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != pinned["sha256"]:
+        raise ValueError("EX-42 E0 parent checkpoint SHA differs from the pinned m13000")
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    if (not isinstance(checkpoint, dict)
+            or checkpoint.get("format") != "foothold-start/1"
+            or checkpoint.get("iter") != 1000
+            or checkpoint.get("ex41_pose_commands") is not True
+            or checkpoint.get("ex41_critic_mirror") is not False):
+        raise ValueError("EX-42 E0 parent is not the stage-zero model_1000.pt pose_cmd checkpoint")
+    cfg = checkpoint.get("perception_cfg") or {}
+    if cfg.get("map_input") != "reconstruction" or cfg.get("force_gt") is not False:
+        raise ValueError("EX-42 E0 parent must consume reconstructed maps without GT forcing")
+    state = checkpoint.get("continuous_curriculum")
+    if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
+            or state.get("stage_id") != "EX42_0_T0_prime" or state.get("iteration") != 1000):
+        raise ValueError("EX-42 E0 parent curriculum state is not the finished stage-zero state")
+    required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
+                "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
+                "normalization_state", "rng", "map_switch", "continuous_curriculum")
+    missing = [key for key in required if key not in checkpoint or checkpoint[key] is None]
+    if missing:
+        raise ValueError("EX-42 E0 parent lacks continuation state: " + ", ".join(missing))
+    model = checkpoint["model_state_dict"]
+    actor, critic = model.get("actor.0.weight"), model.get("critic.0.weight")
+    if (actor is None or tuple(actor.shape) != (512, 98)
+            or critic is None or tuple(critic.shape) != (512, 666)):
+        raise ValueError("EX-42 E0 parent actor/critic dimensions must be 98/666")
+    receipt = {
+        "state": "parent_verified_for_stage_e0",
+        "parent_path": str(path), "manifest_path": parent["manifest_path"],
+        "parent_sha256": digest, "parent_local_update": 1000,
+        "parent_cumulative_update": 13000,
+        "actor_input_dim": 98, "critic_input_dim": 666,
+        "pose_cmd": {"present": True, "width": 2, "zero_on_first_stage": False},
+        "map_input": cfg["map_input"], "force_gt": cfg["force_gt"],
+        "parent_p_map_off": checkpoint["map_switch"].get("p_map_off"),
+        "continuation_state_fields": list(required),
+        "ex41_environment_state_restored": False,
+        "ex41_curriculum_state_restored": False,
+        "terrain_mesh_swap": e0_terrain_mesh_swap_receipt(),
+        "approval": approval,
+    }
+    return checkpoint, receipt
+
+
 def build_ex42_training_chain(*, plan_path: str | Path,
                               approvals_path: str | Path,
                               parent_manifest_path: str | Path,
@@ -1047,7 +1195,9 @@ def build_ex42_training_chain(*, plan_path: str | Path,
                               machine_profile: dict[str, Any] | None = None,
                               dispatch_path: str | Path | None = None,
                               boundary_provider: Any = None,
-                              p1_interval: int = 250):
+                              p1_interval: int = 250,
+                              parent_pin: dict[str, Any] | None = None,
+                              current_stage_id: str | None = None):
     """Load the pinned EX-42 plan and approved parent, then construct its chain."""
     plan = EX42Plan.load(plan_path)
     if plan.document.get("status") != "preparation_only":
@@ -1074,6 +1224,8 @@ def build_ex42_training_chain(*, plan_path: str | Path,
         machine_profile=machine_profile,
         boundary_provider=boundary_provider,
         p1_interval=p1_interval,
+        parent_pin=parent_pin,
+        current_stage_id=current_stage_id,
     )
 
 

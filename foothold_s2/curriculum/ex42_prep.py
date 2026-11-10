@@ -375,8 +375,17 @@ class EX42Plan:
         if counts != contract["kind_count_by_family"]:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
 
-    def verify_parent_manifest(self, manifest_path: str | Path, *, stage_id: str = STAGE_ZERO_ID) -> dict[str, Any]:
-        """Resolve the parent checkpoint by its pinned manifest SHA, not by filename."""
+    def verify_parent_manifest(self, manifest_path: str | Path, *,
+                               stage_id: str = STAGE_ZERO_ID,
+                               parent_pin: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Resolve the stage-zero or E0 parent by its pinned manifest SHA."""
+        if stage_id == STAGE_ZERO_ID:
+            selected = self.document["stage_zero"]["parent"]
+        elif stage_id == "E0":
+            selected = next(row for row in self.document["stages"] if row["id"] == "E0")["parent"]
+        else:
+            raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
+        pin = selected if parent_pin is None else parent_pin
         path = Path(manifest_path).resolve(strict=True)
         try:
             manifest = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -385,24 +394,18 @@ class EX42Plan:
         if not isinstance(manifest, dict):
             raise ValueError("EX-42 parent manifest must be a JSON object")
         progress = manifest.get("progress")
-        if stage_id == STAGE_ZERO_ID:
-            parent = self.document["stage_zero"]["parent"]
-        elif stage_id == "E0":
-            parent = next(row for row in self.document["stages"] if row["id"] == "E0")["parent"]
-        else:
-            raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
-        local_update = parent["manifest_local_update"]
+        local_update = pin["manifest_local_update"]
         if (not isinstance(progress, dict) or type(progress.get("completed_updates")) is not int
                 or progress["completed_updates"] < local_update):
             raise ValueError("EX-42 parent manifest has not completed the pinned local update")
         checkpoints = manifest.get("checkpoints")
         if not isinstance(checkpoints, dict):
             raise ValueError("EX-42 parent manifest has no checkpoint inventory")
-        expected = parent["sha256"]
+        expected = pin["sha256"]
         matches = [name for name, digest in checkpoints.items() if digest == expected]
         if len(matches) != 1:
             raise ValueError("EX-42 parent manifest must contain exactly one checkpoint with the pinned SHA")
-        if parent.get("checkpoint_key") is not None and matches[0] != parent["checkpoint_key"]:
+        if pin.get("checkpoint_key") is not None and matches[0] != pin["checkpoint_key"]:
             raise ValueError("EX-42 parent checkpoint key differs from the pinned E0 parent")
         checkpoint = (path.parent / matches[0]).resolve(strict=True)
         if checkpoint.parent != path.parent or not checkpoint.is_file():
@@ -415,7 +418,7 @@ class EX42Plan:
             "manifest_completed_updates": progress["completed_updates"],
             "manifest_checkpoint_key": matches[0],
             "checkpoint_path": str(checkpoint),
-            "cumulative_update": parent["cumulative_update"],
+            "cumulative_update": pin["cumulative_update"],
             "checkpoint_sha256": actual,
         }
 

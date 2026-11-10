@@ -1195,17 +1195,22 @@ def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] |
     if float(scale) != 1.0 or not isinstance(scoped_approval, dict):
         return False
     scope = scoped_approval.get("scope")
+    common = (scoped_approval.get("production_launch_allowed") is False
+              and scoped_approval.get("later_stages_authorized") is False
+              and isinstance(scope, dict)
+              and scope.get("start_update") == 0
+              and scope.get("later_stages_authorized") is False
+              and re.fullmatch(r"[0-9a-f]{64}", str(scope.get("parent_sha256", "")))
+              and re.fullmatch(r"[0-9a-f]{64}", str(scoped_approval.get("approvals_sha256", ""))))
+    if not common:
+        return False
+    if scoped_approval.get("state") == "stage_e0_only_authorized":
+        # Bounded E0 cell (validate_stage_e0_authorization): m13000 -> 250 updates, nothing later.
+        return scope.get("stage_id") == "E0" and scope.get("maximum_updates") == 250
     return (scoped_approval.get("state") == "stage_zero_only_authorized"
-            and scoped_approval.get("production_launch_allowed") is False
-            and scoped_approval.get("later_stages_authorized") is False
-            and isinstance(scope, dict)
             and scope.get("stage_id") == "EX42_0_T0_prime"
             and scope.get("source_stage_id") == "T0_prime"
-            and scope.get("start_update") == 0
-            and scope.get("maximum_updates") == 1000
-            and scope.get("later_stages_authorized") is False
-            and re.fullmatch(r"[0-9a-f]{64}", str(scope.get("parent_sha256", "")))
-            and re.fullmatch(r"[0-9a-f]{64}", str(scoped_approval.get("approvals_sha256", ""))))
+            and scope.get("maximum_updates") == 1000)
 
 
 def install_initial_dr_scale(env_cfg: Any, scale: float, *,

@@ -355,7 +355,12 @@ def test_e0_entry_as_train_start_calls_it_never_starts_training(tmp_path, parent
     request = entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=False,
                                             e0_approved=True, **cli)
     assert request["state"] == "stage_e0_preflight_passed"
-    with pytest.raises(ValueError, match="not wired"):
+    assert request["training_requested"] is False
+    assert request["terrain_mesh_swap"]["state"] == "not_implemented"
+    assert request["terrain_mesh_swap"]["terrain_manifest"]["state"] == "missing_or_invalid"
+    assert request["training_blockers"] == ["terrain_mesh_swap_not_implemented",
+                                            "terrain_manifest_missing_or_invalid"]
+    with pytest.raises(ValueError, match="terrain_manifest_missing"):
         entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
                                       e0_approved=True, **cli)
     with pytest.raises(ValueError, match="cannot be combined"):
@@ -396,3 +401,36 @@ def test_the_real_rank_gate_in_train_start_skips_the_chain_only_for_probe_rank_o
     assert _run_chain_selection(True, 0) == ([1], "chain")        # rank 0 builds
     assert _run_chain_selection(True, 1) == ([], None)            # probe rank 1 builds nothing
     assert _run_chain_selection(False, 1) == ([1], "chain")       # probe off: every rank builds as before
+
+
+def test_e0_real_run_with_measured_manifest_still_stops_at_the_unimplemented_mesh_mount(
+        tmp_path, parent_file, monkeypatch):
+    args = _e0_args(tmp_path, _approvals(tmp_path), parent_file, monkeypatch)
+    args.pop("approved_switch")
+    monkeypatch.setattr(entry, "read_e0_terrain_manifest", lambda plan, path: {
+        "state": "measured", "path": "x", "sha256": "0" * 64, "kinds": 46, "receipt_ids": []})
+    with pytest.raises(NotImplementedError, match="terrain_mesh_swap is not implemented"):
+        entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
+                                      e0_approved=True, terrain_manifest_path="m.json", **args)
+
+
+def test_read_e0_terrain_manifest_fails_closed(tmp_path):
+    plan = EX42Plan.load(TABLE)
+    with pytest.raises(ValueError, match="terrain_manifest_missing"):
+        entry.read_e0_terrain_manifest(plan, None)
+    with pytest.raises(ValueError, match="terrain_manifest_missing"):
+        entry.read_e0_terrain_manifest(plan, tmp_path / "nope.json")
+    partial = tmp_path / "terrain_manifest.json"
+    partial.write_text('{"format": "foothold-ex42-terrain-manifest/1", "status": "partial"}', encoding="utf-8")
+    with pytest.raises(ValueError, match="not measured"):
+        entry.read_e0_terrain_manifest(plan, partial)
+    partial.write_text("[]", encoding="utf-8")
+    with pytest.raises(ValueError, match="JSON object"):
+        entry.read_e0_terrain_manifest(plan, partial)
+
+
+def test_train_start_passes_the_manifest_path_and_exits_nonzero_if_a_real_run_returns():
+    text = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "terrain_manifest_path=_pre_args.ex42_terrain_manifest" in text
+    assert "raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)" in text
+    assert text.count("--ex42_terrain_manifest") == 2
