@@ -154,11 +154,11 @@ def reset_root_state_by_column(env, env_ids, lo, hi, velocity_range, asset_cfg=N
 
 def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> None:
     """Swap env_cfg.events.reset_base for the per-column version (Kit python)."""
-    from isaaclab.managers import EventTerm
+    from isaaclab.managers import EventTermCfg
 
     lo, hi = table_tensors(table)
     old = env_cfg.events.reset_base.params
-    env_cfg.events.reset_base = EventTerm(
+    env_cfg.events.reset_base = EventTermCfg(
         func=reset_root_state_by_column, mode="reset",
         params={"lo": lo, "hi": hi, "velocity_range": old["velocity_range"]})
 
