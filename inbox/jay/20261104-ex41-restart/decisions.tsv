@@ -405,3 +405,5 @@ ts	phase	decision	why	evidence	result
 2026-11-10 16:0x	lead-lx	팀장: 20 분 점검 예약 c07414a8 끔 (실험 들어갈 때 다시 건다) · 10 분 옛 예약 6d44a383 도 14:5x 에 끔 · 지금 lead-lx 예약 0
 2026-11-10 17:3x	lead-lx	팀장 lead-lx 창 원문 「승인 해시 재고정 승인」: ex42-prep.yaml:107 approval_sha256 694782ce… → 7b931673… (승인 파일 diff 는 D174 critic_mirror 칸뿐 · 고친 판 통과 · 한 줄 더한 사본 거절 확인) · lead/linux-integration-1109 74ae601e
 2026-11-10 17:3x	lead-lx	소통: 보고는 run:run_5283fa2c059b (coordinator = 셸 mailbox term_08352dfc, bridge 17:35) · lead 핸들로 직접 보내면 lead 창 입력줄에 알림이 끼어든다 (W16 재발) · 작업 세션 보고 주소 고침
+2026-11-10 21:1x	lead-lx	팀장 lead-lx 창 원문 「L2 조건부 통과 · Linux 기준선 재측정 진행」: EX-38 m3001 같은 코드(c57f2b4b+경로 7f3a17f4) 에서도 Linux 가 Windows 보다 한쪽으로 밀림 (probe_prop_only side-0.5 61 대 56~57 · body_vx 0.07~0.11 m 대 Windows 끼리 ≤0.04) · Linux 끼리 폭은 Windows 와 비슷 (1 칸 · 0.043 m) → 기기 차이 있음 · EX-42 비교는 Linux 값끼리만 · m12000 · m13000 을 지금 평가 경로로 Linux 재측정해 기준선. 원자료 eval_w15/ex38_linux* · ~/gpu-check/l2c57.sh
+2026-11-10 20:5x	lead-lx	팀장: 조용한 점검은 채팅에 「.」 도 쓰지 않음
