@@ -22,7 +22,7 @@ files:
   curriculum: foothold_s2/curriculum/ex42-prep.yaml
   boundary: foothold_s2/curriculum/ex42-boundary.yaml
   approvals: foothold_s2/curriculum/ex42-approvals.yaml
-  score_config: null
+  score_config: foothold_s2/curriculum/ex42_score_config.json
   push_baseline: null
   maintenance_baseline: null
   stage_video_source: null
