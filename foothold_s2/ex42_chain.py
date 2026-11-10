@@ -375,7 +375,8 @@ class EX42TrainingChain:
         transition_path = Path(application_log) if application_log else self.application_path
         transitions = read_transition_rows(transition_path) if transition_path.is_file() else ()
         context = checkpoint_stage_context(
-            self.plan, self.approvals_path, iteration, transition_rows=transitions)
+            self.plan, self.approvals_path, iteration, transition_rows=transitions,
+            current_stage_id=self.consumer.current_stage_id)
         self.queue_path.parent.mkdir(parents=True, exist_ok=True)
         spec = importlib.util.spec_from_file_location("ex42_chain_dispatch", self.dispatch_path)
         if spec is None or spec.loader is None:

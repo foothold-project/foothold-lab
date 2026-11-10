@@ -8,9 +8,21 @@ import pytest
 from foothold_s2.eval.map_mode_cells import commands
 from foothold_s2.ex42_eval_once import manifest_checkpoint_sha, p1_score_from_measure
 from foothold_s2.ex42_gate_checks import validate_ex42_map_score
+from foothold_s2.ex42_score_watch import checkpoint_stage_context
+from foothold_s2.curriculum.ex42_prep import EX42Plan
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_running_stage_context_distinguishes_e0_from_stage_zero_at_local_250():
+    plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
+    approvals = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
+    e0 = checkpoint_stage_context(plan, approvals, 250, current_stage_id="E0")
+    zero = checkpoint_stage_context(plan, approvals, 250, current_stage_id="EX42_0_T0_prime")
+    assert e0["stage_id"] == "E0" and zero["stage_id"] == "EX42_0_T0_prime"
+    assert e0["stage_config"]["id"] == "E0"
+    assert zero["stage_config"]["id"] == "EX42_0_T0_prime"
 
 
 def test_manifest_sha_and_p1_score_contract(tmp_path):

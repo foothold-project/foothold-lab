@@ -16,11 +16,11 @@ P1="$("$ISAAC311_PYTHON" -c 'import json,sys; out,py,mesh,repo=sys.argv[1:]; pri
 
 ## 소비와 출력
 
-- `train_start`는 JSON 문자열을 `make_score_argv_factory`로 읽고 `{iteration}`을 저장본 회차로 치환한다. `ex42_chain`은 그 저장본이 `manifest.json`에 게시된 SHA와 일치할 때만 P1 대기열에 넣는다. 이 PR의 P1 관문은 `ex42_eval_once` 모듈, isaac311, cuda:1, seed 42, c333 메시 SHA, A23열, 계획 및 승인 파일, 실행 단계 ID가 `train_start.EX42_STAGE_ID=E0`와 같은지, 실행 플래그를 확인한다.
+- `train_start`는 JSON 문자열을 `make_score_argv_factory`로 읽고 `{iteration}`을 저장본 회차로 치환한다. `ex42_chain`은 그 저장본이 `manifest.json`에 게시된 SHA와 일치할 때만 P1 대기열에 넣는다. 사슬의 대기열 영수증도 실행 중 단계 ID를 사용한다. 이 PR의 P1 관문은 `ex42_eval_once` 모듈, isaac311, cuda:1, seed 42, c333 메시 SHA, A23열, 계획 및 승인 파일, 실행 단계 ID가 `train_start.EX42_STAGE_ID=E0`와 같은지, 실행 플래그를 확인한다.
 - 자식 평가기는 manifest SHA를 다시 읽어 파일과 대조한다. `map64/map_modes.json`은 64 env · 300 step · 지도 셋 · 13명령 · A23 배정이다. `stand_*` 3개와 `axis_v2`도 같은 저장본으로 측정한다. 보조 평가의 정지 지형은 기존대로 plane, axis는 L2 고정이다.
 - 성공 산출은 `eval_receipt.json`의 `state=done`, `ex42_score.json`, `p1_score.json`이다. 마지막 파일은 P1 소비자가 요구하는 checkpoint 회차·SHA, 계획 SHA, 실행 단계 ID `E0`, 39칸 map_matrix 및 판정 역할을 담고 성능 기준선이 미고정이라 `judgment=HOLD`로 기록한다. 수집 실패는 `HOLD` 점수로 위장하지 않고 영수증 `state=HOLD` 및 rc5이다.
 
 ## CPU 확인과 한계
 
-- isaac311 시험 31 passed, 1 skipped. 실제 c333 메시와 기존 m1000 manifest로 `ex42_eval_once` 계획 경로를 읽어 자식 5개와 메시 경로를 확인했다. 실제 Kit 평가는 하지 않았다.
+- isaac311 시험 33 passed, 1 skipped. 실제 c333 메시와 기존 m1000 manifest로 `ex42_eval_once` 계획 경로를 읽어 자식 5개와 메시 경로를 확인했다. 실제 Kit 평가는 하지 않았다.
 - 원래 N1 `eval_map_modes` 명령은 메시 없이 옛 지형을 쓰고 `p1_score.json`도 만들지 않는다. 코드가 병합되지 않은 고정 사본으로 그 명령을 쓰면 E0 P1로 채택할 수 없다. E0 뒤 단계 전환 시 고정 argv의 단계 ID도 갱신해야 하며, 일치하지 않으면 관문이 거절한다.
