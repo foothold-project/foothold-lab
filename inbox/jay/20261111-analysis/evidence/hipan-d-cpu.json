@@ -1,0 +1,293 @@
+{
+  "schema": "foothold-ex42-terrain-d-cpu/1",
+  "preset": "posture_go2_v1",
+  "source_grade": "project_inference_20261111",
+  "kit_started": false,
+  "gpu_used": false,
+  "base_commit": "75293ad567bbdaef63e32b163c95b3fd480b14b8",
+  "cpu_tests": {
+    "tests": 49,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "calculations": {
+    "go2_dimensions_m": [
+      0.7,
+      0.31,
+      0.4
+    ],
+    "go2_hip_span_m": 0.3868,
+    "lite3_hip_span_m": 0.34,
+    "geometric_scale_only": 1.1376470588235292,
+    "PIE_step_scaled_m": 0.8532352941176469,
+    "MOVE_step_scaled_m": 0.6825882352941175,
+    "wall_height_selected_m": 1.2,
+    "wall_in_standing_heights": 2.9999999999999996,
+    "corridor_selected_m": 0.8,
+    "side_clearance_static_m": 0.24500000000000002,
+    "body_rectangle_diagonal_m": 0.7655716818169281,
+    "corridor_minus_diagonal_m": 0.034428318183071904
+  },
+  "image_estimate": {
+    "source": "HiPAN PDF p2 Fig2 right perspective panel",
+    "image_px": [
+      1237,
+      1600
+    ],
+    "robot_apparent_height_px_manual_range": [
+      45,
+      55
+    ],
+    "wall_apparent_visible_height_px_manual_range": [
+      140,
+      155
+    ],
+    "scale_go2_height_m": 0.4,
+    "inferred_range_m": [
+      1.0181818181818183,
+      1.377777777777778
+    ],
+    "grade": "manual appearance estimate, uncalibrated perspective; not a physical measurement or confidence interval"
+  },
+  "sha256": {
+    "foothold_s2/terrains/hipan_posture.py": "37e6550d53931df9de01b32b1d12e08c136af3b60601bb3c68eea211ebe55509",
+    "foothold_s2/tests/test_hipan_posture_cpu.py": "169627bcd42799cc252ebbe2ad4d538fcd1d6b800d38125c10f09fba5ac7e5fe",
+    "foothold_s2/tests/check_hipan_cfg_cpu.py": "c5b2435f2035144c5aaf1d0b946fa37021f8fe904eb20b77ab810b1f1823b3a1",
+    "/mnt/win-d/mai/tmp/analyst/jump-physics-1104/official.urdf": "7d19fe48e2e689ee1a032ab99f2a4a8b671d87e73de48d3e65811682a5b48b9e",
+    "/mnt/win-d/mai/data/foothold/s2_lab/_papers/2604.26504.pdf": "4f83e69265b087c1bf05eee9c9161ee127e5bb2bcc1b4037a92dd7c0411b20a4",
+    "/home/jay/mai/tmp/analyst-lx/terrain-d-1111/page-2.png": "391d8f596fd3cf2c565d5961e03e20d52dd937e2f72846cfcd05fc36edbd18fc",
+    "/home/jay/mai/tmp/analyst-lx/terrain-d-1111/cpu.xml": "44f9dd83bff7c852e2e0650ebc716aeffc5014f68f2960978f9e8e979d938530"
+  },
+  "installed_isaac_cpu_check": {
+    "cpu_only": true,
+    "kit_started": false,
+    "class_type_placeholder": true,
+    "constructor_executed": false,
+    "methods": [
+      "_add_sub_terrain",
+      "_generate_curriculum_terrains",
+      "_get_terrain_mesh"
+    ],
+    "source_hashes": {
+      "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/terrains/terrain_generator.py": "a364d85812a7713b21a94a450f40e8ef5d448bbe652bcb2ee36184b6300c409b",
+      "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/utils/configclass.py": "2054581c2543c0ab3e049d693f863c17f31dd0a2bcb754746675ebf410e1bbfa",
+      "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/terrains/sub_terrain_cfg.py": "771ef835c58b7fb7909632c7ce36bda308b0266e812c4fa5c8ed1b4c94a61538",
+      "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/terrains/terrain_generator_cfg.py": "cd9479064ce5ee830e201da080aeb414847f311f90641cecead82bb60b1e1734"
+    },
+    "fixture_wall_dimensions_m": {
+      "wall_height_m": 1.2,
+      "corridor_width_m": 0.8
+    },
+    "per_kind": [
+      {
+        "kind": "high_ledge",
+        "rows": 3,
+        "origin": [
+          1.0,
+          4.0,
+          0.0
+        ],
+        "mesh_count": 2
+      },
+      {
+        "kind": "wall",
+        "rows": 1,
+        "origin": [
+          1.0,
+          4.0,
+          0.0
+        ],
+        "mesh_count": 2
+      },
+      {
+        "kind": "crawl",
+        "rows": 10,
+        "origin": [
+          1.0,
+          4.0,
+          0.0
+        ],
+        "mesh_count": 2
+      }
+    ],
+    "grid_tiles": 30,
+    "origins_shape": [
+      10,
+      3,
+      3
+    ],
+    "origins": [
+      [
+        [
+          1.0,
+          4.0,
+          0.0
+        ],
+        [
+          1.0,
+          12.0,
+          0.0
+        ],
+        [
+          1.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          9.0,
+          4.0,
+          0.0
+        ],
+        [
+          9.0,
+          12.0,
+          0.0
+        ],
+        [
+          9.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          17.0,
+          4.0,
+          0.0
+        ],
+        [
+          17.0,
+          12.0,
+          0.0
+        ],
+        [
+          17.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          25.0,
+          4.0,
+          0.0
+        ],
+        [
+          25.0,
+          12.0,
+          0.0
+        ],
+        [
+          25.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          33.0,
+          4.0,
+          0.0
+        ],
+        [
+          33.0,
+          12.0,
+          0.0
+        ],
+        [
+          33.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          41.0,
+          4.0,
+          0.0
+        ],
+        [
+          41.0,
+          12.0,
+          0.0
+        ],
+        [
+          41.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          49.0,
+          4.0,
+          0.0
+        ],
+        [
+          49.0,
+          12.0,
+          0.0
+        ],
+        [
+          49.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          57.0,
+          4.0,
+          0.0
+        ],
+        [
+          57.0,
+          12.0,
+          0.0
+        ],
+        [
+          57.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          65.0,
+          4.0,
+          0.0
+        ],
+        [
+          65.0,
+          12.0,
+          0.0
+        ],
+        [
+          65.0,
+          20.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          73.0,
+          4.0,
+          0.0
+        ],
+        [
+          73.0,
+          12.0,
+          0.0
+        ],
+        [
+          73.0,
+          20.0,
+          0.0
+        ]
+      ]
+    ]
+  }
+}

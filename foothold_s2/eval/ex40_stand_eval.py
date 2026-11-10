@@ -42,7 +42,7 @@ from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 
 import foothold_s2.sb_tasks  # noqa: E402,F401
-from foothold_s2.eval import adapters, ex41_eval_loader, map_mode_cells  # noqa: E402
+from foothold_s2.eval import adapters, ex41_eval_loader, map_mode_cells, run_identity  # noqa: E402
 from foothold_s2.robots.go2_kinematics import FOOT_RADIUS_M  # noqa: E402
 
 _KIT_PRELOAD = (h5py, tensordict, rsl_rl.runners, isaaclab_tasks,
@@ -216,8 +216,10 @@ def main():
                             **{"map_err_series_" + name: values
                                for name, values in map_error_series.items()},
                             **{name: value for name, value in map_error_aggregate.items()})
+        checkpoint_sha = hashlib.sha256(args.checkpoint.read_bytes()).hexdigest()
         result = {"format": "foothold-ex40-stand/1", "checkpoint": str(args.checkpoint),
-                  "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
+                  "checkpoint_sha256": checkpoint_sha,
+                  "run_identity": run_identity.safe_collect(args.device, checkpoint_sha, eval_seed=args.seed),
                   "ex41_checkpoint_preparation": checkpoint_preparation,
                   "mode": args.mode, "envs": args.envs, "seconds": args.seconds,
                   "skip_seconds": args.skip_seconds, "dt": dt, "feet": FEET,
