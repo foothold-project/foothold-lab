@@ -200,6 +200,35 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     return plan, parent, request
 
 
+def speed_probe_builds_chain(speed_probe: bool, rank: int) -> bool:
+    """Only rank 0 builds the training chain (P1 score command, queue, dispatch) during a speed probe.
+
+    The chain validates that the shared P1 score command scores run_dir/model_N.pt. A rank whose
+    log dir was moved to scratch would fail that check before launch, and a second chain would
+    also compete for the shared queue. Update counts of 20 / 50 never reach the P1 boundary.
+    """
+    return not speed_probe or rank == 0
+
+
+def validate_speed_probe_switches(*, speed_probe: bool, stage_zero_requested: bool,
+                                  stage_e0_requested: bool) -> None:
+    if speed_probe and not (stage_zero_requested or stage_e0_requested):
+        raise ValueError("EX-42 speed probe is only valid with the stage-zero or E0 approval switches")
+
+
+def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume_requested: bool,
+                            e0_approved: bool, **cli: Any) -> dict[str, Any]:
+    """E0 entry as train_start calls it: preflight only. Returns the request; never starts training."""
+    if stage_zero_requested or resume_requested:
+        raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
+    if not e0_approved:
+        raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
+    _plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
+    if not dry_run:
+        raise ValueError("EX-42 E0 training runtime is not wired: only the preflight (--ex42_stage_e0_dry_run) can run")
+    return request
+
+
 def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
                                    manifest_path: str | Path,
                                    plan_sha256: str, approval_sha256: str,

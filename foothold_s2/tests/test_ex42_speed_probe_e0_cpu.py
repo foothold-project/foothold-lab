@@ -108,8 +108,110 @@ def test_train_start_wiring_has_every_site_that_pinned_1000():
     text = TRAIN_START.read_text(encoding="utf-8")
     ast.parse(text)
     assert text.count("args_cli.max_iterations if args_cli.ex42_speed_probe else 1000") == 6
-    assert "speed_probe=_pre_args.ex42_speed_probe" in text and "speed_probe_rank_log_dir" in text
     assert "agent_cfg.max_iterations = 1000\n" not in text                       # every literal 1000 bound is now switch-aware
+
+
+@pytest.mark.parametrize("bad", [0, 2, 19, 21, 51, 100, 1000])
+def test_probe_update_bound_is_exactly_20_and_50(zero_args, bad):
+    assert entry.SPEED_PROBE_UPDATES == (20, 50) and entry.SPEED_PROBE_ENVS == (1536, 3072)
+    with pytest.raises(ValueError):
+        entry.validate_ex42_stage_zero_cli(**(zero_args | {"max_iterations": bad}), speed_probe=True)
+    if bad != 1000:
+        with pytest.raises(ValueError, match="not an approved value"):
+            entry.configure_ex42_stage_zero_train_cfg({}, {}, parent_path="x", parent_sha256="y", updates=bad)
+        with pytest.raises(ValueError, match="bounded to 1000"):
+            entry.EX42StageZeroRuntime(stage_zero_plan=type("P", (), {"stages": [object()]})(), plan_sha256="p",
+                                       approval_sha256="a", parent_sha256="s", maximum_updates=bad,
+                                       push_vmax_mps=1.0, speed_probe=True)
+
+
+# ---- train_start pre-parse block, run for real in a subprocess (rank, guards) ----
+
+def _preparse_harness(tmp_path, argv, local_rank):
+    """Execute train_start's pre-parser through the rank override, exactly as written in the file."""
+    import json
+    import subprocess
+    import sys
+    text = TRAIN_START.read_text(encoding="utf-8")
+    head = text[text.index("_pre = argparse.ArgumentParser"):text.index("EX41_PLAN = None")]
+    script = tmp_path / "harness.py"
+    script.write_text("import argparse, os, sys, json\n" + head
+                      + "\nprint(json.dumps({'rank': EX42_SPEED_PROBE_RANK, 'log_dir': _pre_args.ex42_log_dir}))\n",
+                      encoding="utf-8")
+    env = {"PATH": "/usr/bin:/bin", "PYTHONPATH": str(ROOT), "LOCAL_RANK": str(local_rank)}
+    return subprocess.run([sys.executable, str(script)] + argv, env=env, capture_output=True, text=True, cwd=ROOT)
+
+
+def test_preparse_moves_only_non_zero_ranks_to_a_private_dir(tmp_path):
+    import json
+    argv = ["--ex42_speed_probe", "--ex42_log_dir", str(tmp_path / "run" / "M2_x")]
+    got = {}
+    for rank in (0, 1):
+        proc = _preparse_harness(tmp_path, argv, rank)
+        assert proc.returncode == 0, proc.stderr
+        got[rank] = json.loads(proc.stdout.splitlines()[-1])
+    assert got[0]["log_dir"] == argv[-1] and got[0]["rank"] == 0
+    assert got[1]["rank"] == 1 and got[1]["log_dir"] != argv[-1] and "ex42_probe_rank1_M2_x" in got[1]["log_dir"]
+    off = _preparse_harness(tmp_path, ["--ex42_log_dir", argv[-1]], 1)                 # probe off: rank is ignored
+    assert json.loads(off.stdout.splitlines()[-1]) == {"rank": 0, "log_dir": argv[-1]}
+
+
+def test_speed_probe_needs_a_stage_approval_switch():
+    entry.validate_speed_probe_switches(speed_probe=False, stage_zero_requested=False, stage_e0_requested=False)
+    entry.validate_speed_probe_switches(speed_probe=True, stage_zero_requested=True, stage_e0_requested=False)
+    entry.validate_speed_probe_switches(speed_probe=True, stage_zero_requested=False, stage_e0_requested=True)
+    with pytest.raises(ValueError, match="only valid with"):
+        entry.validate_speed_probe_switches(speed_probe=True, stage_zero_requested=False, stage_e0_requested=False)
+
+
+def test_train_start_calls_the_entry_helpers_in_the_places_that_matter():
+    text = TRAIN_START.read_text(encoding="utf-8")
+    for needle in ("validate_speed_probe_switches(speed_probe=_pre_args.ex42_speed_probe",
+                   "run_ex42_stage_e0_entry(", "dry_run=_pre_args.ex42_stage_e0_dry_run",
+                   "speed_probe_builds_chain(\n            _pre_args.ex42_speed_probe, EX42_SPEED_PROBE_RANK)",
+                   "args_cli.ex42_log_dir = speed_probe_rank_log_dir(", "raise SystemExit(0)"):
+        assert needle in text, needle
+
+
+# ---- rank 1 on the real Linux machine profile (reviewer r593_rank1_chain.py, through the same gate train_start uses) ----
+
+def _linux_profile(work, monkeypatch):
+    names = ("A_LAYER_MARKER C_LAYER_LOCK EX41_PUSH250_OUTPUT EX41_STAGE_VIDEO_OUTPUT EX41_STAGE_VIDEO_SOURCE "
+             "EX41_W78_VIDEO_ROOT FOOTHOLD_BASH FOOTHOLD_EX42_GATE_REPORT GPU0_EVAL_MARKER GPU0_TRAINING_MARKER "
+             "GPU0_TRAINING_MARKER_ALT GPU1_EVAL_MARKER GPU1_TRAINING_MARKER GPU_JOBS_CONFIG GPU_JOBS_QUEUE "
+             "ISAAC311_PYTHON ISAAC_CACHE_ROOT ISAACLAB_ROOT ISAAC_SIM_ROOT MAI_TMP_ROOT MAI_WORKTREE_ROOT "
+             "PLAYLIST_ROOT RSL_RL_MODULE RUNNER_HOME S2_LAB_ROOT TELEGRAM_OUTBOX TELEGRAM_SCRIPT").split()
+    for name in names:
+        monkeypatch.setenv(name, str(work / name.lower()))
+    monkeypatch.setenv("GPU0_UUID", "GPU-11111111-1111-1111-1111-111111111111")
+    monkeypatch.setenv("GPU1_UUID", "GPU-22222222-2222-2222-2222-222222222222")
+    monkeypatch.setenv("FOOTHOLD_MACHINE_PROFILE", str(ROOT / "machines/AI-WS01-linux.yaml"))
+    from foothold_s2.machine_profile import load_machine_profile
+    return load_machine_profile()
+
+
+def test_two_rank_probe_on_the_linux_profile_builds_one_chain_and_rank1_does_not_die(tmp_path, monkeypatch):
+    import json
+    profile = _linux_profile(tmp_path, monkeypatch)
+    run_dir = tmp_path / "s2_lab" / "ex42_probe_m2"
+    argv = [profile["paths"]["conda_python"], "-m", "foothold_s2.eval.eval_map_modes", "--task", entry.STAGE_ZERO_TASK_ID,
+            "--checkpoint", str(run_dir / "model_{iteration}.pt"), "--out", str(tmp_path / "scores" / "p1_{iteration}.json"),
+            "--device", "cuda:1", "--envs", "64", "--steps", "300", "--modes", "eval_gt,eval_pred,probe_prop_only", "--headless"]
+
+    def build(rank):
+        return entry.build_ex42_training_chain(
+            plan_path=TABLE, approvals_path=APPROVALS, parent_manifest_path=tmp_path / "manifest.json",
+            run_dir=entry.speed_probe_rank_log_dir(run_dir, rank, True), repo_root=ROOT,
+            queue_path=tmp_path / "gpu_jobs_queue", score_argv_json=json.dumps(argv),
+            machine_profile=profile, dispatch_path=tmp_path / "dispatch.json")
+
+    with pytest.raises(FileNotFoundError):                        # rank 0 passes the P1 command check, stops at the missing manifest
+        build(0)
+    with pytest.raises(ValueError, match="does not score this manifest-published checkpoint"):
+        build(1)                                                  # negative control: rank 1 would die here if it built a chain
+    built = [rank for rank in (0, 1) if entry.speed_probe_builds_chain(True, rank)]
+    assert built == [0]                                           # the gate train_start uses: rank 1 builds nothing
+    assert entry.speed_probe_builds_chain(False, 1) is True       # probe off: every rank builds as before
 
 
 # ---- E0 entry ----
@@ -211,3 +313,58 @@ def test_the_shipped_approval_and_prep_files_are_untouched():
                           "foothold_s2/curriculum/ex42-prep.yaml", "experiments/EX-42.yaml"],
                          cwd=ROOT, capture_output=True, text=True).stdout
     assert out.strip() == ""
+
+
+@pytest.mark.parametrize("name,edit", [
+    ("approved_yes", lambda d: d["stage_e0_authorization"].__setitem__("approved", "yes")),
+    ("status_open", lambda d: d.__setitem__("status", "approved")),
+    ("production_open", lambda d: d.__setitem__("production_launch_allowed", True)),
+    ("automatic_open", lambda d: d.__setitem__("automatic_launch_allowed", True)),
+    ("no_decision_id", lambda d: d["stage_e0_authorization"].__setitem__("decision_id", " ")),
+    ("no_approved_at", lambda d: d["stage_e0_authorization"].__setitem__("approved_at", "")),
+    ("no_approver", lambda d: d["stage_e0_authorization"].__setitem__("approver", None)),
+    ("dr_not_approved", lambda d: d["domain_randomization"].__setitem__("approved", "yes")),
+    ("scope_stage", lambda d: d["stage_e0_authorization"]["scope"].__setitem__("stage_id", "E1")),
+    ("scope_start", lambda d: d["stage_e0_authorization"]["scope"].__setitem__("start_update", 1)),
+    ("scope_max", lambda d: d["stage_e0_authorization"]["scope"].__setitem__("maximum_updates", 251)),
+])
+def test_every_closing_condition_of_the_e0_approval_is_pinned(tmp_path, name, edit):
+    plan = EX42Plan.load(TABLE)
+    validate_stage_e0_authorization(plan, _approvals(tmp_path), TEST_PARENT_SHA)         # control: the unedited cell opens
+    with pytest.raises(ValueError):
+        validate_stage_e0_authorization(plan, _approvals(tmp_path, edit=edit), TEST_PARENT_SHA)
+
+
+@pytest.mark.parametrize("key,value", [("minimum_updates", 249), ("maximum_updates", 251), ("extension_updates", 1), ("enabled", False)])
+def test_e0_stage_row_must_be_the_bounded_250_update_row(tmp_path, key, value):
+    plan = EX42Plan.load(TABLE)
+    row = next(r for r in plan.document["stages"] if r["id"] == "E0")
+    original = row[key]
+    row[key] = value
+    try:
+        with pytest.raises(ValueError, match="bounded 250-update stage"):
+            validate_stage_e0_authorization(plan, _approvals(tmp_path), TEST_PARENT_SHA)
+    finally:
+        row[key] = original
+
+
+def test_e0_entry_as_train_start_calls_it_never_starts_training(tmp_path, parent_file, monkeypatch):
+    args = _e0_args(tmp_path, _approvals(tmp_path), parent_file, monkeypatch)
+    args.pop("approved_switch")
+    args.pop("stage_id")
+    cli = dict(args, stage_id="E0")
+    request = entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=False,
+                                            e0_approved=True, **cli)
+    assert request["state"] == "stage_e0_preflight_passed"
+    with pytest.raises(ValueError, match="not wired"):
+        entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
+                                      e0_approved=True, **cli)
+    with pytest.raises(ValueError, match="cannot be combined"):
+        entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=True, resume_requested=False,
+                                      e0_approved=True, **cli)
+    with pytest.raises(ValueError, match="cannot be combined"):
+        entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=True,
+                                      e0_approved=True, **cli)
+    with pytest.raises(ValueError, match="also requires"):
+        entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=False,
+                                      e0_approved=False, **cli)

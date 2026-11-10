@@ -470,15 +470,20 @@ if _ex42_requested:
                                  or _pre_args.ex42_stage_zero_dry_run)
     _stage_e0_requested = bool(_pre_args.ex42_stage_e0_approved
                                or _pre_args.ex42_stage_e0_dry_run)
-    if _stage_e0_requested:
-        from foothold_s2.scripts.ex42_training_entry import validate_ex42_stage_e_cli
+    from foothold_s2.scripts.ex42_training_entry import (
+        run_ex42_stage_e0_entry,
+        speed_probe_builds_chain, validate_speed_probe_switches,
+    )
 
-        if _stage_zero_requested or _pre_args.ex42_resume_from or _pre_args.ex42_resume_smoke:
-            raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
-        if not _pre_args.ex42_stage_e0_approved:
-            raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
-        _e0_plan, _e0_parent, _e0_preflight = validate_ex42_stage_e_cli(
-            stage_id="E0", plan_path=_pre_args.ex42_plan, approvals_path=_pre_args.ex42_approvals,
+    validate_speed_probe_switches(speed_probe=_pre_args.ex42_speed_probe,
+                                  stage_zero_requested=_stage_zero_requested,
+                                  stage_e0_requested=_stage_e0_requested)
+    if _stage_e0_requested:
+        _e0_preflight = run_ex42_stage_e0_entry(
+            dry_run=_pre_args.ex42_stage_e0_dry_run, stage_zero_requested=_stage_zero_requested,
+            resume_requested=bool(_pre_args.ex42_resume_from or _pre_args.ex42_resume_smoke),
+            e0_approved=_pre_args.ex42_stage_e0_approved, stage_id="E0",
+            plan_path=_pre_args.ex42_plan, approvals_path=_pre_args.ex42_approvals,
             experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
             parent_checkpoint_path=os.path.join(os.path.dirname(os.path.abspath(
                 _pre_args.ex42_parent_manifest)), "model_1000.pt"),
@@ -486,15 +491,10 @@ if _ex42_requested:
             device=_pre_args.device or "", headless=_pre_args.headless,
             distributed=_pre_args.distributed, max_iterations=_pre_args.max_iterations,
             num_envs=_pre_args.num_envs, map_input=_pre_args.map_input,
-            force_gt=_pre_args.force_gt, approved_switch=_pre_args.ex42_stage_e0_approved,
-            speed_probe=_pre_args.ex42_speed_probe)
+            force_gt=_pre_args.force_gt, speed_probe=_pre_args.ex42_speed_probe)
         print("EX42_STAGE_E0_PREFLIGHT " + json.dumps({
             **_e0_preflight, "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
-        if not _pre_args.ex42_stage_e0_dry_run:
-            raise ValueError("EX-42 E0 training runtime is not wired: only the preflight (--ex42_stage_e0_dry_run) can run")
         raise SystemExit(0)
-    if _pre_args.ex42_speed_probe and not _stage_zero_requested:
-        raise ValueError("EX-42 speed probe is only valid with the stage-zero or E0 approval switches")
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
             validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
@@ -575,7 +575,10 @@ if _ex42_requested:
             machine_profile=load_machine_profile(),
         )
 
-    if EX42_STAGE_ZERO_PLAN is not None:
+    if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(
+            _pre_args.ex42_speed_probe, EX42_SPEED_PROBE_RANK):
+        print("EX42_SPEED_PROBE_RANK_NO_CHAIN " + json.dumps({"rank": EX42_SPEED_PROBE_RANK}), flush=True)
+    elif EX42_STAGE_ZERO_PLAN is not None:
         EX42_TRAINING_CHAIN, EX42_STAGE_ZERO_CHAIN_RECEIPT = (
             build_stage_zero_chain_with_receipt_checks(
                 _pre_args.ex42_log_dir,
