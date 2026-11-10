@@ -1182,7 +1182,8 @@ def main(env_cfg, agent_cfg):
                   + json.dumps(ex42_stage_zero_root_xy_readback, sort_keys=True), flush=True)
         else:
             ex42_transfer = runner.load_ex42_stage_zero_parent(
-                EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT)
+                EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT,
+                stage_e0=(EX42_STAGE_ID == "E0"))      # E0 parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
             print("EX42_STAGE_ZERO_PARENT_TRANSFER "
                   + json.dumps(ex42_transfer, sort_keys=True), flush=True)
     runner.add_git_repo_to_log(__file__)

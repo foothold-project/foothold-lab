@@ -121,3 +121,66 @@ def test_reset_readback_and_first_update_carry_the_level_counts(capsys):
     assert payload["stage_id"] == "E0" and payload["per_level"][4] == 1 and payload["per_level"][5] == 1
     runtime.on_update_start(2)
     assert "EX42_FIRST_UPDATE_LEVELS" not in capsys.readouterr().out             # only the first update prints it
+
+
+# ---- E0 parent load (N1 fourth start: "parent receipt is incomplete") ----
+def _loader_runner(p_map_off, pcfg):
+    from types import SimpleNamespace
+    from foothold_s2.runners import start_runner
+
+    class Loader:
+        def __init__(self):
+            self.calls = []
+
+        def load_state_dict(self, *args, **kwargs):
+            self.calls.append((args, kwargs))
+
+    runner = object.__new__(start_runner.StartRunner)
+    runner._resumed = False
+    runner.current_learning_iteration = 0
+    runner.ex41_pose_commands = True
+    runner.ex41_critic_mirror = False
+    runner.pcfg = dict(pcfg)
+    runner.p_map_off = p_map_off
+    runner.alg = SimpleNamespace(policy=Loader(), optimizer=Loader(), learning_rate=1.0)
+    runner.perception = Loader()
+    runner.adasmpl = Loader()
+    runner.perception_optimizer = Loader()
+    runner._apply_resume_adasmpl = lambda: None
+    runner.load_map_switch_state = lambda *args: None
+    runner.set_rng_state = lambda *_args: None
+    return runner
+
+
+@needs_parent
+def test_real_m13000_checkpoint_and_real_receipt_load_with_stage_e0_and_are_refused_without_it():
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.runners import start_runner
+
+    checkpoint, receipt = entry.inspect_ex42_stage_e0_parent(
+        plan=EX42Plan.load(TABLE), approvals_path=APPROVALS, experiment_path=ROOT / "experiments" / "EX-42.yaml",
+        parent_manifest_path=PARENT_DIR / "manifest.json")
+    assert receipt["state"] == "parent_verified_for_stage_e0"
+    pcfg = {**start_runner.MODE_DEFAULTS, **(checkpoint.get("perception_cfg") or {})}
+    p_off = float(checkpoint["map_switch"]["p_map_off"])
+    with pytest.raises(ValueError, match="parent receipt is incomplete"):          # what train_start did at :1184
+        _loader_runner(p_off, pcfg).load_ex42_stage_zero_parent(checkpoint, receipt)
+    runner = _loader_runner(p_off, pcfg)
+    result = runner.load_ex42_stage_zero_parent(checkpoint, receipt, stage_e0=True)
+    assert result["state"] == "loaded_for_ex42_stage_e0" and result["parent_cumulative_update"] == 13000
+    assert result["local_iteration_origin"] == 0 and runner.current_learning_iteration == 0
+    assert runner.alg.policy.calls[0][1] == {"strict": True}
+    assert runner.alg.learning_rate == float(checkpoint["ppo_learning_rate"])
+
+
+def test_train_start_passes_stage_e0_to_the_parent_load_and_no_other_stage_zero_literal_is_left_on_the_e0_path():
+    tree = ast.parse(TRAIN_START.read_text(encoding="utf-8"))
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
+             and getattr(n.func, "attr", "") == "load_ex42_stage_zero_parent"]
+    assert len(calls) == 1
+    kw = {k.arg: k.value for k in calls[0].keywords}
+    assert "stage_e0" in kw and "EX42_STAGE_ID" in ast.unparse(kw["stage_e0"]) and "'E0'" in ast.unparse(kw["stage_e0"])
+    src = TRAIN_START.read_text(encoding="utf-8")
+    # the only 12000 / 12001 literals left belong to the self-resume branch (EX42_STAGE_ZERO_RESUME), which E0 never sets
+    resume = [i for i, line in enumerate(src.splitlines(), 1) if "12000 +" in line or "12001 +" in line]
+    assert len(resume) == 2
