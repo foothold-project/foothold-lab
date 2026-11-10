@@ -20,13 +20,36 @@ from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.curriculum.ex42_runtime import EX42Runtime
-from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization
+from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization, validate_stage_e0_authorization
 
 
 STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
 STAGE_ZERO_UPDATES = 1000
 STAGE_ZERO_NUM_ENVS = 3072
 STAGE_ZERO_DEVICE = "cuda:0"
+# Throughput probe only (--ex42_speed_probe): bounded update counts, per-process env counts, two ranks.
+SPEED_PROBE_UPDATES = (20, 50)
+SPEED_PROBE_ENVS = (1536, 3072)
+STAGE_E0_ID = "E0"
+STAGE_E0_DEVICE = "cuda:0"
+
+
+def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:
+    """Update count the stage-zero run is bounded to: 1000, or the probe's own 20 / 50."""
+    return int(max_iterations) if speed_probe else STAGE_ZERO_UPDATES
+
+
+def speed_probe_rank_log_dir(log_dir: str | Path, rank: int, speed_probe: bool) -> str:
+    """Rank 0 keeps the real run directory; other probe ranks get a private scratch directory.
+
+    Both ranks receive the same argv, so a shared directory would trip the new-output and
+    startup-receipt checks and interleave status / manifest / jsonl writes. Rank 0 alone
+    writes into the run directory; the scratch path is not created here.
+    """
+    if not speed_probe or rank == 0:
+        return str(log_dir)
+    import tempfile
+    return str(Path(tempfile.gettempdir()) / f"ex42_probe_rank{rank}_{Path(log_dir).name}")
 
 
 def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str | Path,
@@ -38,9 +61,12 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
                                  approved_switch: bool, resume_from: str | Path | None = None,
                                  relocation_receipt_path: str | Path | None = None,
                                  self_resume: bool = False, resume_smoke: bool = False,
-                                 resume_updates: int | None = None
+                                 resume_updates: int | None = None,
+                                 speed_probe: bool = False
                                  ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Validate the explicitly approved stage-zero CLI without importing Kit."""
+    if speed_probe and (resume_from or self_resume or resume_smoke):
+        raise ValueError("EX-42 speed probe cannot be combined with resume")
     if approved_switch is not True:
         raise ValueError("EX-42 stage zero requires its explicit scoped approval switch")
     if resume_from and not self_resume:
@@ -56,10 +82,16 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
     if machine_profile is not None:
         from foothold_s2.machine_profile import validate_training_device
         validate_training_device(device, machine_profile=machine_profile)
-    if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
-        raise ValueError("EX-42 stage zero requires headless single-process cuda:0 for fresh and resume runs")
-    if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
-        raise ValueError("EX-42 stage zero is bounded to exactly 1000 updates and 3072 environments")
+    if speed_probe:
+        if device != STAGE_ZERO_DEVICE or headless is not True or type(distributed) is not bool:
+            raise ValueError("EX-42 speed probe requires headless cuda:0 (rank device is chosen by the launcher)")
+        if max_iterations not in SPEED_PROBE_UPDATES or num_envs not in SPEED_PROBE_ENVS:
+            raise ValueError("EX-42 speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
+    else:
+        if device != STAGE_ZERO_DEVICE or headless is not True or distributed is not False:
+            raise ValueError("EX-42 stage zero requires headless single-process cuda:0 for fresh and resume runs")
+        if max_iterations != STAGE_ZERO_UPDATES or num_envs != STAGE_ZERO_NUM_ENVS:
+            raise ValueError("EX-42 stage zero is bounded to exactly 1000 updates and 3072 environments")
     if map_input not in (None, "reconstruction") or force_gt is not False:
         raise ValueError("EX-42 stage zero must consume reconstructed maps without forced GT")
     if resume_smoke:
@@ -83,7 +115,7 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
     if (parent_receipt["approval"]["state"] != "stage_zero_only_authorized"
             or parent_receipt["approval"]["later_stages_authorized"] is not False):
         raise ValueError("EX-42 stage-zero approval is not bounded to stage zero")
-    return plan, checkpoint, parent_receipt, {
+    request = {
         "state": "stage_zero_preflight_passed",
         "task": task, "device": device, "num_envs": num_envs,
         "max_iterations": max_iterations, "map_input": "reconstruction",
@@ -94,6 +126,78 @@ def validate_ex42_stage_zero_cli(*, plan_path: str | Path, approvals_path: str |
         "resume_smoke": bool(resume_smoke),
         "resume_updates": resume_updates,
     }
+    if speed_probe:
+        request["speed_probe"] = {"updates": max_iterations, "num_envs": num_envs,
+                                  "distributed": bool(distributed)}
+    return plan, checkpoint, parent_receipt, request
+
+
+def read_e_stage_parent(experiment_path: str | Path) -> dict[str, Any]:
+    """The pinned m13000 (stage-zero model_1000.pt) record from experiments/EX-42.yaml."""
+    import yaml
+    document = yaml.safe_load(Path(experiment_path).read_text(encoding="utf-8-sig"))
+    parent = document["operational_values"]["e_stage_parent"]
+    if (parent.get("cumulative_update") != 13000 or parent.get("checkpoint_key") != "model_1000.pt"
+            or not re.fullmatch(r"[0-9a-f]{64}", str(parent.get("sha256", "")))):
+        raise ValueError("EX-42 E-stage parent record is not the pinned m13000 checkpoint")
+    return parent
+
+
+def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals_path: str | Path,
+                              experiment_path: str | Path, parent_checkpoint_path: str | Path,
+                              log_dir: str | Path, task: str, device: str, headless: bool,
+                              distributed: bool, max_iterations: int | None,
+                              num_envs: int | None, map_input: str | None, force_gt: bool,
+                              machine_profile: dict[str, Any] | None = None,
+                              approved_switch: bool, speed_probe: bool = False
+                              ) -> tuple[EX42Plan, dict[str, Any], dict[str, Any]]:
+    """Validate the explicitly approved E0 CLI (m13000 -> 250 updates) without importing Kit.
+
+    Only E0 is accepted; E1 and later stage ids are refused. No torch: the parent is pinned by
+    the sha256 of the bytes beside it, and the checkpoint contents are read by the launcher.
+    """
+    if approved_switch is not True:
+        raise ValueError("EX-42 E0 requires its explicit scoped approval switch")
+    if stage_id != STAGE_E0_ID:
+        raise ValueError("EX-42 stage entry accepts E0 only; E1 and later stages are not authorized")
+    if task != STAGE_ZERO_TASK_ID:
+        raise ValueError("EX-42 E0 task differs from the approved task")
+    if machine_profile is not None:
+        from foothold_s2.machine_profile import validate_training_device
+        validate_training_device(device, machine_profile=machine_profile)
+    if device != STAGE_E0_DEVICE or headless is not True:
+        raise ValueError("EX-42 E0 requires headless cuda:0")
+    if speed_probe:
+        if (type(distributed) is not bool or max_iterations not in SPEED_PROBE_UPDATES
+                or num_envs not in SPEED_PROBE_ENVS):
+            raise ValueError("EX-42 E0 speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
+    elif distributed is not False or max_iterations != 250 or num_envs != STAGE_ZERO_NUM_ENVS:
+        raise ValueError("EX-42 E0 is bounded to exactly 250 updates and 3072 environments, single process")
+    if map_input not in (None, "reconstruction") or force_gt is not False:
+        raise ValueError("EX-42 E0 must consume reconstructed maps without forced GT")
+    output = Path(log_dir).resolve()
+    if output.exists():
+        raise ValueError("EX-42 E0 output must be new")
+    plan = EX42Plan.load(plan_path)
+    parent = read_e_stage_parent(experiment_path)
+    checkpoint = Path(parent_checkpoint_path).resolve(strict=True)
+    digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    if checkpoint.name != parent["checkpoint_key"] or digest != parent["sha256"]:
+        raise ValueError("EX-42 E0 parent checkpoint differs from the pinned m13000")
+    approval = validate_stage_e0_authorization(plan, approvals_path, parent["sha256"])
+    request = {
+        "state": "stage_e0_preflight_passed", "stage_id": STAGE_E0_ID,
+        "task": task, "device": device, "num_envs": num_envs,
+        "max_iterations": max_iterations, "map_input": "reconstruction", "force_gt": False,
+        "output_dir": str(output), "parent_path": str(checkpoint), "parent_sha256": digest,
+        "parent_cumulative_update": 13000,
+        "production_launch_allowed": False, "later_stages_authorized": False,
+        "approval": approval,
+    }
+    if speed_probe:
+        request["speed_probe"] = {"updates": max_iterations, "num_envs": num_envs,
+                                  "distributed": bool(distributed)}
+    return plan, parent, request
 
 
 def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
@@ -536,8 +640,9 @@ class EX42StageZeroRuntime:
 
     def __init__(self, *, stage_zero_plan: Any, plan_sha256: str,
                  approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000,
-                 push_vmax_mps: float):
-        if maximum_updates != STAGE_ZERO_UPDATES:
+                 push_vmax_mps: float, speed_probe: bool = False):
+        if maximum_updates != STAGE_ZERO_UPDATES and not (
+                speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
             raise ValueError("EX-42 stage-zero runtime must remain bounded to 1000 updates")
         self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
         self.plan_sha256 = plan_sha256
@@ -790,8 +895,11 @@ class EX42StageZeroDRReadback:
 def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
                                          checkpoint: dict[str, Any], *,
                                          parent_path: str | Path,
-                                         parent_sha256: str) -> dict[str, Any]:
+                                         parent_sha256: str,
+                                         updates: int = STAGE_ZERO_UPDATES) -> dict[str, Any]:
     """Match the saved learner/perception contract while bounding stage zero."""
+    if updates != STAGE_ZERO_UPDATES and updates not in SPEED_PROBE_UPDATES:
+        raise ValueError("EX-42 stage-zero update bound is not an approved value")
     saved_cfg = checkpoint.get("perception_cfg")
     if not isinstance(saved_cfg, dict):
         raise ValueError("EX-42 stage-zero parent perception config is missing")
@@ -806,7 +914,7 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
                                     "sha256": parent_sha256,
                                     "local_update": 6000,
                                     "cumulative_update": 12000}
-    cfg["max_iterations"] = STAGE_ZERO_UPDATES
+    cfg["max_iterations"] = updates
     cfg["save_interval"] = 50
     parent_sha = cfg["ex42_stage_zero_parent"]["sha256"]
     if parent_sha is not None and not re.fullmatch(r"[0-9a-f]{64}", parent_sha):

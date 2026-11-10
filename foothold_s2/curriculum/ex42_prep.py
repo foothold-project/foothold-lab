@@ -95,6 +95,55 @@ def validate_stage_zero_authorization(plan: "EX42Plan", approvals_path: str | Pa
             "production_launch_allowed": False, "later_stages_authorized": False}
 
 
+def validate_stage_e0_authorization(plan: "EX42Plan", approvals_path: str | Path,
+                                    e_parent_sha256: str) -> dict[str, Any]:
+    """Read the separately approved, bounded E0 cell (m13000 -> 250 updates). E1 and later are never opened.
+
+    A missing or incomplete cell fails closed. The approvals file bytes are not re-pinned here:
+    the launch source lock (audit_ex42_launch_source) protects the file, and the stage-zero
+    pin in the curriculum table is left to the lead.
+    """
+    path = Path(approvals_path).resolve(strict=True)
+    approvals = _read_yaml(path)
+    if (approvals.get("format") != APPROVAL_FORMAT
+            or approvals.get("status") != "blocked"
+            or approvals.get("production_launch_allowed") is not False
+            or approvals.get("automatic_launch_allowed") is not False):
+        raise ValueError("EX-42 full-plan launch guard must remain blocked")
+    cell = approvals.get("stage_e0_authorization")
+    if not isinstance(cell, dict) or cell.get("approved") is not True:
+        raise ValueError("EX-42 E0 authorization is missing")
+    stage = next((row for row in plan.document["stages"] if row.get("id") == "E0"), None)
+    if (stage is None or stage.get("enabled") is not True
+            or stage.get("minimum_updates") != 250 or stage.get("maximum_updates") != 250
+            or stage.get("extension_updates") != 0):
+        raise ValueError("EX-42 E0 stage in the curriculum table is not the bounded 250-update stage")
+    expected_scope = {
+        "stage_id": "E0",
+        "start_update": 0,
+        "maximum_updates": 250,
+        "parent_sha256": e_parent_sha256,
+        "later_stages_authorized": False,
+    }
+    if cell.get("scope") != expected_scope:
+        raise ValueError("EX-42 E0 approval scope differs from the bounded E0 stage")
+    decision_id = cell.get("decision_id")
+    approved_at = cell.get("approved_at")
+    if (not isinstance(decision_id, str) or not decision_id.strip()
+            or not isinstance(approved_at, str) or not approved_at.strip()
+            or not isinstance(cell.get("approver"), str) or not cell["approver"].strip()):
+        raise ValueError("EX-42 E0 approval identity or timestamp is missing")
+    dr = approvals.get("domain_randomization", {})
+    if (not isinstance(dr, dict) or dr.get("approved") is not True
+            or dr.get("stage_scales", {}).get("E0") != 1.0):
+        raise ValueError("EX-42 E0 DR scale must be explicitly approved as 1.0")
+    return {"state": "stage_e0_only_authorized", "scope": expected_scope,
+            "decision_id": decision_id, "approved_at": approved_at,
+            "approvals_path": str(path),
+            "approvals_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "production_launch_allowed": False, "later_stages_authorized": False}
+
+
 @dataclass(frozen=True)
 class EX42Plan:
     path: Path
