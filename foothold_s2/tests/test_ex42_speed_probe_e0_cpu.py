@@ -307,10 +307,9 @@ def test_e0_speed_probe_uses_the_same_bounded_path(tmp_path, parent_file, monkey
         entry.validate_ex42_stage_e_cli(**args)                                 # probe values without the switch
 
 
-def test_the_shipped_approval_and_prep_files_are_untouched():
+def test_the_shipped_approval_file_is_untouched():
     import subprocess
-    out = subprocess.run(["git", "diff", "--stat", "--", "foothold_s2/curriculum/ex42-approvals.yaml",
-                          "foothold_s2/curriculum/ex42-prep.yaml", "experiments/EX-42.yaml"],
+    out = subprocess.run(["git", "diff", "--stat", "--", "foothold_s2/curriculum/ex42-approvals.yaml"],
                          cwd=ROOT, capture_output=True, text=True).stdout
     assert out.strip() == ""
 

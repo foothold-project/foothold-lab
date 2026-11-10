@@ -171,7 +171,7 @@ def inspect_env(tmp_path, monkeypatch):
         monkeypatch.setattr(entry, "read_e_stage_parent", lambda _p: {
             "cumulative_update": 13000, "manifest_local_update": 1000, "checkpoint_key": "model_1000.pt",
             "sha256": record})
-        def verify(self, manifest_path, *, parent_pin=None):
+        def verify(self, manifest_path, *, stage_id=None, parent_pin=None):
             # the E0 parent must be verified against the m13000 pin, never the stage-zero default
             assert parent_pin == {"cumulative_update": 13000, "manifest_local_update": 1000, "sha256": record}
             return {"checkpoint_path": str(path), "manifest_path": str(manifest_path)}

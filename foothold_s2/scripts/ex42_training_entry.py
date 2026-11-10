@@ -1135,7 +1135,8 @@ def inspect_ex42_stage_e0_parent(*, plan: EX42Plan, approvals_path: str | Path,
     if pinned["sha256"] != E0_PARENT_SHA256:
         raise ValueError("EX-42 E0 parent pin in EX-42.yaml differs from the reviewed m13000")
     approval = validate_stage_e0_authorization(plan, approvals_path, pinned["sha256"])
-    parent = plan.verify_parent_manifest(parent_manifest_path, parent_pin=e0_parent_pin(pinned))
+    parent = plan.verify_parent_manifest(parent_manifest_path, stage_id="E0",
+                                         parent_pin=e0_parent_pin(pinned))
     path = Path(parent["checkpoint_path"]).resolve(strict=True)
     if path.name != pinned["checkpoint_key"]:
         raise ValueError("EX-42 E0 parent checkpoint is not the pinned model_1000.pt")

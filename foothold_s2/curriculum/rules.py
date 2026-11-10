@@ -11,14 +11,40 @@
 import torch
 
 
+def check_size_x(size_x):
+    """size_x (scalar or per-env tensor) must be finite and > 0: promotion is `max_dist > size_x / 2`,
+    so a 0 (the combined-mesh cfg once carried size (0, 0)) would promote every moving env."""
+    value = torch.as_tensor(size_x, dtype=torch.float32)
+    if value.numel() == 0 or not bool(torch.isfinite(value).all()) or float(value.min()) <= 0.0:
+        raise ValueError(f"promotion size_x must be finite and positive, got {size_x!r}")
+    return size_x
+
+
+def promotion_size_x(terrain, env_ids):
+    """Tile length (m, along the row axis) that the free-velocity promotion rule compares against.
+
+    A generator cfg that joins tiles of different sizes (EX-42 combined mesh) carries
+    `tile_x_by_column`; the value is then taken per env from its own column. Otherwise the cfg's
+    scalar `size[0]` (every Isaac generator) is used. Either way it must be positive.
+    """
+    gen = terrain.cfg.terrain_generator
+    by_column = getattr(gen, "tile_x_by_column", None)
+    if by_column is None:
+        return check_size_x(gen.size[0])
+    table = torch.as_tensor(by_column, dtype=torch.float32, device=terrain.terrain_types.device)
+    ids = torch.as_tensor(env_ids, dtype=torch.long, device=terrain.terrain_types.device)
+    return check_size_x(table[terrain.terrain_types[ids].long()])
+
+
 def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, eps=1.0e-9):
     """자유 속도 env 들의 판정. `cmd_sum_xy` (n, 2) = 에피소드 동안 뽑힌 (vx, vy) 의 합(움직임 명령 재추출만)."""
+    check_size_x(size_x)
     max_dist_m = torch.as_tensor(max_dist_m, dtype=torch.float32)
     cmd_sum_xy = torch.as_tensor(cmd_sum_xy, dtype=torch.float32)
     norm = torch.linalg.norm(cmd_sum_xy, dim=1)
     out = torch.zeros(len(max_dist_m), dtype=torch.long, device=max_dist_m.device)
     active = norm > eps
-    up = active & (max_dist_m > size_x / 2.0)
+    up = active & (max_dist_m > torch.as_tensor(size_x, dtype=max_dist_m.dtype, device=max_dist_m.device) / 2.0)
     down = active & (max_dist_m < 0.5 * norm * resample_s * factor) & ~up
     out[up] = 1
     out[down] = -1

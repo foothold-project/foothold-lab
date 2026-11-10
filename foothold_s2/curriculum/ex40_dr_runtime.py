@@ -220,6 +220,8 @@ def interval_push(env, env_ids, asset_cfg, target_range):
         rows = torch.arange(env.scene.num_envs, device=asset.device)
     else:
         rows = torch.as_tensor(env_ids, dtype=torch.long, device=asset.device).flatten()
+    if not rows.numel():
+        return
     ex41_vmax = getattr(env, '_ex41_push_vmax_mps', None)
     before = asset.root_physx_view.get_root_velocities()[rows].clone()
     if ex41_vmax is not None:

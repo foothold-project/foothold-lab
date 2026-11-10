@@ -95,6 +95,12 @@ def verify_train_entry_contract() -> dict[str, Any]:
             or known.max_iterations != 1 or known.resume_from is None
             or unknown != ["--headless", "--device", "cuda:0"]):
         raise ValueError("EX-42 candidate train argv differs from the real parser contract")
+    full_argv = [*argv]
+    full_argv.append("--distributed")
+    full_known, full_unknown = parser.parse_known_args(full_argv)
+    if (full_known.num_envs != 3072 or full_known.distributed is not True
+            or full_known.num_envs * 2 != 6144 or full_unknown != unknown):
+        raise ValueError("EX-42 M3 must pass 3072 environments per rank, 6144 total")
     isaac_cli = machine_path("isaaclab_root") / "scripts/reinforcement_learning/rsl_rl/cli_args.py"
     argv_hash = launch_argv_sha256(argv, python=identity["python_executable"],
                                    isaac_cli=str(isaac_cli.resolve(strict=True)))
@@ -103,7 +109,8 @@ def verify_train_entry_contract() -> dict[str, Any]:
             "machine_profile_path": machine["profile"],
             "runtime_identity": identity, "known_argv": argv[:-3],
             "applauncher_passthrough": unknown, "final_argv_sha256": argv_hash,
-            "training_started": False}
+            "full_plan_num_envs": full_known.num_envs * 2,
+            "full_plan_per_gpu_envs": full_known.num_envs, "training_started": False}
 
 
 def verify_env_cfg_import(task_id: str = "FootholdS2-Go2-S2-SB-v0") -> dict[str, Any]:
@@ -173,7 +180,6 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
               gate_report: str | Path | None = None) -> dict[str, Any]:
     plan = EX42Plan.load(table)
     blockers = plan.launch_blockers(approvals, graduation, terrain_manifest)
-    blockers.append("runtime_integration_pending")
     report_path = Path(gate_report) if gate_report is not None else machine_path("ex42_gate_report")
     blockers.extend(f"gate_open:{row}" for row in open_gate_rows(report_path))
     definition = load_experiment("EX-42")
@@ -184,6 +190,12 @@ def ops_check(table: str | Path = DEFAULT_TABLE,
             or training.get("initial_stage") != plan.document["stage_zero"]["id"]
             or training.get("initial_stage_updates") != plan.document["stage_zero"]["maximum_updates"]):
         blockers.append("stage_zero_definition_mismatch")
+    if (values.get("e_stage_parent", {}).get("sha256")
+            != next(row for row in plan.document["stages"] if row["id"] == "E0")["parent"]["sha256"]
+            or training.get("environments") != plan.document["environment"]["num_envs"]
+            or training.get("gpus") != 2 or training.get("per_gpu_envs") != 3072
+            or training.get("launch") != "M3" or training.get("nccl_shm_disable") != 1):
+        blockers.append("full_plan_definition_mismatch")
     try:
         stage_ids = plan.runtime_stage_ids
         read_approved_dr_schedule(approvals, stage_ids)
@@ -247,7 +259,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--exp", required=True, help="experiment definition ID in experiments/<ID>.yaml")
     parser.add_argument("--table", type=Path)
     parser.add_argument("--approvals", type=Path)
-    parser.add_argument("--graduation", type=Path)
+    parser.add_argument("--e0-parent-manifest", "--graduation", dest="graduation", type=Path)
     parser.add_argument("--terrain-manifest", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--expected-head")

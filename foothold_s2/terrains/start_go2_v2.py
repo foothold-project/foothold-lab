@@ -16,6 +16,12 @@ from foothold_s2.eval import start_sheet as ss
 from foothold_s2.terrains import sparse_terrains as legacy
 
 PRESET_ID = "start_go2_v2"
+# Lead 2026-11-11 02:16/02:20: only these four failing A kinds lose jitter.
+# The 0.70 x 0.50 m support footprint is a reset contract, not a gait score.
+RESET_RANGES = {kind: {axis: (0., 0.) for axis in ('x', 'y', 'yaw')}
+                for kind in ('stepping_stones_low', 'stepping_stones_high',
+                             'balance_beams', 'stepping_beams')}
+SPAWN_HALF_EXTENT = (0.35, 0.25)
 SCALE_X = 1.108
 SCALE_Y = 0.885
 STONE_SIZE_X = tuple(v * SCALE_X for v in ss.STONE_SIZE)
@@ -161,24 +167,113 @@ class SideTable(legacy.SideTable):
     def bind(self, row, col, kind, difficulty, size=legacy.TILE):
         key = self.key(kind, difficulty)
         if key not in self.by_key:
-            self.by_key[key] = build_tile(kind, difficulty)
+            tile = build_tile(kind, difficulty)
+            tile.origin = spawn_origin(tile)
+            self.by_key[key] = tile
         super().bind(row, col, kind, difficulty, size)
 
 
 SIDE_TABLE = SideTable()
 
 
-def _tile_function(difficulty, cfg):
+def _tile_meshes(tile):
     import trimesh
 
-    tile = build_tile(cfg.kind, difficulty)
-    SIDE_TABLE.record(cfg.kind, difficulty, tile)
     meshes = []
     for x0, x1, y0, y1, z0, z1 in tile.boxes:
         meshes.append(trimesh.creation.box(
             (x1 - x0, y1 - y0, z1 - z0),
             trimesh.transformations.translation_matrix(
                 ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2))))
+    return meshes
+
+
+def _clip_polygon(subject, clip):
+    """Intersect convex CCW polygons (actual triangle with footprint edges)."""
+    out = [np.asarray(p, dtype=float) for p in subject]
+    for a, b in zip(clip, np.roll(clip, -1, axis=0)):
+        previous, out = out, []
+        if not previous:
+            break
+        edge = b - a
+
+        def side(p):
+            v = p - a
+            return edge[0] * v[1] - edge[1] * v[0]
+
+        for p, q in zip(previous, previous[1:] + previous[:1]):
+            dp, dq = side(p), side(q)
+            pin, qin = dp >= 0, dq >= 0
+            if pin:
+                out.append(p)
+            if pin != qin:
+                out.append(p + (q - p) * (dp / (dp - dq)))
+    return np.asarray(out, dtype=float).reshape(-1, 2)
+
+
+def _area(poly):
+    if len(poly) < 3:
+        return 0.0
+    p = poly - poly[0]  # keep precision even when checking world coordinates
+    q = np.roll(p, -1, axis=0)
+    return abs(float(np.sum(p[:, 0] * q[:, 1] - p[:, 1] * q[:, 0]))) / 2
+
+
+def spawn_origin(tile, *, meshes=None):
+    """Verify the existing entry anchor against the emitted triangle surfaces.
+
+    The original x=0.5,y=4 entry platform covers this rectangle at z=0.
+    No jitter is safe here for the four declared kinds. We do not fall back
+    to a pit, a finish platform or a centre-only height sample. Clipped top
+    triangles must cover the entire 0.35 m² rectangle with no area overlap;
+    holes or duplicate faces cannot pass by merely summing triangle areas.
+    Geometry and all nondeclared kinds remain unchanged.
+    """
+    if tile.kind not in RESET_RANGES:
+        return tile.origin.copy()
+    meshes = _tile_meshes(tile) if meshes is None else meshes
+    centre = tile.origin[:2]
+    hx, hy = SPAWN_HALF_EXTENT
+    rect = centre + np.array([[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]])
+    pieces = []
+    for mesh in meshes:
+        triangles = np.asarray(mesh.vertices, dtype=float)[mesh.faces]
+        if not np.isfinite(triangles).all():
+            raise ValueError('nonfinite spawn support mesh')
+        top = np.all(np.abs(triangles[:, :, 2] - PLATFORM_Z) <= 1e-8, axis=1)
+        normal = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+        top &= normal[:, 2] > 1e-12
+        intersects = (np.all(triangles[:, :, :2].max(1) >= rect[0], axis=1) &
+                      np.all(triangles[:, :, :2].min(1) <= rect[2], axis=1))
+        for triangle in triangles[top & intersects]:
+            piece = _clip_polygon(triangle[:, :2], rect)
+            if _area(piece) > 1e-12:
+                pieces.append(piece)
+    for i, piece in enumerate(pieces):
+        if any(_area(_clip_polygon(piece, other)) > 1e-9 for other in pieces[:i]):
+            raise ValueError('overlapping spawn support faces')
+    if abs(sum(_area(p) for p in pieces) - 4 * hx * hy) > 1e-8:
+        raise ValueError(f'no full entry support: kind={tile.kind} level={tile.level}')
+    return np.array([*centre, float(PLATFORM_Z)])
+
+
+def reset_ranges_by_column(column_kinds):
+    """Explicit actual A column numbers; undeclared kinds keep caller defaults."""
+    result = {}
+    for column, kind in column_kinds.items():
+        if (isinstance(column, bool) or not isinstance(column, (int, np.integer))
+                or column < 0 or kind not in legacy.KINDS):
+            raise ValueError('expected nonnegative integer A sparse column and canonical kind')
+        result[int(column)] = dict(RESET_RANGES.get(kind, {
+            'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}))
+    return result
+
+
+def _tile_function(difficulty, cfg):
+    tile = build_tile(cfg.kind, difficulty)
+    meshes = _tile_meshes(tile)
+    tile.origin = spawn_origin(tile, meshes=meshes)
+    SIDE_TABLE.record(cfg.kind, difficulty, tile)
     return meshes, tile.origin.copy()
 
 

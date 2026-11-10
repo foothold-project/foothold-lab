@@ -94,6 +94,65 @@ def _per_column_pass(env, raw, terrain, mesh_heights, foot_ids, action, data, ta
     dev = terrain.terrain_types.device
     out: list[dict[str, Any]] = []
     kept = True
+    changes: list[dict[str, Any]] = []          # envs whose (type, level) differ from the assignment, with when
+    curriculum_calls: list[dict[str, Any]] = []  # what the terrain curriculum tried to do to our envs
+    state = {"batch": 0, "batch_pairs": [], "phase": "reset"}
+    original = terrain.__dict__.get("update_env_origins")     # instance override, if any (None = class method)
+
+    def spy(env_ids, move_up, move_down):
+        """The only code that moves terrain_levels (Isaac Lab update_env_origins). In this check the
+        assignment IS the test input, so the curriculum's move is recorded and NOT applied."""
+        ids = torch.as_tensor(env_ids, dtype=torch.long).detach().cpu()
+        up = torch.as_tensor(move_up).detach().cpu().bool().flatten()
+        down = torch.as_tensor(move_down).detach().cpu().bool().flatten()
+        for k, e in enumerate(ids.tolist()):
+            if k < len(up) and (bool(up[k]) or bool(down[k])) and e < len(state["batch_pairs"]):
+                lvl, c = state["batch_pairs"][e]
+                curriculum_calls.append({"batch": state["batch"], "phase": state["phase"], "env": e, "column": c,
+                                         "family": fam[c], "kind": column_kind(c, fam), "level": lvl,
+                                         "wanted": "up" if bool(up[k]) else "down"})
+
+    terrain.update_env_origins = spy
+    try:
+        _per_column_batches(env, raw, terrain, foot_ids, action, pairs, dev, torch, np, mesh_heights, data, table,
+                            fam, out, changes, state)
+    finally:
+        if original is None:
+            terrain.__dict__.pop("update_env_origins", None)
+        else:
+            terrain.update_env_origins = original
+    kept = not changes
+    by_family: dict[str, dict[str, Any]] = {}
+    for item in out:
+        slot = by_family.setdefault(item["family"], {"checked": 0, "failed": 0, "failed_kinds": set()})
+        slot["checked"] += 1
+        if not item["passed"]:
+            slot["failed"] += 1
+            slot["failed_kinds"].add(item["kind"])
+    for slot in by_family.values():
+        slot["failed_kinds"] = sorted(slot["failed_kinds"])
+    failed = [r for r in out if not r["passed"]]
+    return {"levels": levels_pick, "checked": len(out), "failed_count": len(failed), "by_family": by_family,
+            "assignment_kept": kept, "assignment_changes": changes[:40], "assignment_change_count": len(changes),
+            "curriculum_moves_suppressed": curriculum_calls[:40], "curriculum_move_count": len(curriculum_calls),
+            "failed": failed, "rows": out}
+
+
+def _note_changes(terrain, lv, ty, chunk, fam, when, batch, changes, torch):
+    """Record every env of the batch whose terrain type / level no longer equals its assignment."""
+    n = len(chunk)
+    now_t = terrain.terrain_types[:n].detach().cpu()
+    now_l = terrain.terrain_levels[:n].detach().cpu()
+    bad = ((now_t != ty.cpu()) | (now_l != lv.cpu())).nonzero().flatten().tolist()
+    for e in bad:
+        lvl, c = chunk[e]
+        changes.append({"batch": batch, "when": when, "env": e, "assigned_column": c, "assigned_level": lvl,
+                        "assigned_family": fam[c], "assigned_kind": column_kind(c, fam),
+                        "now_column": int(now_t[e]), "now_level": int(now_l[e])})
+
+
+def _per_column_batches(env, raw, terrain, foot_ids, action, pairs, dev, torch, np, mesh_heights, data, table,
+                        fam, out, changes, state):
     for start in range(0, len(pairs), raw.num_envs):
         chunk = pairs[start:start + raw.num_envs]
         n = len(chunk)
@@ -102,9 +161,14 @@ def _per_column_pass(env, raw, terrain, mesh_heights, foot_ids, action, data, ta
         terrain.terrain_levels[:n] = lv
         terrain.terrain_types[:n] = ty
         terrain.env_origins[:n] = terrain.terrain_origins[lv, ty]
+        state["batch"] += 1
+        state["batch_pairs"] = chunk
+        state["phase"] = "reset"
         raw.reset()
+        _note_changes(terrain, lv, ty, chunk, fam, "after_reset", state["batch"], changes, torch)
+        state["phase"] = "step"
         env.step(action)
-        kept &= bool((terrain.terrain_types[:n] == ty).all() and (terrain.terrain_levels[:n] == lv).all())
+        _note_changes(terrain, lv, ty, chunk, fam, "after_step", state["batch"], changes, torch)
         root = raw.scene["robot"].data.root_pos_w[:n].detach().cpu().numpy()
         feet = raw.scene["robot"].data.body_pos_w[:n][:, foot_ids].detach().cpu().numpy()
         origins_np = terrain.env_origins[:n].detach().cpu().numpy()
@@ -136,18 +200,6 @@ def _per_column_pass(env, raw, terrain, mesh_heights, foot_ids, action, data, ta
                         "foot_clearance": [float(x) for x in clear],
                         "foot_clearance_max": float(np.nanmax(clear)) if np.isfinite(clear).any() else None,
                         "reasons": reasons, "passed": not reasons})
-    by_family: dict[str, dict[str, Any]] = {}
-    for item in out:
-        slot = by_family.setdefault(item["family"], {"checked": 0, "failed": 0, "failed_kinds": set()})
-        slot["checked"] += 1
-        if not item["passed"]:
-            slot["failed"] += 1
-            slot["failed_kinds"].add(item["kind"])
-    for slot in by_family.values():
-        slot["failed_kinds"] = sorted(slot["failed_kinds"])
-    failed = [r for r in out if not r["passed"]]
-    return {"levels": levels_pick, "checked": len(out), "failed_count": len(failed), "by_family": by_family,
-            "assignment_kept": kept, "failed": failed, "rows": out}
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:

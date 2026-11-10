@@ -62,7 +62,7 @@ def family_column_kinds(family: str, count: int) -> list[str | None]:
 
 def kind_ranges_of(family: str) -> dict[str, dict[str, tuple[float, float]]]:
     """The generator module's own RESET_RANGES declaration ({} if it has none)."""
-    module = {"B": "foothold_s2.terrains.ame2_preset", "C": "foothold_s2.terrains.jeplo_preset",
+    module = {"A": "foothold_s2.terrains.start_go2_v2", "B": "foothold_s2.terrains.ame2_preset", "C": "foothold_s2.terrains.jeplo_preset",
               "D": "foothold_s2.terrains.hipan_posture", "E": "foothold_s2.terrains.ex42"}.get(family)
     if module is None:
         return {}

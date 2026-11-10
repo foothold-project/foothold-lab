@@ -167,7 +167,7 @@ def test_chain_verifies_the_parent_with_the_given_pin(tmp_path):
     seen = {}
 
     class FakePlan:
-        def verify_parent_manifest(self, path, *, parent_pin=None):
+        def verify_parent_manifest(self, path, *, stage_id=None, parent_pin=None):
             seen["pin"] = parent_pin
             raise Stop
 
@@ -192,16 +192,21 @@ def _manifest_and_ckpt(tmp_path, payload=b"parent", completed=20000):
 def test_verify_parent_manifest_uses_the_given_pin_not_the_stage_zero_pin(tmp_path):
     plan = EX42Plan.load(TABLE)
     manifest, ckpt, sha = _manifest_and_ckpt(tmp_path)
+    e0 = next(row for row in plan.document["stages"] if row["id"] == "E0")
+    e0["parent"]["sha256"] = sha                                           # the table's E0 parent = this fake file
     pin = {"cumulative_update": 13000, "manifest_local_update": 1000, "sha256": sha}
-    out = plan.verify_parent_manifest(manifest, parent_pin=pin)
+    out = plan.verify_parent_manifest(manifest, stage_id="E0", parent_pin=pin)
     assert out["cumulative_update"] == 13000 and out["checkpoint_sha256"] == sha
     assert out["checkpoint_path"] == str(ckpt.resolve())
     with pytest.raises(ValueError, match="exactly one checkpoint with the pinned SHA"):
-        plan.verify_parent_manifest(manifest)                           # default pin = stage-zero parent, other sha
-    with pytest.raises(ValueError, match="exactly one checkpoint"):
-        plan.verify_parent_manifest(manifest, parent_pin={**pin, "sha256": "9" * 64})
+        plan.verify_parent_manifest(manifest)                           # default stage-zero parent, other sha
+    for bad in ({**pin, "sha256": "9" * 64}, {**pin, "manifest_local_update": 20001}):
+        with pytest.raises(ValueError, match="differs from the pinned table"):   # a pin must match the table now
+            plan.verify_parent_manifest(manifest, stage_id="E0", parent_pin=bad)
+    e0["parent"]["manifest_local_update"] = 20001
     with pytest.raises(ValueError, match="not completed the pinned local update"):
-        plan.verify_parent_manifest(manifest, parent_pin={**pin, "manifest_local_update": 20001})
+        plan.verify_parent_manifest(manifest, stage_id="E0", parent_pin={**pin, "manifest_local_update": 20001})
+    e0["parent"]["manifest_local_update"] = 1000
     with pytest.raises(ValueError, match="bytes differ"):
         ckpt.write_bytes(b"tampered")
-        plan.verify_parent_manifest(manifest, parent_pin=pin)
+        plan.verify_parent_manifest(manifest, stage_id="E0", parent_pin=pin)
