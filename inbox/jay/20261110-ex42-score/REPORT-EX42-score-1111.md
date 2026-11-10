@@ -10,15 +10,15 @@
 
 `experiments/EX-42.yaml`의 `score_config`를 전용 JSON으로 연결했다. `ex42_eval_once.py`는 지도 모드 세 가지에서 13명령 map64, 세 가지 정지 64 env, W57 10칸을 순차 평가한다. W57 원자료에 발 링크 중심의 월드 XY 속도를 추가하며, 발 센서 이름과 articulation 링크 이름을 각각 검증한다. 기존 W57 결과에는 이 필드가 없어서 새 판정과 섞이지 않는다.
 
-`ex42_score.py`는 점수 설정과 `ex42-prep.yaml`의 maintenance ID가 같은지, 저장본 SHA, 평가 조건, 모든 모드와 명령, stand/W57 원자료 SHA, 발별 샘플 형태를 확인한다. 값은 생존, vx/vy/wz 오차, 명령 방향 이동, 발별 접촉 점유, FL 기준 접지 위상, 접지 중 발 중심 XY 이동량, yaw 적분, W57 목표 회전 생존으로 기록한다. `foot_drag_proxy_m`은 정지한 지형 대비 발 **링크 중심**의 XY 이동량이다. 실제 접촉점 미끄럼은 계측하지 않는다. FL 주기를 2회 이상 찾지 못하면 위상은 null이다. 기준선과 반복 폭이 아직 승인되지 않아 모든 maintenance 판정은 HOLD다. 새 합격선을 만들지 않았다.
+`ex42_score.py`는 점수 설정과 `ex42-prep.yaml`의 maintenance ID가 같은지, 저장본 SHA, 평가 조건, 모든 모드와 명령, stand/W57 원자료 SHA, 발별 샘플 형태를 확인한다. 값은 생존, vx/vy/wz 오차, 명령 방향 이동, 발별 접촉 점유, FL 기준 접지 위상, 접지 중 발 중심 XY 이동량, yaw 적분, 양방향 spin 생존으로 기록한다. maintenance의 `W57_spin_survival` 이름은 원문 그대로지만 이 판의 실제 연속 spin ±1.2 출처는 map64이다. W57 axis v2의 목표 회전 8칸은 별도로 기록한다. `foot_drag_proxy_m`은 정지한 지형 대비 발 **링크 중심**의 XY 이동량이다. 실제 접촉점 미끄럼은 계측하지 않는다. FL 주기를 2회 이상 찾지 못하면 위상은 null이다. 기준선과 반복 폭이 아직 승인되지 않아 모든 maintenance 판정은 HOLD다. 새 합격선을 만들지 않았다.
 
 EX-41 Linux 기준선의 m13000 평가에는 map64와 stand 영수증은 있지만 `axis_v2/axis_v2.json`이 없다. 실제 경로 `/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261108_123914/eval/linux-baseline-1110/m13000/evaluation`을 직접 읽었고, 이 자료는 EX-42 점수 완성판이 아니다. 같은 저장본을 새 실행기로 다시 측정해야 한다.
 
 ## CPU 증거
 
-- isaac311 Python, `test_ex42_score_cpu.py` + 기존 `test_axis_v2_run_cpu.py` + `test_axis_v2_cells.py`: **29 passed**.
+- isaac311 Python, `test_ex42_score_cpu.py` + 기존 `test_axis_v2_run_cpu.py` + `test_axis_v2_cells.py`: **30 passed**.
 - 답을 아는 접촉과 속도: FL 접촉 2/4, FR 1/4, 위상 FR 0.5, 발 중심 이동 FL 0.08 m, FR 0.04 m.
-- 결측 발 속도, 변조된 NPZ SHA, 옛 EX-41 W57 영수증은 거절.
+- 결측 발 속도, 변조된 NPZ SHA, 옛 EX-41 W57 영수증, 이름만 spin이고 명령값은 0인 영수증은 거절.
 - 실제 m13000 저장본 SHA를 읽는 `--execute` 없는 CLI 계획: `plan`, 자식 5개, GPU1 지정. Kit는 시작하지 않았다.
 - 관련 코드의 `git diff --check` 통과. 원자료 및 실행 중 학습 사본은 불변.
 

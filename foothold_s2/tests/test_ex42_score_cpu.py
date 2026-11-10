@@ -7,6 +7,7 @@ import pytest
 
 from foothold_s2.eval.axis_v2_cells import case_specs
 from foothold_s2.eval.ex42_foot_metrics import per_env
+from foothold_s2.eval.map_mode_cells import commands as expected_commands
 from foothold_s2.ex42_eval_once import commands
 from foothold_s2.ex42_score import MODES, config, digest, measure
 
@@ -32,7 +33,7 @@ def fixture(tmp_path):
     write_json(out / "map64/map_modes.json", {
         "checkpoint_sha256": sha, "envs": 64, "steps": 300, "eval_seed": 42,
         "command_suite": "extended", "dr_off": ["physics_material"],
-        "curriculum_off": ["terrain_levels"], "commands": {case: [0, 0, 0] for case in cases},
+        "curriculum_off": ["terrain_levels"], "commands": expected_commands("extended"),
         "modes": {mode: {case: {"per_env": rows} for case in cases} for mode in MODES}})
     feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
     for mode in MODES:
@@ -90,6 +91,8 @@ def test_measure_complete_is_hold_without_approved_baseline(tmp_path):
     assert row["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] == 64
     assert row["stand"]["eval_gt"]["per_foot_contact_fraction_median"]["FL_foot"] == .75
     assert row["axis_v2"]["eval_gt"]["fwd0.5"]["foot_drag_proxy_m_by_foot_median"] == pytest.approx([.08]*4)
+    assert row["maintenance_items"]["W57_spin_survival"]["by_mode_and_direction"]["eval_gt"] == {
+        "spin+1.2": 64, "spin-1.2": 64}
 
 
 def test_measure_rejects_missing_foot_speed_and_sha_mutation(tmp_path):
@@ -115,6 +118,16 @@ def test_measure_rejects_old_ex41_axis_receipt(tmp_path):
     axis.pop("ex42_maintenance")
     write_json(out / "axis_v2/axis_v2.json", axis)
     with pytest.raises(ValueError, match="foot speed marker"):
+        measure(model, out)
+
+
+def test_measure_rejects_mislabeled_spin_command(tmp_path):
+    model, out = fixture(tmp_path)
+    path = out / "map64/map_modes.json"
+    row = json.loads(path.read_text())
+    row["commands"]["spin+1.2"] = [0, 0, 0]
+    write_json(path, row)
+    with pytest.raises(ValueError, match="13-command coverage"):
         measure(model, out)
 
 

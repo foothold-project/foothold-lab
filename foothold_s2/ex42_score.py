@@ -11,6 +11,7 @@ import yaml
 
 from foothold_s2.eval.axis_v2_cells import case_specs
 from foothold_s2.eval.ex42_foot_metrics import FOOT_ORDER, per_env as foot_per_env
+from foothold_s2.eval.map_mode_cells import commands as expected_commands
 from foothold_s2.experiment_registry import load_experiment, source_path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,7 +75,8 @@ def measure(checkpoint, evaluation, config_path=None):
             set(map_row.get("modes", {})) != set(MODES)):
         raise ValueError("EX-42 map64 conditions or checkpoint differ")
     commands = map_row.get("commands", {})
-    if len(commands) != 13 or any(set(map_row["modes"][mode]) != set(commands) for mode in MODES):
+    if (commands != {key: list(value) for key, value in expected_commands("extended").items()} or
+            any(set(map_row["modes"][mode]) != set(commands) for mode in MODES)):
         raise ValueError("EX-42 map64 extended 13-command coverage incomplete")
     out = {"format": "foothold-ex42-maintenance-score/1", "checkpoint": str(checkpoint),
            "checkpoint_sha256": checkpoint_sha, "score_config_sha256": digest(cfg_path),
@@ -169,7 +171,7 @@ def measure(checkpoint, evaluation, config_path=None):
         "gait_phase_and_duty": "axis_v2.*.*.phase_from_FL_cycle_median/duty_by_foot_median",
         "foot_drag_m": "axis_v2.*.*.foot_drag_proxy_m_by_foot_median",
         "yaw_integral": "axis_v2.*.*.yaw_signed_accum_median_rad/yaw_by_terrain_kind",
-        "W57_spin_survival": "axis_v2.*.goal_left/right_delta*.alive_at_end",
+        "W57_spin_survival": "map64.*.spin+1.2/spin-1.2.alive_at_end",
         "parent_cumulative_drop": None,
         "calibration_repeat_width": None,
     }
@@ -179,4 +181,7 @@ def measure(checkpoint, evaluation, config_path=None):
             "state": "measured_unjudged" if sources[item] else "missing_parent_or_repeat_evidence",
             "judgement": "HOLD",
         }
+    out["maintenance_items"]["W57_spin_survival"]["by_mode_and_direction"] = {
+        mode: {case: out["map64"][mode][case]["alive_at_end"]
+               for case in ("spin+1.2", "spin-1.2")} for mode in MODES}
     return out
