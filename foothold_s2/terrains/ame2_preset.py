@@ -78,9 +78,9 @@ def dimensions(kind: str, level: int) -> dict[str, float]:
     table = {
         "stair_up": {"step_height_m": (.05, .27), "tread_m": (.30, .30)},
         "stair_down": {"step_height_m": (.05, .27), "tread_m": (.30, .30)},
-        # Go2 choice (lead 11/11 01:42): independent cell noise U[-0.15,+0.15].
+        # Canonical CG E3 G1 roughness is the full 0..0.16 m span: a=0..0.08.
         # The 20-degree limit belongs to the 3 m undulation component alone.
-        "rough": {"noise_amplitude_m": (0, .15), "undulation_slope_deg": (0, 20)},
+        "rough": {"noise_amplitude_m": (0, .08), "undulation_slope_deg": (0, 20)},
         "boxes": {"box_height_m": (.05, .30)},
         "climb_up": {"ledge_height_m": (.10, .53)},
         "climb_down": {"ledge_height_m": (.20, .60)},

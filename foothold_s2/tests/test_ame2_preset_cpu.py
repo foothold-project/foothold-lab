@@ -10,7 +10,7 @@ from foothold_s2.terrains import ame2_preset as p
 ENDPOINTS = {
     "stair_up": ("step_height_m", .05, .27),
     "stair_down": ("step_height_m", .05, .27),
-    "rough": ("noise_amplitude_m", 0, .15),
+    "rough": ("noise_amplitude_m", 0, .08),
     "boxes": ("box_height_m", .05, .30),
     "climb_up": ("ledge_height_m", .1, .53),
     "climb_down": ("ledge_height_m", .2, .6),
@@ -83,6 +83,7 @@ def test_rough_undulation_slope_and_per_cell_noise_separately():
         if level == 9:
             assert 19 <= wave_slope_deg <= 20
         noise = z - wave[:, None]
+        assert tile.dimensions["noise_amplitude_m"] * 2 == pytest.approx(.16 * level / 9)
         assert np.max(np.abs(noise)) <= tile.dimensions["noise_amplitude_m"] + 1e-12
         assert np.ptp(noise) <= 2 * tile.dimensions["noise_amplitude_m"] + 1e-12
         assert np.unique(noise).size == noise.size  # independently sampled cells
