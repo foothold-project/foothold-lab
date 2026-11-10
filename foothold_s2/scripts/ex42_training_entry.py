@@ -69,7 +69,12 @@ def read_e0_terrain_manifest(plan: EX42Plan, path: str | Path | None) -> dict[st
 
 
 def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
-    """Place for the E0 mesh swap. Intentionally not implemented (see the receipt)."""
+    """Place for the E0 mesh swap. Still stops here on purpose.
+
+    The mount adapter exists (terrains/ex42_mesh_mount.py, Kit check scripts/ex42_mesh_mount_check.py),
+    but E0 also needs the complete 39-kind mesh (B and D generators are missing) and the column
+    exposure rule (new kinds share 0, level cap 0, continuous 7 only at cap 5) wired into the env.
+    """
     raise NotImplementedError(
         "EX-42 E0 terrain_mesh_swap is not implemented: training stops before the environment is built")
 
