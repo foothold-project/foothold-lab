@@ -147,6 +147,18 @@ def test_76_column_reference_requires_explicit_scope():
     assert row["comparison_scope"] == "historical_76_reference"
 
 
+def test_all_five_null_metric_remains_explicitly_missing():
+    scores, receipts = _scores()
+    path = "axis_v2/eval_gt/spin+1.2/phase_from_FL_cycle_median"
+    for score in scores:
+        score["axis_v2"]["eval_gt"]["spin+1.2"]["phase_from_FL_cycle_median"] = None
+    row = summarize(scores, receipts, "b" * 64, "a" * 64)
+    assert row["missing_by_repeat"][path] == [0, 1, 2, 3, 4]
+    assert path not in row["metric_widths"]
+    assert not any(key.startswith(path + "/") for key in row["metric_widths"])
+    assert row["item_widths"]["gait_phase_and_duty"]["state"] == "measured"
+
+
 def test_nonfinite_metric_still_rejected():
     scores, receipts = _scores()
     scores[2]["axis_v2"]["eval_gt"]["spin+1.2"]["phase_from_FL_cycle_median"] = float("nan")
