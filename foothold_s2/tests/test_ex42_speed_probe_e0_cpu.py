@@ -368,3 +368,32 @@ def test_e0_entry_as_train_start_calls_it_never_starts_training(tmp_path, parent
     with pytest.raises(ValueError, match="also requires"):
         entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=False,
                                       e0_approved=False, **cli)
+
+
+def _chain_selection_node():
+    tree = ast.parse(TRAIN_START.read_text(encoding="utf-8"))
+    nodes = [n for n in ast.walk(tree) if isinstance(n, ast.If) and "speed_probe_builds_chain" in ast.dump(n.test)]
+    assert len(nodes) == 1, "the rank gate in front of the stage-zero chain build must exist exactly once"
+    return nodes[0]
+
+
+def _run_chain_selection(speed_probe, rank):
+    """Execute the real if/elif block from train_start.py with stubs; return (built_calls, chain)."""
+    node = _chain_selection_node()
+    built = []
+    ns = {
+        "EX42_STAGE_ZERO_PLAN": type("P", (), {"sha256": "p"})(), "EX42_STAGE_ZERO_PARENT": {"parent_sha256": "s"},
+        "EX42_STAGE_ZERO_RESUME_SAME_RUN": False, "EX42_STAGE_ZERO_RESUME": None, "EX42_SPEED_PROBE_RANK": rank,
+        "EX42_TRAINING_CHAIN": None, "EX42_STAGE_ZERO_CHAIN_RECEIPT": None, "json": __import__("json"),
+        "_pre_args": type("A", (), {"ex42_speed_probe": speed_probe, "ex42_log_dir": "x"})(),
+        "speed_probe_builds_chain": entry.speed_probe_builds_chain, "_build_ex42_chain": lambda: "chain",
+        "build_stage_zero_chain_with_receipt_checks": lambda *a, **k: (built.append(1) or ("chain", {"state": "ok"})),
+    }
+    exec(compile(ast.Module(body=[node], type_ignores=[]), "train_start_chain_selection", "exec"), ns)
+    return built, ns["EX42_TRAINING_CHAIN"]
+
+
+def test_the_real_rank_gate_in_train_start_skips_the_chain_only_for_probe_rank_one():
+    assert _run_chain_selection(True, 0) == ([1], "chain")        # rank 0 builds
+    assert _run_chain_selection(True, 1) == ([], None)            # probe rank 1 builds nothing
+    assert _run_chain_selection(False, 1) == ([1], "chain")       # probe off: every rank builds as before
