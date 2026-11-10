@@ -36,7 +36,7 @@ def isaac_stubs(monkeypatch):
     monkeypatch.setitem(sys.modules, "isaaclab.utils", utils)
 
 
-def _inner_push(env, env_ids, **kw):
+def _inner_push(env, env_ids, velocity_range):
     pass
 
 
@@ -80,13 +80,13 @@ def test_real_cfg_objects_point_at_the_column_functions_and_push_follows_the_col
     cfg = _env_cfg()
     receipt = te.prepare_e0_env_cfg(cfg, _plan(), REAL)
     assert cfg.events.reset_base.func is cr.reset_root_state_by_column
-    assert cfg.events.ex40_push.func is cr.push_gated_by_column
-    assert cfg.events.ex40_push.params["inner"] is _inner_push
+    assert cfg.events.ex40_push.func.column_gate_inner is _inner_push
+    assert cfg.events.ex40_push.params == {"velocity_range": {"x": (-1, 1)}}
     assert cfg.events.reset_base.params["velocity_range"] == {"x": (0.0, 0.0)}
     assert cfg.scene.terrain.terrain_generator.mesh_npz.endswith("terrain_mesh.npz")
     fam = _real_families()
     table = cr.build_column_table(fam)
-    off = cfg.events.ex40_push.params["push_off"]
+    off = cfg.events.ex40_push.func.column_gate_push_off
     assert len(off) == len(fam) == receipt["columns"]
     for c, row in enumerate(table):
         want = (row["family"], row["kind"]) in {
@@ -102,19 +102,6 @@ def test_real_cfg_objects_point_at_the_column_functions_and_push_follows_the_col
             assert lo[c, [0, 1, 5]].abs().sum() == 0 and hi[c, [0, 1, 5]].abs().sum() == 0
         elif row["family"] == "E":
             assert hi[c, 0] == pytest.approx(0.5)
-
-
-def test_gate_runs_the_push_only_for_envs_on_push_on_columns():
-    cfg = _env_cfg()
-    cfg.events.ex40_push.params["extra"] = 1
-    cr.apply_column_push_gate(cfg, [True, False])
-    calls = []
-    env = types.SimpleNamespace(scene=types.SimpleNamespace(
-        num_envs=4, terrain=types.SimpleNamespace(terrain_types=torch.tensor([0, 1, 0, 1]))))
-    term = cfg.events.ex40_push
-    term.params["inner"] = lambda e, ids, **kw: calls.append(ids.tolist())
-    term.func(env, None, **term.params)
-    assert calls == [[1, 3]]
 
 
 def test_missing_family_missing_kind_task_and_missing_push_term_fail_closed(tmp_path):
@@ -155,3 +142,37 @@ def test_train_start_declares_the_arg_checks_equality_and_calls_the_seam():
     assert src.count('"--ex42_terrain_mesh_dir"') == 2                    # pre-parser and runtime parser
     assert "args_cli.ex42_terrain_mesh_dir != _pre_args.ex42_terrain_mesh_dir" in src
     assert "--ex42_terrain_mesh_dir (combined mesh)" in src
+
+
+MANAGER_BASE = pathlib.Path("/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/managers/manager_base.py")
+
+
+def _installed_term_check():
+    """The installed ManagerBase._resolve_common_term_cfg, compiled on its own (no Kit needed)."""
+    import inspect
+    tree = ast.parse(MANAGER_BASE.read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "_resolve_common_term_cfg")
+    fn.decorator_list = []
+    module = ast.Module(body=[fn], type_ignores=[])
+    ast.fix_missing_locations(module)
+    ns = {"inspect": inspect, "ManagerTermBaseCfg": Term, "ManagerTermBase": object, "string_to_callable": None,
+          "annotations": None}
+    exec(compile(module, str(MANAGER_BASE), "exec"), ns)
+    fake = types.SimpleNamespace(_env=types.SimpleNamespace(sim=types.SimpleNamespace(is_playing=lambda: False)))
+    return lambda name, term: ns["_resolve_common_term_cfg"](fake, name, term, min_argc=2)
+
+
+@pytest.mark.skipif(not MANAGER_BASE.is_file(), reason="Isaac Lab source not on this machine")
+def test_installed_event_manager_argument_check_accepts_the_gated_term_and_rejects_the_old_shape():
+    check = _installed_term_check()
+    plain = Term(func=_inner_push, mode="interval", params={"velocity_range": {"x": (-1, 1)}})
+    check("plain", plain)                                           # the check itself works on a normal term
+    with pytest.raises(ValueError, match="expects mandatory parameters"):
+        check("bad", Term(func=_inner_push, mode="interval", params={"nope": 1}))
+    cfg = _env_cfg()
+    cr.apply_column_push_gate(cfg, [False, True])
+    check("ex40_push", cfg.events.ex40_push)                        # same params, same signature: passes
+    old = Term(func=cr.push_gated_by_column, mode="interval",       # the shape that broke gym.make
+               params={"inner": _inner_push, "push_off": torch.tensor([False, True]), "velocity_range": {}})
+    with pytest.raises(ValueError, match="expects mandatory parameters"):
+        check("old", old)
