@@ -10,6 +10,8 @@
 
 `foothold_s2/terrains/ame2_preset.py`는 `ame2_go2_mix_v1`의 12종 `KINDS`, 종류별 L0~9 치수, 시드 고정 박스와 높이 메시, 물리 구멍, 12 × 12 m 타일을 만든다. `measurement_generator(kind, *, seed)`는 JEPLO와 같은 `(TerrainGeneratorCfg, subcfg)` 계약을 내며 한 종류 1열과 10난도 행을 쓴다. `build_generator`는 부록 A의 12종 비율로 60열을 낸다. 현재 학습 cfg에는 등록하지 않았다.
 
+sonnet의 작업 사본에 있는 `ex42_kit_measure.py:_generator_for`는 지금 C 계열 JEPLO만 분기하며 B 분기는 아직 없다. 이 PR을 합친 뒤 sonnet이 `from foothold_s2.terrains.ame2_preset import measurement_generator`를 B 분기에 연결해야 Kit 측정 사슬에서 이 생성기를 호출한다.
+
 | 종류 | Go2 L0 → L9 | 근거와 구분 |
 |---|---|---|
 | stair_up · stair_down | 단 0.05 → 0.27 m, 디딤 0.30 m | SPEC §1.6의 공개 G1 수치, 논문은 경사 5° → 45° |
