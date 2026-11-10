@@ -42,6 +42,7 @@ eval_dr_mode.add_arguments(parser)
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
+parser.add_argument("--ex42-maintenance", action="store_true", help="W57 plus EX-42 foot-center XY speed for contact duty and drag recording")
 parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
 parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
 parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
@@ -100,6 +101,8 @@ if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.
     parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
 if args.axis_v2 and args.steps < 4:
     parser.error("--axis-v2 requires at least four steps")
+if args.ex42_maintenance and not args.axis_v2:
+    parser.error("--ex42-maintenance requires --axis-v2")
 if args.terrain_skill and (args.axis_v2 or args.terrain_skill_v2 or not args.fixed_terrain or args.fixed_level is None or args.terrain_set != "default"):
     parser.error("--terrain-skill requires --fixed-terrain --fixed-level N on the default set, without --axis-v2 or --terrain-skill-v2")
 if args.terrain_skill_v2:
