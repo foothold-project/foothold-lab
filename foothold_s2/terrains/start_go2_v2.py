@@ -16,11 +16,11 @@ from foothold_s2.eval import start_sheet as ss
 from foothold_s2.terrains import sparse_terrains as legacy
 
 PRESET_ID = "start_go2_v2"
-# Lead 2026-11-11 02:16/02:20: only these four failing A kinds lose jitter.
+# Lead 2026-11-11 02:16/02:20, then 02:41 adds gaps to the same contract.
 # The 0.70 x 0.50 m support footprint is a reset contract, not a gait score.
 RESET_RANGES = {kind: {axis: (0., 0.) for axis in ('x', 'y', 'yaw')}
                 for kind in ('stepping_stones_low', 'stepping_stones_high',
-                             'balance_beams', 'stepping_beams')}
+                             'balance_beams', 'stepping_beams', 'gaps')}
 SPAWN_HALF_EXTENT = (0.35, 0.25)
 SCALE_X = 1.108
 SCALE_Y = 0.885
@@ -223,7 +223,7 @@ def spawn_origin(tile, *, meshes=None):
     """Verify the existing entry anchor against the emitted triangle surfaces.
 
     The original x=0.5,y=4 entry platform covers this rectangle at z=0.
-    No jitter is safe here for the four declared kinds. We do not fall back
+    No jitter is allowed here for the declared sparse kinds. We do not fall back
     to a pit, a finish platform or a centre-only height sample. Clipped top
     triangles must cover the entire 0.35 m² rectangle with no area overlap;
     holes or duplicate faces cannot pass by merely summing triangle areas.
