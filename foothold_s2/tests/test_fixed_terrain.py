@@ -87,7 +87,8 @@ def test_compare_requires_the_same_fixed_terrain_record_for_columns_and_referenc
 def test_eval_script_applies_it_after_reset_and_before_the_hash_and_shell_scripts_pass_the_flag():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
-    assert '"--fixed-terrain"' in src and src.index("fixed_terrain.apply(raw, args.fixed_level)") < src.index("th = hashlib.sha256(") and src.count("env.reset()") == 2
+    independent = src[src.index("for cname, cmd in"):src.index('if args.command_suite in ("extended", "ex40_b3")')]
+    assert '"--fixed-terrain"' in src and src.index("fixed_terrain.apply(raw, args.fixed_level)") < src.index("th = hashlib.sha256(") and independent.count("env.reset()") == 2
     assert "고정 지형 칸이 reset 뒤에 바뀌었다" in src
     for name in ("run_eval_map_modes.sh", "run_eval_g0_reference.sh"):
         text = (ROOT / "foothold_s2" / name).read_text(encoding="utf-8")

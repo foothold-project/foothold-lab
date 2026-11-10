@@ -60,16 +60,22 @@ def _median(values, label):
     return float(np.median(values))
 
 
-def measure(checkpoint, evaluation, config_path=None):
+def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
+            expected_mesh_sha256=None):
     """Read durable Kit artifacts; never infer a pass from an EX-41 score."""
     cfg, cfg_path = config(config_path)
+    seed = cfg["eval_seed"] if expected_seed is None else expected_seed
+    if type(seed) is not int or seed < 0:
+        raise ValueError("EX-42 evaluation seed must be a nonnegative integer")
     checkpoint, evaluation = Path(checkpoint).resolve(strict=True), Path(evaluation)
     checkpoint_sha = digest(checkpoint)
     map_dir = evaluation / "map64"
     map_row = _json(map_dir / "map_modes.json")
+    if expected_mesh_sha256 and map_row.get("ex42_mesh", {}).get("mesh_sha256") != expected_mesh_sha256:
+        raise ValueError("EX-42 map64 combined mesh SHA differs")
     if (map_row.get("checkpoint_sha256") != checkpoint_sha or
             map_row.get("envs") != cfg["envs"] or map_row.get("steps") != cfg["steps"] or
-            map_row.get("eval_seed") != cfg["eval_seed"] or
+            map_row.get("eval_seed") != seed or
             map_row.get("command_suite") != cfg["map_command_suite"] or
             not map_row.get("dr_off") or not map_row.get("curriculum_off") or
             set(map_row.get("modes", {})) != set(MODES)):
@@ -83,7 +89,7 @@ def measure(checkpoint, evaluation, config_path=None):
            "maintenance_source_sha256": digest(ROOT / cfg["maintenance_source"]),
            "baseline": None, "judgement": "HOLD", "reason": "EX-42 maintenance baseline and repeat width not pinned",
            "conditions": {"envs": cfg["envs"], "steps": cfg["steps"],
-                          "eval_seed": cfg["eval_seed"], "modes": list(MODES)},
+                          "eval_seed": seed, "modes": list(MODES)},
            "map64": {}, "stand": {}, "axis_v2": {}, "maintenance_items": {}}
     for mode in MODES:
         out["map64"][mode] = {}
@@ -106,6 +112,7 @@ def measure(checkpoint, evaluation, config_path=None):
         row = _json(folder / "stand.json")
         if (row.get("format") != "foothold-ex40-stand/1" or row.get("mode") != mode or
                 row.get("checkpoint_sha256") != checkpoint_sha or row.get("envs") != cfg["envs"] or
+                row.get("conditions", {}).get("seed") != seed or
                 len(row.get("per_env", [])) != cfg["envs"] or
                 row.get("seconds") != cfg["stand_seconds"] or
                 row.get("skip_seconds") != cfg["stand_skip_seconds"] or
@@ -122,10 +129,12 @@ def measure(checkpoint, evaluation, config_path=None):
                                   for foot in FOOT_ORDER}}
     axis_dir = evaluation / "axis_v2"
     axis = _json(axis_dir / "axis_v2.json")
+    if expected_mesh_sha256 and axis.get("ex42_mesh", {}).get("mesh_sha256") != expected_mesh_sha256:
+        raise ValueError("EX-42 W57 combined mesh SHA differs")
     marker = axis.get("ex42_maintenance", {})
     if (axis.get("schema") != "foothold-axis-v2/1" or axis.get("checkpoint_sha256") != checkpoint_sha or
             axis.get("envs") != cfg["envs"] or axis.get("steps") != cfg["steps"] or
-            axis.get("eval_seed") != cfg["eval_seed"] or axis.get("fixed_level") != cfg["axis_fixed_level"] or
+            axis.get("eval_seed") != seed or axis.get("fixed_level") != cfg["axis_fixed_level"] or
             not axis.get("dr_off") or not axis.get("curriculum_off") or
             tuple(axis.get("foot_order", ())) != FOOT_ORDER or
             marker.get("schema") != "foothold-ex42-foot-xy/1" or

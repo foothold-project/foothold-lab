@@ -15,13 +15,18 @@ from foothold_s2.machine_profile import machine_path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def commands(checkpoint, output, device, cfg=None):
+def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None):
     cfg = cfg or config()[0]
+    seed = cfg["eval_seed"] if eval_seed is None else eval_seed
+    if type(seed) is not int or seed < 0:
+        raise ValueError("EX-42 evaluation seed must be a nonnegative integer")
     queue_gpu_identity(device)  # Only the two registered physical GPU ordinals are supported.
     common = ["--task", cfg["task"], "--checkpoint", str(checkpoint),
               "--envs", str(cfg["envs"])]
     maps = [*common, "--modes", ",".join(MODES), "--fixed-terrain",
-            "--eval-seed", str(cfg["eval_seed"])]
+            "--eval-seed", str(seed)]
+    if mesh_dir is not None:
+        maps += ["--mesh-dir", str(mesh_dir)]
     kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
     rows = [("map64", "foothold_s2.eval.eval_map_modes", [*maps, "--steps", str(cfg["steps"]),
              "--command-suite", "extended", "--commands", "all"])]
@@ -30,7 +35,7 @@ def commands(checkpoint, output, device, cfg=None):
                      [*common, "--mode", mode, "--seconds", str(cfg["stand_seconds"]),
                       "--skip-seconds", str(cfg["stand_skip_seconds"]),
                       "--contact-n", str(cfg["stand_contact_n"]),
-                      "--seed", str(cfg["eval_seed"])]))
+                      "--seed", str(seed)]))
     rows.append(("axis_v2", "foothold_s2.eval.eval_map_modes",
                  [*maps, "--axis-v2", "--ex42-maintenance", "--fixed-level",
                   str(cfg["axis_fixed_level"]), "--terrain-set", "default",
@@ -97,7 +102,7 @@ def observed_child_identity(output, name, expected):
     return {"device": identity["device"], "gpu_uuid": observed}
 
 
-def run(checkpoint, expected_sha256, output, device):
+def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
@@ -111,11 +116,17 @@ def run(checkpoint, expected_sha256, output, device):
         raise ValueError("EX-42 evaluator source must be committed before execution")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     physical_gpu = gpu_identity(device)
-    output.mkdir(parents=True)
     cfg, cfg_path = config()
+    seed = cfg["eval_seed"] if eval_seed is None else eval_seed
+    mesh = None
+    if mesh_dir is not None:
+        from foothold_s2.eval.ex42_mesh_eval import preflight
+        mesh = preflight(mesh_dir)
+    output.mkdir(parents=True)
     row = {"format": "foothold-ex42-eval/1", "state": "running", "source_git_head": head,
            "checkpoint": str(checkpoint), "checkpoint_sha256": expected_sha256,
-           "score_config_sha256": digest(cfg_path), "steps": {},
+           "score_config_sha256": digest(cfg_path), "eval_seed": seed,
+           "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
            **receipt_device_fields(device, physical_gpu)}
     _atomic(output / "eval_receipt.json", row)
     env = child_env()
@@ -123,7 +134,7 @@ def run(checkpoint, expected_sha256, output, device):
     row["child_cuda_device_order"] = env["CUDA_DEVICE_ORDER"]
     row["parent_cuda_visible_devices"] = os.environ.get("CUDA_VISIBLE_DEVICES")
     _atomic(output / "eval_receipt.json", row)
-    for phase in commands(checkpoint, output, device, cfg):
+    for phase in commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir):
         name = phase["name"]
         process.prepare_phase_output(phase["argv"])
         child = process.hidden_child(phase["argv"], output / "children" / name, env=env)
@@ -140,7 +151,8 @@ def run(checkpoint, expected_sha256, output, device):
             _atomic(output / "eval_receipt.json", row)
             return 5
     try:
-        score = measure(checkpoint, output)
+        score = measure(checkpoint, output, expected_seed=seed,
+                        expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None)
         _atomic(output / "ex42_score.json", score)
         row.update(state="done", score=str(output / "ex42_score.json"), judgement="HOLD")
     except (ValueError, KeyError, OSError) as exc:
@@ -155,6 +167,8 @@ def main(argv=None):
     parser.add_argument("--expected-sha256", required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
+    parser.add_argument("--eval-seed", type=int, default=None)
+    parser.add_argument("--mesh-dir", type=Path, default=None)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
@@ -162,16 +176,28 @@ def main(argv=None):
         parser.error("select either --execute or --score-existing")
     if not args.checkpoint.is_file() or digest(args.checkpoint) != args.expected_sha256:
         parser.error("checkpoint missing or SHA differs")
+    if args.eval_seed is not None and args.eval_seed < 0:
+        parser.error("evaluation seed must be nonnegative")
+    if args.mesh_dir is not None:
+        from foothold_s2.eval.ex42_mesh_eval import preflight
+        try:
+            preflight(args.mesh_dir)
+        except (OSError, ValueError, KeyError) as exc:
+            parser.error(str(exc))
     if args.score_existing:
-        score = measure(args.checkpoint, args.out)
+        mesh_sha = preflight(args.mesh_dir)["mesh_sha256"] if args.mesh_dir else None
+        score = measure(args.checkpoint, args.out, expected_seed=args.eval_seed,
+                        expected_mesh_sha256=mesh_sha)
         _atomic(args.out / "ex42_score.json", score)
         print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
         return 0
     if not args.execute:
         print(json.dumps({"state": "plan", "score_config": str(config()[1]),
-                          "commands": commands(args.checkpoint, args.out, args.device)}))
+                          "commands": commands(args.checkpoint, args.out, args.device,
+                                               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)}))
         return 0
-    return run(args.checkpoint, args.expected_sha256, args.out, args.device)
+    return run(args.checkpoint, args.expected_sha256, args.out, args.device,
+               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)
 
 
 if __name__ == "__main__":

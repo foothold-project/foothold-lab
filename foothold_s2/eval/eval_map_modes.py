@@ -34,6 +34,7 @@ parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
+parser.add_argument("--mesh-dir", default=None, help="EX-42 calibration: pinned full ABCDE combined mesh directory")
 parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
 parser.add_argument("--n21-stage", default=None, help="N21 approved EX-42 stage id")
 parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=None)
@@ -61,6 +62,9 @@ parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
+                      or args.terrain_skill_v2 or not args.fixed_terrain):
+    parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
 parser_sparse = args.terrain_set == "sparse50"
 parser_n21 = bool(args.n21_record_only)
 if parser_n21:
@@ -205,6 +209,10 @@ if parser_sparse:                                                               
     sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
     env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
                                                               seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
+args.ex42_mesh = None
+if args.mesh_dir:
+    from foothold_s2.eval.ex42_mesh_eval import attach as _attach_ex42_mesh
+    args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir)
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
 
@@ -274,7 +282,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         from foothold_s2.terrains import columns as _c2
 
         _g2 = terrain.cfg.terrain_generator
-        names = _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols))
+        names = (args.ex42_mesh["columns"] if args.ex42_mesh else
+                 _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols)))
     except Exception as e:                                                             # noqa: BLE001  (이름 표를 못 만들어도 열 번호 · 레벨은 남긴다)
         err = repr(e)
 
@@ -312,11 +321,11 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
              run_identity=json.dumps(res.get("run_identity"), ensure_ascii=False, sort_keys=True), **extra)
     res.setdefault("env_arrays", {})["%s/%s" % (mode, cname)] = "env_arrays_%s_%s.npz" % (mode, cname)
-    res["env_array_basis"] = dict(res.get("env_array_basis") or {}, **{"kind_names": "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]" if names else None, "kind_error": err,
+    res["env_array_basis"] = dict(res.get("env_array_basis") or {}, **{"kind_names": ("EX-42 pinned mesh column_family/kind table" if args.ex42_mesh else "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]") if names else None, "kind_error": err,
                               "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
 
 
-res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
                        "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
@@ -331,8 +340,8 @@ if args.ex39_heading_smoke_guard:
                                         "forced_heading_before_disable": True,
                                         "fixed_command_step_checks": 0}
 terrain_gen = raw.scene.terrain.cfg.terrain_generator
-terrain_props = {name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}
-terrain_names = columns.column_types(terrain_props, int(terrain_gen.num_cols))
+terrain_names = (args.ex42_mesh["columns"] if args.ex42_mesh else
+                 columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
 res["terrain_columns"] = terrain_names
 
 if args.push_ladder:
@@ -583,7 +592,7 @@ for mode in args.modes.split(","):
     if args.command_suite in ("extended", "ex40_b3"):
         res.setdefault("sequences", {})[mode] = {}
         for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
-            torch.manual_seed(42)
+            torch.manual_seed(args.eval_seed)
             rollout_key = "%s/%s" % (mode, seq_name)
             dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
             env.reset()
