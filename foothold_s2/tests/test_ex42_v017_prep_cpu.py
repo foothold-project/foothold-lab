@@ -60,10 +60,10 @@ def test_e0_parent_manifest_key_and_bytes_must_match(tmp_path):
         plan.verify_parent_manifest(manifest, stage_id="E0")
 
 
-def test_runtime_integration_approval_is_not_a_merge_or_launch_approval():
+def test_merged_runtime_does_not_authorize_full_plan_launch():
     plan = EX42Plan.load(PLAN)
     blockers = plan.launch_blockers(APPROVALS, None, None)
-    assert "runtime_integration_pending" in blockers
+    assert "runtime_integration_pending" not in blockers
     assert "explicit_lead_approval_missing" in blockers
     assert "e0_parent_manifest_missing" in blockers
     assert "design_assumptions_pending" not in blockers
