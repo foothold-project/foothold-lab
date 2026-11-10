@@ -8,7 +8,8 @@ import pytest
 from foothold_s2.eval.axis_v2_cells import case_specs
 from foothold_s2.eval.ex42_foot_metrics import per_env
 from foothold_s2.eval.map_mode_cells import commands as expected_commands
-from foothold_s2.ex42_eval_once import commands
+from foothold_s2.ex42_eval_once import (commands, gpu_identity, child_env,
+                                        observed_child_identity, receipt_device_fields)
 from foothold_s2.ex42_score import MODES, config, digest, measure
 
 
@@ -138,5 +139,35 @@ def test_commands_include_real_ex42_axis_and_three_modes(tmp_path):
     axis = rows[-1]["argv"]
     assert "--ex42-maintenance" in axis and "--axis-v2" in axis
     assert all("--headless" in row["argv"] for row in rows)
-    with pytest.raises(ValueError, match="device differs"):
-        commands("/tmp/model.pt", tmp_path, "cuda:0")
+    gpu0 = commands("/tmp/model.pt", tmp_path, "cuda:0")
+    assert len(gpu0) == len(rows)
+    assert all(r["argv"][r["argv"].index("--device") + 1] == "cuda:0" for r in gpu0)
+    with pytest.raises(ValueError, match="unsupported experiment queue device"):
+        commands("/tmp/model.pt", tmp_path, "cuda:2")
+
+
+def test_ex42_physical_device_and_override_receipt(tmp_path):
+    inventory = ("0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 00000000:41:00.0\n"
+                 "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 00000000:81:00.0\n")
+    physical = gpu_identity("cuda:0", query=lambda: inventory)
+    receipt = receipt_device_fields("cuda:0", physical)
+    assert receipt["physical_gpu"]["gpu_uuid"] == "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    assert receipt["device_override"] == {"registered": "cuda:1", "used": "cuda:0"}
+    assert "device_override" not in receipt_device_fields(
+        "cuda:1", gpu_identity("cuda:1", query=lambda: inventory))
+    with pytest.raises(ValueError, match="physical GPU UUID differs"):
+        gpu_identity("cuda:0", query=lambda: inventory.replace("c08e23b0", "wrong-id"))
+
+    env = child_env({"CUDA_VISIBLE_DEVICES": "1,0", "CUDA_DEVICE_ORDER": "FASTEST_FIRST"})
+    assert "CUDA_VISIBLE_DEVICES" not in env
+    assert env["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+
+    for name, basename in (("map64", "map_modes.json"), ("axis_v2", "axis_v2.json"),
+                           ("stand_eval_gt", "stand.json")):
+        write_json(tmp_path / name / basename, {"run_identity": {
+            "device": "cuda:0", "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"}})
+        assert observed_child_identity(tmp_path, name, physical)["device"] == "cuda:0"
+        write_json(tmp_path / name / basename, {"run_identity": {
+            "device": "cuda:0", "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"}})
+        with pytest.raises(ValueError, match="Kit physical GPU UUID differs"):
+            observed_child_identity(tmp_path, name, physical)

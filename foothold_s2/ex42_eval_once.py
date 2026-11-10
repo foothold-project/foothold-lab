@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from foothold_s2.ex42_score import MODES, config, digest, measure
-from foothold_s2.experiment_registry import load_experiment, device_contract
+from foothold_s2.experiment_registry import load_experiment, device_contract, queue_gpu_identity
 from foothold_s2.machine_profile import machine_path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,8 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def commands(checkpoint, output, device, cfg=None):
     cfg = cfg or config()[0]
-    if device != device_contract(load_experiment("EX-42"))["evaluation"]:
-        raise ValueError("EX-42 evaluation device differs from registry")
+    queue_gpu_identity(device)  # Only the two registered physical GPU ordinals are supported.
     common = ["--task", cfg["task"], "--checkpoint", str(checkpoint),
               "--envs", str(cfg["envs"])]
     maps = [*common, "--modes", ",".join(MODES), "--fixed-terrain",
@@ -48,6 +47,56 @@ def _atomic(path, value):
     os.replace(temp, path)
 
 
+def gpu_identity(device, *, query=None):
+    """Check the PCI-ordered physical ordinal before Kit starts; no CUDA context is made."""
+    index, registered_uuid = queue_gpu_identity(device)
+    if query is None:
+        query = lambda: subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=index,uuid,pci.bus_id", "--format=csv,noheader,nounits"],
+            text=True, timeout=20)
+    rows = {}
+    for line in query().splitlines():
+        fields = [field.strip() for field in line.split(",")]
+        if len(fields) != 3:
+            raise ValueError("nvidia-smi GPU identity row malformed")
+        rows[int(fields[0])] = {"gpu_uuid": fields[1], "pci_bus_id": fields[2]}
+    actual = rows.get(index)
+    if not actual or actual["gpu_uuid"].lower().removeprefix("gpu-") != registered_uuid.lower():
+        raise ValueError(f"EX-42 {device} physical GPU UUID differs from registry")
+    return {"device": device, "gpu_index": index, **actual}
+
+
+def child_env(parent=None):
+    env = dict(os.environ if parent is None else parent)
+    env.pop("CUDA_VISIBLE_DEVICES", None)
+    env.update(PYTHONPATH=str(ROOT), CUDA_DEVICE_ORDER="PCI_BUS_ID", PYTHONUNBUFFERED="1",
+               KMP_DUPLICATE_LIB_OK="TRUE", OMNI_KIT_ACCEPT_EULA="YES")
+    return env
+
+
+def receipt_device_fields(device, physical_gpu):
+    registered = device_contract(load_experiment("EX-42"))["evaluation"]
+    fields = {"device": device, "registered_evaluation_device": registered,
+              "physical_gpu": physical_gpu}
+    if device != registered:
+        fields["device_override"] = {"registered": registered, "used": device}
+    return fields
+
+
+def observed_child_identity(output, name, expected):
+    """Verify Kit's own CUDA identity where its result exports one."""
+    basename = "map_modes.json" if name == "map64" else "axis_v2.json" if name == "axis_v2" else "stand.json"
+    path = Path(output) / name / basename
+    row = json.loads(path.read_text(encoding="utf-8-sig"))
+    identity = row.get("run_identity") or {}
+    observed = identity.get("gpu_uuid")
+    if identity.get("device") != expected["device"] or observed in (None, "", "None"):
+        raise ValueError(f"{name} Kit device identity missing")
+    if str(observed).lower().removeprefix("gpu-") != expected["gpu_uuid"].lower().removeprefix("gpu-"):
+        raise ValueError(f"{name} Kit physical GPU UUID differs from preflight")
+    return {"device": identity["device"], "gpu_uuid": observed}
+
+
 def run(checkpoint, expected_sha256, output, device):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
@@ -61,21 +110,29 @@ def run(checkpoint, expected_sha256, output, device):
                                cwd=ROOT, text=True).strip():
         raise ValueError("EX-42 evaluator source must be committed before execution")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    physical_gpu = gpu_identity(device)
     output.mkdir(parents=True)
     cfg, cfg_path = config()
     row = {"format": "foothold-ex42-eval/1", "state": "running", "source_git_head": head,
            "checkpoint": str(checkpoint), "checkpoint_sha256": expected_sha256,
-           "score_config_sha256": digest(cfg_path), "device": device, "steps": {}}
+           "score_config_sha256": digest(cfg_path), "steps": {},
+           **receipt_device_fields(device, physical_gpu)}
     _atomic(output / "eval_receipt.json", row)
-    env = dict(os.environ)
-    env.pop("CUDA_VISIBLE_DEVICES", None)
-    env.update(PYTHONPATH=str(ROOT), CUDA_DEVICE_ORDER="PCI_BUS_ID", PYTHONUNBUFFERED="1",
-               KMP_DUPLICATE_LIB_OK="TRUE", OMNI_KIT_ACCEPT_EULA="YES")
+    env = child_env()
+    row["child_cuda_visible_devices"] = None
+    row["child_cuda_device_order"] = env["CUDA_DEVICE_ORDER"]
+    row["parent_cuda_visible_devices"] = os.environ.get("CUDA_VISIBLE_DEVICES")
+    _atomic(output / "eval_receipt.json", row)
     for phase in commands(checkpoint, output, device, cfg):
         name = phase["name"]
         process.prepare_phase_output(phase["argv"])
         child = process.hidden_child(phase["argv"], output / "children" / name, env=env)
         child = process.reconcile_child_result(name, child, output / name)
+        if child.get("state") == "done":
+            try:
+                child["observed_gpu"] = observed_child_identity(output, name, physical_gpu)
+            except (OSError, ValueError, KeyError) as exc:
+                child.update(state="HOLD", gpu_identity_error=str(exc))
         row["steps"][name] = child
         _atomic(output / "eval_receipt.json", row)
         if child.get("state") != "done":

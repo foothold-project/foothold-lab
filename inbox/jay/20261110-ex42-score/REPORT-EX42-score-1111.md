@@ -43,3 +43,9 @@ cd ~/mai/wt/foothold-lab/scripter-ex42-score-1110
 - `foothold_s2/eval/ex40_stand_eval.py`: 정지 3초, 첫 1초 제외, 접촉 >1 N의 기존 측정 계약.
 - `foothold_s2/ex41_eval_once.py`: 자식 실행·영수증의 기존 절차. EX-42 점수는 별도 파일에서 계산한다.
 - `foothold_s2/curriculum/ex42-prep.yaml`: EX-42 maintenance ID와 판단 기준의 정본. 기준선과 반복 폭은 아직 고정되지 않았다.
+
+## 11/11 평가 장치 선택 후속
+
+EX-42.yaml의 등록 평가 장치는 `cuda:1`이지만, 장치가 비었을 때 실행기는 `--device cuda:0`도 받는다. `eval_receipt.json`에 등록 장치, 실제 요청 장치, 다르면 `device_override`, `nvidia-smi`에서 읽은 물리 GPU UUID와 PCI bus ID를 적는다. 부모 환경의 `CUDA_VISIBLE_DEVICES=1,0`은 Kit 자식에게 넘기지 않고 `CUDA_DEVICE_ORDER=PCI_BUS_ID`로 설정한다. 각 자식의 `run_identity`에 기록된 CUDA 장치와 GPU UUID를 물리 GPU 정보와 대조하며 다르면 HOLD다. 정지 평가 영수증에도 같은 자식 관측값을 추가했다.
+
+물리 GPU0 확인 순서는 `nvidia-smi --query-gpu=index,uuid,pci.bus_id --format=csv,noheader,nounits`에서 index 0의 UUID를 확인하고, 평가 뒤 `eval_receipt.json`의 `physical_gpu.gpu_uuid` 및 다섯 단계 `observed_gpu.gpu_uuid`가 모두 같은지 읽는 것이다. 현재 기계의 등록 GPU0 UUID는 `c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b`다. 장치가 실제로 비었는지와 Kit 실측은 lead 실행 전까지 미확인이다. CPU 반례는 부모의 `CUDA_VISIBLE_DEVICES=1,0` 제거, GPU0/1 인자 전달, UUID 불일치 거절을 확인했다. isaac311에서 관련 시험 **31 passed**, `git diff --check` 통과.
