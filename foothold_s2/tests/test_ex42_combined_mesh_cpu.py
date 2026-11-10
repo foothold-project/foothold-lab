@@ -88,14 +88,30 @@ def test_family_a_is_the_full_thirteen_and_plan_shows_it():
 
 def test_family_b_one_column_per_kind_and_default_is_all_five(monkeypatch):
     import types
+    from foothold_s2.terrains import ame2_preset
     seen = {}
-    fake = types.ModuleType("foothold_s2.terrains.ame2_preset")
-    fake.KINDS = tuple(f"k{i}" for i in range(12))
-    fake.build_generator = lambda **kw: seen.update(kw) or "cfg"
-    monkeypatch.setitem(__import__("sys").modules, "foothold_s2.terrains.ame2_preset", fake)
+    fake = types.SimpleNamespace(KINDS=ame2_preset.KINDS)
+    monkeypatch.setattr(ame2_preset, "build_generator", lambda **kw: seen.update(kw) or "cfg")
+    rough = types.ModuleType("foothold_s2.terrains.rough_go2_cfg")      # real one imports isaaclab (Kit only)
+    rough.build_generator = rough.continuous_subterrains = None
+    monkeypatch.setitem(__import__("sys").modules, "foothold_s2.terrains.rough_go2_cfg", rough)
     assert mb._family_generator("B", 42) == "cfg"
     assert seen["num_cols"] == mb.FAMILY_COLUMNS["B"] == 12 and seen["seed"] == 42
     assert set(seen["proportions"]) == set(fake.KINDS) and abs(sum(seen["proportions"].values()) - 1.0) < 1e-9
     assert len(set(seen["proportions"].values())) == 1          # equal share = one column per kind
     assert mb.build_parser().parse_args(["--out", "x"]).family is None
     assert "B" in mb.ALL_FAMILIES and set(mb.FAMILY_COLUMNS) == set(mb.ALL_FAMILIES)
+
+
+def test_join_passes_family_origins_through_unchanged_except_the_axis_shift():
+    a, c = part("A", 10, 5), part("C", 10, 3)
+    a["origins"][..., 2] = np.linspace(-0.7, 0.4, a["origins"][..., 2].size).reshape(a["origins"][..., 2].shape)
+    c["origins"][..., 2] = 0.123                              # a family's own z must survive the join
+    c["origins"][3, 1, 0] += 0.25                             # and its own x offset inside the tile
+    before = {"A": a["origins"].copy(), "C": c["origins"].copy()}
+    out = combine_family_parts([a, c])
+    for name, sl in (("A", slice(0, 5)), ("C", slice(5, 8))):
+        got = out["origins"][:, sl]
+        assert np.array_equal(got[..., 2], before[name][..., 2])
+        assert np.array_equal(got[..., 0], before[name][..., 0])
+        assert np.allclose(got[..., 1] - before[name][..., 1], out["offsets"][name])
