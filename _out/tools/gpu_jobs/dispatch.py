@@ -277,12 +277,12 @@ def classify(cmdline: str) -> str | None:
 
 
 def nvidia_smi() -> dict:
-    """GPU index -> util/MiB and pid -> GPU set. Empty on failure (grants nothing)."""
+    """Keep each PID/GPU pair and its measured MiB, or None if unavailable."""
     import subprocess
 
     def q(args):
         return subprocess.run(["nvidia-smi", *args, "--format=csv,noheader,nounits"],
-                              capture_output=True, text=True, timeout=20).stdout
+                              capture_output=True, text=True, timeout=20, check=True).stdout
     try:
         gpus, uuid = {}, {}
         for line in q(["--query-gpu=index,uuid,utilization.gpu,memory.used,memory.total,name"]).splitlines():
@@ -290,14 +290,28 @@ def nvidia_smi() -> dict:
             gpus[int(i)] = {"util": int(util), "mib": int(mem), "total_mib": int(total),
                             "name": name.replace("NVIDIA GeForce ", "")}
             uuid[u] = int(i)
-        apps = {}
-        for line in q(["--query-compute-apps=pid,gpu_uuid"]).splitlines():
-            pid, u = [x.strip() for x in line.split(",")[:2]]
-            if u in uuid:
-                apps.setdefault(int(pid), set()).add(uuid[u])
-        return {"gpus": gpus, "apps": apps}
     except (OSError, ValueError, subprocess.SubprocessError):
         return {"gpus": {}, "apps": {}}
+    try:
+        rows = q(["--query-compute-apps=pid,gpu_uuid,used_memory"])
+    except subprocess.CalledProcessError:
+        try:
+            rows = q(["--query-compute-apps=pid,gpu_uuid"])
+        except (OSError, subprocess.SubprocessError):
+            rows = ""
+    except (OSError, subprocess.SubprocessError):
+        rows = ""
+    apps = {}
+    for line in rows.splitlines():
+        parts = [x.strip() for x in line.split(",")]
+        if len(parts) not in (2, 3) or not parts[0].isdecimal() or parts[1] not in uuid:
+            continue
+        pid, index = int(parts[0]), uuid[parts[1]]
+        mib = int(parts[2]) if len(parts) == 3 and parts[2].isdecimal() else None
+        readings = apps.setdefault(pid, {})
+        if index not in readings or mib is not None and (readings[index] is None or mib > readings[index]):
+            readings[index] = mib
+    return {"gpus": gpus, "apps": apps}
 
 
 def processes() -> list[dict]:
@@ -329,16 +343,33 @@ def live_jobs(smi: dict, procs: list[dict]) -> list[dict]:
         tokens = p["cmdline"].replace("\\", "/").split()
         module = tokens[tokens.index("-m") + 1] if "-m" in tokens[:-1] else None
         script = next((t for t in tokens if t.endswith(".py")), module or "?")
-        jobs.append({"pid": p["pid"], "kind": kind, "gpus": sorted(smi["apps"].get(p["pid"], ())),
+        contexts = smi["apps"].get(p["pid"], {})
+        primary = None
+        if isinstance(contexts, dict) and contexts and all(mib is not None for mib in contexts.values()):
+            largest = max(contexts.values())
+            winners = [i for i, mib in contexts.items() if mib == largest]
+            if largest > 0 and len(winners) == 1:
+                primary = winners[0]
+        jobs.append({"pid": p["pid"], "kind": kind, "gpus": sorted(contexts), "primary_gpu": primary,
                      "device": device_hint(p["cmdline"]), "script": script.rsplit("/", 1)[-1],
                      "started": p["started"]})
     return jobs
 
 
 def on_gpu(job: dict, gpu: int) -> bool:
-    # A Kit process also holds a graphics context on the display GPU; trust cuda:N first.
+    """Display the largest measured context; keep the legacy hint when inconclusive."""
+    if job.get("primary_gpu") is not None:
+        return job["kind"] != "guard" and job["primary_gpu"] == gpu
+    return prior_gpu_assignment(job, gpu)
+
+
+def prior_gpu_assignment(job: dict, gpu: int) -> bool:
     return job["kind"] != "guard" and (job["device"] == gpu or (job["device"] is None and gpu in job["gpus"]))
 
+
+def occupies_gpu(job: dict, gpu: int) -> bool:
+    # Display may hide auxiliary contexts, but it must never relax admission.
+    return on_gpu(job, gpu) or prior_gpu_assignment(job, gpu)
 
 def marker_files(dirs: list[str], now: float) -> list[str]:
     lines = []
@@ -383,7 +414,7 @@ def idle_update(smi: dict, jobs: list[dict], state_path: str, util_floor: int, n
         state = {}
     out = {}
     for i, g in smi["gpus"].items():
-        busy = g["util"] >= util_floor or any(on_gpu(j, i) for j in jobs)
+        busy = g["util"] >= util_floor or any(occupies_gpu(j, i) for j in jobs)
         out[str(i)] = None if busy else (state.get(str(i)) or now)
     try:
         Path(state_path).write_text(json.dumps(out), encoding="utf-8")
@@ -497,7 +528,31 @@ def _queue_cmd(args, cfg=LIVE, now=None) -> str:
     now = now if now is not None else datetime.now().timestamp()
     q = read_queue(cfg["queue"])
     items = q["items"]
-    if args.qaction == "add":
+    for item in items:
+        if item.get("external"):
+            settle_external(item, now)
+    if args.qaction == "external":
+        gpus = sorted(set(args.gpu))
+        start, end = parse_when(args.start, now), parse_when(args.end, now)
+        if not gpus or not all(gpu in (0, 1) for gpu in gpus) or not 0 <= args.priority <= 4:
+            raise ValueError("priority 0..4, GPU 0|1")
+        if not args.title.strip() or not args.log.strip() or start is None or end is None or start > now or end <= start:
+            raise ValueError("title, log, past/current start and expected end after start required")
+        state, started = external_process(args.pid)
+        if state != "running":
+            raise ValueError("cannot verify the live PID and creation time")
+        if any(it.get("external") and it["state"] == "실행" and it.get("pid") == args.pid
+               and it.get("pid_started") == started and it["gpu"] in gpus for it in items):
+            raise ValueError("PID already registered for this GPU")
+        first = max((it["id"] for it in items), default=0) + 1
+        log = str(Path(args.log).expanduser().resolve())
+        for offset, gpu in enumerate(gpus):
+            items.append({"id": first + offset, "title": args.title, "priority": args.priority, "gpu": gpu,
+                          "start": start, "end": end, "owner": args.owner, "state": "실행", "added_at": now,
+                          "run_at": start, "external": True, "pid": args.pid, "pid_started": started,
+                          "log": log, "condition": f"로그 {log}"})
+        msg = "registered " + ",".join(str(first + offset) for offset in range(len(gpus)))
+    elif args.qaction == "add":
         if not 0 <= args.priority <= 4 or args.gpu not in (0, 1):
             raise ValueError("priority 0..4, gpu 0|1")
         new_id = max((i["id"] for i in items), default=0) + 1
@@ -709,6 +764,8 @@ def c_layer_owners(jobs: list[dict]) -> list[dict]:
 
 
 def launcher(e: dict) -> str:
+    if e.get("external"):
+        return f"외부 PID {e['pid']}"
     if needs_approval(e) and not e.get("auto"):
         return "승인 뒤"
     if not e.get("auto") and e.get("argv"):
@@ -722,6 +779,8 @@ def warnings(cfg: dict, queue: list[dict], auto: list[dict], jobs: list[dict], i
              train: dict | None, now: float, attempts=None) -> list[str]:
     out = []
     for it in queue:
+        if it.get("external"):
+            continue  # Tracked by PID identity, not GPU observation or wrapper PID.
         if it["state"] == "실행" and not (pid_alive(it["pid"]) if it.get("pid")
                                          else any(on_gpu(j, it["gpu"]) for j in jobs)):
             out.append(f"대기열 {it['id']} 「{it['title']}」 는 실행인데 GPU{it['gpu']} 에 프로세스 없음")
@@ -900,11 +959,15 @@ def slow_data(cfg=LIVE, procs=None) -> dict:
         queue, qerr = read_queue(cfg["queue"])["items"], None
     except ValueError as exc:
         queue, qerr = [], str(exc)
+    observed_at = datetime.now().timestamp()
+    for item in queue:
+        if item.get("external"):
+            settle_external(item, observed_at)  # Display only; do not write the queue.
     return {"procs": procs, "train": train, "queue": queue, "qerr": qerr,
             "attempts": eval_attempts(cfg["eval_root"]), "rows": stage_rows(cfg),
             "pending": watcher_pending(cfg["eval_root"]),
             "c_files": c_layer_files(cfg),
-            "read_at": datetime.now().timestamp()}
+            "read_at": observed_at}
 
 
 def in_c_layer_group(e: dict) -> bool:
@@ -984,6 +1047,10 @@ def board_data(smi=None, procs=None, cfg=LIVE, now=None, slow=None) -> dict:
     # running first, then what the dispatcher will start next (by priority), then timed items
     entries.sort(key=lambda e: (e["state"] != "실행", not (e.get("argv") and not needs_approval(e)),
                                 e.get("start") or float("inf"), e["priority"]))
+    # Retain a short visible completion history without displacing running/planned rows.
+    completed = sorted((it for it in queue if it.get("external") and it["state"] == "끝"),
+                       key=lambda it: it.get("done_at") or 0, reverse=True)
+    entries.extend(dict(it, auto=False) for it in completed[:8])
     warn = (warnings(cfg, queue, auto, jobs, idle, train, now, slow["attempts"])
             + ([f"대기열 파일 오류: {qerr}"] if qerr else []))
     return {"now": now, "smi": smi, "jobs": jobs, "idle": idle, "train": train, "rows": slow["rows"],
@@ -1001,7 +1068,7 @@ def gpu_box(d: dict, i: int, width: int, paint: Paint) -> list[str]:
         since = d["idle"].get(str(i))
         body.append(paint("C층 렌더", "실행") + " · Kit 시작 중 · 칸 사이"
                     + (f" ({int((now - since) // 60)} 분)" if since else ""))
-    elif not here:
+    elif not here and not any(e.get("external") for e in running):
         since = d["idle"].get(str(i))
         body.append(paint(f"쉼 · {clock(since, now)} 부터 관측", "보류") if since else "프로세스 없음")
     for j in here:
@@ -1010,6 +1077,7 @@ def gpu_box(d: dict, i: int, width: int, paint: Paint) -> list[str]:
             st = stage_of(it, d["rows"])
             stage = f"{st[0]} (m{p + st[1]}~m{p + st[2]})" if st else "단계 미확인"
             body.append(paint("EX-41 학습", "실행") + " · " + fit(stage, inner - 13).rstrip())
+            body.append(f"{j['script']} · PID {j['pid']}")
             tail = f" m{p + it} · {it}/{last}"
             body.append(f"[{bar(it / last, inner - 2 - cell_width(tail))}]{tail}")
             s = train.get("iter_s")
@@ -1024,6 +1092,9 @@ def gpu_box(d: dict, i: int, width: int, paint: Paint) -> list[str]:
             e = next((e for e in running if e.get("kind") == j["kind"]), None)
             body.append(f"시작 {when((e or {}).get('start') or j['started'], now)} · "
                         f"예상 끝 {when(e['end'] if e else None, now)}")
+    for e in running:
+        if e.get("external"):
+            body.append(f"외부 등록 · {e['title']} · 추적 PID {e['pid']}")
     total = g.get("total_mib")
     mem = f"{g['mib'] / 1024:.1f}/{total / 1024:.0f} GB" if total else f"{g['mib'] / 1024:.1f} GB"
     tail = f" {g['util']:>3} % · {mem}"
@@ -1234,6 +1305,33 @@ def pid_alive(pid) -> bool:
         return False
 
 
+def external_process(pid) -> tuple[str, float | None]:
+    """Read process identity without signalling; missing evidence is not an exit."""
+    if psutil is None or type(pid) is not int or pid <= 0:
+        return "unknown", None
+    try:
+        proc = psutil.Process(pid)
+        started = proc.create_time()
+        if proc.status() in (psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD):
+            return "exited", None
+        return "running", started
+    except psutil.NoSuchProcess:
+        return "exited", None
+    except (psutil.Error, OSError):
+        return "unknown", None
+
+
+def settle_external(item: dict, now: float) -> bool:
+    if item.get("state") != "실행" or not isinstance(item.get("pid_started"), (int, float)):
+        return False
+    state, started = external_process(item.get("pid"))
+    if state == "unknown" or state == "running" and started == item["pid_started"]:
+        return False
+    item.update(state="끝", done_at=now, rc=None, finish_reason="external_process_ended")
+    item["condition"] = " · ".join(filter(None, (item.get("condition"), "프로세스 종료 · 종료 코드 미확인")))
+    return True
+
+
 def family(pid) -> set[int]:
     """The wrapper and every process under it (the Kit child is a grandchild)."""
     out = set()
@@ -1334,7 +1432,7 @@ def p1_busy(jobs: list[dict], ours: set[int], markers: list[str]) -> str | None:
     if (why := p1_waiting(DISPATCH.get("p1_attempt_globs", []))):
         return why
     for j in jobs:
-        if j["kind"] != "guard" and on_gpu(j, DISPATCH["gpu"]) and j["pid"] not in ours:
+        if occupies_gpu(j, DISPATCH["gpu"]) and j["pid"] not in ours:
             return f"gpu1_process:{j['pid']}:{j['script']}"
     return None
 
@@ -1362,6 +1460,8 @@ def settle(it: dict, exists=lambda p: Path(p).exists(), alive=pid_alive, now: fl
     """Running item -> 끝 / 실패 from the wrapper's result file. True when it changed."""
     if it.get("state") != "실행":
         return False
+    if it.get("external"):
+        return settle_external(it, now if now is not None else datetime.now().timestamp())
     rp = result_path(it["id"])
     if rp.exists():
         try:
@@ -1704,6 +1804,16 @@ def main(argv: list[str] | None = None) -> int:
     qa.add_argument("--wait-pid", action="append", type=int, default=[])
     qa.add_argument("--done-file", action="append", default=[])
     qa.add_argument("--queue", type=Path, help="queue file (defaults to the live dispatcher queue)")
+    qe = qs.add_parser("external", help="register an already running process; never launch it")
+    qe.add_argument("--title", required=True)
+    qe.add_argument("--gpu", type=int, choices=(0, 1), action="append", required=True)
+    qe.add_argument("--priority", type=int, choices=range(5), default=2)
+    qe.add_argument("--pid", type=int, required=True)
+    qe.add_argument("--start", required=True, help="HH:MM or MM-DD HH:MM")
+    qe.add_argument("--end", required=True, help="expected end, HH:MM or MM-DD HH:MM")
+    qe.add_argument("--log", required=True)
+    qe.add_argument("--owner", default="lead")
+    qe.add_argument("--queue", type=Path, help="queue file (defaults to the live dispatcher queue)")
     for name in ("done", "run"):
         qs.add_parser(name).add_argument("id", type=int)
     qc = qs.add_parser("cancel", help="never ran / should not run; kept with a reason")
