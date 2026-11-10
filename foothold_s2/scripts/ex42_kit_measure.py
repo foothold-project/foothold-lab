@@ -109,7 +109,7 @@ def _generator_for(family: str, kind: str):
         subs = paper_ext_subterrains({spec.kind: 1.0 for spec in PAPER_EXT_SPECS})
     elif family == "A":
         from foothold_s2.terrains import columns
-        from foothold_s2.terrains.sparse_terrains import sparse_subterrains
+        from foothold_s2.terrains.start_go2_v2 import sparse_subterrains   # EX-42 A: scaled preset start_go2_v2
 
         subs = sparse_subterrains(dict(columns.SPARSE))
     else:
