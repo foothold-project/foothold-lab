@@ -20,12 +20,12 @@
 - 실제 m12000 `model_6000.pt` SHA는 `1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613`으로 확인했다.
 - 첫 CPU 사전검사는 `/home/jay/mai/tmp/runner` 기준 자료가 없어 rc1이었다. 원문: `/home/jay/mai/tmp/scripter-lx/m-actual-preflight.log`.
 - lead-lx가 `~/data/foothold`와 `~/mai/tmp/runner`를 D: 자료에 심볼릭 링크로 연결한 뒤 실제 `train_start.py --ex42_stage_zero_dry_run`을 재실행했다. M1~M4의 rank 조합 **9건 모두 rc0**, 각 로그에 `EX42_STAGE_ZERO_PREFLIGHT` 및 `app_launcher_started=false`가 있다. 영수증: `/home/jay/mai/tmp/scripter-lx/m-actual-preflights-6/preflight/receipt.json`. GPU·Kit은 실행하지 않았다.
-- `~/mai/wt/foothold-lab/m-probe-locked`를 원격 `a87824c0`에서 detached로 만들고 잠갔다. 소스 감사 실측: detached=true · clean=true · writable_count=0 · 보호 파일 15개. 이 잠긴 사본의 `LIVE=0` DRY도 6판을 출력했다.
+- `~/mai/wt/foothold-lab/m-probe-locked`를 원격 `ad0bf751`에서 detached로 만들고 잠갔다. 소스 감사 실측: detached=true · clean=true · writable_count=0 · 보호 파일 15개. 이 잠긴 사본의 `LIVE=0` DRY도 6판을 출력했다.
 
 ## 실제 시작 계약
 
 1. `origin/scripter/m-launch-1110` HEAD의 별도 detached 사본 `~/mai/wt/foothold-lab/m-probe-locked`를 만들고 `_out/tools/ex41/lock_checkout.py lock`과 `chmod a-w experiments/EX-42.yaml`을 적용했다. 다시 만들 때는 같은 순서로 하되 기존 폴더를 덮지 않는다. 원본 작업 가지와 같은 디렉터리에서 학습을 돌리지 않는다.
-2. `~/mai/foothold-linux.env`는 아직 없다. 만들려면 `cp -n ~/mai/wt/foothold-lab/m-probe-locked/machines/AI-WS01-linux.env.example ~/mai/foothold-linux.env`로 복사한 뒤 실제 값과 경로를 재검사한다. 부모 manifest와 `model_6000.pt`는 연결된 Linux 경로에서 읽힌다. L-8 통과 전달 전에는 실행하지 않는다.
+2. `~/mai/foothold-linux.env`는 2026-11-10 21:52 KST에 파일 존재를 확인했다. 실제 값 검증은 별도이며, 파일이 없는 환경에서 만들 때는 `cp -n ~/mai/wt/foothold-lab/m-probe-locked/machines/AI-WS01-linux.env.example ~/mai/foothold-linux.env`로 복사한 뒤 실제 값과 경로를 재검사한다. 부모 manifest와 `model_6000.pt`는 연결된 Linux 경로에서 읽힌다. L-8 통과 전달 전에는 실행하지 않는다.
 3. 다음 한 줄을 lead-lx가 잠근 사본에서 실행한다. `EX42_M_PARENT_MANIFEST`는 실제 Linux 부모 경로로 바꾼다.
 
 ```bash
