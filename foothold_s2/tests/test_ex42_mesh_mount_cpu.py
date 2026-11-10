@@ -27,7 +27,7 @@ def _save(tmp_path, v, f, origins, families):
 
 
 def test_modules_called_exist():
-    for name in ("foothold_s2.terrains.ex42_mesh_mount", "foothold_s2.scripts.ex42_mesh_mount_check"):
+    for name in ("foothold_s2.terrains.ex42_mesh_mount", "foothold_s2.scripts.ex42_mesh_mount_check", "foothold_s2.terrains.ex42_column_reset"):
         assert importlib.util.find_spec(name) is not None
 
 

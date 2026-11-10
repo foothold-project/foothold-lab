@@ -32,6 +32,8 @@ CRITERIA = {
     "root_above_support_min_m": 0.05,      # root over the mesh under the FEET (what it stands on)
     "root_above_support_max_m": 0.80,
     "foot_clearance_max_m": 0.30,          # no foot hovers over the mesh under it (spawn is not airborne)
+    "foot_clearance_min_m": -0.10,         # no foot sunk into the mesh (all four feet ON the support)
+    "zero_range_xy_offset_max_m": 0.15,    # kinds with a declared 0 start range stand on their origin
     "scan_error_max_abs_m": 0.02,          # scanner hit z vs independent mesh height
     "scan_finite_fraction_min": 0.99,
 }
@@ -68,9 +70,53 @@ def part_a(data: dict[str, Any]) -> dict[str, Any]:
             "passed": missing == 0 and all(v <= CRITERIA["origin_height_max_abs_m"] for v in worst.values())}
 
 
+def _per_column_pass(env, raw, terrain, mesh_heights, foot_ids, action, data, table, np, torch):
+    """Put envs on every C column at levels 0/3/6/9, reset, and check all four feet stand on the mesh.
+    Columns with a declared zero xy range must also start on their origin."""
+    fam = list(data["column_family"])
+    rows_n = data["origins"].shape[0]
+    levels_pick = sorted({min(l, rows_n - 1) for l in (0, 3, 6, 9)})
+    pairs = [(lvl, c) for c, f in enumerate(fam) if f == "C" for lvl in levels_pick][:raw.num_envs]
+    if not pairs:
+        return {"rows": [], "assignment_kept": False, "note": "no C column in this mesh"}
+    n = len(pairs)
+    dev = terrain.terrain_types.device
+    lv = torch.tensor([p[0] for p in pairs], device=dev)
+    ty = torch.tensor([p[1] for p in pairs], device=dev)
+    terrain.terrain_levels[:n] = lv
+    terrain.terrain_types[:n] = ty
+    terrain.env_origins[:n] = terrain.terrain_origins[lv, ty]
+    raw.reset()
+    env.step(action)
+    kept = bool((terrain.terrain_types[:n] == ty).all() and (terrain.terrain_levels[:n] == lv).all())
+    root = raw.scene["robot"].data.root_pos_w[:n].detach().cpu().numpy()
+    feet = raw.scene["robot"].data.body_pos_w[:n][:, foot_ids].detach().cpu().numpy()
+    origins_np = terrain.env_origins[:n].detach().cpu().numpy()
+    out = []
+    for e, (lvl, c) in enumerate(pairs):
+        pts = np.vstack([root[e:e + 1, :2], feet[e, :, :2]])
+        hs = mesh_heights.at(pts, radius=1.0)
+        support, fh = float(np.nanmean(hs[1:])), hs[1:]
+        clear = feet[e, :, 2] - fh
+        xy = float(np.linalg.norm(root[e, :2] - origins_np[e, :2]))
+        zero = table[c]["from_declaration"] and all(
+            table[c]["ranges"].get(a, (0, 0)) == (0.0, 0.0) for a in ("x", "y"))
+        above = float(root[e, 2] - support)
+        passed = bool(np.isfinite(clear).all() and clear.max() <= CRITERIA["foot_clearance_max_m"]
+                      and clear.min() >= CRITERIA["foot_clearance_min_m"]
+                      and CRITERIA["root_above_support_min_m"] <= above <= CRITERIA["root_above_support_max_m"]
+                      and (not zero or xy <= CRITERIA["zero_range_xy_offset_max_m"]))
+        out.append({"env": e, "column": c, "kind": table[c]["kind"], "level": lvl, "zero_xy_range": bool(zero),
+                    "root_xy_offset_m": xy, "root_above_support": above,
+                    "foot_clearance": [float(x) for x in clear], "passed": passed})
+    return {"rows": out, "assignment_kept": kept, "failed": [r for r in out if not r["passed"]]}
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     from foothold_s2.terrains.ex42_mesh_mount import (
         MeshHeights, expected_sha_from_manifest, load_combined_mesh, mesh_file_generator_cfg)
+
+    from foothold_s2.terrains.ex42_column_reset import apply_column_reset, build_column_table
 
     npz = Path(args.mesh_dir) / "terrain_mesh.npz"
     sha = expected_sha_from_manifest(Path(args.mesh_dir) / "mesh_manifest.json")
@@ -93,6 +139,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     env_cfg.scene.num_envs = NUM_ENVS
     env_cfg.sim.device = args.device
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
+    table = build_column_table(list(data["column_family"]))
+    apply_column_reset(env_cfg, table)
+    result["column_reset_table"] = [{"column": c, "family": r["family"], "kind": r["kind"],
+                                     "from_declaration": r["from_declaration"],
+                                     "ranges": {k: list(v) for k, v in r["ranges"].items()}}
+                                    for c, r in enumerate(table) if r["from_declaration"]]
     env = gym.make(TASK_ID, cfg=env_cfg)
     raw = env.unwrapped
     terrain = raw.scene.terrain
@@ -158,6 +210,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                                "ref_missing": int(np.isnan(ref).sum())}
         resets.append(row)
     result["resets"] = resets
+    result["per_column_family_c"] = _per_column_pass(
+        env, raw, terrain, mesh_heights, foot_ids, action, data, table, np, torch)
     result["height_scanner"] = scanner is not None
     ok = True
     for row in resets:
@@ -170,6 +224,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         if scan is not None:
             ok &= scan["finite_fraction"] >= CRITERIA["scan_finite_fraction_min"]
             ok &= scan["max_abs_error_m"] <= CRITERIA["scan_error_max_abs_m"]
+    for item in result["per_column_family_c"]["rows"]:
+        ok &= item["passed"]
+    ok &= result["per_column_family_c"]["assignment_kept"] and result["per_column_family_c"]["rows"] != []
     checks["scanner_checked"] = scanner is not None and all("scan" in r for r in resets)
     result["checks"] = checks
     result["state"] = "passed" if (ok and result["part_a_origin_heights"]["passed"]) else "failed_criteria"
