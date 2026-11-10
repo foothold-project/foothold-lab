@@ -96,3 +96,56 @@ def test_zero_range_columns_must_start_on_their_origin():
     raw.reset = shifted
     res = mc._per_column_pass(env, raw, terrain, Mesh(origins, None), [0, 1, 2, 3], None, data, table, np, torch)
     assert all("zero_range_start_off_origin" in r["reasons"] for r in res["rows"])
+
+
+class CurriculumTerrain(types.SimpleNamespace):
+    """Fake Isaac TerrainImporter: update_env_origins really moves levels (class method)."""
+
+    def update_env_origins(self, env_ids, move_up, move_down):
+        self.terrain_levels[env_ids] += 1 * move_up - 1 * move_down
+        self.env_origins[env_ids] = self.terrain_origins[self.terrain_levels[env_ids], self.terrain_types[env_ids]]
+
+
+def _curriculum_setup(on_step):
+    origins, terrain, raw, env, resets = _setup()
+    terrain = CurriculumTerrain(**vars(terrain))
+    terrain.terrain_levels = torch.zeros(4, dtype=torch.long)
+    env.step = lambda action: on_step(terrain)
+    return origins, terrain, raw, env
+
+
+def _table3():
+    return [{"family": "A", "kind": "random_rough", "from_declaration": False, "ranges": {}},
+            {"family": "C", "kind": "gap", "from_declaration": False, "ranges": {}},
+            {"family": "C", "kind": "flat", "from_declaration": False, "ranges": {}}]
+
+
+def test_a_curriculum_move_during_step_is_recorded_not_applied_and_the_method_is_restored():
+    def curriculum(terrain):
+        terrain.update_env_origins(torch.tensor([0, 2]), torch.tensor([True, False]), torch.tensor([False, True]))
+
+    origins, terrain, raw, env = _curriculum_setup(curriculum)
+    data = {"column_family": ["A", "C", "C"], "origins": origins}
+    res = mc._per_column_pass(env, raw, terrain, Mesh(origins, None), [0, 1, 2, 3], None, data, _table3(), np, torch)
+    assert res["assignment_kept"] is True and res["assignment_change_count"] == 0
+    assert res["curriculum_move_count"] == 6                      # 3 batches x 2 envs the curriculum wanted to move
+    first = res["curriculum_moves_suppressed"][0]
+    assert first["batch"] == 1 and first["env"] == 0 and first["wanted"] == "up" and first["phase"] == "step"
+    assert first["family"] == "A" and first["kind"] == mc.column_kind(0, ["A", "C", "C"]) and first["column"] == 0 and first["level"] == 0
+    assert "update_env_origins" not in terrain.__dict__           # the class method is back
+    terrain.terrain_levels[:] = 0
+    terrain.update_env_origins(torch.tensor([1]), torch.tensor([True]), torch.tensor([False]))
+    assert terrain.terrain_levels[1].item() == 1                  # and it works again
+
+
+def test_any_other_change_of_the_assignment_is_listed_with_env_cell_and_moment():
+    def meddle(terrain):
+        terrain.terrain_types[1] = 2
+
+    origins, terrain, raw, env = _curriculum_setup(meddle)
+    data = {"column_family": ["A", "C", "C"], "origins": origins}
+    res = mc._per_column_pass(env, raw, terrain, Mesh(origins, None), [0, 1, 2, 3], None, data, _table3(), np, torch)
+    assert res["assignment_kept"] is False and res["assignment_change_count"] >= 1
+    change = res["assignment_changes"][0]
+    assert change["when"] == "after_step" and change["env"] == 1 and change["now_column"] == 2
+    assert {"assigned_column", "assigned_level", "assigned_family", "assigned_kind"} <= set(change)
