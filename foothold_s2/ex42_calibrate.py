@@ -40,7 +40,18 @@ def _numeric_leaves(value, path=()):
         yield "/".join(path), float(value)
 
 
-def summarize(scores, receipts, mesh_sha256, checkpoint_sha256):
+def _null_leaves(value, path=()):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield from _null_leaves(child, (*path, str(key)))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from _null_leaves(child, (*path, str(index)))
+    elif value is None:
+        yield "/".join(path)
+
+
+def summarize(scores, receipts, mesh_sha256, checkpoint_sha256, *, eval_cols=EVAL_COLS):
     if len(scores) != 5 or len(receipts) != 5:
         raise ValueError("calibration needs exactly five evaluations")
     heads = {row.get("source_git_head") for row in receipts}
@@ -50,29 +61,42 @@ def summarize(scores, receipts, mesh_sha256, checkpoint_sha256):
         if (receipt.get("state") != "done" or receipt.get("eval_seed") != SEEDS[i]
                 or receipt.get("checkpoint_sha256") != checkpoint_sha256
                 or receipt.get("ex42_mesh", {}).get("mesh_sha256") != mesh_sha256
-                or receipt.get("ex42_mesh", {}).get("eval_cols") != EVAL_COLS
+                or receipt.get("ex42_mesh", {}).get("eval_cols") != (None if eval_cols == 76 else eval_cols)
                 or score.get("checkpoint_sha256") != checkpoint_sha256
                 or score.get("conditions", {}).get("eval_seed") != SEEDS[i]):
             raise ValueError(f"calibration repeat {i} source, mesh, seed, or completion differs")
-    metrics = [dict(_numeric_leaves({name: score[name] for name in SCORE_GROUPS})) for score in scores]
-    keys = set(metrics[0])
-    if any(set(row) != keys for row in metrics):
-        raise ValueError("calibration metric coverage differs between repetitions")
+    groups = [{name: score[name] for name in SCORE_GROUPS} for score in scores]
+    metrics = [dict(_numeric_leaves(group)) for group in groups]
+    nulls = [set(_null_leaves(group)) for group in groups]
+    numeric_keys = set().union(*(set(row) for row in metrics))
+    all_keys = numeric_keys | {key for missing in nulls for key in missing
+                               if not any(path.startswith(key + "/") for path in numeric_keys)}
+    missing_by_repeat = {key: [i for i, row in enumerate(metrics) if key not in row]
+                         for key in sorted(all_keys) if any(key not in row for row in metrics)}
+    keys = all_keys - set(missing_by_repeat)
+    if not keys:
+        raise ValueError("calibration has no metric measured in all repetitions")
     widths = {key: {"same_seed_width": abs(metrics[0][key] - metrics[1][key]),
                     "all_seed_width": max(row[key] for row in metrics) - min(row[key] for row in metrics),
                     "values": [row[key] for row in metrics]}
               for key in sorted(keys)}
     items = {}
     for item, rules in ITEM_RULES.items():
-        selected = {key: row for key, row in widths.items()
-                    if any(key.startswith(group + "/") and leaf in key.split("/")
-                           for group, leaf in rules)
-                    or (item == "W57_spin_survival" and key.startswith("map64/")
-                        and "/spin" in key and key.endswith("/alive_at_end"))}
-        if item == "W57_spin_survival":
-            selected = {key: row for key, row in selected.items() if "/spin" in key}
+        def matches(key):
+            if item == "W57_spin_survival" and "/spin" not in key:
+                return False
+            return any(key.startswith(group + "/") and leaf in key.split("/")
+                       for group, leaf in rules)
+
+        selected = {key: row for key, row in widths.items() if matches(key)}
         if not selected:
-            raise ValueError(f"calibration item {item} has no measured numeric metric")
+            missing = sorted(key for key in missing_by_repeat if matches(key))
+            if not missing:
+                raise ValueError(f"calibration item {item} has no measured numeric metric")
+            items[item] = {"state": "missing_in_repeat", "metric_count": 0,
+                           "max_same_seed_width": None, "max_all_seed_width": None,
+                           "metric_paths": [], "missing_paths": missing}
+            continue
         items[item] = {"state": "measured", "metric_count": len(selected),
                        "max_same_seed_width": max(row["same_seed_width"] for row in selected.values()),
                        "max_all_seed_width": max(row["all_seed_width"] for row in selected.values()),
@@ -83,8 +107,11 @@ def summarize(scores, receipts, mesh_sha256, checkpoint_sha256):
     return {"format": "foothold-ex42-calibration/1", "state": "measured_unjudged",
             "seeds": list(SEEDS), "mesh_sha256": mesh_sha256,
             "checkpoint_sha256": checkpoint_sha256, "source_git_head": heads.pop(),
+            "eval_cols": eval_cols,
+            "comparison_scope": "historical_76_reference" if eval_cols == 76 else "a23_parent_matched",
             "same_seed_pair": [0, 1], "stand_terrain": "plane z=0, existing EX-42 stance protocol",
             "item_widths": items, "metric_widths": widths,
+            "missing_by_repeat": missing_by_repeat,
             "note": "range is descriptive, no performance PASS threshold inferred"}
 
 
@@ -97,12 +124,46 @@ def main(argv=None):
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--summarize-only", action="store_true",
+                        help="read five completed evaluations without starting Kit")
+    parser.add_argument("--summary-output", type=Path,
+                        help="new output JSON for --summarize-only; never overwrite the evaluation folder")
+    parser.add_argument("--historical-76-reference", action="store_true",
+                        help="label the old 76-column exploratory run; not the A23 parent comparison")
     args = parser.parse_args(argv)
+    if args.summarize_only and args.execute:
+        parser.error("--summarize-only and --execute are mutually exclusive")
+    if args.summarize_only != bool(args.summary_output):
+        parser.error("--summarize-only requires --summary-output, and vice versa")
+    if args.historical_76_reference and not args.summarize_only:
+        parser.error("--historical-76-reference requires --summarize-only")
     if not args.checkpoint.is_file() or digest(args.checkpoint) != args.expected_sha256:
         parser.error("m13000 checkpoint missing or SHA differs")
     mesh = preflight(args.mesh_dir)
     if mesh["mesh_sha256"] != args.expected_mesh_sha256:
         parser.error("E0 combined mesh SHA differs from the operator pin")
+    if args.summarize_only:
+        scores, receipts = [], []
+        eval_cols = 76 if args.historical_76_reference else EVAL_COLS
+        for i in range(len(SEEDS)):
+            folder = args.out / f"repeat_{i:02d}"
+            score_path, receipt_path = folder / "ex42_score.json", folder / "eval_receipt.json"
+            map_path = folder / "map64" / "map_modes.json"
+            if not all(path.is_file() for path in (score_path, receipt_path, map_path)):
+                raise ValueError(f"calibration repeat {i} is incomplete")
+            cell = json.loads(map_path.read_text(encoding="utf-8"))
+            if cell.get("fixed_terrain", {}).get("cols") != eval_cols:
+                raise ValueError(f"calibration repeat {i} fixed terrain columns differ")
+            scores.append(json.loads(score_path.read_text(encoding="utf-8")))
+            receipts.append(json.loads(receipt_path.read_text(encoding="utf-8")))
+        result = summarize(scores, receipts, mesh["mesh_sha256"], args.expected_sha256,
+                           eval_cols=eval_cols)
+        args.summary_output.parent.mkdir(parents=True, exist_ok=True)
+        with args.summary_output.open("x", encoding="utf-8") as output:
+            output.write(json.dumps(result, indent=2, allow_nan=False) + "\n")
+        print(json.dumps({"state": result["state"], "calibration": str(args.summary_output),
+                          "comparison_scope": result["comparison_scope"]}))
+        return 0
     commands = [[sys.executable, "-m", "foothold_s2.ex42_eval_once", "--checkpoint", str(args.checkpoint),
                  "--expected-sha256", args.expected_sha256, "--mesh-dir", str(args.mesh_dir),
                  "--eval-seed", str(seed), "--out", str(args.out / f"repeat_{i:02d}"),
