@@ -21,16 +21,17 @@ class TerrainSpec:
     fixed: tuple[tuple[str, Any], ...]
 
 
+# CURRICULUM-GATES v0.16:294: E starts at the continuous L9 dimensions.
 PAPER_EXT_SPECS = (
     TerrainSpec("slope_steep", "HfPyramidSlopedTerrainCfg", "slope_range",
-                (0.0, 0.70), (("platform_width", 2.0), ("border_width", 0.25))),
+                (0.40, 0.70), (("platform_width", 2.0), ("border_width", 0.25))),
     TerrainSpec("slope_steep_inv", "HfInvertedPyramidSlopedTerrainCfg", "slope_range",
-                (0.0, 0.70), (("platform_width", 2.0), ("border_width", 0.25))),
+                (0.40, 0.70), (("platform_width", 2.0), ("border_width", 0.25))),
     TerrainSpec("stairs_high", "MeshPyramidStairsTerrainCfg", "step_height_range",
-                (0.05, 0.30), (("step_width", 0.30), ("platform_width", 3.0),
+                (0.23, 0.30), (("step_width", 0.30), ("platform_width", 3.0),
                                ("border_width", 1.0), ("holes", False))),
     TerrainSpec("stairs_high_inv", "MeshInvertedPyramidStairsTerrainCfg", "step_height_range",
-                (0.05, 0.30), (("step_width", 0.30), ("platform_width", 3.0),
+                (0.23, 0.30), (("step_width", 0.30), ("platform_width", 3.0),
                                ("border_width", 1.0), ("holes", False))),
 )
 
