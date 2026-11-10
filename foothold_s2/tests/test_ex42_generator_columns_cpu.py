@@ -91,15 +91,33 @@ def test_stair_hist_start_runner_and_ex41_read_the_real_cfg(real_cfg):
     sh.record_reset(env, None)
     names = gc.generator_column_names(cfg)
     assert [int(v) for v in env._ex41_stair_columns] == [sh.STAIRS.index(n) if n in sh.STAIRS else -1 for n in names]
-    # StartRunner._off_column_names on the real cfg: B/C/D/E kinds are not eligible names -> refused, never a crash on sub_terrains
+    # real cfg -> StartRunner names: B/C/D/E are sparse (lead 11/11 06:53), A keeps its own split
     from foothold_s2.runners import start_runner as sr
     fake = types.SimpleNamespace(env=types.SimpleNamespace(unwrapped=env), map_ratio_events=[])
     fake._off_terrain = lambda: sr.StartRunner._off_terrain(fake)
-    assert fake._off_terrain() is terrain                        # combined cfg is a usable source now
-    with pytest.raises(ValueError, match="끔 대상 지형을 정할 수 없는 열 이름"):
-        sr.StartRunner._off_column_names(fake)
-    only_a = types.SimpleNamespace(num_cols=50, num_rows=10, column_family=("A",) * 50)
-    terrain.cfg.terrain_generator = only_a
-    fake = types.SimpleNamespace(env=fake.env, map_ratio_events=[])      # fresh: the refused call leaves a None cache
+    assert fake._off_terrain() is terrain                        # combined cfg is a usable source
+    assert sr.StartRunner._off_column_names(fake) == names
+
+
+@pytest.mark.parametrize("mesh", [B613, C333])
+def test_restrict_map_off_runs_on_the_real_cfg_and_only_a_continuous_or_flat_columns_may_turn_the_map_off(real_cfg, mesh):
+    from foothold_s2.runners import start_runner as sr
+    from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, is_sparse_name
+    cfg = real_cfg(mesh)
+    names = gc.generator_column_names(cfg)
+    n = cfg.num_cols
+    terrain = types.SimpleNamespace(
+        cfg=types.SimpleNamespace(terrain_generator=cfg), terrain_types=torch.arange(n),
+        terrain_levels=torch.zeros(n, dtype=torch.long), terrain_origins=torch.zeros(cfg.num_rows, n, 3))
+    env = types.SimpleNamespace(scene=types.SimpleNamespace(terrain=terrain))
+    fake = types.SimpleNamespace(env=types.SimpleNamespace(unwrapped=env), map_ratio_events=[], p_map_off=0.1)
     fake._off_terrain = lambda: sr.StartRunner._off_terrain(fake)
-    assert sr.StartRunner._off_column_names(fake) == columns.column_types(columns.FULL, 50)
+    fake._off_column_names = lambda: sr.StartRunner._off_column_names(fake)
+    out = sr.StartRunner._restrict_map_off(fake, torch.ones(n, dtype=torch.bool), torch.ones(n, dtype=torch.bool))
+    want = torch.tensor([x in ELIGIBLE_NAMES for x in names])
+    assert torch.equal(out, want)                                # every column asked for "off"; only the eligible ones keep it
+    assert not out[[i for i, x in enumerate(names) if "/" in x or x == "E"]].any()
+    assert all(is_sparse_name(x) for x in names if "/" in x or x == "E")
+    assert out[:50].sum() == sum(x in ELIGIBLE_NAMES for x in names[:50]) > 0        # A: unchanged split
+    events = fake.map_ratio_events[0]
+    assert events["kind"] == "off_eligibility" and events["num_cols"] == n

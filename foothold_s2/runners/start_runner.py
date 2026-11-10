@@ -50,7 +50,7 @@ from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, S
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
-from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
+from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
@@ -1411,7 +1411,7 @@ class StartRunner(OnPolicyRunner):
         names = self._off_column_names()
         origins = self._off_terrain().terrain_origins[..., :2].to(prev_xy.device)
         cols = nearest_tile_cols(prev_xy[done_ids], origins)
-        on_sparse = torch.tensor([n in SPARSE_NAMES for n in names], dtype=torch.bool, device=cols.device)[cols]
+        on_sparse = torch.tensor([is_sparse_name(n) for n in names], dtype=torch.bool, device=cols.device)[cols]
         self.off_elig.add_ended(self.pstate.map_off[done_ids].to(cols.device), on_sparse)
 
     def _flush_map_ratio_events(self) -> None:

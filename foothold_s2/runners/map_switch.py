@@ -14,12 +14,19 @@ from foothold_s2.terrains import columns
 # M-T6 끔 대상 지형(DESIGN-MAPRATIO v0.6 3.2): 새 에피소드가 놓인 칸의 지형 이름이 연속 7 종 또는 flat 이면 허용, 듬성 5 종은 불허. 레벨은 보지 않는다
 ELIGIBLE_NAMES = frozenset(columns.CONTINUOUS) | {"flat"}
 SPARSE_NAMES = frozenset(columns.SPARSE) - {"flat"}
+NON_A_FAMILIES = frozenset("BCDE")      # EX-42 합친 메시의 A 가 아닌 족 (terrains.generator_columns 의 이름 규칙)
+
+
+def is_sparse_name(name: str) -> bool:
+    """듬성(지도 끔 불허) 열인가. EX-42 합친 메시의 B · C · D · E 열 (이름 `B/kind` · `E`) 은 듬성으로 본다 (팀장 결정 11/11 06:53:
+    어려운 지형은 지도가 필요). A 열은 위 연속 · 듬성 분류 그대로."""
+    return name in SPARSE_NAMES or name.split("/", 1)[0] in NON_A_FAMILIES
 
 
 def check_column_names(names) -> list[str]:
     """생성기의 열 이름 목록을 확인한다. 모르는 이름이 있으면 기동 거절(허용 여부를 정할 수 없다)."""
     names = list(names)
-    unknown = sorted({n for n in names if n not in ELIGIBLE_NAMES and n not in SPARSE_NAMES})
+    unknown = sorted({n for n in names if n not in ELIGIBLE_NAMES and not is_sparse_name(n)})
 
     if unknown:
         raise ValueError(f"끔 대상 지형을 정할 수 없는 열 이름: {unknown} (허용 {sorted(ELIGIBLE_NAMES)}, 불허 {sorted(SPARSE_NAMES)})")
