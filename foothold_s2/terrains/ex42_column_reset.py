@@ -78,6 +78,8 @@ def build_column_table(column_family: list[str],
                        ) -> list[dict[str, Any]]:
     """One row per mesh column: {family, kind, ranges}. `kind_ranges` = {family: {kind: ranges}};
     default None reads each family module's RESET_RANGES."""
+    if not column_family:
+        raise ValueError("EX-42 reset table needs the mesh column_family list (no columns given)")
     rows: list[dict[str, Any]] = []
     for family in dict.fromkeys(column_family):
         count = column_family.count(family)
@@ -97,6 +99,8 @@ def table_tensors(table: list[dict[str, Any]], device: Any = "cpu"):
     """(lo, hi) tensors of shape (columns, 6) in AXES order; undeclared axes are 0 (as Isaac does)."""
     import torch
 
+    if not table:
+        raise ValueError("EX-42 reset table is empty")
     lo = torch.zeros(len(table), 6, device=device)
     hi = torch.zeros(len(table), 6, device=device)
     for c, row in enumerate(table):
@@ -154,6 +158,8 @@ def reset_root_state_by_column(env, env_ids, lo, hi, velocity_range, asset_cfg=N
 
 def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> None:
     """Swap env_cfg.events.reset_base for the per-column version (Kit python)."""
+    if not table:
+        raise ValueError("EX-42 reset table missing: refusing to fall back to the default range silently")
     from isaaclab.managers import EventTermCfg
 
     lo, hi = table_tensors(table)
