@@ -176,3 +176,9 @@ def test_installed_event_manager_argument_check_accepts_the_gated_term_and_rejec
                params={"inner": _inner_push, "push_off": torch.tensor([False, True]), "velocity_range": {}})
     with pytest.raises(ValueError, match="expects mandatory parameters"):
         check("old", old)
+
+
+def test_no_undefined_names_in_the_files_this_wiring_touches():
+    from foothold_s2.scripts.ex41_startup import assert_no_undefined_names
+    assert_no_undefined_names([ROOT / "foothold_s2/scripts/train_start.py", ROOT / "foothold_s2/scripts/ex42_training_entry.py",
+                               ROOT / "foothold_s2/terrains/ex42_exposure.py", ROOT / "foothold_s2/terrains/ex42_column_reset.py"])

@@ -138,8 +138,8 @@ def test_dry_run_lists_both_blockers_and_never_requests_training(tmp_path, paren
     request = entry.run_ex42_stage_e0_entry(dry_run=True, stage_zero_requested=False, resume_requested=False,
                                             e0_approved=True, terrain_manifest_path=None, **args)
     assert request["training_requested"] is False
-    assert request["training_blockers"] == ["terrain_mesh_swap_not_implemented", "terrain_manifest_missing_or_invalid"]
-    assert request["terrain_mesh_swap"]["state"] == "not_implemented"
+    assert request["training_blockers"] == ["terrain_manifest_missing_or_invalid"]
+    assert request["terrain_mesh_swap"]["state"] == "mounted_at_env_build"
 
 
 # ---- parent checkpoint contents (inspect_ex42_stage_e0_parent) ----
@@ -184,7 +184,7 @@ def test_the_good_fake_parent_passes_so_the_refusals_below_are_the_guards_talkin
     _checkpoint, receipt = inspect_env()
     assert receipt["state"] == "parent_verified_for_stage_e0" and receipt["parent_cumulative_update"] == 13000
     assert receipt["actor_input_dim"] == 98 and receipt["critic_input_dim"] == 666
-    assert receipt["terrain_mesh_swap"]["state"] == "not_implemented"
+    assert receipt["terrain_mesh_swap"]["state"] == "mounted_at_env_build"
 
 
 @pytest.mark.parametrize("name,mutate,match", [
