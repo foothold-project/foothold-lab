@@ -1300,7 +1300,8 @@ def build_ex42_training_chain(*, plan_path: str | Path,
         from foothold_s2.ex42_chain import _validate_p1_score_command
         _validate_p1_score_command(
             score_argv_factory(250), machine_profile=machine_profile,
-            iteration=250, checkpoint_path=Path(run_dir) / "model_250.pt")
+            iteration=250, checkpoint_path=Path(run_dir) / "model_250.pt",
+            expected_stage_id=current_stage_id)
     return EX42Runtime.training_chain(
         plan=plan,
         approvals_path=approvals_path,

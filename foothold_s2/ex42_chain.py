@@ -34,7 +34,8 @@ def _append_jsonl(path: Path, row: dict[str, Any]) -> None:
 
 
 def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, Any],
-                               iteration: int, checkpoint_path: Path) -> int:
+                               iteration: int, checkpoint_path: Path,
+                               expected_stage_id: str | None = None) -> int:
     """Bind Linux P1 to the selected Python, full E0 mesh bundle, and profile GPU."""
     devices = machine_profile.get("devices", {})
     training = devices.get("training", {})
@@ -78,6 +79,8 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
         raise ValueError("EX-42 Linux P1 E0 mesh pin or A23 cell differs")
     if not Path(option("--p1-plan")).is_file() or not Path(option("--p1-approvals")).is_file():
         raise ValueError("EX-42 Linux P1 plan or approvals missing")
+    if expected_stage_id is not None and option("--p1-stage-id") != expected_stage_id:
+        raise ValueError("EX-42 Linux P1 stage differs from the running stage")
     from foothold_s2.ex42_score import config
     cfg, _ = config()
     if (cfg["envs"] != 64 or cfg["steps"] != 300
@@ -366,7 +369,8 @@ class EX42TrainingChain:
         if self.machine_profile is not None:
             p1_gpu = _validate_p1_score_command(
                 score_argv, machine_profile=self.machine_profile,
-                iteration=iteration, checkpoint_path=checkpoint)
+                iteration=iteration, checkpoint_path=checkpoint,
+                expected_stage_id=self.consumer.current_stage_id)
             p1_gpu_uuid = self.machine_profile["devices"]["p1_evaluation"]["uuid"]
         transition_path = Path(application_log) if application_log else self.application_path
         transitions = read_transition_rows(transition_path) if transition_path.is_file() else ()

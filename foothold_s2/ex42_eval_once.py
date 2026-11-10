@@ -118,25 +118,25 @@ def manifest_checkpoint_sha(checkpoint):
     return sha, iteration
 
 
-def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_path, output):
+def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_path,
+                          stage_id, output):
     from foothold_s2.curriculum.ex42_prep import EX42Plan
-    from foothold_s2.ex42_score_watch import checkpoint_stage_context, read_transition_rows
+    from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
     from foothold_s2.ex42_gate_checks import validate_ex42_map_score
 
     if score.get("checkpoint_sha256") != digest(checkpoint):
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
     plan = EX42Plan.load(plan_path)
-    application = Path(checkpoint).parent / "ex42_application.jsonl"
-    context = checkpoint_stage_context(
-        plan, approvals_path, iteration,
-        transition_rows=read_transition_rows(application) if application.exists() else ())
+    if stage_id not in plan.runtime_stage_ids:
+        raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
+    read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
     roles = {"eval_gt": "judge", "eval_pred": "judge", "probe_prop_only": "record_only"}
     matrix = [{"map_mode": mode, "command": command, "role": roles[mode], **row}
               for mode, commands in score["map64"].items()
               for command, row in commands.items()]
     result = {"state": "complete", "checkpoint_sha256": score["checkpoint_sha256"],
               "checkpoint_iteration": iteration, "plan_sha256": plan.sha256,
-              "stage_id": context["stage_id"], "judgment": "HOLD",
+              "stage_id": stage_id, "judgment": "HOLD",
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
               "measurement": str(Path(output) / "ex42_score.json"),
               "measurement_sha256": digest(Path(output) / "ex42_score.json")}
@@ -145,12 +145,13 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
 
 
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
-        expected_mesh_sha256=None, p1_plan=None, p1_approvals=None, checkpoint_iteration=None):
+        expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
+        p1_stage_id=None, checkpoint_iteration=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
         raise ValueError("EX-42 checkpoint SHA differs")
-    if p1_plan is not None and (p1_approvals is None or checkpoint_iteration is None
+    if p1_plan is not None and (p1_approvals is None or p1_stage_id is None or checkpoint_iteration is None
                                 or mesh_dir is None or expected_mesh_sha256 is None):
         raise ValueError("EX-42 P1 requires plan, approvals, iteration and pinned mesh")
     if output.exists():
@@ -205,7 +206,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         if p1_plan is not None:
             p1 = p1_score_from_measure(
                 score, checkpoint=checkpoint, iteration=checkpoint_iteration,
-                plan_path=p1_plan, approvals_path=p1_approvals, output=output)
+                plan_path=p1_plan, approvals_path=p1_approvals,
+                stage_id=p1_stage_id, output=output)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
         row.update(state="done", score=str(output / "ex42_score.json"), judgement="HOLD")
@@ -228,13 +230,14 @@ def main(argv=None):
     parser.add_argument("--expected-mesh-sha256")
     parser.add_argument("--p1-plan", type=Path)
     parser.add_argument("--p1-approvals", type=Path)
+    parser.add_argument("--p1-stage-id")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
     if args.execute and args.score_existing:
         parser.error("select either --execute or --score-existing")
-    if (args.p1_plan is None) != (args.p1_approvals is None):
-        parser.error("P1 plan and approvals must be supplied together")
+    if len([x for x in (args.p1_plan, args.p1_approvals, args.p1_stage_id) if x is not None]) not in (0, 3):
+        parser.error("P1 plan, approvals and running stage ID must be supplied together")
     if args.p1_plan is not None and (not args.sha_from_manifest or not args.mesh_dir
                                       or not args.expected_mesh_sha256 or args.eval_seed != 42):
         parser.error("P1 requires manifest SHA, pinned E0 mesh and eval seed 42")
@@ -271,6 +274,7 @@ def main(argv=None):
                eval_seed=args.eval_seed, mesh_dir=args.mesh_dir,
                expected_mesh_sha256=args.expected_mesh_sha256,
                p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
+               p1_stage_id=args.p1_stage_id,
                checkpoint_iteration=iteration)
 
 

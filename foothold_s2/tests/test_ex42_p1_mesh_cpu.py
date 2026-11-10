@@ -29,12 +29,17 @@ def test_manifest_sha_and_p1_score_contract(tmp_path):
     plan = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
     approvals = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
     result = p1_score_from_measure(measured, checkpoint=checkpoint, iteration=250,
-                                   plan_path=plan, approvals_path=approvals, output=output)
+                                   plan_path=plan, approvals_path=approvals,
+                                   stage_id="E0", output=output)
     assert result["state"] == "complete" and result["judgment"] == "HOLD"
     assert result["checkpoint_iteration"] == 250 and result["checkpoint_sha256"] == sha
-    assert result["stage_id"] == "EX42_0_T0_prime"
+    assert result["stage_id"] == "E0"
     assert len(result["map_matrix"]) == 39
     validate_ex42_map_score(result, ["gt", "pred", "off"])
+    stage_zero = p1_score_from_measure(measured, checkpoint=checkpoint, iteration=250,
+                                       plan_path=plan, approvals_path=approvals,
+                                       stage_id="EX42_0_T0_prime", output=output)
+    assert stage_zero["stage_id"] == "EX42_0_T0_prime"
     (tmp_path / "manifest.json").write_text(json.dumps({"checkpoints": {checkpoint.name: "0" * 64}}))
     with pytest.raises(ValueError, match="published manifest SHA"):
         manifest_checkpoint_sha(checkpoint)
@@ -52,4 +57,5 @@ def test_p1_score_rejects_missing_mode(tmp_path):
         p1_score_from_measure(
             measured, checkpoint=checkpoint, iteration=250,
             plan_path=ROOT / "foothold_s2/curriculum/ex42-prep.yaml",
-            approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml", output=output)
+            approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
+            stage_id="E0", output=output)
