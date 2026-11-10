@@ -6,6 +6,7 @@ import json
 import os
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -158,10 +159,11 @@ def test_launch_command_is_the_chain_on_cuda0_with_the_linux_environment(tmp_pat
     assert argv[0] == "env" and "OMNI_KIT_ACCEPT_EULA=YES" in argv and "CUDA_DEVICE_ORDER=PCI_BUS_ID" in argv
     assert "CUDA_VISIBLE_DEVICES" not in printed
     i = argv.index("/opt/isaac311/bin/python")
-    assert argv[i + 1:i + 3] == ["-m", "foothold_s2.basic_gait_eval_chain_v3"]
+    assert argv[i + 1:i + 3] == ["-m", "foothold_s2.basic_gait_eval_once"]
+    assert argv[argv.index("--expected-iter") + 1] == "3001"
     assert argv[argv.index("--device") + 1] == "cuda:0"
     assert argv[argv.index("--checkpoint") + 1].endswith("EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt")
-    assert argv[argv.index("--out") + 1].endswith("/basic_gait_runs/eval_w15/ex38_linux")
+    assert "/basic_gait_runs/eval_w15/ex38_linux/m3001/attempt_" in argv[argv.index("--out") + 1]
     assert f"PYTHONPATH={ROOT}" in argv
 
 
@@ -201,7 +203,20 @@ def test_compare_calls_w15_compare_twice_with_the_right_pairs(tmp_path):
 def test_device_and_out_are_taken_from_the_environment(tmp_path):
     env = dict(os.environ, ISAAC311_PYTHON="/opt/isaac311/bin/python", L2_DEVICE="cuda:1", L2_OUT=str(tmp_path / "o1"))
     argv = shlex.split(subprocess.run(["bash", str(SCRIPT), "print"], env=env, capture_output=True, text=True, check=True).stdout)
-    assert argv[argv.index("--device") + 1] == "cuda:1" and argv[argv.index("--out") + 1] == str(tmp_path / "o1")
+    assert argv[argv.index("--device") + 1] == "cuda:1" and argv[argv.index("--out") + 1].startswith(str(tmp_path / "o1" / "m3001" / "attempt_"))
     env["L2_DEVICE"] = "cuda:2"
     bad = subprocess.run(["bash", str(SCRIPT), "print"], env=env, capture_output=True, text=True)
     assert bad.returncode == 2 and "L2_DEVICE" in bad.stderr
+
+
+def test_the_module_the_script_calls_exists_in_this_checkout():
+    import importlib.util
+    env = dict(os.environ, ISAAC311_PYTHON="/opt/isaac311/bin/python")
+    argv = shlex.split(subprocess.run(["bash", str(SCRIPT), "print"], env=env, capture_output=True, text=True, check=True).stdout)
+    module = argv[argv.index("-m") + 1]
+    sys.path.insert(0, str(ROOT))
+    try:
+        spec = importlib.util.find_spec(module)
+    finally:
+        sys.path.remove(str(ROOT))
+    assert spec is not None and Path(spec.origin).is_file() and str(ROOT) in spec.origin, module

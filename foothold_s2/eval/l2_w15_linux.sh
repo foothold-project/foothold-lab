@@ -16,13 +16,16 @@ case "$DEV" in cuda:0|cuda:1) ;; *) echo "L2_DEVICE must be cuda:0 or cuda:1 (go
 REF_ROOT="$RUNS/eval_w15"
 COMPARE="${W15_COMPARE:-$HOME/mai/wt/mai-os/ledger/tools/w15_compare.py}"
 : "${ISAAC311_PYTHON:?ISAAC311_PYTHON is not set (source the machine env file)}"
-CMD=(env OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONPATH="$ROOT" "$ISAAC311_PYTHON" -m foothold_s2.basic_gait_eval_chain_v3 --device "$DEV" --checkpoint "$CK" --out "$OUT")
+ATT="${L2_ATTEMPT:-$OUT/m3001/attempt_$(date +%s%N)}"
+CMD=(env OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONPATH="$ROOT" "$ISAAC311_PYTHON" -m foothold_s2.basic_gait_eval_once --device "$DEV" --checkpoint "$CK" --expected-iter 3001 --out "$ATT")
 case "${1:-print}" in
   print) printf '%q ' "${CMD[@]}"; echo ;;
   run)
     [ -f "$CK" ] || { echo "checkpoint missing: $CK" >&2; exit 2; }
     [ "$(sha256sum "$CK" | cut -d' ' -f1)" = "$CK_SHA" ] || { echo "checkpoint sha256 differs from 7ff575f3..." >&2; exit 2; }
-    [ ! -e "$OUT" ] || { echo "output root already exists (the chain needs an unused one): $OUT" >&2; exit 2; }
+    ! ls -d "$OUT"/m3001/attempt_* >/dev/null 2>&1 || { echo "output root already holds an attempt (use a new L2_OUT): $OUT" >&2; exit 2; }
+    [ ! -e "$ATT" ] || { echo "attempt dir exists: $ATT" >&2; exit 2; }
+    mkdir -p "$(dirname "$ATT")"
     cd "$ROOT"
     "${CMD[@]}" ;;
   compare)
