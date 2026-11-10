@@ -10,7 +10,7 @@ from foothold_s2.terrains import ame2_preset as p
 ENDPOINTS = {
     "stair_up": ("step_height_m", .05, .27),
     "stair_down": ("step_height_m", .05, .27),
-    "rough": ("noise_amplitude_m", 0, .16),
+    "rough": ("noise_amplitude_m", 0, .08),
     "boxes": ("box_height_m", .05, .30),
     "climb_up": ("ledge_height_m", .1, .53),
     "climb_down": ("ledge_height_m", .2, .6),
@@ -67,6 +67,28 @@ def test_obstacles_include_positive_and_negative_geometry():
     assert len(low.boxes) == 144
     assert any(box.z1 > 0 for box in high.boxes)
     assert any(box.z1 < 0 for box in high.boxes)
+
+
+def test_rough_actual_mesh_slope_and_uniform_noise_span():
+    assert np.count_nonzero(p.build_tile("rough", 0, 42).rough_height_m) == 0
+    for level in (5, 9):
+        tile = p.build_tile("rough", level, 42)
+        z = tile.rough_height_m
+        dx = np.diff(z, axis=0) / p.HORIZONTAL_SCALE
+        dy = np.diff(z, axis=1) / p.HORIZONTAL_SCALE
+        # Both triangle orientations of every 0.1 m mesh cell are measured.
+        max_gradient = max(np.hypot(dx[:, :-1], dy[:-1, :]).max(),
+                           np.hypot(dx[:, 1:], dy[1:, :]).max())
+        max_slope_deg = float(np.degrees(np.arctan(max_gradient)))
+        assert max_slope_deg <= tile.dimensions["slope_deg"] + 1e-9
+        if level == 9:
+            assert 18 <= max_slope_deg <= 20
+        x = np.linspace(0, p.SIZE, z.shape[0])
+        gradient_budget = .82 * np.tan(np.radians(tile.dimensions["slope_deg"]))
+        wave = gradient_budget * 3 / (2 * np.pi) * np.sin(2 * np.pi * x / 3)
+        noise = z - wave[:, None]
+        assert np.max(np.abs(noise)) <= tile.dimensions["noise_amplitude_m"] + 1e-12
+        assert np.ptp(noise) <= 2 * tile.dimensions["noise_amplitude_m"] + 1e-12
 
 
 def test_mesh_cpu_arrays_and_mutation_rejection():

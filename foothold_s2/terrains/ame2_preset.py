@@ -78,7 +78,8 @@ def dimensions(kind: str, level: int) -> dict[str, float]:
     table = {
         "stair_up": {"step_height_m": (.05, .27), "tread_m": (.30, .30)},
         "stair_down": {"step_height_m": (.05, .27), "tread_m": (.30, .30)},
-        "rough": {"noise_amplitude_m": (0, .16), "slope_deg": (0, 20)},
+        # SPEC's 0..0.16 m is the full U[-a,+a] span, so a_max = 0.08 m.
+        "rough": {"noise_amplitude_m": (0, .08), "slope_deg": (0, 20)},
         "boxes": {"box_height_m": (.05, .30)},
         "climb_up": {"ledge_height_m": (.10, .53)},
         "climb_down": {"ledge_height_m": (.20, .60)},
@@ -130,11 +131,17 @@ def build_tile(kind: str, level: int, seed: int) -> Tile:
             boxes.append(_box(x0, x1, 1., 11., h, z0=min(-.2, h - .2)))
     elif kind == "rough":
         n = int(SIZE / HORIZONTAL_SCALE) + 1
-        noise = rng.uniform(-d["noise_amplitude_m"], d["noise_amplitude_m"], (n, n))
-        x = np.linspace(0, SIZE, n)
-        rough = noise + (1.5 * math.tan(math.radians(d["slope_deg"]))
-                         * np.sin(2 * math.pi * x[:, None] / 3.))
-        rough = np.broadcast_to(rough, (n, n)).copy()
+        axis = np.linspace(0, SIZE, n)
+        coarse_axis = np.linspace(0, SIZE, 5)
+        anchors = rng.uniform(-d["noise_amplitude_m"], d["noise_amplitude_m"], (5, 5))
+        x_interp = np.stack([np.interp(axis, coarse_axis, anchors[:, j]) for j in range(5)], axis=1)
+        noise = np.stack([np.interp(axis, coarse_axis, row) for row in x_interp], axis=0)
+        # The 3 m undulation uses 82% of the tan(slope) derivative budget.
+        # The remaining 18% bounds the 3 m-spaced U[-0.08,+0.08] anchors.
+        period = 3.
+        slope = .82 * math.tan(math.radians(d["slope_deg"]))
+        wave = slope * period / (2 * math.pi) * np.sin(2 * math.pi * axis / period)
+        rough = noise + wave[:, None]
     elif kind == "boxes":
         boxes.append(_box(0, SIZE, 0, SIZE, 0))
         for _ in range(20):
