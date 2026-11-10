@@ -16,6 +16,8 @@ from foothold_s2.runners.start_runner import StartRunner
 
 
 def test_linux_chain_builder_binds_queue_path_to_machine_profile(tmp_path, monkeypatch):
+    from foothold_s2.tests.test_ex42_calibrate_cpu import mesh_fixture
+
     plan = SimpleNamespace(document={"status": "preparation_only"})
     monkeypatch.setattr(entry.EX42Plan, "load", lambda _path: plan)
     monkeypatch.setattr(entry.EX42Runtime, "training_chain", lambda **kwargs: kwargs)
@@ -32,16 +34,23 @@ def test_linux_chain_builder_binds_queue_path_to_machine_profile(tmp_path, monke
             "screen": {"cuda_index": 1, "device": "cuda:1", "uuid": "GPU-test1"},
         },
     }
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    mesh = mesh_fixture(mesh_dir)
+    plan_path, approvals_path = tmp_path / "plan.yaml", tmp_path / "approvals.yaml"
+    plan_path.write_text("plan")
+    approvals_path.write_text("approvals")
     argv_template = [
-        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.eval.eval_map_modes",
-        "--task", "FootholdS2-Go2-S2-SB-v0", "--checkpoint",
-        str(tmp_path / "run" / "model_{iteration}.pt"), "--out",
-        str(tmp_path / "scores" / "score_{iteration}"), "--device", "cuda:0",
-        "--envs", "64", "--steps", "300", "--modes",
-        "eval_gt,eval_pred,probe_prop_only", "--headless",
+        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.ex42_eval_once",
+        "--checkpoint", str(tmp_path / "run" / "model_{iteration}.pt"), "--sha-from-manifest",
+        "--out", str(tmp_path / "scores" / "score_{iteration}"), "--device", "cuda:0",
+        "--eval-seed", "42", "--mesh-dir", str(mesh_dir),
+        "--expected-mesh-sha256", mesh["mesh_sha256"],
+        "--p1-plan", str(plan_path), "--p1-approvals", str(approvals_path),
+        "--p1-stage-id", "EX42_0_T0_prime", "--execute",
     ]
     kwargs = dict(
-        plan_path=tmp_path / "plan.yaml", approvals_path=tmp_path / "approvals.yaml",
+        plan_path=plan_path, approvals_path=approvals_path,
         parent_manifest_path=tmp_path / "parent" / "manifest.json", run_dir=tmp_path / "run",
         repo_root=tmp_path, queue_path=queue_path, score_argv_json=json.dumps(argv_template),
         machine_profile=profile,
