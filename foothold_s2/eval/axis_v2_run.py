@@ -175,6 +175,8 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
               "foot_order": cells.FOOT_NAMES, "foot_contact_threshold_n": cells.CONTACT_N,
               "cases": cells.case_specs(), "modes": {}, "terrain_tiles": None,
               "measurement_note": "alive samples exclude post-reset state; goal offsets use reset body yaw; complete stop windows only; no pass threshold"}
+    if getattr(args, "ex42_mesh", None):
+        result["ex42_mesh"] = args.ex42_mesh
     if ex42_maintenance:
         result["ex42_maintenance"] = {
             "schema": "foothold-ex42-foot-xy/1", "foot_order": list(cells.FOOT_NAMES),

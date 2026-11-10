@@ -45,6 +45,7 @@ def fixture(tmp_path):
             "format": "foothold-ex40-stand/1", "checkpoint_sha256": sha, "mode": mode,
             "envs": 64, "seconds": cfg["stand_seconds"],
             "skip_seconds": cfg["stand_skip_seconds"], "contact_force_n": cfg["stand_contact_n"],
+            "conditions": {"seed": 42},
             "feet": feet, "raw_sha256": digest(folder / "stand_raw.npz"),
             "per_env": [{"alive_at_end": True, "feet": {
                 foot: {"contact_fraction_gt1n": .75} for foot in feet}} for _ in range(64)]})
@@ -94,6 +95,27 @@ def test_measure_complete_is_hold_without_approved_baseline(tmp_path):
     assert row["axis_v2"]["eval_gt"]["fwd0.5"]["foot_drag_proxy_m_by_foot_median"] == pytest.approx([.08]*4)
     assert row["maintenance_items"]["W57_spin_survival"]["by_mode_and_direction"]["eval_gt"] == {
         "spin+1.2": 64, "spin-1.2": 64}
+
+
+def test_measure_changed_seed_requires_all_three_child_receipts(tmp_path):
+    model, out = fixture(tmp_path)
+    map_path = out / "map64/map_modes.json"
+    axis_path = out / "axis_v2/axis_v2.json"
+    for path in (map_path, axis_path):
+        row = json.loads(path.read_text())
+        row["eval_seed"] = 43
+        write_json(path, row)
+    for mode in MODES:
+        path = out / f"stand_{mode}/stand.json"
+        row = json.loads(path.read_text())
+        row["conditions"]["seed"] = 43
+        write_json(path, row)
+    assert measure(model, out, expected_seed=43)["conditions"]["eval_seed"] == 43
+    row = json.loads((out / "stand_eval_gt/stand.json").read_text())
+    row["conditions"]["seed"] = 42
+    write_json(out / "stand_eval_gt/stand.json", row)
+    with pytest.raises(ValueError, match="stand eval_gt conditions"):
+        measure(model, out, expected_seed=43)
 
 
 def test_measure_rejects_missing_foot_speed_and_sha_mutation(tmp_path):
