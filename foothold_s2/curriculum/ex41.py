@@ -817,7 +817,7 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     if not world_frame or not hasattr(term,'cmd_sum_w'): raise ValueError('EX41 requires world-frame command displacement')
     if term.is_flag_env[ids].any(): raise ValueError('EX41 has no flag slots; new terrain contract required')
     summed=term.cmd_sum_w[ids]*env.step_dt/resample_s
-    moves=rules.judge_free(term.max_dist[ids],summed,size_x=terrain.cfg.terrain_generator.size[0],resample_s=resample_s)
+    moves=rules.judge_free(term.max_dist[ids],summed,size_x=rules.promotion_size_x(terrain,ids),resample_s=resample_s)
     before=terrain.terrain_levels[ids].clone()
     moves=capped_moves(before,moves,settings['level_cap'])
     terrain.update_env_origins(ids,moves>0,moves<0)

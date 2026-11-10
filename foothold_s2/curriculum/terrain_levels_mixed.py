@@ -24,7 +24,7 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
 
     # 점 명령 합을 «재추출 한 번당 한 번 뽑힌 값의 합» 단위로 (rules.judge_free 의 0.5 x 합 x 4 s x 0.9 식에 맞춤)
     cmd_sum = term.cmd_sum_xy[env_ids] * env.step_dt / resample_s
-    size_x = terrain.cfg.terrain_generator.size[0]
+    size_x = rules.promotion_size_x(terrain, env_ids)
     num_goals = torch.full((len(env_ids),), term.cfg.flag_count, device=env.device)
 
     move = rules.judge(term.is_flag_env[env_ids], term.max_dist[env_ids], cmd_sum, term.goals[env_ids],
