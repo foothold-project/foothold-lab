@@ -1,0 +1,1744 @@
+{
+  "schema": "hipan-D-spawn-audit/1",
+  "cpu_only": true,
+  "geometry_changed": false,
+  "mount_mesh_identity": "eafbada6c431fdc37b2a0e20094a404f0caad96d58cb2bcaca761629acf0b01d",
+  "mount_state": "failed_criteria",
+  "mesh_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_ABCDE_v2/terrain_mesh.npz",
+  "mesh_file_sha256": "f1697a4bc0ad2e8f352d003a9bd41f9077bea808a605f8e1f911062b874d09c2",
+  "mount_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/mount_check_ABCDE_v2_cuda0.json",
+  "mount_file_sha256": "15a39b5f2c3b794006317cb712426e1faff0fd57165228820f84076a114f2064",
+  "generator_sha256": "37e6550d53931df9de01b32b1d12e08c136af3b60601bb3c68eea211ebe55509",
+  "half_footprint_m": [
+    0.35,
+    0.25
+  ],
+  "yaw_bound_rad": [
+    -3.14,
+    3.14
+  ],
+  "xy_jitter_bound_m": [
+    -0.5,
+    0.5
+  ],
+  "all_yaw_radius_m": 0.4301162633521313,
+  "swept_half_extent_m": [
+    0.9301162633521314,
+    0.9301162633521314
+  ],
+  "stored_tiles": 30,
+  "ray_count": 7260,
+  "unsupported": [],
+  "rows": [
+    {
+      "row": 0,
+      "physical_level": 0,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        -39.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 0,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        -39.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 0,
+      "physical_level": 0,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        -39.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 1,
+      "physical_level": 1,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        -31.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 1,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        -31.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 1,
+      "physical_level": 1,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        -31.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 2,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        -23.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 2,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        -23.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 2,
+      "physical_level": 2,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        -23.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 3,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        -15.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 3,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        -15.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 3,
+      "physical_level": 3,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        -15.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 4,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        -7.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 4,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        -7.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 4,
+      "physical_level": 4,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        -7.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 5,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        1.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 5,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        1.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 5,
+      "physical_level": 5,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        1.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 6,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        9.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 6,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        9.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 6,
+      "physical_level": 6,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        9.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 7,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        17.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 7,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        17.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 7,
+      "physical_level": 7,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        17.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 8,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        25.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 8,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        25.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 8,
+      "physical_level": 8,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        25.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 9,
+      "physical_level": 2,
+      "column": 69,
+      "kind": "high_ledge",
+      "world_origin": [
+        33.0,
+        491.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.65
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.069883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 9,
+      "physical_level": 0,
+      "column": 70,
+      "kind": "wall",
+      "world_origin": [
+        33.0,
+        499.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.6
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 2.019883736647869
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    },
+    {
+      "row": 9,
+      "physical_level": 9,
+      "column": 71,
+      "kind": "crawl",
+      "world_origin": [
+        33.0,
+        507.0,
+        0.0
+      ],
+      "nominal": {
+        "floor_margin_m": 0.65,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.6499999999999999
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.65,
+          3.75
+        ],
+        "xy_max_m": [
+          1.35,
+          4.25
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      },
+      "reset_swept": {
+        "floor_margin_m": 0.06988373664786862,
+        "obstacles": [
+          {
+            "overlap_xy": false,
+            "entry_x_margin_m": 0.06988373664786862
+          }
+        ],
+        "support_available": true,
+        "xy_min_m": [
+          0.06988373664786862,
+          3.069883736647869
+        ],
+        "xy_max_m": [
+          1.9301162633521314,
+          4.930116263352131
+        ],
+        "ray_count": 121,
+        "no_hit": 0,
+        "support_min_m": 0.0,
+        "support_max_m": 0.0,
+        "actual_mesh_support_zero": true
+      }
+    }
+  ]
+}
