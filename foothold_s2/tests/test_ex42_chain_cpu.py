@@ -621,12 +621,16 @@ def _linux_p1_profile():
     }
 
 
-def _linux_p1_argv(checkpoint: Path, out: Path):
+def _linux_p1_argv(checkpoint: Path, out: Path, mesh_dir: Path, mesh_sha: str):
     return [
-        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.eval.eval_map_modes",
-        "--task", "FootholdS2-Go2-S2-SB-v0", "--checkpoint", str(checkpoint),
-        "--out", str(out), "--device", "cuda:0", "--envs", "64", "--steps", "300",
-        "--modes", "eval_gt,eval_pred,probe_prop_only", "--headless",
+        "/opt/conda/envs/isaac311/bin/python", "-m", "foothold_s2.ex42_eval_once",
+        "--checkpoint", str(checkpoint), "--sha-from-manifest",
+        "--out", str(out), "--device", "cuda:0", "--eval-seed", "42",
+        "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha,
+        "--p1-plan", str(ROOT / "foothold_s2/curriculum/ex42-prep.yaml"),
+        "--p1-approvals", str(ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"),
+        "--p1-stage-id", "EX42_0_T0_prime",
+        "--execute",
     ]
 
 
@@ -644,9 +648,14 @@ def _manifested_checkpoint(directory: Path, iteration: int):
 
 
 def test_linux_p1_queues_profile_bound_isaac311_command_on_gpu0(tmp_path):
+    from foothold_s2.tests.test_ex42_calibrate_cpu import mesh_fixture
+
     chain, _ = make_chain(tmp_path, machine_profile=_linux_p1_profile())
     checkpoint = _manifested_checkpoint(tmp_path / "linux-checkpoints", 250)
-    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250")
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    manifest = mesh_fixture(mesh_dir)
+    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250", mesh_dir, manifest["mesh_sha256"])
     queued = chain.register_checkpoint_p1(
         iteration=250, checkpoint_dir=checkpoint.parent, score_argv=argv)
     queue = json.loads((tmp_path / "gpu/queue.json").read_text(encoding="utf-8"))
@@ -657,13 +666,43 @@ def test_linux_p1_queues_profile_bound_isaac311_command_on_gpu0(tmp_path):
 
 
 def test_linux_p1_rejects_unprofiled_interpreter_and_eval_command(tmp_path):
+    from foothold_s2.tests.test_ex42_calibrate_cpu import mesh_fixture
+
     chain, _ = make_chain(tmp_path, machine_profile=_linux_p1_profile())
     checkpoint = _manifested_checkpoint(tmp_path / "linux-checkpoints", 250)
-    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250")
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    manifest = mesh_fixture(mesh_dir)
+    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250", mesh_dir, manifest["mesh_sha256"])
     argv[0] = "python"
     with pytest.raises(ValueError, match="isaac311 Python"):
         chain.register_checkpoint_p1(
             iteration=250, checkpoint_dir=checkpoint.parent, score_argv=argv)
+    argv[0] = _linux_p1_profile()["paths"]["conda_python"]
+    argv[2] = "foothold_s2.eval.eval_map_modes"
+    with pytest.raises(ValueError, match="mesh evaluation bundle"):
+        chain.register_checkpoint_p1(
+            iteration=250, checkpoint_dir=checkpoint.parent, score_argv=argv)
+
+
+def test_linux_p1_running_e0_stage_is_not_mislabelled_stage_zero(tmp_path):
+    from foothold_s2.ex42_chain import _validate_p1_score_command
+    from foothold_s2.tests.test_ex42_calibrate_cpu import mesh_fixture
+
+    checkpoint = _manifested_checkpoint(tmp_path / "linux-checkpoints", 250)
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    manifest = mesh_fixture(mesh_dir)
+    argv = _linux_p1_argv(checkpoint, tmp_path / "score_250", mesh_dir, manifest["mesh_sha256"])
+    argv[argv.index("--p1-stage-id") + 1] = "E0"
+    assert _validate_p1_score_command(argv, machine_profile=_linux_p1_profile(),
+                                      iteration=250, checkpoint_path=checkpoint,
+                                      expected_stage_id="E0") == 0
+    argv[argv.index("--p1-stage-id") + 1] = "EX42_0_T0_prime"
+    with pytest.raises(ValueError, match="running stage"):
+        _validate_p1_score_command(argv, machine_profile=_linux_p1_profile(),
+                                   iteration=250, checkpoint_path=checkpoint,
+                                   expected_stage_id="E0")
 
 
 def test_windows_profile_keeps_existing_p1_gpu1_assignment(tmp_path):

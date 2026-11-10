@@ -34,8 +34,9 @@ def _append_jsonl(path: Path, row: dict[str, Any]) -> None:
 
 
 def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, Any],
-                               iteration: int, checkpoint_path: Path) -> int:
-    """Bind Linux P1 to the selected Python, real map evaluator, and profile GPU."""
+                               iteration: int, checkpoint_path: Path,
+                               expected_stage_id: str | None = None) -> int:
+    """Bind Linux P1 to the selected Python, full E0 mesh bundle, and profile GPU."""
     devices = machine_profile.get("devices", {})
     training = devices.get("training", {})
     p1 = devices.get("p1_evaluation", {})
@@ -50,8 +51,8 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
     expected_python = paths.get("conda_python")
     if argv[0] != expected_python:
         raise ValueError("EX-42 Linux P1 must use machine-profile isaac311 Python")
-    if argv[1:3] != ["-m", "foothold_s2.eval.eval_map_modes"]:
-        raise ValueError("EX-42 Linux P1 must invoke the real map-mode evaluator module")
+    if argv[1:3] != ["-m", "foothold_s2.ex42_eval_once"]:
+        raise ValueError("EX-42 Linux P1 must invoke the pinned E0 mesh evaluation bundle")
 
     def option(name: str) -> str:
         if argv.count(name) != 1:
@@ -61,8 +62,6 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
             raise ValueError(f"EX-42 Linux P1 command is missing the value for {name}")
         return argv[offset + 1]
 
-    if option("--task") != "FootholdS2-Go2-S2-SB-v0":
-        raise ValueError("EX-42 Linux P1 task differs from the approved stage-zero task")
     if Path(option("--checkpoint")).resolve() != checkpoint_path.resolve():
         raise ValueError("EX-42 Linux P1 command does not score this manifest-published checkpoint")
     output = option("--out")
@@ -70,12 +69,23 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
         raise ValueError("EX-42 Linux P1 output must be an iteration-specific absolute path")
     if option("--device") != p1["device"]:
         raise ValueError("EX-42 Linux P1 command device differs from the machine profile")
-    if option("--envs") != "64" or option("--steps") != "300":
-        raise ValueError("EX-42 Linux P1 must retain the 64-environment, 300-step map evaluation")
-    if option("--modes") != "eval_gt,eval_pred,probe_prop_only":
-        raise ValueError("EX-42 Linux P1 must score all three map modes")
-    if "--headless" not in argv:
-        raise ValueError("EX-42 Linux P1 must be headless")
+    if (option("--eval-seed") != "42" or "--sha-from-manifest" not in argv
+            or "--execute" not in argv or "--score-existing" in argv):
+        raise ValueError("EX-42 Linux P1 requires seed 42, manifest checkpoint SHA and execution")
+    from foothold_s2.eval.ex42_mesh_eval import preflight
+    mesh = preflight(option("--mesh-dir"))
+    if (mesh["mesh_sha256"] != option("--expected-mesh-sha256")
+            or mesh["eval_cols"] != 23):
+        raise ValueError("EX-42 Linux P1 E0 mesh pin or A23 cell differs")
+    if not Path(option("--p1-plan")).is_file() or not Path(option("--p1-approvals")).is_file():
+        raise ValueError("EX-42 Linux P1 plan or approvals missing")
+    if expected_stage_id is not None and option("--p1-stage-id") != expected_stage_id:
+        raise ValueError("EX-42 Linux P1 stage differs from the running stage")
+    from foothold_s2.ex42_score import config
+    cfg, _ = config()
+    if (cfg["envs"] != 64 or cfg["steps"] != 300
+            or set(cfg["modes"]) != {"eval_gt", "eval_pred", "probe_prop_only"}):
+        raise ValueError("EX-42 Linux P1 score config differs from the fixed 64x300 map modes")
     return index
 
 
@@ -359,12 +369,14 @@ class EX42TrainingChain:
         if self.machine_profile is not None:
             p1_gpu = _validate_p1_score_command(
                 score_argv, machine_profile=self.machine_profile,
-                iteration=iteration, checkpoint_path=checkpoint)
+                iteration=iteration, checkpoint_path=checkpoint,
+                expected_stage_id=self.consumer.current_stage_id)
             p1_gpu_uuid = self.machine_profile["devices"]["p1_evaluation"]["uuid"]
         transition_path = Path(application_log) if application_log else self.application_path
         transitions = read_transition_rows(transition_path) if transition_path.is_file() else ()
         context = checkpoint_stage_context(
-            self.plan, self.approvals_path, iteration, transition_rows=transitions)
+            self.plan, self.approvals_path, iteration, transition_rows=transitions,
+            current_stage_id=self.consumer.current_stage_id)
         self.queue_path.parent.mkdir(parents=True, exist_ok=True)
         spec = importlib.util.spec_from_file_location("ex42_chain_dispatch", self.dispatch_path)
         if spec is None or spec.loader is None:

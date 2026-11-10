@@ -29,10 +29,14 @@ def read_transition_rows(path: str | Path | None) -> tuple[dict[str, Any], ...]:
 
 def checkpoint_stage_context(plan: EX42Plan, approvals_path: str | Path,
                              local_iteration: int, *,
-                             transition_rows: Iterable[dict[str, Any]] = ()) -> dict[str, Any]:
+                             transition_rows: Iterable[dict[str, Any]] = (),
+                             current_stage_id: str | None = None) -> dict[str, Any]:
     """Resolve score attribution from the same plan and approved DR rows as transition runtime."""
     scales, decision_id = read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
-    stage_id = plan.stage_id_at(local_iteration, transitions=tuple(transition_rows))
+    stage_id = (plan.stage_id_at(local_iteration, transitions=tuple(transition_rows))
+                if current_stage_id is None else current_stage_id)
+    if stage_id not in plan.runtime_stage_ids:
+        raise ValueError("EX-42 running score stage is not in the pinned plan")
     stage = next(row for row in plan.runtime_stages if row["id"] == stage_id)
     return {
         "state": "ready",

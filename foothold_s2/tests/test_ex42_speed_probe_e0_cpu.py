@@ -192,11 +192,19 @@ def _linux_profile(work, monkeypatch):
 
 def test_two_rank_probe_on_the_linux_profile_builds_one_chain_and_rank1_does_not_die(tmp_path, monkeypatch):
     import json
+    from foothold_s2.tests.test_ex42_calibrate_cpu import mesh_fixture
+
     profile = _linux_profile(tmp_path, monkeypatch)
     run_dir = tmp_path / "s2_lab" / "ex42_probe_m2"
-    argv = [profile["paths"]["conda_python"], "-m", "foothold_s2.eval.eval_map_modes", "--task", entry.STAGE_ZERO_TASK_ID,
-            "--checkpoint", str(run_dir / "model_{iteration}.pt"), "--out", str(tmp_path / "scores" / "p1_{iteration}.json"),
-            "--device", "cuda:1", "--envs", "64", "--steps", "300", "--modes", "eval_gt,eval_pred,probe_prop_only", "--headless"]
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    mesh = mesh_fixture(mesh_dir)
+    argv = [profile["paths"]["conda_python"], "-m", "foothold_s2.ex42_eval_once",
+            "--checkpoint", str(run_dir / "model_{iteration}.pt"), "--sha-from-manifest",
+            "--out", str(tmp_path / "scores" / "p1_{iteration}"), "--device", "cuda:1",
+            "--eval-seed", "42", "--mesh-dir", str(mesh_dir),
+            "--expected-mesh-sha256", mesh["mesh_sha256"], "--p1-plan", str(TABLE),
+            "--p1-approvals", str(APPROVALS), "--p1-stage-id", "EX42_0_T0_prime", "--execute"]
 
     def build(rank):
         return entry.build_ex42_training_chain(
