@@ -117,7 +117,7 @@ def test_assemble_rejects_empty_family_receipt_and_wrong_device():     # K6
     with pytest.raises(ValueError):
         assemble_manifest(_plan(), [_receipt([])])
     with pytest.raises(ValueError):
-        assemble_manifest(_plan(), [_receipt([_row()], device="cuda:0")])
+        assemble_manifest(_plan(), [_receipt([_row()], device="cuda:2")])
 
 
 def test_full_inventory_without_aggregates_is_still_partial():        # M3
@@ -220,3 +220,19 @@ def test_family_c_wiring_passes_seed(monkeypatch):
     fake.measurement_generator = lambda kind, seed: seen.update(kind=kind, seed=seed) or ("g", "s")
     monkeypatch.setitem(sys.modules, "foothold_s2.terrains.jeplo_preset", fake)
     assert km._generator_for("C", "gap", 7) == ("g", "s") and seen == {"kind": "gap", "seed": 7}
+
+
+def test_receipt_device_is_cuda0_or_cuda1_and_recorded_not_assumed():
+    from foothold_s2.curriculum.ex42_manifest import MEASURE_DEVICES, build_family_receipt
+    assert MEASURE_DEVICES == ("cuda:0", "cuda:1")
+    for device in MEASURE_DEVICES:
+        row = _row()
+        row["measurement_provenance"]["device"] = device
+        assert build_family_receipt("E", [row], receipt_id="r", source_head=HEAD, seed=42,
+                                    device=device)["device"] == device
+    with pytest.raises(ValueError):
+        build_family_receipt("E", [_row()], receipt_id="r", source_head=HEAD, seed=42, device="cuda:2")
+    row = _row()
+    row["measurement_provenance"]["device"] = "cuda:0"
+    with pytest.raises(ValueError):       # provenance must match the receipt device
+        build_family_receipt("E", [row], receipt_id="r", source_head=HEAD, seed=42, device="cuda:1")

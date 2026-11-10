@@ -2,8 +2,7 @@
 
 Scope kept narrow on purpose:
   * Only families whose generator code exists in this repository are buildable:
-    continuous (rough_go2_cfg), E (terrains/ex42.py), A (START sparse tiles, by the
-    names in terrains/columns.py), C (terrains/jeplo_preset.py). Families B (AME-2) and D
+    continuous (rough_go2_cfg), E (terrains/ex42.py), A (columns.FULL = continuous 7 + START sparse 6), C (terrains/jeplo_preset.py). Families B (AME-2) and D
     have no generator code here; this tool never creates one and reports them as missing.
   * Dimensions, paper references and physical flags are never filled in by this tool.
     They come from a declarations JSON written by whoever owns the kind. A kind with a
@@ -15,7 +14,7 @@ Scope kept narrow on purpose:
 Modes:
   plan      CPU only. Coverage of the 39-kind inventory and declaration gaps. Exit 0.
   template  CPU only. Write a declarations skeleton with null fields for buildable kinds.
-  measure   Kit (device cuda:1, via the GPU queue; lead starts it). Writes one family
+  measure   Kit (device cuda:0 or cuda:1, the real device is recorded; lead starts it). Writes one family
             receipt per family, ready for scripts/ex42_manifest_build.py.
 """
 from __future__ import annotations
@@ -47,7 +46,7 @@ def buildable_kinds() -> dict[str, list[str]]:
     return {
         "continuous": list(columns.CONTINUOUS),
         "E": [spec.kind for spec in PAPER_EXT_SPECS],
-        "A": list(columns.SPARSE),
+        "A": list(columns.FULL),
         "C": list(jeplo_preset.KINDS),
     }
 
@@ -117,7 +116,8 @@ def _generator_for(family: str, kind: str, seed: int = DEFAULT_SEED):
         from foothold_s2.terrains import columns
         from foothold_s2.terrains.sparse_terrains import sparse_subterrains
 
-        subs = sparse_subterrains(dict(columns.SPARSE))
+        # A = columns.FULL: the continuous 7 plus the START sparse 6 (50 columns)
+        subs = {**continuous_subterrains(), **sparse_subterrains(dict(columns.SPARSE))}
     else:
         raise ValueError(f"no generator code for terrain family {family!r} in this repository")
     if kind not in subs:
@@ -155,7 +155,7 @@ def measure_family(family: str, declarations: dict[str, Any], *, seed: int,
             evaluation_axis_directions=declaration["evaluation_axis_directions"],
             paper_reference=declaration["paper_reference"],
             physical_flag=declaration["physical_flag"],
-            source_head=head, seed=seed)
+            source_head=head, seed=seed, device=device)
         rows.append(row)
     if not rows:
         raise ValueError(f"no fully declared buildable kind for family {family}")
@@ -207,8 +207,10 @@ def main(argv: list[str] | None = None) -> int:
                          indent=2, sort_keys=True))
         return 0
     # measure: Kit
-    if args.device != "cuda:1":
-        raise SystemExit("EX-42 terrain measurement is restricted to --device cuda:1")
+    from foothold_s2.curriculum.ex42_manifest import MEASURE_DEVICES
+
+    if args.device not in MEASURE_DEVICES:
+        raise SystemExit(f"EX-42 terrain measurement device must be one of {MEASURE_DEVICES}")
     if not args.family or args.out is None or args.declarations is None:
         raise SystemExit("measure needs --family, --out and --declarations")
     from isaaclab.app import AppLauncher
