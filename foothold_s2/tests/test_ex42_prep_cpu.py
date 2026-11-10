@@ -77,12 +77,14 @@ def test_w65_stage_zero_scope_rejects_stale_pin_and_any_later_stage(tmp_path):
         validate_stage_zero_authorization(plan_with_mutation_pin, altered)
 
 
-def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed():
+def test_continuous_factory_dispatches_ex42_and_training_runtime_fails_closed(monkeypatch):
     plan = load_plan(TABLE)
     assert plan.is_ex42
     from foothold_s2.curriculum.continuous import make_runtime
+    monkeypatch.setenv("WORLD_SIZE", "2")
+    monkeypatch.setenv("RANK", "0")
     with pytest.raises(ValueError, match="preparation-only"):
-        make_runtime(plan, 6144, "cuda:0", REPO / "outputs")
+        make_runtime(plan, 3072, "cuda:0", REPO / "outputs")
 
 
 def test_terrain_manifest_measured_contract_and_larger_evaluation_requirement():

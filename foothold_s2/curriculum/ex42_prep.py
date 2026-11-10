@@ -385,6 +385,9 @@ class EX42Plan:
             selected = next(row for row in self.document["stages"] if row["id"] == "E0")["parent"]
         else:
             raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
+        if parent_pin is not None and any(selected.get(key) != value
+                                          for key, value in parent_pin.items()):
+            raise ValueError(f"EX-42 {stage_id} parent override differs from the pinned table")
         pin = selected if parent_pin is None else parent_pin
         path = Path(manifest_path).resolve(strict=True)
         try:

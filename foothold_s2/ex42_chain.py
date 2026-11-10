@@ -100,7 +100,9 @@ class EX42TrainingChain:
                  current_stage_id: str | None = None):
         self.plan = plan
         self.approvals_path = Path(approvals_path).resolve(strict=True)
-        self.parent = plan.verify_parent_manifest(parent_manifest_path, parent_pin=parent_pin)
+        self.parent = plan.verify_parent_manifest(
+            parent_manifest_path, stage_id=current_stage_id or "EX42_0_T0_prime",
+            parent_pin=parent_pin)
         self.run_dir = Path(run_dir)
         self.repo_root = Path(repo_root).resolve(strict=True)
         self.queue_path = Path(queue_path)

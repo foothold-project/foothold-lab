@@ -7,13 +7,11 @@ from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
-import torch
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan, validate_command_shares
-from foothold_s2.curriculum.ex40_dr_runtime import _ex42_push_rows
+from foothold_s2.terrains.ex42_column_reset import build_column_table, push_gate_mask
 from foothold_s2.experiment_registry import load_experiment
 from foothold_s2.scripts.ex42_ops import verify_train_entry_contract
 
@@ -88,19 +86,13 @@ def test_push_mask_and_measurement_declarations_are_exact():
     assert "stairs_m" not in doc["evaluation"]["paper_cells"]["physical_flag_record_only"]
 
 
-def test_ex42_push_excludes_narrow_support_before_physics_and_ex40_is_unchanged():
+def test_ex42_plan_push_declarations_feed_the_single_column_gate():
     tasks = EX42Plan.load(PLAN).document["stages"][0]["terrain"]["kind_task"]
-    gen = SimpleNamespace(num_cols=2, sub_terrains={
-        "flat": SimpleNamespace(proportion=0.5),
-        "gaps": SimpleNamespace(proportion=0.5)})
-    terrain = SimpleNamespace(cfg=SimpleNamespace(terrain_generator=gen),
-                              terrain_types=torch.tensor([0, 1, 0, 1]))
-    env = SimpleNamespace(scene=SimpleNamespace(terrain=terrain),
-                          _ex42_stage_id="E0", _ex42_push_kind_task=tasks)
-    rows = torch.arange(4)
-    assert _ex42_push_rows(env, rows).tolist() == [0, 2]
-    assert env._ex40_dr_samples["push_kind_excluded_count"]["sum"] == 2
-    assert _ex42_push_rows(SimpleNamespace(scene=env.scene, _ex42_stage_id=None), rows).tolist() == rows.tolist()
-    del env._ex42_push_kind_task
-    with pytest.raises(ValueError, match="registered kind table"):
-        _ex42_push_rows(env, rows)
+    families = ["A"] * 50 + ["B"] * 12 + ["C"] * 7 + ["D"] * 3 + ["E"] * 4
+    table = build_column_table(families)
+    off = {family: {name for name, entry in kinds.items() if entry["push"] is False}
+           for family, kinds in tasks.items() if family in set(families)}
+    mask = push_gate_mask(table, off)
+    assert mask[table.index(next(row for row in table if row["family"] == "A" and row["kind"] == "flat"))] is False
+    assert mask[59] is True  # B/beam is narrow; #600 gate owns the event wrapper.
+    assert len(mask) == len(families)

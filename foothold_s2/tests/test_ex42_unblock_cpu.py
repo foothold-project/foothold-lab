@@ -63,9 +63,12 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
     path.write_text(yaml.safe_dump(approvals), encoding="utf-8")
     consumer = EX42Runtime.transition_consumer(plan, path, current_stage_id="E0")
     env = SimpleNamespace(_ex42_stage_id="E0", _ex40_dr_scale=0.1)
+    mirror_calls = []
+    runner = SimpleNamespace(set_ex41_critic_mirror=lambda enabled, approval: mirror_calls.append(
+        (enabled, approval)), ex41_critic_mirror=False)
     row = consumer.transition(env, "E1", boundary_iteration=251,
                               expected_score_iteration=250,
-                              observed_score_iteration=None)
+                              observed_score_iteration=None, runner=runner)
     assert row["stage_before"] == "E0" and row["stage_after"] == "E1"
     assert row["decision_id"] == "fixture-decision"
     assert row["status"] == "measurement_gap"
@@ -73,6 +76,7 @@ def test_stage_transition_consumes_only_complete_approved_dr_schedule(tmp_path):
     assert row["learning_continues"] is True
     assert row["maintenance_action"] == "not_decided_here"
     assert env._ex42_stage_id == "E1" and env._ex40_dr_scale == 0.37
+    assert mirror_calls[0][0] is True and mirror_calls[0][1]["decision_id"] == "D174"
     with pytest.raises(ValueError, match="exactly one planned stage"):
         consumer.transition(env, "E3", boundary_iteration=501,
                             expected_score_iteration=500,

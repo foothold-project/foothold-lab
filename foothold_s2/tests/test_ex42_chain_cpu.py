@@ -134,11 +134,13 @@ def test_existing_runner_mirror_setter_accepts_committed_e1_d174_only(tmp_path):
     assert runner.ex41_critic_mirror is False and runner.alg.mirror_enabled is False
 
 
-def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_path):
+def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_path, monkeypatch):
     plan = EX42Plan.load(TABLE)
     assert plan.document["status"] == "preparation_only"
+    monkeypatch.setenv("WORLD_SIZE", "2")
+    monkeypatch.setenv("RANK", "0")
     try:
-        EX42Runtime(plan, 6144, "cuda:0", tmp_path,
+        EX42Runtime(plan, 3072, "cuda:0", tmp_path,
                     approvals_path=APPROVALS, graduation_path=None,
                     terrain_manifest_path=None)
     except ValueError as exc:
