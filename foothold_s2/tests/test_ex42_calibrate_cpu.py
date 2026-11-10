@@ -8,7 +8,7 @@ import pytest
 
 from foothold_s2.eval.ex42_mesh_eval import preflight, validate_eval_cell
 from foothold_s2.eval.fixed_terrain import assignment_sha256, fixed_assignment
-from foothold_s2.ex42_calibrate import SEEDS, summarize
+from foothold_s2.ex42_calibrate import SEEDS, main, summarize
 from foothold_s2.ex42_eval_once import commands
 
 
@@ -127,5 +127,61 @@ def test_five_repeat_widths_and_mismatch_guards():
 def test_missing_metric_is_not_silently_averaged():
     scores, receipts = _scores()
     del scores[4]["axis_v2"]["eval_gt"]["spin+1.2"]["foot_drag_proxy_m_by_foot_median"]
-    with pytest.raises(ValueError, match="metric coverage"):
+    scores[2]["axis_v2"]["eval_gt"]["spin+1.2"]["phase_from_FL_cycle_median"] = None
+    row = summarize(scores, receipts, "b" * 64, "a" * 64)
+    assert row["missing_by_repeat"]["axis_v2/eval_gt/spin+1.2/foot_drag_proxy_m_by_foot_median/0"] == [4]
+    assert row["missing_by_repeat"]["axis_v2/eval_gt/spin+1.2/phase_from_FL_cycle_median/0"] == [2]
+    assert "axis_v2/eval_gt/spin+1.2/phase_from_FL_cycle_median/0" not in row["metric_widths"]
+    assert row["item_widths"]["gait_phase_and_duty"]["state"] == "measured"
+    assert row["item_widths"]["foot_drag_m"]["state"] == "missing_in_repeat"
+    assert row["item_widths"]["foot_drag_m"]["max_all_seed_width"] is None
+
+
+def test_76_column_reference_requires_explicit_scope():
+    scores, receipts = _scores()
+    for receipt in receipts:
+        del receipt["ex42_mesh"]["eval_cols"]
+    with pytest.raises(ValueError, match="repeat 0"):
         summarize(scores, receipts, "b" * 64, "a" * 64)
+    row = summarize(scores, receipts, "b" * 64, "a" * 64, eval_cols=76)
+    assert row["comparison_scope"] == "historical_76_reference"
+
+
+def test_nonfinite_metric_still_rejected():
+    scores, receipts = _scores()
+    scores[2]["axis_v2"]["eval_gt"]["spin+1.2"]["phase_from_FL_cycle_median"] = float("nan")
+    with pytest.raises(ValueError, match="nonfinite calibration value"):
+        summarize(scores, receipts, "b" * 64, "a" * 64)
+
+
+def test_summarize_only_reads_five_saved_outputs_without_launch(tmp_path, monkeypatch):
+    from foothold_s2.ex42_score import digest
+
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    mesh = mesh_fixture(mesh_dir)
+    checkpoint = tmp_path / "model.pt"
+    checkpoint.write_bytes(b"known checkpoint")
+    checkpoint_sha = digest(checkpoint)
+    scores, receipts = _scores()
+    for i, (score, receipt) in enumerate(zip(scores, receipts)):
+        folder = tmp_path / "saved" / f"repeat_{i:02d}"
+        (folder / "map64").mkdir(parents=True)
+        score["checkpoint_sha256"] = checkpoint_sha
+        receipt["checkpoint_sha256"] = checkpoint_sha
+        receipt["ex42_mesh"]["mesh_sha256"] = mesh["mesh_sha256"]
+        (folder / "ex42_score.json").write_text(json.dumps(score))
+        (folder / "eval_receipt.json").write_text(json.dumps(receipt))
+        (folder / "map64" / "map_modes.json").write_text(json.dumps({"fixed_terrain": {"cols": 23}}))
+    monkeypatch.setattr("foothold_s2.ex42_calibrate.subprocess.run", lambda *_a, **_kw: pytest.fail("launched child"))
+    argv = ["--checkpoint", str(checkpoint), "--expected-sha256", checkpoint_sha,
+            "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh["mesh_sha256"],
+            "--out", str(tmp_path / "saved"), "--device", "cuda:1", "--summarize-only",
+            "--summary-output", str(tmp_path / "summary.json")]
+    assert main(argv) == 0
+    assert json.loads((tmp_path / "summary.json").read_text())["comparison_scope"] == "a23_parent_matched"
+    with pytest.raises(FileExistsError):
+        main(argv)
+    (tmp_path / "saved" / "repeat_04" / "ex42_score.json").unlink()
+    with pytest.raises(ValueError, match="incomplete"):
+        main(argv[:-1] + [str(tmp_path / "second.json")])
