@@ -153,6 +153,7 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
         # fields other code may read from a generator cfg; they describe the joined grid
         num_rows: int = int(loaded["origins"].shape[0])
         num_cols: int = int(loaded["origins"].shape[1])
+        column_family: tuple = tuple(loaded["column_family"])      # family letter per joined column
         # Tiles differ per family. `size` must NOT be (0, 0): the free-velocity promotion rule compares
         # max distance with size[0] / 2, so 0 promotes every moving env. The scalar below is the median
         # tile; the promotion rule reads the per-column table (rules.promotion_size_x).

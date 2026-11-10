@@ -132,11 +132,9 @@ class StandSensorEvidence:
 
     @classmethod
     def from_env(cls, env):
-        from foothold_s2.terrains.columns import column_types
+        from foothold_s2.terrains.generator_columns import generator_column_names
 
-        generator = env.scene.terrain.cfg.terrain_generator
-        proportions = {name: cfg.proportion for name, cfg in generator.sub_terrains.items()}
-        names = column_types(proportions, generator.num_cols)
+        names = generator_column_names(env.scene.terrain.cfg.terrain_generator)
         return cls(tuple(index for index, name in enumerate(names) if name == "flat"))
 
     def add(self, gap_m, hit_z, force_z, stop, terrain_types, origin_z):
@@ -182,6 +180,8 @@ class StandSensorEvidence:
                 "flat_stand_valid_foot_count": int(flat_valid.sum()),
                 "flat_gap_p50_mm": (float(torch.median(gap[flat_valid] * 1000.0))
                                     if flat_valid.any() else None),
+                "flat_record": ("recorded" if flat_valid.any()
+                                else "n/a: no stand sample on a flat column (E0 flat exposure 0)"),
                 "hit_origin_samples": samples, "flat_columns": list(self.flat_columns)}
 
 

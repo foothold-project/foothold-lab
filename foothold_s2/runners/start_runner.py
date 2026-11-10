@@ -50,11 +50,12 @@ from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, S
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
-from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
+from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 from foothold_s2.terrains import columns
+from foothold_s2.terrains.generator_columns import generator_column_names, has_column_source
 
 def _final_checkpoint_is_already_current(runtime, iteration: int, checkpoint_path: str | Path) -> bool:
     """Avoid overwriting a just-saved stride checkpoint with its own reference."""
@@ -1365,7 +1366,7 @@ class StartRunner(OnPolicyRunner):
             return None
         gen = getattr(getattr(terrain, "cfg", None), "terrain_generator", None)
 
-        if gen is None or not hasattr(gen, "sub_terrains") or not hasattr(gen, "num_cols"):
+        if not has_column_source(gen):
             return None
 
         return terrain
@@ -1377,7 +1378,7 @@ class StartRunner(OnPolicyRunner):
             self._off_names_cache = None
             if terrain is not None:
                 gen = terrain.cfg.terrain_generator
-                names = columns.column_types({k: float(v.proportion) for k, v in gen.sub_terrains.items()}, int(gen.num_cols))
+                names = generator_column_names(gen)
                 self._off_names_cache = check_column_names(names)
                 self.map_ratio_events.append({"kind": "off_eligibility", "eligible": sorted(ELIGIBLE_NAMES), "sparse": sorted(SPARSE_NAMES),
                                               "num_cols": int(gen.num_cols), "column_counts": {n: self._off_names_cache.count(n) for n in sorted(set(self._off_names_cache))}})
@@ -1410,7 +1411,7 @@ class StartRunner(OnPolicyRunner):
         names = self._off_column_names()
         origins = self._off_terrain().terrain_origins[..., :2].to(prev_xy.device)
         cols = nearest_tile_cols(prev_xy[done_ids], origins)
-        on_sparse = torch.tensor([n in SPARSE_NAMES for n in names], dtype=torch.bool, device=cols.device)[cols]
+        on_sparse = torch.tensor([is_sparse_name(n) for n in names], dtype=torch.bool, device=cols.device)[cols]
         self.off_elig.add_ended(self.pstate.map_off[done_ids].to(cols.device), on_sparse)
 
     def _flush_map_ratio_events(self) -> None:

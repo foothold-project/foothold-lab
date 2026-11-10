@@ -1,7 +1,7 @@
 """P4-2 reset-only orientation diagnostics. Never changes yaw or commands."""
 import torch
 
-from foothold_s2.terrains.columns import column_types
+from foothold_s2.terrains.generator_columns import generator_column_names
 
 STAIRS = ('pyramid_stairs', 'pyramid_stairs_inv', 'stage_stairs')
 EDGES_DEG = (0., 15., 45., 75., 90.)
@@ -71,7 +71,7 @@ def record_reset(env, env_ids):
     # The generated terrain config is immutable during this run. Resolve by
     # actual terrain names, not hard-coded env/column numbers.
     if not hasattr(env, '_ex41_stair_columns'):
-        names = column_types({n: float(s.proportion) for n, s in cfg.sub_terrains.items()}, cfg.num_cols)
+        names = generator_column_names(cfg)
         env._ex41_stair_columns = torch.tensor([STAIRS.index(n) if n in STAIRS else -1 for n in names],
                                                device=env.device, dtype=torch.long)
     ids = torch.arange(env.num_envs, device=env.device) if env_ids is None else env_ids
