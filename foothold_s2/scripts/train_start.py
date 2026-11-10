@@ -76,6 +76,7 @@ _pre.add_argument("--ex42_speed_probe", action="store_true")
 _pre.add_argument("--ex42_stage_e0_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e0_dry_run", action="store_true")
 _pre.add_argument("--ex42_terrain_manifest")
+_pre.add_argument("--ex42_terrain_mesh_dir")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
                   help="W65 self-resume from a manifest-pinned EX-42 stage-zero model_N.pt")
 _pre.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -678,6 +679,8 @@ parser.add_argument("--ex42_stage_e0_dry_run", action="store_true",
                     help="CPU-only E0 preflight; exits before AppLauncher")
 parser.add_argument("--ex42_terrain_manifest", type=str, default=None,
                     help="Measured EX-42 terrain_manifest.json; a real E0 run needs it (fails closed)")
+parser.add_argument("--ex42_terrain_mesh_dir", type=str, default=None,
+                    help="Folder with the saved EX-42 combined mesh (terrain_mesh.npz + mesh_manifest.json); E0 env cfg")
 parser.add_argument("--ex42_resume_from", type=str, default=None,
                     help="W65 self-resume from a manifest-pinned EX-42 model_N.pt")
 parser.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -725,6 +728,7 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_stage_e0_approved != _pre_args.ex42_stage_e0_approved
         or args_cli.ex42_stage_e0_dry_run != _pre_args.ex42_stage_e0_dry_run
         or args_cli.ex42_terrain_manifest != _pre_args.ex42_terrain_manifest
+        or args_cli.ex42_terrain_mesh_dir != _pre_args.ex42_terrain_mesh_dir
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
         or args_cli.ex42_resume_relocation_receipt != _pre_args.ex42_resume_relocation_receipt
         or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
@@ -909,6 +913,17 @@ def main(env_cfg, agent_cfg):
             parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
+    EX42_E0_ENV_CONTRACT = None
+    if args_cli.ex42_stage_e0_approved:
+        # Unreachable until the E0 launch path stops exiting 3 above; wired so it cannot be forgotten.
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        from foothold_s2.scripts.ex42_training_entry import prepare_e0_env_cfg
+
+        if not args_cli.ex42_terrain_mesh_dir:
+            raise ValueError("EX-42 E0 needs --ex42_terrain_mesh_dir (combined mesh); refusing the default terrain")
+        EX42_E0_ENV_CONTRACT = prepare_e0_env_cfg(
+            env_cfg, EX42Plan.load(Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"), args_cli.ex42_terrain_mesh_dir)
+        print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,

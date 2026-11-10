@@ -79,6 +79,67 @@ def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
         "EX-42 E0 terrain_mesh_swap is not implemented: training stops before the environment is built")
 
 
+def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
+    """{family: kinds whose E0 `kind_task` says push: off}, read from the plan (not typed here)."""
+    stage = next((row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID), None)
+    tasks = ((stage or {}).get("terrain") or {}).get("kind_task")
+    if not isinstance(tasks, dict) or not tasks:
+        raise ValueError("EX-42 E0 stage lacks terrain.kind_task (per-kind push declarations)")
+    off: dict[str, set[str]] = {}
+    for family, kinds in tasks.items():
+        for kind, row in kinds.items():
+            if not isinstance(row, dict) or type(row.get("push")) is not bool:
+                raise ValueError(f"EX-42 E0 kind_task {family}/{kind} needs an explicit push: on|off")
+            if row["push"] is False:
+                off.setdefault(family, set()).add(kind)
+    return off
+
+
+def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> dict[str, Any]:
+    """The one E0 env-cfg seam: combined mesh + per-column reset ranges + per-column push gate.
+
+    Call after the DR events are installed (the push term must exist) and before gym.make.
+      1. terrain generator = the saved, sha-checked 39-kind mesh (all five families present);
+      2. events.reset_base -> per-column pose ranges (generator declarations, else EX-41 default);
+      3. the interval push term -> wrapped by the column gate; which columns are push-off comes from
+         the E0 `kind_task` of the plan, looked up through the column table (family, kind).
+    Fails closed: a missing family, a mesh column whose kind has no `kind_task` row, a `kind_task`
+    name that is not a mesh column, or a missing push term all raise before anything trains.
+    """
+    from foothold_s2.terrains.ex42_column_reset import (
+        apply_column_push_gate, apply_column_reset, build_column_table, push_gate_mask, push_gate_report)
+    from foothold_s2.terrains.ex42_mesh_mount import (
+        expected_sha_from_manifest, load_combined_mesh, mesh_file_generator_cfg)
+
+    mesh_dir = Path(mesh_dir)
+    npz = mesh_dir / "terrain_mesh.npz"
+    sha = expected_sha_from_manifest(mesh_dir / "mesh_manifest.json")
+    data = load_combined_mesh(npz, sha)
+    families = list(data["column_family"])
+    missing = sorted(set("ABCDE") - set(families))
+    if missing:
+        raise ValueError(f"EX-42 E0 mesh lacks families {missing}; all five are required")
+    table = build_column_table(families)
+    declared = {(f, k) for f, kinds in _kind_task(plan).items() for k in kinds}
+    undeclared = sorted({(r["family"], r["kind"]) for r in table if (r["family"], r["kind"]) not in declared})
+    if undeclared:
+        raise ValueError(f"EX-42 E0 mesh columns without a kind_task row: {undeclared}")
+    # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
+    mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
+    env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
+    apply_column_reset(env_cfg, table)
+    wrapped = apply_column_push_gate(env_cfg, mask)
+    return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+            "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
+            "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
+
+
+def _kind_task(plan: EX42Plan) -> dict[str, Any]:
+    e0_push_off_kinds(plan)                      # validates the shape
+    stage = next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
+    return stage["terrain"]["kind_task"]
+
+
 def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:
     """Update count the stage-zero run is bounded to: 1000, or the probe's own 20 / 50."""
     return int(max_iterations) if speed_probe else STAGE_ZERO_UPDATES
