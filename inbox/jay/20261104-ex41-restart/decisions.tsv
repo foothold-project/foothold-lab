@@ -403,3 +403,5 @@ ts	phase	decision	why	evidence	result
 2026-11-10 14:41	lead-lx	Linux 예약 시험 들어옴 14:41 (lead-lx d1392bfd · 20 분 점검 c07414a8 · lead 작업 사본 ~/mai/wt/foothold-lab/lead-lx-1110)
 2026-11-10 15:3x	lead-lx	팀장 승인: ai-lx01 git 전역 설정 user.name vfxpedia · user.email vfxpedia1987@kakao.com (Windows 커밋 작성자와 같음) · 넣고 확인함
 2026-11-10 16:0x	lead-lx	팀장: 20 분 점검 예약 c07414a8 끔 (실험 들어갈 때 다시 건다) · 10 분 옛 예약 6d44a383 도 14:5x 에 끔 · 지금 lead-lx 예약 0
+2026-11-10 17:3x	lead-lx	팀장 lead-lx 창 원문 「승인 해시 재고정 승인」: ex42-prep.yaml:107 approval_sha256 694782ce… → 7b931673… (승인 파일 diff 는 D174 critic_mirror 칸뿐 · 고친 판 통과 · 한 줄 더한 사본 거절 확인) · lead/linux-integration-1109 74ae601e
+2026-11-10 17:3x	lead-lx	소통: 보고는 run:run_5283fa2c059b (coordinator = 셸 mailbox term_08352dfc, bridge 17:35) · lead 핸들로 직접 보내면 lead 창 입력줄에 알림이 끼어든다 (W16 재발) · 작업 세션 보고 주소 고침
