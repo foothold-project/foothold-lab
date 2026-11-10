@@ -217,7 +217,8 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
             torch.manual_seed(args.eval_seed)
             env.reset()
             terrain_record = (fixed_terrain.apply_sparse(raw, args.fixed_level) if args.terrain_set == "sparse50"
-                              else fixed_terrain.apply(raw, args.fixed_level))
+                              else fixed_terrain.apply(raw, args.fixed_level,
+                                                       cols=args.ex42_mesh["eval_cols"] if getattr(args, "ex42_mesh", None) else None))
             env.reset()
             if bool(term.is_flag_env.any()):
                 raise RuntimeError("W57 reset produced flag environments")

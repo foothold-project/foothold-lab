@@ -85,12 +85,15 @@ def assignment_sha256(levels, types) -> str:
     return hashlib.sha256(np.asarray(levels, dtype=np.int64).tobytes() + np.asarray(types, dtype=np.int64).tobytes()).hexdigest()
 
 
-def apply(raw, level=None) -> dict:
+def apply(raw, level=None, *, cols=None) -> dict:
     """raw = env.unwrapped. terrain 의 레벨 · 종류 · env 원점을 고정 배열로 바꾼다. 호출한 쪽이 이어서 env.reset() 한다(curriculum 이 꺼져 있어야 레벨이 안 바뀐다)."""
     import torch
 
     terrain = raw.scene.terrain
-    rows, cols = int(terrain.terrain_origins.shape[0]), int(terrain.terrain_origins.shape[1])
+    rows, physical_cols = int(terrain.terrain_origins.shape[0]), int(terrain.terrain_origins.shape[1])
+    cols = physical_cols if cols is None else cols
+    if type(cols) is not int or not 1 <= cols <= physical_cols:
+        raise ValueError(f"fixed evaluation column count must be 1..{physical_cols}: {cols!r}")
     levels, types = fixed_assignment(int(terrain.terrain_levels.shape[0]), rows, cols, level)
 
     return apply_assignment(raw, levels, types, rows, cols, LEVELS_USED if level is None else int(level) + 1, fixed_level=level)
