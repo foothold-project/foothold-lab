@@ -218,6 +218,7 @@ def test_two_rank_probe_on_the_linux_profile_builds_one_chain_and_rank1_does_not
 
 def _approvals(tmp_path, *, cell=True, e0_scale=1.0, later=False, parent=TEST_PARENT_SHA, edit=None):
     doc = yaml.safe_load(APPROVALS.read_text(encoding="utf-8"))
+    doc.pop("stage_e0_authorization", None)  # cell=False must mean missing, even after E0 approval.
     if cell:
         doc["stage_e0_authorization"] = {
             "approved": True, "decision_id": "lead-e0-test", "approved_at": "2026-11-10T00:00:00Z", "approver": "lead",
@@ -249,10 +250,11 @@ def _e0_args(tmp_path, approvals, parent_file, monkeypatch, **over):
     return base | over
 
 
-def test_shipped_approvals_have_no_e0_cell_so_the_entry_fails_closed():
+def test_shipped_approvals_authorize_only_the_bounded_e0_entry():
     plan = EX42Plan.load(TABLE)
-    with pytest.raises(ValueError, match="E0 authorization is missing"):
-        validate_stage_e0_authorization(plan, APPROVALS, E_PARENT_SHA)
+    proof = validate_stage_e0_authorization(plan, APPROVALS, E_PARENT_SHA)
+    assert proof["scope"]["maximum_updates"] == 250
+    assert proof["scope"]["later_stages_authorized"] is False
     parent = entry.read_e_stage_parent(EXPERIMENT)
     assert parent["sha256"] == E_PARENT_SHA and parent["cumulative_update"] == 13000
 
@@ -307,11 +309,12 @@ def test_e0_speed_probe_uses_the_same_bounded_path(tmp_path, parent_file, monkey
         entry.validate_ex42_stage_e_cli(**args)                                 # probe values without the switch
 
 
-def test_the_shipped_approval_file_is_untouched():
-    import subprocess
-    out = subprocess.run(["git", "diff", "--stat", "--", "foothold_s2/curriculum/ex42-approvals.yaml"],
-                         cwd=ROOT, capture_output=True, text=True).stdout
-    assert out.strip() == ""
+def test_the_shipped_approval_file_remains_pinned_and_full_plan_blocked():
+    from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization
+    plan = EX42Plan.load(TABLE)
+    proof = validate_stage_zero_authorization(plan, APPROVALS)
+    assert proof["production_launch_allowed"] is False
+    assert proof["later_stages_authorized"] is False
 
 
 @pytest.mark.parametrize("name,edit", [

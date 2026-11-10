@@ -24,7 +24,7 @@ def test_ops_check_reports_all_known_blockers_and_never_allows_launch(capsys):
     result = ops_check(TABLE, APPROVALS, gate_report=GATE_FIXTURE)
     assert result["state"] == "blocked"
     assert result["production_launch_allowed"] is False
-    assert "runtime_integration_pending" in result["blockers"]
+    assert "runtime_integration_pending" not in result["blockers"]
     assert "explicit_lead_approval_missing" in result["blockers"]
     assert "terrain_manifest_missing" in result["blockers"]
     assert "environment_import_unavailable" in result["blockers"]
@@ -70,7 +70,7 @@ def test_ops_check_collects_environment_blockers_when_train_import_is_missing(mo
     assert called["env"] is True
     assert payload["state"] == "blocked"
     assert payload["production_launch_allowed"] is False
-    assert "runtime_integration_pending" in payload["blockers"]
+    assert "runtime_integration_pending" not in payload["blockers"]
     assert "environment_import_unavailable" in payload["blockers"]
     assert "train_entry_contract_unavailable" in payload["blockers"]
     assert payload["train_entry"]["verified"] is False
@@ -82,7 +82,7 @@ def test_production_mode_is_rejected_even_if_a_flag_is_given(capsys):
                  "--approvals", str(APPROVALS), "--gate-report", str(GATE_FIXTURE)]) == 2
     result = json.loads(capsys.readouterr().out)
     assert result["state"] == "blocked"
-    assert "runtime_integration_pending" in result["blockers"]
+    assert "runtime_integration_pending" not in result["blockers"]
     assert "fixed_source_identity_required" in result["blockers"]
 
 

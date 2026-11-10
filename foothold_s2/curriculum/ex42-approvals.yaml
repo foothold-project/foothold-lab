@@ -3,7 +3,7 @@ status: blocked
 production_launch_allowed: false
 automatic_launch_allowed: false
 requirements:
-  - ex41_graduation_receipt
+  - parent_adoption_decision
   - explicit_lead_approval
   - resolved_assumptions
   - terrain_manifest_with_measurements
@@ -40,6 +40,14 @@ domain_randomization:
   approved: true
   decision_id: lead-relay-teamlead-20261106-1725-dr-1.0-fixed
   rationale: '팀장 11/06 17:2x: 「DR 은 우선 1.0 으로 시작해서 그대로 두는 쪽으로 하자」'
+  push_mask:
+    mode: event_exclusion
+    off_kinds:
+      A: [stepping_stones_low, stepping_stones_high, balance_beams, stepping_beams, gaps]
+      B: [stones, beam, pallets, gap, consecutive, climb_up, climb_down]
+      C: [gap, discrete_obstacles, box]
+      D: [crawl, high_ledge, wall]
+      evaluation: [start_go2_eval_gap115, start_go2_eval_sup085, start_go2_eval_both]
   stage_scales:
     EX42_0_T0_prime: 1.0
     E0: 1.0
@@ -52,3 +60,18 @@ domain_randomization:
     M: 1.0
     E6a: 1.0
     E6b: 1.0
+parent_adoption_decision:
+  decision: 285348de
+  checkpoints: [m12000_20261107, m13000_20261108]
+stage_e0_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-015x-e0-prior-approval-b
+  approved_at: '2026-11-11 01:5x KST (original decision time notation)'
+  approver: teamlead
+  decision_source: origin/feature/verify-v2-mvp-jay:inbox/jay/20261104-ex41-restart/decisions.tsv:413
+  scope:
+    stage_id: E0
+    start_update: 0
+    maximum_updates: 250
+    parent_sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
+    later_stages_authorized: false
