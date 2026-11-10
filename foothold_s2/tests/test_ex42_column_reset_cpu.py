@@ -94,3 +94,50 @@ def test_zero_columns_start_exactly_on_the_origin_and_others_jitter():
 def test_yaw_quaternion_matches_the_closed_form():
     q = cr._quat_from_euler_wxyz(torch.zeros(1), torch.zeros(1), torch.tensor([1.0]))
     assert torch.allclose(q, torch.tensor([[math.cos(0.5), 0.0, 0.0, math.sin(0.5)]]), atol=1e-6)
+
+
+# ---- push gate ----
+def _kinds_table():
+    return [{"family": "A", "kind": "random_rough"}, {"family": "A", "kind": "stones"},
+            {"family": "C", "kind": "gap"}, {"family": "C", "kind": "flat"}, {"family": "E", "kind": None}]
+
+
+def test_push_gate_mask_follows_the_table_and_rejects_unknown_kinds():
+    mask = cr.push_gate_mask(_kinds_table(), {"A": ["stones"], "C": {"gap"}})
+    assert mask == [False, True, True, False, False]
+    assert cr.push_gate_mask(_kinds_table(), {}) == [False] * 5            # no table -> push stays everywhere
+    with pytest.raises(ValueError):
+        cr.push_gate_mask(_kinds_table(), {"C": ["gapp"]})                 # typo must not silently keep the push
+    report = cr.push_gate_report(_kinds_table(), mask)
+    assert report["push_off_kinds"] == ["A/stones", "C/gap"] and report["columns_with_unknown_kind_push_kept"] == [4]
+
+
+def _gate_env(columns):
+    class Scene:
+        terrain = types.SimpleNamespace(terrain_types=torch.tensor(columns))
+        num_envs = len(columns)
+    return types.SimpleNamespace(scene=Scene())
+
+
+def test_gate_calls_the_push_only_for_envs_on_allowed_columns():
+    seen = []
+    inner = lambda env, rows, tag: seen.append((rows.tolist(), tag))
+    push_off = torch.tensor([False, True, True, False])
+    env = _gate_env([0, 1, 2, 3, 1, 0])
+    cr.push_gated_by_column(env, None, inner, push_off, tag="t")
+    assert seen == [([0, 3, 5], "t")]
+    seen.clear()
+    cr.push_gated_by_column(env, torch.tensor([1, 2, 4]), inner, push_off, tag="t")      # all push-off
+    assert seen == []
+
+
+def test_apply_gate_wraps_the_term_keeps_params_and_fails_without_a_term():
+    func = lambda env, rows, asset_cfg, target_range: None
+    cfg = types.SimpleNamespace(events=types.SimpleNamespace(
+        ex40_push=types.SimpleNamespace(func=func, params={"asset_cfg": "robot", "target_range": {"x": (0, 1)}})))
+    assert cr.apply_column_push_gate(cfg, [False, True]) == ["ex40_push"]
+    term = cfg.events.ex40_push
+    assert term.func is cr.push_gated_by_column and term.params["inner"] is func
+    assert term.params["target_range"] == {"x": (0, 1)} and term.params["push_off"].tolist() == [False, True]
+    with pytest.raises(ValueError):
+        cr.apply_column_push_gate(types.SimpleNamespace(events=types.SimpleNamespace()), [False])

@@ -161,3 +161,59 @@ def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> None:
     env_cfg.events.reset_base = EventTerm(
         func=reset_root_state_by_column, mode="reset",
         params={"lo": lo, "hi": hi, "velocity_range": old["velocity_range"]})
+
+
+# ---- push gate: no interval push on narrow-support (sparse) columns -----------------------------
+# Team-lead decision 01:54: pushes stay on for continuous / flat columns, off on narrow-support
+# terrain. The kind list is planner's; until it lands the caller passes the table:
+#     narrow_support = {"A": {"stones", ...}, "C": {"gap", ...}, ...}      # family -> kind names
+# A column whose kind name is unknown to the code (None) keeps the push and is listed in the report.
+
+def push_gate_mask(table: list[dict[str, Any]], narrow_support: dict[str, Any]) -> list[bool]:
+    """Per mesh column: True = push disabled. `narrow_support` = {family: iterable of kind names}."""
+    sets = {family: set(kinds) for family, kinds in narrow_support.items()}
+    known = {(row["family"], row["kind"]) for row in table if row["kind"]}
+    unknown_names = [(f, k) for f, ks in sets.items() for k in ks if (f, k) not in known]
+    if unknown_names:
+        raise ValueError(f"narrow-support kinds not present in the mesh columns: {sorted(unknown_names)}")
+    return [bool(row["kind"] and row["kind"] in sets.get(row["family"], ())) for row in table]
+
+
+def push_gate_report(table: list[dict[str, Any]], mask: list[bool]) -> dict[str, Any]:
+    return {"push_off_columns": [c for c, off in enumerate(mask) if off],
+            "push_off_kinds": [f"{table[c]['family']}/{table[c]['kind']}" for c, off in enumerate(mask) if off],
+            "columns_with_unknown_kind_push_kept": [c for c, r in enumerate(table) if r["kind"] is None],
+            "columns": len(mask)}
+
+
+def push_gated_by_column(env, env_ids, inner, push_off, **params):
+    """EventTerm func: run the wrapped interval push only for envs whose column is not push-off.
+    `push_off` is a bool tensor of shape (columns,)."""
+    import torch
+
+    device = env.scene.terrain.terrain_types.device
+    rows = torch.arange(env.scene.num_envs, device=device) if env_ids is None else torch.as_tensor(
+        env_ids, dtype=torch.long, device=device).flatten()
+    keep = ~push_off.to(device)[env.scene.terrain.terrain_types[rows].long()]
+    rows = rows[keep]
+    if len(rows) == 0:
+        return
+    inner(env, rows, **params)
+
+
+def apply_column_push_gate(env_cfg, mask: list[bool], term_names=("ex40_push", "push_robot")) -> list[str]:
+    """Wrap the existing interval push term(s) of env_cfg.events (Kit python). Returns wrapped names.
+    Raises if no push term is installed, so a missing gate cannot pass silently."""
+    import torch
+
+    wrapped = []
+    for name in term_names:
+        term = getattr(env_cfg.events, name, None)
+        if term is None:
+            continue
+        term.params = {"inner": term.func, "push_off": torch.tensor(mask, dtype=torch.bool), **term.params}
+        term.func = push_gated_by_column
+        wrapped.append(name)
+    if not wrapped:
+        raise ValueError(f"no push event term found among {term_names}")
+    return wrapped
