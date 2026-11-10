@@ -32,7 +32,7 @@ ENVS = 3072
 HEIGHT_SCAN_RAYS = 17 * 11          # EX-40 env.yaml height_scanner 0.1 m grid [1.6, 1.0]
 DEPTH_RAYS = 60 * 60                # depth_cam 60 x 60
 WARMUP, TIMED = 20, 100
-FAMILY_COLUMNS = {"A": 50, "C": 7, "E": 4}   # A: columns.FULL_COLS, C: one column per kind, E: four kinds
+FAMILY_COLUMNS = {"A": 50, "C": 7, "D": 3, "E": 4}   # A: columns.FULL_COLS, C: one column per kind, E: four kinds
 
 
 def aggregate_files(families_present: list[str], values: dict[str, float]) -> tuple[str, dict[str, Any]]:
@@ -72,6 +72,10 @@ def _family_generator(family: str, seed: int):
         from foothold_s2.terrains import jeplo_preset
 
         return jeplo_preset.build_generator(seed=seed, num_cols=FAMILY_COLUMNS["C"])
+    if family == "D":
+        from foothold_s2.terrains import hipan_posture
+
+        return hipan_posture.build_family_generator(seed=seed)      # 10 rows x 3 kinds, border 0
     if family == "E":
         from foothold_s2.terrains.ex42 import PAPER_EXT_SPECS, paper_ext_subterrains
 
@@ -170,8 +174,8 @@ def build_parser(app_launcher: Any | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--family", action="append", choices=("A", "C", "E"),
-                        help="repeatable; default: every family with generator code (A C E)")
+    parser.add_argument("--family", action="append", choices=("A", "C", "D", "E"),
+                        help="repeatable; default: every family with generator code (A C D E)")
     parser.add_argument("--seed", type=int, default=42)
     if app_launcher is None:
         parser.add_argument("--device", default="cuda:1")
@@ -186,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     from isaaclab.app import AppLauncher
 
     args, _ = build_parser(AppLauncher).parse_known_args(argv)
-    families = args.family or ["A", "C", "E"]
+    families = args.family or ["A", "C", "D", "E"]
     app = AppLauncher(args).app
     code = 0
     try:

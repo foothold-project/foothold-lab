@@ -2,8 +2,8 @@
 
 Scope kept narrow on purpose:
   * Only families whose generator code exists in this repository are buildable:
-    continuous (rough_go2_cfg), E (terrains/ex42.py), A (columns.FULL = continuous 7 + START sparse 6), C (terrains/jeplo_preset.py). Families B (AME-2) and D
-    have no generator code here; this tool never creates one and reports them as missing.
+    continuous (rough_go2_cfg), E (terrains/ex42.py), A (columns.FULL = continuous 7 + START sparse 6), C (terrains/jeplo_preset.py), D (terrains/hipan_posture.py). Family B (AME-2)
+    has no generator code here; this tool never creates one and reports them as missing.
   * Dimensions, paper references and physical flags are never filled in by this tool.
     They come from a declarations JSON written by whoever owns the kind. A kind with a
     null or missing field is reported as undeclared and is NOT measured.
@@ -40,7 +40,7 @@ DEFAULT_SEED = 42
 def buildable_kinds() -> dict[str, list[str]]:
     """Kind names whose generator code exists here (no Isaac import)."""
     from foothold_s2.terrains import columns
-    from foothold_s2.terrains import jeplo_preset
+    from foothold_s2.terrains import hipan_posture, jeplo_preset
     from foothold_s2.terrains.ex42 import PAPER_EXT_SPECS
 
     return {
@@ -48,6 +48,7 @@ def buildable_kinds() -> dict[str, list[str]]:
         "E": [spec.kind for spec in PAPER_EXT_SPECS],
         "A": list(columns.FULL),
         "C": list(jeplo_preset.KINDS),
+        "D": list(hipan_posture.KINDS),
     }
 
 
@@ -101,6 +102,10 @@ def _generator_for(family: str, kind: str, seed: int = DEFAULT_SEED):
     """Return (TerrainGeneratorCfg, subterrain cfg) for one buildable kind (Kit python)."""
     if family == "C":
         from foothold_s2.terrains.jeplo_preset import measurement_generator
+
+        return measurement_generator(kind, seed=seed)
+    if family == "D":
+        from foothold_s2.terrains.hipan_posture import measurement_generator
 
         return measurement_generator(kind, seed=seed)
     from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains

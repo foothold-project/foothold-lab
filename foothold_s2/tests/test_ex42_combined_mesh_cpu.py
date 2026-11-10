@@ -65,7 +65,7 @@ def test_partial_mesh_aggregates_never_use_the_final_key_names():
     name, payload = mb.aggregate_files(["A", "C", "E"], values)
     assert name == "aggregate_partial_mesh.json"
     assert not set(mb.AGGREGATE_KEYS) & set(payload) and payload["valid_for_manifest"] is False
-    assert payload["families_missing"] == ["B", "D"]
+    assert payload["families_missing"] == ["B", "D"]    # partial: only A C E given
     name, payload = mb.aggregate_files(list(mb.ALL_FAMILIES), values)
     assert name == "aggregate_measurements.json" and set(payload) == set(mb.AGGREGATE_KEYS)
     with pytest.raises(ValueError):
@@ -83,4 +83,4 @@ def test_family_a_is_the_full_thirteen_and_plan_shows_it():
                          km.buildable_kinds(), {})
     assert report["A"]["generator_in_repo"] == 13 and report["A"]["generator_missing"] == 0
     assert report["C"]["generator_in_repo"] == 7 and report["E"]["generator_in_repo"] == 4
-    assert report["B"]["generator_in_repo"] == 0 and report["D"]["generator_in_repo"] == 0
+    assert report["B"]["generator_in_repo"] == 0 and report["D"]["generator_in_repo"] == 3

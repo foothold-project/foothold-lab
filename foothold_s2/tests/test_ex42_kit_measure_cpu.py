@@ -31,7 +31,8 @@ def test_modules_called_exist():
 def test_coverage_reports_missing_generators_and_does_not_invent_declarations():
     report = km.coverage(_expected(), km.buildable_kinds(), {})
     assert report["C"]["generator_in_repo"] == 7 and report["C"]["generator_missing"] == 0
-    for family in ("B", "D"):
+    assert report["D"]["generator_in_repo"] == 3 and report["D"]["generator_missing"] == 0
+    for family in ("B",):
         assert report[family]["generator_in_repo"] == 0
         assert report[family]["generator_missing"] == _expected()[family]
     assert report["continuous"]["generator_in_repo"] == 7
@@ -236,3 +237,12 @@ def test_receipt_device_is_cuda0_or_cuda1_and_recorded_not_assumed():
     row["measurement_provenance"]["device"] = "cuda:0"
     with pytest.raises(ValueError):       # provenance must match the receipt device
         build_family_receipt("E", [row], receipt_id="r", source_head=HEAD, seed=42, device="cuda:1")
+
+
+def test_family_d_wiring_passes_seed(monkeypatch):
+    seen = {}
+    fake = types.ModuleType("foothold_s2.terrains.hipan_posture")
+    fake.KINDS = ("high_ledge", "wall", "crawl")
+    fake.measurement_generator = lambda kind, seed: seen.update(kind=kind, seed=seed) or ("g", "s")
+    monkeypatch.setitem(sys.modules, "foothold_s2.terrains.hipan_posture", fake)
+    assert km._generator_for("D", "wall", 9) == ("g", "s") and seen == {"kind": "wall", "seed": 9}
