@@ -1553,8 +1553,12 @@ class StartRunner(OnPolicyRunner):
         self._resumed = True
         return dict(self.ex41_parent_transfer)
 
-    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict) -> dict:
+    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict, *,
+                                    stage_e0: bool = False) -> dict:
         """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
+
+        With ``stage_e0`` the parent is the stage-zero m13000 (local 1000, cumulative 13000) and the
+        receipt state is parent_verified_for_stage_e0; everything else is the same transfer.
 
         This starts a new physical environment and a new local curriculum clock.
         EX-41 environment and continuous-curriculum state are intentionally omitted.
@@ -1562,16 +1566,19 @@ class StartRunner(OnPolicyRunner):
         if (self._resumed or self.current_learning_iteration != 0
                 or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
             raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
+        expected_state, local_update, cumulative_update = (
+            ("parent_verified_for_stage_e0", 1000, 13000) if stage_e0
+            else ("parent_verified_for_stage_zero", 6000, 12000))
         if (not isinstance(receipt, dict)
-                or receipt.get("state") != "parent_verified_for_stage_zero"
-                or receipt.get("parent_local_update") != 6000
-                or receipt.get("parent_cumulative_update") != 12000
+                or receipt.get("state") != expected_state
+                or receipt.get("parent_local_update") != local_update
+                or receipt.get("parent_cumulative_update") != cumulative_update
                 or receipt.get("actor_input_dim") != 98
                 or receipt.get("critic_input_dim") != 666
                 or receipt.get("ex41_environment_state_restored") is not False
                 or receipt.get("ex41_curriculum_state_restored") is not False):
             raise ValueError("EX-42 stage-zero parent receipt is incomplete")
-        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != 6000:
+        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != local_update:
             raise ValueError("EX-42 stage-zero checkpoint identity differs")
         if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not False:
             raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
@@ -1588,7 +1595,7 @@ class StartRunner(OnPolicyRunner):
         self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
         self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
-        self.load_map_switch_state(checkpoint["map_switch"], 6000)
+        self.load_map_switch_state(checkpoint["map_switch"], local_update)
         self.set_rng_state(checkpoint["rng"])
         use_gt_frac = checkpoint.get("last_use_gt_frac")
         if use_gt_frac is not None:
@@ -1600,7 +1607,7 @@ class StartRunner(OnPolicyRunner):
         self.current_learning_iteration = 0
         self.ex42_parent_transfer = dict(receipt)
         self._ex42_parent_loaded = True
-        return {**receipt, "state": "loaded_for_ex42_stage_zero",
+        return {**receipt, "state": "loaded_for_ex42_stage_e0" if stage_e0 else "loaded_for_ex42_stage_zero",
                 "local_iteration_origin": 0,
                 "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
                              "perception", "perception_optimizer", "adasmpl",

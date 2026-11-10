@@ -375,8 +375,14 @@ class EX42Plan:
         if counts != contract["kind_count_by_family"]:
             raise ValueError(f"EX-42 terrain inventory counts differ: {counts}")
 
-    def verify_parent_manifest(self, manifest_path: str | Path) -> dict[str, Any]:
-        """Resolve the parent checkpoint by its pinned manifest SHA, not by filename."""
+    def verify_parent_manifest(self, manifest_path: str | Path, *,
+                               parent_pin: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Resolve the parent checkpoint by its pinned manifest SHA, not by filename.
+
+        ``parent_pin`` (cumulative_update, manifest_local_update, sha256) replaces the stage-zero
+        parent pin; only the E0 path passes it (m13000). The default is the stage-zero parent.
+        """
+        pin = self.document["stage_zero"]["parent"] if parent_pin is None else parent_pin
         path = Path(manifest_path).resolve(strict=True)
         try:
             manifest = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -385,14 +391,14 @@ class EX42Plan:
         if not isinstance(manifest, dict):
             raise ValueError("EX-42 parent manifest must be a JSON object")
         progress = manifest.get("progress")
-        local_update = self.document["stage_zero"]["parent"]["manifest_local_update"]
+        local_update = pin["manifest_local_update"]
         if (not isinstance(progress, dict) or type(progress.get("completed_updates")) is not int
                 or progress["completed_updates"] < local_update):
             raise ValueError("EX-42 parent manifest has not completed the pinned local update")
         checkpoints = manifest.get("checkpoints")
         if not isinstance(checkpoints, dict):
             raise ValueError("EX-42 parent manifest has no checkpoint inventory")
-        expected = self.document["stage_zero"]["parent"]["sha256"]
+        expected = pin["sha256"]
         matches = [name for name, digest in checkpoints.items() if digest == expected]
         if len(matches) != 1:
             raise ValueError("EX-42 parent manifest must contain exactly one checkpoint with the pinned SHA")
@@ -407,7 +413,7 @@ class EX42Plan:
             "manifest_completed_updates": progress["completed_updates"],
             "manifest_checkpoint_key": matches[0],
             "checkpoint_path": str(checkpoint),
-            "cumulative_update": self.document["stage_zero"]["parent"]["cumulative_update"],
+            "cumulative_update": pin["cumulative_update"],
             "checkpoint_sha256": actual,
         }
 
