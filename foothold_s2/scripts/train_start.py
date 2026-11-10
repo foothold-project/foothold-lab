@@ -95,6 +95,7 @@ _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
 EX42_E0_REQUESTED = bool(_pre_args.ex42_stage_e0_approved or _pre_args.ex42_stage_e0_dry_run)
+EX42_STAGE_ID = "E0" if EX42_E0_REQUESTED else "EX42_0_T0_prime"
 EX42_STAGE_UPDATES = 250 if EX42_E0_REQUESTED else 1000      # bound of the single-stage run (E0: m13000 -> 250)
 # ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
 EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
@@ -602,6 +603,7 @@ if _ex42_requested:
             dispatch_path=_pre_args.ex42_dispatch_path,
             score_argv_json=_pre_args.ex42_p1_score_argv_json,
             machine_profile=load_machine_profile(),
+            current_stage_id=EX42_STAGE_ID,        # E0: the parent is m13000, not the stage-zero parent
         )
 
     if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(
@@ -1050,7 +1052,7 @@ def main(env_cfg, agent_cfg):
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
             maximum_updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES),
             push_vmax_mps=push_vmax, speed_probe=args_cli.ex42_speed_probe,
-            stage_id=("E0" if EX42_E0_REQUESTED else "EX42_0_T0_prime"))
+            stage_id=EX42_STAGE_ID)
         ex42_stage_zero_runtime.attach_environment(env, command_term)
         EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_manager(
             env, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
@@ -1070,7 +1072,7 @@ def main(env_cfg, agent_cfg):
         if (env.unwrapped._ex40_dr_scale != 1.0 or ex42_dr_readback.scale != 1.0
                 or env.unwrapped._ex41_push_vmax_mps != push_vmax
                 or float(env.unwrapped.reward_manager.get_term_cfg("lin_vel_z").weight) != 0.0
-                or env.unwrapped._ex42_stage_id != "EX42_0_T0_prime"):
+                or env.unwrapped._ex42_stage_id != EX42_STAGE_ID):
             raise ValueError("EX-42 stage-zero first reset readback differs")
         print("EX42_STAGE_ZERO_FIRST_RESET "
               + json.dumps(ex42_stage_zero_reset_readback, sort_keys=True), flush=True)
