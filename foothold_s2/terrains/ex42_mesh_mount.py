@@ -52,34 +52,46 @@ def expected_sha_from_manifest(mesh_manifest_path: str | Path) -> str:
     return sha
 
 
+class MeshHeights:
+    """Top-surface height under xy points, by trimesh ray casting on a local patch.
+
+    Independent of warp. Per-face xy bounds are computed once, so many small queries (one per
+    env) stay cheap. A downward ray starts at z = max + 10 and the highest hit counts, so a
+    point over a gap reads the pit floor, which is the mesh under that xy and nothing else.
+    """
+
+    def __init__(self, vertices: np.ndarray, faces: np.ndarray):
+        self.vertices, self.faces = vertices, faces
+        corners = vertices[faces][:, :, :2]
+        self.lo, self.hi = corners.min(axis=1), corners.max(axis=1)   # large faces count
+        self.top = float(vertices[:, 2].max()) + 10.0
+
+    def at(self, points_xy: np.ndarray, radius: float = 3.0) -> np.ndarray:
+        import trimesh
+
+        pts = np.asarray(points_xy, dtype=np.float64).reshape(-1, 2)
+        out = np.full(len(pts), np.nan)
+        if not len(pts):
+            return out
+        center = pts.mean(axis=0)
+        reach = float(np.abs(pts - center).max()) + radius
+        near = ((self.hi[:, 0] >= center[0] - reach) & (self.lo[:, 0] <= center[0] + reach)
+                & (self.hi[:, 1] >= center[1] - reach) & (self.lo[:, 1] <= center[1] + reach))
+        if not near.any():
+            return out
+        local = trimesh.Trimesh(vertices=self.vertices, faces=self.faces[near], process=False)
+        origins = np.column_stack([pts, np.full(len(pts), self.top)])
+        directions = np.tile([0.0, 0.0, -1.0], (len(pts), 1))
+        locations, ray_index, _tri = local.ray.intersects_location(origins, directions, multiple_hits=True)
+        for i in np.unique(ray_index):
+            out[i] = locations[ray_index == i][:, 2].max()
+        return out
+
+
 def local_mesh_heights(vertices: np.ndarray, faces: np.ndarray, points_xy: np.ndarray,
                        radius: float = 3.0) -> np.ndarray:
-    """Top-surface height under each xy point, by trimesh ray casting on a local patch.
-
-    Independent of warp: a downward ray from z = max + 10 against the faces whose xy bounds
-    overlap the points' box grown by `radius` (large faces are kept). NaN where nothing is hit.
-    """
-    import trimesh
-
-    pts = np.asarray(points_xy, dtype=np.float64).reshape(-1, 2)
-    corners = vertices[faces][:, :, :2]
-    lo, hi = corners.min(axis=1), corners.max(axis=1)      # per-face xy bounds (large faces count)
-    top = float(vertices[:, 2].max()) + 10.0
-    out = np.full(len(pts), np.nan)
-    center = pts.mean(axis=0)
-    spread = float(np.abs(pts - center).max()) if len(pts) else 0.0
-    reach = spread + radius
-    near = ((hi[:, 0] >= center[0] - reach) & (lo[:, 0] <= center[0] + reach)
-            & (hi[:, 1] >= center[1] - reach) & (lo[:, 1] <= center[1] + reach))
-    if not near.any():
-        return out
-    local = trimesh.Trimesh(vertices=vertices, faces=faces[near], process=False)
-    origins = np.column_stack([pts, np.full(len(pts), top)])
-    directions = np.tile([0.0, 0.0, -1.0], (len(pts), 1))
-    locations, ray_index, _tri = local.ray.intersects_location(origins, directions, multiple_hits=True)
-    for i in np.unique(ray_index):
-        out[i] = locations[ray_index == i][:, 2].max()
-    return out
+    """One-shot form of MeshHeights.at."""
+    return MeshHeights(vertices, faces).at(points_xy, radius)
 
 
 def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None):

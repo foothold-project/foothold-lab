@@ -29,16 +29,28 @@ RESETS = 3
 CRITERIA = {
     "origin_height_max_abs_m": 0.10,       # terrain_origins z vs mesh height under the origin
     "root_xy_offset_max_m": 1.0,           # robot root xy vs its env origin xy
-    "root_above_mesh_min_m": 0.05,
-    "root_above_mesh_max_m": 0.80,
+    "root_above_support_min_m": 0.05,      # root over the mesh under the FEET (what it stands on)
+    "root_above_support_max_m": 0.80,
+    "foot_clearance_max_m": 0.30,          # no foot hovers over the mesh under it (spawn is not airborne)
     "scan_error_max_abs_m": 0.02,          # scanner hit z vs independent mesh height
     "scan_finite_fraction_min": 0.99,
 }
 REPO = Path(__file__).resolve().parents[2]
 
 
+def column_kind(column: int, column_family: list[str]) -> str:
+    """Kind name of a mesh column where the code knows it (A: columns.FULL order); else the family."""
+    from foothold_s2.terrains import columns
+
+    if column_family[column] == "A":
+        return columns.column_types(columns.FULL, columns.FULL_COLS)[column]
+    return f"{column_family[column]}[{column - column_family.index(column_family[column])}]"
+
+
 def part_a(data: dict[str, Any]) -> dict[str, Any]:
-    from foothold_s2.terrains.ex42_mesh_mount import local_mesh_heights
+    from foothold_s2.terrains.ex42_mesh_mount import MeshHeights
+
+    heights = MeshHeights(data["vertices"], data["faces"])
 
     origins, families = data["origins"], data["column_family"]
     rows, cols = origins.shape[:2]
@@ -46,7 +58,7 @@ def part_a(data: dict[str, Any]) -> dict[str, Any]:
     per_family: dict[str, list[float]] = {}
     missing = 0
     for r, c in picks:
-        h = local_mesh_heights(data["vertices"], data["faces"], origins[r, c, :2][None], radius=2.0)[0]
+        h = heights.at(origins[r, c, :2][None], radius=2.0)[0]
         if not np.isfinite(h):
             missing += 1
             continue
@@ -58,7 +70,7 @@ def part_a(data: dict[str, Any]) -> dict[str, Any]:
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     from foothold_s2.terrains.ex42_mesh_mount import (
-        expected_sha_from_manifest, load_combined_mesh, local_mesh_heights, mesh_file_generator_cfg)
+        MeshHeights, expected_sha_from_manifest, load_combined_mesh, mesh_file_generator_cfg)
 
     npz = Path(args.mesh_dir) / "terrain_mesh.npz"
     sha = expected_sha_from_manifest(Path(args.mesh_dir) / "mesh_manifest.json")
@@ -89,6 +101,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     checks: dict[str, Any] = {}
     scanner = raw.scene.sensors["height_scanner"] if "height_scanner" in raw.scene.sensors.keys() else None
     resets = []
+    mesh_heights = MeshHeights(data["vertices"], data["faces"])
+    foot_ids = raw.scene["robot"].find_bodies(".*_foot")[0]
+    if len(foot_ids) != 4:
+        raise RuntimeError(f"expected four foot bodies, found {len(foot_ids)}")
     action = torch.zeros((raw.num_envs, raw.action_manager.total_action_dim), device=raw.device)
     env.reset(seed=42)
     for k in range(RESETS):
@@ -100,20 +116,41 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         origin_gap = float((origins_env - expected).abs().max().item())
         root = raw.scene["robot"].data.root_pos_w
         xy_off = (root[:, :2] - origins_env[:, :2]).norm(dim=1)
-        heights = local_mesh_heights(data["vertices"], data["faces"],
-                                     root[:, :2].detach().cpu().numpy(), radius=3.0)
-        above = root[:, 2].detach().cpu().numpy() - heights
+        robot = raw.scene["robot"]
+        foot_pos = robot.data.body_pos_w[:, foot_ids].detach().cpu().numpy()       # (envs, feet, 3)
+        root_np = root.detach().cpu().numpy()
+        root_h = np.full(len(root_np), np.nan)
+        feet_h = np.full(foot_pos.shape[:2], np.nan)
+        for e in range(len(root_np)):
+            pts = np.vstack([root_np[e:e + 1, :2], foot_pos[e, :, :2]])
+            hs = mesh_heights.at(pts, radius=1.0)
+            root_h[e], feet_h[e] = hs[0], hs[1:]
+        above_mesh = root_np[:, 2] - root_h                      # root over the mesh under the root xy (pit floor if over a gap)
+        support = np.nanmean(feet_h, axis=1)                      # mesh under the feet = what the robot stands on
+        above_support = root_np[:, 2] - support
+        foot_clear = foot_pos[:, :, 2] - feet_h                   # each foot over the mesh under that foot
+        types = terrain.terrain_types.cpu().numpy()
+        levels = terrain.terrain_levels.cpu().numpy()
+        worst = np.argsort(-np.nan_to_num(above_mesh, nan=-1.0))[:3]
         row = {"reset": k, "env_origin_vs_terrain_origin_max_m": origin_gap,
                "root_xy_offset_max_m": float(xy_off.max().item()),
-               "root_above_mesh_min_m": float(np.nanmin(above)), "root_above_mesh_max_m": float(np.nanmax(above)),
-               "root_no_mesh_under": int(np.isnan(heights).sum())}
+               "root_above_mesh_min_m": float(np.nanmin(above_mesh)), "root_above_mesh_max_m": float(np.nanmax(above_mesh)),
+               "root_above_support_min_m": float(np.nanmin(above_support)),
+               "root_above_support_max_m": float(np.nanmax(above_support)),
+               "foot_clearance_min_m": float(np.nanmin(foot_clear)), "foot_clearance_max_m": float(np.nanmax(foot_clear)),
+               "root_no_mesh_under": int(np.isnan(root_h).sum()),
+               "worst_root_above_mesh": [{
+                   "env": int(e), "column": int(types[e]), "family": data["column_family"][types[e]],
+                   "kind": column_kind(int(types[e]), data["column_family"]), "level": int(levels[e]),
+                   "root_z": float(root_np[e, 2]), "mesh_under_root": float(root_h[e]),
+                   "support_under_feet": float(support[e]), "root_above_support": float(above_support[e]),
+                   "foot_clearance": [float(x) for x in foot_clear[e]]} for e in worst]}
         if scanner is not None:
             scanner.update(raw.physics_dt, force_recompute=True)
             hits = scanner.data.ray_hits_w[:8].detach().cpu().numpy()          # 8 envs, all rays
             finite = np.isfinite(hits[..., 2])
             flat = hits.reshape(-1, 3)
-            ref = local_mesh_heights(data["vertices"], data["faces"], flat[:, :2], radius=3.0) \
-                if len(flat) <= 4000 else None
+            ref = mesh_heights.at(flat[:, :2], radius=3.0) if len(flat) <= 4000 else None
             if ref is not None:
                 err = np.abs(flat[:, 2] - ref)
                 row["scan"] = {"rays": int(len(flat)), "finite_fraction": float(finite.mean()),
@@ -126,8 +163,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     for row in resets:
         ok &= row["env_origin_vs_terrain_origin_max_m"] <= 1e-4
         ok &= row["root_xy_offset_max_m"] <= CRITERIA["root_xy_offset_max_m"]
-        ok &= (CRITERIA["root_above_mesh_min_m"] <= row["root_above_mesh_min_m"]
-               and row["root_above_mesh_max_m"] <= CRITERIA["root_above_mesh_max_m"])
+        ok &= (CRITERIA["root_above_support_min_m"] <= row["root_above_support_min_m"]
+               and row["root_above_support_max_m"] <= CRITERIA["root_above_support_max_m"])
+        ok &= row["foot_clearance_max_m"] <= CRITERIA["foot_clearance_max_m"]
         scan = row.get("scan")
         if scan is not None:
             ok &= scan["finite_fraction"] >= CRITERIA["scan_finite_fraction_min"]
