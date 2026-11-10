@@ -871,6 +871,12 @@ class EX42StageZeroRuntime:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
             raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
+        if update == 1 and self.env is not None:
+            terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
+            if getattr(terrain, "terrain_levels", None) is not None:
+                from foothold_s2.terrains.ex42_exposure import level_counts
+                print("EX42_FIRST_UPDATE_LEVELS " + json.dumps(
+                    {"stage_id": self.stage_id, **level_counts(terrain)}, sort_keys=True), flush=True)
         if self.env is not None:
             raw = self.env
             raw._ex42_stage_id = self.stage_id
@@ -970,8 +976,14 @@ def build_stage_zero_reset_readback(env: Any, dr_runtime: Any,
         raise ValueError("EX-42 stage-zero W86 registration contract is missing")
     if getattr(raw, "_ex41_w86", None) is None:
         raise ValueError("EX-42 stage-zero W86 runtime is not attached")
+    terrain = getattr(getattr(raw, "scene", None), "terrain", None)
+    placement = None
+    if getattr(terrain, "terrain_levels", None) is not None and getattr(terrain, "terrain_origins", None) is not None:
+        from foothold_s2.terrains.ex42_exposure import level_counts
+        placement = level_counts(terrain)
     return {
         "stage_id": raw._ex42_stage_id,
+        "terrain_level_counts": placement,
         "dr_scale": raw._ex40_dr_scale,
         "runtime_dr_scale": float(dr_runtime.scale),
         "initial_scale_wrapper": env_contract["initial_dr"],

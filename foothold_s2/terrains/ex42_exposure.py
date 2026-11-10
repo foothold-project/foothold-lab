@@ -151,3 +151,20 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
     return {"exposed_columns": [c for c, w in enumerate(exposure) if w > 0],
             "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
             "start": "parent_env_state" if inherited else "assigned"}
+
+
+def level_counts(terrain) -> dict[str, Any]:
+    """Receipt of the live placement: envs per level, and the (column, level) cells that hold envs."""
+    import torch
+
+    levels = terrain.terrain_levels.detach().cpu().to(torch.long)
+    types = terrain.terrain_types.detach().cpu().to(torch.long)
+    rows = int(terrain.terrain_origins.shape[0])
+    cells: dict[str, int] = {}
+    for c, l in zip(types.tolist(), levels.tolist()):
+        cells[f"{c}:{l}"] = cells.get(f"{c}:{l}", 0) + 1
+    return {"envs": int(levels.numel()),
+            "per_level": torch.bincount(levels, minlength=rows).tolist(),
+            "columns_used": sorted(set(types.tolist())),
+            "per_column_level": dict(sorted(cells.items(), key=lambda kv: tuple(map(int, kv[0].split(":"))))),
+            "levels_max": int(levels.max()) if levels.numel() else None}
