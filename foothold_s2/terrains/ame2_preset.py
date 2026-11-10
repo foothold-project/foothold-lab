@@ -17,6 +17,12 @@ PRESET = "ame2_go2_mix_v1"
 KINDS = ("stair_up", "stair_down", "rough", "boxes", "climb_up",
          "climb_down", "gap", "pallets", "stones", "beam", "consecutive",
          "obstacles")
+SAFE_ENTRY_KINDS = frozenset(("stair_up", "stair_down", "pallets", "stones", "beam"))
+# The actual column number is supplied by the combined mesh, never inferred
+# from an env ID. These five kinds use the certified entry anchor without XY
+# or yaw jitter; all other B kinds retain the caller's existing reset range.
+RESET_RANGES = {kind: {axis: (0., 0.) for axis in ("x", "y", "yaw")}
+                for kind in sorted(SAFE_ENTRY_KINDS)}
 PROPORTIONS = {kind: (.20 if kind == "climb_up" else .30 if kind == "stones" else .05)
                for kind in KINDS}
 SIZE = 12.0
@@ -226,7 +232,58 @@ def build_tile(kind: str, level: int, seed: int) -> Tile:
                                        y + 1 - margin, -height, z0=-height - .2)))
     else:
         raise AssertionError(kind)
+    if kind in {"pallets", "stones"}:
+        # Their narrow separated supports cannot contain a 0.70 x 0.50 m
+        # reset footprint at high levels. Add only an entrance landing before
+        # the first obstacle, preserving the dimensions of the obstacle run.
+        boxes.append(_box(0., .95, 5., 7., 0., z0=-.2))
     return Tile(kind, level, seed, tuple(boxes), d, floor_mode, floor_height, rough)
+
+
+def reset_ranges_by_column(column_kinds):
+    """Return B-only reset overrides keyed by measured global column labels."""
+    result = {}
+    for column, kind in column_kinds.items():
+        if (isinstance(column, bool) or not isinstance(column, (int, np.integer))
+                or column < 0 or kind not in KINDS):
+            raise ValueError("expected nonnegative integer B column and canonical kind")
+        result[int(column)] = dict(RESET_RANGES.get(kind, {
+            "x": (-.5, .5), "y": (-.5, .5), "yaw": (-3.14, 3.14)}))
+    return result
+
+
+def spawn_origin(tile: Tile) -> np.ndarray:
+    """Return a supported entry anchor for the five B kinds failing mount v3.
+
+    The anchor has a 0.70 x 0.50 m footprint on actual box tops. Staircases
+    already have a final entry plateau near the old x=2 origin; beam has a
+    full-width entrance platform. Pallets and stones use the new landing.
+    The 0.15 m relief bound is our reset contract, not a paper success bar.
+    """
+    if tile.kind not in SAFE_ENTRY_KINDS:
+        return tile.origin.copy()
+    x, y = ({"stair_up": (2.4, 6.), "stair_down": (2.4, 6.),
+             "pallets": (.5, 6.), "stones": (.5, 6.), "beam": (1., 6.)}[tile.kind])
+    # The sparse physical floor is a fall surface, not a valid reset support.
+    supports = [box for box in tile.boxes
+                if tile.floor_height_m is None or box.z1 > tile.floor_height_m + .2]
+    heights = []
+    for px in np.linspace(x - .35, x + .35, 7):
+        for py in np.linspace(y - .25, y + .25, 7):
+            covers = [box.z1 for box in supports
+                      if box.x0 - 1e-9 <= px <= box.x1 + 1e-9
+                      and box.y0 - 1e-9 <= py <= box.y1 + 1e-9]
+            if not covers:
+                raise ValueError(f"AME-2 no safe entry support: {tile.kind} L{tile.level}")
+            heights.append(max(covers))
+    if np.ptp(heights) > .15 + 1e-9:
+        raise ValueError(f"AME-2 entry support relief too large: {tile.kind} L{tile.level}")
+    centre = [box.z1 for box in supports
+              if box.x0 - 1e-9 <= x <= box.x1 + 1e-9
+              and box.y0 - 1e-9 <= y <= box.y1 + 1e-9]
+    if not centre:
+        raise ValueError(f"AME-2 no support under entry centre: {tile.kind} L{tile.level}")
+    return np.array([x, y, max(centre)], dtype=float)
 
 
 def validate_tile(tile: Tile):
@@ -280,7 +337,7 @@ def tile_function(difficulty, cfg):
     import trimesh
     # One mesh per tile keeps the 60-column layout from creating hundreds of
     # separate USD mesh prims for every stone tile.
-    return [trimesh.util.concatenate(mesh_arrays(tile))], tile.origin
+    return [trimesh.util.concatenate(mesh_arrays(tile))], spawn_origin(tile)
 
 
 def _subterrains(seed, proportions):
