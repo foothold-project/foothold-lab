@@ -193,8 +193,8 @@ def push_gate_report(table: list[dict[str, Any]], mask: list[bool]) -> dict[str,
 
 
 def push_gated_by_column(env, env_ids, inner, push_off, **params):
-    """EventTerm func: run the wrapped interval push only for envs whose column is not push-off.
-    `push_off` is a bool tensor of shape (columns,)."""
+    """Run the wrapped interval push only for envs whose column is not push-off.
+    `push_off` is a bool tensor of shape (columns,). Kept as the plain function behind the wrapper."""
     import torch
 
     device = env.scene.terrain.terrain_types.device
@@ -207,18 +207,42 @@ def push_gated_by_column(env, env_ids, inner, push_off, **params):
     inner(env, rows, **params)
 
 
+def make_column_gated_push(inner, push_off):
+    """EventTerm func with the SAME signature as `inner` (env, env_ids, <its own params>).
+
+    Isaac's EventManager checks the func signature against term.params, so the gate must not add
+    arguments: the wrapped push and the mask live in the closure and term.params stays the original.
+    """
+    import functools
+    import inspect
+
+    if inspect.isclass(inner) or not callable(inner):
+        raise TypeError("the push term must be a plain function to be gated by column")
+
+    @functools.wraps(inner)                      # inspect.signature(gated) == inspect.signature(inner)
+    def gated(env, env_ids, *args, **params):
+        return push_gated_by_column(env, env_ids, lambda e, rows, **kw: inner(e, rows, *args, **kw),
+                                    push_off, **params)
+
+    gated.column_gate_inner = inner
+    gated.column_gate_push_off = push_off
+    return gated
+
+
 def apply_column_push_gate(env_cfg, mask: list[bool], term_names=("ex40_push", "push_robot")) -> list[str]:
     """Wrap the existing interval push term(s) of env_cfg.events (Kit python). Returns wrapped names.
-    Raises if no push term is installed, so a missing gate cannot pass silently."""
+    term.params is left as it was. Raises if no push term is installed or one is already gated."""
     import torch
 
+    push_off = torch.tensor(mask, dtype=torch.bool)
     wrapped = []
     for name in term_names:
         term = getattr(env_cfg.events, name, None)
         if term is None:
             continue
-        term.params = {"inner": term.func, "push_off": torch.tensor(mask, dtype=torch.bool), **term.params}
-        term.func = push_gated_by_column
+        if hasattr(term.func, "column_gate_inner"):
+            raise ValueError(f"push term {name} is already gated by column")
+        term.func = make_column_gated_push(term.func, push_off)
         wrapped.append(name)
     if not wrapped:
         raise ValueError(f"no push event term found among {term_names}")

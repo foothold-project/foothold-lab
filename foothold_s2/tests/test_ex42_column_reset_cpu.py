@@ -131,13 +131,29 @@ def test_gate_calls_the_push_only_for_envs_on_allowed_columns():
     assert seen == []
 
 
-def test_apply_gate_wraps_the_term_keeps_params_and_fails_without_a_term():
+def test_apply_gate_wraps_the_term_keeps_params_and_signature_and_fails_without_a_term():
+    import inspect
     func = lambda env, rows, asset_cfg, target_range: None
+    params = {"asset_cfg": "robot", "target_range": {"x": (0, 1)}}
     cfg = types.SimpleNamespace(events=types.SimpleNamespace(
-        ex40_push=types.SimpleNamespace(func=func, params={"asset_cfg": "robot", "target_range": {"x": (0, 1)}})))
+        ex40_push=types.SimpleNamespace(func=func, params=dict(params))))
     assert cr.apply_column_push_gate(cfg, [False, True]) == ["ex40_push"]
     term = cfg.events.ex40_push
-    assert term.func is cr.push_gated_by_column and term.params["inner"] is func
-    assert term.params["target_range"] == {"x": (0, 1)} and term.params["push_off"].tolist() == [False, True]
+    assert term.func.column_gate_inner is func and term.func.column_gate_push_off.tolist() == [False, True]
+    assert term.params == params                                     # Isaac checks params against the signature
+    assert str(inspect.signature(term.func)) == str(inspect.signature(func))
+    with pytest.raises(ValueError, match="already gated"):
+        cr.apply_column_push_gate(cfg, [False, True])
     with pytest.raises(ValueError):
         cr.apply_column_push_gate(types.SimpleNamespace(events=types.SimpleNamespace()), [False])
+
+
+def test_gated_func_runs_the_inner_push_only_on_push_on_columns():
+    seen = []
+    inner = lambda env, rows, asset_cfg, target_range: seen.append((rows.tolist(), asset_cfg))
+    cfg = types.SimpleNamespace(events=types.SimpleNamespace(
+        ex40_push=types.SimpleNamespace(func=inner, params={"asset_cfg": "robot", "target_range": {}})))
+    cr.apply_column_push_gate(cfg, [False, True])
+    term = cfg.events.ex40_push
+    term.func(_gate_env([0, 1, 0, 1]), None, **term.params)
+    assert seen == [([0, 2], "robot")]

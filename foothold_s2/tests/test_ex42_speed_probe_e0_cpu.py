@@ -107,7 +107,7 @@ def test_runtime_and_train_cfg_accept_the_probe_bound_only_with_the_probe():
 def test_train_start_wiring_has_every_site_that_pinned_1000():
     text = TRAIN_START.read_text(encoding="utf-8")
     ast.parse(text)
-    assert text.count("args_cli.max_iterations if args_cli.ex42_speed_probe else 1000") == 6
+    assert text.count("args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES") == 6
     assert "agent_cfg.max_iterations = 1000\n" not in text                       # every literal 1000 bound is now switch-aware
 
 
@@ -168,7 +168,7 @@ def test_train_start_calls_the_entry_helpers_in_the_places_that_matter():
     text = TRAIN_START.read_text(encoding="utf-8")
     for needle in ("validate_speed_probe_switches(speed_probe=_pre_args.ex42_speed_probe",
                    "run_ex42_stage_e0_entry(", "dry_run=_pre_args.ex42_stage_e0_dry_run",
-                   "speed_probe_builds_chain(\n            _pre_args.ex42_speed_probe, EX42_SPEED_PROBE_RANK)",
+                   "speed_probe_builds_chain(\n            EX42_RANK_SPLIT, EX42_SPEED_PROBE_RANK)",
                    "args_cli.ex42_log_dir = speed_probe_rank_log_dir(", "raise SystemExit(0)"):
         assert needle in text, needle
 
@@ -356,10 +356,9 @@ def test_e0_entry_as_train_start_calls_it_never_starts_training(tmp_path, parent
                                             e0_approved=True, **cli)
     assert request["state"] == "stage_e0_preflight_passed"
     assert request["training_requested"] is False
-    assert request["terrain_mesh_swap"]["state"] == "not_implemented"
+    assert request["terrain_mesh_swap"]["state"] == "mounted_at_env_build"
     assert request["terrain_mesh_swap"]["terrain_manifest"]["state"] == "missing_or_invalid"
-    assert request["training_blockers"] == ["terrain_mesh_swap_not_implemented",
-                                            "terrain_manifest_missing_or_invalid"]
+    assert request["training_blockers"] == ["terrain_manifest_missing_or_invalid"]
     with pytest.raises(ValueError, match="terrain_manifest_missing"):
         entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
                                       e0_approved=True, **cli)
@@ -387,7 +386,7 @@ def _run_chain_selection(speed_probe, rank):
     built = []
     ns = {
         "EX42_STAGE_ZERO_PLAN": type("P", (), {"sha256": "p"})(), "EX42_STAGE_ZERO_PARENT": {"parent_sha256": "s"},
-        "EX42_STAGE_ZERO_RESUME_SAME_RUN": False, "EX42_STAGE_ZERO_RESUME": None, "EX42_SPEED_PROBE_RANK": rank,
+        "EX42_STAGE_ZERO_RESUME_SAME_RUN": False, "EX42_STAGE_ZERO_RESUME": None, "EX42_SPEED_PROBE_RANK": rank, "EX42_RANK_SPLIT": speed_probe,
         "EX42_TRAINING_CHAIN": None, "EX42_STAGE_ZERO_CHAIN_RECEIPT": None, "json": __import__("json"),
         "_pre_args": type("A", (), {"ex42_speed_probe": speed_probe, "ex42_log_dir": "x"})(),
         "speed_probe_builds_chain": entry.speed_probe_builds_chain, "_build_ex42_chain": lambda: "chain",
@@ -403,15 +402,15 @@ def test_the_real_rank_gate_in_train_start_skips_the_chain_only_for_probe_rank_o
     assert _run_chain_selection(False, 1) == ([1], "chain")       # probe off: every rank builds as before
 
 
-def test_e0_real_run_with_measured_manifest_still_stops_at_the_unimplemented_mesh_mount(
+def test_e0_real_run_with_measured_manifest_returns_the_request_for_training(
         tmp_path, parent_file, monkeypatch):
     args = _e0_args(tmp_path, _approvals(tmp_path), parent_file, monkeypatch)
     args.pop("approved_switch")
     monkeypatch.setattr(entry, "read_e0_terrain_manifest", lambda plan, path: {
         "state": "measured", "path": "x", "sha256": "0" * 64, "kinds": 46, "receipt_ids": []})
-    with pytest.raises(NotImplementedError, match="terrain_mesh_swap is not implemented"):
-        entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
-                                      e0_approved=True, terrain_manifest_path="m.json", **args)
+    request = entry.run_ex42_stage_e0_entry(dry_run=False, stage_zero_requested=False, resume_requested=False,
+                                            e0_approved=True, terrain_manifest_path="m.json", **args)
+    assert request["training_requested"] is True and request["total_envs"] == 3072
 
 
 def test_read_e0_terrain_manifest_fails_closed(tmp_path):
@@ -429,8 +428,32 @@ def test_read_e0_terrain_manifest_fails_closed(tmp_path):
         entry.read_e0_terrain_manifest(plan, partial)
 
 
-def test_train_start_passes_the_manifest_path_and_exits_nonzero_if_a_real_run_returns():
+def test_train_start_passes_the_manifest_path_and_only_dry_run_exits():
     text = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
     assert "terrain_manifest_path=_pre_args.ex42_terrain_manifest" in text
-    assert "raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)" in text
+    assert "raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)" not in text      # real E0 no longer exits 3
+    assert "if _pre_args.ex42_stage_e0_dry_run:\n            raise SystemExit(0)" in text
     assert text.count("--ex42_terrain_manifest") == 2
+
+
+def test_e0_accepts_one_process_or_a_two_rank_torchrun_with_3072_per_rank(tmp_path, parent_file, monkeypatch):
+    approvals = _approvals(tmp_path)
+    one = entry.validate_ex42_stage_e_cli(**_e0_args(tmp_path, approvals, parent_file, monkeypatch))[2]
+    assert one["world_size"] == 1 and one["total_envs"] == 3072
+    for rank in (0, 1):
+        two = entry.validate_ex42_stage_e_cli(**_e0_args(
+            tmp_path, approvals, parent_file, monkeypatch, distributed=True, world_size=2, rank=rank))[2]
+        assert two["rank"] == rank and two["total_envs"] == 6144 and two["num_envs"] == 3072
+    for bad in ({"distributed": True}, {"world_size": 2}, {"distributed": True, "world_size": 3},
+                {"distributed": True, "world_size": 2, "rank": 2}, {"distributed": True, "world_size": 2, "num_envs": 6144}):
+        with pytest.raises(ValueError, match="exactly 250"):
+            entry.validate_ex42_stage_e_cli(**_e0_args(tmp_path, approvals, parent_file, monkeypatch, **bad))
+
+
+def test_only_rank_zero_insists_the_run_directory_is_new(tmp_path, parent_file, monkeypatch):
+    approvals = _approvals(tmp_path)
+    (tmp_path / "e0run").mkdir()
+    over = dict(distributed=True, world_size=2)
+    with pytest.raises(ValueError, match="must be new"):
+        entry.validate_ex42_stage_e_cli(**_e0_args(tmp_path, approvals, parent_file, monkeypatch, rank=0, **over))
+    entry.validate_ex42_stage_e_cli(**_e0_args(tmp_path, approvals, parent_file, monkeypatch, rank=1, **over))

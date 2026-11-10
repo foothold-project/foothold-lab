@@ -44,13 +44,13 @@ REWARD_CONTRACT_PARENTS = ((STAGE_ZERO_PARENT_SHA256, 6000), (E0_PARENT_SHA256, 
 def e0_terrain_mesh_swap_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     """E0 axis ``terrain_mesh_swap`` (ex42-prep.yaml stages E0): the single E0 change.
 
-    The swap itself is NOT implemented: no importer adapter mounts the combined mesh
-    (foothold_s2/terrains/ex42_combined.py joins it; the training env still builds its own
-    generator). Training therefore stops at ``mount_e0_terrain_mesh`` and never runs on the
-    stage-zero mesh under the name E0 (planner-lx D1/D2, lead 23:56).
+    The swap happens when the environment config is built: prepare_e0_env_cfg mounts the saved,
+    sha-checked 39-kind mesh (needs --ex42_terrain_mesh_dir), per-column reset and push gate, and
+    apply_e0_exposure puts envs only on exposed columns after gym.make. This receipt records the
+    manifest state; the mesh folder is checked at env build and fails closed there.
     """
-    return {"axis": "terrain_mesh_swap", "state": "not_implemented",
-            "reason": "mesh mount adapter not written; terrain manifest required before E0 trains",
+    return {"axis": "terrain_mesh_swap", "state": "mounted_at_env_build",
+            "reason": "prepare_e0_env_cfg + apply_e0_exposure (train_start); needs --ex42_terrain_mesh_dir",
             "terrain_manifest": manifest if manifest is not None else {"state": "missing"}}
 
 
@@ -69,14 +69,87 @@ def read_e0_terrain_manifest(plan: EX42Plan, path: str | Path | None) -> dict[st
 
 
 def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
-    """Place for the E0 mesh swap. Still stops here on purpose.
+    """Entry-side hook for the E0 mesh swap. The mount itself runs at env build (prepare_e0_env_cfg),
+    where the mesh folder is verified; nothing is stubbed here any more."""
+    return None
 
-    The mount adapter exists (terrains/ex42_mesh_mount.py, Kit check scripts/ex42_mesh_mount_check.py),
-    but E0 also needs the complete 39-kind mesh (B and D generators are missing) and the column
-    exposure rule (new kinds share 0, level cap 0, continuous 7 only at cap 5) wired into the env.
+
+def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
+    """{family: kinds whose E0 `kind_task` says push: off}, read from the plan (not typed here)."""
+    stage = next((row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID), None)
+    tasks = ((stage or {}).get("terrain") or {}).get("kind_task")
+    if not isinstance(tasks, dict) or not tasks:
+        raise ValueError("EX-42 E0 stage lacks terrain.kind_task (per-kind push declarations)")
+    off: dict[str, set[str]] = {}
+    for family, kinds in tasks.items():
+        for kind, row in kinds.items():
+            if not isinstance(row, dict) or type(row.get("push")) is not bool:
+                raise ValueError(f"EX-42 E0 kind_task {family}/{kind} needs an explicit push: on|off")
+            if row["push"] is False:
+                off.setdefault(family, set()).add(kind)
+    return off
+
+
+def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> dict[str, Any]:
+    """The one E0 env-cfg seam: combined mesh + per-column reset ranges + per-column push gate.
+
+    Call after the DR events are installed (the push term must exist) and before gym.make.
+      1. terrain generator = the saved, sha-checked 39-kind mesh (all five families present);
+      2. events.reset_base -> per-column pose ranges (generator declarations, else EX-41 default);
+      3. the interval push term -> wrapped by the column gate; which columns are push-off comes from
+         the E0 `kind_task` of the plan, looked up through the column table (family, kind).
+    Fails closed: a missing family, a mesh column whose kind has no `kind_task` row, a `kind_task`
+    name that is not a mesh column, or a missing push term all raise before anything trains.
     """
-    raise NotImplementedError(
-        "EX-42 E0 terrain_mesh_swap is not implemented: training stops before the environment is built")
+    from foothold_s2.terrains.ex42_column_reset import (
+        apply_column_push_gate, apply_column_reset, build_column_table, push_gate_mask, push_gate_report)
+    from foothold_s2.terrains.ex42_mesh_mount import (
+        expected_sha_from_manifest, load_combined_mesh, mesh_file_generator_cfg)
+
+    mesh_dir = Path(mesh_dir)
+    npz = mesh_dir / "terrain_mesh.npz"
+    sha = expected_sha_from_manifest(mesh_dir / "mesh_manifest.json")
+    data = load_combined_mesh(npz, sha)
+    families = list(data["column_family"])
+    missing = sorted(set("ABCDE") - set(families))
+    if missing:
+        raise ValueError(f"EX-42 E0 mesh lacks families {missing}; all five are required")
+    table = build_column_table(families)
+    declared = {(f, k) for f, kinds in _kind_task(plan).items() for k in kinds}
+    undeclared = sorted({(r["family"], r["kind"]) for r in table if (r["family"], r["kind"]) not in declared})
+    if undeclared:
+        raise ValueError(f"EX-42 E0 mesh columns without a kind_task row: {undeclared}")
+    # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
+    from foothold_s2.terrains.ex42_exposure import exposure_by_column
+    stage_terrain = _e0_stage(plan)["terrain"]
+    exposure, level_caps = exposure_by_column(stage_terrain, table)       # plan values; raises if none positive
+    mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
+    env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
+    apply_column_reset(env_cfg, table)
+    wrapped = apply_column_push_gate(env_cfg, mask)
+    return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+            "exposure": exposure, "level_caps": level_caps,
+            "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
+            "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
+            "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
+
+
+def _e0_stage(plan: EX42Plan) -> dict[str, Any]:
+    return next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
+
+
+def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict[str, Any]) -> dict[str, Any]:
+    """After gym.make: start from the parent's (column, level) per env, then cut at the column caps (Kit side)."""
+    from foothold_s2.terrains.ex42_exposure import apply_exposure
+
+    return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
+                          parent_env_state=parent_env_state, table=contract["column_table"])
+
+
+def _kind_task(plan: EX42Plan) -> dict[str, Any]:
+    e0_push_off_kinds(plan)                      # validates the shape
+    stage = next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
+    return stage["terrain"]["kind_task"]
 
 
 def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:
@@ -194,7 +267,8 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
                               distributed: bool, max_iterations: int | None,
                               num_envs: int | None, map_input: str | None, force_gt: bool,
                               machine_profile: dict[str, Any] | None = None,
-                              approved_switch: bool, speed_probe: bool = False
+                              approved_switch: bool, speed_probe: bool = False,
+                              world_size: int = 1, rank: int = 0
                               ) -> tuple[EX42Plan, dict[str, Any], dict[str, Any]]:
     """Validate the explicitly approved E0 CLI (m13000 -> 250 updates) without importing Kit.
 
@@ -216,12 +290,15 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         if (type(distributed) is not bool or max_iterations not in SPEED_PROBE_UPDATES
                 or num_envs not in SPEED_PROBE_ENVS):
             raise ValueError("EX-42 E0 speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
-    elif distributed is not False or max_iterations != 250 or num_envs != STAGE_ZERO_NUM_ENVS:
-        raise ValueError("EX-42 E0 is bounded to exactly 250 updates and 3072 environments, single process")
+    elif max_iterations != 250 or num_envs != STAGE_ZERO_NUM_ENVS:
+        raise ValueError("EX-42 E0 is bounded to exactly 250 updates and 3072 environments per process")
+    elif distributed is not (world_size == 2) or world_size not in (1, 2) or not 0 <= rank < world_size:
+        # M3 decision: one process (3072) or a two-GPU torchrun with 3072 per rank (6144 = plan num_envs)
+        raise ValueError("EX-42 E0 is bounded to exactly 250 updates on one process or a two-rank torchrun (distributed iff world size 2)")
     if map_input not in (None, "reconstruction") or force_gt is not False:
         raise ValueError("EX-42 E0 must consume reconstructed maps without forced GT")
     output = Path(log_dir).resolve()
-    if output.exists():
+    if output.exists() and rank == 0:             # every rank gets the same argv; rank 0 creates the run directory
         raise ValueError("EX-42 E0 output must be new")
     plan = EX42Plan.load(plan_path)
     parent = read_e_stage_parent(experiment_path)
@@ -237,7 +314,8 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         "output_dir": str(output), "parent_path": str(checkpoint), "parent_sha256": digest,
         "parent_cumulative_update": 13000,
         "production_launch_allowed": False, "later_stages_authorized": False,
-        "approval": approval,
+        "approval": approval, "world_size": world_size, "rank": rank,
+        "total_envs": num_envs * world_size,
     }
     if speed_probe:
         request["speed_probe"] = {"updates": max_iterations, "num_envs": num_envs,
@@ -267,8 +345,7 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
     """E0 entry as train_start calls it: validates the CLI and returns the request.
 
     Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
-    A real run needs a measured manifest (else ValueError) and then stops at the unimplemented
-    mesh mount. A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
+    A real run needs a measured manifest (else ValueError). A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
     """
     if stage_zero_requested or resume_requested:
         raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
@@ -282,14 +359,13 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
             manifest = {"state": "missing_or_invalid", "reason": str(exc)}
         request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
         request["training_requested"] = False
-        request["training_blockers"] = [
-            "terrain_mesh_swap_not_implemented",
-            *([] if manifest.get("state") == "measured" else ["terrain_manifest_missing_or_invalid"])]
+        request["training_blockers"] = (
+            [] if manifest.get("state") == "measured" else ["terrain_manifest_missing_or_invalid"])
         return request
     manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)    # raises: fail closed
     request["terrain_mesh_swap"] = e0_terrain_mesh_swap_receipt(manifest)
     request["training_requested"] = True
-    mount_e0_terrain_mesh(manifest)                                      # raises NotImplementedError today
+    mount_e0_terrain_mesh(manifest)
     return request
 
 

@@ -76,6 +76,7 @@ _pre.add_argument("--ex42_speed_probe", action="store_true")
 _pre.add_argument("--ex42_stage_e0_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e0_dry_run", action="store_true")
 _pre.add_argument("--ex42_terrain_manifest")
+_pre.add_argument("--ex42_terrain_mesh_dir")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
                   help="W65 self-resume from a manifest-pinned EX-42 stage-zero model_N.pt")
 _pre.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -93,11 +94,15 @@ _pre.add_argument("--force_gt", action="store_true")
 _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
-EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if _pre_args.ex42_speed_probe else 0
+EX42_E0_REQUESTED = bool(_pre_args.ex42_stage_e0_approved or _pre_args.ex42_stage_e0_dry_run)
+EX42_STAGE_UPDATES = 250 if EX42_E0_REQUESTED else 1000      # bound of the single-stage run (E0: m13000 -> 250)
+# ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
+EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
+EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLIT else 0
 if _pre_args.ex42_speed_probe and _pre_args.distributed:
     # Linux L1 measured NCCL shared-memory failure; scope the workaround to the two-rank probe.
     os.environ.setdefault("NCCL_SHM_DISABLE", "1")
-if _pre_args.ex42_speed_probe and _pre_args.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
+if EX42_RANK_SPLIT and _pre_args.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
     # Speed probe: only rank 0 writes into the shared run directory; the others get a private scratch directory.
     from foothold_s2.scripts.ex42_training_entry import speed_probe_rank_log_dir
     _pre_args.ex42_log_dir = speed_probe_rank_log_dir(_pre_args.ex42_log_dir, EX42_SPEED_PROBE_RANK, True)
@@ -496,12 +501,29 @@ if _ex42_requested:
             device=_pre_args.device or "", headless=_pre_args.headless,
             distributed=_pre_args.distributed, max_iterations=_pre_args.max_iterations,
             num_envs=_pre_args.num_envs, map_input=_pre_args.map_input,
-            force_gt=_pre_args.force_gt, speed_probe=_pre_args.ex42_speed_probe)
+            force_gt=_pre_args.force_gt, speed_probe=_pre_args.ex42_speed_probe,
+            world_size=int(os.environ.get("WORLD_SIZE", "1")), rank=int(os.environ.get("RANK", "0")))
         print("EX42_STAGE_E0_PREFLIGHT " + json.dumps({
             **_e0_preflight, "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
-        # A real E0 run never gets here today: run_ex42_stage_e0_entry needs a measured terrain
-        # manifest and then stops at the unimplemented mesh mount (raises). Dry-run exits 0.
-        raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)
+        if _pre_args.ex42_stage_e0_dry_run:
+            raise SystemExit(0)
+        # Real E0: reuse the stage-zero variables (lead-lx 04:58, fork 2). The parent is m13000.
+        from foothold_s2.curriculum.ex42_prep import EX42Plan as _EX42Plan
+        from foothold_s2.scripts.ex42_training_entry import (
+            inspect_ex42_stage_e0_parent, load_ex42_stage_zero_source, make_ex42_stage_zero_plan_view)
+
+        EX42_STAGE_ZERO_PLAN = _EX42Plan.load(_pre_args.ex42_plan)
+        EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e0_parent(
+            plan=EX42_STAGE_ZERO_PLAN, approvals_path=_pre_args.ex42_approvals,
+            experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
+            parent_manifest_path=_pre_args.ex42_parent_manifest)
+        EX42_STAGE_ZERO_PREFLIGHT = _e0_preflight
+        EX42_STAGE_ZERO_APPROVAL = EX42_STAGE_ZERO_PARENT["approval"]
+        EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE = load_ex42_stage_zero_source(
+            EX42_STAGE_ZERO_PLAN)
+        EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
+            EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
+            parent_update=13000)
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
             validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
@@ -583,7 +605,7 @@ if _ex42_requested:
         )
 
     if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(
-            _pre_args.ex42_speed_probe, EX42_SPEED_PROBE_RANK):
+            EX42_RANK_SPLIT, EX42_SPEED_PROBE_RANK):
         print("EX42_SPEED_PROBE_RANK_NO_CHAIN " + json.dumps({"rank": EX42_SPEED_PROBE_RANK}), flush=True)
     elif EX42_STAGE_ZERO_PLAN is not None:
         EX42_TRAINING_CHAIN, EX42_STAGE_ZERO_CHAIN_RECEIPT = (
@@ -612,7 +634,7 @@ if _ex42_requested:
             }, sort_keys=True), flush=True)
     else:
         EX42_TRAINING_CHAIN = _build_ex42_chain()
-    if not _stage_zero_requested:
+    if not (_stage_zero_requested or _stage_e0_requested):
         raise RuntimeError(
             "EX-42 preparation_only: full plan is blocked; refusing before AppLauncher"
         )
@@ -678,6 +700,8 @@ parser.add_argument("--ex42_stage_e0_dry_run", action="store_true",
                     help="CPU-only E0 preflight; exits before AppLauncher")
 parser.add_argument("--ex42_terrain_manifest", type=str, default=None,
                     help="Measured EX-42 terrain_manifest.json; a real E0 run needs it (fails closed)")
+parser.add_argument("--ex42_terrain_mesh_dir", type=str, default=None,
+                    help="Folder with the saved EX-42 combined mesh (terrain_mesh.npz + mesh_manifest.json); E0 env cfg")
 parser.add_argument("--ex42_resume_from", type=str, default=None,
                     help="W65 self-resume from a manifest-pinned EX-42 model_N.pt")
 parser.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
@@ -691,7 +715,7 @@ parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
-if args_cli.ex42_speed_probe and args_cli.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
+if EX42_RANK_SPLIT and args_cli.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
     from foothold_s2.scripts.ex42_training_entry import speed_probe_rank_log_dir
     args_cli.ex42_log_dir = speed_probe_rank_log_dir(args_cli.ex42_log_dir, EX42_SPEED_PROBE_RANK, True)
 sys.argv = [sys.argv[0]] + hydra_args
@@ -725,6 +749,7 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_stage_e0_approved != _pre_args.ex42_stage_e0_approved
         or args_cli.ex42_stage_e0_dry_run != _pre_args.ex42_stage_e0_dry_run
         or args_cli.ex42_terrain_manifest != _pre_args.ex42_terrain_manifest
+        or args_cli.ex42_terrain_mesh_dir != _pre_args.ex42_terrain_mesh_dir
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
         or args_cli.ex42_resume_relocation_receipt != _pre_args.ex42_resume_relocation_receipt
         or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
@@ -823,7 +848,7 @@ def main(env_cfg, agent_cfg):
         if type(parent_seed) is not int:
             raise ValueError("EX-42 stage-zero parent environment seed is missing")
         agent_cfg.seed = parent_seed
-        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else 1000)
+        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
     env_cfg.seed = agent_cfg.seed
@@ -857,7 +882,7 @@ def main(env_cfg, agent_cfg):
         parent_checkpoint_path = EX42_STAGE_ZERO_PARENT["parent_path"]
         log_dir = EX42_STAGE_ZERO_PREFLIGHT["output_dir"]
         agent_cfg.resume = False
-        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else 1000)
+        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
         if EX42_STAGE_ZERO_RESUME_SAME_RUN:
             source_manifest_path = Path(log_dir) / "manifest.json"
             if hashlib.sha256(source_manifest_path.read_bytes()).hexdigest() != (
@@ -909,6 +934,17 @@ def main(env_cfg, agent_cfg):
             parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
+    EX42_E0_ENV_CONTRACT = None
+    if args_cli.ex42_stage_e0_approved:
+        # Unreachable until the E0 launch path stops exiting 3 above; wired so it cannot be forgotten.
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        from foothold_s2.scripts.ex42_training_entry import prepare_e0_env_cfg
+
+        if not args_cli.ex42_terrain_mesh_dir:
+            raise ValueError("EX-42 E0 needs --ex42_terrain_mesh_dir (combined mesh); refusing the default terrain")
+        EX42_E0_ENV_CONTRACT = prepare_e0_env_cfg(
+            env_cfg, EX42Plan.load(Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"), args_cli.ex42_terrain_mesh_dir)
+        print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
@@ -919,7 +955,7 @@ def main(env_cfg, agent_cfg):
                                if EX41_LAUNCH_RECEIPT else None),
                              "max_updates": (args_cli.ex41_rehearsal_updates if EX41_REHEARSAL else
                                              args_cli.ex41_startup_smoke_updates if EX41_STARTUP_SMOKE else
-                                             (args_cli.max_iterations if args_cli.ex42_speed_probe else 1000)
+                                             (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
                                              if EX42_STAGE_ZERO_PLAN is not None else None),
                              "ex42_stage_zero": (EX42_STAGE_ZERO_PREFLIGHT
                                                  if EX42_STAGE_ZERO_PLAN is not None else None),
@@ -931,6 +967,11 @@ def main(env_cfg, agent_cfg):
 
     _write_ex41_gpu0_marker_receipt(log_dir)
     env = gym.make(args_cli.task, cfg=env_cfg)
+    if EX42_E0_ENV_CONTRACT is not None:
+        from foothold_s2.scripts.ex42_training_entry import apply_e0_exposure
+
+        print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(
+            env, EX42_E0_ENV_CONTRACT, EX42_STAGE_ZERO_CHECKPOINT["env_state"]), sort_keys=True), flush=True)
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None
@@ -1007,8 +1048,9 @@ def main(env_cfg, agent_cfg):
             plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
             approval_sha256=EX42_STAGE_ZERO_APPROVAL["approvals_sha256"],
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            maximum_updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else 1000),
-            push_vmax_mps=push_vmax, speed_probe=args_cli.ex42_speed_probe)
+            maximum_updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES),
+            push_vmax_mps=push_vmax, speed_probe=args_cli.ex42_speed_probe,
+            stage_id=("E0" if EX42_E0_REQUESTED else "EX42_0_T0_prime"))
         ex42_stage_zero_runtime.attach_environment(env, command_term)
         EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_manager(
             env, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
@@ -1045,8 +1087,10 @@ def main(env_cfg, agent_cfg):
                         if EX42_STAGE_ZERO_RESUME else EX42_STAGE_ZERO_CHECKPOINT),
             parent_path=EX42_STAGE_ZERO_PARENT["parent_path"],
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else 1000))
-        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else 1000)
+            updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES),
+            **({"stage_e0": True, "parent_local_update": 1000, "parent_cumulative_update": 13000}
+               if EX42_E0_REQUESTED else {}))
+        agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
         agent_cfg.seed = int(EX42_STAGE_ZERO_CHECKPOINT["env_seed"])
     pc = dict(train_cfg.get("perception", {}) or {})
     if args_cli.map_input:
