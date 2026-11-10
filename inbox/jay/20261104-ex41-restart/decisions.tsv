@@ -408,3 +408,4 @@ ts	phase	decision	why	evidence	result
 2026-11-10 21:1x	lead-lx	팀장 lead-lx 창 원문 「L2 조건부 통과 · Linux 기준선 재측정 진행」: EX-38 m3001 같은 코드(c57f2b4b+경로 7f3a17f4) 에서도 Linux 가 Windows 보다 한쪽으로 밀림 (probe_prop_only side-0.5 61 대 56~57 · body_vx 0.07~0.11 m 대 Windows 끼리 ≤0.04) · Linux 끼리 폭은 Windows 와 비슷 (1 칸 · 0.043 m) → 기기 차이 있음 · EX-42 비교는 Linux 값끼리만 · m12000 · m13000 을 지금 평가 경로로 Linux 재측정해 기준선. 원자료 eval_w15/ex38_linux* · ~/gpu-check/l2c57.sh
 2026-11-10 20:5x	lead-lx	팀장: 조용한 점검은 채팅에 「.」 도 쓰지 않음
 2026-11-10 21:3x	lead-lx	팀장 lead-lx 창 원문 「M 단계 측정 판 미리 승인한다, 기준선 끝나면 바로 띄워서」: M1~M4 (m12000 부모 · 한 장 3072 · 두 장 1536x2 · 3072x2 · 20/50 회 · 저장본은 속도 재기용) 기준선 평가 뒤 바로 기동 · NCCL_SHM_DISABLE=1 (L1 실측)
+2026-11-11 01:1x	lead-lx	팀장 lead-lx 창 원문 요지: 「지형은 최대한 있는 걸 쓰되 없으면 만든다 · B · D 는 논문 공개 치수 · 그림 보고 지금 만든다 · D 도 HiPAN 지형 보고 만든다 · 천장 문제는 depth 카메라 + 상위 보행의 몸 숙이기 명령으로 푼다 (Q12 막음 아님) · 빌 때는 GPU0 에서도 평가」 → B scripter · D analyst · 메시 잇기 · 측정 sonnet 배정 (01:1x)
