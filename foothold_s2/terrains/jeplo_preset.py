@@ -15,6 +15,11 @@ from foothold_s2.terrains.sparse_terrains import level_of, seed_of
 
 KINDS = ('gap', 'flat', 'box', 'discrete_obstacles', 'discrete_grid',
          'pyramid_stairs', 'inverted_pyramid_stairs')
+WAYPOINT_KINDS = frozenset(('gap', 'box', 'discrete_obstacles'))
+# Consumer contract: ex42_column_reset reads this by canonical kind name.
+# Missing kinds keep the caller's existing default XY +/-0.5 and yaw +/-3.14.
+RESET_RANGES = {kind: {axis: (0., 0.) for axis in ('x', 'y', 'yaw')}
+                for kind in sorted(WAYPOINT_KINDS)}
 H, V, SIZE, BORDER, INNER = 0.08, 0.005, 9.0, 7, 99
 
 
@@ -28,6 +33,7 @@ class HeightTile:
 
     @property
     def origin(self):
+        """Reference wrapper's geometric centre, NOT a safe robot spawn."""
         return np.array([4.5, 4.5, self.height_units[56, 56] * V])
 
 
@@ -190,6 +196,76 @@ def adapter_seed(kind, difficulty, generator_seed):
     return seed_of(f'jeplo/{generator_seed}/{kind}', difficulty) % 2**32
 
 
+def reset_ranges_by_column(column_kinds):
+    """Global C column -> reset pose ranges, consumed BEFORE the first reset.
+
+    Input is an explicit mapping of actual global column numbers to KINDS.
+    Never infer columns from env IDs or assume C starts at column 50. Columns
+    outside C are omitted by the caller and retain its normal reset settings.
+    Decision 2026-11-11 01:44: three waypoint kinds have no XY/yaw jitter;
+    the other four retain the existing ranges. This does not alter joints,
+    initial velocity, commands or the terrain curriculum.
+    """
+    result = {}
+    for column, kind in column_kinds.items():
+        if (isinstance(column, bool) or not isinstance(column, (int, np.integer))
+                or column < 0 or kind not in KINDS):
+            raise ValueError('expected nonnegative integer C column and canonical kind')
+        result[int(column)] = dict(RESET_RANGES.get(kind, {
+            'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}))
+    return result
+
+
+def spawn_origin(tile, *, vertices=None, faces=None):
+    """Return a support-checked entry anchor without changing any geometry.
+
+    The three waypoint kinds require reset_ranges_by_column's zero XY/yaw.
+    Inspect the actual snapped triangles over a 0.70 x 0.50 m rectangle, not
+    just the height under the body centre. Prefer the entry near (1,4.48),
+    constrain it to x<=1.6 and within 0.4 m of the route centreline. Accept
+    at most 0.15 m relief and only ground in [-0.10,0.15] m; pit floors and
+    box tops above 0.15 m are not fallback starts. These bounds are our reset
+    contract, not a published JEPLO success threshold. No candidate -> error.
+    Direct-command kinds retain the reference origin and their reset ranges.
+    """
+    if tile.kind not in WAYPOINT_KINDS:
+        return tile.origin.copy()
+    if (vertices is None) != (faces is None):
+        raise ValueError('vertices and faces must be supplied together')
+    if vertices is None:
+        vertices, faces = mesh_arrays(tile)
+    triangles = np.asarray(vertices, dtype=np.float64)[faces]
+    if not np.isfinite(triangles).all():
+        raise ValueError('nonfinite spawn support mesh')
+    lower, upper = triangles[:, :, :2].min(1), triangles[:, :, :2].max(1)
+    candidates = np.array([(x*H, y*H) for x in range(5, 21) for y in range(51, 62)])
+    distance = ((candidates - (1., 4.48))**2).sum(1)
+    for centre in candidates[np.argsort(distance, kind='stable')]:
+        intersects = (np.all(upper >= centre-(.35, .25), axis=1)
+                      & np.all(lower <= centre+(.35, .25), axis=1))
+        patch = triangles[intersects]
+        if not len(patch):
+            continue
+        z = patch[:, :, 2]
+        if z.min() < -.1-1e-7 or z.max() > .15+1e-7 or np.ptp(z) > .15+1e-7:
+            continue
+        # Interpolate the true surface at the anchor; cliffs can displace the
+        # nominal heightfield sample XY by one cell during triangulation.
+        a = patch[:, 0]
+        u, v = patch[:, 1, :2]-a[:, :2], patch[:, 2, :2]-a[:, :2]
+        det = u[:, 0]*v[:, 1]-u[:, 1]*v[:, 0]
+        nonvertical = abs(det) > 1e-12
+        a, u, v, det, patch = (item[nonvertical] for item in (a, u, v, det, patch))
+        delta = centre-a[:, :2]
+        s = (delta[:, 0]*v[:, 1]-delta[:, 1]*v[:, 0])/det
+        t = (u[:, 0]*delta[:, 1]-u[:, 1]*delta[:, 0])/det
+        hit = (s >= -1e-7) & (t >= -1e-7) & (s+t <= 1+1e-7)
+        if hit.any():
+            height = a[:, 2]+s*(patch[:, 1, 2]-a[:, 2])+t*(patch[:, 2, 2]-a[:, 2])
+            return np.r_[centre, height[hit].max()]
+    raise ValueError(f'no safe entry support: kind={tile.kind} level={tile.level} seed={tile.seed}')
+
+
 def tile_function(difficulty, cfg):
     """Isaac SubTerrainBaseCfg interface. Standard row bins map to JEPLO L/9.
 
@@ -207,8 +283,9 @@ def tile_function(difficulty, cfg):
         warnings.warn('explicit jeplo_level overrides row difficulty', RuntimeWarning, stacklevel=2)
     tile = build_heightfield(cfg.kind, level, adapter_seed(cfg.kind, difficulty, cfg.seed))
     vertices, faces = mesh_arrays(tile)
+    origin = spawn_origin(tile, vertices=vertices, faces=faces)
     import trimesh
-    return [trimesh.Trimesh(vertices=vertices, faces=faces, process=True)], tile.origin
+    return [trimesh.Trimesh(vertices=vertices, faces=faces, process=True)], origin
 
 
 def jeplo_subterrains(seed=42):
