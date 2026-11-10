@@ -831,11 +831,15 @@ def terrain_distribution(env):
     """Read real labels; column assignment matches installed Isaac generator."""
     terrain=env.scene.terrain; cfg=terrain.cfg.terrain_generator
     if cfg.curriculum is not True: raise ValueError('EX41 column names require curriculum generator or actual tile manifest')
-    names=list(cfg.sub_terrains); proportions=[float(cfg.sub_terrains[k].proportion) for k in names]
-    if sum(proportions)<=0: raise ValueError('EX41 terrain proportions empty')
-    cumulative=[]; total=0.
-    for p in proportions: total+=p/sum(proportions); cumulative.append(total)
-    columns=[names[next(j for j,c in enumerate(cumulative) if i/cfg.num_cols+.001<c)] for i in range(cfg.num_cols)]
+    if hasattr(cfg,'sub_terrains'):
+        names=list(cfg.sub_terrains); proportions=[float(cfg.sub_terrains[k].proportion) for k in names]
+        if sum(proportions)<=0: raise ValueError('EX41 terrain proportions empty')
+        cumulative=[]; total=0.
+        for p in proportions: total+=p/sum(proportions); cumulative.append(total)
+        columns=[names[next(j for j,c in enumerate(cumulative) if i/cfg.num_cols+.001<c)] for i in range(cfg.num_cols)]
+    else:   # EX-42 combined mesh cfg: names come from its column table
+        from foothold_s2.terrains.generator_columns import generator_column_names
+        columns=generator_column_names(cfg); names=list(dict.fromkeys(columns))
     raw_levels=terrain.terrain_levels.detach().cpu(); raw_types=terrain.terrain_types.detach().cpu()
     if (not torch.isfinite(raw_levels).all() or not torch.isfinite(raw_types).all()
         or (raw_levels!=raw_levels.long()).any() or (raw_types!=raw_types.long()).any()

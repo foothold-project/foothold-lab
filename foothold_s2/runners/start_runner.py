@@ -55,6 +55,7 @@ from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 from foothold_s2.terrains import columns
+from foothold_s2.terrains.generator_columns import generator_column_names, has_column_source
 
 def _final_checkpoint_is_already_current(runtime, iteration: int, checkpoint_path: str | Path) -> bool:
     """Avoid overwriting a just-saved stride checkpoint with its own reference."""
@@ -1365,7 +1366,7 @@ class StartRunner(OnPolicyRunner):
             return None
         gen = getattr(getattr(terrain, "cfg", None), "terrain_generator", None)
 
-        if gen is None or not hasattr(gen, "sub_terrains") or not hasattr(gen, "num_cols"):
+        if not has_column_source(gen):
             return None
 
         return terrain
@@ -1377,7 +1378,7 @@ class StartRunner(OnPolicyRunner):
             self._off_names_cache = None
             if terrain is not None:
                 gen = terrain.cfg.terrain_generator
-                names = columns.column_types({k: float(v.proportion) for k, v in gen.sub_terrains.items()}, int(gen.num_cols))
+                names = generator_column_names(gen)
                 self._off_names_cache = check_column_names(names)
                 self.map_ratio_events.append({"kind": "off_eligibility", "eligible": sorted(ELIGIBLE_NAMES), "sparse": sorted(SPARSE_NAMES),
                                               "num_cols": int(gen.num_cols), "column_counts": {n: self._off_names_cache.count(n) for n in sorted(set(self._off_names_cache))}})
