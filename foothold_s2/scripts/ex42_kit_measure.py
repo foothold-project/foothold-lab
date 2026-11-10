@@ -3,8 +3,8 @@
 Scope kept narrow on purpose:
   * Only families whose generator code exists in this repository are buildable:
     continuous (rough_go2_cfg), E (terrains/ex42.py), A (START sparse tiles, by the
-    names in terrains/columns.py). Families B (AME-2), C (JEPLO) and D have no generator
-    code here; this tool never creates one and reports them as missing.
+    names in terrains/columns.py), C (terrains/jeplo_preset.py). Families B (AME-2) and D
+    have no generator code here; this tool never creates one and reports them as missing.
   * Dimensions, paper references and physical flags are never filled in by this tool.
     They come from a declarations JSON written by whoever owns the kind. A kind with a
     null or missing field is reported as undeclared and is NOT measured.
@@ -41,12 +41,14 @@ DEFAULT_SEED = 42
 def buildable_kinds() -> dict[str, list[str]]:
     """Kind names whose generator code exists here (no Isaac import)."""
     from foothold_s2.terrains import columns
+    from foothold_s2.terrains import jeplo_preset
     from foothold_s2.terrains.ex42 import PAPER_EXT_SPECS
 
     return {
         "continuous": list(columns.CONTINUOUS),
         "E": [spec.kind for spec in PAPER_EXT_SPECS],
         "A": list(columns.SPARSE),
+        "C": list(jeplo_preset.KINDS),
     }
 
 
@@ -96,8 +98,12 @@ def declarations_template(buildable: dict[str, list[str]]) -> dict[str, Any]:
             for family, kinds in buildable.items()}
 
 
-def _generator_for(family: str, kind: str):
+def _generator_for(family: str, kind: str, seed: int = DEFAULT_SEED):
     """Return (TerrainGeneratorCfg, subterrain cfg) for one buildable kind (Kit python)."""
+    if family == "C":
+        from foothold_s2.terrains.jeplo_preset import measurement_generator
+
+        return measurement_generator(kind, seed=seed)
     from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
 
     if family == "continuous":
@@ -116,7 +122,7 @@ def _generator_for(family: str, kind: str):
         raise ValueError(f"no generator code for terrain family {family!r} in this repository")
     if kind not in subs:
         raise ValueError(f"no generator for {family}/{kind}")
-    return build_generator(subs, 1, DEFAULT_SEED), subs[kind]
+    return build_generator(subs, 1, seed), subs[kind]
 
 
 def source_head() -> str:
@@ -139,7 +145,7 @@ def measure_family(family: str, declarations: dict[str, Any], *, seed: int,
         declaration = (declarations.get(family) or {}).get(kind)
         if declaration_gaps(declaration):
             continue
-        generator_cfg, subterrain_cfg = _generator_for(family, kind)
+        generator_cfg, subterrain_cfg = _generator_for(family, kind, seed)
         row, _elapsed = measure_kind_with_kit(
             family=family, kind=kind, preset_id=declaration["preset_id"],
             generator_cfg=generator_cfg, subterrain_cfg=subterrain_cfg,
