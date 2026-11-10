@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# L2 (LINUX-DAY-EXPERIMENT-ORDER): EX-38 m3001 W15 evaluation on ai-lx01, GPU0 (cuda:0), same arguments as the Windows reference.
+# L2 (LINUX-DAY-EXPERIMENT-ORDER): EX-38 m3001 W15 evaluation on ai-lx01, GPU0 (cuda:0 by default; L2_DEVICE=cuda:1 and L2_OUT=<new dir> select the other card / output root), same arguments as the Windows reference.
 # usage: l2_w15_linux.sh print     print the launch command (nothing runs)
 #        l2_w15_linux.sh run       evaluate (lead starts this; uses the GPU, Kit, OMNI_KIT_ACCEPT_EULA=YES)
 #        l2_w15_linux.sh compare   w15_compare.py: (reference ex38/m3001 vs Linux) and (Windows cuda0 vs cuda1 width)
@@ -11,10 +11,12 @@ RUNS="$LAB/basic_gait_runs"
 CK="${L2_CHECKPOINT:-$RUNS/main/EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt}"
 CK_SHA=7ff575f356c27ab6280fa2e01dce40f806bbfdd89d4306ae63c827b3ff16706c
 OUT="${L2_OUT:-$RUNS/eval_w15/ex38_linux}"
+DEV="${L2_DEVICE:-cuda:0}"
+case "$DEV" in cuda:0|cuda:1) ;; *) echo "L2_DEVICE must be cuda:0 or cuda:1 (got $DEV)" >&2; exit 2 ;; esac
 REF_ROOT="$RUNS/eval_w15"
 COMPARE="${W15_COMPARE:-$HOME/mai/wt/mai-os/ledger/tools/w15_compare.py}"
 : "${ISAAC311_PYTHON:?ISAAC311_PYTHON is not set (source the machine env file)}"
-CMD=(env OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONPATH="$ROOT" "$ISAAC311_PYTHON" -m foothold_s2.basic_gait_eval_chain_v3 --device cuda:0 --checkpoint "$CK" --out "$OUT")
+CMD=(env OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONPATH="$ROOT" "$ISAAC311_PYTHON" -m foothold_s2.basic_gait_eval_chain_v3 --device "$DEV" --checkpoint "$CK" --out "$OUT")
 case "${1:-print}" in
   print) printf '%q ' "${CMD[@]}"; echo ;;
   run)

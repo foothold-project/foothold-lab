@@ -196,3 +196,12 @@ def test_compare_calls_w15_compare_twice_with_the_right_pairs(tmp_path):
     assert len(calls) == 2
     assert "/ex38/m3001/" in calls[0][1] and "/ex38_linux/m3001/" in calls[0][2] and "--json" in calls[0]
     assert "/ex38_repeat/cuda0/" in calls[1][1] and "/ex38_repeat/cuda1/" in calls[1][2]
+
+
+def test_device_and_out_are_taken_from_the_environment(tmp_path):
+    env = dict(os.environ, ISAAC311_PYTHON="/opt/isaac311/bin/python", L2_DEVICE="cuda:1", L2_OUT=str(tmp_path / "o1"))
+    argv = shlex.split(subprocess.run(["bash", str(SCRIPT), "print"], env=env, capture_output=True, text=True, check=True).stdout)
+    assert argv[argv.index("--device") + 1] == "cuda:1" and argv[argv.index("--out") + 1] == str(tmp_path / "o1")
+    env["L2_DEVICE"] = "cuda:2"
+    bad = subprocess.run(["bash", str(SCRIPT), "print"], env=env, capture_output=True, text=True)
+    assert bad.returncode == 2 and "L2_DEVICE" in bad.stderr
