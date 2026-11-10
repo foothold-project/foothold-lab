@@ -40,13 +40,14 @@ DEFAULT_SEED = 42
 def buildable_kinds() -> dict[str, list[str]]:
     """Kind names whose generator code exists here (no Isaac import)."""
     from foothold_s2.terrains import columns
-    from foothold_s2.terrains import hipan_posture, jeplo_preset
+    from foothold_s2.terrains import ame2_preset, hipan_posture, jeplo_preset
     from foothold_s2.terrains.ex42 import PAPER_EXT_SPECS
 
     return {
         "continuous": list(columns.CONTINUOUS),
         "E": [spec.kind for spec in PAPER_EXT_SPECS],
         "A": list(columns.FULL),
+        "B": list(ame2_preset.KINDS),
         "C": list(jeplo_preset.KINDS),
         "D": list(hipan_posture.KINDS),
     }
@@ -100,6 +101,10 @@ def declarations_template(buildable: dict[str, list[str]]) -> dict[str, Any]:
 
 def _generator_for(family: str, kind: str, seed: int = DEFAULT_SEED):
     """Return (TerrainGeneratorCfg, subterrain cfg) for one buildable kind (Kit python)."""
+    if family == "B":
+        from foothold_s2.terrains.ame2_preset import measurement_generator
+
+        return measurement_generator(kind, seed=seed)
     if family == "C":
         from foothold_s2.terrains.jeplo_preset import measurement_generator
 

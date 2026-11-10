@@ -83,4 +83,19 @@ def test_family_a_is_the_full_thirteen_and_plan_shows_it():
                          km.buildable_kinds(), {})
     assert report["A"]["generator_in_repo"] == 13 and report["A"]["generator_missing"] == 0
     assert report["C"]["generator_in_repo"] == 7 and report["E"]["generator_in_repo"] == 4
-    assert report["B"]["generator_in_repo"] == 0 and report["D"]["generator_in_repo"] == 3
+    assert report["B"]["generator_in_repo"] == 12 and report["D"]["generator_in_repo"] == 3
+
+
+def test_family_b_one_column_per_kind_and_default_is_all_five(monkeypatch):
+    import types
+    seen = {}
+    fake = types.ModuleType("foothold_s2.terrains.ame2_preset")
+    fake.KINDS = tuple(f"k{i}" for i in range(12))
+    fake.build_generator = lambda **kw: seen.update(kw) or "cfg"
+    monkeypatch.setitem(__import__("sys").modules, "foothold_s2.terrains.ame2_preset", fake)
+    assert mb._family_generator("B", 42) == "cfg"
+    assert seen["num_cols"] == mb.FAMILY_COLUMNS["B"] == 12 and seen["seed"] == 42
+    assert set(seen["proportions"]) == set(fake.KINDS) and abs(sum(seen["proportions"].values()) - 1.0) < 1e-9
+    assert len(set(seen["proportions"].values())) == 1          # equal share = one column per kind
+    assert mb.build_parser().parse_args(["--out", "x"]).family is None
+    assert "B" in mb.ALL_FAMILIES and set(mb.FAMILY_COLUMNS) == set(mb.ALL_FAMILIES)

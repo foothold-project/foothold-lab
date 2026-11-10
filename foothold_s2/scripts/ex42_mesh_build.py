@@ -9,7 +9,7 @@ three plan aggregates on that mesh (DESIGN-EX42-TERRAIN section 8):
   ray_count_per_second  downward grid rays, 3,072 env x (187 height-scan + 3,600 depth) per
                       cast, 20 warm-up + 100 timed casts, device synchronised
 
-Families without generator code (B, D today) are reported missing. In that case the three numbers
+Families without generator code are reported missing. In that case the three numbers
 are written under `partial_*` keys in aggregate_partial_mesh.json, which assemble_manifest does
 not accept, so a partial mesh can never pass as the final aggregate.
 
@@ -32,7 +32,7 @@ ENVS = 3072
 HEIGHT_SCAN_RAYS = 17 * 11          # EX-40 env.yaml height_scanner 0.1 m grid [1.6, 1.0]
 DEPTH_RAYS = 60 * 60                # depth_cam 60 x 60
 WARMUP, TIMED = 20, 100
-FAMILY_COLUMNS = {"A": 50, "C": 7, "D": 3, "E": 4}   # A: columns.FULL_COLS, C: one column per kind, E: four kinds
+FAMILY_COLUMNS = {"A": 50, "B": 12, "C": 7, "D": 3, "E": 4}   # A: columns.FULL_COLS, C: one column per kind, E: four kinds
 
 
 def aggregate_files(families_present: list[str], values: dict[str, float]) -> tuple[str, dict[str, Any]]:
@@ -68,6 +68,11 @@ def _family_generator(family: str, seed: int):
 
         subs = {**continuous_subterrains(), **sparse_subterrains(dict(columns.SPARSE))}
         return build_generator(subs, columns.FULL_COLS, seed)
+    if family == "B":
+        from foothold_s2.terrains import ame2_preset
+
+        equal = {kind: 1.0 / len(ame2_preset.KINDS) for kind in ame2_preset.KINDS}      # one column per kind
+        return ame2_preset.build_generator(seed=seed, num_cols=FAMILY_COLUMNS["B"], proportions=equal)
     if family == "C":
         from foothold_s2.terrains import jeplo_preset
 
@@ -174,8 +179,8 @@ def build_parser(app_launcher: Any | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--family", action="append", choices=("A", "C", "D", "E"),
-                        help="repeatable; default: every family with generator code (A C D E)")
+    parser.add_argument("--family", action="append", choices=ALL_FAMILIES,
+                        help="repeatable; default: every family with generator code (A B C D E)")
     parser.add_argument("--seed", type=int, default=42)
     if app_launcher is None:
         parser.add_argument("--device", default="cuda:1")
@@ -190,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     from isaaclab.app import AppLauncher
 
     args, _ = build_parser(AppLauncher).parse_known_args(argv)
-    families = args.family or ["A", "C", "D", "E"]
+    families = args.family or list(ALL_FAMILIES)
     app = AppLauncher(args).app
     code = 0
     try:

@@ -23,7 +23,7 @@ def _expected():
 
 def test_modules_called_exist():
     for name in ("foothold_s2.curriculum.ex42_manifest", "foothold_s2.terrains.ex42",
-                 "foothold_s2.terrains.rough_go2_cfg", "foothold_s2.terrains.sparse_terrains", "foothold_s2.terrains.jeplo_preset",
+                 "foothold_s2.terrains.rough_go2_cfg", "foothold_s2.terrains.sparse_terrains", "foothold_s2.terrains.jeplo_preset", "foothold_s2.terrains.ame2_preset",
                  "foothold_s2.scripts.ex42_manifest_build"):
         assert importlib.util.find_spec(name) is not None, name
 
@@ -32,9 +32,7 @@ def test_coverage_reports_missing_generators_and_does_not_invent_declarations():
     report = km.coverage(_expected(), km.buildable_kinds(), {})
     assert report["C"]["generator_in_repo"] == 7 and report["C"]["generator_missing"] == 0
     assert report["D"]["generator_in_repo"] == 3 and report["D"]["generator_missing"] == 0
-    for family in ("B",):
-        assert report[family]["generator_in_repo"] == 0
-        assert report[family]["generator_missing"] == _expected()[family]
+    assert report["B"]["generator_in_repo"] == 12 and report["B"]["generator_missing"] == 0
     assert report["continuous"]["generator_in_repo"] == 7
     assert report["E"]["generator_in_repo"] == 4
     # nothing declared -> nothing measurable
@@ -237,6 +235,15 @@ def test_receipt_device_is_cuda0_or_cuda1_and_recorded_not_assumed():
     row["measurement_provenance"]["device"] = "cuda:0"
     with pytest.raises(ValueError):       # provenance must match the receipt device
         build_family_receipt("E", [row], receipt_id="r", source_head=HEAD, seed=42, device="cuda:1")
+
+
+def test_family_b_wiring_passes_seed(monkeypatch):
+    seen = {}
+    fake = types.ModuleType("foothold_s2.terrains.ame2_preset")
+    fake.KINDS = ("gap",)
+    fake.measurement_generator = lambda kind, seed: seen.update(kind=kind, seed=seed) or ("g", "s")
+    monkeypatch.setitem(sys.modules, "foothold_s2.terrains.ame2_preset", fake)
+    assert km._generator_for("B", "gap", 5) == ("g", "s") and seen == {"kind": "gap", "seed": 5}
 
 
 def test_family_d_wiring_passes_seed(monkeypatch):
