@@ -124,3 +124,81 @@ def test_proportional_assignment_counts():
     types_ = ex.assign_exposed_columns(10, [0.0, 3.0, 0.0, 1.0, 1.0])
     counts = torch.bincount(types_, minlength=5).tolist()
     assert counts[0] == counts[2] == 0 and sum(counts) == 10 and counts[1] == 6
+
+
+PARENT_CKPT = pathlib.Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261108_123914/main/"
+                           "EX-42-B-stagezero_20261108_123914/model_1000.pt")
+
+
+def _real_parts():
+    data = np.load(REAL / "terrain_mesh.npz", allow_pickle=False)
+    table = cr.build_column_table([str(v) for v in data["column_family"]])
+    _plan, spec = _stage_terrain()
+    exposure, caps = ex.exposure_by_column(spec, table)
+    return data, table, exposure, caps
+
+
+@needs_real
+@pytest.mark.skipif(not PARENT_CKPT.is_file(), reason="parent m13000 checkpoint not on this machine")
+def test_real_parent_env_state_is_restored_exactly_and_the_cap_only_cuts():
+    state = torch.load(PARENT_CKPT, map_location="cpu", weights_only=False)["env_state"]
+    data, table, exposure, caps = _real_parts()
+    t = _terrain(data["origins"], num_envs=3072)
+    receipt = ex.apply_exposure(t, exposure, caps, parent_env_state=state, table=table)
+    assert receipt["start"] == "parent_env_state"
+    assert torch.equal(t.terrain_types.cpu(), state["terrain_types"])                    # column diff 0
+    assert torch.equal(t.terrain_levels.cpu(), state["terrain_levels"])                  # level diff 0
+    hist = torch.bincount(t.terrain_levels, minlength=10).tolist()
+    assert hist == torch.bincount(state["terrain_levels"], minlength=10).tolist()
+    assert int(t.terrain_types.max()) <= 22 and hist[5] > 0 and sum(hist[6:]) == 0
+    assert torch.equal(t.env_origins, t.terrain_origins[t.terrain_levels, t.terrain_types])
+    # a second rank restores the same distribution (6144 = 2 x 3072)
+    t2 = _terrain(data["origins"], num_envs=3072)
+    ex.apply_exposure(t2, exposure, caps, parent_env_state=state, table=table)
+    assert torch.equal(t2.terrain_levels, t.terrain_levels) and torch.equal(t2.terrain_types, t.terrain_types)
+    # later moves stay under the cap and inside exposed columns
+    gen = torch.Generator().manual_seed(1)
+    exposed = torch.tensor([w > 0 for w in exposure])
+    capv = torch.tensor(caps)
+    for _ in range(300):
+        ids = torch.nonzero(torch.rand(3072, generator=gen) < 0.5).flatten()
+        up = torch.rand(len(ids), generator=gen) < 0.8
+        t.update_env_origins(ids, up, ~up)
+        assert exposed[t.terrain_types].all() and (t.terrain_levels <= capv[t.terrain_types]).all()
+
+
+@needs_real
+def test_parent_placement_that_does_not_match_the_new_mesh_stops():
+    data, table, exposure, caps = _real_parts()
+    ok = {"terrain_types": torch.arange(64) % 23, "terrain_levels": torch.full((64,), 5)}
+    t = _terrain(data["origins"], num_envs=64)
+    ex.apply_exposure(t, exposure, caps, parent_env_state=ok, table=table)
+    bad_table = [dict(r) for r in table]
+    bad_table[3] = {**bad_table[3], "kind": "boxes"}                                       # kind name differs at column 3
+    with pytest.raises(ValueError, match="parent column 3"):
+        ex.apply_exposure(_terrain(data["origins"], num_envs=64), exposure, caps, parent_env_state=ok, table=bad_table)
+    with pytest.raises(ValueError, match="envs"):
+        ex.apply_exposure(_terrain(data["origins"], num_envs=32), exposure, caps, parent_env_state=ok, table=table)
+    on_unexposed = {"terrain_types": torch.full((64,), 30), "terrain_levels": torch.zeros(64, dtype=torch.long)}
+    with pytest.raises(ValueError, match="outside the parent mesh"):
+        ex.apply_exposure(_terrain(data["origins"], num_envs=64), exposure, caps, parent_env_state=on_unexposed, table=table)
+    zero_exposure = list(exposure); zero_exposure[0] = 0.0
+    with pytest.raises(ValueError, match="exposure 0"):
+        ex.apply_exposure(_terrain(data["origins"], num_envs=64), zero_exposure, caps, parent_env_state=ok, table=table)
+    too_high = {"terrain_types": torch.zeros(64, dtype=torch.long), "terrain_levels": torch.full((64,), 12)}
+    with pytest.raises(ValueError, match="outside the mesh rows"):
+        ex.apply_exposure(_terrain(data["origins"], num_envs=64), exposure, caps, parent_env_state=too_high, table=table)
+
+
+@needs_real
+def test_cap_cuts_a_parent_level_above_it():
+    data, table, exposure, caps = _real_parts()
+    st = {"terrain_types": torch.zeros(8, dtype=torch.long), "terrain_levels": torch.tensor([0, 3, 5, 6, 7, 8, 9, 5])}
+    t = _terrain(data["origins"], num_envs=8)
+    ex.apply_exposure(t, exposure, caps, parent_env_state=st, table=table)
+    assert t.terrain_levels.tolist() == [0, 3, 5, 5, 5, 5, 5, 5]
+
+
+def test_train_start_passes_the_parent_env_state_to_the_exposure_step():
+    src = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert 'EX42_STAGE_ZERO_CHECKPOINT["env_state"]' in src and "apply_e0_exposure(" in src

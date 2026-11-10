@@ -970,7 +970,8 @@ def main(env_cfg, agent_cfg):
     if EX42_E0_ENV_CONTRACT is not None:
         from foothold_s2.scripts.ex42_training_entry import apply_e0_exposure
 
-        print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(env, EX42_E0_ENV_CONTRACT), sort_keys=True), flush=True)
+        print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(
+            env, EX42_E0_ENV_CONTRACT, EX42_STAGE_ZERO_CHECKPOINT["env_state"]), sort_keys=True), flush=True)
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None

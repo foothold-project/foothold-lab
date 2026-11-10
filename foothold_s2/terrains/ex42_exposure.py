@@ -73,10 +73,41 @@ def assign_exposed_columns(num_envs: int, exposure, generator=None, device="cpu"
     return types[perm].to(device)
 
 
-def apply_exposure(terrain, exposure, caps, generator=None) -> dict[str, Any]:
+def parent_column_kinds() -> list[str]:
+    """Kind of each column of the parent's mesh (EX-41 / stage zero: the 23 continuous columns)."""
+    from foothold_s2.terrains import columns
+
+    return list(columns.column_types(columns.CONTINUOUS, columns.CONTINUOUS_COLS))
+
+
+def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[str, Any]], num_envs: int):
+    """(terrain_types, terrain_levels) of the parent's envs, checked against the new mesh by kind name.
+
+    Parent column c must be the same kind as new-mesh column c (family A); a mismatch raises. Every rank
+    gets the same parent distribution (3072 envs each), so two ranks hold 6144 envs of that distribution.
+    """
+    import torch
+
+    types = torch.as_tensor(parent_env_state["terrain_types"]).to(torch.long).clone()
+    levels = torch.as_tensor(parent_env_state["terrain_levels"]).to(torch.long).clone()
+    if types.shape != levels.shape or types.ndim != 1 or len(types) != num_envs:
+        raise ValueError(f"EX-42 parent env_state has {tuple(types.shape)} envs, this process has {num_envs}")
+    kinds = parent_column_kinds()
+    if int(types.min()) < 0 or int(types.max()) >= len(kinds):
+        raise ValueError("EX-42 parent env_state names a column outside the parent mesh")
+    for c, kind in enumerate(kinds):
+        row = table[c] if c < len(table) else None
+        if row is None or row["family"] != "A" or row["kind"] != kind:
+            raise ValueError(f"EX-42 parent column {c} is {kind!r} but the new mesh column is "
+                             f"{None if row is None else (row['family'], row['kind'])}")
+    return types, levels
+
+
+def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None) -> dict[str, Any]:
     """Runtime step on the TerrainImporter (call once after the env exists, before the first reset):
-    assign envs only to exposed columns, cut levels at the caps, and wrap update_env_origins so every
-    later level change is cut the same way. Returns a receipt."""
+    start from the parent's (column, level) per env when given (else assign only to exposed columns),
+    cut levels at the caps, and wrap update_env_origins so every later level change is cut the same
+    way. A parent column with exposure 0 raises. Returns a receipt."""
     import torch
 
     if getattr(terrain, "exposure_wrapped", False):
@@ -88,8 +119,20 @@ def apply_exposure(terrain, exposure, caps, generator=None) -> dict[str, Any]:
     device = terrain.terrain_levels.device
     cap = torch.as_tensor(caps, dtype=torch.long, device=device)
     num_envs = terrain.terrain_levels.shape[0]
-    terrain.terrain_types = assign_exposed_columns(num_envs, exposure, generator, device)
     cap = cap.clamp(max=terrain.terrain_origins.shape[0] - 1)
+    inherited = parent_env_state is not None
+    if inherited:
+        if table is None:
+            raise ValueError("EX-42 parent placement needs the column table")
+        types, levels = restore_parent_placement(parent_env_state, table, num_envs)
+        if int(levels.min()) < 0 or int(levels.max()) >= terrain.terrain_origins.shape[0]:
+            raise ValueError("EX-42 parent env_state level is outside the mesh rows")
+        if not torch.as_tensor([w > 0 for w in exposure])[types].all():
+            raise ValueError("EX-42 parent env sits on a column with exposure 0")
+        terrain.terrain_types = types.to(device)
+        terrain.terrain_levels = levels.to(device)
+    else:
+        terrain.terrain_types = assign_exposed_columns(num_envs, exposure, generator, device)
 
     def refresh(ids):
         terrain.terrain_levels[ids] = torch.minimum(terrain.terrain_levels[ids], cap[terrain.terrain_types[ids]])
@@ -106,4 +149,5 @@ def apply_exposure(terrain, exposure, caps, generator=None) -> dict[str, Any]:
     terrain.update_env_origins = capped_update
     terrain.exposure_wrapped = True
     return {"exposed_columns": [c for c, w in enumerate(exposure) if w > 0],
-            "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs}
+            "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
+            "start": "parent_env_state" if inherited else "assigned"}
