@@ -94,11 +94,31 @@ def local_mesh_heights(vertices: np.ndarray, faces: np.ndarray, points_xy: np.nd
     return MeshHeights(vertices, faces).at(points_xy, radius)
 
 
+def column_tile_sizes(origins) -> tuple[np.ndarray, float]:
+    """(tile_x per column, tile_y) of the joined grid, from the origin spacing (rows run along x).
+
+    Row pitch of one column = that family's tile length along x; it must be one positive number per
+    column. The y value is the median positive spacing between neighbouring columns of the same
+    kind of tile (borders between families are larger and are ignored by the median).
+    """
+    o = np.asarray(origins, dtype=np.float64)
+    if o.ndim != 3 or o.shape[0] < 2 or o.shape[1] < 1:
+        raise ValueError("tile sizes need origins of shape (rows >= 2, columns, 3)")
+    pitch = np.diff(o[:, :, 0], axis=0)                       # (rows-1, cols)
+    tile_x = pitch.mean(axis=0)
+    if not np.isfinite(tile_x).all() or (tile_x <= 0).any() or not np.allclose(pitch, tile_x[None], atol=1e-4):
+        raise ValueError("origin row spacing must be one positive tile length per column")
+    dy = np.diff(o[0, :, 1]) if o.shape[1] > 1 else np.array([tile_x.mean()])
+    dy = dy[dy > 0]
+    return tile_x, float(np.median(dy)) if len(dy) else float(tile_x.mean())
+
+
 def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None):
     """Isaac-side cfg whose class_type loads the saved mesh. Kit python only."""
     from isaaclab.utils import configclass
 
     loaded = load_combined_mesh(npz_path, mesh_sha256)
+    tile_x, tile_y = column_tile_sizes(loaded["origins"])
 
     class CombinedMeshGenerator:
         def __init__(self, cfg, device="cpu"):
@@ -118,7 +138,11 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
         # fields other code may read from a generator cfg; they describe the joined grid
         num_rows: int = int(loaded["origins"].shape[0])
         num_cols: int = int(loaded["origins"].shape[1])
-        size: tuple = (0.0, 0.0)          # tiles differ per family; the origins tensor is the layout
+        # Tiles differ per family. `size` must NOT be (0, 0): the free-velocity promotion rule compares
+        # max distance with size[0] / 2, so 0 promotes every moving env. The scalar below is the median
+        # tile; the promotion rule reads the per-column table (rules.promotion_size_x).
+        size: tuple = (float(np.median(tile_x)), tile_y)
+        tile_x_by_column: tuple = tuple(float(v) for v in tile_x)
         seed: int = 0
         curriculum: bool = True
         use_cache: bool = False
