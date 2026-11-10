@@ -69,9 +69,9 @@ environment:
     - ray_count_per_second
     values:
       peak_memory_gib: 0.90625
-      generation_seconds: 7.346669879999354
-      ray_count_per_second: 675841254.9544429
-      source: s2_lab/ex42_mesh_1111/seed42_ABCDE/aggregate_measurements.json
+      generation_seconds: 9.176870384999347
+      ray_count_per_second: 687191753.0844679
+      source: s2_lab/ex42_mesh_1111/seed42_E0_c333/aggregate_measurements.json
       kind: proxy_downward_grid_rays
       replace_with: real_sensor_patterns_later
   terrain_manifest:
@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 7b93167330f8c065ef11e3dc0177194e5d4c2bc3040cb01c5b2a261888f677a8
+  approval_sha256: c4c76916f8d126694c7c8c9be81430919d99cf09a27375379f727cc19c24f680
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -567,10 +567,10 @@ assumptions_pending_lead:
   terrain_manifest_measurements:
     value:
       peak_memory_gib: 0.90625
-      generation_seconds: 7.346669879999354
-      ray_count_per_second: 675841254.9544429
-      source: s2_lab/ex42_mesh_1111/seed42_ABCDE/aggregate_measurements.json
-      mesh_sha256: 6732b8886029032a853f88daeb3180cd265edbe7afad645eca6226b2434c1dfd
+      generation_seconds: 9.176870384999347
+      ray_count_per_second: 687191753.0844679
+      source: s2_lab/ex42_mesh_1111/seed42_E0_c333/aggregate_measurements.json
+      mesh_sha256: 88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95
       device: cuda:0
       envs: 3072
       kind: proxy_downward_grid_rays
@@ -579,7 +579,12 @@ assumptions_pending_lead:
     approved: true
     decision: teamlead-2026-11-11-0150-71a3d51f
   runtime_integration:
-    value: {pr: 600, head: 2c64ef11e892ead8dfc8deb159f80d857dc75af7, base: lead/linux-integration-1109, merged: null}
+    value:
+      base: lead/linux-integration-1109
+      merged: true
+      integrations:
+      - {pr: 600, merge_commit: f007b640af0fa0d7f23618bab591d55ef873a060}
+      - {pr: 615, merge_commit: 9002c0eb7545a843cf387a0525d9c008f4c94592}
     class: implementation_approved
     approved: true
     decision: teamlead-2026-11-11-0150-71a3d51f
