@@ -173,7 +173,9 @@ def test_g05_placeholder_paths_and_argv_hash_do_not_close_native_gate(tmp_path, 
     monkeypatch.setattr(ex42_ops, "verify_env_cfg_import", lambda task_id: {
         "task_id": task_id, "imported": False, "error_type": "ModuleNotFoundError",
         "error": "No module named 'pxr'", "kit_started": False})
-    result = ex42_ops.ops_check(ex42_ops.DEFAULT_TABLE, ex42_ops.DEFAULT_APPROVALS)
+    gate_fixture = Path(__file__).with_name("fixtures") / "ex42-gate-g11-open.md"
+    result = ex42_ops.ops_check(ex42_ops.DEFAULT_TABLE, ex42_ops.DEFAULT_APPROVALS,
+                                gate_report=gate_fixture)
     assert result["g05_evidence"]["state"] == "kit_required"
     assert result["g05_evidence"]["complete"] is False
     assert result["g05_evidence"]["environment_imported"] is False

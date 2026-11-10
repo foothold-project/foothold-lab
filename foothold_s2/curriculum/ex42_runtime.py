@@ -170,6 +170,8 @@ class EX42StageTransitionConsumer:
         target = getattr(env, "unwrapped", env)
         target._ex42_stage_id = next_stage_id
         target._ex42_stage_config = stage
+        if next_stage_id == "E0":
+            target._ex42_push_kind_task = stage["terrain"]["kind_task"]
         target._ex40_dr_scale = evidence["applied_scale"]
         self.stage_index = next_index
         return {

@@ -72,6 +72,45 @@ def _ids_cpu(env_ids: Any, num_envs: int):
     return torch.as_tensor(env_ids, dtype=torch.long, device="cpu").flatten()
 
 
+def _ex42_push_rows(env: Any, rows: Any) -> Any:
+    """Exclude registered narrow-support kinds before the PhysX velocity write.
+
+    EX-40 and the EX-42 stage-zero bridge keep their prior event path. E0 and
+    later fail closed when the realized terrain column labels are unavailable.
+    """
+    import torch
+
+    if getattr(env, "_ex42_stage_id", None) not in {
+            "E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"}:
+        return rows
+    table = getattr(env, "_ex42_push_kind_task", None)
+    terrain = getattr(env.scene, "terrain", None)
+    generator = getattr(getattr(terrain, "cfg", None), "terrain_generator", None)
+    if not isinstance(table, dict) or generator is None or not hasattr(terrain, "terrain_types"):
+        raise ValueError("EX-42 push mask requires registered kind table and realized terrain labels")
+    from foothold_s2.terrains.columns import column_types
+
+    by_name: dict[str, bool] = {}
+    for family in table.values():
+        for name, entry in family.items():
+            value = entry.get("push")
+            if type(value) is not bool or (name in by_name and by_name[name] != value):
+                raise ValueError(f"EX-42 push kind declaration conflicts: {name}")
+            by_name[name] = value
+    props = {name: float(cfg.proportion) for name, cfg in generator.sub_terrains.items()}
+    names = column_types(props, int(generator.num_cols))
+    if any(name not in by_name for name in names):
+        raise ValueError("EX-42 push mask has an undeclared realized terrain kind")
+    types = terrain.terrain_types[rows].to(device="cpu", dtype=torch.long)
+    if bool(((types < 0) | (types >= len(names))).any()):
+        raise ValueError("EX-42 push mask terrain column index is invalid")
+    keep = torch.tensor([by_name[names[int(index)]] for index in types],
+                        dtype=torch.bool, device=rows.device)
+    excluded = int((~keep).sum())
+    _record(env, "push_kind_excluded_count", torch.tensor([excluded]), len(rows))
+    return rows[keep]
+
+
 def _require_all_joints(asset_cfg: Any, asset: Any, adapter_name: str) -> None:
     selected = asset_cfg.joint_ids
     if isinstance(selected, slice) and selected == slice(None):
@@ -220,6 +259,9 @@ def interval_push(env, env_ids, asset_cfg, target_range):
         rows = torch.arange(env.scene.num_envs, device=asset.device)
     else:
         rows = torch.as_tensor(env_ids, dtype=torch.long, device=asset.device).flatten()
+    rows = _ex42_push_rows(env, rows)
+    if not rows.numel():
+        return
     ex41_vmax = getattr(env, '_ex41_push_vmax_mps', None)
     before = asset.root_physx_view.get_root_velocities()[rows].clone()
     if ex41_vmax is not None:

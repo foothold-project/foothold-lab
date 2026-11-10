@@ -138,7 +138,7 @@ def test_runtime_launch_remains_fail_closed_while_plan_is_preparation_only(tmp_p
     plan = EX42Plan.load(TABLE)
     assert plan.document["status"] == "preparation_only"
     try:
-        EX42Runtime(plan, 3072, "cuda:0", tmp_path,
+        EX42Runtime(plan, 6144, "cuda:0", tmp_path,
                     approvals_path=APPROVALS, graduation_path=None,
                     terrain_manifest_path=None)
     except ValueError as exc:

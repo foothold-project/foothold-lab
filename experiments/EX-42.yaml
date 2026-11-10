@@ -23,7 +23,8 @@ files:
   boundary: foothold_s2/curriculum/ex42-boundary.yaml
   approvals: foothold_s2/curriculum/ex42-approvals.yaml
   score_config: foothold_s2/curriculum/ex42_score_config.json
-  push_baseline: null
+  push_baseline: eval/push250/e0_flat_push_baseline.json
+  push_baseline_status: planned_after_e0_local_update0
   maintenance_baseline: null
   stage_video_source: null
 operational_values:
@@ -45,7 +46,11 @@ operational_values:
     env_yaml_sha256: 4464400ce9dc4d33594d5099a1d932b969fddf839a8b26e8f6c2c58a799d4b7d
     agent_yaml_sha256: 035b3f586c6a728256d6a5777740fa9c7cefc758607d2729784f3ff8b4eb1e6f
   training:
-    environments: 3072
+    environments: 6144
+    gpus: 2
+    per_gpu_envs: 3072
+    launch: M3
+    nccl_shm_disable: 1
     seed: 42
     status: preparation_only
     initial_stage: EX42_0_T0_prime
