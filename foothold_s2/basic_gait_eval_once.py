@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
+from foothold_s2.basic_gait_kit import KIT_CACHE_ARG, kit_cache_arg
 from foothold_s2.eval.map_mode_cells import commands, SEQUENCES
 
 
@@ -53,12 +53,23 @@ def verify(out: Path, checkpoint: Path, expected_iter: int) -> dict:
             "terrain_tiles": len(row.get("terrain_tiles", [])), "source_sha256": row.get("source_sha256")}
 
 
+def shell_default() -> str:
+    """Windows keeps Git Bash; with a machine profile selected the profile's git_bash (Linux: FOOTHOLD_BASH) is used."""
+    if not os.environ.get("FOOTHOLD_MACHINE_PROFILE"):
+        return "C:/Program Files/Git/bin/bash.exe"
+    from foothold_s2.machine_profile import load_machine_profile
+    shell = load_machine_profile()["paths"].get("git_bash")
+    if not shell:
+        raise ValueError("machine profile defines no git_bash")
+    return str(shell)
+
+
 def run(device: str, checkpoint: Path, expected_iter: int, out: Path) -> dict:
     if device not in ("cuda:0", "cuda:1") or not checkpoint.is_file() or out.exists():
         raise ValueError("invalid device, missing checkpoint, or existing output")
     before = sha256_file(checkpoint)
     root = Path(__file__).resolve().parents[1]
-    shell = Path(os.environ.get("BASIC_GAIT_BASH", "C:/Program Files/Git/bin/bash.exe"))
+    shell = Path(os.environ.get("BASIC_GAIT_BASH") or shell_default())
     if not shell.is_file():
         raise FileNotFoundError(shell)
     env = os.environ.copy()
@@ -66,7 +77,7 @@ def run(device: str, checkpoint: Path, expected_iter: int, out: Path) -> dict:
     env["COMMAND_SUITE"] = "extended"
     env["PYTHONUTF8"] = "1"
     env["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-    env["BASIC_GAIT_KIT_ARG"] = KIT_CACHE_ARG
+    env["BASIC_GAIT_KIT_ARG"] = kit_cache_arg()
     child = subprocess.run([str(shell), str(root / "foothold_s2/eval/run_sb_eval.sh"), device,
                             str(checkpoint), str(out)], cwd=root, env=env, check=False)
     if child.returncode != 0 or sha256_file(checkpoint) != before:
