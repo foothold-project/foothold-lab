@@ -119,7 +119,7 @@ def _generator_for(family: str, kind: str, seed: int = DEFAULT_SEED):
         subs = paper_ext_subterrains({spec.kind: 1.0 for spec in PAPER_EXT_SPECS})
     elif family == "A":
         from foothold_s2.terrains import columns
-        from foothold_s2.terrains.sparse_terrains import sparse_subterrains
+        from foothold_s2.terrains.start_go2_v2 import sparse_subterrains   # EX-42 A: scaled preset start_go2_v2
 
         # A = columns.FULL: the continuous 7 plus the START sparse 6 (50 columns)
         subs = {**continuous_subterrains(), **sparse_subterrains(dict(columns.SPARSE))}

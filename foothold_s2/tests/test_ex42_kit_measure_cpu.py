@@ -246,3 +246,15 @@ def test_family_d_wiring_passes_seed(monkeypatch):
     fake.measurement_generator = lambda kind, seed: seen.update(kind=kind, seed=seed) or ("g", "s")
     monkeypatch.setitem(sys.modules, "foothold_s2.terrains.hipan_posture", fake)
     assert km._generator_for("D", "wall", 9) == ("g", "s") and seen == {"kind": "wall", "seed": 9}
+
+
+def test_family_a_uses_the_scaled_start_go2_v2_import_and_ex41_path_is_untouched():
+    import inspect
+    from pathlib import Path
+    for mod in (km, __import__("foothold_s2.scripts.ex42_mesh_build", fromlist=["x"])):
+        text = Path(inspect.getsourcefile(mod)).read_text(encoding="utf-8")
+        assert "from foothold_s2.terrains.start_go2_v2 import sparse_subterrains" in text
+        assert "terrains.sparse_terrains import sparse_subterrains" not in text
+    # the EX-41 task cfg still resolves its sparse terrains from sparse_terrains
+    ex41 = Path(km.REPO, "foothold_s2", "tasks", "s2_env_cfg.py").read_text(encoding="utf-8")
+    assert "sparse_terrains" in ex41 and "start_go2_v2" not in ex41

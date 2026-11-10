@@ -64,7 +64,7 @@ def _family_generator(family: str, seed: int):
     from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
 
     if family == "A":
-        from foothold_s2.terrains.sparse_terrains import sparse_subterrains
+        from foothold_s2.terrains.start_go2_v2 import sparse_subterrains   # EX-42 A: scaled preset start_go2_v2
 
         subs = {**continuous_subterrains(), **sparse_subterrains(dict(columns.SPARSE))}
         return build_generator(subs, columns.FULL_COLS, seed)
