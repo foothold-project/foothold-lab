@@ -57,13 +57,27 @@ def test_missing_entry_landing_is_rejected(kind):
         p.spawn_origin(damaged)
 
 
-def test_rough_landing_is_required_and_original_noise_is_preserved():
+def test_rough_entry_is_part_of_heightfield_and_joins_without_box_edge():
     tile = p.build_tile('rough', 9, 42)
-    damaged = replace(tile, boxes=())
-    with pytest.raises(ValueError, match='safe entry support'):
-        p.spawn_origin(damaged)
     assert tile.rough_height_m is not None
+    assert not tile.boxes
     assert p.spawn_origin(tile)[0] < 1.
+    np.testing.assert_allclose(tile.rough_height_m[:11], tile.rough_height_m[5, 60])
+    sample = mesh_top_heights(tile, [(x, 6.) for x in (.9, 1., 1.1)])
+    assert np.max(np.abs(np.diff(sample))) < .06
+
+
+def test_rough_relief_guard_rejects_surviving_mutation():
+    tile = p.build_tile('rough', 9, 42)
+    damaged = tile.rough_height_m.copy()
+    damaged[5, 60] += .3
+    with pytest.raises(ValueError, match='rough entry support relief'):
+        p.spawn_origin(replace(tile, rough_height_m=damaged))
+
+
+def test_consecutive_start_precedes_first_riser():
+    tile = p.build_tile('consecutive', 9, 42)
+    assert p.spawn_origin(tile)[0] < tile.boxes[1].x0
 
 
 @pytest.mark.parametrize('kind', ('boxes', 'obstacles'))

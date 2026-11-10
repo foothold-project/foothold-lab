@@ -82,7 +82,10 @@ def test_rough_undulation_slope_and_per_cell_noise_separately():
         assert wave_slope_deg <= declared + 1e-9
         if level == 9:
             assert 19 <= wave_slope_deg <= 20
-        noise = z - wave[:, None]
+        assert np.ptp(z[:11]) == pytest.approx(0.0, abs=1e-12)
+        # Entry shaping ends at x=2 m. The authored roughness remains exact
+        # across the body of the tile and keeps the declared noise span.
+        noise = z[20:] - wave[20:, None]
         assert tile.dimensions["noise_amplitude_m"] * 2 == pytest.approx(.16 * level / 9)
         assert np.max(np.abs(noise)) <= tile.dimensions["noise_amplitude_m"] + 1e-12
         assert np.ptp(noise) <= 2 * tile.dimensions["noise_amplitude_m"] + 1e-12
