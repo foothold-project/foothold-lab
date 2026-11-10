@@ -8,6 +8,34 @@ from foothold_s2.terrains.ex42_mesh_mount import load_combined_mesh
 from foothold_s2.terrains.ex42_column_reset import build_column_table
 
 
+# The parent's default map64 uses the 23 continuous A columns. The physical
+# combined mesh has 76 columns; its B-E columns are not part of this cell.
+EVAL_COLS = 23
+
+
+def validate_eval_cell(result, mesh, *, fixed_level=None):
+    """Reject a 76-column reference run when scoring the A-only calibration cell."""
+    from foothold_s2.eval.fixed_terrain import assignment_sha256, fixed_assignment
+
+    record = result.get("fixed_terrain") or {}
+    n = result.get("envs")
+    if (n != 64 or record.get("rows") != 10 or record.get("cols") != EVAL_COLS
+            or record.get("num_envs") != n or record.get("fixed_level") != fixed_level
+            or mesh.get("eval_cols") != EVAL_COLS):
+        raise ValueError("EX-42 calibration fixed evaluation cell is not A continuous 23 x 64 env")
+    levels, types = fixed_assignment(n, record["rows"], EVAL_COLS, fixed_level)
+    if record.get("assignment_sha256") != assignment_sha256(levels, types):
+        raise ValueError("EX-42 calibration fixed evaluation assignment SHA differs")
+    tiles = result.get("terrain_tiles") or []
+    names = mesh.get("eval_columns") or []
+    if len(tiles) != n or len(names) != EVAL_COLS or any(
+            tile.get("env") != i or tile.get("column") != int(types[i])
+            or tile.get("level") != int(levels[i])
+            or tile.get("kind") != names[int(types[i])]
+            for i, tile in enumerate(tiles)):
+        raise ValueError("EX-42 calibration terrain tiles differ from A continuous fixed cell")
+
+
 def preflight(mesh_dir):
     folder = Path(mesh_dir).resolve(strict=True)
     manifest_path = folder / "mesh_manifest.json"
@@ -24,9 +52,12 @@ def preflight(mesh_dir):
     table = build_column_table(loaded["column_family"])
     if any(row["kind"] is None for row in table):
         raise ValueError("EX-42 calibration mesh has an unknown column kind")
+    if loaded["column_family"][:EVAL_COLS] != ["A"] * EVAL_COLS:
+        raise ValueError("EX-42 calibration requires the first 23 columns to be family A")
     return {"mesh_npz": str(npz_path), "manifest": str(manifest_path),
             "mesh_sha256": loaded["mesh_sha256"], "columns": [row["kind"] for row in table],
-            "column_family": loaded["column_family"]}
+            "column_family": loaded["column_family"], "eval_cols": EVAL_COLS,
+            "eval_columns": [row["kind"] for row in table[:EVAL_COLS]]}
 
 
 def attach(env_cfg, mesh_dir):

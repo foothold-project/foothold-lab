@@ -73,6 +73,10 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     map_row = _json(map_dir / "map_modes.json")
     if expected_mesh_sha256 and map_row.get("ex42_mesh", {}).get("mesh_sha256") != expected_mesh_sha256:
         raise ValueError("EX-42 map64 combined mesh SHA differs")
+    if expected_mesh_sha256:
+        from foothold_s2.eval.ex42_mesh_eval import validate_eval_cell
+
+        validate_eval_cell(map_row, map_row["ex42_mesh"])
     if (map_row.get("checkpoint_sha256") != checkpoint_sha or
             map_row.get("envs") != cfg["envs"] or map_row.get("steps") != cfg["steps"] or
             map_row.get("eval_seed") != seed or
@@ -131,6 +135,10 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     axis = _json(axis_dir / "axis_v2.json")
     if expected_mesh_sha256 and axis.get("ex42_mesh", {}).get("mesh_sha256") != expected_mesh_sha256:
         raise ValueError("EX-42 W57 combined mesh SHA differs")
+    if expected_mesh_sha256:
+        from foothold_s2.eval.ex42_mesh_eval import validate_eval_cell
+
+        validate_eval_cell(axis, axis["ex42_mesh"], fixed_level=cfg["axis_fixed_level"])
     marker = axis.get("ex42_maintenance", {})
     if (axis.get("schema") != "foothold-axis-v2/1" or axis.get("checkpoint_sha256") != checkpoint_sha or
             axis.get("envs") != cfg["envs"] or axis.get("steps") != cfg["steps"] or

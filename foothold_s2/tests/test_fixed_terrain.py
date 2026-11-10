@@ -45,6 +45,17 @@ def test_different_tasks_with_different_initial_tiles_get_the_same_hash_after_ap
     assert torch.equal(a.scene.terrain.env_origins, a.scene.terrain.terrain_origins[a.scene.terrain.terrain_levels, a.scene.terrain.terrain_types])
 
 
+def test_physical_76_columns_can_assign_only_first_23():
+    raw = _raw(cols=76)
+    record = ft.apply(raw, cols=23)
+    assert record["cols"] == 23
+    assert record["assignment_sha256"].startswith("c3884d68")
+    assert int(raw.scene.terrain.terrain_types.max()) == 22
+    for bad in (0, 77, 23.5, True):
+        with pytest.raises(ValueError, match="column count"):
+            ft.apply(raw, cols=bad)
+
+
 def test_grid_mismatch_is_refused_not_called_the_same_tile():
     with pytest.raises(ValueError, match="행 수"):
         ft.fixed_assignment(64, 2, 20)
@@ -88,7 +99,7 @@ def test_eval_script_applies_it_after_reset_and_before_the_hash_and_shell_script
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     independent = src[src.index("for cname, cmd in"):src.index('if args.command_suite in ("extended", "ex40_b3")')]
-    assert '"--fixed-terrain"' in src and src.index("fixed_terrain.apply(raw, args.fixed_level)") < src.index("th = hashlib.sha256(") and independent.count("env.reset()") == 2
+    assert '"--fixed-terrain"' in src and src.index("fixed_terrain.apply(\n                raw, args.fixed_level, cols=") < src.index("th = hashlib.sha256(") and independent.count("env.reset()") == 2
     assert "고정 지형 칸이 reset 뒤에 바뀌었다" in src
     for name in ("run_eval_map_modes.sh", "run_eval_g0_reference.sh"):
         text = (ROOT / "foothold_s2" / name).read_text(encoding="utf-8")
@@ -129,4 +140,4 @@ def test_eval_script_asserts_root_is_near_the_env_origin_after_reset():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     assert "START_OFFSET_MAX_M = 0.5" in src and "root_pos_w[:, :2] - raw.scene.env_origins[:, :2]" in src and "start_offset_max_m" in src
-    assert src.index("fixed_terrain.apply(raw, args.fixed_level)") < src.index("START_OFFSET_MAX_M + 1.0e-3") < src.index("th = hashlib.sha256(")
+    assert src.index("fixed_terrain.apply(\n                raw, args.fixed_level, cols=") < src.index("START_OFFSET_MAX_M + 1.0e-3") < src.index("th = hashlib.sha256(")

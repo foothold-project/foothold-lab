@@ -282,7 +282,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         from foothold_s2.terrains import columns as _c2
 
         _g2 = terrain.cfg.terrain_generator
-        names = (args.ex42_mesh["columns"] if args.ex42_mesh else
+        names = (args.ex42_mesh["eval_columns"] if args.ex42_mesh else
                  _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols)))
     except Exception as e:                                                             # noqa: BLE001  (이름 표를 못 만들어도 열 번호 · 레벨은 남긴다)
         err = repr(e)
@@ -340,7 +340,7 @@ if args.ex39_heading_smoke_guard:
                                         "forced_heading_before_disable": True,
                                         "fixed_command_step_checks": 0}
 terrain_gen = raw.scene.terrain.cfg.terrain_generator
-terrain_names = (args.ex42_mesh["columns"] if args.ex42_mesh else
+terrain_names = (args.ex42_mesh["eval_columns"] if args.ex42_mesh else
                  columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
 res["terrain_columns"] = terrain_names
 
@@ -416,7 +416,8 @@ for mode in args.modes.split(","):
         terrain = raw.scene.terrain
 
         if args.fixed_terrain:
-            res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(raw, args.fixed_level)
+            res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(
+                raw, args.fixed_level, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
             env.reset()                                                                  # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
             if parser_sparse:
                 lv, ty = np.array([t["level"] for t in res["fixed_terrain"]["tiles"]]), np.array([t["col"] for t in res["fixed_terrain"]["tiles"]])
@@ -597,7 +598,7 @@ for mode in args.modes.split(","):
             dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
             env.reset()
             if args.fixed_terrain:
-                fixed_terrain.apply(raw)
+                fixed_terrain.apply(raw, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
                 env.reset()
             seq_tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
                                                     terrain.terrain_types.cpu().numpy(), terrain_names)

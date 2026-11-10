@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from foothold_s2.ex42_score import digest
-from foothold_s2.eval.ex42_mesh_eval import preflight
+from foothold_s2.eval.ex42_mesh_eval import EVAL_COLS, preflight
 
 SEEDS = (42, 42, 43, 44, 45)
 SCORE_GROUPS = ("map64", "stand", "axis_v2")
@@ -50,6 +50,7 @@ def summarize(scores, receipts, mesh_sha256, checkpoint_sha256):
         if (receipt.get("state") != "done" or receipt.get("eval_seed") != SEEDS[i]
                 or receipt.get("checkpoint_sha256") != checkpoint_sha256
                 or receipt.get("ex42_mesh", {}).get("mesh_sha256") != mesh_sha256
+                or receipt.get("ex42_mesh", {}).get("eval_cols") != EVAL_COLS
                 or score.get("checkpoint_sha256") != checkpoint_sha256
                 or score.get("conditions", {}).get("eval_seed") != SEEDS[i]):
             raise ValueError(f"calibration repeat {i} source, mesh, seed, or completion differs")

@@ -81,7 +81,7 @@ def test_cli_flags_and_script_wiring():
         src = (ROOT / "foothold_s2" / rel).read_text(encoding="utf-8")
 
         assert '"--fixed-level", type=int, default=None' in src
-    assert "fixed_terrain.apply(raw, args.fixed_level)" in (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+    assert "fixed_terrain.apply(\n                raw, args.fixed_level, cols=" in (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
     tp = (ROOT / "foothold_s2/eval/turn_probe.py").read_text(encoding="utf-8")
 
     assert tp.count("probe_tiles.apply_to(raw, args.fixed_level)") == 2                     # 회전 시행 · 전진 걸음 구간 둘 다

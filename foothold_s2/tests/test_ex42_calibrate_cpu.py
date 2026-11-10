@@ -1,11 +1,13 @@
 """Known-input mesh and five-repeat calibration preflight without Kit or GPU."""
 import hashlib
 import json
+import os
 
 import numpy as np
 import pytest
 
-from foothold_s2.eval.ex42_mesh_eval import preflight
+from foothold_s2.eval.ex42_mesh_eval import preflight, validate_eval_cell
+from foothold_s2.eval.fixed_terrain import assignment_sha256, fixed_assignment
 from foothold_s2.ex42_calibrate import SEEDS, summarize
 from foothold_s2.ex42_eval_once import commands
 
@@ -30,6 +32,8 @@ def test_mesh_preflight_and_all_child_arguments(tmp_path):
     record = preflight(tmp_path)
     assert record["mesh_sha256"] == manifest["mesh_sha256"]
     assert len(record["columns"]) == 76
+    assert record["eval_cols"] == 23
+    assert record["eval_columns"] == record["columns"][:23]
     rows = commands("model.pt", tmp_path / "out", "cuda:1", eval_seed=44, mesh_dir=tmp_path)
     assert len(rows) == 5
     for row in (rows[0], rows[-1]):
@@ -42,6 +46,43 @@ def test_mesh_preflight_and_all_child_arguments(tmp_path):
     (tmp_path / "mesh_manifest.json").write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="mesh sha256"):
         preflight(tmp_path)
+
+
+def test_a23_cell_rejects_the_old_76_column_reference(tmp_path):
+    mesh_fixture(tmp_path)
+    mesh = preflight(tmp_path)
+    levels, types = fixed_assignment(64, 10, 23)
+    result = {"envs": 64, "fixed_terrain": {"rows": 10, "cols": 23, "num_envs": 64,
+              "fixed_level": None, "assignment_sha256": assignment_sha256(levels, types)},
+              "terrain_tiles": [{"env": i, "column": int(types[i]), "level": int(levels[i]),
+                                 "kind": mesh["eval_columns"][int(types[i])]} for i in range(64)]}
+    validate_eval_cell(result, mesh)
+    result["fixed_terrain"]["cols"] = 76
+    with pytest.raises(ValueError, match="A continuous 23"):
+        validate_eval_cell(result, mesh)
+    result["fixed_terrain"]["cols"] = 23
+    result["terrain_tiles"][42]["column"] = 50
+    with pytest.raises(ValueError, match="terrain tiles"):
+        validate_eval_cell(result, mesh)
+
+
+def test_real_c333_mesh_matches_parent_map64_env_by_env():
+    mesh_dir = os.environ.get("EX42_REAL_MESH")
+    parent_path = os.environ.get("EX42_PARENT_MAP64")
+    if not mesh_dir or not parent_path:
+        pytest.skip("set EX42_REAL_MESH and EX42_PARENT_MAP64 for the real input comparison")
+    mesh = preflight(mesh_dir)
+    parent = json.loads(open(parent_path, encoding="utf-8-sig").read())
+    levels, types = fixed_assignment(64, 10, mesh["eval_cols"])
+    result = {"envs": 64, "fixed_terrain": {"rows": 10, "cols": 23, "num_envs": 64,
+              "fixed_level": None, "assignment_sha256": assignment_sha256(levels, types)},
+              "terrain_tiles": [{"env": i, "column": int(types[i]), "level": int(levels[i]),
+                                 "kind": mesh["eval_columns"][int(types[i])]} for i in range(64)]}
+    validate_eval_cell(result, mesh)
+    assert parent["fixed_terrain"]["assignment_sha256"] == result["fixed_terrain"]["assignment_sha256"]
+    assert result["fixed_terrain"]["assignment_sha256"].startswith("c3884d68")
+    assert [(r["kind"], r["level"], r["column"]) for r in result["terrain_tiles"]] == [
+        (r["kind"], r["level"], r["column"]) for r in parent["terrain_tiles"]]
 
 
 def _scores():
@@ -61,7 +102,8 @@ def _scores():
                            "foot_drag_proxy_m_by_foot_median": [.3 * value],
                            "yaw_signed_accum_median_rad": .4 * value}}}})
         receipts.append({"state": "done", "eval_seed": seed, "checkpoint_sha256": "a" * 64,
-                         "source_git_head": "fixed-head", "ex42_mesh": {"mesh_sha256": "b" * 64}})
+                         "source_git_head": "fixed-head", "ex42_mesh": {"mesh_sha256": "b" * 64,
+                                                                           "eval_cols": 23}})
     return scores, receipts
 
 
@@ -75,6 +117,9 @@ def test_five_repeat_widths_and_mismatch_guards():
         "tracking_vx_vy", "tracking_wz", "command_projection", "per_foot_contact",
         "gait_phase_and_duty", "foot_drag_m", "yaw_integral", "W57_spin_survival"))
     receipts[2]["ex42_mesh"]["mesh_sha256"] = "wrong"
+    with pytest.raises(ValueError, match="repeat 2"):
+        summarize(scores, receipts, "b" * 64, "a" * 64)
+    receipts[2]["ex42_mesh"].update(mesh_sha256="b" * 64, eval_cols=76)
     with pytest.raises(ValueError, match="repeat 2"):
         summarize(scores, receipts, "b" * 64, "a" * 64)
 
