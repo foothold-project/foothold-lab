@@ -140,3 +140,12 @@ def test_e0_scoped_policy_uses_stage_zero_parent_gate(known):
     proof = call((replace(plan, document=doc), ap, manifest, gp), 'E0')
     assert proof['scope']['maximum_updates'] == 250
     assert proof['source_stage_id'] == 'EX42_0_T0_prime'
+
+
+def test_plan_and_approval_declare_same_scoped_automatic_mode():
+    plan = EX42Plan.load(TABLE)
+    approval = yaml.safe_load(APPROVALS.read_text())
+    assert plan.document['launch']['automatic'] == 'approved_stage_only'
+    assert plan.document['launch']['automatic'] == approval['automatic_launch_allowed']['mode']
+    assert approval['automatic_launch_allowed']['require_gate_pass'] is True
+    assert plan.document['stage_zero']['approval_sha256'] == hashlib.sha256(APPROVALS.read_bytes()).hexdigest()

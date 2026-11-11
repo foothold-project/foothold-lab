@@ -53,3 +53,13 @@ isaac311, CUDA 숨김, GPU/Kit 미실행. 지정 CPU 7파일 최종 원출력:
 ## reviewer 확인 요청
 
 새 정책을 단순 truthy로 해석하는 우회가 없는지, E1F 이후·조건 누락을 막는지, 재고정된 승인 SHA와 실제 부모/P1 연결을 독립 확인한다. 자동 기동기·알림 실행은 미확인 경계로 유지한다.
+
+## 11:45 의뢰 후속: 계획 선언 정합과 운영 E1 읽기 경로
+
+#639 병합은 11:45에 시작한 E1 종료까지 보류한다. E1F 승인 칸은 없으므로 이번 자동 기동 대상이 아니다. `ex42-prep.yaml:35`의 `launch.automatic`을 `approved_stage_only`로 맞추고 선언 일치 시험을 추가했다. 고치기 전 해당 시험은 `False != approved_stage_only`로 실패, 수정 뒤 관련 CPU 36 passed. 이전 v0.16 시험의 automatic=false 기대도 현재 결정으로 갱신했다.
+
+이번 재고정에서 승인 파일 바이트는 추가로 바뀌지 않았다. 다시 계산한 승인 SHA는 기존 `507af8ce351be8ca2e07ad2d5f3e354ae92025ef3e073aacad28fdedf4be7921`과 같고 plan pin도 일치한다. 최종 계획 SHA는 **`19e86a25c846ed7ceb3a543a91077cb30e1b04b02987bb1f6468906795291167`**이다. 위 표의 `815d4e36...`은 첫 커밋의 이력값이다. 새 계획으로 원본 E0 자료를 CPU 재판정한 결과도 PASS이며 `rejudge-plan-aligned/rejudge_receipt.json`에 score `2bcf0aa7b830476364daa9ec5ac3ae6704e65f2fa4fec012b1f1d97b0a77d05a`, P1 `5c1f5327d34bbb482320033ed03d3d13c49804ea1fdc4f0fed2aa415507cdadc`를 남겼다.
+
+**운영 E1 한 줄 결론:** 실제 PID 3119663의 학습 `--ex42_plan`과 경계 평가 `--p1-plan`은 모두 `/home/jay/mai/wt/foothold-lab/ex42-launch-b379eb98/foothold_s2/curriculum/ex42-prep.yaml`이고, 파일 모드 444·실제 SHA `e542961d9c65a588ae893b81a8d07d39cd66ca068f2f118410c3e2d1d7a2d982`가 startup_receipt와 일치하므로 #639나 통합 가지 변경을 자동으로 읽는 경로는 현재 argv에 없다.
+
+경계와 한계: 고정 사본 `ex42_score_watch.py:48`은 전달받은 메모리 plan의 SHA를 기록한다. `ex42_chain.py:383`이 그 객체를 넘기고, 별도 평가 자식 `ex42_eval_once.py:146`은 `--p1-plan` 파일을 다시 읽는다. 그 함수만 보면 파일 변경 시 다른 계획을 읽을 수 있지만 현재 실제 인자는 고정 사본 경로다. 다른 SHA를 가진 P1 결과는 `ex42_chain.py:462~465`에서 기동 시 plan SHA와 비교해 거부한다. 이 확인은 250 경계 실제 완료 실측이 아니라 기동 인자·파일·영수증과 소비 코드 대조다. 운영 사본·프로세스·원자료는 수정하지 않았다. 되읽기 증거는 `/home/jay/mai/tmp/verifier-lx/scoped-auto-1111/live-e1-plan-readback.json`.
