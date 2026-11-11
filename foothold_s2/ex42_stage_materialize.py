@@ -129,7 +129,7 @@ def validate_source_exit(source_plan, gate, gate_path, *, evaluation_plan=None):
             adapter = adapter_for(policy.document, source)
             if adapter is None:
                 raise ValueError('E1 judge is unavailable')
-            extras = adapter.verify(measured, 'PASS', 'PASS')
+            extras = adapter.verify(measured, 'PASS', 'PASS', plan=policy.document)
             if not extras or any(gate.get(k) != v for k,v in extras.items()):
                 raise ValueError('E1 P1 and measurement exit evidence differ')
             return
@@ -159,7 +159,7 @@ def validate_source_exit(source_plan, gate, gate_path, *, evaluation_plan=None):
     adapter = adapter_for(policy.document, source)
     if adapter is None:
         raise ValueError('later-stage judge is not registered in the source plan')
-    extras = adapter.verify(measured, 'PASS', 'PASS')
+    extras = adapter.verify(measured, 'PASS', 'PASS', plan=policy.document)
     if not isinstance(extras, dict) or not extras:
         raise ValueError('later-stage judge returned no stage exit evidence')
     for key, value in extras.items():
@@ -259,8 +259,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     scope['parent_sha256'] = actual_sha
     row['parent'] = pin
     if target not in ('E0', 'E1'):
-        row['authorization_contract']['entry_gate_adapter'] = 'stage_exit_v1'
-        cell['later_stage_entry_gate_adapter'] = 'stage_exit_v1'
+        row['authorization_contract']['entry_gate_adapter'] = 'flag_two_window'
+        cell['later_stage_entry_gate_adapter'] = 'flag_two_window'
         cell['critic_mirror'] = True
         row['critic_mirror'] = True
         # First segment stays the registered minimum. The separate HOLD-only

@@ -37,6 +37,7 @@ def known(tmp_path):
     specs=plan.document['evaluation']['paper_cells']['stairs_landing']['case_specs']
     case_ids=plan.document['evaluation']['paper_cells']['stairs_landing']['judge_cases']
     cases={}
+    current_cells={}
     for case_id in case_ids:
         cases[case_id]={}
         for name in ('current','previous'):
@@ -44,14 +45,18 @@ def known(tmp_path):
             landing=dict(case_id=case_id,envs=64,valid_count=64,success_count=60,survival_count=64,
                          **specs[case_id],trace_file=str(trace),trace_sha256=sha(trace))
             ref=dump(run/f'{name}-{case_id}.json',landing)
-            cases[case_id][name]=dict(landing,judgement='PASS',raw_file=ref['path'],raw_sha256=ref['sha256'])
-    d44=dict(cases=cases,judge_cases=case_ids,current={'judgement':'PASS'},previous={'judgement':'PASS'})
+            value=dict(case_id=case_id,envs=64,valid_count=64,success_count=60,survival_count=64,
+                success_min=52,survival_min=60,judgement='PASS',raw_file=ref['path'],raw_sha256=ref['sha256'])
+            cases[case_id][name]=value
+            if name=='current':
+                current_cells[case_id]=dict(landing,raw_file=ref['path'],raw_sha256=ref['sha256'])
+    d44=dict(cases=cases,required_cases=case_ids,current={'judgement':'PASS'},previous={'judgement':'PASS'})
     exit_row=dict(windows_required=2,maintenance=dict(current='PASS',previous='PASS'),d44=d44,judgement='PASS')
     cells = {m:{c:{'role':'record_only' if m=='probe_prop_only' else 'judge', 'judgment':'PASS'}
                   for c in commands('extended')} for m in ('eval_gt','eval_pred','probe_prop_only')}
     measure = run / 'score.json'
     dump(measure, dict(stage_id='E1', checkpoint_sha256=parent_sha, judgement='PASS',
-                       e1_exit=exit_row, cell_judgments=cells,map64={m:{c:{} for c in items} for m,items in cells.items()}))
+                       e1_exit=exit_row, d44_cells=current_cells, cell_judgments=cells,map64={m:{c:{} for c in items} for m,items in cells.items()}))
     rows = [{'map_mode':m,'command':c,'role':v['role']} for m,items in cells.items() for c,v in items.items()]
     gate = run / 'p1.json'
     dump(gate, dict(stage_id='E1', state='complete', judgment='PASS', checkpoint_iteration=1000,
@@ -92,6 +97,8 @@ def test_publish_relocatable_scope_and_parent_chain_without_changing_inputs(know
     assert a['prerequisites']['predecessor_exit']['continuous_level_cap'] == 5
     assert a['scope']['parent_sha256'] == sha(known['parent_manifest'].parent/'model_1000.pt')
     row = next(x for x in plan.document['stages'] if x['id']=='E1F')
+    assert row['authorization_contract']['entry_gate_adapter']=='flag_two_window'
+    assert a['later_stage_entry_gate_adapter']=='flag_two_window'
     assert row['parent']['source_stage_id']=='E1'
     assert row['parent']['cumulative_update']==14250
     assert row['terrain']['exposure_at_E1F']['positive'][0]['level_cap']==5
@@ -293,3 +300,25 @@ def test_registered_boolean_requires_real_boolean_evidence(known):
     e['bindings']['budget.m_updates_count_toward_source_maximum']=ref;dump(known['evidence'],e)
     r=run(known)
     assert yaml.safe_load(Path(r['approvals']).read_text())['stage_e1f_authorization']['budget']['m_updates_count_toward_source_maximum'] is True
+
+
+@pytest.mark.parametrize('stage',['E1','E1F'])
+def test_every_source_adapter_receives_the_selected_policy_document(known,monkeypatch,stage):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_stage_materialize import validate_source_exit
+    from foothold_s2 import ex42_stage_judges
+    plan=EX42Plan.load(known['source_plan'])
+    policy=EX42Plan.load(known['plan'])
+    gate=json.loads(known['gate_receipt'].read_text());gate['stage_id']=stage
+    mp=Path(gate['measurement']);measured=json.loads(mp.read_text());measured['stage_id']=stage
+    measured['stage_exit']={'judgement':'PASS','windows':2}
+    gate['stage_exit']=measured['stage_exit'];dump(mp,measured);gate['measurement_sha256']=sha(mp)
+    seen=[]
+    class PolicyRequired:
+        def verify(self,score,judgment,expected,plan=None):
+            assert plan is policy.document
+            seen.append((judgment,expected))
+            return {'stage_exit':score['stage_exit']}
+    monkeypatch.setattr(ex42_stage_judges,'adapter_for',lambda document,stage_id:PolicyRequired())
+    validate_source_exit(plan,gate,known['gate_receipt'],evaluation_plan=policy)
+    assert seen==[('PASS','PASS')]
