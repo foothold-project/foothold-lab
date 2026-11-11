@@ -413,3 +413,5 @@ ts	phase	decision	why	evidence	result
 2026-11-11 01:5x	lead-lx	팀장 lead-lx 창 원문 미리 승인: a 「reviewer 통과한 PR 은 통합 가지에 병합 승인」 b 「6144 · E0 승인 칸 고침 뒤 승인 해시 재고정 승인」 c 「N1 Kit 예행 · 관문 통과 시 E0 기동 승인」
 2026-11-11 01:5x	lead-lx	팀장 「모두 승인」: 평가 마찰 0.8 (0.7 = tan35° 정적 한계라 lead · planner 권고) · 지형 측정값은 대리 하향 격자 광선 값으로 가정 승인 (실센서 측정으로 나중에 갈음) · 점프 연구 착수 = E4 졸업 뒤 J0~J3 · E6b 판정 뒤 J4
 2026-11-11 02:21	lead-lx	팀장 lead-lx 창 원문: 「EX-42 는 M3 방식(6144) ok」 · 「미리 Isaac 승인도 한다. 문제 없이 해라」 → 오늘 밤 E0 준비 · 기동에 필요한 Isaac (Kit) 실행 (장착 검사 · calibration 평가 · N1 예행 · E0 학습) 미리 승인. 범위 밖 (새 계열 실험 · 유료 · 외부 발송) 은 해당 없음
+2026-11-11 10:29	lead-lx	팀장 lead-lx 창 원문 「1 · 2 · 3 · 4 모두 승인」: 1 E0 경계 기준 고정 (부모 m13000 기준값 · calibration 문턱을 판정 설정에 넣고 m250 재판정) 2 E1 진입 (재판정 통과 조건) 3 GPU 작업판 배정기 Linux 사용자 서비스 (super) 4 #617 병합 + 메시 재생성 · 장착 재검
+2026-11-11 10:29	lead-lx	팀장 상시 결정: 「Isaac 라이선스(EULA) 동의 => 기본 사항으로 무조건 박는다 (앞으로도)」 → ~/mai/foothold-linux.env 에 OMNI_KIT_ACCEPT_EULA=YES 기본 (모든 실행기가 이 파일을 source)
