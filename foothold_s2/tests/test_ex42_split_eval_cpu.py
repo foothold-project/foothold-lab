@@ -99,7 +99,8 @@ REAL_GPU1 = "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
 
 def test_gpu_gate_ignores_the_real_sunshine_sessions_but_not_training_or_kit_processes():
     sleeps = []
-    split.wait_gpus_free([REAL_GPU0, REAL_GPU1], query=lambda: REAL_SMI_IDLE, sleep=sleeps.append)   # returns at once
+    split.wait_gpus_free([REAL_GPU0, REAL_GPU1], timeout_s=0, query=lambda: REAL_SMI_IDLE,
+                         sleep=sleeps.append)   # returns at once; a skip that stopped working fails here instead of waiting 30 min
     assert sleeps == []
     training = REAL_SMI_IDLE + "7001, GPU-" + REAL_GPU0 + ", 13800, /home/jay/miniforge3/envs/isaac311/bin/python3.11\n"
     with pytest.raises(ValueError, match="7001"):
@@ -116,7 +117,7 @@ def test_gpu_gate_ignores_the_real_sunshine_sessions_but_not_training_or_kit_pro
 def test_gpu_gate_default_query_asks_for_the_process_name(monkeypatch):
     seen = []
     monkeypatch.setattr(split.subprocess, "check_output", lambda cmd, **kw: seen.append(cmd) or REAL_SMI_IDLE)
-    split.wait_gpus_free([REAL_GPU0])
+    split.wait_gpus_free([REAL_GPU0], timeout_s=0)
     assert "--query-compute-apps=pid,gpu_uuid,used_memory,process_name" in seen[0]
 
 
@@ -242,7 +243,7 @@ def test_split_branch_of_run_reproduces_the_one_gpu_score_from_real_e0_files(tmp
     notice = json.loads((out / "next_stage_notice.json").read_text())          # the real P1 judgment is HOLD
     judged = json.loads((out / "p1_score.json").read_text())["judgment"]          # #631 judges the E0 cells now
     assert notice["judgment"] == judged and notice["next_stage_id"] == "E1" and notice["automatic_launch_started"] is False
-    assert notice["state"] == ("next_stage_ready_for_approval" if judged == "PASS" else "not_ready")
+    assert notice["state"] == ("next_stage_authorized_no_launcher" if judged == "PASS" else "not_ready")   # #639 cell is open, no launcher given
     assert receipt["next_stage_notice"] == notice["state"]
     assert receipt["split"]["devices"] == ["cuda:1", "cuda:0"]
     assert {k.split("@")[1] for k in receipt["steps"]} == {"cuda:0", "cuda:1"}

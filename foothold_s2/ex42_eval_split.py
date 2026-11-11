@@ -71,6 +71,17 @@ def _gpu_busy_uuids(query=None):
     return busy
 
 
+def all_gpu_uuids(query=None):
+    """uuids of every GPU on the machine (the next stage trains on all of them)."""
+    if query is None:
+        query = lambda: subprocess.check_output(["nvidia-smi", "--query-gpu=uuid", "--format=csv,noheader"],
+                                                text=True, timeout=20)
+    uuids = [line.strip() for line in query().splitlines() if line.strip()]
+    if not uuids:
+        raise ValueError("EX-42 found no GPU uuid")
+    return uuids
+
+
 def wait_gpus_free(uuids, *, timeout_s=1800.0, poll_s=15.0, query=None, sleep=time.sleep,
                    clock=time.monotonic):
     """Training may still be releasing its GPUs when the queue starts this job: wait, never overlap."""

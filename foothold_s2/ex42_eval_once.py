@@ -177,7 +177,7 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
     the lead reads and takes to the team lead; HOLD yields a notice that says it is not ready.
     """
     from foothold_s2.curriculum.ex42_prep import EX42Plan
-    stages = EX42Plan.load(plan_path).document["stages"]
+    stages = (plan_path if isinstance(plan_path, EX42Plan) else EX42Plan.load(plan_path)).document["stages"]
     index = next((i for i, row in enumerate(stages) if row.get("id") == stage_id), None)
     if index is None or iteration != stages[index].get("minimum_updates"):
         return None
@@ -191,9 +191,40 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
                     "the next stage approval cell."}
 
 
+def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None):
+    """The notice is always written at the last boundary. When the gate passed and the next stage has a bounded approval
+    cell (#639), the lead's launcher starts it, once; every other case stays a notice (reason included). The launched
+    training is not in the GPU queue, so `gpu_wait` (every GPU free of other compute processes) runs first: boundary
+    evaluations still queued or running must not share a GPU with the new training."""
+    from foothold_s2.ex42_stage_handoff import decide_next_stage, start_launcher
+    notice = next_stage_notice(plan_path, stage_id, iteration, p1)
+    if notice is None:
+        return None
+    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json",
+                                 Path(checkpoint).parent / "manifest.json")
+    notice["notification_required"] = True
+    notice["reason"] = decision.get("reason")
+    if decision["action"] != "launch":
+        return notice
+    notice.update(state="next_stage_authorized", note="The gate passed and the next stage has its own bounded approval cell.")
+    if launcher is None:
+        notice.update(state="next_stage_authorized_no_launcher", reason="no --next-stage-launcher was given")
+        return notice
+    try:
+        if gpu_wait is not None:
+            gpu_wait()
+        record = start_launcher(decision, launcher, output, parent_manifest=Path(checkpoint).parent / "manifest.json",
+                                parent_checkpoint=checkpoint, gate_receipt=output / "p1_score.json")
+    except (ValueError, OSError) as exc:
+        notice.update(state="next_stage_authorized_launch_failed", reason=str(exc))
+        return notice
+    notice.update(state="next_stage_started", automatic_launch_started=True, launcher_pid=record["pid"])
+    return notice
+
+
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
-        p1_stage_id=None, checkpoint_iteration=None, split_device=None):
+        p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
@@ -301,7 +332,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 stage_id=p1_stage_id, output=output)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
-            notice = next_stage_notice(p1_plan, p1_stage_id, checkpoint_iteration, p1)
+            from foothold_s2 import ex42_eval_split as split
+            notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
+                               next_stage_launcher, gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids()))
             if notice is not None:
                 _atomic(output / "next_stage_notice.json", notice)
                 row["next_stage_notice"] = notice["state"]
@@ -329,6 +362,8 @@ def main(argv=None):
     parser.add_argument("--p1-plan", type=Path)
     parser.add_argument("--p1-approvals", type=Path)
     parser.add_argument("--p1-stage-id")
+    parser.add_argument("--next-stage-launcher", type=Path, default=None,
+                        help="executable that starts the next stage; run only after a gate PASS with an approved cell")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
@@ -338,6 +373,9 @@ def main(argv=None):
         parser.error("select either --execute or --score-existing")
     if len([x for x in (args.p1_plan, args.p1_approvals, args.p1_stage_id) if x is not None]) not in (0, 3):
         parser.error("P1 plan, approvals and running stage ID must be supplied together")
+    if args.next_stage_launcher is not None and (args.p1_plan is None or not args.next_stage_launcher.is_absolute()
+                                                  or not args.next_stage_launcher.is_file()):
+        parser.error("--next-stage-launcher needs P1 and an absolute path to an existing file")
     if args.p1_plan is not None and (not args.sha_from_manifest or not args.mesh_dir
                                       or not args.expected_mesh_sha256 or args.eval_seed != 42):
         parser.error("P1 requires manifest SHA, pinned E0 mesh and eval seed 42")
@@ -384,7 +422,8 @@ def main(argv=None):
                expected_mesh_sha256=args.expected_mesh_sha256,
                p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
                p1_stage_id=args.p1_stage_id,
-               checkpoint_iteration=iteration, split_device=args.split_device)
+               checkpoint_iteration=iteration, split_device=args.split_device,
+               next_stage_launcher=args.next_stage_launcher)
 
 
 if __name__ == "__main__":
