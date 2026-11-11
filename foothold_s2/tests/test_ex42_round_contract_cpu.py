@@ -70,7 +70,7 @@ def test_a_hold_at_the_approved_bound_goes_on_only_when_the_extension_is_open(tm
 
 @needs_run
 def test_when_every_extension_is_used_the_stage_ends_with_a_notice(tmp_path, monkeypatch):
-    _with_extension(monkeypatch, {"extension_updates": 500, "extension_max_count": 1})
-    path, manifest, out, _ = _boundary(tmp_path, 1500, "HOLD")
-    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 1500, out / "p1_score.json", manifest)
+    _with_extension(monkeypatch, {"extension_updates": 500, "extension_max_count": 2})
+    path, manifest, out, _ = _boundary(tmp_path, 2000, "HOLD")
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 2000, out / "p1_score.json", manifest)
     assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"

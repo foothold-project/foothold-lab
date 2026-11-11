@@ -41,6 +41,8 @@ BOUNDARY_FORMAT = "foothold-ex42-boundary/1"
 APPROVAL_FORMAT = "foothold-ex42-approvals/1"
 ALL_STAGES_DECISION_ID = "teamlead-2026-11-11-1307-ex42-all-stages"
 ALL_STAGES_DECISION_SHA = "2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d"
+E1_EXTENSION_DECISION_ID = "teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension"
+E1_EXTENSION_DECISION_SHA = "7121e0188cf1cbe558704764227e306e6097149f"
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -173,8 +175,8 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     """Read the separately approved, bounded E1 first segment (E0 m250 -> 1000 updates).
 
     Same fail-closed shape as the E0 cell: a missing or incomplete `stage_e1_authorization` raises.
-    E1F and later stages are never opened by it. The extension (+500 x 2) and the L+ cap raise are
-    separate boundaries and are not covered by this cell.
+    E1F and later stages are never opened by it. A separately pinned 19:38 decision
+    may authorize HOLD-only +500 x 2. Old frozen cells with extension=false stay valid.
     """
     path = Path(approvals_path).resolve(strict=True)
     approvals = _read_yaml(path)
@@ -221,15 +223,21 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
             or rejudgment.get("checkpoint_key") != stage["parent"]["checkpoint_key"]
             or rejudgment.get("checkpoint_sha256") != e1_parent_sha256):
         raise ValueError("EX-42 E1 approval lacks the E0 re-judgement PASS prerequisite on the pinned parent")
-    if cell.get("extension_authorized") is not False:
-        raise ValueError("EX-42 E1 approval must keep the +500 extension unauthorized")
+    extension = cell.get("extension_authorized")
+    if extension is True:
+        if (stage.get("extension_max_count") != 2
+                or cell.get("extension_contract") != stage_extension_contract(stage)):
+            raise ValueError("EX-42 E1 extension unauthorized: requires the exact 19:38 HOLD +500 x 2 decision")
+    elif extension is not False:
+        raise ValueError("EX-42 E1 extension unauthorized: explicit boolean required")
     interval = cell.get("boundary_evaluation_interval_updates")
     plan_interval = plan.document.get("evaluation", {}).get("interval_updates")
     if (type(interval) is not int or interval <= 0 or interval != plan_interval
             or expected_scope["maximum_updates"] % interval):
         raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide 1000")
     return {"state": "stage_e1_only_authorized", "scope": expected_scope,
-            "boundary_evaluation_interval_updates": interval, "extension_authorized": False,
+            "boundary_evaluation_interval_updates": interval, "extension_authorized": extension,
+            **({"extension_contract": cell["extension_contract"]} if extension else {}),
             "e0_rejudgment_prerequisite": rejudgment,
             "decision_id": decision_id, "approved_at": approved_at,
             "approvals_path": str(path),
@@ -254,8 +262,33 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
 
 
 # Entry gate adapters a stage row may name: the predecessor's exit judge (foothold_s2.ex42_stage_judges registers the
-# module; an unregistered name fails closed there, at score time) or `pending` (not ready, the stage cannot start).
-ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending')
+# module; readiness also checks registration before launch) or `pending` (not ready, the stage cannot start).
+ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending',
+                       'kind_two_window_e2', 'kind_two_window_e3', 'kind_two_window_e4',
+                       'kind_two_window_e5', 'posture_two_window_e6a')
+
+
+def entry_gate_adapter_ready(plan: "EX42Plan", row: dict[str, Any], contract: dict[str, Any]) -> bool:
+    """A declared name is not an implementation. Resolve the actual predecessor judges."""
+    name = contract['entry_gate_adapter']
+    if name == 'pending':
+        return False
+    if contract['validator'] in ('legacy_e0', 'legacy_e1'):
+        return name == 'map39'  # Reviewed E0/E1 alias, including the EX-41 bridge.
+    from foothold_s2.ex42_stage_judges import ADAPTERS, adapter_for
+    try:
+        judges = [adapter_for(plan.document, source) for source in contract['source_stage_ids']]
+    except ValueError:
+        return False
+    if not judges or any(judge is None for judge in judges):
+        return False
+    if name == 'stage_exit_v1':
+        return True  # M resolves its measured source-stage list; no hard-coded E5 source.
+    # Preserve the already approved E1 -> E1F entry alias. New later entries name
+    # the predecessor's exit judge literally and cannot substitute a weaker one.
+    if row['id'] == 'E1F' and contract['source_stage_ids'] == ['E1'] and name == 'flag_two_window':
+        return name in ADAPTERS and judges[0].name == 'map39_e1_two_window'
+    return name in ADAPTERS and all(judge.name == name for judge in judges)
 
 
 def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
@@ -284,7 +317,9 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
         raise ValueError('EX-42 stage source contract is unresolved or invalid')
     if contract['validator'] not in ('bounded', 'legacy_e0', 'legacy_e1'):
         raise ValueError('EX-42 unknown approval validator contract')
-    if contract['entry_gate_adapter'] not in ENTRY_GATE_ADAPTERS:
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+    if (not isinstance(contract['entry_gate_adapter'], str)
+            or contract['entry_gate_adapter'] not in (*ENTRY_GATE_ADAPTERS, *ADAPTERS)):
         raise ValueError('EX-42 stage entry gate adapter is unknown')
     for key in ('required_sha256_paths', 'required_string_paths', 'required_boolean_paths'):
         paths = contract[key]
@@ -431,7 +466,7 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         raise ValueError(f'EX-42 {stage_id} must preserve approved DR 1.0')
     return {**proof, 'source_stage_ids': list(contract['source_stage_ids']),
             'entry_gate_adapter': contract['entry_gate_adapter'],
-            'entry_gate_adapter_ready': contract['entry_gate_adapter'] != 'pending',
+            'entry_gate_adapter_ready': entry_gate_adapter_ready(plan, row, contract),
             'training_started': False}
 
 
@@ -441,9 +476,10 @@ def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
     if (any(type(v) is not int for v in (cap, step, count))
             or cap <= 0 or step <= 0 or count <= 0):
         raise ValueError('EX-42 extension step/count/base cap is invalid')
+    decision_id, decision_sha = (E1_EXTENSION_DECISION_ID, E1_EXTENSION_DECISION_SHA) if row.get('id') == 'E1' else (ALL_STAGES_DECISION_ID, ALL_STAGES_DECISION_SHA)
     return {'judgment': 'HOLD', 'after_updates': cap, 'max_count': count,
             'maximum_updates': cap + step * count, 'increment_updates': step,
-            'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
+            'decision_id': decision_id, 'decision_source': decision_sha}
 
 
 def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:

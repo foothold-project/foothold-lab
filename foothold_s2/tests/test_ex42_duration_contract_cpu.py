@@ -1,4 +1,4 @@
-"""CG v0.16 E.1 table and E.4: first check 250, base cap, HOLD-only extensions."""
+"""CG v0.16 E.1/E.4 plus team decision 7121e018: bounded HOLD extensions."""
 from copy import deepcopy
 from dataclasses import replace
 import hashlib
@@ -16,11 +16,11 @@ run, dump, sha = materialize_tests.run, materialize_tests.dump, materialize_test
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = ROOT / 'foothold_s2/curriculum/ex42-prep.yaml'
-# Literal transcription of CG v0.16 E.1, lines 186..195; E.4 lines 435..437.
+# CG v0.16 E.1/E.4, amended E3/E4/E6b by decision 7121e018 (19:38).
 EXPECTED = {'E0': (250, 0, 0), 'E1': (1000, 500, 2), 'E1F': (750, 500, 1),
-            'E2': (1500, 500, 2), 'E3': (3000, 1000, 2), 'E4': (2000, 1000, 2),
+            'E2': (1500, 500, 2), 'E3': (4000, 1000, 2), 'E4': (3000, 1000, 2),
             'E5': (1500, 500, 2), 'M': (500, 500, 1), 'E6a': (1000, 500, 1),
-            'E6b': (2000, 1000, 2)}
+            'E6b': (3000, 1000, 2)}
 
 
 @pytest.mark.parametrize('stage', EXPECTED)
@@ -82,7 +82,20 @@ def test_extension_cannot_start_before_cap_or_expand_or_follow_pass(known, field
 def test_corrected_template_allows_early_exit_without_rewriting_frozen_source(known):
     # Running E1 was pinned when min/max were incorrectly 1000/2000. New approved
     # timing governs eligibility; source receipt still hashes the untouched old plan.
+    # The pre-19:38 frozen run had extension=false, not today's new authorization.
+    approval = yaml.safe_load(known['approvals'].read_text())
+    approval['stage_e1_authorization']['extension_authorized'] = False
+    approval['stage_e1_authorization'].pop('extension_contract', None)
+    old_pin = sha(known['approvals'])
+    known['approvals'].write_text(yaml.safe_dump(approval))
     doc = yaml.safe_load(known['source_plan'].read_text())
+    doc['stage_zero']['approval_sha256'] = sha(known['approvals'])
+    known['plan'].write_text(yaml.safe_dump(doc))
+    evidence = json.loads(known['evidence'].read_text())
+    log = Path(evidence['exposure_receipt']['path'])
+    log.write_text(log.read_text().replace(old_pin, sha(known['approvals'])))
+    evidence['exposure_receipt']['sha256'] = sha(log)
+    dump(known['evidence'], evidence)
     row = next(r for r in doc['stages'] if r['id'] == 'E1')
     row.update(minimum_updates=1000, maximum_updates=2000)
     row.pop('extension_max_count', None)
@@ -106,7 +119,7 @@ def test_source_extension_requires_actual_pinned_authorization_not_table_count(k
     assert source_exit_bounds(plan, plan, 'E1F') == (250, 750)
 
 
-def test_e1_extension_remains_unapproved_despite_registered_two_extensions():
+def test_e1_extension_is_separately_approved_by_the_1938_decision():
     from foothold_s2.ex42_stage_materialize import source_exit_bounds
     plan = EX42Plan.load(PLAN)
-    assert source_exit_bounds(plan, plan, 'E1') == (250, 1000)
+    assert source_exit_bounds(plan, plan, 'E1') == (250, 2000)

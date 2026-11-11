@@ -39,6 +39,14 @@ launch:
     checkpoints: [m12000_20261107, m13000_20261108]
   require_explicit_lead_approval: true
   require_resolved_assumptions: true
+training_budget:
+  basis: ex42_new_updates
+  maximum_updates: 20000
+  count_m_updates: true
+  extensions_within_remaining_budget: true
+  decision_source:
+    commit: 7121e0188cf1cbe558704764227e306e6097149f
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -120,7 +128,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 43b97dd29b3af69ceefbbbf4685fcd938e14fcebfdbf969afa8e615e6f1691be
+  approval_sha256: e64284789730d426eba1732c2e41186bfc5a46b7007eba595567a0a7cf220db7
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -403,7 +411,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E1F
-    entry_gate_adapter: pending
+    entry_gate_adapter: flag_two_window
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
@@ -461,7 +469,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E2
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e2
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -477,7 +485,7 @@ stages:
     required_stage_values: {}
   name: kind_dimensions_and_irregularity
   minimum_updates: 250
-  maximum_updates: 3000
+  maximum_updates: 4000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -534,7 +542,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E3
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e3
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -549,7 +557,7 @@ stages:
     required_stage_values: {}
   name: difficult_terrain_kinds
   minimum_updates: 250
-  maximum_updates: 2000
+  maximum_updates: 3000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -625,10 +633,11 @@ stages:
         kind: climb_up
         share: 0.05
         level_cap: 0
-    # K 경계 사다리 (planner §2 · 가정): 쉬움 1.5 % 이므로 하한 1.5 %
+    # K 경계 사다리: 쉬움 하한 1.5 %는 팀장 19:38 확정
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: B, kind: climb_down, level_cap: 0}
       - {family: C, kind: box, level_cap: 0}
@@ -664,7 +673,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E4
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e4
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -822,7 +831,7 @@ stages:
   authorization_contract:
     validator: bounded
     source_stage_ids: []
-    entry_gate_adapter: pending
+    entry_gate_adapter: stage_exit_v1
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.entry_condition_receipt_sha256
@@ -834,9 +843,30 @@ stages:
     required_boolean_paths:
     - critic_mirror
     - budget.m_updates_count_toward_source_maximum
+    - budget.m_updates_count_toward_ex42_budget
     required_values:
       boundary.boundary_mode: stop_evaluate_resume
+      budget.m_updates_count_toward_source_maximum: false
+      budget.m_updates_count_toward_ex42_budget: true
+      budget.source_window_counter_after_return: restart_two_windows
+      on_exhausted: notify_and_return_to_source_stage
+      exit.return_to: source_stage
+      exit.p_map_off_after_return: 0.3
+      exit.required_new_windows_after_return: 2
     required_stage_values: {}
+  branch_contract:
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    return_to: source_stage
+    maximum_updates_including_extension: 1000
+    budget:
+      m_updates_count_toward_source_maximum: false
+      m_updates_count_toward_ex42_budget: true
+      source_window_counter_after_return: restart_two_windows
+    on_exhausted: notify_and_return_to_source_stage
+    p_map_off_after_return: 0.3
+    required_new_windows_after_return: 2
   name: map_off_continuous_branch
   minimum_updates: 250
   maximum_updates: 500
@@ -982,7 +1012,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E5
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e5
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -1142,7 +1172,7 @@ stages:
     validator: bounded
     source_stage_ids:
     - E6a
-    entry_gate_adapter: pending
+    entry_gate_adapter: posture_two_window_e6a
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -1158,7 +1188,7 @@ stages:
     required_stage_values: {}
   name: terrain_family_d
   minimum_updates: 250
-  maximum_updates: 2000
+  maximum_updates: 3000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -1296,7 +1326,8 @@ stages:
     # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall 은 치수 미정이라 열지 않음
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: D, kind: crawl, level_cap: 0}
     floors:
