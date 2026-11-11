@@ -75,3 +75,25 @@ stage_e0_authorization:
     maximum_updates: 250
     parent_sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
     later_stages_authorized: false
+stage_e1_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1029-e1-conditional-entry
+  approved_at: '2026-11-11T10:29+09:00'
+  approver: teamlead
+  decision_source:
+    commit: 7ef023f58027f43c985c34a521d53a52252cabdf
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    condition: E0 rejudgment passes after parent baseline and calibration thresholds are pinned
+  scope:
+    stage_id: E1
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
+    later_stages_authorized: false
+  prerequisites:
+    e0_rejudgment:
+      required_result: PASS
+      checkpoint_key: model_250.pt
+      checkpoint_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
