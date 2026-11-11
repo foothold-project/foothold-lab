@@ -114,13 +114,10 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
     xmin, xmax, ymin, ymax = anchors["landing_bounds_xy"]
     top = anchors["landing_center"][2]
     foot_floor = top - settings["timing"]["foot_below_top_m"]
-    within_top = ((local_root[:, :, 0] >= xmin) & (local_root[:, :, 0] <= xmax)
-                  & (local_root[:, :, 1] >= ymin) & (local_root[:, :, 1] <= ymax))
-    platform = (within_top & contact.any(axis=-1)
+    platform = ((local_root[:, :, 0] >= xmin) & (local_root[:, :, 0] <= xmax)
+                & (local_root[:, :, 1] >= ymin) & (local_root[:, :, 1] <= ymax)
+                & contact.any(axis=-1)
                 & np.all(~contact | (local_feet[:, :, :, 2] >= foot_floor), axis=-1))
-    four_feet_xy = np.all(
-        (local_feet[:, :, :, 0] >= xmin) & (local_feet[:, :, :, 0] <= xmax)
-        & (local_feet[:, :, :, 1] >= ymin) & (local_feet[:, :, :, 1] <= ymax), axis=-1)
     yaw = np.unwrap(_yaw(quat), axis=0)
     timing = settings["timing"]
     rows = []
@@ -158,11 +155,8 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         # Foot height is diagnostic. The approved stop is root x and horizontal speed.
         stop_ok = _continuous_true((stop & within_band & stopped),
                                    math.ceil(timing["stop_hold_s"] / dt))
-        # Approved landing hold: root and all four foot XY are on the landing;
-        # only feet that are contacting must meet the surface height floor.
-        # A trot does not require four feet to contact simultaneously.
-        top_ok = (restart & within_top[:, env] & four_feet_xy[:, env]
-                  & np.all(~contact[:, env] | (local_feet[:, env, :, 2] >= foot_floor), axis=-1))
+        top_ok = (restart & platform[:, env] & contact[:, env].all(axis=-1)
+                  & np.all(local_feet[:, env, :, 2] >= foot_floor, axis=-1))
         reached = _continuous_true(top_ok, math.ceil(timing["top_hold_s"] / dt))
         success = bool(valid and survives and stop_ok and reached)
         rows.append({"env": env, "valid": valid, "survival": survives, "success": success,
