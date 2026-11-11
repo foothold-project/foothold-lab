@@ -256,7 +256,32 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
 
 # Entry gate adapters a stage row may name: the predecessor's exit judge (foothold_s2.ex42_stage_judges registers the
 # module; an unregistered name fails closed there, at score time) or `pending` (not ready, the stage cannot start).
-ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending')
+ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending',
+                       'kind_two_window_e2', 'kind_two_window_e3', 'kind_two_window_e4',
+                       'kind_two_window_e5', 'posture_two_window_e6a')
+
+
+def entry_gate_adapter_ready(plan: "EX42Plan", row: dict[str, Any], contract: dict[str, Any]) -> bool:
+    """A declared name is not an implementation. Resolve the actual predecessor judges."""
+    name = contract['entry_gate_adapter']
+    if name == 'pending':
+        return False
+    if contract['validator'] in ('legacy_e0', 'legacy_e1'):
+        return name == 'map39'  # Reviewed E0/E1 alias, including the EX-41 bridge.
+    from foothold_s2.ex42_stage_judges import ADAPTERS, adapter_for
+    try:
+        judges = [adapter_for(plan.document, source) for source in contract['source_stage_ids']]
+    except ValueError:
+        return False
+    if not judges or any(judge is None for judge in judges):
+        return False
+    if name == 'stage_exit_v1':
+        return True  # M resolves its measured source-stage list; no hard-coded E5 source.
+    # Preserve the already approved E1 -> E1F entry alias. New later entries name
+    # the predecessor's exit judge literally and cannot substitute a weaker one.
+    if row['id'] == 'E1F' and contract['source_stage_ids'] == ['E1'] and name == 'flag_two_window':
+        return name in ADAPTERS and judges[0].name == 'map39_e1_two_window'
+    return name in ADAPTERS and all(judge.name == name for judge in judges)
 
 
 def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
@@ -285,7 +310,9 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
         raise ValueError('EX-42 stage source contract is unresolved or invalid')
     if contract['validator'] not in ('bounded', 'legacy_e0', 'legacy_e1'):
         raise ValueError('EX-42 unknown approval validator contract')
-    if contract['entry_gate_adapter'] not in ENTRY_GATE_ADAPTERS:
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+    if (not isinstance(contract['entry_gate_adapter'], str)
+            or contract['entry_gate_adapter'] not in (*ENTRY_GATE_ADAPTERS, *ADAPTERS)):
         raise ValueError('EX-42 stage entry gate adapter is unknown')
     for key in ('required_sha256_paths', 'required_string_paths', 'required_boolean_paths'):
         paths = contract[key]
@@ -432,7 +459,7 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         raise ValueError(f'EX-42 {stage_id} must preserve approved DR 1.0')
     return {**proof, 'source_stage_ids': list(contract['source_stage_ids']),
             'entry_gate_adapter': contract['entry_gate_adapter'],
-            'entry_gate_adapter_ready': contract['entry_gate_adapter'] != 'pending',
+            'entry_gate_adapter_ready': entry_gate_adapter_ready(plan, row, contract),
             'training_started': False}
 
 

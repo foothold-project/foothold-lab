@@ -226,7 +226,7 @@ stage_e2_authorization:
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   critic_mirror: null
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: flag_two_window
   missing_evidence_policy: reject_launch_then_fill_and_repin
   missing_evidence:
   - parent_sha256
@@ -294,7 +294,7 @@ stage_e3_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e2
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -334,7 +334,7 @@ stage_e4_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e3
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -368,7 +368,7 @@ stage_e5_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e4
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -402,7 +402,7 @@ stage_m_authorization:
   boundary:
     axis: map_off_probability
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: stage_exit_v1
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -459,7 +459,7 @@ stage_e6a_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e5
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -504,7 +504,7 @@ stage_e6b_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: posture_two_window_e6a
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
