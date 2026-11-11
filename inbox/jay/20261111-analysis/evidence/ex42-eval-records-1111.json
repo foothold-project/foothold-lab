@@ -1,0 +1,145 @@
+{
+  "code_commit": "2198d0c5a4a3abc7ab52b2251675e30ce34eb9da",
+  "code_tree": "51a2cd5b7bb602812803806193663a303131ede7",
+  "canonical_commit": "368d03e2061b505fc72ad73e9cd2527a766e7738",
+  "prep_ids": [
+    "eval_slope_30",
+    "eval_slope_35",
+    "eval_slope_45",
+    "eval_stairs_015",
+    "eval_stairs_020",
+    "eval_stairs_025",
+    "eval_stairs_010",
+    "eval_stairs_015_reverse",
+    "eval_stairs_020_reverse",
+    "eval_stairs_landing_016",
+    "eval_stair_surface_spin",
+    "gap_090",
+    "gap_100",
+    "high_ledge_075",
+    "climb_down_088",
+    "consecutive_040",
+    "crawl_020"
+  ],
+  "missing_prep_geometry_ids": [],
+  "artifacts": [
+    {
+      "folder": "landing_seed42_v2",
+      "columns": 1,
+      "mesh_sha256": "baa59af3347c53c2cdeae674ddc873f26d4b9e38cffdbce4a4dc73cf94febb82",
+      "mesh_file_sha256": "86231d2f9ba85af18c89f6c10392498f609dba62ebfe530c7aa9ff5954088531",
+      "manifest_sha256": "94e3fe3dae914968e0e41b7fb3505339fcad72dd38a650c0381a2855af06d55e",
+      "cpu": {
+        "probed": 1,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 5.7220459037665705e-08
+        },
+        "passed": true
+      }
+    },
+    {
+      "folder": "paper_seed42_v2",
+      "columns": 7,
+      "mesh_sha256": "a194d719e70089a35498d7df4a851101810fe3a0dcf56cf0642e4a012c47b03e",
+      "mesh_file_sha256": "24d1f0cbee9801f44fff6f910094e7864a297343b2267a836bb8bf7e41938a30",
+      "manifest_sha256": "ba830a8d03e6747eeeaf783276a3625bf1c55221a4c9ef8334e373db2a3bc2ec",
+      "cpu": {
+        "probed": 7,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 0.0
+        },
+        "passed": true
+      }
+    },
+    {
+      "folder": "start_seed42_v2",
+      "columns": 12,
+      "mesh_sha256": "aeaf97d5f1f57757183b5b7e9c14458964cb5042ed31abcbd7b19b8b4ecfd513",
+      "mesh_file_sha256": "b41c4f66452c568deb1f8dc504de55448bb06733d4de674af70a56f586ad7f9b",
+      "manifest_sha256": "c05234a108e0fd32f7ab7a05fcd3532757a6baf1bc3fb4a682eaa375b09af094",
+      "cpu": {
+        "probed": 12,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 0.0
+        },
+        "passed": true
+      }
+    },
+    {
+      "folder": "surface_seed42_v1",
+      "columns": 1,
+      "mesh_sha256": "533cf6c149fae4e9dab66bdf262f6094ec29c8b097fe8242e21544360da88e4a",
+      "mesh_file_sha256": "e3eb563b599963136f12d302e90f9ee9c1dd443d44786f223d84bb31e5abf7f0",
+      "manifest_sha256": "96b81225030bed8e751f24a129d1454f6f234f29770197e955764c1e4256d787",
+      "cpu": {
+        "probed": 1,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 0.0
+        },
+        "passed": true
+      }
+    },
+    {
+      "folder": "records_seed42_v1",
+      "columns": 11,
+      "mesh_sha256": "8bd011bb4f23e0fb3b06c078475358140b9951c602949307a90bbee83a76ce57",
+      "mesh_file_sha256": "94d28549b6429ef4f321678b75b5904f480b55ddc1d96f5e9601109401b42d7f",
+      "manifest_sha256": "17c2c8fb9742629990a1e25d9617585652ee0601ff2d4f0b7e741c421a95dd02",
+      "cpu": {
+        "probed": 11,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 4.768371586472142e-09
+        },
+        "passed": true
+      }
+    },
+    {
+      "folder": "all32_seed42_v1",
+      "columns": 32,
+      "mesh_sha256": "057b6a292681f95bf669e8c1213d51f4e1e74bdacee02a05d07aca73a7ffc01a",
+      "mesh_file_sha256": "d5e8a2956ee8c7f6e96ba26b41ffb19b415aeb6a17c969379f26b03fdedfee0b",
+      "manifest_sha256": "1f6a489ac3d1910d5c2ca1d8251e1a15e448fd79cd1177cd466f344639532fca",
+      "cpu": {
+        "probed": 32,
+        "no_hit": 0,
+        "max_abs_by_family_m": {
+          "V": 5.7220459037665705e-08
+        },
+        "passed": true
+      }
+    }
+  ],
+  "preserved": [
+    {
+      "group": "landing",
+      "columns": 1,
+      "file_sha256": "86231d2f9ba85af18c89f6c10392498f609dba62ebfe530c7aa9ff5954088531",
+      "unchanged": true
+    },
+    {
+      "group": "paper",
+      "columns": 7,
+      "file_sha256": "24d1f0cbee9801f44fff6f910094e7864a297343b2267a836bb8bf7e41938a30",
+      "unchanged": true
+    },
+    {
+      "group": "start",
+      "columns": 12,
+      "file_sha256": "b41c4f66452c568deb1f8dc504de55448bb06733d4de674af70a56f586ad7f9b",
+      "unchanged": true
+    },
+    {
+      "group": "surface",
+      "columns": 1,
+      "file_sha256": "e3eb563b599963136f12d302e90f9ee9c1dd443d44786f223d84bb31e5abf7f0",
+      "unchanged": true
+    }
+  ],
+  "kit_mount": "pending",
+  "training_changed": false
+}
