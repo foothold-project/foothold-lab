@@ -25,6 +25,9 @@ class ValidRolloutStorage(RolloutStorage):
         self.yielded_batches = 0
         self.skipped_batches = 0
         self.normalize_per_batch_safely = False
+        # Two-GPU mirror update: every rank must make the same number of gradient exchanges, so an
+        # empty slot is handed to the caller as None instead of being dropped.
+        self.yield_skipped = False
 
     def clear(self) -> None:
         super().clear()
@@ -56,6 +59,8 @@ class ValidRolloutStorage(RolloutStorage):
                 batch_idx = batch_idx[valid[batch_idx]]
                 if batch_idx.numel() == 0:
                     self.skipped_batches += 1
+                    if self.yield_skipped:
+                        yield None
                     continue
                 self.yielded_batches += 1
                 batch_advantage = advantages[batch_idx]
