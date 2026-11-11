@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 6f2c7fc3cd92fe51531e6602d41c93904ab57e2b4c43720a09bd8355d1ff6a84
+  approval_sha256: 3309fe8c77c655e8d21a43204efefab35b295cf3e645ac39660a8abc79f71466
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -304,6 +304,7 @@ stages:
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
+    - prerequisites.predecessor_exit.exposure_receipt_sha256
     required_string_paths:
     - prerequisites.flag_baseline.path
     required_values:
@@ -318,7 +319,7 @@ stages:
         forward: -0.06
         spin_left: -0.02
         spin_right: -0.02
-      boundary.exposure_at_E1F: same_as_E1_end
+      boundary.exposure_source: same_as_E1_end
     required_boolean_paths: []
     required_stage_values:
       shares:
@@ -336,9 +337,23 @@ stages:
         diag_back_left: 0.025
         diag_back_right: 0.025
         flag: 0.1
-      terrain.exposure_at_E1F: same_as_E1_end
+    inherited_stage_templates:
+    - stage_path: terrain.exposure_at_E1F
+      approval_path: prerequisites.predecessor_exit.continuous_level_cap
+      allowed_values:
+      - 5
+      - 6
+      template:
+        default:
+          exposure: 0.0
+          level_cap: 0
+        positive:
+        - family: A
+          kinds_of: continuous
+          exposure: 1.0
+          level_cap: null
+      value_path: positive.0.level_cap
   name: flag_contract
-  # CG 69e5ac6b:245 donor split is an assumption adopted with the E1F stage.
   shares:
     forward: 0.17
     walk_left: 0.06
@@ -362,8 +377,15 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
-    # CG:242/244: continuous 100%; inherit the actual E1 exit cap (5 or 6), never reset to 5.
-    exposure_at_E1F: same_as_E1_end
+    exposure_at_E1F:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: null
     floors:
       global_command_floor:
         reverse: 0.05

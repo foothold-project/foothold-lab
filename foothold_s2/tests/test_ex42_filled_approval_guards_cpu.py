@@ -26,6 +26,11 @@ def filled(tmp_path, stage):
     cell['prerequisites']['calibration_sha256'] = 'e' * 64
     if stage == 'E2':
         cell['prerequisites']['m0_m3_receipt_sha256'] = 'f' * 64
+    if stage == 'E1F':
+        cell['prerequisites']['predecessor_exit'].update(continuous_level_cap=5,exposure_receipt_sha256='e'*64)
+        doc = deepcopy(plan.document)
+        next(r for r in doc['stages'] if r['id']=='E1F')['terrain']['exposure_at_E1F']['positive'][0]['level_cap']=5
+        plan = replace(plan, document=doc)
     path = tmp_path / 'fixture.yaml'
     plan = pin(plan, path, data)
     validate = validate_stage_e1f_authorization if stage == 'E1F' else validate_stage_e2_authorization
