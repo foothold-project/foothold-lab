@@ -242,7 +242,7 @@ def test_split_branch_of_run_reproduces_the_one_gpu_score_from_real_e0_files(tmp
     notice = json.loads((out / "next_stage_notice.json").read_text())          # the real P1 judgment is HOLD
     judged = json.loads((out / "p1_score.json").read_text())["judgment"]          # #631 judges the E0 cells now
     assert notice["judgment"] == judged and notice["next_stage_id"] == "E1" and notice["automatic_launch_started"] is False
-    assert notice["state"] == ("next_stage_ready_for_approval" if judged == "PASS" else "not_ready")
+    assert notice["state"] == ("next_stage_authorized_no_launcher" if judged == "PASS" else "not_ready")   # #639 cell is open, no launcher given
     assert receipt["next_stage_notice"] == notice["state"]
     assert receipt["split"]["devices"] == ["cuda:1", "cuda:0"]
     assert {k.split("@")[1] for k in receipt["steps"]} == {"cuda:0", "cuda:1"}

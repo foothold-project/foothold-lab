@@ -72,6 +72,10 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
     if "--split-device" in argv and (option("--split-device") != training["device"]
                                      or option("--split-device") == p1["device"]):
         raise ValueError("EX-42 Linux P1 split device must be the training GPU, different from the P1 GPU")
+    if "--next-stage-launcher" in argv:
+        launcher = Path(option("--next-stage-launcher"))
+        if not launcher.is_absolute() or not launcher.is_file() or not os.access(launcher, os.X_OK):
+            raise ValueError("EX-42 Linux P1 next-stage launcher must be an absolute executable file")
     if (option("--eval-seed") != "42" or "--sha-from-manifest" not in argv
             or "--execute" not in argv or "--score-existing" in argv):
         raise ValueError("EX-42 Linux P1 requires seed 42, manifest checkpoint SHA and execution")
