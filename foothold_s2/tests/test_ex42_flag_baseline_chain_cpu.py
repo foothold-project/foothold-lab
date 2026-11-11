@@ -84,7 +84,8 @@ def test_w09_requires_a_pinned_e1_graduation_gate(tmp_path):
     result = check_e1_gate(gate, checkpoint_sha256=CHECKPOINT_SHA)
     assert result["measurement_sha256"] == measurement_sha
     for key, value in (("judgment", "HOLD"), ("stage_id", "E0"),
-                       ("checkpoint_iteration", 750), ("measurement_sha256", "0" * 64)):
+                       ("checkpoint_iteration", 750), ("measurement_sha256", "0" * 64),
+                       ("checkpoint_sha256", "0" * 64)):
         changed = {**row, key: value}
         gate.write_text(json.dumps(changed), encoding="utf-8")
         with pytest.raises(ValueError, match="E1 m1000 PASS"):
@@ -122,6 +123,22 @@ def test_chain_dry_order_and_no_output_or_gpu(tmp_path, monkeypatch):
     assert [row["seed"] for row in result["rounds"]] == [42, 42, 42, 43, 44, 45]
     assert all(len(row["children"]) == 2 for row in result["rounds"])
     assert not (tmp_path / "out").exists()
+    # Each pin is an independent launch identity gate. A forged expected SHA
+    # must not be substituted into the later receipt or accepted as a dry run.
+    with pytest.raises(ValueError, match="pinned E1 m1000 checkpoint"):
+        chain.run_chain(checkpoint, tmp_path / "wrong_checkpoint", "cuda:1",
+                        plan_path=plan_path, mesh_dir=tmp_path,
+                        expected_checkpoint_sha256="0" * 64,
+                        expected_mesh_sha256="a" * 64, e1_gate=gate,
+                        task="test", execute=False)
+    with pytest.raises(ValueError, match="pinned mesh SHA differs"):
+        chain.run_chain(checkpoint, tmp_path / "wrong_mesh", "cuda:1",
+                        plan_path=plan_path, mesh_dir=tmp_path,
+                        expected_checkpoint_sha256=chain.digest(checkpoint),
+                        expected_mesh_sha256="0" * 64, e1_gate=gate,
+                        task="test", execute=False)
+    assert not (tmp_path / "wrong_checkpoint").exists()
+    assert not (tmp_path / "wrong_mesh").exists()
 
 
 def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):
