@@ -141,7 +141,7 @@ def test_parent_runs_both_flag_children_and_checks_their_durable_receipts(tmp_pa
                   process=SimpleNamespace(hidden_child=hidden_child), env={"CUDA_DEVICE_ORDER": "PCI_BUS_ID"},
                   physical_gpu={"gpu_uuid": "GPU-" + "a" * 32},
                   record=lambda count, child: steps.__setitem__(count, child))
-    execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs)
+    assert execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs) == {}
     assert [argv[argv.index("--count") + 1] for argv, _, _ in calls] == ["flag_one", "flag_four"]
     assert all("--headless" in argv and "--device" in argv for argv, _, _ in calls)
     assert set(steps) == {"flag_one", "flag_four"}
@@ -159,8 +159,9 @@ def test_parent_runs_both_flag_children_and_checks_their_durable_receipts(tmp_pa
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     receipt["run_identity"]["gpu_uuid"] = "GPU-" + "b" * 32
     receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
-    with pytest.raises(ValueError, match="GPU identity"):
-        execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs)
+    failures = execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs)
+    assert "GPU identity" in failures["flag_four"]
+    assert steps["flag_four"]["state"] == "HOLD"
 
 
 def test_flag_child_real_parser_accepts_parent_argv_before_mesh_preflight(tmp_path, monkeypatch):
@@ -334,3 +335,139 @@ def test_calibration_cli_reads_all_five_raw_runs(tmp_path):
     assert set(row["repeat_width"]) == set(plan["evaluation"]["flag_cells"]["judge_cases"])
     with pytest.raises(ValueError, match="five roots"):
         main(argv[:-2])
+
+
+def _rewrite_cell(tmp_path, current, case_id, **changes):
+    """Keep the raw SHA truthful while probing the judgment, not the file gate."""
+    changed = copy.deepcopy(current)
+    item = changed[case_id]
+    raw = json.loads(Path(item["raw_file"]).read_text(encoding="utf-8"))
+    raw.update(changes)
+    path = tmp_path / ("override_" + case_id + ".json")
+    path.write_text(json.dumps(raw, sort_keys=True), encoding="utf-8")
+    item.update({key: raw[key] for key in ("valid_count", "success_count", "survival_count")})
+    item.update(raw_file=str(path), raw_sha256=_sha(path))
+    return changed
+
+
+def test_fail_precedes_calibration_hold_and_ceil_threshold(tmp_path, monkeypatch):
+    plan, _cal, current, _ = _full(tmp_path)
+    plan["evaluation"]["flag_cells"]["calibration"] = {"path": None, "sha256": None}
+    boundary = _rewrite_cell(tmp_path, current, "flag_one_eval_gt",
+                             valid_count=49, success_count=39, survival_count=46)
+    result = _judge(monkeypatch, plan, boundary, previous=current)
+    assert result["stage_exit"]["items"]["flag_one_eval_gt_current"]["success_min"] == 40
+    assert result["stage_exit"]["items"]["flag_one_eval_gt_current"]["judgement"] == "FAIL"
+    assert result["stage_exit"]["items"]["flag_calibration"]["judgement"] == "HOLD"
+    assert result["judgement"] == "FAIL"
+
+
+def test_survival_threshold_and_trace_sha_are_independent_gates(tmp_path, monkeypatch):
+    plan, _cal, current, _ = _full(tmp_path)
+    low_survival = _rewrite_cell(tmp_path, current, "flag_four_eval_pred",
+                                 valid_count=64, success_count=64, survival_count=59)
+    result = _judge(monkeypatch, plan, low_survival, previous=current)
+    assert result["stage_exit"]["items"]["flag_four_eval_pred_current"]["survival_min"] == 60
+    assert result["judgement"] == "FAIL"
+    broken_trace = _rewrite_cell(tmp_path, current, "flag_four_eval_pred",
+                                 trace_sha256="0" * 64)
+    with pytest.raises(ValueError, match="trace SHA"):
+        _judge(monkeypatch, plan, broken_trace, previous=current)
+
+
+def test_each_missing_previous_window_is_explicit_hold(tmp_path, monkeypatch):
+    plan, _cal, current, _ = _full(tmp_path)
+    missing_flag = copy.deepcopy(current)
+    missing_flag.pop("flag_four_eval_pred")
+    result = _judge(monkeypatch, plan, current, previous=missing_flag)
+    assert result["stage_exit"]["items"]["flag_four_eval_pred_previous"]["judgement"] == "HOLD"
+    assert result["judgement"] == "HOLD"
+    no_previous = _judge(monkeypatch, plan, current)
+    assert no_previous["stage_exit"]["items"]["maintenance_previous"]["judgement"] == "HOLD"
+    assert no_previous["stage_exit"]["items"]["flag_one_eval_gt_previous"]["judgement"] == "HOLD"
+    assert no_previous["judgement"] == "HOLD"
+
+
+def test_p1_stage_and_calibration_must_match_raw_evidence(tmp_path, monkeypatch):
+    plan, _cal, current, _ = _full(tmp_path)
+    passed = _judge(monkeypatch, plan, current, previous=current)
+    wrong_stage = copy.deepcopy(passed)
+    wrong_stage["stage_id"] = "E2"
+    with pytest.raises(ValueError, match="stage exit evidence differs"):
+        FlagTwoWindowJudge().verify(wrong_stage, "PASS", "PASS", plan=plan)
+    wrong_calibration = copy.deepcopy(passed)
+    wrong_calibration["stage_exit"]["items"]["flag_calibration"]["repeat_width"]["flag_four_eval_gt"]["success_count"] = 17
+    with pytest.raises(ValueError, match="calibration differs"):
+        FlagTwoWindowJudge().verify(wrong_calibration, "PASS", "PASS", plan=plan)
+
+
+def test_failed_child_marker_overrides_a_partial_durable_receipt(tmp_path, monkeypatch):
+    plan, _cal, current, _ = _full(tmp_path)
+    _write_round(tmp_path / "evaluation" / "flag_cells", plan, 42)
+    marker = tmp_path / "evaluation" / "flag_cells" / "child_failures.json"
+    marker.write_text(json.dumps({"format": "foothold-ex42-e1f-child-failures/1",
+                                  "checkpoint_sha256": CHECKPOINT_SHA,
+                                  "failures": {"flag_four": "Kit child rc=1"}}), encoding="utf-8")
+    monkeypatch.setattr("foothold_s2.ex42_e1f_judge.judge_maintenance",
+                        lambda score, baseline, measured: {**score, "judgement": "PASS"})
+    monkeypatch.setattr("foothold_s2.ex42_e0_judge.load_baseline", lambda *args: {})
+    monkeypatch.setattr("foothold_s2.ex42_stage_judges.previous_window",
+                        lambda ctx: {"flag_cells": current})
+    ctx = SimpleNamespace(root=ROOT, cfg={"baseline": {"sha256": "a" * 64}},
+                          plan=plan, evaluation=tmp_path / "evaluation",
+                          checkpoint_sha=CHECKPOINT_SHA, plan_path=tmp_path / "plan.yaml",
+                          seed=42, digest=lambda path: PLAN_SHA)
+    result = FlagTwoWindowJudge().judge(ctx, {})
+    assert result["judgement"] == "HOLD"
+    assert result["stage_exit"]["items"]["flag_four_eval_gt_current"]["judgement"] == "HOLD"
+    assert result["flag_child_failures"]["failures"] == {"flag_four": "Kit child rc=1"}
+
+
+def test_failed_child_still_writes_p1_score_and_handoff(tmp_path, monkeypatch):
+    import foothold_s2.ex42_eval_once as once
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
+    import foothold_s2
+    child_module = SimpleNamespace()
+    monkeypatch.setitem(sys.modules, "foothold_s2.ex41_eval_once", child_module)
+    monkeypatch.setattr(foothold_s2, "ex41_eval_once", child_module, raising=False)
+    checkpoint = tmp_path / "model_1250.pt"
+    checkpoint.write_bytes(b"known E1F boundary")
+    sha = _sha(checkpoint)
+    output = tmp_path / "evaluation"
+    plan_path = tmp_path / "plan.yaml"
+    plan_path.write_text("stages: []\n", encoding="utf-8")
+    approvals = tmp_path / "approvals.yaml"
+    approvals.write_text("approvals: []\n", encoding="utf-8")
+    cfg_path = tmp_path / "score.yaml"
+    cfg_path.write_text("test: true\n", encoding="utf-8")
+    monkeypatch.setattr(once, "machine_path", lambda key: Path(sys.executable))
+    monkeypatch.setattr(once.subprocess, "check_output",
+                        lambda argv, **kwargs: "" if argv[1] == "status" else "a" * 40)
+    monkeypatch.setattr(once, "gpu_identity", lambda device: {"device": device, "gpu_uuid": "GPU-test"})
+    monkeypatch.setattr(once, "receipt_device_fields", lambda device, physical: {"device": device})
+    monkeypatch.setattr(once, "config", lambda: ({"eval_seed": 42, "task": "test"}, cfg_path))
+    monkeypatch.setattr("foothold_s2.eval.ex42_mesh_eval.preflight",
+                        lambda mesh_dir: {"mesh_sha256": "b" * 64})
+    monkeypatch.setattr(once, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
+    monkeypatch.setattr(once, "commands", lambda *args, **kwargs: [])
+    monkeypatch.setattr(EX42Plan, "load", lambda path: SimpleNamespace(document=_plan(), sha256=PLAN_SHA))
+    monkeypatch.setattr(once, "execute_flag_children", lambda *args, **kwargs: {"flag_four": "Kit child rc=1"})
+
+    def measure_with_marker(*args, **kwargs):
+        marker = json.loads((output / "flag_cells" / "child_failures.json").read_text(encoding="utf-8"))
+        assert marker["failures"] == {"flag_four": "Kit child rc=1"}
+        return {"judgement": "HOLD", "checkpoint_sha256": sha}
+
+    monkeypatch.setattr(once, "measure", measure_with_marker)
+    monkeypatch.setattr(once, "p1_score_from_measure",
+                        lambda *args, **kwargs: {"judgment": "HOLD", "checkpoint_sha256": sha})
+    monkeypatch.setattr(once, "_hand_off",
+                        lambda *args, **kwargs: {"state": "stage_continued", "automatic_launch_started": True})
+    rc = once.run(checkpoint, sha, output, "cuda:1", mesh_dir=tmp_path,
+                  expected_mesh_sha256="b" * 64, p1_plan=plan_path, p1_approvals=approvals,
+                  p1_stage_id="E1F", checkpoint_iteration=1250)
+    assert rc == 0
+    assert json.loads((output / "p1_score.json").read_text(encoding="utf-8"))["judgment"] == "HOLD"
+    receipt = json.loads((output / "eval_receipt.json").read_text(encoding="utf-8"))
+    assert receipt["state"] == "done" and receipt["next_stage_notice"] == "stage_continued"

@@ -168,7 +168,22 @@ class FlagTwoWindowJudge:
         baseline["_sha256"] = ctx.cfg["baseline"]["sha256"]
         measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         folder = ctx.evaluation / "flag_cells"
+        marker = folder / "child_failures.json"
+        failures = {}
+        if marker.is_file():
+            state = json.loads(marker.read_text(encoding="utf-8-sig"))
+            failures = state.get("failures")
+            if (state.get("format") != "foothold-ex42-e1f-child-failures/1" or
+                    state.get("checkpoint_sha256") != ctx.checkpoint_sha or
+                    not isinstance(failures, dict) or not failures or
+                    set(failures) - {"flag_one", "flag_four"} or
+                    any(not isinstance(reason, str) or not reason for reason in failures.values())):
+                raise ValueError("E1F flag child failure marker invalid")
+            score["flag_child_failures"] = {"path": str(marker), "sha256": _sha(marker),
+                                             "failures": failures}
         for count in ("flag_one", "flag_four"):
+            if count in failures:
+                continue
             subdir = folder / count
             if (subdir / "flag_cells.json").is_file():
                 score.setdefault("flag_cells", {}).update(read_evidence(

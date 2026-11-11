@@ -129,29 +129,35 @@ def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
 def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
                           mesh_sha256, checkpoint_sha256, seed, plan, process, env,
                           physical_gpu, record):
-    """Run and verify both E1F counts before the stage score can be made."""
+    """Run both E1F counts; a failed child is a recorded HOLD, not a lost P1 boundary."""
     from foothold_s2.eval.ex42_flag_cells import contract, read_evidence
 
     contract(plan.document)
+    failures = {}
     for count, argv in flag_kit_commands(checkpoint, output, device, task=task,
                                           plan_path=plan_path, mesh_dir=mesh_dir,
                                           mesh_sha256=mesh_sha256, seed=seed):
-        child = process.hidden_child(argv, Path(output) / "children" / count, env=env)
-        if child.get("state") == "done":
-            receipt = json.loads((Path(output) / "flag_cells" / count / "flag_cells.json").read_text(
-                encoding="utf-8-sig"))
-            identity = receipt.get("run_identity") or {}
-            observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
-            if (identity.get("device") != device or
-                    observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
-                raise ValueError("E1F flag Kit physical GPU identity differs")
-            read_evidence(Path(output) / "flag_cells" / count, plan=plan.document,
-                          plan_sha256=plan.sha256, checkpoint_sha256=checkpoint_sha256,
-                          seed=seed, count=count)
-            child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
-        record(count, child)
+        try:
+            child = process.hidden_child(argv, Path(output) / "children" / count, env=env)
+            if child.get("state") == "done":
+                receipt = json.loads((Path(output) / "flag_cells" / count / "flag_cells.json").read_text(
+                    encoding="utf-8-sig"))
+                identity = receipt.get("run_identity") or {}
+                observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                if (identity.get("device") != device or
+                        observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                    raise ValueError("E1F flag Kit physical GPU identity differs")
+                read_evidence(Path(output) / "flag_cells" / count, plan=plan.document,
+                              plan_sha256=plan.sha256, checkpoint_sha256=checkpoint_sha256,
+                              seed=seed, count=count)
+                child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
         if child.get("state") != "done":
-            raise ValueError(f"E1F {count} Kit child failed or lacks durable receipt")
+            failures[count] = str(child.get("reason") or f"child state {child.get('state')}")
+            child["state"] = "HOLD"
+        record(count, child)
+    return failures
 
 
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
@@ -426,11 +432,19 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 row["steps"][count] = child
                 _atomic(output / "eval_receipt.json", row)
 
-            execute_flag_children(
+            flag_failures = execute_flag_children(
                 checkpoint, output, device, task=cfg["task"], plan_path=p1_plan,
                 mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
                 checkpoint_sha256=expected_sha256, seed=seed, plan=plan, process=process,
                 env=env, physical_gpu=physical_gpu, record=record_flag)
+            if flag_failures:
+                marker = output / "flag_cells" / "child_failures.json"
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                _atomic(marker, {"format": "foothold-ex42-e1f-child-failures/1",
+                                 "checkpoint_sha256": expected_sha256,
+                                 "failures": flag_failures})
+                row["flag_child_failures"] = {"path": str(marker), "failures": flag_failures}
+                _atomic(output / "eval_receipt.json", row)
         except (OSError, ValueError, KeyError) as exc:
             row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
             _atomic(output / "eval_receipt.json", row)

@@ -17,10 +17,16 @@
 ## CPU 검증과 남은 관문
 
 - isaac311 CPU 관련 시험 묶음 **42 passed** (`test_ex42_e1f_flag_cpu.py` · `test_ex42_e1_judge_cpu.py` · `test_ex42_d44_four_cells_cpu.py`). 답 아는 64 env 완주·낙상·정지 속도·전체 시간·두 창·실패 우선·47/48 분모·세 모드 역할·원자료 및 반복 영수증 변조를 포함한다.
-- `ex42_eval_once.py` 가 E1F 단계에서 깃발 한 개·네 개 자식을 차례로 부르고 두 `flag_cells.json` 원자료와 실제 GPU UUID 를 확인한 뒤 점수를 만든다. 자식 하나 실패나 영수증 누락은 HOLD 로 끝난다. 부모 명령 형성·영수증·GPU 신원 반례와 실제 `ex42_flag_eval.py` argparse 가 부모 argv 를 받는 경로를 CPU 로 확인했다. 실제 Kit 자식 동작과 지도 소비 영수증은 **미확인**이다.
+- `ex42_eval_once.py` 가 E1F 단계에서 깃발 한 개·네 개 자식을 차례로 부르고 두 `flag_cells.json` 원자료와 실제 GPU UUID 를 확인한 뒤 점수를 만든다. 자식 하나 실패나 영수증 누락은 해당 칸의 실패 이유를 `child_failures.json` 에 남기고 P1 HOLD 점수와 handoff 영수증까지 쓴다. CPU 주입 시험에서 rc 0, `p1_score.json` HOLD, 같은 단계 이어 가기 notice 를 확인했다. 실제 이어 학습 실행은 **미확인**이다. 부모 명령 형성·영수증·GPU 신원 반례와 실제 `ex42_flag_eval.py` argparse 가 부모 argv 를 받는 경로를 CPU 로 확인했다. 실제 Kit 자식 동작과 지도 소비 영수증은 **미확인**이다.
 - #672 일반 `StageJudge` 배관과 E1F 이름 등록은 결선했다. #670 진입 어댑터 병합 및 E1F plan materialize 후 전체 실행 경로를 다시 확인해야 한다.
 - E1 졸업본에서 W09 기준선과 깃발 다섯 반복 평가를 수행한 뒤, `evaluation.flag_cells.calibration` 에 파일 경로·SHA 를 채우고 plan·approval SHA 를 재고정해야 한다. 이 보고의 값은 실측 아님.
 
 ## 실행 계약, 아직 GPU 실행하지 않음
 
 두 자식의 공통 꼴은 `python -m foothold_s2.eval.ex42_flag_eval --checkpoint <E1F model_N.pt> --plan <고정 prep.yaml> --mesh-dir <고정 ABCDE mesh> --expected-mesh-sha256 <승인된 SHA> --seed 42 --envs 64 --device cuda:1 --headless --count flag_one --out <평가>/flag_cells/flag_one` 이다. 두 번째는 `--count flag_four --out <평가>/flag_cells/flag_four` 이다. 결과 `flag_cells.json` 이 둘 다 있어야 한다. 다섯 반복의 CPU 합산 명령은 `python -m foothold_s2.eval.ex42_flag_calibrate --plan <반복 당시 prep.yaml> --checkpoint <E1 졸업본> --repeat-root <회1> ... --repeat-root <회5> --out <새 calibration.json>` 이다. 운영 argv 는 E1F materialize 뒤 실제 경로와 다시 대조해야 한다.
+
+## #677 검토 지적 반영
+
+- 통합판의 E1F 입구 관문은 준비됨으로 시험 기대를 갱신했다. 공통 PASS 만 담은 점수는 E1F 전용 `stage_exit` 검증에서 거절한다.
+- 검토의 생존 돌연변이 여덟 개에 답 아는 CPU 반례를 추가했다. FAIL 우선, 비례 문턱 올림, 생존 하한, trace SHA, 직전 깃발 칸과 직전 유지표 창 결측, stage_id 위조, calibration 위조를 각각 검사한다.
+- 자식 실패 원인을 HOLD 마커에 기록하고, 부분 영수증이 남아 있어도 실패한 깃발 수의 칸을 채택하지 않는다. 자식 실패가 P1 전체 출력 누락으로 번지지 않는다는 CPU 제어 흐름 시험을 추가했다. `test_ex42_e1f_flag_cpu.py` · `test_ex42_future_approval_cpu.py` · `test_ex42_stage_continue_cpu.py` · `test_ex42_stage_handoff_cpu.py`: 110 passed. 이 시험은 Kit 실행과 실제 GPU handoff 성공을 뜻하지 않는다.
