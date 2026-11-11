@@ -172,7 +172,8 @@ def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
     return off
 
 
-def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage_id: str = STAGE_E0_ID) -> dict[str, Any]:
+def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage_id: str = STAGE_E0_ID,
+                       boundary_index: int = 0) -> dict[str, Any]:
     """The one E0 env-cfg seam: combined mesh + per-column reset ranges + per-column push gate.
 
     Call after the DR events are installed (the push term must exist) and before gym.make.
@@ -206,6 +207,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
     stage_row = _e_stage(plan, stage_id)["terrain"]
     stage_terrain = {**stage_row, "kind_task": stage_row.get("kind_task") or _e0_stage(plan)["terrain"]["kind_task"]}
+    from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
+    stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index)   # a continued segment: k boundaries on
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
@@ -217,6 +220,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "flag_table": flag_table,
+            "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt},
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
