@@ -16,11 +16,11 @@
 
 ## CPU 검증과 남은 관문
 
-- `/home/jay/miniforge3/envs/isaac311/bin/python -m pytest -q -p no:cacheprovider --basetemp=/home/jay/mai/tmp/scripter/test-e1f-flags foothold_s2/tests/test_ex42_e1f_flag_cpu.py` · **8 passed**. 답 아는 64 env 완주·낙상·정지 속도·전체 시간·두 창·실패 우선·47/48 분모·세 모드 역할·원자료 및 반복 영수증 변조를 포함한다.
-- `python -m py_compile` 평가 자식·CPU 집계·판정 4 파일 · **rc 0**. Isaac EULA 입력창이 생기는 `--help` 호출은 CPU 검증으로 쓰지 않았다. 실제 Kit 자식 동작과 지도 소비 영수증은 **미확인**이다.
-- #670 진입 어댑터 이름 허용과 #672 일반 `StageJudge` 배관 병합 후 등록 import 및 두 count 자식 호출을 결선해야 한다. 병합 전 이 PR 단독으로 EX-42 전체 CPU suite 또는 E1F 출구가 통과한다고 주장하지 않는다.
+- isaac311 CPU 관련 시험 묶음 **42 passed** (`test_ex42_e1f_flag_cpu.py` · `test_ex42_e1_judge_cpu.py` · `test_ex42_d44_four_cells_cpu.py`). 답 아는 64 env 완주·낙상·정지 속도·전체 시간·두 창·실패 우선·47/48 분모·세 모드 역할·원자료 및 반복 영수증 변조를 포함한다.
+- `ex42_eval_once.py` 가 E1F 단계에서 깃발 한 개·네 개 자식을 차례로 부르고 두 `flag_cells.json` 원자료와 실제 GPU UUID 를 확인한 뒤 점수를 만든다. 자식 하나 실패나 영수증 누락은 HOLD 로 끝난다. 부모 명령 형성·영수증·GPU 신원 반례와 실제 `ex42_flag_eval.py` argparse 가 부모 argv 를 받는 경로를 CPU 로 확인했다. 실제 Kit 자식 동작과 지도 소비 영수증은 **미확인**이다.
+- #672 일반 `StageJudge` 배관과 E1F 이름 등록은 결선했다. #670 진입 어댑터 병합 및 E1F plan materialize 후 전체 실행 경로를 다시 확인해야 한다.
 - E1 졸업본에서 W09 기준선과 깃발 다섯 반복 평가를 수행한 뒤, `evaluation.flag_cells.calibration` 에 파일 경로·SHA 를 채우고 plan·approval SHA 를 재고정해야 한다. 이 보고의 값은 실측 아님.
 
 ## 실행 계약, 아직 GPU 실행하지 않음
 
-두 자식의 공통 꼴은 `python -m foothold_s2.eval.ex42_flag_eval --checkpoint <E1F model_N.pt> --plan <고정 prep.yaml> --mesh-dir <고정 ABCDE mesh> --expected-mesh-sha256 <승인된 SHA> --seed 42 --envs 64 --device cuda:1 --headless --count flag_one --out <평가>/flag_cells/flag_one` 이다. 두 번째는 `--count flag_four --out <평가>/flag_cells/flag_four` 이다. 결과 `flag_cells.json` 이 둘 다 있어야 한다. 다섯 반복의 CPU 합산 명령은 `python -m foothold_s2.eval.ex42_flag_calibrate --plan <반복 당시 prep.yaml> --checkpoint <E1 졸업본> --repeat-root <회1> ... --repeat-root <회5> --out <새 calibration.json>` 이다. 운영 argv 는 #672 배관·E1F materialize 뒤 실제 경로와 다시 대조해야 한다.
+두 자식의 공통 꼴은 `python -m foothold_s2.eval.ex42_flag_eval --checkpoint <E1F model_N.pt> --plan <고정 prep.yaml> --mesh-dir <고정 ABCDE mesh> --expected-mesh-sha256 <승인된 SHA> --seed 42 --envs 64 --device cuda:1 --headless --count flag_one --out <평가>/flag_cells/flag_one` 이다. 두 번째는 `--count flag_four --out <평가>/flag_cells/flag_four` 이다. 결과 `flag_cells.json` 이 둘 다 있어야 한다. 다섯 반복의 CPU 합산 명령은 `python -m foothold_s2.eval.ex42_flag_calibrate --plan <반복 당시 prep.yaml> --checkpoint <E1 졸업본> --repeat-root <회1> ... --repeat-root <회5> --out <새 calibration.json>` 이다. 운영 argv 는 E1F materialize 뒤 실제 경로와 다시 대조해야 한다.

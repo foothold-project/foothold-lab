@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -15,6 +17,7 @@ import yaml
 
 from foothold_s2.eval.ex42_flag_cells import contract, read_evidence, score_trace, summarize_repeats
 from foothold_s2.ex42_e1f_judge import FlagTwoWindowJudge, judge_e1f
+from foothold_s2.ex42_eval_once import execute_flag_children, flag_kit_commands
 
 
 ROOT = Path(__file__).parents[2]
@@ -112,6 +115,67 @@ def _full(tmp_path):
         current.update(read_evidence(roots[0] / count, plan=plan, plan_sha256=PLAN_SHA,
                                      checkpoint_sha256=CHECKPOINT_SHA, seed=42, count=count))
     return plan, summary, current, roots
+
+
+def test_parent_runs_both_flag_children_and_checks_their_durable_receipts(tmp_path, monkeypatch):
+    monkeypatch.setattr("foothold_s2.ex42_eval_once.machine_path",
+                        lambda key: Path(sys.executable if key == "conda_python" else tmp_path / "kit-cache"))
+    plan = _plan()
+    output = tmp_path / "out"
+    _write_round(output / "flag_cells", plan, 42)
+    for count in ("flag_one", "flag_four"):
+        receipt_path = output / "flag_cells" / count / "flag_cells.json"
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        receipt["run_identity"] = {"device": "cuda:1", "gpu_uuid": "GPU-" + "a" * 32}
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    calls, steps = [], {}
+
+    def hidden_child(argv, folder, *, env):
+        calls.append((argv, folder, env))
+        return {"state": "done", "rc": 0}
+
+    kwargs = dict(task="FootholdS2-Go2-S2-SB-v0", plan_path=tmp_path / "prep.yaml",
+                  mesh_dir=tmp_path / "mesh", mesh_sha256="d" * 64,
+                  checkpoint_sha256=CHECKPOINT_SHA, seed=42,
+                  plan=SimpleNamespace(document=plan, sha256=PLAN_SHA),
+                  process=SimpleNamespace(hidden_child=hidden_child), env={"CUDA_DEVICE_ORDER": "PCI_BUS_ID"},
+                  physical_gpu={"gpu_uuid": "GPU-" + "a" * 32},
+                  record=lambda count, child: steps.__setitem__(count, child))
+    execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs)
+    assert [argv[argv.index("--count") + 1] for argv, _, _ in calls] == ["flag_one", "flag_four"]
+    assert all("--headless" in argv and "--device" in argv for argv, _, _ in calls)
+    assert set(steps) == {"flag_one", "flag_four"}
+    assert all(step["observed_gpu"]["device"] == "cuda:1" for step in steps.values())
+    assert len(flag_kit_commands(tmp_path / "model.pt", output, "cuda:1",
+                                 task=kwargs["task"], plan_path=kwargs["plan_path"],
+                                 mesh_dir=kwargs["mesh_dir"], mesh_sha256=kwargs["mesh_sha256"],
+                                 seed=42)) == 2
+
+    receipt_path = output / "flag_cells" / "flag_four" / "flag_cells.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["run_identity"]["gpu_uuid"] = "GPU-" + "b" * 32
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    with pytest.raises(ValueError, match="GPU identity"):
+        execute_flag_children(tmp_path / "model.pt", output, "cuda:1", **kwargs)
+
+
+def test_flag_child_real_parser_accepts_parent_argv_before_mesh_preflight(tmp_path, monkeypatch):
+    if importlib.util.find_spec("isaaclab") is None:
+        pytest.skip("Isaac Lab parser unavailable in this CPU interpreter")
+    monkeypatch.setattr("foothold_s2.ex42_eval_once.machine_path",
+                        lambda key: Path(sys.executable if key == "conda_python" else tmp_path / "kit-cache"))
+    checkpoint = ROOT / "foothold_s2/tests/test_ex42_e1f_flag_cpu.py"
+    plan = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
+    count, argv = flag_kit_commands(checkpoint, tmp_path, "cuda:1", task="FootholdS2-Go2-S2-SB-v0",
+                                    plan_path=plan, mesh_dir=tmp_path / "missing-mesh",
+                                    mesh_sha256="a" * 64, seed=42)[0]
+    result = subprocess.run(argv, cwd=ROOT, env={**os.environ, "CUDA_VISIBLE_DEVICES": "",
+                                             "OMNI_KIT_ACCEPT_EULA": "YES"},
+                            capture_output=True, text=True, timeout=30)
+    assert count == "flag_one" and result.returncode == 1
+    assert "missing-mesh" in result.stderr
+    assert "unrecognized arguments" not in result.stderr
+    assert not (tmp_path / "flag_cells" / count).exists()
 
 
 def _judge(monkeypatch, plan, current, *, previous=None):
