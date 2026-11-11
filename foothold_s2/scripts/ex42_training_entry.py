@@ -285,6 +285,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
 
     env.unwrapped._ex42_column_table = contract["column_table"]          # the learned_cells recorder names columns by it
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
+    env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
@@ -1100,6 +1101,7 @@ class EX42StageZeroRuntime:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
             raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
+        self._exposure_receipt(update - 1, "start")
         if update == 1 and self.env is not None:
             terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
             if getattr(terrain, "terrain_levels", None) is not None:
@@ -1111,6 +1113,27 @@ class EX42StageZeroRuntime:
             raw._ex42_stage_id = self.stage_id
             raw._ex40_dr_scale = 1.0
             raw._ex41_push_vmax_mps = self.push_vmax_mps
+
+    def _exposure_receipt(self, iteration: int, kind: str) -> None:
+        """E3 raw material: the env contract (k_ladder exposure, level caps, opened kinds) plus the live placement as
+        exposure_receipt_<it>.json. `start` once per process, `boundary` at every save boundary. Never stops training."""
+        raw, log_dir = self.env, getattr(self.runner, "log_dir", None)
+        contract = getattr(raw, "_ex42_env_contract", None)
+        if contract is None or log_dir is None or (kind == "start" and getattr(self, "_exposure_start_done", False)):
+            return
+        try:
+            from foothold_s2.ex42_exposure_receipt import build_receipt, write_receipt
+            from foothold_s2.terrains.ex42_exposure import level_counts
+            terrain = getattr(getattr(raw, "scene", None), "terrain", None)
+            live = (level_counts(terrain) if getattr(terrain, "terrain_levels", None) is not None else None)
+            body = build_receipt(contract, stage_id=self.stage_id, plan_sha256=self.plan_sha256, iteration=iteration,
+                                 kind=kind, live=live, rank=int(os.environ.get("RANK", "0")),
+                                 world_size=int(os.environ.get("WORLD_SIZE", "1")))
+            write_receipt(log_dir, body)
+            if kind == "start":
+                self._exposure_start_done = True
+        except Exception as exc:          # noqa: BLE001 (the receipt must not stop the training)
+            print("EX42_EXPOSURE_RECEIPT_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
 
     def _learned_cells_init(self) -> None:
         """CG:380/381 boundary_log recorder (E1F on). Never stops training: any failure switches it off and says so."""
@@ -1242,6 +1265,7 @@ class EX42StageZeroRuntime:
         log_dir = getattr(self.runner, "log_dir", None)
         if log_dir is None:
             return
+        self._exposure_receipt(iteration, "boundary")
         terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
         floor = getattr(terrain, "low_level_floor", None)
         try:
