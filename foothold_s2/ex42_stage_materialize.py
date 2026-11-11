@@ -227,7 +227,7 @@ def source_exit_bounds(source, template, stage):
 
 
 def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
-             budget_limit, budget_used, budget_basis):
+             budget_limit, budget_used, budget_basis, flag_chain=None):
     template, source = EX42Plan.load(plan), EX42Plan.load(source_plan)
     row = deepcopy(_row(template, target))
     approval_path = Path(approvals).resolve(strict=True)
@@ -302,6 +302,16 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
             cell['extension_authorized'] = True
             from foothold_s2.curriculum.ex42_prep import stage_extension_contract
             cell['extension_contract'] = stage_extension_contract(row)
+    flag_artifacts = {}
+    if flag_chain is not None:
+        if target != 'E1F':
+            raise ValueError('flag calibration publication is scoped to E1F')
+        from foothold_s2.ex42_flag_publication import validate_flag_chain
+        flag_artifacts = validate_flag_chain(flag_chain, template=template, checkpoint=checkpoint,
+            baseline_ref=ev.get('bindings', {}).get('prerequisites.flag_baseline.sha256'),
+            mesh_ref=ev.get('bindings', {}).get('prerequisites.predecessor_exit.evaluation_mesh_sha256'),
+            evidence_dir=ev_path.parent, gate_path=gate_path)
+        cell.setdefault('prerequisites', {})['calibration_sha256'] = flag_artifacts['flag_calibration']['sha256']
     contract = row['authorization_contract']
     bindings = ev.get('bindings', {})
     if not isinstance(bindings, dict):
@@ -353,6 +363,12 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         cell['boundary']['axis']=axis
     document=deepcopy(template.document)
     document['stages']=[row if x['id']==target else x for x in document['stages']]
+    if flag_artifacts:
+        flag_cells = document['evaluation']['flag_cells']
+        flag_cells['calibration'] = flag_artifacts['flag_calibration']
+        flag_cells['calibration_sha256'] = flag_artifacts['flag_calibration']['sha256']
+        flag_cells['flag_baseline'] = flag_artifacts['flag_baseline']
+        artifacts.update(flag_artifacts)
     document['approval_file']='ex42-approvals.yaml'
     document['materialization']={'format':FORMAT,'target_stage':target,'transition_file':'transition.json'}
     approval_bytes=yaml.safe_dump(approvals_doc,sort_keys=False,allow_unicode=True).encode()
@@ -360,6 +376,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     plan_bytes=yaml.safe_dump(document,sort_keys=False,allow_unicode=True).encode()
     refs={k:_ref(v) for k,v in dict(plan=plan,source_plan=source_plan,approvals=approvals,
                                    parent_manifest=parent_manifest,gate_receipt=gate_receipt,evidence=evidence).items()}
+    if flag_chain is not None:
+        refs['flag_chain'] = flag_artifacts['flag_chain_receipt']
     transition={'format':FORMAT,'target_stage':target,'source_stage':stage,'prior_plan_sha':source.sha256,
         'template_plan_sha':template.sha256,'gate_sha':digest(gate_path),'gate_sha256':digest(gate_path),'parent_sha256':actual_sha,
         'new_plan_sha':hashlib.sha256(plan_bytes).hexdigest(),'approval_sha256':document['stage_zero']['approval_sha256'],
@@ -369,10 +387,10 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
 
 
 def materialize(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
-                budget_limit, budget_used, budget_basis, out):
+                budget_limit, budget_used, budget_basis, out, flag_chain=None):
     """Validate first, publish once. Existing output directories are never reused."""
     args=dict(plan=plan,source_plan=source_plan,approvals=approvals,target=target,parent_manifest=parent_manifest,
-              gate_receipt=gate_receipt,evidence=evidence,budget_limit=budget_limit,budget_used=budget_used,budget_basis=budget_basis)
+              gate_receipt=gate_receipt,evidence=evidence,budget_limit=budget_limit,budget_used=budget_used,budget_basis=budget_basis,flag_chain=flag_chain)
     template,document,plan_bytes,approval_bytes,transition=_prepare(**args)
     destination=Path(out).absolute()
     if destination.is_relative_to(template.path.parent):
@@ -459,7 +477,8 @@ def validate_materialized_transition(plan: EX42Plan, *, target_stage, gate_recei
             or digest(gate_receipt_path)!=expected_gate_sha256):
         raise ValueError('materialized plan/gate SHA differs')
     inputs=receipt.get('inputs',{})
-    if set(inputs)!={'plan','source_plan','approvals','parent_manifest','gate_receipt','evidence'}:
+    required_inputs = {'plan','source_plan','approvals','parent_manifest','gate_receipt','evidence'}
+    if set(inputs) not in (required_inputs, required_inputs | {'flag_chain'}):
         raise ValueError('materialization input inventory differs')
     paths={k:_checked_ref(v,plan.path.parent) for k,v in inputs.items()}
     if paths['gate_receipt']!=Path(gate_receipt_path).resolve():
@@ -501,9 +520,22 @@ def main(argv=None):
         parser.add_argument('--'+name,required=True)
     parser.add_argument('--budget-limit',required=True,type=int)
     parser.add_argument('--budget-used',required=True,type=int)
+    parser.add_argument('--materialize-only',action='store_true',help='CPU publication only; require completed flag-chain input')
+    parser.add_argument('--flag-chain',help='completed W09+W08 chain_receipt.json')
+    parser.add_argument('--expected-flag-chain-sha256')
     try:
-        result=materialize(**vars(parser.parse_args(argv)))
-    except (ValueError,OSError,KeyError,TypeError) as exc:
+        args=vars(parser.parse_args(argv))
+        only=args.pop('materialize_only')
+        expected=args.pop('expected_flag_chain_sha256')
+        flag_chain=args.get('flag_chain')
+        if only and flag_chain is None:
+            raise ValueError('--materialize-only requires --flag-chain')
+        if bool(flag_chain) != bool(expected):
+            raise ValueError('--flag-chain and --expected-flag-chain-sha256 are required together')
+        if flag_chain and digest(flag_chain) != expected:
+            raise ValueError('flag-chain SHA differs from requested pin')
+        result=materialize(**args)
+    except (ValueError,OSError,KeyError,TypeError,ImportError) as exc:
         print(json.dumps({'state':'HOLD','reason':str(exc),'training_started':False},ensure_ascii=False))
         return 2
     print(json.dumps(result,ensure_ascii=False))
