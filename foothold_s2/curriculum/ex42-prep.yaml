@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 779b2d44c10416d9d1d941d33d4039376a248d630a2c339935d5567e41b1dec4
+  approval_sha256: 7e9f72da0e708a36f3b44c3560414f5d77fc33fedb1129ccc4ac99c76473c98d
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -173,6 +173,7 @@ stages:
   minimum_updates: 250
   maximum_updates: 250
   extension_updates: 0
+  extension_max_count: 0
   boundary_axes:
   - terrain_mesh_swap
   enabled: true
@@ -275,9 +276,10 @@ stages:
     manifest_local_update: 250
     checkpoint_key: model_250.pt
     sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
-  minimum_updates: 1000
-  maximum_updates: 2000
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 2
   critic_mirror: true
   boundary_axes:
   - terrain_level_cap
@@ -296,11 +298,12 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E1F
+  exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E1
-    entry_gate_adapter: pending
+    entry_gate_adapter: flag_two_window
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
@@ -369,9 +372,10 @@ stages:
     diag_back_left: 0.025
     diag_back_right: 0.025
     flag: 0.1
-  minimum_updates: 750
-  maximum_updates: 1250
+  minimum_updates: 250
+  maximum_updates: 750
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - command_allocation
   enabled: true
@@ -391,6 +395,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
   authorization_contract:
     validator: bounded
@@ -414,9 +421,10 @@ stages:
     - critic_mirror
     required_stage_values: {}
   name: one_easy_new_terrain_kind
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   enabled: true
@@ -442,6 +450,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   kind_alternatives:
   - start_beam_l0
   - start_gap_l0
@@ -465,9 +476,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E2
     required_stage_values: {}
   name: kind_dimensions_and_irregularity
-  minimum_updates: 3000
-  maximum_updates: 5000
+  minimum_updates: 250
+  maximum_updates: 3000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_kind_level_cap
   - terrain_exposure
@@ -514,6 +526,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
   authorization_contract:
     validator: bounded
@@ -533,9 +548,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E3
     required_stage_values: {}
   name: difficult_terrain_kinds
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
@@ -633,6 +649,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   families_in_scope:
   - A
   - B
@@ -659,9 +678,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E4
     required_stage_values: {}
   name: mixed_and_direction_generalization
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - command_allocation
@@ -795,6 +815,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
   authorization_contract:
     validator: bounded
@@ -815,9 +838,10 @@ stages:
       boundary.boundary_mode: stop_evaluate_resume
     required_stage_values: {}
   name: map_off_continuous_branch
-  minimum_updates: 500
-  maximum_updates: 1000
+  minimum_updates: 250
+  maximum_updates: 500
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - map_off_probability
   enabled: false
@@ -950,6 +974,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
   authorization_contract:
     validator: bounded
@@ -970,9 +997,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E5
     required_stage_values: {}
   name: posture_command_activation
-  minimum_updates: 1000
-  maximum_updates: 1500
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - posture_height
   - posture_roll
@@ -1106,6 +1134,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
   authorization_contract:
     validator: bounded
@@ -1126,9 +1157,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E6a
     required_stage_values: {}
   name: terrain_family_d
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
@@ -1272,6 +1304,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 evaluation:
   judge_cells: 26
   record_only_cells: 13
@@ -1305,6 +1340,26 @@ evaluation:
   policy_failure_in_denominator: true
   sparse_off_role: record
   push_cells: {role: record, mask: same_as_training, off_kinds_value: n/a}
+  # CG v0.16:248 E1F assumption. W09 parent baseline and five Kit repeats
+  # remain unpinned until E1 graduates; absent calibration means HOLD.
+  flag_cells:
+    reach_radius_m: 0.3
+    stop_hold_s: 0.5
+    stop_speed_mps: 0.05  # E1 D44 stop convention, assumption for E1F
+    seconds: 12.0
+    flag_speed_mps: 1.0
+    valid_min: 48
+    repeat_seeds: [42, 42, 43, 44, 45]
+    calibration: {path: null, sha256: null}
+    judge_cases: [flag_one_eval_gt, flag_one_eval_pred, flag_four_eval_gt, flag_four_eval_pred]
+    record_cases: [flag_one_probe_prop_only, flag_four_probe_prop_only]
+    case_specs:
+      flag_one_eval_gt: {count: flag_one, map_mode: eval_gt, role: judge}
+      flag_one_eval_pred: {count: flag_one, map_mode: eval_pred, role: judge}
+      flag_one_probe_prop_only: {count: flag_one, map_mode: probe_prop_only, role: record_only}
+      flag_four_eval_gt: {count: flag_four, map_mode: eval_gt, role: judge}
+      flag_four_eval_pred: {count: flag_four, map_mode: eval_pred, role: judge}
+      flag_four_probe_prop_only: {count: flag_four, map_mode: probe_prop_only, role: record_only}
   paper_cells:
     judge_from_stage: E4
     slope:

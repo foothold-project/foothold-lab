@@ -302,7 +302,7 @@ def test_train_start_wires_e1_the_same_way_as_e0():
     src = TRAIN_START.read_text(encoding="utf-8")
     tree = ast.parse(src)
     assert 'EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"' in src
-    assert 'EX42_STAGE_UPDATES = EX42_STAGE_SPEC["updates"] if EX42_STAGE_SPEC else 1000' in src
+    assert "EX42_STAGE_UPDATES = _stage_bound(EX42_STAGE_ID, _pre_args.ex42_segment_end, _pre_args.ex42_approvals)" in src
     assert "--ex42_stage_e1_approved" in src and "--ex42_stage_e1_dry_run" in src
     assert "args_cli.ex42_stage_e1_approved != _pre_args.ex42_stage_e1_approved" in src
     calls = {n.func.attr: n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}

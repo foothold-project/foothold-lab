@@ -562,6 +562,7 @@ def _queue_cmd(args, cfg=LIVE, now=None) -> str:
                       "needs_approval": bool(getattr(args, "needs_approval", False))})
         extra = {"kind": getattr(args, "kind", None), "cwd": getattr(args, "cwd", None),
                  "wait_absent": getattr(args, "wait_absent", None) or [],
+                 "wait_present": getattr(args, "wait_present", None) or [],
                  "wait_pids": getattr(args, "wait_pid", None) or [],
                  "done_files": getattr(args, "done_file", None) or []}
         if getattr(args, "argv_json", None):
@@ -1801,6 +1802,7 @@ def main(argv: list[str] | None = None) -> int:
     qa.add_argument("--argv-json", help='command as a JSON list, e.g. ["python","x.py"]')
     qa.add_argument("--cwd")
     qa.add_argument("--wait-absent", action="append", default=[])
+    qa.add_argument("--wait-present", action="append", default=[])
     qa.add_argument("--wait-pid", action="append", type=int, default=[])
     qa.add_argument("--done-file", action="append", default=[])
     qa.add_argument("--queue", type=Path, help="queue file (defaults to the live dispatcher queue)")

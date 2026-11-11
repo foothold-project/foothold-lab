@@ -43,7 +43,7 @@ def fixture(tmp_path,stage='E3'):
         'approved':True,'decision_id':'known-test','approved_at':'2026-11-11T12:00+09:00',
         'approver':'teamlead','approval_statement':'test only','decision_source':{'commit':'a'*40,
         'path':'inbox/jay/20261104-ex41-restart/decisions.tsv'},
-        'scope':{'stage_id':stage,'start_update':0,'maximum_updates':row['minimum_updates'],
+        'scope':{'stage_id':stage,'start_update':0,'maximum_updates':row['maximum_updates'],
                  'parent_sha256':'b'*64,'later_stages_authorized':False},
         'extension_authorized':False,'boundary_evaluation_interval_updates':250,
         'prerequisites':{'exit_receipt_sha256':'c'*64},
@@ -54,11 +54,11 @@ def fixture(tmp_path,stage='E3'):
     return replace(p,document=d),ap,a
 
 
-def test_first_segment_limit_comes_from_selected_table_row(tmp_path):
+def test_base_cap_comes_from_selected_table_row(tmp_path):
     p,ap,a=fixture(tmp_path)
     proof=validate_stage_authorization(p,ap,'b'*64,stage_id='E3')
     assert proof['scope']['maximum_updates']==3000
-    d=deepcopy(p.document);next(r for r in d['stages'] if r['id']=='E3')['minimum_updates']=3250
+    d=deepcopy(p.document);next(r for r in d['stages'] if r['id']=='E3')['maximum_updates']=3250
     with pytest.raises(ValueError,match='scope differs'):
         validate_stage_authorization(replace(p,document=d),ap,'b'*64,stage_id='E3')
     a['stage_e3_authorization']['scope']['maximum_updates']=3250
@@ -119,7 +119,7 @@ def test_same_validator_accepts_only_complete_bounded_stage_fixture(tmp_path,sta
             validate_stage_authorization(replace(p,document=d),ap,'b'*64,stage_id=stage)
         row['enabled']=True  # CPU fixture only, never the shipped plan.
     proof=authorization_validators(replace(p,document=d))[stage](ap,'b'*64)
-    assert proof['scope']['maximum_updates']==row['minimum_updates']
+    assert proof['scope']['maximum_updates']==row['maximum_updates']
     assert proof['entry_gate_adapter_ready'] is False
     assert proof['training_started'] is False
     assert proof['boundary_evaluation_interval_updates']==250     # the train entry cuts the stage at every boundary

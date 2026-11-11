@@ -23,6 +23,19 @@ TABLE = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
 APPROVALS = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 
+def _e1_row():
+    return next(r for r in yaml.safe_load(TABLE.read_text())["stages"] if r["id"] == "E1")
+
+
+def _e1_maximum():
+    return _e1_row()["maximum_updates"]
+
+
+def _past_the_extensions():
+    row = _e1_row()
+    return row["maximum_updates"] + row["extension_updates"] * row["extension_max_count"] + _interval()
+
+
 def _boundary(tmp_path, iteration, judgment="HOLD"):
     path, manifest, *_ = _boundary_checkpoint(tmp_path, iteration)
     p1 = {"state": "complete", "judgment": judgment, "stage_id": "E1", "checkpoint_iteration": iteration,
@@ -38,32 +51,57 @@ def _decide(tmp_path, iteration, judgment="HOLD", approvals=APPROVALS):
     return handoff.decide_next_stage(TABLE, approvals, "E1", iteration, out / "p1_score.json", manifest), path
 
 
+def _interval():
+    return yaml.safe_load(TABLE.read_text())["evaluation"]["interval_updates"]
+
+
+def _inside_boundaries():
+    """The E1 boundaries after the first check and before the base cap, read from the plan (nothing typed)."""
+    row, step = _e1_row(), _interval()
+    return [(i, min(i + step, row["maximum_updates"])) for i in range(row["minimum_updates"], row["maximum_updates"], step)]
+
+
 @needs_run
-@pytest.mark.parametrize("iteration,end", [(250, 500), (500, 750), (750, 1000)])
-@pytest.mark.parametrize("judgment", ["HOLD", "FAIL", None, "PASS"])     # a PASS before the stage minimum goes on too
-def test_a_boundary_inside_the_stage_continues_from_its_own_save(tmp_path, iteration, end, judgment):
-    decision, path = _decide(tmp_path, iteration, judgment)
-    assert decision["action"] == "continue" and decision["state"] == "stage_continues"
-    assert decision["target_stage"] == "E1" and decision["segment_end"] == end
-    assert decision["resume_checkpoint"] == str(path) and decision["authorization"]["scope"]["maximum_updates"] == 1000
+@pytest.mark.parametrize("judgment", ["HOLD", "FAIL", None])
+def test_a_boundary_inside_the_stage_continues_from_its_own_save(tmp_path, judgment):
+    for number, (iteration, end) in enumerate(_inside_boundaries()):
+        sub = tmp_path / f"b{number}"
+        sub.mkdir()
+        decision, path = _decide(sub, iteration, judgment)
+        assert decision["action"] == "continue" and decision["state"] == "stage_continues"
+        assert decision["target_stage"] == "E1" and decision["segment_end"] == end
+        assert decision["resume_checkpoint"] == str(path)
+        assert decision["authorization"]["scope"]["maximum_updates"] == _e1_maximum()
+
+
+@needs_run
+def test_a_pass_at_any_boundary_from_the_first_check_goes_to_the_next_stage_not_on(tmp_path):
+    following = "E1F"
+    for number, (iteration, _) in enumerate(_inside_boundaries()):
+        sub = tmp_path / f"p{number}"
+        sub.mkdir()
+        decision, _ = _decide(sub, iteration, "PASS")
+        assert decision["state"] != "stage_continues" and decision["next_stage_id"] == following
+        assert decision["action"] in ("launch", "notify")           # no E1F approval cell yet: a notice, never "continue"
 
 
 @needs_run
 @pytest.mark.parametrize("judgment", ["HOLD", "FAIL", None])
 def test_the_stage_bound_without_a_pass_ends_the_stage_with_a_notice(tmp_path, judgment):
-    decision, _ = _decide(tmp_path, 1000, judgment)
+    decision, _ = _decide(tmp_path, _e1_maximum(), judgment)
     assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
 
 
 @needs_run
 def test_a_pass_at_the_bound_wants_the_next_stage_which_has_no_approval_cell(tmp_path):
-    decision, _ = _decide(tmp_path, 1000, "PASS")
+    decision, _ = _decide(tmp_path, _e1_maximum(), "PASS")
     assert decision["action"] == "notify" and decision["state"] == "next_stage_ready_for_approval"
 
 
 @needs_run
-@pytest.mark.parametrize("iteration", [0, 100, 300, 999, 1250])
+@pytest.mark.parametrize("iteration", [0, 100, 300, 999, "past_maximum"])
 def test_updates_that_are_not_boundaries_decide_nothing(tmp_path, iteration):
+    iteration = _past_the_extensions() if iteration == "past_maximum" else iteration     # read from the plan, not typed
     path, manifest, out, _ = _boundary(tmp_path, 250)
     assert handoff.decide_next_stage(TABLE, APPROVALS, "E1", iteration, out / "p1_score.json", manifest) is None
 
@@ -138,8 +176,8 @@ def test_the_tail_without_a_launcher_or_at_the_bound_only_notifies(tmp_path):
     assert not (out / handoff.LAUNCH_RECORD).exists()
     sub = tmp_path / "bound"
     sub.mkdir()
-    path, manifest, out, p1 = _boundary(sub, 1000)
-    notice = once._hand_off(TABLE, APPROVALS, "E1", 1000, p1, path, out, _launcher(sub))
+    path, manifest, out, p1 = _boundary(sub, _e1_maximum())
+    notice = once._hand_off(TABLE, APPROVALS, "E1", _e1_maximum(), p1, path, out, _launcher(sub))
     assert notice["state"] == "stage_bound_reached_not_ready" and notice["automatic_launch_started"] is False
     assert not (sub / "ran.txt").exists()
 
@@ -148,6 +186,7 @@ def test_the_shipped_plan_and_cell_have_the_shape_the_decision_reads():
     plan = EX42Plan.load(TABLE)
     e1 = next(r for r in plan.document["stages"] if r["id"] == "E1")
     cell = yaml.safe_load(APPROVALS.read_text())["stage_e1_authorization"]
-    assert e1["minimum_updates"] == cell["scope"]["maximum_updates"] == 1000
+    assert e1["minimum_updates"] == _interval()                       # the first check is the first boundary
+    assert e1["maximum_updates"] == cell["scope"]["maximum_updates"]  # the cell approves the base cap
     assert cell["boundary_evaluation_interval_updates"] == 250 and cell["extension_authorized"] is False
     assert os.path.isfile(TABLE)

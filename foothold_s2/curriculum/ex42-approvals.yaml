@@ -116,6 +116,7 @@ stage_e1f_authorization:
   scope:
     stage_id: E1F
     start_update: 0
+    # Base cap, not minimum residence: PASS may exit at any 250-update boundary.
     maximum_updates: 750
     parent_sha256: null
     later_stages_authorized: false
@@ -142,6 +143,7 @@ stage_e1f_authorization:
       spin_right: -0.02
     exposure_source: same_as_E1_end
   extension_authorized: false
+  minimum_updates: 250
   boundary_evaluation_interval_updates: 250
   critic_mirror: true
   later_stage_entry_gate_adapter: pending
