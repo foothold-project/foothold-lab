@@ -296,11 +296,12 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E1F
+  exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E1
-    entry_gate_adapter: pending
+    entry_gate_adapter: flag_two_window
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
@@ -675,6 +676,26 @@ evaluation:
   policy_failure_in_denominator: true
   sparse_off_role: record
   push_cells: {role: record, mask: same_as_training, off_kinds_value: n/a}
+  # CG v0.16:248 E1F assumption. W09 parent baseline and five Kit repeats
+  # remain unpinned until E1 graduates; absent calibration means HOLD.
+  flag_cells:
+    reach_radius_m: 0.3
+    stop_hold_s: 0.5
+    stop_speed_mps: 0.05  # E1 D44 stop convention, assumption for E1F
+    seconds: 12.0
+    flag_speed_mps: 1.0
+    valid_min: 48
+    repeat_seeds: [42, 42, 43, 44, 45]
+    calibration: {path: null, sha256: null}
+    judge_cases: [flag_one_eval_gt, flag_one_eval_pred, flag_four_eval_gt, flag_four_eval_pred]
+    record_cases: [flag_one_probe_prop_only, flag_four_probe_prop_only]
+    case_specs:
+      flag_one_eval_gt: {count: flag_one, map_mode: eval_gt, role: judge}
+      flag_one_eval_pred: {count: flag_one, map_mode: eval_pred, role: judge}
+      flag_one_probe_prop_only: {count: flag_one, map_mode: probe_prop_only, role: record_only}
+      flag_four_eval_gt: {count: flag_four, map_mode: eval_gt, role: judge}
+      flag_four_eval_pred: {count: flag_four, map_mode: eval_pred, role: judge}
+      flag_four_probe_prop_only: {count: flag_four, map_mode: probe_prop_only, role: record_only}
   paper_cells:
     judge_from_stage: E4
     slope:
