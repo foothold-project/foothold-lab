@@ -38,6 +38,8 @@ if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out
 plan_bytes = args.plan.read_bytes()
 plan = yaml.safe_load(plan_bytes.decode("utf-8-sig"))
 settings = contract(plan)
+from foothold_s2.eval import ex42_friction
+friction_policy = ex42_friction.load_policy(args.plan)
 mesh = preflight(args.mesh_dir)
 if mesh["mesh_sha256"] != args.expected_mesh_sha256:
     parser.error("E1F flag evaluation mesh SHA differs")
@@ -90,6 +92,7 @@ def _configure():
                   "flag_vmax": settings["flag_speed_mps"]}
     if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
         env_cfg.actions.joint_pos.max_delay_s = 0.0
+    ex42_friction.configure(env_cfg, friction_policy)
     return env_cfg, agent_cfg, disabled, mounted
 
 
@@ -166,6 +169,7 @@ def main():
             env_cfg, args.checkpoint)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
+        ex42_friction.install_and_verify(raw, friction_policy)
         robot = raw.scene["robot"]
         term = raw.command_manager.get_term("base_velocity")
         dt = float(raw.step_dt)
@@ -195,6 +199,7 @@ def main():
                                       "raw_file": str(raw_file), "raw_sha256": _sha(raw_file),
                                       **{key: raw_row[key] for key in ("envs", "valid_count", "success_count", "survival_count")}}
             print("E1F_FLAG_CASE_DONE", case, raw_row["success_count"], raw_row["survival_count"], flush=True)
+        receipt["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
         (args.out / "flag_cells.json").write_text(
             json.dumps(receipt, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print("E1F_FLAG_EVAL_DONE", args.out, flush=True)
