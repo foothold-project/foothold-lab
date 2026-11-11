@@ -114,3 +114,74 @@ def test_env_counts_are_the_assignment():
     types = ex.assign_exposed_columns(10, exposure, torch.Generator().manual_seed(0))
     assert eligible.tolist() == [1, 3] and counts.tolist() == [3, 7] or counts.tolist() == [2, 8]
     assert torch.bincount(types, minlength=4).tolist()[1::2] == counts.tolist()
+
+
+# ---- inherited placement at a K boundary (planner: parent env_state left the new kind with 0 envs) ------------
+def _parent_state(table, envs, spec_terrain):
+    cont = [i for i, row in enumerate(table) if row["family"] == "A" and row["kind"] in spec_terrain["kind_task"]["continuous"]]
+    gen = torch.Generator().manual_seed(1)
+    types = torch.as_tensor(cont)[torch.randint(len(cont), (envs,), generator=gen)]
+    levels = torch.randint(0, 6, (envs,), generator=gen)
+    return types, levels, cont
+
+
+@needs_mesh
+@pytest.mark.parametrize("envs", [3072, 6144])
+def test_a_k_boundary_fills_the_new_kind_from_the_parent_placement_and_keeps_the_rest(envs):
+    table = _table()
+    rule = {"family": "A", "kind": "stepping_stones_low", "share": 0.05, "level_cap": 3}
+    spec = _terrain(rule)
+    exposure, caps = ex.exposure_by_column(spec, table, "E2")
+    shares = ex.column_shares(spec, table, "E2")
+    types, levels, cont = _parent_state(table, envs, _stage_terrain()[1])
+    new_types, new_levels, receipt = ex.rebalance_to_shares(types, levels, exposure, shares, torch.Generator().manual_seed(2))
+    ids = [i for i, s in enumerate(shares) if s]
+    held = int(torch.isin(new_types, torch.as_tensor(ids)).sum())
+    assert abs(held - 0.05 * envs) <= 1 and receipt["moved_to_share_columns"] == held
+    changed = new_types != types
+    assert int(changed.sum()) == held                                       # nothing else moved
+    assert bool((new_levels[changed] == 0).all()) and torch.equal(new_levels[~changed], levels[~changed])
+    assert bool(torch.as_tensor([w > 0 for w in exposure])[new_types].all())
+
+
+@needs_mesh
+def test_envs_on_exposure_zero_columns_and_a_surplus_on_the_share_column_move_to_weight_columns():
+    table = _table()
+    spec = _terrain({"family": "A", "kind": "stepping_stones_low", "share": 0.05, "level_cap": 3})
+    exposure, _ = ex.exposure_by_column(spec, table, "E2")
+    shares = ex.column_shares(spec, table, "E2")
+    types, levels, cont = _parent_state(table, 3072, _stage_terrain()[1])
+    dead = [i for i, w in enumerate(exposure) if w == 0][0]
+    share_col = [i for i, s in enumerate(shares) if s][0]
+    types[:100] = dead                       # parent envs on a column that now has exposure 0
+    types[100:600] = share_col               # far more than 5 % on the share column
+    new_types, _, receipt = ex.rebalance_to_shares(types, levels, exposure, shares, torch.Generator().manual_seed(3))
+    assert not bool((new_types == dead).any())
+    assert abs(int((new_types == share_col).sum()) - 0.05 * 3072 / sum(1 for s in shares if s)) <= 1
+    assert receipt["moved_to_weight_columns"] >= 100
+
+
+@needs_mesh
+def test_apply_exposure_with_shares_accepts_the_parent_and_without_shares_still_refuses_exposure_zero_envs():
+    table = _table()
+    spec = _terrain({"family": "A", "kind": "stepping_stones_low", "share": 0.05, "level_cap": 3})
+    exposure, caps = ex.exposure_by_column(spec, table, "E2")
+    shares = ex.column_shares(spec, table, "E2")
+    types, levels, _ = _parent_state(table, 3072, _stage_terrain()[1])
+    mesh = np.load(REAL / "terrain_mesh.npz", allow_pickle=False)
+
+    def terrain():
+        return __import__("types").SimpleNamespace(
+            terrain_levels=torch.zeros(3072, dtype=torch.long), terrain_types=torch.zeros(3072, dtype=torch.long),
+            terrain_origins=torch.zeros(10, len(table), 3), env_origins=torch.zeros(3072, 3),
+            update_env_origins=lambda *a: None)
+
+    state = {"terrain_types": types, "terrain_levels": levels}
+    t = terrain()
+    receipt = ex.apply_exposure(t, exposure, caps, parent_env_state=state, table=table, parent_same_mesh=True, shares=shares)
+    assert receipt["rebalance"]["moved_to_share_columns"] > 0
+    assert int(torch.isin(t.terrain_types, torch.as_tensor([i for i, s in enumerate(shares) if s])).sum()) > 0
+    with pytest.raises(ValueError, match="exposure 0"):
+        ex.apply_exposure(terrain(), exposure, caps, parent_env_state={"terrain_types": torch.full((3072,), [i for i, w in enumerate(exposure) if w == 0][0]),
+                                                                       "terrain_levels": levels},
+                          table=table, parent_same_mesh=True)

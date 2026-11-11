@@ -73,6 +73,62 @@ def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]
     return exposure, caps
 
 
+def column_shares(plan_terrain: dict[str, Any], table: list[dict[str, Any]], stage_id: str) -> list[float | None]:
+    """Per mesh column: its fraction of ALL envs when a `share` rule names it, else None (a weight column)."""
+    spec = plan_terrain.get(f"exposure_at_{stage_id}") or {}
+    kind_task = plan_terrain.get("kind_task") or {}
+    out: list[float | None] = [None] * len(table)
+    for rule in spec.get("positive") or []:
+        if "share" not in rule:
+            continue
+        kinds = set(kind_task[rule["kinds_of"]]) if "kinds_of" in rule else {rule["kind"]}
+        ids = [i for i, row in enumerate(table) if row["family"] == rule.get("family") and row["kind"] in kinds]
+        for i in ids:
+            out[i] = float(rule["share"]) / len(ids)
+    return out
+
+
+def rebalance_to_shares(types, levels, exposure, shares, generator=None):
+    """Inherited placement at a K boundary: make the share columns hold their share of the envs.
+
+    The parent's (column, level) per env is kept wherever it is still right. Envs on exposure-0 columns and the
+    surplus on over-full share columns go to weight columns; the deficit of the share columns is taken, at random,
+    from envs on weight columns and restarts at level 0. Returns (types, levels, receipt)."""
+    import torch
+
+    types, levels = types.clone(), levels.clone()
+    n, ncol = len(types), len(exposure)
+    w = torch.as_tensor(exposure, dtype=torch.float64)
+    share_cols = [c for c, s in enumerate(shares) if s]
+    weight_cols = [c for c in range(ncol) if w[c] > 0 and not shares[c]]
+    if not weight_cols:
+        raise ValueError("EX-42 rebalance needs at least one weight column")
+    eligible, counts = env_counts(n, exposure)
+    target = {int(c): int(k) for c, k in zip(eligible.tolist(), counts.tolist())}
+    on = lambda c: torch.nonzero(types == c).flatten()  # noqa: E731
+    homeless = [on(c) for c in range(ncol) if w[c] <= 0]
+    for c in share_cols:
+        ids = on(c)
+        extra = len(ids) - target.get(c, 0)
+        if extra > 0:
+            homeless.append(ids[torch.randperm(len(ids), generator=generator)[:extra]])
+    pool = torch.cat(homeless) if homeless else torch.zeros(0, dtype=torch.long)
+    moved_out = int(len(pool))
+    if moved_out:
+        pick = torch.multinomial(w[weight_cols], moved_out, replacement=True, generator=generator)
+        types[pool] = torch.as_tensor(weight_cols)[pick]
+    taken = 0
+    for c in share_cols:
+        deficit = target.get(c, 0) - len(on(c))
+        if deficit <= 0:
+            continue
+        donors = torch.nonzero(torch.isin(types, torch.as_tensor(weight_cols))).flatten()
+        chosen = donors[torch.randperm(len(donors), generator=generator)[:deficit]]
+        types[chosen], levels[chosen] = c, 0
+        taken += len(chosen)
+    return types, levels, {"moved_to_weight_columns": moved_out, "moved_to_share_columns": taken}
+
+
 def _share(value: Any) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 < value < 1:
         raise ValueError("EX-42 exposure share must be a number with 0 < share < 1")
@@ -149,7 +205,7 @@ def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[
 
 
 def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None,
-                   parent_same_mesh: bool = False) -> dict[str, Any]:
+                   parent_same_mesh: bool = False, shares=None) -> dict[str, Any]:
     """Runtime step on the TerrainImporter (call once after the env exists, before the first reset):
     start from the parent's (column, level) per env when given (else assign only to exposed columns),
     cut levels at the caps, and wrap update_env_origins so every later level change is cut the same
@@ -173,6 +229,9 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
         types, levels = restore_parent_placement(parent_env_state, table, num_envs, same_mesh=parent_same_mesh)
         if int(levels.min()) < 0 or int(levels.max()) >= terrain.terrain_origins.shape[0]:
             raise ValueError("EX-42 parent env_state level is outside the mesh rows")
+        rebalance = None
+        if shares is not None and any(shares):
+            types, levels, rebalance = rebalance_to_shares(types, levels, exposure, shares, generator)
         if not torch.as_tensor([w > 0 for w in exposure])[types].all():
             raise ValueError("EX-42 parent env sits on a column with exposure 0")
         terrain.terrain_types = types.to(device)
@@ -196,7 +255,8 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
     terrain.exposure_wrapped = True
     return {"exposed_columns": [c for c, w in enumerate(exposure) if w > 0],
             "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
-            "start": "parent_env_state" if inherited else "assigned"}
+            "start": "parent_env_state" if inherited else "assigned",
+            **({"rebalance": rebalance} if inherited and rebalance else {})}
 
 
 def level_counts(terrain) -> dict[str, Any]:

@@ -170,12 +170,14 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
     stage_terrain = {**_e_stage(plan, stage_id)["terrain"], "kind_task": _e0_stage(plan)["terrain"]["kind_task"]}
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
+    from foothold_s2.terrains.ex42_exposure import column_shares
+    shares = column_shares(stage_terrain, table, stage_id)
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
-            "exposure": exposure, "level_caps": level_caps,
+            "exposure": exposure, "level_caps": level_caps, "shares": shares,
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
@@ -197,6 +199,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     from foothold_s2.terrains.ex42_exposure import apply_exposure
 
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
+                          shares=contract.get("shares"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
                           parent_same_mesh=parent_same_mesh)
 
