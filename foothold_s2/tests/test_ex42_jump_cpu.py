@@ -271,6 +271,8 @@ def test_e6b_pass_at_its_minimum_goes_on_with_the_same_stage_never_to_the_closed
 def test_a_jump_mesh_family_in_a_non_jump_stage_is_refused_and_a_jump_stage_needs_it(monkeypatch, tmp_path):
     from foothold_s2.terrains import ex42_mesh_mount as mount
     families = {"now": list("ABCDEF")}
+    from foothold_s2 import ex42_stage_mesh                    # the pinned-mesh guard has its own tests (test_ex42_stage_mesh_cpu)
+    monkeypatch.setattr(ex42_stage_mesh, "pinned_stage_mesh", lambda document, stage: None)
     monkeypatch.setattr(mount, "expected_sha_from_manifest", lambda path: "0" * 64)
     monkeypatch.setattr(mount, "load_combined_mesh", lambda npz, sha: {"column_family": np.array(families["now"])})
     plan = EX42Plan.load(PLAN)
