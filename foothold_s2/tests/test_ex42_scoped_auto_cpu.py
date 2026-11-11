@@ -72,7 +72,7 @@ def test_bad_or_stale_gate_never_authorizes(known,key,value):
 
 @pytest.mark.parametrize('stage',['E1F','E2','E6b','unknown'])
 def test_unapproved_or_unsupported_stage_remains_blocked(known,stage):
-    with pytest.raises(ValueError): call(known,stage)
+    with pytest.raises(ValueError, match='automatic target has no supported approval cell'): call(known,stage)
 
 
 def test_pin_gate_hash_measurement_and_parent_bytes_are_required(known):
@@ -149,3 +149,41 @@ def test_plan_and_approval_declare_same_scoped_automatic_mode():
     assert plan.document['launch']['automatic'] == approval['automatic_launch_allowed']['mode']
     assert approval['automatic_launch_allowed']['require_gate_pass'] is True
     assert plan.document['stage_zero']['approval_sha256'] == hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize('value', [True, 'true', {'mode': 'all_stages'}])
+def test_bounded_reader_rejects_truthy_policy_at_every_consumer(known, value):
+    from foothold_s2.curriculum.ex42_prep import (
+        bounded_automatic_policy, validate_stage_zero_authorization,
+        validate_stage_e0_authorization, validate_stage_e1_authorization,
+    )
+    plan, ap, _, _ = known
+    assert bounded_automatic_policy(value) is False
+    approval = yaml.safe_load(ap.read_text())
+    approval['automatic_launch_allowed'] = value
+    ap.write_text(yaml.safe_dump(approval))
+    doc = deepcopy(plan.document)
+    doc['stage_zero']['approval_sha256'] = hashlib.sha256(ap.read_bytes()).hexdigest()
+    plan = replace(plan, document=doc)
+    with pytest.raises(ValueError, match='full-plan launch guard'):
+        validate_stage_zero_authorization(plan, ap)
+    for stage, validate in [('E0', validate_stage_e0_authorization), ('E1', validate_stage_e1_authorization)]:
+        parent_sha = approval[f'stage_{stage.lower()}_authorization']['scope']['parent_sha256']
+        with pytest.raises(ValueError, match='full-plan launch guard'):
+            validate(plan, ap, parent_sha)
+    assert 'automatic_launch_policy_invalid' in plan.launch_blockers(ap, None, None)
+
+
+def test_extra_policy_key_is_not_accepted(known):
+    from foothold_s2.curriculum.ex42_prep import scoped_automatic_policy, bounded_automatic_policy
+    plan, ap, manifest, gp = known
+    approval = yaml.safe_load(ap.read_text())
+    policy = approval['automatic_launch_allowed']
+    policy['later_stages_authorized'] = True
+    assert scoped_automatic_policy(policy) is False
+    assert bounded_automatic_policy(policy) is False
+    ap.write_text(yaml.safe_dump(approval))
+    doc = deepcopy(plan.document)
+    doc['stage_zero']['approval_sha256'] = hashlib.sha256(ap.read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match='scoped automatic policy is not enabled'):
+        call((replace(plan, document=doc), ap, manifest, gp))

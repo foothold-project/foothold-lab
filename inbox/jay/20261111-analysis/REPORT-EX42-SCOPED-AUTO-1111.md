@@ -63,3 +63,18 @@ isaac311, CUDA 숨김, GPU/Kit 미실행. 지정 CPU 7파일 최종 원출력:
 **운영 E1 한 줄 결론:** 실제 PID 3119663의 학습 `--ex42_plan`과 경계 평가 `--p1-plan`은 모두 `/home/jay/mai/wt/foothold-lab/ex42-launch-b379eb98/foothold_s2/curriculum/ex42-prep.yaml`이고, 파일 모드 444·실제 SHA `e542961d9c65a588ae893b81a8d07d39cd66ca068f2f118410c3e2d1d7a2d982`가 startup_receipt와 일치하므로 #639나 통합 가지 변경을 자동으로 읽는 경로는 현재 argv에 없다.
 
 경계와 한계: 고정 사본 `ex42_score_watch.py:48`은 전달받은 메모리 plan의 SHA를 기록한다. `ex42_chain.py:383`이 그 객체를 넘기고, 별도 평가 자식 `ex42_eval_once.py:146`은 `--p1-plan` 파일을 다시 읽는다. 그 함수만 보면 파일 변경 시 다른 계획을 읽을 수 있지만 현재 실제 인자는 고정 사본 경로다. 다른 SHA를 가진 P1 결과는 `ex42_chain.py:462~465`에서 기동 시 plan SHA와 비교해 거부한다. 이 확인은 250 경계 실제 완료 실측이 아니라 기동 인자·파일·영수증과 소비 코드 대조다. 운영 사본·프로세스·원자료는 수정하지 않았다. 되읽기 증거는 `/home/jay/mai/tmp/verifier-lx/scoped-auto-1111/live-e1-plan-readback.json`.
+
+## 11:50 reviewer 고침 1 후속
+
+`REVIEW-0858295c.md`의 생존 돌연변이 세 건을 겨냥해 시험만 보강했다. bounded 정책의 truthy 값 세 가지는 단계 0/E0/E1 소비자와 전체 launch_blockers까지 거부하는지 확인한다. 정확한 정책에 `later_stages_authorized: true`를 더하면 strict/bounded/API 모두 거부한다. E1F는 단순 ValueError가 아니라 대상 표에서 거절한 메시지까지 확인해, 부모 검사에 우연히 막힌 결과를 같은 통과로 세지 않는다.
+
+| CPU 입력 | 결과 |
+|---|---|
+| 정상 scoped_auto + e1_entry | 45 passed in 5.00s |
+| `bounded_automatic_policy`를 false 또는 bool(value)로 바꿈 | 4 failed, 30 passed · pytest rc1 |
+| 정책 키 집합 대조 제거 | 1 failed, 33 passed · pytest rc1 |
+| 대상 validators에 E1F 추가 | 1 failed, 33 passed · pytest rc1 |
+
+돌연변이는 새 CPU 프로세스의 모듈 메모리 안에서만 적용했고 소스 파일을 고치지 않았다. 재현 스크립트·원출력은 `/home/jay/mai/tmp/verifier-lx/scoped-auto-1111/mutants/`의 `check.py`, `truthy.log`, `extra_key.log`, `e1f.log`다.
+
+#634 선행 병합 순서에 맞춰 `test_ex42_e1_entry_cpu.py`의 충돌한 첫 함수는 206c0848과 정확히 같은 이름·본문으로 맞췄고 부분 문자열 바이트 대조 PASS를 확인했다. sonnet-code-lx에 이 방식을 직접 전달했고 turn_started 영수증을 확인했다. 승인·계획·운영 코드는 이번 시험 보강에서 바뀌지 않았다. #639의 E1 종료 전 병합 보류는 유지한다.
