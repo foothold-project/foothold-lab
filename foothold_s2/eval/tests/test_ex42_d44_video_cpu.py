@@ -23,6 +23,26 @@ def test_d44_video_case_order_matches_eval_tasks():
         video.command_order("invented")
 
 
+def test_capture_env_requests_rgb_array_and_fixed_viewport_resolution():
+    class Gym:
+        def __init__(self):
+            self.call = None
+
+        def make(self, task_id, **kwargs):
+            self.call = (task_id, kwargs)
+            return object()
+
+    class Cfg:
+        class Viewer:
+            resolution = None
+        viewer = Viewer()
+
+    gym, cfg = Gym(), Cfg()
+    video.make_capture_env(gym, "task-id", cfg)
+    assert gym.call == ("task-id", {"cfg": cfg, "render_mode": "rgb_array"})
+    assert cfg.viewer.resolution == (video.WIDTH, video.HEIGHT)
+
+
 def test_d44_video_commands_follow_eval_timing_and_latched_band_entry():
     common = {"settle": 0, "approach": 200, "stop": 100, "turn_rate": 1.2,
               "approach_speed": 1., "restart_speed": 1., "stop_band": (1., 2.)}

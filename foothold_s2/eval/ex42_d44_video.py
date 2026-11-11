@@ -138,6 +138,12 @@ def _steps(seconds: float, dt: float) -> int:
     return count
 
 
+def make_capture_env(gym, task_id: str, env_cfg):
+    """Create the same RGB-backed viewport used by the approved recorder."""
+    env_cfg.viewer.resolution = (WIDTH, HEIGHT)
+    return gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
+
+
 def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
               case_id: str, settings: dict, anchors: dict, dt: float,
               tile_origin, foot_ids, output: Path, camera,
@@ -512,7 +518,7 @@ def main(argv: list[str] | None = None) -> int:
             env_cfg, Path(args.checkpoint))
         if int(checkpoint_state.get("iter", -1)) != 1000:
             raise ValueError("D44 capture checkpoint is not m1000 by embedded iteration")
-        env = RslRlVecEnvWrapper(gym.make("FootholdS2-Go2-S2-SB-v0", cfg=env_cfg),
+        env = RslRlVecEnvWrapper(make_capture_env(gym, "FootholdS2-Go2-S2-SB-v0", env_cfg),
                                  clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
         terrain = raw.scene.terrain
