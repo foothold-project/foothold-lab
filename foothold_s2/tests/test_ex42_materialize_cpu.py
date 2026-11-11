@@ -159,14 +159,32 @@ def test_published_new_plan_consumes_original_gate_without_relabeling(known):
     assert json.loads(original_gate)['plan_sha256'] != plan.sha256
 
 
-def test_e1f_first_scope_750_and_only_hold_extension_within_table(known):
-    result=run(known)
-    a=yaml.safe_load(Path(result['approvals']).read_text())['stage_e1f_authorization']
-    assert a['scope']['maximum_updates']==750
-    assert a['extension_authorized'] is True
-    assert a['extension_contract']==dict(judgment='HOLD',after_updates=750,max_count=1,maximum_updates=1250,increment_updates=500,
-        decision_id='teamlead-2026-11-11-1307-ex42-all-stages',
-        decision_source='2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d')
+def test_e1f_extension_separate_approval_survives_materialization(known):
+    # decisions 7121e018:420: E1F extension is separate, not whole-plan approval.
+    result = run(known)
+    a = yaml.safe_load(Path(result['approvals']).read_text())['stage_e1f_authorization']
+    assert a['scope']['maximum_updates'] == 750
+    assert a['extension_authorized'] is False
+    assert 'extension_contract' not in a
+
+
+def test_e1f_cannot_enable_extension_with_whole_plan_decision(known):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan, authorization_validators, stage_extension_contract
+    result = run(known)
+    p = Path(result['plan']); a = Path(result['approvals'])
+    doc = yaml.safe_load(p.read_text()); approvals = yaml.safe_load(a.read_text())
+    cell = approvals['stage_e1f_authorization']
+    row = next(r for r in doc['stages'] if r['id'] == 'E1F')
+    cell['extension_authorized'] = True
+    cell['extension_contract'] = stage_extension_contract(row)
+    # Copy out of the immutable publication before constructing the negative input.
+    bad = known['out'].parent / 'bad-approval.yaml'
+    bad.write_text(yaml.safe_dump(approvals))
+    from dataclasses import replace
+    doc['stage_zero']['approval_sha256'] = sha(bad)
+    plan = replace(EX42Plan.load(p), document=doc)
+    with pytest.raises(ValueError, match='extension'):
+        authorization_validators(plan)['E1F'](bad, cell['scope']['parent_sha256'])
 
 
 def test_secondary_rank_uses_own_output_directory(known):
@@ -322,3 +340,18 @@ def test_every_source_adapter_receives_the_selected_policy_document(known,monkey
     monkeypatch.setattr(ex42_stage_judges,'adapter_for',lambda document,stage_id:PolicyRequired())
     validate_source_exit(plan,gate,known['gate_receipt'],evaluation_plan=policy)
     assert seen==[('PASS','PASS')]
+
+
+def test_e1f_at_750_hold_does_not_launch_unauthorized_extension(known):
+    from foothold_s2.ex42_stage_handoff import decide_next_stage
+    published = run(known)
+    run_dir = known['out'].parent / 'e1f_run'; run_dir.mkdir()
+    checkpoint = run_dir / 'model_750.pt'; checkpoint.write_bytes(b'E1F cap')
+    manifest = run_dir / 'manifest.json'
+    dump(manifest, {'progress': {'completed_updates': 750}, 'checkpoints': {checkpoint.name: sha(checkpoint)}})
+    gate = run_dir / 'p1.json'
+    dump(gate, {'stage_id': 'E1F', 'checkpoint_iteration': 750,
+                'checkpoint_sha256': sha(checkpoint), 'judgment': 'HOLD'})
+    decision = decide_next_stage(published['plan'], published['approvals'], 'E1F', 750, gate, manifest)
+    assert decision['action'] == 'notify'
+    assert decision['state'] == 'stage_bound_reached_not_ready'

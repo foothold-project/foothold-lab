@@ -416,7 +416,8 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         interval = plan.document['evaluation']['interval_updates']
         extension_ok = cell.get('extension_authorized') is False
         if cell.get('extension_authorized') is True:
-            extension_ok = (type(row['extension_updates']) is int and row['extension_updates'] > 0
+            extension_ok = (stage_id != 'E1F'  # 12:02 entry approved, extension still a separate decision.
+                and type(row['extension_updates']) is int and row['extension_updates'] > 0
                 and cell.get('extension_contract') == stage_extension_contract(row)
                 and any(isinstance(v, dict) and v.get('approved') is True
                     and v.get('decision_id') == ALL_STAGES_DECISION_ID
