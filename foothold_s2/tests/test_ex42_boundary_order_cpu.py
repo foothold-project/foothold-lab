@@ -71,3 +71,30 @@ def test_a_multi_axis_stage_without_the_block_is_refused():
     del row["boundary"]
     with pytest.raises(ValueError):
         check_boundary(row)
+
+
+def test_e3_start_block_is_the_e2_end_state_plus_the_entry_axis_only():
+    rows = _rows()
+    e2 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
+    e3 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
+    assert set(e3) == set(e2)                                            # no kind opens at the stage entry
+    assert e3["continuous"] == e2["continuous"]                          # the continuous cap does not move (L+ is its own boundary)
+    low2, low3 = e2["stepping_stones_low"], e3["stepping_stones_low"]
+    assert low3["share"] == low2["share"] and low3["level_cap"] == low2["level_cap"] + 1   # D: that kind's cap +1, share unchanged
+    assert rows["E3"]["terrain"]["k_ladder"]["order"][0] == {"family": "C", "kind": "flat", "level_cap": 0}
+
+
+def test_command_shares_follow_the_canon_c_boundaries():
+    rows = _rows()
+    e1f, e3, e4 = rows["E1F"]["shares"], rows["E3"], rows["E4"]
+    assert e3["shares"] == e1f and e1f["flag"] == 0.1                    # E2 changes no command share
+    after = e3["command_allocation_boundary"]["shares"]
+    assert abs(sum(after.values()) - 1.0) < 1e-9 and after["flag"] == 0.15
+    assert (after["forward"], after["walk_left"], after["walk_right"]) == (0.14, 0.05, 0.05)
+    assert {k: v for k, v in after.items() if k not in ("forward", "walk_left", "walk_right", "flag")} == \
+           {k: v for k, v in e1f.items() if k not in ("forward", "walk_left", "walk_right", "flag")}
+    assert e4["shares"] == after
+    assert e4["command_allocation_boundary"]["targets"] == {"flag": 0.2, "forward": 0.11, "diagonal_total": 0.07}
+    assert e4["command_allocation_boundary"]["shares"] is None           # CG gives the diagonal sum only
+    for stage in ("E5", "E6a", "E6b"):
+        assert rows[stage]["command_allocation_start"] == {"flag": 0.2, "source_stage": "E4", "shares": None}
