@@ -97,6 +97,30 @@ def test_critic_mirror_is_off_at_zero_and_enabled_only_at_e1_start(tmp_path):
     assert env._ex42_stage_config["critic_mirror"] is True
 
 
+def test_a_later_stage_keeps_the_mirror_once_on_and_never_turns_it_on_by_itself(tmp_path):
+    plan=EX42Plan.load(TABLE)
+    env=SimpleNamespace(); calls=[]
+    def apply(enabled,approval=None):
+        calls.append((enabled,approval)); runner.ex41_critic_mirror=enabled
+    runner=SimpleNamespace(ex41_critic_mirror=False,set_ex41_critic_mirror=apply)
+    consumer=EX42Runtime.transition_consumer(plan,APPROVALS)
+    consumer.transition(env,"E0",boundary_iteration=1001,expected_score_iteration=1000,observed_score_iteration=None)
+    consumer.transition(env,"E1",boundary_iteration=1251,expected_score_iteration=1250,observed_score_iteration=None,runner=runner)
+    assert len(calls)==1
+    result=consumer.transition(env,"E1F",boundary_iteration=2001,expected_score_iteration=2000,
+                               observed_score_iteration=None,runner=runner)
+    assert len(calls)==1 and runner.ex41_critic_mirror is True               # inherited: not switched off, not granted again
+    assert result["critic_mirror_receipt"]["enabled"] is True and result["critic_mirror_receipt"]["inherited"] is True
+    # a runner whose mirror is off cannot get it back at E1F: the D174 grant names the E1 boundary only
+    consumer=EX42Runtime.transition_consumer(plan,APPROVALS)
+    consumer.transition(env,"E0",boundary_iteration=1001,expected_score_iteration=1000,observed_score_iteration=None)
+    consumer.transition(env,"E1",boundary_iteration=1251,expected_score_iteration=1250,observed_score_iteration=None,runner=runner)
+    runner.ex41_critic_mirror=False
+    with pytest.raises(ValueError):
+        consumer.transition(env,"E1F",boundary_iteration=2001,expected_score_iteration=2000,
+                            observed_score_iteration=None,runner=runner)
+
+
 def test_existing_runner_mirror_setter_accepts_committed_e1_d174_only(tmp_path):
     root=tmp_path/'repo'; curriculum=root/'foothold_s2'/'curriculum'
     curriculum.mkdir(parents=True)

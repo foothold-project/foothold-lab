@@ -424,6 +424,20 @@ stages:
   kind_choice: start_stones_l0
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
+    exposure_at_E2:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_low
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
@@ -463,6 +477,24 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:275~281); 세 등급 몫 · 시작 상한은 가정
+    exposure_at_E3:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 6
+      - family: A
+        kind: stepping_stones_low
+        share: 0.1
+        level_cap: 1
+      - family: C
+        kind: flat
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
@@ -497,6 +529,72 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:292~298 D159 D176); 쉬움 1.5 % 는 가정 (연 종류 하한 산수)
+    exposure_at_E4:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
@@ -537,6 +635,128 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:309~314); 28 종 고르게 2 % · 상한은 E4 목표값 (가정), 실제 E4 끝 값으로 바꿀 것
+    exposure_at_E5:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
@@ -570,6 +790,128 @@ stages:
   enabled: false
   hold_policy: hold_exposure_continue_training
   terrain:
+    # 자리만: E5 블록 복사. M 은 들어온 단계의 그때 값 그대로라 M 진입 때 원 단계 값으로 교체 (가정, planner)
+    exposure_at_M:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
@@ -604,6 +946,128 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # E5 끝 값 그대로 (CG:343~346 지형 몫 변경 없음); 상한은 E5 끝 값으로 교체 (가정)
+    exposure_at_E6a:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
@@ -638,6 +1102,132 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:360~365 D81); 앞 28 종 1.5 % 로 내리고 D 첫 종류 5 % (가정), wall 은 치수 미정이라 0
+    exposure_at_E6b:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05

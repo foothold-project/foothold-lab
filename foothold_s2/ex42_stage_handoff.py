@@ -25,16 +25,19 @@ def _sha256(path: Path) -> str:
 
 def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1):
     """Same stage, from this boundary's saved checkpoint: allowed only inside the bounds of the stage's own approval
-    cell (E1: scope maximum, cell interval) under the scoped automatic policy. No PASS is needed to go on."""
-    from foothold_s2.curriculum.ex42_prep import _read_yaml, scoped_automatic_policy, validate_stage_e1_authorization
-    if stage_id != "E1":
+    cell (scope maximum, cell interval; read through the stage's own validator) under the scoped automatic policy.
+    No PASS is needed to go on. The plan's first stage has no boundary to continue from."""
+    from foothold_s2.curriculum.ex42_prep import _read_yaml, scoped_automatic_policy
+    if plan.document["stages"][0].get("id") == stage_id:
         return {**base, "action": "notify", "state": "not_ready", "reason": f"{stage_id} has no boundary to continue from"}
     try:
         if not scoped_automatic_policy(_read_yaml(Path(approvals_path)).get("automatic_launch_allowed")):
             raise ValueError("scoped automatic policy is not enabled")
         pin = next(row for row in plan.document["stages"] if row["id"] == stage_id)["parent"]["sha256"]
-        proof = validate_stage_e1_authorization(plan, approvals_path, pin)
-        bound, interval = proof["scope"]["maximum_updates"], proof["boundary_evaluation_interval_updates"]
+        from foothold_s2.scripts.ex42_training_entry import stage_approval_validator
+        proof = stage_approval_validator(plan, stage_id)(plan, approvals_path, pin)
+        bound = proof["scope"]["maximum_updates"]
+        interval = proof.get("boundary_evaluation_interval_updates", plan.document["evaluation"]["interval_updates"])
         manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8-sig"))
         name = f"model_{iteration}.pt"
         checkpoint = Path(manifest_path).parent / name
@@ -50,13 +53,19 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
                 "reason": f"not authorized to continue by itself: {exc}"}
     return {**base, "action": "continue", "state": "stage_continues", "target_stage": stage_id,
             "resume_checkpoint": str(checkpoint), "segment_end": min(iteration + interval, bound),
+            "plan": str(plan.path), "approvals": str(Path(approvals_path).resolve()),     # the run's own pinned pair
             "authorization": proof}
 
 
-def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, manifest_path) -> dict[str, Any] | None:
+def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, manifest_path,
+                      materialize=None) -> dict[str, Any] | None:
     """None when this update is not a boundary of the stage. Otherwise a decision for the boundary:
     launch (the gate passed at or after the stage minimum and the next stage has its approved cell), continue (the
-    same stage goes on from this save), or notify (anything else, with the reason)."""
+    same stage goes on from this save), or notify (anything else, with the reason).
+
+    `materialize` (see `materializer_from_env`) publishes the next stage's plan / approvals / transition from this
+    boundary's evidence when the next stage has no parent pin yet; the launch is then authorized against that
+    published pair and carries it to the launcher (EX42_AUTO_PLAN / EX42_AUTO_APPROVALS)."""
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.ex42_auto_authorization import validate_automatic_stage_launch
     plan = plan_path if isinstance(plan_path, EX42Plan) else EX42Plan.load(plan_path)
@@ -66,9 +75,10 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
         return None
     minimum = stages[index].get("minimum_updates")
     boundary = iteration == minimum
-    if stage_id == "E1" and not boundary:          # the plan's evaluation interval, so a removed cell still gets a notice
+    if index > 0 and not boundary:          # the plan's evaluation interval, so a removed cell still gets a notice
         interval = plan.document.get("evaluation", {}).get("interval_updates")
-        boundary = type(interval) is int and interval > 0 and 0 < iteration < minimum and iteration % interval == 0
+        limit = stages[index].get("maximum_updates", minimum)
+        boundary = type(interval) is int and interval > 0 and 0 < iteration <= limit and iteration % interval == 0
     if not boundary:
         return None
     following = stages[index + 1]["id"] if index + 1 < len(stages) else None
@@ -77,19 +87,29 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
             "next_stage_id": following, "checkpoint_sha256": p1.get("checkpoint_sha256"),
             "gate_sha256": _sha256(p1_path)}
     if not (p1.get("judgment") == "PASS" and iteration >= minimum and following is not None):
-        if stage_id == "E1":      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
+        if index > 0:      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
             return _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1)
         return {**base, "action": "notify", "state": "not_ready",
                 "reason": "no following stage" if following is None else f"gate judgment is {p1.get('judgment')}"}
+    launch_plan, launch_approvals, pair = plan, approvals_path, {}
+    if materialize is not None and not isinstance(stages[index + 1].get("parent"), dict):
+        try:
+            made = materialize(target_stage=following, gate_receipt=p1_path, parent_manifest=manifest_path,
+                               source_plan=plan.path)
+            launch_plan, launch_approvals = EX42Plan.load(made["plan"]), made["approvals"]
+            pair = {"plan": made["plan"], "approvals": made["approvals"], "materialized_plan_sha256": made["plan_sha256"]}
+        except (ValueError, OSError, KeyError, TypeError) as exc:      # FileExistsError is an OSError: one launch per boundary
+            return {**base, "action": "notify", "state": "next_stage_ready_for_approval",
+                    "reason": f"not authorized to start by itself: materialize refused: {exc}"}
     try:
         proof = validate_automatic_stage_launch(
-            plan, approvals_path, target_stage=following, parent_manifest_path=manifest_path,
+            launch_plan, launch_approvals, target_stage=following, parent_manifest_path=manifest_path,
             gate_receipt_path=p1_path, expected_gate_sha256=_sha256(p1_path))
     except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "next_stage_ready_for_approval",
                 "reason": f"not authorized to start by itself: {exc}"}
     return {**base, "action": "launch", "state": "next_stage_authorized", "target_stage": following,
-            "authorization": proof, "gate_sha256": proof["gate_sha256"]}
+            "authorization": proof, "gate_sha256": proof["gate_sha256"], **pair}
 
 
 def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkpoint, gate_receipt, popen=subprocess.Popen):
@@ -110,6 +130,9 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
     env = {**os.environ, "EX42_AUTO_ACTION": kind, "EX42_AUTO_TARGET_STAGE": decision["target_stage"],
            "EX42_AUTO_PARENT_MANIFEST": str(parent_manifest), "EX42_AUTO_PARENT_CHECKPOINT": str(parent_checkpoint),
            "EX42_AUTO_GATE_RECEIPT": str(gate_receipt), "EX42_AUTO_GATE_SHA256": decision["gate_sha256"]}
+    if decision.get("plan"):    # a materialized pair (next stage) or the running stage's own pair (continue)
+        env.update(EX42_AUTO_PLAN=str(decision["plan"]), EX42_AUTO_APPROVALS=str(decision["approvals"]))
+        record.update(plan=str(decision["plan"]), approvals=str(decision["approvals"]))
     if kind == "continue":      # the same stage goes on in the same run directory: resume from this boundary save
         env.update(EX42_AUTO_RESUME_CHECKPOINT=decision["resume_checkpoint"],
                    EX42_AUTO_SEGMENT_END=str(decision["segment_end"]))
@@ -119,6 +142,33 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
     record.update(state="started", pid=child.pid)
     (output / LAUNCH_RECORD).write_text(json.dumps(record, ensure_ascii=False, sort_keys=True), encoding="utf-8")
     return record
+
+
+def materializer_from_env(env):
+    """The `materialize` callable of `decide_next_stage`, or None when no template is configured. Everything comes from
+    the environment (machine profile): EX42_MATERIALIZE_TEMPLATE_PLAN / _TEMPLATE_APPROVALS (the approved template),
+    _EVIDENCE_DIR (the runner writes <target>.json there from the finished stage's logs and baselines), _OUT_ROOT (one
+    immutable folder per target and gate is created under it) and the explicit budget triple _BUDGET_LIMIT / _USED /
+    _BASIS. A missing piece refuses the materialization (a notice), it is never guessed."""
+    names = ("TEMPLATE_PLAN", "TEMPLATE_APPROVALS", "EVIDENCE_DIR", "OUT_ROOT")
+    if not env.get("EX42_MATERIALIZE_TEMPLATE_PLAN"):
+        return None
+
+    def run(*, target_stage, gate_receipt, parent_manifest, source_plan):
+        missing = [n for n in names + ("BUDGET_LIMIT", "BUDGET_USED", "BUDGET_BASIS") if not env.get("EX42_MATERIALIZE_" + n)]
+        if missing:
+            raise ValueError("materialize setting missing: " + ", ".join("EX42_MATERIALIZE_" + n for n in missing))
+        evidence = Path(env["EX42_MATERIALIZE_EVIDENCE_DIR"]) / f"{target_stage}.json"
+        if not evidence.is_file():
+            raise ValueError(f"materialize evidence {evidence} is missing (written from the finished stage's own records)")
+        from foothold_s2.ex42_stage_materialize import materialize
+        return materialize(
+            plan=env["EX42_MATERIALIZE_TEMPLATE_PLAN"], source_plan=source_plan,
+            approvals=env["EX42_MATERIALIZE_TEMPLATE_APPROVALS"], target=target_stage, parent_manifest=parent_manifest,
+            gate_receipt=gate_receipt, evidence=evidence, budget_limit=int(env["EX42_MATERIALIZE_BUDGET_LIMIT"]),
+            budget_used=int(env["EX42_MATERIALIZE_BUDGET_USED"]), budget_basis=env["EX42_MATERIALIZE_BUDGET_BASIS"],
+            out=Path(env["EX42_MATERIALIZE_OUT_ROOT"]) / f"{target_stage}_{_sha256(gate_receipt)[:12]}")
+    return run
 
 
 def register_launched_training(queue_path, dispatch_path, *, pid, log, title, gpus=(0, 1), now=None):
