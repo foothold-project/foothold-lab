@@ -99,6 +99,12 @@ def test_pin_mismatch_of_plan_or_approvals_is_held(launch_copy):
         check(launch_copy, approvals=bad)
 
 
+def test_approvals_that_the_plan_does_not_pin_are_held(launch_copy):
+    other = launch_copy.root / 'foothold_s2/curriculum/ex42-boundary.yaml'          # right SHA for itself, not the plan's pin
+    with pytest.raises(ValueError, match='approval pin differs'):
+        check(launch_copy, approvals=batch.ref(other))
+
+
 def test_plan_outside_the_launch_root_is_held(launch_copy):
     elsewhere = launch_copy.root.parent / 'plan.yaml'
     elsewhere.write_bytes((launch_copy.root / 'foothold_s2/curriculum/ex42-prep.yaml').read_bytes())
@@ -173,7 +179,8 @@ def test_unregistered_launch_source_holds_before_any_flag_chain_gpu_work(tmp_pat
     assert calls == []
 
 
-def test_children_run_in_the_evaluation_root_and_bridge_gets_the_launch_check(tmp_path, complete_job, monkeypatch):
+@pytest.mark.parametrize('state', ['gate_not_passed', 'launcher_started'])
+def test_children_run_in_the_evaluation_root_and_bridge_gets_the_launch_check(tmp_path, complete_job, monkeypatch, state):
     from contextlib import contextmanager
     import shutil
     template, policy = complete_job
@@ -226,16 +233,19 @@ def test_children_run_in_the_evaluation_root_and_bridge_gets_the_launch_check(tm
     seen = {}
     def no_launch(req, bnd, out, gate, **kwargs):
         seen.update(kwargs)
-        return {'state': 'gate_not_passed', 'training_started': False}
+        return {'state': state, 'training_started': state == 'launcher_started'}
     monkeypatch.setattr(batch, 'bridge', no_launch)
+    watched = []
+    monkeypatch.setattr(batch, 'watch_first_boundary', lambda req, out, **kw: watched.append((req, out)))
     batch.execute(request, launch_path=tmp_path / 'launch.json')
+    assert (len(watched) == 1 and watched[0][1] == root) if state == 'launcher_started' else watched == []
     assert cwds == [eval_root] * 9 and all(v == eval_root for v in validated)
     assert callable(seen['launch_check'])
     with pytest.raises(ValueError, match='not registered'):
         seen['launch_check']()                      # the file does not exist: HOLD, no fallback
 
 
-def test_bridge_starts_everything_from_the_launch_source(ready, monkeypatch):
+def _bridge_setup(ready, monkeypatch):
     """Known CPU trace as in the 6b bridge test, with a separate launch plan: dry-run cwd, source ref and template follow it."""
     import shutil
     from foothold_s2.scripts import ex42_flag_baseline_chain as flag_module
@@ -287,13 +297,58 @@ def test_bridge_starts_everything_from_the_launch_source(ready, monkeypatch):
                               'EX42_MAIN_ROOT': str(root / 'future-training')}}
     source = {'root': str(launch_root), 'head': 'h', 'plan': batch.ref(launch_plan), 'approvals': batch.ref(launch_approvals),
               'source_ref': 'origin/ex42-launch-abcdef12', 'e1f_flag_share': 0.10}
+    return request, binding, root, source, seen, launch_root
+
+
+def test_bridge_starts_everything_from_the_launch_source(ready, monkeypatch):
+    request, binding, root, source, seen, launch_root = _bridge_setup(ready, monkeypatch)
     result = batch.bridge(request, binding, root, ready['gate_receipt'], guard=lambda: None, launch=False,
                           launch_check=lambda: source)
     assert result['state'] == 'ready_not_started'
     assert seen['cwd'] == launch_root                         # never the process root nor the evaluation source
     assert '--ex42_source_ref=origin/ex42-launch-abcdef12' in seen['argv']
     transition = batch.read(root / 'E1F-materialized/transition.json')
-    assert transition['template_plan_sha'] == batch.sha(launch_plan)
+    assert transition['template_plan_sha'] == batch.sha(source['plan']['path'])
+
+
+class _Guard:
+    released = False
+    def __call__(self):
+        pass
+    def release(self):
+        self.released = True
+
+
+def _start_probe(monkeypatch):
+    from foothold_s2 import ex42_stage_handoff as handoff
+    started = []
+    monkeypatch.setattr(handoff, 'start_launcher', lambda decision, launcher, *a, **k: started.append(launcher) or {'pid': 1})
+    monkeypatch.setattr(handoff, 'register_launched_training', lambda *a, **k: {'registered': True})
+    return started
+
+
+def test_launch_source_is_checked_again_right_before_the_start(ready, monkeypatch):
+    request, binding, root, source, seen, launch_root = _bridge_setup(ready, monkeypatch)
+    started = _start_probe(monkeypatch)
+    calls, guard = [], _Guard()
+    def check_launch():
+        calls.append(1)
+        if len(calls) == 2:
+            raise ValueError('launch root went dirty after the CPU dry-run')
+        return source
+    with pytest.raises(ValueError, match='went dirty'):
+        batch.bridge(request, binding, root, ready['gate_receipt'], guard=guard, launch_check=check_launch)
+    assert len(calls) == 2 and started == [] and guard.released is False          # no marker released, nothing started
+
+
+def test_a_passing_second_check_starts_the_launcher_of_the_launch_root(ready, monkeypatch):
+    request, binding, root, source, seen, launch_root = _bridge_setup(ready, monkeypatch)
+    started = _start_probe(monkeypatch)
+    calls, guard = [], _Guard()
+    result = batch.bridge(request, binding, root, ready['gate_receipt'], guard=guard,
+                          launch_check=lambda: calls.append(1) or source)
+    assert result['state'] == 'launcher_started' and len(calls) == 2 and guard.released
+    assert started == [launch_root / 'foothold_s2/scripts/ex42_stage_launcher.sh']
 
 
 def _shares_doc(rank, it, n, flag, configured=0.10):
