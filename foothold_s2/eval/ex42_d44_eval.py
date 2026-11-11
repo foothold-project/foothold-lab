@@ -40,7 +40,9 @@ if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out
 plan_bytes = args.plan.read_bytes()
 plan = yaml.safe_load(plan_bytes.decode("utf-8-sig"))
 settings = contract(plan)
-if settings["source_mesh_dir"] != str(args.mesh_dir.resolve()) or not settings["source_mesh_sha256"]:
+# prep pins /home/jay/data/... while the evaluator passes the resolved /mnt/win-d/... path (11/11 m250); compare both resolved
+if (not settings["source_mesh_dir"] or Path(settings["source_mesh_dir"]).resolve() != args.mesh_dir.resolve()
+        or not settings["source_mesh_sha256"]):
     parser.error("D44 prep must pin the one-tile source directory and mesh SHA")
 source, tile = source_tile(args.mesh_dir)
 if source["mesh_sha256"] != settings["source_mesh_sha256"]:
