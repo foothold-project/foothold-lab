@@ -15,6 +15,8 @@ from pathlib import Path
 import sys
 import traceback
 
+from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+
 SCHEMA = "foothold-ex42-d44-video/1"
 VIDEO_CASES = ("turn_left_eval_gt", "turn_left_eval_pred",
                "turn_right_eval_gt", "turn_right_eval_pred",
@@ -163,7 +165,6 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
     robot.write_root_pose_to_sim(state[:, :7])
     robot.write_root_velocity_to_sim(state[:, 7:])
     obs = env.get_observations()
-    from foothold_s2.eval.ex42_eval_loader import verify_ex41_pose_observation
     verify_ex41_pose_observation(obs)
     policy.reset(torch.ones(1, dtype=torch.bool, device=raw.device))
     # The approved video tasks start directly at their task anchor: turns are

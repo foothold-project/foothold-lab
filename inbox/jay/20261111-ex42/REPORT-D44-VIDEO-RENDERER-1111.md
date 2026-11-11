@@ -5,7 +5,7 @@
 > 작성: runner-lx · 2026-11-11
 > 근거: EX-42 D44 평가 코드 · 팀장 지시 2026-11-11 19:40 · 19:44 · 19:49
 > 요지: m1000 저장본으로 D44 과제 세 종류를 eval_gt와 eval_pred로 기록하고 전 프레임을 검사하는 소비기를 준비한다.
-> 상태: CPU 사전검사 통과 · m1000 촬영 시도에서 단일 타일 크기 처리 결함 발견, 수정 후 재시험 중
+> 상태: CPU 사전검사 통과 · Kit 실측에서 결함 2건 수정, 다음 촬영 시도 대기
 
 ## 구현
 
@@ -57,4 +57,4 @@
 
 20:20 m1000 P1은 `FAIL`로 끝났고 네 개 평가 경계(250·500·750·1000)가 모두 완료돼 사슬 프로세스가 종료됐다. 첫 Kit 촬영 시도 중 저장공간은 충분했으나 원본 D44 메시의 `origins=(1,1,3)`을 `mesh_file_generator_cfg`가 거부해 환경 생성 전에 끝났다. 단일 타일 경로에서만 manifest의 `tile_size_m`을 받아 크기를 지정하도록 수정했고, 원본 메시 파일은 변경하지 않았다.
 
-20:28 두 번째 Kit 시도도 동일한 단일 타일 오류에서 종료되어 수정 필요가 확인됐다. `mesh_file_generator_cfg`에 명시적 `single_tile_size` 경로를 넣고 D44 캡처 소비기가 manifest 크기를 전달하도록 고쳤다. ISAAC311 CPU 테스트 두 파일은 19 passed, `compileall` · `pyflakes` · diff-check도 통과했다. GPU1에서 수정 후 실행 결과는 이어서 기록한다.
+20:28 Kit에서 단일 타일 크기 문제로 실패한 뒤 `mesh_file_generator_cfg`에 명시적 `single_tile_size` 경로를 넣고 D44 캡처 소비기가 manifest 크기를 전달하도록 고쳤다. 20:31 Kit은 환경·정책 로드까지 통과했지만 공유 pose readback import의 모듈명을 잘못 적어 첫 사례 실행에서 끝났다. 존재하는 `ex41_eval_loader`를 모듈 import로 고쳤다. 후속 CPU 시험 두 파일은 19 passed, `compileall` · `pyflakes` · diff-check도 통과했다. 이전 시도 로그와 비어 있거나 부분 실패한 output 디렉터리는 보존하며 새 output 디렉터리로 재시도한다.
