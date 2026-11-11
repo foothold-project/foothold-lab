@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from foothold_s2.curriculum.ex40_dr_runtime import RuntimeReadback
@@ -60,6 +62,32 @@ def _physical_env(torch, *, changed):
     env._ex40_dr_motor_baselines = {"legs": {"effort_limit": torch.full((2,), 30.0),
                                                "saturation_effort": torch.full((2,), 40.0)}}
     return env
+
+
+def test_map_modes_creates_empty_output_directory_before_env_npz_write(tmp_path):
+    source_path = ROOT / "foothold_s2/eval/eval_map_modes.py"
+    source = source_path.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    create_stmt = next(
+        node for node in tree.body
+        if isinstance(node, ast.Expr) and ast.unparse(node.value) == "os.makedirs(args.out, exist_ok=True)"
+    )
+    app_line = next(node.lineno for node in tree.body
+                    if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "app"
+                    and ast.unparse(node.value) == "AppLauncher(args).app")
+    npz_write_line = source.index("_save_env_arrays(mode,")
+    assert create_stmt.lineno < app_line < source[:npz_write_line].count("\n") + 1
+
+    out = tmp_path / "empty" / "map-eval"
+    assert not out.exists()
+    args = SimpleNamespace(out=str(out))
+    statement = ast.Module(body=[create_stmt], type_ignores=[])
+    ast.fix_missing_locations(statement)
+    exec(compile(statement, str(source_path), "exec"), {"os": os, "args": args})
+    target = out / "env_arrays_eval_gt_fwd0.5.npz"
+    np.savez(target, env=np.arange(2))
+    with np.load(target) as saved:
+        assert saved["env"].tolist() == [0, 1]
 
 
 def test_n21_selector_is_exact_and_rejects_scope_drift():

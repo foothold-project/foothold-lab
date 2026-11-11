@@ -135,6 +135,8 @@ if args.push_ladder:
         parser.error("push250 requires one terrain, eval_gt, walk_1.0 and eight fixed directions")
 elif args.push_ladder_terrain or args.push_ladder_map_mode:
     parser.error("push-ladder selectors require --push-ladder")
+# Create the destination before Kit and before _save_env_arrays writes NPZ files.
+os.makedirs(args.out, exist_ok=True)
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -678,7 +680,6 @@ for _m in list(sys.modules.values()):
     _key, _file = _module_key(_m), getattr(_m, "__file__", None)
     if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
         res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
-os.makedirs(args.out, exist_ok=True)
 out_json = os.path.join(args.out, "map_modes.json")
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
