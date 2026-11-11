@@ -69,6 +69,9 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
         raise ValueError("EX-42 Linux P1 output must be an iteration-specific absolute path")
     if option("--device") != p1["device"]:
         raise ValueError("EX-42 Linux P1 command device differs from the machine profile")
+    if "--split-device" in argv and (option("--split-device") != training["device"]
+                                     or option("--split-device") == p1["device"]):
+        raise ValueError("EX-42 Linux P1 split device must be the training GPU, different from the P1 GPU")
     if (option("--eval-seed") != "42" or "--sha-from-manifest" not in argv
             or "--execute" not in argv or "--score-existing" in argv):
         raise ValueError("EX-42 Linux P1 requires seed 42, manifest checkpoint SHA and execution")
