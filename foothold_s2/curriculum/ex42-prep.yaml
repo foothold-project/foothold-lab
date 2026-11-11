@@ -627,8 +627,8 @@ stages:
         level_cap: 0
     # K 경계 사다리 (planner §2 · 가정): 쉬움 1.5 % 이므로 하한 1.5 %
     k_ladder:
-      grades: {new: 0.05, current: 0.1, easy: 0.015}
-      kind_floor: 0.015
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
       order:
       - {family: B, kind: climb_down, level_cap: 0}
       - {family: C, kind: box, level_cap: 0}
@@ -1295,8 +1295,8 @@ stages:
         level_cap: 0
     # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall 은 치수 미정이라 열지 않음
     k_ladder:
-      grades: {new: 0.05, current: 0.1, easy: 0.015}
-      kind_floor: 0.015
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
       order:
       - {family: D, kind: crawl, level_cap: 0}
     floors:

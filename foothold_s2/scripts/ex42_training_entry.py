@@ -201,7 +201,7 @@ def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
 
 
 def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage_id: str = STAGE_E0_ID,
-                       boundary_index: int = 0) -> dict[str, Any]:
+                       boundary_index: int = 0, ladder_outcomes: list | None = None) -> dict[str, Any]:
     """The one E0 env-cfg seam: combined mesh + per-column reset ranges + per-column push gate.
 
     Call after the DR events are installed (the push term must exist) and before gym.make.
@@ -236,7 +236,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     stage_row = _e_stage(plan, stage_id)["terrain"]
     stage_terrain = {**stage_row, "kind_task": stage_row.get("kind_task") or _e0_stage(plan)["terrain"]["kind_task"]}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
-    stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index)   # a continued segment: k boundaries on
+    stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
