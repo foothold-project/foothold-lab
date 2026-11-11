@@ -1,4 +1,4 @@
-"""Prepare, but never register, the ordered E1 P1 boundary queue after E1 ends."""
+"""Prepare, but never launch or register, the ordered two-GPU E1 P1 chain after E1 ends."""
 from __future__ import annotations
 
 import argparse
@@ -18,7 +18,9 @@ from foothold_s2.machine_profile import machine_path
 
 
 BOUNDARIES = (250, 500, 750, 1000)
-DEVICES = ("cuda:0", "cuda:1", "cuda:0", "cuda:1")
+PRIMARY_DEVICE = "cuda:1"
+SPLIT_DEVICE = "cuda:0"
+QUEUE_GPU = 1  # The optional dispatcher fallback is GPU1-only.
 
 
 def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | Path,
@@ -28,6 +30,8 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
                      queue_path: str | Path | None = None,
                      mesh_root_path: str | Path | None = None,
                      landing_mesh_check: Callable[[str | Path], dict[str, Any]] | None = None,
+                     training_log_path: str | Path | None = None,
+                     w09_baseline_path: str | Path | None = None,
                      require_locked: bool = False) -> dict[str, Any]:
     repo = Path(repo).resolve(strict=True)
     run = Path(e1_run).resolve(strict=True)
@@ -94,6 +98,17 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
     if not dispatcher.is_file():
         raise ValueError("fixed checkout does not contain the GPU dispatcher")
     queue = str(Path(queue_path).resolve() if queue_path is not None else machine_path("gpu_queue"))
+    chain_receipt = run / "eval" / f"e1-p1-chain-{head[:12]}.json"
+    chain_done = run / "eval" / f"e1-p1-chain-{head[:12]}.p1-done.json"
+    log_dir = run / "eval" / "e1-p1-chain-logs" / head[:12]
+    evidence_path = run / "eval" / "materialize" / "E1F-stage-evidence.json"
+    if chain_receipt.exists() or chain_done.exists() or log_dir.exists() or evidence_path.exists():
+        raise ValueError("E1 P1 chain receipt, logs, or E1F evidence already exists")
+    training_log = (Path(training_log_path).resolve(strict=True) if training_log_path is not None
+                    else run / "torchrun.stdout.log")
+    baseline = Path(w09_baseline_path).resolve() if w09_baseline_path is not None else None
+    if not training_log.is_file():
+        raise ValueError("completed E1 training log is missing")
     jobs = []
     for index, iteration in enumerate(BOUNDARIES):
         checkpoint = run / f"model_{iteration}.pt"
@@ -102,12 +117,13 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
                 manifest, iteration=iteration, checkpoint_exists=True, checkpoint_sha256=sha):
             raise ValueError(f"E1 m{iteration} checkpoint is not published with its manifest SHA")
         output = run / "eval" / "scores" / f"m{iteration}"
-        marker = run / "eval" / "queue-markers" / f"E1-{head[:12]}-m{iteration}.done.json"
+        marker = run / "eval" / "e1-p1-markers" / f"E1-{head[:12]}-m{iteration}.done.json"
         if output.exists() or marker.exists():
             raise ValueError(f"E1 m{iteration} output or completion marker already exists")
         eval_argv = [python, "-m", "foothold_s2.ex42_eval_once",
                      "--checkpoint", str(checkpoint), "--sha-from-manifest",
-                     "--out", str(output), "--device", DEVICES[index],
+                     "--out", str(output), "--device", PRIMARY_DEVICE,
+                     "--split-device", SPLIT_DEVICE,
                      "--eval-seed", "42", "--mesh-dir", str(mesh_dir),
                      "--expected-mesh-sha256", expected_mesh_sha,
                      "--p1-plan", str(plan_path), "--p1-approvals", str(approvals_path),
@@ -115,32 +131,54 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
         wrapper_argv = [python, "-m", "foothold_s2.scripts.ex42_p1_queue_item",
                         "--iteration", str(iteration), "--marker", str(marker),
                         "--eval-argv-json", json.dumps(eval_argv, separators=(",", ":"))]
-        predecessors = [] if index == 0 else [jobs[-1]["marker"]]
-        queue_args = [python, str(dispatcher), "queue", "add", "--queue", queue,
-                      "--title", f"EX-42 E1 P1 m{iteration} D44 six cases",
-                      "--priority", "1", "--gpu", str(index % 2), "--owner", "runner",
-                      "--cond", f"E1 ended · manifest SHA verified · after m{BOUNDARIES[index - 1]} success" if index else
-                      "E1 ended · manifest SHA verified",
-                      "--kind", "eval", "--cwd", str(repo), "--argv-json",
-                      json.dumps(wrapper_argv, separators=(",", ":")), "--done-file", str(marker)]
-        for predecessor in predecessors:
-            queue_args.extend(("--wait-present", predecessor))
         jobs.append({"id": f"E1-P1-m{iteration}", "iteration": iteration, "checkpoint": str(checkpoint),
-                     "checkpoint_sha256": sha, "device": DEVICES[index], "gpu": index % 2,
+                     "checkpoint_sha256": sha, "device": PRIMARY_DEVICE, "split_device": SPLIT_DEVICE,
+                     "gpu": QUEUE_GPU,
                      "priority": 1, "kind": "eval", "output": str(output), "marker": str(marker),
-                     "wait_present": predecessors, "d44_judge_cases": list(landing["judge_cases"]),
+                     "d44_judge_cases": list(landing["judge_cases"]),
                      "d44_record_cases": list(landing["record_cases"]), "eval_argv": eval_argv,
-                     "wrapper_argv": wrapper_argv, "queue_add_argv": queue_args,
-                     "queue_add_shell": shlex.join(queue_args)})
+                     "wrapper_argv": wrapper_argv})
 
-    return {"format": "foothold-ex42-e1-p1-queue-preparation/1", "source_head": head,
+    chain_receipt = run / "eval" / f"e1-p1-chain-{head[:12]}.json"
+    chain_log_dir = run / "eval" / "e1-p1-chain-logs" / head[:12]
+    chain_argv = [python, "-m", "foothold_s2.scripts.ex42_e1_boundary_chain",
+                  "--repo", str(repo), "--e1-run", str(run), "--plan", str(plan_path),
+                  "--approvals", str(approvals_path), "--e1-ended", "--execute"]
+    chain_argv.extend(("--p1-done", str(chain_done)))
+    chain_argv.extend(("--training-log", str(training_log), "--evidence-out", str(evidence_path)))
+    if baseline is not None:
+        chain_argv.extend(("--w09-baseline", str(baseline)))
+    # One dispatcher fallback item only. It owns GPU1 while the evaluator splits
+    # its two independent shards across cuda:1 and cuda:0 in strict checkpoint order.
+    queue_args = [python, str(dispatcher), "queue", "add", "--queue", queue,
+                  "--title", "EX-42 E1 P1 m250-m1000 direct split chain",
+                  "--priority", "1", "--gpu", str(QUEUE_GPU), "--owner", "runner",
+                  "--cond", "E1 ended · manifest SHAs verified · one complete four-boundary direct chain",
+                  "--kind", "eval", "--cwd", str(repo), "--argv-json",
+                  json.dumps(chain_argv, separators=(",", ":"))]
+
+    return {"format": "foothold-ex42-e1-p1-boundary-chain/1", "source_head": head,
             "plan_sha256": plan.sha256,
             "approvals_sha256": hashlib.sha256(approvals_path.read_bytes()).hexdigest(),
+            "repo": str(repo), "plan_path": str(plan_path), "approvals_path": str(approvals_path),
             "e1_run": str(run), "e1_manifest_completed_updates": completed,
             "mesh_dir": str(mesh_dir), "mesh_sha256": mesh["mesh_sha256"],
             "d44_landing_mesh_dir": landing["source_mesh_dir"],
             "d44_landing_mesh_sha256": landing["source_mesh_sha256"],
-            "queue": queue, "queue_mutated": False, "kit_started": False,
+            "queue": queue, "queue_mutated": False, "primary_execution": "direct_two_gpu_sequential_chain",
+            "fallback_queue_gpu": QUEUE_GPU, "chain_receipt": str(chain_receipt),
+            "chain_done": str(chain_done),
+            "fallback_queue_add_argv": queue_args,
+            "fallback_queue_add_shell": shlex.join(queue_args),
+            "direct_chain_argv": chain_argv,
+            "direct_chain_shell": shlex.join(chain_argv),
+            "log_dir": str(chain_log_dir), "evidence_path": str(evidence_path),
+            "training_log": str(training_log),
+            "w09_baseline": str(baseline) if baseline else None,
+            "gate_receipt": str(run / "eval" / "scores" / "m1000" / "p1_score.json"),
+            "evaluation_mesh_path": mesh["mesh_npz"],
+            "parent_manifest": str(run / "manifest.json"),
+            "kit_started": False,
             "training_started": False, "registration_allowed_after_fixed_checkout": True,
             "cancel_targets": [{"id": 4, "reason": "superseded by exact ex42_eval_once E1 P1 + D44 chain; lead cancels"}],
             "jobs": jobs}
@@ -153,13 +191,19 @@ def main(argv=None) -> int:
     parser.add_argument("--e1-run", type=Path, required=True)
     parser.add_argument("--plan", type=Path, default=repo_default / "foothold_s2/curriculum/ex42-prep.yaml")
     parser.add_argument("--approvals", type=Path, default=repo_default / "foothold_s2/curriculum/ex42-approvals.yaml")
+    parser.add_argument("--training-log", type=Path,
+                        help="completed E1 rank log; defaults to <run>/torchrun.stdout.log")
+    parser.add_argument("--w09-baseline", type=Path,
+                        help="optional W09 output path; if not ready after P1, materialize-only can finish later")
     parser.add_argument("--e1-ended", action="store_true", help="required assertion; registration is still not performed")
     parser.add_argument("--out-json", type=Path)
     args = parser.parse_args(argv)
     try:
         result = build_queue_plan(repo=args.repo, e1_run=args.e1_run,
                                   plan_path=args.plan, approvals_path=args.approvals,
-                                  e1_ended=args.e1_ended, require_clean=True, require_locked=True)
+                                  e1_ended=args.e1_ended, training_log_path=args.training_log,
+                                  w09_baseline_path=args.w09_baseline,
+                                  require_clean=True, require_locked=True)
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as exc:
         print(json.dumps({"state": "blocked", "reason": str(exc), "queue_mutated": False,
                           "kit_started": False, "training_started": False}, ensure_ascii=False))

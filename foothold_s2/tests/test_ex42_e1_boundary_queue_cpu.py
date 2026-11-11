@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -34,11 +35,34 @@ def _e1_run(path: Path, *, through: int = 1000) -> None:
 def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000):
     run = tmp_path / "e1"
     _e1_run(run, through=through)
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    approval_sha = EX42Plan.load(PLAN).document["stage_zero"]["approval_sha256"]
+    lines = []
+    for rank in range(2):
+        lines.append("EX42_STAGE_E1_PREFLIGHT " + json.dumps({
+            "stage_id": "E1", "rank": rank, "world_size": 2,
+            "output_dir": str(run) if rank == 0 else str(run / "rank1"),
+            "approval": {"approvals_sha256": approval_sha}}))
+        lines.append("EX42_E0_EXPOSURE " + json.dumps({
+            "stage_id": "E1", "rank": rank, "world_size": 2,
+            "exposed_columns": [0], "level_caps": [5]}))
+    (run / "torchrun.stdout.log").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    baseline = run / "w09-flag-baseline.json"
+    baseline.write_text('{"state":"measured","source":"W09"}\n', encoding="utf-8")
+    mesh_dir = tmp_path / "s2_lab" / "ex42_mesh_1111" / "seed42_E0_c333"
+    mesh_dir.mkdir(parents=True)
+    mesh_npz = mesh_dir / "terrain_mesh.npz"
+    mesh_npz.write_bytes(b"seed42 E0 mesh bytes")
+    (mesh_dir / "mesh_manifest.json").write_text(
+        json.dumps({"format": "foothold-ex42-combined-mesh/1", "seed": 42,
+                    "mesh_sha256": E0_MESH_SHA,
+                    "mesh_file_sha256": hashlib.sha256(mesh_npz.read_bytes()).hexdigest()}), encoding="utf-8")
     return build_queue_plan(repo=ROOT, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
-                           e1_ended=e1_ended, mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA},
+                           e1_ended=e1_ended,
+                           mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA, "mesh_npz": str(mesh_npz)},
                            landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
-                           python_path=Path(__file__).resolve(), queue_path=tmp_path / "queue.json",
-                           mesh_root_path=tmp_path / "s2_lab")
+                           python_path=sys.executable, queue_path=tmp_path / "queue.json",
+                           mesh_root_path=tmp_path / "s2_lab", w09_baseline_path=baseline)
 
 
 def test_e1_front_queue_is_exact_ordered_p1_and_never_mutates_queue(tmp_path):
@@ -46,22 +70,29 @@ def test_e1_front_queue_is_exact_ordered_p1_and_never_mutates_queue(tmp_path):
     assert result["queue_mutated"] is False
     assert result["kit_started"] is False and result["training_started"] is False
     assert result["registration_allowed_after_fixed_checkout"] is True
+    assert result["primary_execution"] == "direct_two_gpu_sequential_chain"
     assert [row["iteration"] for row in result["jobs"]] == [250, 500, 750, 1000]
-    assert [row["gpu"] for row in result["jobs"]] == [0, 1, 0, 1]
+    assert [row["gpu"] for row in result["jobs"]] == [1, 1, 1, 1]
+    assert [(row["device"], row["split_device"]) for row in result["jobs"]] == [("cuda:1", "cuda:0")] * 4
     assert [row["priority"] for row in result["jobs"]] == [1] * 4
     assert len(result["jobs"][0]["d44_judge_cases"]) == 6
     assert len(result["jobs"][0]["d44_record_cases"]) == 3
     for index, job in enumerate(result["jobs"]):
         argv = job["eval_argv"]
         assert argv[argv.index("--p1-stage-id") + 1] == "E1"
-        assert argv[argv.index("--device") + 1] == f"cuda:{index % 2}"
+        assert argv[argv.index("--device") + 1] == "cuda:1"
+        assert argv[argv.index("--split-device") + 1] == "cuda:0"
         assert argv[argv.index("--expected-mesh-sha256") + 1] == E0_MESH_SHA
         assert "--sha-from-manifest" in argv and "--execute" in argv
-        assert job["queue_add_argv"][job["queue_add_argv"].index("--queue") + 1] == result["queue"]
-        assert "queue add" in job["queue_add_shell"]
-        if index:
-            assert job["wait_present"] == [result["jobs"][index - 1]["marker"]]
-            assert job["wait_present"][0] in job["queue_add_argv"]
+    fallback = result["fallback_queue_add_argv"]
+    assert fallback[fallback.index("--gpu") + 1] == "1"
+    assert fallback[fallback.index("--queue") + 1] == result["queue"]
+    assert "--done-file" not in fallback
+    chain_argv = json.loads(fallback[fallback.index("--argv-json") + 1])
+    assert chain_argv[-2] == "--w09-baseline"
+    assert chain_argv[-1] == result["w09_baseline"]
+    assert "ex42_e1_boundary_chain" in " ".join(chain_argv)
+    assert chain_argv[chain_argv.index("--p1-done") + 1] == result["chain_done"]
     assert result["cancel_targets"][0]["id"] == 4
     assert result["cancel_targets"][0]["reason"].endswith("lead cancels")
     assert result["d44_landing_mesh_sha256"] == LANDING_SHA
@@ -74,13 +105,11 @@ def test_e1_front_queue_is_exact_ordered_p1_and_never_mutates_queue(tmp_path):
     assert spec.loader is not None
     spec.loader.exec_module(dispatch)
     with patch.object(dispatch, "require_linux_profile", lambda _profile: None):
-        for job in result["jobs"]:
-            assert dispatch.main(job["queue_add_argv"][2:]) == 0
+        assert dispatch.main(fallback[2:]) == 0
     persisted = json.loads(Path(result["queue"]).read_text(encoding="utf-8"))
-    assert len(persisted["items"]) == 4
-    assert persisted["items"][0].get("wait_present") is None
-    assert persisted["items"][1]["wait_present"] == [result["jobs"][0]["marker"]]
-    assert persisted["items"][3]["wait_present"] == [result["jobs"][2]["marker"]]
+    assert len(persisted["items"]) == 1
+    assert persisted["items"][0]["gpu"] == 1
+    assert persisted["items"][0].get("done_files", []) == []
 
 
 def test_e1_queue_refuses_before_end_or_without_all_manifest_checkpoints(tmp_path):
@@ -154,3 +183,118 @@ def test_queue_item_rc0_without_matching_receipts_does_not_release_next_boundary
     with pytest.raises(ValueError, match="without matching complete evidence"):
         run_item(evaluator_argv=argv, iteration=500, marker=marker, popen=broken)
     assert not marker.exists()
+
+
+def test_direct_chain_runs_both_gpus_in_checkpoint_order_and_writes_e1f_evidence(tmp_path):
+    from foothold_s2.scripts.ex42_e1_boundary_chain import execute_chain
+    jobs = [{"iteration": iteration, "eval_argv": ["python", "eval", str(iteration)],
+             "marker": str(tmp_path / f"m{iteration}.done"),
+             "output": str(tmp_path / f"m{iteration}")}
+            for iteration in BOUNDARIES]
+    plan = {"primary_execution": "direct_two_gpu_sequential_chain", "queue_mutated": False,
+            "source_head": "abc", "plan_sha256": "p", "approvals_sha256": "a", "e1_run": "/e1",
+            "chain_receipt": str(tmp_path / "chain.json"), "log_dir": str(tmp_path / "logs"),
+            "p1_done_path": str(tmp_path / "chain.p1-done.json"),
+            "repo": str(ROOT), "jobs": jobs, "w09_baseline": str(tmp_path / "w09.json"),
+                "evidence_path": str(tmp_path / "evidence.json"), "plan_path": str(PLAN),
+                "parent_manifest": str(tmp_path / "manifest.json"), "gate_receipt": str(tmp_path / "p1.json"),
+                "training_log": str(tmp_path / "train.log"),
+                "evaluation_mesh_path": str(tmp_path / "mesh.npz")}
+    calls = []
+
+    def item_runner(*, evaluator_argv, iteration, marker, popen):
+        calls.append((iteration, evaluator_argv))
+        Path(marker).write_text("ok", encoding="utf-8")
+        return 0
+
+    evidence_calls = []
+    def evidence_writer(**kwargs):
+        evidence_calls.append(kwargs)
+        Path(kwargs["out_path"]).write_text('{"applied_level_cap":5}', encoding="utf-8")
+        return {"applied_level_cap": 5}
+
+    Path(plan["w09_baseline"]).write_text('{"state":"measured"}\n', encoding="utf-8")
+    row = execute_chain(plan, item_runner=item_runner, evidence_writer=evidence_writer)
+    assert [iteration for iteration, _ in calls] == list(BOUNDARIES)
+    assert row["state"] == "complete" and row["evidence_state"] == "ready"
+    assert len(evidence_calls) == 1 and [x["iteration"] for x in row["completed"]] == list(BOUNDARIES)
+    assert json.loads(Path(plan["chain_receipt"]).read_text())["state"] == "complete"
+    marker = json.loads(Path(plan["p1_done_path"]).read_text())
+    assert marker["completed_iterations"] == list(BOUNDARIES)
+
+
+def test_chain_waits_for_w09_then_materializes_without_rerunning_p1(tmp_path):
+    from foothold_s2.scripts.ex42_e1_boundary_chain import execute_chain, materialize_only
+
+    jobs = [{"iteration": iteration, "eval_argv": ["python", "eval", str(iteration)],
+             "marker": str(tmp_path / f"m{iteration}.done"), "output": str(tmp_path / f"m{iteration}")}
+            for iteration in BOUNDARIES]
+    baseline = tmp_path / "w09.json"
+    evidence_path = tmp_path / "evidence.json"
+    receipt_path = tmp_path / "chain.json"
+    plan = {"primary_execution": "direct_two_gpu_sequential_chain", "queue_mutated": False,
+            "source_head": "abc", "plan_sha256": "p", "approvals_sha256": "a", "e1_run": "/e1",
+            "chain_receipt": str(receipt_path), "log_dir": str(tmp_path / "logs"),
+            "p1_done_path": str(tmp_path / "chain.p1-done.json"),
+            "repo": str(ROOT), "jobs": jobs, "w09_baseline": str(baseline),
+            "evidence_path": str(evidence_path), "plan_path": str(PLAN),
+            "parent_manifest": str(tmp_path / "manifest.json"), "gate_receipt": str(tmp_path / "p1.json"),
+            "training_log": str(tmp_path / "train.log"),
+            "evaluation_mesh_path": str(tmp_path / "mesh.npz")}
+    p1_calls = []
+
+    def item_runner(*, evaluator_argv, iteration, marker, popen):
+        p1_calls.append(iteration)
+        Path(marker).write_text("ok", encoding="utf-8")
+        return 0
+
+    row = execute_chain(plan, item_runner=item_runner)
+    assert row["state"] == "p1_complete_waiting_w09_baseline"
+    assert row["evidence_state"] == "waiting_for_w09_baseline"
+    assert json.loads(Path(plan["p1_done_path"]).read_text())["state"] == "complete"
+    assert p1_calls == list(BOUNDARIES)
+    assert [item["iteration"] for item in json.loads(receipt_path.read_text())["completed"]] == list(BOUNDARIES)
+
+    baseline.write_text('{"state":"measured"}\n', encoding="utf-8")
+    materialize_calls = []
+
+    def evidence_writer(**kwargs):
+        materialize_calls.append(kwargs)
+        Path(kwargs["out_path"]).write_text('{"applied_level_cap":5}', encoding="utf-8")
+        return {"applied_level_cap": 5}
+
+    finished = materialize_only(
+        receipt_path=receipt_path, source_plan_path=PLAN,
+        parent_manifest_path=plan["parent_manifest"], gate_receipt_path=plan["gate_receipt"],
+        training_log_path=plan["training_log"], evaluation_mesh_path=plan["evaluation_mesh_path"],
+        w09_baseline_path=baseline, evidence_out=evidence_path, evidence_writer=evidence_writer)
+    assert finished["state"] == "complete" and finished["evidence_state"] == "ready"
+    assert len(materialize_calls) == 1
+    assert p1_calls == list(BOUNDARIES)
+
+
+def test_direct_chain_stops_at_first_failed_boundary_and_records_blocking_receipt(tmp_path):
+    from foothold_s2.scripts.ex42_e1_boundary_chain import execute_chain
+    jobs = [{"iteration": iteration, "eval_argv": ["python", "eval", str(iteration)],
+             "marker": str(tmp_path / f"m{iteration}.done"), "output": str(tmp_path / f"m{iteration}")}
+            for iteration in BOUNDARIES]
+    plan = {"primary_execution": "direct_two_gpu_sequential_chain", "queue_mutated": False,
+            "source_head": "abc", "plan_sha256": "p", "approvals_sha256": "a", "e1_run": "/e1",
+            "chain_receipt": str(tmp_path / "chain.json"), "log_dir": str(tmp_path / "logs"),
+            "p1_done_path": str(tmp_path / "chain.p1-done.json"),
+            "repo": str(ROOT), "jobs": jobs, "w09_baseline": str(tmp_path / "w09.json"),
+            "evidence_path": str(tmp_path / "evidence.json"), "plan_path": str(PLAN),
+            "parent_manifest": str(tmp_path / "manifest.json"), "gate_receipt": str(tmp_path / "p1.json"),
+            "training_log": str(tmp_path / "train.log"),
+            "evaluation_mesh_path": str(tmp_path / "mesh.npz")}
+    calls = []
+
+    def item_runner(*, evaluator_argv, iteration, marker, popen):
+        calls.append(iteration)
+        return 5 if iteration == 500 else 0
+
+    row = execute_chain(plan, item_runner=item_runner)
+    assert calls == [250, 500]
+    assert row["state"] == "failed" and row["failed_iteration"] == 500
+    assert not Path(plan["p1_done_path"]).exists()
+    assert json.loads(Path(plan["chain_receipt"]).read_text())["state"] == "failed"
