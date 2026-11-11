@@ -5,6 +5,8 @@ import json
 import math
 from pathlib import Path
 
+import yaml
+
 from foothold_s2.eval.ex42_kind_completion import read_start_kind_cell
 from foothold_s2.eval.ex42_kind_flag_cells import read_kind_flag_cell
 from foothold_s2.ex42_stage_judges import StageJudge, aggregate, previous_window, register
@@ -126,12 +128,21 @@ class E2KindTwoWindowJudge(StageJudge):
                               "mesh_sha256": mesh["mesh_sha256"],
                               "evaluation": str(ctx.evaluation / "kind_cells")}
         from foothold_s2.ex42_exchange_watch import compare
-        from foothold_s2.ex42_learned_cells_evidence import read_boundary
+        from foothold_s2.ex42_learned_cells_evidence import judge_two_boundaries
         exchange = compare(current, prior_score, measured=measured, baseline=baseline,
                            kind_now=now, kind_previous=old)
-        learned = read_boundary(ctx.checkpoint, stage_id="E2",
-                                plan_sha256=ctx.digest(ctx.plan_path),
-                                interval=ctx.plan["evaluation"]["interval_updates"])
+        approvals_path = ctx.plan_path.parent / ctx.plan["approval_file"]
+        approvals = yaml.safe_load(approvals_path.read_text(encoding="utf-8-sig"))
+        authorization = approvals["stage_e2_authorization"]
+        if authorization.get("approved") is not True:
+            raise ValueError("EX-42 E2 learned_cells threshold authorization absent")
+        learned = judge_two_boundaries(
+            ctx.checkpoint, stage_id="E2", plan=ctx.plan,
+            plan_sha256=ctx.digest(ctx.plan_path),
+            interval=ctx.plan["evaluation"]["interval_updates"],
+            min_episodes=authorization["exit_gate"]["learned_cells_min"],
+            previous_kind_pass=bool(old and all(old[mode]["judgement"] == "PASS"
+                                                for mode in ("eval_gt", "eval_pred"))))
         items = {"maintenance_current": {"role": "judge", "judgement": current["judgement"]},
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
                  "learned_cells": learned,
