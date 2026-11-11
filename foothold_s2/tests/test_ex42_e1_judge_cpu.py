@@ -145,7 +145,10 @@ def test_real_m250_measure_as_e1_keeps_maintenance_pass_and_d44_hold():
     score = measure(Path(saved["checkpoint"]), original, stage_id="E1")
     assert score["maintenance_judgement"] == "PASS"
     assert score["judgement"] == "HOLD"
-    assert score["e1_exit"]["d44"]["current"]["reason"] == "D44 판정 칸 계약 없음"
+    d44 = score["e1_exit"]["d44"]
+    assert len(d44["required_cases"]) == 6
+    assert d44["current"]["judgement"] == "HOLD"
+    assert all(row["current"]["reason"] == "평가 열 없음" for row in d44["cases"].values())
 
 
 def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path, monkeypatch):
@@ -200,7 +203,7 @@ def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path, monkeypatch):
 
 def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
     score, baseline, measured, plan = _inputs()
-    del plan["evaluation"]["paper_cells"]["stairs_landing"]["judge_cases"]
+    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8-sig"))
     score["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] = 0
     judged = judge_e1(score, baseline, measured, plan, previous=None)
     checkpoint = tmp_path / "model_250.pt"
@@ -214,7 +217,7 @@ def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
                                    approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
                                    stage_id="E1", output=output)
     assert result["judgment"] == "FAIL"
-    assert result["e1_exit"]["d44"]["current"]["reason"] == "D44 판정 칸 계약 없음"
+    assert result["e1_exit"]["d44"]["current"]["judgement"] == "HOLD"
 
 
 def test_prior_window_requires_published_p1_and_checkpoint_bytes(tmp_path):

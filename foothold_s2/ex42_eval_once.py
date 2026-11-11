@@ -185,6 +185,16 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
                            for case_id in required for which in ("current", "previous")]
             if any(state not in ("PASS", "HOLD", "FAIL") for state in case_states):
                 raise ValueError("EX-42 P1 E1 D44 case judgment invalid")
+            from foothold_s2.ex42_e1_judge import _landing_window
+            for case_id in required:
+                current_row = _landing_window((score.get("d44_cells") or {}).get(case_id),
+                                              plan.document, case_id)
+                if cases[case_id]["current"] != current_row:
+                    raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
+                previous_row = cases[case_id]["previous"]
+                if previous_row["judgement"] in ("PASS", "FAIL") and _landing_window(
+                        previous_row, plan.document, case_id) != previous_row:
+                    raise ValueError("EX-42 P1 E1 prior D44 raw evidence differs")
             current_states = [cases[case_id]["current"]["judgement"] for case_id in required]
             previous_states = [cases[case_id]["previous"]["judgement"] for case_id in required]
             def aggregate(states):

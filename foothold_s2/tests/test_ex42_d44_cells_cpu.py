@@ -80,6 +80,22 @@ def test_contract_reads_six_judge_and_three_record_cases_from_plan():
         contract(bad)
 
 
+def test_approved_prep_contract_pins_six_judged_three_record_and_source_mesh():
+    import yaml
+    from foothold_s2.eval.ex42_eval_tile_mesh import source_tile
+
+    prep = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"
+    plan = yaml.safe_load(prep.read_text(encoding="utf-8-sig"))
+    settings = contract(plan)
+    assert len(settings["judge_cases"]) == 6
+    assert len(settings["record_cases"]) == 3
+    assert set(settings["case_specs"]) == set(settings["judge_cases"] + settings["record_cases"])
+    assert tuple(settings["timing"][key] for key in
+                 ("settle_s", "approach_limit_s", "stop_s", "restart_limit_s")) == (1, 4, 2, 6)
+    manifest, _ = source_tile(Path(settings["source_mesh_dir"]))
+    assert manifest["mesh_sha256"] == settings["source_mesh_sha256"]
+
+
 def test_turn_left_right_use_signed_unwrapped_angle_and_platform():
     settings = contract(_plan())
     for task in ("turn_left", "turn_right"):
