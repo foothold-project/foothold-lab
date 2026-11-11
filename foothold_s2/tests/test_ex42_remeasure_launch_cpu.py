@@ -339,3 +339,29 @@ def test_watch_reports_a_run_that_ended_without_receipts(tmp_path, monkeypatch):
     out = tmp_path / 'out'; out.mkdir()
     assert batch.watch_first_boundary({'launch_env': {'EX42_MAIN_ROOT': str(main)}}, out, started_after=0, limit=3,
                                       sleep=lambda s: None) is None and 'ended without' in sent[0]
+
+
+def test_out_of_band_flag_share_writes_a_hold_and_never_touches_the_training(tmp_path, monkeypatch):
+    main = tmp_path / 'main'; run = main / 'EX-42-B-E1F_20261112_080000'; run.mkdir(parents=True)
+    write(run / 'command_shares_250_rank0.json', _shares_doc(0, 250, 4000, 400))
+    write(run / 'command_shares_250_rank1.json', _shares_doc(1, 250, 4000, 1200))
+    sent, signals = [], []
+    monkeypatch.setattr(batch, 'notify_hold', lambda output, reason, **kw: sent.append((kw['label'], reason)) or {'sent': True})
+    monkeypatch.setattr(os, 'kill', lambda *a: signals.append(a))
+    monkeypatch.setattr(os, 'killpg', lambda *a: signals.append(a))
+    out = tmp_path / 'out'; out.mkdir()
+    result = batch.watch_first_boundary({'launch_env': {'EX42_MAIN_ROOT': str(main)}}, out, started_after=0, limit=2,
+                                        sleep=lambda s: None)
+    hold = batch.read(out / 'first-boundary-HOLD.json')
+    assert result['near'] is False and hold['state'] == 'HOLD' and hold['training_touched'] is False
+    assert sent[0][0] == 'E1F 첫 경계 HOLD' and '팀장 승인' in sent[0][1] and signals == []
+
+
+def test_in_band_share_writes_no_hold(tmp_path, monkeypatch):
+    main = tmp_path / 'main'; run = main / 'EX-42-B-E1F_20261112_080000'; run.mkdir(parents=True)
+    write(run / 'command_shares_250_rank0.json', _shares_doc(0, 250, 4000, 400))
+    write(run / 'command_shares_250_rank1.json', _shares_doc(1, 250, 4000, 420))
+    monkeypatch.setattr(batch, 'notify_hold', lambda *a, **k: {'sent': True})
+    out = tmp_path / 'out'; out.mkdir()
+    batch.watch_first_boundary({'launch_env': {'EX42_MAIN_ROOT': str(main)}}, out, started_after=0, limit=2, sleep=lambda s: None)
+    assert not (out / 'first-boundary-HOLD.json').exists()

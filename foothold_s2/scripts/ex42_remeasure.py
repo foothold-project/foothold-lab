@@ -529,8 +529,17 @@ def watch_first_boundary(request, output, *, poll=60, started_after=None, sleep=
                 save(Path(output) / 'first-boundary-shares.json', {'run': str(run), **result})
                 text = ('flag 몫 ' + ', '.join(f"rank{r['rank']} {r['flag_fraction']:.4f} (n={r['continuous_resets']}, z={r['z']:.2f})"
                                                for r in result['ranks']) + f" · 기대 {result['expected']} · it {result['iteration']}")
-                notify_hold(output, text + (' · 근처' if result['near'] else ' · 벗어남, 확인 필요'),
-                            label='E1F 첫 경계 command_shares', name='first-boundary-notification.json')
+                if result['near']:
+                    notify_hold(output, text + ' · 근처', label='E1F 첫 경계 command_shares',
+                                name='first-boundary-notification.json')
+                else:
+                    # Outside 4 sigma: the run is HOLD. This process only records and shouts; ending a training process
+                    # is a team-lead approval item and no in-process stop exists for a stage launched whole.
+                    save(Path(output) / 'first-boundary-HOLD.json', {'state': 'HOLD', 'run': str(run), 'reason': text,
+                         'action_needed': 'stop the E1F training (team lead approval), then fix the flag share',
+                         'training_touched': False})
+                    notify_hold(output, text + f' · 4시그마 밖 HOLD: 깃발 몫이 틀린 채 학습 중, 종료는 팀장 승인 필요 · run {run}',
+                                label='E1F 첫 경계 HOLD', name='first-boundary-notification.json')
                 return result
             status = run / 'train_start_status.json'
             if status.is_file() and read(status).get('state') in ('failed', 'error', 'done'):
