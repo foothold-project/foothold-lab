@@ -78,4 +78,4 @@
 
 ## 변경 커밋과 CPU 검증
 
-최종 원격 HEAD `02042b77a8a97dfa8c002f981a4edfdd57c71deb` (`origin/feature/ex42-d44-video-runner-lx-final`). 변경은 RGB render product 생성, 단일 메시 크기 전달, 평가 pose-loader 참조, 정지 명령 구간을 검수기가 인지하는 수정과 각 회귀시험이다. 해당 CPU 묶음은 22 passed; compileall · pyflakes · diff-check 통과.
+촬영과 검증에 사용한 코드 HEAD는 `02042b77a8a97dfa8c002f981a4edfdd57c71deb`이다. 결과 문서 추가를 포함한 현재 원격 HEAD는 `6901faa61552e0d29f89016b75719f063da9e042` (`origin/feature/ex42-d44-video-runner-lx-final`). 변경은 RGB render product 생성, 단일 메시 크기 전달, 평가 pose-loader 참조, 정지 명령 구간을 검수기가 인지하는 수정과 각 회귀시험이다. 해당 CPU 묶음은 22 passed; compileall · pyflakes · diff-check 통과.
