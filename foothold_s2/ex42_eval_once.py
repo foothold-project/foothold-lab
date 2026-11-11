@@ -11,6 +11,8 @@ import sys
 import threading
 
 from foothold_s2.ex42_score import MODES, config, digest, measure
+from foothold_s2.curriculum.ex42_prep import EX42Plan
+from foothold_s2.ex42_stage_judges import retained_paper_cells
 from foothold_s2.experiment_registry import load_experiment, device_contract, queue_gpu_identity
 from foothold_s2.machine_profile import machine_path
 
@@ -462,8 +464,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             row.update(state="HOLD", reason=f"{name} failed or lacks durable receipt")
             _atomic(output / "eval_receipt.json", row)
             return 5
-    if p1_stage_id == "E1" and p1_plan is not None:
-        from foothold_s2.curriculum.ex42_prep import EX42Plan
+    retained = retained_paper_cells(EX42Plan.load(p1_plan).document, p1_stage_id) if p1_plan and p1_stage_id else ()
+    if "d44" in retained:
         from foothold_s2.eval.ex42_d44_cells import contract, read_evidence
         from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
         plan = EX42Plan.load(p1_plan)
@@ -496,8 +498,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         else:
             row["steps"]["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
             _atomic(output / "eval_receipt.json", row)
-    if p1_stage_id == "E1F" and p1_plan is not None:
-        from foothold_s2.curriculum.ex42_prep import EX42Plan
+    if "flag_cells" in retained:
         try:
             plan = EX42Plan.load(p1_plan)
             def record_flag(count, child):
@@ -522,7 +523,6 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             _atomic(output / "eval_receipt.json", row)
             return 5
     if p1_stage_id == "E2" and p1_plan is not None:
-        from foothold_s2.curriculum.ex42_prep import EX42Plan
         try:
             plan = EX42Plan.load(p1_plan)
             def record_kind(phase, child):
@@ -644,8 +644,8 @@ def main(argv=None):
                 dev: commands(args.checkpoint, args.out / "shards" / shard_tag(dev), dev,
                               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard)
                 for dev, shard in shards.items()})
-        if args.p1_stage_id == "E1" and args.p1_plan is not None:
-            from foothold_s2.curriculum.ex42_prep import EX42Plan
+        retained = retained_paper_cells(EX42Plan.load(args.p1_plan).document, args.p1_stage_id) if args.p1_plan and args.p1_stage_id else ()
+        if "d44" in retained:
             from foothold_s2.eval.ex42_d44_cells import contract
             landing = EX42Plan.load(args.p1_plan).document["evaluation"]["paper_cells"]["stairs_landing"]
             if landing.get("judge_cases") is None:
@@ -655,8 +655,7 @@ def main(argv=None):
                 plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
                                "record_cases": settings["record_cases"],
                                "source_mesh_dir": settings["source_mesh_dir"]}
-        if args.p1_stage_id == "E1F" and args.p1_plan is not None:
-            from foothold_s2.curriculum.ex42_prep import EX42Plan
+        if "flag_cells" in retained:
             from foothold_s2.eval.ex42_flag_cells import contract
             settings = contract(EX42Plan.load(args.p1_plan).document)
             plan["flag_cells"] = {"state": "planned", "judge_cases": settings["judge_cases"],
@@ -667,7 +666,6 @@ def main(argv=None):
                                       mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
                                       seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         if args.p1_stage_id == "E2" and args.p1_plan is not None:
-            from foothold_s2.curriculum.ex42_prep import EX42Plan
             plan_doc = EX42Plan.load(args.p1_plan).document
             plan["e2_kind_cells"] = {"state": "planned", "commands": [argv for _, argv in
                 e2_kind_kit_commands(args.checkpoint, args.out, args.device,

@@ -126,12 +126,15 @@ class E2KindTwoWindowJudge(StageJudge):
                               "mesh_sha256": mesh["mesh_sha256"],
                               "evaluation": str(ctx.evaluation / "kind_cells")}
         from foothold_s2.ex42_exchange_watch import compare
+        from foothold_s2.ex42_learned_cells_evidence import read_boundary
         exchange = compare(current, prior_score, measured=measured, baseline=baseline,
                            kind_now=now, kind_previous=old)
+        learned = read_boundary(ctx.checkpoint, stage_id="E2",
+                                plan_sha256=ctx.digest(ctx.plan_path),
+                                interval=ctx.plan["evaluation"]["interval_updates"])
         items = {"maintenance_current": {"role": "judge", "judgement": current["judgement"]},
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
-                 "learned_cells": {"role": "judge", "judgement": "HOLD",
-                    "reason": "E2 학습 종료 에피소드 원장 미결선"},
+                 "learned_cells": learned,
                  "exchange_watch": exchange}
         for mode in ("eval_gt", "eval_pred"):
             items[f"{mode}_current"] = {"role": "judge", **now[mode]}
