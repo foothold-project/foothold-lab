@@ -28,7 +28,8 @@ def run_item(*, evaluator_argv: list[str], iteration: int, marker: str | Path,
     if (receipt.get("state") != "done" or score.get("state") != "complete"
             or score.get("stage_id") != "E1" or score.get("checkpoint_iteration") != iteration
             or measurement.get("stage_id") != "E1"
-            or measurement.get("checkpoint_iteration") != iteration
+            # ex42_score.json carries no checkpoint_iteration (real E1 m250, 11/11 19:2x); the checkpoint SHA binds it
+            or measurement.get("checkpoint_iteration", iteration) != iteration
             or score.get("checkpoint_sha256") != measurement.get("checkpoint_sha256")):
         raise ValueError(f"EX-42 E1 m{iteration} evaluator returned rc0 without matching complete evidence")
     marker.parent.mkdir(parents=True, exist_ok=True)
