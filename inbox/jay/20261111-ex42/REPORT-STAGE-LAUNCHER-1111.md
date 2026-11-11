@@ -49,7 +49,7 @@ foothold_s2/scripts/ex42_stage_launcher.sh --dry-run
 
 ## 확인한 것 (CPU)
 
-- 시험 23 건 (`test_ex42_stage_launcher_cpu.py`) + 기존 handoff 시험: 단계 값이 plan 에서 오는 것, continue, 예행, 단계 꼬리 값, 거절 10 가지, 알림 순서 (알림 → exec, 예행은 알림 없음, 거절은 exec 없음), 알림 실패가 기동을 막지 않음, 셸 → 파이썬 → 트레이너가 같은 PID, `start_launcher` 가 넘기는 환경 이름 = launcher 가 읽는 이름.
+- 시험 24 건 (`test_ex42_stage_launcher_cpu.py`) + 기존 handoff 시험: 단계 값이 plan 에서 오는 것, continue, 예행, 단계 꼬리 값, 거절 10 가지, 알림 순서 (알림 → exec, 예행은 알림 없음, 거절은 exec 없음), 알림 실패가 기동을 막지 않음, 셸 → 파이썬 → 트레이너가 같은 PID, `start_launcher` 가 넘기는 환경 이름 = launcher 가 읽는 이름.
 - 돌연변이 5 모두 걸림: 파이썬에서 exec 대신 자식 띄움 · 셸에서 exec 뺌 · 단계 표 검사 끔 · 예행에도 알림 · segment_end 검사 끔.
 - 실제 E1 예행 (위 명령) rc 0.
 
