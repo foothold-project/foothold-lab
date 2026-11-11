@@ -1,11 +1,14 @@
 """Known input checks for the E2 START arrival support window."""
 
 import json
+import hashlib
 
 import numpy as np
 import pytest
 
-from foothold_s2.eval.ex42_kind_completion import read_start_kind_cell, score_last_support
+from foothold_s2.eval.ex42_kind_completion import (
+    finish_anchor_for_kind, read_start_kind_cell, score_last_support,
+)
 
 
 def _trace():
@@ -108,7 +111,45 @@ def _read(folder, mesh, mode="eval_gt"):
                                 level=0, mode=mode, seconds=2.0, settle_s=0.5)
 
 
-def test_kind_folder_recounts_all_modes_and_binds_assignment(tmp_path):
+@pytest.mark.parametrize(("kind", "finish_start", "expected"), [
+    ("gaps", 5.6, 5.1),
+    ("stepping_stones_low", 7.0, 6.5),
+])
+def test_finish_anchor_is_measured_from_pinned_tile_not_shared_constant(
+        tmp_path, monkeypatch, kind, finish_start, expected):
+    from foothold_s2.eval import ex42_task_mesh
+
+    vertices = []
+    faces = []
+    for x0, x1, y0, y1 in ((0, 1, 0, 8), (1, finish_start, 3.9, 4.1),
+                            (finish_start, 8, 0, 8)):
+        offset = len(vertices)
+        vertices.extend(((x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0)))
+        faces.extend(((offset, offset + 1, offset + 2),
+                      (offset, offset + 2, offset + 3)))
+    source_sha = "a" * 64
+    def select_tile(_folder, *, family, kind, level):
+        assert (family, level) == ("A", 0)
+        return {"vertices": np.asarray(vertices, np.float32),
+                "faces": np.asarray(faces, np.int32),
+                "origin": [0.5, 4, 0], "size": [8, 8],
+                "source_mesh_sha256": source_sha,
+                "tile_triangle_sha256": "b" * 64}
+    monkeypatch.setattr(ex42_task_mesh, "select_tile", select_tile)
+    manifest = tmp_path / "mesh_manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    mesh = {"manifest": str(manifest), "mesh_sha256": source_sha}
+    row = finish_anchor_for_kind(mesh, family="A", kind=kind, level=0)
+    assert row["finish_x_m"] == expected
+    assert row["source_manifest_sha256"] == hashlib.sha256(b"{}").hexdigest()
+    mesh["mesh_sha256"] = "c" * 64
+    with pytest.raises(ValueError, match="SHA differs"):
+        finish_anchor_for_kind(mesh, family="A", kind=kind, level=0)
+
+
+def test_kind_folder_recounts_all_modes_and_binds_assignment(tmp_path, monkeypatch):
+    monkeypatch.setattr("foothold_s2.eval.ex42_kind_completion.finish_anchor_for_kind",
+                        lambda *_args, **_kwargs: {"finish_x_m": 7.0})
     folder, mesh = _folder(tmp_path)
     for mode in ("eval_gt", "eval_pred", "probe_prop_only"):
         row = _read(folder, mesh, mode)
@@ -117,7 +158,9 @@ def test_kind_folder_recounts_all_modes_and_binds_assignment(tmp_path):
         assert set(row["evidence"]) == {"map_modes", "arrays"}
 
 
-def test_kind_folder_rejects_wrong_map_consumption_or_missing_trace(tmp_path):
+def test_kind_folder_rejects_wrong_map_consumption_or_missing_trace(tmp_path, monkeypatch):
+    monkeypatch.setattr("foothold_s2.eval.ex42_kind_completion.finish_anchor_for_kind",
+                        lambda *_args, **_kwargs: {"finish_x_m": 7.0})
     folder, mesh = _folder(tmp_path)
     source = folder / "map_modes.json"
     doc = json.loads(source.read_text(encoding="utf-8"))

@@ -60,6 +60,43 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def finish_anchor_for_kind(mesh: dict, *, family: str, kind: str, level: int) -> dict:
+    """Ray-measure the first full robot-width support that continues to the tile end.
+
+    The center ray alone also hits a narrow beam or an isolated stone. Three
+    rays spanning the root/foot support width distinguish that from the finish
+    platform. The source tile is selected from the SHA-pinned combined mesh.
+    """
+    from foothold_s2.eval.ex42_task_mesh import select_tile
+    from foothold_s2.terrains.ex42_mesh_mount import MeshHeights
+
+    manifest = Path(mesh["manifest"]).resolve(strict=True)
+    tile = select_tile(manifest.parent, family=family, kind=kind, level=level)
+    if tile["source_mesh_sha256"] != mesh["mesh_sha256"]:
+        raise ValueError("EX-42 kind finish source mesh SHA differs")
+    origin = np.asarray(tile["origin"], dtype=np.float64)
+    size = np.asarray(tile["size"], dtype=np.float64)
+    half_width = 0.4  # Go2 footprint support, wider than the narrow balance beam.
+    if not half_width < origin[1] < size[1] - half_width:
+        raise ValueError("EX-42 kind finish center is outside the tile")
+    xs = np.arange(0.05, size[0] - 0.05, 0.05)
+    ys = (origin[1] - half_width, origin[1], origin[1] + half_width)
+    points = np.array([(x, y) for x in xs for y in ys], dtype=np.float64)
+    heights = MeshHeights(tile["vertices"], tile["faces"]).at(points).reshape(len(xs), len(ys))
+    # The landing must support the footprint at its entry elevation. A deep
+    # pit floor beneath the ray is not a traversable finish surface.
+    full_support = np.isfinite(heights).all(axis=1) & (heights >= origin[2] - 0.05).all(axis=1)
+    bad = np.flatnonzero(~full_support)
+    first = int(bad[-1] + 1) if len(bad) else 0
+    if first >= len(xs) or not full_support[-10:].all() or xs[-1] - xs[first] < 0.5:
+        raise ValueError("EX-42 kind finish platform not measured from mesh")
+    return {"finish_x_m": float(round(xs[first] - origin[0], 3)),
+            "kind": kind, "level": level, "family": family,
+            "source_manifest": str(manifest), "source_manifest_sha256": _sha(manifest),
+            "tile_triangle_sha256": tile["tile_triangle_sha256"],
+            "method": "three_vertical_rays_footprint_width_0.8m_final_contiguous_support"}
+
+
 def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
                          seed: int, family: str, kind: str, level: int,
                          mode: str, seconds: float, settle_s: float) -> dict:
@@ -70,7 +107,6 @@ def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
     """
     from foothold_s2.eval import fixed_terrain
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
-    from foothold_s2.eval.start_sheet import GOAL_X
 
     if family != "A" or kind not in (
             "stepping_stones_low", "stepping_stones_high", "balance_beams",
@@ -116,9 +152,10 @@ def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
                              abs_tol=float(a["dt"]) / 2, rel_tol=0)):
         raise ValueError("EX-42 kind step arrays differ from pinned tile or duration")
     fixed_terrain.verify_kind_foot_arrays(a["foot_contact"], a["foot_pos_local"], a["alive"])
-    counted = score_last_support(a, finish_x_m=GOAL_X, settle_s=settle_s)
+    anchor = finish_anchor_for_kind(mesh, family=family, kind=kind, level=level)
+    counted = score_last_support(a, finish_x_m=anchor["finish_x_m"], settle_s=settle_s)
     return {"case_id": f"{family}/{kind}/L{level}/fwd1.0/{mode}",
             "role": "record_only" if mode == "probe_prop_only" else "judge",
-            "completion": "last_support_0.5s", **counted,
+            "completion": "last_support_0.5s", "completion_anchor": anchor, **counted,
             "evidence": {"map_modes": {"path": str(result_path), "sha256": _sha(result_path)},
                          "arrays": {"path": str(arrays_path), "sha256": _sha(arrays_path)}}}
