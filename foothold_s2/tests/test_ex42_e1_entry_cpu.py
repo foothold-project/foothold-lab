@@ -56,14 +56,16 @@ def _approvals(tmp_path, *, cell=True, scale=1.0, later=False, parent=E1_PARENT,
 
 
 # ---- plan and approval ----
-def test_the_pin_constant_matches_the_plan_and_the_shipped_approvals_do_not_open_e1_yet():
+def test_the_pin_constant_matches_the_plan_and_the_shipped_e1_approval_is_bounded():
     plan = EX42Plan.load(TABLE)
     pin = next(r for r in plan.document["stages"] if r["id"] == "E1")["parent"]
     assert pin == {"cumulative_update": 13250, "manifest_local_update": 250, "checkpoint_key": "model_250.pt",
                    "sha256": E1_PARENT}
     assert (E1_PARENT, 250) in entry.REWARD_CONTRACT_PARENTS
-    with pytest.raises(ValueError, match="E1 authorization is missing"):          # lead fills this cell, not this PR
-        validate_stage_e1_authorization(plan, APPROVALS, E1_PARENT)
+    proof = validate_stage_e1_authorization(plan, APPROVALS, E1_PARENT)
+    assert proof["scope"]["maximum_updates"] == 1000
+    assert proof["later_stages_authorized"] is False
+    assert proof["extension_authorized"] is False
 
 
 def test_e1_cell_is_bounded_and_every_guard_refuses_on_its_own(tmp_path):
