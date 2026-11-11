@@ -548,6 +548,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  exit_judge: kind_two_window_e4
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -680,6 +681,7 @@ stages:
   - E
   - continuous
 - id: E5
+  exit_judge: kind_two_window_e5
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
