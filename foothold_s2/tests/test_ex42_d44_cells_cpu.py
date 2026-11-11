@@ -160,13 +160,13 @@ def test_stop_is_root_band_and_speed_only_with_foot_height_diagnostic():
 
 
 def test_top_latch_and_command_are_per_env_after_post_step_entry():
-    root = np.array([[3.75, 4.0], [3.75, 4.0], [4.7, 4.0]])
-    feet = np.array([[3.4, 3.5, 3.6, 3.7], [3.39, 3.5, 3.6, 3.7], [3.8]*4])
-    latch = top_latch_mask(root, feet, np.ones(3, bool), ANCHORS["landing_bounds_xy"])
-    assert latch.tolist() == [True, False, False]
+    root = np.array([[3.75, 4.0], [3.75, 4.0], [4.7, 4.0], [3.75, 4.61]])
+    feet = np.array([[3.4, 3.5, 3.6, 3.7], [3.39, 3.5, 3.6, 3.7], [3.8]*4, [3.8]*4])
+    latch = top_latch_mask(root, feet, np.ones(4, bool), ANCHORS["landing_bounds_xy"])
+    assert latch.tolist() == [True, False, False, False]
     phase, vx = restart_command(latch, 1.0)
-    assert phase.tolist() == [4, 3, 3]
-    assert vx.tolist() == [0.0, 1.0, 1.0]
+    assert phase.tolist() == [4, 3, 3, 3]
+    assert vx.tolist() == [0.0, 1.0, 1.0, 1.0]
 
 
 def test_top_stand_six_known_inputs_and_old_trace_rejection():
@@ -214,6 +214,26 @@ def test_four_foot_xy_diagnostic_counts_longest_consecutive_run_only():
                      settings=contract(_plan()), dt=.1)["per_env"]
     assert rows[0]["success"] is True
     assert rows[0]["four_foot_xy_inside_ticks"] == 51
+
+
+def test_top_stand_needs_25_consecutive_ticks_at_actual_plan_dt():
+    import yaml
+    plan = yaml.safe_load((Path(__file__).resolve().parents[1] / "curriculum" /
+                           "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    settings = contract(plan)
+    assert settings["timing"]["top_hold_s"] == .5
+    trace = _trace("stop_restart")
+    trace = {key: np.repeat(value, 5, axis=0) if value.shape[:1] == (130,) else value.copy()
+             for key, value in trace.items()}
+    trace["phase_id"][351:] = 4
+    trace["cmd_post"][351:] = 0
+    trace["top_latched_at"][:] = 350
+    trace["body_vel_b"][351:, :, 0] = .06
+    trace["body_vel_b"][400:424, :, 0] = 0
+    kwargs = dict(spec={"task": "stop_restart"}, anchors=ANCHORS, settings=settings, dt=.02)
+    assert summarize(trace, **kwargs)["success_count"] == 0
+    trace["body_vel_b"][424, :, 0] = 0
+    assert summarize(trace, **kwargs)["success_count"] == 64
 
 
 def test_post_step_reset_command_is_ignored_only_after_terminal_tick():
