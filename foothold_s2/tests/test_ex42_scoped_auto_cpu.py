@@ -70,7 +70,7 @@ def test_bad_or_stale_gate_never_authorizes(known,key,value):
     with pytest.raises(ValueError): call(known)
 
 
-@pytest.mark.parametrize('stage',['E1F','E2','E6b','unknown'])
+@pytest.mark.parametrize('stage',['E3','E6b','unknown'])
 def test_unapproved_or_unsupported_stage_remains_blocked(known,stage):
     with pytest.raises(ValueError, match='automatic target has no supported approval cell'): call(known,stage)
 
@@ -187,3 +187,9 @@ def test_extra_policy_key_is_not_accepted(known):
     doc['stage_zero']['approval_sha256'] = hashlib.sha256(ap.read_bytes()).hexdigest()
     with pytest.raises(ValueError, match='scoped automatic policy is not enabled'):
         call((replace(plan, document=doc), ap, manifest, gp))
+
+
+@pytest.mark.parametrize('stage,reason', [('E1F','parent SHA is unfilled'), ('E2','authorization is missing')])
+def test_registered_future_stage_still_rejects_unfilled_or_unapproved_cell(known,stage,reason):
+    with pytest.raises(ValueError,match=reason):
+        call(known,stage)
