@@ -1,9 +1,4 @@
-"""CPU-only EX-42 render request planner for the pinned combined mesh.
-
-This freezes which kind/level/map/selection slots are required. It does not
-claim that the legacy record_c_layer renderer can consume an EX-42 checkpoint
-or mesh; capture remains blocked until that Kit backend is integrated.
-"""
+"""CPU EX-42 render planner for the pinned combined mesh and recorder backend."""
 from __future__ import annotations
 
 import argparse
@@ -13,6 +8,7 @@ from pathlib import Path
 from typing import Iterable
 
 from foothold_s2.terrains.ex42_mesh_mount import load_combined_mesh
+from foothold_s2.terrains.ex42_column_reset import build_column_table
 
 
 SCHEMA = "foothold-ex42-render-plan/1"
@@ -61,6 +57,7 @@ def _mesh_kinds(folder: Path) -> tuple[dict, dict, str]:
                          for _ in range(columns_by_family.get(family, 0))]
     if loaded["column_family"] != expected_families:
         raise ValueError("combined mesh family columns differ from mesh manifest")
+    physical_kinds = [row["kind"] for row in build_column_table(loaded["column_family"])]
 
     kinds: dict[str, dict] = {}
     for row in terrain_manifest.get("kinds", []):
@@ -75,6 +72,8 @@ def _mesh_kinds(folder: Path) -> tuple[dict, dict, str]:
                 or col >= len(loaded["column_family"]) for col in normalized)
                 or any(loaded["column_family"][col] != geometry_family for col in normalized)):
             raise ValueError(f"terrain kind columns do not match combined mesh family: {key}")
+        if any(physical_kinds[col] != kind for col in normalized):
+            raise ValueError(f"terrain kind name differs from per-column reset table: {key}")
         if key in kinds:
             if kinds[key]["columns"] != normalized:
                 raise ValueError(f"duplicate terrain declarations disagree on columns: {key}")
@@ -133,8 +132,11 @@ def build_render_plan(mesh_dir: str | Path, checkpoint: str | Path, *,
             "current_cap_source": "explicit checkpoint/runtime receipt required",
             "current_cap": current_cap, "map_modes": list(MAP_MODES),
             "selection_roles": list(SELECTION_ROLES),
-            "renderer_backend": {"supported": False,
-                "reason": "record_c_layer has no EX-42 profile or combined-mesh mount path"},
+            "renderer_backend": {"supported": True,
+                "consumer": "foothold_s2.eval.video25.record_c_layer",
+                "terrain_mount": "foothold_s2.eval.ex42_mesh_eval.attach",
+                "checkpoint_loader": "foothold_s2.eval.ex41_eval_loader.load_checkpoint_for_eval",
+                "frame_audit": "foothold_s2.eval.c_layer_frame_audit.audit_video"},
             "requests": requests}
 
 
