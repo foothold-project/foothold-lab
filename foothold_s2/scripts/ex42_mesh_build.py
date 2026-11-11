@@ -96,15 +96,19 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
     from isaaclab.terrains import TerrainGenerator
     from isaaclab.utils.warp import convert_to_warp_mesh, raycast_mesh
     from foothold_s2.terrains.ex42_combined import combine_family_parts, family_column_summary
+    from foothold_s2.terrains.mesh_rng import seeded_mesh_rng
 
     parts, seconds = [], {}
-    for family in families:
-        cfg = _family_generator(family, seed)
-        started = time.perf_counter()
-        generated = TerrainGenerator(cfg)
-        seconds[family] = time.perf_counter() - started
-        parts.append({"name": family, "mesh": generated.terrain_mesh,
-                      "origins": generated.terrain_origins})
+    # cfg.seed alone does not seed boxes (Torch) or random_rough (legacy NumPy).
+    # Seed before the first family/config, then preserve the consumed states.
+    with seeded_mesh_rng(seed) as rng_provenance:
+        for family in families:
+            cfg = _family_generator(family, seed)
+            started = time.perf_counter()
+            generated = TerrainGenerator(cfg)
+            seconds[family] = time.perf_counter() - started
+            parts.append({"name": family, "mesh": generated.terrain_mesh,
+                          "origins": generated.terrain_origins})
     combined = combine_family_parts(parts, axis=1)
     vertices = combined["vertices"].astype(np.float32)
     faces = combined["faces"].astype(np.int32)
@@ -152,10 +156,14 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
     out_dir.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(out_dir / "terrain_mesh.npz", vertices=vertices, faces=faces,
                         origins=combined["origins"], column_family=np.array(combined["column_family"]))
+    # File identity includes origins and column metadata, unlike mesh_sha above.
+    with (out_dir / "terrain_mesh.npz").open("rb") as stream:
+        mesh_file_sha = hashlib.file_digest(stream, "sha256").hexdigest()
     name, payload = aggregate_files(families, values)
     (out_dir / name).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     manifest = {
         "format": "foothold-ex42-combined-mesh/1", "seed": seed, "device": device,
+        "rng_provenance": rng_provenance, "mesh_file_sha256": mesh_file_sha,
         "families_present": families, "families_missing": sorted(set(ALL_FAMILIES) - set(families)),
         "mesh_sha256": mesh_sha, "vertex_count": int(len(vertices)), "face_count": int(len(faces)),
         "origins_shape": list(combined["origins"].shape), "join_axis": combined["axis"],
