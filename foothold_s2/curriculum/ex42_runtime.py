@@ -222,7 +222,8 @@ class EX42Runtime:
                        boundary_provider: Any = None,
                        p1_interval: int = 250,
                        parent_pin: dict[str, Any] | None = None,
-                       current_stage_id: str | None = None):
+                       current_stage_id: str | None = None,
+                       defer_until_pid: int | None = None):
         """Build the runner-owned chain adapter without granting launch approval."""
         from foothold_s2.ex42_chain import EX42TrainingChain
         return EX42TrainingChain(
@@ -233,7 +234,8 @@ class EX42Runtime:
             score_argv_factory=score_argv_factory,
             machine_profile=machine_profile,
             boundary_provider=boundary_provider, p1_interval=p1_interval,
-            parent_pin=parent_pin, current_stage_id=current_stage_id)
+            parent_pin=parent_pin, current_stage_id=current_stage_id,
+            defer_until_pid=defer_until_pid)
 
     def __init__(
         self, plan: EX42Plan, env_count: int, device: str, log_dir: str | Path,

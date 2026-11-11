@@ -1385,7 +1385,8 @@ def build_ex42_training_chain(*, plan_path: str | Path,
                               boundary_provider: Any = None,
                               p1_interval: int = 250,
                               parent_pin: dict[str, Any] | None = None,
-                              current_stage_id: str | None = None):
+                              current_stage_id: str | None = None,
+                              defer_until_pid: int | None = None):
     """Load the pinned EX-42 plan and approved parent, then construct its chain."""
     plan = EX42Plan.load(plan_path)
     if plan.document.get("status") != "preparation_only":
@@ -1415,6 +1416,7 @@ def build_ex42_training_chain(*, plan_path: str | Path,
         p1_interval=p1_interval,
         parent_pin=parent_pin,
         current_stage_id=current_stage_id,
+        defer_until_pid=defer_until_pid,
     )
 
 

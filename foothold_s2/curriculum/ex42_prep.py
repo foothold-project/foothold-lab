@@ -191,7 +191,22 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
             or mirror.get("decision_id") != "D174" or mirror.get("choices") != [True]
             or mirror.get("boundaries") != ["E1"]):
         raise ValueError("EX-42 E1 critic mirror requires its explicit D174 approval")
+    # The approval is conditional on the E0 re-judgement and bounded to the first 1000 updates.
+    rejudgment = (cell.get("prerequisites") or {}).get("e0_rejudgment") if isinstance(cell.get("prerequisites"), dict) else None
+    if (not isinstance(rejudgment, dict) or rejudgment.get("required_result") != "PASS"
+            or rejudgment.get("checkpoint_key") != stage["parent"]["checkpoint_key"]
+            or rejudgment.get("checkpoint_sha256") != e1_parent_sha256):
+        raise ValueError("EX-42 E1 approval lacks the E0 re-judgement PASS prerequisite on the pinned parent")
+    if cell.get("extension_authorized") is not False:
+        raise ValueError("EX-42 E1 approval must keep the +500 extension unauthorized")
+    interval = cell.get("boundary_evaluation_interval_updates")
+    plan_interval = plan.document.get("evaluation", {}).get("interval_updates")
+    if (type(interval) is not int or interval <= 0 or interval != plan_interval
+            or expected_scope["maximum_updates"] % interval):
+        raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide 1000")
     return {"state": "stage_e1_only_authorized", "scope": expected_scope,
+            "boundary_evaluation_interval_updates": interval, "extension_authorized": False,
+            "e0_rejudgment_prerequisite": rejudgment,
             "decision_id": decision_id, "approved_at": approved_at,
             "approvals_path": str(path),
             "approvals_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),

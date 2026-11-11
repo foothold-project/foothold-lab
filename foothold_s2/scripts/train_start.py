@@ -618,9 +618,13 @@ if _ex42_requested:
             score_argv_json=_pre_args.ex42_p1_score_argv_json,
             machine_profile=load_machine_profile(),
             current_stage_id=EX42_STAGE_ID,        # E0: the parent is m13000, not the stage-zero parent
-            # score only at the end of the single-stage run: training holds both GPUs (13.8 GB each), so no
-            # P1 evaluation may start mid-run (E0: 250 = the default; E1 first segment: 1000, not every 250)
-            **({"p1_interval": EX42_STAGE_UPDATES} if EX42_E0_REQUESTED else {}),
+            # Boundary evaluations: E0 scores its only save (250 = the stage length); E1 scores every boundary
+            # its approval cell names (boundary_evaluation_interval_updates, checked against the plan; 250/500/750/1000).
+            # Training holds both GPUs (13.8 GB each), so E1 queues them with a wait on this training process and
+            # they run after training ends.
+            **({"p1_interval": (_e0_preflight["approval"]["boundary_evaluation_interval_updates"]
+                                if EX42_STAGE_ID == "E1" else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),
+            **({"defer_until_pid": os.getpid()} if _E1_FLAGS else {}),
         )
 
     if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(

@@ -33,14 +33,20 @@ needs_run = pytest.mark.skipif(not (E0_RUN / "model_250.pt").is_file(), reason="
 E1_PARENT = entry.E1_PARENT_SHA256
 
 
-def _approvals(tmp_path, *, cell=True, scale=1.0, later=False, parent=E1_PARENT, maximum=1000, mirror=True, name="approvals.yaml"):
+def _approvals(tmp_path, *, cell=True, scale=1.0, later=False, parent=E1_PARENT, maximum=1000, mirror=True, name="approvals.yaml",
+               cell_edit=None):
     doc = yaml.safe_load(APPROVALS.read_text(encoding="utf-8"))
     doc.pop("stage_e1_authorization", None)
     if cell:
         doc["stage_e1_authorization"] = {
             "approved": True, "decision_id": "lead-e1-test", "approved_at": "2026-11-11T10:30:00Z", "approver": "lead",
             "scope": {"stage_id": "E1", "start_update": 0, "maximum_updates": maximum, "parent_sha256": parent,
-                      "later_stages_authorized": later}}
+                      "later_stages_authorized": later},
+            "prerequisites": {"e0_rejudgment": {"required_result": "PASS", "checkpoint_key": "model_250.pt",
+                                                "checkpoint_sha256": E1_PARENT}},
+            "extension_authorized": False, "boundary_evaluation_interval_updates": 250}
+        if cell_edit:
+            cell_edit(doc["stage_e1_authorization"])
     doc["domain_randomization"]["stage_scales"]["E1"] = scale
     if not mirror:
         doc["fields"]["critic_mirror"]["boundaries"] = []
@@ -65,11 +71,47 @@ def test_e1_cell_is_bounded_and_every_guard_refuses_on_its_own(tmp_path):
     proof = validate_stage_e1_authorization(plan, _approvals(tmp_path), E1_PARENT)
     assert proof["state"] == "stage_e1_only_authorized" and proof["scope"]["maximum_updates"] == 1000
     assert proof["later_stages_authorized"] is False
+    assert proof["boundary_evaluation_interval_updates"] == 250 and proof["extension_authorized"] is False
+    assert proof["e0_rejudgment_prerequisite"]["required_result"] == "PASS"
     for kw, match in (({"cell": False}, "authorization is missing"), ({"later": True}, "scope differs"),
                       ({"parent": "0" * 64}, "scope differs"), ({"maximum": 2000}, "scope differs"),
                       ({"scale": 0.8}, "DR scale"), ({"mirror": False}, "D174")):
         with pytest.raises(ValueError, match=match):
             validate_stage_e1_authorization(plan, _approvals(tmp_path, **kw), E1_PARENT)
+
+
+def _drop(key):
+    return lambda cell: cell.pop(key)
+
+
+def _set(path, value):
+    def edit(cell):
+        node = cell
+        for part in path[:-1]:
+            node = node[part]
+        node[path[-1]] = value
+    return edit
+
+
+def test_e1_cell_conditions_are_read_not_assumed(tmp_path):
+    """Reviewer 10:58 fix 1: the E0 re-judgement PASS prerequisite, extension_authorized false and the boundary
+    interval are read from the cell and checked, each refusing on its own."""
+    plan = EX42Plan.load(TABLE)
+    cases = (
+        (_drop("prerequisites"), "re-judgement PASS prerequisite"),
+        (_set(("prerequisites", "e0_rejudgment", "required_result"), "HOLD"), "re-judgement PASS prerequisite"),
+        (_set(("prerequisites", "e0_rejudgment", "checkpoint_sha256"), "0" * 64), "re-judgement PASS prerequisite"),
+        (_set(("prerequisites", "e0_rejudgment", "checkpoint_key"), "model_1000.pt"), "re-judgement PASS prerequisite"),
+        (_drop("extension_authorized"), "extension unauthorized"),
+        (_set(("extension_authorized",), True), "extension unauthorized"),
+        (_drop("boundary_evaluation_interval_updates"), "boundary evaluation interval"),
+        (_set(("boundary_evaluation_interval_updates",), 500), "boundary evaluation interval"),      # differs from the plan 250
+        (_set(("boundary_evaluation_interval_updates",), 250.0), "boundary evaluation interval"),
+        (_set(("boundary_evaluation_interval_updates",), True), "boundary evaluation interval"),
+    )
+    for edit, match in cases:
+        with pytest.raises(ValueError, match=match):
+            validate_stage_e1_authorization(plan, _approvals(tmp_path, cell_edit=edit), E1_PARENT)
 
 
 # ---- CLI ----
@@ -201,19 +243,56 @@ def test_mirror_proof_turns_the_runner_mirror_on_only_for_committed_plan_and_app
     assert runner.ex41_critic_mirror is False and runner.alg.mirror_enabled is False
 
 
-# ---- chain: the real builder with the E1 stage id and a single score at the end of the 1000 updates ----
+# ---- chain: the real builder with the E1 stage id; boundaries 250/500/750/1000 are queued behind training ----
 @needs_run
-def test_real_chain_builder_takes_the_e0_run_as_e1_parent_and_scores_only_at_the_end(tmp_path, monkeypatch):
+def test_real_chain_builder_takes_the_e0_run_as_e1_parent_and_queues_every_boundary_behind_training(tmp_path, monkeypatch):
+    import hashlib
+    import os
     from foothold_s2.tests.test_ex42_e0_launch_cpu import _chain_kwargs
 
     kwargs = _chain_kwargs(tmp_path, monkeypatch)
     kwargs["parent_manifest_path"] = E0_RUN / "manifest.json"
-    kwargs["score_argv_json"] = kwargs["score_argv_json"].replace('"E0"', '"E1"')
+    argv = json.loads(kwargs["score_argv_json"])
+    argv[argv.index("--p1-stage-id") + 1] = "E1"
+    kwargs["score_argv_json"] = json.dumps(argv)
+    kwargs["queue_path"] = pathlib.Path(kwargs["machine_profile"]["paths"]["gpu_queue"])
+    kwargs.pop("dispatch_path")
     with pytest.raises(ValueError):
         entry.build_ex42_training_chain(**kwargs)                          # no stage id: the stage-zero parent is looked for
-    chain = entry.build_ex42_training_chain(**kwargs, current_stage_id="E1", p1_interval=1000)
-    assert chain.p1_interval == 1000 and chain.consumer.current_stage_id == "E1"
+    interval = validate_stage_e1_authorization(EX42Plan.load(TABLE), _approvals(tmp_path), E1_PARENT)["boundary_evaluation_interval_updates"]
+    chain = entry.build_ex42_training_chain(**kwargs, current_stage_id="E1", p1_interval=interval, defer_until_pid=os.getpid())
+    assert chain.p1_interval == 250 and chain.consumer.current_stage_id == "E1"
     assert chain.parent["checkpoint_sha256"] == E1_PARENT
+    run = pathlib.Path(kwargs["run_dir"])
+    manifest = {"progress": {"completed_updates": 0}, "checkpoints": {}}
+    for iteration in (250, 300, 500, 750, 1000):
+        data = f"model {iteration}".encode()
+        (run / f"model_{iteration}.pt").write_bytes(data)
+        manifest["checkpoints"][f"model_{iteration}.pt"] = hashlib.sha256(data).hexdigest()
+        manifest["progress"]["completed_updates"] = iteration
+        (run / "manifest.json").write_text(json.dumps(manifest))
+        state = chain.on_checkpoint_saved(types.SimpleNamespace(log_dir=str(run)), iteration)
+        assert (state["state"] == "queued") == (iteration % 250 == 0), (iteration, state)
+        if iteration % 250 == 0:
+            assert state["stage_id"] == "E1"
+    items = json.loads(kwargs["queue_path"].read_text())["items"]
+    assert [i["argv"][i["argv"].index("--checkpoint") + 1].rsplit("_", 1)[-1] for i in items] == [
+        "250.pt", "500.pt", "750.pt", "1000.pt"]
+    assert all(i["wait_pids"] == [os.getpid()] and i["gpu"] == 1 for i in items)     # wait for training, never mid-run
+
+
+def test_deferred_pid_is_checked_and_plain_chains_queue_without_a_wait(tmp_path):
+    import os
+    from foothold_s2.ex42_chain import EX42TrainingChain
+    from foothold_s2.tests.test_ex42_chain_cpu import make_chain, _manifested_checkpoint
+    with pytest.raises(ValueError, match="training process id"):
+        EX42TrainingChain.__init__(object.__new__(EX42TrainingChain), plan=None, approvals_path="", parent_manifest_path="",
+                                   run_dir="", repo_root="", queue_path="", defer_until_pid=0)
+    chain, _ = make_chain(tmp_path)
+    ck = _manifested_checkpoint(tmp_path / "ck", 250)
+    chain.register_checkpoint_p1(iteration=250, checkpoint_dir=ck.parent, score_argv=["python", "-m", "known.score_command"])
+    assert "wait_pids" not in json.loads((tmp_path / "gpu/queue.json").read_text())["items"][0]
+    assert os.getpid() > 1
 
 
 # ---- train_start wiring (AST / text, no Kit) ----
@@ -231,7 +310,10 @@ def test_train_start_wires_e1_the_same_way_as_e0():
     assert "runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(" in src          # mirror on right after the load
     assert src.index("load_ex42_stage_zero_parent(") < src.index("runner.set_ex41_critic_mirror(True")
     assert 'parent_same_mesh=(EX42_STAGE_ID == "E1")' in src and "stage_id=EX42_STAGE_ID)" in src
-    assert '**({"p1_interval": EX42_STAGE_UPDATES} if EX42_E0_REQUESTED else {})' in src      # no P1 mid-run
+    assert '_e0_preflight["approval"]["boundary_evaluation_interval_updates"]' in src       # read from the approval cell
+    assert 'if EX42_STAGE_ID == "E1" else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),' in src
+    assert '**({"defer_until_pid": os.getpid()} if _E1_FLAGS else {})' in src               # boundaries wait for training
+    assert "250" not in src[src.index('_e0_preflight["approval"]["boundary'):][:200]         # no hard-coded number there
     assert "inspect_ex42_stage_e1_parent(" in src
 
 
