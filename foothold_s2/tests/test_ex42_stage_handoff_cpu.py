@@ -258,7 +258,7 @@ def test_real_e0_pass_and_the_shipped_e1_cell_decide_to_launch_e1(tmp_path):
     shipped = EX42Plan.load(plan).sha256
     if receipt.get("plan_sha256") != shipped:
         stale = handoff.decide_next_stage(plan, approvals, "E0", 250, REAL_P1, REAL_E0 / "manifest.json")
-        assert stale["action"] == "notify" and "under this plan" in stale["reason"], stale
+        assert stale["action"] == "notify" and "no transition record links it" in stale["reason"], stale
     receipt["plan_sha256"] = shipped
     (copy / REAL_P1.name).write_text(json.dumps(receipt), encoding="utf-8")
     decision = handoff.decide_next_stage(plan, approvals, "E0", 250, copy / REAL_P1.name, REAL_E0 / "manifest.json")
@@ -350,3 +350,121 @@ def test_chain_validator_takes_the_queue_pair_only_together_with_a_launcher(tmp_
                 base + ["--next-stage-queue", str(tmp_path / "q.json"), "--next-stage-dispatch", str(tmp_path / "gone.py")]):
         with pytest.raises(ValueError, match="next-stage queue"):
             check(bad)
+
+
+# ---- a later stage goes on from its own boundary through its own table-driven cell (no E1-only branch) ----------
+def _later_stage(tmp_path, iteration=1000, judgment="HOLD"):
+    from foothold_s2.tests.test_ex42_table_authorization_cpu import fixture
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    plan, approvals, _ = fixture(tmp_path, "E3")
+    doc = deepcopy(plan.document)
+    row = next(r for r in doc["stages"] if r["id"] == "E3")
+    row["parent"] = {"sha256": "b" * 64, "manifest_local_update": 1500, "cumulative_update": 20000, "checkpoint_key": "model_1500.pt"}
+    run = tmp_path / "run"
+    run.mkdir()
+    data = b"boundary save"
+    (run / f"model_{iteration}.pt").write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({"checkpoints": {f"model_{iteration}.pt": digest},
+                                                   "progress": {"completed_updates": iteration}}))
+    gate = tmp_path / "p1.json"
+    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest}))
+    return replace(plan, document=doc), approvals, run / "manifest.json", gate
+
+
+def test_a_later_stage_boundary_below_its_bound_continues_the_same_stage(tmp_path):
+    plan, approvals, manifest, gate = _later_stage(tmp_path)
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 1000, gate, manifest)
+    assert decision["action"] == "continue" and decision["target_stage"] == "E3"
+    assert decision["segment_end"] == 1250 and decision["resume_checkpoint"].endswith("model_1000.pt")
+
+
+def test_a_later_stage_bound_without_a_pass_only_notifies_and_an_off_boundary_is_ignored(tmp_path):
+    plan, approvals, manifest, gate = _later_stage(tmp_path, iteration=3000)
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 3000, gate, manifest)
+    assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
+    plan, approvals, manifest, gate = _later_stage(tmp_path / "again", iteration=1000)
+    assert handoff.decide_next_stage(plan, approvals, "E3", 1100, gate, manifest) is None
+    assert handoff.decide_next_stage(plan, approvals, "E0", 1000, gate, manifest) is None     # E0 keeps only its minimum
+
+
+# ---- the loop: PASS -> materialize the next stage's pair -> the launcher gets that pair -------------------------
+def test_the_launcher_gets_the_plan_pair_of_a_continue_and_of_a_materialized_next_stage(known, tmp_path):
+    seen = []
+
+    class Child:
+        pid = 4242
+
+    def popen(argv, env, **_):
+        seen.append({k: v for k, v in env.items() if k.startswith("EX42_AUTO_")})
+        return Child()
+    launcher = _launcher(tmp_path)
+    for index, extra in enumerate(({}, {"plan": "/m/ex42-prep.yaml", "approvals": "/m/ex42-approvals.yaml"})):
+        out = tmp_path / f"o{index}"
+        out.mkdir()
+        decision = {**_decide(known), **extra}
+        handoff.start_launcher(decision, launcher, out, parent_manifest=known[2], parent_checkpoint=known[2], gate_receipt=known[3],
+                               popen=popen)
+    assert "EX42_AUTO_PLAN" not in seen[0]                                   # the shipped pair stays the default
+    assert seen[1]["EX42_AUTO_PLAN"] == "/m/ex42-prep.yaml" and seen[1]["EX42_AUTO_APPROVALS"] == "/m/ex42-approvals.yaml"
+    plan, approvals, manifest, gate = _later_stage(tmp_path / "later")
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 1000, gate, manifest)
+    assert decision["action"] == "continue" and decision["plan"] == str(plan.path) and decision["approvals"]
+
+
+def test_a_next_stage_without_a_parent_pin_is_materialized_first_and_a_refusal_only_notifies(known):
+    gate = {**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}
+    calls = []
+
+    def refuse(**kw):
+        calls.append(kw["target_stage"])
+        raise ValueError("evidence missing")
+    base, ap, manifest, gp = known
+    gp.write_text(json.dumps(gate))
+    decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=refuse)
+    assert calls == ["E1F"] and decision["action"] == "notify" and "materialize refused: evidence missing" in decision["reason"]
+    gp.write_text(json.dumps(_gate(known) | {"stage_id": "E0"}))
+    assert handoff.decide_next_stage(base, ap, "E0", 250, gp, manifest, materialize=refuse)["action"] in ("launch", "notify")
+    assert calls == ["E1F"]                                                  # E1 has its parent pin: nothing to materialize
+
+
+def test_the_materializer_needs_every_setting_and_the_evidence_file_and_one_folder_per_boundary(known, tmp_path, monkeypatch):
+    assert handoff.materializer_from_env({}) is None
+    env = {"EX42_MATERIALIZE_TEMPLATE_PLAN": "/t/p.yaml", "EX42_MATERIALIZE_TEMPLATE_APPROVALS": "/t/a.yaml",
+           "EX42_MATERIALIZE_EVIDENCE_DIR": str(tmp_path / "ev"), "EX42_MATERIALIZE_OUT_ROOT": str(tmp_path / "out")}
+    run = handoff.materializer_from_env(env)
+    with pytest.raises(ValueError, match="BUDGET_LIMIT"):
+        run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
+    env.update(EX42_MATERIALIZE_BUDGET_LIMIT="20000", EX42_MATERIALIZE_BUDGET_USED="1000", EX42_MATERIALIZE_BUDGET_BASIS="b")
+    with pytest.raises(ValueError, match="evidence .* is missing"):
+        run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
+    (tmp_path / "ev").mkdir()
+    (tmp_path / "ev" / "E1F.json").write_text("{}")
+    import foothold_s2.ex42_stage_materialize as materialize
+    got = {}
+    monkeypatch.setattr(materialize, "materialize", lambda **kw: got.update(kw) or {"plan": "x"})
+    run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
+    assert got["target"] == "E1F" and got["budget_limit"] == 20000 and got["budget_used"] == 1000
+    assert got["out"].parent == tmp_path / "out" and got["out"].name.startswith("E1F_") and got["plan"] == "/t/p.yaml"
+
+
+def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_decision_carries_it(known, tmp_path, monkeypatch):
+    import shutil
+    import foothold_s2.ex42_auto_authorization as auto
+    base, ap, manifest, gp = known
+    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
+    folder = tmp_path / "published"
+    shutil.copytree(base.path.parent, folder)
+    made = {"plan": str(folder / "ex42-prep.yaml"), "approvals": str(folder / "ex42-approvals.yaml"), "plan_sha256": "9" * 64}
+    seen = {}
+
+    def fake(plan, approvals, **kw):
+        seen.update(plan=str(plan.path), approvals=str(approvals), **kw)
+        return {"gate_sha256": kw["expected_gate_sha256"], "automatic_launch_authorized": True}
+    monkeypatch.setattr(auto, "validate_automatic_stage_launch", fake)
+    decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=lambda **kw: made)
+    assert decision["action"] == "launch" and decision["target_stage"] == "E1F"
+    assert seen["plan"] == made["plan"] and seen["approvals"] == made["approvals"]          # not the original pair
+    assert seen["plan"] != str(base.path) and seen["target_stage"] == "E1F"
+    assert (decision["plan"], decision["approvals"], decision["materialized_plan_sha256"]) == (
+        made["plan"], made["approvals"], made["plan_sha256"])

@@ -402,48 +402,67 @@ class StartRunner(OnPolicyRunner):
 
     @staticmethod
     def _valid_ex42_mirror_approval(receipt: dict | None) -> bool:
-        """Validate the EX-42 E1 D174 grant against committed source bytes."""
+        """Validate the EX-42 D174 grant (E1 and the later stages that keep the mirror on) against the plan and
+        approval bytes: committed source bytes, or a materialized plan chained by its transition record."""
         if (not isinstance(receipt, dict) or receipt.get("format") != "foothold-ex42-critic-mirror-approval/1"
-                or receipt.get("stage_id") != "E1" or receipt.get("decision_id") != "D174"):
+                or not isinstance(receipt.get("stage_id"), str) or receipt.get("decision_id") != "D174"):
             return False
         try:
             plan_path = Path(receipt["plan_path"]).resolve(strict=True)
             approval_path = Path(receipt["approval_path"]).resolve(strict=True)
-            commit = receipt["config_commit"]
-            if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
-                return False
-            root_text = subprocess.check_output(
-                ["git", "-C", str(plan_path.parent), "rev-parse", "--show-toplevel"],
-                stderr=subprocess.DEVNULL)
-            root = Path(root_text.decode().strip()).resolve(strict=True)
-            if any(root not in path.parents for path in (plan_path, approval_path)):
-                return False
             import yaml
             parsed = []
-            for path, digest in ((plan_path, receipt["plan_sha256"]),
-                                 (approval_path, receipt["approval_sha256"])):
-                rel = path.relative_to(root).as_posix()
-                committed = subprocess.check_output(
-                    ["git", "-C", str(root), "show", f"{commit}:{rel}"],
-                    stderr=subprocess.DEVNULL)
-                current = path.read_bytes()
-                if (not isinstance(digest, str) or hashlib.sha256(committed).hexdigest() != digest
-                        or hashlib.sha256(current).hexdigest() != digest):
+            if "transition_path" in receipt:
+                if "config_commit" in receipt or Path(receipt["transition_path"]).resolve(strict=True) != plan_path.parent / "transition.json":
                     return False
-                parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
+                transition = json.loads(Path(receipt["transition_path"]).read_bytes())
+                for path, digest in ((plan_path, receipt["plan_sha256"]), (approval_path, receipt["approval_sha256"])):
+                    current = path.read_bytes()
+                    if not isinstance(digest, str) or hashlib.sha256(current).hexdigest() != digest:
+                        return False
+                    parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
+                if not isinstance(transition, dict) or transition.get("new_plan_sha") != receipt["plan_sha256"]:
+                    return False
+            else:
+                commit = receipt["config_commit"]
+                if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+                    return False
+                root_text = subprocess.check_output(
+                    ["git", "-C", str(plan_path.parent), "rev-parse", "--show-toplevel"],
+                    stderr=subprocess.DEVNULL)
+                root = Path(root_text.decode().strip()).resolve(strict=True)
+                if any(root not in path.parents for path in (plan_path, approval_path)):
+                    return False
+                for path, digest in ((plan_path, receipt["plan_sha256"]),
+                                     (approval_path, receipt["approval_sha256"])):
+                    rel = path.relative_to(root).as_posix()
+                    committed = subprocess.check_output(
+                        ["git", "-C", str(root), "show", f"{commit}:{rel}"],
+                        stderr=subprocess.DEVNULL)
+                    current = path.read_bytes()
+                    if (not isinstance(digest, str) or hashlib.sha256(committed).hexdigest() != digest
+                            or hashlib.sha256(current).hexdigest() != digest):
+                        return False
+                    parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
             plan, approvals = parsed
             field = approvals.get("fields", {}).get("critic_mirror")
-            e1 = next(row for row in plan.get("stages", []) if row.get("id") == "E1")
+            on = False                      # the mirror is on from the stage that says so until a stage says off
+            for row in plan.get("stages", []):
+                on = row.get("critic_mirror", on)
+                if row.get("id") == receipt["stage_id"]:
+                    break
+            else:
+                return False
             zero = plan.get("stage_zero", {})
             return (plan.get("format") == "foothold-ex42-curriculum/1"
-                    and e1.get("critic_mirror") is True
+                    and on is True
                     and zero.get("critic_mirror", False) is False
                     and approvals.get("format") == "foothold-ex42-approvals/1"
                     and isinstance(field, dict) and field.get("approved") is True
                     and field.get("decision_id") == "D174"
                     and field.get("choices") == [True]
                     and field.get("boundaries") == ["E1"])
-        except (OSError, ValueError, KeyError, StopIteration,
+        except (OSError, ValueError, KeyError, TypeError, StopIteration,
                 UnicodeDecodeError, subprocess.CalledProcessError):
             return False
 
@@ -1561,11 +1580,18 @@ class StartRunner(OnPolicyRunner):
         return dict(self.ex41_parent_transfer)
 
     def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict, *,
-                                    stage_e0: bool = False, stage_e1: bool = False) -> dict:
+                                    stage_e0: bool = False, stage_e1: bool = False,
+                                    stage_id: str | None = None, parent_local_update: int | None = None,
+                                    parent_cumulative_update: int | None = None,
+                                    parent_mirror: bool = False) -> dict:
         """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
 
         With ``stage_e0`` the parent is the stage-zero m13000 (local 1000, cumulative 13000) and the
         receipt state is parent_verified_for_stage_e0; everything else is the same transfer.
+
+        With ``stage_e1`` and a ``stage_id`` (a later stage that continues the previous stage's run) the parent
+        position and the mirror state the parent was saved with come from the plan's stage table instead of E1's
+        250 / 13250 / mirror off; this runner itself is always loaded fresh with the mirror off.
 
         This starts a new physical environment and a new local curriculum clock.
         EX-41 environment and continuous-curriculum state are intentionally omitted.
@@ -1575,8 +1601,14 @@ class StartRunner(OnPolicyRunner):
             raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
         if stage_e0 and stage_e1:
             raise ValueError("EX-42 parent load is for one stage")
+        if stage_id is not None and not (stage_e1 and isinstance(parent_local_update, int)
+                                         and isinstance(parent_cumulative_update, int)
+                                         and type(parent_mirror) is bool):
+            raise ValueError("EX-42 later-stage parent load needs the stage table position and mirror state")
         expected_state, local_update, cumulative_update = (
-            ("parent_verified_for_stage_e1", 250, 13250) if stage_e1
+            (f"parent_verified_for_stage_{stage_id.lower()}", parent_local_update, parent_cumulative_update)
+            if stage_id is not None
+            else ("parent_verified_for_stage_e1", 250, 13250) if stage_e1
             else ("parent_verified_for_stage_e0", 1000, 13000) if stage_e0
             else ("parent_verified_for_stage_zero", 6000, 12000))
         if (not isinstance(receipt, dict)
@@ -1590,7 +1622,7 @@ class StartRunner(OnPolicyRunner):
             raise ValueError("EX-42 stage-zero parent receipt is incomplete")
         if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != local_update:
             raise ValueError("EX-42 stage-zero checkpoint identity differs")
-        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not False:
+        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not parent_mirror:
             raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
         saved = checkpoint.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
@@ -1617,7 +1649,8 @@ class StartRunner(OnPolicyRunner):
         self.current_learning_iteration = 0
         self.ex42_parent_transfer = dict(receipt)
         self._ex42_parent_loaded = True
-        return {**receipt, "state": ("loaded_for_ex42_stage_e1" if stage_e1 else "loaded_for_ex42_stage_e0" if stage_e0
+        return {**receipt, "state": (f"loaded_for_ex42_stage_{stage_id.lower()}" if stage_id is not None
+                                     else "loaded_for_ex42_stage_e1" if stage_e1 else "loaded_for_ex42_stage_e0" if stage_e0
                                      else "loaded_for_ex42_stage_zero"),
                 "local_iteration_origin": 0,
                 "restored": ["policy", "critic", "policy_optimizer", "learning_rate",

@@ -112,6 +112,54 @@ def observed_child_identity(output, name, expected):
     return {"device": identity["device"], "gpu_uuid": observed}
 
 
+def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                      mesh_sha256, seed):
+    """E1F adds one and four flag counts after the fixed maintenance bundle."""
+    if type(seed) is not int or seed < 0:
+        raise ValueError("E1F flag evaluation seed must be a nonnegative integer")
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    return [(count, [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_flag_eval",
+                    "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+                    "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha256,
+                    "--count", count, "--seed", str(seed), "--envs", "64",
+                    "--out", str(Path(output) / "flag_cells" / count), "--device", device, *kit])
+            for count in ("flag_one", "flag_four")]
+
+
+def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                          mesh_sha256, checkpoint_sha256, seed, plan, process, env,
+                          physical_gpu, record):
+    """Run both E1F counts; a failed child is a recorded HOLD, not a lost P1 boundary."""
+    from foothold_s2.eval.ex42_flag_cells import contract, read_evidence
+
+    contract(plan.document)
+    failures = {}
+    for count, argv in flag_kit_commands(checkpoint, output, device, task=task,
+                                          plan_path=plan_path, mesh_dir=mesh_dir,
+                                          mesh_sha256=mesh_sha256, seed=seed):
+        try:
+            child = process.hidden_child(argv, Path(output) / "children" / count, env=env)
+            if child.get("state") == "done":
+                receipt = json.loads((Path(output) / "flag_cells" / count / "flag_cells.json").read_text(
+                    encoding="utf-8-sig"))
+                identity = receipt.get("run_identity") or {}
+                observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                if (identity.get("device") != device or
+                        observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                    raise ValueError("E1F flag Kit physical GPU identity differs")
+                read_evidence(Path(output) / "flag_cells" / count, plan=plan.document,
+                              plan_sha256=plan.sha256, checkpoint_sha256=checkpoint_sha256,
+                              seed=seed, count=count)
+                child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
+        if child.get("state") != "done":
+            failures[count] = str(child.get("reason") or f"child state {child.get('state')}")
+            child["state"] = "HOLD"
+        record(count, child)
+    return failures
+
+
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
                     replica_dir, replica_sha256, seed):
     """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
@@ -150,67 +198,16 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
     plan = EX42Plan.load(plan_path)
     judgment = score.get("judgement", "HOLD")
     if judgment in ("PASS", "FAIL"):
-        cells = score.get("cell_judgments") or {}
-        if (stage_id not in ("E0", "E1") or set(cells) != set(MODES) or
-                any(set(cells[mode]) != set(score["map64"].get(mode, {})) for mode in MODES) or
-                any(cells[mode][case].get("role") != "judge" for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]) or
-                any(cells["probe_prop_only"][case].get("role") != "record_only"
-                    for case in cells["probe_prop_only"]) or
-                any(cells[mode][case].get("judgment") not in ("PASS", "HOLD", "FAIL")
-                    for mode in ("eval_gt", "eval_pred") for case in cells[mode])):
+        from foothold_s2.ex42_stage_judges import adapter_for
+        adapter = adapter_for(plan.document, stage_id)
+        if adapter is None:
             raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
-        verdicts = [cells[mode][case]["judgment"] for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]]
-        expected = "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"
-        if len(verdicts) != 26:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E0" and expected != judgment:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E1":
-            exit_row = score.get("e1_exit") or {}
-            maintenance = exit_row.get("maintenance", {})
-            landing = exit_row.get("d44", {})
-            required = plan.document["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases")
-            cases = landing.get("cases")
-            if (required is None):
-                required = []
-            if (not isinstance(required, list) or
-                    any(not isinstance(case_id, str) or not case_id for case_id in required) or
-                    len(set(required)) != len(required)
-                    or not isinstance(cases, dict) or set(cases) != set(required)
-                    or landing.get("required_cases") != required):
-                raise ValueError("EX-42 P1 E1 D44 case evidence missing")
-            case_states = [cases[case_id].get(which, {}).get("judgement")
-                           for case_id in required for which in ("current", "previous")]
-            if any(state not in ("PASS", "HOLD", "FAIL") for state in case_states):
-                raise ValueError("EX-42 P1 E1 D44 case judgment invalid")
-            from foothold_s2.ex42_e1_judge import _landing_window
-            for case_id in required:
-                current_row = _landing_window((score.get("d44_cells") or {}).get(case_id),
-                                              plan.document, case_id)
-                if cases[case_id]["current"] != current_row:
-                    raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
-                previous_row = cases[case_id]["previous"]
-                if previous_row["judgement"] in ("PASS", "FAIL") and _landing_window(
-                        previous_row, plan.document, case_id) != previous_row:
-                    raise ValueError("EX-42 P1 E1 prior D44 raw evidence differs")
-            current_states = [cases[case_id]["current"]["judgement"] for case_id in required]
-            previous_states = [cases[case_id]["previous"]["judgement"] for case_id in required]
-            def aggregate(states):
-                return "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
-            states = (expected, maintenance.get("previous"),
-                      landing.get("current", {}).get("judgement"),
-                      landing.get("previous", {}).get("judgement"))
-            overall = aggregate(states)
-            if (score.get("stage_id") != "E1" or exit_row.get("judgement") != judgment or
-                    maintenance.get("current") != expected or
-                    set(landing) != {"required_cases", "cases", "current", "previous"} or
-                    landing["current"].get("judgement") != aggregate(current_states) or
-                    landing["previous"].get("judgement") != aggregate(previous_states) or
-                    any(state not in ("PASS", "HOLD", "FAIL") for state in states) or
-                    overall != judgment):
-                raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
+        verdicts = [v["judgment"] for mode in ("eval_gt", "eval_pred")
+                    for v in (score.get("cell_judgments") or {}).get(mode, {}).values() if isinstance(v, dict)]
+        extra_fields = adapter.verify(score, judgment, "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS",
+                                      plan=plan.document)
+    else:
+        extra_fields = {}
     if stage_id not in plan.runtime_stage_ids:
         raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
     read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
@@ -223,7 +220,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
               "stage_id": stage_id, "judgment": judgment,
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
               "cell_judgments": score.get("cell_judgments"),
-              **({"e1_exit": score["e1_exit"]} if stage_id == "E1" and "e1_exit" in score else {}),
+              **extra_fields,
               "measurement": str(Path(output) / "ex42_score.json"),
               "measurement_sha256": digest(Path(output) / "ex42_score.json")}
     validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
@@ -258,9 +255,10 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
     the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
     stays a notice with its reason. The launched training is not in the GPU queue, so `gpu_wait` (every GPU free of
     other compute processes) runs first: boundary evaluations still queued or running must not share a GPU with it."""
-    from foothold_s2.ex42_stage_handoff import decide_next_stage, start_launcher
+    from foothold_s2.ex42_stage_handoff import decide_next_stage, materializer_from_env, start_launcher
     manifest = Path(checkpoint).parent / "manifest.json"
-    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest)
+    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest,
+                                 materialize=materializer_from_env(os.environ))
     if decision is None:
         return None
     notice = {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
@@ -426,6 +424,31 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         else:
             row["steps"]["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
             _atomic(output / "eval_receipt.json", row)
+    if p1_stage_id == "E1F" and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        try:
+            plan = EX42Plan.load(p1_plan)
+            def record_flag(count, child):
+                row["steps"][count] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            flag_failures = execute_flag_children(
+                checkpoint, output, device, task=cfg["task"], plan_path=p1_plan,
+                mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
+                checkpoint_sha256=expected_sha256, seed=seed, plan=plan, process=process,
+                env=env, physical_gpu=physical_gpu, record=record_flag)
+            if flag_failures:
+                marker = output / "flag_cells" / "child_failures.json"
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                _atomic(marker, {"format": "foothold-ex42-e1f-child-failures/1",
+                                 "checkpoint_sha256": expected_sha256,
+                                 "failures": flag_failures})
+                row["flag_child_failures"] = {"path": str(marker), "failures": flag_failures}
+                _atomic(output / "eval_receipt.json", row)
+        except (OSError, ValueError, KeyError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -543,6 +566,17 @@ def main(argv=None):
                 plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
                                "record_cases": settings["record_cases"],
                                "source_mesh_dir": settings["source_mesh_dir"]}
+        if args.p1_stage_id == "E1F" and args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.eval.ex42_flag_cells import contract
+            settings = contract(EX42Plan.load(args.p1_plan).document)
+            plan["flag_cells"] = {"state": "planned", "judge_cases": settings["judge_cases"],
+                                  "record_cases": settings["record_cases"],
+                                  "commands": [argv for _, argv in flag_kit_commands(
+                                      args.checkpoint, args.out, args.device,
+                                      task=config()[0]["task"], plan_path=args.p1_plan,
+                                      mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
+                                      seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,

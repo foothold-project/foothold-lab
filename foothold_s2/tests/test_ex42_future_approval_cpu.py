@@ -75,7 +75,7 @@ def test_filled_fixture_is_only_a_bounded_approval_not_a_launch(tmp_path,stage,v
     proof=validate(p,ap,'b'*64)
     assert proof['scope']['maximum_updates']==limit
     assert proof['later_stages_authorized'] is False
-    assert proof['entry_gate_adapter_ready'] is False
+    assert proof['entry_gate_adapter_ready'] is (stage == 'E1F')
     assert proof['training_started'] is False
 
 
@@ -103,9 +103,17 @@ def test_missing_evidence_and_parent_pin_cannot_be_waived(tmp_path,stage,validat
 def test_registration_does_not_confuse_common_pass_with_stage_specific_exit(tmp_path,stage,validate,limit):
     from foothold_s2.ex42_auto_authorization import validate_automatic_stage_launch
     p,ap,_ = prepared(tmp_path,stage)
-    with pytest.raises(ValueError,match=f'{stage} stage-specific entry gate adapter is pending'):
-        validate_automatic_stage_launch(p,ap,target_stage=stage,parent_manifest_path=tmp_path/'not-created',
-            gate_receipt_path=tmp_path/'not-created-either',expected_gate_sha256='e'*64)
+    if stage == 'E2':
+        with pytest.raises(ValueError,match='unknown pinned parent stage|stage-specific entry gate adapter is pending'):
+            validate_automatic_stage_launch(p,ap,target_stage=stage,parent_manifest_path=tmp_path/'not-created',
+                gate_receipt_path=tmp_path/'not-created-either',expected_gate_sha256='e'*64)
+    else:
+        from foothold_s2.ex42_stage_judges import adapter_for
+        adapter = adapter_for(p.document, 'E1F')
+        common_pass = {'stage_id': 'E1F', 'judgement': 'PASS', 'map64': {},
+                       'cell_judgments': {}, 'stage_exit': {'judgement': 'PASS'}}
+        with pytest.raises(ValueError, match='stage exit evidence differs'):
+            adapter.verify(common_pass, 'PASS', 'PASS', plan=p.document)
 
 
 @pytest.mark.parametrize('key', ['parent', 'landing', 'baseline'])
