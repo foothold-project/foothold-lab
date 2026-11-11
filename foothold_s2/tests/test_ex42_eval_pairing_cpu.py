@@ -64,4 +64,4 @@ def test_cli_group_selection_does_not_shift_start_variants():
     assert all(k.startswith('start_go2_eval_') for k in GROUPS['start'])
     assert GROUPS['surface'] == ('eval_stair_surface_spin',)
     assert set(GROUPS['all']) == set(GROUPS['landing'] + GROUPS['paper']
-                                      + GROUPS['start'] + GROUPS['surface'])
+                                      + GROUPS['start'] + GROUPS['surface'] + GROUPS['records'])
