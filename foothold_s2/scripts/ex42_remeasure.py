@@ -13,6 +13,7 @@ import fcntl
 import hashlib
 import json
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -261,7 +262,10 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True):
     source = EX42Plan.load(checked(binding['plan']))
     template = EX42Plan.load(checked(request['evaluation_plan']))
     predecessor = next(r for r in source.document['stages'] if r['id'] == 'E1')
-    used = predecessor['parent']['cumulative_update'] + 1000 - template.document['stage_zero']['parent']['cumulative_update']
+    origin = next(row for row in template.document['stages'] if row['id'] == 'E0')['parent']['cumulative_update']
+    used = predecessor['parent']['cumulative_update'] + 1000 - origin
+    excluded = {'stage_zero_updates': origin - template.document['stage_zero']['parent']['cumulative_update'],
+                'discarded_first_e1_updates': 1000, 'discarded_run': request.get('old', {}).get('run')}
     made = materialize(plan=template.path, source_plan=source.path, approvals=checked(request['evaluation_approvals']),
                        target='E1F', parent_manifest=checked(binding['manifest']), gate_receipt=gate_path, evidence=evidence,
                        budget_limit=template.document['training_budget']['maximum_updates'], budget_used=used,
@@ -283,7 +287,8 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True):
     decision = {'action': 'launch', 'state': 'next_stage_authorized', 'target_stage': 'E1F',
                 'plan': made['plan'], 'approvals': made['approvals'], 'gate_sha256': sha(gate_path), 'authorization': proof}
     save(Path(root) / 'E1F-adoption.json', {'decision': decision, 'materialized': made,
-                                         'budget_used': used, 'training_started': False})
+                                         'budget_used': used, 'budget_origin_cumulative_update': origin,
+                                         'excluded_branches': excluded, 'training_started': False})
     if not launch:
         return {'state': 'ready_not_started', 'decision': decision}
     guard()
@@ -365,6 +370,26 @@ def admission(request, output):
                 priority.clear_marker(path, owner)
 
 
+def notify_hold(output, reason, *, runner=None):
+    """One run-inbox notice, with durable delivery evidence. Never writes to a terminal."""
+    output = Path(output)
+    text = f"({time.strftime('%H:%M')}) [verifier-lx] 재측정 HOLD · {output} · {reason}"
+    command = shlex.split(os.environ.get('ORCA_CLI_COMMAND') or 'orca-ide')
+    command += ['orchestration', 'send', '--to', 'run:run_5283fa2c059b', '--type', 'status',
+                '--subject', text, '--body', text]
+    try:
+        result = (runner or subprocess.run)(command, capture_output=True, text=True,
+                                           stdin=subprocess.DEVNULL, timeout=30)
+        receipt = {'sent': result.returncode == 0, 'returncode': result.returncode,
+                   'stdout': result.stdout, 'stderr': result.stderr, 'reason': reason}
+    except (OSError, subprocess.SubprocessError) as exc:
+        receipt = {'sent': False, 'reason': reason, 'delivery_error': str(exc)}
+    save(output / 'notification.json', receipt)
+    if not receipt['sent']:
+        print('EX42_REMEASURE_NOTIFICATION_FAILED ' + json.dumps(receipt, ensure_ascii=False), file=sys.stderr)
+    return receipt
+
+
 def execute(request, *, wait=False, poll=30):
     validate_request(request)
     required = ('GPU_JOBS_QUEUE', 'EX42_MAIN_ROOT', 'EX42_SOURCE_REF')
@@ -419,10 +444,16 @@ def execute(request, *, wait=False, poll=30):
             comparison(output, results)
             # All nine receipts must exist before the new run alone may advance.
             outcome = bridge(request, binding, output, Path(rows[-1]['output']) / 'p1_score.json', guard=guard)
-        save(output / 'batch_receipt.json', {'state': 'complete', 'measurements': len(results), 'bridge': outcome})
+        notification = None
+        if outcome.get('state') != 'launcher_started':
+            notification = notify_hold(output, f"E1F not launched: {outcome.get('state')}, judgment={outcome.get('judgment')}")
+        save(output / 'batch_receipt.json', {'state': 'complete', 'measurements': len(results),
+                                           'bridge': outcome, 'notification': notification})
     except Exception as exc:
+        reason = f'{type(exc).__name__}: {exc}'
+        notification = notify_hold(output, reason)
         save(output / 'batch_receipt.json', {'state': 'HOLD', 'completed_measurements': len(results),
-                                           'reason': f'{type(exc).__name__}: {exc}', 'results': results})
+                                           'reason': reason, 'results': results, 'notification': notification})
         raise
     return outcome
 
@@ -490,6 +521,16 @@ def main(argv=None):
         print(json.dumps(row, ensure_ascii=False, indent=2))
         return 0
     except (ValueError, OSError, KeyError, subprocess.SubprocessError) as exc:
+        if args.execute:
+            try:
+                request = read(args.request) if args.request.is_file() else {}
+            except (ValueError, OSError):
+                request = {}
+            existing = Path(request.get('output', str(args.request.parent))) / 'notification.json'
+            if not existing.is_file():
+                import tempfile
+                attempt = Path(tempfile.mkdtemp(prefix='remeasure-admission-hold-', dir=args.request.parent))
+                notify_hold(attempt, f'{type(exc).__name__}: {exc}')
         print(f'HOLD: {type(exc).__name__}: {exc}', file=sys.stderr)
         return 2
 

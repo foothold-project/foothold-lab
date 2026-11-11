@@ -143,8 +143,11 @@ def test_other_run_pass_cannot_reach_flags(tmp_path):
     cp=tmp_path/'model_1000.pt';cp.write_bytes(b'new')
     gate=write(tmp_path/'gate.json',{'state':'complete','judgment':'PASS','stage_id':'E1',
         'checkpoint_iteration':1000,'checkpoint_sha256':'0'*64,'plan_sha256':'a'*64})
+    evidence=write(tmp_path/'evidence.json',{})
     with pytest.raises(ValueError,match='only this retrain'):
-        batch.bridge({}, {'run':str(tmp_path),'plan':{'sha256':'a'*64}},tmp_path,gate,guard=lambda:pytest.fail('GPU'))
+        batch.bridge({}, {'run':str(tmp_path),'plan':{'sha256':'a'*64},
+                          'manifest':batch.ref(evidence),'training_log':batch.ref(evidence)},
+                     tmp_path,gate,guard=lambda:pytest.fail('GPU'))
 
 
 # Actual publication and automatic authorization over known CPU traces. Only the
@@ -155,8 +158,8 @@ known = chain_tests.known
 ready = chain_tests.ready
 
 
-@pytest.mark.parametrize('actual_frozen_source', [False, True])
-def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorization(ready, monkeypatch, actual_frozen_source):
+@pytest.mark.parametrize('actual_frozen_source,dry_rc', [(False,0), (True,0), (False,2)])
+def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorization(ready, monkeypatch, actual_frozen_source, dry_rc):
     import shutil
     from types import SimpleNamespace
     from foothold_s2.scripts import ex42_flag_baseline_chain as flag_module
@@ -198,7 +201,7 @@ def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorizati
     def cpu(argv,**kwargs):
         assert '--ex42_stage_dry_run' in argv and kwargs['env']['CUDA_VISIBLE_DEVICES']==''
         assert any(a=='--max_iterations=750' for a in argv)
-        calls.append('cpu-dry-argv');return SimpleNamespace(returncode=0)
+        calls.append('cpu-dry-argv');return SimpleNamespace(returncode=dry_rc)
     monkeypatch.setattr(batch.subprocess,'run',cpu)
     binding={'run':str(ready['parent_manifest'].parent), 'plan':batch.ref(ready['source_plan']),
              'manifest':batch.ref(ready['parent_manifest']),
@@ -208,6 +211,11 @@ def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorizati
          'launch_env':{'EX42_MESH_DIR':str(mesh),'EX42_MESH_SHA256':chain['mesh_sha256'],
                        'GPU_JOBS_QUEUE':'/not-live-queue.json','EX42_SOURCE_REF':'fixture',
                        'EX42_MAIN_ROOT':str(root/'future-training')}}
+    if dry_rc:
+        with pytest.raises(ValueError,match='CPU preflight refused: rc 2'):
+            batch.bridge(req,binding,root,ready['gate_receipt'],guard=lambda:None,launch=False)
+        assert not (root/'E1F-adoption.json').exists()
+        return
     result=batch.bridge(req,binding,root,ready['gate_receipt'],guard=lambda:None,launch=False)
     assert result['state']=='ready_not_started' and calls==['evidence','cpu-dry-argv']
     transition=batch.read(root/'E1F-materialized/transition.json')
@@ -215,9 +223,10 @@ def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorizati
     assert transition['gate_sha256']==batch.sha(ready['gate_receipt'])
     assert transition['new_plan_sha']==batch.sha(root/'E1F-materialized/ex42-prep.yaml')
     assert not (root/'next_stage_launch.json').exists()
+    assert batch.read(root/'E1F-adoption.json')['budget_used']==1250
 
 
-@pytest.mark.parametrize('fail_child', [None, 4])
+@pytest.mark.parametrize('fail_child', [None, 4, 'tamper'])
 def test_all_nine_complete_before_bridge_and_child_failure_stays_hold(tmp_path, complete_job, monkeypatch, fail_child):
     from contextlib import contextmanager
     from types import SimpleNamespace
@@ -243,7 +252,12 @@ def test_all_nine_complete_before_bridge_and_child_failure_stays_hold(tmp_path, 
     monkeypatch.setattr(batch,'source_binding',lambda *args:binding)
     monkeypatch.setattr(batch,'checked',lambda r:Path(r['path']))
     @contextmanager
-    def no_gpu(*args):yield lambda:None
+    def no_gpu(*args):
+        def guard():
+            if fail_child=='tamper':(parent/'model_1000.pt').write_bytes(b'changed after pin')
+        yield guard
+    notices=[]
+    monkeypatch.setattr(batch,'notify_hold',lambda output,reason:notices.append(reason) or {'sent':True})
     monkeypatch.setattr(batch,'admission',no_gpu)
     def child(argv,**kwargs):
         index=len(calls);calls.append(argv)
@@ -271,6 +285,9 @@ def test_all_nine_complete_before_bridge_and_child_failure_stays_hold(tmp_path, 
     if fail_child is None:
         batch.execute(request)
         assert batch.read(root/'batch_receipt.json')['state']=='complete'
+    elif fail_child=='tamper':
+        with pytest.raises(ValueError,match='checkpoint changed before evaluation'):batch.execute(request)
+        assert calls==[] and notices
     else:
         with pytest.raises(ValueError,match='child rc=5'):batch.execute(request)
         assert len(calls)==5 and batch.read(root/'batch_receipt.json')['state']=='HOLD'
@@ -283,3 +300,40 @@ def test_queue_live_owner_blocks_cpu_reservation(tmp_path):
     before=queue.read_bytes()
     with pytest.raises(ValueError,match='queue still occupied'):batch.reserve_queue(queue,tmp_path/'not-live.log')
     assert queue.read_bytes()==before
+
+
+def test_missing_d44_actual_friction_receipt_rejected(complete_job):
+    job,policy=complete_job
+    (Path(job['output'])/'d44/d44_cells.json').unlink()
+    with pytest.raises(FileNotFoundError):batch.completed_job(job,policy)
+
+
+def test_same_checkpoint_different_gate_plan_is_refused_before_flags(tmp_path):
+    cp=tmp_path/'model_1000.pt';cp.write_bytes(b'known')
+    gate=write(tmp_path/'gate.json',{'state':'complete','judgment':'PASS','stage_id':'E1',
+        'checkpoint_iteration':1000,'checkpoint_sha256':batch.sha(cp),'plan_sha256':'b'*64})
+    evidence=write(tmp_path/'evidence.json',{})
+    with pytest.raises(ValueError,match='only this retrain'):
+        batch.bridge({}, {'run':str(tmp_path),'plan':{'sha256':'a'*64},
+                          'manifest':batch.ref(evidence),'training_log':batch.ref(evidence)},
+                     tmp_path,gate,guard=lambda:pytest.fail('GPU'))
+
+
+def test_dirty_source_refused_even_with_all_other_pins_valid(tmp_path,monkeypatch):
+    p=tmp_path/'p';p.write_text('known');pin=batch.ref(p)
+    request={'source_git_head':'known','evaluation_plan':pin,'evaluation_approvals':pin,'parent':pin,
+             'dependencies':[],'old':{k:pin for k in ('plan','approvals','manifest','startup')}}
+    monkeypatch.setattr(batch.subprocess,'check_output',lambda argv,**kwargs:'known\n' if 'rev-parse' in argv else ' M foothold_s2/changed.py\n')
+    with pytest.raises(ValueError,match='not clean'):batch.validate_request(request)
+
+
+@pytest.mark.parametrize('rc',[0,4])
+def test_hold_notice_uses_run_inbox_and_preserves_delivery_failure(tmp_path,rc):
+    from types import SimpleNamespace
+    calls=[]
+    def fake(argv,**kwargs):
+        calls.append(argv);return SimpleNamespace(returncode=rc,stdout='fake messageId' if rc==0 else '',stderr='busy' if rc else '')
+    result=batch.notify_hold(tmp_path,'gate HOLD',runner=fake)
+    argv=calls[0]
+    assert argv[argv.index('--to')+1]=='run:run_5283fa2c059b' and 'terminal' not in argv
+    assert result['sent'] is (rc==0) and batch.read(tmp_path/'notification.json')['returncode']==rc

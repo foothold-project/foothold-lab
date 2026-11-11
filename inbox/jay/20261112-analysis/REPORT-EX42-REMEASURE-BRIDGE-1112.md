@@ -88,3 +88,11 @@ python -m foothold_s2.scripts.ex42_remeasure --request "$REQUEST" --execute --wa
 ```
 
 Python은 `/home/jay/miniforge3/envs/isaac311/bin/python`. `--wait`는 바인딩/학습 done을 기다린다. done 이후 GPU 점유가 남으면 시작 거절 영수증을 쓰며 강제 종료하거나 남의 표식을 지우지 않는다.
+
+## Reviewer 지적분 1회 보강
+
+- 새 반례 7개를 더해 이 파일의 CPU 시험은 30개다. E1F dry rc2는 부모 채택/기동 전에 거절, D44 실제 마찰 영수증 누락은 거절, 평가 직전 checkpoint 변경은 자식 실행 전에 거절, 같은 checkpoint에 다른 gate plan은 거절, dirty evaluator는 거절한다.
+- 위 다섯 검사를 각각 제거한 메모리 돌연변이 모두 검출했다. checkpoint SHA 검사 제거 시 나중 영수증 검사도 변조를 잡지만, 새 시험은 늦은 검출을 통과시키지 않고 **자식 실행 전** 검출을 요구한다. 원출력 `review-mutations.json`.
+- FAIL/HOLD는 `notify_hold`가 run `run_5283fa2c059b`로 한 줄을 보내고 `notification.json`에 rc/stdout/stderr를 기록한다. rc4는 sent=false 및 stderr 경보로 남긴다. 시험은 가짜 송신기를 사용했고 실제 시험 알림은 보내지 않았다.
+- lead 정정: 20,000 예산은 현재 정책 계보의 EX-42 본 단계만 센다. 기점은 stage_zero의 m12000이 아니라 **E0 부모 m13000**. 현재 E0 250 + 재학습 E1 1000 = **1250**. stage_zero 1000과 폐기한 첫 E1 1000은 `E1F-adoption.json.excluded_branches`에 따로 적고 합계에서 뺀다.
+- 후속 launcher·누적 예산 생산자 작업은 별도 가지의 변경이며 이 PR에 섞지 않는다.
