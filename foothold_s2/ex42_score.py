@@ -223,6 +223,16 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
         plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
         measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         out = judge(out, baseline, measured)
+    elif cfg["status"] == "e0_parent_baseline_pinned" and stage_id == "E1":
+        from foothold_s2.ex42_e0_judge import load_baseline
+        from foothold_s2.ex42_e1_judge import judge_e1, previous_e1_score
+        baseline = load_baseline(ROOT, cfg, digest)
+        baseline["_sha256"] = cfg["baseline"]["sha256"]
+        plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        prior = previous_e1_score(checkpoint, evaluation,
+                                  plan["evaluation"]["interval_updates"], digest(cfg_path))
+        out = judge_e1(out, baseline, measured, plan, previous=prior)
     elif cfg["status"] == "e0_parent_baseline_pinned":
         out["reason"] = "E0 baseline is pinned; this stage requires its own judgment policy"
     return out
