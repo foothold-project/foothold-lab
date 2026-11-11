@@ -44,6 +44,8 @@ if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out
 plan_bytes = args.plan.read_bytes()
 plan = yaml.safe_load(plan_bytes.decode("utf-8-sig"))
 settings = contract(plan)
+from foothold_s2.eval import ex42_friction
+friction_policy = ex42_friction.load_policy(args.plan)
 # prep pins /home/jay/data/... while the evaluator passes the resolved /mnt/win-d/... path (11/11 m250); compare both resolved
 if (not settings["source_mesh_dir"] or Path(settings["source_mesh_dir"]).resolve() != args.mesh_dir.resolve()
         or not settings["source_mesh_sha256"]):
@@ -104,6 +106,7 @@ def _configure():
     command_cfg.flag_stride = 0
     if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
         env_cfg.actions.joint_pos.max_delay_s = 0.0
+    ex42_friction.configure(env_cfg, friction_policy)
     return env_cfg, agent_cfg, disabled
 
 
@@ -228,6 +231,7 @@ def main():
         print("D44_PHASE", phase, flush=True)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
+        ex42_friction.install_and_verify(raw, friction_policy)
         assign_independent_env_origins(raw)
         robot, sensor = raw.scene["robot"], raw.scene["contact_forces"]
         body_ids, sensor_ids = _indices(robot, sensor)
@@ -263,6 +267,7 @@ def main():
                   "dt": dt, "dr_disabled": disabled,
                   "run_identity": run_identity.safe_collect(args.device, checkpoint_sha, eval_seed=args.seed),
                   "checkpoint_preparation": checkpoint_preparation, "cases": cases}
+        result["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
         (args.out / "d44_cells.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print("D44_EVAL_DONE", args.out, flush=True)
