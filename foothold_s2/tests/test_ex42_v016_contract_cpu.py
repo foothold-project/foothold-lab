@@ -56,7 +56,9 @@ def test_v016_makes_known_values_decisions_but_keeps_unmeasured_values_open():
     assert doc["launch"]["automatic"] is False
     assert doc["launch"]["require_explicit_lead_approval"] is True
     assert doc["assumptions_pending_lead"]["evaluation_friction"]["value"] == {"static": 0.8, "dynamic": 0.6}
-    assert doc["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"] is None
+    measured = doc["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+    assert measured["survival_drop_envs"] == 6
+    assert measured["foot_drag_m"] == "per_cell_max_0.25_parent_or_2_repeat_width"
     assert doc["assumptions_pending_lead"]["next_jump_study_start"]["approved"] is True
     assert doc["stages"][3]["id"] == "E2"
     assert doc["maintenance"]["judge_from_stage"]["foot_drag"] == "E2"

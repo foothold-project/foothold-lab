@@ -199,6 +199,15 @@ def run_shards(plan, *, output, commands_for, env, physical, process, observed, 
 IGNORED_COMPARE_KEYS = ("checkpoint", "raw_file", "maintenance_source_sha256")
 
 
+MEASURED_KEYS = ("conditions", "map64", "stand", "axis_v2")
+
+
+def compare_measurements(a, b):
+    """Compare only what Kit measured (conditions and the map64 / stand / axis_v2 cells). Judgement, baseline and
+    maintenance fields come from the scoring code at hand, which may differ from the code that wrote the other file."""
+    return compare_scores({k: a.get(k) for k in MEASURED_KEYS}, {k: b.get(k) for k in MEASURED_KEYS})
+
+
 def compare_scores(a, b, *, path="", out=None):
     """Exact structural comparison of two ex42_score.json documents. Returns a list of differences."""
     out = [] if out is None else out
@@ -229,10 +238,11 @@ def main(argv=None):
     cmp_.add_argument("a", type=Path)
     cmp_.add_argument("b", type=Path)
     cmp_.add_argument("--limit", type=int, default=50)
+    cmp_.add_argument("--all-fields", action="store_true", help="also compare judgement and baseline fields")
     args = parser.parse_args(argv)
     docs = [json.loads(path.read_text(encoding="utf-8-sig")) for path in (args.a, args.b)]
-    diffs = compare_scores(*docs)
-    print(json.dumps({"state": "same" if not diffs else "differs", "count": len(diffs),
+    diffs = compare_scores(*docs) if args.all_fields else compare_measurements(*docs)
+    print(json.dumps({"fields": "all" if args.all_fields else "measured", "state": "same" if not diffs else "differs", "count": len(diffs),
                       "differences": diffs[:args.limit]}, ensure_ascii=False))
     return 0 if not diffs else 1
 

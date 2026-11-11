@@ -208,8 +208,10 @@ def test_split_branch_of_run_reproduces_the_one_gpu_score_from_real_e0_files(tmp
     receipt = json.loads((out / "eval_receipt.json").read_text())
     assert rc == 0 and receipt["state"] == "done", receipt.get("reason")
     notice = json.loads((out / "next_stage_notice.json").read_text())          # the real P1 judgment is HOLD
-    assert (notice["state"], notice["next_stage_id"], notice["automatic_launch_started"]) == ("not_ready", "E1", False)
-    assert receipt["next_stage_notice"] == "not_ready"
+    judged = json.loads((out / "p1_score.json").read_text())["judgment"]          # #631 judges the E0 cells now
+    assert notice["judgment"] == judged and notice["next_stage_id"] == "E1" and notice["automatic_launch_started"] is False
+    assert notice["state"] == ("next_stage_ready_for_approval" if judged == "PASS" else "not_ready")
+    assert receipt["next_stage_notice"] == notice["state"]
     assert receipt["split"]["devices"] == ["cuda:1", "cuda:0"]
     assert {k.split("@")[1] for k in receipt["steps"]} == {"cuda:0", "cuda:1"}
     expected = sum(len(dev["stand"]) + bool(dev["map64"]) + bool(dev["axis_v2"])
@@ -219,7 +221,7 @@ def test_split_branch_of_run_reproduces_the_one_gpu_score_from_real_e0_files(tmp
     # the merged map/axis/stand files are what `measure` reads: the score equals the one-GPU score cell for cell
     mine = json.loads((out / "ex42_score.json").read_text())
     real = json.loads((REAL / "ex42_score.json").read_text())
-    assert split.compare_scores(real, mine) == []
+    assert split.compare_measurements(real, mine) == []        # measured cells equal (judgement fields come from newer code)
     assert (real["checkpoint_sha256"], mine["conditions"]) == (mine["checkpoint_sha256"], real["conditions"])
 
 
@@ -418,3 +420,49 @@ def test_next_stage_notice_only_at_the_stage_end_and_never_starts_anything():
     for mid in (250, 500, 750):                                 # mid-stage boundaries get no notice
         assert once.next_stage_notice(plan, "E1", mid, passed) is None
     assert once.next_stage_notice(plan, "NOPE", 1000, passed) is None
+
+
+# ---- the two device checks each refuse on their own (reviewer 11:10 survivors) ----
+def test_validator_split_device_must_be_the_training_gpu_and_not_the_p1_gpu_each_alone(tmp_path):
+    from foothold_s2.ex42_chain import _validate_p1_score_command
+    ck = tmp_path / "model_250.pt"
+    ck.write_bytes(b"x")
+    mesh_dir, mesh_sha = _mesh(tmp_path)
+
+    def check(profile, split_device):
+        argv = _argv(ck, tmp_path / "score_250", mesh_dir, mesh_sha, split_device=split_device)
+        if profile["devices"]["p1_evaluation"]["device"] == "cuda:0":
+            argv[argv.index("--device") + 1] = "cuda:0"
+        return _validate_p1_score_command(argv, machine_profile=profile, iteration=250, checkpoint_path=ck,
+                                          expected_stage_id="E1")
+    normal = _profile_p1_on_gpu1()
+    with pytest.raises(ValueError, match="split device"):
+        check(normal, "cuda:1")                       # the P1 GPU
+    assert check(normal, "cuda:0") == 1
+    # not the training GPU at all: only the "differs from training" clause can refuse this
+    odd = copy.deepcopy(normal)
+    odd["devices"]["training"] = {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-t0"}
+    with pytest.raises(ValueError, match="split device"):
+        check(odd, "cuda:2")
+    # training and P1 on the same GPU (the shared fixture): only the "same as P1" clause can refuse cuda:0
+    same = copy.deepcopy(normal)
+    same["devices"]["p1_evaluation"] = {"cuda_index": 0, "device": "cuda:0", "uuid": "GPU-t0"}
+    with pytest.raises(ValueError, match="split device"):
+        check(same, "cuda:0")
+
+
+@needs_run
+def test_run_itself_refuses_a_split_device_equal_to_the_evaluation_device(tmp_path, monkeypatch):
+    from foothold_s2 import ex41_eval_once as process
+    started = []
+    monkeypatch.setattr(process, "hidden_child", lambda *a, **k: started.append(a))
+    monkeypatch.setattr(once, "gpu_identity", lambda dev: {"device": dev, "gpu_index": int(dev[-1]), "gpu_uuid": UUID[dev], "pci_bus_id": "x"})
+    real_check = once.subprocess.check_output
+    monkeypatch.setattr(once.subprocess, "check_output",
+                        lambda cmd, **kw: "" if cmd[:2] == ["git", "status"] else "0" * 40 if cmd[:2] == ["git", "rev-parse"]
+                        else real_check(cmd, **kw))
+    monkeypatch.setattr(once, "machine_path", lambda k, _m=once.machine_path: pathlib.Path(sys.executable) if k == "conda_python" else _m(k))
+    checkpoint = E0_RUN / "model_250.pt"
+    with pytest.raises(ValueError, match="split device must differ"):
+        once.run(checkpoint, once.digest(checkpoint), tmp_path / "same", "cuda:1", eval_seed=42, split_device="cuda:1")
+    assert started == [] and not (tmp_path / "same").exists()

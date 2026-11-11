@@ -49,7 +49,7 @@ E=/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261
   /home/jay/data/foothold/s2_lab/ex42_split_check_1111/m250_split/ex42_score.json
 ```
 
-`--execute` 을 빼면 계획만 출력한다 (CPU). 비교 결과가 `same` 이면 모든 칸이 같다. `differs` 이면 칸 경로와 차이가 나온다 (경로 · 소스 해시 칸은 무시).
+`--execute` 을 빼면 계획만 출력한다 (CPU). 비교는 측정 칸 (conditions · map64 · stand · axis_v2) 만 본다 (판정 · 기준선 칸은 점수를 낸 코드에 따라 다를 수 있어 제외, 포함하려면 `--all-fields`). `same` 이면 측정 칸이 모두 같고, `differs` 이면 칸 경로와 차이가 나온다 (경로 · 소스 해시 칸은 무시).
 
 주의: 두 장 병렬은 같은 시드여도 GPU 부동소수점 때문에 한 장 결과와 마지막 자리가 다를 수 있다. 그것이 차이로 나오면 「절대 같음」 이 아니라 차이의 크기 (`abs_diff`) 를 본다. 이 PR 은 어느 쪽인지 예단하지 않는다.
 
@@ -65,7 +65,7 @@ E=/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261
 
 - 두 장 병렬의 실제 Kit 수치 일치 · 연속 네 건 기동 · 평가 중 GPU 메모리.
 - 합치기가 거절하지 않는 칸 (run_identity · ex41_checkpoint_preparation) 은 샤드마다 달라도 통과시키고 `eval_split_merge.json` 에 기록한다. 실제 Kit 샤드에서 그 밖의 칸이 갈리면 거절한다 (그때 lead 에게 보고).
-- `next_stage_notice` 가 PASS 를 내려면 P1 판정이 PASS 여야 한다. 지금 `p1_score_from_measure` 는 항상 HOLD 를 쓰므로 현재는 「준비 안 됨」 만 나온다. 승격 관문 (52/64 창) 을 읽는 판정은 이 PR 에 없다.
+- 알림은 P1 판정 (#631 의 E0 26 칸 판정) 을 그대로 따른다. #631 판정은 E0 에서만 PASS/FAIL 을 허용하므로 E1 의 PASS 는 아직 나올 수 없다 (E1 승격 관문 판정은 이 PR 에 없다).
 
 ## 안 한 것
 
