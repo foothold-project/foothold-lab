@@ -13,7 +13,8 @@ import sys
 import numpy as np
 import pytest
 
-from foothold_s2.eval.ex42_d44_cells import contract, summarize, read_evidence
+from foothold_s2.eval.ex42_d44_cells import (TRACE_FORMAT, RECEIPT_FORMAT, contract, summarize,
+                                             read_evidence, restart_command, top_latch_mask)
 from foothold_s2.ex42_eval_once import d44_kit_command
 
 
@@ -39,7 +40,7 @@ def _plan():
 
 
 def _trace(task):
-    n, steps = 64, 70
+    n, steps = 64, 130 if task == "stop_restart" else 70
     root = np.zeros((steps, n, 3), dtype=np.float32)
     root[..., 0] = 4.0 if task.startswith("turn_") else 1.7
     root[..., 1] = 4.0
@@ -53,13 +54,22 @@ def _trace(task):
     feet = np.zeros((steps, n, 4, 3), dtype=np.float32)
     feet[..., 2] = 1.44 if task.startswith("turn_") else .32
     phase = np.ones((steps, n), dtype=np.int16)
+    phase[:10] = 0
+    cmd = np.zeros((steps, n, 3), dtype=np.float32)
+    latch = np.full(n, -1, dtype=np.int32)
     if task == "stop_restart":
-        phase[10:30] = 2
-        phase[30:] = 3
-        root[30:, :, 0] = 4.0
-        root[30:, :, 2] = 1.9
-        feet[30:, :, :, 2] = 1.44
-    return {"root_pos_w": root, "root_quat_w": quat, "foot_pos_w": feet,
+        phase[50:70] = 2
+        phase[70] = 3
+        phase[71:] = 4
+        cmd[70, :, 0] = 1.0
+        latch[:] = 70
+        root[70:, :, 0] = 4.0
+        root[70:, :, 2] = 1.9
+        feet[70:, :, :, 0] = 4.0
+        feet[70:, :, :, 1] = 4.0
+        feet[70:, :, :, 2] = 1.44
+    return {"trace_format": np.asarray(TRACE_FORMAT), "top_latched_at": latch,
+            "cmd_post": cmd, "root_pos_w": root, "root_quat_w": quat, "foot_pos_w": feet,
             "contact": np.ones((steps, n, 4), dtype=bool),
             "alive": np.ones((steps, n), dtype=bool),
             "body_vel_b": np.zeros((steps, n, 3), dtype=np.float32),
@@ -115,7 +125,7 @@ def test_turn_left_right_use_signed_unwrapped_angle_and_platform():
                          settings=settings, dt=.1)["success_count"] == 0
 
 
-def test_stop_restart_timeout_is_unjudged_and_reach_requires_four_feet():
+def test_stop_restart_timeout_is_unjudged_and_low_contact_foot_fails():
     settings = contract(_plan())
     trace = _trace("stop_restart")
     good = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
@@ -123,7 +133,7 @@ def test_stop_restart_timeout_is_unjudged_and_reach_requires_four_feet():
     assert (good["valid_count"], good["success_count"]) == (64, 64)
     trace["approach_entered"] = np.ones(64, dtype=bool)
     trace["approach_entered"][0] = False
-    trace["foot_pos_w"][30:, 1, 3, 2] = 1.1
+    trace["foot_pos_w"][70:, 1, 3, 2] = 1.1
     bad = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
                     settings=settings, dt=.1)
     assert (bad["valid_count"], bad["success_count"]) == (63, 62)
@@ -140,13 +150,70 @@ def test_stop_is_root_band_and_speed_only_with_foot_height_diagnostic():
     assert good["success_count"] == 64
     assert good["per_env"][0]["stop_feet_height_ok"] is False
     moving = copy.deepcopy(trace)
-    moving["body_vel_b"][10:30, :, 0] = .051
+    moving["body_vel_b"][50:70, :, 0] = .051
     assert summarize(moving, spec={"task": "stop_restart"}, anchors=ANCHORS,
                      settings=settings, dt=.1)["success_count"] == 0
     outside = copy.deepcopy(trace)
-    outside["root_pos_w"][10:30, :, 0] = 1.91
+    outside["root_pos_w"][50:70, :, 0] = 1.91
     assert summarize(outside, spec={"task": "stop_restart"}, anchors=ANCHORS,
                      settings=settings, dt=.1)["success_count"] == 0
+
+
+def test_top_latch_and_command_are_per_env_after_post_step_entry():
+    root = np.array([[3.75, 4.0], [3.75, 4.0], [4.7, 4.0]])
+    feet = np.array([[3.4, 3.5, 3.6, 3.7], [3.39, 3.5, 3.6, 3.7], [3.8]*4])
+    latch = top_latch_mask(root, feet, np.ones(3, bool), ANCHORS["landing_bounds_xy"])
+    assert latch.tolist() == [True, False, False]
+    phase, vx = restart_command(latch, 1.0)
+    assert phase.tolist() == [4, 3, 3]
+    assert vx.tolist() == [0.0, 1.0, 1.0]
+
+
+def test_top_stand_six_known_inputs_and_old_trace_rejection():
+    settings = contract(_plan())
+    kwargs = dict(spec={"task": "stop_restart"}, anchors=ANCHORS, settings=settings, dt=.1)
+    good = _trace("stop_restart")
+    # A trot can keep diagonal contact without all four feet touching together.
+    good["contact"][71::2, :, [1, 3]] = False
+    good["contact"][72::2, :, [0, 2]] = False
+    assert summarize(good, **kwargs)["success_count"] == 64
+    low = copy.deepcopy(good)
+    low["contact"][71:, 0, 0] = True
+    low["foot_pos_w"][71:, 0, 0, 2] = 1.28
+    result = summarize(low, **kwargs)
+    assert result["success_count"] == 63
+    assert result["per_env"][0]["reason"] == "foot_below_landing"
+    moving = copy.deepcopy(good)
+    moving["body_vel_b"][71:, :, 0] = .06
+    assert summarize(moving, **kwargs)["success_count"] == 0
+    assert summarize(moving, **kwargs)["per_env"][0]["reason"] == "not_still"
+    no_latch = copy.deepcopy(good)
+    no_latch["phase_id"][71:] = 3
+    no_latch["cmd_post"][71:, :, 0] = 1.0
+    no_latch["top_latched_at"][:] = -1
+    no_latch["foot_pos_w"][70:, :, :, 0] = 3.2
+    assert summarize(no_latch, **kwargs)["per_env"][0]["reason"] == "no_top_latch"
+    no_stand = copy.deepcopy(good)
+    no_stand["body_vel_b"][71:, :, 0] = .2
+    assert summarize(no_stand, **kwargs)["success_count"] == 0
+    old = copy.deepcopy(good)
+    old.pop("trace_format")
+    with pytest.raises(ValueError, match="old trace format"):
+        summarize(old, **kwargs)
+    forged = copy.deepcopy(good)
+    forged["cmd_post"][71:, :, 0] = 1.0
+    with pytest.raises(ValueError, match="recorded command"):
+        summarize(forged, **kwargs)
+
+
+def test_four_foot_xy_diagnostic_counts_longest_consecutive_run_only():
+    trace = _trace("stop_restart")
+    trace["foot_pos_w"][74, :, 0, 1] = 4.7
+    trace["foot_pos_w"][78, :, 0, 1] = 4.7
+    rows = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=contract(_plan()), dt=.1)["per_env"]
+    assert rows[0]["success"] is True
+    assert rows[0]["four_foot_xy_inside_ticks"] == 51
 
 
 def test_read_evidence_binds_every_case_json_and_npz_sha(tmp_path, monkeypatch):
@@ -170,7 +237,7 @@ def test_read_evidence_binds_every_case_json_and_npz_sha(tmp_path, monkeypatch):
         source.write_text(json.dumps(summary), encoding="utf-8")
         cases[case_id] = {**summary, "raw_file": str(source),
                           "raw_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
-    receipt = {"format": "foothold-ex42-d44-eval/1", "state": "done", "plan_sha256": "a" * 64,
+    receipt = {"format": RECEIPT_FORMAT, "state": "done", "plan_sha256": "a" * 64,
                "source_mesh_sha256": "a" * 64,
                "checkpoint_sha256": "b" * 64, "seed": 42, "envs": 64, "cases": cases}
     (tmp_path / "d44_cells.json").write_text(json.dumps(receipt), encoding="utf-8")
