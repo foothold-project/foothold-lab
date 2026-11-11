@@ -82,3 +82,11 @@ sonnet 소비자는 `validate_materialized_transition(plan, target_stage=..., ga
 3. M 조건부 진입·복귀 자료, 뒤 단계 미작성 정책과 측정이 없으면 여전히 HOLD다. 이것을 전체 단계 준비 완료라고 보고하지 않는다.
 
 Refs #555.
+
+## #672 통합 뒤 지적분 재검증 (2026-11-11)
+
+통합 `864cd398`를 #678 가지에 merge했다. 수정 전 동일 materialize 시험에서 `19 failed, 12 passed`를 재현했다. 두 `adapter.verify` 호출에 `plan=policy.document`를 전달하고, E1 시험 자료를 #672 생산자의 실제 형식(`required_cases`, 정규화된 D44 판정 행, 원자료 `d44_cells`)에 맞췄다. 정답으로 기대하는 성공·생존 수와 문턱은 직접 구성했다.
+
+`ENTRY_GATE_ADAPTERS = ('map39', 'flag_two_window', 'pending')` 및 준비 여부 표현을 #670 `f60e19a5`와 동일하게 맞췄다. 발행되는 승인·plan의 옛 `stage_exit_v1` 이름은 `flag_two_window`로 바꿨다. 실제 검증기는 계속 앞 단계의 `policy.document`와 source stage로 선택하므로 E1 졸업을 E1F 깃발 졸업으로 바꾸어 검사하지 않는다. critic_mirror는 기존 #678의 E1 이후 켬 규칙을 보존했다.
+
+최신 CPU: materialize `33 passed in 11.29s`, 관련 묶음과 E1 판정 회귀 `176 passed in 30.36s`. 두 호출을 각각 plan 없이 되돌린 제거본은 각각 `1 failed, 1 passed`로 검출했고, 정상 대조는 `2 passed`. pyflakes 0. GPU/Kit 미실행. 원출력은 `/home/jay/mai/tmp/verifier-lx/materialize-1111/r2/`의 `red.log`, `green.log`, `regression.log`, `mutation-results.json`이다.
