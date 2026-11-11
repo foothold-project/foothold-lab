@@ -234,3 +234,125 @@ def test_e2_p1_rejects_training_execution_plan_sha_substitution(tmp_path):
             plan_path=ROOT / "foothold_s2/curriculum/ex42-prep.yaml",
             approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
             stage_id="E2", output=tmp_path / "evaluation")
+
+
+@pytest.mark.parametrize("blocked", ["child_failure", "previous_window", "exchange_watch", "learned_cells"])
+def test_each_e2_exit_source_independently_blocks_pass(monkeypatch, tmp_path, blocked):
+    import json
+    from types import SimpleNamespace
+    from foothold_s2 import ex42_e0_judge, ex42_e2_judge, ex42_exchange_watch, ex42_learned_cells_evidence
+    from foothold_s2.eval import ex42_mesh_eval
+
+    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
+    plan["approval_file"] = "approvals.yaml"
+    policy = tmp_path / "policy.yaml"
+    policy.write_text("known policy")
+    (tmp_path / "approvals.yaml").write_text(
+        "stage_e2_authorization: {approved: true, exit_gate: {learned_cells_min: 32}}")
+    evaluation = tmp_path / "m250"
+    (evaluation / "map64").mkdir(parents=True)
+    (evaluation / "kind_cells").mkdir()
+    (evaluation / "map64" / "map_modes.json").write_text(
+        json.dumps({"ex42_mesh": {"manifest": "/tmp/mesh/mesh_manifest.json",
+                                  "mesh_sha256": "b" * 64}}))
+    if blocked == "child_failure":
+        (evaluation / "kind_cells" / "child_failures.json").write_text(json.dumps({
+            "format": "foothold-ex42-e2-child-failures/1", "checkpoint_sha256": "c" * 64,
+            "reason": "Kit child rc=1"}))
+    modes = {mode: {"role": "record_only" if mode == "probe_prop_only" else "judge",
+                    "judgement": "PASS"} for mode in ("eval_gt", "eval_pred", "probe_prop_only")}
+    monkeypatch.setattr(ex42_e0_judge, "load_baseline", lambda *_: {})
+    monkeypatch.setattr(ex42_e0_judge, "judge", lambda score, *_: {**score, "judgement": "PASS"})
+    monkeypatch.setattr(ex42_e2_judge, "previous_window", lambda *_: None if blocked == "previous_window" else {
+        "checkpoint": str(tmp_path / "model_0.pt"), "checkpoint_sha256": "c" * 64})
+    monkeypatch.setattr(ex42_e2_judge, "checked_previous_bundle", lambda prior, **_:
+                        modes if prior else None)
+    monkeypatch.setattr(ex42_e2_judge, "read_bundle", lambda *_args, **_kwargs: modes)
+    monkeypatch.setattr(ex42_mesh_eval, "preflight", lambda *_: {"mesh_sha256": "b" * 64})
+    monkeypatch.setattr(ex42_exchange_watch, "compare", lambda *_args, **_kwargs: {
+        "role": "judge", "judgement": "HOLD" if blocked == "exchange_watch" else "PASS",
+        "missing": ["map64/eval_gt/fwd1.0/coverage"] if blocked == "exchange_watch" else []})
+    monkeypatch.setattr(ex42_learned_cells_evidence, "judge_two_boundaries", lambda *_args, **_kwargs: {
+        "role": "judge", "judgement": "HOLD" if blocked == "learned_cells" else "PASS"})
+    ctx = SimpleNamespace(root=tmp_path, cfg={"baseline": {"sha256": "d" * 64}},
+                          digest=lambda *_: "a" * 64, plan=plan, plan_path=policy,
+                          evaluation=evaluation, checkpoint=tmp_path / "model_250.pt",
+                          checkpoint_sha="c" * 64, seed=42, stage_id="E2")
+    result = adapter_for(plan, "E2").judge(ctx, {"conditions": {"eval_seed": 42}})
+    assert result["judgement"] == "HOLD"
+    if blocked == "child_failure":
+        assert result["e2_kind"]["child_failure"]["sha256"]
+        assert result["stage_exit"]["items"]["eval_gt_current"]["judgement"] == "HOLD"
+    elif blocked == "previous_window":
+        assert result["stage_exit"]["items"]["eval_gt_previous"]["judgement"] == "HOLD"
+    else:
+        assert result["stage_exit"]["items"][blocked]["judgement"] == "HOLD"
+
+
+def test_e2_p1_training_evidence_guard_is_independent_of_aggregate(monkeypatch):
+    from foothold_s2 import ex42_e2_judge, ex42_stage_judges
+    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
+    judge = adapter_for(plan, "E2")
+    keys = ("maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch",
+            "eval_gt_current", "eval_gt_previous", "eval_pred_current", "eval_pred_previous")
+    items = {key: {"role": "judge", "judgement": "PASS"} for key in keys}
+    items["learned_cells"] = {"role": "judge", "judgement": "HOLD"}
+    items["probe_prop_only_current"] = {"role": "record_only", "judgement": "PASS"}
+    score = {"stage_id": "E2", "stage_exit": {"adapter": judge.name, "windows": 2,
+             "judgement": "PASS", "items": items}, "map64": {}, "cell_judgments": {}}
+    monkeypatch.setattr(ex42_stage_judges, "_map39_cell_check", lambda *_: "PASS")
+    # Remove the general aggregation guard to isolate the explicit learned/exchange PASS gate.
+    monkeypatch.setattr(ex42_e2_judge, "aggregate", lambda *_: "PASS")
+    with pytest.raises(ValueError, match="training evidence absent"):
+        judge.verify(score, "PASS", "PASS", plan=plan)
+
+
+def test_e2_eval_parent_persists_child_failure_marker_before_scoring(monkeypatch, tmp_path):
+    import json
+    import sys
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.eval import ex42_friction, ex42_mesh_eval
+
+    checkpoint = tmp_path / "model_250.pt"
+    checkpoint.write_bytes(b"known E2 checkpoint")
+    plan_path = tmp_path / "prep.yaml"
+    plan_path.write_text("known E2 plan")
+    approvals = tmp_path / "approvals.yaml"
+    approvals.write_text("known approvals")
+    cfg_path = tmp_path / "score.json"
+    cfg_path.write_text("{}")
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    output = tmp_path / "evaluation"
+    sha = ex42_eval_once.digest(checkpoint)
+    policy = SimpleNamespace(runtime_stage_ids=("E2",), document={"evaluation": {}}, sha256="a" * 64)
+    monkeypatch.setattr(EX42Plan, "load", staticmethod(lambda *_: policy))
+    monkeypatch.setattr(ex42_friction, "load_policy", lambda *_: {})
+    monkeypatch.setattr(ex42_mesh_eval, "preflight", lambda *_: {"mesh_sha256": "b" * 64})
+    monkeypatch.setattr(ex42_eval_once, "machine_path", lambda name: Path(sys.executable))
+    monkeypatch.setattr(ex42_eval_once.subprocess, "check_output", lambda cmd, **_: "" if "status" in cmd else "fixedhead")
+    monkeypatch.setattr(ex42_eval_once, "gpu_identity", lambda *_: {"gpu_uuid": "GPU-" + "a" * 32})
+    monkeypatch.setattr(ex42_eval_once, "receipt_device_fields", lambda *_: {"device": "cuda:1"})
+    monkeypatch.setattr(ex42_eval_once, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
+    monkeypatch.setattr(ex42_eval_once, "config", lambda: ({"task": "test", "eval_seed": 42}, cfg_path))
+    monkeypatch.setattr(ex42_eval_once, "commands", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(ex42_eval_once, "retained_paper_cells", lambda *_: ())
+    monkeypatch.setattr(ex42_eval_once, "execute_e2_kind_children", lambda *_args, **_kwargs:
+                        (_ for _ in ()).throw(ValueError("known Kit failure")))
+    monkeypatch.setattr(ex42_eval_once, "measure", lambda *_args, **_kwargs:
+                        {"checkpoint_sha256": sha, "judgement": "HOLD"})
+    monkeypatch.setattr(ex42_eval_once, "p1_score_from_measure", lambda *_args, **_kwargs:
+                        {"state": "complete", "judgment": "HOLD"})
+    monkeypatch.setattr(ex42_eval_once, "_hand_off", lambda *_args, **_kwargs: None)
+    assert ex42_eval_once.run(checkpoint, sha, output, "cuda:1", eval_seed=42,
+                              mesh_dir=mesh_dir, expected_mesh_sha256="b" * 64,
+                              p1_plan=plan_path, p1_approvals=approvals,
+                              p1_stage_id="E2", checkpoint_iteration=250) == 0
+    marker = output / "kind_cells" / "child_failures.json"
+    assert json.loads(marker.read_text()) == {
+        "format": "foothold-ex42-e2-child-failures/1",
+        "checkpoint_sha256": sha, "reason": "ValueError: known Kit failure"}
+    parent = json.loads((output / "eval_receipt.json").read_text())
+    assert parent["e2_kind_child_failure"] == {
+        "path": str(marker), "sha256": ex42_eval_once.digest(marker)}
