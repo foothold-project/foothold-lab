@@ -140,7 +140,7 @@ def test_the_notice_is_one_time_stamped_line_to_the_run_and_a_failed_send_never_
     cmd = seen[0]
     assert cmd[:4] == ["orca-x", "--a", "orchestration", "send"] and cmd[cmd.index("--to") + 1] == "run:run_1"
     subject = cmd[cmd.index("--subject") + 1]
-    assert subject.startswith("(12:34) ") and "\n" not in subject and "—" not in subject
+    assert subject.startswith("(12:34) ") and "\n" not in subject and chr(0x2014) not in subject
     assert not L.notify(env, summary, runner=lambda *a, **k: (_ for _ in ()).throw(OSError("no")))
     assert not L.notify({k: v for k, v in env.items() if k != "EX42_NOTIFY_TO"}, summary, runner=runner)
 
