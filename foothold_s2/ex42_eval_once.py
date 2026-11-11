@@ -191,11 +191,12 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
                     "the next stage approval cell."}
 
 
-def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher):
+def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None):
     """Every boundary writes a notice. The gate passed (at or after the stage minimum) and the next stage has its
     bounded approval cell (#639): the lead's launcher starts the next stage. Otherwise an E1 boundary goes on with
     the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
-    stays a notice with its reason."""
+    stays a notice with its reason. The launched training is not in the GPU queue, so `gpu_wait` (every GPU free of
+    other compute processes) runs first: boundary evaluations still queued or running must not share a GPU with it."""
     from foothold_s2.ex42_stage_handoff import decide_next_stage, start_launcher
     manifest = Path(checkpoint).parent / "manifest.json"
     decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest)
@@ -213,6 +214,8 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
         notice.update(state=decision["state"] + "_no_launcher", reason="no --next-stage-launcher was given")
         return notice
     try:
+        if gpu_wait is not None:
+            gpu_wait()
         record = start_launcher(decision, launcher, output, parent_manifest=manifest,
                                 parent_checkpoint=checkpoint, gate_receipt=output / "p1_score.json")
     except (ValueError, OSError) as exc:
@@ -333,8 +336,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 stage_id=p1_stage_id, output=output)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
+            from foothold_s2 import ex42_eval_split as split
             notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
-                               next_stage_launcher)
+                               next_stage_launcher, gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids()))
             if notice is not None:
                 _atomic(output / "next_stage_notice.json", notice)
                 row["next_stage_notice"] = notice["state"]

@@ -22,7 +22,7 @@ from foothold_s2.tests.test_ex42_scoped_auto_cpu import known  # noqa: F401  (fi
 
 ROOT = Path(__file__).resolve().parents[2]
 REAL_E0 = Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218")
-REAL_P1 = Path("/home/jay/mai/tmp/verifier-lx/scoped-auto-1111/rejudge/p1_score.json")
+REAL_P1 = Path("/home/jay/mai/tmp/verifier-lx/scoped-auto-1111/rejudge-plan-aligned/p1_score.json")
 
 
 def _decide(known, *, stage="E0", iteration=250, p1=None, approvals=None, plan=None):
@@ -143,13 +143,14 @@ def test_a_launcher_that_is_not_an_absolute_executable_file_is_refused_before_an
 
 
 # ---- evaluation tail: notice, state and launch -------------------------------------------------------
-def _tail(known, tmp_path, launcher, *, gate=None):
+def _tail(known, tmp_path, launcher, *, gate=None, gpu_wait=None):
     plan, _, manifest, gp = known
     out = _out(tmp_path)
     (out / "p1_score.json").write_text(json.dumps(gate or _gate(known)))
     p1 = json.loads((out / "p1_score.json").read_text())
     approvals = known[1]
-    notice = once._hand_off(plan, approvals, "E0", 250, p1, manifest.parent / "model_250.pt", out, launcher)
+    notice = once._hand_off(plan, approvals, "E0", 250, p1, manifest.parent / "model_250.pt", out, launcher,
+                           gpu_wait=gpu_wait)
     return notice, out
 
 
@@ -174,6 +175,49 @@ def test_tail_hold_gate_starts_nothing(known, tmp_path):
     notice, out = _tail(known, tmp_path, _launcher(tmp_path), gate={**_gate(known), "judgment": "HOLD"})
     assert notice["state"] == "not_ready" and notice["automatic_launch_started"] is False
     assert not marker.exists() and not (out / handoff.LAUNCH_RECORD).exists()
+
+
+def test_launch_waits_for_the_gpus_first_and_a_busy_gpu_starts_nothing(known, tmp_path):
+    seen = []
+    launcher = _launcher(tmp_path)
+    notice, out = _tail(known, tmp_path, launcher, gpu_wait=lambda: seen.append((tmp_path / "launched.txt").exists()))
+    assert seen == [False] and notice["state"] == "next_stage_started"
+
+    def busy():
+        raise ValueError("EX-42 split evaluation GPUs still hold compute processes: {'uuid': [('1', 'python', '900')]}")
+
+    (tmp_path / "b").mkdir()
+    notice, out = _tail(known, tmp_path / "b", _launcher(tmp_path / "b"), gpu_wait=busy)
+    assert notice["state"] == "next_stage_authorized_launch_failed" and notice["automatic_launch_started"] is False
+    assert "still hold compute processes" in notice["reason"]
+    assert not (out / handoff.LAUNCH_RECORD).exists() and not (tmp_path / "b" / "launched.txt").exists()
+
+
+def test_the_evaluation_run_passes_a_real_gpu_wait_to_the_hand_off():
+    import inspect
+    source = inspect.getsource(once.run)
+    assert "gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids())" in source
+
+
+def test_all_gpu_uuids_reads_every_line_and_refuses_none():
+    from foothold_s2 import ex42_eval_split as split
+    assert split.all_gpu_uuids(lambda: "GPU-aaa\nGPU-bbb\n") == ["GPU-aaa", "GPU-bbb"]
+    with pytest.raises(ValueError):
+        split.all_gpu_uuids(lambda: "\n")
+
+
+def test_every_notice_state_carries_its_reason(known, tmp_path):
+    notice, _ = _tail(known, tmp_path, None, gate={**_gate(known), "judgment": "HOLD"})
+    assert notice["reason"] == "gate judgment is HOLD"
+    (tmp_path / "a").mkdir()
+    notice, _ = _tail(known, tmp_path / "a", None)
+    assert notice["reason"] == "no --next-stage-launcher was given"
+    (tmp_path / "b").mkdir()
+    notice, _ = _tail(known, tmp_path / "b", tmp_path / "missing.sh")
+    assert "absolute path to an executable file" in notice["reason"]
+    (tmp_path / "c").mkdir()
+    notice, _ = _tail(known, tmp_path / "c", _launcher(tmp_path / "c"))
+    assert "reason" in notice and notice["reason"] is None
 
 
 def test_chain_validator_takes_only_an_absolute_executable_launcher(tmp_path):
