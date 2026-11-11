@@ -99,7 +99,10 @@ def test_eval_script_applies_it_after_reset_and_before_the_hash_and_shell_script
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     independent = src[src.index("for cname, cmd in"):src.index('if args.command_suite in ("extended", "ex40_b3")')]
-    assert '"--fixed-terrain"' in src and src.index("fixed_terrain.apply(\n                raw, args.fixed_level, cols=") < src.index("th = hashlib.sha256(") and independent.count("env.reset()") == 2
+    assert ('"--fixed-terrain"' in src
+            and src.index('res["fixed_terrain"] = fixed_terrain.apply_sparse') < src.index("th = hashlib.sha256(")
+            and src.index('res["fixed_terrain"] = fixed_terrain.apply_kind') < src.index("th = hashlib.sha256(")
+            and independent.count("env.reset()") == 2)
     assert "고정 지형 칸이 reset 뒤에 바뀌었다" in src
     for name in ("run_eval_map_modes.sh", "run_eval_g0_reference.sh"):
         text = (ROOT / "foothold_s2" / name).read_text(encoding="utf-8")
@@ -140,4 +143,5 @@ def test_eval_script_asserts_root_is_near_the_env_origin_after_reset():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     assert "START_OFFSET_MAX_M = 0.5" in src and "root_pos_w[:, :2] - raw.scene.env_origins[:, :2]" in src and "start_offset_max_m" in src
-    assert src.index("fixed_terrain.apply(\n                raw, args.fixed_level, cols=") < src.index("START_OFFSET_MAX_M + 1.0e-3") < src.index("th = hashlib.sha256(")
+    assert src.index('res["fixed_terrain"] = fixed_terrain.apply_sparse') < src.index("START_OFFSET_MAX_M + 1.0e-3") < src.index("th = hashlib.sha256(")
+    assert src.index('res["fixed_terrain"] = fixed_terrain.apply_kind') < src.index("START_OFFSET_MAX_M + 1.0e-3")

@@ -35,6 +35,8 @@ parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terr
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
 parser.add_argument("--mesh-dir", default=None, help="EX-42 calibration: pinned full ABCDE combined mesh directory")
+parser.add_argument("--ex42-kind-family", choices=("A", "B", "C", "D", "E"))
+parser.add_argument("--ex42-kind-name")
 parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
 parser.add_argument("--n21-stage", default=None, help="N21 approved EX-42 stage id")
 parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=None)
@@ -62,6 +64,12 @@ parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
+if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
+                  or not args.fixed_terrain or args.fixed_level is None or args.envs != 64
+                  or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
+                  or args.terrain_skill_v2 or args.push_ladder):
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 64 env without other suites")
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
@@ -284,7 +292,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         from foothold_s2.terrains import columns as _c2
 
         _g2 = terrain.cfg.terrain_generator
-        names = (args.ex42_mesh["eval_columns"] if args.ex42_mesh else
+        names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
                  _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols)))
     except Exception as e:                                                             # noqa: BLE001  (이름 표를 못 만들어도 열 번호 · 레벨은 남긴다)
         err = repr(e)
@@ -342,7 +350,7 @@ if args.ex39_heading_smoke_guard:
                                         "forced_heading_before_disable": True,
                                         "fixed_command_step_checks": 0}
 terrain_gen = raw.scene.terrain.cfg.terrain_generator
-terrain_names = (args.ex42_mesh["eval_columns"] if args.ex42_mesh else
+terrain_names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
                  columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
 res["terrain_columns"] = terrain_names
 
@@ -418,10 +426,16 @@ for mode in args.modes.split(","):
         terrain = raw.scene.terrain
 
         if args.fixed_terrain:
-            res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(
-                raw, args.fixed_level, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
+            if kind_cell:
+                kind_table = [{"family": f, "kind": k} for f, k in zip(
+                    args.ex42_mesh["column_family"], args.ex42_mesh["columns"])]
+                res["fixed_terrain"] = fixed_terrain.apply_kind(
+                    raw, kind_table, args.ex42_kind_family, args.ex42_kind_name, args.fixed_level)
+            else:
+                res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(
+                    raw, args.fixed_level, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
             env.reset()                                                                  # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
-            if parser_sparse:
+            if kind_cell or parser_sparse:
                 lv, ty = np.array([t["level"] for t in res["fixed_terrain"]["tiles"]]), np.array([t["col"] for t in res["fixed_terrain"]["tiles"]])
             else:
                 lv, ty = fixed_terrain.fixed_assignment(env.num_envs, res["fixed_terrain"]["rows"], res["fixed_terrain"]["cols"], args.fixed_level)
@@ -600,7 +614,11 @@ for mode in args.modes.split(","):
             dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
             env.reset()
             if args.fixed_terrain:
-                fixed_terrain.apply(raw, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
+                if kind_cell:
+                    fixed_terrain.apply_kind(raw, kind_table, args.ex42_kind_family,
+                                             args.ex42_kind_name, args.fixed_level)
+                else:
+                    fixed_terrain.apply(raw, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
                 env.reset()
             seq_tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
                                                     terrain.terrain_types.cpu().numpy(), terrain_names)
@@ -681,6 +699,10 @@ for _m in list(sys.modules.values()):
     if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
         res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
 out_json = os.path.join(args.out, "map_modes.json")
+if kind_cell:
+    from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
+    validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
+                       kind=args.ex42_kind_name, level=args.fixed_level)
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
     stream.flush()
