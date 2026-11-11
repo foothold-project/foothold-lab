@@ -573,7 +573,8 @@ if _ex42_requested:
             EX42_STAGE_ZERO_PLAN)
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
-            parent_update=EX42_STAGE_PARENT_UPDATES[1])
+            parent_update=EX42_STAGE_PARENT_UPDATES[1],
+            ex42_plan=EX42_STAGE_ZERO_PLAN, stage_id=EX42_STAGE_ID)
         from foothold_s2.scripts.ex42_training_entry import validate_ex42_segment_end, validate_ex42_stage_zero_resume
 
         _interval = EX42_STAGE_ZERO_APPROVAL.get("boundary_evaluation_interval_updates")
@@ -1061,6 +1062,9 @@ def main(env_cfg, agent_cfg):
             ladder_outcomes=(json.loads(Path(os.environ["EX42_LADDER_OUTCOMES"]).read_text(encoding="utf-8"))
                              if os.environ.get("EX42_LADDER_OUTCOMES") else None))
         print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
+    if EX42_STAGE_ZERO_PLAN_VIEW is not None:
+        from foothold_s2.commands.ex42_shares import configure_env as configure_ex42_command_env
+        configure_ex42_command_env(env_cfg, EX42_STAGE_ZERO_PLAN_VIEW.command_contract)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
