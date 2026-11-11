@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import math
 import re
 from pathlib import Path
 
@@ -19,6 +20,7 @@ def _landing_window(value: dict | None, plan: dict, case_id: str) -> dict:
             any(type(value.get(key)) is not int or not 0 <= value[key] <= envs
                 for key in ("valid_count", "success_count", "survival_count")) or
             value["success_count"] > value["valid_count"] or
+            value["survival_count"] > value["valid_count"] or
             not isinstance(value.get("raw_file"), str) or
             not isinstance(value.get("raw_sha256"), str) or
             re.fullmatch(r"[0-9a-f]{64}", value["raw_sha256"]) is None):
@@ -34,21 +36,33 @@ def _landing_window(value: dict | None, plan: dict, case_id: str) -> dict:
                 ("case_id", "envs", "valid_count", "success_count", "survival_count"))):
         raise ValueError("EX-42 E1 D44 landing raw evidence differs")
     spec = plan["evaluation"]["paper_cells"]["stairs_landing"].get("case_specs", {}).get(case_id)
-    if spec is not None:
-        if any(source.get(key) != spec[key] for key in ("task", "map_mode", "role")):
-            raise ValueError("EX-42 E1 D44 case identity differs from prep")
-        trace_file, trace_sha = source.get("trace_file"), source.get("trace_sha256")
-        if (not isinstance(trace_file, str) or not isinstance(trace_sha, str)
-                or re.fullmatch(r"[0-9a-f]{64}", trace_sha) is None
-                or hashlib.sha256(Path(trace_file).read_bytes()).hexdigest() != trace_sha):
-            raise ValueError("EX-42 E1 D44 trace SHA differs")
-    passed = value["success_count"] >= promotion["success_min"] and value["survival_count"] >= promotion["survival_min"]
-    judgement = "HOLD" if value["valid_count"] != envs else "PASS" if passed else "FAIL"
+    if (not isinstance(spec, dict) or spec.get("role") != "judge" or
+            case_id != f"{spec.get('task')}_{spec.get('map_mode')}" or any(
+            source.get(key) != spec.get(key) for key in ("task", "map_mode", "role"))):
+        raise ValueError("EX-42 E1 D44 case identity differs from prep")
+    trace_file, trace_sha = source.get("trace_file"), source.get("trace_sha256")
+    try:
+        trace_matches = (isinstance(trace_file, str) and isinstance(trace_sha, str)
+                         and re.fullmatch(r"[0-9a-f]{64}", trace_sha) is not None
+                         and hashlib.sha256(Path(trace_file).read_bytes()).hexdigest() == trace_sha)
+    except OSError:
+        trace_matches = False
+    if not trace_matches:
+        raise ValueError("EX-42 E1 D44 trace SHA differs")
+    landing = plan["evaluation"]["paper_cells"]["stairs_landing"]
+    valid_min = landing["valid_min"]
+    if type(valid_min) is not int or not 0 < valid_min <= envs:
+        raise ValueError("EX-42 E1 D44 valid denominator floor invalid")
+    valid = value["valid_count"]
+    success_min = math.ceil(promotion["success_min"] * valid / envs)
+    survival_min = math.ceil(promotion["survival_min"] * valid / envs)
+    passed = value["success_count"] >= success_min and value["survival_count"] >= survival_min
+    judgement = "HOLD" if valid < valid_min else "PASS" if passed else "FAIL"
     return {"judgement": judgement, "case_id": case_id,
             "envs": envs, "valid_count": value["valid_count"], "success_count": value["success_count"],
             "survival_count": value["survival_count"],
-            **({"reason": "D44 무판정 env 있음"} if judgement == "HOLD" else {}),
-            "success_min": promotion["success_min"], "survival_min": promotion["survival_min"],
+            **({"reason": "D44 유효 env 하한 미달"} if judgement == "HOLD" else {}),
+            "success_min": success_min, "survival_min": survival_min,
             "raw_file": str(path), "raw_sha256": value["raw_sha256"]}
 
 
@@ -58,6 +72,13 @@ def judge_e1(score: dict, baseline: dict, measured: dict, plan: dict,
     current = judge_maintenance(score, baseline, measured)
     earlier = judge_maintenance(previous, baseline, measured) if previous is not None else None
     windows = plan["evaluation"]["promotion"]["windows"]
+    timing = plan["evaluation"]["paper_cells"]["stairs_landing"].get("timing", {})
+    if (not isinstance(timing, dict) or
+            type(timing.get("stop_hold_s")) not in (int, float) or
+            type(timing.get("stop_s")) not in (int, float) or
+            not math.isfinite(timing["stop_hold_s"]) or not math.isfinite(timing["stop_s"]) or
+            timing["stop_hold_s"] <= 0 or timing["stop_hold_s"] > timing["stop_s"]):
+        raise ValueError("EX-42 E1 D44 stop hold exceeds window")
     if windows != 2:
         raise ValueError("EX-42 E1 exit requires the approved two-window plan")
     case_ids = plan["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases")

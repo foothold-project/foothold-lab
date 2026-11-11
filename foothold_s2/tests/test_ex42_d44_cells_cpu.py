@@ -31,7 +31,7 @@ def _plan():
                    "stop_speed_mps": .05, "foot_below_top_m": .08,
                    "foot_stop_z_tolerance_m": .08},
         "turn_rate_radps": 1.2, "turn_seconds": 6.,
-        "success_turn_fraction": .8, "stop_surface_z_m": .32,
+        "success_turn_fraction": .8, "stop_surface_z_m": .48, "valid_min": 48,
         "approach_vx_mps": 1.0, "restart_vx_mps": 1.0,
         "source_mesh_dir": "/tmp/proposed-evaluation-mesh",
         "source_mesh_sha256": "a" * 64,
@@ -127,7 +127,26 @@ def test_stop_restart_timeout_is_unjudged_and_reach_requires_four_feet():
     bad = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
                     settings=settings, dt=.1)
     assert (bad["valid_count"], bad["success_count"]) == (63, 62)
+    assert bad["survival_count"] == 63
     assert bad["per_env"][0]["reason"] == "approach_timeout"
+
+
+def test_stop_is_root_band_and_speed_only_with_foot_height_diagnostic():
+    settings = contract(_plan())
+    trace = _trace("stop_restart")
+    # Feet span different treads. The approved stop does not require 0.48 m feet.
+    good = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)
+    assert good["success_count"] == 64
+    assert good["per_env"][0]["stop_feet_height_ok"] is False
+    moving = copy.deepcopy(trace)
+    moving["body_vel_b"][10:30, :, 0] = .051
+    assert summarize(moving, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)["success_count"] == 0
+    outside = copy.deepcopy(trace)
+    outside["root_pos_w"][10:30, :, 0] = 1.91
+    assert summarize(outside, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)["success_count"] == 0
 
 
 def test_read_evidence_binds_every_case_json_and_npz_sha(tmp_path, monkeypatch):
@@ -165,9 +184,10 @@ def test_read_evidence_binds_every_case_json_and_npz_sha(tmp_path, monkeypatch):
                       checkpoint_sha256="b" * 64, seed=42)
 
 
-def test_d44_real_kit_parser_accepts_parent_argv_then_rejects_bad_env_count(tmp_path):
+def test_d44_real_kit_parser_accepts_parent_argv_then_rejects_bad_env_count(tmp_path, monkeypatch):
     if importlib.util.find_spec("isaaclab") is None:
         pytest.skip("Isaac Lab parser is unavailable in this CPU interpreter")
+    monkeypatch.setenv("FOOTHOLD_MACHINE_PROFILE", str(Path(__file__).resolve().parents[2] / "machines/AI-WS01-linux.yaml"))
     argv = d44_kit_command(Path(__file__), tmp_path, "cuda:1", task="FootholdS2-Go2-S2-SB-v0",
                            plan_path=tmp_path / "missing-plan.yaml", mesh_dir=tmp_path / "source",
                            replica_dir=tmp_path / "replica", replica_sha256="a" * 64, seed=42)

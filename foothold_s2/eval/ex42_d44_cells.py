@@ -34,6 +34,7 @@ def contract(plan: dict) -> dict:
     for name, spec in cases.items():
         if (not isinstance(spec, dict) or spec.get("task") not in TASKS
                 or spec.get("map_mode") not in MODES
+                or name != f"{spec.get('task')}_{spec.get('map_mode')}"
                 or spec.get("role") != ("judge" if name in judges else "record_only")):
             raise ValueError(f"D44 prep case {name} has invalid task, mode or role")
         if (name in judges) != (spec["map_mode"] in ("eval_gt", "eval_pred")):
@@ -46,6 +47,9 @@ def contract(plan: dict) -> dict:
             raise ValueError(f"D44 prep timing {key} missing or invalid")
     if timing["stop_hold_s"] > timing["stop_s"]:
         raise ValueError("D44 stop hold exceeds stop window")
+    valid_min = landing.get("valid_min")
+    if type(valid_min) is not int or not 0 < valid_min <= 64:
+        raise ValueError("D44 valid denominator floor missing or invalid")
     for key in ("turn_rate_radps", "turn_seconds", "success_turn_fraction", "stop_surface_z_m"):
         value = landing.get(key)
         if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
@@ -148,7 +152,8 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         stop_feet = (contact[:, env].any(axis=-1) & np.all(
                         ~contact[:, env] | (np.abs(local_feet[:, env, :, 2] - stop_floor)
                                               <= timing["foot_stop_z_tolerance_m"]), axis=-1))
-        stop_ok = _continuous_true((stop & within_band & stopped & stop_feet),
+        # Foot height is diagnostic. The approved stop is root x and horizontal speed.
+        stop_ok = _continuous_true((stop & within_band & stopped),
                                    math.ceil(timing["stop_hold_s"] / dt))
         top_ok = (restart & platform[:, env] & contact[:, env].all(axis=-1)
                   & np.all(local_feet[:, env, :, 2] >= foot_floor, axis=-1))
@@ -156,9 +161,11 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         success = bool(valid and survives and stop_ok and reached)
         rows.append({"env": env, "valid": valid, "survival": survives, "success": success,
                      "reason": "stop_restart_pass" if success else reason or "stop_or_landing_or_survival",
-                     "approach_steps": int(approach.sum()), "stop_ok": stop_ok, "landing_0_5s": reached})
+                     "approach_steps": int(approach.sum()), "stop_ok": stop_ok,
+                     "stop_feet_height_ok": bool(np.any(stop & stop_feet)),
+                     "landing_0_5s": reached})
     return {"envs": envs, "valid_count": sum(row["valid"] for row in rows),
-            "survival_count": sum(row["survival"] for row in rows),
+            "survival_count": sum(row["survival"] for row in rows if row["valid"]),
             "success_count": sum(row["success"] for row in rows), "per_env": rows}
 
 

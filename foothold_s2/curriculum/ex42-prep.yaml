@@ -520,7 +520,8 @@ evaluation:
         foot_stop_z_tolerance_m: 0.08
       approach_vx_mps: 1.0
       restart_vx_mps: 1.0
-      stop_surface_z_m: 0.32
+      stop_surface_z_m: 0.48  # measured stop-band interior, D44-SIX-ANCHORS-1111.json
+      valid_min: 48  # D176: unapproached envs excluded from denominator
       source_mesh_dir: /home/jay/data/foothold/s2_lab/ex42_eval_mesh_1111/landing_seed42_v2
       source_mesh_sha256: baa59af3347c53c2cdeae674ddc873f26d4b9e38cffdbce4a4dc73cf94febb82
     stairs_surface_spin:
