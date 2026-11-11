@@ -63,7 +63,7 @@ def test_a_continue_command_resumes_in_the_checkpoint_folder_up_to_the_segment_e
 def test_the_dry_run_is_the_single_rank_command_with_the_dry_run_flag(tmp_path):
     argv, child, _ = L.build(_env(tmp_path), dry_run=True)
     assert argv[:2] == ["/py/python", str(L.TRAIN_START)] and "torch.distributed.run" not in argv
-    assert "--ex42_stage_dry_run" in argv and "--ex42_stage_approved" not in argv
+    assert "--ex42_stage_dry_run" in argv and "--ex42_stage_approved" in argv   # the entry wants both switches
     assert (child["WORLD_SIZE"], child["RANK"]) == ("2", "0")
 
 

@@ -98,7 +98,7 @@ def build(env, *, dry_run=False, now=None):
              f"--ex42_queue_path={queue}", f"--ex42_dispatch_path={DISPATCH}",
              "--ex42_p1_score_argv_json=" + json.dumps(p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python)),
              f"--ex42_source_ref={_need(env, 'SOURCE_REF')}", f"--ex42_stage={stage}",
-             "--ex42_stage_dry_run" if dry_run else "--ex42_stage_approved",
+             "--ex42_stage_approved"] + (["--ex42_stage_dry_run"] if dry_run else []) + [
              f"--ex42_terrain_manifest={terrain_manifest}", f"--ex42_terrain_mesh_dir={mesh_dir}"]
     if resume:
         flags += [f"--ex42_resume_from={resume}", f"--ex42_segment_end={segment_end}"]
