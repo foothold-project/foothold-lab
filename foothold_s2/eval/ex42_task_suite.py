@@ -46,6 +46,15 @@ def push_applicability(plan,family,kind):
 
 def _forward_task(family,kind):
     if (family,kind)==('C','box'):return 'box_center_pass'
+    # CG E.3 completion contract: the far support must hold for 0.5 s.
+    # Keep the name in the receipt even though the geometric predicate is
+    # shared with tile_end_reach. Never infer a fall from a final x sample.
+    last_support={
+        'A': {'stepping_stones_low','stepping_stones_high','balance_beams','stepping_beams','gaps'},
+        'B': {'stair_up','stair_down','climb_up','climb_down','gap','pallets','stones','beam','consecutive'},
+        'C': {'pyramid_stairs','inverted_pyramid_stairs','discrete_grid','gap'},
+    }
+    if kind in last_support.get(family,set()):return 'last_support_0.5s'
     if kind.startswith(('eval_stairs_','eval_slope_')) or kind=='high_ledge_075':return 'surface_hold'
     if kind in ('crawl','crawl_020'):return 'tunnel_exit_no_contact'
     return 'tile_end_reach'
@@ -58,9 +67,17 @@ def case_specs(plan,*,stage,group,family,kind,window_index,steps):
     if group=='directions' and steps!=cfg['steps']:raise ValueError('direction test must use 300 steps')
     if group=='push' and push_applicability(plan,family,kind)['status']=='n/a':return {}
     if group not in ('paper','kind','directions','push'):raise ValueError('unknown task group')
-    if group=='kind' and not ((family,kind)==('C','box') or
-            (family=='E' and kind in ('slope_steep','slope_steep_inv','stairs_high','stairs_high_inv'))):
-        raise ValueError('this completion evaluator handles C box and expanded E; use the kind-specific completion evaluator')
+    e3_kinds={
+        'A': {'stepping_stones_low','stepping_stones_high','balance_beams','stepping_beams','gaps',
+              'pyramid_stairs','pyramid_stairs_inv','boxes','random_rough',
+              'hf_pyramid_slope','hf_pyramid_slope_inv','stage_stairs','flat'},
+        'B': {'stair_up','stair_down','rough','boxes'},
+        'C': {'pyramid_stairs','inverted_pyramid_stairs','discrete_grid','flat'},
+    }
+    if group=='kind' and (STAGES.index(stage)<STAGES.index('E3') or
+            kind not in plan['stages'][0]['terrain']['kind_task'].get(family,{}) or
+            (stage=='E3' and kind not in e3_kinds.get(family,set()))):
+        raise ValueError('named kind is unavailable at this stage or absent from the pinned training task table')
     if kind in ('eval_stairs_landing_016','eval_stair_surface_spin'):
         raise ValueError('landing/spin needs its maneuver evaluator, not a forward completion cell')
     commands=cfg['commands'] if group=='directions' else {'reverse' if kind in ('eval_stairs_010','eval_stairs_015_reverse','eval_stairs_020_reverse') else 'forward':

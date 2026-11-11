@@ -67,6 +67,14 @@ def test_tile_end_requires_lane_and_hold():
     assert summarize(t,spec=spec('tile_end_reach'),anchors=anchors())['success_count']==0
 
 
+def test_last_support_requires_continuous_contact_and_end_survival():
+    t=trace()
+    t['contact'][-5:,0,:]=False
+    t['alive'][-1,1]=False
+    out=summarize(t,spec=spec('last_support_0.5s'),anchors=anchors())
+    assert (out['valid_count'],out['success_count'],out['survival_count'])==(64,62,63)
+
+
 def cross_row(distance=2.,survivors=60,valid=64):
     return dict(envs=64,valid_count=valid,survival_count=survivors,
         projected_distance_m=[distance]*64,role='record_only',
