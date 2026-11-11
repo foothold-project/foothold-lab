@@ -23,6 +23,14 @@ TABLE = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
 APPROVALS = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 
+def _e1_row():
+    return next(r for r in yaml.safe_load(TABLE.read_text())["stages"] if r["id"] == "E1")
+
+
+def _e1_maximum():
+    return _e1_row()["maximum_updates"]
+
+
 def _boundary(tmp_path, iteration, judgment="HOLD"):
     path, manifest, *_ = _boundary_checkpoint(tmp_path, iteration)
     p1 = {"state": "complete", "judgment": judgment, "stage_id": "E1", "checkpoint_iteration": iteration,
@@ -62,8 +70,9 @@ def test_a_pass_at_the_bound_wants_the_next_stage_which_has_no_approval_cell(tmp
 
 
 @needs_run
-@pytest.mark.parametrize("iteration", [0, 100, 300, 999, 1250])
+@pytest.mark.parametrize("iteration", [0, 100, 300, 999, "past_maximum"])
 def test_updates_that_are_not_boundaries_decide_nothing(tmp_path, iteration):
+    iteration = _e1_maximum() + 250 if iteration == "past_maximum" else iteration     # read from the plan, not typed
     path, manifest, out, _ = _boundary(tmp_path, 250)
     assert handoff.decide_next_stage(TABLE, APPROVALS, "E1", iteration, out / "p1_score.json", manifest) is None
 
