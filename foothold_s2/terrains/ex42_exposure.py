@@ -8,6 +8,12 @@ at the column's own cap. The numbers come from the plan (stages E0 terrain.expos
       default: {exposure: 0.0, level_cap: 0}
       positive: [{family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}]   # kinds_of -> kind_task[<name>]
 
+A rule carries either `exposure` (a relative weight) or `share` (the fraction of ALL envs its columns hold together,
+0 < share < 1, split evenly over its columns; K boundary: CG "terrain.exposure.<family>.<kind>.share"). The weight
+rules take the rest, 1 - sum(share), in proportion to their weights (the derived continuous share). `kinds_of` names a
+kind_task list, `kind` names one kind. Shares and weights are turned into one weight per column, so the env counts
+(`env_counts`, largest remainder) hit the shares exactly up to one env.
+
 Isaac's TerrainImporter keeps terrain_types fixed after the start and only moves terrain_levels, so
 "never reassigned into an exposure-0 column" holds once the start assignment is inside the eligible set.
 Pure python + torch; Kit only supplies the terrain object.
@@ -26,24 +32,51 @@ def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]
     base = spec["default"]
     default = (_number(base.get("exposure"), "default.exposure"), _cap(base.get("level_cap"), "default.level_cap"))
     kind_task = plan_terrain.get("kind_task") or {}
-    rules = []
+    rules = []                                    # (family, kinds, weight, share, level cap)
     for rule in spec.get("positive") or []:
-        kinds_of = rule.get("kinds_of")
-        if kinds_of not in kind_task:
-            raise ValueError(f"EX-42 exposure rule names kind list {kinds_of!r} that kind_task lacks")
-        rules.append((rule.get("family"), set(kind_task[kinds_of]),
-                      _number(rule.get("exposure"), "positive.exposure"), _cap(rule.get("level_cap"), "positive.level_cap")))
-    exposure, caps = [], []
+        if ("kinds_of" in rule) == ("kind" in rule):
+            raise ValueError("EX-42 exposure rule names exactly one of kinds_of or kind")
+        if "kinds_of" in rule:
+            if rule["kinds_of"] not in kind_task:
+                raise ValueError(f"EX-42 exposure rule names kind list {rule['kinds_of']!r} that kind_task lacks")
+            kinds = set(kind_task[rule["kinds_of"]])
+        else:
+            kinds = {rule["kind"]}
+        if ("exposure" in rule) == ("share" in rule):
+            raise ValueError("EX-42 exposure rule carries exactly one of exposure or share")
+        weight = _number(rule["exposure"], "positive.exposure") if "exposure" in rule else None
+        share = _share(rule["share"]) if "share" in rule else None
+        rules.append((rule.get("family"), kinds, weight, share, _cap(rule.get("level_cap"), "positive.level_cap")))
+    exposure, caps, share_of = [], [], []
     for row in table:
-        hit = [(w, c) for fam, kinds, w, c in rules if row["family"] == fam and row["kind"] in kinds]
+        hit = [(w, sh, c) for fam, kinds, w, sh, c in rules if row["family"] == fam and row["kind"] in kinds]
         if len(hit) > 1:
             raise ValueError(f"EX-42 exposure rules overlap on column {row['family']}/{row['kind']}")
-        w, c = hit[0] if hit else default
+        w, sh, c = hit[0] if hit else (default[0], None, default[1])
         exposure.append(w)
+        share_of.append(sh)
         caps.append(c)
+    shares = [(fam, kinds, sh) for fam, kinds, w, sh, c in rules if sh is not None]
+    if shares:
+        total_share = sum(sh for _, _, sh in shares)
+        weight_total = sum(w for w, sh in zip(exposure, share_of) if sh is None)
+        if total_share >= 1.0 or weight_total <= 0:
+            raise ValueError("EX-42 exposure shares must leave a positive remainder for the weight rules")
+        for fam, kinds, sh in shares:
+            ids = [i for i, row in enumerate(table) if row["family"] == fam and row["kind"] in kinds]
+            if not ids:
+                raise ValueError(f"EX-42 exposure share rule {fam}/{sorted(kinds)} matches no mesh column")
+            for i in ids:               # normalized weight of these columns = sh / len(ids) of all envs
+                exposure[i] = sh / len(ids) * weight_total / (1.0 - total_share)
     if not any(w > 0 for w in exposure):
         raise ValueError(f"EX-42 {stage_id} exposure leaves no column with positive exposure")
     return exposure, caps
+
+
+def _share(value: Any) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 < value < 1:
+        raise ValueError("EX-42 exposure share must be a number with 0 < share < 1")
+    return float(value)
 
 
 def _number(value: Any, name: str) -> float:
@@ -58,8 +91,8 @@ def _cap(value: Any, name: str) -> int:
     return value
 
 
-def assign_exposed_columns(num_envs: int, exposure, generator=None, device="cpu"):
-    """Column per env: only exposure > 0 columns, counts proportional to exposure (largest remainder)."""
+def env_counts(num_envs: int, exposure):
+    """(eligible column ids, envs per eligible column): proportional to exposure, largest remainder."""
     import torch
 
     w = torch.as_tensor(exposure, dtype=torch.float64)
@@ -69,6 +102,14 @@ def assign_exposed_columns(num_envs: int, exposure, generator=None, device="cpu"
     left = num_envs - int(counts.sum())
     if left > 0:
         counts[torch.argsort(share - counts, descending=True)[:left]] += 1
+    return eligible, counts
+
+
+def assign_exposed_columns(num_envs: int, exposure, generator=None, device="cpu"):
+    """Column per env: only exposure > 0 columns, counts proportional to exposure (largest remainder)."""
+    import torch
+
+    eligible, counts = env_counts(num_envs, exposure)
     types = torch.repeat_interleave(eligible, counts)
     perm = torch.randperm(num_envs, generator=generator)
     return types[perm].to(device)
