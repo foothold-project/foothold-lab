@@ -126,6 +126,23 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
 
     if score.get("checkpoint_sha256") != digest(checkpoint):
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
+    judgment = score.get("judgement", "HOLD")
+    if judgment in ("PASS", "FAIL"):
+        cells = score.get("cell_judgments") or {}
+        if (stage_id != "E0" or set(cells) != set(MODES) or
+                any(set(cells[mode]) != set(score["map64"].get(mode, {})) for mode in MODES) or
+                any(cells[mode][case].get("role") != "judge" for mode in ("eval_gt", "eval_pred")
+                    for case in cells[mode]) or
+                any(cells["probe_prop_only"][case].get("role") != "record_only"
+                    for case in cells["probe_prop_only"]) or
+                any(cells[mode][case].get("judgment") not in ("PASS", "HOLD", "FAIL")
+                    for mode in ("eval_gt", "eval_pred") for case in cells[mode])):
+            raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
+        verdicts = [cells[mode][case]["judgment"] for mode in ("eval_gt", "eval_pred")
+                    for case in cells[mode]]
+        expected = "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"
+        if len(verdicts) != 26 or expected != judgment:
+            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
     plan = EX42Plan.load(plan_path)
     if stage_id not in plan.runtime_stage_ids:
         raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
@@ -136,8 +153,9 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
               for command, row in commands.items()]
     result = {"state": "complete", "checkpoint_sha256": score["checkpoint_sha256"],
               "checkpoint_iteration": iteration, "plan_sha256": plan.sha256,
-              "stage_id": stage_id, "judgment": "HOLD",
+              "stage_id": stage_id, "judgment": judgment,
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
+              "cell_judgments": score.get("cell_judgments"),
               "measurement": str(Path(output) / "ex42_score.json"),
               "measurement_sha256": digest(Path(output) / "ex42_score.json")}
     validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
@@ -201,7 +219,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             return 5
     try:
         score = measure(checkpoint, output, expected_seed=seed,
-                        expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None)
+                        expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
+                        stage_id=p1_stage_id)
         _atomic(output / "ex42_score.json", score)
         if p1_plan is not None:
             p1 = p1_score_from_measure(
@@ -210,7 +229,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 stage_id=p1_stage_id, output=output)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
-        row.update(state="done", score=str(output / "ex42_score.json"), judgement="HOLD")
+        row.update(state="done", score=str(output / "ex42_score.json"), judgement=score["judgement"])
     except (ValueError, KeyError, OSError) as exc:
         row.update(state="HOLD", reason=f"EX-42 evidence invalid: {exc}")
     _atomic(output / "eval_receipt.json", row)
@@ -261,7 +280,7 @@ def main(argv=None):
     if args.score_existing:
         mesh_sha = preflight(args.mesh_dir)["mesh_sha256"] if args.mesh_dir else None
         score = measure(args.checkpoint, args.out, expected_seed=args.eval_seed,
-                        expected_mesh_sha256=mesh_sha)
+                        expected_mesh_sha256=mesh_sha, stage_id=args.p1_stage_id)
         _atomic(args.out / "ex42_score.json", score)
         print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
         return 0

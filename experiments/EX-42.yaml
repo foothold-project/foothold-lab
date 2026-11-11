@@ -25,7 +25,7 @@ files:
   score_config: foothold_s2/curriculum/ex42_score_config.json
   push_baseline: eval/push250/e0_flat_push_baseline.json
   push_baseline_status: planned_after_e0_local_update0
-  maintenance_baseline: null
+  maintenance_baseline: foothold_s2/curriculum/ex42_e0_baseline_a23.json
   stage_video_source: null
 operational_values:
   # Stage zero (EX42_0_T0_prime) started from m12000 = EX-41 run model_6000.pt.
