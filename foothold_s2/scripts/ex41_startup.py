@@ -1207,6 +1207,13 @@ def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] |
     if scoped_approval.get("state") == "stage_e0_only_authorized":
         # Bounded E0 cell (validate_stage_e0_authorization): m13000 -> 250 updates, nothing later.
         return scope.get("stage_id") == "E0" and scope.get("maximum_updates") == 250
+    if scoped_approval.get("state") == "stage_e1_only_authorized":
+        # Bounded E1 first segment (validate_stage_e1_authorization): E0 m250 -> the cell's own maximum, no extension
+        # and no later stage. The bound is read from the approved cell, not written here.
+        bound, interval = scope.get("maximum_updates"), scoped_approval.get("boundary_evaluation_interval_updates")
+        return (scope.get("stage_id") == "E1" and type(bound) is int and bound > 0
+                and scoped_approval.get("extension_authorized") is False
+                and type(interval) is int and 0 < interval <= bound and bound % interval == 0)
     return (scoped_approval.get("state") == "stage_zero_only_authorized"
             and scope.get("stage_id") == "EX42_0_T0_prime"
             and scope.get("source_stage_id") == "T0_prime"

@@ -41,6 +41,21 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return value
 
 
+def scoped_automatic_policy(value: Any) -> bool:
+    """Only the approved-stage, PASS-required policy can enable automatic dispatch."""
+    return (isinstance(value, dict)
+            and set(value) == {"mode", "require_gate_pass", "notify", "decision_source"}
+            and value.get("mode") == "approved_stage_only"
+            and value.get("require_gate_pass") is True
+            and value.get("notify") is True
+            and value.get("decision_source") == "c5471d370d634ed2a381d8249a10c652c143f699")
+
+
+def bounded_automatic_policy(value: Any) -> bool:
+    """Legacy disabled and explicitly scoped policies both preserve the full-plan block."""
+    return value is False or scoped_automatic_policy(value)
+
+
 def validate_stage_zero_authorization(plan: "EX42Plan", approvals_path: str | Path) -> dict[str, Any]:
     """Validate the separately approved, bounded T0-prime bridge only.
 
@@ -57,7 +72,7 @@ def validate_stage_zero_authorization(plan: "EX42Plan", approvals_path: str | Pa
     if (approvals.get("format") != APPROVAL_FORMAT
             or approvals.get("status") != "blocked"
             or approvals.get("production_launch_allowed") is not False
-            or approvals.get("automatic_launch_allowed") is not False):
+            or not bounded_automatic_policy(approvals.get("automatic_launch_allowed"))):
         raise ValueError("EX-42 full-plan launch guard must remain blocked")
     scoped = approvals.get("stage_zero_authorization")
     if not isinstance(scoped, dict) or scoped.get("approved") is not True:
@@ -108,7 +123,7 @@ def validate_stage_e0_authorization(plan: "EX42Plan", approvals_path: str | Path
     if (approvals.get("format") != APPROVAL_FORMAT
             or approvals.get("status") != "blocked"
             or approvals.get("production_launch_allowed") is not False
-            or approvals.get("automatic_launch_allowed") is not False):
+            or not bounded_automatic_policy(approvals.get("automatic_launch_allowed"))):
         raise ValueError("EX-42 full-plan launch guard must remain blocked")
     cell = approvals.get("stage_e0_authorization")
     if not isinstance(cell, dict) or cell.get("approved") is not True:
@@ -157,7 +172,7 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     if (approvals.get("format") != APPROVAL_FORMAT
             or approvals.get("status") != "blocked"
             or approvals.get("production_launch_allowed") is not False
-            or approvals.get("automatic_launch_allowed") is not False):
+            or not bounded_automatic_policy(approvals.get("automatic_launch_allowed"))):
         raise ValueError("EX-42 full-plan launch guard must remain blocked")
     cell = approvals.get("stage_e1_authorization")
     if not isinstance(cell, dict) or cell.get("approved") is not True:
@@ -516,8 +531,8 @@ class EX42Plan:
             blockers.append("approval_format_invalid")
         if approvals.get("production_launch_allowed") is not True:
             blockers.append("explicit_lead_approval_missing")
-        if approvals.get("automatic_launch_allowed") is not False:
-            blockers.append("automatic_launch_must_remain_disabled")
+        if not bounded_automatic_policy(approvals.get("automatic_launch_allowed")):
+            blockers.append("automatic_launch_policy_invalid")
         adoption = self.document["launch"].get("parent_adoption")
         if (self.document["launch"].get("require_ex41_graduation") is not False
                 or adoption != {"decision": "285348de", "checkpoints": ["m12000_20261107", "m13000_20261108"]}):

@@ -216,3 +216,56 @@ def test_verify_parent_manifest_uses_the_given_pin_not_the_stage_zero_pin(tmp_pa
     with pytest.raises(ValueError, match="bytes differ"):
         ckpt.write_bytes(b"tampered")
         plan.verify_parent_manifest(manifest, stage_id="E0", parent_pin=pin)
+
+
+def test_dr_scale_one_is_authorized_by_the_real_e1_cell_and_only_by_it(tmp_path):
+    """E1 launch 11:16 stopped here: the approval state of E1 was unknown to this check. Real approvals file, real
+    validator; every other E0 / stage-zero-only branch of the same shape is pinned by the sweep test below."""
+    import pathlib
+    from foothold_s2.curriculum.ex42_prep import EX42Plan, validate_stage_e1_authorization
+    root = pathlib.Path(__file__).resolve().parents[1] / "curriculum"
+    plan = EX42Plan.load(root / "ex42-prep.yaml")
+    ok = ex41_startup._authorized_initial_dr_scale
+    real = validate_stage_e1_authorization(plan, root / "ex42-approvals.yaml", entry.E1_PARENT_SHA256)
+    assert real["state"] == "stage_e1_only_authorized" and ok(1.0, real) is True
+    assert not ok(0.5, real) and not ok(0.8, real) and not ok(1.0, None)
+    for bad in ({**real, "state": "stage_e0_only_authorized"},                      # E0 cell shape with an E1 scope
+                {**real, "scope": {**real["scope"], "stage_id": "E1F"}},
+                {**real, "scope": {**real["scope"], "stage_id": "E0"}},
+                {**real, "scope": {**real["scope"], "start_update": 1}},
+                {**real, "scope": {**real["scope"], "maximum_updates": 0}},
+                {**real, "scope": {**real["scope"], "maximum_updates": "1000"}},
+                {**real, "scope": {**real["scope"], "later_stages_authorized": True}},
+                {**real, "scope": {**real["scope"], "parent_sha256": "xyz"}},
+                {**real, "extension_authorized": True}, {k: v for k, v in real.items() if k != "extension_authorized"},
+                {**real, "boundary_evaluation_interval_updates": 300},               # does not divide the bound
+                {**real, "boundary_evaluation_interval_updates": 0},
+                {k: v for k, v in real.items() if k != "boundary_evaluation_interval_updates"},
+                {**real, "production_launch_allowed": True}, {**real, "later_stages_authorized": True},
+                {**real, "approvals_sha256": "short"}):
+        assert not ok(1.0, bad), bad
+    assert not ok(1.0, {**real, "state": "stage_zero_only_authorized"})              # the stage-zero shape needs its own ids
+    # the exact call of train_start.py (prepare_ex41_env_cfg -> install_initial_dr_scale) with the plan view the E1
+    # path builds and the three reset terms of the env cfg: it must get through and wrap them
+    source_plan, source_stage = entry.load_ex42_stage_zero_source(plan)
+    view = entry.make_ex42_stage_zero_plan_view(source_plan, source_stage, {"parent_sha256": entry.E1_PARENT_SHA256},
+                                                parent_update=13250)
+    terms = {name: types.SimpleNamespace(func=lambda env, ids, *a, **k: None, params={})
+             for name in ("ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength")}
+    cfg = types.SimpleNamespace(events=types.SimpleNamespace(**terms))
+    receipt = ex41_startup.install_initial_dr_scale(cfg, view.initial_dr_scale, scoped_approval=real)
+    assert receipt["scale"] == 1.0 and receipt["scope"] == "ex42_stage_zero_only"
+    with pytest.raises(ValueError, match="requires EX-41 0.5 or a bounded EX-42"):      # the failure of the 11:16 launch
+        ex41_startup.install_initial_dr_scale(cfg, 1.0, scoped_approval={**real, "state": "stage_e1_unknown"})
+
+
+def test_every_code_file_that_knows_the_e0_approval_state_also_knows_the_e1_one():
+    """Sweep lock for the 11:16 failure shape: a branch that names the E0 approval state but not the E1 one."""
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[1]
+    for path in root.rglob("*.py"):
+        if "tests" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "stage_e0_only_authorized" in text:
+            assert "stage_e1_only_authorized" in text, path
