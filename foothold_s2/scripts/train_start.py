@@ -1051,9 +1051,15 @@ def main(env_cfg, agent_cfg):
 
         if not args_cli.ex42_terrain_mesh_dir:
             raise ValueError("EX-42 E0 needs --ex42_terrain_mesh_dir (combined mesh); refusing the default terrain")
+        # the plan this run was started with (a materialized plan for the later stages), and the boundaries already
+        # passed in this stage (a continued segment resumes at update `origin`; the ladder is read at every interval)
         EX42_E0_ENV_CONTRACT = prepare_e0_env_cfg(
-            env_cfg, EX42Plan.load(Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"), args_cli.ex42_terrain_mesh_dir,
-            stage_id=EX42_STAGE_ID)
+            env_cfg, EX42Plan.load(_pre_args.ex42_plan or Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"),
+            args_cli.ex42_terrain_mesh_dir, stage_id=EX42_STAGE_ID,
+            boundary_index=(EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"] // _interval
+                            if EX42_STAGE_ZERO_RESUME_PROOF is not None and _interval else 0),
+            ladder_outcomes=(json.loads(Path(os.environ["EX42_LADDER_OUTCOMES"]).read_text(encoding="utf-8"))
+                             if os.environ.get("EX42_LADDER_OUTCOMES") else None))
         print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,

@@ -122,6 +122,7 @@ def test_same_validator_accepts_only_complete_bounded_stage_fixture(tmp_path,sta
     assert proof['scope']['maximum_updates']==row['maximum_updates']
     assert proof['entry_gate_adapter_ready'] is False
     assert proof['training_started'] is False
+    assert proof['boundary_evaluation_interval_updates']==250     # the train entry cuts the stage at every boundary
 
 
 @pytest.mark.parametrize('field,value', [('source_stage_ids',[{}]), ('required_sha256_paths',[[]])])

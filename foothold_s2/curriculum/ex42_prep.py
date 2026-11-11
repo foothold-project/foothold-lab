@@ -391,7 +391,8 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
             raise ValueError(f'EX-42 {stage_id} boundary axis is not allowed by the table')
         proof = {'state': f'stage_{stage_id.lower()}_approval_only', 'scope': scope,
                  'decision_id': cell['decision_id'], 'approvals_path': str(path),
-                 'approvals_sha256': digest, 'later_stages_authorized': False}
+                 'approvals_sha256': digest, 'later_stages_authorized': False,
+                 'boundary_evaluation_interval_updates': interval}      # the stage is cut at every boundary (CG ledger)
     for dotted in contract['required_sha256_paths']:
         if not valid_digest(_approval_path_value(cell, dotted)):
             raise ValueError(f'EX-42 {stage_id} required SHA is unfilled: {dotted}')

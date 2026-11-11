@@ -506,6 +506,21 @@ stages:
         kind: flat
         share: 0.05
         level_cap: 0
+    # K 경계 사다리 (planner §2 여는 순서 · 가정): 경계마다 종류 하나 열기 (5 %), 다음 경계 현재 (10 %), 그다음 쉬움 (3 %)
+    k_ladder:
+      grades: {new: 0.05, current: 0.1, easy: 0.03}
+      order:
+      - {family: B, kind: rough, level_cap: 0}
+      - {family: C, kind: discrete_grid, level_cap: 0}
+      - {family: A, kind: stepping_stones_high, level_cap: 0}
+      - {family: C, kind: pyramid_stairs, level_cap: 0}
+      - {family: C, kind: inverted_pyramid_stairs, level_cap: 0}
+      - {family: B, kind: stair_up, level_cap: 0}
+      - {family: B, kind: stair_down, level_cap: 0}
+      - {family: B, kind: boxes, level_cap: 0}
+      - {family: A, kind: balance_beams, level_cap: 0}
+      - {family: A, kind: stepping_beams, level_cap: 0}
+      - {family: A, kind: gaps, level_cap: 0}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -610,6 +625,25 @@ stages:
         kind: climb_up
         share: 0.05
         level_cap: 0
+    # K 경계 사다리 (planner §2 · 가정): 쉬움 1.5 % 이므로 하한 1.5 %
+    k_ladder:
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      order:
+      - {family: B, kind: climb_down, level_cap: 0}
+      - {family: C, kind: box, level_cap: 0}
+      - {family: C, kind: discrete_obstacles, level_cap: 0}
+      - {family: B, kind: obstacles, level_cap: 0}
+      - {family: B, kind: stones, level_cap: 0}
+      - {family: B, kind: pallets, level_cap: 0}
+      - {family: B, kind: consecutive, level_cap: 0}
+      - {family: B, kind: beam, level_cap: 0}
+      - {family: B, kind: gap, level_cap: 0}
+      - {family: C, kind: gap, level_cap: 0}
+      - {family: E, kind: stairs_high, level_cap: 0}
+      - {family: E, kind: stairs_high_inv, level_cap: 0}
+      - {family: E, kind: slope_steep, level_cap: 0}
+      - {family: E, kind: slope_steep_inv, level_cap: 0}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1259,6 +1293,12 @@ stages:
         kind: high_ledge
         share: 0.05
         level_cap: 0
+    # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall 은 치수 미정이라 열지 않음
+    k_ladder:
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      order:
+      - {family: D, kind: crawl, level_cap: 0}
     floors:
       global_command_floor:
         reverse: 0.05
