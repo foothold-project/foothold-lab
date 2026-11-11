@@ -202,9 +202,14 @@ def test_split_branch_of_run_reproduces_the_one_gpu_score_from_real_e0_files(tmp
     monkeypatch.setattr(once, "machine_path", lambda k, _m=once.machine_path: pathlib.Path(sys.executable) if k == "conda_python" else _m(k))
     out = tmp_path / "split_250"
     rc = once.run(checkpoint, sha, out, "cuda:1", eval_seed=42, mesh_dir=MESH, expected_mesh_sha256=mesh_sha,
-                  split_device="cuda:0")
+                  split_device="cuda:0", p1_plan=ROOT / "foothold_s2/curriculum/ex42-prep.yaml",
+                  p1_approvals=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml", p1_stage_id="E0",
+                  checkpoint_iteration=250)
     receipt = json.loads((out / "eval_receipt.json").read_text())
     assert rc == 0 and receipt["state"] == "done", receipt.get("reason")
+    notice = json.loads((out / "next_stage_notice.json").read_text())          # the real P1 judgment is HOLD
+    assert (notice["state"], notice["next_stage_id"], notice["automatic_launch_started"]) == ("not_ready", "E1", False)
+    assert receipt["next_stage_notice"] == "not_ready"
     assert receipt["split"]["devices"] == ["cuda:1", "cuda:0"]
     assert {k.split("@")[1] for k in receipt["steps"]} == {"cuda:0", "cuda:1"}
     expected = sum(len(dev["stand"]) + bool(dev["map64"]) + bool(dev["axis_v2"])
@@ -397,3 +402,19 @@ def test_real_e1_chain_queues_250_500_750_1000_with_split_command_and_a_wait_on_
     assert [i["argv"][i["argv"].index("--checkpoint") + 1].rsplit("_", 1)[-1] for i in items] == [
         "250.pt", "500.pt", "750.pt", "1000.pt"]
     assert all(i["wait_pids"] == [os.getpid()] and i["gpu"] == 1 and "--split-device" in i["argv"] for i in items)
+
+
+def test_next_stage_notice_only_at_the_stage_end_and_never_starts_anything():
+    plan = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    ids = [row["id"] for row in EX42Plan.load(plan).document["stages"]]
+    assert ids.index("E1") + 1 < len(ids)
+    following = ids[ids.index("E1") + 1]
+    passed = {"judgment": "PASS", "checkpoint_sha256": "a" * 64}
+    ready = once.next_stage_notice(plan, "E1", 1000, passed)
+    assert ready["state"] == "next_stage_ready_for_approval" and ready["next_stage_id"] == following
+    assert ready["automatic_launch_started"] is False
+    assert once.next_stage_notice(plan, "E1", 1000, {**passed, "judgment": "HOLD"})["state"] == "not_ready"
+    for mid in (250, 500, 750):                                 # mid-stage boundaries get no notice
+        assert once.next_stage_notice(plan, "E1", mid, passed) is None
+    assert once.next_stage_notice(plan, "NOPE", 1000, passed) is None

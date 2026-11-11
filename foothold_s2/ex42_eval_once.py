@@ -152,6 +152,27 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
     return result
 
 
+def next_stage_notice(plan_path, stage_id, iteration, p1):
+    """After the stage's last boundary only: say whether the next stage is ready to be asked for.
+
+    CG D146 / `automatic_launch_allowed: false`: nothing starts by itself. A PASS gate yields a notice that
+    the lead reads and takes to the team lead; HOLD yields a notice that says it is not ready.
+    """
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    stages = EX42Plan.load(plan_path).document["stages"]
+    index = next((i for i, row in enumerate(stages) if row.get("id") == stage_id), None)
+    if index is None or iteration != stages[index].get("minimum_updates"):
+        return None
+    following = stages[index + 1]["id"] if index + 1 < len(stages) else None
+    ready = p1.get("judgment") == "PASS"
+    return {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
+            "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),
+            "next_stage_id": following, "state": "next_stage_ready_for_approval" if ready and following else "not_ready",
+            "automatic_launch_started": False,
+            "note": "No automatic start (CG D146, automatic_launch_allowed false): the lead asks the team lead and fills "
+                    "the next stage approval cell."}
+
+
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
         p1_stage_id=None, checkpoint_iteration=None, split_device=None):
@@ -261,6 +282,11 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 stage_id=p1_stage_id, output=output)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
+            notice = next_stage_notice(p1_plan, p1_stage_id, checkpoint_iteration, p1)
+            if notice is not None:
+                _atomic(output / "next_stage_notice.json", notice)
+                row["next_stage_notice"] = notice["state"]
+                print("EX42_NEXT_STAGE_NOTICE " + json.dumps(notice, ensure_ascii=False, sort_keys=True), flush=True)
         row.update(state="done", score=str(output / "ex42_score.json"), judgement="HOLD")
     except (ValueError, KeyError, OSError) as exc:
         row.update(state="HOLD", reason=f"EX-42 evidence invalid: {exc}")
