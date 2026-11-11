@@ -9,13 +9,14 @@ Adapter contract (input / output shapes, shared by every stage):
       ctx has: stage_id, checkpoint, evaluation, cfg, cfg_path, root, digest, plan (the maintenance-source plan dict),
       baseline loader helpers via ex42_e0_judge. Returns the measured score with `judgement` in PASS / HOLD / FAIL and
       the stage's own evidence under `stage_exit`: {judgement, windows, items{name: {role judge|record, judgement}}}.
-  verify(score, judgment, expected) -> dict
+  verify(score, judgment, expected, plan=None) -> dict
       Re-checks, on the P1 side, that a PASS / FAIL score carries its evidence (cells, two windows, ...). `expected` is
-      the 26-cell aggregate. Raises ValueError; returns extra result fields to copy into the P1 receipt.
+      the 26-cell aggregate, `plan` the plan document (passed by keyword). Raises ValueError; returns extra result
+      fields to copy into the P1 receipt. ctx also has plan_path, checkpoint_sha and seed.
 Aggregate rule everywhere: FAIL if any judge item FAILs, else HOLD if any is HOLD or missing, else PASS."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 LEGACY_DEFAULT = {"E0": "map39_e0", "E1": "map39_e1_two_window"}
 ADAPTERS: dict[str, "StageJudge"] = {}
@@ -27,7 +28,7 @@ class StageJudge:
     def judge(self, ctx: Any, score: dict) -> dict:
         raise NotImplementedError
 
-    def verify(self, score: dict, judgment: str, expected: str) -> dict:
+    def verify(self, score: dict, judgment: str, expected: str, plan: dict | None = None) -> dict:
         raise NotImplementedError
 
 
@@ -96,7 +97,7 @@ class _E0(StageJudge):
         measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         return judge(score, baseline, measured)
 
-    def verify(self, score, judgment, expected):
+    def verify(self, score, judgment, expected, plan=None):
         if _map39_cell_check(score, judgment, self.modes) != judgment:
             raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
         return {}
@@ -108,21 +109,51 @@ class _E1(_E0):
     def judge(self, ctx, score):
         from foothold_s2.ex42_e0_judge import load_baseline
         from foothold_s2.ex42_e1_judge import judge_e1, previous_e1_score
+        from foothold_s2.eval.ex42_d44_cells import read_evidence
         baseline = load_baseline(ctx.root, ctx.cfg, ctx.digest)
         baseline["_sha256"] = ctx.cfg["baseline"]["sha256"]
         measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        if (ctx.evaluation / "d44" / "d44_cells.json").is_file():
+            score["d44_cells"] = read_evidence(
+                ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
+                checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         prior = previous_e1_score(ctx.checkpoint, ctx.evaluation, ctx.plan["evaluation"]["interval_updates"],
                                   ctx.digest(ctx.cfg_path))
         return judge_e1(score, baseline, measured, ctx.plan, previous=prior)
 
-    def verify(self, score, judgment, expected):
+    def verify(self, score, judgment, expected, plan=None):
+        expected = _map39_cell_check(score, judgment, self.modes)          # the 26-cell structure first
+        if plan is None:
+            raise ValueError("EX-42 P1 E1 two-window exit needs the plan document")
         exit_row = score.get("e1_exit") or {}
         maintenance = exit_row.get("maintenance", {})
         landing = exit_row.get("d44", {})
+        required = plan["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases") or []
+        cases = landing.get("cases")
+        if (not isinstance(required, list) or any(not isinstance(case_id, str) or not case_id for case_id in required)
+                or len(set(required)) != len(required) or not isinstance(cases, dict) or set(cases) != set(required)
+                or landing.get("required_cases") != required):
+            raise ValueError("EX-42 P1 E1 D44 case evidence missing")
+        case_states = [cases[case_id].get(which, {}).get("judgement")
+                       for case_id in required for which in ("current", "previous")]
+        if any(state not in ("PASS", "HOLD", "FAIL") for state in case_states):
+            raise ValueError("EX-42 P1 E1 D44 case judgment invalid")
+        from foothold_s2.ex42_e1_judge import _landing_window
+        for case_id in required:                                          # per-case re-derivation from the raw evidence
+            if cases[case_id]["current"] != _landing_window((score.get("d44_cells") or {}).get(case_id), plan, case_id):
+                raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
+            previous_row = cases[case_id]["previous"]
+            if previous_row["judgement"] in ("PASS", "FAIL") and _landing_window(previous_row, plan, case_id) != previous_row:
+                raise ValueError("EX-42 P1 E1 prior D44 raw evidence differs")
+        current_states = [cases[case_id]["current"]["judgement"] for case_id in required]
+        previous_states = [cases[case_id]["previous"]["judgement"] for case_id in required]
         states = (expected, maintenance.get("previous"), landing.get("current", {}).get("judgement"),
                   landing.get("previous", {}).get("judgement"))
         if (score.get("stage_id") != "E1" or exit_row.get("judgement") != judgment or
-                maintenance.get("current") != expected or set(landing) != {"current", "previous"} or
+                maintenance.get("current") != expected or
+                set(landing) != {"required_cases", "cases", "current", "previous"} or
+                landing["current"].get("judgement") != aggregate(current_states) or
+                landing["previous"].get("judgement") != aggregate(previous_states) or
                 any(state not in ("PASS", "HOLD", "FAIL") for state in states) or aggregate(states) != judgment):
             raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
         return {"e1_exit": score["e1_exit"]}

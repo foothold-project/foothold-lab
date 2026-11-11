@@ -226,6 +226,7 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
             out["reason"] = f"{stage_id} has no exit judge adapter in the plan; this stage requires its own judgment policy"
         else:
             ctx = SimpleNamespace(root=ROOT, cfg=cfg, cfg_path=cfg_path, digest=digest, plan=plan, stage_id=stage_id,
-                                  checkpoint=checkpoint, evaluation=evaluation)
+                                  plan_path=ROOT / cfg["maintenance_source"], checkpoint=checkpoint,
+                                  evaluation=evaluation, checkpoint_sha=checkpoint_sha, seed=seed)
             out = adapter.judge(ctx, out)
     return out
