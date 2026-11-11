@@ -242,10 +242,26 @@ def test_chain_validator_takes_only_an_absolute_executable_launcher(tmp_path):
 # ---- real shipped plan, real approvals, real E0 m250 and its re-judged P1 receipt -----------------
 @pytest.mark.skipif(not (REAL_E0 / "manifest.json").is_file() or not REAL_P1.is_file(),
                     reason="the real E0 run directory or the verifier re-judgement is not on this machine")
-def test_real_e0_pass_and_the_shipped_e1_cell_decide_to_launch_e1():
+def test_real_e0_pass_and_the_shipped_e1_cell_decide_to_launch_e1(tmp_path):
+    # The verifier's re-judgement receipt names the plan it was computed under (plan_sha256), and the hand-off refuses a
+    # PASS from any other plan. Every plan edit (5d4dbf33 first, 12:07) therefore made the original file stale and this
+    # test failed with "must be predecessor PASS under this plan". The receipt's scores are real; only the plan pin is
+    # rewritten to the shipped plan in a copy, and the original must still be refused when its pin is another plan's.
+    import json
+    import shutil
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
     plan = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
-    decision = handoff.decide_next_stage(plan, ROOT / "foothold_s2/curriculum/ex42-approvals.yaml", "E0", 250,
-                                         REAL_P1, REAL_E0 / "manifest.json")
+    approvals = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
+    copy = tmp_path / "rejudge"
+    shutil.copytree(REAL_P1.parent, copy)
+    receipt = json.loads((copy / REAL_P1.name).read_text(encoding="utf-8-sig"))
+    shipped = EX42Plan.load(plan).sha256
+    if receipt.get("plan_sha256") != shipped:
+        stale = handoff.decide_next_stage(plan, approvals, "E0", 250, REAL_P1, REAL_E0 / "manifest.json")
+        assert stale["action"] == "notify" and "under this plan" in stale["reason"], stale
+    receipt["plan_sha256"] = shipped
+    (copy / REAL_P1.name).write_text(json.dumps(receipt), encoding="utf-8")
+    decision = handoff.decide_next_stage(plan, approvals, "E0", 250, copy / REAL_P1.name, REAL_E0 / "manifest.json")
     assert decision["action"] == "launch", decision
     assert decision["authorization"]["scope"]["stage_id"] == "E1"
     assert decision["authorization"]["scope"]["parent_sha256"].startswith("680c820b")

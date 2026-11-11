@@ -14,6 +14,8 @@ from foothold_s2.ex42_eval_once import p1_score_from_measure
 
 
 SAVED_E0 = Path("/home/jay/mai/tmp/scripter/ex42-e0-rejudge-m250-v3/ex42_score.json")
+CASES = ("turn_left_eval_gt", "turn_left_eval_pred", "turn_right_eval_gt",
+         "turn_right_eval_pred", "stop_restart_eval_gt", "stop_restart_eval_pred")
 
 
 def _inputs():
@@ -28,15 +30,30 @@ def _inputs():
     return score, baseline, measured, plan
 
 
-def _landing(plan, tmp_path, *, success=None, survival=None):
+def _landing(plan, tmp_path, case_id, *, success=None, survival=None, valid=64):
     promotion = plan["evaluation"]["promotion"]
-    value = {"case_id": plan["evaluation"]["paper_cells"]["stairs_landing"]["id"],
+    spec = plan["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"][case_id]
+    value = {"case_id": case_id,
             "envs": promotion["window_episodes"],
+            "valid_count": valid,
             "success_count": promotion["success_min"] if success is None else success,
             "survival_count": promotion["survival_min"] if survival is None else survival}
-    path = tmp_path / f"landing_{value['success_count']}_{value['survival_count']}.json"
+    trace = tmp_path / f"trace_{case_id}.npz"
+    trace.write_bytes(b"known trace")
+    value.update(spec)
+    value.update(trace_file=str(trace), trace_sha256=digest(trace))
+    path = tmp_path / f"landing_{case_id}_{valid}_{value['success_count']}_{value['survival_count']}.json"
     path.write_text(json.dumps(value), encoding="utf-8")
     return {**value, "raw_file": str(path), "raw_sha256": digest(path)}
+
+
+def _cells(plan, tmp_path):
+    return {case: _landing(plan, tmp_path, case) for case in CASES}
+
+
+def _replace_cell(score, plan, tmp_path, case_id, *, valid, success, survival):
+    score["d44_cells"][case_id] = _landing(
+        plan, tmp_path, case_id, valid=valid, success=success, survival=survival)
 
 
 def test_saved_e0_m250_as_e1_is_hold_for_missing_d44_column():
@@ -44,38 +61,39 @@ def test_saved_e0_m250_as_e1_is_hold_for_missing_d44_column():
     result = judge_e1(score, baseline, measured, plan, previous=None)
     assert result["maintenance_judgement"] == "PASS"
     assert result["judgement"] == "HOLD"
-    assert result["e1_exit"]["d44"]["current"]["reason"] == "평가 열 없음"
-    assert result["e1_exit"]["d44"]["previous"]["reason"] == "직전 창 없음"
+    assert result["e1_exit"]["d44"]["cases"][CASES[0]]["current"]["reason"] == "평가 열 없음"
+    assert result["e1_exit"]["d44"]["cases"][CASES[0]]["previous"]["reason"] == "직전 창 없음"
     assert result["e1_exit"]["windows_required"] == plan["evaluation"]["promotion"]["windows"]
 
 
 def test_e1_two_windows_require_both_thresholds_and_maintenance(tmp_path):
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    score["d44_cells"] = _cells(plan, tmp_path)
     previous = copy.deepcopy(score)
     passed = judge_e1(score, baseline, measured, plan, previous=previous)
     assert passed["judgement"] == "PASS"
     assert passed["e1_exit"]["d44"]["current"]["judgement"] == "PASS"
     assert passed["e1_exit"]["d44"]["previous"]["judgement"] == "PASS"
-    previous["d44_landing"] = _landing(plan, tmp_path, success=plan["evaluation"]["promotion"]["success_min"] - 1)
+    previous["d44_cells"][CASES[-1]] = _landing(plan, tmp_path, CASES[-1], success=plan["evaluation"]["promotion"]["success_min"] - 1)
     failed = judge_e1(score, baseline, measured, plan, previous=previous)
     assert failed["judgement"] == "FAIL"
-    score["d44_landing"] = _landing(plan, tmp_path, survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
+    score["d44_cells"][CASES[-1]] = _landing(plan, tmp_path, CASES[-1], survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
     assert judge_e1(score, baseline, measured, plan, previous=previous)["judgement"] == "FAIL"
 
 
 def test_e1_d44_missing_and_survival_floor_are_visible_with_passing_prior(tmp_path):
     score, baseline, measured, plan = _inputs()
     previous = copy.deepcopy(score)
-    previous["d44_landing"] = _landing(plan, tmp_path)
+    previous["d44_cells"] = _cells(plan, tmp_path)
     missing = judge_e1(score, baseline, measured, plan, previous=previous)
     assert missing["maintenance_judgement"] == "PASS"
     assert missing["e1_exit"]["d44"]["previous"]["judgement"] == "PASS"
-    assert missing["e1_exit"]["d44"]["current"] == {"judgement": "HOLD", "reason": "평가 열 없음"}
+    assert missing["e1_exit"]["d44"]["cases"][CASES[0]]["current"] == {"judgement": "HOLD", "reason": "평가 열 없음"}
     assert missing["judgement"] == "HOLD"
 
-    score["d44_landing"] = _landing(
-        plan, tmp_path, survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
+    score["d44_cells"] = _cells(plan, tmp_path)
+    score["d44_cells"][CASES[-1]] = _landing(
+        plan, tmp_path, CASES[-1], survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
     below = judge_e1(score, baseline, measured, plan, previous=previous)
     assert below["e1_exit"]["d44"]["current"]["judgement"] == "FAIL"
     assert below["judgement"] == "FAIL"
@@ -83,14 +101,14 @@ def test_e1_d44_missing_and_survival_floor_are_visible_with_passing_prior(tmp_pa
 
 def test_e1_thresholds_are_read_from_plan_and_missing_prior_is_hold(tmp_path):
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    score["d44_cells"] = _cells(plan, tmp_path)
     assert judge_e1(score, baseline, measured, plan, previous=None)["judgement"] == "HOLD"
     changed = copy.deepcopy(plan)
     changed["evaluation"]["promotion"]["success_min"] -= 1
     changed["evaluation"]["promotion"]["survival_min"] -= 1
     current = copy.deepcopy(score)
-    current["d44_landing"] = _landing(
-        plan, tmp_path, success=plan["evaluation"]["promotion"]["success_min"] - 1,
+    current["d44_cells"][CASES[-1]] = _landing(
+        plan, tmp_path, CASES[-1], success=plan["evaluation"]["promotion"]["success_min"] - 1,
         survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
     assert judge_e1(current, baseline, measured, changed, previous=current)["judgement"] == "PASS"
 
@@ -100,28 +118,72 @@ def test_known_maintenance_failure_is_not_hidden_by_missing_d44():
     score["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] = 0
     result = judge_e1(score, baseline, measured, plan, previous=None)
     assert result["maintenance_judgement"] == "FAIL"
-    assert result["e1_exit"]["d44"]["current"]["reason"] == "평가 열 없음"
+    assert result["e1_exit"]["d44"]["cases"][CASES[0]]["current"]["reason"] == "평가 열 없음"
     assert result["judgement"] == "FAIL"
+
+
+def test_d176_valid_denominator_floor_and_scaled_thresholds(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    score["d44_cells"] = _cells(plan, tmp_path)
+    previous = copy.deepcopy(score)
+    _replace_cell(score, plan, tmp_path, CASES[-1], valid=47, success=47, survival=47)
+    held = judge_e1(score, baseline, measured, plan, previous=previous)
+    assert held["judgement"] == "HOLD"
+    assert held["e1_exit"]["d44"]["cases"][CASES[-1]]["current"]["reason"] == "D44 유효 env 하한 미달"
+    _replace_cell(score, plan, tmp_path, CASES[-1], valid=48, success=39, survival=45)
+    passed = judge_e1(score, baseline, measured, plan, previous=previous)
+    assert passed["judgement"] == "PASS"
+    row = passed["e1_exit"]["d44"]["cases"][CASES[-1]]["current"]
+    assert (row["success_min"], row["survival_min"]) == (39, 45)
+    _replace_cell(score, plan, tmp_path, CASES[-1], valid=48, success=38, survival=45)
+    assert judge_e1(score, baseline, measured, plan, previous=previous)["judgement"] == "FAIL"
+
+
+def test_d176_fail_wins_over_hold_and_off_cannot_enter_judgment(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    score["d44_cells"] = _cells(plan, tmp_path)
+    previous = copy.deepcopy(score)
+    _replace_cell(score, plan, tmp_path, CASES[0], valid=47, success=47, survival=47)
+    _replace_cell(score, plan, tmp_path, CASES[1], valid=48, success=38, survival=45)
+    assert judge_e1(score, baseline, measured, plan, previous=previous)["judgement"] == "FAIL"
+    off = copy.deepcopy(score)
+    off["d44_cells"]["turn_left_probe_prop_only"] = off["d44_cells"][CASES[0]]
+    with pytest.raises(ValueError, match="outside the approved"):
+        judge_e1(off, baseline, measured, plan, previous=previous)
+
+
+def test_d44_case_identity_and_stop_window_are_enforced(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    score["d44_cells"] = _cells(plan, tmp_path)
+    previous = copy.deepcopy(score)
+    wrong = copy.deepcopy(plan)
+    wrong["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"][CASES[0]]["task"] = "turn_right"
+    with pytest.raises(ValueError, match="case identity"):
+        judge_e1(score, baseline, measured, wrong, previous=previous)
+    long_stop = copy.deepcopy(plan)
+    long_stop["evaluation"]["paper_cells"]["stairs_landing"]["timing"]["stop_hold_s"] = 2.1
+    with pytest.raises(ValueError, match="stop hold exceeds window"):
+        judge_e1(score, baseline, measured, long_stop, previous=previous)
 
 
 def test_e1_rejects_bad_landing_evidence(tmp_path):
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    score["d44_cells"] = _cells(plan, tmp_path)
     for update in ({"envs": 63}, {"success_count": 65}, {"raw_sha256": ""},
                    {"case_id": "another_case"}):
         bad = copy.deepcopy(score)
-        bad["d44_landing"].update(update)
+        bad["d44_cells"][CASES[0]].update(update)
         with pytest.raises(ValueError, match="D44"):
             judge_e1(bad, baseline, measured, plan, previous=score)
-    Path(score["d44_landing"]["raw_file"]).write_text("{}", encoding="utf-8")
+    Path(score["d44_cells"][CASES[0]]["raw_file"]).write_text("{}", encoding="utf-8")
     with pytest.raises(ValueError, match="D44"):
         judge_e1(score, baseline, measured, plan, previous=score)
 
 
 def test_e1_rejects_changed_raw_bytes_with_same_counts(tmp_path):
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
-    source = Path(score["d44_landing"]["raw_file"])
+    score["d44_cells"] = _cells(plan, tmp_path)
+    source = Path(score["d44_cells"][CASES[0]]["raw_file"])
     source.write_bytes(source.read_bytes() + b"\n")
     with pytest.raises(ValueError, match="D44 landing raw evidence differs"):
         judge_e1(score, baseline, measured, plan, previous=score)
@@ -137,12 +199,22 @@ def test_real_m250_measure_as_e1_keeps_maintenance_pass_and_d44_hold():
     score = measure(Path(saved["checkpoint"]), original, stage_id="E1")
     assert score["maintenance_judgement"] == "PASS"
     assert score["judgement"] == "HOLD"
-    assert score["e1_exit"]["d44"]["current"]["reason"] == "평가 열 없음"
+    d44 = score["e1_exit"]["d44"]
+    assert len(d44["required_cases"]) == 6
+    assert d44["current"]["judgement"] == "HOLD"
+    assert all(row["current"]["reason"] == "평가 열 없음" for row in d44["cases"].values())
 
 
-def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path):
+def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml").read_text(encoding="utf-8-sig"))
+    monkeypatch.setattr(EX42Plan, "load", lambda _: SimpleNamespace(
+        document=plan, runtime_stage_ids=tuple(approvals["domain_randomization"]["stage_scales"]),
+        sha256="a" * 64))
+    score["d44_cells"] = _cells(plan, tmp_path)
     judged = judge_e1(score, baseline, measured, plan, previous=copy.deepcopy(score))
     checkpoint = tmp_path / "model_500.pt"
     checkpoint.write_bytes(b"known checkpoint")
@@ -155,12 +227,19 @@ def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path):
                                    approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
                                    stage_id="E1", output=output)
     assert result["judgment"] == "PASS" and result["stage_id"] == "E1"
-    assert result["e1_exit"]["d44"]["current"]["success_count"] == plan["evaluation"]["promotion"]["success_min"]
+    assert result["e1_exit"]["d44"]["cases"][CASES[0]]["current"]["success_count"] == plan["evaluation"]["promotion"]["success_min"]
 
 
-def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path):
+def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml").read_text(encoding="utf-8-sig"))
+    monkeypatch.setattr(EX42Plan, "load", lambda _: SimpleNamespace(
+        document=plan, runtime_stage_ids=tuple(approvals["domain_randomization"]["stage_scales"]),
+        sha256="a" * 64))
+    score["d44_cells"] = _cells(plan, tmp_path)
     judged = judge_e1(score, baseline, measured, plan, previous=copy.deepcopy(score))
     checkpoint = tmp_path / "model_500.pt"
     checkpoint.write_bytes(b"known checkpoint")
@@ -178,6 +257,7 @@ def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path):
 
 def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
     score, baseline, measured, plan = _inputs()
+    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8-sig"))
     score["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] = 0
     judged = judge_e1(score, baseline, measured, plan, previous=None)
     checkpoint = tmp_path / "model_250.pt"
@@ -191,7 +271,7 @@ def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
                                    approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
                                    stage_id="E1", output=output)
     assert result["judgment"] == "FAIL"
-    assert result["e1_exit"]["d44"]["current"]["reason"] == "평가 열 없음"
+    assert result["e1_exit"]["d44"]["current"]["judgement"] == "HOLD"
 
 
 def test_prior_window_requires_published_p1_and_checkpoint_bytes(tmp_path):

@@ -21,10 +21,13 @@ def test_registry_has_every_table_stage_without_an_id_allowlist():
 
 
 @pytest.mark.parametrize('stage',['E2','E3','E4','E5','M','E6a','E6b'])
-def test_unapproved_later_rows_never_inherit_e1f_approval(stage):
-    p=EX42Plan.load(TABLE)
+def test_unapproved_later_rows_never_inherit_e1f_approval(tmp_path,stage):
+    p=EX42Plan.load(TABLE);d=deepcopy(p.document);a=yaml.safe_load(APPROVALS.read_text())
+    a[f'stage_{stage.lower()}_authorization']['approved']=False
+    path=tmp_path/'unapproved.yaml';path.write_text(yaml.safe_dump(a))
+    d['stage_zero']['approval_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
     with pytest.raises(ValueError,match='authorization is missing'):
-        authorization_validators(p)[stage](APPROVALS,'a'*64)
+        authorization_validators(replace(p,document=d))[stage](path,'a'*64)
 
 
 def fixture(tmp_path,stage='E3'):
@@ -138,7 +141,7 @@ def test_parent_and_approval_file_are_pinned(tmp_path):
         validate_stage_authorization(p,ap,'b'*64,stage_id='E3')
 
 
-def test_shipped_future_drafts_use_table_limits_and_preserve_no_approval():
+def test_shipped_stage_cells_use_table_limits_and_generator_stays_unapproved():
     from foothold_s2.curriculum.ex42_prep import draft_stage_authorization
     p=EX42Plan.load(TABLE);a=yaml.safe_load(APPROVALS.read_text())
     # CG v0.16 E.2: first segment, excluding any conditional extensions.
@@ -146,7 +149,8 @@ def test_shipped_future_drafts_use_table_limits_and_preserve_no_approval():
     for stage,limit in limits.items():
         generated=draft_stage_authorization(p,stage)
         cell=a[f'stage_{stage.lower()}_authorization']
-        assert cell['approved'] is False and cell['decision_source']['commit'] is None
+        assert generated['approved'] is False and generated['decision_source']['commit'] is None
+        assert cell['approved'] is True and cell['decision_source']['commit']=='2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d'
         assert cell['scope']==generated['scope']
         assert cell['scope']['maximum_updates']==limit
         assert cell['critic_mirror'] is None
@@ -159,7 +163,8 @@ def test_shipped_future_drafts_use_table_limits_and_preserve_no_approval():
 
 def test_e2_draft_six_additions_are_not_launch_permission():
     c=yaml.safe_load(APPROVALS.read_text())['stage_e2_authorization']
-    assert c['approved'] is False
+    assert c['approved'] is True
+    assert c['scope']['parent_sha256'] is None
     assert c['prerequisites']['kind_cell_evaluator']=='pending'
     assert c['prerequisites']['stage_judgment_policy']=='pending'
     assert c['kind_choice']=={'prep':'start_stones_l0','mesh_kind':'stepping_stones_low'}

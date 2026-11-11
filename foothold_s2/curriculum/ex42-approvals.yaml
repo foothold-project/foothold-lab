@@ -157,15 +157,15 @@ stage_e1f_authorization:
     thresholds: null
     flag_cells: from:E1F
 
-# DRAFT ONLY: no team approval. Never activate by inheriting E1F approval.
+# Team 13:07 approval. Missing measurement fields still block launch.
 stage_e2_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
     condition: E1F exit gate PASS under this plan
   scope:
@@ -246,15 +246,15 @@ stage_e2_authorization:
     command: flag_reach
     flags: 1
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_e3_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: E3
@@ -281,15 +281,15 @@ stage_e3_authorization:
   critic_mirror: null
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_e4_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: E4
@@ -315,15 +315,15 @@ stage_e4_authorization:
   critic_mirror: null
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_e5_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: E5
@@ -349,15 +349,15 @@ stage_e5_authorization:
   critic_mirror: null
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_m_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: M
@@ -398,15 +398,15 @@ stage_m_authorization:
     return_receipt_sha256: null
     consumer_status: pending
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_e6a_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: E6a
@@ -438,15 +438,15 @@ stage_e6a_authorization:
     m_return_receipt_sha256: null
     consumer_status: pending
 
-# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+# Team 13:07 approval; materialize measured evidence before launch.
 stage_e6b_authorization:
-  approved: false
-  decision_id: null
-  approved_at: null
-  approver: null
-  approval_statement: null
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
   decision_source:
-    commit: null
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
   scope:
     stage_id: E6b

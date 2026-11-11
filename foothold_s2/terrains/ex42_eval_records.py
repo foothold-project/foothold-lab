@@ -17,6 +17,13 @@ PHYSICAL_RECORDS = ('gap_090', 'gap_100', 'climb_down_075', 'climb_down_088',
 KINDS = BEAM_RECORDS + STAIR_RECORDS + PHYSICAL_RECORDS
 REVERSE_CASES = {'eval_stairs_015_reverse': 'eval_stairs_015',
                  'eval_stairs_020_reverse': 'eval_stairs_020'}
+BODY_DIRECTIONS = {'side_plus': (0., 1.), 'side_minus': (0., -1.),
+                   'diag_fwd_plus': (1., 1.), 'diag_fwd_minus': (1., -1.),
+                   'diag_back_plus': (-1., 1.), 'diag_back_minus': (-1., -1.)}
+DIRECTION_CASES = {f'{kind}_{direction}': kind
+                   for kind in ('eval_stairs_015','eval_stairs_020','eval_stairs_025')
+                   for direction in BODY_DIRECTIONS}
+CASE_ALIASES = {**REVERSE_CASES, **DIRECTION_CASES}
 
 
 def case_contract(case_id):
@@ -26,7 +33,7 @@ Forward and reverse cases use the same saved triangles. A reverse ascent faces
 away from the stairs (yaw pi) and commands negative body vx from the approach.
 """
     from . import ex42_eval_terrains as et
-    geometry = REVERSE_CASES.get(case_id, case_id)
+    geometry = CASE_ALIASES.get(case_id, case_id)
     if geometry not in et.KINDS:
         raise ValueError('unknown evaluation case')
     role, stage = 'record', None
@@ -36,11 +43,23 @@ away from the stairs (yaw pi) and commands negative body vx from the approach.
                      'eval_stairs_025','eval_slope_30','eval_slope_35'):
         role, stage = 'judge', 'E4'
     reverse = case_id in REVERSE_CASES or case_id == 'eval_stairs_010'
-    return {'case_id':case_id, 'geometry_id':geometry, 'role':role,
+    contract = {'case_id':case_id, 'geometry_id':geometry, 'role':role,
             'judge_from_stage':stage, 'training_allowed':False,
             'body_command_vx_sign':-1 if reverse else None,
             'approach_yaw_rad':math.pi if reverse else 0.,
             'source':et._source([392,393,394,590,591,592])}
+    if case_id in DIRECTION_CASES:
+        direction=case_id[len(geometry)+1:]
+        vx,vy=BODY_DIRECTIONS[direction]
+        length=math.hypot(vx,vy)
+        contract.update(body_command_xy_unit=[vx/length,vy/length],
+            approach_yaw_rad=-math.atan2(vy,vx), start_anchor='approach',
+            exit_anchor='course_exit', course_world_xy_unit=[1.,0.],
+            speed_mps_requires_evaluator_contract=True,
+            path='same uphill and downhill course; body-relative direction only',
+            source=et._source([392,394,601]),
+            layout_assumption='rotate reset yaw to keep the world course unchanged')
+    return contract
 
 
 def build_tile(kind, *, seed):

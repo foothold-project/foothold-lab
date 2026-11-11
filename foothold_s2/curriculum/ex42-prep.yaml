@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 3309fe8c77c655e8d21a43204efefab35b295cf3e645ac39660a8abc79f71466
+  approval_sha256: 779b2d44c10416d9d1d941d33d4039376a248d630a2c339935d5567e41b1dec4
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -705,6 +705,35 @@ evaluation:
       turn_rate_radps: 1.2
       success_turn_fraction: 0.8
       stop_seconds: 2.0
+      # Team approval 5fc05cf9, 2026-11-11 13:03. Each case uses 64 envs.
+      judge_cases: [turn_left_eval_gt, turn_left_eval_pred, turn_right_eval_gt, turn_right_eval_pred, stop_restart_eval_gt, stop_restart_eval_pred]
+      record_cases: [turn_left_probe_prop_only, turn_right_probe_prop_only, stop_restart_probe_prop_only]
+      case_specs:
+        turn_left_eval_gt: {task: turn_left, map_mode: eval_gt, role: judge}
+        turn_left_eval_pred: {task: turn_left, map_mode: eval_pred, role: judge}
+        turn_left_probe_prop_only: {task: turn_left, map_mode: probe_prop_only, role: record_only}
+        turn_right_eval_gt: {task: turn_right, map_mode: eval_gt, role: judge}
+        turn_right_eval_pred: {task: turn_right, map_mode: eval_pred, role: judge}
+        turn_right_probe_prop_only: {task: turn_right, map_mode: probe_prop_only, role: record_only}
+        stop_restart_eval_gt: {task: stop_restart, map_mode: eval_gt, role: judge}
+        stop_restart_eval_pred: {task: stop_restart, map_mode: eval_pred, role: judge}
+        stop_restart_probe_prop_only: {task: stop_restart, map_mode: probe_prop_only, role: record_only}
+      timing:
+        settle_s: 1.0
+        approach_limit_s: 4.0
+        stop_s: 2.0
+        restart_limit_s: 6.0
+        stop_hold_s: 1.0
+        top_hold_s: 0.5
+        stop_speed_mps: 0.05
+        foot_below_top_m: 0.08
+        foot_stop_z_tolerance_m: 0.08
+      approach_vx_mps: 1.0
+      restart_vx_mps: 1.0
+      stop_surface_z_m: 0.48  # measured stop-band interior, D44-SIX-ANCHORS-1111.json
+      valid_min: 48  # D176: unapproached envs excluded from denominator
+      source_mesh_dir: /home/jay/data/foothold/s2_lab/ex42_eval_mesh_1111/landing_seed42_v2
+      source_mesh_sha256: baa59af3347c53c2cdeae674ddc873f26d4b9e38cffdbce4a4dc73cf94febb82
     stairs_surface_spin:
       id: eval_stair_surface_spin
       rise_m: 0.15
