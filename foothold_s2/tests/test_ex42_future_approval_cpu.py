@@ -36,15 +36,14 @@ def test_shipped_cells_preserve_approval_scope_and_unfilled_evidence(stage,valid
         assert cell['approval_statement'] == 'E1F 승인'
         assert cell['decision_source']['commit'] == '0b51913fced4eb6b34d39ebdd95548c190cb3018'
     else:
-        assert cell['approved'] is False
-        for name in ['decision_id','approved_at','approver','approval_statement']:
-            assert cell[name] is None
-        assert cell['decision_source']['commit'] is None
+        assert cell['approved'] is True
+        assert cell['decision_id']=='teamlead-2026-11-11-1307-ex42-all-stages'
+        assert cell['decision_source']['commit']=='2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d'
     assert cell['scope']['parent_sha256'] is None
     assert cell['scope']['maximum_updates'] == limit
     assert cell['extension_authorized'] is False
     assert cell['later_stage_entry_gate_adapter'] == 'pending'
-    with pytest.raises(ValueError, match='scope differs' if stage == 'E1F' else 'authorization is missing'):
+    with pytest.raises(ValueError, match='scope differs'):
         validate(p,APPROVALS,'a'*64)
 
 

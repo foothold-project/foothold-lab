@@ -189,7 +189,7 @@ def test_extra_policy_key_is_not_accepted(known):
         call((replace(plan, document=doc), ap, manifest, gp))
 
 
-@pytest.mark.parametrize('stage,reason', [('E1F','parent SHA is unfilled'), ('E2','authorization is missing'), ('E3','authorization is missing'), ('E6b','authorization is missing')])
+@pytest.mark.parametrize('stage,reason', [('E1F','parent SHA is unfilled'), ('E2','parent SHA is unfilled'), ('E3','parent SHA is unfilled'), ('E6b','parent SHA is unfilled')])
 def test_registered_future_stage_still_rejects_unfilled_or_unapproved_cell(known,stage,reason):
     with pytest.raises(ValueError,match=reason):
         call(known,stage)
