@@ -109,7 +109,8 @@ def test_chain_dry_order_and_no_output_or_gpu(tmp_path, monkeypatch):
     monkeypatch.setattr(chain, "preflight", lambda path: {"mesh_sha256": "a" * 64})
     monkeypatch.setattr(chain, "flag_kit_commands",
                         lambda checkpoint, output, device, **kwargs:
-                        [(name, ["cpu-test", "--count", name, "--seed", str(kwargs["seed"])])
+                        [(name, ["cpu-test", "--count", name, "--seed", str(kwargs["seed"]),
+                                 "--kit_args=--/UJITSO/datastore/localCachePath=/shared/cache"])
                          for name in ("flag_one", "flag_four")])
     monkeypatch.setattr(chain, "gpu_identity", lambda device: (_ for _ in ()).throw(
         AssertionError("dry must not query GPU")))
@@ -146,7 +147,8 @@ def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):
     monkeypatch.setattr(chain, "gpu_identity", lambda device: {"gpu_uuid": "GPU-" + "a" * 32})
     monkeypatch.setattr(chain, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
     fake_commands = lambda checkpoint, output, device, **kwargs: [
-        (name, ["cpu-test", "--count", name, "--seed", str(kwargs["seed"])])
+        (name, ["cpu-test", "--count", name, "--seed", str(kwargs["seed"]),
+                "--kit_args=--/UJITSO/datastore/localCachePath=/shared/cache"])
         for name in ("flag_one", "flag_four")]
     monkeypatch.setattr(chain, "flag_kit_commands", fake_commands)
     monkeypatch.setattr(once, "flag_kit_commands", fake_commands)
@@ -163,7 +165,7 @@ def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):
                 row = json.loads(receipt.read_text(encoding="utf-8"))
                 row["run_identity"] = {"device": "cuda:1", "gpu_uuid": "GPU-" + "a" * 32}
                 receipt.write_text(json.dumps(row), encoding="utf-8")
-        calls.append((root, argv[argv.index("--count") + 1]))
+        calls.append((root, argv[argv.index("--count") + 1], env, argv))
         return {"state": "done", "rc": 0}
 
     child_module = SimpleNamespace(hidden_child=hidden_child)
@@ -174,6 +176,11 @@ def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):
                              mesh_dir=tmp_path, expected_checkpoint_sha256=chain.digest(checkpoint),
                              expected_mesh_sha256="a" * 64, e1_gate=gate, task="test", execute=True)
     assert result["state"] == "complete" and len(calls) == 12
+    assert len({env["TMPDIR"] for _, _, env, _ in calls}) == 12
+    assert len({env["XDG_CACHE_HOME"] for _, _, env, _ in calls}) == 12
+    assert all(env["TMPDIR"] == env["TEMP"] == env["TMP"] for _, _, env, _ in calls)
+    assert all(f"localCachePath={env['XDG_CACHE_HOME']}" in " ".join(argv)
+               for _, _, env, argv in calls)
     assert (out / "w09_baseline.json").is_file()
     calibration = json.loads((out / "w08_calibration.json").read_text(encoding="utf-8"))
     assert calibration == make_calibration([out / "w08" / f"repeat_{i:02d}" for i in range(5)],
@@ -222,7 +229,10 @@ def test_dual_device_keeps_seed_order_and_runs_two_groups_concurrently(tmp_path,
     monkeypatch.setattr(chain, "gpu_identity", lambda device: {"device": device, "gpu_uuid": device})
     monkeypatch.setattr(chain, "child_env", lambda: {})
     monkeypatch.setattr(chain, "flag_kit_commands",
-                        lambda checkpoint, output, device, **kwargs: [("flag_one", [device])])
+                        lambda checkpoint, output, device, **kwargs: [("flag_one", [
+                            device, "--kit_args=--/UJITSO/datastore/localCachePath=/shared/cache"])])
+    sleeps = []
+    monkeypatch.setattr(chain.time, "sleep", lambda seconds: sleeps.append(seconds))
     monkeypatch.setitem(sys.modules, "foothold_s2.ex41_eval_once", SimpleNamespace())
     monkeypatch.setattr(foothold_s2, "ex41_eval_once", SimpleNamespace(), raising=False)
     barrier, lock = Barrier(2, timeout=2), Lock()
@@ -230,6 +240,8 @@ def test_dual_device_keeps_seed_order_and_runs_two_groups_concurrently(tmp_path,
 
     def run_round(_checkpoint, root, device, **kwargs):
         index = 0 if root.name == "w09" else int(root.name.removeprefix("repeat_")) + 1
+        if kwargs["first_child_launch"] is not None:
+            kwargs["first_child_launch"].set()
         if index in (0, 3):
             barrier.wait()
         with lock:
@@ -253,6 +265,7 @@ def test_dual_device_keeps_seed_order_and_runs_two_groups_concurrently(tmp_path,
     assert [index for device, index, _ in seen if device == "cuda:0"] == [0, 1, 2]
     assert [index for device, index, _ in seen if device == "cuda:1"] == [3, 4, 5]
     assert len(result["round_receipts"]) == 6
+    assert sleeps == [30]
     with pytest.raises(ValueError, match="dual assignment"):
         chain.round_devices(None, ("cuda:1", "cuda:0"))
 
@@ -269,3 +282,29 @@ def test_dual_device_cli_accepts_exact_pair(monkeypatch, tmp_path, capsys):
     assert received[0]["devices"] == ("cuda:0", "cuda:1") and received[0]["execute"] is False
     with pytest.raises(SystemExit):
         chain.main([*base, "--devices", "cuda:1,cuda:0"])
+
+
+def test_cuda1_round_rejects_cuda0_child_identity(tmp_path, monkeypatch):
+    from foothold_s2.scripts import ex42_flag_baseline_chain as chain
+
+    monkeypatch.setattr(chain, "flag_kit_commands",
+                        lambda *args, **kwargs: [("flag_one", [
+                            "cpu-test", "--kit_args=--/UJITSO/datastore/localCachePath=/shared/cache"])])
+
+    def child(_argv, folder, *, env):
+        receipt = Path(folder).parent.parent / "flag_cells" / "flag_one" / "flag_cells.json"
+        receipt.parent.mkdir(parents=True)
+        receipt.write_text(json.dumps({"run_identity": {
+            "device": "cuda:0", "gpu_uuid": "GPU-WRONG"}}), encoding="utf-8")
+        return {"state": "done", "rc": 0}
+
+    output = tmp_path / "cuda1"
+    with pytest.raises(ValueError, match="flag round HOLD"):
+        chain.run_round(tmp_path / "model_1000.pt", output, "cuda:1", plan=_p(),
+                        plan_path=tmp_path / "plan.yaml", mesh_dir=tmp_path,
+                        mesh_sha256="a" * 64, checkpoint_sha256=CHECKPOINT_SHA,
+                        seed=42, task="test", process=SimpleNamespace(hidden_child=child),
+                        env={}, physical_gpu={"device": "cuda:1", "gpu_uuid": "GPU-RIGHT"})
+    receipt = json.loads((output / "round_receipt.json").read_text(encoding="utf-8"))
+    assert "physical GPU identity differs" in receipt["failures"]["flag_one"]
+    assert receipt["state"] == "HOLD"

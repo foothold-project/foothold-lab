@@ -10,6 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 from threading import Event
+import time
+from types import SimpleNamespace
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.eval.ex42_flag_cells import contract, read_evidence, summarize_repeats
@@ -63,9 +65,19 @@ def make_q4(calibration: dict, *, plan: EX42Plan) -> dict:
                         for case, metrics in calibration["repeat_width"].items()}}
 
 
+def isolated_kit_argv(argv: list[str], output: Path, device: str, count: str) -> list[str]:
+    prefix = "--kit_args=--/UJITSO/datastore/localCachePath="
+    old = [arg for arg in argv if arg.startswith(prefix)]
+    if len(old) != 1:
+        raise ValueError("W09/W08 child needs exactly one Kit cache argument")
+    cache = Path(output) / "kit_runtime" / device.replace(":", "_") / count / "cache"
+    return [prefix + str(cache) if arg == old[0] else arg for arg in argv]
+
+
 def run_round(checkpoint: Path, output: Path, device: str, *, plan: EX42Plan,
               plan_path: Path, mesh_dir: Path, mesh_sha256: str, checkpoint_sha256: str,
-              seed: int, task: str, process, env: dict, physical_gpu: dict) -> dict:
+              seed: int, task: str, process, env: dict, physical_gpu: dict,
+              first_child_launch: Event | None = None) -> dict:
     output.mkdir(parents=True, exist_ok=False)
     steps = {}
 
@@ -75,10 +87,26 @@ def run_round(checkpoint: Path, output: Path, device: str, *, plan: EX42Plan,
                                                  "checkpoint_sha256": checkpoint_sha256,
                                                  "plan_sha256": plan.sha256, "steps": steps})
 
+    def hidden_child(argv, folder, *, env):
+        # Each Kit child receives its own USD/system temporary directory and
+        # cache. A second GPU must not share Kit's default paths with the first.
+        child_root = output / "kit_runtime" / device.replace(":", "_") / Path(folder).name
+        temporary, cache = child_root / "tmp", child_root / "cache"
+        temporary.mkdir(mode=0o700, parents=True, exist_ok=False)
+        cache.mkdir()
+        child_env = dict(env, TMPDIR=str(temporary), TEMP=str(temporary), TMP=str(temporary),
+                         XDG_CACHE_HOME=str(cache), XDG_RUNTIME_DIR=str(temporary))
+        isolated_argv = isolated_kit_argv(argv, output, device, Path(folder).name)
+        if first_child_launch is not None:
+            first_child_launch.set()
+        child = process.hidden_child(isolated_argv, folder, env=child_env)
+        child["isolated_runtime"] = {"tmpdir": str(temporary), "kit_cache": str(cache)}
+        return child
+
     failures = execute_flag_children(checkpoint, output, device, task=task,
                                      plan_path=plan_path, mesh_dir=mesh_dir,
                                      mesh_sha256=mesh_sha256, checkpoint_sha256=checkpoint_sha256,
-                                     seed=seed, plan=plan, process=process, env=env,
+                                     seed=seed, plan=plan, process=SimpleNamespace(hidden_child=hidden_child), env=env,
                                      physical_gpu=physical_gpu, record=record)
     receipt = {"format": "foothold-ex42-flag-round/1", "state": "HOLD" if failures else "complete",
                "seed": seed, "checkpoint_sha256": checkpoint_sha256, "plan_sha256": plan.sha256,
@@ -147,7 +175,8 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
                "plan": str(plan_path), "plan_sha256": plan.sha256,
                "mesh_dir": str(mesh_dir), "mesh_sha256": expected_mesh_sha256,
                "rounds": [{"root": str(root), "seed": seed, "device": assigned[index],
-                           "children": [argv for _, argv in batch]}
+                           "children": [isolated_kit_argv(argv, root, assigned[index], count)
+                                        for count, argv in batch]}
                           for index, (root, seed, batch) in enumerate(zip(roots, seeds, commands))]}
     if not execute:
         return preview
@@ -158,6 +187,7 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
     _atomic(output / "chain_receipt.json", preview)
     try:
         stop = Event()
+        first_child_launch = Event()
         def group(indices):
             for index in indices:
                 if stop.is_set():
@@ -166,7 +196,8 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
                     run_round(checkpoint, roots[index], assigned[index], plan=plan, plan_path=plan_path,
                               mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
                               checkpoint_sha256=checkpoint_sha, seed=seeds[index], task=task,
-                              process=process, env=env, physical_gpu=physical[assigned[index]])
+                              process=process, env=env, physical_gpu=physical[assigned[index]],
+                              first_child_launch=first_child_launch if devices is not None and index == 0 else None)
                 except Exception:
                     stop.set()
                     raise
@@ -175,7 +206,12 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
             group(range(6))
         else:
             with ThreadPoolExecutor(max_workers=2) as pool:
-                futures = [pool.submit(group, range(3)), pool.submit(group, range(3, 6))]
+                first = pool.submit(group, range(3))
+                if not first_child_launch.wait(timeout=60):
+                    first.result() if first.done() else None
+                    raise ValueError("W09 GPU0 first Kit child did not start within 60 seconds")
+                time.sleep(30)
+                futures = [first, pool.submit(group, range(3, 6))]
                 for future in futures:
                     future.result()
         baseline = make_baseline(roots[0], plan=plan, checkpoint_sha256=checkpoint_sha,
