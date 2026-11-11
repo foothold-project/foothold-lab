@@ -248,7 +248,7 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
 
 # Entry gate adapters a stage row may name: the predecessor's exit judge (foothold_s2.ex42_stage_judges registers the
 # module; an unregistered name fails closed there, at score time) or `pending` (not ready, the stage cannot start).
-ENTRY_GATE_ADAPTERS = ('map39', 'flag_two_window', 'pending')
+ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending')
 
 
 def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
