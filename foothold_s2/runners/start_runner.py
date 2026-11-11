@@ -1555,7 +1555,7 @@ class StartRunner(OnPolicyRunner):
         return dict(self.ex41_parent_transfer)
 
     def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict, *,
-                                    stage_e0: bool = False) -> dict:
+                                    stage_e0: bool = False, stage_e1: bool = False) -> dict:
         """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
 
         With ``stage_e0`` the parent is the stage-zero m13000 (local 1000, cumulative 13000) and the
@@ -1567,8 +1567,11 @@ class StartRunner(OnPolicyRunner):
         if (self._resumed or self.current_learning_iteration != 0
                 or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
             raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
+        if stage_e0 and stage_e1:
+            raise ValueError("EX-42 parent load is for one stage")
         expected_state, local_update, cumulative_update = (
-            ("parent_verified_for_stage_e0", 1000, 13000) if stage_e0
+            ("parent_verified_for_stage_e1", 250, 13250) if stage_e1
+            else ("parent_verified_for_stage_e0", 1000, 13000) if stage_e0
             else ("parent_verified_for_stage_zero", 6000, 12000))
         if (not isinstance(receipt, dict)
                 or receipt.get("state") != expected_state
@@ -1608,7 +1611,8 @@ class StartRunner(OnPolicyRunner):
         self.current_learning_iteration = 0
         self.ex42_parent_transfer = dict(receipt)
         self._ex42_parent_loaded = True
-        return {**receipt, "state": "loaded_for_ex42_stage_e0" if stage_e0 else "loaded_for_ex42_stage_zero",
+        return {**receipt, "state": ("loaded_for_ex42_stage_e1" if stage_e1 else "loaded_for_ex42_stage_e0" if stage_e0
+                                     else "loaded_for_ex42_stage_zero"),
                 "local_iteration_origin": 0,
                 "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
                              "perception", "perception_optimizer", "adasmpl",

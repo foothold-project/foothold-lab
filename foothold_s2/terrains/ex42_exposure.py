@@ -17,11 +17,12 @@ from __future__ import annotations
 from typing import Any
 
 
-def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]) -> tuple[list[float], list[int]]:
-    """(exposure, level_cap) per mesh column from the plan's E0 terrain section and the column table."""
-    spec = plan_terrain.get("exposure_at_E0")
+def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]],
+                       stage_id: str = "E0") -> tuple[list[float], list[int]]:
+    """(exposure, level_cap) per mesh column from the plan's terrain section of `stage_id` and the column table."""
+    spec = plan_terrain.get(f"exposure_at_{stage_id}")
     if not isinstance(spec, dict) or not isinstance(spec.get("default"), dict):
-        raise ValueError("EX-42 E0 stage lacks terrain.exposure_at_E0.default")
+        raise ValueError(f"EX-42 {stage_id} stage lacks terrain.exposure_at_{stage_id}.default")
     base = spec["default"]
     default = (_number(base.get("exposure"), "default.exposure"), _cap(base.get("level_cap"), "default.level_cap"))
     kind_task = plan_terrain.get("kind_task") or {}
@@ -41,7 +42,7 @@ def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]
         exposure.append(w)
         caps.append(c)
     if not any(w > 0 for w in exposure):
-        raise ValueError("EX-42 E0 exposure leaves no column with positive exposure")
+        raise ValueError(f"EX-42 {stage_id} exposure leaves no column with positive exposure")
     return exposure, caps
 
 
@@ -80,11 +81,14 @@ def parent_column_kinds() -> list[str]:
     return list(columns.column_types(columns.CONTINUOUS, columns.CONTINUOUS_COLS))
 
 
-def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[str, Any]], num_envs: int):
+def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[str, Any]], num_envs: int,
+                             same_mesh: bool = False):
     """(terrain_types, terrain_levels) of the parent's envs, checked against the new mesh by kind name.
 
     Parent column c must be the same kind as new-mesh column c (family A); a mismatch raises. Every rank
     gets the same parent distribution (3072 envs each), so two ranks hold 6144 envs of that distribution.
+    `same_mesh` (E1: the parent is an E0 run on this very mesh): columns are the table's own columns,
+    so the only check is that every parent column exists in the table.
     """
     import torch
 
@@ -92,10 +96,10 @@ def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[
     levels = torch.as_tensor(parent_env_state["terrain_levels"]).to(torch.long).clone()
     if types.shape != levels.shape or types.ndim != 1 or len(types) != num_envs:
         raise ValueError(f"EX-42 parent env_state has {tuple(types.shape)} envs, this process has {num_envs}")
-    kinds = parent_column_kinds()
+    kinds = [r["kind"] for r in table] if same_mesh else parent_column_kinds()
     if int(types.min()) < 0 or int(types.max()) >= len(kinds):
         raise ValueError("EX-42 parent env_state names a column outside the parent mesh")
-    for c, kind in enumerate(kinds):
+    for c, kind in enumerate(kinds if not same_mesh else []):
         row = table[c] if c < len(table) else None
         if row is None or row["family"] != "A" or row["kind"] != kind:
             raise ValueError(f"EX-42 parent column {c} is {kind!r} but the new mesh column is "
@@ -103,7 +107,8 @@ def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[
     return types, levels
 
 
-def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None) -> dict[str, Any]:
+def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None,
+                   parent_same_mesh: bool = False) -> dict[str, Any]:
     """Runtime step on the TerrainImporter (call once after the env exists, before the first reset):
     start from the parent's (column, level) per env when given (else assign only to exposed columns),
     cut levels at the caps, and wrap update_env_origins so every later level change is cut the same
@@ -124,7 +129,7 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
     if inherited:
         if table is None:
             raise ValueError("EX-42 parent placement needs the column table")
-        types, levels = restore_parent_placement(parent_env_state, table, num_envs)
+        types, levels = restore_parent_placement(parent_env_state, table, num_envs, same_mesh=parent_same_mesh)
         if int(levels.min()) < 0 or int(levels.max()) >= terrain.terrain_origins.shape[0]:
             raise ValueError("EX-42 parent env_state level is outside the mesh rows")
         if not torch.as_tensor([w > 0 for w in exposure])[types].all():

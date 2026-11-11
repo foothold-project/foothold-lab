@@ -74,7 +74,7 @@ def test_train_start_passes_the_stage_id_to_the_chain_and_uses_it_in_the_first_r
     assert 'env.unwrapped._ex42_stage_id != EX42_STAGE_ID' in src
     assert 'env.unwrapped._ex42_stage_id != "EX42_0_T0_prime"' not in src
     assert "stage_id=EX42_STAGE_ID)" in src                                       # the runtime gets the same id
-    assert 'EX42_STAGE_ID = "E0" if EX42_E0_REQUESTED else "EX42_0_T0_prime"' in src
+    assert 'EX42_STAGE_ID = "E1" if _E1_FLAGS else "E0" if _E0_FLAGS else "EX42_0_T0_prime"' in src
 
 
 def _fake_env(levels, types_, rows=10, cols=76):

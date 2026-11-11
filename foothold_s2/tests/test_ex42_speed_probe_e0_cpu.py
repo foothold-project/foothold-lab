@@ -167,7 +167,7 @@ def test_speed_probe_needs_a_stage_approval_switch():
 def test_train_start_calls_the_entry_helpers_in_the_places_that_matter():
     text = TRAIN_START.read_text(encoding="utf-8")
     for needle in ("validate_speed_probe_switches(speed_probe=_pre_args.ex42_speed_probe",
-                   "run_ex42_stage_e0_entry(", "dry_run=_pre_args.ex42_stage_e0_dry_run",
+                   "run_ex42_stage_e0_entry(", "dry_run=_e_dry_run",
                    "speed_probe_builds_chain(\n            EX42_RANK_SPLIT, EX42_SPEED_PROBE_RANK)",
                    "args_cli.ex42_log_dir = speed_probe_rank_log_dir(", "raise SystemExit(0)"):
         assert needle in text, needle
@@ -287,7 +287,7 @@ def test_e0_cell_missing_or_wrong_is_refused(tmp_path, parent_file, monkeypatch,
 
 
 @pytest.mark.parametrize("over,match", [
-    ({"stage_id": "E1"}, "E0 only"), ({"stage_id": "E1F"}, "E0 only"), ({"stage_id": "M"}, "E0 only"),
+    ({"stage_id": "E1F"}, "E0 or E1 only"), ({"stage_id": "E2"}, "E0 or E1 only"), ({"stage_id": "M"}, "E0 or E1 only"),
     ({"approved_switch": False}, "approval switch"), ({"max_iterations": 1000}, "exactly 250"),
     ({"num_envs": 1536}, "exactly 250"), ({"distributed": True}, "exactly 250"), ({"device": "cuda:1"}, "cuda:0"),
     ({"force_gt": True}, "forced GT"), ({"task": "other"}, "task differs"),
@@ -443,7 +443,7 @@ def test_train_start_passes_the_manifest_path_and_only_dry_run_exits():
     text = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
     assert "terrain_manifest_path=_pre_args.ex42_terrain_manifest" in text
     assert "raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)" not in text      # real E0 no longer exits 3
-    assert "if _pre_args.ex42_stage_e0_dry_run:\n            raise SystemExit(0)" in text
+    assert "if _e_dry_run:\n            raise SystemExit(0)" in text                        # only the dry run exits (E0 and E1 flags)
     assert text.count("--ex42_terrain_manifest") == 2
 
 

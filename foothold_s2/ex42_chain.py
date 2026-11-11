@@ -107,8 +107,14 @@ class EX42TrainingChain:
                  boundary_provider: Callable[[int, Any], dict[str, Any] | None] | None = None,
                  p1_interval: int = 250,
                  parent_pin: dict[str, Any] | None = None,
-                 current_stage_id: str | None = None):
+                 current_stage_id: str | None = None,
+                 defer_until_pid: int | None = None):
         self.plan = plan
+        if defer_until_pid is not None and (type(defer_until_pid) is not int or defer_until_pid <= 1):
+            raise ValueError("EX-42 deferred P1 needs the training process id")
+        # Boundary evaluations queued before the training process exits wait for it (queue wait_pids), so a
+        # mid-run boundary never runs on the GPUs that training holds.
+        self.defer_until_pid = defer_until_pid
         self.approvals_path = Path(approvals_path).resolve(strict=True)
         self.parent = plan.verify_parent_manifest(
             parent_manifest_path, stage_id=current_stage_id or "EX42_0_T0_prime",
@@ -389,7 +395,7 @@ class EX42TrainingChain:
             priority=1, gpu=p1_gpu, owner="runner-ex42", cond="manifest SHA verified",
             start=None, end=None, needs_approval=False, kind="eval",
             argv_json=json.dumps(score_argv), cwd=str(self.repo_root),
-            wait_absent=[], wait_pid=[], done_file=[],
+            wait_absent=[], wait_pid=[self.defer_until_pid] if self.defer_until_pid else [], done_file=[],
         )
         message = dispatch.queue_cmd(args, {"queue": str(self.queue_path)})
         job_id = int(message.rsplit(" ", 1)[-1])
