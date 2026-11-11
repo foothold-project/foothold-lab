@@ -93,3 +93,12 @@ def test_e3_child_failure_is_a_scored_hold_and_tampered_marker_is_rejected(tmp_p
     marker.write_text(json.dumps(row), encoding="utf-8")
     with pytest.raises(ValueError, match="marker differs"):
         recount(score, plan={}, evaluation=evaluation, mesh={"mesh_sha256": "b" * 64})
+
+
+def test_e3_missing_retained_children_stay_hold_without_inventing_raw(tmp_path):
+    from foothold_s2.ex42_e3_judge import _retained
+
+    score = {}
+    assert _retained(score, evaluation=tmp_path, plan={}, plan_sha256="a" * 64,
+                     checkpoint_sha256="b" * 64, seed=42) == ["d44", "flag_one", "flag_four"]
+    assert "d44_cells" not in score and "flag_cells" not in score

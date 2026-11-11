@@ -67,19 +67,28 @@ def recount(score: dict, *, plan: dict, evaluation: Path, mesh: dict) -> dict:
 
 
 def _retained(score: dict, *, evaluation: Path, plan: dict, plan_sha256: str,
-              checkpoint_sha256: str, seed: int) -> None:
+              checkpoint_sha256: str, seed: int) -> list[str]:
     from foothold_s2.eval.ex42_d44_cells import read_evidence as read_d44
     from foothold_s2.eval.ex42_flag_cells import read_evidence as read_flag
 
-    score["d44_cells"] = read_d44(evaluation / "d44", plan=plan,
-                                  plan_sha256=plan_sha256,
-                                  checkpoint_sha256=checkpoint_sha256, seed=seed)
+    missing = []
+    if (evaluation / "d44" / "d44_cells.json").is_file():
+        score["d44_cells"] = read_d44(evaluation / "d44", plan=plan,
+                                      plan_sha256=plan_sha256,
+                                      checkpoint_sha256=checkpoint_sha256, seed=seed)
+    else:
+        missing.append("d44")
     flags = {}
     for count in ("flag_one", "flag_four"):
-        flags.update(read_flag(evaluation / "flag_cells" / count, plan=plan,
-                               plan_sha256=plan_sha256,
-                               checkpoint_sha256=checkpoint_sha256, seed=seed, count=count))
-    score["flag_cells"] = flags
+        if (evaluation / "flag_cells" / count / "flag_cells.json").is_file():
+            flags.update(read_flag(evaluation / "flag_cells" / count, plan=plan,
+                                   plan_sha256=plan_sha256,
+                                   checkpoint_sha256=checkpoint_sha256, seed=seed, count=count))
+        else:
+            missing.append(count)
+    if flags:
+        score["flag_cells"] = flags
+    return missing
 
 
 class E3KindTwoWindowJudge(StageJudge):
@@ -97,8 +106,8 @@ class E3KindTwoWindowJudge(StageJudge):
         old_score = previous_window(ctx)
         old = judge_maintenance(old_score, baseline, measured) if old_score else None
         plan_sha = ctx.digest(ctx.plan_path)
-        _retained(now, evaluation=ctx.evaluation, plan=ctx.plan, plan_sha256=plan_sha,
-                  checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
+        retained_missing = _retained(now, evaluation=ctx.evaluation, plan=ctx.plan, plan_sha256=plan_sha,
+                                     checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         mesh = _mesh(now, ctx.evaluation)
         current_kind = recount(now, plan=ctx.plan, evaluation=ctx.evaluation, mesh=mesh)
         prior_evaluation = (Path(old_score["e3_kind"]["evaluation"]).parent
@@ -144,6 +153,8 @@ class E3KindTwoWindowJudge(StageJudge):
             "kind_current": {"role": "judge", "judgement": kind_states[0]},
             "kind_previous": {"role": "judge", "judgement": kind_states[1]},
             "kind_coverage": {"role": "judge", "judgement": aggregate(kind_states)},
+            "retained_cells": {"role": "judge", "judgement": "HOLD" if retained_missing else "PASS",
+                               "missing": retained_missing},
             "learned_cells": learned, "exchange_watch": exchange, "flag_share": flag_share,
         }
         verdict = aggregate(row["judgement"] for row in items.values())
@@ -158,7 +169,7 @@ class E3KindTwoWindowJudge(StageJudge):
         exit_row = score.get("stage_exit") or {}
         items = exit_row.get("items") or {}
         required = {"maintenance_current", "maintenance_previous", "kind_current", "kind_previous",
-                    "kind_coverage", "learned_cells", "exchange_watch", "flag_share"}
+                    "kind_coverage", "retained_cells", "learned_cells", "exchange_watch", "flag_share"}
         if (exit_row.get("adapter") != self.name or exit_row.get("windows") != 2 or
                 set(items) != required or exit_row.get("judgement") != judgment or
                 _map39_cell_check(score, judgment, MODES) != expected or
