@@ -1,0 +1,28 @@
+{
+  "schema": "foothold-e1-slip-live/1",
+  "generated_at": "2026-11-12T01:35:10+09:00",
+  "latest_candidate_iteration": 50,
+  "checks": [
+    {
+      "start": 1,
+      "end": 50,
+      "complete_window": true,
+      "formal_50_check": true,
+      "slip_share_last10": 0.0706391685495229,
+      "slip_share_ratio_of_means_reference": 0.07060606817074223,
+      "candidate_track_last20": 1.5725895583629608,
+      "control_track_last20": 1.5668300330638885,
+      "tracking_ratio_last20": 1.003675909433399,
+      "tracking_threshold": 1.4101470297574996,
+      "penalty_check": "PASS",
+      "tracking_check": "PASS"
+    }
+  ],
+  "control_raw_slip_cost": null,
+  "control_raw_slip_reason": "weight zero; contact/foot velocity training trace not recorded",
+  "fall_event_ratio": null,
+  "fall_event_reason": "only latest-ended-episode reason fractions are logged",
+  "runner_crosscheck": {
+    "status": "runner numeric result pending"
+  }
+}
