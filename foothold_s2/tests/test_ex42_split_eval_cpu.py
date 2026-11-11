@@ -88,6 +88,38 @@ def test_gpu_gate_waits_for_training_to_release_and_refuses_after_the_timeout():
     split.wait_gpus_free([UUID["cuda:1"]], query=lambda: "9, " + UUID["cuda:0"])   # the other GPU is not ours
 
 
+# Real `nvidia-smi --query-compute-apps=pid,gpu_uuid,used_memory,process_name --format=csv,noheader,nounits` output
+# of this machine at 11:14 (training and evaluation both stopped): two sunshine sessions on GPU 0, nothing on GPU 1.
+REAL_SMI_IDLE = """4108, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 262, /usr/bin/sunshine
+5968, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 262, /usr/bin/sunshine
+"""
+REAL_GPU0 = "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+REAL_GPU1 = "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"
+
+
+def test_gpu_gate_ignores_the_real_sunshine_sessions_but_not_training_or_kit_processes():
+    sleeps = []
+    split.wait_gpus_free([REAL_GPU0, REAL_GPU1], query=lambda: REAL_SMI_IDLE, sleep=sleeps.append)   # returns at once
+    assert sleeps == []
+    training = REAL_SMI_IDLE + "7001, GPU-" + REAL_GPU0 + ", 13800, /home/jay/miniforge3/envs/isaac311/bin/python3.11\n"
+    with pytest.raises(ValueError, match="7001"):
+        split.wait_gpus_free([REAL_GPU0], timeout_s=0, query=lambda: training, sleep=lambda s: None)
+    tiny = REAL_SMI_IDLE + "7002, GPU-" + REAL_GPU1 + ", 40, /home/jay/miniforge3/envs/isaac311/bin/python3.11\n"
+    with pytest.raises(ValueError, match="7002"):                 # a just-started Kit child uses little memory
+        split.wait_gpus_free([REAL_GPU1], timeout_s=0, query=lambda: tiny, sleep=lambda s: None)
+    # a name that merely contains "sunshine" in its path is not skipped: only the basename counts
+    spoof = "7003, GPU-" + REAL_GPU1 + ", 900, /home/jay/sunshine/python\n"
+    with pytest.raises(ValueError, match="7003"):
+        split.wait_gpus_free([REAL_GPU1], timeout_s=0, query=lambda: spoof, sleep=lambda s: None)
+
+
+def test_gpu_gate_default_query_asks_for_the_process_name(monkeypatch):
+    seen = []
+    monkeypatch.setattr(split.subprocess, "check_output", lambda cmd, **kw: seen.append(cmd) or REAL_SMI_IDLE)
+    split.wait_gpus_free([REAL_GPU0])
+    assert "--query-compute-apps=pid,gpu_uuid,used_memory,process_name" in seen[0]
+
+
 # ---- merge refusals (synthetic) ----
 def _doc(modes, **extra):
     return {"checkpoint_sha256": "s", "envs": 64, "modes": {m: {"x": m} for m in modes},

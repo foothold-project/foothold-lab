@@ -46,16 +46,28 @@ def assign_shards(devices, modes=MODES):
     return shard, load
 
 
+# Screen and remote-desktop sessions (this machine: sunshine, 262 MiB per GPU) hold a compute context but are not the
+# training or evaluation processes this wait is about; they never free up, so counting them blocks forever. Only these
+# names are skipped, by basename. Everything else on the GPU still blocks, whatever its memory: a Kit or python
+# process that has just started also uses little memory.
+DISPLAY_PROCESS_NAMES = frozenset({"sunshine", "Xorg", "Xwayland", "gnome-shell", "gnome-remote-desktop-daemon"})
+
+
 def _gpu_busy_uuids(query=None):
+    """gpu uuid -> [(pid, process basename, MiB)] of compute processes that are not display/streaming sessions."""
     if query is None:
         query = lambda: subprocess.check_output(
-            ["nvidia-smi", "--query-compute-apps=pid,gpu_uuid", "--format=csv,noheader,nounits"],
-            text=True, timeout=20)
+            ["nvidia-smi", "--query-compute-apps=pid,gpu_uuid,used_memory,process_name",
+             "--format=csv,noheader,nounits"], text=True, timeout=20)
     busy = {}
     for line in query().splitlines():
         fields = [field.strip() for field in line.split(",")]
         if len(fields) >= 2 and fields[0]:
-            busy.setdefault(fields[1].lower().removeprefix("gpu-"), []).append(fields[0])
+            name = os.path.basename(fields[3]) if len(fields) >= 4 else ""
+            if name in DISPLAY_PROCESS_NAMES:
+                continue
+            memory = fields[2] if len(fields) >= 3 else "?"
+            busy.setdefault(fields[1].lower().removeprefix("gpu-"), []).append((fields[0], name or "?", memory))
     return busy
 
 
