@@ -18,7 +18,7 @@
 
 - 저장된 E0 m250 원자료를 E1 규칙으로 CPU 재집계: 유지표 PASS, D44 `평가 열 없음`, 바로 앞 창 `직전 창 없음`, E1 출구 HOLD. 원본 P1은 수정하지 않았다.
 - 합성 D44 현재 · 직전 창에서 정확히 prep 성공 하한과 생존 하한이면 PASS, 어느 한 창이 하한 미만이면 FAIL. 하한을 바꾼 계획 사본을 넣으면 판정도 함께 바뀐다. 결측 원자료 · 바뀐 SHA · 다른 칸 이름은 거절한다.
-- 전체 EX-42 CPU: `434 passed, 3 skipped` (`isaac311`, `FOOTHOLD_MACHINE_PROFILE` 로드, GPU 없음). 기존 E1 승인 칸이 실제 승인됐는데도 결측을 기대하던 오래된 시험 한 줄을 현재 승인 영수증에 맞게 고쳤다.
+- 현재 통합 가지 병합 뒤 전체 EX-42 CPU: `465 passed, 3 skipped` (`isaac311`, `FOOTHOLD_MACHINE_PROFILE` 로드, `CUDA_VISIBLE_DEVICES` 비움). 통합 가지가 이미 고친 E1 승인 시험을 그대로 유지했다.
 
 ## 남은 연결
 
