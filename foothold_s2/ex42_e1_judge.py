@@ -68,7 +68,7 @@ def judge_e1(score: dict, baseline: dict, measured: dict, plan: dict,
 
 
 def previous_e1_score(checkpoint: Path, evaluation: Path, interval: int,
-                      score_config_sha256: str) -> dict | None:
+                      score_config_sha256: str, stage_id: str = "E1") -> dict | None:
     """Read only the immediate prior E1 P1 result in this run and source config."""
     match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
     if match is None or interval <= 0:
@@ -85,11 +85,11 @@ def previous_e1_score(checkpoint: Path, evaluation: Path, interval: int,
     receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
     prior = json.loads(path.read_text(encoding="utf-8-sig"))
     expected_checkpoint = checkpoint.parent / f"model_{previous_iteration}.pt"
-    if (receipt.get("state") != "complete" or receipt.get("stage_id") != "E1" or
+    if (receipt.get("state") != "complete" or receipt.get("stage_id") != stage_id or
             receipt.get("checkpoint_iteration") != previous_iteration or
             receipt.get("measurement_sha256") != hashlib.sha256(path.read_bytes()).hexdigest() or
             receipt.get("checkpoint_sha256") != prior.get("checkpoint_sha256") or
-            prior.get("stage_id") != "E1" or prior.get("checkpoint") != str(expected_checkpoint) or
+            prior.get("stage_id") != stage_id or prior.get("checkpoint") != str(expected_checkpoint) or
             prior.get("score_config_sha256") != score_config_sha256 or
             not isinstance(prior.get("checkpoint_sha256"), str) or
             re.fullmatch(r"[0-9a-f]{64}", prior["checkpoint_sha256"]) is None or

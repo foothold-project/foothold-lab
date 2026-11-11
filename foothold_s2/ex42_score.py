@@ -216,23 +216,16 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     out["maintenance_items"]["W57_spin_survival"]["by_mode_and_direction"] = {
         mode: {case: out["map64"][mode][case]["alive_at_end"]
                for case in ("spin+1.2", "spin-1.2")} for mode in MODES}
-    if cfg["status"] == "e0_parent_baseline_pinned" and stage_id == "E0":
-        from foothold_s2.ex42_e0_judge import judge, load_baseline
-        baseline = load_baseline(ROOT, cfg, digest)
-        baseline["_sha256"] = cfg["baseline"]["sha256"]
+    if cfg["status"] == "e0_parent_baseline_pinned":
+        # the plan names the stage's exit judge (E0 / E1 default to their reviewed adapters); no name = nothing judged
+        from types import SimpleNamespace
+        from foothold_s2.ex42_stage_judges import adapter_for
         plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
-        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
-        out = judge(out, baseline, measured)
-    elif cfg["status"] == "e0_parent_baseline_pinned" and stage_id == "E1":
-        from foothold_s2.ex42_e0_judge import load_baseline
-        from foothold_s2.ex42_e1_judge import judge_e1, previous_e1_score
-        baseline = load_baseline(ROOT, cfg, digest)
-        baseline["_sha256"] = cfg["baseline"]["sha256"]
-        plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
-        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
-        prior = previous_e1_score(checkpoint, evaluation,
-                                  plan["evaluation"]["interval_updates"], digest(cfg_path))
-        out = judge_e1(out, baseline, measured, plan, previous=prior)
-    elif cfg["status"] == "e0_parent_baseline_pinned":
-        out["reason"] = "E0 baseline is pinned; this stage requires its own judgment policy"
+        adapter = adapter_for(plan, stage_id) if stage_id else None
+        if adapter is None:
+            out["reason"] = f"{stage_id} has no exit judge adapter in the plan; this stage requires its own judgment policy"
+        else:
+            ctx = SimpleNamespace(root=ROOT, cfg=cfg, cfg_path=cfg_path, digest=digest, plan=plan, stage_id=stage_id,
+                                  checkpoint=checkpoint, evaluation=evaluation)
+            out = adapter.judge(ctx, out)
     return out

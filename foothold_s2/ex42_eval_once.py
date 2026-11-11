@@ -136,37 +136,15 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
     judgment = score.get("judgement", "HOLD")
     if judgment in ("PASS", "FAIL"):
-        cells = score.get("cell_judgments") or {}
-        if (stage_id not in ("E0", "E1") or set(cells) != set(MODES) or
-                any(set(cells[mode]) != set(score["map64"].get(mode, {})) for mode in MODES) or
-                any(cells[mode][case].get("role") != "judge" for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]) or
-                any(cells["probe_prop_only"][case].get("role") != "record_only"
-                    for case in cells["probe_prop_only"]) or
-                any(cells[mode][case].get("judgment") not in ("PASS", "HOLD", "FAIL")
-                    for mode in ("eval_gt", "eval_pred") for case in cells[mode])):
+        from foothold_s2.ex42_stage_judges import adapter_for
+        adapter = adapter_for(EX42Plan.load(plan_path).document, stage_id)
+        if adapter is None:
             raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
-        verdicts = [cells[mode][case]["judgment"] for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]]
-        expected = "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"
-        if len(verdicts) != 26:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E0" and expected != judgment:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E1":
-            exit_row = score.get("e1_exit") or {}
-            maintenance = exit_row.get("maintenance", {})
-            landing = exit_row.get("d44", {})
-            states = (expected, maintenance.get("previous"),
-                      landing.get("current", {}).get("judgement"),
-                      landing.get("previous", {}).get("judgement"))
-            aggregate = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states else "PASS"
-            if (score.get("stage_id") != "E1" or exit_row.get("judgement") != judgment or
-                    maintenance.get("current") != expected or
-                    set(landing) != {"current", "previous"} or
-                    any(state not in ("PASS", "HOLD", "FAIL") for state in states) or
-                    aggregate != judgment):
-                raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
+        verdicts = [v["judgment"] for mode in ("eval_gt", "eval_pred")
+                    for v in (score.get("cell_judgments") or {}).get(mode, {}).values() if isinstance(v, dict)]
+        extra_fields = adapter.verify(score, judgment, "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS")
+    else:
+        extra_fields = {}
     plan = EX42Plan.load(plan_path)
     if stage_id not in plan.runtime_stage_ids:
         raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
@@ -180,7 +158,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
               "stage_id": stage_id, "judgment": judgment,
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
               "cell_judgments": score.get("cell_judgments"),
-              **({"e1_exit": score["e1_exit"]} if stage_id == "E1" and "e1_exit" in score else {}),
+              **extra_fields,
               "measurement": str(Path(output) / "ex42_score.json"),
               "measurement_sha256": digest(Path(output) / "ex42_score.json")}
     validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
