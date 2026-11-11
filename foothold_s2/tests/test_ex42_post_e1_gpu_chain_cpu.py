@@ -55,6 +55,10 @@ def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
     assert evidence["evidence_out"].endswith("eval/materialize/E1F-stage-evidence.json")
     assert evidence["argv"][evidence["argv"].index("--w09-baseline") + 1].endswith(
         "eval/w09-w08/w09_baseline.json")
+    expected_p1_receipt = "/tmp/ex42-e1-run/eval/e1-p1-chain-${E1_SOURCE_HEAD_12}.json"
+    assert evidence["completion_receipt"] == expected_p1_receipt
+    assert evidence["argv"][evidence["argv"].index("--chain-receipt") + 1] == expected_p1_receipt
+    assert evidence["completion_receipt"] != flags["completion_receipt"]
     assert "--materialize-only" in evidence["argv"]
     repin = schedule[8]
     assert repin["id"] == "W08-materialize-and-repin"

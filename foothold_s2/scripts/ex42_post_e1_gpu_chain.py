@@ -24,6 +24,14 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                 e1_run: str | Path | None = None) -> dict[str, Any]:
     plan = EX42Plan.load(plan_path)
     run = Path(e1_run).resolve() if e1_run is not None else None
+    run_path = str(run) if run else "${E1_RUN}"
+    manifest_path = run / "manifest.json" if run else None
+    source_head = None
+    if manifest_path is not None and manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+        source_head = ((manifest.get("git") or {}).get("head"))
+    source_head_prefix = source_head[:12] if isinstance(source_head, str) and len(source_head) >= 12 else "${E1_SOURCE_HEAD_12}"
+    p1_chain_receipt = f"{run_path}/eval/e1-p1-chain-{source_head_prefix}.json"
     steps: list[dict[str, Any]] = []
     previous_p1 = None
     for iteration in BOUNDARIES:
@@ -40,7 +48,6 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                       "blockers": ["E1_must_end_and_publish_checkpoint_and_exact_p1_receipt"]})
         previous_p1 = f"E1-P1-m{iteration}"
 
-    run_path = str(run) if run else "${E1_RUN}"
     gate_path = f"{run_path}/eval/scores/m1000/p1_score.json"
     checkpoint_path = f"{run_path}/model_1000.pt"
     flag_chain_path = f"{run_path}/eval/w09-w08/chain_receipt.json"
@@ -98,14 +105,15 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                      "--repo", "${FIXED_REPO}", "--e1-run", run_path,
                      "--plan", "${E1_SOURCE_PLAN}", "--training-log", "${E1_TRAINING_LOG}",
                      "--evaluation-plan", "${EVALUATION_PLAN}", "--materialize-only",
-                     "--chain-receipt", flag_chain_path,
+                     "--chain-receipt", p1_chain_receipt,
                      "--w09-baseline", f"{run_path}/eval/w09-w08/w09_baseline.json",
                      "--evidence-out", evidence_path,
                      "--evaluation-mesh", "${E1_EVALUATION_MESH_NPZ}"]
     steps.append({"id": "E1F-evidence-materialize", "kind": "materialize_e1f_stage_evidence",
                   "requires": ["W09-W08-flag-chain=complete"],
                   "argv": evidence_argv, "evidence_out": evidence_path, "queue_command": None,
-                  "completion_receipt": flag_chain_path,
+                  "completion_receipt": p1_chain_receipt,
+                  "other_required_receipt": flag_chain_path,
                   "blockers": ["completed_e1_p1_receipt_and_w09_baseline_required"]})
 
     materialize_argv = ["${ISAAC311_PYTHON}", "-m", "foothold_s2.ex42_stage_materialize",
