@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from threading import Barrier, Lock
 from types import SimpleNamespace
 
 import pytest
@@ -198,3 +199,73 @@ def test_failed_kit_child_is_a_durable_hold_not_a_baseline(tmp_path, monkeypatch
     receipt = json.loads((out / "round_receipt.json").read_text(encoding="utf-8"))
     assert receipt["state"] == "HOLD" and receipt["failures"] == {"flag_one": "child rc=1"}
     assert not (out / "w09_baseline.json").exists()
+
+
+def test_dual_device_keeps_seed_order_and_runs_two_groups_concurrently(tmp_path, monkeypatch):
+    import sys
+    import foothold_s2
+    from foothold_s2.scripts import ex42_flag_baseline_chain as chain
+
+    checkpoint = tmp_path / "model_1000.pt"
+    checkpoint.write_bytes(b"known graduate")
+    measurement = tmp_path / "score.json"
+    measurement.write_bytes(b"{}")
+    gate = tmp_path / "p1_score.json"
+    gate.write_text(json.dumps({"state": "complete", "stage_id": "E1",
+                                "checkpoint_iteration": 1000, "judgment": "PASS",
+                                "checkpoint_sha256": chain.digest(checkpoint),
+                                "measurement": str(measurement),
+                                "measurement_sha256": chain.digest(measurement)}), encoding="utf-8")
+    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1000))
+    monkeypatch.setattr(chain.EX42Plan, "load", lambda path: _p())
+    monkeypatch.setattr(chain, "preflight", lambda path: {"mesh_sha256": "a" * 64})
+    monkeypatch.setattr(chain, "gpu_identity", lambda device: {"device": device, "gpu_uuid": device})
+    monkeypatch.setattr(chain, "child_env", lambda: {})
+    monkeypatch.setattr(chain, "flag_kit_commands",
+                        lambda checkpoint, output, device, **kwargs: [("flag_one", [device])])
+    monkeypatch.setitem(sys.modules, "foothold_s2.ex41_eval_once", SimpleNamespace())
+    monkeypatch.setattr(foothold_s2, "ex41_eval_once", SimpleNamespace(), raising=False)
+    barrier, lock = Barrier(2, timeout=2), Lock()
+    seen = []
+
+    def run_round(_checkpoint, root, device, **kwargs):
+        index = 0 if root.name == "w09" else int(root.name.removeprefix("repeat_")) + 1
+        if index in (0, 3):
+            barrier.wait()
+        with lock:
+            seen.append((device, index, kwargs["seed"]))
+        root.mkdir(parents=True)
+        (root / "round_receipt.json").write_text(json.dumps({"device": device, "seed": kwargs["seed"]}), encoding="utf-8")
+
+    monkeypatch.setattr(chain, "run_round", run_round)
+    monkeypatch.setattr(chain, "make_baseline", lambda *args, **kwargs: {"source": "w09"})
+    monkeypatch.setattr(chain, "make_calibration", lambda *args, **kwargs: {"repeat_width": {}})
+    monkeypatch.setattr(chain, "make_q4", lambda *args, **kwargs: {"rule": "test"})
+    out = tmp_path / "dual"
+    result = chain.run_chain(checkpoint, out, None,
+                             plan_path=ROOT / "foothold_s2/curriculum/ex42-prep.yaml",
+                             mesh_dir=tmp_path, expected_checkpoint_sha256=chain.digest(checkpoint),
+                             expected_mesh_sha256="a" * 64, e1_gate=gate, task="test", execute=True,
+                             devices=("cuda:0", "cuda:1"))
+    assert result["state"] == "complete"
+    assert [row["seed"] for row in result["rounds"]] == [42, 42, 42, 43, 44, 45]
+    assert [row["device"] for row in result["rounds"]] == ["cuda:0"] * 3 + ["cuda:1"] * 3
+    assert [index for device, index, _ in seen if device == "cuda:0"] == [0, 1, 2]
+    assert [index for device, index, _ in seen if device == "cuda:1"] == [3, 4, 5]
+    assert len(result["round_receipts"]) == 6
+    with pytest.raises(ValueError, match="dual assignment"):
+        chain.round_devices(None, ("cuda:1", "cuda:0"))
+
+
+def test_dual_device_cli_accepts_exact_pair(monkeypatch, tmp_path, capsys):
+    from foothold_s2.scripts import ex42_flag_baseline_chain as chain
+    received = []
+    monkeypatch.setattr(chain, "run_chain", lambda *args, **kwargs: received.append(kwargs) or {"state": "DRY"})
+    base = ["--checkpoint", str(tmp_path / "model_1000.pt"),
+            "--expected-checkpoint-sha256", "a" * 64, "--e1-gate", str(tmp_path / "gate.json"),
+            "--plan", str(tmp_path / "plan.yaml"), "--mesh-dir", str(tmp_path),
+            "--expected-mesh-sha256", "b" * 64, "--out", str(tmp_path / "out")]
+    assert chain.main([*base, "--devices", "cuda:0,cuda:1"]) == 0
+    assert received[0]["devices"] == ("cuda:0", "cuda:1") and received[0]["execute"] is False
+    with pytest.raises(SystemExit):
+        chain.main([*base, "--devices", "cuda:1,cuda:0"])
