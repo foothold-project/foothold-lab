@@ -24,19 +24,21 @@ def test_trot_without_four_simultaneous_contacts_separates_definitions():
     old, proposed = _scorers()
     settings = old["contract"](_plan())
     trace = _trace("stop_restart")
-    trace["foot_pos_w"][30:, :, :, :2] = 4.0
-    trace["contact"][30:, :, :] = False
-    trace["contact"][30::2, :, [0, 2]] = True
-    trace["contact"][31::2, :, [1, 3]] = True
+    # The historical scorers used the old continuous-restart command timeline.
+    trace["phase_id"][70:] = 3
+    trace["foot_pos_w"][70:, :, :, :2] = 4.0
+    trace["contact"][70:, :, :] = False
+    trace["contact"][70::2, :, [0, 2]] = True
+    trace["contact"][71::2, :, [1, 3]] = True
     kwargs = dict(spec={"task": "stop_restart"}, anchors=ANCHORS, settings=settings,
                   old_summarize=old["summarize"], proposed_summarize=proposed["summarize"], dt=.1)
     result = dual.compare_trace(trace, **kwargs)
     assert (result["valid_count"], result["old_success"], result["proposed_success"]) == (64, 0, 64)
     assert result["added_envs"] == list(range(64))
     assert result["removed_envs"] == []
-    trace["foot_pos_w"][30:, 0, 3, 0] = 5.0
+    trace["foot_pos_w"][70:, 0, 3, 0] = 5.0
     assert dual.compare_trace(trace, **kwargs)["proposed_success"] == 63
-    trace["foot_pos_w"][30:, 1, 0, 2] = 1.0
+    trace["foot_pos_w"][70:, 1, 0, 2] = 1.0
     assert dual.compare_trace(trace, **kwargs)["proposed_success"] == 62
 
 

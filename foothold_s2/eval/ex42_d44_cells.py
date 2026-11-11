@@ -16,6 +16,30 @@ import numpy as np
 
 TASKS = ("turn_left", "turn_right", "stop_restart")
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
+TRACE_FORMAT = "foothold-ex42-d44-trace/2"
+RECEIPT_FORMAT = "foothold-ex42-d44-eval/2"
+
+
+def top_latch_mask(root_xy, foot_x, alive, bounds):
+    """Post-step entry into the landing with every foot past its front edge."""
+    root_xy, foot_x, alive = np.asarray(root_xy), np.asarray(foot_x), np.asarray(alive)
+    xmin, xmax, ymin, ymax = bounds
+    if (root_xy.ndim != 2 or root_xy.shape[1] != 2 or foot_x.shape != (len(root_xy), 4)
+            or alive.shape != (len(root_xy),) or alive.dtype != bool
+            or not np.isfinite(root_xy).all() or not np.isfinite(foot_x).all()):
+        raise ValueError("D44 top latch geometry shape or finite values differ")
+    return (alive & (root_xy[:, 0] >= xmin) & (root_xy[:, 0] <= xmax)
+            & (root_xy[:, 1] >= ymin) & (root_xy[:, 1] <= ymax)
+            & (foot_x >= xmin).all(axis=1))
+
+
+def restart_command(latched, speed):
+    """Per-env phase 3 becomes phase 4 with a zero command after latching."""
+    latched = np.asarray(latched)
+    if (latched.ndim != 1 or latched.dtype != bool or type(speed) not in (int, float)
+            or not math.isfinite(speed) or speed <= 0):
+        raise ValueError("D44 restart command contract invalid")
+    return np.where(latched, 4, 3).astype(np.int16), np.where(latched, 0.0, speed)
 
 
 def contract(plan: dict) -> dict:
@@ -89,10 +113,20 @@ def _continuous_true(mask: np.ndarray, steps: int) -> bool:
     return False
 
 
+def _longest_true(mask: np.ndarray) -> int:
+    longest = run = 0
+    for value in mask:
+        run = run + 1 if bool(value) else 0
+        longest = max(longest, run)
+    return longest
+
+
 def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: float) -> dict:
     """Score one 64-env case from post-step raw arrays; retain every env reason."""
     if spec.get("task") not in TASKS or not math.isfinite(dt) or dt <= 0:
         raise ValueError("D44 case task or dt invalid")
+    if str(np.asarray(trace.get("trace_format", ""))) != TRACE_FORMAT:
+        raise ValueError("D44 old trace format cannot prove the arrival stop")
     root = np.asarray(trace["root_pos_w"], dtype=np.float64)
     quat = np.asarray(trace["root_quat_w"], dtype=np.float64)
     feet = np.asarray(trace["foot_pos_w"], dtype=np.float64)
@@ -100,6 +134,8 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
     alive = np.asarray(trace["alive"], dtype=bool)
     body_vel = np.asarray(trace["body_vel_b"], dtype=np.float64)
     phases = np.asarray(trace["phase_id"], dtype=np.int16)
+    commands = np.asarray(trace["cmd_post"], dtype=np.float64)
+    latched_at = np.asarray(trace["top_latched_at"])
     origin = np.asarray(trace["tile_offset_w"], dtype=np.float64)
     steps, envs = alive.shape
     approached = np.asarray(trace.get("approach_entered", np.ones(envs, dtype=bool)), dtype=bool)
@@ -107,8 +143,32 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
             or feet.shape != (steps, envs, 4, 3) or contact.shape != (steps, envs, 4)
             or body_vel.shape != (steps, envs, 3) or phases.shape != (steps, envs)
             or origin.shape != (envs, 3) or approached.shape != (envs,) or envs != 64
-            or not all(np.isfinite(array).all() for array in (root, quat, feet, body_vel, origin))):
+            or commands.shape != (steps, envs, 3) or latched_at.shape != (envs,)
+            or latched_at.dtype.kind not in "iu" or contact.dtype != bool or alive.dtype != bool
+            or np.any(alive[1:] & ~alive[:-1])
+            or not all(np.isfinite(array).all() for array in (root, quat, feet, body_vel, origin, commands))):
         raise ValueError("D44 trace shape, finiteness or 64-env denominator differs")
+    if not np.isin(phases, (0, 1, 2, 3, 4)).all():
+        raise ValueError("D44 unknown phase id")
+    timing = settings["timing"]
+    counts = {name: round(timing[name] / dt) for name in
+              ("settle_s", "approach_limit_s", "stop_s", "restart_limit_s")}
+    turn_count = round(settings["turn_seconds"] / dt)
+    if any(abs(counts[name] * dt - timing[name]) > dt / 2 for name in counts):
+        raise ValueError("D44 trace timing does not align with policy dt")
+    if (spec["task"].startswith("turn_") and
+            (steps != counts["settle_s"] + turn_count or
+             not np.all(phases[:counts["settle_s"]] == 0) or
+             not np.all(phases[counts["settle_s"]:] == 1))):
+        raise ValueError("D44 turn phase schedule differs")
+    if spec["task"] == "stop_restart":
+        a = counts["settle_s"]
+        b = a + counts["approach_limit_s"]
+        c = b + counts["stop_s"]
+        if (steps != c + counts["restart_limit_s"] or
+                not np.all(phases[:a] == 0) or not np.all(phases[a:b] == 1) or
+                not np.all(phases[b:c] == 2) or not np.isin(phases[c:], (3, 4)).all()):
+            raise ValueError("D44 stop and arrival phase schedule differs")
     local_root = root - origin[None]
     local_feet = feet - origin[None, :, None]
     xmin, xmax, ymin, ymax = anchors["landing_bounds_xy"]
@@ -119,12 +179,13 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
                 & contact.any(axis=-1)
                 & np.all(~contact | (local_feet[:, :, :, 2] >= foot_floor), axis=-1))
     yaw = np.unwrap(_yaw(quat), axis=0)
-    timing = settings["timing"]
     rows = []
     for env in range(envs):
         survives = bool(alive[-1, env])
         valid, success, reason = True, False, ""
         if spec["task"].startswith("turn_"):
+            if latched_at[env] != -1 or np.any(phases[:, env] == 4):
+                raise ValueError("D44 turn trace contains an arrival latch")
             turn = phases[:, env] == 1
             sign = 1 if spec["task"] == "turn_left" else -1
             signed_yaw = sign * float(yaw[turn, env][-1] - yaw[turn, env][0]) if turn.any() else 0.0
@@ -140,6 +201,23 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         approach = phases[:, env] == 1
         stop = phases[:, env] == 2
         restart = phases[:, env] == 3
+        top_stop = phases[:, env] == 4
+        candidate = top_latch_mask(local_root[:, env, :2], local_feet[:, env, :, 0],
+                                   alive[:, env], anchors["landing_bounds_xy"])
+        first = np.flatnonzero(restart & candidate)
+        expected_latch = int(first[0]) if len(first) else -1
+        if int(latched_at[env]) != expected_latch or not np.array_equal(
+                top_stop, (np.arange(steps) > expected_latch) & (phases[:, env] >= 3)
+                if expected_latch >= 0 else np.zeros(steps, dtype=bool)):
+            raise ValueError("D44 top latch or phase 4 differs from post-step geometry")
+        # cmd_post is read after env.step. A terminal reset may resample the
+        # command on that very step, so it is a policy-command witness only
+        # while the env is still alive in the post-step trace.
+        post_live = alive[:, env]
+        if (np.any(np.abs(commands[restart & post_live, env, 0] - settings["restart_vx_mps"]) > 1e-5)
+                or np.any(np.abs(commands[top_stop & post_live, env]) > 1e-5)
+                or np.any(np.abs(commands[stop & post_live, env]) > 1e-5)):
+            raise ValueError("D44 recorded command differs from restart and arrival stop")
         if not approached[env]:
             valid, reason = False, "approach_timeout"
         stop_floor = settings["stop_surface_z_m"]
@@ -155,15 +233,39 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         # Foot height is diagnostic. The approved stop is root x and horizontal speed.
         stop_ok = _continuous_true((stop & within_band & stopped),
                                    math.ceil(timing["stop_hold_s"] / dt))
-        top_ok = (restart & platform[:, env] & contact[:, env].all(axis=-1)
-                  & np.all(local_feet[:, env, :, 2] >= foot_floor, axis=-1))
+        top_ok = top_stop & platform[:, env] & stopped
         reached = _continuous_true(top_ok, math.ceil(timing["top_hold_s"] / dt))
         success = bool(valid and survives and stop_ok and reached)
+        on_landing = ((local_root[:, env, 0] >= xmin) & (local_root[:, env, 0] <= xmax)
+                      & (local_root[:, env, 1] >= ymin) & (local_root[:, env, 1] <= ymax))
+        feet_inside = ((local_feet[:, env, :, 0] >= xmin) & (local_feet[:, env, :, 0] <= xmax)
+                       & (local_feet[:, env, :, 1] >= ymin) & (local_feet[:, env, :, 1] <= ymax)).all(axis=1)
+        four_foot_xy_ticks = _longest_true(top_stop & feet_inside)
+        if not valid:
+            reason = "approach_timeout"
+        elif success:
+            reason = "stop_restart_pass"
+        elif expected_latch < 0:
+            reason = "no_top_latch"
+        elif not stop_ok or not np.any(top_stop & stopped):
+            reason = "not_still"
+        elif np.any(top_stop & on_landing & contact[:, env].any(axis=1)
+                    & ~np.all(~contact[:, env] | (local_feet[:, env, :, 2] >= foot_floor), axis=1)):
+            reason = "foot_below_landing"
+        elif np.any(top_stop & ~on_landing):
+            reason = "left_landing"
+        else:
+            reason = "landing_hold_or_survival"
         rows.append({"env": env, "valid": valid, "survival": survives, "success": success,
-                     "reason": "stop_restart_pass" if success else reason or "stop_or_landing_or_survival",
+                     "reason": reason,
                      "approach_steps": int(approach.sum()), "stop_ok": stop_ok,
                      "stop_feet_height_ok": bool(np.any(stop & stop_feet)),
-                     "landing_0_5s": reached})
+                     "landing_0_5s": reached, "top_latched_at": expected_latch,
+                     "lateral_offset_at_latch_m": (float(abs(local_root[expected_latch, env, 1] - (ymin + ymax) / 2))
+                                                   if expected_latch >= 0 else None),
+                     "max_foot_lateral_offset_m": (float(np.max(np.abs(
+                         local_feet[top_stop, env, :, 1] - (ymin + ymax) / 2))) if top_stop.any() else None),
+                     "four_foot_xy_inside_ticks": four_foot_xy_ticks})
     return {"envs": envs, "valid_count": sum(row["valid"] for row in rows),
             "survival_count": sum(row["survival"] for row in rows if row["valid"]),
             "success_count": sum(row["success"] for row in rows), "per_env": rows}
@@ -189,7 +291,7 @@ def read_evidence(folder: Path, *, plan: dict, plan_sha256: str,
     folder = Path(folder)
     receipt = json.loads((folder / "d44_cells.json").read_text(encoding="utf-8-sig"))
     expected = set(settings["judge_cases"] + settings["record_cases"])
-    if (receipt.get("format") != "foothold-ex42-d44-eval/1" or receipt.get("state") != "done"
+    if (receipt.get("format") != RECEIPT_FORMAT or receipt.get("state") != "done"
             or receipt.get("plan_sha256") != plan_sha256
             or receipt.get("checkpoint_sha256") != checkpoint_sha256
             or receipt.get("source_mesh_sha256") != settings["source_mesh_sha256"]
