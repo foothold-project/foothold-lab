@@ -7,7 +7,7 @@ from foothold_s2.eval.ex42_kind_flag_cells import read_kind_flag_cell
 from foothold_s2.eval.ex42_task_evidence import read_evidence
 from foothold_s2.eval.ex42_task_suite import validate_request
 from foothold_s2.eval.ex42_mesh_eval import preflight
-from foothold_s2.ex42_e2_judge import MODES, score_mode
+from foothold_s2.eval.ex42_flag_cells import MODES
 
 
 def e3_target_inventory(plan: dict, opened_kinds: dict[str, int]) -> dict:
@@ -77,6 +77,7 @@ def read_stage_kind_bundle(folder: Path, *, stage_id: str, family: str, kind: st
                            level: int, plan: dict, plan_sha256: str, mesh: dict,
                            checkpoint_sha256: str, seed: int) -> dict:
     """A mode can pass only when its forward and flag raw traces both recount."""
+    from foothold_s2.ex42_e2_judge import score_mode
     folder = Path(folder)
     request_path = folder / "forward" / "request.json"
     request = validate_request(request_path)

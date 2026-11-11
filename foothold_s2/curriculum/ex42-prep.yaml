@@ -2415,6 +2415,7 @@ evaluation:
     start_min_level: 5
     easy_min_level: 3
     flag_share_min: 0.15
+    learned_cells_min: 32
     start_kinds: [stepping_stones_low, stepping_stones_high, balance_beams, stepping_beams, gaps]
     easy_kinds:
       B: [stair_up, stair_down, rough, boxes]
