@@ -69,6 +69,7 @@ def test_all_prep_paper_cases_resolve_without_making_reverse_new_geometry():
     for case in ids:
         contract=case_contract(case)
         assert contract['geometry_id'] in et.KINDS
+    assert case_contract(et.LANDING)['role'] == 'judge'
     reverse=case_contract('eval_stairs_015_reverse')
     assert reverse['geometry_id']=='eval_stairs_015'
     assert reverse['body_command_vx_sign']==-1
