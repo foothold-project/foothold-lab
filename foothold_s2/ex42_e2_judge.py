@@ -121,19 +121,24 @@ class E2KindTwoWindowJudge(StageJudge):
                           checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         old = checked_previous_bundle(prior_score, evaluation=ctx.evaluation, plan=ctx.plan,
                                       plan_sha256=ctx.digest(ctx.plan_path), mesh=mesh, seed=ctx.seed)
+        current["stage_id"] = "E2"
+        current["e2_kind"] = {"modes": now, "previous_modes": old,
+                              "mesh_sha256": mesh["mesh_sha256"],
+                              "evaluation": str(ctx.evaluation / "kind_cells")}
+        from foothold_s2.ex42_exchange_watch import compare
+        exchange = compare(current, prior_score, measured=measured, baseline=baseline,
+                           kind_now=now, kind_previous=old)
         items = {"maintenance_current": {"role": "judge", "judgement": current["judgement"]},
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
-                 "learned_cells_and_exchange_watch": {"role": "judge", "judgement": "HOLD",
-                    "reason": "E2 학습 노출 32와 교환 학습 감시 원자료 미결선"}}
+                 "learned_cells": {"role": "judge", "judgement": "HOLD",
+                    "reason": "E2 학습 종료 에피소드 원장 미결선"},
+                 "exchange_watch": exchange}
         for mode in ("eval_gt", "eval_pred"):
             items[f"{mode}_current"] = {"role": "judge", **now[mode]}
             items[f"{mode}_previous"] = ({"role": "judge", **old[mode]} if old and mode in old
                                           else {"role": "judge", "judgement": "HOLD", "reason": "직전 창 없음"})
         items["probe_prop_only_current"] = {"role": "record_only", **now["probe_prop_only"]}
         verdict = aggregate(item["judgement"] for item in items.values() if item["role"] == "judge")
-        current["e2_kind"] = {"modes": now, "previous_modes": old,
-                               "mesh_sha256": mesh["mesh_sha256"],
-                               "evaluation": str(ctx.evaluation / "kind_cells")}
         current.update(stage_id="E2", judgement=verdict,
                        stage_exit={"adapter": self.name, "judgement": verdict,
                                    "windows": 2, "items": items})
@@ -145,7 +150,7 @@ class E2KindTwoWindowJudge(StageJudge):
             raise ValueError("EX-42 E2 P1 plan or stage identity missing")
         exit_row = score.get("stage_exit") or {}
         items = exit_row.get("items") or {}
-        required = {"maintenance_current", "maintenance_previous", "learned_cells_and_exchange_watch",
+        required = {"maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch",
                     "eval_gt_current", "eval_gt_previous", "eval_pred_current", "eval_pred_previous",
                     "probe_prop_only_current"}
         if (exit_row.get("adapter") != self.name or exit_row.get("windows") != 2 or
@@ -161,7 +166,8 @@ class E2KindTwoWindowJudge(StageJudge):
             raise ValueError("EX-42 E2 P1 aggregate stage exit differs")
         # The scorer cannot issue PASS until the training exposure and exchange
         # evidence is connected. A forged PASS must never skip that HOLD.
-        if judgment == "PASS" and items.get("learned_cells_and_exchange_watch", {}).get("judgement") != "PASS":
+        if judgment == "PASS" and any(items.get(key, {}).get("judgement") != "PASS"
+                                      for key in ("learned_cells", "exchange_watch")):
             raise ValueError("EX-42 E2 training evidence absent")
         return {"stage_exit": exit_row}
 

@@ -70,10 +70,10 @@ def test_e2_stage_registration_and_kit_commands_are_named_kind_and_three_modes(m
 def test_e2_p1_cannot_forge_pass_without_training_exposure_evidence(monkeypatch):
     plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
     adapter = adapter_for(plan, "E2")
-    keys = ("maintenance_current", "maintenance_previous", "learned_cells_and_exchange_watch",
+    keys = ("maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch",
             "eval_gt_current", "eval_gt_previous", "eval_pred_current", "eval_pred_previous")
     items = {key: {"role": "judge", "judgement": "PASS"} for key in keys}
-    items["learned_cells_and_exchange_watch"]["judgement"] = "HOLD"
+    items["learned_cells"]["judgement"] = "HOLD"
     items["probe_prop_only_current"] = {"role": "record_only", "judgement": "PASS"}
     score = {"stage_id": "E2", "stage_exit": {"adapter": adapter.name,
              "windows": 2, "judgement": "PASS", "items": items},
