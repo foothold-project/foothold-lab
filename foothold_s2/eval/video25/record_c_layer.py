@@ -81,7 +81,12 @@ def w15_ref(spec) -> bool:
 
 
 def c_layer_ref(spec) -> bool:
-    return spec.get("c_layer_reference") is True or ex41_video_ref(spec)
+    return (spec.get("c_layer_reference") is True or ex41_video_ref(spec)
+            or ex42_render_ref(spec))
+
+
+def ex42_render_ref(spec) -> bool:
+    return spec.get("ex42_render_reference") is True
 
 
 def stage_video_ref(spec) -> bool:
@@ -208,7 +213,7 @@ W03_CHECKPOINT_SHA256 = ("4d987818", "eba0fbdd")           # 부모 m1500 · EX-
 FALL_TURN16 = "turn16"                                     # W26 넘어짐 촬영: turn_probe 16 env 고정 칸 배치(probe_tiles.apply_to)
 W03_FIXED_LEVEL_KINDS = "fixed64"                          # 연속 지형 64 env 평가 배치(map64 = 레벨 0..2, hardlevel = 레벨 L)
 FALL_TERRAIN_SETS = (W03_FIXED_LEVEL_KINDS, FALL_TURN16)
-CAPTURE_TERRAIN_SETS = ("sparse50",) + FALL_TERRAIN_SETS
+CAPTURE_TERRAIN_SETS = ("sparse50", "ex42_mesh") + FALL_TERRAIN_SETS
 W03_SUCCESS_FWD_M = 3.0                                    # SELECTION_RULE.md v2: 성공 = alive_end 참 그리고 body_vx_integral_m >= 3.0(몸 앞쪽 방향 이동 거리, 시작 yaw 가 무작위인 연속 칸에서도 뜻이 같다), 실패 = alive_end 거짓
 EX35_CHECKPOINT = "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476/model_2000.pt"
 EX35_CHECKPOINT_SHA256 = "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548"
@@ -463,9 +468,14 @@ def exit_after_flush(code: int, stdout: Any = sys.stdout, stderr: Any = sys.stde
 
 def parse_spec(value: str) -> dict[str, Any]:
     try:
-        spec = json.loads(value)
+        if value.startswith("@"):
+            spec = json.loads(Path(value[1:]).read_text(encoding="utf-8-sig"))
+        else:
+            spec = json.loads(value)
     except json.JSONDecodeError as exc:
         raise ValueError("--policy must be a JSON object for record_sol23f") from exc
+    except OSError as exc:
+        raise ValueError("--policy @file could not be read: %s" % exc) from exc
     if not isinstance(spec, dict):
         raise ValueError("policy spec must be an object")
     root = spec.get("source_root")
@@ -481,8 +491,18 @@ def parse_spec(value: str) -> dict[str, Any]:
     if stage_video_ref(spec):
         return parse_stage_video_spec(spec)
     source_profile = spec.get("source_profile")
+    if ex42_render_ref(spec):
+        if source_profile != "EX42_RENDER" or experiment != "SB" or spec.get("terrain_set") != "ex42_mesh":
+            raise ValueError("EX42 render capture requires its EX42_RENDER S-B combined-mesh profile")
+        from foothold_s2.eval.ex42_render_capture import validate_capture_spec
+        validate_capture_spec(spec)
+        if (spec.get("envs") != 64 or spec.get("seed") != 42 or spec.get("map_mode") not in ("eval_gt", "eval_pred")
+                or spec.get("command") != [1.0, 0.0, 0.0] or spec.get("duration_s") != 18.0
+                or spec.get("selection_role") not in ("success", "failure", "overview")):
+            raise ValueError("EX42 render spec violates the 64-env seed-42 18s forward capture contract")
+        return spec
     if source_profile not in (None, EX35_SOURCE_PROFILE, W03_PROFILE, W15_PROFILE, C_LAYER_PROFILE):
-        raise ValueError("source_profile must be omitted, EX-35, W03, W15 or C76")
+        raise ValueError("source_profile must be omitted, EX-35, W03, W15, C76 or EX42_RENDER")
     if source_profile == C_LAYER_PROFILE and not c_layer_ref(spec):
         raise ValueError("C76 source profile requires c_layer_reference=true")
     if c_layer_ref(spec):
@@ -585,6 +605,8 @@ def parse_spec(value: str) -> dict[str, Any]:
             raise ValueError("fixed64 requires the receipt/reference sha256 and checkpoint_sha256")
         if w15_ref(spec) and spec.get("w15_rule") not in W15_RULES:
             raise ValueError("w15_rule must be one of %s" % sorted(W15_RULES))
+    if spec.get("terrain_set") == "ex42_mesh":
+        raise ValueError("ex42_mesh is reserved for a verified EX42_RENDER capture spec")
     if spec.get("terrain_set") == "sparse50":
         if spec["physics_mode"] != "sparse_eval_reference":
             raise ValueError("sparse50 must use sparse_eval_reference physics mode")
@@ -1064,6 +1086,16 @@ def validate_source_root(root: Path, experiment: str | None = None,
             if actual != digest:
                 raise ValueError("EX-35 pinned source SHA mismatch: " + relative)
             checked[relative] = actual
+    elif source_profile == "EX42_RENDER":
+        recorder = root / "foothold_s2/eval/video25/record_c_layer.py"
+        if experiment != "SB" or not recorder.is_file():
+            raise ValueError("EX42 render source needs the S-B task and EX42 recorder")
+        head = _git_value(root, "rev-parse", "HEAD")
+        status = _git_value(root, "status", "--porcelain")
+        if not head or status:
+            raise ValueError("EX42 render source root must be a clean pinned commit")
+        checked = {"profile": source_profile, "git_head": head,
+                   "foothold_s2/eval/video25/record_c_layer.py": _sha(recorder)}
     elif source_profile in (C_LAYER_PROFILE, W78_VIDEO_PROFILE, A_PUSH_VIDEO_PROFILE, STAGE_VIDEO_PROFILE):
         if experiment != "SB" or not source.is_file():
             raise ValueError("C76 needs an S-B source root with record_sol23f.py")
@@ -1102,6 +1134,17 @@ def validate_source_root(root: Path, experiment: str | None = None,
 def validate_checkpoint_profile(spec: dict[str, Any], checkpoint: Path) -> dict[str, str] | None:
     if spec.get("source_profile") is None:
         return None
+    if spec["source_profile"] == "EX42_RENDER":
+        root = Path(spec["source_root"])
+        source = root / "foothold_s2/eval/video25/record_c_layer.py"
+        if (_git_value(root, "rev-parse", "HEAD") != spec.get("source_head")
+                or _sha(source) != spec.get("source_recorder_sha256")):
+            raise ValueError("EX42 recorder source HEAD or SHA mismatch")
+        digest = _sha(checkpoint.resolve())
+        if digest != spec.get("checkpoint_sha256"):
+            raise ValueError("EX42 checkpoint SHA mismatch")
+        return {"profile": "EX42_RENDER", "checkpoint": str(checkpoint.resolve()),
+                "checkpoint_sha256": digest, "source_head": spec["source_head"]}
     if spec["source_profile"] in (C_LAYER_PROFILE, W78_VIDEO_PROFILE, A_PUSH_VIDEO_PROFILE, STAGE_VIDEO_PROFILE):
         root = Path(spec["source_root"])
         source = root / "foothold_s2/eval/record_sol23f.py"
@@ -1463,11 +1506,19 @@ def _capture(spec: dict[str, Any]) -> None:
         ex41_checkpoint_state = None
         ex41_checkpoint_preparation = None
         ex41_pose_readback = None
+        ex42_checkpoint_state = None
+        ex42_checkpoint_preparation = None
+        ex42_pose_readback = None
+        ex42_mesh_record = None
         if ex41_video_ref(spec):
             from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
             ex41_plan, ex41_preparation = prepare_ex41_environment(env_cfg)
             if ex41_plan.parent_sha256 != spec["parent_sha256"]:
                 raise RuntimeError("EX41 fixed plan parent SHA differs")
+        if ex42_render_ref(spec):
+            from foothold_s2.eval.ex41_eval_loader import load_checkpoint_for_eval
+            ex42_checkpoint_state, ex42_checkpoint_preparation = load_checkpoint_for_eval(
+                env_cfg, full_args.checkpoint)
         seed, device = spec["seed"], full_args.device
         env_cfg.seed = seed
         env_cfg.scene.num_envs = n_envs(spec) if sparse_capture else 1
@@ -1475,29 +1526,43 @@ def _capture(spec: dict[str, Any]) -> None:
             env_cfg.episode_length_s = 14.0
         env_cfg.sim.device = device
         if sparse_capture:
-            from foothold_s2.eval import geometry_hash as sparse_geometry_hash
-            from foothold_s2.terrains import columns as sparse_columns
-            from foothold_s2.terrains import sparse_terrains
-            from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
-            sparse_terrains.SIDE_TABLE.__init__()
-            generator = build_generator(
-                {**continuous_subterrains(), **sparse_terrains.sparse_subterrains()},
-                sparse_columns.FULL_COLS, seed=sparse_geometry_hash.SPARSE_GEOMETRY_SEED)
-            if not fixed64_capture and sparse_geometry_hash.SPARSE_GEOMETRY_SEED != spec["geometry_seed"]:
-                raise RuntimeError("sparse terrain geometry seed changed from the eval reference")
-            if fixed64_capture:
-                pin_c_layer_geometry_seed(env_cfg, spec)
-            physics_record = configure_sparse_evaluation_config(
-                env_cfg, None if fixed64_capture else generator, n_envs(spec),
-                preserve_dr=a_push_video_ref(spec))
-            start_record = ({"yaw_override_rad": None, "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)", "reset_ranges_preserved": True}
-                            if fixed64_capture else {"yaw_override_rad": 0.0, "source": "sparse evaluation reset and quaternion override", "reset_ranges_preserved": True})
-            task_selection = {"terrain_set": "sparse50", "fixed_terrain": True,
-                              "fixed_level": spec["fixed_level"], "envs": n_envs(spec),
-                              "env_id": spec["env_id"], "kind": spec["kind"], "col": spec["col"],
-                              "geometry_seed": spec.get("geometry_seed"), "selection_role": spec["selection_role"]}
-            if fixed64_capture:
-                task_selection["terrain_set"] = spec["terrain_set"]
+            if ex42_render_ref(spec):
+                from foothold_s2.eval.ex42_mesh_eval import attach
+                ex42_mesh_record = attach(env_cfg, spec["mesh_dir"])
+                physics_record = configure_sparse_evaluation_config(env_cfg, None, n_envs(spec))
+                start_record = {"yaw_override_rad": None,
+                                "source": "E0 combined-mesh evaluation reset",
+                                "reset_ranges_preserved": True}
+                task_selection = {"terrain_set": "ex42_mesh", "fixed_terrain": True,
+                                  "mesh_sha256": ex42_mesh_record["mesh_sha256"],
+                                  "envs": n_envs(spec), "env_id": spec["env_id"],
+                                  "kind": spec["kind"], "col": spec["col"],
+                                  "fixed_level": spec["fixed_level"],
+                                  "selection_role": spec["selection_role"]}
+            else:
+                from foothold_s2.eval import geometry_hash as sparse_geometry_hash
+                from foothold_s2.terrains import columns as sparse_columns
+                from foothold_s2.terrains import sparse_terrains
+                from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
+                sparse_terrains.SIDE_TABLE.__init__()
+                generator = build_generator(
+                    {**continuous_subterrains(), **sparse_terrains.sparse_subterrains()},
+                    sparse_columns.FULL_COLS, seed=sparse_geometry_hash.SPARSE_GEOMETRY_SEED)
+                if not fixed64_capture and sparse_geometry_hash.SPARSE_GEOMETRY_SEED != spec["geometry_seed"]:
+                    raise RuntimeError("sparse terrain geometry seed changed from the eval reference")
+                if fixed64_capture:
+                    pin_c_layer_geometry_seed(env_cfg, spec)
+                physics_record = configure_sparse_evaluation_config(
+                    env_cfg, None if fixed64_capture else generator, n_envs(spec),
+                    preserve_dr=a_push_video_ref(spec))
+                start_record = ({"yaw_override_rad": None, "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)", "reset_ranges_preserved": True}
+                                if fixed64_capture else {"yaw_override_rad": 0.0, "source": "sparse evaluation reset and quaternion override", "reset_ranges_preserved": True})
+                task_selection = {"terrain_set": "sparse50", "fixed_terrain": True,
+                                  "fixed_level": spec["fixed_level"], "envs": n_envs(spec),
+                                  "env_id": spec["env_id"], "kind": spec["kind"], "col": spec["col"],
+                                  "geometry_seed": spec.get("geometry_seed"), "selection_role": spec["selection_role"]}
+                if fixed64_capture:
+                    task_selection["terrain_set"] = spec["terrain_set"]
         else:
             physics_record = configure_physics_mode(env_cfg, spec["physics_mode"])
             start_record = configure_capture_start(env_cfg)
@@ -1600,6 +1665,21 @@ def _capture(spec: dict[str, Any]) -> None:
             from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
 
             ex41_pose_readback = verify_ex41_pose_observation(obs)
+        elif ex42_render_ref(spec):
+            train_cfg = dict(agent_cfg.to_dict())
+            train_cfg["ex41_pose_commands"] = True
+            runner, saved = adapters.load_s2_runner(
+                env, train_cfg, full_args.checkpoint, device,
+                checkpoint_state=ex42_checkpoint_state)
+            if saved.get("ex41_pose_commands") is not True:
+                raise RuntimeError("EX42 checkpoint lacks the required 98/666 pose-command architecture")
+            policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean",
+                                       map_mode=spec["map_mode"])
+            policy_nn = policy
+            obs = env.get_observations()
+            from foothold_s2.eval.ex41_eval_loader import verify_ex41_pose_observation
+
+            ex42_pose_readback = verify_ex41_pose_observation(obs)
         else:
             env, policy, policy_nn, obs = adapter.load_policy(built, full_args.checkpoint)
         runner = policy.runner
@@ -1636,7 +1716,25 @@ def _capture(spec: dict[str, Any]) -> None:
                               int(round(spec["duration_s"] / float(raw.step_dt))),
                               env.num_envs, float(raw.step_dt), demo_pushes=spec["demo_pushes"])
             env.reset()
-            if turn16_capture:
+            if ex42_render_ref(spec):
+                from foothold_s2.eval.ex42_render_capture import apply_evaluation_assignment
+                sparse_assignment = apply_evaluation_assignment(raw, spec)
+                env.reset()
+                levels = raw.scene.terrain.terrain_levels.detach().cpu().numpy()
+                cols = raw.scene.terrain.terrain_types.detach().cpu().numpy()
+                with np.load(spec["evaluation_arrays"], allow_pickle=False) as selected_arrays:
+                    expected_levels = np.asarray(selected_arrays["terrain_level"], dtype=np.int64)
+                    expected_cols = np.asarray(selected_arrays["terrain_col"], dtype=np.int64)
+                    expected_kinds = np.asarray(selected_arrays["kind"]).astype(str)
+                if not (np.array_equal(levels, expected_levels) and np.array_equal(cols, expected_cols)):
+                    raise RuntimeError("EX42 full evaluation tile assignment changed after reset")
+                env_id = int(spec["env_id"])
+                tile = {"env": env_id, "kind": str(expected_kinds[env_id]),
+                        "level": int(levels[env_id]), "col": int(cols[env_id])}
+                if (tile["kind"] != spec["kind"] or tile["level"] != spec["fixed_level"]
+                        or tile["col"] != spec["col"]):
+                    raise RuntimeError("EX42 selected env differs from the planned combined-mesh cell")
+            elif turn16_capture:
                 from foothold_s2.eval import probe_tiles
                 sparse_assignment = probe_tiles.apply_to(raw, None)
                 env.reset()
@@ -1677,7 +1775,7 @@ def _capture(spec: dict[str, Any]) -> None:
                 raise RuntimeError("sparse capture env count or episode length cannot cover the evaluation window")
             robot = raw.scene["robot"]
             state = robot.data.root_state_w.clone()
-            if not fixed64_capture:
+            if not fixed64_capture and not ex42_render_ref(spec):
                 state[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=raw.device)
                 state[:, 7:] = 0.0
                 robot.write_root_pose_to_sim(state[:, :7])
@@ -1685,7 +1783,7 @@ def _capture(spec: dict[str, Any]) -> None:
             yaw = torch.atan2(2.0 * (robot.data.root_quat_w[:, 0] * robot.data.root_quat_w[:, 3] +
                                      robot.data.root_quat_w[:, 1] * robot.data.root_quat_w[:, 2]),
                               1.0 - 2.0 * (robot.data.root_quat_w[:, 2] ** 2 + robot.data.root_quat_w[:, 3] ** 2))
-            if not fixed64_capture and yaw.abs().max().item() > 1.0e-3:
+            if not fixed64_capture and not ex42_render_ref(spec) and yaw.abs().max().item() > 1.0e-3:
                 raise RuntimeError("sparse capture start yaw is not +x")
             if w78_video_ref(spec) or stage_video_ref(spec):
                 from foothold_s2.eval.terrain_skill_v2_run import set_start_yaw
@@ -1693,7 +1791,7 @@ def _capture(spec: dict[str, Any]) -> None:
                     robot, spec["start_angle_deg"] if w78_video_ref(spec) else 0)
             sparse_command_term = raw.command_manager.get_term("base_velocity")
             pin_segment_command(command_cfg, sparse_command_term, capture_commands(spec)[0][1])
-            if ex41_video_ref(spec):
+            if ex41_video_ref(spec) or ex42_render_ref(spec):
                 from foothold_s2.eval.map_mode_cells import disable_heading_for_fixed_eval
                 disable_heading_for_fixed_eval(sparse_command_term)
             sparse_reference = ({"rule": "EX41 stage video own reset outcome" if stage_video_ref(spec) else "EX41 W78 own video reset outcome" if w78_video_ref(spec) else "C76 video reset outcome, no evaluation selection",
@@ -2038,6 +2136,21 @@ def _capture(spec: dict[str, Any]) -> None:
         container.close()
         container = None
 
+        ex42_frame_audit = None
+        ex42_frame_audit_path = None
+        if ex42_render_ref(spec):
+            from foothold_s2.eval.ex42_render_capture import audit_capture_video
+
+            ex42_frame_audit = audit_capture_video(
+                output, expected=contract["video_frames"], width=full_args.width,
+                height=full_args.height, screen_evidence=camera_screen_projection,
+                robot_instance_evidence=instance_evidence)
+            ex42_frame_audit_path = output.with_name(output.stem + "_frame_audit.json")
+            _json_atomic(ex42_frame_audit_path, ex42_frame_audit)
+            if ex42_frame_audit.get("pass") is not True:
+                raise RuntimeError("EX42 full-frame check failed: " + ",".join(
+                    ex42_frame_audit.get("issues", [])))
+
         npz_path = output.with_name(output.stem + "_feet.npz")
         map_t = np.asarray([row["t"] for row in map_rows], dtype=np.float64)
         map_arrays: dict[str, Any] = {}
@@ -2108,6 +2221,13 @@ def _capture(spec: dict[str, Any]) -> None:
                              "foothold_s2/eval/fixed_terrain.py",
                              "foothold_s2/curriculum/ex41-fixed5000.yaml"):
                 source_hashes[relative] = _sha(repo / relative)
+        if ex42_render_ref(spec):
+            for relative in ("foothold_s2/eval/ex42_render_capture.py",
+                             "foothold_s2/eval/ex42_mesh_eval.py",
+                             "foothold_s2/terrains/ex42_column_reset.py",
+                             "foothold_s2/eval/ex41_eval_loader.py",
+                             "foothold_s2/eval/fixed_terrain.py"):
+                source_hashes[relative] = _sha(repo / relative)
         if sparse_capture and sparse_reference:
             source_hashes.update({"sparse_eval:" + name: digest
                                   for name, digest in sparse_reference["evaluation_source_sha256"].items()})
@@ -2140,6 +2260,24 @@ def _capture(spec: dict[str, Any]) -> None:
                               "ex41_checkpoint_preparation": ex41_checkpoint_preparation,
                               "ex41_pose_readback": ex41_pose_readback}
                              if stage_video_ref(spec) else None),
+            "ex42_render": ({"request_id": spec["request_id"],
+                              "checkpoint_sha256": spec["checkpoint_sha256"],
+                              "mesh_sha256": spec["mesh_sha256"],
+                              "evaluation_json_sha256": spec["evaluation_json_sha256"],
+                              "evaluation_arrays_sha256": spec["evaluation_arrays_sha256"],
+                              "selected_env_id": capture_env_id,
+                              "terrain_key": spec["terrain_key"],
+                              "terrain_level": spec["fixed_level"], "terrain_col": spec["col"],
+                              "map_mode": spec["map_mode"], "selection_role": spec["selection_role"],
+                              "mesh_attachment": ex42_mesh_record,
+                              "assignment": sparse_assignment,
+                              "checkpoint_preparation": ex42_checkpoint_preparation,
+                              "pose_cmd_readback": ex42_pose_readback,
+                              "frame_audit": {"path": str(ex42_frame_audit_path),
+                                              "pass": ex42_frame_audit.get("pass"),
+                                              "frames": ex42_frame_audit.get("frames"),
+                                              "sha256": _sha(ex42_frame_audit_path)}}
+                             if ex42_render_ref(spec) else None),
             "a_push_video": ({"push_group_id": spec["push_group_id"],
                               "push_seed": spec["push_seed"], "dr_scale": spec["dr_scale"],
                               "dr_recovery": dr_summary["recovery"],
