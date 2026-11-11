@@ -103,7 +103,10 @@ def build(env, *, dry_run=False, now=None):
         raise LaunchRefused(str(error)) from error
     mesh_env = mesh_launch_env(mesh_receipt, stage)
     for key, value in mesh_env.items():
-        if env.get(key) and env[key] != value:
+        supplied = env.get(key)
+        if supplied and key == f"EX42_MESH_DIR_{stage}":
+            supplied = str(Path(supplied).resolve())
+        if supplied and supplied != value:
             raise LaunchRefused(f"stage mesh override differs from pinned plan: {key}")
     mesh_dir = mesh_receipt['directory'] if mesh_receipt else _need(env, "MESH_DIR", stage)
     mesh_sha = mesh_receipt['geometry_sha256'] if mesh_receipt else _need(env, "MESH_SHA256", stage)

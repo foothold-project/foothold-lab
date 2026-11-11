@@ -136,3 +136,13 @@ def test_environment_mount_refuses_a_different_directory_before_importing_kit(tm
     from foothold_s2.scripts.ex42_training_entry import prepare_e0_env_cfg
     with pytest.raises(ValueError, match='mesh'):
         prepare_e0_env_cfg(SimpleNamespace(), SimpleNamespace(document=document(pinned)), tmp_path/'old', stage_id='E2')
+
+
+def test_existing_stage_env_may_name_the_same_directory_through_a_symlink(tmp_path, pinned):
+    alias=tmp_path/'same-mesh';alias.symlink_to(pinned['directory'],target_is_directory=True)
+    plan=tmp_path/'plan.yaml';plan.write_text(yaml.safe_dump(document(pinned)))
+    env=_env(tmp_path,stage='E2')
+    env.update(EX42_AUTO_PLAN=str(plan),EX42_AUTO_APPROVALS=str(launcher.APPROVALS),
+               EX42_MESH_DIR_E2=str(alias),EX42_MESH_SHA256_E2=pinned['geometry_sha256'])
+    argv,_,_=launcher.build(env,dry_run=True)
+    assert _flag(argv,'--ex42_terrain_mesh_dir')==pinned['directory']
