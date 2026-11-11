@@ -272,6 +272,7 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
                                                         focal_length_mm=camera[0], horizontal_aperture_mm=camera[1])
                 screen_evidence.append({"root_center_px": camera_projection,
                     "root_in_frame": 0 <= camera_projection[0] < WIDTH and 0 <= camera_projection[1] < HEIGHT,
+                    "expected_static": (task == "stop_restart" and command == (0.0, 0.0, 0.0)),
                     "camera_eye_w": eye, "camera_target_w": target,
                     "focal_length_mm": camera[0], "horizontal_aperture_mm": camera[1]})
                 packet = annotator.get_data()

@@ -59,6 +59,29 @@ def test_render_product_is_created_by_warmup_before_mask_attachment():
     assert raw.calls == video.RENDER_WARMUP_FRAMES
 
 
+def test_expected_stationary_command_does_not_fail_low_motion_audit_but_frozen_frames_do():
+    from foothold_s2.eval.c_layer_frame_audit import inspect_frames
+
+    frames = []
+    evidence = []
+    robot = []
+    y, x = np.indices((720, 1280))
+    checker = np.where((x + y) % 2, 180, 60).astype(np.uint8)
+    for index in range(30):
+        level = np.stack((checker, checker, checker), axis=-1)
+        frames.append(np.clip(level.astype(np.int16) + index, 0, 255).astype(np.uint8))
+        evidence.append({"root_center_px": [640, 360], "root_in_frame": True,
+                         "expected_static": True})
+        robot.append({"selected_robot_pixels": 1000, "other_robot_pixels": 0})
+    stationary = inspect_frames(frames, expected=30, width=1280, height=720,
+        screen_evidence=evidence, robot_instance_evidence=robot)
+    frozen = inspect_frames([frames[0]] * 30, expected=30, width=1280, height=720,
+        screen_evidence=evidence, robot_instance_evidence=robot)
+    assert stationary["pass"] is True
+    assert frozen["pass"] is False
+    assert "frozen_30_frames" in frozen["issues"]
+
+
 def test_d44_video_commands_follow_eval_timing_and_latched_band_entry():
     common = {"settle": 0, "approach": 200, "stop": 100, "turn_rate": 1.2,
               "approach_speed": 1., "restart_speed": 1., "stop_band": (1., 2.)}
