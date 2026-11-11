@@ -10,6 +10,9 @@ import argparse
 import hashlib
 import json
 import math
+import os
+import sys
+import traceback
 from pathlib import Path
 
 import h5py  # noqa: F401
@@ -110,7 +113,8 @@ def _steps(seconds, dt):
     return value
 
 
-def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_id, spec, dt):
+def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_id, spec, dt,
+              checkpoint_preparation):
     n = args.envs
     env.reset()
     terrain = raw.scene.terrain
@@ -194,10 +198,16 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
 
 def main():
     env = None
+    phase = "configure"
     try:
+        print("D44_PHASE", phase, flush=True)
         env_cfg, agent_cfg, disabled = _configure()
+        phase = "checkpoint"
+        print("D44_PHASE", phase, flush=True)
         checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(
             env_cfg, args.checkpoint)
+        phase = "gym_make"
+        print("D44_PHASE", phase, flush=True)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
         assign_independent_env_origins(raw)
@@ -213,7 +223,7 @@ def main():
         for case_id in (*settings["judge_cases"], *settings["record_cases"]):
             spec = settings["case_specs"][case_id]
             trace = _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner,
-                              case_id, spec, dt)
+                              case_id, spec, dt, checkpoint_preparation)
             raw_file = args.out / f"{case_id}.npz"
             np.savez_compressed(raw_file, **trace)
             scored = summarize(trace, spec=spec, anchors=tile["anchors_local_m"], settings=settings, dt=dt)
@@ -238,6 +248,14 @@ def main():
         (args.out / "d44_cells.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print("D44_EVAL_DONE", args.out, flush=True)
+        if not (args.out / "d44_cells.json").is_file():
+            raise RuntimeError("D44 child returned without its result receipt")
+    except BaseException as exc:
+        print("D44_FAILED", phase, repr(exc), file=sys.stderr, flush=True)
+        traceback.print_exc()
+        # Isaac Kit's close path can turn an uncaught child exception into rc 0.
+        # A failed evaluation must never look like a successful empty receipt.
+        os._exit(1)
     finally:
         if env is not None:
             env.close()
