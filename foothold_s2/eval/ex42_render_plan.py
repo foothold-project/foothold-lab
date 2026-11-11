@@ -112,18 +112,19 @@ def build_render_plan(mesh_dir: str | Path, checkpoint: str | Path, *,
     mesh_sha = mesh_manifest["mesh_sha256"]
     requests = []
     for key, kind in sorted(kinds.items()):
-        level = current_cap if key in trained else 0
+        levels = sorted({current_cap, MAX_LEVEL}) if key in trained else [0]
         for mode in MAP_MODES:
-            for role in SELECTION_ROLES:
-                identity = {"mesh_sha256": mesh_sha, "checkpoint_sha256": checkpoint_sha,
-                            "terrain_key": key, "terrain_level": level,
-                            "map_mode": mode, "selection_role": role}
-                request_id = hashlib.sha256(json.dumps(
-                    identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-                requests.append({"request_id": request_id, **identity,
-                    "columns": kind["columns"], "selected_env_id": None,
-                    "selection_source": "matching evaluation receipt required",
-                    "capture_ready": False})
+            for level in levels:
+                for role in SELECTION_ROLES:
+                    identity = {"mesh_sha256": mesh_sha, "checkpoint_sha256": checkpoint_sha,
+                                "terrain_key": key, "terrain_level": level,
+                                "map_mode": mode, "selection_role": role}
+                    request_id = hashlib.sha256(json.dumps(
+                        identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                    requests.append({"request_id": request_id, **identity,
+                        "columns": kind["columns"], "selected_env_id": None,
+                        "selection_source": "matching evaluation receipt required",
+                        "capture_ready": False})
     return {"schema": SCHEMA, "state": "selection_pending",
             "mesh_dir": str(Path(mesh_dir).resolve(strict=True)),
             "mesh_sha256": mesh_sha, "mesh_file_sha256": mesh_file_sha,
