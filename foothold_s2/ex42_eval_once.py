@@ -112,6 +112,54 @@ def observed_child_identity(output, name, expected):
     return {"device": identity["device"], "gpu_uuid": observed}
 
 
+def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                      mesh_sha256, seed):
+    """E1F adds one and four flag counts after the fixed maintenance bundle."""
+    if type(seed) is not int or seed < 0:
+        raise ValueError("E1F flag evaluation seed must be a nonnegative integer")
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    return [(count, [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_flag_eval",
+                    "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+                    "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha256,
+                    "--count", count, "--seed", str(seed), "--envs", "64",
+                    "--out", str(Path(output) / "flag_cells" / count), "--device", device, *kit])
+            for count in ("flag_one", "flag_four")]
+
+
+def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                          mesh_sha256, checkpoint_sha256, seed, plan, process, env,
+                          physical_gpu, record):
+    """Run both E1F counts; a failed child is a recorded HOLD, not a lost P1 boundary."""
+    from foothold_s2.eval.ex42_flag_cells import contract, read_evidence
+
+    contract(plan.document)
+    failures = {}
+    for count, argv in flag_kit_commands(checkpoint, output, device, task=task,
+                                          plan_path=plan_path, mesh_dir=mesh_dir,
+                                          mesh_sha256=mesh_sha256, seed=seed):
+        try:
+            child = process.hidden_child(argv, Path(output) / "children" / count, env=env)
+            if child.get("state") == "done":
+                receipt = json.loads((Path(output) / "flag_cells" / count / "flag_cells.json").read_text(
+                    encoding="utf-8-sig"))
+                identity = receipt.get("run_identity") or {}
+                observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                if (identity.get("device") != device or
+                        observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                    raise ValueError("E1F flag Kit physical GPU identity differs")
+                read_evidence(Path(output) / "flag_cells" / count, plan=plan.document,
+                              plan_sha256=plan.sha256, checkpoint_sha256=checkpoint_sha256,
+                              seed=seed, count=count)
+                child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
+        if child.get("state") != "done":
+            failures[count] = str(child.get("reason") or f"child state {child.get('state')}")
+            child["state"] = "HOLD"
+        record(count, child)
+    return failures
+
+
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
                     replica_dir, replica_sha256, seed):
     """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
@@ -376,6 +424,31 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         else:
             row["steps"]["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
             _atomic(output / "eval_receipt.json", row)
+    if p1_stage_id == "E1F" and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        try:
+            plan = EX42Plan.load(p1_plan)
+            def record_flag(count, child):
+                row["steps"][count] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            flag_failures = execute_flag_children(
+                checkpoint, output, device, task=cfg["task"], plan_path=p1_plan,
+                mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
+                checkpoint_sha256=expected_sha256, seed=seed, plan=plan, process=process,
+                env=env, physical_gpu=physical_gpu, record=record_flag)
+            if flag_failures:
+                marker = output / "flag_cells" / "child_failures.json"
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                _atomic(marker, {"format": "foothold-ex42-e1f-child-failures/1",
+                                 "checkpoint_sha256": expected_sha256,
+                                 "failures": flag_failures})
+                row["flag_child_failures"] = {"path": str(marker), "failures": flag_failures}
+                _atomic(output / "eval_receipt.json", row)
+        except (OSError, ValueError, KeyError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -493,6 +566,17 @@ def main(argv=None):
                 plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
                                "record_cases": settings["record_cases"],
                                "source_mesh_dir": settings["source_mesh_dir"]}
+        if args.p1_stage_id == "E1F" and args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.eval.ex42_flag_cells import contract
+            settings = contract(EX42Plan.load(args.p1_plan).document)
+            plan["flag_cells"] = {"state": "planned", "judge_cases": settings["judge_cases"],
+                                  "record_cases": settings["record_cases"],
+                                  "commands": [argv for _, argv in flag_kit_commands(
+                                      args.checkpoint, args.out, args.device,
+                                      task=config()[0]["task"], plan_path=args.p1_plan,
+                                      mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
+                                      seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,
