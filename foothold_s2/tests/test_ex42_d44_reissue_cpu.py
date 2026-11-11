@@ -57,20 +57,31 @@ def _input(tmp_path, monkeypatch):
     indexed = {}
     for case_id, spec in settings["case_specs"].items():
         trace = d44 / f"{case_id}.npz"
-        arrays = {"root_pos_w": np.zeros((2, 64, 3), dtype=np.float32),
-                  "root_quat_w": np.tile(np.array([1, 0, 0, 0], dtype=np.float32), (2, 64, 1)),
-                  "foot_pos_w": np.zeros((2, 64, 4, 3), dtype=np.float32),
-                  "contact": np.zeros((2, 64, 4), dtype=bool),
-                  "alive": np.ones((2, 64), dtype=bool),
-                  "body_vel_b": np.zeros((2, 64, 3), dtype=np.float32),
-                  "phase_id": np.ones((2, 64), dtype=np.int16),
+        count = 130 if spec["task"] == "stop_restart" else 70
+        phases = np.ones((count, 64), dtype=np.int16)
+        phases[:10] = 0
+        commands = np.zeros((count, 64, 3), dtype=np.float32)
+        if spec["task"] == "stop_restart":
+            phases[50:70] = 2
+            phases[70:] = 3
+            commands[70:, :, 0] = 1.0
+        arrays = {"root_pos_w": np.zeros((count, 64, 3), dtype=np.float32),
+                  "root_quat_w": np.tile(np.array([1, 0, 0, 0], dtype=np.float32), (count, 64, 1)),
+                  "foot_pos_w": np.zeros((count, 64, 4, 3), dtype=np.float32),
+                  "contact": np.zeros((count, 64, 4), dtype=bool),
+                  "alive": np.ones((count, 64), dtype=bool),
+                  "body_vel_b": np.zeros((count, 64, 3), dtype=np.float32),
+                  "phase_id": phases,
+                  "cmd_post": commands,
+                  "top_latched_at": np.full(64, -1, dtype=np.int32),
+                  "trace_format": np.asarray(ex42_d44_cells.TRACE_FORMAT),
                   "tile_offset_w": np.zeros((64, 3), dtype=np.float32), "dt": np.asarray(.1)}
         np.savez_compressed(trace, **arrays)
         row = {"case_id": case_id, **spec, "trace_file": str(trace), "trace_sha256": _sha(trace)}
         case_file = d44 / f"{case_id}.json"
         _put(case_file, row)
         indexed[case_id] = {"raw_sha256": _sha(case_file), "trace_sha256": _sha(trace)}
-    kit = {"format": "foothold-ex42-d44-eval/1", "state": "done", "checkpoint_sha256": _sha(checkpoint),
+    kit = {"format": ex42_d44_cells.RECEIPT_FORMAT, "state": "done", "checkpoint_sha256": _sha(checkpoint),
            "source_mesh_sha256": "a" * 64,
            "plan_sha256": policy.sha256, "seed": 42, "envs": 64, "cases": indexed}
     _put(d44 / "d44_cells.json", kit)

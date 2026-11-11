@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import sys
+from pathlib import Path
 
 import h5py  # noqa: F401
 import tensordict  # noqa: F401
@@ -24,7 +25,9 @@ from foothold_s2.eval import map_mode_cells as _command_cells
 from foothold_s2.eval import eval_dr_mode
 from foothold_s2.eval import n21_dr_record
 
+from foothold_s2.eval import ex42_friction
 parser = argparse.ArgumentParser()
+parser.add_argument("--ex42-evaluation-plan", type=Path)
 parser.add_argument("--task", required=True)
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
@@ -64,6 +67,7 @@ parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
                   or not args.fixed_terrain or args.fixed_level is None or args.envs != 64
@@ -229,11 +233,14 @@ if args.push_ladder:
     configure_single_terrain(env_cfg, args.push_ladder_terrain, seed=args.eval_seed)
     env_cfg.seed = args.eval_seed
     agent_cfg.seed = args.eval_seed
+ex42_friction.configure(env_cfg, friction_policy)
 checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(env_cfg, args.checkpoint)
 args.ex41_checkpoint_state = checkpoint_state
 args.ex41_checkpoint_preparation = checkpoint_preparation
 env, raw = eval_dr_mode.make_wrapped_env_after_dr_ready(
     gym.make, RslRlVecEnvWrapper, args.task, env_cfg, agent_cfg.clip_actions, dr_mode)
+friction_receipt = ex42_friction.install_and_verify(raw, friction_policy)
+args.ex42_friction_policy = friction_policy
 args.ex41_w86_attachment = None
 args.ex41_runtime_attachment = None
 if args.terrain_skill_v2:
@@ -345,7 +352,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
                               "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
 
 
-res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
                        "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
@@ -730,6 +737,7 @@ if kind_cell:
     validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
                        kind=args.ex42_kind_name, level=args.fixed_level)
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
+    res["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
     stream.flush()
     os.fsync(stream.fileno())

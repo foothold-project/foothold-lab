@@ -436,7 +436,7 @@ def test_failed_child_still_writes_p1_score_and_handoff(tmp_path, monkeypatch):
     sha = _sha(checkpoint)
     output = tmp_path / "evaluation"
     plan_path = tmp_path / "plan.yaml"
-    plan_path.write_text("stages: []\n", encoding="utf-8")
+    plan_path.write_text(yaml.safe_dump(_plan()), encoding="utf-8")
     approvals = tmp_path / "approvals.yaml"
     approvals.write_text("approvals: []\n", encoding="utf-8")
     cfg_path = tmp_path / "score.yaml"

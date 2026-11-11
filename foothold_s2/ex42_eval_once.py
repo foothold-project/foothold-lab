@@ -18,7 +18,7 @@ from foothold_s2.machine_profile import machine_path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None, shard=None):
+def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None, shard=None, evaluation_plan=None):
     """Phase commands for one device. `shard` ({"map64": [modes], "axis_v2": [modes], "stand": [modes]})
     restricts the modes each phase measures; None is the whole one-device bundle."""
     cfg = cfg or config()[0]
@@ -29,7 +29,9 @@ def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=N
     if type(seed) is not int or seed < 0:
         raise ValueError("EX-42 evaluation seed must be a nonnegative integer")
     queue_gpu_identity(device)  # Only the two registered physical GPU ordinals are supported.
-    common = ["--task", cfg["task"], "--checkpoint", str(checkpoint),
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction = load_policy(evaluation_plan or DEFAULT_PLAN)
+    common = ["--ex42-evaluation-plan", friction["plan_path"], "--task", cfg["task"], "--checkpoint", str(checkpoint),
               "--envs", str(cfg["envs"])]
     def maps_for(phase):
         row = [*common, "--modes", ",".join(shard[phase]), "--fixed-terrain", "--eval-seed", str(seed)]
@@ -387,6 +389,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
     if evaluation_plan is not None and p1_plan is None:
         raise ValueError("EX-42 evaluation plan requires a P1 execution plan")
     policy_path = Path(evaluation_plan or p1_plan).resolve(strict=True) if p1_plan is not None else None
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction_policy = load_policy(policy_path or DEFAULT_PLAN)
     if policy_path is not None:
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         policy = EX42Plan.load(policy_path)
@@ -419,6 +423,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
            "checkpoint": str(checkpoint), "checkpoint_sha256": expected_sha256,
            "score_config_sha256": digest(cfg_path), "eval_seed": seed,
            "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
+           "evaluation_friction_requested": friction_policy,
            **receipt_device_fields(device, physical_gpu)}
     if policy_path is not None:
         row["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
@@ -451,7 +456,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         failed = split.run_shards(
             shards, output=output,
             commands_for=lambda dev, shard, out: commands(checkpoint, out, dev, cfg, eval_seed=seed,
-                                                          mesh_dir=mesh_dir, shard=shard),
+                                                          mesh_dir=mesh_dir, shard=shard, evaluation_plan=policy_path),
             env=env, physical={device: physical_gpu, split_device: split_gpu}, process=process,
             observed=observed_child_identity, record=record)
         if failed:
@@ -466,7 +471,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             _atomic(output / "eval_receipt.json", row)
             return 5
     for phase in ([] if split_device is not None else
-                  commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir)):
+                  commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir, evaluation_plan=policy_path)):
         name = phase["name"]
         process.prepare_phase_output(phase["argv"])
         child = process.hidden_child(phase["argv"], output / "children" / name, env=env)
@@ -666,6 +671,7 @@ def main(argv=None):
         print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
         return 0
     if not args.execute:
+        policy_path = args.evaluation_plan or args.p1_plan
         plan = {"state": "plan", "score_config": str(config()[1])}
         if args.p1_plan is not None:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -674,13 +680,13 @@ def main(argv=None):
             plan["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
         if args.split_device is None:
             plan["commands"] = commands(args.checkpoint, args.out, args.device,
-                                        eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)
+                                        eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, evaluation_plan=policy_path)
         else:
             from foothold_s2.ex42_eval_split import assign_shards, shard_tag
             shards, load = assign_shards([args.device, args.split_device])
             plan.update(split=shards, estimated_seconds=load, commands={
                 dev: commands(args.checkpoint, args.out / "shards" / shard_tag(dev), dev,
-                              eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard)
+                              eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard, evaluation_plan=policy_path)
                 for dev, shard in shards.items()})
         retained = retained_paper_cells(policy.document, args.p1_stage_id) if args.p1_plan is not None else ()
         if "d44" in retained:

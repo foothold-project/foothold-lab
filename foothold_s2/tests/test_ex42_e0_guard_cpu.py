@@ -128,5 +128,5 @@ def test_e1_p1_aggregate_must_match_all_26_judged_cells(tmp_path):
 
 def test_e2_p1_e0_verdict_cannot_be_reused_for_later_stage(tmp_path):
     checkpoint, output, score = _p1_inputs(tmp_path)
-    with pytest.raises(ValueError, match="judged E0 cell evidence missing or stage differs"):
+    with pytest.raises(ValueError, match="E2 learned_cells execution plan SHA differs"):
         _p1(score, checkpoint, output, "E2")
