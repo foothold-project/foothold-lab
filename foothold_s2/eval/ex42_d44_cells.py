@@ -210,9 +210,13 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
                 top_stop, (np.arange(steps) > expected_latch) & (phases[:, env] >= 3)
                 if expected_latch >= 0 else np.zeros(steps, dtype=bool)):
             raise ValueError("D44 top latch or phase 4 differs from post-step geometry")
-        if (np.any(np.abs(commands[restart, env, 0] - settings["restart_vx_mps"]) > 1e-5)
-                or np.any(np.abs(commands[top_stop, env]) > 1e-5)
-                or np.any(np.abs(commands[stop, env]) > 1e-5)):
+        # cmd_post is read after env.step. A terminal reset may resample the
+        # command on that very step, so it is a policy-command witness only
+        # while the env is still alive in the post-step trace.
+        post_live = alive[:, env]
+        if (np.any(np.abs(commands[restart & post_live, env, 0] - settings["restart_vx_mps"]) > 1e-5)
+                or np.any(np.abs(commands[top_stop & post_live, env]) > 1e-5)
+                or np.any(np.abs(commands[stop & post_live, env]) > 1e-5)):
             raise ValueError("D44 recorded command differs from restart and arrival stop")
         if not approached[env]:
             valid, reason = False, "approach_timeout"

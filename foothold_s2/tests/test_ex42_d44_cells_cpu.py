@@ -216,6 +216,45 @@ def test_four_foot_xy_diagnostic_counts_longest_consecutive_run_only():
     assert rows[0]["four_foot_xy_inside_ticks"] == 51
 
 
+def test_post_step_reset_command_is_ignored_only_after_terminal_tick():
+    trace = _trace("stop_restart")
+    trace["alive"][90:, 0] = False
+    trace["cmd_post"][90, 0, 0] = .968
+    kwargs = dict(spec={"task": "stop_restart"}, anchors=ANCHORS,
+                  settings=contract(_plan()), dt=.1)
+    assert summarize(trace, **kwargs)["per_env"][0]["survival"] is False
+    trace["cmd_post"][89, 0, 0] = .968
+    with pytest.raises(ValueError, match="recorded command"):
+        summarize(trace, **kwargs)
+
+
+def test_real_m1000_trace_replays_terminal_reset_without_waiving_live_command():
+    path = os.environ.get("EX42_D44_M1000_REAL_TRACE")
+    if not path:
+        pytest.skip("set EX42_D44_M1000_REAL_TRACE to replay the preserved Kit trace")
+    import yaml
+    from foothold_s2.eval.ex42_eval_tile_mesh import source_tile
+
+    with np.load(path) as saved:
+        trace = {key: saved[key] for key in saved.files}
+    plan = yaml.safe_load((Path(__file__).resolve().parents[1] / "curriculum" /
+                           "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    settings = contract(plan)
+    _, tile = source_tile(Path(settings["source_mesh_dir"]))
+    kwargs = dict(spec={"task": "stop_restart"}, anchors=tile["anchors_local_m"],
+                  settings=settings, dt=float(trace["dt"]))
+    assert bool(trace["alive"][495, 38]) is True
+    assert bool(trace["alive"][496, 38]) is False
+    assert trace["phase_id"][496, 38] == 3
+    assert trace["cmd_post"][496, 38, 0] == pytest.approx(.968481779, abs=1e-6)
+    result = summarize(trace, **kwargs)
+    assert (result["valid_count"], result["survival_count"], result["success_count"]) == (64, 63, 36)
+    forged = copy.deepcopy(trace)
+    forged["cmd_post"][495, 38, 0] = .968
+    with pytest.raises(ValueError, match="recorded command"):
+        summarize(forged, **kwargs)
+
+
 def test_read_evidence_binds_every_case_json_and_npz_sha(tmp_path, monkeypatch):
     from foothold_s2.eval import ex42_eval_tile_mesh
 
