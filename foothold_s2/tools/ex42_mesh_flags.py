@@ -26,6 +26,68 @@ def _sha(path):
         return hashlib.file_digest(stream,'sha256').hexdigest()
 
 
+def verify_annotation(destination):
+    """Read back both artifacts; flags cannot authorize changed geometry or measurements.
+
+    Geometry SHA covers vertices/faces only. Compare every original array including
+    origins and column order, and bind the copied measurements to their real source.
+    This is CPU evidence, never a new Kit measurement or launch approval.
+    """
+    from foothold_s2.terrains.columns import CONTINUOUS
+    from foothold_s2.terrains.ex42_column_reset import build_column_table
+    from foothold_s2.terrains.ex42_flags import load_flag_table
+
+    destination = Path(destination).resolve(strict=True)
+    receipt = json.loads((destination/'mesh_manifest.json').read_text(encoding='utf-8'))
+    inherited = receipt['flag_annotation_source']
+    source = Path(inherited['folder']).resolve(strict=True)
+    if source == destination or any(inherited.get(key) is not value for key, value in {
+            'geometry_preserved': True, 'measurements_inherited': True,
+            'new_kit_validation': False, 'execution_manifest_regeneration_required': True}.items()):
+        raise ValueError('flag annotation must preserve the measured source and require a new execution manifest')
+    for key, filename, label in [('manifest_sha256', 'mesh_manifest.json', 'source manifest'),
+                                 ('npz_sha256', 'terrain_mesh.npz', 'source NPZ')]:
+        if _sha(source/filename) != inherited.get(key):
+            raise ValueError(f'{label} SHA mismatch')
+    old = json.loads((source/'mesh_manifest.json').read_text(encoding='utf-8'))
+    aggregate = old['aggregate_file']
+    if (Path(aggregate).name != aggregate or aggregate != receipt['aggregate_file']
+            or (source/aggregate).read_bytes() != (destination/aggregate).read_bytes()):
+        raise ValueError('inherited aggregate differs from the source measurement')
+    npz = destination/'terrain_mesh.npz'
+    file_sha = _sha(npz)
+    if file_sha != receipt.get('mesh_file_sha256'):
+        raise ValueError('annotated NPZ file SHA mismatch')
+    with np.load(source/'terrain_mesh.npz', allow_pickle=False) as a, np.load(npz, allow_pickle=False) as b:
+        if 'flags' in a.files or set(b.files) != set(a.files) | {'flags'}:
+            raise ValueError('annotation may only add flags to the original NPZ members')
+        for key in a.files:
+            before, after = a[key], b[key]
+            if (before.dtype != after.dtype or before.shape != after.shape
+                    or before.tobytes() != after.tobytes()):
+                raise ValueError(f'original array changed: {key}')
+        unchanged = sorted(a.files)
+    geometry = load_combined_mesh(npz, old['mesh_sha256'])
+    if geometry['mesh_sha256'] != receipt['mesh_sha256']:
+        raise ValueError('annotation geometry SHA differs')
+    rows, columns = geometry['origins'].shape[:2]
+    flags = load_flag_table(npz, rows, columns)
+    if flags is None:
+        raise ValueError('annotated flags missing')
+    table = build_column_table(geometry['column_family'])
+    for col, kind in enumerate(table):
+        fallback = kind['family'] == 'A' and kind['kind'] in CONTINUOUS
+        valid = np.isnan(flags[:, col]).all() if fallback else np.isfinite(flags[:, col]).all()
+        if kind['kind'] is None or not valid:
+            raise ValueError(f'flags do not cover the declared kind: column {col}')
+    return dict(inherited, source=str(source), mesh_file_sha256=file_sha,
+                mesh_sha256=geometry['mesh_sha256'], original_arrays_unchanged=unchanged,
+                aggregate_sha256=_sha(destination/aggregate), flags_shape=list(flags.shape),
+                flags_sha256=hashlib.sha256(flags.tobytes()).hexdigest(), flags_bytes=flags.nbytes,
+                finite_cells=int(np.isfinite(flags).all(axis=(2, 3)).sum()),
+                fallback_cells=int(np.isnan(flags).all(axis=(2, 3)).sum()))
+
+
 def annotate(source, destination):
     source, destination=Path(source).resolve(),Path(destination).resolve()
     if destination.exists():
@@ -82,6 +144,7 @@ def annotate(source, destination):
             'new_kit_validation':False,'execution_manifest_regeneration_required':True})
     (destination/'mesh_manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,
         indent=2,allow_nan=False)+'\n',encoding='utf-8')
+    verify_annotation(destination)
     return manifest
 
 
@@ -89,9 +152,25 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--out',type=Path,required=True)
+    parser.add_argument('--table',type=Path,
+                        help='Optional execution plan; requires --declarations. No approval is modified.')
+    parser.add_argument('--declarations',type=Path,action='append',
+                        help='Publish terrain_manifest after original measurement/pin validation.')
     args=parser.parse_args(argv)
+    if bool(args.table) != bool(args.declarations):
+        parser.error('--table and --declarations must be supplied together')
     result=annotate(args.source,args.out)
-    print(json.dumps({key:result[key] for key in ('mesh_sha256','mesh_file_sha256','flag_generation_seconds')}))
+    summary={key:result[key] for key in ('mesh_sha256','mesh_file_sha256','flag_generation_seconds')}
+    if args.table:
+        from foothold_s2.tools.ex42_execution_manifest import (
+            EX42Plan, assemble_saved_mesh, read_declarations, write_once)
+        plan=EX42Plan.load(args.table)
+        execution=assemble_saved_mesh(plan,args.out,read_declarations(args.declarations),args.declarations)
+        plan.validate_terrain_manifest(execution)
+        path=args.out/'terrain_manifest.json'
+        write_once(path,execution)
+        summary['terrain_manifest_sha256']=_sha(path)
+    print(json.dumps(summary))
     return 0
 
 

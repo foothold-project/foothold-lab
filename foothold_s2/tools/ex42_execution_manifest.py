@@ -222,6 +222,13 @@ def assemble_saved_mesh(plan, mesh_dir, declarations, declaration_paths):
         raise ValueError('mesh identity differs from the plan measurement pin')
     if any(measurements[key] != pinned[key] for key in contract['required_measurements']):
         raise ValueError('aggregate differs from the plan measurement pin')
+    if ('mesh_file_sha256' in receipt
+            and sha_file(mesh_dir/'terrain_mesh.npz') != receipt['mesh_file_sha256']):
+        raise ValueError('saved mesh file SHA differs from measurement receipt')
+    annotation = None
+    if 'flag_annotation_source' in receipt:
+        from foothold_s2.tools.ex42_mesh_flags import verify_annotation
+        annotation = verify_annotation(mesh_dir)
     mesh = load_combined_mesh(mesh_dir/'terrain_mesh.npz', receipt['mesh_sha256'])
     actual_counts = dict(Counter(mesh['column_family']))
     if actual_counts != receipt['columns_by_family'] or list(mesh['origins'].shape) != receipt['origins_shape']:
@@ -307,6 +314,10 @@ def assemble_saved_mesh(plan, mesh_dir, declarations, declaration_paths):
             'continuous_alias_scope': 'seven A columns/kinds reused, not seven additional measured kinds',
             'evaluation_geometry_measured': False, 'cpu_readback_only': True,
             'training_started': False}}
+    if annotation is not None:
+        manifest['provenance']['flag_annotation'] = annotation
+        manifest['provenance']['measurement_scope'] += (
+            '; inherited from byte-identical source geometry, no new Kit run for added flags')
     if not missing:
         plan.validate_terrain_manifest(manifest)
     return manifest

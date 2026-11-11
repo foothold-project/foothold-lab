@@ -27,4 +27,4 @@ def test_team_all_stage_approval_preserves_empty_evidence(stage):
         authorization_validators(plan)[stage](APPROVALS,None)
     assert plan.document['stage_zero']['approval_sha256']==hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
     assert a['production_launch_allowed'] is False
-    assert not any(k.startswith('stage_j') for k in a)
+    assert all(a[k]['approved'] is False for k in a if k.startswith('stage_j'))      # J cells exist and stay closed

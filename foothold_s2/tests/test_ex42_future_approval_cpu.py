@@ -42,7 +42,7 @@ def test_shipped_cells_preserve_approval_scope_and_unfilled_evidence(stage,valid
     assert cell['scope']['parent_sha256'] is None
     assert cell['scope']['maximum_updates'] == limit
     assert cell['extension_authorized'] is False
-    assert cell['later_stage_entry_gate_adapter'] == 'pending'
+    assert cell['later_stage_entry_gate_adapter'] == ('pending' if stage == 'E1F' else 'flag_two_window')
     with pytest.raises(ValueError, match='scope differs'):
         validate(p,APPROVALS,'a'*64)
 
@@ -75,7 +75,7 @@ def test_filled_fixture_is_only_a_bounded_approval_not_a_launch(tmp_path,stage,v
     proof=validate(p,ap,'b'*64)
     assert proof['scope']['maximum_updates']==limit
     assert proof['later_stages_authorized'] is False
-    assert proof['entry_gate_adapter_ready'] is (stage == 'E1F')
+    assert proof['entry_gate_adapter_ready'] is True
     assert proof['training_started'] is False
 
 

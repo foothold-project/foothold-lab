@@ -314,11 +314,12 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
     the lead reads and takes to the team lead; HOLD yields a notice that says it is not ready.
     """
     from foothold_s2.curriculum.ex42_prep import EX42Plan
-    stages = (plan_path if isinstance(plan_path, EX42Plan) else EX42Plan.load(plan_path)).document["stages"]
+    plan = plan_path if isinstance(plan_path, EX42Plan) else EX42Plan.load(plan_path)
+    stages = plan.document["stages"]
     index = next((i for i, row in enumerate(stages) if row.get("id") == stage_id), None)
     if index is None or iteration != stages[index].get("minimum_updates"):
         return None
-    following = stages[index + 1]["id"] if index + 1 < len(stages) else None
+    following = plan.following_stage_id(stage_id)
     ready = p1.get("judgment") == "PASS"
     return {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
             "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),

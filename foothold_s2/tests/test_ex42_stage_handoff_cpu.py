@@ -380,8 +380,8 @@ def test_a_later_stage_boundary_below_its_bound_continues_the_same_stage(tmp_pat
 
 
 def test_a_later_stage_bound_without_a_pass_only_notifies_and_an_off_boundary_is_ignored(tmp_path):
-    plan, approvals, manifest, gate = _later_stage(tmp_path, iteration=3000)
-    decision = handoff.decide_next_stage(plan, approvals, "E3", 3000, gate, manifest)
+    plan, approvals, manifest, gate = _later_stage(tmp_path, iteration=4000)
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 4000, gate, manifest)
     assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
     plan, approvals, manifest, gate = _later_stage(tmp_path / "again", iteration=1000)
     assert handoff.decide_next_stage(plan, approvals, "E3", 1100, gate, manifest) is None

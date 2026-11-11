@@ -6,6 +6,18 @@ automatic_launch_allowed:
   require_gate_pass: true
   notify: true
   decision_source: c5471d370d634ed2a381d8249a10c652c143f699
+plan_amendment_1938:
+  approved: true
+  decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+  approved_at: '2026-11-11T19:38+09:00'
+  approver: teamlead
+  decision_source:
+    commit: 7121e0188cf1cbe558704764227e306e6097149f
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  budget_basis: ex42_new_updates
+  maximum_updates: 20000
+  extensions_within_remaining_budget: true
+  easy_kind_floor: 0.015
 requirements:
   - parent_adoption_decision
   - explicit_lead_approval
@@ -99,7 +111,15 @@ stage_e1_authorization:
       required_result: PASS
       checkpoint_key: model_250.pt
       checkpoint_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
-  extension_authorized: false
+  extension_authorized: true
+  extension_contract:
+    judgment: HOLD
+    after_updates: 1000
+    max_count: 2
+    maximum_updates: 2000
+    increment_updates: 500
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source: 7121e0188cf1cbe558704764227e306e6097149f
   boundary_evaluation_interval_updates: 250
 
 # Approved stage; missing evidence must be filled and re-pinned before launch.
@@ -206,7 +226,7 @@ stage_e2_authorization:
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   critic_mirror: null
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: flag_two_window
   missing_evidence_policy: reject_launch_then_fill_and_repin
   missing_evidence:
   - parent_sha256
@@ -261,15 +281,20 @@ stage_e3_authorization:
   scope:
     stage_id: E3
     start_update: 0
-    maximum_updates: 3000
+    maximum_updates: 4000
     parent_sha256: null
     later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e2
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -296,15 +321,20 @@ stage_e4_authorization:
   scope:
     stage_id: E4
     start_update: 0
-    maximum_updates: 2000
+    maximum_updates: 3000
     parent_sha256: null
     later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e3
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -338,7 +368,7 @@ stage_e5_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e4
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -372,7 +402,7 @@ stage_m_authorization:
   boundary:
     axis: map_off_probability
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: stage_exit_v1
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -382,12 +412,18 @@ stage_m_authorization:
     stage_judgment_policy: pending
   critic_mirror: null
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  contract_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
   optional_branch: true
-  source_stage_contract_status: unresolved_not_linear_E5
+  source_stage_contract_status: decided_source_stage_return_runtime_pending
   budget:
-    m_updates_count_toward_source_maximum: null
-    source_window_counter_after_return: null
-  on_exhausted: null
+    m_updates_count_toward_source_maximum: false
+    m_updates_count_toward_ex42_budget: true
+    source_window_counter_after_return: restart_two_windows
+  on_exhausted: notify_and_return_to_source_stage
   entry:
     source_stage: null
     same_boundary_other_axis_change: forbidden
@@ -397,6 +433,8 @@ stage_m_authorization:
       command_shares: same
   exit:
     return_to: source_stage
+    p_map_off_after_return: 0.3
+    required_new_windows_after_return: 2
     return_receipt_sha256: null
     consumer_status: pending
 
@@ -421,7 +459,7 @@ stage_e6a_authorization:
   boundary:
     axis: null
     boundary_mode: stop_evaluate_resume
-  later_stage_entry_gate_adapter: pending
+  later_stage_entry_gate_adapter: kind_two_window_e5
   missing_evidence_policy: reject_launch_then_fill_and_repin
   prerequisites:
     calibration_sha256: null
@@ -453,6 +491,109 @@ stage_e6b_authorization:
   scope:
     stage_id: E6b
     start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: posture_two_window_e6a
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6a
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+
+# J0~J4 (DESIGN-JUMP v0.2): jump stages are NOT approved. approved: false until the team lead writes a decision here;
+# the table rows are enabled: false too, so no automatic launch exists for them.
+stage_j0_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J0
+    start_update: 0
+    maximum_updates: 250
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6b
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j1_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J1
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J0
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j2_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J2
+    start_update: 0
     maximum_updates: 2000
     parent_sha256: null
     later_stages_authorized: false
@@ -469,8 +610,72 @@ stage_e6b_authorization:
       evaluation_mesh_sha256: null
       required_result: PASS
       same_plan_sha256: true
-      stage_id: E6a
+      stage_id: J1
     q12_sensor_decision: null
     stage_judgment_policy: pending
   critic_mirror: null
-  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j3_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J3
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J2
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j4_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J4
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J3
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2

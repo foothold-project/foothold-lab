@@ -32,7 +32,7 @@ def test_known_ex42_table_is_design_only_with_approved_assumptions():
     plan = EX42Plan.load(TABLE)
     assert plan.is_ex42 is True
     assert [stage["id"] for stage in plan.document["stages"]] == [
-        "E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"
+        "E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b", "J0", "J1", "J2", "J3", "J4"   # J: DESIGN-JUMP, disabled
     ]
     assert plan.document["environment"]["num_envs"] == 6144
     assert plan.document["evaluation"]["judge_cells"] == 26
