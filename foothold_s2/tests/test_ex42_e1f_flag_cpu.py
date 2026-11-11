@@ -150,6 +150,10 @@ def test_parent_runs_both_flag_children_and_checks_their_durable_receipts(tmp_pa
                                  task=kwargs["task"], plan_path=kwargs["plan_path"],
                                  mesh_dir=kwargs["mesh_dir"], mesh_sha256=kwargs["mesh_sha256"],
                                  seed=42)) == 2
+    with pytest.raises(ValueError, match="seed"):
+        flag_kit_commands(tmp_path / "model.pt", output, "cuda:1", task=kwargs["task"],
+                          plan_path=kwargs["plan_path"], mesh_dir=kwargs["mesh_dir"],
+                          mesh_sha256=kwargs["mesh_sha256"], seed=None)
 
     receipt_path = output / "flag_cells" / "flag_four" / "flag_cells.json"
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))

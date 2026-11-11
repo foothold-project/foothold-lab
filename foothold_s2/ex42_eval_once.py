@@ -115,6 +115,8 @@ def observed_child_identity(output, name, expected):
 def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
                       mesh_sha256, seed):
     """E1F adds one and four flag counts after the fixed maintenance bundle."""
+    if type(seed) is not int or seed < 0:
+        raise ValueError("E1F flag evaluation seed must be a nonnegative integer")
     kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
     return [(count, [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_flag_eval",
                     "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
@@ -559,7 +561,7 @@ def main(argv=None):
                                       args.checkpoint, args.out, args.device,
                                       task=config()[0]["task"], plan_path=args.p1_plan,
                                       mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
-                                      seed=args.eval_seed)]}
+                                      seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,
