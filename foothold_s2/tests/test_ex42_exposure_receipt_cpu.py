@@ -217,14 +217,16 @@ def test_two_ranks_write_into_one_folder_and_the_boundary_files_fold(tmp_path, m
 
 
 # ---- ladder_outcomes: the evidence the k moves came from, replayable by the consumer ----------------------------
-FLAT_PASS = {"C/flat": {"first_window_pass": True}}
+# E3 starts as the E2 end state plus the entry axis D only (lead 2026-11-12 02:00): the one `new` kind of the start block is
+# A/stepping_stones_low, and C/flat is the first kind the K ladder opens once that kind passed its first window.
+LOW_PASS = {"A/stepping_stones_low": {"first_window_pass": True}}
 
 
 @need_mesh
 def test_the_receipt_records_the_ordered_outcomes_the_ladder_really_used_inside_the_sha():
-    contract = _contract(k=2, outcomes=[FLAT_PASS, {"B/rough": {"target_level_reached": False}}, {"x": {}}])
+    contract = _contract(k=2, outcomes=[LOW_PASS, {"B/rough": {"target_level_reached": False}}, {"x": {}}])
     body = er.build_receipt(contract, stage_id="E3", plan_sha256=PSHA, iteration=500, kind="boundary")
-    assert body["ladder_outcomes"] == [FLAT_PASS, {"B/rough": {"target_level_reached": False}}]    # first k only, in order
+    assert body["ladder_outcomes"] == [LOW_PASS, {"B/rough": {"target_level_reached": False}}]    # first k only, in order
     swapped = json.loads(json.dumps(body)); swapped["ladder_outcomes"].reverse()
     with pytest.raises(ValueError, match="sha256"):
         er.verify_receipt(swapped)
@@ -234,9 +236,9 @@ def test_the_receipt_records_the_ordered_outcomes_the_ladder_really_used_inside_
 @need_mesh
 def test_the_consumer_replays_the_k_moves_from_the_plan_and_the_recorded_outcomes():
     plan = EX42Plan.load(PLAN)
-    body = er.build_receipt(_contract(k=2, outcomes=[FLAT_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
-    assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["C/flat", "B/rough"]
+    assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/stepping_stones_low", "C/flat"]
     fake = json.loads(json.dumps(body)); fake["ladder_outcomes"] = [{}, {}]                  # outcomes changed, sha refreshed
     fake["sha256"] = er._sha(fake)
     with pytest.raises(ValueError, match="differ from the plan replay"):
@@ -270,7 +272,7 @@ def test_outcomes_longer_than_the_boundary_index_or_not_dicts_are_refused():
 @need_mesh
 def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh_column_table():
     plan = EX42Plan.load(PLAN)
-    body = er.build_receipt(_contract(k=2, outcomes=[FLAT_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
     rows = body["column_rows"]
     open_i = next(i for i, r in enumerate(rows) if r["open"])
