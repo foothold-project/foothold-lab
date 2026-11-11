@@ -53,7 +53,8 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         if not isinstance(parent, dict):
             continue
         table[row["id"]] = {
-            "updates": row["minimum_updates"], "parent_local": parent["manifest_local_update"],
+            "updates": row.get("maximum_updates", row["minimum_updates"]),               # the base cap; the first check (minimum) is not a limit
+            "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
             "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
             "critic_mirror": mirror,
             "previous": previous}
@@ -69,9 +70,15 @@ def _shipped_stages() -> list[dict[str, Any]]:
 
 E_STAGE_SPECS = e_stage_table(_shipped_stages())
 # stage id -> (updates, parent local update, parent cumulative update), read from the plan (E1: the first segment, the
-# plan minimum; the +500 extensions are separate boundaries)
+# plan base cap `maximum_updates`; HOLD-only extensions add extension_updates x extension_max_count)
 E_STAGES = {stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
             for stage, spec in E_STAGE_SPECS.items()}
+
+
+def _stage_caps(stage_id: str) -> set[int]:
+    """The `maximum_updates` a finished stage may have saved: its base cap, or the cap plus whole extensions."""
+    spec = E_STAGE_SPECS[stage_id]
+    return {spec["updates"] + k * spec["extension_updates"] for k in range(spec["extension_max_count"] + 1)}
 
 
 def adopt_plan_stage_table(plan_path: str | Path) -> dict[str, dict[str, Any]]:
@@ -1472,7 +1479,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
     state = checkpoint.get("continuous_curriculum")
     if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
             or state.get("stage_id") != previous or state.get("iteration") != local
-            or state.get("maximum_updates") != E_STAGES[previous][0]):
+            or state.get("maximum_updates") not in _stage_caps(previous)):
         raise ValueError(f"EX-42 {stage_id} parent curriculum state is not the finished {previous} state")
     required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
                 "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
