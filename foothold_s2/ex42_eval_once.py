@@ -208,7 +208,8 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
                     "the next stage approval cell."}
 
 
-def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None):
+def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None,
+              register=None):
     """Every boundary writes a notice. The gate passed (at or after the stage minimum) and the next stage has its
     bounded approval cell (#639): the lead's launcher starts the next stage. Otherwise an E1 boundary goes on with
     the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
@@ -240,12 +241,19 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
         return notice
     notice.update(state="stage_continued" if decision["action"] == "continue" else "next_stage_started",
                   automatic_launch_started=True, launcher_pid=record["pid"])
+    if register is not None:                      # the started training goes into the GPU queue (no P1 over it)
+        try:
+            notice["queue_registration"] = register(record["pid"], output / "next_stage_launcher.log",
+                                                    f"EX-42 auto start after {stage_id} m{iteration}")
+        except (ValueError, OSError) as exc:
+            notice["queue_registration_error"] = str(exc)
     return notice
 
 
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
-        p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None):
+        p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None,
+        next_stage_queue=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
@@ -354,8 +362,12 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
             from foothold_s2 import ex42_eval_split as split
+            from foothold_s2 import ex42_stage_handoff as handoff
             notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
-                               next_stage_launcher, gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids()))
+                               next_stage_launcher, gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids()),
+                               register=None if next_stage_queue is None else (
+                                   lambda pid, log, title: handoff.register_launched_training(
+                                       *next_stage_queue, pid=pid, log=log, title=title)))
             if notice is not None:
                 _atomic(output / "next_stage_notice.json", notice)
                 row["next_stage_notice"] = notice["state"]
@@ -385,6 +397,10 @@ def main(argv=None):
     parser.add_argument("--p1-stage-id")
     parser.add_argument("--next-stage-launcher", type=Path, default=None,
                         help="executable that starts the next stage; run only after a gate PASS with an approved cell")
+    parser.add_argument("--next-stage-queue", type=Path, default=None,
+                        help="GPU queue file: the auto-started training is registered there as an external process")
+    parser.add_argument("--next-stage-dispatch", type=Path, default=None,
+                        help="the dispatcher script that owns --next-stage-queue (required with it)")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
@@ -397,6 +413,9 @@ def main(argv=None):
     if args.next_stage_launcher is not None and (args.p1_plan is None or not args.next_stage_launcher.is_absolute()
                                                   or not args.next_stage_launcher.is_file()):
         parser.error("--next-stage-launcher needs P1 and an absolute path to an existing file")
+    if (args.next_stage_queue is None) != (args.next_stage_dispatch is None) or (
+            args.next_stage_queue is not None and args.next_stage_launcher is None):
+        parser.error("--next-stage-queue and --next-stage-dispatch go together and need --next-stage-launcher")
     if args.p1_plan is not None and (not args.sha_from_manifest or not args.mesh_dir
                                       or not args.expected_mesh_sha256 or args.eval_seed != 42):
         parser.error("P1 requires manifest SHA, pinned E0 mesh and eval seed 42")
@@ -444,7 +463,8 @@ def main(argv=None):
                p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
                p1_stage_id=args.p1_stage_id,
                checkpoint_iteration=iteration, split_device=args.split_device,
-               next_stage_launcher=args.next_stage_launcher)
+               next_stage_launcher=args.next_stage_launcher,
+               next_stage_queue=((args.next_stage_queue, args.next_stage_dispatch) if args.next_stage_queue else None))
 
 
 if __name__ == "__main__":
