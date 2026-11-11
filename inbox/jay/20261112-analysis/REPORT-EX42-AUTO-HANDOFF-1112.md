@@ -33,7 +33,10 @@
 - 커밋 0f9a066c의 git archive 고정 사본: 새 시험 `12 passed in 66.92s`. 경로 `/home/jay/mai/tmp/verifier-lx/handoff-1112/locked-0f9a066c`.
 - launcher 인자 누락, 예산 0 고정, 메시 SHA 검사 제거, 필수 생산자 누락 허용, checkpoint 섞임 허용 돌연변이 5개를 각각 잡았다. 원문 `mutants.json` 및 이름별 `.log`.
 - M0~M3는 파일 SHA만 맞는 HOLD, 항목 누락, 원자료 변조, 다른 메시를 거절한다. 새 파일 생산 시뿐 아니라 기존 E2.json을 주는 경로도 검사한다. 두 경로 모두 고침 전 DID NOT RAISE를 직접 확인했고 고침 뒤 `16 passed in 82.23s` + 기존 파일 우회 시험 `1 passed in 6.80s`.
-- M0~M3 제안 꼴은 `format=foothold-ex42-m0-m3/1`, `status=PASS`, `stage_id=E2`, `checks.M0~M3.status/evidence`, `mesh.geometry_sha256/files`. analyst 생산자와 키 조율 중이다. 이 검사는 실측을 대신 수행하지 않는다.
+- M0~M3 제안 꼴은 `format=foothold-ex42-m0-m3/1`, `status=PASS`, `stage_id=E2`, `checks.M0~M3.status/evidence`, `mesh.geometry_sha256/files`. analyst가 01:49 같은 꼴을 채택했다. 최종 소비는 `foothold_s2.tools.ex42_m0_m3.verify_receipt(path, sha, mesh_dir=...)`가 실제 M0와 raw timing을 다시 확인한다. 그 모듈이 없거나 raw가 거부되면 HOLD. 이 검사는 실측을 대신 수행하지 않는다.
+
+- 최종 raw 소비 연결 후 새 시험 + handoff/launcher: `87 passed in 116.95s (0:01:56)` (`producer-api.log`). 기존 E1F 전용 flag-chain 배선 시험의 비-E1F 예시는 이제 별도 M0 계약이 있는 E2 대신 E3로 분리했다.
+- **한계:** 성공 경로 fixture 안의 M0 raw verifier는 시험 대역이다. 실제 M2/M3는 아직 없고 analyst의 독립 producer PR이 통합되어야 한다. raw verifier의 오류/HOLD를 무시하지 않는 반례는 별도로 포함했다.
 
 ## 단계별 입력 생산자
 

@@ -40,6 +40,13 @@ def validate_m0_m3(path, template):
         measured = _checked_ref(files.get(name), path.parent)
         if digest(measured) != pinned['files'][name]['sha256']:
             raise ValueError('M0~M3 mesh file differs from E2 profile')
+    try:
+        from foothold_s2.tools.ex42_m0_m3 import verify_receipt
+    except ImportError as exc:
+        raise ValueError('M0~M3 measurement verifier unavailable') from exc
+    rebuilt = verify_receipt(path, digest(path), mesh_dir=pinned['directory'])
+    if rebuilt.get('status') != 'PASS':
+        raise ValueError('M0~M3 raw measurement verification did not PASS')
 
 
 def produce(*, template_path, source_path, target, gate_path, manifest_path, output_dir, bindings_path=None):

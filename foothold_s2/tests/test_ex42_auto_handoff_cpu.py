@@ -50,7 +50,14 @@ def ready(known, monkeypatch):
 
 
 @pytest.fixture
-def e1f_exit(ready):
+def e1f_exit(ready, monkeypatch):
+    # The M0~M3 GPU measurements below are deliberately synthetic. The analyst
+    # raw-measurement consumer is a test double only inside this fixture.
+    import sys
+    from types import ModuleType
+    verifier = ModuleType('foothold_s2.tools.ex42_m0_m3')
+    verifier.verify_receipt = lambda path, expected_sha256, mesh_dir: {'status': 'PASS'}
+    monkeypatch.setitem(sys.modules, verifier.__name__, verifier)
     from foothold_s2.ex42_stage_materialize import materialize, digest
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.ex42_e1f_judge import _calibration, _flag_window
@@ -238,3 +245,17 @@ def test_preexisting_evidence_file_cannot_skip_m0_pass_check(e1f_exit, tmp_path)
         handoff.materializer_from_env(env)(target_stage='E2', gate_receipt=gate,
                                            parent_manifest=manifest, source_plan=source.path)
     assert not (tmp_path / 'no-publish').exists()
+
+
+@pytest.mark.parametrize('bad', ['raw_rejected', 'raw_not_pass'])
+def test_m0_raw_measurement_consumer_is_required(e1f_exit, tmp_path, monkeypatch, bad):
+    import sys
+    from foothold_s2.ex42_stage_evidence import produce
+    source, _, manifest, gate, bindings = e1f_exit
+    def check(*args, **kwargs):
+        if bad == 'raw_rejected': raise ValueError('M0~M3 raw measurement differs')
+        return {'status': 'HOLD'}
+    monkeypatch.setattr(sys.modules['foothold_s2.tools.ex42_m0_m3'], 'verify_receipt', check)
+    with pytest.raises(ValueError, match='M0.M3 raw measurement'):
+        produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                manifest_path=manifest, output_dir=tmp_path / 'no-publish', bindings_path=bindings)

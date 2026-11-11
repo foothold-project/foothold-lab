@@ -482,7 +482,7 @@ def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known
     gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
     (tmp_path / "ev").mkdir()
     (tmp_path / "ev" / "E1F.json").write_text("{}")
-    (tmp_path / "ev" / "E2.json").write_text("{}")
+    (tmp_path / "ev" / "E3.json").write_text("{}")
     called = []
     monkeypatch.setattr(materialize, "materialize", lambda **kw: called.append(kw) or {"plan": "x"})
     env = {"EX42_MATERIALIZE_TEMPLATE_PLAN": "/t/p.yaml", "EX42_MATERIALIZE_TEMPLATE_APPROVALS": "/t/a.yaml",
@@ -503,5 +503,5 @@ def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known
     env["EX42_FLAG_CHAIN_SHA256"] = hashlib.sha256(good.read_bytes()).hexdigest()
     handoff.materializer_from_env(env)(target_stage="E1F", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
     assert called[0]["flag_chain"] == str(good)
-    handoff.materializer_from_env({**env, "EX42_FLAG_CHAIN": ""})(target_stage="E2", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
+    handoff.materializer_from_env({**env, "EX42_FLAG_CHAIN": ""})(target_stage="E3", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
     assert called[1]["flag_chain"] is None                                       # the chain is E1F's, later stages do not take it
