@@ -222,7 +222,102 @@ def table(headers, rows):
                      [headers, ['---'] * len(headers), *rows]) + '\n'
 
 
-def plot(rows, output):
+def limit_series(series, end):
+    if end < 50:
+        raise ValueError('boundary must be at least 50')
+    missing = {tag: [i for i in range(1, end + 1) if not finite(series.get(tag, {}).get(i))]
+               for tag in METRICS.values()}
+    missing = {k: v for k, v in missing.items() if v}
+    if missing:
+        raise ValueError(f'incomplete boundary {end}: {missing}')
+    return {tag: {i: v for i, v in values.items() if 1 <= i <= end}
+            for tag, values in series.items()}
+
+
+def boundary_numbers(c, b, end, cw, bw):
+    c, b = limit_series(c, end), limit_series(b, end)
+    measured = checkpoint(c, b, end)
+    intervals = []
+    for start in dict.fromkeys([1, end - 49]):
+        metrics = {}
+        for name, tag in METRICS.items():
+            bv, cv = exact_mean(b, tag, start, end), exact_mean(c, tag, start, end)
+            metrics[name] = {'control': bv, 'candidate': cv, 'candidate_minus_control': cv - bv}
+        metrics['slip_cost_normalized'] = {
+            'control': unweighted(exact_mean(b, SLIP, start, end), bw),
+            'candidate': unweighted(exact_mean(c, SLIP, start, end), cw),
+            'candidate_minus_control': None if bw == 0 else
+                unweighted(exact_mean(c, SLIP, start, end), cw) - unweighted(exact_mean(b, SLIP, start, end), bw)}
+        intervals.append({'start': start, 'end': end, 'metrics': metrics})
+    return {'schema': 'foothold-e1-slip-boundary/1', 'latest_candidate_iteration': end,
+            'intervals': intervals, 'control_raw_slip_cost': None, 'fall_event_ratio': None,
+            **{k: measured[k] for k in ['slip_share_last10', 'candidate_track_last20',
+                                        'control_track_last20', 'tracking_ratio_last20']}}
+
+
+def render_record(snapshot, output):
+    c, b = [{tag: {int(i): v for i, v in vals.items()} for tag, vals in snapshot[name]['scalars'].items()}
+            for name in ['candidate', 'control']]
+    end = snapshot['through']
+    c, b = limit_series(c, end), limit_series(b, end)
+    cm, bm = [snapshot[name]['metadata'] for name in ['candidate', 'control']]
+    result = boundary_numbers(c, b, end, cm['slip_weight'], bm['slip_weight'])
+    result['generated_at'] = snapshot['generated_at']
+    rows = iteration_rows(c, b, cm['slip_weight'], bm['slip_weight'])
+    measurements = [{'start': w['start'], 'end': w['end'], 'metric': name, **values}
+                    for w in result['intervals'] for name, values in w['metrics'].items()]
+    output.mkdir(parents=True, exist_ok=True)
+    for name, data in [('iterations.csv', rows), ('boundary.csv', measurements)]:
+        with (output / name).open('w', newline='', encoding='utf-8') as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(data[0]), lineterminator='\n')
+            writer.writeheader()
+            writer.writerows(data)
+    plot(rows, output / 'comparison.png', record_only=True)
+    report = [
+        '# E1 미끄럼 재학습 · 경계별 같은 회차 기록',
+        '> 분류: 실험\n> 작성: 오흥재 · ' + snapshot['generated_at'][:10] +
+        '\n> 근거: 두 실행의 TensorBoard · 실행 영수증 · lead 11/12 경계 비교 의뢰'
+        '\n> 요지: 같은 회차의 수치만 기록\n> 상태: CPU 재계산 확인됨\n> 판: v1.1',
+        f"생성 `{snapshot['generated_at']}`. 로컬 1~{end}회만 포함한다. rank0 기록으로 두 GPU 합산 평균이 아니다.",
+        table(['지표', '구간', '대조군', '재학습'], [
+            ['미끄럼 벌점 몫', f'{end-9}~{end}', '원시 비용 없음', f(result['slip_share_last10'], True)],
+            ['몸 XY 추종 보상', f'{end-19}~{end}', f(result['control_track_last20']), f(result['candidate_track_last20'])],
+            ['재학습/대조군 추종 비율', f'{end-19}~{end}', '분모', f(result['tracking_ratio_last20'], True)]]),
+        '벌점 몫은 같은 회차의 `abs(foot_slip)/track_lin_vel`을 계산한 뒤 마지막 10회 평균이다. '
+        '아래 표는 누적 구간과 마지막 50회 구간을 각각 같은 대조군 회차와 비교한다.',
+        table(['회차', '지표', '대조군', '재학습', '재학습−대조군'],
+              [[f"{r['start']}~{r['end']}", LABELS.get(r['metric'], '미끄럼 비용 적분/최대 시간'),
+                f(r['control']), f(r['candidate']), f(r['candidate_minus_control'])] for r in measurements]),
+        '![같은 회차 학습 곡선](comparison.png)',
+        '`track_lin_vel`은 모든 명령의 몸 XY 속도 추종 보상이다. 실제 전진 속도 오차가 아니다. '
+        '종료 원인 열은 환경별 마지막 종료 원인 비율이다. 구간의 넘어짐 사건 수/종료 사건 수는 미측정이다. '
+        '종료 원인 중복이 가능하므로 합하거나 `1-time_out`으로 바꾸지 않았다.',
+        '대조군 미끄럼 가중 보상은 가중 0의 결과다. 기록이 없는 원시 미끄럼 비용은 `없음`이며 0으로 대체하지 않았다. '
+        '`Episode_Reward`는 에피소드 가중 합/최대 에피소드 시간, 전체 보상과 길이는 최근 종료 에피소드 버퍼 평균이다.',
+        '## 비교 조건',
+        table(['조건', '대조군', '재학습'], [[key, bm.get(key), cm.get(key)] for key in
+              ['path', 'git_head', 'parent_sha256', 'parent_cumulative_update', 'seed', 'num_envs_per_rank',
+               'distributed', 'dt', 'max_episode_seconds', 'slip_weight', 'terrain_manifest_sha256']]),
+        table(['env.yaml 차이', '대조군', '재학습'], [[r['field'], r['control'], r['candidate']]
+              for r in snapshot['env_differences']]),
+        '[계산 정의와 선행 기록](https://github.com/foothold-project/foothold-lab/issues/725). '
+        '입력 prefix SHA와 회차별 값은 `tb_snapshot.json`, 결과 해시는 `SHA256SUMS`에 있다.',
+        '## 수동 갱신',
+        '250·500·750·1000회에는 아래 명령의 `--through`와 출력 폴더의 경계 번호를 함께 바꾼다. '
+        '필요한 회차가 빠지면 파일을 생성하지 않고 오류로 알린다. 예약은 만들지 않는다.',
+        '```bash\n' + snapshot['refresh_command'] + '\n```',
+        '같은 입력 재현: `--snapshot tb_snapshot.json --out <다른 폴더>`. 새 실행은 별도 폴더로 기록한다.',
+        '## 이력\n\n| 판 | 변경 |\n| --- | --- |\n| v1.1 | 경계 상한 고정 · 수치 전용 기록 |',
+    ]
+    (output / 'REPORT-E1-slip-live.md').write_text('\n\n'.join(report) + '\n', encoding='utf-8')
+    for name, value in [('summary.json', result), ('tb_snapshot.json', snapshot)]:
+        (output / name).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    (output / 'SHA256SUMS').write_text(''.join(f'{sha(p.read_bytes())}  {p.name}\n'
+        for p in sorted(output.iterdir()) if p.is_file() and p.name != 'SHA256SUMS'), encoding='utf-8')
+    return result
+
+
+def plot(rows, output, record_only=False):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -245,17 +340,19 @@ def plot(rows, output):
         ax.grid(alpha=.22)
         for boundary in range(50, x[-1] + 1, 50):
             ax.axvline(boundary, color='#555555', alpha=.3, linewidth=.6)
-        if key == 'slip_share_tracking':
+        if key == 'slip_share_tracking' and not record_only:
             ax.axhspan(.02, .08, color='#32936F', alpha=.15, label='50-update check band')
         if key == 'slip_weighted':
             ax.text(.03, .05, 'Control weight=0; raw slip cost unavailable', transform=ax.transAxes, fontsize=8)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, loc='upper right' if key == 'slip_weighted' else 'best')
     fig.suptitle(f'E1 slip comparison | rank0 only | updates 1-{x[-1]} | unsmoothed', fontsize=15)
     fig.savefig(output, dpi=155)
     plt.close(fig)
 
 
 def render(snapshot, output):
+    if snapshot.get('record_only'):
+        return render_record(snapshot, output)
     output.mkdir(parents=True, exist_ok=True)
     c, b = [{tag: {int(k): v for k, v in values.items()} for tag, values in snapshot[name]['scalars'].items()}
             for name in ['candidate', 'control']]
@@ -383,7 +480,11 @@ def main():
     parser.add_argument('--control', type=Path, default=Path(DEFAULT_CONTROL))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--runner-result', type=Path, help='Independent runner JSON: slip_share_last10, tracking_ratio_31_50')
+    parser.add_argument('--through', type=int, help='Exact local boundary; require all metrics through this update')
+    parser.add_argument('--record-only', action='store_true', help='Numbers only; requires --through on live inputs')
     args = parser.parse_args()
+    if args.record_only and args.candidate and args.through is None:
+        parser.error('--record-only requires --through')
     if args.snapshot:
         snapshot = json.loads(args.snapshot.read_text())
     else:
@@ -409,6 +510,17 @@ def main():
         limit = max(max(v) for v in snapshot['candidate']['scalars'].values())
         snapshot['control']['scalars'] = {tag: {i: v for i, v in vals.items() if i <= limit}
                                           for tag, vals in snapshot['control']['scalars'].items()}
+    if args.through is not None:
+        for name in ['candidate', 'control']:
+            series = {tag: {int(i): v for i, v in vals.items()} for tag, vals in snapshot[name]['scalars'].items()}
+            snapshot[name]['scalars'] = limit_series(series, args.through)
+        snapshot['through'] = args.through
+    if args.record_only:
+        snapshot['record_only'] = True
+    if args.candidate and args.through is not None:
+        snapshot['refresh_command'] += f' --through {args.through}'
+        if args.record_only:
+            snapshot['refresh_command'] += ' --record-only'
     if args.runner_result:
         raw = args.runner_result.read_bytes()
         reported = json.loads(raw)
@@ -424,7 +536,8 @@ def main():
         snapshot['runner_crosscheck'] = cross
     result = render(snapshot, args.out)
     print(json.dumps({'out': str(args.out), 'latest': result['latest_candidate_iteration'],
-                      'checks': result['checks']}, ensure_ascii=False, allow_nan=False))
+                      'checks': result.get('checks'), 'slip_share_last10': result.get('slip_share_last10'),
+                      'tracking_ratio_last20': result.get('tracking_ratio_last20')}, ensure_ascii=False, allow_nan=False))
 
 
 if __name__ == '__main__':

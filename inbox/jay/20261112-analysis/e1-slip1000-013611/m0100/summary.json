@@ -1,0 +1,135 @@
+{
+  "schema": "foothold-e1-slip-boundary/1",
+  "latest_candidate_iteration": 100,
+  "intervals": [
+    {
+      "start": 1,
+      "end": 100,
+      "metrics": {
+        "slip_weighted": {
+          "control": 0.0,
+          "candidate": -0.09449926824308932,
+          "candidate_minus_control": -0.09449926824308932
+        },
+        "track_lin_vel": {
+          "control": 1.3538544505462051,
+          "candidate": 1.35802202668041,
+          "candidate_minus_control": 0.00416757613420482
+        },
+        "track_ang_vel": {
+          "control": 0.6654964734520763,
+          "candidate": 0.6689681873191148,
+          "candidate_minus_control": 0.003471713867038484
+        },
+        "total_reward": {
+          "control": 26.582155952453615,
+          "candidate": 25.219195505678655,
+          "candidate_minus_control": -1.3629604467749594
+        },
+        "episode_length": {
+          "control": 783.3310355472564,
+          "candidate": 784.7115391635895,
+          "candidate_minus_control": 1.3805036163330442
+        },
+        "terrain_level": {
+          "control": 4.893224482536316,
+          "candidate": 4.890117254257202,
+          "candidate_minus_control": -0.003107228279113805
+        },
+        "bad_orientation": {
+          "control": 0.017437473794961987,
+          "candidate": 0.01474161879003077,
+          "candidate_minus_control": -0.0026958550049312174
+        },
+        "foot_below_ground": {
+          "control": 0.000271267369389534,
+          "candidate": 0.0004745822591939941,
+          "candidate_minus_control": 0.0002033148898044601
+        },
+        "ex41_invalid": {
+          "control": 0.0,
+          "candidate": 0.0,
+          "candidate_minus_control": 0.0
+        },
+        "time_out": {
+          "control": 0.7784496088698506,
+          "candidate": 0.7810724991932512,
+          "candidate_minus_control": 0.002622890323400573
+        },
+        "slip_cost_normalized": {
+          "control": null,
+          "candidate": 0.6299951216205956,
+          "candidate_minus_control": null
+        }
+      }
+    },
+    {
+      "start": 51,
+      "end": 100,
+      "metrics": {
+        "slip_weighted": {
+          "control": 0.0,
+          "candidate": -0.11289809048175811,
+          "candidate_minus_control": -0.11289809048175811
+        },
+        "track_lin_vel": {
+          "control": 1.7041337275505066,
+          "candidate": 1.7127937436103822,
+          "candidate_minus_control": 0.008660016059875542
+        },
+        "track_ang_vel": {
+          "control": 0.8392298686504364,
+          "candidate": 0.8447925639152527,
+          "candidate_minus_control": 0.005562695264816342
+        },
+        "total_reward": {
+          "control": 33.475767860412596,
+          "candidate": 32.06643898010254,
+          "candidate_minus_control": -1.4093288803100563
+        },
+        "episode_length": {
+          "control": 989.5764001464844,
+          "candidate": 992.2030004882813,
+          "candidate_minus_control": 2.626600341796916
+        },
+        "terrain_level": {
+          "control": 4.8977998352050784,
+          "candidate": 4.8948437786102295,
+          "candidate_minus_control": -0.002956056594848988
+        },
+        "bad_orientation": {
+          "control": 0.02585150960832834,
+          "candidate": 0.020950522273778915,
+          "candidate_minus_control": -0.004900987334549425
+        },
+        "foot_below_ground": {
+          "control": 0.0002514648510259576,
+          "candidate": 0.00048502605292014776,
+          "candidate_minus_control": 0.00023356120189419014
+        },
+        "ex41_invalid": {
+          "control": 0.0,
+          "candidate": 0.0,
+          "candidate_minus_control": 0.0
+        },
+        "time_out": {
+          "control": 0.9738970685005188,
+          "candidate": 0.9785645031929016,
+          "candidate_minus_control": 0.0046674346923827326
+        },
+        "slip_cost_normalized": {
+          "control": null,
+          "candidate": 0.7526539365450541,
+          "candidate_minus_control": null
+        }
+      }
+    }
+  ],
+  "control_raw_slip_cost": null,
+  "fall_event_ratio": null,
+  "slip_share_last10": 0.06316022372226252,
+  "candidate_track_last20": 1.7160062611103057,
+  "control_track_last20": 1.7074130058288575,
+  "tracking_ratio_last20": 1.0050329095843316,
+  "generated_at": "2026-11-12T02:19:42+09:00"
+}

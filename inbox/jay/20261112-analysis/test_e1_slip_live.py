@@ -132,3 +132,48 @@ def test_fixed_penalty_thresholds(value, expected):
     for i in range(41, 51):
         c[m.SLIP][i] = -value
     assert m.checkpoint(c, b, 50)['penalty_check'] == expected
+
+
+def test_boundary_cap_ignores_future_but_rejects_missing_required_samples():
+    c = fixture(120)
+    capped = m.limit_series(c, 100)
+    assert max(capped[m.LIN]) == 100
+    assert max(c[m.LIN]) == 120
+    del c[m.BAD][99]
+    with pytest.raises(ValueError, match='incomplete boundary'):
+        m.limit_series(c, 100)
+    with pytest.raises(ValueError, match='incomplete boundary'):
+        m.limit_series(fixture(99), 100)
+
+
+def test_boundary_numeric_windows_and_unknown_slip_cost():
+    c, b = fixture(100), fixture(100)
+    for i in range(1, 51):
+        c[m.LIN][i] = 2.
+    result = m.boundary_numbers(c, b, 100, -.15, 0.)
+    assert result['intervals'][0]['start'] == 1
+    assert result['intervals'][0]['metrics']['track_lin_vel']['candidate'] == 1.5
+    assert result['intervals'][1]['start'] == 51
+    assert result['intervals'][1]['metrics']['track_lin_vel']['candidate'] == 1.
+    assert result['slip_share_last10'] == pytest.approx(.05)
+    assert result['control_raw_slip_cost'] is None
+    assert result['fall_event_ratio'] is None
+    assert not any('check' in key or 'threshold' in key for key in result)
+
+
+def test_record_report_contains_only_measurements(tmp_path):
+    import json
+    meta = {'slip_weight': -.15, 'path': '/candidate', 'git_head': 'a' * 40}
+    snap = {'generated_at': '2026-11-12T02:00:00+09:00',
+            'candidate': {'metadata': meta, 'scalars': fixture(100)},
+            'control': {'metadata': dict(meta, slip_weight=0., path='/control'), 'scalars': fixture(100)},
+            'env_differences': [], 'refresh_command': 'python tool --through 100 --record-only',
+            'through': 100, 'record_only': True}
+    result = m.render(snap, tmp_path)
+    report = (tmp_path / 'REPORT-E1-slip-live.md').read_text(encoding='utf-8')
+    summary = (tmp_path / 'summary.json').read_text(encoding='utf-8')
+    assert result['latest_candidate_iteration'] == 100
+    assert '1~100' in report and '51~100' in report
+    for forbidden in ('PASS', 'FAIL', '좋아짐', '나빠짐'):
+        assert forbidden not in report + summary
+    assert json.loads(summary)['control_raw_slip_cost'] is None
