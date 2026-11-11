@@ -637,7 +637,7 @@ stages:
       decisions: ['2026-11-12 01:40 lead']
   # Command shares (CG E.2 E4 one-axis row). Start = the E3 vector after its C boundary (flag 0.15). The C boundary of this
   # stage moves shares.flag 0.15 -> 0.20; donors are the CG assumption: forward 0.14 -> 0.11, diagonal sum 0.09 -> 0.07.
-  # CG gives only the diagonal sum, not the four slots, so the full vector stays null until the lead fixes the split.
+  # CG gives only the diagonal sum; the four slots keep their ratio (lead 2026-11-12 02:13).
   shares:
     forward: 0.14
     walk_left: 0.05
@@ -657,7 +657,22 @@ stages:
     class: assumption
     donor: {forward: -0.03, diagonal_total: -0.02}
     targets: {flag: 0.2, forward: 0.11, diagonal_total: 0.07}
-    shares: null
+    # Diagonal slots keep their ratio and scale by 0.07 / 0.09 (lead 2026-11-12 02:13, team lead confirmation pending).
+    shares:
+      forward: 0.11
+      walk_left: 0.05
+      walk_right: 0.05
+      spin_left: 0.07
+      spin_right: 0.07
+      stand: 0.1
+      reverse: 0.14
+      side_left: 0.07
+      side_right: 0.07
+      diag_fwd_left: 0.0155555556
+      diag_fwd_right: 0.0155555556
+      diag_back_left: 0.0194444444
+      diag_back_right: 0.0194444444
+      flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -801,9 +816,23 @@ stages:
     source:
       canon: CURRICULUM-GATES v0.17c E.1 E5 row, E.2 E5 one-axis row
       decisions: ['2026-11-12 01:40 lead']
-  # Command shares: flag stays 0.20 from the E4 C boundary (CG E.2 E5 env-share row: 깃발 env 20 %). The full start vector
-  # follows the E4 vector, which waits for the diagonal split.
-  command_allocation_start: {flag: 0.2, source_stage: E4, shares: null}
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -1155,9 +1184,23 @@ stages:
     source:
       canon: CURRICULUM-GATES v0.17c E.1 E6a row, E.2 E6a one-axis row
       decisions: ['2026-11-12 01:40 lead']
-  # Command shares: flag stays 0.20 from the E4 C boundary (CG E.2 E5 env-share row: 깃발 env 20 %). The full start vector
-  # follows the E4 vector, which waits for the diagonal split.
-  command_allocation_start: {flag: 0.2, source_stage: E4, shares: null}
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -1331,9 +1374,23 @@ stages:
     source:
       canon: CURRICULUM-GATES v0.17c E.1 E6b row, E.2 E6b one-axis row
       decisions: ['2026-11-12 01:40 lead']
-  # Command shares: flag stays 0.20 from the E4 C boundary (CG E.2 E5 env-share row: 깃발 env 20 %). The full start vector
-  # follows the E4 vector, which waits for the diagonal split.
-  command_allocation_start: {flag: 0.2, source_stage: E4, shares: null}
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:

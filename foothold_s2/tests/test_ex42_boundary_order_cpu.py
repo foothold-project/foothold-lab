@@ -95,6 +95,13 @@ def test_command_shares_follow_the_canon_c_boundaries():
            {k: v for k, v in e1f.items() if k not in ("forward", "walk_left", "walk_right", "flag")}
     assert e4["shares"] == after
     assert e4["command_allocation_boundary"]["targets"] == {"flag": 0.2, "forward": 0.11, "diagonal_total": 0.07}
-    assert e4["command_allocation_boundary"]["shares"] is None           # CG gives the diagonal sum only
+    last = e4["command_allocation_boundary"]["shares"]
+    assert abs(sum(last.values()) - 1.0) < 1e-9 and (last["flag"], last["forward"]) == (0.2, 0.11)
+    diagonal = [k for k in last if k.startswith("diag_")]
+    assert abs(sum(last[k] for k in diagonal) - 0.07) < 1e-9
+    for k in diagonal:                                                   # the four slots keep their ratio (scaled 7/9)
+        assert abs(last[k] / after[k] - 0.07 / 0.09) < 1e-6
+    assert {k: v for k, v in last.items() if k not in ("forward", "flag", *diagonal)} == \
+           {k: v for k, v in after.items() if k not in ("forward", "flag", *diagonal)}
     for stage in ("E5", "E6a", "E6b"):
-        assert rows[stage]["command_allocation_start"] == {"flag": 0.2, "source_stage": "E4", "shares": None}
+        assert rows[stage]["shares"] == last
