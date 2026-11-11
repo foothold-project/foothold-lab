@@ -12,7 +12,7 @@
 - D44 칸은 `ex42-prep.yaml`의 `evaluation.paper_cells.stairs_landing.id`와 `evaluation.promotion`에서 칸 이름 · 64 env · 성공 하한 · 생존 하한 · 창 수를 읽는다. 현재와 바로 앞 창이 모두 하한에 닿아야 PASS이다. 판정에 새 수치를 박지 않았다.
 - 평가 열 자체가 없으면 D44에는 `HOLD: 평가 열 없음`, 바로 앞 P1 창이 없으면 `HOLD: 직전 창 없음`을 별도로 기록한다. 확인된 유지표 실패는 D44 결측으로 숨기지 않고 FAIL로 남긴다.
 - D44 연결 입력은 `ex42_score.json`의 `d44_landing` 객체다. 필드 `case_id, envs, success_count, survival_count, raw_file, raw_sha256`를 요구하고 원자료 파일의 SHA와 숫자를 다시 대조한다. analyst의 `landing_016` 평가 생산자가 아직 없으므로 현재 평가는 해당 객체를 만들지 않는다. 이때 E1 출구는 HOLD이고 학습 진행이나 점수 수집 실패와 구분된다.
-- 두 창은 같은 E1 실행의 `p1/score_<회차>/` 산출을 잇는다. 직전 창의 P1 영수증 SHA, 점수 설정 SHA, 저장본 SHA, 단계 ID를 확인한다. 직전 창이 아직 없으면 현재 창을 단독 PASS로 올리지 않는다.
+- 두 창은 같은 E1 실행의 `eval/scores/m<회차>/` 산출을 회차 번호로 잇는다. 직전 창의 P1 영수증 SHA, 점수 설정 SHA, 저장본 SHA, 단계 ID를 확인한다. m500 평가가 m250보다 먼저 끝나면 직전 창이 올 때까지 HOLD이고, 뒤에 m250이 끝나면 m500의 직전 창은 m250으로 찾아진다.
 
 ## 답을 아는 입력과 실제 m250
 

@@ -76,7 +76,7 @@ def previous_e1_score(checkpoint: Path, evaluation: Path, interval: int,
     previous_iteration = int(match.group(1)) - interval
     if previous_iteration <= 0:
         return None
-    path = evaluation.parent / f"score_{previous_iteration}" / "ex42_score.json"
+    path = evaluation.parent / f"m{previous_iteration}" / "ex42_score.json"
     if not path.is_file():
         return None
     receipt_path = path.with_name("p1_score.json")

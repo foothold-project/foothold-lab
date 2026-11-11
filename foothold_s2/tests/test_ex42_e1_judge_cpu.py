@@ -121,7 +121,7 @@ def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path):
     checkpoint = tmp_path / "model_500.pt"
     checkpoint.write_bytes(b"known checkpoint")
     judged["checkpoint_sha256"] = digest(checkpoint)
-    output = tmp_path / "score_500"
+    output = tmp_path / "m500"
     output.mkdir()
     (output / "ex42_score.json").write_text(json.dumps(judged), encoding="utf-8")
     result = p1_score_from_measure(judged, checkpoint=checkpoint, iteration=500,
@@ -139,7 +139,7 @@ def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
     checkpoint = tmp_path / "model_250.pt"
     checkpoint.write_bytes(b"known checkpoint")
     judged["checkpoint_sha256"] = digest(checkpoint)
-    output = tmp_path / "score_250"
+    output = tmp_path / "m250"
     output.mkdir()
     (output / "ex42_score.json").write_text(json.dumps(judged), encoding="utf-8")
     result = p1_score_from_measure(judged, checkpoint=checkpoint, iteration=250,
@@ -155,17 +155,40 @@ def test_prior_window_requires_published_p1_and_checkpoint_bytes(tmp_path):
     checkpoint.write_bytes(b"new")
     prior_checkpoint = tmp_path / "model_250.pt"
     prior_checkpoint.write_bytes(b"prior")
-    folder = tmp_path / "p1"
-    prior_dir = folder / "score_250"
+    folder = tmp_path / "eval" / "scores"
+    prior_dir = folder / "m250"
     prior_dir.mkdir(parents=True)
     score = {"stage_id": "E1", "checkpoint": str(prior_checkpoint),
              "checkpoint_sha256": digest(prior_checkpoint), "score_config_sha256": "b" * 64}
     score_path = prior_dir / "ex42_score.json"
     score_path.write_text(json.dumps(score), encoding="utf-8")
-    assert previous_e1_score(checkpoint, folder / "score_500", 250, "b" * 64) is None
+    assert previous_e1_score(checkpoint, folder / "m500", 250, "b" * 64) is None
     (prior_dir / "p1_score.json").write_text(json.dumps({"state": "complete", "stage_id": "E1", "checkpoint_iteration": 250,
         "checkpoint_sha256": digest(prior_checkpoint), "measurement_sha256": digest(score_path)}), encoding="utf-8")
-    assert previous_e1_score(checkpoint, folder / "score_500", 250, "b" * 64)["stage_id"] == "E1"
+    assert previous_e1_score(checkpoint, folder / "m500", 250, "b" * 64)["stage_id"] == "E1"
     prior_checkpoint.write_bytes(b"changed")
     with pytest.raises(ValueError, match="prior window"):
-        previous_e1_score(checkpoint, folder / "score_500", 250, "b" * 64)
+        previous_e1_score(checkpoint, folder / "m500", 250, "b" * 64)
+
+
+def test_prior_window_uses_iteration_even_when_current_finishes_first(tmp_path):
+    checkpoint = tmp_path / "model_500.pt"
+    checkpoint.write_bytes(b"current completed first")
+    score_dir = tmp_path / "eval" / "scores"
+    current_dir = score_dir / "m500"
+    current_dir.mkdir(parents=True)
+    (current_dir / "p1_score.json").write_text('{"state":"complete"}', encoding="utf-8")
+    assert previous_e1_score(checkpoint, current_dir, 250, "b" * 64) is None
+
+    prior_checkpoint = tmp_path / "model_250.pt"
+    prior_checkpoint.write_bytes(b"prior completed later")
+    prior_dir = score_dir / "m250"
+    prior_dir.mkdir()
+    score = {"stage_id": "E1", "checkpoint": str(prior_checkpoint),
+             "checkpoint_sha256": digest(prior_checkpoint), "score_config_sha256": "b" * 64}
+    score_path = prior_dir / "ex42_score.json"
+    score_path.write_text(json.dumps(score), encoding="utf-8")
+    (prior_dir / "p1_score.json").write_text(json.dumps({"state": "complete", "stage_id": "E1",
+        "checkpoint_iteration": 250, "checkpoint_sha256": digest(prior_checkpoint),
+        "measurement_sha256": digest(score_path)}), encoding="utf-8")
+    assert previous_e1_score(checkpoint, current_dir, 250, "b" * 64) == score
