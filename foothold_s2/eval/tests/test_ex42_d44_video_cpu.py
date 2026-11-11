@@ -38,7 +38,7 @@ def test_d44_video_commands_follow_eval_timing_and_latched_band_entry():
     assert at("stop_restart", 300)[0:2] == ("restart_to_top", (1., 0., 0.))
 
 
-def test_plan_uses_three_eval_gt_cases_and_pinned_source(monkeypatch, tmp_path):
+def test_plan_uses_gt_and_pred_cases_with_pinned_source(monkeypatch, tmp_path):
     checkpoint = tmp_path / "model_1000.pt"
     checkpoint.write_bytes(b"answer-known-checkpoint")
     mesh = tmp_path / "mesh"
@@ -54,8 +54,13 @@ def test_plan_uses_three_eval_gt_cases_and_pinned_source(monkeypatch, tmp_path):
     result = video.build_plan(checkpoint=checkpoint, plan_path=plan, output_dir=tmp_path / "out",
                               mesh_dir=mesh, expected_checkpoint_sha256=hashlib.sha256(
                                   checkpoint.read_bytes()).hexdigest())
-    assert result["envs"] == 1 and result["map_mode"] == "eval_gt"
-    assert result["cases"] == ["turn_left_eval_gt", "turn_right_eval_gt", "stop_restart_eval_gt"]
+    assert result["envs"] == 1 and result["map_modes"] == ["eval_gt", "eval_pred"]
+    assert result["cases"] == list(video.VIDEO_CASES)
+    assert result["durations_s"] == {
+        "turn_left_eval_gt": 6.0, "turn_left_eval_pred": 6.0,
+        "turn_right_eval_gt": 6.0, "turn_right_eval_pred": 6.0,
+        "stop_restart_eval_gt": 12.0, "stop_restart_eval_pred": 12.0,
+    }
     assert result["command_order"]["stop_restart_eval_gt"] == list(video.command_order("stop_restart"))
     assert result["durations_s"]["stop_restart_eval_gt"] == 12.0
     assert result["durations_s"]["turn_left_eval_gt"] == 6.0
@@ -101,3 +106,12 @@ def test_command_summary_pairs_requested_and_actual_values():
     assert rows[0]["requested_vx_mps"] == 1.0
     assert rows[0]["actual_vx_mean_mps"] == pytest.approx(.85)
     assert rows[1]["actual_wz_mean_radps"] == pytest.approx(-.1)
+
+
+def test_stop_restart_hud_exposes_stop_band_motion_and_contact_readback():
+    assert video.stop_restart_hud(task="stop_restart", local_x=1.5, stop_band=(1., 2.),
+        foot_contacts=4, speed_xy=.01, stop_speed=.05) == (
+            "stop-band=in | stopped=yes | feet contact=4/4 | speed_xy=0.010 m/s")
+    assert video.stop_restart_hud(task="stop_restart", local_x=2.5, stop_band=(1., 2.),
+        foot_contacts=2, speed_xy=.2, stop_speed=.05) == (
+            "stop-band=out | stopped=no | feet contact=2/4 | speed_xy=0.200 m/s")

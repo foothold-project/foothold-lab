@@ -1,4 +1,4 @@
-"""Record the three approved EX-42 D44 eval_gt cases without changing their command semantics.
+"""Record the approved EX-42 D44 eval_gt and eval_pred cases.
 
 The capture uses one environment on the pinned single evaluation tile.  It is
 deliberately a separate Kit child from ex42_d44_eval, so it can be scheduled
@@ -16,7 +16,9 @@ import sys
 import traceback
 
 SCHEMA = "foothold-ex42-d44-video/1"
-VIDEO_CASES = ("turn_left_eval_gt", "turn_right_eval_gt", "stop_restart_eval_gt")
+VIDEO_CASES = ("turn_left_eval_gt", "turn_left_eval_pred",
+               "turn_right_eval_gt", "turn_right_eval_pred",
+               "stop_restart_eval_gt", "stop_restart_eval_pred")
 WIDTH, HEIGHT, FPS = 1280, 720, 25
 
 
@@ -34,7 +36,7 @@ def command_for_tick(*, task: str, tick: int, settle: int, approach: int,
                      stop: int, turn_rate: float, approach_speed: float,
                      restart_speed: float, stop_band: tuple[float, float],
                      local_x: float, entered: bool) -> tuple[str, tuple[float, float, float], bool]:
-    """Pure command schedule matching ex42_d44_eval's task-specific phases."""
+    """Pure command schedule for the specifically approved D44 video tasks."""
     if tick < settle:
         return "settle", (0.0, 0.0, 0.0), entered
     if task in ("turn_left", "turn_right"):
@@ -84,21 +86,22 @@ def build_plan(*, checkpoint: str | Path, plan_path: str | Path,
     if out.exists():
         raise FileExistsError("D44 video output directory must be new")
     selected = {name: settings["case_specs"].get(name) for name in VIDEO_CASES}
-    if any(spec != {"task": name.removesuffix("_eval_gt"), "map_mode": "eval_gt", "role": "judge"}
-           for name, spec in selected.items()):
-        raise ValueError("D44 eval_gt case mapping differs from the approved plan")
+    expected = {}
+    for name in VIDEO_CASES:
+        task, mode = name.rsplit("_eval_", maxsplit=1)
+        expected[name] = {"task": task, "map_mode": "eval_" + mode, "role": "judge"}
+    if any(spec != expected[name] for name, spec in selected.items()):
+        raise ValueError("D44 video case mapping differs from the approved plan")
     timings = settings["timing"]
-    durations = {
-        "turn_left_eval_gt": settings["turn_seconds"],
-        "turn_right_eval_gt": settings["turn_seconds"],
-        "stop_restart_eval_gt": (timings["approach_limit_s"] + timings["stop_s"]
-                                 + timings["restart_limit_s"]),
-    }
+    durations = {name: (settings["turn_seconds"] if name.startswith("turn_") else
+                        timings["approach_limit_s"] + timings["stop_s"]
+                        + timings["restart_limit_s"]) for name in VIDEO_CASES}
     return {"schema": SCHEMA, "checkpoint": str(ckpt), "checkpoint_sha256": ckpt_sha,
             "checkpoint_iteration_required": 1000, "plan": str(plan_file),
             "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "mesh_dir": str(mesh),
             "mesh_sha256": source_manifest["mesh_sha256"], "seed": 42, "envs": 1,
-            "map_mode": "eval_gt", "cases": list(VIDEO_CASES), "durations_s": durations,
+            "map_modes": sorted({settings["case_specs"][name]["map_mode"] for name in VIDEO_CASES}),
+            "cases": list(VIDEO_CASES), "durations_s": durations,
             "video": {"width": WIDTH, "height": HEIGHT, "fps": FPS},
             "output_dir": str(out), "command_order": {
                 name: list(command_order(settings["case_specs"][name]["task"]))
@@ -147,6 +150,7 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
     from foothold_s2.eval.video25.record_c_layer import follow_camera_pose
 
     task = settings["case_specs"][case_id]["task"]
+    map_mode = settings["case_specs"][case_id]["map_mode"]
     timing = settings["timing"]
     env.reset()
     tile_origin = torch.as_tensor(tile_origin, device=raw.device)
@@ -259,10 +263,18 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
                 robot_evidence.append(pixels)
                 rgba = Image.fromarray(frame)
                 draw = ImageDraw.Draw(rgba, "RGBA")
-                draw.rectangle((0, 0, WIDTH, 42), fill=(0, 0, 0, 190))
+                draw.rectangle((0, 0, WIDTH, 59), fill=(0, 0, 0, 190))
                 draw.text((10, 4), f"{case_id} | {phase} | t={tick * dt:.2f}s",
                           font=ImageFont.load_default(), fill=(255, 255, 255, 255))
                 draw.text((10, 21), f"cmd vx={command[0]:+.2f} wz={command[2]:+.2f} | actual vx={vel_now[0]:+.2f} wz={wz_now:+.2f}",
+                          font=ImageFont.load_default(), fill=(255, 255, 255, 255))
+                local_x_now = float(robot.data.root_pos_w[0, 0] - tile_origin[0])
+                contacts = int(contact[0].sum().item())
+                speed_xy = float(np.linalg.norm(vel_now[:2]))
+                status = stop_restart_hud(task=task if phase == "stop_band_hold" else "other",
+                    local_x=local_x_now, stop_band=stop_band, foot_contacts=contacts,
+                    speed_xy=speed_xy, stop_speed=timing["stop_speed_mps"])
+                draw.text((10, 38), status,
                           font=ImageFont.load_default(), fill=(255, 255, 255, 255))
                 frame = np.asarray(rgba.convert("RGB"))
                 for packet_frame in stream.encode(av.VideoFrame.from_ndarray(frame, format="rgb24")):
@@ -285,7 +297,7 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
     if audit["pass"] is not True:
         raise RuntimeError("D44 full-frame audit failed: " + ",".join(audit.get("issues", [])))
     receipt = {"schema": SCHEMA, "state": "done", "case_id": case_id, "task": task,
-        "map_mode": "eval_gt", "start_position": "landing_center" if task.startswith("turn_") else "approach",
+        "map_mode": map_mode, "start_position": "landing_center" if task.startswith("turn_") else "approach",
         "command_order": list(command_order(task)),
         "command_trace": summarize_commands(arrays),
         "checkpoint_sha256": checkpoint_sha, "plan_sha256": plan_sha,
@@ -391,6 +403,15 @@ def summarize_commands(data: dict) -> list[dict]:
     return rows
 
 
+def stop_restart_hud(*, task: str, local_x: float, stop_band: tuple[float, float],
+                     foot_contacts: int, speed_xy: float, stop_speed: float) -> str:
+    in_band = stop_band[0] <= local_x <= stop_band[1]
+    band = ("in" if in_band else "out") if task == "stop_restart" else "n/a"
+    stopped = ("yes" if speed_xy <= stop_speed else "no") if task == "stop_restart" else "n/a"
+    return (f"stop-band={band} | stopped={stopped} | feet contact={foot_contacts}/4 "
+            f"| speed_xy={speed_xy:.3f} m/s")
+
+
 def _overlay_result(source: Path, destination: Path, *, case_id: str, start_position: str,
                     sequence: tuple[str, ...], success: bool,
                     failure_reasons: list[str]) -> None:
@@ -437,6 +458,8 @@ def main(argv: list[str] | None = None) -> int:
     from isaaclab.app import AppLauncher
     AppLauncher.add_app_launcher_args(parser)
     args = parser.parse_args(argv)
+    # Isaac Sim requires camera rendering to be enabled explicitly for headless captures.
+    args.enable_cameras = True
     app = AppLauncher(args).app
     if app is None:
         raise RuntimeError("Kit failed to start")
@@ -508,9 +531,6 @@ def main(argv: list[str] | None = None) -> int:
         map_mode_cells.disable_heading_for_fixed_eval(term)
         runner, _ = adapters.load_s2_runner(env, agent_cfg.to_dict(), Path(args.checkpoint),
             args.device, checkpoint_state=checkpoint_state)
-        policy = adapters.S2Policy(runner, 1, z_mode="mean", act_mode="mean", map_mode="eval_gt")
-        if not bool(policy.pstate.use_gt.all()):
-            raise RuntimeError("D44 eval_gt capture did not select GT policy input")
         obs = env.get_observations()
         ex41_eval_loader.verify_ex41_pose_observation(obs)
         import omni.usd
@@ -524,7 +544,12 @@ def main(argv: list[str] | None = None) -> int:
         out_dir = Path(args.out).resolve(); out_dir.mkdir(parents=True, exist_ok=False)
         outputs = {}
         for case_id in VIDEO_CASES:
-            target = out_dir / f"D44-{case_id}-m1000-eval_gt.mp4"
+            map_mode = settings["case_specs"][case_id]["map_mode"]
+            policy = adapters.S2Policy(runner, 1, z_mode="mean", act_mode="mean", map_mode=map_mode)
+            expected_gt = map_mode == "eval_gt"
+            if bool(policy.pstate.use_gt.all()) != expected_gt:
+                raise RuntimeError(f"D44 {map_mode} capture selected the wrong map input")
+            target = out_dir / f"D44-{case_id}-m1000.mp4"
             outputs[case_id] = _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs,
                 case_id=case_id, settings=settings, anchors=tile["anchors_local_m"],
                 dt=float(raw.step_dt), tile_origin=tile_origin, foot_ids=foot_ids,
