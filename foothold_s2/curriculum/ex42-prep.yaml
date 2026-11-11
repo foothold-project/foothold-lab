@@ -47,6 +47,14 @@ training_budget:
   decision_source:
     commit: 7121e0188cf1cbe558704764227e306e6097149f
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
+training_mesh_profiles:
+  e2_named_flags_v2:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333_flags_E2_1111_v2
+    geometry_sha256: 88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95
+    files:
+      terrain_mesh.npz: 59b0bf3e3023f40da828b86eebff4513222e13452c70fc49b8951d7e8d42d771
+      mesh_manifest.json: c6954b6c7ffaaeee2e17c3b9365a40b4391dd2ef33bafd2ab4b526daf42851a7
+      terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -407,6 +415,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -465,6 +474,7 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -538,6 +548,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -669,6 +680,7 @@ stages:
   - E
   - continuous
 - id: E5
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -828,6 +840,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids: []
@@ -1008,6 +1021,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1168,6 +1182,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
