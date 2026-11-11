@@ -81,3 +81,17 @@ def test_landing_assignment_uses_every_tile_once():
     assert torch.equal(scene_origins, origins.reshape(4, 3))
     with pytest.raises(ValueError, match="one terrain tile"):
         assign_independent_env_origins(raw, grid=3)
+
+
+def test_landing_replicas_accept_a_manifest_published_before_new_derived_anchors(tmp_path, monkeypatch):
+    # 11/11 18:4x: landing_seed42_v2 was published before build_tile reported course_exit and
+    # stop_band_interior_surface_z_m; the real post-E1 P1 m250 stopped on that difference although the geometry matched.
+    source = _source(tmp_path, monkeypatch)
+    path = source / "mesh_manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("course_exit", "stop_band_interior_surface_z_m"):
+        manifest["columns"][0]["anchors_local_m"].pop(key, None)
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    build_replicas(source, tmp_path / "ok", anchor="approach", grid=2)
+    # the Kit child checks the receipt against the published manifest: it must carry the pinned anchors only
+    preflight_replicas(source, tmp_path / "ok", anchor="approach", grid=2)
