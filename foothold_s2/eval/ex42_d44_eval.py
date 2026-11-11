@@ -22,7 +22,8 @@ import rsl_rl.runners  # noqa: F401
 import yaml
 from isaaclab.app import AppLauncher
 
-from foothold_s2.eval.ex42_d44_cells import contract, summarize
+from foothold_s2.eval.ex42_d44_cells import (TRACE_FORMAT, RECEIPT_FORMAT, contract, summarize,
+                                             restart_command, top_latch_mask)
 from foothold_s2.eval.ex42_eval_tile_mesh import preflight_replicas, source_tile
 
 
@@ -43,6 +44,8 @@ if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out
 plan_bytes = args.plan.read_bytes()
 plan = yaml.safe_load(plan_bytes.decode("utf-8-sig"))
 settings = contract(plan)
+from foothold_s2.eval import ex42_friction
+friction_policy = ex42_friction.load_policy(args.plan)
 # prep pins /home/jay/data/... while the evaluator passes the resolved /mnt/win-d/... path (11/11 m250); compare both resolved
 if (not settings["source_mesh_dir"] or Path(settings["source_mesh_dir"]).resolve() != args.mesh_dir.resolve()
         or not settings["source_mesh_sha256"]):
@@ -103,6 +106,7 @@ def _configure():
     command_cfg.flag_stride = 0
     if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
         env_cfg.actions.joint_pos.max_delay_s = 0.0
+    ex42_friction.configure(env_cfg, friction_policy)
     return env_cfg, agent_cfg, disabled
 
 
@@ -150,17 +154,24 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
                                 "body_vel_b", "alive", "phase_id", "cmd_post")}
     alive = torch.ones(n, dtype=torch.bool, device=raw.device)
     entered = torch.zeros(n, dtype=torch.bool, device=raw.device)
+    top_latched = torch.zeros(n, dtype=torch.bool, device=raw.device)
+    top_latched_at = np.full(n, -1, dtype=np.int32)
     offset = (raw.scene.env_origins - torch.tensor(local_anchor, device=raw.device)).detach().cpu().numpy()
     for k in range(total):
         phase = 0 if k < settle else (1 if spec["task"].startswith("turn_") else
                 1 if k < settle + approach else 2 if k < settle + approach + stop else 3)
+        phase_ids = torch.full((n,), phase, dtype=torch.int16, device=raw.device)
+        if phase == 3:
+            phase_np, restart_vx = restart_command(top_latched.detach().cpu().numpy(),
+                                                   settings["restart_vx_mps"])
+            phase_ids = torch.as_tensor(phase_np, device=raw.device)
         term.vel_command_b[:, :3] = 0.0
         if phase == 1 and spec["task"].startswith("turn_"):
             term.vel_command_b[:, 2] = settings["turn_rate_radps"] * (1 if spec["task"] == "turn_left" else -1)
         elif phase == 1:
             term.vel_command_b[~entered, 0] = settings["approach_vx_mps"]
         elif phase == 3:
-            term.vel_command_b[:, 0] = settings["restart_vx_mps"]
+            term.vel_command_b[:, 0] = torch.as_tensor(restart_vx, device=raw.device)
         term.stand.copy_(torch.linalg.norm(term.vel_command_b[:, :3], dim=1) == 0)
         map_mode_cells.assert_heading_off_for_fixed_eval(term)
         if bool(term.is_flag_env.any()):
@@ -180,6 +191,15 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
             local_x = robot.data.root_pos_w[:, 0] - torch.as_tensor(offset[:, 0], device=raw.device)
             band = tile["anchors_local_m"]["stop_band_x"]
             entered |= (local_x >= band[0]) & (local_x <= band[1]) & alive
+        if phase == 3 and spec["task"] == "stop_restart":
+            local_root = robot.data.root_pos_w.detach().cpu().numpy() - offset
+            local_feet = robot.data.body_pos_w[:, body_ids].detach().cpu().numpy() - offset[:, None, :]
+            candidate = top_latch_mask(local_root[:, :2], local_feet[:, :, 0],
+                                       alive.detach().cpu().numpy(),
+                                       tile["anchors_local_m"]["landing_bounds_xy"])
+            newly = candidate & ~top_latched.detach().cpu().numpy()
+            top_latched_at[newly] = k
+            top_latched |= torch.as_tensor(candidate, dtype=torch.bool, device=raw.device)
         force = torch.linalg.vector_norm(sensor.data.net_forces_w[:, sensor_ids], dim=-1)
         data = robot.data
         rows["root_pos_w"].append(data.root_pos_w.detach().cpu().numpy().copy())
@@ -188,10 +208,11 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
         rows["contact"].append((force > 1.0).detach().cpu().numpy().copy())
         rows["body_vel_b"].append(data.root_lin_vel_b.detach().cpu().numpy().copy())
         rows["alive"].append(alive.detach().cpu().numpy().copy())
-        rows["phase_id"].append(np.full(n, phase, dtype=np.int16))
+        rows["phase_id"].append(phase_ids.detach().cpu().numpy().copy())
         rows["cmd_post"].append(term.vel_command_b[:, :3].detach().cpu().numpy().copy())
     trace = {key: np.stack(value) for key, value in rows.items()}
-    trace.update(tile_offset_w=offset, approach_entered=entered.detach().cpu().numpy(), dt=np.asarray(dt),
+    trace.update(trace_format=np.asarray(TRACE_FORMAT), top_latched_at=top_latched_at,
+                 tile_offset_w=offset, approach_entered=entered.detach().cpu().numpy(), dt=np.asarray(dt),
                  case_id=np.asarray(case_id), map_mode=np.asarray(spec["map_mode"]))
     return trace
 
@@ -210,6 +231,7 @@ def main():
         print("D44_PHASE", phase, flush=True)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
+        ex42_friction.install_and_verify(raw, friction_policy)
         assign_independent_env_origins(raw)
         robot, sensor = raw.scene["robot"], raw.scene["contact_forces"]
         body_ids, sensor_ids = _indices(robot, sensor)
@@ -238,13 +260,14 @@ def main():
             cases[case_id].update(raw_file=str(case_file), raw_sha256=hashlib.sha256(case_file.read_bytes()).hexdigest())
             print("D44_CASE_DONE", case_id, scored["valid_count"], scored["success_count"],
                   scored["survival_count"], flush=True)
-        result = {"format": "foothold-ex42-d44-eval/1", "state": "done",
+        result = {"format": RECEIPT_FORMAT, "state": "done",
                   "checkpoint": str(args.checkpoint.resolve()), "checkpoint_sha256": checkpoint_sha,
                   "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "source_mesh_sha256": source["mesh_sha256"],
                   "replica_mesh_sha256": replica["mesh_sha256"], "seed": args.seed, "envs": args.envs,
                   "dt": dt, "dr_disabled": disabled,
                   "run_identity": run_identity.safe_collect(args.device, checkpoint_sha, eval_seed=args.seed),
                   "checkpoint_preparation": checkpoint_preparation, "cases": cases}
+        result["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
         (args.out / "d44_cells.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print("D44_EVAL_DONE", args.out, flush=True)

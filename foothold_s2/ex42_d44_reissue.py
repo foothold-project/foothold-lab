@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
-from foothold_s2.eval.ex42_d44_cells import contract, read_evidence, summarize
+from foothold_s2.eval.ex42_d44_cells import RECEIPT_FORMAT, contract, read_evidence, summarize
 from foothold_s2.eval.ex42_eval_tile_mesh import source_tile
 from foothold_s2.ex42_eval_once import manifest_checkpoint_sha, p1_score_from_measure
 from foothold_s2.ex42_score import digest, measure
@@ -47,7 +47,7 @@ def _preflight(run: Path, iteration: int, policy: EX42Plan, settings: dict) -> d
             or receipt.get("checkpoint_sha256") != checkpoint_sha or receipt.get("eval_seed") != 42
             or (receipt.get("evaluation_plan") or {}).get("sha256") != policy.sha256
             or (receipt.get("steps", {}).get("d44") or {}).get("state") != "done"
-            or kit.get("format") != "foothold-ex42-d44-eval/1" or kit.get("state") != "done"
+            or kit.get("format") != RECEIPT_FORMAT or kit.get("state") != "done"
             or kit.get("checkpoint_sha256") != checkpoint_sha or kit.get("plan_sha256") != policy.sha256
             or kit.get("seed") != 42 or kit.get("envs") != 64
             or set(kit.get("cases", {})) != set(settings["judge_cases"] + settings["record_cases"])):

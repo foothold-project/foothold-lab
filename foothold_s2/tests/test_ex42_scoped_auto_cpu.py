@@ -96,7 +96,7 @@ def test_disabled_or_broad_policy_never_authorizes(known,value):
 
 
 @pytest.mark.parametrize('field,value', [('approved', False), ('scope', {}),
-    ('extension_authorized', True), ('boundary_evaluation_interval_updates', 1000)])
+    ('extension_contract', None), ('boundary_evaluation_interval_updates', 1000)])
 def test_existing_cell_cannot_expand_its_scope(known, field, value):
     plan, ap, manifest, gp = known
     d = yaml.safe_load(ap.read_text())

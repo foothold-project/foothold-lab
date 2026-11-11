@@ -52,6 +52,7 @@ def sha256_file(path: Path) -> str:
 def stage_command(python: Path, source: Path, source_ref: str, parent_manifest: Path,
                   queue: Path, out: Path, updates: int, envs: int, ranks: int) -> list[str]:
     score = [str(python), "-m", "foothold_s2.eval.eval_map_modes",
+             "--ex42-evaluation-plan", str(source / "foothold_s2/curriculum/ex42-prep.yaml"),
              "--task", "FootholdS2-Go2-S2-SB-v0",
              "--checkpoint", str(out / "model_{iteration}.pt"),
              "--out", str(out / "p1" / "score_{iteration}"),

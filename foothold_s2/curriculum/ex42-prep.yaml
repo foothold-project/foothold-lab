@@ -39,6 +39,22 @@ launch:
     checkpoints: [m12000_20261107, m13000_20261108]
   require_explicit_lead_approval: true
   require_resolved_assumptions: true
+training_budget:
+  basis: ex42_new_updates
+  maximum_updates: 20000
+  count_m_updates: true
+  extensions_within_remaining_budget: true
+  decision_source:
+    commit: 7121e0188cf1cbe558704764227e306e6097149f
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+training_mesh_profiles:
+  e2_named_flags_v2:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333_flags_E2_1111_v2
+    geometry_sha256: 88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95
+    files:
+      terrain_mesh.npz: 59b0bf3e3023f40da828b86eebff4513222e13452c70fc49b8951d7e8d42d771
+      mesh_manifest.json: c6954b6c7ffaaeee2e17c3b9365a40b4391dd2ef33bafd2ab4b526daf42851a7
+      terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -120,7 +136,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 7e9f72da0e708a36f3b44c3560414f5d77fc33fedb1129ccc4ac99c76473c98d
+  approval_sha256: e64284789730d426eba1732c2e41186bfc5a46b7007eba595567a0a7cf220db7
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -400,11 +416,12 @@ stages:
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
   exit_judge: kind_two_window_e2
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E1F
-    entry_gate_adapter: pending
+    entry_gate_adapter: flag_two_window
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
@@ -458,11 +475,12 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E2
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e2
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -478,7 +496,7 @@ stages:
     required_stage_values: {}
   name: kind_dimensions_and_irregularity
   minimum_updates: 250
-  maximum_updates: 3000
+  maximum_updates: 4000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -531,11 +549,12 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E3
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e3
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -550,7 +569,7 @@ stages:
     required_stage_values: {}
   name: difficult_terrain_kinds
   minimum_updates: 250
-  maximum_updates: 2000
+  maximum_updates: 3000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -626,10 +645,11 @@ stages:
         kind: climb_up
         share: 0.05
         level_cap: 0
-    # K 경계 사다리 (planner §2 · 가정): 쉬움 1.5 % 이므로 하한 1.5 %
+    # K 경계 사다리: 쉬움 하한 1.5 %는 팀장 19:38 확정
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: B, kind: climb_down, level_cap: 0}
       - {family: C, kind: box, level_cap: 0}
@@ -661,11 +681,12 @@ stages:
   - E
   - continuous
 - id: E5
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E4
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e4
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -820,10 +841,11 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids: []
-    entry_gate_adapter: pending
+    entry_gate_adapter: stage_exit_v1
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.entry_condition_receipt_sha256
@@ -835,9 +857,30 @@ stages:
     required_boolean_paths:
     - critic_mirror
     - budget.m_updates_count_toward_source_maximum
+    - budget.m_updates_count_toward_ex42_budget
     required_values:
       boundary.boundary_mode: stop_evaluate_resume
+      budget.m_updates_count_toward_source_maximum: false
+      budget.m_updates_count_toward_ex42_budget: true
+      budget.source_window_counter_after_return: restart_two_windows
+      on_exhausted: notify_and_return_to_source_stage
+      exit.return_to: source_stage
+      exit.p_map_off_after_return: 0.3
+      exit.required_new_windows_after_return: 2
     required_stage_values: {}
+  branch_contract:
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    return_to: source_stage
+    maximum_updates_including_extension: 1000
+    budget:
+      m_updates_count_toward_source_maximum: false
+      m_updates_count_toward_ex42_budget: true
+      source_window_counter_after_return: restart_two_windows
+    on_exhausted: notify_and_return_to_source_stage
+    p_map_off_after_return: 0.3
+    required_new_windows_after_return: 2
   name: map_off_continuous_branch
   minimum_updates: 250
   maximum_updates: 500
@@ -979,11 +1022,12 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E5
-    entry_gate_adapter: pending
+    entry_gate_adapter: kind_two_window_e5
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -1139,11 +1183,12 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E6a
-    entry_gate_adapter: pending
+    entry_gate_adapter: posture_two_window_e6a
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
@@ -1159,7 +1204,7 @@ stages:
     required_stage_values: {}
   name: terrain_family_d
   minimum_updates: 250
-  maximum_updates: 2000
+  maximum_updates: 3000
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
@@ -1297,7 +1342,8 @@ stages:
     # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall 은 치수 미정이라 열지 않음
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # one cell: easy share = floor. CG says 2 %, which does not fit here (team lead decision pending)
+      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: D, kind: crawl, level_cap: 0}
     floors:
@@ -1308,6 +1354,962 @@ stages:
       # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
+# ---- J0~J4: jump stages after E6b (DESIGN-JUMP v0.2 s2.2; lead 11/11 19:40). enabled: false and their approval cells are
+# approved: false, so no automatic launch exists for them. Dimensions are the ladder of s2.2 (assumption, to be re-cut from the
+# measured EX-42 pass sizes). Family F is a separate mesh bundle (analyst); the kind names here are the code's contract.
+- id: J0
+  authorization_contract:
+    validator: bounded
+    source_stage_ids:
+    - E6b
+    entry_gate_adapter: pending
+    required_sha256_paths:
+    - prerequisites.calibration_sha256
+    - prerequisites.predecessor_exit.evaluation_mesh_sha256
+    required_string_paths:
+    - prerequisites.q12_sensor_decision
+    required_boolean_paths:
+    - critic_mirror
+    required_values:
+      boundary.boundary_mode: stop_evaluate_resume
+      prerequisites.predecessor_exit.required_result: PASS
+      prerequisites.predecessor_exit.same_plan_sha256: true
+      prerequisites.predecessor_exit.stage_id: E6b
+    required_stage_values: {}
+  name: jump_parent_contract_check
+  minimum_updates: 250
+  maximum_updates: 250
+  extension_updates: 0
+  extension_max_count: 0
+  boundary_axes:
+  - parent_contract_check
+  enabled: false
+  hold_policy: hold_exposure_continue_training
+  jump: true
+  assumption: 'update counts are placeholders: no J count is decided (DESIGN-JUMP v0.2 s2.3 gives only the window rules)'
+  terrain:
+    exposure_at_J0:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.015
+        level_cap: 0
+      - family: D
+        kind: crawl
+        share: 0.015
+        level_cap: 3
+    floors:
+      global_command_floor:
+        reverse: 0.05
+        side_left: 0.03
+        side_right: 0.03
+      continuous_low_level_floor:
+        levels:
+        - 0
+        - 2
+        fraction_of_continuous: 0.3
+        class: assumption
+        source: CG:380
+    kind_task:
+      F:
+        jump_up_low:
+          push: off
+        jump_down_low:
+          push: off
+        jump_gap:
+          push: off
+        jump_up_high:
+          push: off
+    jump_ladder:
+      jump_up_low:
+        axis: height
+        unit: m
+        levels:
+        - 0.1
+        - 0.2
+        - 0.3
+        opens_in: J2
+      jump_down_low:
+        axis: height
+        unit: m
+        levels:
+        - 0.1
+        - 0.2
+        - 0.3
+        opens_in: J2
+      jump_gap:
+        axis: width
+        unit: m
+        levels:
+        - 0.15
+        - 0.3
+        - 0.45
+        - 0.6
+        opens_in: J3
+      jump_up_high:
+        axis: height
+        unit: m
+        levels:
+        - 0.4
+        - 0.5
+        - 0.6
+        - 0.65
+        - 0.7
+        - 0.75
+        opens_in: J4
+    jump_share_cap: 0.2
+- id: J1
+  authorization_contract:
+    validator: bounded
+    source_stage_ids:
+    - J0
+    entry_gate_adapter: pending
+    required_sha256_paths:
+    - prerequisites.calibration_sha256
+    - prerequisites.predecessor_exit.evaluation_mesh_sha256
+    required_string_paths:
+    - prerequisites.q12_sensor_decision
+    required_boolean_paths:
+    - critic_mirror
+    required_values:
+      boundary.boundary_mode: stop_evaluate_resume
+      prerequisites.predecessor_exit.required_result: PASS
+      prerequisites.predecessor_exit.same_plan_sha256: true
+      prerequisites.predecessor_exit.stage_id: J0
+    required_stage_values: {}
+  name: jump_approach_recovery
+  minimum_updates: 250
+  maximum_updates: 1000
+  extension_updates: 500
+  extension_max_count: 2
+  boundary_axes:
+  - command_velocity_cap
+  enabled: false
+  hold_policy: hold_exposure_continue_training
+  jump: true
+  assumption: 'update counts are placeholders: no J count is decided (DESIGN-JUMP v0.2 s2.3 gives only the window rules)'
+  terrain:
+    exposure_at_J1:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.015
+        level_cap: 0
+      - family: D
+        kind: crawl
+        share: 0.015
+        level_cap: 3
+    floors:
+      global_command_floor:
+        reverse: 0.05
+        side_left: 0.03
+        side_right: 0.03
+      continuous_low_level_floor:
+        levels:
+        - 0
+        - 2
+        fraction_of_continuous: 0.3
+        class: assumption
+        source: CG:380
+- id: J2
+  authorization_contract:
+    validator: bounded
+    source_stage_ids:
+    - J1
+    entry_gate_adapter: pending
+    required_sha256_paths:
+    - prerequisites.calibration_sha256
+    - prerequisites.predecessor_exit.evaluation_mesh_sha256
+    required_string_paths:
+    - prerequisites.q12_sensor_decision
+    required_boolean_paths:
+    - critic_mirror
+    required_values:
+      boundary.boundary_mode: stop_evaluate_resume
+      prerequisites.predecessor_exit.required_result: PASS
+      prerequisites.predecessor_exit.same_plan_sha256: true
+      prerequisites.predecessor_exit.stage_id: J1
+    required_stage_values: {}
+  name: jump_low_ledge_descend
+  minimum_updates: 250
+  maximum_updates: 2000
+  extension_updates: 1000
+  extension_max_count: 2
+  boundary_axes:
+  - jump_height_cap
+  - terrain_exposure
+  enabled: false
+  hold_policy: hold_exposure_continue_training
+  jump: true
+  assumption: 'update counts are placeholders: no J count is decided (DESIGN-JUMP v0.2 s2.3 gives only the window rules)'
+  terrain:
+    exposure_at_J2:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.015
+        level_cap: 0
+      - family: D
+        kind: crawl
+        share: 0.015
+        level_cap: 3
+      - family: F
+        kind: jump_up_low
+        share: 0.05
+        level_cap: 0
+    floors:
+      global_command_floor:
+        reverse: 0.05
+        side_left: 0.03
+        side_right: 0.03
+      continuous_low_level_floor:
+        levels:
+        - 0
+        - 2
+        fraction_of_continuous: 0.3
+        class: assumption
+        source: CG:380
+    k_ladder:
+      grades:
+        new: 0.05
+        current: 0.1
+      kind_floor: 0.015
+      order:
+      - family: F
+        kind: jump_down_low
+        level_cap: 0
+- id: J3
+  authorization_contract:
+    validator: bounded
+    source_stage_ids:
+    - J2
+    entry_gate_adapter: pending
+    required_sha256_paths:
+    - prerequisites.calibration_sha256
+    - prerequisites.predecessor_exit.evaluation_mesh_sha256
+    required_string_paths:
+    - prerequisites.q12_sensor_decision
+    required_boolean_paths:
+    - critic_mirror
+    required_values:
+      boundary.boundary_mode: stop_evaluate_resume
+      prerequisites.predecessor_exit.required_result: PASS
+      prerequisites.predecessor_exit.same_plan_sha256: true
+      prerequisites.predecessor_exit.stage_id: J2
+    required_stage_values: {}
+  name: jump_small_gap
+  minimum_updates: 250
+  maximum_updates: 2000
+  extension_updates: 1000
+  extension_max_count: 2
+  boundary_axes:
+  - jump_gap_cap
+  - terrain_exposure
+  enabled: false
+  hold_policy: hold_exposure_continue_training
+  jump: true
+  assumption: 'update counts are placeholders: no J count is decided (DESIGN-JUMP v0.2 s2.3 gives only the window rules)'
+  terrain:
+    exposure_at_J3:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.015
+        level_cap: 0
+      - family: D
+        kind: crawl
+        share: 0.015
+        level_cap: 3
+      - family: F
+        kind: jump_up_low
+        share: 0.015
+        level_cap: 0
+      - family: F
+        kind: jump_down_low
+        share: 0.015
+        level_cap: 0
+      - family: F
+        kind: jump_gap
+        share: 0.05
+        level_cap: 0
+    floors:
+      global_command_floor:
+        reverse: 0.05
+        side_left: 0.03
+        side_right: 0.03
+      continuous_low_level_floor:
+        levels:
+        - 0
+        - 2
+        fraction_of_continuous: 0.3
+        class: assumption
+        source: CG:380
+- id: J4
+  authorization_contract:
+    validator: bounded
+    source_stage_ids:
+    - J3
+    entry_gate_adapter: pending
+    required_sha256_paths:
+    - prerequisites.calibration_sha256
+    - prerequisites.predecessor_exit.evaluation_mesh_sha256
+    required_string_paths:
+    - prerequisites.q12_sensor_decision
+    required_boolean_paths:
+    - critic_mirror
+    required_values:
+      boundary.boundary_mode: stop_evaluate_resume
+      prerequisites.predecessor_exit.required_result: PASS
+      prerequisites.predecessor_exit.same_plan_sha256: true
+      prerequisites.predecessor_exit.stage_id: J3
+    required_stage_values: {}
+  name: jump_high_ledge
+  minimum_updates: 250
+  maximum_updates: 3000
+  extension_updates: 1000
+  extension_max_count: 2
+  boundary_axes:
+  - jump_height_cap
+  - terrain_exposure
+  - command_velocity_cap
+  enabled: false
+  hold_policy: hold_exposure_continue_training
+  jump: true
+  assumption: 'update counts are placeholders: no J count is decided (DESIGN-JUMP v0.2 s2.3 gives only the window rules)'
+  terrain:
+    exposure_at_J4:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.015
+        level_cap: 0
+      - family: D
+        kind: crawl
+        share: 0.015
+        level_cap: 3
+      - family: F
+        kind: jump_up_low
+        share: 0.015
+        level_cap: 0
+      - family: F
+        kind: jump_down_low
+        share: 0.015
+        level_cap: 0
+      - family: F
+        kind: jump_gap
+        share: 0.015
+        level_cap: 0
+      - family: F
+        kind: jump_up_high
+        share: 0.05
+        level_cap: 0
+    floors:
+      global_command_floor:
+        reverse: 0.05
+        side_left: 0.03
+        side_right: 0.03
+      continuous_low_level_floor:
+        levels:
+        - 0
+        - 2
+        fraction_of_continuous: 0.3
+        class: assumption
+        source: CG:380
 evaluation:
   judge_cells: 26
   record_only_cells: 13
