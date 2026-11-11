@@ -206,3 +206,77 @@ def test_a_jump_stage_with_a_parent_pin_is_startable_and_the_launcher_builds_its
         assert _flag(argv, "--ex42_stage") == "J2" and _flag(argv, "--max_iterations") == "2000"
         assert ("--ex42_stage_dry_run" in argv) is dry and _flag(argv, "--ex42_plan") == str(plan)
     assert summary["updates"] == 2000
+
+
+# ---- the chain order: J sits outside the EX-42 sequence, so E6b has no following stage (reviewer: handoff block) ----
+def _gate_and_manifest(tmp_path, iteration, judgment="PASS"):
+    import hashlib
+    import json
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    data = b"boundary save"
+    (tmp_path / f"model_{iteration}.pt").write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"checkpoints": {f"model_{iteration}.pt": digest}, "progress": {"completed_updates": iteration}}))
+    gate = tmp_path / "p1.json"
+    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest}))
+    return gate, manifest
+
+
+def _document_order_without_j():
+    return [r["id"] for r in _doc()["stages"] if r["id"] not in JUMP_STAGE_IDS]
+
+
+def test_every_runtime_stage_is_followed_by_the_next_runtime_stage_and_e6b_by_none_in_both_callers(tmp_path):
+    from foothold_s2 import ex42_eval_once as once
+    from foothold_s2 import ex42_stage_handoff as handoff
+    plan = EX42Plan.load(PLAN)
+    order = _document_order_without_j()
+    assert list(plan.runtime_stage_ids)[1:] == order and order[-1] == "E6b"
+    for i, sid in enumerate(order):
+        expected = order[i + 1] if i + 1 < len(order) else None
+        assert plan.following_stage_id(sid) == expected, sid
+        minimum = _rows()[sid]["minimum_updates"]
+        gate, manifest = _gate_and_manifest(tmp_path / sid, minimum)
+        notice = once.next_stage_notice(plan, sid, minimum, {"judgment": "PASS", "checkpoint_sha256": "a" * 64})
+        decision = handoff.decide_next_stage(plan, APPROVALS, sid, minimum, gate, manifest)
+        assert notice["next_stage_id"] == expected and (decision is None or decision["next_stage_id"] == expected), sid
+        if sid != "E6b":
+            assert notice["state"] == "next_stage_ready_for_approval"
+    assert plan.following_stage_id("J0") == "J1" and plan.following_stage_id("J4") is None
+
+
+def test_e6b_pass_at_its_minimum_goes_on_with_the_same_stage_never_to_the_closed_j0(tmp_path):
+    from foothold_s2 import ex42_eval_once as once
+    from foothold_s2 import ex42_stage_handoff as handoff
+    from foothold_s2.tests.test_ex42_table_authorization_cpu import fixture
+    (tmp_path / "fx").mkdir()
+    plan, approvals, _ = fixture(tmp_path / "fx", "E6b")
+    from copy import deepcopy
+    from dataclasses import replace
+    doc = deepcopy(plan.document)
+    row = next(r for r in doc["stages"] if r["id"] == "E6b")
+    row["parent"] = {"sha256": "b" * 64, "manifest_local_update": 1500, "cumulative_update": 20000, "checkpoint_key": "model_1500.pt"}
+    plan = replace(plan, document=doc)
+    minimum = row["minimum_updates"]
+    gate, manifest = _gate_and_manifest(tmp_path / "run", minimum)
+    decision = handoff.decide_next_stage(plan, approvals, "E6b", minimum, gate, manifest)
+    assert decision["next_stage_id"] is None and decision["action"] != "launch"
+    assert decision["state"] != "next_stage_ready_for_approval" and decision.get("target_stage") in (None, "E6b")
+    assert decision["action"] == "continue", decision
+    notice = once.next_stage_notice(plan, "E6b", minimum, {"judgment": "PASS", "checkpoint_sha256": "a" * 64})
+    assert notice["next_stage_id"] is None and notice["state"] == "not_ready"
+
+
+def test_a_jump_mesh_family_in_a_non_jump_stage_is_refused_and_a_jump_stage_needs_it(monkeypatch, tmp_path):
+    from foothold_s2.terrains import ex42_mesh_mount as mount
+    families = {"now": list("ABCDEF")}
+    monkeypatch.setattr(mount, "expected_sha_from_manifest", lambda path: "0" * 64)
+    monkeypatch.setattr(mount, "load_combined_mesh", lambda npz, sha: {"column_family": np.array(families["now"])})
+    plan = EX42Plan.load(PLAN)
+    for sid in ("E0", "E3", "E6b"):
+        with pytest.raises(ValueError, match="only the jump stages use"):
+            entry.prepare_e0_env_cfg(None, plan, tmp_path, sid)
+    families["now"] = list("ABCDE")
+    with pytest.raises(ValueError, match="lacks families.*F"):
+        entry.prepare_e0_env_cfg(None, plan, tmp_path, "J2")

@@ -693,6 +693,16 @@ class EX42Plan:
     def runtime_stage_ids(self) -> tuple[str, ...]:
         return tuple(row["id"] for row in self.runtime_stages)
 
+    def following_stage_id(self, stage_id: str) -> str | None:
+        """The stage after `stage_id` in the runtime order: the document's stages without the jump stages (the runtime
+        list names the first row by its stage-zero id, the document by "E0"). The last EX-42 stage has no following
+        stage, so it goes on with the same stage; a J stage follows the document order."""
+        ids = [row["id"] for row in self.document["stages"]]
+        order = [i for i in ids if i not in JUMP_STAGE_IDS] if stage_id not in JUMP_STAGE_IDS else ids
+        if stage_id not in order:
+            return None
+        return order[order.index(stage_id) + 1] if order.index(stage_id) + 1 < len(order) else None
+
     def stage_id_at(self, local_iteration: int, *, transitions: tuple[dict[str, Any], ...] = ()) -> str:
         """Resolve a checkpoint's stage from the shared sequence and applied receipts.
 
