@@ -129,7 +129,27 @@ def plan_stage_terrain(plan: Any, stage_id: str) -> dict[str, Any]:
     return {**_e_stage(plan, stage_id)["terrain"], "kind_task": _kind_task(plan, stage_id)}
 
 
-def recompute_from_plan(body: dict[str, Any], plan: Any) -> dict[str, Any]:
+def mesh_column_table(body: dict[str, Any], plan: Any, mesh_dir: Any = None) -> list[dict[str, Any]]:
+    """The (family, kind) column table rebuilt from the mesh the receipt names: its directory is the one the plan pins for the
+    stage (or `mesh_dir`), its geometry must hash to `mesh_sha256`. The receipt's own rows are never the source of the table."""
+    from pathlib import Path
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    from foothold_s2.terrains.ex42_column_reset import build_column_table
+    from foothold_s2.terrains.ex42_mesh_mount import expected_sha_from_manifest, load_combined_mesh
+    if mesh_dir is None:
+        pin = pinned_stage_mesh(plan.document, body["stage_id"])
+        if not pin:
+            raise ValueError("EX-42 exposure receipt replay needs mesh_dir: the plan pins no mesh for this stage")
+        mesh_dir = pin["directory"]
+    mesh_dir = Path(mesh_dir)
+    sha = expected_sha_from_manifest(mesh_dir / "mesh_manifest.json")
+    if sha != body["mesh_sha256"]:
+        raise ValueError("EX-42 exposure receipt mesh_sha256 differs from the mesh of the plan")
+    data = load_combined_mesh(mesh_dir / "terrain_mesh.npz", sha)
+    return [{"family": r["family"], "kind": r["kind"]} for r in build_column_table(list(data["column_family"]))]
+
+
+def recompute_from_plan(body: dict[str, Any], plan: Any, mesh_dir: Any = None) -> dict[str, Any]:
     """Consumer check against the approved plan: replay `ladder_terrain` with the receipt's boundary index and ordered
     outcomes, then compare the k moves and every column's exposure and level cap. Raises ValueError on any difference."""
     from foothold_s2.terrains.ex42_exposure import exposure_by_column
@@ -140,7 +160,9 @@ def recompute_from_plan(body: dict[str, Any], plan: Any) -> dict[str, Any]:
                                   body["ladder_outcomes"])
     if json.loads(json.dumps(moves, sort_keys=True)) != json.loads(json.dumps(body["k_ladder_moves"], sort_keys=True)):
         raise ValueError("EX-42 exposure receipt k moves differ from the plan replay of its ladder_outcomes")
-    table = [{"family": r["family"], "kind": r["kind"]} for r in body["column_rows"]]
+    table = mesh_column_table(body, plan, mesh_dir)
+    if [{"family": r["family"], "kind": r["kind"]} for r in body["column_rows"]] != table:
+        raise ValueError("EX-42 exposure receipt column rows (family, kind) differ from the columns of its mesh")
     exposure, caps = exposure_by_column(moved, table, stage_id)
     if [r["exposure"] for r in body["column_rows"]] != exposure or [r["level_cap"] for r in body["column_rows"]] != caps:
         raise ValueError("EX-42 exposure receipt exposure or level caps differ from the plan replay")

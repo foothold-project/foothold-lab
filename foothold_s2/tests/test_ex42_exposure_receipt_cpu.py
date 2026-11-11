@@ -263,3 +263,24 @@ def test_outcomes_longer_than_the_boundary_index_or_not_dicts_are_refused():
         contract = {**base, "k_ladder": {"boundary_index": 1, "moves": [], "outcomes": outcomes}}
         with pytest.raises(ValueError, match="outcomes"):
             er.build_receipt(contract, stage_id="E3", plan_sha256=PSHA, iteration=0, kind="start")
+
+
+@need_mesh
+def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh_column_table():
+    plan = EX42Plan.load(PLAN)
+    body = er.build_receipt(_contract(k=2, outcomes=[FLAT_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+                            kind="boundary")
+    rows = body["column_rows"]
+    open_i = next(i for i, r in enumerate(rows) if r["open"])
+    closed_i = next(i for i, r in enumerate(rows) if not r["open"])
+    forged = json.loads(json.dumps(body))
+    for key in ("family", "kind"):                                           # swap which kind is open; derived part and sha refreshed
+        forged["column_rows"][open_i][key], forged["column_rows"][closed_i][key] = rows[closed_i][key], rows[open_i][key]
+    forged["opened_kinds"] = er.opened_kinds(forged["column_rows"]); forged["sha256"] = er._sha(forged)
+    assert er.verify_receipt(forged)                                          # the self-consistency check alone accepts it
+    with pytest.raises(ValueError, match="differ from the columns of its mesh"):
+        er.recompute_from_plan(forged, plan)
+    assert er.recompute_from_plan(body, plan)["moves"]                        # the honest receipt still passes
+    other = json.loads(json.dumps(body)); other["mesh_sha256"] = "0" * 64; other["sha256"] = er._sha(other)
+    with pytest.raises(ValueError, match="mesh_sha256 differs"):
+        er.recompute_from_plan(other, plan)
