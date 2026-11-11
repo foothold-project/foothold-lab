@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
 
 from foothold_s2.scripts.ex42_post_e1_gpu_chain import build_chain
 
@@ -12,7 +13,7 @@ APPROVALS = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
 
 def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
     plan = build_chain(plan_path=PLAN, approvals_path=APPROVALS,
-                       e1_run="/tmp/ex42-e1-run")
+                       e1_run="/tmp/ex42-e1-run", fixed_repo_path=ROOT)
     schedule = plan["schedule"]
     ids = [row["id"] for row in schedule]
     assert ids[:9] == [
@@ -55,8 +56,10 @@ def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
     assert evidence["evidence_out"].endswith("eval/materialize/E1F-stage-evidence.json")
     assert evidence["argv"][evidence["argv"].index("--w09-baseline") + 1].endswith(
         "eval/w09-w08/w09_baseline.json")
-    expected_p1_receipt = "/tmp/ex42-e1-run/eval/e1-p1-chain-${E1_SOURCE_HEAD_12}.json"
+    fixed_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    expected_p1_receipt = f"/tmp/ex42-e1-run/eval/e1-p1-chain-{fixed_head[:12]}.json"
     assert evidence["completion_receipt"] == expected_p1_receipt
+    assert evidence["receipt_source_head"] == fixed_head
     assert evidence["argv"][evidence["argv"].index("--chain-receipt") + 1] == expected_p1_receipt
     assert evidence["completion_receipt"] != flags["completion_receipt"]
     assert "--materialize-only" in evidence["argv"]
@@ -78,6 +81,16 @@ def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
     assert ids.index("KIT-E2") < ids.index("W19-E3-kind-repeat-width") < ids.index("KIT-E3")
     assert "KIT-E1F=complete" in schedule[ids.index("KIT-E2")]["requires"]
     assert "KIT-E3=complete" in schedule[ids.index("KIT-E4")]["requires"]
+
+
+def test_explicit_p1_chain_receipt_override_is_supported() -> None:
+    plan = build_chain(plan_path=PLAN, approvals_path=APPROVALS,
+                       e1_run="/tmp/ex42-e1-run",
+                       p1_chain_receipt="/tmp/override/e1-p1-receipt.json")
+    evidence = next(row for row in plan["schedule"] if row["id"] == "E1F-evidence-materialize")
+    assert evidence["argv"][evidence["argv"].index("--chain-receipt") + 1] == (
+        "/tmp/override/e1-p1-receipt.json")
+    assert evidence["receipt_source_head"] is None
 
 
 def test_unresolved_commands_keep_entire_chain_out_of_live_queue() -> None:

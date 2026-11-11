@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
 from typing import Any, Iterable
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -21,7 +22,9 @@ FLAG_DEVICES = ("cuda:0", "cuda:1")
 
 
 def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
-                e1_run: str | Path | None = None) -> dict[str, Any]:
+                e1_run: str | Path | None = None,
+                fixed_repo_path: str | Path | None = None,
+                p1_chain_receipt: str | Path | None = None) -> dict[str, Any]:
     plan = EX42Plan.load(plan_path)
     run = Path(e1_run).resolve() if e1_run is not None else None
     run_path = str(run) if run else "${E1_RUN}"
@@ -30,8 +33,17 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
     if manifest_path is not None and manifest_path.is_file():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
         source_head = ((manifest.get("git") or {}).get("head"))
-    source_head_prefix = source_head[:12] if isinstance(source_head, str) and len(source_head) >= 12 else "${E1_SOURCE_HEAD_12}"
-    p1_chain_receipt = f"{run_path}/eval/e1-p1-chain-{source_head_prefix}.json"
+    if p1_chain_receipt is not None:
+        p1_chain_receipt_path = str(Path(p1_chain_receipt).resolve())
+        receipt_head = None
+    elif fixed_repo_path is not None:
+        fixed_repo = Path(fixed_repo_path).resolve(strict=True)
+        receipt_head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=fixed_repo, text=True).strip()
+        p1_chain_receipt_path = f"{run_path}/eval/e1-p1-chain-{receipt_head[:12]}.json"
+    else:
+        receipt_head = "${FIXED_REPO_HEAD}"
+        p1_chain_receipt_path = f"{run_path}/eval/e1-p1-chain-${{FIXED_REPO_HEAD_12}}.json"
     steps: list[dict[str, Any]] = []
     previous_p1 = None
     for iteration in BOUNDARIES:
@@ -105,14 +117,15 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                      "--repo", "${FIXED_REPO}", "--e1-run", run_path,
                      "--plan", "${E1_SOURCE_PLAN}", "--training-log", "${E1_TRAINING_LOG}",
                      "--evaluation-plan", "${EVALUATION_PLAN}", "--materialize-only",
-                     "--chain-receipt", p1_chain_receipt,
+                     "--chain-receipt", p1_chain_receipt_path,
                      "--w09-baseline", f"{run_path}/eval/w09-w08/w09_baseline.json",
                      "--evidence-out", evidence_path,
                      "--evaluation-mesh", "${E1_EVALUATION_MESH_NPZ}"]
     steps.append({"id": "E1F-evidence-materialize", "kind": "materialize_e1f_stage_evidence",
                   "requires": ["W09-W08-flag-chain=complete"],
                   "argv": evidence_argv, "evidence_out": evidence_path, "queue_command": None,
-                  "completion_receipt": p1_chain_receipt,
+                  "completion_receipt": p1_chain_receipt_path,
+                  "receipt_source_head": receipt_head,
                   "other_required_receipt": flag_chain_path,
                   "blockers": ["completed_e1_p1_receipt_and_w09_baseline_required"]})
 
@@ -172,6 +185,8 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
 
     return {"format": "foothold-ex42-post-e1-gpu-chain/2", "plan_sha256": plan.sha256,
             "e1_run": str(run) if run else None,
+            "p1_chain_receipt": p1_chain_receipt_path,
+            "p1_chain_receipt_source_head": receipt_head,
             "schedule": steps,
             "state": "blocked" if any(row["blockers"] for row in steps) else "ready",
             "queue_mutated": False, "kit_started": False,
@@ -204,7 +219,12 @@ def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-repo", "--repo", dest="source_repo", type=Path,
                         default=Path(__file__).resolve().parents[2],
-                        help="fixed source checkout used by the E1 run")
+                        help="E1 launch source checkout used for manifest identity checks")
+    parser.add_argument("--fixed-repo", type=Path,
+                        default=Path(__file__).resolve().parents[2],
+                        help="locked integrated checkout that runs the P1 chain")
+    parser.add_argument("--p1-chain-receipt", type=Path,
+                        help="explicit P1 chain receipt override; otherwise derived from --fixed-repo HEAD")
     parser.add_argument("--plan", default=str(Path(__file__).parents[1] / "curriculum/ex42-prep.yaml"))
     parser.add_argument("--approvals", default=str(Path(__file__).parents[1] / "curriculum/ex42-approvals.yaml"))
     parser.add_argument("--e1-run", type=Path)
@@ -215,7 +235,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     parser.add_argument("--register", action="store_true",
                         help="Reserved. Refuses until all job commands and completion gates exist.")
     args = parser.parse_args(argv)
-    report = build_chain(plan_path=args.plan, approvals_path=args.approvals, e1_run=args.e1_run)
+    report = build_chain(plan_path=args.plan, approvals_path=args.approvals, e1_run=args.e1_run,
+                         fixed_repo_path=args.fixed_repo,
+                         p1_chain_receipt=args.p1_chain_receipt)
     if args.preflight:
         inputs = {"e1_run": args.e1_run, "training_log": args.training_log,
                   "source_repo": args.source_repo}
@@ -226,7 +248,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         else:
             report["preflight_state"] = "inputs_present_plan_valid"
             report["preflight_inputs"] = {name: str(Path(value).resolve()) for name, value in inputs.items()}
-            report["preflight_source_head"] = __import__("subprocess").check_output(
+            report["preflight_source_head"] = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=args.source_repo, text=True).strip()
             report["preflight_log_bytes"] = Path(args.training_log).stat().st_size
             manifest_path = Path(args.e1_run) / "manifest.json"
