@@ -164,7 +164,7 @@ def test_e1f_first_scope_750_and_only_hold_extension_within_table(known):
     a=yaml.safe_load(Path(result['approvals']).read_text())['stage_e1f_authorization']
     assert a['scope']['maximum_updates']==750
     assert a['extension_authorized'] is True
-    assert a['extension_contract']==dict(judgment='HOLD',maximum_updates=1250,increment_updates=500,
+    assert a['extension_contract']==dict(judgment='HOLD',after_updates=750,max_count=1,maximum_updates=1250,increment_updates=500,
         decision_id='teamlead-2026-11-11-1307-ex42-all-stages',
         decision_source='2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d')
 
