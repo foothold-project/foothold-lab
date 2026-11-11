@@ -53,6 +53,14 @@ def opened_kinds(rows: list[dict[str, Any]]) -> dict[str, int]:
     return dict(sorted(out.items()))
 
 
+def _outcomes(ladder: dict[str, Any], k: int) -> list[dict[str, Any]]:
+    """The ordered evidence list `ladder_terrain` read (`outcomes[b - 1]` for boundary b <= k). A short list = no evidence for the rest."""
+    outcomes = ladder.get("outcomes")
+    if not isinstance(outcomes, list) or len(outcomes) > k or any(not isinstance(e, dict) for e in outcomes):
+        raise ValueError("EX-42 exposure receipt: k_ladder.outcomes must be a list of at most boundary_index dicts")
+    return json.loads(json.dumps(outcomes, sort_keys=True))
+
+
 def build_receipt(contract: dict[str, Any], *, stage_id: str, plan_sha256: str, iteration: int, kind: str,
                   live: dict[str, Any] | None = None, rank: int = 0, world_size: int = 1) -> dict[str, Any]:
     if kind not in KINDS:
@@ -67,6 +75,7 @@ def build_receipt(contract: dict[str, Any], *, stage_id: str, plan_sha256: str, 
             "rank": int(rank), "world_size": int(world_size),
             "mesh_sha256": contract["mesh_sha256"], "columns": int(contract["columns"]),
             "families": list(contract["families"]), "k_ladder_moves": list(ladder["moves"]),
+            "ladder_outcomes": _outcomes(ladder, int(ladder["boundary_index"])),
             "column_rows": rows, "opened_kinds": opened_kinds(rows),
             "low_floor": contract["low_floor"], "live": live}
     body["sha256"] = _sha(body)
@@ -110,7 +119,32 @@ def verify_receipt(body: dict[str, Any]) -> dict[str, Any]:
             raise ValueError(f"EX-42 exposure receipt column {row['column']} open flag differs from its exposure")
     if body["opened_kinds"] != opened_kinds(rows):
         raise ValueError("EX-42 exposure receipt opened_kinds differs from its column rows")
+    _outcomes({"outcomes": body.get("ladder_outcomes")}, int(body["boundary_index"]))
     return body["opened_kinds"]
+
+
+def plan_stage_terrain(plan: Any, stage_id: str) -> dict[str, Any]:
+    """The stage terrain exactly as `prepare_e0_env_cfg` hands it to `ladder_terrain` (stage row + kind_task)."""
+    from foothold_s2.scripts.ex42_training_entry import _e_stage, _kind_task
+    return {**_e_stage(plan, stage_id)["terrain"], "kind_task": _kind_task(plan, stage_id)}
+
+
+def recompute_from_plan(body: dict[str, Any], plan: Any) -> dict[str, Any]:
+    """Consumer check against the approved plan: replay `ladder_terrain` with the receipt's boundary index and ordered
+    outcomes, then compare the k moves and every column's exposure and level cap. Raises ValueError on any difference."""
+    from foothold_s2.terrains.ex42_exposure import exposure_by_column
+    from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
+    verify_receipt(body)
+    stage_id = body["stage_id"]
+    moved, moves = ladder_terrain(plan_stage_terrain(plan, stage_id), stage_id, int(body["boundary_index"]),
+                                  body["ladder_outcomes"])
+    if json.loads(json.dumps(moves, sort_keys=True)) != json.loads(json.dumps(body["k_ladder_moves"], sort_keys=True)):
+        raise ValueError("EX-42 exposure receipt k moves differ from the plan replay of its ladder_outcomes")
+    table = [{"family": r["family"], "kind": r["kind"]} for r in body["column_rows"]]
+    exposure, caps = exposure_by_column(moved, table, stage_id)
+    if [r["exposure"] for r in body["column_rows"]] != exposure or [r["level_cap"] for r in body["column_rows"]] != caps:
+        raise ValueError("EX-42 exposure receipt exposure or level caps differ from the plan replay")
+    return {"moves": moves, "opened_kinds": body["opened_kinds"]}
 
 
 def fold_ranks(documents: list[dict[str, Any]]) -> dict[str, Any]:
