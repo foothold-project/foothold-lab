@@ -40,21 +40,44 @@ def _need(env, name, stage=None):
     raise LaunchRefused(f"missing {'EX42_%s_%s or ' % (name, stage) if stage else ''}EX42_{name}")
 
 
-def _stage_updates(stage):
-    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS
-    if stage not in E_STAGE_SPECS:
-        raise LaunchRefused(f"stage {stage!r} has no pinned parent in the plan (startable: {', '.join(E_STAGE_SPECS)})")
-    return int(E_STAGE_SPECS[stage]["updates"])
+def plan_paths(env):
+    """(plan, approvals): the materialized pair when EX42_AUTO_PLAN / EX42_AUTO_APPROVALS name them (ex42_stage_materialize
+    publishes them with the parent pins of the stage about to start), else the ones beside this launcher."""
+    plan, approvals = Path(env.get("EX42_AUTO_PLAN") or PLAN), Path(env.get("EX42_AUTO_APPROVALS") or APPROVALS)
+    if (env.get("EX42_AUTO_PLAN") or env.get("EX42_AUTO_APPROVALS")) and not (
+            env.get("EX42_AUTO_PLAN") and env.get("EX42_AUTO_APPROVALS")):
+        raise LaunchRefused("EX42_AUTO_PLAN and EX42_AUTO_APPROVALS come as a pair")
+    for path in (plan, approvals):
+        if not path.is_absolute() or not path.is_file():
+            raise LaunchRefused(f"{path} must be an absolute path to an existing file")
+    return plan, approvals
 
 
-def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python):
+def _stage_updates(stage, plan):
+    import yaml
+    from foothold_s2.scripts.ex42_training_entry import e_stage_table
+    table = e_stage_table(yaml.safe_load(plan.read_text(encoding="utf-8-sig"))["stages"])
+    if stage not in table:
+        raise LaunchRefused(f"stage {stage!r} has no pinned parent in the plan {plan} (startable: {', '.join(table)})")
+    return int(table[stage]["updates"])
+
+
+def _stage_caps(stage, plan):
+    """Every bound a process of the stage may run with: the base cap, then the cap plus whole HOLD-only extensions."""
+    import yaml
+    from foothold_s2.scripts.ex42_training_entry import e_stage_table
+    spec = e_stage_table(yaml.safe_load(plan.read_text(encoding="utf-8-sig"))["stages"])[stage]
+    return [spec["updates"] + k * spec["extension_updates"] for k in range(spec["extension_max_count"] + 1)]
+
+
+def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
     """The per-boundary evaluation command; `{iteration}` is filled by the training's boundary hook."""
     argv = [python, "-m", "foothold_s2.ex42_eval_once",
             "--checkpoint", f"{run_dir}/model_{{iteration}}.pt", "--sha-from-manifest",
             "--out", f"{run_dir}/eval/scores/m{{iteration}}",
             "--device", env.get("EX42_P1_DEVICE", "cuda:1"), "--eval-seed", env.get("EX42_EVAL_SEED", "42"),
             "--mesh-dir", mesh_dir, "--expected-mesh-sha256", mesh_sha,
-            "--p1-plan", str(PLAN), "--p1-approvals", str(APPROVALS), "--p1-stage-id", stage]
+            "--p1-plan", str(plan), "--p1-approvals", str(approvals), "--p1-stage-id", stage]
     if env.get("EX42_P1_SPLIT_DEVICE"):
         argv += ["--split-device", env["EX42_P1_SPLIT_DEVICE"]]
     return argv + ["--execute"]
@@ -66,7 +89,8 @@ def build(env, *, dry_run=False, now=None):
     if action not in ("next_stage", "continue"):
         raise LaunchRefused(f"EX42_AUTO_ACTION must be next_stage or continue, got {action!r}")
     stage = _need(env, "AUTO_TARGET_STAGE")
-    updates = _stage_updates(stage)
+    plan, approvals = plan_paths(env)
+    updates = _stage_updates(stage, plan)
     parent_manifest = _need(env, "AUTO_PARENT_MANIFEST")
     python = env.get("ISAAC311_PYTHON")
     if not python:
@@ -82,8 +106,10 @@ def build(env, *, dry_run=False, now=None):
     if action == "continue":
         resume = _need(env, "AUTO_RESUME_CHECKPOINT")
         segment_end = _need(env, "AUTO_SEGMENT_END")
-        if not segment_end.isdigit() or not 0 < int(segment_end) <= updates:
-            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{updates}")
+        caps = _stage_caps(stage, plan)
+        if not segment_end.isdigit() or not 0 < int(segment_end) <= caps[-1]:
+            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{caps[-1]}")
+        updates = next(c for c in caps if c >= int(segment_end))      # past the base cap: the extension's whole bound
         run_dir = str(Path(resume).resolve().parent)
         if not (Path(run_dir) / "manifest.json").is_file():
             raise LaunchRefused(f"{run_dir} has no manifest.json: not the run folder of the checkpoint")
@@ -93,10 +119,10 @@ def build(env, *, dry_run=False, now=None):
         run_dir = f"{_need(env, 'MAIN_ROOT').rstrip('/')}/EX-42-B-{stage}_{stamp}"
     flags = [f"--task={TASK}", "--device=cuda:0", f"--num_envs={env.get('EX42_NUM_ENVS', '3072')}",
              f"--max_iterations={updates}", f"--seed={env.get('EX42_SEED', '42')}", "--headless", "--distributed",
-             "--map_input=reconstruction", f"--ex42_plan={PLAN}", f"--ex42_approvals={APPROVALS}",
+             "--map_input=reconstruction", f"--ex42_plan={plan}", f"--ex42_approvals={approvals}",
              f"--ex42_parent_manifest={parent_manifest}", f"--ex42_log_dir={run_dir}",
              f"--ex42_queue_path={queue}", f"--ex42_dispatch_path={DISPATCH}",
-             "--ex42_p1_score_argv_json=" + json.dumps(p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python)),
+             "--ex42_p1_score_argv_json=" + json.dumps(p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals)),
              f"--ex42_source_ref={_need(env, 'SOURCE_REF')}", f"--ex42_stage={stage}",
              "--ex42_stage_approved"] + (["--ex42_stage_dry_run"] if dry_run else []) + [
              f"--ex42_terrain_manifest={terrain_manifest}", f"--ex42_terrain_mesh_dir={mesh_dir}"]

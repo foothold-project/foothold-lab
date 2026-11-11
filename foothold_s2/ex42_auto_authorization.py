@@ -72,9 +72,18 @@ def validate_automatic_stage_launch(
         # The gate was scored under the plan the predecessor ran with. This plan is a later one published by
         # ex42_stage_materialize; it is accepted only through that tool's transition record, which names the
         # gate's plan, this gate receipt and this plan.
-        transition = _read_transition(transition_path, prior_plan_sha=gate.get('plan_sha256'),
-                                      new_plan_sha=plan.sha256, gate_sha256=gate_sha,
-                                      parent_sha256=parent['checkpoint_sha256'])
+        beside = plan.path.parent / 'transition.json'
+        transition = _read_transition(
+            transition_path if transition_path is not None else beside if beside.is_file() else None,
+            prior_plan_sha=gate.get('plan_sha256'), new_plan_sha=plan.sha256, gate_sha256=gate_sha,
+            parent_sha256=parent['checkpoint_sha256'])
+        # three matching SHA strings are not enough: rebuild the allowed changes from the recorded inputs
+        from foothold_s2.ex42_stage_materialize import validate_materialized_transition
+        rebuilt = validate_materialized_transition(plan, target_stage=target_stage, gate_receipt_path=gate_path,
+                                                   expected_gate_sha256=gate_sha)
+        if rebuilt['source_plan_sha256'] != gate.get('plan_sha256') or rebuilt['source_stage_id'] != source_stage:
+            raise ValueError('EX-42 materialized transition source differs from the gate receipt')
+        transition = {**transition, 'rebuilt': {k: v for k, v in rebuilt.items() if k != 'parent'}}
     stage = next(row for row in plan.document['stages'] if row['id'] == target_stage)
     iteration = stage['parent']['manifest_local_update']
     manifest = json.loads(Path(parent_manifest_path).read_text(encoding='utf-8-sig'))

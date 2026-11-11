@@ -220,12 +220,39 @@ def _call_with(known, gate_sha, transition):
                                            transition_path=transition)
 
 
-def test_a_gate_scored_under_the_previous_plan_is_accepted_through_the_transition_chain(known, tmp_path):
+def _rebuilt(monkeypatch, **change):
+    import foothold_s2.ex42_stage_materialize as materialize
+    calls = []
+
+    def fake(plan, *, target_stage, gate_receipt_path, expected_gate_sha256):
+        calls.append((target_stage, expected_gate_sha256))
+        return {'source_plan_sha256': 'a' * 64, 'source_stage_id': 'E0', 'parent': {}, 'transition_path': 'x', **change}
+    monkeypatch.setattr(materialize, 'validate_materialized_transition', fake)
+    return calls
+
+
+def test_a_gate_scored_under_the_previous_plan_is_accepted_through_the_transition_chain(known, tmp_path, monkeypatch):
     gate_sha = _other_plan_gate(known, tmp_path)
+    calls = _rebuilt(monkeypatch)
     proof = _call_with(known, gate_sha, _transition(tmp_path, known, gate_sha))
     assert proof['automatic_launch_authorized'] is True and proof['transition']['prior_plan_sha'] == 'a' * 64
+    assert calls == [('E1', gate_sha)] and proof['transition']['rebuilt']['source_stage_id'] == 'E0'
     with pytest.raises(ValueError, match="no transition record"):
         _call_with(known, gate_sha, None)
+
+
+@pytest.mark.parametrize('change', [{'source_plan_sha256': 'b' * 64}, {'source_stage_id': 'E1'}])
+def test_the_rebuilt_source_must_be_the_gates_plan_and_stage(known, tmp_path, monkeypatch, change):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    _rebuilt(monkeypatch, **change)
+    with pytest.raises(ValueError, match="source differs"):
+        _call_with(known, gate_sha, _transition(tmp_path, known, gate_sha))
+
+
+def test_three_matching_sha_strings_without_a_real_materialization_are_refused(known, tmp_path):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    with pytest.raises(ValueError, match="materialization declaration differs"):
+        _call_with(known, gate_sha, _transition(tmp_path, known, gate_sha))
 
 
 @pytest.mark.parametrize('change', [{'prior_plan_sha': 'b' * 64}, {'new_plan_sha': 'c' * 64}, {'gate_sha256': 'd' * 64},
@@ -244,3 +271,18 @@ def test_a_transition_missing_a_key_is_refused_and_a_matching_plan_needs_no_tran
     path.write_text(json.dumps(record))
     with pytest.raises(ValueError, match="lacks"):
         _call_with(known, gate_sha, path)
+
+
+def test_the_transition_record_beside_the_plan_is_found_when_no_path_is_given(known, tmp_path, monkeypatch):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    calls = _rebuilt(monkeypatch)
+    plan, ap, manifest, gp = known
+    beside = replace(plan, path=tmp_path / 'ex42-prep.yaml')            # the plan folder holds the transition.json
+    _transition(tmp_path, known, gate_sha)
+    proof = validate_automatic_stage_launch(beside, ap, target_stage='E1', parent_manifest_path=manifest,
+                                            gate_receipt_path=gp, expected_gate_sha256=gate_sha)
+    assert proof['transition']['gate_sha256'] == gate_sha and calls == [('E1', gate_sha)]
+    (tmp_path / 'transition.json').unlink()
+    with pytest.raises(ValueError, match='no transition record'):
+        validate_automatic_stage_launch(beside, ap, target_stage='E1', parent_manifest_path=manifest,
+                                        gate_receipt_path=gp, expected_gate_sha256=gate_sha)

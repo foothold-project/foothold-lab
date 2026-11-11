@@ -117,17 +117,24 @@ EX42_E_DRY_RUN = any(request[2] for request in _E_REQUESTS)
 EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"
 EX42_STAGE_SPEC = None
 if EX42_E0_REQUESTED:
-    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS as _E_STAGE_SPECS
+    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS as _E_STAGE_SPECS, adopt_plan_stage_table
+    if _pre_args.ex42_plan:                          # a materialized plan pins the parents of the later stages
+        adopt_plan_stage_table(_pre_args.ex42_plan)
     if EX42_STAGE_ID not in _E_STAGE_SPECS:
         raise ValueError(f"EX-42 stage {EX42_STAGE_ID} has no pinned parent in the plan (stages: {', '.join(_E_STAGE_SPECS)})")
     EX42_STAGE_SPEC = _E_STAGE_SPECS[EX42_STAGE_ID]
 # bound of the single-stage run (first segment: the plan minimum) and the parent (local update, cumulative update)
-EX42_STAGE_UPDATES = EX42_STAGE_SPEC["updates"] if EX42_STAGE_SPEC else 1000
+if EX42_STAGE_SPEC:       # the base cap, or the cap plus whole extensions when this segment ends past the cap (HOLD-only)
+    from foothold_s2.scripts.ex42_training_entry import stage_bound as _stage_bound
+    EX42_STAGE_UPDATES = _stage_bound(EX42_STAGE_ID, _pre_args.ex42_segment_end, _pre_args.ex42_approvals)
+else:
+    EX42_STAGE_UPDATES = 1000
 EX42_STAGE_PARENT_UPDATES = ((EX42_STAGE_SPEC["parent_local"], EX42_STAGE_SPEC["parent_cumulative"])
                              if EX42_STAGE_SPEC else (1000, 13000))
 # a stage whose parent is the previous stage's finished run (not the stage-zero m13000)
 EX42_CONTINUES_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["previous"] is not None)
-EX42_MIRROR_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["critic_mirror"])      # plan stages[].critic_mirror (D174)
+EX42_MIRROR_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["critic_mirror"])      # plan stages[].critic_mirror (D174), kept once on
+EX42_PARENT_MIRROR = bool(EX42_CONTINUES_STAGE and _E_STAGE_SPECS[EX42_STAGE_SPEC["previous"]]["critic_mirror"])
 # ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
 EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
 EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLIT else 0
@@ -1265,7 +1272,7 @@ def main(env_cfg, agent_cfg):
                 from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
 
                 runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(
-                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals))
+                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals, EX42_STAGE_ID))
             runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
             runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
             ex42_transfer = {
@@ -1294,13 +1301,16 @@ def main(env_cfg, agent_cfg):
             ex42_transfer = runner.load_ex42_stage_zero_parent(
                 EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT,
                 stage_e0=not EX42_CONTINUES_STAGE,     # first stage: parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
-                stage_e1=EX42_CONTINUES_STAGE)         # later stage: parent is the previous stage's run (E1: E0 m250, 250 / 13250)
+                stage_e1=EX42_CONTINUES_STAGE,         # later stage: parent is the previous stage's run (E1: E0 m250, 250 / 13250)
+                **({"stage_id": EX42_STAGE_ID, "parent_local_update": EX42_STAGE_PARENT_UPDATES[0],
+                    "parent_cumulative_update": EX42_STAGE_PARENT_UPDATES[1],
+                    "parent_mirror": EX42_PARENT_MIRROR} if EX42_CONTINUES_STAGE else {}))
             if EX42_MIRROR_STAGE:
                 # D174: the parent was saved with the mirror off; the committed plan + approval grant turns it on here.
                 from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
 
                 runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(
-                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals))
+                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals, EX42_STAGE_ID))
                 ex42_transfer["critic_mirror"] = {"enabled": bool(runner.ex41_critic_mirror), "decision_id": "D174"}
             print("EX42_STAGE_ZERO_PARENT_TRANSFER "
                   + json.dumps(ex42_transfer, sort_keys=True), flush=True)

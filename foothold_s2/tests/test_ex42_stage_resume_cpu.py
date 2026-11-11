@@ -79,7 +79,7 @@ def test_resume_without_a_segment_end_runs_to_the_stage_bound(tmp_path):
     ("segment end past the stage bound", {"segment_end": 1250}),
     ("stage id of an E0 checkpoint", {"stage_id": "E0"}),
     ("wrong parent cumulative update", {"parent_cumulative_update": 13000}),
-    ("wrong stage bound", {"maximum_updates": 2000}),
+    ("wrong stage bound", {"maximum_updates": 1750}),          # not the cap and not cap + whole extensions
     ("wrong plan pin", {"plan_sha256": "0" * 64}),
     ("wrong approval pin", {"approval_sha256": "0" * 64}),
     ("wrong parent", {"parent_receipt": {"parent_sha256": "0" * 64}}),

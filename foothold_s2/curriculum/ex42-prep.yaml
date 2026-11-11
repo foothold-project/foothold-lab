@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 779b2d44c10416d9d1d941d33d4039376a248d630a2c339935d5567e41b1dec4
+  approval_sha256: 7e9f72da0e708a36f3b44c3560414f5d77fc33fedb1129ccc4ac99c76473c98d
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -173,6 +173,7 @@ stages:
   minimum_updates: 250
   maximum_updates: 250
   extension_updates: 0
+  extension_max_count: 0
   boundary_axes:
   - terrain_mesh_swap
   enabled: true
@@ -275,9 +276,10 @@ stages:
     manifest_local_update: 250
     checkpoint_key: model_250.pt
     sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
-  minimum_updates: 1000
-  maximum_updates: 2000
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 2
   critic_mirror: true
   boundary_axes:
   - terrain_level_cap
@@ -296,11 +298,12 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E1F
+  exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
     source_stage_ids:
     - E1
-    entry_gate_adapter: pending
+    entry_gate_adapter: flag_two_window
     required_sha256_paths:
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
     - prerequisites.flag_baseline.sha256
@@ -369,9 +372,10 @@ stages:
     diag_back_left: 0.025
     diag_back_right: 0.025
     flag: 0.1
-  minimum_updates: 750
-  maximum_updates: 1250
+  minimum_updates: 250
+  maximum_updates: 750
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - command_allocation
   enabled: true
@@ -391,6 +395,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
   authorization_contract:
     validator: bounded
@@ -414,20 +421,38 @@ stages:
     - critic_mirror
     required_stage_values: {}
   name: one_easy_new_terrain_kind
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   enabled: true
   kind_choice: start_stones_l0
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
+    exposure_at_E2:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_low
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   kind_alternatives:
   - start_beam_l0
   - start_gap_l0
@@ -451,9 +476,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E2
     required_stage_values: {}
   name: kind_dimensions_and_irregularity
-  minimum_updates: 3000
-  maximum_updates: 5000
+  minimum_updates: 250
+  maximum_updates: 3000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_kind_level_cap
   - terrain_exposure
@@ -462,11 +488,32 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:275~281); 세 등급 몫 · 시작 상한은 가정
+    exposure_at_E3:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 6
+      - family: A
+        kind: stepping_stones_low
+        share: 0.1
+        level_cap: 1
+      - family: C
+        kind: flat
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
   authorization_contract:
     validator: bounded
@@ -486,9 +533,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E3
     required_stage_values: {}
   name: difficult_terrain_kinds
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
@@ -496,11 +544,80 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:292~298 D159 D176); 쉬움 1.5 % 는 가정 (연 종류 하한 산수)
+    exposure_at_E4:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   families_in_scope:
   - A
   - B
@@ -527,20 +644,146 @@ stages:
       prerequisites.predecessor_exit.stage_id: E4
     required_stage_values: {}
   name: mixed_and_direction_generalization
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - command_allocation
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:309~314); 28 종 고르게 2 % · 상한은 E4 목표값 (가정), 실제 E4 끝 값으로 바꿀 것
+    exposure_at_E5:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
   authorization_contract:
     validator: bounded
@@ -561,19 +804,145 @@ stages:
       boundary.boundary_mode: stop_evaluate_resume
     required_stage_values: {}
   name: map_off_continuous_branch
-  minimum_updates: 500
-  maximum_updates: 1000
+  minimum_updates: 250
+  maximum_updates: 500
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - map_off_probability
   enabled: false
   hold_policy: hold_exposure_continue_training
   terrain:
+    # 자리만: E5 블록 복사. M 은 들어온 단계의 그때 값 그대로라 M 진입 때 원 단계 값으로 교체 (가정, planner)
+    exposure_at_M:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
   authorization_contract:
     validator: bounded
@@ -594,20 +963,146 @@ stages:
       prerequisites.predecessor_exit.stage_id: E5
     required_stage_values: {}
   name: posture_command_activation
-  minimum_updates: 1000
-  maximum_updates: 1500
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - posture_height
   - posture_roll
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # E5 끝 값 그대로 (CG:343~346 지형 몫 변경 없음); 상한은 E5 끝 값으로 교체 (가정)
+    exposure_at_E6a:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.02
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.02
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.02
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.02
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.02
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.02
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.02
+        level_cap: 3
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
   authorization_contract:
     validator: bounded
@@ -628,20 +1123,150 @@ stages:
       prerequisites.predecessor_exit.stage_id: E6a
     required_stage_values: {}
   name: terrain_family_d
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # planner 표 (CG:360~365 D81); 앞 28 종 1.5 % 로 내리고 D 첫 종류 5 % (가정), wall 은 치수 미정이라 0
+    exposure_at_E6b:
+      default:
+        exposure: 0.0
+        level_cap: 0
+      positive:
+      - family: A
+        kinds_of: continuous
+        exposure: 1.0
+        level_cap: 9
+      - family: A
+        kind: stepping_stones_low
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: stepping_beams
+        share: 0.015
+        level_cap: 5
+      - family: A
+        kind: gaps
+        share: 0.015
+        level_cap: 5
+      - family: B
+        kind: stair_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stair_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: rough
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: boxes
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_up
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: climb_down
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: pallets
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: stones
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: beam
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: consecutive
+        share: 0.015
+        level_cap: 3
+      - family: B
+        kind: obstacles
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: inverted_pyramid_stairs
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_grid
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: flat
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: gap
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: box
+        share: 0.015
+        level_cap: 3
+      - family: C
+        kind: discrete_obstacles
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: slope_steep
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: slope_steep_inv
+        share: 0.015
+        level_cap: 6
+      - family: E
+        kind: stairs_high
+        share: 0.015
+        level_cap: 3
+      - family: E
+        kind: stairs_high_inv
+        share: 0.015
+        level_cap: 3
+      - family: D
+        kind: high_ledge
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 evaluation:
   judge_cells: 26
   record_only_cells: 13
@@ -674,7 +1299,55 @@ evaluation:
   interval_updates: 250
   policy_failure_in_denominator: true
   sparse_off_role: record
+  # Lead decision 2026-11-11 15:20; result-independent geometry timing assumption.
+  forward_completion_timing:
+    rule: distance_over_speed_plus_hold_plus_margin
+    hold_s: 0.5
+    margin_s: 2.0
+    source: saved_mesh_triangles_and_entry_origin
+    pin_each_case: request.completion_timing
+    direction_forward_300_role: record_only
+    family_E_eval_origin: [0.5, y_mid, measured_support_z]
+    calibration_table:
+      path: inbox/jay/20261111-analysis/ex42-task-geometry-times.json
+      sha256: 5977df4ea4fb633aaf0e017572cc4e1def75687826637c48037f0761aa0c015d
+  # Lead decision 2026-11-11 15:05. Statistic/time/speed are explicit assumptions.
+  cross_dir_half_flat:
+    statistic: median_signed_projection_all_initial_64
+    match: [checkpoint_sha256, seed, map_mode, command_b, steps, dt]
+    ratio_min: 0.5
+    survival_min: 60
+    valid_min: 48
+    threshold_scaling: ceil_threshold_times_valid_over_64
+    flat_nonpositive: HOLD
+    judge_from_window: 2
+    steps: 300
+    commands:
+      forward: [1.0, 0.0, 0.0]
+      reverse: [-0.5, 0.0, 0.0]
+      side_left: [0.0, 0.5, 0.0]
+      side_right: [0.0, -0.5, 0.0]
   push_cells: {role: record, mask: same_as_training, off_kinds_value: n/a}
+  # CG v0.16:248 E1F assumption. W09 parent baseline and five Kit repeats
+  # remain unpinned until E1 graduates; absent calibration means HOLD.
+  flag_cells:
+    reach_radius_m: 0.3
+    stop_hold_s: 0.5
+    stop_speed_mps: 0.05  # E1 D44 stop convention, assumption for E1F
+    seconds: 12.0
+    flag_speed_mps: 1.0
+    valid_min: 48
+    repeat_seeds: [42, 42, 43, 44, 45]
+    calibration: {path: null, sha256: null}
+    judge_cases: [flag_one_eval_gt, flag_one_eval_pred, flag_four_eval_gt, flag_four_eval_pred]
+    record_cases: [flag_one_probe_prop_only, flag_four_probe_prop_only]
+    case_specs:
+      flag_one_eval_gt: {count: flag_one, map_mode: eval_gt, role: judge}
+      flag_one_eval_pred: {count: flag_one, map_mode: eval_pred, role: judge}
+      flag_one_probe_prop_only: {count: flag_one, map_mode: probe_prop_only, role: record_only}
+      flag_four_eval_gt: {count: flag_four, map_mode: eval_gt, role: judge}
+      flag_four_eval_pred: {count: flag_four, map_mode: eval_pred, role: judge}
+      flag_four_probe_prop_only: {count: flag_four, map_mode: probe_prop_only, role: record_only}
   paper_cells:
     judge_from_stage: E4
     slope:
