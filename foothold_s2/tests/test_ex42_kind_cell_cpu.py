@@ -53,3 +53,19 @@ def test_unknown_kind_or_bad_level_cannot_silently_fall_back_to_a23():
     for family, kind, level in (("C", "rough", 0), ("B", "unknown", 0), ("B", "rough", 10)):
         with pytest.raises(ValueError):
             ft.kind_assignment(64, 10, TABLE, family, kind, level)
+
+
+def test_four_foot_raw_evidence_rejects_missing_or_nonfinite_active_steps():
+    alive = np.ones((3, 2), dtype=bool)
+    contact = np.ones((3, 2, 4), dtype=bool)
+    foot = np.zeros((3, 2, 4, 3), dtype=np.float32)
+    ft.verify_kind_foot_arrays(contact, foot, alive)
+    with pytest.raises(ValueError, match="foot evidence"):
+        ft.verify_kind_foot_arrays(contact[:, :, :3], foot, alive)
+    with pytest.raises(ValueError, match="foot evidence"):
+        ft.verify_kind_foot_arrays(contact.astype(np.int8), foot, alive)
+    foot[1, 0, 2, 0] = np.nan
+    with pytest.raises(ValueError, match="foot evidence"):
+        ft.verify_kind_foot_arrays(contact, foot, alive)
+    alive[1, 0] = False
+    ft.verify_kind_foot_arrays(contact, foot, alive)

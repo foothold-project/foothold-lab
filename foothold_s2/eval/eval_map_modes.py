@@ -281,7 +281,8 @@ def _run_identity():
     return out
 
 
-def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None):
+def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
+                     kind_foot_arrays=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -326,6 +327,14 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
             "valid_envs": 0,
         }
 
+    if kind_foot_arrays is not None:
+        contact, foot_local = kind_foot_arrays
+        fixed_terrain.verify_kind_foot_arrays(contact, foot_local, al)
+        extra.update(foot_contact=contact, foot_pos_local=foot_local)
+        row["kind_foot_evidence"] = {"foot_order": ["FL_foot", "FR_foot", "RL_foot", "RR_foot"],
+                                     "contact_threshold_n": 1.0,
+                                     "valid_mask": "alive excludes post-reset samples",
+                                     "completion": "unjudged_raw_only"}
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
@@ -353,6 +362,14 @@ terrain_gen = raw.scene.terrain.cfg.terrain_generator
 terrain_names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
                  columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
 res["terrain_columns"] = terrain_names
+kind_foot_ids = None
+if kind_cell:
+    feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    sensor = raw.scene.sensors["contact_forces"]
+    if any(robot.body_names.count(name) != 1 or sensor.body_names.count(name) != 1 for name in feet):
+        raise RuntimeError("EX-42 kind cell requires four uniquely named robot and sensor feet")
+    kind_foot_ids = ([robot.body_names.index(name) for name in feet],
+                     [sensor.body_names.index(name) for name in feet])
 
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import run_isaac_cell
@@ -506,6 +523,8 @@ for mode in args.modes.split(","):
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
         YAW = torch.zeros(S, env.num_envs, device=dev)
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
+        FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
 
         START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
 
@@ -536,6 +555,10 @@ for mode in args.modes.split(","):
             q = robot.data.root_quat_w
             YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
             DN[k] = dones.bool()
+            if kind_cell:
+                body_ids, sensor_ids = kind_foot_ids
+                FOOT_CONTACT[k] = sensor.data.net_forces_w[:, sensor_ids].norm(dim=-1) > 1.0
+                FOOT_POS[k] = robot.data.body_pos_w[:, body_ids] - raw.scene.env_origins[:, None, :]
             VY[k] = robot.data.root_lin_vel_b[:, 1]
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
@@ -586,7 +609,9 @@ for mode in args.modes.split(","):
                                            root_xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
                                            XY.cpu().numpy()))
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
-                         map_err=None if mode == "none" else ERR.cpu().numpy())                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
+                         map_err=None if mode == "none" else ERR.cpu().numpy(),
+                         kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
+                         if kind_cell else None)  # EX-42 kind completion remains unjudged.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 

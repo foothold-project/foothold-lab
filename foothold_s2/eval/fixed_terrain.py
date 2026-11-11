@@ -115,6 +115,16 @@ def assignment_sha256(levels, types) -> str:
     return hashlib.sha256(np.asarray(levels, dtype=np.int64).tobytes() + np.asarray(types, dtype=np.int64).tobytes()).hexdigest()
 
 
+def verify_kind_foot_arrays(contact, foot_local, alive) -> None:
+    """Reject incomplete or nonfinite four-foot raw evidence before a kind receipt is written."""
+    contact, foot_local, alive = np.asarray(contact), np.asarray(foot_local), np.asarray(alive)
+    if (alive.ndim != 2 or contact.shape != (*alive.shape, 4)
+            or foot_local.shape != (*alive.shape, 4, 3)
+            or contact.dtype != np.dtype(bool) or alive.dtype != np.dtype(bool)
+            or not np.isfinite(foot_local[alive]).all()):
+        raise ValueError("EX-42 kind foot evidence shape, dtype or finite values differ")
+
+
 def apply(raw, level=None, *, cols=None) -> dict:
     """raw = env.unwrapped. terrain 의 레벨 · 종류 · env 원점을 고정 배열로 바꾼다. 호출한 쪽이 이어서 env.reset() 한다(curriculum 이 꺼져 있어야 레벨이 안 바뀐다)."""
     import torch
