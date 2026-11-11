@@ -125,6 +125,8 @@ stage_e1f_authorization:
       required_result: PASS
       same_plan_sha256: true
       evaluation_mesh_sha256: null
+      continuous_level_cap: null
+      exposure_receipt_sha256: null
     flag_baseline:
       path: null
       sha256: null
@@ -138,7 +140,7 @@ stage_e1f_authorization:
       forward: -0.06
       spin_left: -0.02
       spin_right: -0.02
-    exposure_at_E1F: same_as_E1_end
+    exposure_source: same_as_E1_end
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   critic_mirror: true
@@ -148,6 +150,7 @@ stage_e1f_authorization:
   - parent_sha256
   - landing_evaluation_mesh_sha256
   - flag_baseline
+  - e1_exit_cap_and_exposure_receipt
   exit_gate:
     cell: flag_reach
     threshold_source: W09_baseline_then_fixed

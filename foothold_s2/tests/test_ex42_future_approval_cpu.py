@@ -24,7 +24,7 @@ def test_canonical_e1f_shares_and_exposure_are_explicit():
     expected.update(flag=0.10, forward=0.17, spin_left=0.07, spin_right=0.07)
     assert s['shares'] == expected
     assert sum(s['shares'].values()) == pytest.approx(1.0)
-    assert s['terrain']['exposure_at_E1F'] == 'same_as_E1_end'
+    assert s['terrain']['exposure_at_E1F']['positive'][0]['level_cap'] is None
 
 
 @pytest.mark.parametrize('stage,validate,limit', CASES)
@@ -62,6 +62,9 @@ def prepared(tmp_path, stage):
     if stage=='E2':
         c['prerequisites']['m0_m3_receipt_sha256']='e'*64
         c['prerequisites']['calibration_sha256']='f'*64
+    if stage=='E1F':
+        c['prerequisites']['predecessor_exit'].update(continuous_level_cap=5,exposure_receipt_sha256='e'*64)
+        next(r for r in d['stages'] if r['id']=='E1F')['terrain']['exposure_at_E1F']['positive'][0]['level_cap']=5
     ap=tmp_path/'approvals.yaml';ap.write_text(yaml.safe_dump(a))
     d['stage_zero']['approval_sha256']=hashlib.sha256(ap.read_bytes()).hexdigest()
     return replace(p, document=d),ap,a

@@ -259,7 +259,8 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
     contract = row.get('authorization_contract')
     required = {'validator', 'source_stage_ids', 'entry_gate_adapter', 'required_sha256_paths',
                 'required_string_paths', 'required_boolean_paths', 'required_stage_values', 'required_values'}
-    if not isinstance(contract, dict) or set(contract) != required:
+    if (not isinstance(contract, dict) or not required <= set(contract)
+            or set(contract) - required - {'inherited_stage_templates'}):
         raise ValueError('EX-42 stage authorization contract is incomplete')
     sources = contract['source_stage_ids']
     known = set(plan.runtime_stage_ids)
@@ -286,6 +287,34 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
     if not isinstance(contract['required_stage_values'], dict):
         raise ValueError('EX-42 required stage values must be a mapping')
     return contract
+
+
+def _validate_inherited_stage_template(row: dict[str, Any], cell: dict[str, Any], binding: Any) -> None:
+    """Bind a measured integer from the approval cell into a fixed stage template."""
+    from copy import deepcopy
+    keys = {'stage_path', 'approval_path', 'allowed_values', 'template', 'value_path'}
+    if not isinstance(binding, dict) or set(binding) != keys:
+        raise ValueError('EX-42 inherited stage template contract is invalid')
+    value = _approval_path_value(cell, binding['approval_path'])
+    allowed = binding['allowed_values']
+    if (not isinstance(allowed, list) or not allowed or any(type(v) is not int for v in allowed)
+            or type(value) is not int or value not in allowed):
+        raise ValueError('EX-42 inherited stage integer is unfilled or outside its approved range')
+    expected = deepcopy(binding['template'])
+    target = expected
+    parts = binding['value_path'].split('.')
+    try:
+        for part in parts[:-1]:
+            target = target[int(part)] if isinstance(target, list) else target[part]
+        key = int(parts[-1]) if isinstance(target, list) else parts[-1]
+        if target[key] is not None:
+            raise ValueError('EX-42 inherited template slot must be unfilled')
+        target[key] = value
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
+        raise ValueError('EX-42 inherited template path is invalid') from exc
+    actual = _approval_path_value(row, binding['stage_path'])
+    if json.dumps(actual, sort_keys=True, allow_nan=False) != json.dumps(expected, sort_keys=True, allow_nan=False):
+        raise ValueError('EX-42 stage exposure differs from the measured predecessor cap or fixed template')
 
 
 def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
@@ -362,6 +391,8 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         value = _approval_path_value(cell, dotted)
         if type(value) is not type(expected) or value != expected:
             raise ValueError(f'EX-42 {stage_id} required approval value differs: {dotted}')
+    for binding in contract.get('inherited_stage_templates', []):
+        _validate_inherited_stage_template(row, cell, binding)
     for dotted, expected in contract['required_stage_values'].items():
         value = _approval_path_value(row, dotted)
         if type(value) is not type(expected) or value != expected:
@@ -690,7 +721,7 @@ class EX42Plan:
         if checkpoint.parent != path.parent or not checkpoint.is_file():
             raise ValueError("EX-42 parent checkpoint must be a file beside its manifest")
         actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
-        if actual != expected:
+        if json.dumps(actual, sort_keys=True, allow_nan=False) != json.dumps(expected, sort_keys=True, allow_nan=False):
             raise ValueError("EX-42 parent checkpoint bytes differ from manifest-pinned SHA")
         return {
             "manifest_path": str(path),
