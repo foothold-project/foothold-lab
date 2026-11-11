@@ -30,7 +30,8 @@ def test_e1_record_is_1000_updates_from_e0_and_requires_rejudgment_pass():
     assert required['checkpoint_sha256'] == E1_PARENT
     assert doc['domain_randomization']['stage_scales']['E1'] == 1.0
     assert doc['production_launch_allowed'] is False
-    assert doc['automatic_launch_allowed'] is False
+    assert doc['automatic_launch_allowed']['mode'] == 'approved_stage_only'
+    assert doc['automatic_launch_allowed']['require_gate_pass'] is True
 
 
 def test_e1_file_repin_preserves_old_scopes_and_rejects_an_extra_line(tmp_path):

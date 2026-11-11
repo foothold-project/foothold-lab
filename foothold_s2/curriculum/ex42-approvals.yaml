@@ -1,7 +1,11 @@
 format: foothold-ex42-approvals/1
 status: blocked
 production_launch_allowed: false
-automatic_launch_allowed: false
+automatic_launch_allowed:
+  mode: approved_stage_only
+  require_gate_pass: true
+  notify: true
+  decision_source: c5471d370d634ed2a381d8249a10c652c143f699
 requirements:
   - parent_adoption_decision
   - explicit_lead_approval
