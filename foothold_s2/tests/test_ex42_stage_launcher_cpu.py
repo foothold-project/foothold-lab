@@ -96,7 +96,7 @@ def test_a_missing_or_inconsistent_value_refuses_the_launch(tmp_path, change, ma
         L.build({**_env(tmp_path), **change})
 
 
-@pytest.mark.parametrize("end", ["0", "abc", str(E_STAGE_SPECS[STAGE]["updates"] + 250), ""])
+@pytest.mark.parametrize("end", ["0", "abc", str(E_STAGE_SPECS[STAGE]["updates"] + E_STAGE_SPECS[STAGE]["extension_updates"] * E_STAGE_SPECS[STAGE]["extension_max_count"] + 250), ""])
 def test_a_continue_segment_end_outside_the_stage_or_a_folder_without_manifest_is_refused(tmp_path, end):
     env = _env(tmp_path, action="continue")
     env["EX42_AUTO_SEGMENT_END"] = end

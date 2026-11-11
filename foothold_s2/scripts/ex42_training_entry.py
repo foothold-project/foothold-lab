@@ -82,6 +82,26 @@ def _stage_caps(stage_id: str) -> set[int]:
     return {spec["updates"] + k * spec["extension_updates"] for k in range(spec["extension_max_count"] + 1)}
 
 
+def stage_bound(stage_id: str, segment_end: int | None = None, approvals_path: str | Path | None = None) -> int:
+    """The update bound a process of this stage runs with: the base cap, or, for a segment that ends past it, the
+    smallest cap + whole extensions that holds the segment end. An extension needs `extension_authorized` in the
+    stage's approval cell (HOLD-only; the decision to use it is the hand-off's) and a count left in the table."""
+    spec = E_STAGE_SPECS[stage_id]
+    cap = spec["updates"]
+    if segment_end is None or segment_end <= cap:
+        return cap
+    bounds = sorted(_stage_caps(stage_id))
+    bound = next((b for b in bounds if b >= segment_end), None)
+    if bound is None:
+        raise ValueError(f"EX-42 {stage_id} segment end {segment_end} is past the last extension {bounds[-1]}")
+    if approvals_path is not None:
+        from foothold_s2.curriculum.ex42_prep import _read_yaml
+        cell = _read_yaml(Path(approvals_path)).get(f"stage_{stage_id.lower()}_authorization")
+        if not isinstance(cell, dict) or cell.get("extension_authorized") is not True:
+            raise ValueError(f"EX-42 {stage_id} extension is not authorized in its approval cell")
+    return bound
+
+
 def adopt_plan_stage_table(plan_path: str | Path) -> dict[str, dict[str, Any]]:
     """Make the stage table the one of the plan this run was started with (`--ex42_plan`), in place, so every
     importer of E_STAGE_SPECS / E_STAGES sees it. A materialized plan (one that pins the parents of later stages)
@@ -403,8 +423,9 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         if (type(distributed) is not bool or max_iterations not in SPEED_PROBE_UPDATES
                 or num_envs not in SPEED_PROBE_ENVS):
             raise ValueError(f"EX-42 {stage_id} speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
-    elif max_iterations != updates or num_envs != STAGE_ZERO_NUM_ENVS:
-        raise ValueError(f"EX-42 {stage_id} is bounded to exactly {updates} updates and 3072 environments per process")
+    elif max_iterations not in _stage_caps(stage_id) or num_envs != STAGE_ZERO_NUM_ENVS:
+        raise ValueError(f"EX-42 {stage_id} is bounded to exactly {updates} updates (or its whole extensions) "
+                         "and 3072 environments per process")
     elif distributed is not (world_size == 2) or world_size not in (1, 2) or not 0 <= rank < world_size:
         # M3 decision: one process (3072) or a two-GPU torchrun with 3072 per rank (6144 = plan num_envs)
         raise ValueError(f"EX-42 {stage_id} is bounded to exactly {updates} updates on one process or a two-rank torchrun (distributed iff world size 2)")
@@ -521,6 +542,14 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
     return request
 
 
+def _saved_bound_fits(saved, bound: int, stage_id: str) -> bool:
+    """Stage zero: the saved bound is the bound. An E stage: the saved bound is one of the stage's caps, not above
+    this process's bound (an extension segment resumes a save that ran to a lower cap)."""
+    if stage_id in E_STAGES:
+        return saved in _stage_caps(stage_id) and saved <= bound
+    return saved == bound
+
+
 def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
                                    manifest_path: str | Path,
                                    plan_sha256: str, approval_sha256: str,
@@ -551,6 +580,8 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
     local_iteration = int(match.group(1))
     if not 0 < local_iteration < maximum_updates:
         raise ValueError("EX-42 self-resume checkpoint must be inside the approved stage-zero range")
+    if stage_id in E_STAGES and maximum_updates not in _stage_caps(stage_id):
+        raise ValueError(f"EX-42 {stage_id} resume bound {maximum_updates} is neither the stage cap nor a whole extension")
     manifest_bytes = manifest_file.read_bytes()
     manifest_sha = hashlib.sha256(manifest_bytes).hexdigest()
     manifest = json.loads(manifest_bytes.decode("utf-8-sig"))
@@ -609,7 +640,7 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
     if (not isinstance(curriculum, dict)
             or curriculum.get("format") != "foothold-ex42-stage-zero-state/1"
             or curriculum.get("iteration") != local_iteration
-            or curriculum.get("maximum_updates") != maximum_updates
+            or not _saved_bound_fits(curriculum.get("maximum_updates"), maximum_updates, stage_id)
             or curriculum.get("plan_sha256") != plan_sha256
             or curriculum.get("approval_sha256") != approval_sha256
             or curriculum.get("parent_sha256") != expected_parent
@@ -978,7 +1009,8 @@ class EX42StageZeroRuntime:
         bound = E_STAGES[stage_id][0] if stage_id in E_STAGES else STAGE_ZERO_UPDATES
         if stage_id not in ("EX42_0_T0_prime", *E_STAGES):
             raise ValueError(f"EX-42 single-stage runtime accepts stage zero, {' or '.join(E_STAGES)} only")
-        if maximum_updates != bound and not (
+        allowed = _stage_caps(stage_id) if stage_id in E_STAGES else {bound}
+        if maximum_updates not in allowed and not (
                 speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
             raise ValueError(f"EX-42 stage-zero runtime must remain bounded to {bound} updates")
         self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
@@ -1143,6 +1175,9 @@ class EX42StageZeroRuntime:
         for key in ("format", "stage_id", "maximum_updates", "plan_sha256",
                     "approval_sha256", "parent_sha256", "dr_scale", "terrain",
                     "push_vmax_mps"):
+            if key == "maximum_updates" and self.stage_id in E_STAGES:      # an earlier segment may have run to a lower cap
+                if state.get(key) in _stage_caps(self.stage_id) and state[key] <= expected[key]:
+                    continue
             if state.get(key) != expected[key]:
                 raise ValueError(f"EX-42 stage-zero continuation {key} differs")
         iteration = state.get("iteration")
@@ -1318,7 +1353,8 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
     if stage_id is None:
         stage_id = STAGE_E0_ID if stage_e0 else "EX42_0_T0_prime"
     approved_updates = E_STAGES[stage_id][0] if stage_id in E_STAGES else STAGE_ZERO_UPDATES
-    if updates != approved_updates and updates not in SPEED_PROBE_UPDATES:
+    approved = _stage_caps(stage_id) if stage_id in E_STAGES else {approved_updates}
+    if updates not in approved and updates not in SPEED_PROBE_UPDATES:
         raise ValueError("EX-42 stage-zero update bound is not an approved value")
     saved_cfg = checkpoint.get("perception_cfg")
     if not isinstance(saved_cfg, dict):

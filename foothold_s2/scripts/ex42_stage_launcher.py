@@ -62,6 +62,14 @@ def _stage_updates(stage, plan):
     return int(table[stage]["updates"])
 
 
+def _stage_caps(stage, plan):
+    """Every bound a process of the stage may run with: the base cap, then the cap plus whole HOLD-only extensions."""
+    import yaml
+    from foothold_s2.scripts.ex42_training_entry import e_stage_table
+    spec = e_stage_table(yaml.safe_load(plan.read_text(encoding="utf-8-sig"))["stages"])[stage]
+    return [spec["updates"] + k * spec["extension_updates"] for k in range(spec["extension_max_count"] + 1)]
+
+
 def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
     """The per-boundary evaluation command; `{iteration}` is filled by the training's boundary hook."""
     argv = [python, "-m", "foothold_s2.ex42_eval_once",
@@ -98,8 +106,10 @@ def build(env, *, dry_run=False, now=None):
     if action == "continue":
         resume = _need(env, "AUTO_RESUME_CHECKPOINT")
         segment_end = _need(env, "AUTO_SEGMENT_END")
-        if not segment_end.isdigit() or not 0 < int(segment_end) <= updates:
-            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{updates}")
+        caps = _stage_caps(stage, plan)
+        if not segment_end.isdigit() or not 0 < int(segment_end) <= caps[-1]:
+            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{caps[-1]}")
+        updates = next(c for c in caps if c >= int(segment_end))      # past the base cap: the extension's whole bound
         run_dir = str(Path(resume).resolve().parent)
         if not (Path(run_dir) / "manifest.json").is_file():
             raise LaunchRefused(f"{run_dir} has no manifest.json: not the run folder of the checkpoint")
