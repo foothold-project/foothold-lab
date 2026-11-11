@@ -226,6 +226,9 @@ def source_exit_bounds(source, template, stage):
     return minimum, expected['maximum_updates']
 
 
+FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_sha256 / flag_baseline from the W09+W08 chain
+
+
 def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
              budget_limit, budget_used, budget_basis, flag_chain=None):
     template, source = EX42Plan.load(plan), EX42Plan.load(source_plan)
@@ -304,7 +307,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
             cell['extension_contract'] = stage_extension_contract(row)
     flag_artifacts = {}
     if flag_chain is not None:
-        if target != 'E1F':
+        if target != FLAG_CHAIN_TARGET:
             raise ValueError('flag calibration publication is scoped to E1F')
         from foothold_s2.ex42_flag_publication import validate_flag_chain
         flag_artifacts = validate_flag_chain(flag_chain, template=template, checkpoint=checkpoint,

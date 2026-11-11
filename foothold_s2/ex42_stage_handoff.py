@@ -172,7 +172,10 @@ def materializer_from_env(env):
     the environment (machine profile): EX42_MATERIALIZE_TEMPLATE_PLAN / _TEMPLATE_APPROVALS (the approved template),
     _EVIDENCE_DIR (the runner writes <target>.json there from the finished stage's logs and baselines), _OUT_ROOT (one
     immutable folder per target and gate is created under it) and the explicit budget triple _BUDGET_LIMIT / _USED /
-    _BASIS. A missing piece refuses the materialization (a notice), it is never guessed."""
+    _BASIS. A missing piece refuses the materialization (a notice), it is never guessed.
+    E1F is published together with the completed W09+W08 flag chain (`EX42_FLAG_CHAIN`, optional pin
+    `EX42_FLAG_CHAIN_SHA256`): its approval needs `calibration_sha256` and the `flag_baseline`, so without the chain the
+    handoff does not start it (fail closed, a notice) instead of freezing a plan with an empty calibration."""
     names = ("TEMPLATE_PLAN", "TEMPLATE_APPROVALS", "EVIDENCE_DIR", "OUT_ROOT")
     if not env.get("EX42_MATERIALIZE_TEMPLATE_PLAN"):
         return None
@@ -184,13 +187,24 @@ def materializer_from_env(env):
         evidence = Path(env["EX42_MATERIALIZE_EVIDENCE_DIR"]) / f"{target_stage}.json"
         if not evidence.is_file():
             raise ValueError(f"materialize evidence {evidence} is missing (written from the finished stage's own records)")
-        from foothold_s2.ex42_stage_materialize import materialize
+        from foothold_s2.ex42_stage_materialize import FLAG_CHAIN_TARGET, materialize
+        flag_chain = None
+        if target_stage == FLAG_CHAIN_TARGET:
+            chain = env.get("EX42_FLAG_CHAIN")
+            if not chain or not Path(chain).is_file():
+                raise ValueError(f"{target_stage} needs the completed flag chain (EX42_FLAG_CHAIN) for calibration_sha256 and "
+                                 "flag_baseline; not started without it")
+            pin = env.get("EX42_FLAG_CHAIN_SHA256")
+            if pin and _sha256(chain) != pin:
+                raise ValueError("EX42_FLAG_CHAIN differs from its EX42_FLAG_CHAIN_SHA256 pin")
+            flag_chain = chain
         return materialize(
             plan=env["EX42_MATERIALIZE_TEMPLATE_PLAN"], source_plan=source_plan,
             approvals=env["EX42_MATERIALIZE_TEMPLATE_APPROVALS"], target=target_stage, parent_manifest=parent_manifest,
             gate_receipt=gate_receipt, evidence=evidence, budget_limit=int(env["EX42_MATERIALIZE_BUDGET_LIMIT"]),
             budget_used=int(env["EX42_MATERIALIZE_BUDGET_USED"]), budget_basis=env["EX42_MATERIALIZE_BUDGET_BASIS"],
-            out=Path(env["EX42_MATERIALIZE_OUT_ROOT"]) / f"{target_stage}_{_sha256(gate_receipt)[:12]}")
+            out=Path(env["EX42_MATERIALIZE_OUT_ROOT"]) / f"{target_stage}_{_sha256(gate_receipt)[:12]}",
+            flag_chain=flag_chain)
     return run
 
 

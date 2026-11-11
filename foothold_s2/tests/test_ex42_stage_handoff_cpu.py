@@ -443,7 +443,11 @@ def test_the_materializer_needs_every_setting_and_the_evidence_file_and_one_fold
     import foothold_s2.ex42_stage_materialize as materialize
     got = {}
     monkeypatch.setattr(materialize, "materialize", lambda **kw: got.update(kw) or {"plan": "x"})
+    chain = tmp_path / "chain_receipt.json"
+    chain.write_text("{}")
+    env["EX42_FLAG_CHAIN"] = str(chain)
     run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
+    assert got["flag_chain"] == str(chain)
     assert got["target"] == "E1F" and got["budget_limit"] == 20000 and got["budget_used"] == 1000
     assert got["out"].parent == tmp_path / "out" and got["out"].name.startswith("E1F_") and got["plan"] == "/t/p.yaml"
 
@@ -468,3 +472,34 @@ def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_deci
     assert seen["plan"] != str(base.path) and seen["target_stage"] == "E1F"
     assert (decision["plan"], decision["approvals"], decision["materialized_plan_sha256"]) == (
         made["plan"], made["approvals"], made["plan_sha256"])
+
+
+def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known, tmp_path, monkeypatch):
+    import foothold_s2.ex42_stage_materialize as materialize
+    base, ap, manifest, gp = known
+    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
+    (tmp_path / "ev").mkdir()
+    (tmp_path / "ev" / "E1F.json").write_text("{}")
+    (tmp_path / "ev" / "E2.json").write_text("{}")
+    called = []
+    monkeypatch.setattr(materialize, "materialize", lambda **kw: called.append(kw) or {"plan": "x"})
+    env = {"EX42_MATERIALIZE_TEMPLATE_PLAN": "/t/p.yaml", "EX42_MATERIALIZE_TEMPLATE_APPROVALS": "/t/a.yaml",
+           "EX42_MATERIALIZE_EVIDENCE_DIR": str(tmp_path / "ev"), "EX42_MATERIALIZE_OUT_ROOT": str(tmp_path / "out"),
+           "EX42_MATERIALIZE_BUDGET_LIMIT": "20000", "EX42_MATERIALIZE_BUDGET_USED": "1000", "EX42_MATERIALIZE_BUDGET_BASIS": "b"}
+    for chain in (None, str(tmp_path / "missing.json")):                        # unset, or a path with no file
+        if chain:
+            env["EX42_FLAG_CHAIN"] = chain
+        decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=handoff.materializer_from_env(env))
+        assert decision["action"] == "notify" and "flag chain" in decision["reason"]
+    assert called == []                                                          # no plan was frozen, no launch decision
+    good = tmp_path / "chain_receipt.json"
+    good.write_text("{}")
+    env.update(EX42_FLAG_CHAIN=str(good), EX42_FLAG_CHAIN_SHA256="0" * 64)
+    with pytest.raises(ValueError, match="pin"):
+        handoff.materializer_from_env(env)(target_stage="E1F", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
+    assert called == []
+    env["EX42_FLAG_CHAIN_SHA256"] = hashlib.sha256(good.read_bytes()).hexdigest()
+    handoff.materializer_from_env(env)(target_stage="E1F", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
+    assert called[0]["flag_chain"] == str(good)
+    handoff.materializer_from_env({**env, "EX42_FLAG_CHAIN": ""})(target_stage="E2", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
+    assert called[1]["flag_chain"] is None                                       # the chain is E1F's, later stages do not take it
