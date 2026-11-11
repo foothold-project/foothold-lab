@@ -91,6 +91,19 @@ STAGE_E0_UPDATES = E_STAGES[STAGE_E0_ID][0]
 STAGE_E1_UPDATES = E_STAGES[STAGE_E1_ID][0]
 # approval cell validator per stage; a stage without a line here is refused (its approval cell is not reviewed yet)
 APPROVAL_VALIDATORS = {STAGE_E0_ID: validate_stage_e0_authorization, STAGE_E1_ID: validate_stage_e1_authorization}
+
+
+def stage_approval_validator(plan: EX42Plan, stage_id: str):
+    """(plan, approvals_path, parent_sha256) -> proof. E0 and E1 keep their reviewed special checks; every later stage
+    goes through the table-driven bounded validator (stages[].authorization_contract, fails closed)."""
+    legacy = APPROVAL_VALIDATORS.get(stage_id)
+    if legacy is not None:
+        return legacy
+    from foothold_s2.curriculum.ex42_prep import authorization_validators
+    table = authorization_validators(plan)
+    if stage_id not in table:
+        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    return lambda _plan, approvals_path, parent_sha256: table[stage_id](approvals_path, parent_sha256)
 # m13000 = stage-zero model_1000.pt (experiments/EX-42.yaml operational_values.e_stage_parent; a test keeps both equal).
 E0_PARENT_SHA256 = "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
 STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613"
@@ -398,9 +411,7 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     if checkpoint.name != parent["checkpoint_key"] or digest != parent["sha256"]:
         raise ValueError(f"EX-42 {stage_id} parent checkpoint differs from the pinned {parent_label}")
-    validator = APPROVAL_VALIDATORS.get(stage_id)
-    if validator is None:
-        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    validator = stage_approval_validator(plan, stage_id)
     approval = validator(plan, approvals_path, parent["sha256"])
     request = {
         "state": f"stage_{stage_id.lower()}_preflight_passed", "stage_id": stage_id,
@@ -1430,9 +1441,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
     spec = E_STAGE_SPECS.get(stage_id)
     if spec is None or spec["previous"] is None:
         raise ValueError(f"EX-42 {stage_id} is not a stage that continues a previous stage's run")
-    validator = APPROVAL_VALIDATORS.get(stage_id)
-    if validator is None:
-        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    validator = stage_approval_validator(plan, stage_id)
     previous, local, cumulative = spec["previous"], spec["parent_local"], spec["parent_cumulative"]
     mirror_before = E_STAGE_SPECS[previous]["critic_mirror"]
     pin = dict(_e_stage(plan, stage_id)["parent"])
