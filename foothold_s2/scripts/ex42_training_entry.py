@@ -358,6 +358,14 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     return plan, parent, request
 
 
+def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) -> bool:
+    """A boundary segment continues in the run directory that holds its checkpoint (manifest, chain receipts and the
+    queued evaluations all live there); any other log directory splits the run in two and is refused."""
+    if Path(log_dir).resolve() != Path(resume_checkpoint).resolve().parent:
+        raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
+    return True
+
+
 def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
                               origin: int = 0) -> int:
     """Where a boundary segment stops. None means the whole stage (the old single-process run).

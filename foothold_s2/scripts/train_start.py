@@ -566,10 +566,9 @@ if _ex42_requested:
                 require_latest=True, stage_id=EX42_STAGE_ID,
                 parent_cumulative_update=EX42_STAGE_PARENT_UPDATES[1], segment_end=EX42_SEGMENT_END)
             EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
-            EX42_STAGE_ZERO_RESUME_SAME_RUN = (
-                Path(_pre_args.ex42_log_dir).resolve() == Path(EX42_STAGE_ZERO_RESUME).resolve().parent)
-            if not EX42_STAGE_ZERO_RESUME_SAME_RUN:
-                raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
+            from foothold_s2.scripts.ex42_training_entry import require_same_run_resume
+
+            EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)
             print(f"EX42_STAGE_{EX42_STAGE_ID}_RESUME_PREFLIGHT " + json.dumps(
                 EX42_STAGE_ZERO_RESUME_PROOF, ensure_ascii=False, sort_keys=True), flush=True)
         else:
