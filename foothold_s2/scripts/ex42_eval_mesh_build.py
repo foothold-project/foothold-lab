@@ -6,11 +6,12 @@ import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from foothold_s2.terrains.ex42_eval_terrains import KINDS, LANDING, PAPER, START, SURFACE_SPIN, write_mesh
+from foothold_s2.terrains.ex42_eval_records import KINDS as RECORDS
 from foothold_s2.eval.ex42_eval_mesh import preflight
 from foothold_s2.scripts.ex42_mesh_mount_check import part_a
 
 GROUPS = {'landing': (LANDING,), 'paper': PAPER, 'start': START,
-          'surface': (SURFACE_SPIN,), 'all': KINDS}
+          'surface': (SURFACE_SPIN,), 'records': RECORDS, 'all': KINDS}
 
 
 def main(argv=None):

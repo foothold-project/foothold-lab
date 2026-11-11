@@ -18,6 +18,7 @@ import numpy as np
 from foothold_s2.eval import start_sheet as ss
 from foothold_s2.terrains import sparse_terrains as sparse
 from foothold_s2.terrains import start_go2_v2 as train
+from foothold_s2.terrains import ex42_eval_records as records
 
 FORMAT = 'foothold-ex42-evaluation-mesh/1'
 CG_COMMIT = '368d03e2061b505fc72ad73e9cd2527a766e7738'
@@ -29,7 +30,7 @@ SURFACE_SPIN = 'eval_stair_surface_spin'
 PAPER = tuple(f'eval_stairs_{n:03d}' for n in (10,15,20,25)) + tuple(f'eval_slope_{n}' for n in (30,35,45))
 START = tuple(f'{v}__{k}' for v in START_VARIANTS for k in ss.KINDS)
 # Append the record-only column; preserve the original twenty column identities.
-KINDS = (LANDING,) + PAPER + START + (SURFACE_SPIN,)
+KINDS = (LANDING,) + PAPER + START + (SURFACE_SPIN,) + records.KINDS
 RESET_RANGES = {k: {axis: (0.,0.) for axis in ('x','y','yaw')} for k in KINDS}
 
 
@@ -82,6 +83,8 @@ def _stairs(kind, seed):
                'stop_band_x':[1+2*tread,1+3*tread]}
     dims = {'step_height_m':rise,'tread_m':tread,'landing_depth_m':platform,
             'landing_width_m':platform,'riser_count':rings+1,'top_height_m':top}
+    if kind in records.STAIR_RECORDS:
+        dims['role']='record'
     assumptions = {'square_landing_width_m':platform, 'layout':'concentric square stairs, 8 x 8 m carrier',
                    'outer_stair_width_m':6., 'ground_border_m':1.,
                    'reference':'rough_go2_cfg.py:21-22,34-36 platform 3 and tread .3; exact 1.2 square is evaluation layout'}
@@ -92,7 +95,8 @@ def _stairs(kind, seed):
         dims['role'] = 'record'
         assumptions.update(spin_entry='walk from approach; do not reset on narrow tread',
             spin_tread_index=3, reference='CG:394 .15 rise/.25 run; third tread and 3 m top are layout assumptions')
-    return EvalTile(kind,_mesh_boxes(boxes),origin,anchors,dims,[_source([229,394,600])],0,seed,assumptions)
+    sources = [_source([590,625] if kind in records.STAIR_RECORDS else [229,394,600])]
+    return EvalTile(kind,_mesh_boxes(boxes),origin,anchors,dims,sources,0,seed,assumptions)
 
 
 def _slope(kind, seed):
@@ -190,6 +194,8 @@ def build_tile(kind, *, seed):
         return _stairs(kind,seed)
     if kind.startswith('eval_slope_'):
         return _slope(kind,seed)
+    if kind in records.KINDS:
+        return records.build_tile(kind,seed=seed)
     return _start(kind,seed)
 
 
@@ -235,12 +241,16 @@ does not initialize a live training GPU. No Kit or model is loaded here.
     npz=folder/'terrain_mesh.npz'
     np.savez_compressed(npz,vertices=vertices,faces=faces,origins=np.array([origins]),
                         column_family=np.array(['V']*len(kinds)))
-    source_paths=[Path(__file__),Path(train.__file__),Path(ss.__file__),Path(sparse.__file__)]
+    from foothold_s2.terrains import hipan_posture
+    source_paths=[Path(__file__),Path(train.__file__),Path(ss.__file__),Path(sparse.__file__),
+                  Path(records.__file__),Path(hipan_posture.__file__)]
     root=Path(__file__).resolve().parents[2]
     doc={'format':FORMAT,'training_allowed':False,'seed':seed,'origins_shape':[1,len(kinds),3],
          'row_semantics':'one fixed geometry row; nominal START L9 is column metadata, not curriculum row',
          'mesh_sha256':hashlib.sha256(vertices.tobytes()+faces.tobytes()).hexdigest(),
          'mesh_file_sha256':hashlib.sha256(npz.read_bytes()).hexdigest(),'columns':columns,
+         'evaluation_cases':[records.case_contract(case) for case in (*kinds,*records.REVERSE_CASES)
+                             if records.REVERSE_CASES.get(case,case) in kinds],
          'exterior_border_m':20.,'border_source':'rough_go2_cfg.py:42-43; outside grid only, pits preserved',
          'rng_provenance':receipt,'source_sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}}
     (folder/'mesh_manifest.json').write_text(json.dumps(doc,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
