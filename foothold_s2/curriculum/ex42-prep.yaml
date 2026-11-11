@@ -390,6 +390,7 @@ stages:
     flag: 0.1
   minimum_updates: 250
   maximum_updates: 750
+  # CG assumption only. 12:02 approval excludes extension; materialize cannot enable it.
   extension_updates: 500
   extension_max_count: 1
   boundary_axes:
@@ -1212,7 +1213,7 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
-    # planner 표 (CG:360~365 D81); 앞 28 종 1.5 % 로 내리고 D 첫 종류 5 % (가정), wall 은 치수 미정이라 0
+    # planner 표 (CG:360~365 D81); 앞 28 종 1.5 % 로 내리고 D 첫 종류 5 % (가정), wall 은 12:02 확정 1.20 m / 통로 0.80 m, K 사다리로 순차 노출
     exposure_at_E6b:
       default:
         exposure: 0.0
@@ -1338,13 +1339,14 @@ stages:
         kind: high_ledge
         share: 0.05
         level_cap: 0
-    # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall 은 치수 미정이라 열지 않음
+    # K 경계 사다리 (planner §2 · 가정): high_ledge 다음 crawl, wall (12:02 원장 7121e018:420)
     k_ladder:
       grades: {new: 0.05, current: 0.1}
       kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
       kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: D, kind: crawl, level_cap: 0}
+      - {family: D, kind: wall, level_cap: 0}
     floors:
       global_command_floor:
         reverse: 0.05

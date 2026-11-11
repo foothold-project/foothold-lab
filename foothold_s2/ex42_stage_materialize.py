@@ -296,7 +296,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         row['critic_mirror'] = True
         # Scope stays at the registered base cap. The separate HOLD-only
         # extension starts there and is bounded by step times count.
-        if row['extension_updates'] > 0:
+        if row['extension_updates'] > 0 and target != 'E1F':
+            # E1F: decisions 7121e018:420 explicitly keeps extension separate.
             from foothold_s2.curriculum.ex42_prep import ALL_STAGES_DECISION_ID, ALL_STAGES_DECISION_SHA
             if not any(isinstance(v,dict) and v.get('approved') is True
                        and v.get('decision_id')==ALL_STAGES_DECISION_ID
