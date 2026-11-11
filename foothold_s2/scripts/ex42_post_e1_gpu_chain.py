@@ -17,7 +17,7 @@ from foothold_s2.scripts.ex42_kit_sequence_rehearsal import SEQUENCE, build_repo
 
 BOUNDARIES = (250, 500, 750, 1000)
 STAGE_PREREQUISITES = {"E2": "W14", "E3": "W19"}
-FLAG_DEVICE = "cuda:1"
+FLAG_DEVICES = ("cuda:0", "cuda:1")
 
 
 def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
@@ -65,9 +65,9 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                            "E1 gate HOLD; W09/W08, materialization and E1F launch skipped; awaiting lead approval."],
                   "blockers": []})
 
-    # #688's single-device CLI runs W09 and all five W08 rounds serially. The
-    # later --devices contract can replace this one device without changing the
-    # dependency chain or allowing E1F to overlap the calibration work.
+    # #691 assigns W09 and two W08 rounds to GPU0, then three W08 rounds to
+    # GPU1. Each group is sequential; the materialize and E1F stages wait for
+    # the complete six-round receipt.
     flag_argv = ["${ISAAC311_PYTHON}", "-m", "foothold_s2.scripts.ex42_flag_baseline_chain",
                  "--checkpoint", checkpoint_path,
                  "--expected-checkpoint-sha256", "${E1_MODEL_1000_SHA256}",
@@ -75,16 +75,23 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                  "--plan", "${W09_W08_EVALUATION_PLAN}",
                  "--mesh-dir", "${E1_MESH_DIR}",
                  "--expected-mesh-sha256", "${E1_MESH_SHA256}",
-                 "--device", FLAG_DEVICE, "--out", f"{run_path}/eval/w09-w08", "--execute"]
+                 "--devices", ",".join(FLAG_DEVICES),
+                 "--out", f"{run_path}/eval/w09-w08", "--execute"]
+    flag_blockers = []
+    if not _supports_flag_devices():
+        flag_blockers.append("scripter_dual_device_cli_not_merged")
     steps.append({"id": "W09-W08-flag-chain", "kind": "flag_baseline_and_calibration",
-                  "checkpoint": checkpoint_path, "priority": 2, "gpu": 1, "device": FLAG_DEVICE,
-                  "execution": "single_device_serial_until_devices_cli",
+                  "checkpoint": checkpoint_path, "priority": 2, "gpus": list(range(2)),
+                  "devices": list(FLAG_DEVICES),
+                  "execution": "two_device_groups_concurrent_each_group_serial",
                   "round_order": ["W09-seed42", *(f"W08-repeat-{i}" for i in range(1, 6))],
+                  "round_devices": ["cuda:0", "cuda:0", "cuda:0", "cuda:1", "cuda:1", "cuda:1"],
+                  "parallel_groups": [[0, 1, 2], [3, 4, 5]],
                   "requires": ["E1-exit-gate=PASS"], "queue_command": None,
                   "argv": flag_argv,
                   "completion_receipt": flag_chain_path,
                   "completion_state": "complete_after_all_six_rounds",
-                  "blockers": []})
+                  "blockers": flag_blockers})
 
     materialize_argv = ["${ISAAC311_PYTHON}", "-m", "foothold_s2.ex42_stage_materialize",
                         "--plan", "${E1F_TEMPLATE_PLAN}", "--source-plan", "${E1_SOURCE_PLAN}",
@@ -156,6 +163,16 @@ def _supports_flag_materialize() -> bool:
         from foothold_s2 import ex42_stage_materialize
         import inspect
         return "flag_chain" in inspect.signature(ex42_stage_materialize.materialize).parameters
+    except (ImportError, AttributeError, TypeError):
+        return False
+
+
+def _supports_flag_devices() -> bool:
+    """Return whether the merged flag producer accepts its dual-device contract."""
+    try:
+        from foothold_s2.scripts import ex42_flag_baseline_chain
+        import inspect
+        return "devices" in inspect.signature(ex42_flag_baseline_chain.run_chain).parameters
     except (ImportError, AttributeError, TypeError):
         return False
 

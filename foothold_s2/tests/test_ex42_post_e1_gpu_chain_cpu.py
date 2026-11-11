@@ -38,11 +38,13 @@ def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
     assert hold["extension_requires_lead_approval"] is True
     flags = schedule[6]
     assert flags["requires"] == ["E1-exit-gate=PASS"]
-    assert flags["device"] == "cuda:1"
-    assert flags["execution"] == "single_device_serial_until_devices_cli"
+    assert flags["devices"] == ["cuda:0", "cuda:1"]
+    assert flags["execution"] == "two_device_groups_concurrent_each_group_serial"
+    assert flags["round_devices"] == ["cuda:0", "cuda:0", "cuda:0", "cuda:1", "cuda:1", "cuda:1"]
+    assert flags["parallel_groups"] == [[0, 1, 2], [3, 4, 5]]
     assert flags["round_order"] == ["W09-seed42", "W08-repeat-1", "W08-repeat-2",
                                     "W08-repeat-3", "W08-repeat-4", "W08-repeat-5"]
-    assert "--device" in flags["argv"]
+    assert flags["argv"][flags["argv"].index("--devices") + 1] == "cuda:0,cuda:1"
     assert flags["argv"].count("--execute") == 1
     repin = schedule[7]
     assert repin["id"] == "W08-materialize-and-repin"
@@ -73,6 +75,6 @@ def test_unresolved_commands_keep_entire_chain_out_of_live_queue() -> None:
     assert all(row["queue_command"] is None for row in plan["schedule"])
     assert plan["queue_mutated"] is False and plan["kit_started"] is False
     assert plan["training_started"] is False
-    assert plan["schedule"][6]["blockers"] == []
+    assert "scripter_dual_device_cli_not_merged" in plan["schedule"][6]["blockers"]
     assert "verifier_materialize_cli_not_merged" in plan["schedule"][7]["blockers"]
     assert plan["schedule"][8]["blockers"] == ["materialized_launch_env_required_at_runtime"]
