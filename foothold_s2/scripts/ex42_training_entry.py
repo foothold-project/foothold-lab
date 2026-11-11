@@ -44,14 +44,18 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     (None for the first, whose parent is the stage-zero m13000). Nothing here names a stage."""
     table: dict[str, dict[str, Any]] = {}
     previous = None
+    mirror = False                  # the critic mirror stays on from the stage that turns it on until a stage says off
     for row in stages:
+        mirror = row.get("critic_mirror", mirror)
+        if type(mirror) is not bool:
+            raise ValueError(f"EX-42 stage {row.get('id')} critic_mirror must be a bool")
         parent = row.get("parent")
         if not isinstance(parent, dict):
             continue
         table[row["id"]] = {
             "updates": row["minimum_updates"], "parent_local": parent["manifest_local_update"],
             "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
-            "critic_mirror": row.get("critic_mirror") is True,
+            "critic_mirror": mirror,
             "previous": previous}
         previous = row["id"]
     return table
@@ -68,10 +72,42 @@ E_STAGE_SPECS = e_stage_table(_shipped_stages())
 # plan minimum; the +500 extensions are separate boundaries)
 E_STAGES = {stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
             for stage, spec in E_STAGE_SPECS.items()}
+
+
+def adopt_plan_stage_table(plan_path: str | Path) -> dict[str, dict[str, Any]]:
+    """Make the stage table the one of the plan this run was started with (`--ex42_plan`), in place, so every
+    importer of E_STAGE_SPECS / E_STAGES sees it. A materialized plan (one that pins the parents of later stages)
+    makes those stages startable; the shipped plan stays the default. The first stage's parent is still m13000."""
+    import yaml
+    stages = yaml.safe_load(Path(plan_path).read_text(encoding="utf-8-sig"))["stages"]
+    table = e_stage_table(stages)
+    if STAGE_E0_ID not in table or STAGE_E1_ID not in table:
+        raise ValueError("EX-42 plan stage table must pin the parents of E0 and E1")
+    E_STAGE_SPECS.clear()
+    E_STAGE_SPECS.update(table)
+    E_STAGES.clear()
+    E_STAGES.update({stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
+                     for stage, spec in table.items()})
+    return E_STAGE_SPECS
+
+
 STAGE_E0_UPDATES = E_STAGES[STAGE_E0_ID][0]
 STAGE_E1_UPDATES = E_STAGES[STAGE_E1_ID][0]
 # approval cell validator per stage; a stage without a line here is refused (its approval cell is not reviewed yet)
 APPROVAL_VALIDATORS = {STAGE_E0_ID: validate_stage_e0_authorization, STAGE_E1_ID: validate_stage_e1_authorization}
+
+
+def stage_approval_validator(plan: EX42Plan, stage_id: str):
+    """(plan, approvals_path, parent_sha256) -> proof. E0 and E1 keep their reviewed special checks; every later stage
+    goes through the table-driven bounded validator (stages[].authorization_contract, fails closed)."""
+    legacy = APPROVAL_VALIDATORS.get(stage_id)
+    if legacy is not None:
+        return legacy
+    from foothold_s2.curriculum.ex42_prep import authorization_validators
+    table = authorization_validators(plan)
+    if stage_id not in table:
+        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    return lambda _plan, approvals_path, parent_sha256: table[stage_id](approvals_path, parent_sha256)
 # m13000 = stage-zero model_1000.pt (experiments/EX-42.yaml operational_values.e_stage_parent; a test keeps both equal).
 E0_PARENT_SHA256 = "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
 STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613"
@@ -168,7 +204,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
     from foothold_s2.terrains.ex42_exposure import exposure_by_column
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
-    stage_terrain = {**_e_stage(plan, stage_id)["terrain"], "kind_task": _e0_stage(plan)["terrain"]["kind_task"]}
+    stage_row = _e_stage(plan, stage_id)["terrain"]
+    stage_terrain = {**stage_row, "kind_task": stage_row.get("kind_task") or _e0_stage(plan)["terrain"]["kind_task"]}
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
@@ -379,9 +416,7 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     if checkpoint.name != parent["checkpoint_key"] or digest != parent["sha256"]:
         raise ValueError(f"EX-42 {stage_id} parent checkpoint differs from the pinned {parent_label}")
-    validator = APPROVAL_VALIDATORS.get(stage_id)
-    if validator is None:
-        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    validator = stage_approval_validator(plan, stage_id)
     approval = validator(plan, approvals_path, parent["sha256"])
     request = {
         "state": f"stage_{stage_id.lower()}_preflight_passed", "stage_id": stage_id,
@@ -1411,9 +1446,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
     spec = E_STAGE_SPECS.get(stage_id)
     if spec is None or spec["previous"] is None:
         raise ValueError(f"EX-42 {stage_id} is not a stage that continues a previous stage's run")
-    validator = APPROVAL_VALIDATORS.get(stage_id)
-    if validator is None:
-        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    validator = stage_approval_validator(plan, stage_id)
     previous, local, cumulative = spec["previous"], spec["parent_local"], spec["parent_cumulative"]
     mirror_before = E_STAGE_SPECS[previous]["critic_mirror"]
     pin = dict(_e_stage(plan, stage_id)["parent"])

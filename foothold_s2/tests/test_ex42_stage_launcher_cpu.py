@@ -196,3 +196,28 @@ def test_what_start_launcher_hands_over_is_exactly_what_the_launcher_builds_from
            **{k: v for k, v in seen.items() if k.startswith("EX42_AUTO_")}}
     argv, _, summary = L.build(env)
     assert summary["action"] == action and summary["stage"] == STAGE
+
+
+def test_a_later_stage_goes_through_the_table_validator_and_e0_e1_keep_their_own():
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.scripts import ex42_training_entry as entry
+    plan = EX42Plan.load(L.PLAN)
+    assert entry.stage_approval_validator(plan, "E1") is entry.validate_stage_e1_authorization
+    assert entry.stage_approval_validator(plan, "E0") is entry.validate_stage_e0_authorization
+    later = entry.stage_approval_validator(plan, "E2")
+    assert later is not entry.APPROVAL_VALIDATORS.get("E2")
+    with pytest.raises(ValueError):                    # the shipped approvals have no approved E2 cell: fails closed
+        later(plan, L.APPROVALS, "0" * 64)
+    with pytest.raises(ValueError, match="no reviewed approval"):
+        entry.stage_approval_validator(plan, "Z9")
+
+
+def test_a_materialized_plan_pair_must_come_as_a_pair_of_existing_absolute_files(tmp_path):
+    plan = tmp_path / "plan.yaml"
+    plan.write_text("stages: []\n")
+    with pytest.raises(L.LaunchRefused, match="pair"):
+        L.plan_paths({"EX42_AUTO_PLAN": str(plan)})
+    with pytest.raises(L.LaunchRefused, match="absolute"):
+        L.plan_paths({"EX42_AUTO_PLAN": str(plan), "EX42_AUTO_APPROVALS": "rel.yaml"})
+    assert L.plan_paths({"EX42_AUTO_PLAN": str(plan), "EX42_AUTO_APPROVALS": str(plan)}) == (plan, plan)
+    assert L.plan_paths({}) == (L.PLAN, L.APPROVALS)

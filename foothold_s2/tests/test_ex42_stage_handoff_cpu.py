@@ -350,3 +350,39 @@ def test_chain_validator_takes_the_queue_pair_only_together_with_a_launcher(tmp_
                 base + ["--next-stage-queue", str(tmp_path / "q.json"), "--next-stage-dispatch", str(tmp_path / "gone.py")]):
         with pytest.raises(ValueError, match="next-stage queue"):
             check(bad)
+
+
+# ---- a later stage goes on from its own boundary through its own table-driven cell (no E1-only branch) ----------
+def _later_stage(tmp_path, iteration=1000, judgment="HOLD"):
+    from foothold_s2.tests.test_ex42_table_authorization_cpu import fixture
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    plan, approvals, _ = fixture(tmp_path, "E3")
+    doc = deepcopy(plan.document)
+    row = next(r for r in doc["stages"] if r["id"] == "E3")
+    row["parent"] = {"sha256": "b" * 64, "manifest_local_update": 1500, "cumulative_update": 20000, "checkpoint_key": "model_1500.pt"}
+    run = tmp_path / "run"
+    run.mkdir()
+    data = b"boundary save"
+    (run / f"model_{iteration}.pt").write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    (run / "manifest.json").write_text(json.dumps({"checkpoints": {f"model_{iteration}.pt": digest},
+                                                   "progress": {"completed_updates": iteration}}))
+    gate = tmp_path / "p1.json"
+    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest}))
+    return replace(plan, document=doc), approvals, run / "manifest.json", gate
+
+
+def test_a_later_stage_boundary_below_its_bound_continues_the_same_stage(tmp_path):
+    plan, approvals, manifest, gate = _later_stage(tmp_path)
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 1000, gate, manifest)
+    assert decision["action"] == "continue" and decision["target_stage"] == "E3"
+    assert decision["segment_end"] == 1250 and decision["resume_checkpoint"].endswith("model_1000.pt")
+
+
+def test_a_later_stage_bound_without_a_pass_only_notifies_and_an_off_boundary_is_ignored(tmp_path):
+    plan, approvals, manifest, gate = _later_stage(tmp_path, iteration=3000)
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 3000, gate, manifest)
+    assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
+    plan, approvals, manifest, gate = _later_stage(tmp_path / "again", iteration=1000)
+    assert handoff.decide_next_stage(plan, approvals, "E3", 1100, gate, manifest) is None
+    assert handoff.decide_next_stage(plan, approvals, "E0", 1000, gate, manifest) is None     # E0 keeps only its minimum

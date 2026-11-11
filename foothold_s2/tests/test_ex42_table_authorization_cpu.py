@@ -188,3 +188,13 @@ def test_m_branch_cannot_replace_e5_graduation():
     assert a['stage_m_authorization']['budget']['m_updates_count_toward_source_maximum'] is None
     assert a['stage_m_authorization']['on_exhausted'] is None
     assert a['stage_e6a_authorization']['parent_lineage']['consumer_status']=='pending'
+
+
+@pytest.mark.parametrize('adapter,ready',[('map39',True),('flag_two_window',True),('pending',False)])
+def test_entry_gate_adapter_names_a_registered_gate_and_only_pending_is_not_ready(tmp_path,adapter,ready):
+    p,ap,_=fixture(tmp_path,'E3');d=deepcopy(p.document)
+    row=next(r for r in d['stages'] if r['id']=='E3')
+    row['authorization_contract']['source_stage_ids']=['E1F']
+    row['authorization_contract']['entry_gate_adapter']=adapter
+    proof=authorization_validators(replace(p,document=d))['E3'](ap,'b'*64)
+    assert proof['entry_gate_adapter'] == adapter and proof['entry_gate_adapter_ready'] is ready
