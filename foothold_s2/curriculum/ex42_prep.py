@@ -644,6 +644,14 @@ class EX42Plan:
                 or mirror_approval.get("choices") != [True]
                 or mirror_approval.get("boundaries") != ["E1"]):
             raise ValueError("EX-42 E1 critic mirror requires its explicit D174 approval")
+        for row in stages:
+            if "reward_overrides" in row or "retry_of" in row:
+                overrides, retry = row.get("reward_overrides"), row.get("retry_of")
+                if (not isinstance(overrides, dict) or set(overrides) != {"foot_slip"}
+                        or any(type(v) not in (int, float) or not math.isfinite(v) or not -1.0 <= v < 0 for v in overrides.values())
+                        or not isinstance(retry, dict) or not isinstance(retry.get("control_run"), str) or not retry["control_run"]
+                        or not isinstance(retry.get("control_plan_sha256"), str)):
+                    raise ValueError(f"EX-42 {row.get('id')} reward override needs retry_of (control run and plan) and only a foot_slip weight in [-1, 0)")
         evaluation = doc.get("evaluation", {})
         if (evaluation.get("judge_cells") != 26 or evaluation.get("record_only_cells") != 13
                 or evaluation.get("total_cells") != 39
@@ -692,6 +700,13 @@ class EX42Plan:
     @property
     def runtime_stage_ids(self) -> tuple[str, ...]:
         return tuple(row["id"] for row in self.runtime_stages)
+
+    def reward_overrides(self, stage_id: str) -> dict[str, float]:
+        """The stage's `reward_overrides` (a retry cell changes one preregistered reward weight, nothing else); {} when
+        the stage declares none. Checked at load: only `foot_slip`, a finite weight in [-1, 0), and only together with
+        `retry_of`, which names the finished control run the retry is compared with."""
+        row = next((r for r in self.document["stages"] if r.get("id") == stage_id), None)
+        return dict(row.get("reward_overrides") or {}) if row is not None else {}
 
     def following_stage_id(self, stage_id: str) -> str | None:
         """The stage after `stage_id` in the runtime order: the document's stages without the jump stages (the runtime

@@ -573,7 +573,8 @@ if _ex42_requested:
             EX42_STAGE_ZERO_PLAN)
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
-            parent_update=EX42_STAGE_PARENT_UPDATES[1])
+            parent_update=EX42_STAGE_PARENT_UPDATES[1],
+            reward_overrides=EX42_STAGE_ZERO_PLAN.reward_overrides(EX42_STAGE_ID))
         from foothold_s2.scripts.ex42_training_entry import validate_ex42_segment_end, validate_ex42_stage_zero_resume
 
         _interval = EX42_STAGE_ZERO_APPROVAL.get("boundary_evaluation_interval_updates")

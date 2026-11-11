@@ -1,0 +1,681 @@
+format: foothold-ex42-approvals/1
+status: blocked
+production_launch_allowed: false
+automatic_launch_allowed:
+  mode: approved_stage_only
+  require_gate_pass: true
+  notify: true
+  decision_source: c5471d370d634ed2a381d8249a10c652c143f699
+plan_amendment_1938:
+  approved: true
+  decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+  approved_at: 2026-11-11T19:38+09:00
+  approver: teamlead
+  decision_source:
+    commit: 7121e0188cf1cbe558704764227e306e6097149f
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  budget_basis: ex42_new_updates
+  maximum_updates: 20000
+  extensions_within_remaining_budget: true
+  easy_kind_floor: 0.015
+requirements:
+- parent_adoption_decision
+- explicit_lead_approval
+- resolved_assumptions
+- terrain_manifest_with_measurements
+fields:
+  critic_mirror:
+    approved: true
+    decision_id: D174
+    choices:
+    - true
+    boundaries:
+    - E1
+stage_zero_authorization:
+  approved: true
+  decision_id: lead-w65-ex42-stage-zero-20261108
+  approved_at: '2026-11-08T00:25:58Z'
+  approver: lead
+  scope:
+    stage_id: EX42_0_T0_prime
+    source_stage_id: T0_prime
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
+    later_stages_authorized: false
+  evidence:
+    ex41_graduated: false
+    ex41_requires_review: true
+    human_review_complete: true
+    adopted_parent_decision: teamlead-2026-11-07-m12000
+    stage_zero_decision: teamlead-2026-11-08-m13000
+    rationale: EX-41 graduated=false and requires_review=true remain recorded. Human review was completed; the team lead adopted m12000 on 2026-11-07 and accepted m13000 as EX-42 stage zero on 2026-11-08. This grants only the bounded T0-prime stage-zero bridge and does not authorize E0 or later.
+domain_randomization:
+  approved: true
+  decision_id: lead-relay-teamlead-20261106-1725-dr-1.0-fixed
+  rationale: '팀장 11/06 17:2x: 「DR 은 우선 1.0 으로 시작해서 그대로 두는 쪽으로 하자」'
+  push_mask:
+    mode: event_exclusion
+    off_kinds:
+      A:
+      - stepping_stones_low
+      - stepping_stones_high
+      - balance_beams
+      - stepping_beams
+      - gaps
+      B:
+      - stones
+      - beam
+      - pallets
+      - gap
+      - consecutive
+      - climb_up
+      - climb_down
+      C:
+      - gap
+      - discrete_obstacles
+      - box
+      D:
+      - crawl
+      - high_ledge
+      - wall
+      evaluation:
+      - start_go2_eval_gap115
+      - start_go2_eval_sup085
+      - start_go2_eval_both
+  stage_scales:
+    EX42_0_T0_prime: 1.0
+    E0: 1.0
+    E1: 1.0
+    E1F: 1.0
+    E2: 1.0
+    E3: 1.0
+    E4: 1.0
+    E5: 1.0
+    M: 1.0
+    E6a: 1.0
+    E6b: 1.0
+parent_adoption_decision:
+  decision: 285348de
+  checkpoints:
+  - m12000_20261107
+  - m13000_20261108
+stage_e0_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-015x-e0-prior-approval-b
+  approved_at: 2026-11-11 01:5x KST (original decision time notation)
+  approver: teamlead
+  decision_source: origin/feature/verify-v2-mvp-jay:inbox/jay/20261104-ex41-restart/decisions.tsv:413
+  scope:
+    stage_id: E0
+    start_update: 0
+    maximum_updates: 250
+    parent_sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
+    later_stages_authorized: false
+stage_e1_authorization:
+  scope:
+    stage_id: E1
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
+    later_stages_authorized: false
+  prerequisites:
+    e0_rejudgment:
+      required_result: PASS
+      checkpoint_key: model_250.pt
+      checkpoint_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
+  extension_authorized: true
+  extension_contract:
+    judgment: HOLD
+    after_updates: 1000
+    max_count: 2
+    maximum_updates: 2000
+    increment_updates: 500
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source: 7121e0188cf1cbe558704764227e306e6097149f
+  boundary_evaluation_interval_updates: 250
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  decision_source: null
+  retry_of:
+    control_run: EX-42-B-E1_20261111_114505
+    control_plan_sha256: e542961d9c65a588ae893b81a8d07d39cd66ca068f2f118410c3e2d1d7a2d982
+    control_parent_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
+    control_foot_slip_weight: 0.0
+    changes: foot_slip weight 0.0 -> -0.25, nothing else
+stage_e1f_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1202-e1f-entry
+  approved_at: 2026-11-11T12:02+09:00
+  approver: teamlead
+  approval_statement: E1F 승인
+  decision_source:
+    commit: 0b51913fced4eb6b34d39ebdd95548c190cb3018
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    condition: E1 exit gate PASS under this plan
+  scope:
+    stage_id: E1F
+    start_update: 0
+    maximum_updates: 750
+    parent_sha256: null
+    later_stages_authorized: false
+  prerequisites:
+    predecessor_exit:
+      stage_id: E1
+      required_result: PASS
+      same_plan_sha256: true
+      evaluation_mesh_sha256: null
+      continuous_level_cap: null
+      exposure_receipt_sha256: null
+    flag_baseline:
+      path: null
+      sha256: null
+      source: W09_baseline_then_fixed
+  boundary:
+    axis: command_allocation
+    terrain_change: none
+    boundary_mode: stop_evaluate_resume
+    shares_delta:
+      flag: 0.1
+      forward: -0.06
+      spin_left: -0.02
+      spin_right: -0.02
+    exposure_source: same_as_E1_end
+  extension_authorized: false
+  minimum_updates: 250
+  boundary_evaluation_interval_updates: 250
+  critic_mirror: true
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  missing_evidence:
+  - parent_sha256
+  - landing_evaluation_mesh_sha256
+  - flag_baseline
+  - e1_exit_cap_and_exposure_receipt
+  exit_gate:
+    cell: flag_reach
+    threshold_source: W09_baseline_then_fixed
+    thresholds: null
+    flag_cells: from:E1F
+stage_e2_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    condition: E1F exit gate PASS under this plan
+  scope:
+    stage_id: E2
+    start_update: 0
+    maximum_updates: 1500
+    parent_sha256: null
+    later_stages_authorized: false
+  prerequisites:
+    predecessor_exit:
+      stage_id: E1F
+      required_result: PASS
+      same_plan_sha256: true
+      evaluation_mesh_sha256: null
+    flag_baseline:
+      path: null
+      sha256: null
+      source: W09_baseline_then_fixed
+    m0_m3_receipt_sha256: null
+    calibration_sha256: null
+    kind_cell_evaluator: pending
+    stage_judgment_policy: pending
+  boundary:
+    axis: terrain_exposure
+    terrain_change: none
+    boundary_mode: stop_evaluate_resume
+    exposure_delta:
+      family: A
+      kind: stepping_stones_low
+      prep_alias: start_stones_l0
+      share:
+        from: 0.0
+        to: 0.05
+      level_cap: 0
+      donor: continuous
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  critic_mirror: null
+  later_stage_entry_gate_adapter: flag_two_window
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  missing_evidence:
+  - parent_sha256
+  - landing_evaluation_mesh_sha256
+  - flag_baseline
+  - m0_m3_receipt_sha256
+  kind_choice:
+    prep: start_stones_l0
+    mesh_kind: stepping_stones_low
+  exit_gate:
+    cells:
+    - family: A
+      kind: stepping_stones_low
+      level: 0
+      command: forward_1.0
+    completion: last_support_0.5s
+    denominator: forward+flag_all
+    success_min: 52
+    survival_min: 60
+    windows: 2
+    learned_cells_min: 32
+    exchange_learning_watch: true
+    maintenance_table: pass
+    learned_cells_min_grade: assumption
+  judge_cells_added:
+  - family: A
+    kind: stepping_stones_low
+    level: 0
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  record_cells_added:
+  - family: A
+    kind: stepping_stones_low
+    level: 0
+    command: flag_reach
+    flags: 1
+stage_e3_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E3
+    start_update: 0
+    maximum_updates: 4000
+    parent_sha256: null
+    later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: kind_two_window_e2
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E2
+    kind_opening_order_recorded: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+stage_e4_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E4
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: kind_two_window_e3
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E3
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+stage_e5_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E5
+    start_update: 0
+    maximum_updates: 1500
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: kind_two_window_e4
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E4
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+stage_m_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: M
+    start_update: 0
+    maximum_updates: 500
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: map_off_probability
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: stage_exit_v1
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    entry_condition_receipt_sha256: null
+    branch_origin_stage_id: null
+    return_stage_id: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  contract_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  optional_branch: true
+  source_stage_contract_status: decided_source_stage_return_runtime_pending
+  budget:
+    m_updates_count_toward_source_maximum: false
+    m_updates_count_toward_ex42_budget: true
+    source_window_counter_after_return: restart_two_windows
+  on_exhausted: notify_and_return_to_source_stage
+  entry:
+    source_stage: null
+    same_boundary_other_axis_change: forbidden
+    carry_over:
+      exposure: same_as_source_at_entry
+      level_caps: same_as_source_at_entry
+      command_shares: same
+  exit:
+    return_to: source_stage
+    p_map_off_after_return: 0.3
+    required_new_windows_after_return: 2
+    return_receipt_sha256: null
+    consumer_status: pending
+stage_e6a_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E6a
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: kind_two_window_e5
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      stage_id: E5
+      required_result: PASS
+      same_plan_sha256: true
+    stage_judgment_policy: pending
+    posture_command_code: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  parent_lineage:
+    direct_source: E5_exit
+    conditional_source: M_exit_with_source_E5
+    m_return_receipt_sha256: null
+    consumer_status: pending
+stage_e6b_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1307-ex42-all-stages
+  approved_at: 2026-11-11T13:07+09:00
+  approver: teamlead
+  approval_statement: EX-42 계획 E1F ~ E6b 전체 승인, 관문 통과 시 자동 기동, 단계마다 다시 묻지 않음
+  decision_source:
+    commit: 2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E6b
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  scope_amendment:
+    decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
+    decision_source:
+      commit: 7121e0188cf1cbe558704764227e306e6097149f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: posture_two_window_e6a
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6a
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+stage_j0_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J0
+    start_update: 0
+    maximum_updates: 250
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6b
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+stage_j1_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J1
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J0
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+stage_j2_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J2
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J1
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+stage_j3_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J3
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J2
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+stage_j4_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J4
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J3
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
