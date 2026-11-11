@@ -204,7 +204,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
     from foothold_s2.terrains.ex42_exposure import exposure_by_column
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
-    stage_terrain = {**_e_stage(plan, stage_id)["terrain"], "kind_task": _e0_stage(plan)["terrain"]["kind_task"]}
+    stage_row = _e_stage(plan, stage_id)["terrain"]
+    stage_terrain = {**stage_row, "kind_task": stage_row.get("kind_task") or _e0_stage(plan)["terrain"]["kind_task"]}
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)

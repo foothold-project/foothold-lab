@@ -25,16 +25,19 @@ def _sha256(path: Path) -> str:
 
 def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1):
     """Same stage, from this boundary's saved checkpoint: allowed only inside the bounds of the stage's own approval
-    cell (E1: scope maximum, cell interval) under the scoped automatic policy. No PASS is needed to go on."""
-    from foothold_s2.curriculum.ex42_prep import _read_yaml, scoped_automatic_policy, validate_stage_e1_authorization
-    if stage_id != "E1":
+    cell (scope maximum, cell interval; read through the stage's own validator) under the scoped automatic policy.
+    No PASS is needed to go on. The plan's first stage has no boundary to continue from."""
+    from foothold_s2.curriculum.ex42_prep import _read_yaml, scoped_automatic_policy
+    if plan.document["stages"][0].get("id") == stage_id:
         return {**base, "action": "notify", "state": "not_ready", "reason": f"{stage_id} has no boundary to continue from"}
     try:
         if not scoped_automatic_policy(_read_yaml(Path(approvals_path)).get("automatic_launch_allowed")):
             raise ValueError("scoped automatic policy is not enabled")
         pin = next(row for row in plan.document["stages"] if row["id"] == stage_id)["parent"]["sha256"]
-        proof = validate_stage_e1_authorization(plan, approvals_path, pin)
-        bound, interval = proof["scope"]["maximum_updates"], proof["boundary_evaluation_interval_updates"]
+        from foothold_s2.scripts.ex42_training_entry import stage_approval_validator
+        proof = stage_approval_validator(plan, stage_id)(plan, approvals_path, pin)
+        bound = proof["scope"]["maximum_updates"]
+        interval = proof.get("boundary_evaluation_interval_updates", plan.document["evaluation"]["interval_updates"])
         manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8-sig"))
         name = f"model_{iteration}.pt"
         checkpoint = Path(manifest_path).parent / name
@@ -66,9 +69,10 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
         return None
     minimum = stages[index].get("minimum_updates")
     boundary = iteration == minimum
-    if stage_id == "E1" and not boundary:          # the plan's evaluation interval, so a removed cell still gets a notice
+    if index > 0 and not boundary:          # the plan's evaluation interval, so a removed cell still gets a notice
         interval = plan.document.get("evaluation", {}).get("interval_updates")
-        boundary = type(interval) is int and interval > 0 and 0 < iteration < minimum and iteration % interval == 0
+        limit = stages[index].get("maximum_updates", minimum)
+        boundary = type(interval) is int and interval > 0 and 0 < iteration <= limit and iteration % interval == 0
     if not boundary:
         return None
     following = stages[index + 1]["id"] if index + 1 < len(stages) else None
@@ -77,7 +81,7 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
             "next_stage_id": following, "checkpoint_sha256": p1.get("checkpoint_sha256"),
             "gate_sha256": _sha256(p1_path)}
     if not (p1.get("judgment") == "PASS" and iteration >= minimum and following is not None):
-        if stage_id == "E1":      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
+        if index > 0:      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
             return _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1)
         return {**base, "action": "notify", "state": "not_ready",
                 "reason": "no following stage" if following is None else f"gate judgment is {p1.get('judgment')}"}
