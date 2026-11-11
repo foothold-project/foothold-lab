@@ -490,7 +490,8 @@ def main(argv: list[str] | None = None) -> int:
         env_cfg.sim.device = agent_cfg.device = args.device
         env_cfg.scene.terrain.terrain_type = "generator"
         env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(
-            Path(args.mesh_dir) / "terrain_mesh.npz", source_manifest["mesh_sha256"])
+            Path(args.mesh_dir) / "terrain_mesh.npz", source_manifest["mesh_sha256"],
+            single_tile_size=tile["tile_size_m"])
         env_cfg.scene.terrain.max_init_terrain_level = 0
         env_cfg.observations.policy.enable_corruption = False
         from foothold_s2.sensors import start_obs

@@ -128,12 +128,25 @@ def column_tile_sizes(origins) -> tuple[np.ndarray, float, list[dict[str, float]
     return tile_x, (float(np.median(dy)) if len(dy) else float(tile_x.mean())), irregular
 
 
-def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None):
+def single_tile_sizes(origins, tile_size) -> tuple[np.ndarray, float, list[dict[str, float]]]:
+    """Use the manifest's explicit size for one pinned evaluation tile."""
+    o = np.asarray(origins, dtype=np.float64)
+    size = np.asarray(tile_size, dtype=np.float64)
+    if o.shape != (1, 1, 3) or size.shape != (2,) or not np.isfinite(size).all() or (size <= 0).any():
+        raise ValueError("single tile size requires origins (1,1,3) and positive finite (x,y) size")
+    return np.asarray([size[0]], dtype=np.float64), float(size[1]), []
+
+
+def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None, *,
+                            single_tile_size: tuple[float, float] | None = None):
     """Isaac-side cfg whose class_type loads the saved mesh. Kit python only."""
     from isaaclab.utils import configclass
 
     loaded = load_combined_mesh(npz_path, mesh_sha256)
-    tile_x, tile_y, irregular = column_tile_sizes(loaded["origins"])
+    if single_tile_size is None:
+        tile_x, tile_y, irregular = column_tile_sizes(loaded["origins"])
+    else:
+        tile_x, tile_y, irregular = single_tile_sizes(loaded["origins"], single_tile_size)
 
     class CombinedMeshGenerator:
         def __init__(self, cfg, device="cpu"):
