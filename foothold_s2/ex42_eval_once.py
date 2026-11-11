@@ -188,7 +188,7 @@ def manifest_checkpoint_sha(checkpoint):
 
 
 def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_path,
-                          stage_id, output):
+                          stage_id, output, evaluation_plan_path=None):
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
     from foothold_s2.ex42_gate_checks import validate_ex42_map_score
@@ -196,16 +196,20 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
     if score.get("checkpoint_sha256") != digest(checkpoint):
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
     plan = EX42Plan.load(plan_path)
+    policy_path = Path(evaluation_plan_path or plan_path).resolve(strict=True)
+    policy = EX42Plan.load(policy_path)
+    if evaluation_plan_path is not None and score.get("maintenance_source_sha256") != policy.sha256:
+        raise ValueError("EX-42 P1 measured evaluation policy SHA differs")
     judgment = score.get("judgement", "HOLD")
     if judgment in ("PASS", "FAIL"):
         from foothold_s2.ex42_stage_judges import adapter_for
-        adapter = adapter_for(plan.document, stage_id)
+        adapter = adapter_for(policy.document, stage_id)
         if adapter is None:
             raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
         verdicts = [v["judgment"] for mode in ("eval_gt", "eval_pred")
                     for v in (score.get("cell_judgments") or {}).get(mode, {}).values() if isinstance(v, dict)]
         extra_fields = adapter.verify(score, judgment, "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS",
-                                      plan=plan.document)
+                                      plan=policy.document)
     else:
         extra_fields = {}
     if stage_id not in plan.runtime_stage_ids:
@@ -217,6 +221,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
               for command, row in commands.items()]
     result = {"state": "complete", "checkpoint_sha256": score["checkpoint_sha256"],
               "checkpoint_iteration": iteration, "plan_sha256": plan.sha256,
+              "evaluation_plan": {"path": str(policy_path), "sha256": policy.sha256},
               "stage_id": stage_id, "judgment": judgment,
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
               "cell_judgments": score.get("cell_judgments"),
@@ -293,6 +298,7 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
 
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
+        evaluation_plan=None,
         p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None,
         next_stage_queue=None):
     from foothold_s2 import ex41_eval_once as process
@@ -302,6 +308,14 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
     if p1_plan is not None and (p1_approvals is None or p1_stage_id is None or checkpoint_iteration is None
                                 or mesh_dir is None or expected_mesh_sha256 is None):
         raise ValueError("EX-42 P1 requires plan, approvals, iteration and pinned mesh")
+    if evaluation_plan is not None and p1_plan is None:
+        raise ValueError("EX-42 evaluation plan requires a P1 execution plan")
+    policy_path = Path(evaluation_plan or p1_plan).resolve(strict=True) if p1_plan is not None else None
+    if policy_path is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        policy = EX42Plan.load(policy_path)
+        if p1_stage_id not in policy.runtime_stage_ids:
+            raise ValueError("EX-42 evaluation policy lacks the running stage")
     if output.exists():
         raise ValueError("EX-42 evaluation requires fresh output directory")
     if Path(sys.executable).resolve() != machine_path("conda_python").resolve():
@@ -330,6 +344,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
            "score_config_sha256": digest(cfg_path), "eval_seed": seed,
            "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
            **receipt_device_fields(device, physical_gpu)}
+    if policy_path is not None:
+        row["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
     if split_gpu is not None:
         row["split"] = {"devices": [device, split_device], "split_physical_gpu": split_gpu}
     _atomic(output / "eval_receipt.json", row)
@@ -394,7 +410,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         from foothold_s2.eval.ex42_d44_cells import contract, read_evidence
         from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
-        plan = EX42Plan.load(p1_plan)
+        plan = EX42Plan.load(policy_path)
         landing = plan.document["evaluation"]["paper_cells"]["stairs_landing"]
         if landing.get("judge_cases") is not None:
             try:
@@ -404,7 +420,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                     raise ValueError("D44 source mesh SHA is absent from prep")
                 replica = build_replicas(source_mesh, output / "d44_mesh", anchor="landing_center")
                 argv = d44_kit_command(checkpoint, output, device, task=cfg["task"],
-                                       plan_path=p1_plan, mesh_dir=source_mesh,
+                                       plan_path=policy_path, mesh_dir=source_mesh,
                                        replica_dir=output / "d44_mesh",
                                        replica_sha256=replica["mesh_sha256"], seed=seed)
                 child = process.hidden_child(argv, output / "children" / "d44", env=env)
@@ -427,13 +443,13 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
     if p1_stage_id == "E1F" and p1_plan is not None:
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         try:
-            plan = EX42Plan.load(p1_plan)
+            plan = EX42Plan.load(policy_path)
             def record_flag(count, child):
                 row["steps"][count] = child
                 _atomic(output / "eval_receipt.json", row)
 
             flag_failures = execute_flag_children(
-                checkpoint, output, device, task=cfg["task"], plan_path=p1_plan,
+                checkpoint, output, device, task=cfg["task"], plan_path=policy_path,
                 mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
                 checkpoint_sha256=expected_sha256, seed=seed, plan=plan, process=process,
                 env=env, physical_gpu=physical_gpu, record=record_flag)
@@ -452,13 +468,14 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
-                        stage_id=p1_stage_id)
+                        stage_id=p1_stage_id, evaluation_plan_path=policy_path)
         _atomic(output / "ex42_score.json", score)
         if p1_plan is not None:
             p1 = p1_score_from_measure(
                 score, checkpoint=checkpoint, iteration=checkpoint_iteration,
                 plan_path=p1_plan, approvals_path=p1_approvals,
-                stage_id=p1_stage_id, output=output)
+                stage_id=p1_stage_id, output=output,
+                evaluation_plan_path=policy_path if evaluation_plan is not None else None)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
             from foothold_s2 import ex42_eval_split as split
@@ -493,6 +510,7 @@ def main(argv=None):
     parser.add_argument("--mesh-dir", type=Path, default=None)
     parser.add_argument("--expected-mesh-sha256")
     parser.add_argument("--p1-plan", type=Path)
+    parser.add_argument("--evaluation-plan", type=Path)
     parser.add_argument("--p1-approvals", type=Path)
     parser.add_argument("--p1-stage-id")
     parser.add_argument("--next-stage-launcher", type=Path, default=None,
@@ -510,6 +528,8 @@ def main(argv=None):
         parser.error("select either --execute or --score-existing")
     if len([x for x in (args.p1_plan, args.p1_approvals, args.p1_stage_id) if x is not None]) not in (0, 3):
         parser.error("P1 plan, approvals and running stage ID must be supplied together")
+    if args.evaluation_plan is not None and args.p1_plan is None:
+        parser.error("--evaluation-plan requires --p1-plan")
     if args.next_stage_launcher is not None and (args.p1_plan is None or not args.next_stage_launcher.is_absolute()
                                                   or not args.next_stage_launcher.is_file()):
         parser.error("--next-stage-launcher needs P1 and an absolute path to an existing file")
@@ -539,12 +559,18 @@ def main(argv=None):
     if args.score_existing:
         mesh_sha = preflight(args.mesh_dir)["mesh_sha256"] if args.mesh_dir else None
         score = measure(args.checkpoint, args.out, expected_seed=args.eval_seed,
-                        expected_mesh_sha256=mesh_sha, stage_id=args.p1_stage_id)
+                        expected_mesh_sha256=mesh_sha, stage_id=args.p1_stage_id,
+                        evaluation_plan_path=args.evaluation_plan)
         _atomic(args.out / "ex42_score.json", score)
         print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
         return 0
     if not args.execute:
         plan = {"state": "plan", "score_config": str(config()[1])}
+        if args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            policy_path = Path(args.evaluation_plan or args.p1_plan).resolve(strict=True)
+            policy = EX42Plan.load(policy_path)
+            plan["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
         if args.split_device is None:
             plan["commands"] = commands(args.checkpoint, args.out, args.device,
                                         eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)
@@ -558,23 +584,23 @@ def main(argv=None):
         if args.p1_stage_id == "E1" and args.p1_plan is not None:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             from foothold_s2.eval.ex42_d44_cells import contract
-            landing = EX42Plan.load(args.p1_plan).document["evaluation"]["paper_cells"]["stairs_landing"]
+            landing = policy.document["evaluation"]["paper_cells"]["stairs_landing"]
             if landing.get("judge_cases") is None:
                 plan["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
             else:
-                settings = contract(EX42Plan.load(args.p1_plan).document)
+                settings = contract(policy.document)
                 plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
                                "record_cases": settings["record_cases"],
                                "source_mesh_dir": settings["source_mesh_dir"]}
         if args.p1_stage_id == "E1F" and args.p1_plan is not None:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             from foothold_s2.eval.ex42_flag_cells import contract
-            settings = contract(EX42Plan.load(args.p1_plan).document)
+            settings = contract(policy.document)
             plan["flag_cells"] = {"state": "planned", "judge_cases": settings["judge_cases"],
                                   "record_cases": settings["record_cases"],
                                   "commands": [argv for _, argv in flag_kit_commands(
                                       args.checkpoint, args.out, args.device,
-                                      task=config()[0]["task"], plan_path=args.p1_plan,
+                                      task=config()[0]["task"], plan_path=policy_path,
                                       mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
                                       seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         print(json.dumps(plan))
@@ -583,6 +609,7 @@ def main(argv=None):
                eval_seed=args.eval_seed, mesh_dir=args.mesh_dir,
                expected_mesh_sha256=args.expected_mesh_sha256,
                p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
+               evaluation_plan=args.evaluation_plan,
                p1_stage_id=args.p1_stage_id,
                checkpoint_iteration=iteration, split_device=args.split_device,
                next_stage_launcher=args.next_stage_launcher,
