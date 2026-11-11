@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import hashlib
 import math
+import os
 import ntpath
 import posixpath
 from pathlib import Path
@@ -216,6 +217,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
+    from foothold_s2.terrains.ex42_exposure import low_level_floor
+    floor = low_level_floor(stage_terrain, table, stage_id)
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
@@ -223,7 +226,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
-            "exposure": exposure, "level_caps": level_caps, "shares": shares, "flag_table": flag_table,
+            "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
@@ -244,8 +247,10 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     `parent_same_mesh`: the E1 parent is an E0 run on this same mesh (no 23-column parent layout to translate)."""
     from foothold_s2.terrains.ex42_exposure import apply_exposure
 
+    env.unwrapped._ex42_column_table = contract["column_table"]          # the learned_cells recorder names columns by it
+    env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
-                          shares=contract.get("shares"),
+                          shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
                           parent_same_mesh=parent_same_mesh)
 
@@ -1018,6 +1023,7 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero runtime requires its environment and run directory")
         self.runner = runner
         runner.continuous_curriculum = self
+        self._learned_cells_init()
 
     def on_reset(self, env_ids: Any) -> None:
         return None
@@ -1042,6 +1048,30 @@ class EX42StageZeroRuntime:
             raw._ex40_dr_scale = 1.0
             raw._ex41_push_vmax_mps = self.push_vmax_mps
 
+    def _learned_cells_init(self) -> None:
+        """CG:380/381 boundary_log recorder (E1F on). Never stops training: any failure switches it off and says so."""
+        self.learned_cells = None
+        self.learned_cells_error = None
+        raw = self.env
+        if not getattr(raw, "_ex42_learned_cells", False):
+            return
+        try:
+            from foothold_s2.commands.mixed_core import EX39_SLOTS
+            from foothold_s2.ex42_learned_cells import LearnedCellRecorder
+            terrain = raw.scene.terrain
+            self.learned_cells = LearnedCellRecorder(
+                raw.num_envs, int(terrain.terrain_origins.shape[1]), EX39_SLOTS, stage_id=self.stage_id,
+                plan_sha256=self.plan_sha256, device=raw.device,
+                rank=int(os.environ.get("RANK", "0")), world_size=int(os.environ.get("WORLD_SIZE", "1")))
+            self._learned_cells_started = False
+        except Exception as exc:          # noqa: BLE001 (the recorder must not stop the training)
+            self._learned_cells_off(exc)
+
+    def _learned_cells_off(self, exc: Exception) -> None:
+        self.learned_cells = None
+        self.learned_cells_error = f"{type(exc).__name__}: {exc}"
+        print("EX42_LEARNED_CELLS_OFF " + self.learned_cells_error, flush=True)
+
     def record_pre_step(self) -> None:
         if self.env is None or self.runner is None:
             raise RuntimeError("EX-42 stage-zero step recorder is not attached")
@@ -1049,6 +1079,19 @@ class EX42StageZeroRuntime:
             raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
         self._step_pending = True
         self.pre_step_count += 1
+        if getattr(self, "learned_cells", None) is not None:
+            try:
+                raw = self.env
+                term = raw.command_manager.get_term("base_velocity")
+                if not self._learned_cells_started:        # this process (or resume) starts its window here
+                    self.learned_cells.window_from = self.iteration - 1
+                    self.learned_cells.episode_start.fill_(self.iteration - 1)
+                    self._learned_cells_started = True
+                terrain = raw.scene.terrain
+                self.learned_cells.pre_step(terrain.terrain_levels, terrain.terrain_types, term.slot_current,
+                                            term.is_flag_env)
+            except Exception as exc:      # noqa: BLE001
+                self._learned_cells_off(exc)
 
     def record_post_step(self, done: Any) -> None:
         if not self._step_pending:
@@ -1058,6 +1101,11 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero done vector must match the environment batch")
         self._step_pending = False
         self.post_step_count += 1
+        if getattr(self, "learned_cells", None) is not None:
+            try:
+                self.learned_cells.post_step(done, self.runner.pstate.map_off, self.iteration)
+            except Exception as exc:      # noqa: BLE001
+                self._learned_cells_off(exc)
 
     def flush_consumption(self, update: int) -> None:
         if update != self.iteration:
@@ -1119,6 +1167,25 @@ class EX42StageZeroRuntime:
         if iteration != self.iteration:
             raise ValueError("EX-42 stage-zero checkpoint did not consume the latest update")
         self.last_checkpoint = {"path": str(Path(checkpoint).resolve()), "iteration": iteration}
+        self._boundary_records(iteration)
+
+    def _boundary_records(self, iteration: int) -> None:
+        """Per save boundary: learned_cells_<it>.json (episodes that ended, by cell) and continuous_floor_<it>.json
+        (the CG:380 L0~2 floor receipt). Failures are printed; the files are then absent and the exit items HOLD."""
+        log_dir = getattr(self.runner, "log_dir", None)
+        if log_dir is None:
+            return
+        terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
+        floor = getattr(terrain, "low_level_floor", None)
+        try:
+            if floor is not None:
+                path = Path(log_dir) / f"continuous_floor_{iteration}.json"
+                path.write_text(json.dumps({**floor.receipt(), "iteration": iteration, "stage_id": self.stage_id},
+                                           sort_keys=True), encoding="utf-8")
+            if getattr(self, "learned_cells", None) is not None:
+                self.learned_cells.write(log_dir, iteration, getattr(self.env, "_ex42_column_table", None))
+        except Exception as exc:          # noqa: BLE001
+            print("EX42_BOUNDARY_RECORD_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
 
 
 def build_stage_zero_reset_readback(env: Any, dr_runtime: Any,
