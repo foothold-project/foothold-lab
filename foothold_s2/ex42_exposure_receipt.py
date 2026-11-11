@@ -73,16 +73,26 @@ def build_receipt(contract: dict[str, Any], *, stage_id: str, plan_sha256: str, 
     return body
 
 
-def receipt_name(iteration: int, rank: int, world_size: int) -> str:
-    return (f"exposure_receipt_{iteration}.json" if world_size <= 1
-            else f"exposure_receipt_{iteration}_rank{rank}.json")
+def receipt_name(kind: str, iteration: int, rank: int, world_size: int) -> str:
+    """boundary: exposure_receipt_<it>.json · start: exposure_receipt_start_<it>.json (a continued segment starts at the
+    update where the last one ended, so both exist at the same iteration and must not share a name). `_rank<r>` when 2+ ranks."""
+    if kind not in KINDS:
+        raise ValueError(f"EX-42 exposure receipt kind must be one of {KINDS}")
+    stem = f"exposure_receipt_{'start_' if kind == 'start' else ''}{iteration}"
+    return f"{stem}.json" if world_size <= 1 else f"{stem}_rank{rank}.json"
 
 
 def write_receipt(directory: str | Path, body: dict[str, Any]) -> Path:
-    path = Path(directory) / receipt_name(body["iteration"], body["rank"], body["world_size"])
+    """Atomic, and never over an existing file: a receipt already there is evidence, a second writer is refused."""
+    path = Path(directory) / receipt_name(body["kind"], body["iteration"], body["rank"], body["world_size"])
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(body, sort_keys=True, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, path)
+    try:
+        os.link(tmp, path)                      # fails if the name exists (os.replace would silently overwrite)
+    except FileExistsError:
+        raise FileExistsError(f"EX-42 exposure receipt {path.name} already exists; not overwritten") from None
+    finally:
+        tmp.unlink(missing_ok=True)
     return path
 
 
