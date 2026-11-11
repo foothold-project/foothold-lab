@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 MODES = ('eval_gt', 'eval_pred', 'probe_prop_only')
-TASKS = ('tile_end_reach', 'box_center_pass', 'surface_hold',
+TASKS = ('tile_end_reach', 'last_support_0.5s', 'box_center_pass', 'surface_hold',
          'cross_dir_half_flat', 'push_record', 'tunnel_exit_no_contact')
 
 
