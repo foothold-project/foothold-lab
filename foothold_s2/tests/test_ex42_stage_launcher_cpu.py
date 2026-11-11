@@ -173,3 +173,26 @@ def test_the_shell_launcher_print_mode_shows_the_command_and_refusal_is_rc_2(tmp
     bad = subprocess.run([str(SH), "--print"], env={**env, "EX42_AUTO_ACTION": "x"}, capture_output=True, text=True,
                          cwd=str(L.SOURCE_ROOT))
     assert bad.returncode == 2 and "refused" in bad.stderr
+
+
+@pytest.mark.parametrize("action", ["next_stage", "continue"])
+def test_what_start_launcher_hands_over_is_exactly_what_the_launcher_builds_from(tmp_path, action):
+    # the producer (ex42_stage_handoff.start_launcher) and this consumer must agree on the EX42_AUTO_* names
+    from foothold_s2.ex42_stage_handoff import start_launcher
+    base = _env(tmp_path, action=action)
+    run = Path(base.get("EX42_AUTO_RESUME_CHECKPOINT", str(tmp_path / "x"))).parent
+    run.mkdir(parents=True, exist_ok=True)
+    launcher = tmp_path / "l.sh"
+    launcher.write_text("#!/bin/sh\n")
+    launcher.chmod(0o755)
+    decision = {"action": action, "target_stage": STAGE, "gate_sha256": "ab" * 32}
+    if action == "continue":
+        decision.update(resume_checkpoint=base["EX42_AUTO_RESUME_CHECKPOINT"], segment_end=500)
+    seen = {}
+    start_launcher(decision, launcher, run, parent_manifest="/p/manifest.json", parent_checkpoint="/p/model_250.pt",
+                   gate_receipt="/g/r.json",
+                   popen=lambda cmd, env, **kw: (seen.update(env), type("P", (), {"pid": 1})())[1])
+    env = {**{k: v for k, v in base.items() if not k.startswith("EX42_AUTO_")},
+           **{k: v for k, v in seen.items() if k.startswith("EX42_AUTO_")}}
+    argv, _, summary = L.build(env)
+    assert summary["action"] == action and summary["stage"] == STAGE
