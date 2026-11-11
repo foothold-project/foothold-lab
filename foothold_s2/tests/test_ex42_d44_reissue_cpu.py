@@ -147,3 +147,12 @@ def test_multiple_source_chains_require_explicit_identity(tmp_path, monkeypatch)
                              approvals=approvals, evaluation_plan=policy,
                              iterations=(250,), source_chain=chain)
     assert result["state"] == "partial_not_gate_ready"
+
+
+def test_requested_scorer_definition_must_match_checked_out_source(tmp_path, monkeypatch):
+    run, plan, approvals, policy, _ = _input(tmp_path, monkeypatch)
+    with pytest.raises(ValueError, match="scorer SHA differs"):
+        reissue.reissue(run, tmp_path / "wrong-definition", p1_plan=plan,
+                        approvals=approvals, evaluation_plan=policy,
+                        iterations=(250,), expected_scorer_sha256="0" * 64)
+    assert not (tmp_path / "wrong-definition").exists()

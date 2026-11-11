@@ -8,6 +8,7 @@ receipt only when the four-boundary gate is PASS.
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 from pathlib import Path
 
@@ -130,7 +131,8 @@ def _reissue_one(item: dict, output: Path, policy: EX42Plan, plan_path: Path,
 
 def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
             evaluation_plan: Path, iterations: tuple[int, ...] = BOUNDARIES,
-            source_chain: Path | None = None) -> dict:
+            source_chain: Path | None = None,
+            expected_scorer_sha256: str | None = None) -> dict:
     if not iterations or any(i not in BOUNDARIES for i in iterations) or tuple(sorted(set(iterations))) != iterations:
         raise ValueError("E1 reissue iterations must be ordered distinct boundaries")
     run, out = run.resolve(strict=True), out.resolve()
@@ -141,6 +143,10 @@ def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
     p1_plan, approvals, evaluation_plan = (p.resolve(strict=True) for p in
                                            (p1_plan, approvals, evaluation_plan))
     plan, policy = EX42Plan.load(p1_plan), EX42Plan.load(evaluation_plan)
+    scorer_path = Path(inspect.getfile(summarize)).resolve(strict=True)
+    scorer_sha256 = digest(scorer_path)
+    if expected_scorer_sha256 is not None and scorer_sha256 != expected_scorer_sha256:
+        raise ValueError("E1 D44 scorer SHA differs from explicitly requested definition")
     settings = contract(policy.document)
     source_manifest, column = source_tile(Path(settings["source_mesh_dir"]))
     if source_manifest["mesh_sha256"] != settings["source_mesh_sha256"]:
@@ -167,7 +173,7 @@ def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
         completed.append(_reissue_one(item, out / f"m{item['iteration']}", policy,
                                       p1_plan, approvals, settings, column["anchors_local_m"]))
     # Detect source mutation during the CPU pass; never bless a moving original.
-    if digest(original_chain) != chain_sha or any(
+    if digest(scorer_path) != scorer_sha256 or digest(original_chain) != chain_sha or any(
             digest(item["receipt_path"]) != item["receipt_sha256"] or
             digest(item["kit_path"]) != item["kit_sha256"] for item in items):
         raise ValueError("E1 original receipt changed during CPU reissue")
@@ -178,6 +184,8 @@ def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
     chain_receipt = {"format": "foothold-ex42-e1-p1-boundary-chain-receipt/1",
                      "state": state, "cpu_reissue": True, "source_chain_receipt": str(original_chain),
                      "source_chain_receipt_sha256": chain_sha,
+                     "scorer_source": str(scorer_path),
+                     "scorer_source_sha256": scorer_sha256,
                      "source_head": chain["source_head"], "plan_sha256": plan.sha256,
                      "approvals_sha256": digest(approvals), "e1_run": str(run),
                      "completed": completed, "current": None, "queue_mutated": False,
@@ -202,13 +210,16 @@ def main(argv=None) -> int:
     parser.add_argument("--evaluation-plan", type=Path, required=True)
     parser.add_argument("--source-chain", type=Path,
                         help="select the original chain when the run has multiple chain receipts")
+    parser.add_argument("--expected-scorer-sha256", required=True,
+                        help="pin the D44 scorer definition approved for this CPU reissue")
     parser.add_argument("--iterations", default="250,500,750,1000")
     args = parser.parse_args(argv)
     try:
         iterations = tuple(int(part) for part in args.iterations.split(","))
         decision = reissue(args.run, args.out, p1_plan=args.p1_plan,
                            approvals=args.approvals, evaluation_plan=args.evaluation_plan,
-                           iterations=iterations, source_chain=args.source_chain)
+                           iterations=iterations, source_chain=args.source_chain,
+                           expected_scorer_sha256=args.expected_scorer_sha256)
         print(json.dumps(decision, ensure_ascii=False, sort_keys=True))
         return 0
     except (OSError, ValueError, KeyError, TypeError) as exc:
