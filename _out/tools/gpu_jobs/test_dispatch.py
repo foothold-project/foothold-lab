@@ -306,6 +306,29 @@ class BoardViewTests(LiveTests):
         with self.assertRaises(ValueError):
             board.queue_cmd(self.args(priority=7), self.cfg, self.now)
 
+    def test_queue_add_wait_present_is_a_real_file_gate(self):
+        marker = Path(self.temp.name) / "prior-success.json"
+        self.assertEqual(board.queue_cmd(self.args(title="ordered", kind="eval", argv_json='["python","job"]',
+                                                   wait_present=[str(marker)]), self.cfg, self.now), "added 1")
+        item = board.read_queue(self.cfg["queue"])["items"][0]
+        self.assertEqual(item["wait_present"], [str(marker)])
+        self.assertEqual(board.item_ready(item, self.now), (False, f"wait_present:{marker}"))
+        marker.write_text("{}", encoding="utf-8")
+        self.assertEqual(board.item_ready(item, self.now), (True, "ready"))
+
+    def test_queue_cli_accepts_wait_present_and_persists_dependency(self):
+        from unittest.mock import patch
+        queue = Path(self.temp.name) / "cli-queue.json"
+        marker = Path(self.temp.name) / "prior.done"
+        with patch.object(board, "require_linux_profile", lambda _profile: None):
+            rc = board.main(["queue", "add", "--queue", str(queue), "--title", "ordered", "--priority", "1",
+                             "--gpu", "1", "--kind", "eval", "--argv-json", '["python","eval"]',
+                             "--wait-present", str(marker)])
+        self.assertEqual(rc, 0)
+        item = board.read_queue(str(queue))["items"][0]
+        self.assertEqual(item["wait_present"], [str(marker)])
+        self.assertEqual(board.item_ready(item, self.now), (False, f"wait_present:{marker}"))
+
     def test_warning_running_item_without_process_and_idle_gpu_with_ready_item(self):
         board.queue_cmd(self.args(title="ghost", gpu=0), self.cfg, self.now)
         board.queue_cmd(self.args(qaction="run", id=1), self.cfg, self.now)
