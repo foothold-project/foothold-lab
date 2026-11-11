@@ -40,10 +40,12 @@ CRITERIA = {
 REPO = Path(__file__).resolve().parents[2]
 
 
-def column_kind(column: int, column_family: list[str]) -> str:
+def column_kind(column: int, column_family: list[str], column_names=None) -> str:
     """Kind name of a mesh column where the code knows it (A: columns.FULL order); else the family."""
     from foothold_s2.terrains import columns
 
+    if column_names is not None:
+        return column_names[column]
     if column_family[column] == "A":
         return columns.column_types(columns.FULL, columns.FULL_COLS)[column]
     return f"{column_family[column]}[{column - column_family.index(column_family[column])}]"
@@ -76,7 +78,7 @@ def _worst(idx_order, k, types, levels, data, root_np, root_h, support, above_su
     for e in idx_order[:k]:
         c = int(types[e])
         out.append({"env": int(e), "column": c, "family": data["column_family"][c],
-                    "kind": column_kind(c, data["column_family"]), "level": int(levels[e]),
+                    "kind": column_kind(c, data["column_family"], data.get("column_names")), "level": int(levels[e]),
                     "root_z": float(root_np[e, 2]), "mesh_under_root": float(root_h[e]),
                     "support_under_feet": float(support[e]), "root_above_support": float(above_support[e]),
                     "foot_clearance": [float(x) for x in foot_clear[e]]})
@@ -109,7 +111,7 @@ def _per_column_pass(env, raw, terrain, mesh_heights, foot_ids, action, data, ta
             if k < len(up) and (bool(up[k]) or bool(down[k])) and e < len(state["batch_pairs"]):
                 lvl, c = state["batch_pairs"][e]
                 curriculum_calls.append({"batch": state["batch"], "phase": state["phase"], "env": e, "column": c,
-                                         "family": fam[c], "kind": column_kind(c, fam), "level": lvl,
+                                         "family": fam[c], "kind": column_kind(c, fam, data.get("column_names")), "level": lvl,
                                          "wanted": "up" if bool(up[k]) else "down"})
 
     terrain.update_env_origins = spy
@@ -194,7 +196,7 @@ def _per_column_batches(env, raw, terrain, foot_ids, action, pairs, dev, torch, 
                 reasons.append("root_height_off_support")
             if zero and xy > CRITERIA["zero_range_xy_offset_max_m"]:
                 reasons.append("zero_range_start_off_origin")
-            out.append({"column": c, "family": fam[c], "kind": column_kind(c, fam), "level": lvl,
+            out.append({"column": c, "family": fam[c], "kind": column_kind(c, fam, data.get("column_names")), "level": lvl,
                         "zero_xy_range": bool(zero), "root_xy_offset_m": xy, "root_z": float(root[e, 2]),
                         "support_under_feet": support, "root_above_support": above,
                         "foot_clearance": [float(x) for x in clear],
@@ -211,6 +213,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     npz = Path(args.mesh_dir) / "terrain_mesh.npz"
     sha = expected_sha_from_manifest(Path(args.mesh_dir) / "mesh_manifest.json")
     data = load_combined_mesh(npz, sha)
+    manifest = json.loads((Path(args.mesh_dir) / "mesh_manifest.json").read_text(encoding="utf-8"))
+    evaluation_only = manifest.get("format") == "foothold-ex42-evaluation-mesh/1"
+    if evaluation_only:
+        from foothold_s2.eval import ex42_eval_mesh
+        data = ex42_eval_mesh.preflight(args.mesh_dir)
     result: dict[str, Any] = {"format": "foothold-ex42-mesh-mount-check/1", "mesh_sha256": sha,
                               "device": args.device, "criteria": CRITERIA, "training_started": False,
                               "columns": len(data["column_family"]), "state": "failed"}
@@ -228,9 +235,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     env_cfg = load_cfg_from_registry(TASK_ID, "env_cfg_entry_point")
     env_cfg.scene.num_envs = NUM_ENVS
     env_cfg.sim.device = args.device
-    env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
-    table = build_column_table(list(data["column_family"]))
-    apply_column_reset(env_cfg, table)
+    if evaluation_only:
+        ex42_eval_mesh.attach(env_cfg, args.mesh_dir)
+        table = ex42_eval_mesh.reset_table(data)
+        result["evaluation_only"] = True
+        result["column_names"] = data["column_names"]
+    else:
+        env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
+        table = build_column_table(list(data["column_family"]))
+        apply_column_reset(env_cfg, table)
     result["column_reset_table"] = [{"column": c, "family": r["family"], "kind": r["kind"],
                                      "from_declaration": r["from_declaration"],
                                      "ranges": {k: list(v) for k, v in r["ranges"].items()}}
