@@ -46,11 +46,11 @@ def assign_shards(devices, modes=MODES):
     return shard, load
 
 
-# Screen and remote-desktop sessions (this machine: sunshine, 262 MiB per GPU) hold a compute context but are not the
+# Screen and remote-desktop sessions (this machine: sunshine 262 MiB per GPU; rustdesk --server ~600 MiB on GPU 0, 11/11) hold a compute context but are not the
 # training or evaluation processes this wait is about; they never free up, so counting them blocks forever. Only these
 # names are skipped, by basename. Everything else on the GPU still blocks, whatever its memory: a Kit or python
 # process that has just started also uses little memory.
-DISPLAY_PROCESS_NAMES = frozenset({"sunshine", "Xorg", "Xwayland", "gnome-shell", "gnome-remote-desktop-daemon"})
+DISPLAY_PROCESS_NAMES = frozenset({"sunshine", "Xorg", "Xwayland", "gnome-shell", "gnome-remote-desktop-daemon", "rustdesk"})
 
 
 def _gpu_busy_uuids(query=None):

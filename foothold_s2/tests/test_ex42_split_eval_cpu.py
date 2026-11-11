@@ -501,3 +501,17 @@ def test_run_itself_refuses_a_split_device_equal_to_the_evaluation_device(tmp_pa
     with pytest.raises(ValueError, match="split device must differ"):
         once.run(checkpoint, once.digest(checkpoint), tmp_path / "same", "cuda:1", eval_seed=42, split_device="cuda:1")
     assert started == [] and not (tmp_path / "same").exists()
+
+
+# 11/11 18:30 real nvidia-smi line: the remote-desktop server held 601 MiB on GPU 0 and blocked the post-E1 P1 chain.
+REAL_SMI_RUSTDESK = "3804440, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 601, /usr/share/rustdesk/rustdesk\n"
+
+
+def test_gpu_gate_ignores_the_real_rustdesk_server_but_not_a_kit_beside_it():
+    sleeps = []
+    split.wait_gpus_free([REAL_GPU0, REAL_GPU1], timeout_s=0, query=lambda: REAL_SMI_RUSTDESK,
+                         sleep=sleeps.append)
+    assert sleeps == []
+    beside = REAL_SMI_RUSTDESK + "7004, GPU-" + REAL_GPU0 + ", 40, /home/jay/miniforge3/envs/isaac311/bin/python3.11\n"
+    with pytest.raises(ValueError, match="7004"):
+        split.wait_gpus_free([REAL_GPU0], timeout_s=0, query=lambda: beside, sleep=lambda s: None)
