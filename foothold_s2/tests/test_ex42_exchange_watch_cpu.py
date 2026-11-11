@@ -84,3 +84,14 @@ def test_missing_prior_or_different_identity_stays_hold():
     assert "flag_cells" in compare(current, previous, measured=measured,
                                    baseline=baseline, kind_now=kind,
                                    kind_previous=kind)["missing"]
+
+
+def test_one_missing_metric_alone_prevents_exchange_pass():
+    previous, kind, measured, baseline = _fixtures()
+    current = copy.deepcopy(previous)
+    del current["map64"]["eval_gt"]["case0"]["vx_abs_error_median_mps"]
+    row = compare(current, previous, measured=measured, baseline=baseline,
+                  kind_now=kind, kind_previous=kind)
+    assert row["violations"] == []
+    assert row["missing"] == ["map64/eval_gt/case0/vx_abs_error_median_mps"]
+    assert row["judgement"] == "HOLD"
