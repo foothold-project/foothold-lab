@@ -74,7 +74,7 @@ def test_train_start_passes_the_stage_id_to_the_chain_and_uses_it_in_the_first_r
     assert 'env.unwrapped._ex42_stage_id != EX42_STAGE_ID' in src
     assert 'env.unwrapped._ex42_stage_id != "EX42_0_T0_prime"' not in src
     assert "stage_id=EX42_STAGE_ID)" in src                                       # the runtime gets the same id
-    assert 'EX42_STAGE_ID = "E1" if _E1_FLAGS else "E0" if _E0_FLAGS else "EX42_0_T0_prime"' in src
+    assert 'EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"' in src
 
 
 def _fake_env(levels, types_, rows=10, cols=76):
@@ -179,7 +179,7 @@ def test_train_start_passes_stage_e0_to_the_parent_load_and_no_other_stage_zero_
              and getattr(n.func, "attr", "") == "load_ex42_stage_zero_parent"]
     assert len(calls) == 1
     kw = {k.arg: k.value for k in calls[0].keywords}
-    assert "stage_e0" in kw and "EX42_STAGE_ID" in ast.unparse(kw["stage_e0"]) and "'E0'" in ast.unparse(kw["stage_e0"])
+    assert ast.unparse(kw["stage_e0"]) == "not EX42_CONTINUES_STAGE"          # the first E stage: parent m13000
     src = TRAIN_START.read_text(encoding="utf-8")
     # the self-resume branch no longer hard-codes the stage-zero 12000 origin: it reads the cumulative origin from the
     # validated resume proof, which an E1 boundary resume computes from its own parent (13250)

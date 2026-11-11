@@ -301,22 +301,23 @@ def test_deferred_pid_is_checked_and_plain_chains_queue_without_a_wait(tmp_path)
 def test_train_start_wires_e1_the_same_way_as_e0():
     src = TRAIN_START.read_text(encoding="utf-8")
     tree = ast.parse(src)
-    assert 'EX42_STAGE_ID = "E1" if _E1_FLAGS else "E0" if _E0_FLAGS else "EX42_0_T0_prime"' in src
-    assert "EX42_STAGE_UPDATES = 1000 if _E1_FLAGS else 250 if _E0_FLAGS else 1000" in src
+    assert 'EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"' in src
+    assert 'EX42_STAGE_UPDATES = EX42_STAGE_SPEC["updates"] if EX42_STAGE_SPEC else 1000' in src
     assert "--ex42_stage_e1_approved" in src and "--ex42_stage_e1_dry_run" in src
     assert "args_cli.ex42_stage_e1_approved != _pre_args.ex42_stage_e1_approved" in src
     calls = {n.func.attr: n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
     load = calls["load_ex42_stage_zero_parent"]
     kw = {k.arg: ast.unparse(k.value) for k in load.keywords}
-    assert kw["stage_e0"] == "EX42_STAGE_ID == 'E0'" and kw["stage_e1"] == "EX42_STAGE_ID == 'E1'"
+    assert kw["stage_e0"] == "not EX42_CONTINUES_STAGE" and kw["stage_e1"] == "EX42_CONTINUES_STAGE"
     assert "runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(" in src          # mirror on right after the load
     assert src.index("load_ex42_stage_zero_parent(") < src.rindex("runner.set_ex41_critic_mirror(True")
-    assert 'parent_same_mesh=(EX42_STAGE_ID == "E1")' in src and "stage_id=EX42_STAGE_ID)" in src
+    assert "parent_same_mesh=EX42_CONTINUES_STAGE" in src and "stage_id=EX42_STAGE_ID)" in src
     assert '_e0_preflight["approval"]["boundary_evaluation_interval_updates"]' in src       # read from the approval cell
-    assert 'if EX42_STAGE_ID == "E1" else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),' in src
-    assert '**({"defer_until_pid": os.getpid()} if _E1_FLAGS else {})' in src               # boundaries wait for training
+    assert 'else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),' in src
+    assert '"boundary_evaluation_interval_updates" in _e0_preflight["approval"]' in src
+    assert '**({"defer_until_pid": os.getpid()}' in src                                      # boundaries wait for training
     assert "250" not in src[src.index('_e0_preflight["approval"]["boundary'):][:200]         # no hard-coded number there
-    assert "inspect_ex42_stage_e1_parent(" in src
+    assert "inspect_ex42_stage_parent(" in src
 
 
 def test_e1_runtime_stamps_the_env_with_the_e1_stage_id_the_first_reset_check_compares():
@@ -327,3 +328,29 @@ def test_e1_runtime_stamps_the_env_with_the_e1_stage_id_the_first_reset_check_co
     runtime.attach_environment(env, types.SimpleNamespace())
     assert env._ex42_stage_id == "E1" and runtime.maximum_updates == 1000
     assert env._ex41_terrain == {"policy": "performance", "level_cap": 5}          # the E1 first segment keeps cap 5
+
+
+# ---- stage ids come from the plan table, never from a literal in the entry path --------------------------
+def test_the_entry_path_names_no_stage_id_it_reads_the_plan_table():
+    import re
+    for path in (TRAIN_START, pathlib.Path(entry.__file__)):
+        text = path.read_text(encoding="utf-8")
+        body = text[text.index("EX42_STAGE_ID ="):] if path == TRAIN_START else text
+        compared = re.findall(r'stage_id\s*(?:==|!=)\s*(?:STAGE_E\d_ID|"E\d[A-Za-z0-9]*")|(?:EX42_STAGE_ID)\s*(?:==|!=)\s*"E\d', body)
+        # the two E0 / E1 approval validators and the D174 mirror proof are the reviewed per-stage lines; nothing else
+        assert compared == [], (path.name, compared)
+
+
+def test_the_stage_table_is_the_plan_and_a_stage_without_a_pin_is_not_startable():
+    import yaml
+    plan = yaml.safe_load((pathlib.Path(entry.__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml").read_text())
+    table = entry.e_stage_table(plan["stages"])
+    assert list(table) == ["E0", "E1"] == list(entry.E_STAGES)
+    assert table["E0"]["previous"] is None and table["E1"]["previous"] == "E0"
+    assert (table["E0"]["updates"], table["E0"]["parent_cumulative"]) == (250, 13000)
+    assert (table["E1"]["updates"], table["E1"]["parent_cumulative"], table["E1"]["critic_mirror"]) == (1000, 13250, True)
+    pinned = [{"id": "E1F", "minimum_updates": 750, "parent": {"manifest_local_update": 1000, "cumulative_update": 14250,
+                                                              "checkpoint_key": "model_1000.pt"}}]
+    later = entry.e_stage_table(plan["stages"][:2] + pinned)
+    assert later["E1F"]["previous"] == "E1" and later["E1F"]["updates"] == 750
+    assert set(entry.APPROVAL_VALIDATORS) == {"E0", "E1"}           # a pinned stage without a validator line is refused
