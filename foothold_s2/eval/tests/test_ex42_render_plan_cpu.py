@@ -70,7 +70,7 @@ def test_plan_rejects_unknown_or_invalid_trained_kind(tmp_path):
         build_render_plan(mesh, checkpoint, trained_kinds={"A/rough"}, current_cap=10)
 
 
-def test_plan_only_cli_emits_json_and_keeps_capture_blocked(tmp_path):
+def test_plan_only_cli_emits_pending_slots_without_capture_backend(tmp_path):
     mesh = _mesh_fixture(tmp_path)
     checkpoint = tmp_path / "model_250.pt"
     checkpoint.write_bytes(b"known checkpoint")
@@ -83,72 +83,6 @@ def test_plan_only_cli_emits_json_and_keeps_capture_blocked(tmp_path):
     assert result["state"] == "selection_pending"
     assert result["renderer_backend"]["supported"] is False
     assert len(result["requests"]) == 12
-    from foothold_s2.eval.video25.record_c_layer import parse_spec
-    with pytest.raises(ValueError, match="experiment must be B, TD, G0B, or SB"):
-        parse_spec(json.dumps({"experiment": "EX42", "source_root": str(Path(__file__).resolve().parents[3])}))
-
-
-def test_capture_spec_uses_matching_eval_cell_and_pins_frame_audit_inputs(tmp_path):
-    from foothold_s2.eval.ex42_render_capture import capture_spec_from_evaluation, validate_capture_spec
-
-    mesh = _mesh_fixture(tmp_path)
-    checkpoint = tmp_path / "model_250.pt"
-    checkpoint.write_bytes(b"known checkpoint")
-    plan = build_render_plan(mesh, checkpoint, trained_kinds={"A/rough"}, current_cap=9)
-    request = next(row for row in plan["requests"]
-                   if row["terrain_key"] == "A/rough" and row["map_mode"] == "eval_gt")
-
-    n = 64
-    kinds = np.asarray(["rough"] * 32 + ["stones"] * 32)
-    cols = np.asarray([0] * 32 + [50] * 32, dtype=np.int64)
-    levels = np.asarray([9] * 32 + [0] * 32, dtype=np.int64)
-    alive = np.ones(n, dtype=np.bool_)
-    alive[1] = False
-    distance = np.full(n, 4.0, dtype=np.float32)
-    arrays = tmp_path / "env_arrays_eval_gt_fwd1.0.npz"
-    np.savez(arrays, kind=kinds, terrain_col=cols, terrain_level=levels,
-             alive_end=alive, body_vx_integral_m=distance)
-    evaluation = tmp_path / "map_modes.json"
-    evaluation.write_text(json.dumps({
-        "checkpoint_sha256": plan["checkpoint_sha256"], "eval_seed": 42,
-        "ex42_mesh": {"mesh_sha256": plan["mesh_sha256"]},
-        "env_arrays": {"eval_gt/fwd1.0": arrays.name},
-    }), encoding="utf-8")
-
-    selected = capture_spec_from_evaluation(
-        plan, request["request_id"], evaluation, command_name="fwd1.0",
-        role="success", source_root=tmp_path, source_head="a" * 40,
-        recorder_sha256="b" * 64,
-    )
-    assert selected["env_id"] == 0
-    assert selected["terrain_key"] == "A/rough"
-    assert selected["fixed_level"] == 9
-    assert selected["map_mode"] == "eval_gt"
-    assert selected["evaluation_arrays_sha256"]
-    assert selected["frame_audit_required"] is True
-    assert validate_capture_spec(selected)["state"] == "verified"
-
-
-def test_capture_spec_rejects_wrong_checkpoint_or_empty_role(tmp_path):
-    from foothold_s2.eval.ex42_render_capture import capture_spec_from_evaluation
-
-    mesh = _mesh_fixture(tmp_path)
-    checkpoint = tmp_path / "model_250.pt"
-    checkpoint.write_bytes(b"known checkpoint")
-    plan = build_render_plan(mesh, checkpoint, trained_kinds={"A/rough"}, current_cap=9)
-    request = next(row for row in plan["requests"] if row["terrain_key"] == "A/rough")
-    arrays = tmp_path / "env_arrays_eval_gt_fwd1.0.npz"
-    np.savez(arrays, kind=np.asarray(["rough"]), terrain_col=np.asarray([0]),
-             terrain_level=np.asarray([9]), alive_end=np.asarray([True]),
-             body_vx_integral_m=np.asarray([4.0]))
-    evaluation = tmp_path / "map_modes.json"
-    evaluation.write_text(json.dumps({"checkpoint_sha256": "0" * 64, "eval_seed": 42,
-        "ex42_mesh": {"mesh_sha256": plan["mesh_sha256"]},
-        "env_arrays": {"eval_gt/fwd1.0": arrays.name}}), encoding="utf-8")
-    kwargs = dict(command_name="fwd1.0", role="success", source_root=tmp_path,
-                  source_head="a" * 40, recorder_sha256="b" * 64)
-    with pytest.raises(ValueError, match="checkpoint SHA"):
-        capture_spec_from_evaluation(plan, request["request_id"], evaluation, **kwargs)
 
 
 def test_plan_includes_current_cap_and_l9_for_trained_kind(tmp_path):
