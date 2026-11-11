@@ -9,6 +9,7 @@ from typing import Any
 from foothold_s2.curriculum.ex42_prep import (
     EX42Plan, STAGE_ZERO_ID, _read_yaml, scoped_automatic_policy,
     validate_stage_e0_authorization, validate_stage_e1_authorization,
+    validate_stage_e1f_authorization, validate_stage_e2_authorization,
 )
 from foothold_s2.ex42_gate_checks import validate_ex42_map_score, validate_score_pair
 
@@ -28,9 +29,16 @@ def validate_automatic_stage_launch(
         raise ValueError('EX-42 automatic approval SHA differs from plan pin')
     if not scoped_automatic_policy(_read_yaml(path).get('automatic_launch_allowed')):
         raise ValueError('EX-42 scoped automatic policy is not enabled')
-    validators = {'E0': validate_stage_e0_authorization, 'E1': validate_stage_e1_authorization}
+    validators = {'E0': validate_stage_e0_authorization, 'E1': validate_stage_e1_authorization,
+                  'E1F': validate_stage_e1f_authorization, 'E2': validate_stage_e2_authorization}
     if target_stage not in validators:
         raise ValueError('EX-42 automatic target has no supported approval cell')
+    if target_stage in ("E1F", "E2"):
+        cell = _read_yaml(path).get(f"stage_{target_stage.lower()}_authorization", {})
+        proof = validators[target_stage](plan, path, cell.get("scope", {}).get("parent_sha256"))
+        # Never treat the generic 26-cell PASS as D44/flag or sparse-entry proof.
+        if proof.get("entry_gate_adapter_ready") is not True:
+            raise ValueError(f"EX-42 {target_stage} stage-specific entry gate adapter is pending")
     parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=target_stage)
     proof = validators[target_stage](plan, path, parent['checkpoint_sha256'])
     gate_path = Path(gate_receipt_path).resolve(strict=True)

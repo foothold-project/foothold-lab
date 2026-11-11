@@ -101,3 +101,98 @@ stage_e1_authorization:
       checkpoint_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
+
+# Approved stage; missing evidence must be filled and re-pinned before launch.
+stage_e1f_authorization:
+  approved: true
+  decision_id: teamlead-2026-11-11-1202-e1f-entry
+  approved_at: 2026-11-11T12:02+09:00
+  approver: teamlead
+  approval_statement: E1F 승인
+  decision_source:
+    commit: 0b51913fced4eb6b34d39ebdd95548c190cb3018
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    condition: E1 exit gate PASS under this plan
+  scope:
+    stage_id: E1F
+    start_update: 0
+    maximum_updates: 750
+    parent_sha256: null
+    later_stages_authorized: false
+  prerequisites:
+    predecessor_exit:
+      stage_id: E1
+      required_result: PASS
+      same_plan_sha256: true
+      evaluation_mesh_sha256: null
+    flag_baseline:
+      path: null
+      sha256: null
+      source: W09_baseline_then_fixed
+  boundary:
+    axis: command_allocation
+    terrain_change: none
+    boundary_mode: stop_evaluate_resume
+    shares_delta:
+      flag: 0.1
+      forward: -0.06
+      spin_left: -0.02
+      spin_right: -0.02
+    exposure_at_E1F: same_as_E1_end
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  critic_mirror: true
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  missing_evidence:
+  - parent_sha256
+  - landing_evaluation_mesh_sha256
+  - flag_baseline
+  exit_gate:
+    cell: flag_reach
+    threshold_source: W09_baseline_then_fixed
+    thresholds: null
+    flag_cells: from:E1F
+
+# DRAFT ONLY: no team approval. Never activate by inheriting E1F approval.
+stage_e2_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    condition: E1F exit gate PASS under this plan
+  scope:
+    stage_id: E2
+    start_update: 0
+    maximum_updates: 1500
+    parent_sha256: null
+    later_stages_authorized: false
+  prerequisites:
+    predecessor_exit:
+      stage_id: E1F
+      required_result: PASS
+      same_plan_sha256: true
+      evaluation_mesh_sha256: null
+    flag_baseline:
+      path: null
+      sha256: null
+      source: W09_baseline_then_fixed
+    m0_m3_receipt_sha256: null
+  boundary:
+    axis: terrain_exposure
+    terrain_change: none
+    boundary_mode: stop_evaluate_resume
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  critic_mirror: null
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  missing_evidence:
+  - parent_sha256
+  - landing_evaluation_mesh_sha256
+  - flag_baseline
+  - m0_m3_receipt_sha256

@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 507af8ce351be8ca2e07ad2d5f3e354ae92025ef3e073aacad28fdedf4be7921
+  approval_sha256: 5cac70d865161ce48e6db2e107e928e0d1dc38e941e7267dd2baf13384ae0068
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -277,6 +277,22 @@ stages:
         side_right: 0.03
 - id: E1F
   name: flag_contract
+  # CG 69e5ac6b:245 donor split is an assumption adopted with the E1F stage.
+  shares:
+    forward: 0.17
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+    flag: 0.1
   minimum_updates: 750
   maximum_updates: 1250
   extension_updates: 500
@@ -285,6 +301,8 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # CG:242/244: continuous 100%; inherit the actual E1 exit cap (5 or 6), never reset to 5.
+    exposure_at_E1F: same_as_E1_end
     floors:
       global_command_floor:
         reverse: 0.05
