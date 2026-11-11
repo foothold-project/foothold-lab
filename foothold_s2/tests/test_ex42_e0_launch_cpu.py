@@ -181,6 +181,8 @@ def test_train_start_passes_stage_e0_to_the_parent_load_and_no_other_stage_zero_
     kw = {k.arg: k.value for k in calls[0].keywords}
     assert "stage_e0" in kw and "EX42_STAGE_ID" in ast.unparse(kw["stage_e0"]) and "'E0'" in ast.unparse(kw["stage_e0"])
     src = TRAIN_START.read_text(encoding="utf-8")
-    # the only 12000 / 12001 literals left belong to the self-resume branch (EX42_STAGE_ZERO_RESUME), which E0 never sets
+    # the self-resume branch no longer hard-codes the stage-zero 12000 origin: it reads the cumulative origin from the
+    # validated resume proof, which an E1 boundary resume computes from its own parent (13250)
     resume = [i for i, line in enumerate(src.splitlines(), 1) if "12000 +" in line or "12001 +" in line]
-    assert len(resume) == 2
+    assert resume == []
+    assert src.count('EX42_STAGE_ZERO_RESUME_PROOF["cumulative_update_origin"]') >= 2

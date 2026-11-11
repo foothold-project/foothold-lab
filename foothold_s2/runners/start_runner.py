@@ -1479,13 +1479,19 @@ class StartRunner(OnPolicyRunner):
         self.ex41_mirror_hold_reason = sd.get("ex41_mirror_hold_reason")
         if self.ex41_critic_mirror:
             approval = sd.get("ex41_mirror_approval")
-            if not self._valid_ex41_mirror_approval(approval):
+            # EX-42 E1 saves the committed plan + approval grant (D174), which is not a W72 receipt: a resume at an
+            # E1 boundary must keep the mirror on instead of falling into the W72 HOLD that switches it off.
+            live = self.ex41_mirror_approval          # an approval the caller already checked against the live files
+            if self._valid_ex41_mirror_approval(approval) or self._valid_ex42_mirror_approval(approval):
+                self.ex41_mirror_approval = approval
+                self.alg.mirror_enabled = True
+            elif self._valid_ex42_mirror_approval(live):   # the plan was re-pinned after the checkpoint was written
+                self.ex41_mirror_approval = live
+                self.alg.mirror_enabled = True
+            else:
                 self._hold_ex41_mirror_resume(
                     path, int(sd["iter"]), "EX-41 W72 HOLD: checkpoint mirror approval file missing or SHA256 changed"
                 )
-            else:
-                self.ex41_mirror_approval = approval
-                self.alg.mirror_enabled = True
         continuous = getattr(self, "continuous_curriculum", None)
         if continuous is not None:
             saved_stage = sd.get("continuous_curriculum")

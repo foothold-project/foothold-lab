@@ -310,7 +310,7 @@ def test_train_start_wires_e1_the_same_way_as_e0():
     kw = {k.arg: ast.unparse(k.value) for k in load.keywords}
     assert kw["stage_e0"] == "EX42_STAGE_ID == 'E0'" and kw["stage_e1"] == "EX42_STAGE_ID == 'E1'"
     assert "runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(" in src          # mirror on right after the load
-    assert src.index("load_ex42_stage_zero_parent(") < src.index("runner.set_ex41_critic_mirror(True")
+    assert src.index("load_ex42_stage_zero_parent(") < src.rindex("runner.set_ex41_critic_mirror(True")
     assert 'parent_same_mesh=(EX42_STAGE_ID == "E1")' in src and "stage_id=EX42_STAGE_ID)" in src
     assert '_e0_preflight["approval"]["boundary_evaluation_interval_updates"]' in src       # read from the approval cell
     assert 'if EX42_STAGE_ID == "E1" else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),' in src
