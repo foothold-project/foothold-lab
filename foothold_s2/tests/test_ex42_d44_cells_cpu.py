@@ -58,6 +58,7 @@ def _trace(task):
         phase[30:] = 3
         root[30:, :, 0] = 4.0
         root[30:, :, 2] = 1.9
+        feet[30:, :, :, :2] = 4.0
         feet[30:, :, :, 2] = 1.44
     return {"root_pos_w": root, "root_quat_w": quat, "foot_pos_w": feet,
             "contact": np.ones((steps, n, 4), dtype=bool),
@@ -129,6 +130,33 @@ def test_stop_restart_timeout_is_unjudged_and_reach_requires_four_feet():
     assert (bad["valid_count"], bad["success_count"]) == (63, 62)
     assert bad["survival_count"] == 63
     assert bad["per_env"][0]["reason"] == "approach_timeout"
+
+
+def test_landing_hold_uses_four_foot_xy_and_contacting_foot_height_without_four_contact():
+    settings = contract(_plan())
+    trace = _trace("stop_restart")
+    # A trot has diagonal support, so no tick has four simultaneous contacts.
+    trace["contact"][30:, :, :] = False
+    trace["contact"][30::2, :, [0, 3]] = True
+    trace["contact"][31::2, :, [1, 2]] = True
+    assert not trace["contact"][30:].all(axis=-1).any()
+    good = summarize(trace, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)
+    assert good["success_count"] == 64
+    # An airborne foot may be low, provided its XY remains on the landing.
+    airborne_low = copy.deepcopy(trace)
+    airborne_low["foot_pos_w"][30::2, :, 1, 2] = 1.0
+    assert summarize(airborne_low, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)["success_count"] == 64
+    # A contacting foot below the landing surface invalidates the hold.
+    contacting_low = copy.deepcopy(trace)
+    contacting_low["foot_pos_w"][30:, 0, 0, 2] = 1.0
+    assert summarize(contacting_low, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)["success_count"] == 63
+    outside_xy = copy.deepcopy(trace)
+    outside_xy["foot_pos_w"][30:, 1, 3, 0] = 4.61
+    assert summarize(outside_xy, spec={"task": "stop_restart"}, anchors=ANCHORS,
+                     settings=settings, dt=.1)["success_count"] == 63
 
 
 def test_stop_is_root_band_and_speed_only_with_foot_height_diagnostic():
