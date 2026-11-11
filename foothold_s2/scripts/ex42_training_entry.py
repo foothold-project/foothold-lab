@@ -1016,8 +1016,18 @@ def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
 
 
 def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
-                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000):
-    """Provide EX-41's existing config adapters the approved single T0-prime stage."""
+                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000,
+                                   reward_overrides: dict[str, float] | None = None):
+    """Provide EX-41's existing config adapters the approved single T0-prime stage.
+
+    `reward_overrides` (a retry cell of the plan, see EX42Plan.reward_overrides) replaces named weights of that one
+    stage's reward table; every other weight stays the EX-41 table's."""
+    if reward_overrides:
+        import dataclasses
+        unknown = sorted(set(reward_overrides) - set(stage.rewards))
+        if unknown:
+            raise ValueError(f"EX-42 reward override names a weight the reward table does not have: {unknown}")
+        stage = dataclasses.replace(stage, rewards={**stage.rewards, **reward_overrides})
     return SimpleNamespace(
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
         initial_dr_scale=1.0, stand_cfg=source_plan.stand_cfg,
