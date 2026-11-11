@@ -463,6 +463,8 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     elif output.exists() and rank == 0:           # every rank gets the same argv; rank 0 creates the run directory
         raise ValueError(f"EX-42 {stage_id} output must be new")
     plan = EX42Plan.load(plan_path)
+    from foothold_s2.commands.ex42_shares import read_contract
+    command_contract = read_contract(plan, stage_id)  # Before dry-run return or AppLauncher.
     spec = E_STAGE_SPECS[stage_id]
     if spec["previous"] is None:
         parent = read_e_stage_parent(experiment_path)
@@ -484,7 +486,7 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         "parent_cumulative_update": E_STAGES[stage_id][2],
         "production_launch_allowed": False, "later_stages_authorized": False,
         "approval": approval, "world_size": world_size, "rank": rank,
-        "total_envs": num_envs * world_size,
+        "total_envs": num_envs * world_size, "command_allocation": command_contract,
     }
     if spec["critic_mirror"]:
         request["critic_mirror"] = {"enabled_at_start": True, "decision_id": "D174"}
@@ -1016,9 +1018,13 @@ def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
 
 
 def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
-                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000):
-    """Provide EX-41's existing config adapters the approved single T0-prime stage."""
+                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000,
+                                   ex42_plan=None, stage_id="EX42_0_T0_prime"):
+    """Keep the reward/source adapter intact; later command shares have a separate contract."""
+    from foothold_s2.commands.ex42_shares import read_contract
+    command_contract = read_contract(ex42_plan, stage_id) if ex42_plan is not None else None
     return SimpleNamespace(
+        command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
         initial_dr_scale=1.0, stand_cfg=source_plan.stand_cfg,
         heading_cfg=source_plan.heading_cfg, terrain_curriculum="performance",
@@ -1056,6 +1062,9 @@ class EX42StageZeroRuntime:
         self.push_vmax_mps = float(push_vmax_mps)
         self.stage_id = stage_id
         self.stage_config = stage_zero_plan.stages[0]
+        from foothold_s2.commands.ex42_shares import CommandShares
+        contract = getattr(stage_zero_plan, "command_contract", None)
+        self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
                           "terrain": {"policy": "performance", "level_cap": 5}}
         self.iteration = 0
@@ -1076,6 +1085,8 @@ class EX42StageZeroRuntime:
         self.env = raw
         self.env_stage = torch.zeros(raw.num_envs, dtype=torch.long, device=raw.device)
         command_term.stage_runtime = self
+        if self.command_allocation is not None:
+            self.command_allocation.attach(raw, command_term, self)
         raw._ex42_stage_id = self.stage_id
         raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 / E1 use the same environment as stage zero
         raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
@@ -1090,11 +1101,18 @@ class EX42StageZeroRuntime:
         self._learned_cells_init()
 
     def on_reset(self, env_ids: Any) -> None:
-        return None
+        if self.command_allocation is not None:
+            self.command_allocation.reset(env_ids)
 
     def record_command_sample(self, env_ids: Any, commands: Any, slots: Any,
                               heading: Any) -> None:
         self.command_samples += int(len(env_ids))
+        if self.command_allocation is not None:
+            self.command_allocation.samples(env_ids, slots)
+
+    def record_flag_command_sample(self, env_ids: Any) -> None:
+        if self.command_allocation is not None:
+            self.command_allocation.samples(env_ids, None)
 
     def on_update_start(self, update: int) -> None:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
@@ -1143,6 +1161,8 @@ class EX42StageZeroRuntime:
             raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
         self._step_pending = True
         self.pre_step_count += 1
+        if self.command_allocation is not None:
+            self.command_allocation.pre_step()
         if getattr(self, "learned_cells", None) is not None:
             try:
                 raw = self.env
@@ -1174,6 +1194,14 @@ class EX42StageZeroRuntime:
     def flush_consumption(self, update: int) -> None:
         if update != self.iteration:
             raise ValueError("EX-42 stage-zero command consumption iteration differs")
+        # All ranks call this, unlike on_checkpoint (rank 0 only). No GPU collective or checkpoint wait.
+        if (self.command_allocation is not None and self.runner is not None
+                and update % int(self.runner.save_interval) == 0):
+            try:
+                self.command_allocation.write(self.runner.log_dir, update, None,
+                                              plan_sha=self.plan_sha256, stage_id=self.stage_id)
+            except Exception as exc:
+                print("EX42_COMMAND_SHARES_RECORD_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
 
     def record_map_reset(self, env_ids: Any, use_gt: Any, map_off: Any = None) -> None:
         import torch
@@ -1196,6 +1224,8 @@ class EX42StageZeroRuntime:
                 "parent_sha256": self.parent_sha256,
                 "terrain": {"policy": "performance", "level_cap": 5},
                 "command_samples": self.command_samples,
+                **({"command_allocation": self.command_allocation.state_dict()}
+                   if self.command_allocation is not None else {}),
                 "push_vmax_mps": self.push_vmax_mps,
                 "pre_step_count": self.pre_step_count,
                 "post_step_count": self.post_step_count,
@@ -1216,6 +1246,11 @@ class EX42StageZeroRuntime:
         if type(iteration) is not int or not 0 <= iteration <= self.maximum_updates:
             raise ValueError("EX-42 stage-zero continuation iteration is invalid")
         self.iteration = iteration
+        if self.command_allocation is not None:
+            saved_allocation = state.get("command_allocation")
+            if not isinstance(saved_allocation, dict) or saved_allocation.get("contract") != self.command_allocation.contract:
+                raise ValueError("EX-42 command allocation continuation contract differs")
+            self.command_allocation.restart_counts(iteration)
         self.command_samples = int(state.get("command_samples", 0))
         self.pre_step_count = int(state.get("pre_step_count", 0))
         self.post_step_count = int(state.get("post_step_count", 0))
