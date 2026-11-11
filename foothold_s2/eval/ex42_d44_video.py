@@ -22,9 +22,9 @@ WIDTH, HEIGHT, FPS = 1280, 720, 25
 
 def command_order(task: str) -> tuple[str, ...]:
     if task == "turn_left":
-        return ("settle_zero", "turn_left_6s")
+        return ("turn_left_6s",)
     if task == "turn_right":
-        return ("settle_zero", "turn_right_6s")
+        return ("turn_right_6s",)
     if task == "stop_restart":
         return ("approach_to_stop_band", "stop_band_hold_2s", "restart_to_top")
     raise ValueError("unknown D44 task")
@@ -89,10 +89,10 @@ def build_plan(*, checkpoint: str | Path, plan_path: str | Path,
         raise ValueError("D44 eval_gt case mapping differs from the approved plan")
     timings = settings["timing"]
     durations = {
-        "turn_left_eval_gt": timings["settle_s"] + settings["turn_seconds"],
-        "turn_right_eval_gt": timings["settle_s"] + settings["turn_seconds"],
-        "stop_restart_eval_gt": (timings["settle_s"] + timings["approach_limit_s"]
-                                 + timings["stop_s"] + timings["restart_limit_s"]),
+        "turn_left_eval_gt": settings["turn_seconds"],
+        "turn_right_eval_gt": settings["turn_seconds"],
+        "stop_restart_eval_gt": (timings["approach_limit_s"] + timings["stop_s"]
+                                 + timings["restart_limit_s"]),
     }
     return {"schema": SCHEMA, "checkpoint": str(ckpt), "checkpoint_sha256": ckpt_sha,
             "checkpoint_iteration_required": 1000, "plan": str(plan_file),
@@ -162,11 +162,13 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
     from foothold_s2.eval.ex42_eval_loader import verify_ex41_pose_observation
     verify_ex41_pose_observation(obs)
     policy.reset(torch.ones(1, dtype=torch.bool, device=raw.device))
-    settle = _steps(timing["settle_s"], dt)
+    # The approved video tasks start directly at their task anchor: turns are
+    # six seconds of in-place rotation; stop/restart begins with approach.
+    settle = 0
     if task.startswith("turn_"):
         approach = stop = restart = 0
         turn = _steps(settings["turn_seconds"], dt)
-        total = settle + turn
+        total = turn
     else:
         approach = _steps(timing["approach_limit_s"], dt)
         stop = _steps(timing["stop_s"], dt)

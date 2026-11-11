@@ -15,8 +15,8 @@ PLAN = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
 
 
 def test_d44_video_case_order_matches_eval_tasks():
-    assert video.command_order("turn_left") == ("settle_zero", "turn_left_6s")
-    assert video.command_order("turn_right") == ("settle_zero", "turn_right_6s")
+    assert video.command_order("turn_left") == ("turn_left_6s",)
+    assert video.command_order("turn_right") == ("turn_right_6s",)
     assert video.command_order("stop_restart") == (
         "approach_to_stop_band", "stop_band_hold_2s", "restart_to_top")
     with pytest.raises(ValueError, match="unknown D44 task"):
@@ -24,19 +24,18 @@ def test_d44_video_case_order_matches_eval_tasks():
 
 
 def test_d44_video_commands_follow_eval_timing_and_latched_band_entry():
-    common = {"settle": 50, "approach": 200, "stop": 100, "turn_rate": 1.2,
+    common = {"settle": 0, "approach": 200, "stop": 100, "turn_rate": 1.2,
               "approach_speed": 1., "restart_speed": 1., "stop_band": (1., 2.)}
     def at(task, tick, x=0., entered=False):
         return video.command_for_tick(task=task, tick=tick, local_x=x,
                                       entered=entered, **common)
-    assert at("turn_left", 49) == ("settle", (0., 0., 0.), False)
-    assert at("turn_left", 50) == ("landing_turn", (0., 0., 1.2), False)
-    assert at("turn_right", 50) == ("landing_turn", (0., 0., -1.2), False)
-    assert at("stop_restart", 248)[0:2] == ("approach", (1., 0., 0.))
-    assert at("stop_restart", 249, x=1.5) == ("approach", (0., 0., 0.), True)
-    assert at("stop_restart", 249, x=2.5, entered=True) == ("approach", (0., 0., 0.), True)
-    assert at("stop_restart", 250)[0:2] == ("stop_band_hold", (0., 0., 0.))
-    assert at("stop_restart", 350)[0:2] == ("restart_to_top", (1., 0., 0.))
+    assert at("turn_left", 0) == ("landing_turn", (0., 0., 1.2), False)
+    assert at("turn_right", 0) == ("landing_turn", (0., 0., -1.2), False)
+    assert at("stop_restart", 198)[0:2] == ("approach", (1., 0., 0.))
+    assert at("stop_restart", 199, x=1.5) == ("approach", (0., 0., 0.), True)
+    assert at("stop_restart", 199, x=2.5, entered=True) == ("approach", (0., 0., 0.), True)
+    assert at("stop_restart", 200)[0:2] == ("stop_band_hold", (0., 0., 0.))
+    assert at("stop_restart", 300)[0:2] == ("restart_to_top", (1., 0., 0.))
 
 
 def test_plan_uses_three_eval_gt_cases_and_pinned_source(monkeypatch, tmp_path):
@@ -58,8 +57,8 @@ def test_plan_uses_three_eval_gt_cases_and_pinned_source(monkeypatch, tmp_path):
     assert result["envs"] == 1 and result["map_mode"] == "eval_gt"
     assert result["cases"] == ["turn_left_eval_gt", "turn_right_eval_gt", "stop_restart_eval_gt"]
     assert result["command_order"]["stop_restart_eval_gt"] == list(video.command_order("stop_restart"))
-    assert result["durations_s"]["stop_restart_eval_gt"] == 13.0
-    assert result["durations_s"]["turn_left_eval_gt"] == 7.0
+    assert result["durations_s"]["stop_restart_eval_gt"] == 12.0
+    assert result["durations_s"]["turn_left_eval_gt"] == 6.0
     with pytest.raises(ValueError, match="SHA differs"):
         video.build_plan(checkpoint=checkpoint, plan_path=plan, output_dir=tmp_path / "out",
                          mesh_dir=mesh, expected_checkpoint_sha256="0" * 64)
