@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import threading
 
 from foothold_s2.ex42_score import MODES, config, digest, measure
 from foothold_s2.experiment_registry import load_experiment, device_contract, queue_gpu_identity
@@ -16,31 +17,38 @@ from foothold_s2.machine_profile import machine_path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None):
+def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None, shard=None):
+    """Phase commands for one device. `shard` ({"map64": [modes], "axis_v2": [modes], "stand": [modes]})
+    restricts the modes each phase measures; None is the whole one-device bundle."""
     cfg = cfg or config()[0]
+    shard = shard or {"map64": list(MODES), "axis_v2": list(MODES), "stand": list(MODES)}
+    if any(set(shard.get(phase, ())) - set(MODES) for phase in ("map64", "axis_v2", "stand")):
+        raise ValueError("EX-42 shard names a mode that is not a score mode")
     seed = cfg["eval_seed"] if eval_seed is None else eval_seed
     if type(seed) is not int or seed < 0:
         raise ValueError("EX-42 evaluation seed must be a nonnegative integer")
     queue_gpu_identity(device)  # Only the two registered physical GPU ordinals are supported.
     common = ["--task", cfg["task"], "--checkpoint", str(checkpoint),
               "--envs", str(cfg["envs"])]
-    maps = [*common, "--modes", ",".join(MODES), "--fixed-terrain",
-            "--eval-seed", str(seed)]
-    if mesh_dir is not None:
-        maps += ["--mesh-dir", str(mesh_dir)]
+    def maps_for(phase):
+        row = [*common, "--modes", ",".join(shard[phase]), "--fixed-terrain", "--eval-seed", str(seed)]
+        return row + (["--mesh-dir", str(mesh_dir)] if mesh_dir is not None else [])
     kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
-    rows = [("map64", "foothold_s2.eval.eval_map_modes", [*maps, "--steps", str(cfg["steps"]),
-             "--command-suite", "extended", "--commands", "all"])]
-    for mode in MODES:
+    rows = []
+    if shard["map64"]:
+        rows.append(("map64", "foothold_s2.eval.eval_map_modes", [*maps_for("map64"), "--steps", str(cfg["steps"]),
+                     "--command-suite", "extended", "--commands", "all"]))
+    for mode in shard["stand"]:
         rows.append((f"stand_{mode}", "foothold_s2.eval.ex40_stand_eval",
                      [*common, "--mode", mode, "--seconds", str(cfg["stand_seconds"]),
                       "--skip-seconds", str(cfg["stand_skip_seconds"]),
                       "--contact-n", str(cfg["stand_contact_n"]),
                       "--seed", str(seed)]))
-    rows.append(("axis_v2", "foothold_s2.eval.eval_map_modes",
-                 [*maps, "--axis-v2", "--ex42-maintenance", "--fixed-level",
-                  str(cfg["axis_fixed_level"]), "--terrain-set", "default",
-                  "--steps", str(cfg["steps"])]))
+    if shard["axis_v2"]:
+        rows.append(("axis_v2", "foothold_s2.eval.eval_map_modes",
+                     [*maps_for("axis_v2"), "--axis-v2", "--ex42-maintenance", "--fixed-level",
+                      str(cfg["axis_fixed_level"]), "--terrain-set", "default",
+                      "--steps", str(cfg["steps"])]))
     return [{"name": name, "device": device,
              "argv": [str(machine_path("conda_python")), "-m", module, *args, "--out", str(Path(output) / name),
                       "--device", device, *kit]} for name, module, args in rows]
@@ -146,7 +154,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
 
 def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
-        p1_stage_id=None, checkpoint_iteration=None):
+        p1_stage_id=None, checkpoint_iteration=None, split_device=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
@@ -163,6 +171,11 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         raise ValueError("EX-42 evaluator source must be committed before execution")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     physical_gpu = gpu_identity(device)
+    split_gpu = None
+    if split_device is not None:
+        if split_device == device:
+            raise ValueError("EX-42 split device must differ from the evaluation device")
+        split_gpu = gpu_identity(split_device)
     cfg, cfg_path = config()
     seed = cfg["eval_seed"] if eval_seed is None else eval_seed
     mesh = None
@@ -177,13 +190,51 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
            "score_config_sha256": digest(cfg_path), "eval_seed": seed,
            "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
            **receipt_device_fields(device, physical_gpu)}
+    if split_gpu is not None:
+        row["split"] = {"devices": [device, split_device], "split_physical_gpu": split_gpu}
     _atomic(output / "eval_receipt.json", row)
     env = child_env()
     row["child_cuda_visible_devices"] = None
     row["child_cuda_device_order"] = env["CUDA_DEVICE_ORDER"]
     row["parent_cuda_visible_devices"] = os.environ.get("CUDA_VISIBLE_DEVICES")
     _atomic(output / "eval_receipt.json", row)
-    for phase in commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir):
+    if split_device is not None:
+        from foothold_s2 import ex42_eval_split as split
+        shards, load = split.assign_shards([device, split_device])
+        row["split"].update(assignment=shards, estimated_seconds=load)
+        _atomic(output / "eval_receipt.json", row)
+        try:
+            split.wait_gpus_free([physical_gpu["gpu_uuid"], split_gpu["gpu_uuid"]])
+        except ValueError as exc:
+            row.update(state="HOLD", reason=str(exc))
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+        lock = threading.Lock()
+
+        def record(key, child):
+            with lock:
+                row["steps"][key] = child
+                _atomic(output / "eval_receipt.json", row)
+
+        failed = split.run_shards(
+            shards, output=output,
+            commands_for=lambda dev, shard, out: commands(checkpoint, out, dev, cfg, eval_seed=seed,
+                                                          mesh_dir=mesh_dir, shard=shard),
+            env=env, physical={device: physical_gpu, split_device: split_gpu}, process=process,
+            observed=observed_child_identity, record=record)
+        if failed:
+            row.update(state="HOLD", reason=f"{', '.join(failed)} failed or lacks durable receipt")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+        try:
+            merge = split.merge_shards(output, [output / "shards" / split.shard_tag(d) for d in (device, split_device)])
+            _atomic(output / "eval_split_merge.json", merge)
+        except (OSError, ValueError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 split merge failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+    for phase in ([] if split_device is not None else
+                  commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir)):
         name = phase["name"]
         process.prepare_phase_output(phase["argv"])
         child = process.hidden_child(phase["argv"], output / "children" / name, env=env)
@@ -225,6 +276,8 @@ def main(argv=None):
     sha_group.add_argument("--sha-from-manifest", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
+    parser.add_argument("--split-device", choices=("cuda:0", "cuda:1"), default=None,
+                        help="second GPU: map modes are split over --device and this one, then merged")
     parser.add_argument("--eval-seed", type=int, default=None)
     parser.add_argument("--mesh-dir", type=Path, default=None)
     parser.add_argument("--expected-mesh-sha256")
@@ -234,6 +287,8 @@ def main(argv=None):
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--score-existing", action="store_true")
     args = parser.parse_args(argv)
+    if args.split_device == args.device:
+        parser.error("--split-device must differ from --device")
     if args.execute and args.score_existing:
         parser.error("select either --execute or --score-existing")
     if len([x for x in (args.p1_plan, args.p1_approvals, args.p1_stage_id) if x is not None]) not in (0, 3):
@@ -266,16 +321,25 @@ def main(argv=None):
         print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
         return 0
     if not args.execute:
-        print(json.dumps({"state": "plan", "score_config": str(config()[1]),
-                          "commands": commands(args.checkpoint, args.out, args.device,
-                                               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)}))
+        plan = {"state": "plan", "score_config": str(config()[1])}
+        if args.split_device is None:
+            plan["commands"] = commands(args.checkpoint, args.out, args.device,
+                                        eval_seed=args.eval_seed, mesh_dir=args.mesh_dir)
+        else:
+            from foothold_s2.ex42_eval_split import assign_shards, shard_tag
+            shards, load = assign_shards([args.device, args.split_device])
+            plan.update(split=shards, estimated_seconds=load, commands={
+                dev: commands(args.checkpoint, args.out / "shards" / shard_tag(dev), dev,
+                              eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard)
+                for dev, shard in shards.items()})
+        print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,
                eval_seed=args.eval_seed, mesh_dir=args.mesh_dir,
                expected_mesh_sha256=args.expected_mesh_sha256,
                p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
                p1_stage_id=args.p1_stage_id,
-               checkpoint_iteration=iteration)
+               checkpoint_iteration=iteration, split_device=args.split_device)
 
 
 if __name__ == "__main__":
