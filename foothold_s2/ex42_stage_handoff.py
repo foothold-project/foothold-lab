@@ -23,6 +23,21 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def extension_ceiling(iteration: int, cap: int, step: int, count: int):
+    """The end a HOLD-only extension may reach from this boundary, or None. The stage runs to its base cap
+    (`maximum_updates`); each extension adds `step` (`extension_updates`), at most `count` (`extension_max_count`)."""
+    if type(step) is not int or type(count) is not int or step <= 0 or count <= 0 or iteration < cap:
+        return None
+    done = (iteration - cap) // step
+    return cap + (done + 1) * step if done < count else None
+
+
+def _extension_authorized(approvals_path, stage_id) -> bool:
+    from foothold_s2.curriculum.ex42_prep import _read_yaml
+    cell = _read_yaml(Path(approvals_path)).get(f"stage_{stage_id.lower()}_authorization")
+    return isinstance(cell, dict) and cell.get("extension_authorized") is True
+
+
 def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1):
     """Same stage, from this boundary's saved checkpoint: allowed only inside the bounds of the stage's own approval
     cell (scope maximum, cell interval; read through the stage's own validator) under the scoped automatic policy.
@@ -45,14 +60,21 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
                 or _sha256(checkpoint) != p1.get("checkpoint_sha256")
                 or manifest.get("progress", {}).get("completed_updates") != iteration):
             raise ValueError("the boundary checkpoint is not the manifest's latest save that was scored")
+        end = min(iteration + interval, bound)
         if iteration >= bound:
-            return {**base, "action": "notify", "state": "stage_bound_reached_not_ready",
-                    "reason": f"update {iteration} is the approved bound {bound} and the gate did not pass"}
+            row = next(r for r in plan.document["stages"] if r["id"] == stage_id)
+            ceiling = (extension_ceiling(iteration, bound, row.get("extension_updates"), row.get("extension_max_count", 0))
+                       if p1.get("judgment") == "HOLD" and _extension_authorized(approvals_path, stage_id) else None)
+            if ceiling is None:      # not HOLD, no extension authorized, or every extension used
+                return {**base, "action": "notify", "state": "stage_bound_reached_not_ready",
+                        "reason": f"update {iteration} is the approved bound {bound} (extensions used or not open) "
+                                  f"and the gate did not pass"}
+            end = min(iteration + interval, ceiling)
     except (ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "continue_not_authorized",
                 "reason": f"not authorized to continue by itself: {exc}"}
     return {**base, "action": "continue", "state": "stage_continues", "target_stage": stage_id,
-            "resume_checkpoint": str(checkpoint), "segment_end": min(iteration + interval, bound),
+            "resume_checkpoint": str(checkpoint), "segment_end": end,
             "plan": str(plan.path), "approvals": str(Path(approvals_path).resolve()),     # the run's own pinned pair
             "authorization": proof}
 
@@ -78,6 +100,7 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
     if index > 0 and not boundary:          # the plan's evaluation interval, so a removed cell still gets a notice
         interval = plan.document.get("evaluation", {}).get("interval_updates")
         limit = stages[index].get("maximum_updates", minimum)
+        limit += (stages[index].get("extension_updates") or 0) * (stages[index].get("extension_max_count") or 0)
         boundary = type(interval) is int and interval > 0 and 0 < iteration <= limit and iteration % interval == 0
     if not boundary:
         return None

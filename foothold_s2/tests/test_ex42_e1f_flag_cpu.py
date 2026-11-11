@@ -453,6 +453,8 @@ def test_failed_child_still_writes_p1_score_and_handoff(tmp_path, monkeypatch):
     monkeypatch.setattr(once, "commands", lambda *args, **kwargs: [])
     monkeypatch.setattr(EX42Plan, "load", lambda path: SimpleNamespace(document=_plan(), sha256=PLAN_SHA))
     monkeypatch.setattr(once, "execute_flag_children", lambda *args, **kwargs: {"flag_four": "Kit child rc=1"})
+    # This case isolates a flag-child failure; retained D44 is covered separately.
+    monkeypatch.setattr(once, "retained_paper_cells", lambda *_: ("flag_cells",))
 
     def measure_with_marker(*args, **kwargs):
         marker = json.loads((output / "flag_cells" / "child_failures.json").read_text(encoding="utf-8"))

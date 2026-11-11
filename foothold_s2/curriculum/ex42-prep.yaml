@@ -120,7 +120,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 779b2d44c10416d9d1d941d33d4039376a248d630a2c339935d5567e41b1dec4
+  approval_sha256: 7e9f72da0e708a36f3b44c3560414f5d77fc33fedb1129ccc4ac99c76473c98d
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -173,6 +173,7 @@ stages:
   minimum_updates: 250
   maximum_updates: 250
   extension_updates: 0
+  extension_max_count: 0
   boundary_axes:
   - terrain_mesh_swap
   enabled: true
@@ -275,9 +276,10 @@ stages:
     manifest_local_update: 250
     checkpoint_key: model_250.pt
     sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
-  minimum_updates: 1000
-  maximum_updates: 2000
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 2
   critic_mirror: true
   boundary_axes:
   - terrain_level_cap
@@ -370,9 +372,10 @@ stages:
     diag_back_left: 0.025
     diag_back_right: 0.025
     flag: 0.1
-  minimum_updates: 750
-  maximum_updates: 1250
+  minimum_updates: 250
+  maximum_updates: 750
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - command_allocation
   enabled: true
@@ -393,6 +396,7 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E2
+  exit_judge: kind_two_window_e2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -415,9 +419,10 @@ stages:
     - critic_mirror
     required_stage_values: {}
   name: one_easy_new_terrain_kind
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   enabled: true
@@ -466,9 +471,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E2
     required_stage_values: {}
   name: kind_dimensions_and_irregularity
-  minimum_updates: 3000
-  maximum_updates: 5000
+  minimum_updates: 250
+  maximum_updates: 3000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_kind_level_cap
   - terrain_exposure
@@ -519,9 +525,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E3
     required_stage_values: {}
   name: difficult_terrain_kinds
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
@@ -626,9 +633,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E4
     required_stage_values: {}
   name: mixed_and_direction_generalization
-  minimum_updates: 1500
-  maximum_updates: 2500
+  minimum_updates: 250
+  maximum_updates: 1500
   extension_updates: 500
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - command_allocation
@@ -782,9 +790,10 @@ stages:
       boundary.boundary_mode: stop_evaluate_resume
     required_stage_values: {}
   name: map_off_continuous_branch
-  minimum_updates: 500
-  maximum_updates: 1000
+  minimum_updates: 250
+  maximum_updates: 500
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - map_off_probability
   enabled: false
@@ -937,9 +946,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E5
     required_stage_values: {}
   name: posture_command_activation
-  minimum_updates: 1000
-  maximum_updates: 1500
+  minimum_updates: 250
+  maximum_updates: 1000
   extension_updates: 500
+  extension_max_count: 1
   boundary_axes:
   - posture_height
   - posture_roll
@@ -1093,9 +1103,10 @@ stages:
       prerequisites.predecessor_exit.stage_id: E6a
     required_stage_values: {}
   name: terrain_family_d
-  minimum_updates: 2000
-  maximum_updates: 4000
+  minimum_updates: 250
+  maximum_updates: 2000
   extension_updates: 1000
+  extension_max_count: 2
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
@@ -1286,6 +1297,22 @@ evaluation:
       flag_four_eval_gt: {count: flag_four, map_mode: eval_gt, role: judge}
       flag_four_eval_pred: {count: flag_four, map_mode: eval_pred, role: judge}
       flag_four_probe_prop_only: {count: flag_four, map_mode: probe_prop_only, role: record_only}
+  # Lead 2026-11-11 16:10, 16:13: E2 kind L0 has one forward and one four-flag
+  # 64-env subcell per map mode. The 12 s forward window covers START x=7 m;
+  # 300 maintenance steps cover only 6 s and cannot reach that finish at 1 m/s.
+  e2_kind_cells:
+    family: A
+    kind: stepping_stones_low
+    level: 0
+    forward_command: fwd1.0
+    forward_steps: 600
+    forward_seconds: 12.0
+    completion_settle_s: 0.5
+    flag_count: flag_four
+    valid_min_each: 48
+    weak_subcell_warning_fraction_of_success_floor: 0.5
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
   paper_cells:
     judge_from_stage: E4
     slope:

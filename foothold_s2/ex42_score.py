@@ -221,6 +221,37 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
         from types import SimpleNamespace
         from foothold_s2.ex42_stage_judges import adapter_for
         plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+        if stage_id:
+            from foothold_s2.ex42_stage_judges import retained_paper_cells
+            retained = retained_paper_cells(plan, stage_id)
+            if "d44" in retained and (evaluation / "d44" / "d44_cells.json").is_file():
+                from foothold_s2.eval.ex42_d44_cells import read_evidence
+                out["d44_cells"] = read_evidence(
+                    evaluation / "d44", plan=plan,
+                    plan_sha256=digest(ROOT / cfg["maintenance_source"]),
+                    checkpoint_sha256=checkpoint_sha, seed=seed)
+            if "flag_cells" in retained:
+                from foothold_s2.eval.ex42_flag_cells import read_evidence
+                marker = evaluation / "flag_cells" / "child_failures.json"
+                failures = set()
+                if marker.is_file():
+                    failed = _json(marker)
+                    if (failed.get("format") != "foothold-ex42-e1f-child-failures/1" or
+                            failed.get("checkpoint_sha256") != checkpoint_sha or
+                            not isinstance(failed.get("failures"), dict) or
+                            not failed["failures"] or
+                            set(failed["failures"]) - {"flag_one", "flag_four"}):
+                        raise ValueError("EX-42 retained flag child failure marker invalid")
+                    failures = set(failed["failures"])
+                for count in ("flag_one", "flag_four"):
+                    if count in failures:
+                        continue
+                    folder = evaluation / "flag_cells" / count
+                    if (folder / "flag_cells.json").is_file():
+                        out.setdefault("flag_cells", {}).update(read_evidence(
+                            folder, plan=plan,
+                            plan_sha256=digest(ROOT / cfg["maintenance_source"]),
+                            checkpoint_sha256=checkpoint_sha, seed=seed, count=count))
         adapter = adapter_for(plan, stage_id) if stage_id else None
         if adapter is None:
             out["reason"] = f"{stage_id} has no exit judge adapter in the plan; this stage requires its own judgment policy"

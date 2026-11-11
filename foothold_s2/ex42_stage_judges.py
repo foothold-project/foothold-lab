@@ -22,6 +22,16 @@ LEGACY_DEFAULT = {"E0": "map39_e0", "E1": "map39_e1_two_window"}
 ADAPTERS: dict[str, "StageJudge"] = {}
 
 
+def retained_paper_cells(plan: dict, stage_id: str) -> tuple[str, ...]:
+    """Stage-order contract for maintenance children that survive later entries."""
+    stages = [row["id"] for row in plan["stages"]]
+    if len(stages) != len(set(stages)) or stage_id not in stages or not {"E1", "E1F"} <= set(stages):
+        raise ValueError("EX-42 paper-cell stage order is absent or duplicated")
+    index = stages.index(stage_id)
+    return tuple(name for anchor, name in (("E1", "d44"), ("E1F", "flag_cells"))
+                 if index >= stages.index(anchor))
+
+
 class StageJudge:
     name = ""
 
@@ -165,3 +175,4 @@ register(_E1())
 # E1F owns its policy and registers the adapter when the reviewed E0/E1 table
 # is ready. Importing only this registry must be sufficient for adapter_for().
 from foothold_s2 import ex42_e1f_judge  # noqa: E402,F401
+from foothold_s2 import ex42_e2_judge  # noqa: E402,F401
