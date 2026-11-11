@@ -84,3 +84,26 @@ def test_missing_prior_or_different_identity_stays_hold():
     assert "flag_cells" in compare(current, previous, measured=measured,
                                    baseline=baseline, kind_now=kind,
                                    kind_previous=kind)["missing"]
+
+
+def test_stage_specific_identity_and_kind_subcells_are_checked():
+    previous, kind, measured, baseline = _fixtures()
+    previous["stage_id"] = "E3"
+    previous["e3_kind"] = previous.pop("e2_kind")
+    current = copy.deepcopy(previous)
+    row = compare(current, previous, measured=measured, baseline=baseline,
+                  kind_now=kind, kind_previous=kind, stage_id="E3",
+                  kind_score_key="e3_kind", kind_subcells=("forward", "flag_four"))
+    assert row["judgement"] == "PASS"
+    current["e3_kind"]["mesh_sha256"] = "c" * 64
+    row = compare(current, previous, measured=measured, baseline=baseline,
+                  kind_now=kind, kind_previous=kind, stage_id="E3",
+                  kind_score_key="e3_kind", kind_subcells=("forward", "flag_four"))
+    assert row["missing"] == ["identity"]
+    current = copy.deepcopy(previous)
+    broken = copy.deepcopy(kind)
+    del broken["eval_pred"]["flag_four"]
+    row = compare(current, previous, measured=measured, baseline=baseline,
+                  kind_now=broken, kind_previous=kind, stage_id="E3",
+                  kind_score_key="e3_kind", kind_subcells=("forward", "flag_four"))
+    assert "kind/eval_pred/flag_four/success_count" in row["missing"]

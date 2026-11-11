@@ -108,10 +108,17 @@ def read_boundary(checkpoint: Path, *, stage_id: str, plan_sha256: str, interval
 
 def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                          plan_sha256: str, interval: int, min_episodes: int,
-                         previous_kind_pass: bool) -> dict:
+                         previous_kind_pass: bool = False,
+                         registered_kind_passes: dict[tuple[str, str], bool] | None = None) -> dict:
     """CG:381 registration, two adjacent save windows, no proxy counts."""
-    if stage_id != "E2" or type(min_episodes) is not int or min_episodes < 1:
-        raise ValueError("EX-42 learned_cells E2 threshold invalid")
+    if (not isinstance(stage_id, str) or not stage_id or
+            type(min_episodes) is not int or min_episodes < 1):
+        raise ValueError("EX-42 learned_cells stage threshold invalid")
+    if stage_id != "E2" and (not isinstance(registered_kind_passes, dict) or
+            any(not isinstance(key, tuple) or len(key) != 2 or
+                any(not isinstance(part, str) or not part for part in key) or
+                type(value) is not bool for key, value in registered_kind_passes.items())):
+        raise ValueError("EX-42 learned_cells prior kind pass registry invalid")
     checkpoint = Path(checkpoint)
     iteration = int(re.fullmatch(r"model_(\d+)\.pt", checkpoint.name).group(1))
     current = read_boundary(checkpoint, stage_id=stage_id,
@@ -145,12 +152,14 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
     registered = set()
     for column, row in enumerate(table):
         family, kind = row["family"], row["kind"]
-        if exposure[column] <= 0 or family != "A":
+        if exposure[column] <= 0 or (stage_id == "E2" and family != "A"):
             continue
-        if kind in continuous:
+        if family == "A" and kind in continuous:
             groups = GROUPS  # the flag group opened at E1F, before E2
             modes = MODES if p_off > 0 and kind in ELIGIBLE_NAMES else MODES[:1]
-        elif kind == "stepping_stones_low" and previous_kind_pass:
+        elif stage_id == "E2" and kind == "stepping_stones_low" and previous_kind_pass:
+            groups, modes = ("forward", "flag"), MODES[:1]
+        elif stage_id != "E2" and registered_kind_passes.get((family, kind)) is True:
             groups, modes = ("forward", "flag"), MODES[:1]
         else:
             continue  # new kind registers only after its first passing window
@@ -161,7 +170,7 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                 for mode in modes:
                     registered.add((family, kind, band, group, mode))
     if not registered:
-        raise ValueError("EX-42 learned_cells has no registered E2 cells")
+        raise ValueError(f"EX-42 learned_cells has no registered {stage_id} cells")
     counted = {}
     for window in (previous, current):
         for column, band, group, mode, n in window["cells"]:

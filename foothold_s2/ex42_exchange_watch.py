@@ -9,14 +9,24 @@ import math
 
 
 def compare(now: dict, previous: dict | None, *, measured: dict,
-            baseline: dict, kind_now: dict, kind_previous: dict | None) -> dict:
+            baseline: dict, kind_now: dict, kind_previous: dict | None,
+            stage_id: str | None = None, kind_score_key: str = "e2_kind",
+            kind_subcells: tuple[str, ...] = ("forward", "flag_four")) -> dict:
+    if (stage_id is not None and (not isinstance(stage_id, str) or not stage_id) or
+            not isinstance(kind_score_key, str) or not kind_score_key or
+            not isinstance(kind_subcells, tuple) or not kind_subcells or
+            len(set(kind_subcells)) != len(kind_subcells) or
+            any(not isinstance(cell, str) or not cell for cell in kind_subcells)):
+        raise ValueError("EX-42 exchange watch stage or kind identity invalid")
     if previous is None:
         return {"role": "judge", "judgement": "HOLD", "source": "fixed_eval",
                 "reason": "직전 경계 평가 없음", "violations": [], "missing": ["previous_boundary"]}
     if (now.get("conditions", {}).get("eval_seed") != previous.get("conditions", {}).get("eval_seed") or
             now.get("score_config_sha256") != previous.get("score_config_sha256") or
             now.get("stage_id") != previous.get("stage_id") or
-            now.get("e2_kind", {}).get("mesh_sha256") != previous.get("e2_kind", {}).get("mesh_sha256")):
+            (stage_id is not None and now.get("stage_id") != stage_id) or
+            (stage_id is not None and (kind_score_key not in now or kind_score_key not in previous)) or
+            now.get(kind_score_key, {}).get("mesh_sha256") != previous.get(kind_score_key, {}).get("mesh_sha256")):
         return {"role": "judge", "judgement": "HOLD", "source": "fixed_eval",
                 "reason": "직전 경계 시드·설정·단계·메시가 다름", "violations": [], "missing": ["identity"]}
     limits = {"alive_at_end": measured["survival_drop_envs"],
@@ -64,7 +74,7 @@ def compare(now: dict, previous: dict | None, *, measured: dict,
         if not isinstance(new_row, dict) or not isinstance(old_row, dict):
             missing.append(f"kind/{mode}")
             continue
-        for subcell in ("forward", "flag_four"):
+        for subcell in kind_subcells:
             newer, older = new_row.get(subcell, {}), old_row.get(subcell, {})
             valid_new, valid_old = newer.get("valid_count"), older.get("valid_count")
             for metric in ("success_count", "survival_count"):
