@@ -362,3 +362,22 @@ def test_direct_chain_stops_at_first_failed_boundary_and_records_blocking_receip
     assert row["state"] == "failed" and row["failed_iteration"] == 500
     assert not Path(plan["p1_done_path"]).exists()
     assert json.loads(Path(plan["chain_receipt"]).read_text())["state"] == "failed"
+
+
+def test_queue_item_accepts_real_measurement_without_iteration_field(tmp_path):
+    # 11/11 19:2x real E1 m250: ex42_score.json has stage_id and checkpoint_sha256 but no checkpoint_iteration
+    out = tmp_path / "m250"
+    out.mkdir()
+    marker = tmp_path / "m250.done.json"
+    argv = ["python", "-m", "fake-eval", "--out", str(out)]
+
+    def real_shape(_argv, check):
+        (out / "eval_receipt.json").write_text('{"state":"done"}', encoding="utf-8")
+        (out / "p1_score.json").write_text(
+            '{"state":"complete","stage_id":"E1","checkpoint_iteration":250,"checkpoint_sha256":"a","judgment":"FAIL"}',
+            encoding="utf-8")
+        (out / "ex42_score.json").write_text('{"stage_id":"E1","checkpoint_sha256":"a"}', encoding="utf-8")
+        return type("Proc", (), {"returncode": 0})()
+
+    assert run_item(evaluator_argv=argv, iteration=250, marker=marker, popen=real_shape) == 0
+    assert marker.exists()
