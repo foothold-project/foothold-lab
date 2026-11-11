@@ -237,13 +237,22 @@ def test_dr_scale_one_is_authorized_by_the_real_e1_cell_and_only_by_it(tmp_path)
                 {**real, "scope": {**real["scope"], "maximum_updates": "1000"}},
                 {**real, "scope": {**real["scope"], "later_stages_authorized": True}},
                 {**real, "scope": {**real["scope"], "parent_sha256": "xyz"}},
-                {**real, "extension_authorized": True}, {k: v for k, v in real.items() if k != "extension_authorized"},
+                {**real, "extension_contract": None}, {k: v for k, v in real.items() if k != "extension_authorized"},
                 {**real, "boundary_evaluation_interval_updates": 300},               # does not divide the bound
                 {**real, "boundary_evaluation_interval_updates": 0},
                 {k: v for k, v in real.items() if k != "boundary_evaluation_interval_updates"},
                 {**real, "production_launch_allowed": True}, {**real, "later_stages_authorized": True},
                 {**real, "approvals_sha256": "short"}):
         assert not ok(1.0, bad), bad
+    # An old false proof remains valid; true alone or an altered HOLD contract never is.
+    historical = {k: v for k, v in real.items() if k != "extension_contract"}
+    assert ok(1.0, {**historical, "extension_authorized": False})
+    assert not ok(1.0, historical)
+    for key, value in (("judgment", "PASS"), ("after_updates", 750), ("max_count", 3),
+                       ("maximum_updates", 2500), ("increment_updates", 250),
+                       ("decision_id", "unapproved"), ("decision_source", "0" * 40)):
+        assert not ok(1.0, {**real, "extension_contract": {**real["extension_contract"], key: value}})
+    assert not ok(1.0, {**real, "scope": {**real["scope"], "maximum_updates": 2000}})
     assert not ok(1.0, {**real, "state": "stage_zero_only_authorized"})              # the stage-zero shape needs its own ids
     # the exact call of train_start.py (prepare_ex41_env_cfg -> install_initial_dr_scale) with the plan view the E1
     # path builds and the three reset terms of the env cfg: it must get through and wrap them
