@@ -226,10 +226,16 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     elif cfg["status"] == "e0_parent_baseline_pinned" and stage_id == "E1":
         from foothold_s2.ex42_e0_judge import load_baseline
         from foothold_s2.ex42_e1_judge import judge_e1, previous_e1_score
+        from foothold_s2.eval.ex42_d44_cells import read_evidence
         baseline = load_baseline(ROOT, cfg, digest)
         baseline["_sha256"] = cfg["baseline"]["sha256"]
-        plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+        plan_path = ROOT / cfg["maintenance_source"]
+        plan = yaml.safe_load(plan_path.read_text(encoding="utf-8-sig"))
         measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        if (evaluation / "d44" / "d44_cells.json").is_file():
+            out["d44_cells"] = read_evidence(
+                evaluation / "d44", plan=plan, plan_sha256=digest(plan_path),
+                checkpoint_sha256=checkpoint_sha, seed=seed)
         prior = previous_e1_score(checkpoint, evaluation,
                                   plan["evaluation"]["interval_updates"], digest(cfg_path))
         out = judge_e1(out, baseline, measured, plan, previous=prior)
