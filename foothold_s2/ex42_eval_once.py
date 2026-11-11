@@ -258,9 +258,10 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
     the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
     stays a notice with its reason. The launched training is not in the GPU queue, so `gpu_wait` (every GPU free of
     other compute processes) runs first: boundary evaluations still queued or running must not share a GPU with it."""
-    from foothold_s2.ex42_stage_handoff import decide_next_stage, start_launcher
+    from foothold_s2.ex42_stage_handoff import decide_next_stage, materializer_from_env, start_launcher
     manifest = Path(checkpoint).parent / "manifest.json"
-    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest)
+    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest,
+                                 materialize=materializer_from_env(os.environ))
     if decision is None:
         return None
     notice = {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
