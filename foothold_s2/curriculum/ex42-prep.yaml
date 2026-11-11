@@ -1484,16 +1484,16 @@ stages:
         source: CG:380
     kind_task:
       F:
-        ledge_up:
+        jump_up_low:
           push: off
-        ledge_down:
+        jump_down_low:
           push: off
-        gap:
+        jump_gap:
           push: off
-        ledge_high:
+        jump_up_high:
           push: off
     jump_ladder:
-      ledge_up:
+      jump_up_low:
         axis: height
         unit: m
         levels:
@@ -1501,7 +1501,7 @@ stages:
         - 0.2
         - 0.3
         opens_in: J2
-      ledge_down:
+      jump_down_low:
         axis: height
         unit: m
         levels:
@@ -1509,7 +1509,7 @@ stages:
         - 0.2
         - 0.3
         opens_in: J2
-      gap:
+      jump_gap:
         axis: width
         unit: m
         levels:
@@ -1518,7 +1518,7 @@ stages:
         - 0.45
         - 0.6
         opens_in: J3
-      ledge_high:
+      jump_up_high:
         axis: height
         unit: m
         levels:
@@ -1864,7 +1864,7 @@ stages:
         share: 0.015
         level_cap: 3
       - family: F
-        kind: ledge_up
+        kind: jump_up_low
         share: 0.05
         level_cap: 0
     floors:
@@ -1886,7 +1886,7 @@ stages:
       kind_floor: 0.015
       order:
       - family: F
-        kind: ledge_down
+        kind: jump_down_low
         level_cap: 0
 - id: J3
   authorization_contract:
@@ -2050,15 +2050,15 @@ stages:
         share: 0.015
         level_cap: 3
       - family: F
-        kind: ledge_up
+        kind: jump_up_low
         share: 0.015
         level_cap: 0
       - family: F
-        kind: ledge_down
+        kind: jump_down_low
         share: 0.015
         level_cap: 0
       - family: F
-        kind: gap
+        kind: jump_gap
         share: 0.05
         level_cap: 0
     floors:
@@ -2236,19 +2236,19 @@ stages:
         share: 0.015
         level_cap: 3
       - family: F
-        kind: ledge_up
+        kind: jump_up_low
         share: 0.015
         level_cap: 0
       - family: F
-        kind: ledge_down
+        kind: jump_down_low
         share: 0.015
         level_cap: 0
       - family: F
-        kind: gap
+        kind: jump_gap
         share: 0.015
         level_cap: 0
       - family: F
-        kind: ledge_high
+        kind: jump_up_high
         share: 0.05
         level_cap: 0
     floors:

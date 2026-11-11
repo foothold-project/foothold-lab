@@ -1,12 +1,10 @@
 """J0~J4 (DESIGN-JUMP v0.2 s2.2): the jump stages in the EX-42 table, their closed approval cells, the family F entry
 contract (mesh families, kind_task, column kinds) and the exposure of every J stage on a table with F columns.
-The F generator itself is the analyst's; here a stand-in module with the contract names is used. No Kit, no GPU."""
+The F generator is the analyst's `foothold_s2.terrains.jump_preset` (#710); kind names, stage openings and level dims are read
+from it, never retyped. No Kit, no GPU."""
 from __future__ import annotations
 
 import copy
-import importlib.util
-import sys
-import types
 
 import numpy as np
 import pytest
@@ -17,12 +15,14 @@ from foothold_s2.curriculum.ex42_prep import (
 from foothold_s2.scripts import ex42_training_entry as entry
 from foothold_s2.terrains import ex42_column_reset as cr
 from foothold_s2.terrains import ex42_exposure as ex
+from foothold_s2.terrains import jump_preset
 from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
 from foothold_s2.tests.test_ex42_exposure_cpu import PLAN, REAL
 
 needs_mesh = pytest.mark.skipif(not (REAL / "terrain_mesh.npz").is_file(), reason="real mesh missing")
 APPROVALS = PLAN.parent / "ex42-approvals.yaml"
-F_KINDS = ["ledge_up", "ledge_down", "gap", "ledge_high"]
+F_KINDS = list(jump_preset.KINDS)
+UP_LOW, DOWN_LOW, GAP, UP_HIGH = F_KINDS
 
 
 def _doc():
@@ -63,23 +63,24 @@ def test_the_approval_cells_are_closed_so_no_jump_stage_can_start_by_itself():
 def test_the_ladders_are_the_design_dimensions_and_each_stage_opens_only_its_own_kinds():
     rows = _rows()
     ladder = rows["J0"]["terrain"]["jump_ladder"]
-    assert ladder["ledge_up"]["levels"] == ladder["ledge_down"]["levels"] == [0.10, 0.20, 0.30]
-    assert ladder["gap"]["levels"] == [0.15, 0.30, 0.45, 0.60]
-    assert ladder["ledge_high"]["levels"] == [0.40, 0.50, 0.60, 0.65, 0.70, 0.75]
-    assert {k: v["axis"] for k, v in ladder.items()} == {"ledge_up": "height", "ledge_down": "height", "gap": "width",
-                                                         "ledge_high": "height"}
+    assert set(ladder) == set(jump_preset.LEVEL_VALUES_M)
+    for kind, spec in ladder.items():                                                 # dims come from the generator, not from prep
+        assert spec["levels"] == pytest.approx(list(jump_preset.LEVEL_VALUES_M[kind])), kind
+        assert spec["opens_in"] == jump_preset.STAGES[kind], kind
+    assert {k: v["axis"] for k, v in ladder.items()} == {UP_LOW: "height", DOWN_LOW: "height", GAP: "width", UP_HIGH: "height"}
     for spec in ladder.values():
         assert spec["levels"] == sorted(set(spec["levels"]))
     assert set(rows["J0"]["terrain"]["kind_task"]) == {"F"} and set(rows["J0"]["terrain"]["kind_task"]["F"]) == set(F_KINDS)
     opened = {sid: [r["kind"] for r in rows[sid]["terrain"][f"exposure_at_{sid}"]["positive"] if r.get("family") == "F"]
               for sid in JUMP_STAGE_IDS}
-    assert opened == {"J0": [], "J1": [], "J2": ["ledge_up"], "J3": ["ledge_up", "ledge_down", "gap"],
-                      "J4": ["ledge_up", "ledge_down", "gap", "ledge_high"]}
+    assert opened == {"J0": [], "J1": [], "J2": [UP_LOW], "J3": [UP_LOW, DOWN_LOW, GAP], "J4": [UP_LOW, DOWN_LOW, GAP, UP_HIGH]}
+    for sid, kinds in opened.items():                                                 # nothing is exposed before its generator stage
+        assert all(jump_preset.STAGES[k] <= sid for k in kinds), (sid, kinds)
     for sid in JUMP_STAGE_IDS:                                                       # a new jump kind starts at its lowest level
         for rule in rows[sid]["terrain"][f"exposure_at_{sid}"]["positive"]:
             if rule.get("family") == "F":
                 assert rule["level_cap"] == 0 and rule["share"] in (0.05, 0.015)
-    assert rows["J2"]["terrain"]["k_ladder"]["order"] == [{"family": "F", "kind": "ledge_down", "level_cap": 0}]
+    assert rows["J2"]["terrain"]["k_ladder"]["order"] == [{"family": "F", "kind": DOWN_LOW, "level_cap": 0}]
 
 
 def test_height_and_gap_never_rise_at_one_boundary_and_the_plan_refuses_a_table_that_does():
@@ -97,7 +98,7 @@ def test_height_and_gap_never_rise_at_one_boundary_and_the_plan_refuses_a_table_
             _load(bad)
     over = copy.deepcopy(doc)
     rules = next(r for r in over["stages"] if r["id"] == "J4")["terrain"]["exposure_at_J4"]["positive"]
-    next(r for r in rules if r.get("kind") == "ledge_high")["share"] = JUMP_SHARE_CAP
+    next(r for r in rules if r.get("kind") == UP_HIGH)["share"] = JUMP_SHARE_CAP
     with pytest.raises(ValueError, match="over 0.2"):
         _load(over)
 
@@ -135,31 +136,22 @@ def test_kind_task_adds_family_f_for_the_jump_stages_only_and_f_kinds_gate_the_p
         entry._kind_task(_load(doc), "J2")
 
 
-def _stand_in_f_module(monkeypatch):
-    module = types.ModuleType("foothold_s2.terrains.jump_go2_v1")
-    module.KINDS = list(F_KINDS)
-    monkeypatch.setitem(sys.modules, "foothold_s2.terrains.jump_go2_v1", module)
-    return module
-
-
-def test_family_f_columns_are_named_from_the_generator_module_and_a_missing_module_gives_unnamed_columns(monkeypatch):
-    assert cr.family_column_kinds("F", 4) == [None] * 4 or importlib.util.find_spec("foothold_s2.terrains.jump_go2_v1")
-    _stand_in_f_module(monkeypatch)
+def test_family_f_columns_are_named_from_the_generator_module():
     assert cr.family_column_kinds("F", 4) == F_KINDS
-    table = cr.build_column_table(["F"] * 4, {})
-    assert [r["kind"] for r in table] == F_KINDS
+    assert [r["kind"] for r in cr.build_column_table(["F"] * 4, {})] == F_KINDS
+    assert cr.FAMILY_KIND_SOURCES["F"] == ("foothold_s2.terrains.jump_preset", "KINDS")
+    assert cr.kind_ranges_of("F") == dict(jump_preset.RESET_RANGES)
 
 
-@pytest.mark.skipif(not importlib.util.find_spec("foothold_s2.terrains.jump_go2_v1"), reason="analyst's F generator not merged")
 def test_the_plans_f_kinds_are_the_generators_kinds():
-    from foothold_s2.terrains import jump_go2_v1
-    assert list(jump_go2_v1.KINDS) == F_KINDS
+    plan_kinds = {r["kind"] for sid in JUMP_STAGE_IDS for r in _rows()[sid]["terrain"][f"exposure_at_{sid}"]["positive"]
+                  if r.get("family") == "F"}
+    assert plan_kinds == set(F_KINDS) and set(_rows()["J0"]["terrain"]["kind_task"]["F"]) == set(F_KINDS)
 
 
 @needs_mesh
 @pytest.mark.parametrize("stage", JUMP_STAGE_IDS)
-def test_every_jump_stage_resolves_on_a_table_with_f_columns_inside_the_share_floors_at_every_boundary(stage, monkeypatch):
-    _stand_in_f_module(monkeypatch)
+def test_every_jump_stage_resolves_on_a_table_with_f_columns_inside_the_share_floors_at_every_boundary(stage):
     data = np.load(REAL / "terrain_mesh.npz", allow_pickle=False)
     families = [str(v) for v in data["column_family"]] + ["F"] * 4
     table = cr.build_column_table(families)
