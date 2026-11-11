@@ -117,7 +117,9 @@ EX42_E_DRY_RUN = any(request[2] for request in _E_REQUESTS)
 EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"
 EX42_STAGE_SPEC = None
 if EX42_E0_REQUESTED:
-    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS as _E_STAGE_SPECS
+    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS as _E_STAGE_SPECS, adopt_plan_stage_table
+    if _pre_args.ex42_plan:                          # a materialized plan pins the parents of the later stages
+        adopt_plan_stage_table(_pre_args.ex42_plan)
     if EX42_STAGE_ID not in _E_STAGE_SPECS:
         raise ValueError(f"EX-42 stage {EX42_STAGE_ID} has no pinned parent in the plan (stages: {', '.join(_E_STAGE_SPECS)})")
     EX42_STAGE_SPEC = _E_STAGE_SPECS[EX42_STAGE_ID]

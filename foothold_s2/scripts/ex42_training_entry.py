@@ -68,6 +68,25 @@ E_STAGE_SPECS = e_stage_table(_shipped_stages())
 # plan minimum; the +500 extensions are separate boundaries)
 E_STAGES = {stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
             for stage, spec in E_STAGE_SPECS.items()}
+
+
+def adopt_plan_stage_table(plan_path: str | Path) -> dict[str, dict[str, Any]]:
+    """Make the stage table the one of the plan this run was started with (`--ex42_plan`), in place, so every
+    importer of E_STAGE_SPECS / E_STAGES sees it. A materialized plan (one that pins the parents of later stages)
+    makes those stages startable; the shipped plan stays the default. The first stage's parent is still m13000."""
+    import yaml
+    stages = yaml.safe_load(Path(plan_path).read_text(encoding="utf-8-sig"))["stages"]
+    table = e_stage_table(stages)
+    if STAGE_E0_ID not in table or STAGE_E1_ID not in table:
+        raise ValueError("EX-42 plan stage table must pin the parents of E0 and E1")
+    E_STAGE_SPECS.clear()
+    E_STAGE_SPECS.update(table)
+    E_STAGES.clear()
+    E_STAGES.update({stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
+                     for stage, spec in table.items()})
+    return E_STAGE_SPECS
+
+
 STAGE_E0_UPDATES = E_STAGES[STAGE_E0_ID][0]
 STAGE_E1_UPDATES = E_STAGES[STAGE_E1_ID][0]
 # approval cell validator per stage; a stage without a line here is refused (its approval cell is not reviewed yet)
