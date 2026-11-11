@@ -674,6 +674,34 @@ evaluation:
   interval_updates: 250
   policy_failure_in_denominator: true
   sparse_off_role: record
+  # Lead decision 2026-11-11 15:20; result-independent geometry timing assumption.
+  forward_completion_timing:
+    rule: distance_over_speed_plus_hold_plus_margin
+    hold_s: 0.5
+    margin_s: 2.0
+    source: saved_mesh_triangles_and_entry_origin
+    pin_each_case: request.completion_timing
+    direction_forward_300_role: record_only
+    family_E_eval_origin: [0.5, y_mid, measured_support_z]
+    calibration_table:
+      path: inbox/jay/20261111-analysis/ex42-task-geometry-times.json
+      sha256: 5977df4ea4fb633aaf0e017572cc4e1def75687826637c48037f0761aa0c015d
+  # Lead decision 2026-11-11 15:05. Statistic/time/speed are explicit assumptions.
+  cross_dir_half_flat:
+    statistic: median_signed_projection_all_initial_64
+    match: [checkpoint_sha256, seed, map_mode, command_b, steps, dt]
+    ratio_min: 0.5
+    survival_min: 60
+    valid_min: 48
+    threshold_scaling: ceil_threshold_times_valid_over_64
+    flat_nonpositive: HOLD
+    judge_from_window: 2
+    steps: 300
+    commands:
+      forward: [1.0, 0.0, 0.0]
+      reverse: [-0.5, 0.0, 0.0]
+      side_left: [0.0, 0.5, 0.0]
+      side_right: [0.0, -0.5, 0.0]
   push_cells: {role: record, mask: same_as_training, off_kinds_value: n/a}
   paper_cells:
     judge_from_stage: E4
