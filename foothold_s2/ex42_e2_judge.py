@@ -79,6 +79,25 @@ def read_bundle(folder: Path, *, plan: dict, plan_sha256: str, mesh: dict,
     return output
 
 
+def checked_previous_bundle(prior_score: dict | None, *, evaluation: Path, plan: dict,
+                            plan_sha256: str, mesh: dict, seed: int) -> dict | None:
+    """Recount the prior window from its raw files before it can help E2 exit."""
+    if prior_score is None or "e2_kind" not in prior_score:
+        return None
+    expected_folder = Path(evaluation).parent / f"m{Path(prior_score['checkpoint']).stem.removeprefix('model_')}" / "kind_cells"
+    recorded = prior_score["e2_kind"]
+    if (recorded.get("evaluation") != str(expected_folder) or
+            recorded.get("mesh_sha256") != mesh["mesh_sha256"] or
+            prior_score.get("maintenance_source_sha256") != plan_sha256 or
+            prior_score.get("conditions", {}).get("eval_seed") != seed):
+        raise ValueError("EX-42 E2 previous kind window identity differs")
+    recounted = read_bundle(expected_folder, plan=plan, plan_sha256=plan_sha256,
+                            mesh=mesh, checkpoint_sha256=prior_score["checkpoint_sha256"], seed=seed)
+    if recorded.get("modes") != recounted:
+        raise ValueError("EX-42 E2 previous kind window differs from its raw evidence")
+    return recounted
+
+
 class E2KindTwoWindowJudge(StageJudge):
     name = "kind_two_window_e2"
 
@@ -100,7 +119,8 @@ class E2KindTwoWindowJudge(StageJudge):
         now = read_bundle(ctx.evaluation / "kind_cells", plan=ctx.plan,
                           plan_sha256=ctx.digest(ctx.plan_path), mesh=mesh,
                           checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
-        old = (prior_score.get("e2_kind", {}).get("modes") if prior_score else None)
+        old = checked_previous_bundle(prior_score, evaluation=ctx.evaluation, plan=ctx.plan,
+                                      plan_sha256=ctx.digest(ctx.plan_path), mesh=mesh, seed=ctx.seed)
         items = {"maintenance_current": {"role": "judge", "judgement": current["judgement"]},
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
                  "learned_cells_and_exchange_watch": {"role": "judge", "judgement": "HOLD",

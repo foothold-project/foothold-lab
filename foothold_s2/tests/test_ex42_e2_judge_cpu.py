@@ -5,7 +5,7 @@ import pytest
 import yaml
 
 from foothold_s2 import ex42_eval_once
-from foothold_s2.ex42_e2_judge import score_mode
+from foothold_s2.ex42_e2_judge import checked_previous_bundle, score_mode
 from foothold_s2.ex42_stage_judges import adapter_for
 
 
@@ -82,3 +82,30 @@ def test_e2_p1_cannot_forge_pass_without_training_exposure_evidence(monkeypatch)
     monkeypatch.setattr(ex42_stage_judges, "_map39_cell_check", lambda *_: "PASS")
     with pytest.raises(ValueError, match="aggregate"):
         adapter.verify(score, "PASS", "PASS", plan=plan)
+
+
+def test_e2_previous_window_is_recounted_and_tampered_raw_rejected(monkeypatch, tmp_path):
+    from foothold_s2 import ex42_e2_judge
+
+    evaluation = tmp_path / "m500"
+    expected = evaluation.parent / "m250" / "kind_cells"
+    plan_sha = "a" * 64
+    mesh = {"mesh_sha256": "b" * 64}
+    prior = {"checkpoint": str(tmp_path / "model_250.pt"), "checkpoint_sha256": "c" * 64,
+             "maintenance_source_sha256": plan_sha, "conditions": {"eval_seed": 42},
+             "e2_kind": {"evaluation": str(expected), "mesh_sha256": mesh["mesh_sha256"],
+                         "modes": {"eval_gt": {"success_count": 52}}}}
+    observed = []
+
+    def reread(folder, **kwargs):
+        observed.append((folder, kwargs["checkpoint_sha256"]))
+        return {"eval_gt": {"success_count": 52}}
+
+    monkeypatch.setattr(ex42_e2_judge, "read_bundle", reread)
+    assert checked_previous_bundle(prior, evaluation=evaluation, plan={},
+                                   plan_sha256=plan_sha, mesh=mesh, seed=42) == prior["e2_kind"]["modes"]
+    assert observed == [(expected, "c" * 64)]
+    prior["e2_kind"]["modes"]["eval_gt"]["success_count"] = 53
+    with pytest.raises(ValueError, match="raw evidence"):
+        checked_previous_bundle(prior, evaluation=evaluation, plan={},
+                                plan_sha256=plan_sha, mesh=mesh, seed=42)
