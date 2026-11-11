@@ -42,7 +42,7 @@ def _mesh_fixture(tmp_path: Path) -> Path:
 
 
 def _write_evaluation_artifacts(plan, mesh: Path, arrays: Path, *, kinds, cols, levels,
-                                alive, distance, evaluation: Path):
+                                alive, distance, evaluation: Path, env_count: int | None = None):
     from foothold_s2.eval.ex42_mesh_eval import preflight
     from foothold_s2.eval.fixed_terrain import assignment_sha256
 
@@ -57,7 +57,8 @@ def _write_evaluation_artifacts(plan, mesh: Path, arrays: Path, *, kinds, cols, 
     mesh_record = preflight(mesh)
     evaluation.write_text(json.dumps({
         "checkpoint_sha256": plan["checkpoint_sha256"], "eval_seed": 42,
-        "envs": 64, "steps": 300, "policy_dt_s": 0.02,
+        "envs": len(kinds) if env_count is None else env_count,
+        "steps": 300, "policy_dt_s": 0.02,
         "commands": {"fwd1.0": [1.0, 0.0, 0.0]},
         "ex42_mesh": {"mesh_sha256": plan["mesh_sha256"],
                       "columns": mesh_record["columns"]},
@@ -65,6 +66,32 @@ def _write_evaluation_artifacts(plan, mesh: Path, arrays: Path, *, kinds, cols, 
         "terrain_hash": {"eval_gt/fwd1.0": assignment},
         "env_arrays": {"eval_gt/fwd1.0": arrays.name},
     }), encoding="utf-8")
+
+
+def _capture_case(tmp_path: Path, *, role="success", map_mode="eval_gt", n=64,
+                  alive=None, distance=None, metadata_env_count=None):
+    from foothold_s2.eval.ex42_render_capture import capture_spec_from_evaluation
+
+    mesh = _mesh_fixture(tmp_path)
+    checkpoint = tmp_path / "model_250.pt"
+    checkpoint.write_bytes(b"known checkpoint")
+    plan = build_render_plan(mesh, checkpoint, trained_kinds={"A/pyramid_stairs"}, current_cap=9)
+    request = next(row for row in plan["requests"]
+                   if row["terrain_key"] == "A/pyramid_stairs"
+                   and row["map_mode"] == "eval_gt" and row["selection_role"] == role)
+    if map_mode != "eval_gt":
+        request["map_mode"] = map_mode
+    kinds = np.asarray(["pyramid_stairs"] * n)
+    cols = np.zeros(n, dtype=np.int64)
+    levels = np.full(n, 9, dtype=np.int64)
+    alive = np.ones(n, dtype=bool) if alive is None else np.asarray(alive, dtype=bool)
+    distance = np.full(n, 4.0) if distance is None else np.asarray(distance, dtype=np.float64)
+    arrays = tmp_path / "env_arrays_eval_gt_fwd1.0.npz"
+    evaluation = tmp_path / "map_modes.json"
+    _write_evaluation_artifacts(plan, mesh, arrays, kinds=kinds, cols=cols, levels=levels,
+        alive=alive, distance=distance, evaluation=evaluation,
+        env_count=metadata_env_count)
+    return plan, request, evaluation, capture_spec_from_evaluation
 
 
 def test_plan_uses_mesh_kinds_level_rule_modes_and_three_slots(tmp_path):
@@ -278,6 +305,79 @@ def test_capture_spec_rejects_wrong_checkpoint_or_empty_role(tmp_path):
                   source_head="a" * 40, recorder_sha256="b" * 64)
     with pytest.raises(ValueError, match="checkpoint SHA"):
         capture_spec_from_evaluation(plan, request["request_id"], evaluation, **kwargs)
+
+
+def test_capture_guard_rejects_role_mismatch(tmp_path):
+    alive = np.ones(64, dtype=bool)
+    alive[0] = False
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, role="success", alive=alive)
+    with pytest.raises(ValueError, match="selection role differs"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="failure", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
+
+
+def test_capture_guard_requires_three_meter_forward_success(tmp_path):
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, distance=np.full(64, 2.99))
+    with pytest.raises(ValueError, match="no successful env"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="success", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
+
+
+def test_capture_guard_selects_the_first_failed_env(tmp_path):
+    alive = np.ones(64, dtype=bool)
+    alive[[3, 9]] = False
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, role="failure", alive=alive)
+    spec = capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                   role="failure", source_root=tmp_path, source_head="a" * 40,
+                   recorder_sha256="b" * 64)
+    assert spec["env_id"] == 3
+    from foothold_s2.eval.ex42_render_capture import validate_capture_spec
+    spec["env_id"] = 9
+    with pytest.raises(ValueError, match="first failed env"):
+        validate_capture_spec(spec)
+
+
+def test_capture_guard_rejects_probe_prop_only_map_mode(tmp_path):
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, map_mode="probe_prop_only")
+    with pytest.raises(ValueError, match="supports eval_gt/eval_pred only"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="success", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
+
+
+def test_capture_guard_rejects_combined_mesh_sha_mismatch(tmp_path):
+    plan, request, evaluation, capture = _capture_case(tmp_path)
+    receipt = json.loads(evaluation.read_text(encoding="utf-8"))
+    receipt["ex42_mesh"]["mesh_sha256"] = "0" * 64
+    evaluation.write_text(json.dumps(receipt), encoding="utf-8")
+    with pytest.raises(ValueError, match="mesh SHA"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="success", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
+
+
+def test_capture_guard_requires_64_environment_receipt_count(tmp_path):
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, metadata_env_count=63)
+    with pytest.raises(ValueError, match="mesh SHA, or seed"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="success", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
+
+
+def test_capture_guard_requires_64_environment_array_count(tmp_path):
+    plan, request, evaluation, capture = _capture_case(
+        tmp_path, n=63, metadata_env_count=64)
+    with pytest.raises(ValueError, match="matching 64-env"):
+        capture(plan, request["request_id"], evaluation, command_name="fwd1.0",
+                role="success", source_root=tmp_path, source_head="a" * 40,
+                recorder_sha256="b" * 64)
 
 
 def test_plan_includes_current_cap_and_l9_for_trained_kind(tmp_path):

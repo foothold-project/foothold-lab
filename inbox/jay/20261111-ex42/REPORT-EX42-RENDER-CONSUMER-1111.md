@@ -20,10 +20,16 @@
 
 실제 E0 m250 map64 결과는 64환경 · seed42 · 300 step · 0.02초 tick이지만, 평가 배열은 A 연속 23열과 level 0~2만 포함한다. 따라서 cap5/L9 계획 셀의 성공·실패를 해당 결과에서 선택할 수 없다. 실제 요청에 맞는 평가 배열이 생기기 전까지 `capture_spec_from_evaluation`은 이를 거절한다. Kit 촬영·전 프레임 영상 검수는 아직 하지 않았다.
 
+## 가드 반례 시험
+
+요청된 여섯 범주를 각각 독립 시험으로 만들었다. 역할 엇갈림, 전진 성공 기준 3 m, 가장 먼저 실패한 환경 선택, `probe_prop_only` 지도 모드 거절, 결합 메시 SHA, 64 환경 계약이다. 64 환경은 map-mode 영수증의 환경 수와 NPZ 배열 길이를 각각 검사해 두 시험으로 분리했다.
+
+각 조건을 실제 구현에서 하나씩 제거해 해당 단일 시험을 재실행했다. 일곱 mutation 모두 rc 1로 실패했다: `role-mismatch`, `forward-3m`, `failed-env-selection`, `probe-map`, `mesh-sha`, `receipt-env-count`, `array-env-count`. 복원한 코드에서 전체 시험은 다시 통과했다.
+
 ## CPU 확인
 
 ```bash
 CUDA_VISIBLE_DEVICES='' /home/jay/miniforge3/envs/isaac311/bin/python -m pytest -q foothold_s2/eval/tests/test_ex42_render_plan_cpu.py -p no:cacheprovider --basetemp=/home/jay/mai/tmp/runner/ex42-render-backend-green
 ```
 
-결과: **8 passed**. 검증 범위에는 계획 슬롯 생성, cap5/L9 요청, 실제 parser로 spec 수락, mesh 열 불일치 거절, 정확한 evaluation assignment 재생, 전체 프레임 감사의 정상·검정 화면 입력이 포함된다. py_compile, pyflakes, `git diff --check`도 통과했다. GPU/Kit은 실행하지 않았다.
+결과: **15 passed**. 검증 범위에는 계획 슬롯 생성, cap5/L9 요청, 실제 parser로 spec 수락, mesh 열 불일치 거절, 정확한 evaluation assignment 재생, 전체 프레임 감사의 정상·검정 화면 입력 및 일곱 가드 반례가 포함된다. py_compile, pyflakes, `git diff --check`도 통과했다. PR #649은 계획기 전용으로 병합됐고, 이 backend는 stacked PR #663에서 검토 중이다. GPU/Kit은 실행하지 않았다.
