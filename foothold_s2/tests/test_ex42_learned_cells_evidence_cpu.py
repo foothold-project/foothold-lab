@@ -76,7 +76,7 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
     exposure = build_receipt({"mesh_sha256": "b" * 64, "columns": 1,
                               "families": ["B"], "exposure": [1.0], "level_caps": [0],
                               "shares": [None], "low_floor": None,
-                              "k_ladder": {"boundary_index": 0, "moves": []},
+                                  "k_ladder": {"boundary_index": 0, "moves": [], "outcomes": []},
                               "column_table": [{"family": "B", "kind": "rough"}]},
                              stage_id="E3", plan_sha256="a" * 64,
                              iteration=500, kind="boundary",
@@ -96,7 +96,7 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
     exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
                                                  sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     receipt.write_text(json.dumps(exposure, ensure_ascii=False))
-    with pytest.raises(ValueError, match="identity"):
+    with pytest.raises(ValueError, match="outcomes"):
         judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
                              interval=250, min_episodes=32,
                              registered_kind_passes={('B', 'rough'): True})
@@ -127,7 +127,7 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
     exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
                                                      sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     receipt.write_text(json.dumps(exposure, ensure_ascii=False))
-    with pytest.raises(ValueError, match="recomputed exposure"):
+    with pytest.raises(ValueError, match="plan replay"):
         judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
                              interval=250, min_episodes=32,
                              registered_kind_passes={('B', 'rough'): True})

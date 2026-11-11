@@ -73,3 +73,23 @@ def test_e3_raw_window_requires_exact_opened_cell_set(monkeypatch, tmp_path):
     with pytest.raises(ValueError, match="coverage"):
         read_e3_window(folder, inventory=inventory, plan=plan,
                        plan_sha256="a" * 64, mesh={}, checkpoint_sha256="b" * 64, seed=42)
+
+
+def test_e3_child_failure_is_a_scored_hold_and_tampered_marker_is_rejected(tmp_path):
+    import json
+    from foothold_s2.ex42_e3_judge import recount
+
+    evaluation = tmp_path / "m250"
+    folder = evaluation / "kind_cells_e3"
+    folder.mkdir(parents=True)
+    marker = folder / "child_failures.json"
+    row = {"format": "foothold-ex42-e3-child-failures/1",
+           "checkpoint_sha256": "a" * 64, "reason": "missing Kit trace"}
+    marker.write_text(json.dumps(row), encoding="utf-8")
+    score = {"stage_id": "E3", "checkpoint_sha256": "a" * 64}
+    result = recount(score, plan={}, evaluation=evaluation, mesh={"mesh_sha256": "b" * 64})
+    assert result["judgement"] == "HOLD" and result["child_failure"]["sha256"]
+    row["checkpoint_sha256"] = "c" * 64
+    marker.write_text(json.dumps(row), encoding="utf-8")
+    with pytest.raises(ValueError, match="marker differs"):
+        recount(score, plan={}, evaluation=evaluation, mesh={"mesh_sha256": "b" * 64})

@@ -101,17 +101,20 @@ class E3KindTwoWindowJudge(StageJudge):
                   checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         mesh = _mesh(now, ctx.evaluation)
         current_kind = recount(now, plan=ctx.plan, evaluation=ctx.evaluation, mesh=mesh)
-        previous_kind = (recount(old_score, plan=ctx.plan,
-                                 evaluation=Path(old_score["e3_kind"]["evaluation"]).parent,
-                                 mesh=mesh) if old_score and "e3_kind" in old_score else None)
+        prior_evaluation = (Path(old_score["e3_kind"]["evaluation"]).parent
+                            if old_score and "e3_kind" in old_score else None)
+        prior_mesh = _mesh(old_score, prior_evaluation) if prior_evaluation else None
+        if prior_mesh and prior_mesh["mesh_sha256"] != mesh["mesh_sha256"]:
+            raise ValueError("EX-42 E3 prior and current evaluation mesh differ")
+        previous_kind = (recount(old_score, plan=ctx.plan, evaluation=prior_evaluation, mesh=prior_mesh)
+                         if prior_evaluation else None)
         now["stage_id"] = "E3"
         now["e3_kind"] = {**current_kind, "previous": previous_kind}
         kind_states = [current_kind["judgement"],
                        previous_kind["judgement"] if previous_kind else "HOLD"]
-        for mode in ("eval_gt", "eval_pred"):
-            if current_kind.get("cells") and previous_kind and previous_kind.get("cells"):
-                if set(current_kind["cells"]) != set(previous_kind["cells"]):
-                    kind_states.append("HOLD")
+        if (current_kind.get("cells") and previous_kind and previous_kind.get("cells") and
+                set(current_kind["cells"]) != set(previous_kind["cells"])):
+            kind_states.append("HOLD")
         prior_pass = {}
         for key, bundle in (previous_kind or {}).get("cells", {}).items():
             family, kind = key.split("/", 2)[:2]
@@ -168,8 +171,27 @@ class E3KindTwoWindowJudge(StageJudge):
             raise ValueError("EX-42 E3 P1 raw folder absent")
         mesh = _mesh(score, folder.parent)
         recounted = recount(score, plan=plan, evaluation=folder.parent, mesh=mesh)
-        if {key: value for key, value in current.items() if key != "previous"} != recounted:
+        if ({key: value for key, value in current.items() if key != "previous"} != recounted or
+                items["kind_current"].get("judgement") != recounted["judgement"]):
             raise ValueError("EX-42 E3 P1 current kind differs from raw")
+        from foothold_s2.ex42_e1_judge import previous_e1_score
+        prior_score = previous_e1_score(Path(score["checkpoint"]), folder.parent,
+                                       plan["evaluation"]["interval_updates"],
+                                       score["score_config_sha256"], stage_id="E3")
+        if prior_score is None:
+            if current.get("previous") is not None or items["kind_previous"].get("judgement") != "HOLD":
+                raise ValueError("EX-42 E3 P1 missing prior window was forged")
+        else:
+            prior_folder = Path(prior_score["e3_kind"]["evaluation"])
+            prior_mesh = _mesh(prior_score, prior_folder.parent)
+            if prior_mesh["mesh_sha256"] != mesh["mesh_sha256"]:
+                raise ValueError("EX-42 E3 P1 prior mesh differs")
+            prior_recount = recount(prior_score, plan=plan, evaluation=prior_folder.parent, mesh=prior_mesh)
+            if (current.get("previous") != prior_recount or
+                    items["kind_previous"].get("judgement") != prior_recount["judgement"]):
+                raise ValueError("EX-42 E3 P1 prior kind differs from raw")
+        if (judgment == "PASS" and items["flag_share"]["judgement"] != "PASS"):
+            raise ValueError("EX-42 E3 P1 flag exposure absent")
         if judgment == "PASS" and (recounted["judgement"] != "PASS" or
                                     any(items[key]["judgement"] != "PASS" for key in required)):
             raise ValueError("EX-42 E3 P1 raw or training evidence cannot prove PASS")

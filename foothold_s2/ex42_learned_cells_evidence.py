@@ -15,7 +15,8 @@ MODES = ["map_on_adaptive", "map_off"]
 def read_stage_exposure(checkpoint: Path, *, stage_id: str, plan: dict,
                         plan_sha256: str, column_table: list[dict]) -> dict | None:
     """Recompute each rank's live placement and the approved K ladder from its boundary receipt."""
-    from foothold_s2.ex42_exposure_receipt import fold_ranks, opened_kinds
+    from foothold_s2.ex42_exposure_receipt import fold_ranks, opened_kinds, recompute_from_plan
+    from types import SimpleNamespace
     from foothold_s2.terrains.ex42_exposure import column_shares, exposure_by_column, low_level_floor
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
 
@@ -34,6 +35,8 @@ def read_stage_exposure(checkpoint: Path, *, stage_id: str, plan: dict,
         return None
     documents = [json.loads(path.read_text(encoding="utf-8-sig")) for path in paths]
     row = fold_ranks(documents)
+    for doc in documents:
+        recompute_from_plan(doc, SimpleNamespace(document=plan))
     if any(path.name != (f"exposure_receipt_{iteration}.json" if doc["world_size"] == 1 else
                          f"exposure_receipt_{iteration}_rank{doc['rank']}.json")
            for path, doc in zip(paths, documents)):
