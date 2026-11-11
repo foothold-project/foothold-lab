@@ -181,9 +181,9 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
         raise ValueError("EX-42 E1 authorization is missing")
     stage = next((row for row in plan.document["stages"] if row.get("id") == "E1"), None)
     if (stage is None or stage.get("enabled") is not True
-            or stage.get("minimum_updates") != 1000 or stage.get("maximum_updates") != 2000
+            or stage.get("minimum_updates") != 250 or stage.get("maximum_updates") != 1000
             or stage.get("extension_updates") != 500 or stage.get("critic_mirror") is not True):
-        raise ValueError("EX-42 E1 stage in the curriculum table is not the 1000-update first segment with the D174 mirror")
+        raise ValueError("EX-42 E1 stage in the curriculum table is not the 250-update first check / 1000-update base cap with the D174 mirror")
     expected_scope = {
         "stage_id": "E1",
         "start_update": 0,
@@ -344,16 +344,17 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
     if row.get('enabled') is not True:
         raise ValueError(f'EX-42 {stage_id} is disabled in the plan')
     first = row.get('minimum_updates')
-    if type(first) is not int or first <= 0:
+    cap = row.get('maximum_updates')
+    if type(first) is not int or first <= 0 or type(cap) is not int or cap < first:
         raise ValueError('EX-42 first-segment update count is invalid')
     def valid_digest(value: Any, length: int = 64) -> bool:
         return isinstance(value, str) and bool(re.fullmatch(r'[0-9a-f]{%d}' % length, value)) and value != '0' * length
     if not valid_digest(parent_sha256):
         raise ValueError(f'EX-42 {stage_id} parent SHA is unfilled')
-    scope = {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': first,
+    scope = {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': cap,
              'parent_sha256': parent_sha256, 'later_stages_authorized': False}
     if cell.get('scope') != scope:
-        raise ValueError(f'EX-42 {stage_id} scope differs from its table first segment')
+        raise ValueError(f'EX-42 {stage_id} scope differs from its table base cap')
     if isinstance(row.get('parent'), dict) and row['parent'].get('sha256') != parent_sha256:
         raise ValueError(f'EX-42 {stage_id} parent SHA differs from table pin')
     legacy = {'legacy_e0': validate_stage_e0_authorization, 'legacy_e1': validate_stage_e1_authorization}
@@ -374,14 +375,13 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         extension_ok = cell.get('extension_authorized') is False
         if cell.get('extension_authorized') is True:
             extension_ok = (type(row['extension_updates']) is int and row['extension_updates'] > 0
-                and cell.get('extension_contract') == {
-                    'judgment': 'HOLD', 'maximum_updates': row['maximum_updates'],
-                    'increment_updates': row['extension_updates'],
-                    'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
+                and cell.get('extension_contract') == stage_extension_contract(row)
                 and any(isinstance(v, dict) and v.get('approved') is True
                     and v.get('decision_id') == ALL_STAGES_DECISION_ID
                     and v.get('decision_source', {}).get('commit') == ALL_STAGES_DECISION_SHA
                     for v in approvals.values()))
+        if ('minimum_updates' in cell and cell['minimum_updates'] != first):
+            raise ValueError(f'EX-42 {stage_id} first inspection differs from the table')
         if (not extension_ok or type(interval) is not int or interval <= 0
                 or type(cell.get('boundary_evaluation_interval_updates')) is not int
                 or cell['boundary_evaluation_interval_updates'] != interval or first % interval):
@@ -427,6 +427,17 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
             'training_started': False}
 
 
+def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
+    """CG E.1/E.4: a base cap and a separate, counted HOLD extension budget."""
+    cap, step, count = (row.get(k) for k in ('maximum_updates', 'extension_updates', 'extension_max_count'))
+    if (any(type(v) is not int for v in (cap, step, count))
+            or cap <= 0 or step <= 0 or count <= 0):
+        raise ValueError('EX-42 extension step/count/base cap is invalid')
+    return {'judgment': 'HOLD', 'after_updates': cap, 'max_count': count,
+            'maximum_updates': cap + step * count, 'increment_updates': step,
+            'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
+
+
 def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
     """Generate an unapproved cell only; never copy an earlier stage's approval or parent."""
     from copy import deepcopy
@@ -435,7 +446,7 @@ def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]
     result = {'approved': False, 'decision_id': None, 'approved_at': None, 'approver': None,
               'approval_statement': None,
               'decision_source': {'commit': None, 'path': 'inbox/jay/20261104-ex41-restart/decisions.tsv'},
-              'scope': {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': row['minimum_updates'],
+              'scope': {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': row['maximum_updates'],
                         'parent_sha256': None, 'later_stages_authorized': False},
               'extension_authorized': False,
               'boundary_evaluation_interval_updates': plan.document['evaluation']['interval_updates'],
@@ -542,6 +553,10 @@ class EX42Plan:
                     or row["maximum_updates"] < row["minimum_updates"]
                     or row["extension_updates"] < 0):
                 raise ValueError(f"EX-42 invalid update range for {row.get('id')}")
+            if "extension_max_count" in row and (
+                    type(row["extension_max_count"]) is not int or row["extension_max_count"] < 0
+                    or (row["extension_updates"] == 0) != (row["extension_max_count"] == 0)):
+                raise ValueError(f"EX-42 invalid extension count for {row.get('id')}")
             if not isinstance(row.get("boundary_axes"), list) or not row["boundary_axes"]:
                 raise ValueError(f"EX-42 stage has no registered boundary axis: {row.get('id')}")
             if row.get("hold_policy") != "hold_exposure_continue_training":

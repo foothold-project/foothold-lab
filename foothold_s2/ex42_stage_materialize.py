@@ -204,6 +204,28 @@ def read_applied_cap(ref, *, base, source_plan, stage, parent_manifest):
     return caps[0], _ref(log)
 
 
+def source_exit_bounds(source, template, stage):
+    """Corrected approved template sets eligibility; immutable source pins stay intact.
+
+    Exits beyond the base cap additionally require the source run's pinned,
+    fully validated HOLD extension authorization. A table count alone grants none.
+    """
+    row = _row(template, stage)
+    minimum, cap = row['minimum_updates'], row['maximum_updates']
+    approval = source.path.parent / 'ex42-approvals.yaml'
+    if not approval.is_file() or digest(approval) != source.document['stage_zero']['approval_sha256']:
+        return minimum, cap
+    cell = yaml.safe_load(approval.read_text(encoding='utf-8-sig')).get(f'stage_{stage.lower()}_authorization', {})
+    if cell.get('extension_authorized') is not True:
+        return minimum, cap
+    from foothold_s2.curriculum.ex42_prep import stage_extension_contract
+    expected = stage_extension_contract(row)
+    if cell.get('extension_contract') != expected:
+        raise ValueError('predecessor extension contract differs from corrected stage table')
+    authorization_validators(source)[stage](approval, _row(source, stage)['parent']['sha256'])
+    return minimum, expected['maximum_updates']
+
+
 def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
              budget_limit, budget_used, budget_basis):
     template, source = EX42Plan.load(plan), EX42Plan.load(source_plan)
@@ -215,15 +237,15 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     cell = approvals_doc.get(f'stage_{target.lower()}_authorization')
     if not isinstance(cell, dict) or cell.get('approved') is not True or row.get('enabled') is not True:
         raise ValueError('target is unapproved or disabled; materialize cannot grant approval')
-    first = row['minimum_updates']
+    base_cap = row['maximum_updates']  # Minimum is only the first inspection.
     if (type(budget_limit) is not int or type(budget_used) is not int or budget_used < 0
-            or budget_limit < budget_used + first or not isinstance(budget_basis, str) or not budget_basis.strip()):
+            or budget_limit < budget_used + base_cap or not isinstance(budget_basis, str) or not budget_basis.strip()):
         raise ValueError('explicit update budget is missing, invalid, or exhausted')
     scope = cell.get('scope', {})
-    expected = dict(stage_id=target, start_update=0, maximum_updates=first,
+    expected = dict(stage_id=target, start_update=0, maximum_updates=base_cap,
                     parent_sha256=scope.get('parent_sha256'), later_stages_authorized=False)
     if _canonical(scope) != _canonical(expected) or type(scope.get('maximum_updates')) is not int or type(scope.get('start_update')) is not int or scope.get('later_stages_authorized') is not False:
-        raise ValueError('scope differs from its table first segment; cannot enlarge authorization')
+        raise ValueError('scope differs from its table base cap; cannot enlarge authorization')
     ev_path = Path(evidence).resolve(strict=True); ev = _json(ev_path)
     gate_path = Path(gate_receipt).resolve(strict=True); gate = _json(gate_path)
     if (ev.get('format') != EVIDENCE_FORMAT or ev.get('target_stage') != target
@@ -237,7 +259,12 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('gate is not predecessor PASS under its actual source plan')
     source_row = _row(source, stage)
     iteration = gate.get('checkpoint_iteration')
-    if (type(iteration) is not int or not source_row['minimum_updates'] <= iteration <= source_row['maximum_updates']
+    source_template = _row(template, stage)
+    source_scope = approvals_doc.get(f'stage_{stage.lower()}_authorization', {}).get('scope', {})
+    if source_scope.get('maximum_updates') != source_template['maximum_updates']:
+        raise ValueError('predecessor template base cap differs from its approval scope')
+    exit_minimum, exit_limit = source_exit_bounds(source, template, stage)
+    if (type(iteration) is not int or not exit_minimum <= iteration <= exit_limit
             or iteration % source.document['evaluation']['interval_updates']):
         raise ValueError('predecessor checkpoint has not reached a valid exit boundary')
     manifest = _json(parent_manifest)
@@ -263,8 +290,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         cell['later_stage_entry_gate_adapter'] = 'flag_two_window'
         cell['critic_mirror'] = True
         row['critic_mirror'] = True
-        # First segment stays the registered minimum. The separate HOLD-only
-        # extension remains bounded by the approved table, never by budget alone.
+        # Scope stays at the registered base cap. The separate HOLD-only
+        # extension starts there and is bounded by step times count.
         if row['extension_updates'] > 0:
             from foothold_s2.curriculum.ex42_prep import ALL_STAGES_DECISION_ID, ALL_STAGES_DECISION_SHA
             if not any(isinstance(v,dict) and v.get('approved') is True
@@ -273,9 +300,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
                        for v in approvals_doc.values()):
                 raise ValueError('HOLD extension lacks the whole-plan decision')
             cell['extension_authorized'] = True
-            cell['extension_contract'] = dict(judgment='HOLD',maximum_updates=row['maximum_updates'],
-                increment_updates=row['extension_updates'],decision_id=ALL_STAGES_DECISION_ID,
-                decision_source=ALL_STAGES_DECISION_SHA)
+            from foothold_s2.curriculum.ex42_prep import stage_extension_contract
+            cell['extension_contract'] = stage_extension_contract(row)
     contract = row['authorization_contract']
     bindings = ev.get('bindings', {})
     if not isinstance(bindings, dict):
@@ -338,7 +364,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         'template_plan_sha':template.sha256,'gate_sha':digest(gate_path),'gate_sha256':digest(gate_path),'parent_sha256':actual_sha,
         'new_plan_sha':hashlib.sha256(plan_bytes).hexdigest(),'approval_sha256':document['stage_zero']['approval_sha256'],
         'inputs':refs,'parent':pin,'artifacts':artifacts,
-        'budget':{'limit':budget_limit,'used':budget_used,'basis':budget_basis,'reserved':first},'training_started':False}
+        'budget':{'limit':budget_limit,'used':budget_used,'basis':budget_basis,'reserved':base_cap},'training_started':False}
     return template,document,plan_bytes,approval_bytes,transition
 
 
