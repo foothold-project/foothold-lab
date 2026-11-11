@@ -32,6 +32,8 @@ EXPECTED_D182 = {
 EX42_FORMAT = "foothold-ex42-curriculum/1"
 BOUNDARY_FORMAT = "foothold-ex42-boundary/1"
 APPROVAL_FORMAT = "foothold-ex42-approvals/1"
+ALL_STAGES_DECISION_ID = "teamlead-2026-11-11-1307-ex42-all-stages"
+ALL_STAGES_DECISION_SHA = "2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d"
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -179,9 +181,9 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
         raise ValueError("EX-42 E1 authorization is missing")
     stage = next((row for row in plan.document["stages"] if row.get("id") == "E1"), None)
     if (stage is None or stage.get("enabled") is not True
-            or stage.get("minimum_updates") != 1000 or stage.get("maximum_updates") != 2000
+            or stage.get("minimum_updates") != 250 or stage.get("maximum_updates") != 1000
             or stage.get("extension_updates") != 500 or stage.get("critic_mirror") is not True):
-        raise ValueError("EX-42 E1 stage in the curriculum table is not the 1000-update first segment with the D174 mirror")
+        raise ValueError("EX-42 E1 stage in the curriculum table is not the 250-update first check / 1000-update base cap with the D174 mirror")
     expected_scope = {
         "stage_id": "E1",
         "start_update": 0,
@@ -244,6 +246,11 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
     return rows[0]
 
 
+# Entry gate adapters a stage row may name: the predecessor's exit judge (foothold_s2.ex42_stage_judges registers the
+# module; an unregistered name fails closed there, at score time) or `pending` (not ready, the stage cannot start).
+ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending')
+
+
 def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
     """Build dispatch from the table, including disabled/unapproved rows (which fail closed)."""
     from functools import partial
@@ -270,7 +277,7 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
         raise ValueError('EX-42 stage source contract is unresolved or invalid')
     if contract['validator'] not in ('bounded', 'legacy_e0', 'legacy_e1'):
         raise ValueError('EX-42 unknown approval validator contract')
-    if contract['entry_gate_adapter'] not in ('map39', 'pending'):
+    if contract['entry_gate_adapter'] not in ENTRY_GATE_ADAPTERS:
         raise ValueError('EX-42 stage entry gate adapter is unknown')
     for key in ('required_sha256_paths', 'required_string_paths', 'required_boolean_paths'):
         paths = contract[key]
@@ -337,16 +344,17 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
     if row.get('enabled') is not True:
         raise ValueError(f'EX-42 {stage_id} is disabled in the plan')
     first = row.get('minimum_updates')
-    if type(first) is not int or first <= 0:
+    cap = row.get('maximum_updates')
+    if type(first) is not int or first <= 0 or type(cap) is not int or cap < first:
         raise ValueError('EX-42 first-segment update count is invalid')
     def valid_digest(value: Any, length: int = 64) -> bool:
         return isinstance(value, str) and bool(re.fullmatch(r'[0-9a-f]{%d}' % length, value)) and value != '0' * length
     if not valid_digest(parent_sha256):
         raise ValueError(f'EX-42 {stage_id} parent SHA is unfilled')
-    scope = {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': first,
+    scope = {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': cap,
              'parent_sha256': parent_sha256, 'later_stages_authorized': False}
     if cell.get('scope') != scope:
-        raise ValueError(f'EX-42 {stage_id} scope differs from its table first segment')
+        raise ValueError(f'EX-42 {stage_id} scope differs from its table base cap')
     if isinstance(row.get('parent'), dict) and row['parent'].get('sha256') != parent_sha256:
         raise ValueError(f'EX-42 {stage_id} parent SHA differs from table pin')
     legacy = {'legacy_e0': validate_stage_e0_authorization, 'legacy_e1': validate_stage_e1_authorization}
@@ -364,7 +372,17 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
                 or source.get('path') != 'inbox/jay/20261104-ex41-restart/decisions.tsv'):
             raise ValueError(f'EX-42 {stage_id} decision source is unfilled')
         interval = plan.document['evaluation']['interval_updates']
-        if (cell.get('extension_authorized') is not False or type(interval) is not int or interval <= 0
+        extension_ok = cell.get('extension_authorized') is False
+        if cell.get('extension_authorized') is True:
+            extension_ok = (type(row['extension_updates']) is int and row['extension_updates'] > 0
+                and cell.get('extension_contract') == stage_extension_contract(row)
+                and any(isinstance(v, dict) and v.get('approved') is True
+                    and v.get('decision_id') == ALL_STAGES_DECISION_ID
+                    and v.get('decision_source', {}).get('commit') == ALL_STAGES_DECISION_SHA
+                    for v in approvals.values()))
+        if ('minimum_updates' in cell and cell['minimum_updates'] != first):
+            raise ValueError(f'EX-42 {stage_id} first inspection differs from the table')
+        if (not extension_ok or type(interval) is not int or interval <= 0
                 or type(cell.get('boundary_evaluation_interval_updates')) is not int
                 or cell['boundary_evaluation_interval_updates'] != interval or first % interval):
             raise ValueError(f'EX-42 {stage_id} extension or evaluation interval differs')
@@ -405,8 +423,19 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         raise ValueError(f'EX-42 {stage_id} must preserve approved DR 1.0')
     return {**proof, 'source_stage_ids': list(contract['source_stage_ids']),
             'entry_gate_adapter': contract['entry_gate_adapter'],
-            'entry_gate_adapter_ready': contract['entry_gate_adapter'] == 'map39',
+            'entry_gate_adapter_ready': contract['entry_gate_adapter'] != 'pending',
             'training_started': False}
+
+
+def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
+    """CG E.1/E.4: a base cap and a separate, counted HOLD extension budget."""
+    cap, step, count = (row.get(k) for k in ('maximum_updates', 'extension_updates', 'extension_max_count'))
+    if (any(type(v) is not int for v in (cap, step, count))
+            or cap <= 0 or step <= 0 or count <= 0):
+        raise ValueError('EX-42 extension step/count/base cap is invalid')
+    return {'judgment': 'HOLD', 'after_updates': cap, 'max_count': count,
+            'maximum_updates': cap + step * count, 'increment_updates': step,
+            'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
 
 
 def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
@@ -417,7 +446,7 @@ def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]
     result = {'approved': False, 'decision_id': None, 'approved_at': None, 'approver': None,
               'approval_statement': None,
               'decision_source': {'commit': None, 'path': 'inbox/jay/20261104-ex41-restart/decisions.tsv'},
-              'scope': {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': row['minimum_updates'],
+              'scope': {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': row['maximum_updates'],
                         'parent_sha256': None, 'later_stages_authorized': False},
               'extension_authorized': False,
               'boundary_evaluation_interval_updates': plan.document['evaluation']['interval_updates'],
@@ -524,6 +553,10 @@ class EX42Plan:
                     or row["maximum_updates"] < row["minimum_updates"]
                     or row["extension_updates"] < 0):
                 raise ValueError(f"EX-42 invalid update range for {row.get('id')}")
+            if "extension_max_count" in row and (
+                    type(row["extension_max_count"]) is not int or row["extension_max_count"] < 0
+                    or (row["extension_updates"] == 0) != (row["extension_max_count"] == 0)):
+                raise ValueError(f"EX-42 invalid extension count for {row.get('id')}")
             if not isinstance(row.get("boundary_axes"), list) or not row["boundary_axes"]:
                 raise ValueError(f"EX-42 stage has no registered boundary axis: {row.get('id')}")
             if row.get("hold_policy") != "hold_exposure_continue_training":
@@ -531,8 +564,8 @@ class EX42Plan:
             expected_floors = {"reverse": 0.05, "side_left": 0.03, "side_right": 0.03}
             if row.get("terrain", {}).get("floors", {}).get("global_command_floor") != expected_floors:
                 raise ValueError(f"EX-42 stage global command floors differ from D176: {row.get('id')}")
-            if "critic_mirror" in row and (row.get("id") != "E1" or row["critic_mirror"] is not True):
-                raise ValueError("EX-42 critic mirror may be enabled only at E1")
+            if "critic_mirror" in row and (row.get("id") == "E0" or row["critic_mirror"] is not True):
+                raise ValueError("EX-42 critic mirror must stay enabled from E1 onward")
         if next(row for row in stages if row.get("id") == "E1").get("critic_mirror") is not True:
             raise ValueError("EX-42 E1 must enable the approved D174 critic mirror")
         if stage_zero.get("critic_mirror", False) is not False:
@@ -723,6 +756,17 @@ class EX42Plan:
         actual = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
         if json.dumps(actual, sort_keys=True, allow_nan=False) != json.dumps(expected, sort_keys=True, allow_nan=False):
             raise ValueError("EX-42 parent checkpoint bytes differ from manifest-pinned SHA")
+        materialization = self.document.get("materialization")
+        if isinstance(materialization, dict) and materialization.get("target_stage") == stage_id:
+            from foothold_s2.ex42_stage_materialize import validate_materialized_transition
+            transition_path = self.path.parent / "transition.json"
+            receipt = json.loads(transition_path.read_text(encoding="utf-8"))
+            inputs = receipt.get("inputs", {})
+            if Path(inputs.get("parent_manifest", {}).get("path", "")).resolve() != path:
+                raise ValueError("EX-42 materialized parent manifest path differs")
+            validate_materialized_transition(self, target_stage=stage_id,
+                gate_receipt_path=inputs.get("gate_receipt", {}).get("path", ""),
+                expected_gate_sha256=receipt.get("gate_sha256"))
         return {
             "manifest_path": str(path),
             "manifest_completed_updates": progress["completed_updates"],
