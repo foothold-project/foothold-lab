@@ -49,6 +49,7 @@ def test_boundary_count_is_sha_checked(tmp_path):
 
 
 def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
+    from foothold_s2.ex42_exposure_receipt import build_receipt
     (tmp_path / "params").mkdir()
     (tmp_path / "params" / "agent.yaml").write_text("perception:\n  p_map_off: 0\n")
     plan = {"stages": [
@@ -72,25 +73,57 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
         checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
         interval=250, min_episodes=32, registered_kind_passes={('B', 'rough'): True})
     assert missing["judgement"] == "HOLD" and "노출" in missing["reason"]
-    exposure = {"format": "foothold-ex42-stage-exposure/1", "stage_id": "E3",
-                "plan_sha256": "a" * 64, "mesh_sha256": "b" * 64,
-                "boundary_index": 0, "ladder_outcomes": [],
-                "column_table": [{"family": "B", "kind": "rough"}],
-                "exposure": [1.0], "level_caps": [0],
-                "k_ladder": {"boundary_index": 0, "moves": []}}
-    exposure["sha256"] = hashlib.sha256(json.dumps(exposure, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-    receipt = tmp_path / "ex42_stage_exposure.json"
+    exposure = build_receipt({"mesh_sha256": "b" * 64, "columns": 1,
+                              "families": ["B"], "exposure": [1.0], "level_caps": [0],
+                              "shares": [None], "low_floor": None,
+                              "k_ladder": {"boundary_index": 0, "moves": []},
+                              "column_table": [{"family": "B", "kind": "rough"}]},
+                             stage_id="E3", plan_sha256="a" * 64,
+                             iteration=500, kind="boundary",
+                             live={"envs": 1, "per_level": [1], "columns_used": [0],
+                                   "per_column_level": {"0:0": 1}, "levels_max": 0})
+    exposure["ladder_outcomes"] = []
+    exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
+                                                 sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt = tmp_path / "exposure_receipt_500.json"
     receipt.write_text(json.dumps(exposure, ensure_ascii=False))
     result = judge_two_boundaries(
         checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
         interval=250, min_episodes=32, registered_kind_passes={('B', 'rough'): True})
     assert result["judgement"] == "PASS"
     assert result["registered_count"] == 2
+    exposure.pop("ladder_outcomes")
+    exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
+                                                 sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt.write_text(json.dumps(exposure, ensure_ascii=False))
+    with pytest.raises(ValueError, match="identity"):
+        judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
+                             interval=250, min_episodes=32,
+                             registered_kind_passes={('B', 'rough'): True})
+    exposure["ladder_outcomes"] = []
+    exposure["live"]["per_column_level"] = {"0:1": 1}
+    exposure["live"]["per_level"] = [0, 1]
+    exposure["live"]["levels_max"] = 1
+    exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
+                                                 sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt.write_text(json.dumps(exposure, ensure_ascii=False))
+    with pytest.raises(ValueError, match="outside approved exposure"):
+        judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
+                             interval=250, min_episodes=32,
+                             registered_kind_passes={('B', 'rough'): True})
+    exposure["live"]["per_column_level"] = {"0:0": 1}
+    exposure["live"]["per_level"] = [1]
+    exposure["live"]["levels_max"] = 0
+    exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
+                                                 sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt.write_text(json.dumps(exposure, ensure_ascii=False))
     pending = judge_two_boundaries(
         checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
         interval=250, min_episodes=65, registered_kind_passes={('B', 'rough'): True})
     assert pending["judgement"] == "HOLD" and len(pending["pending"]) == 2
-    exposure["exposure"] = [0.0]
+    exposure["column_rows"][0]["exposure"] = 0.0
+    exposure["column_rows"][0]["open"] = False
+    exposure["opened_kinds"] = {}
     exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
                                                      sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     receipt.write_text(json.dumps(exposure, ensure_ascii=False))
