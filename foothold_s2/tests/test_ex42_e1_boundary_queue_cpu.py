@@ -34,7 +34,8 @@ def _e1_run(path: Path, *, through: int = 1000) -> None:
 
 
 def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000,
-           repo: Path = ROOT, require_locked: bool = False):
+           repo: Path = ROOT, require_locked: bool = False,
+           evaluation_plan_path: Path = PLAN):
     run = tmp_path / "e1"
     _e1_run(run, through=through)
     from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -61,7 +62,7 @@ def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000,
                     "mesh_sha256": E0_MESH_SHA,
                     "mesh_file_sha256": hashlib.sha256(mesh_npz.read_bytes()).hexdigest()}), encoding="utf-8")
     return build_queue_plan(repo=repo, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
-                           evaluation_plan_path=PLAN, e1_ended=e1_ended,
+                           evaluation_plan_path=evaluation_plan_path, e1_ended=e1_ended,
                            require_clean=require_locked, require_locked=require_locked,
                            training_log_path=run / "torchrun.stdout.log",
                            mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA, "mesh_npz": str(mesh_npz)},
@@ -88,6 +89,7 @@ def test_e1_front_queue_is_exact_ordered_p1_and_never_mutates_queue(tmp_path):
         assert argv[argv.index("--device") + 1] == "cuda:1"
         assert argv[argv.index("--split-device") + 1] == "cuda:0"
         assert argv[argv.index("--expected-mesh-sha256") + 1] == E0_MESH_SHA
+        assert argv[argv.index("--evaluation-plan") + 1] == str(PLAN.resolve())
         assert "--sha-from-manifest" in argv and "--execute" in argv
     fallback = result["fallback_queue_add_argv"]
     assert fallback[fallback.index("--gpu") + 1] == "1"
@@ -168,6 +170,30 @@ def test_queue_preparation_accepts_checkout_locked_by_real_lock_checkout(tmp_pat
     result = _build(tmp_path / "real-lock-run", repo=repo, require_locked=True)
     assert result["primary_execution"] == "direct_two_gpu_sequential_chain"
     assert result["repo"] == str(repo.resolve())
+
+
+def test_d44_contract_and_p1_argv_use_evaluation_plan(tmp_path, monkeypatch):
+    import shutil
+    import foothold_s2.scripts.ex42_e1_boundary_queue as queue_module
+
+    eval_dir = tmp_path / "evaluation-curriculum"
+    shutil.copytree(PLAN.parent, eval_dir)
+    eval_plan = eval_dir / PLAN.name
+    eval_plan.write_text(eval_plan.read_text(encoding="utf-8") + "\nevaluation_plan_probe: actual-eval\n",
+                         encoding="utf-8")
+    original = queue_module.d44_contract
+    observed = []
+
+    def check_eval_document(document):
+        observed.append(document.get("evaluation_plan_probe"))
+        assert document.get("evaluation_plan_probe") == "actual-eval"
+        return original(document)
+
+    monkeypatch.setattr(queue_module, "d44_contract", check_eval_document)
+    result = _build(tmp_path / "source-run", evaluation_plan_path=eval_plan)
+    assert observed == ["actual-eval"]
+    assert result["evaluation_plan_path"] == str(eval_plan.resolve())
+    assert result["jobs"][0]["eval_argv"][result["jobs"][0]["eval_argv"].index("--evaluation-plan") + 1] == str(eval_plan.resolve())
 
 
 def test_queue_item_publishes_dependency_marker_only_after_complete_p1(tmp_path):

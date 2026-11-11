@@ -65,7 +65,7 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
     if type(completed) is not int or completed < 1000:
         raise ValueError("E1 ended checkpoint manifest must publish at least 1000 completed updates")
 
-    landing = d44_contract(plan.document)
+    landing = d44_contract(evaluation_plan.document)
     terrain_source = plan.document["assumptions_pending_lead"]["terrain_manifest_measurements"]
     terrain_source = terrain_source.get("value") if isinstance(terrain_source, dict) else None
     if not isinstance(terrain_source, dict):
@@ -129,6 +129,7 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
                      "--eval-seed", "42", "--mesh-dir", str(mesh_dir),
                      "--expected-mesh-sha256", expected_mesh_sha,
                      "--p1-plan", str(plan_path), "--p1-approvals", str(approvals_path),
+                     "--evaluation-plan", str(evaluation_plan_path),
                      "--p1-stage-id", "E1", "--execute"]
         wrapper_argv = [python, "-m", "foothold_s2.scripts.ex42_p1_queue_item",
                         "--iteration", str(iteration), "--marker", str(marker),
