@@ -47,6 +47,10 @@ def test_manifest_sha_and_p1_score_contract(tmp_path):
     assert result["checkpoint_iteration"] == 250 and result["checkpoint_sha256"] == sha
     assert result["stage_id"] == "E0"
     assert len(result["map_matrix"]) == 39
+    with pytest.raises(ValueError, match="judged E0 cell evidence missing"):
+        p1_score_from_measure({**measured, "judgement": "PASS"}, checkpoint=checkpoint,
+                              iteration=250, plan_path=plan, approvals_path=approvals,
+                              stage_id="E0", output=output)
     validate_ex42_map_score(result, ["gt", "pred", "off"])
     stage_zero = p1_score_from_measure(measured, checkpoint=checkpoint, iteration=250,
                                        plan_path=plan, approvals_path=approvals,

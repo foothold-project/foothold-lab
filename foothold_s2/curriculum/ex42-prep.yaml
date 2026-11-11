@@ -549,7 +549,17 @@ assumptions_pending_lead:
     value:
       rule: max(assumed, 2*repeat_width)
       assumed: {survival_drop_envs: 3, error_rise_vx_vy_mps: 0.03, error_rise_wz_radps: 0.05, foot_drag_frac: 0.25, window_episodes: 64, windows: 2, success_min: 52, survival_min: 60}
-      measured: null
+      measured:
+        calibration_sha256: 1fa9db536a26f853bf43d31b3095faac59ce0c67b68f44425a9fb216d3537e3e
+        baseline_sha256: 402c4a4a8f49a86565802114dcfa98a62ecfb59edb6a28433db5adc347a75c13
+        parent_checkpoint_sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
+        eval_cols: 23
+        seeds: [42, 42, 43, 44, 45]
+        survival_drop_envs: 6
+        error_rise_vx_vy_mps: 0.05125124752521515
+        error_rise_wz_radps: 0.05
+        foot_drag_m: per_cell_max_0.25_parent_or_2_repeat_width
+        foot_drag_metric_count: 120
       fixed_before: E1_entry
     class: calibration_rule_approved
     approved: true

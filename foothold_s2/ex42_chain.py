@@ -458,8 +458,8 @@ class EX42TrainingChain:
             if any(score.get(key) != value for key, value in expected.items()):
                 raise ValueError("EX-42 P1 score artifact identity differs")
             judgment = score.get("judgment")
-            if judgment not in {"PASS", "HOLD"}:
-                raise ValueError("EX-42 P1 score judgment must be PASS or HOLD")
+            if judgment not in {"PASS", "HOLD", "FAIL"}:
+                raise ValueError("EX-42 P1 score judgment must be PASS, HOLD or FAIL")
             result = {**base, "state": "judgment_hold" if judgment == "HOLD" else "scored",
                       "retry_required": False, "judgment": judgment,
                       "score_path": str(path), "score_sha256": score_sha256}

@@ -37,11 +37,26 @@ def config(path=None):
     plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
     ids = [row["id"] for row in plan["maintenance"]["items"]]
     if (cfg.get("format") != "foothold-ex42-score-config/1" or
-            cfg.get("status") != "measurement_ready_baseline_unpinned" or
-            cfg.get("maintenance_ids") != ids or cfg.get("baseline") is not None or
+            cfg.get("status") not in ("measurement_ready_baseline_unpinned", "e0_parent_baseline_pinned") or
+            cfg.get("maintenance_ids") != ids or
             cfg.get("verdict_when_baseline_absent") != "HOLD" or
             cfg.get("modes") != list(MODES)):
         raise ValueError("EX-42 score config disagrees with maintenance plan")
+    if cfg["status"] == "e0_parent_baseline_pinned":
+        from foothold_s2.ex42_e0_judge import load_baseline, validate_measured_q4
+        pin = cfg.get("baseline")
+        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        if not isinstance(pin, dict) or not isinstance(measured, dict):
+            raise ValueError("EX-42 E0 parent baseline or q4 measured values missing")
+        baseline = load_baseline(ROOT, cfg, digest)
+        if (measured.get("baseline_sha256") != pin["sha256"] or
+                measured.get("calibration_sha256") != baseline["calibration_sha256"] or
+                measured.get("parent_checkpoint_sha256") != baseline["checkpoint_sha256"]):
+            raise ValueError("EX-42 E0 score config and prep measured pin differ")
+        validate_measured_q4(baseline, measured,
+                             plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["assumed"])
+    elif cfg.get("baseline") is not None:
+        raise ValueError("EX-42 unpinned score config has a baseline")
     return cfg, path
 
 
@@ -61,7 +76,7 @@ def _median(values, label):
 
 
 def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
-            expected_mesh_sha256=None):
+            expected_mesh_sha256=None, stage_id=None):
     """Read durable Kit artifacts; never infer a pass from an EX-41 score."""
     cfg, cfg_path = config(config_path)
     seed = cfg["eval_seed"] if expected_seed is None else expected_seed
@@ -201,4 +216,13 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     out["maintenance_items"]["W57_spin_survival"]["by_mode_and_direction"] = {
         mode: {case: out["map64"][mode][case]["alive_at_end"]
                for case in ("spin+1.2", "spin-1.2")} for mode in MODES}
+    if cfg["status"] == "e0_parent_baseline_pinned" and stage_id == "E0":
+        from foothold_s2.ex42_e0_judge import judge, load_baseline
+        baseline = load_baseline(ROOT, cfg, digest)
+        baseline["_sha256"] = cfg["baseline"]["sha256"]
+        plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        out = judge(out, baseline, measured)
+    elif cfg["status"] == "e0_parent_baseline_pinned":
+        out["reason"] = "E0 baseline is pinned; this stage requires its own judgment policy"
     return out

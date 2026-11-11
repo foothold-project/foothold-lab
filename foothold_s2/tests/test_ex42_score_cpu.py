@@ -88,7 +88,11 @@ def test_foot_duty_phase_drag_known_input():
 
 def test_measure_complete_is_hold_without_approved_baseline(tmp_path):
     model, out = fixture(tmp_path)
-    row = measure(model, out)
+    cfg = config()[0].copy()
+    cfg.update(status="measurement_ready_baseline_unpinned", baseline=None)
+    cfg_path = tmp_path / "unpinned_score_config.json"
+    write_json(cfg_path, cfg)
+    row = measure(model, out, config_path=cfg_path)
     assert row["judgement"] == "HOLD"
     assert row["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] == 64
     assert row["stand"]["eval_gt"]["per_foot_contact_fraction_median"]["FL_foot"] == .75
