@@ -262,7 +262,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
-            "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt},
+            "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
+                         "outcomes": [dict(entry) for entry in list(ladder_outcomes or [])[:boundary_index]]},   # the evidence the k moves were computed from
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}

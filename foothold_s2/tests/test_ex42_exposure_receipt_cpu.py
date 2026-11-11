@@ -212,3 +212,75 @@ def test_two_ranks_write_into_one_folder_and_the_boundary_files_fold(tmp_path, m
                      "exposure_receipt_start_0_rank0.json", "exposure_receipt_start_0_rank1.json"]
     docs = [json.loads((tmp_path / n).read_text()) for n in names if n.startswith("exposure_receipt_250")]
     assert er.fold_ranks(docs)["world_size"] == 2
+
+
+# ---- ladder_outcomes: the evidence the k moves came from, replayable by the consumer ----------------------------
+FLAT_PASS = {"C/flat": {"first_window_pass": True}}
+
+
+@need_mesh
+def test_the_receipt_records_the_ordered_outcomes_the_ladder_really_used_inside_the_sha():
+    contract = _contract(k=2, outcomes=[FLAT_PASS, {"B/rough": {"target_level_reached": False}}, {"x": {}}])
+    body = er.build_receipt(contract, stage_id="E3", plan_sha256=PSHA, iteration=500, kind="boundary")
+    assert body["ladder_outcomes"] == [FLAT_PASS, {"B/rough": {"target_level_reached": False}}]    # first k only, in order
+    swapped = json.loads(json.dumps(body)); swapped["ladder_outcomes"].reverse()
+    with pytest.raises(ValueError, match="sha256"):
+        er.verify_receipt(swapped)
+    assert er.build_receipt(_contract(k=0), stage_id="E3", plan_sha256=PSHA, iteration=0, kind="start")["ladder_outcomes"] == []
+
+
+@need_mesh
+def test_the_consumer_replays_the_k_moves_from_the_plan_and_the_recorded_outcomes():
+    plan = EX42Plan.load(PLAN)
+    body = er.build_receipt(_contract(k=2, outcomes=[FLAT_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+                            kind="boundary")
+    assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["C/flat", "B/rough"]
+    fake = json.loads(json.dumps(body)); fake["ladder_outcomes"] = [{}, {}]                  # outcomes changed, sha refreshed
+    fake["sha256"] = er._sha(fake)
+    with pytest.raises(ValueError, match="differ from the plan replay"):
+        er.recompute_from_plan(fake, plan)
+    moved = json.loads(json.dumps(body)); moved["k_ladder_moves"] = []                      # moves dropped, sha refreshed
+    moved["sha256"] = er._sha(moved)
+    with pytest.raises(ValueError, match="k moves differ"):
+        er.recompute_from_plan(moved, plan)
+    cap = json.loads(json.dumps(body)); cap["column_rows"][0]["level_cap"] += 1            # a careful forger: derived part and sha refreshed
+    cap["opened_kinds"] = er.opened_kinds(cap["column_rows"]); cap["sha256"] = er._sha(cap)
+    with pytest.raises(ValueError, match="level caps differ"):
+        er.recompute_from_plan(cap, plan)
+
+
+@need_mesh
+def test_no_outcomes_is_a_hold_and_the_replay_agrees():
+    plan = EX42Plan.load(PLAN)
+    body = er.build_receipt(_contract(k=2, outcomes=None), stage_id="E3", plan_sha256=PSHA, iteration=500, kind="boundary")
+    assert body["ladder_outcomes"] == [] and er.recompute_from_plan(body, plan)["moves"] == []
+
+
+def test_outcomes_longer_than_the_boundary_index_or_not_dicts_are_refused():
+    base = {"mesh_sha256": "m", "columns": 1, "families": ["A"], "exposure": [1], "level_caps": [0], "shares": None,
+            "low_floor": None, "column_table": [{"family": "A", "kind": "x"}]}
+    for outcomes in ([{}, {}], ["x"], None):
+        contract = {**base, "k_ladder": {"boundary_index": 1, "moves": [], "outcomes": outcomes}}
+        with pytest.raises(ValueError, match="outcomes"):
+            er.build_receipt(contract, stage_id="E3", plan_sha256=PSHA, iteration=0, kind="start")
+
+
+@need_mesh
+def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh_column_table():
+    plan = EX42Plan.load(PLAN)
+    body = er.build_receipt(_contract(k=2, outcomes=[FLAT_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+                            kind="boundary")
+    rows = body["column_rows"]
+    open_i = next(i for i, r in enumerate(rows) if r["open"])
+    closed_i = next(i for i, r in enumerate(rows) if not r["open"])
+    forged = json.loads(json.dumps(body))
+    for key in ("family", "kind"):                                           # swap which kind is open; derived part and sha refreshed
+        forged["column_rows"][open_i][key], forged["column_rows"][closed_i][key] = rows[closed_i][key], rows[open_i][key]
+    forged["opened_kinds"] = er.opened_kinds(forged["column_rows"]); forged["sha256"] = er._sha(forged)
+    assert er.verify_receipt(forged)                                          # the self-consistency check alone accepts it
+    with pytest.raises(ValueError, match="differ from the columns of its mesh"):
+        er.recompute_from_plan(forged, plan)
+    assert er.recompute_from_plan(body, plan)["moves"]                        # the honest receipt still passes
+    other = json.loads(json.dumps(body)); other["mesh_sha256"] = "0" * 64; other["sha256"] = er._sha(other)
+    with pytest.raises(ValueError, match="mesh_sha256 differs"):
+        er.recompute_from_plan(other, plan)
