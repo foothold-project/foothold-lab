@@ -51,10 +51,10 @@ def _top(tri, point):
 def tile_flags(family, kind, triangles, origin, size):
     """Return local (4,2) metres and auditable support heights/rule metadata."""
     from foothold_s2.terrains import columns, sparse_terrains
-    from foothold_s2.terrains import ame2_preset, jeplo_preset, hipan_posture, ex42
+    from foothold_s2.terrains import ame2_preset, jeplo_preset, hipan_posture, ex42, jump_preset
     kinds = {'A': set(columns.FULL), 'B': set(ame2_preset.KINDS),
              'C': set(jeplo_preset.KINDS), 'D': set(hipan_posture.KINDS),
-             'E': {spec.kind for spec in ex42.PAPER_EXT_SPECS}}
+             'E': {spec.kind for spec in ex42.PAPER_EXT_SPECS}, 'F': set(jump_preset.KINDS)}
     if family not in kinds or kind not in kinds[family]:
         raise ValueError(f'unknown flag family/kind: {family}/{kind}')
     if family=='A' and kind in columns.CONTINUOUS:
@@ -69,6 +69,18 @@ def tile_flags(family, kind, triangles, origin, size):
     tri=tri[normals[:,2]>1e-10]
     if not len(tri):
         raise ValueError(f'{family}/{kind}: no upward support')
+    if family == 'F':
+        # Fixed approach/exit goals, never projected into a gap or onto a pit
+        # floor. Fail loudly if the actual mesh does not support the contract.
+        targets = jump_preset.desired_flags(size)
+        heights = [_top(tri, point) for point in targets]
+        if (not np.isfinite(heights).all() or min(heights) < -1e-6
+                or (targets < 0).any() or (targets >= size).any()
+                or targets[0,0] <= origin[0] or np.diff(targets[:,0]).min() <= .02):
+            raise ValueError(f'F/{kind}: missing progressing approach/exit support')
+        return targets, {'rule':'jump_approach_exit_support_goals', 'grade':'project_assumption',
+                         'support_z_m':heights, 'desired_xy_m':targets.tolist(),
+                         'goal_count':COUNT, 'not_a_motion_plan':True}
     # D crawl has two upward surfaces. The known floor at origin.z is the
     # support; a top-down height scan of the roof is not the support here.
     if family=='D' and kind=='crawl':
