@@ -22,6 +22,8 @@ def test_landing_is_actual_120cm_not_pyramid_platform_parameter():
     assert t.dimensions['step_height_m'] == .16
     assert t.dimensions['landing_depth_m'] == 1.2
     assert t.anchors['approach'] == [0.5, 4., 0.]
+    assert t.anchors['stop_band_interior_surface_z_m']==pytest.approx(.48)
+    assert heights(t, [[1.61,4],[1.75,4],[1.89,4]])==pytest.approx([.48]*3)
 
 
 @pytest.mark.parametrize('kind', et.KINDS)
@@ -71,7 +73,9 @@ def test_saved_bytes_repeat_and_manifest_pins_every_input(tmp_path):
     assert r['origins'].shape == (1,32,3)
     assert r['manifest']['training_allowed'] is False
     cases={c['case_id']:c for c in r['manifest']['evaluation_cases']}
-    assert len(cases)==34  # 32 meshes and two reverse-command aliases.
+    assert len(cases)==52  # 32 meshes, two reverse and 18 side/diagonal aliases.
+    assert cases['eval_stairs_015_side_plus']['geometry_id']=='eval_stairs_015'
+    assert cases['eval_stairs_025_diag_back_minus']['role']=='record'
     assert cases['eval_stairs_020_reverse']['geometry_id']=='eval_stairs_020'
     assert all(c['training_allowed'] is False for c in cases.values())
     assert r['manifest']['rng_provenance']['caller_state_restored']

@@ -36,6 +36,29 @@ def validate_eval_cell(result, mesh, *, fixed_level=None):
         raise ValueError("EX-42 calibration terrain tiles differ from A continuous fixed cell")
 
 
+def validate_kind_cell(result, mesh, *, family: str, kind: str, level: int):
+    """Verify every env stayed on the selected named kind after the Kit run."""
+    from foothold_s2.eval.fixed_terrain import assignment_sha256, kind_assignment
+
+    record = result.get("fixed_terrain") or {}
+    n = result.get("envs")
+    table = [{"family": f, "kind": k} for f, k in zip(
+        mesh.get("column_family", ()), mesh.get("columns", ()))]
+    if (n != 64 or record.get("rows") != 10 or record.get("cols") != len(table)
+            or record.get("num_envs") != n or record.get("fixed_level") != level
+            or record.get("family") != family or record.get("kind") != kind):
+        raise ValueError("EX-42 named kind evaluation identity differs")
+    levels, types = kind_assignment(n, record["rows"], table, family, kind, level)
+    if record.get("assignment_sha256") != assignment_sha256(levels, types):
+        raise ValueError("EX-42 named kind evaluation assignment SHA differs")
+    tiles = result.get("terrain_tiles") or []
+    if len(tiles) != n or any(
+            tile.get("env") != i or tile.get("column") != int(types[i])
+            or tile.get("level") != level or tile.get("kind") != kind
+            for i, tile in enumerate(tiles)):
+        raise ValueError("EX-42 named kind evaluation terrain tiles differ")
+
+
 def preflight(mesh_dir):
     folder = Path(mesh_dir).resolve(strict=True)
     manifest_path = folder / "mesh_manifest.json"
