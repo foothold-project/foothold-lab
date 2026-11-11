@@ -156,7 +156,7 @@ def test_shipped_stage_cells_use_table_limits_and_generator_stays_unapproved():
         assert cell['scope']['maximum_updates']==limit
         assert cell['critic_mirror'] is None
         assert cell['extension_authorized'] is False
-        assert cell['later_stage_entry_gate_adapter']=='pending'
+        assert cell['later_stage_entry_gate_adapter']==next(r for r in p.document['stages'] if r['id']==stage)['authorization_contract']['entry_gate_adapter']
     m=next(r for r in p.document['stages'] if r['id']=='M')
     assert m['enabled'] is False
     assert m['authorization_contract']['source_stage_ids']==[]  # No invented linear predecessor.
@@ -191,8 +191,8 @@ def test_m_branch_cannot_replace_e5_graduation():
     assert a['stage_e6a_authorization']['parent_lineage']['consumer_status']=='pending'
 
 
-@pytest.mark.parametrize('adapter,ready',[('map39',True),('flag_two_window',True),('pending',False)])
-def test_entry_gate_adapter_names_a_registered_gate_and_only_pending_is_not_ready(tmp_path,adapter,ready):
+@pytest.mark.parametrize('adapter,ready',[('map39',False),('flag_two_window',True),('stage_exit_v1',True),('pending',False)])
+def test_entry_gate_adapter_must_resolve_the_registered_predecessor(tmp_path,adapter,ready):
     p,ap,_=fixture(tmp_path,'E3');d=deepcopy(p.document)
     row=next(r for r in d['stages'] if r['id']=='E3')
     row['authorization_contract']['source_stage_ids']=['E1F']
