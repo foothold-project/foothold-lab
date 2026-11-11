@@ -35,12 +35,17 @@ CPU 스크립트 출력: `/mnt/win-d/mai/tmp/runner/ex42-e1-five-preflight-18110
 
 뒤 네 단계의 PASS 모양 gate, 측정, W09 baseline/evidence는 scratch 합성 fixture입니다. 실제 E1 P1 점수 및 W09/W08 측정이 아니며, 실제 점수 판정이나 E1F 출발 증거로 사용하지 않습니다. 실제 E1에는 현재 boundary evaluation receipt와 eval 결과 디렉터리가 없어 후속 산출물을 실제 기록으로 검증할 수 없습니다.
 
-## 평가기 연결 상태
+## 통합 고정 사본 재검사
 
-scripter PR #697 HEAD `9d0a09cf4fe980304369763bddcdb3d55540e701`에 `ex42_eval_once --evaluation-plan`과 P1 영수증의 `evaluation_plan {path, sha256}` 변경이 올라와 있고, scripter 보고는 67 passed 및 D44 planned 6입니다. 이 evaluator 변경은 아직 통합 branch나 잠긴 23ddf076 checkout에 들어오지 않았습니다. 따라서 이 보고의 argv/preflight는 runner 호출부의 전달 확인이며, 실제 고정 사본에서 `--evaluation-plan` evaluator 실행은 통합 및 새 lock checkout 뒤 별도 확인이 필요합니다.
+PR #697 통합 뒤 runner 변경을 포함한 commit `31718e26a2e947549b70f2d8197396d48cc0e1d9`를 새 detached 사본 `/home/jay/mai/wt/foothold-lab/ex42-e1-plan-31718e26`에 체크아웃하고 `lock_checkout.py lock`을 실행했습니다. 결과는 `894 changed · 894 tracked · 0 writable`입니다. 이 사본에서 실제 E1 run·source plan·evaluation plan·mesh를 사용해 위 다섯 단계 preflight를 다시 돌려 각 rc 0을 확인했습니다.
+
+같은 고정 사본의 `foothold_s2.ex42_eval_once`에 m1000 체크포인트와 manifest SHA, c333 mesh SHA, source `--p1-plan`, 승인 파일, 고정 `--evaluation-plan`, `--p1-stage-id E1`을 넣어 execute 없는 plan 모드로 호출했습니다. rc 0, score config와 evaluation plan 경로가 모두 고정 사본 아래를 가리키고, evaluation SHA `a2007c8f00fd1a0b5cab8aeaf425e08cfdd8b6e0401d858b39d680bc9a6e45fa`, D44 planned judge 6 · record 3을 반환했습니다. 출력 폴더는 생성되지 않았습니다. 출력: `/mnt/win-d/mai/tmp/runner/ex42-e1-five-preflight-31718e26-rerun/eval-plan.json`.
+
+다섯 단계의 gate·W09/W08·E1F 증거는 scratch synthetic fixture를 사용하는 CPU 계약 검사이므로 실제 점수 판정이 아닙니다. 실제 P1 실행과 평가 수치는 아직 없으며, GPU/Kit/live queue는 사용하지 않았습니다.
 
 ## 시험
 
 - `test_ex42_e1_boundary_queue_cpu.py`: 10 passed (1.33 s)
+- 통합 사본 시험 `test_ex42_e1_boundary_queue_cpu.py`, `test_ex42_e1_judge_cpu.py`, `test_ex42_e1f_flag_cpu.py`, `test_ex42_split_eval_cpu.py`: 77 passed (39.99 s)
 - `git diff --check`: 통과
 - GPU/Kit 평가 및 실제 queue 등록: 미실행
