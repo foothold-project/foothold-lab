@@ -101,7 +101,7 @@ def build_replicas(mesh_dir: Path, output: Path, *, anchor: str, grid: int = 8) 
               "source_mesh_sha256": manifest["mesh_sha256"], "mesh_sha256": mesh_sha,
               "mesh_file_sha256": hashlib.sha256(npz.read_bytes()).hexdigest(),
               "seed": manifest["seed"], "kind": LANDING, "anchor": anchor,
-              "anchors_local_m": tile.anchors, "rows": grid, "cols": grid,
+              "anchors_local_m": column["anchors_local_m"], "rows": grid, "cols": grid,
               "envs": grid * grid, "tile_size_m": [pitch_x, pitch_y]}
     (output / "replica_receipt.json").write_text(
         json.dumps(record, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")

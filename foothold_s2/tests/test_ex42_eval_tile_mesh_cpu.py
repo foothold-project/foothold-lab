@@ -93,3 +93,5 @@ def test_landing_replicas_accept_a_manifest_published_before_new_derived_anchors
         manifest["columns"][0]["anchors_local_m"].pop(key, None)
     path.write_text(json.dumps(manifest), encoding="utf-8")
     build_replicas(source, tmp_path / "ok", anchor="approach", grid=2)
+    # the Kit child checks the receipt against the published manifest: it must carry the pinned anchors only
+    preflight_replicas(source, tmp_path / "ok", anchor="approach", grid=2)
