@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -32,7 +33,8 @@ def _e1_run(path: Path, *, through: int = 1000) -> None:
     }), encoding="utf-8")
 
 
-def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000):
+def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000,
+           repo: Path = ROOT, require_locked: bool = False):
     run = tmp_path / "e1"
     _e1_run(run, through=through)
     from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -58,8 +60,9 @@ def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000):
         json.dumps({"format": "foothold-ex42-combined-mesh/1", "seed": 42,
                     "mesh_sha256": E0_MESH_SHA,
                     "mesh_file_sha256": hashlib.sha256(mesh_npz.read_bytes()).hexdigest()}), encoding="utf-8")
-    return build_queue_plan(repo=ROOT, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
+    return build_queue_plan(repo=repo, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
                            evaluation_plan_path=PLAN, e1_ended=e1_ended,
+                           require_clean=require_locked, require_locked=require_locked,
                            training_log_path=run / "torchrun.stdout.log",
                            mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA, "mesh_npz": str(mesh_npz)},
                            landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
@@ -142,6 +145,29 @@ def test_queue_preparation_refuses_unlocked_checkout_and_wrong_mesh_identity(tmp
                          landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
                          python_path=Path(__file__).resolve(), queue_path=tmp_path / "queue.json",
                          mesh_root_path=tmp_path / "s2_lab")
+
+
+def test_queue_preparation_accepts_checkout_locked_by_real_lock_checkout(tmp_path):
+    repo = tmp_path / "fixed-repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "CPU test"], check=True)
+    for relative in ("foothold_s2/ex42_eval_once.py",
+                     "foothold_s2/curriculum/ex42-prep.yaml",
+                     "_out/tools/gpu_jobs/dispatch.py"):
+        path = repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# tracked lock target\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "foothold_s2", "_out"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "fixture"], check=True)
+
+    locked = subprocess.run([sys.executable, str(ROOT / "_out/tools/ex41/lock_checkout.py"),
+                             "lock", str(repo)], check=True, text=True, capture_output=True)
+    assert "0 writable" in locked.stdout
+    result = _build(tmp_path / "real-lock-run", repo=repo, require_locked=True)
+    assert result["primary_execution"] == "direct_two_gpu_sequential_chain"
+    assert result["repo"] == str(repo.resolve())
 
 
 def test_queue_item_publishes_dependency_marker_only_after_complete_p1(tmp_path):

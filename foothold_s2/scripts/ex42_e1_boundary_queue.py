@@ -4,9 +4,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shlex
-import stat
 import subprocess
 from typing import Any, Callable
 
@@ -45,11 +45,12 @@ def build_queue_plan(*, repo: str | Path, e1_run: str | Path, plan_path: str | P
         if status.strip():
             raise ValueError("fixed source checkout must be clean before queue preparation")
     if require_locked:
-        protected = (repo, repo / "foothold_s2/scripts/ex42_eval_once.py",
+        protected = (repo / "foothold_s2/ex42_eval_once.py",
                      repo / "foothold_s2/curriculum/ex42-prep.yaml",
                      repo / "_out/tools/gpu_jobs/dispatch.py")
-        if any(path.stat().st_mode & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
-               for path in protected):
+        if any(not path.is_file() for path in protected):
+            raise ValueError("fixed checkout lock target is missing")
+        if any(os.access(path, os.W_OK) for path in protected):
             raise ValueError("fixed checkout is not locked read-only")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
     plan = EX42Plan.load(plan_path)
