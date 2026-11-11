@@ -107,3 +107,14 @@ def test_stage_specific_identity_and_kind_subcells_are_checked():
                   kind_now=broken, kind_previous=kind, stage_id="E3",
                   kind_score_key="e3_kind", kind_subcells=("forward", "flag_four"))
     assert "kind/eval_pred/flag_four/success_count" in row["missing"]
+
+
+def test_one_missing_metric_alone_prevents_exchange_pass():
+    previous, kind, measured, baseline = _fixtures()
+    current = copy.deepcopy(previous)
+    del current["map64"]["eval_gt"]["case0"]["vx_abs_error_median_mps"]
+    row = compare(current, previous, measured=measured, baseline=baseline,
+                  kind_now=kind, kind_previous=kind)
+    assert row["violations"] == []
+    assert row["missing"] == ["map64/eval_gt/case0/vx_abs_error_median_mps"]
+    assert row["judgement"] == "HOLD"

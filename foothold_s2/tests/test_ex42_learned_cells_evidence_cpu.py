@@ -102,6 +102,10 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
 
 def test_e2_missing_raw_and_below_threshold_cannot_pass(tmp_path):
     checkpoint = tmp_path / "model_500.pt"
+    raw_missing = read_boundary(checkpoint, stage_id="E2", plan_sha256="a" * 64,
+                                interval=250)
+    assert raw_missing["judgement"] == "HOLD"
+    assert raw_missing["receipts"] == []
     missing = judge_two_boundaries(checkpoint, stage_id="E2", plan={}, plan_sha256="a" * 64,
                                    interval=250, min_episodes=32, previous_kind_pass=True)
     assert missing["judgement"] == "HOLD" and "원자료" in missing["reason"]

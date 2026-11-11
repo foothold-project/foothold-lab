@@ -263,10 +263,10 @@ def test_each_e2_exit_source_independently_blocks_pass(monkeypatch, tmp_path, bl
                     "judgement": "PASS"} for mode in ("eval_gt", "eval_pred", "probe_prop_only")}
     monkeypatch.setattr(ex42_e0_judge, "load_baseline", lambda *_: {})
     monkeypatch.setattr(ex42_e0_judge, "judge", lambda score, *_: {**score, "judgement": "PASS"})
-    monkeypatch.setattr(ex42_e2_judge, "previous_window", lambda *_: None if blocked == "previous_window" else {
+    monkeypatch.setattr(ex42_e2_judge, "previous_window", lambda *_: {
         "checkpoint": str(tmp_path / "model_0.pt"), "checkpoint_sha256": "c" * 64})
     monkeypatch.setattr(ex42_e2_judge, "checked_previous_bundle", lambda prior, **_:
-                        modes if prior else None)
+                        None if blocked == "previous_window" else modes)
     monkeypatch.setattr(ex42_e2_judge, "read_bundle", lambda *_args, **_kwargs: modes)
     monkeypatch.setattr(ex42_mesh_eval, "preflight", lambda *_: {"mesh_sha256": "b" * 64})
     monkeypatch.setattr(ex42_exchange_watch, "compare", lambda *_args, **_kwargs: {
