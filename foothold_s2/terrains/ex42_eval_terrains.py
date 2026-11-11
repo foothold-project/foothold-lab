@@ -25,8 +25,11 @@ CG_PATH = 'inbox/jay/20261026-experiments/CURRICULUM-GATES.md'
 SIZE = sparse.TILE
 START_VARIANTS = ('start_go2_eval_gap115', 'start_go2_eval_sup085', 'start_go2_eval_both')
 LANDING = 'eval_stairs_landing_016'
+SURFACE_SPIN = 'eval_stair_surface_spin'
 PAPER = tuple(f'eval_stairs_{n:03d}' for n in (10,15,20,25)) + tuple(f'eval_slope_{n}' for n in (30,35,45))
-KINDS = (LANDING,) + PAPER + tuple(f'{v}__{k}' for v in START_VARIANTS for k in ss.KINDS)
+START = tuple(f'{v}__{k}' for v in START_VARIANTS for k in ss.KINDS)
+# Append the record-only column; preserve the original twenty column identities.
+KINDS = (LANDING,) + PAPER + START + (SURFACE_SPIN,)
 RESET_RANGES = {k: {axis: (0.,0.) for axis in ('x','y','yaw')} for k in KINDS}
 
 
@@ -61,8 +64,9 @@ def _mesh_boxes(boxes):
 
 def _stairs(kind, seed):
     landing = kind == LANDING
-    rise = .16 if landing else int(kind.rsplit('_',1)[1])/100
-    tread = .30  # CG:394, same existing stage_stairs tread.
+    surface = kind == SURFACE_SPIN
+    rise = .16 if landing else (.15 if surface else int(kind.rsplit('_',1)[1])/100)
+    tread = .25 if surface else .30  # CG:394 fixes both variants separately.
     platform = 1.2 if landing else 3.0
     # Construct OUTWARD from the required platform. Isaac's platform_width is
     # only a lower-bound-like cfg input; its //+1 formula can shrink the surface.
@@ -81,6 +85,13 @@ def _stairs(kind, seed):
     assumptions = {'square_landing_width_m':platform, 'layout':'concentric square stairs, 8 x 8 m carrier',
                    'outer_stair_width_m':6., 'ground_border_m':1.,
                    'reference':'rough_go2_cfg.py:21-22,34-36 platform 3 and tread .3; exact 1.2 square is evaluation layout'}
+    if surface:
+        # Default reset stays on the broad entry support. A full Go2 footprint
+        # cannot fit on a .25 m tread; the evaluator must walk onto the stairs.
+        anchors['stair_surface_center'] = [1+2.5*tread, 4., 3*rise]
+        dims['role'] = 'record'
+        assumptions.update(spin_entry='walk from approach; do not reset on narrow tread',
+            spin_tread_index=3, reference='CG:394 .15 rise/.25 run; third tread and 3 m top are layout assumptions')
     return EvalTile(kind,_mesh_boxes(boxes),origin,anchors,dims,[_source([229,394,600])],0,seed,assumptions)
 
 
@@ -175,7 +186,7 @@ def _start(kind, seed):
 def build_tile(kind, *, seed):
     if kind not in KINDS or type(seed) is not int or not 0<=seed<2**32:
         raise ValueError('known evaluation kind and explicit uint32 seed required')
-    if kind.startswith('eval_stairs_'):
+    if kind.startswith('eval_stairs_') or kind == SURFACE_SPIN:
         return _stairs(kind,seed)
     if kind.startswith('eval_slope_'):
         return _slope(kind,seed)

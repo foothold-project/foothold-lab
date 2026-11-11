@@ -67,8 +67,8 @@ def test_saved_bytes_repeat_and_manifest_pins_every_input(tmp_path):
     et.write_mesh(q, kinds=et.KINDS, seed=42)
     assert (p/'terrain_mesh.npz').read_bytes() == (q/'terrain_mesh.npz').read_bytes()
     r = preflight(p)
-    assert len(r['columns']) == 20
-    assert r['origins'].shape == (1,20,3)
+    assert len(r['columns']) == 21
+    assert r['origins'].shape == (1,21,3)
     assert r['manifest']['training_allowed'] is False
     assert r['manifest']['rng_provenance']['caller_state_restored']
     assert all(c['sources'] for c in r['columns'])
