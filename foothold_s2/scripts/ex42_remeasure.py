@@ -216,11 +216,12 @@ def comparison(root, results):
     (root / 'comparison.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-def validate_request(request):
-    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+def validate_request(request, root=None):
+    root = ROOT if root is None else Path(root)
+    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
     if head != request['source_git_head']:
         raise ValueError('request code HEAD changed')
-    dirty = subprocess.check_output(['git', 'status', '--porcelain', '--', 'foothold_s2'], cwd=ROOT, text=True)
+    dirty = subprocess.check_output(['git', 'status', '--porcelain', '--', 'foothold_s2'], cwd=root, text=True)
     if dirty.strip():
         raise ValueError('evaluator source is not clean')
     for item in (request['evaluation_plan'], request['evaluation_approvals'], request['parent'], *request['dependencies']):
@@ -229,10 +230,119 @@ def validate_request(request):
         checked(request['old'][key])
 
 
-def bridge(request, binding, root, gate_path, *, guard, launch=True):
+LAUNCH_FORMAT = 'foothold-ex42-launch-binding/1'
+INTEGRATION_REF = 'origin/lead/linux-integration-1109'
+FLAG_SHARE = 0.10
+
+
+def _git(root, *args):
+    done = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    if done.returncode:
+        raise ValueError(f'git {args[0]} failed in {root}: {done.stderr.strip()}')
+    return done.stdout.strip()
+
+
+def check_launch(binding, request, *, running_root=None):
+    """The only source an E1F start may use: a registered, clean, locked, detached copy of a newer integration HEAD
+    that carries the shares feature. Anything else raises ValueError (HOLD); there is no fallback to another root."""
+    from foothold_s2.ex42_gate_checks import audit_ex42_launch_source
+    if binding.get('format') != LAUNCH_FORMAT:
+        raise ValueError('launch binding has another format')
+    root = Path(binding['launch_root']).resolve(strict=True)
+    running = ROOT if running_root is None else Path(running_root).resolve()
+    if root != running:
+        raise ValueError('controller is not running from the registered launch root')
+    head = _git(root, 'rev-parse', 'HEAD')
+    if head != binding['launch_head']:
+        raise ValueError('launch root HEAD differs from its registration')
+    if head == request['source_git_head']:
+        raise ValueError('launch root is the old evaluation source, not a new integration HEAD')
+    if subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', request['source_git_head'], head],
+                      stdin=subprocess.DEVNULL).returncode:
+        raise ValueError('launch HEAD does not contain the evaluation source')
+    audit = audit_ex42_launch_source(root, remote_ref=binding['source_ref'])   # raises: not detached, dirty, writable, != ref
+    if audit['launch_head'] != head:
+        raise ValueError('launch source lock audit saw another HEAD')
+    plan, approvals = checked(binding['plan']), checked(binding['approvals'])
+    if not (plan.is_relative_to(root) and approvals.is_relative_to(root)):
+        raise ValueError('launch plan and approvals must live inside the launch root')
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    loaded = EX42Plan.load(plan)
+    if loaded.document['stage_zero']['approval_sha256'] != binding['approvals']['sha256']:
+        raise ValueError('launch plan approval pin differs')
+    from foothold_s2.commands.ex42_shares import read_contract   # absent module = no shares feature
+    contract = read_contract(loaded, 'E1F')
+    if contract is None or abs(contract['shares']['flag'] - FLAG_SHARE) > 1e-9:
+        raise ValueError(f'launch plan E1F shares flag is not {FLAG_SHARE}')
+    entry = (root / 'foothold_s2/scripts/ex42_training_entry.py').read_text(encoding='utf-8')
+    if 'CommandShares(' not in entry or 'ex42_shares' not in (root / 'foothold_s2/scripts/train_start.py').read_text(encoding='utf-8'):
+        raise ValueError('launch source does not consume command shares')
+    return {'root': str(root), 'head': head, 'plan': binding['plan'], 'approvals': binding['approvals'],
+            'source_ref': binding['source_ref'], 'lock': audit, 'e1f_flag_share': contract['shares']['flag']}
+
+
+def read_launch_binding(path):
+    if path is None or not Path(path).is_file():
+        raise ValueError('launch binding is not registered')
+    return read(path)
+
+
+def register_launch(root, out, *, integration=INTEGRATION_REF):
+    """Pin one newer integration HEAD as the E1F launch source. Fixes the head under an origin/ ref name that later
+    integration merges cannot move, so the training-time lock audit still sees this exact commit."""
+    root = Path(root).resolve(strict=True)
+    head = _git(root, 'rev-parse', 'HEAD')
+    if subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', head, integration],
+                      stdin=subprocess.DEVNULL).returncode:
+        raise ValueError(f'{head[:8]} is not contained in {integration}')
+    from foothold_s2.ex42_gate_checks import EX42_LOCKED_SOURCE_PATHS
+    for name in EX42_LOCKED_SOURCE_PATHS:      # lock_checkout.py skips experiments/, but the training audit protects EX-42.yaml
+        path = root / name
+        path.chmod(path.stat().st_mode & ~0o222)
+    pinned = f'origin/ex42-launch-{head[:8]}'
+    _git(root, 'update-ref', f'refs/remotes/{pinned}', head)
+    curriculum = root / 'foothold_s2/curriculum'
+    doc = {'format': LAUNCH_FORMAT, 'launch_root': str(root), 'launch_head': head, 'source_ref': pinned,
+           'plan': ref(curriculum / 'ex42-prep.yaml'), 'approvals': ref(curriculum / 'ex42-approvals.yaml'),
+           'integration_ref': integration}
+    save(out, doc)
+    return doc
+
+
+
+def first_boundary_shares(run, *, expected=FLAG_SHARE, world_size=2, sigmas=4.0):
+    """E1F first boundary: both ranks' command_shares receipts for one iteration, flag fraction of reset assignments
+    in continuous columns against the configured share. The band is a binomial z-score (reset draws are independent
+    Bernoulli), reported with the raw counts; `near` is only a proposal for the lead, the numbers are the evidence."""
+    run = Path(run)
+    found = {}
+    for path in sorted(run.glob('command_shares_*_rank*.json')):
+        doc = read(path)
+        found.setdefault(doc['iteration'], {})[doc['rank']] = (path, doc)
+    ready = [it for it, ranks in sorted(found.items()) if set(ranks) == set(range(world_size))]
+    if not ready:
+        return None
+    iteration = ready[0]
+    rows = []
+    for rank in range(world_size):
+        path, doc = found[iteration][rank]
+        configured = doc['configured']['shares']['flag']
+        cont = doc['cumulative']['reset_modes']['continuous']
+        n, flag = cont['total'], cont['counts']['flag']
+        sd = (expected * (1 - expected) / n) ** .5 if n else None
+        z = None if not n else (flag / n - expected) / sd
+        rows.append({'rank': rank, 'receipt': ref(path), 'configured_flag': configured, 'continuous_resets': n,
+                     'flag_resets': flag, 'flag_fraction': flag / n if n else None, 'z': z,
+                     'near': bool(n and abs(configured - expected) < 1e-9 and abs(z) <= sigmas)})
+    return {'iteration': iteration, 'expected': expected, 'sigmas': sigmas, 'ranks': rows,
+            'near': all(r['near'] for r in rows)}
+
+
+def bridge(request, binding, root, gate_path, *, guard, launch=True, launch_check=None):
     gate = read(gate_path)
     if gate.get('state') != 'complete' or gate.get('judgment') != 'PASS':
         return {'state': 'gate_not_passed', 'judgment': gate.get('judgment'), 'training_started': False}
+    launch_source = launch_check() if launch_check else None      # HOLD before any GPU time when the launch source is not ready
     from foothold_s2.scripts.ex42_flag_baseline_chain import run_chain
     from foothold_s2.scripts.ex42_e1_materialize_evidence import write_evidence
     from foothold_s2.ex42_stage_materialize import materialize
@@ -260,13 +370,16 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True):
                    evaluation_mesh_path=Path(request['mesh_dir']) / 'terrain_mesh.npz',
                    w09_baseline_path=flags / 'w09_baseline.json', evaluation_plan_path=checked(request['evaluation_plan']))
     source = EX42Plan.load(checked(binding['plan']))
-    template = EX42Plan.load(checked(request['evaluation_plan']))
+    # Evaluation policy stays the pinned 6b plan; the stage template (and its approvals) is the launch source's own.
+    template = EX42Plan.load(checked(launch_source['plan'] if launch_source else request['evaluation_plan']))
+    approvals_path = checked(launch_source['approvals'] if launch_source else request['evaluation_approvals'])
+    start_root = Path(launch_source['root']) if launch_source else ROOT
     predecessor = next(r for r in source.document['stages'] if r['id'] == 'E1')
     origin = next(row for row in template.document['stages'] if row['id'] == 'E0')['parent']['cumulative_update']
     used = predecessor['parent']['cumulative_update'] + 1000 - origin
     excluded = {'stage_zero_updates': origin - template.document['stage_zero']['parent']['cumulative_update'],
                 'discarded_first_e1_updates': 1000, 'discarded_run': request.get('old', {}).get('run')}
-    made = materialize(plan=template.path, source_plan=source.path, approvals=checked(request['evaluation_approvals']),
+    made = materialize(plan=template.path, source_plan=source.path, approvals=approvals_path,
                        target='E1F', parent_manifest=checked(binding['manifest']), gate_receipt=gate_path, evidence=evidence,
                        budget_limit=template.document['training_budget']['maximum_updates'], budget_used=used,
                        budget_basis=template.document['training_budget']['basis'],
@@ -274,13 +387,16 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True):
     proof = validate_automatic_stage_launch(EX42Plan.load(made['plan']), made['approvals'], target_stage='E1F',
                 parent_manifest_path=checked(binding['manifest']), gate_receipt_path=gate_path,
                 expected_gate_sha256=sha(gate_path))
-    env = dict(os.environ, **request['launch_env'], **made['launch_env'], EX42_AUTO_ACTION='next_stage',
+    launch_env = dict(request['launch_env'])
+    if launch_source:      # the old env names the evaluation source ref; the training audit must see the launch source
+        launch_env['EX42_SOURCE_REF'] = launch_source['source_ref']
+    env = dict(os.environ, **launch_env, **made['launch_env'], EX42_AUTO_ACTION='next_stage',
                EX42_AUTO_TARGET_STAGE='E1F', EX42_AUTO_PARENT_MANIFEST=binding['manifest']['path'],
                EX42_AUTO_PARENT_CHECKPOINT=str(checkpoint), EX42_AUTO_GATE_RECEIPT=str(gate_path),
                EX42_AUTO_GATE_SHA256=sha(gate_path), ISAAC311_PYTHON=request['python'])
     argv, child_env, summary = build(env, dry_run=True)
     with (Path(root) / 'E1F-dry.log').open('x') as log:
-        result = subprocess.run(argv, env=child_env, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+        result = subprocess.run(argv, env=child_env, cwd=start_root, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
     save(Path(root) / 'E1F-dry.json', {'argv': argv, 'returncode': result.returncode, 'summary': summary})
     if result.returncode:
         raise ValueError(f'E1F CPU preflight refused: rc {result.returncode}')
@@ -292,18 +408,22 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True):
     if not launch:
         return {'state': 'ready_not_started', 'decision': decision}
     guard()
+    if launch_check:
+        launch_source = launch_check()          # still the same registered, locked HEAD at the moment of handoff
+        start_root = Path(launch_source['root'])
     guard.release()  # No evaluation marker may outlive the handoff to training.
     # start_launcher supplies immutable plan/gate pins; inject the explicit machine
     # environment through its process factory without changing this supervisor's env.
     def spawn(argv, **kwargs):
         kwargs['env'] = dict(kwargs['env'], **env)
         return subprocess.Popen(argv, **kwargs)
-    started = start_launcher(decision, ROOT / 'foothold_s2/scripts/ex42_stage_launcher.sh', root,
+    started = start_launcher(decision, start_root / 'foothold_s2/scripts/ex42_stage_launcher.sh', root,
                 parent_manifest=binding['manifest']['path'], parent_checkpoint=checkpoint,
                 gate_receipt=gate_path, popen=spawn)
-    registered = register_launched_training(env['GPU_JOBS_QUEUE'], ROOT / '_out/tools/gpu_jobs/dispatch.py',
+    registered = register_launched_training(env['GPU_JOBS_QUEUE'], start_root / '_out/tools/gpu_jobs/dispatch.py',
                 pid=started['pid'], log=str(Path(root) / 'next_stage_launcher.log'), title='EX-42 retrain -> E1F')
     return {'state': 'launcher_started', 'launch': started, 'queue': registered,
+            'launch_source': launch_source and {k: launch_source[k] for k in ('root', 'head', 'source_ref', 'e1f_flag_share')},
             'note': 'Process started is not proof that the first update or following stages succeeded.'}
 
 
@@ -370,10 +490,10 @@ def admission(request, output):
                 priority.clear_marker(path, owner)
 
 
-def notify_hold(output, reason, *, runner=None):
+def notify_hold(output, reason, *, runner=None, label='재측정 HOLD', name='notification.json'):
     """One run-inbox notice, with durable delivery evidence. Never writes to a terminal."""
     output = Path(output)
-    text = f"({time.strftime('%H:%M')}) [verifier-lx] 재측정 HOLD · {output} · {reason}"
+    text = f"({time.strftime('%H:%M')}) [verifier-lx] {label} · {output} · {reason}"
     command = shlex.split(os.environ.get('ORCA_CLI_COMMAND') or 'orca-ide')
     command += ['orchestration', 'send', '--to', 'run:run_5283fa2c059b', '--type', 'status',
                 '--subject', text, '--body', text]
@@ -384,14 +504,62 @@ def notify_hold(output, reason, *, runner=None):
                    'stdout': result.stdout, 'stderr': result.stderr, 'reason': reason}
     except (OSError, subprocess.SubprocessError) as exc:
         receipt = {'sent': False, 'reason': reason, 'delivery_error': str(exc)}
-    save(output / 'notification.json', receipt)
+    save(output / name, receipt)
     if not receipt['sent']:
         print('EX42_REMEASURE_NOTIFICATION_FAILED ' + json.dumps(receipt, ensure_ascii=False), file=sys.stderr)
     return receipt
 
 
-def execute(request, *, wait=False, poll=30):
-    validate_request(request)
+def e1f_run_dir(main_root, started_after):
+    """The E1F run folder the launcher created after `started_after` (its stamp is taken at the real start)."""
+    runs = [p for p in Path(main_root).glob('EX-42-B-E1F_*') if p.is_dir() and p.stat().st_mtime >= started_after - 5]
+    return max(runs, key=lambda p: p.stat().st_mtime) if runs else None
+
+
+def watch_first_boundary(request, output, *, poll=60, started_after=None, sleep=time.sleep, limit=None):
+    """After the E1F launcher started: wait for the first boundary's two command_shares receipts and report the flag
+    share. Reporting only, never stops or touches the training. Ends when the receipts exist, the run failed, or `limit` polls."""
+    started_after = time.time() - 600 if started_after is None else started_after
+    polls = 0
+    while True:
+        run = e1f_run_dir(request['launch_env']['EX42_MAIN_ROOT'], started_after)
+        if run is not None:
+            result = first_boundary_shares(run)
+            if result is not None:
+                save(Path(output) / 'first-boundary-shares.json', {'run': str(run), **result})
+                text = ('flag 몫 ' + ', '.join(f"rank{r['rank']} {r['flag_fraction']:.4f} (n={r['continuous_resets']}, z={r['z']:.2f})"
+                                               for r in result['ranks']) + f" · 기대 {result['expected']} · it {result['iteration']}")
+                if result['near']:
+                    notify_hold(output, text + ' · 근처', label='E1F 첫 경계 command_shares',
+                                name='first-boundary-notification.json')
+                else:
+                    # Outside 4 sigma: the run is HOLD. This process only records and shouts; ending a training process
+                    # is a team-lead approval item and no in-process stop exists for a stage launched whole.
+                    save(Path(output) / 'first-boundary-HOLD.json', {'state': 'HOLD', 'run': str(run), 'reason': text,
+                         'action_needed': 'stop the E1F training (team lead approval), then fix the flag share',
+                         'training_touched': False})
+                    notify_hold(output, text + f' · 4시그마 밖 HOLD: 깃발 몫이 틀린 채 학습 중, 종료는 팀장 승인 필요 · run {run}',
+                                label='E1F 첫 경계 HOLD', name='first-boundary-notification.json')
+                return result
+            status = run / 'train_start_status.json'
+            if status.is_file() and read(status).get('state') in ('failed', 'error', 'done'):
+                notify_hold(output, f'E1F run ended without a first-boundary receipt pair: {run}',
+                            label='E1F 첫 경계 command_shares', name='first-boundary-notification.json')
+                return None
+        polls += 1
+        if limit is not None and polls >= limit:
+            return None
+        sleep(poll)
+
+
+def execute(request, *, wait=False, poll=30, launch_path=None):
+    """With `launch_path` (required from the CLI) the nine evaluations run in the pinned evaluation source (the request's
+    own code HEAD) while E1F may start only from the registered launch source; this process runs from the latter."""
+    eval_root = None if launch_path is None else Path(request['evaluation_plan']['path']).parents[2]
+    check = (lambda: validate_request(request)) if eval_root is None else (lambda: validate_request(request, eval_root))
+    launch_check = None if launch_path is None else (lambda: check_launch(read_launch_binding(launch_path), request))
+    child_cwd = ROOT if eval_root is None else eval_root
+    check()
     required = ('GPU_JOBS_QUEUE', 'EX42_MAIN_ROOT', 'EX42_SOURCE_REF')
     if any(not request['launch_env'].get(key) for key in required):
         raise ValueError('launch_env misses queue, source ref or new training output root')
@@ -430,25 +598,28 @@ def execute(request, *, wait=False, poll=30):
     try:
         with admission(request, output) as guard:
             for index, job in enumerate(rows):
-                validate_request(request)
+                check()
                 for key in ('plan', 'approvals', 'manifest', 'startup', 'training_log'):
                     checked(binding[key])
                 guard()
                 if sha(job['checkpoint']) != job['checkpoint_sha256']:
                     raise ValueError('checkpoint changed before evaluation')
                 with (output / f'child-{index}.log').open('x') as log:
-                    done = subprocess.run(job['argv'], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+                    done = subprocess.run(job['argv'], cwd=child_cwd, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
                 if done.returncode:
                     raise ValueError(f'{job["group"]} m{job["iteration"]} child rc={done.returncode}')
                 results.append(completed_job(job, request['evaluation_plan']['sha256']))
             comparison(output, results)
             # All nine receipts must exist before the new run alone may advance.
-            outcome = bridge(request, binding, output, Path(rows[-1]['output']) / 'p1_score.json', guard=guard)
+            outcome = bridge(request, binding, output, Path(rows[-1]['output']) / 'p1_score.json', guard=guard,
+                             launch_check=launch_check)
         notification = None
         if outcome.get('state') != 'launcher_started':
             notification = notify_hold(output, f"E1F not launched: {outcome.get('state')}, judgment={outcome.get('judgment')}")
         save(output / 'batch_receipt.json', {'state': 'complete', 'measurements': len(results),
                                            'bridge': outcome, 'notification': notification})
+        if outcome.get('state') == 'launcher_started':
+            watch_first_boundary(request, output, poll=poll)
     except Exception as exc:
         reason = f'{type(exc).__name__}: {exc}'
         notification = notify_hold(output, reason)
@@ -492,6 +663,8 @@ def main(argv=None):
     parser.add_argument('--training-log', type=Path)
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('--wait', action='store_true')
+    parser.add_argument('--launch-binding', type=Path, help='registered E1F launch source; required with --execute')
+    parser.add_argument('--register-launch', type=Path, metavar='LAUNCH_ROOT', help='pin a locked integration copy as the E1F launch source, written to --launch-binding')
     for name in ('plan', 'approvals', 'parent', 'old-run', 'retrain-binding', 'output', 'mesh-dir', 'launch-env'):
         parser.add_argument('--' + name, type=Path)
     args = parser.parse_args(argv)
@@ -506,13 +679,19 @@ def main(argv=None):
             row = {'run': source['run'], 'training_log': str(args.training_log.resolve(strict=True)),
                    'expected_plan_sha256': source['plan']['sha256'], 'startup': source['startup']}
             save(args.request, row)
+        elif args.register_launch:
+            if args.execute or not args.launch_binding:
+                raise ValueError('register-launch needs --launch-binding and cannot execute')
+            row = register_launch(args.register_launch, args.launch_binding)
         elif args.prepare:
             if args.execute or any(getattr(args, n.replace('-', '_')) is None for n in
                                   ('plan', 'approvals', 'parent', 'old-run', 'retrain-binding', 'output', 'mesh-dir', 'launch-env')):
                 raise ValueError('prepare needs all source paths and cannot execute')
             row = prepare(args)
         elif args.execute:
-            row = execute(read(args.request), wait=args.wait)
+            if args.launch_binding is None:
+                raise ValueError('--execute needs --launch-binding: E1F never falls back to the evaluation source')
+            row = execute(read(args.request), wait=args.wait, launch_path=args.launch_binding)
         else:
             request = read(args.request)
             validate_request(request)
