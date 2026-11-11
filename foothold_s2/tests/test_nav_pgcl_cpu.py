@@ -76,23 +76,24 @@ def test_reach_radius_is_a_tenth_of_a_metre():
     p.update((sub[0].point[0] + 0.09, 5.0)); assert p.target == sub[1]
 
 
-def test_final_level_shows_only_the_goal_and_three_successes_request_a_new_task():
+def test_final_level_shows_only_the_goal_and_five_successes_request_a_new_task():
     p = pgcl.PGCL()
     p.level = 11                                                    # d = 11 m >= 10 m
     sub = p.start_episode(_line(10.0))
     assert p.is_final and [s.kind for s in sub] == ["goal"]
     out = []
-    for _ in range(3):
+    for _ in range(5):                                              # 22 §4 표의 가정: 연속 5 회 (계획 v2 는 3 으로 적음, PR 본문에 충돌 기록)
         p.start_episode(_line(10.0)); p.update((11.0, 5.0)); out.append(p.end_episode())
-    assert out == ["final_success", "final_success", "new_task"] and p.needs_new_task and p.streak == 0
+    assert out == ["final_success"] * 4 + ["new_task"] and p.needs_new_task and p.streak == 0
     p.start_episode(_line(10.0))
     assert not p.needs_new_task
 
 
 def test_a_failure_in_the_final_level_resets_the_streak():
     p = pgcl.PGCL(); p.level = 11
-    for _ in range(2):
+    for _ in range(4):
         p.start_episode(_line(10.0)); p.update((11.0, 5.0)); p.end_episode()
+    assert p.streak == 4
     p.start_episode(_line(10.0))
     assert p.end_episode() == "hold" and p.streak == 0
 

@@ -2,7 +2,7 @@
 
 경로 (m 점 열) 에서 d 간격 부목표를 뽑고, 듬성한 지형 띠 (SPARSE) 입구마다 진입 방향 부목표 둘 (입구 앞 0.5 m 와 입구, 경로 방향) 을 끼운다.
 수준 k 의 d = d0 + (k - 1) * step (논문: 1 m 에서 시작, 수준마다 +1 m). 수준 올림: 그 수준의 부목표를 순서대로 모두 닿아야 (0.1 m 안).
-마지막 수준: d 가 경로 길이 이상이면 목표만 남고, 거기서 연속 final_successes (가정 3) 회 성공하면 새 시작 · 목표를 요청한다.
+마지막 수준: d 가 경로 길이 이상이면 목표만 남고, 거기서 연속 final_successes (가정 5 · 22 §4 표) 회 성공하면 새 시작 · 목표를 요청한다.
 teacher 만 본다 (student 는 최종 목표만).
 """
 from __future__ import annotations
@@ -65,7 +65,7 @@ def path_subgoals(points, d: float, g: gm.GradeMap | None = None) -> list:
 
 
 class PGCL:
-    def __init__(self, d0: float = 1.0, step: float = 1.0, reach_m: float = REACH_M, final_successes: int = 3):
+    def __init__(self, d0: float = 1.0, step: float = 1.0, reach_m: float = REACH_M, final_successes: int = 5):
         if d0 <= 0 or step <= 0 or reach_m <= 0 or final_successes < 1:
             raise ValueError("d0, step, reach_m > 0 and final_successes >= 1 required")
         self.d0, self.step, self.reach_m, self.final_successes = d0, step, reach_m, final_successes
