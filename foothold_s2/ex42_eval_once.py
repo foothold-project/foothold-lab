@@ -99,7 +99,8 @@ def receipt_device_fields(device, physical_gpu):
 
 def observed_child_identity(output, name, expected):
     """Verify Kit's own CUDA identity where its result exports one."""
-    basename = "map_modes.json" if name == "map64" else "axis_v2.json" if name == "axis_v2" else "stand.json"
+    basename = ("map_modes.json" if name == "map64" else "axis_v2.json" if name == "axis_v2"
+                else "d44_cells.json" if name == "d44" else "stand.json")
     path = Path(output) / name / basename
     row = json.loads(path.read_text(encoding="utf-8-sig"))
     identity = row.get("run_identity") or {}
@@ -109,6 +110,18 @@ def observed_child_identity(output, name, expected):
     if str(observed).lower().removeprefix("gpu-") != expected["gpu_uuid"].lower().removeprefix("gpu-"):
         raise ValueError(f"{name} Kit physical GPU UUID differs from preflight")
     return {"device": identity["device"], "gpu_uuid": observed}
+
+
+def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                    replica_dir, replica_sha256, seed):
+    """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
+    return [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_d44_eval",
+            "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+            "--mesh-dir", str(mesh_dir), "--replica-dir", str(replica_dir),
+            "--expected-replica-sha256", replica_sha256, "--envs", "64",
+            "--seed", str(seed), "--out", str(Path(output) / "d44"),
+            "--device", device, "--headless",
+            f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
 
 
 def manifest_checkpoint_sha(checkpoint):
@@ -369,6 +382,40 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             row.update(state="HOLD", reason=f"{name} failed or lacks durable receipt")
             _atomic(output / "eval_receipt.json", row)
             return 5
+    if p1_stage_id == "E1" and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        from foothold_s2.eval.ex42_d44_cells import contract, read_evidence
+        from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
+        plan = EX42Plan.load(p1_plan)
+        landing = plan.document["evaluation"]["paper_cells"]["stairs_landing"]
+        if landing.get("judge_cases") is not None:
+            try:
+                settings = contract(plan.document)
+                source_mesh = Path(settings["source_mesh_dir"]).resolve(strict=True)
+                if not settings["source_mesh_sha256"]:
+                    raise ValueError("D44 source mesh SHA is absent from prep")
+                replica = build_replicas(source_mesh, output / "d44_mesh", anchor="landing_center")
+                argv = d44_kit_command(checkpoint, output, device, task=cfg["task"],
+                                       plan_path=p1_plan, mesh_dir=source_mesh,
+                                       replica_dir=output / "d44_mesh",
+                                       replica_sha256=replica["mesh_sha256"], seed=seed)
+                child = process.hidden_child(argv, output / "children" / "d44", env=env)
+                if child.get("state") == "done":
+                    child["observed_gpu"] = observed_child_identity(output, "d44", physical_gpu)
+                    read_evidence(output / "d44", plan=plan.document,
+                                  plan_sha256=plan.sha256, checkpoint_sha256=expected_sha256,
+                                  seed=seed)
+                row["steps"]["d44"] = child
+                if child.get("state") != "done":
+                    raise ValueError("D44 Kit child failed or lacks durable receipt")
+            except (OSError, ValueError, KeyError) as exc:
+                row.update(state="HOLD", reason=f"EX-42 D44 evaluation failed: {exc}")
+                _atomic(output / "eval_receipt.json", row)
+                return 5
+            _atomic(output / "eval_receipt.json", row)
+        else:
+            row["steps"]["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+            _atomic(output / "eval_receipt.json", row)
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -475,6 +522,17 @@ def main(argv=None):
                 dev: commands(args.checkpoint, args.out / "shards" / shard_tag(dev), dev,
                               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard)
                 for dev, shard in shards.items()})
+        if args.p1_stage_id == "E1" and args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.eval.ex42_d44_cells import contract
+            landing = EX42Plan.load(args.p1_plan).document["evaluation"]["paper_cells"]["stairs_landing"]
+            if landing.get("judge_cases") is None:
+                plan["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+            else:
+                settings = contract(EX42Plan.load(args.p1_plan).document)
+                plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
+                               "record_cases": settings["record_cases"],
+                               "source_mesh_dir": settings["source_mesh_dir"]}
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,

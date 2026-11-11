@@ -74,15 +74,16 @@ def test_e1_two_windows_require_both_thresholds_and_maintenance(tmp_path):
 def test_e1_d44_missing_and_survival_floor_are_visible_with_passing_prior(tmp_path):
     score, baseline, measured, plan = _inputs()
     previous = copy.deepcopy(score)
-    previous["d44_landing"] = _landing(plan, tmp_path)
+    previous["d44_cells"] = _cells(plan, tmp_path)
     missing = judge_e1(score, baseline, measured, plan, previous=previous)
     assert missing["maintenance_judgement"] == "PASS"
     assert missing["e1_exit"]["d44"]["previous"]["judgement"] == "PASS"
-    assert missing["e1_exit"]["d44"]["current"] == {"judgement": "HOLD", "reason": "평가 열 없음"}
+    assert missing["e1_exit"]["d44"]["cases"][CASES[0]]["current"] == {"judgement": "HOLD", "reason": "평가 열 없음"}
     assert missing["judgement"] == "HOLD"
 
-    score["d44_landing"] = _landing(
-        plan, tmp_path, survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
+    score["d44_cells"] = _cells(plan, tmp_path)
+    score["d44_cells"][CASES[-1]] = _landing(
+        plan, tmp_path, CASES[-1], survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
     below = judge_e1(score, baseline, measured, plan, previous=previous)
     assert below["e1_exit"]["d44"]["current"]["judgement"] == "FAIL"
     assert below["judgement"] == "FAIL"
@@ -127,8 +128,8 @@ def test_e1_rejects_bad_landing_evidence(tmp_path):
 
 def test_e1_rejects_changed_raw_bytes_with_same_counts(tmp_path):
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
-    source = Path(score["d44_landing"]["raw_file"])
+    score["d44_cells"] = _cells(plan, tmp_path)
+    source = Path(score["d44_cells"][CASES[0]]["raw_file"])
     source.write_bytes(source.read_bytes() + b"\n")
     with pytest.raises(ValueError, match="D44 landing raw evidence differs"):
         judge_e1(score, baseline, measured, plan, previous=score)
@@ -172,9 +173,16 @@ def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path, monkeypatch):
     assert result["e1_exit"]["d44"]["cases"][CASES[0]]["current"]["success_count"] == plan["evaluation"]["promotion"]["success_min"]
 
 
-def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path):
+def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
     score, baseline, measured, plan = _inputs()
-    score["d44_landing"] = _landing(plan, tmp_path)
+    approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml").read_text(encoding="utf-8-sig"))
+    monkeypatch.setattr(EX42Plan, "load", lambda _: SimpleNamespace(
+        document=plan, runtime_stage_ids=tuple(approvals["domain_randomization"]["stage_scales"]),
+        sha256="a" * 64))
+    score["d44_cells"] = _cells(plan, tmp_path)
     judged = judge_e1(score, baseline, measured, plan, previous=copy.deepcopy(score))
     checkpoint = tmp_path / "model_500.pt"
     checkpoint.write_bytes(b"known checkpoint")

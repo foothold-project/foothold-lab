@@ -33,6 +33,15 @@ def _landing_window(value: dict | None, plan: dict, case_id: str) -> dict:
             any(source.get(key) != value[key] for key in
                 ("case_id", "envs", "valid_count", "success_count", "survival_count"))):
         raise ValueError("EX-42 E1 D44 landing raw evidence differs")
+    spec = plan["evaluation"]["paper_cells"]["stairs_landing"].get("case_specs", {}).get(case_id)
+    if spec is not None:
+        if any(source.get(key) != spec[key] for key in ("task", "map_mode", "role")):
+            raise ValueError("EX-42 E1 D44 case identity differs from prep")
+        trace_file, trace_sha = source.get("trace_file"), source.get("trace_sha256")
+        if (not isinstance(trace_file, str) or not isinstance(trace_sha, str)
+                or re.fullmatch(r"[0-9a-f]{64}", trace_sha) is None
+                or hashlib.sha256(Path(trace_file).read_bytes()).hexdigest() != trace_sha):
+            raise ValueError("EX-42 E1 D44 trace SHA differs")
     passed = value["success_count"] >= promotion["success_min"] and value["survival_count"] >= promotion["survival_min"]
     judgement = "HOLD" if value["valid_count"] != envs else "PASS" if passed else "FAIL"
     return {"judgement": judgement, "case_id": case_id,
