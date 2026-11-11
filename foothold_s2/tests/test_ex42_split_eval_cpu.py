@@ -445,14 +445,16 @@ def test_next_stage_notice_only_at_the_stage_end_and_never_starts_anything():
     ids = [row["id"] for row in EX42Plan.load(plan).document["stages"]]
     assert ids.index("E1") + 1 < len(ids)
     following = ids[ids.index("E1") + 1]
+    row = next(r for r in EX42Plan.load(plan).document["stages"] if r["id"] == "E1")
+    first = row["minimum_updates"]                               # the first check (PASS here already asks for the next stage)
     passed = {"judgment": "PASS", "checkpoint_sha256": "a" * 64}
-    ready = once.next_stage_notice(plan, "E1", 1000, passed)
+    ready = once.next_stage_notice(plan, "E1", first, passed)
     assert ready["state"] == "next_stage_ready_for_approval" and ready["next_stage_id"] == following
     assert ready["automatic_launch_started"] is False
-    assert once.next_stage_notice(plan, "E1", 1000, {**passed, "judgment": "HOLD"})["state"] == "not_ready"
-    for mid in (250, 500, 750):                                 # mid-stage boundaries get no notice
-        assert once.next_stage_notice(plan, "E1", mid, passed) is None
-    assert once.next_stage_notice(plan, "NOPE", 1000, passed) is None
+    assert once.next_stage_notice(plan, "E1", first, {**passed, "judgment": "HOLD"})["state"] == "not_ready"
+    for later in (first + 250, first + 500, row["maximum_updates"]):     # later boundaries get no first-check notice
+        assert once.next_stage_notice(plan, "E1", later, passed) is None
+    assert once.next_stage_notice(plan, "NOPE", first, passed) is None
 
 
 # ---- the two device checks each refuse on their own (reviewer 11:10 survivors) ----
