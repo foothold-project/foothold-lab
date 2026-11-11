@@ -1,13 +1,13 @@
 [
   {
     "group": "landing",
-    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/landing_seed42_v1",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/landing_seed42_v2",
     "columns": 1,
-    "mesh_sha256": "fd87698afb8f6a8b94740be5ab571df6cedb1f21c21dc5f5eee5da8ac96780e0",
-    "mesh_file_sha256": "b8398c6f578a512f7e405bd609a9c82347bb232fb6b00a138e20c1d1114c55f6",
-    "manifest_sha256": "fab22c8b0ae2bdb62820193b1b8ca9fc368622fb2fb6f5f8c875feca760de4f0",
+    "mesh_sha256": "baa59af3347c53c2cdeae674ddc873f26d4b9e38cffdbce4a4dc73cf94febb82",
+    "mesh_file_sha256": "86231d2f9ba85af18c89f6c10392498f609dba62ebfe530c7aa9ff5954088531",
+    "manifest_sha256": "94e3fe3dae914968e0e41b7fb3505339fcad72dd38a650c0381a2855af06d55e",
     "origin_check": {
-      "probed": 2,
+      "probed": 1,
       "no_hit": 0,
       "max_abs_by_family_m": {
         "V": 5.7220459037665705e-08
@@ -18,13 +18,13 @@
   },
   {
     "group": "paper",
-    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/paper_seed42_v1",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/paper_seed42_v2",
     "columns": 7,
-    "mesh_sha256": "f108de5f3cfebd60fce1f0cb12c3b33771ab7d517218f3b36a289ee99eb371a5",
-    "mesh_file_sha256": "be2fc0d70661d9e648d025609c83ebd914e22fa808634a87d9d9cdfe5f5bcbd0",
-    "manifest_sha256": "3bf4a055ae137bb4be00cfaf598d170f4bc3dfc50efcbfdcea2bb8a04a43f931",
+    "mesh_sha256": "a194d719e70089a35498d7df4a851101810fe3a0dcf56cf0642e4a012c47b03e",
+    "mesh_file_sha256": "24d1f0cbee9801f44fff6f910094e7864a297343b2267a836bb8bf7e41938a30",
+    "manifest_sha256": "ba830a8d03e6747eeeaf783276a3625bf1c55221a4c9ef8334e373db2a3bc2ec",
     "origin_check": {
-      "probed": 14,
+      "probed": 7,
       "no_hit": 0,
       "max_abs_by_family_m": {
         "V": 0.0
@@ -35,13 +35,13 @@
   },
   {
     "group": "start",
-    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/start_seed42_v1",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/start_seed42_v2",
     "columns": 12,
-    "mesh_sha256": "5e6a104cc0a96128ac3b5ebf1d7ab1554ae413ce7621a502714d4aba528cb76f",
-    "mesh_file_sha256": "9bd8b5bf72f09f2282d55c71efde6ddb45b9ce5476e3ee8458e86453d62d0102",
-    "manifest_sha256": "473a970edac4a2536194e8c16f54cbb473ad664dbcd983dad64ea3fcf65e2fc6",
+    "mesh_sha256": "aeaf97d5f1f57757183b5b7e9c14458964cb5042ed31abcbd7b19b8b4ecfd513",
+    "mesh_file_sha256": "b41c4f66452c568deb1f8dc504de55448bb06733d4de674af70a56f586ad7f9b",
+    "manifest_sha256": "c05234a108e0fd32f7ab7a05fcd3532757a6baf1bc3fb4a682eaa375b09af094",
     "origin_check": {
-      "probed": 24,
+      "probed": 12,
       "no_hit": 0,
       "max_abs_by_family_m": {
         "V": 0.0

@@ -58,7 +58,7 @@ def part_a(data: dict[str, Any]) -> dict[str, Any]:
 
     origins, families = data["origins"], data["column_family"]
     rows, cols = origins.shape[:2]
-    picks = [(r, c) for c in range(cols) for r in (0, rows - 1)]
+    picks = [(r, c) for c in range(cols) for r in sorted({0, rows - 1})]
     per_family: dict[str, list[float]] = {}
     missing = 0
     for r, c in picks:

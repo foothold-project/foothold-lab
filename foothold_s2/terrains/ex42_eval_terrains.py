@@ -211,6 +211,12 @@ does not initialize a live training GPU. No Kit or model is loaded here.
                 'origin_world_m':origin.tolist(),'tile_offset_m':offset.tolist(), 'tile_size_m':list(SIZE),
                 'anchors_local_m':t.anchors,'dimensions':t.dimensions,'sources':t.sources,
                 'layout_assumptions':t.layout_assumptions,'reset_ranges':RESET_RANGES[kind]})
+        # Same 20 m exterior floor as rough_go2_cfg, needed by scanner rays
+        # behind the x=.5 entry. Four OUTSIDE bands, never a floor across pits.
+        width=len(kinds)*SIZE[1]
+        meshes.append(_mesh_boxes([(-20.,0.,-20.,width+20.,-.2,0.),
+            (8.,28.,-20.,width+20.,-.2,0.),(0.,8.,-20.,0.,-.2,0.),
+            (0.,8.,width,width+20.,-.2,0.)]))
         mesh=trimesh.util.concatenate(meshes)
     vertices=np.asarray(mesh.vertices,dtype=np.float32)
     faces=np.asarray(mesh.faces,dtype=np.int32)
@@ -224,6 +230,7 @@ does not initialize a live training GPU. No Kit or model is loaded here.
          'row_semantics':'one fixed geometry row; nominal START L9 is column metadata, not curriculum row',
          'mesh_sha256':hashlib.sha256(vertices.tobytes()+faces.tobytes()).hexdigest(),
          'mesh_file_sha256':hashlib.sha256(npz.read_bytes()).hexdigest(),'columns':columns,
+         'exterior_border_m':20.,'border_source':'rough_go2_cfg.py:42-43; outside grid only, pits preserved',
          'rng_provenance':receipt,'source_sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}}
     (folder/'mesh_manifest.json').write_text(json.dumps(doc,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
     return doc

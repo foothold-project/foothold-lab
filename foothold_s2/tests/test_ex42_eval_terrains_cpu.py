@@ -109,6 +109,17 @@ def test_training_calibration_refuses_evaluation_mesh(tmp_path):
         training_preflight(tmp_path/'eval')
 
 
+def test_saved_mesh_covers_start_scanner_behind_entry_without_filling_pits(tmp_path):
+    from foothold_s2.eval.ex42_eval_mesh import preflight
+    et.write_mesh(tmp_path/'eval',kinds=['start_go2_eval_both__gaps'],seed=42)
+    d=preflight(tmp_path/'eval')
+    h=MeshHeights(d['vertices'],d['faces'])
+    # Actual S1SceneCfg scanner is 1.6 m along x, centred on x=.5 at reset.
+    assert h.at(np.array([[-.3,4.],[-.2,4.]])) == pytest.approx([0.,0.])
+    gap_start=1+(6-3*(.7*1.108*1.15))/4
+    assert h.at(np.array([[gap_start+.1,4.]]))[0] < -.19
+
+
 def test_one_row_assignment_using_installed_isaac_importer_method(tmp_path):
     """Actual installed Isaac method, extracted to avoid starting Kit/pxr on CPU."""
     import ast

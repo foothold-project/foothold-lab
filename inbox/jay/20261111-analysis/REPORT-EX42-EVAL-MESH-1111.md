@@ -9,7 +9,7 @@
 ## 확인된 범위
 
 - 같은 seed로 반복 생성한 NPZ 파일 바이트가 같다. #636의 NumPy·Torch 상태 기록과 복원을 사용한다. CPU 생성기는 GPU가 보이면 실행을 거절한다.
-- 관련 CPU 시험 **54 PASS**, 0 SKIP. 실제 저장 메시를 광선으로 재서 계단참 크기, 계단 단 높이, 경사 각도, 틈 폭, 평균대 폭, 시작점의 0.70 × 0.50 m 받침을 확인했다.
+- 관련 CPU 시험 **55 PASS**, 0 SKIP. 실제 저장 메시를 광선으로 재서 계단참 크기, 계단 단 높이, 경사 각도, 틈 폭, 평균대 폭, 시작점의 0.70 × 0.50 m 받침을 확인했다.
 - 설치된 Isaac `TerrainImporter._compute_env_origins_curriculum` 메서드를 CPU에서 직접 실행해 1행 · 64 env 배정을 확인했다. Kit 전체 실행을 대신하는 증거는 아니다.
 - 생성·예비 장착 경로는 평가 전용 `V` 묶음이다. 고정 치수는 1행이며 START 명목 L9는 열의 설명값이다. 가짜 10개 난이도 행을 만들지 않는다.
 - 기존 학습용 메시 preflight는 이 평가 메시를 거절한다. 학습 메시·설정·해시·프로세스는 변경하지 않았다.
@@ -36,9 +36,9 @@ START 평균대 평가는 **명목 L9 폭 0.154875 m**가 기준이다. 학습 L
 
 | 묶음 | 폴더(공통 뿌리 `/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/`) | 열 수 |
 |---|---|---:|
-| E1 우선 | `landing_seed42_v1` | 1 |
-| 계단·경사 | `paper_seed42_v1` | 7 |
-| START 변형 | `start_seed42_v1` | 12 |
+| E1 우선 | `landing_seed42_v2` | 1 |
+| 계단·경사 | `paper_seed42_v2` | 7 |
+| START 변형 | `start_seed42_v2` | 12 |
 
 - CPU 생성: `CUDA_VISIBLE_DEVICES='' <isaac311-python> -m foothold_s2.scripts.ex42_eval_mesh_build --group landing --seed 42 --out <새 폴더>`.
 - 각 폴더: `terrain_mesh.npz` · `mesh_manifest.json` · `cpu_origin_check.json`. 기존 폴더 덮어쓰기 거절.
@@ -47,6 +47,8 @@ START 평균대 평가는 **명목 L9 폭 0.154875 m**가 기준이다. 학습 L
 - `anchors_local_m`은 타일 좌표다. 월드 좌표는 `tile_offset_m`을 더한다. 참 spin과 접근→정지→재출발은 서로 다른 시작점이다. 영상/점수 소비자가 명시적으로 선택해야 한다.
 - 기존 `ex42_mesh_mount_check`는 manifest 형식으로 평가 전용 adapter를 선택한다. A~E 학습 메시 분기는 유지했다.
 - D44 6초·±1.2 rad/s·성공식, 정책 로드, 지도 세 모드 평가의 연결은 평가기 소유자 몫이다. **메시 생성 완료와 E1 졸업 평가 완료는 다르다.**
+
+외곽 바닥: S1 높이 스캐너 폭 1.6 m 때문에 시작 x=0.5에서 일부 광선이 x<0으로 나간다. v1의 해당 광선 NaN을 CPU 반례로 잡고, v2에 기존 rough_go2_cfg와 같은 바깥 20 m 바닥만 추가했다. 틈 내부는 메우지 않음을 별도 시험했다. v1은 보존하며 실행 대상에서 제외한다.
 
 ## Kit 실행 대기
 
@@ -60,4 +62,4 @@ START 평균대 평가는 **명목 L9 폭 0.154875 m**가 기준이다. 학습 L
 CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -m pytest -q foothold_s2/tests/test_ex42_eval_terrains_cpu.py foothold_s2/tests/test_ex42_mesh_rng_cpu.py foothold_s2/tests/test_ex42_mesh_mount_cpu.py foothold_s2/tests/test_ex42_mount_all_columns_cpu.py -p no:cacheprovider --basetemp=/home/jay/mai/tmp/analyst-lx/eval-mesh-reproduce
 ```
 
-CPU 로그: `/home/jay/mai/tmp/analyst-lx/eval-mesh-regression-final.log`. 첫 새 시험은 모듈 미구현으로 실패한 뒤 구현 후 통과했다. 검토에 필요한 반례: 단을 한 번 더 잘라 참이 0.6 m가 되는 경우, 경사 45도가 절벽으로 바뀌는 경우, manifest 원점과 NPZ가 다른 경우, 평가 메시를 학습 기준선 경로로 넣는 경우.
+CPU 로그: `/home/jay/mai/tmp/analyst-lx/eval-mesh-border-final.log`. 첫 새 시험은 모듈 미구현으로 실패한 뒤 구현 후 통과했다. 검토에 필요한 반례: 단을 한 번 더 잘라 참이 0.6 m가 되는 경우, 경사 45도가 절벽으로 바뀌는 경우, manifest 원점과 NPZ가 다른 경우, 평가 메시를 학습 기준선 경로로 넣는 경우.
