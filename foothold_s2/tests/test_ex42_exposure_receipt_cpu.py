@@ -70,7 +70,9 @@ def test_the_receipt_carries_the_real_contract_and_opened_kinds_follow_the_expos
 
 @need_mesh
 def test_a_k_ladder_move_changes_the_receipt_and_its_kinds():
-    flat_pass = {"C/flat": {"first_window_pass": True}}                # C/flat starts as the one `new` kind of E3
+    # E3 starts as the E2 end state plus the entry axis D only (lead 2026-11-12 02:00): stepping_stones_low is the one `new`
+    # kind of the start block and C/flat is the first kind the K ladder opens.
+    flat_pass = {"A/stepping_stones_low": {"first_window_pass": True}}
     first = er.build_receipt(_contract(k=1, outcomes=[flat_pass]), stage_id="E3", plan_sha256=PSHA, iteration=250,
                              kind="boundary")
     later = er.build_receipt(_contract(k=2, outcomes=[flat_pass, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
@@ -78,10 +80,10 @@ def test_a_k_ladder_move_changes_the_receipt_and_its_kinds():
     held = er.build_receipt(_contract(k=2, outcomes=[{}, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
     assert first["boundary_index"] == 1 and later["boundary_index"] == 2
-    assert [(m["kind"], m["grade"]) for m in first["k_ladder_moves"]] == [("C/flat", "current")]
-    assert [(m["kind"], m["grade"]) for m in later["k_ladder_moves"]] == [("C/flat", "current"), ("B/rough", "new")]
-    assert "B/rough" not in first["opened_kinds"] and "B/rough" in later["opened_kinds"]   # a new kind opens
-    assert held["k_ladder_moves"] == [] and "B/rough" not in held["opened_kinds"]          # no evidence = a hold
+    assert [(m["kind"], m["grade"]) for m in first["k_ladder_moves"]] == [("A/stepping_stones_low", "current")]
+    assert [(m["kind"], m["grade"]) for m in later["k_ladder_moves"]] == [("A/stepping_stones_low", "current"), ("C/flat", "new")]
+    assert "C/flat" not in first["opened_kinds"] and "C/flat" in later["opened_kinds"]     # a new kind opens
+    assert held["k_ladder_moves"] == [] and "C/flat" not in held["opened_kinds"]           # no evidence = a hold
     assert len({first["sha256"], later["sha256"], held["sha256"]}) == 3
 
 

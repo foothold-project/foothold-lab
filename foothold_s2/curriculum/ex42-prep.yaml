@@ -445,6 +445,23 @@ stages:
   extension_max_count: 2
   boundary_axes:
   - terrain_exposure
+  # Command shares = the E1F vector. CG E.2 E2 one-axis row: the K boundary changes no continuous cap, no command share and
+  # no flag share (연속 상한 · 명령 몫 · 깃발 변경 0).
+  shares:
+    forward: 0.17
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+    flag: 0.1
   enabled: true
   kind_choice: start_stones_l0
   hold_policy: hold_exposure_continue_training

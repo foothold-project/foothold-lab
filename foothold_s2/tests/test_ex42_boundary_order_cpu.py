@@ -105,3 +105,19 @@ def test_command_shares_follow_the_canon_c_boundaries():
            {k: v for k, v in after.items() if k not in ("forward", "flag", *diagonal)}
     for stage in ("E5", "E6a", "E6b"):
         assert rows[stage]["shares"] == last
+
+
+def test_every_stage_the_share_contract_reads_has_an_explicit_vector():
+    from types import SimpleNamespace
+
+    from foothold_s2.commands.ex42_shares import read_contract
+
+    document = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
+    rows = {row["id"]: row for row in document["stages"]}
+    assert rows["E2"]["shares"] == rows["E1F"]["shares"]                 # CG E.2 E2: no command share moves at the K boundary
+    plan = SimpleNamespace(document=document)
+    for stage in ("E1F", "E2", "E3", "E4", "E5", "E6a", "E6b"):
+        contract = read_contract(plan, stage)
+        assert contract["shares"] == rows[stage]["shares"]
+    with pytest.raises(ValueError):                                      # the optional M branch has no fixed vector of its own
+        read_contract(plan, "M")
