@@ -4,7 +4,10 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -17,6 +20,16 @@ from foothold_s2.ex42_e1f_judge import FlagTwoWindowJudge, judge_e1f
 ROOT = Path(__file__).parents[2]
 CHECKPOINT_SHA = "c" * 64
 PLAN_SHA = "d" * 64
+
+
+def test_e1f_stage_adapter_is_registered_in_a_fresh_score_process():
+    code = ("from foothold_s2.ex42_stage_judges import adapter_for; "
+            "p={'stages':[{'id':'E1F','exit_judge':'flag_two_window'}]}; "
+            "assert adapter_for(p,'E1F').name == 'flag_two_window'")
+    result = subprocess.run([sys.executable, "-c", code], cwd=ROOT,
+                            env={**os.environ, "CUDA_VISIBLE_DEVICES": ""},
+                            capture_output=True, text=True, timeout=20)
+    assert result.returncode == 0, result.stderr
 
 
 def _plan():

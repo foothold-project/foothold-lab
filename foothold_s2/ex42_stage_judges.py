@@ -161,3 +161,7 @@ class _E1(_E0):
 
 register(_E0())
 register(_E1())
+
+# E1F owns its policy and registers the adapter when the reviewed E0/E1 table
+# is ready. Importing only this registry must be sufficient for adapter_for().
+from foothold_s2 import ex42_e1f_judge  # noqa: E402,F401
