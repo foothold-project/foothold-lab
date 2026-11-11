@@ -193,3 +193,54 @@ def test_extra_policy_key_is_not_accepted(known):
 def test_registered_future_stage_still_rejects_unfilled_or_unapproved_cell(known,stage,reason):
     with pytest.raises(ValueError,match=reason):
         call(known,stage)
+
+
+# ---- a later plan published by materialize is reached only through its transition record -------------------------
+def _other_plan_gate(known, tmp_path):
+    plan, ap, manifest, gp = known
+    gate = json.loads(gp.read_text())
+    gate['plan_sha256'] = 'a' * 64                                   # scored under the predecessor's plan
+    gp.write_text(json.dumps(gate))
+    return hashlib.sha256(gp.read_bytes()).hexdigest()
+
+
+def _transition(tmp_path, known, gate_sha, **change):
+    plan = known[0]
+    record = {'prior_plan_sha': 'a' * 64, 'gate_sha256': gate_sha, 'new_plan_sha': plan.sha256,
+              'parent_sha256': hashlib.sha256((tmp_path / 'model_250.pt').read_bytes()).hexdigest(), **change}
+    path = tmp_path / 'transition.json'
+    path.write_text(json.dumps(record))
+    return path
+
+
+def _call_with(known, gate_sha, transition):
+    plan, ap, manifest, gp = known
+    return validate_automatic_stage_launch(plan, ap, target_stage='E1', parent_manifest_path=manifest,
+                                           gate_receipt_path=gp, expected_gate_sha256=gate_sha,
+                                           transition_path=transition)
+
+
+def test_a_gate_scored_under_the_previous_plan_is_accepted_through_the_transition_chain(known, tmp_path):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    proof = _call_with(known, gate_sha, _transition(tmp_path, known, gate_sha))
+    assert proof['automatic_launch_authorized'] is True and proof['transition']['prior_plan_sha'] == 'a' * 64
+    with pytest.raises(ValueError, match="no transition record"):
+        _call_with(known, gate_sha, None)
+
+
+@pytest.mark.parametrize('change', [{'prior_plan_sha': 'b' * 64}, {'new_plan_sha': 'c' * 64}, {'gate_sha256': 'd' * 64},
+                                    {'parent_sha256': 'e' * 64}])
+def test_a_transition_that_does_not_chain_this_gate_to_this_plan_is_refused(known, tmp_path, change):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    with pytest.raises(ValueError, match="does not chain"):
+        _call_with(known, gate_sha, _transition(tmp_path, known, gate_sha, **change))
+
+
+def test_a_transition_missing_a_key_is_refused_and_a_matching_plan_needs_no_transition(known, tmp_path):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    path = _transition(tmp_path, known, gate_sha)
+    record = json.loads(path.read_text())
+    del record['gate_sha256']
+    path.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match="lacks"):
+        _call_with(known, gate_sha, path)
