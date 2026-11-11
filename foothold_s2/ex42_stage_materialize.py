@@ -289,8 +289,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     scope['parent_sha256'] = actual_sha
     row['parent'] = pin
     if target not in ('E0', 'E1'):
-        row['authorization_contract']['entry_gate_adapter'] = 'flag_two_window'
-        cell['later_stage_entry_gate_adapter'] = 'flag_two_window'
+        cell['later_stage_entry_gate_adapter'] = row['authorization_contract']['entry_gate_adapter']
         cell['critic_mirror'] = True
         row['critic_mirror'] = True
         # Scope stays at the registered base cap. The separate HOLD-only
