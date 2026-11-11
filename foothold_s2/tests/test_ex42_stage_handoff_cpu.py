@@ -258,7 +258,7 @@ def test_real_e0_pass_and_the_shipped_e1_cell_decide_to_launch_e1(tmp_path):
     shipped = EX42Plan.load(plan).sha256
     if receipt.get("plan_sha256") != shipped:
         stale = handoff.decide_next_stage(plan, approvals, "E0", 250, REAL_P1, REAL_E0 / "manifest.json")
-        assert stale["action"] == "notify" and "under this plan" in stale["reason"], stale
+        assert stale["action"] == "notify" and "no transition record links it" in stale["reason"], stale
     receipt["plan_sha256"] = shipped
     (copy / REAL_P1.name).write_text(json.dumps(receipt), encoding="utf-8")
     decision = handoff.decide_next_stage(plan, approvals, "E0", 250, copy / REAL_P1.name, REAL_E0 / "manifest.json")
