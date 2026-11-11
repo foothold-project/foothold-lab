@@ -68,8 +68,10 @@ class CriticMirrorPPO(PPO):
     configured clipping.  The two value losses are averaged to keep scale.
     The actor uses the original all-parameter PPO gradient clip before mirror
     critic gradients are substituted and clipped separately.  Actor data are
-    neither mirrored nor repeated.  Multi-GPU, symmetry, RND and recurrence
-    are rejected for this specialized update.
+    neither mirrored nor repeated.  Symmetry, RND and recurrence are rejected for
+    this specialized update.  Multi-GPU averages the actor gradient and the
+    mirrored critic gradient across ranks; an empty mini batch contributes zero
+    gradients, so every rank exchanges and steps the same number of times.
     """
 
     mirror_enabled = False
@@ -125,6 +127,47 @@ class CriticMirrorPPO(PPO):
             else:
                 self.storage.advantages.zero_()
 
+    def _average_gradients(self, parameters) -> None:
+        """Mean of the ranks' gradients; a missing gradient counts as zero so every rank sends the same size."""
+        if not self.is_multi_gpu:
+            return
+        parameters = tuple(parameters)
+        flat = torch.cat([(p.grad if p.grad is not None else torch.zeros_like(p)).reshape(-1) for p in parameters])
+        torch.distributed.all_reduce(flat, op=torch.distributed.ReduceOp.SUM)
+        flat /= self.gpu_world_size
+        offset = 0
+        for param in parameters:
+            param.grad = flat[offset:offset + param.numel()].view_as(param).clone()
+            offset += param.numel()
+
+    def _exchange_empty_batch(self) -> None:
+        """This rank had no valid row for a slot. It repeats the other ranks' exchanges in the same order with
+        zero contributions (adaptive-lr KL, actor gradient, critic gradient) and takes the same step."""
+        if self.desired_kl is not None and self.schedule == "adaptive":
+            kl = torch.zeros((), device=self.device)
+            torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
+            kl /= self.gpu_world_size
+            if self.gpu_global_rank == 0:
+                if kl > self.desired_kl * 2.0:
+                    self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                elif 0 < kl < self.desired_kl / 2.0:
+                    self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+            lr_tensor = torch.tensor(self.learning_rate, device=self.device)
+            torch.distributed.broadcast(lr_tensor, src=0)
+            self.learning_rate = lr_tensor.item()
+            for group in self.optimizer.param_groups:
+                group["lr"] = self.learning_rate
+        for param in self.policy.parameters():
+            param.grad = torch.zeros_like(param)
+        self._average_gradients(self.policy.parameters())
+        nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+        critic_params = tuple(self.policy.critic.parameters())
+        for param in critic_params:
+            param.grad = torch.zeros_like(param)
+        self._average_gradients(critic_params)
+        nn.utils.clip_grad_norm_(critic_params, self.max_grad_norm)
+        self.optimizer.step()
+
     def update(self) -> dict[str, float]:
         parameters = tuple(self.policy.parameters())
         if not bool(torch.stack([torch.isfinite(param).all() for param in parameters]).all()):
@@ -154,12 +197,16 @@ class CriticMirrorPPO(PPO):
                 result = {key: value * expected / actual for key, value in result.items()}
             result["ppo_skipped_batches"] = float(self.storage.skipped_batches)
             return result
-        if self.symmetry or self.rnd or self.policy.is_recurrent or self.is_multi_gpu:
-            raise ValueError("EX-41 critic mirror supports single-GPU feed-forward PPO without symmetry or RND")
+        if self.symmetry or self.rnd or self.policy.is_recurrent:
+            raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = 0.0
+        self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
-        for (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma,
-             hidden, masks) in batches:
+        for batch in batches:
+            if batch is None:
+                self._exchange_empty_batch()
+                continue
+            (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma, hidden, masks) = batch
             if self.normalize_advantage_per_mini_batch:
                 with torch.no_grad():
                     advantage = safe_minibatch_advantage(advantage)
@@ -198,12 +245,14 @@ class CriticMirrorPPO(PPO):
             base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
             self.optimizer.zero_grad()
             base_loss.backward(retain_graph=True)
+            self._average_gradients(self.policy.parameters())
             # Preserve the exact unaugmented PPO clip for actor and std.
             nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
             critic_params = tuple(self.policy.critic.parameters())
             critic_grads = torch.autograd.grad(self.value_loss_coef * combined_value, critic_params)
             for param, grad in zip(critic_params, critic_grads, strict=True):
                 param.grad = grad
+            self._average_gradients(critic_params)
             nn.utils.clip_grad_norm_(critic_params, self.max_grad_norm)
             self.optimizer.step()
             total_v += float(original_value.detach())
@@ -211,6 +260,7 @@ class CriticMirrorPPO(PPO):
             total_combined += float(combined_value.detach())
             total_s += float(surrogate.detach())
             total_e += float(entropy.mean().detach())
+        self.storage.yield_skipped = False
         count = self.storage.yielded_batches
         skipped = self.storage.skipped_batches
         self.storage.clear()
