@@ -32,7 +32,7 @@ design:
       height_delta_m: 0.3
       one_axis_per_boundary: true
 launch:
-  automatic: false
+  automatic: approved_stage_only
   require_ex41_graduation: false
   parent_adoption:
     decision: 285348de

@@ -53,7 +53,7 @@ def test_plan_matches_canonical_v016_and_d182_values():
 
 def test_v016_makes_known_values_decisions_but_keeps_unmeasured_values_open():
     doc = EX42Plan.load(TABLE).document
-    assert doc["launch"]["automatic"] is False
+    assert doc["launch"]["automatic"] == "approved_stage_only"
     assert doc["launch"]["require_explicit_lead_approval"] is True
     assert doc["assumptions_pending_lead"]["evaluation_friction"]["value"] == {"static": 0.8, "dynamic": 0.6}
     measured = doc["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
