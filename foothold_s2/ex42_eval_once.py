@@ -345,8 +345,8 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
     if score.get("checkpoint_sha256") != digest(checkpoint):
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
     plan = EX42Plan.load(plan_path)
-    if stage_id == "E2" and score.get("execution_plan_sha256") != plan.sha256:
-        raise ValueError("EX-42 E2 learned_cells execution plan SHA differs")
+    if stage_id in ("E2", "E3") and score.get("execution_plan_sha256") != plan.sha256:
+        raise ValueError(f"EX-42 {stage_id} learned_cells execution plan SHA differs")
     policy_path = Path(evaluation_plan_path or plan_path).resolve(strict=True)
     policy = EX42Plan.load(policy_path)
     if evaluation_plan_path is not None and score.get("maintenance_source_sha256") != policy.sha256:

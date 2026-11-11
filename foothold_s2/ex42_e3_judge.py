@@ -195,6 +195,24 @@ class E3KindTwoWindowJudge(StageJudge):
         if judgment == "PASS" and (recounted["judgement"] != "PASS" or
                                     any(items[key]["judgement"] != "PASS" for key in required)):
             raise ValueError("EX-42 E3 P1 raw or training evidence cannot prove PASS")
+        from types import SimpleNamespace
+        from foothold_s2.ex42_score import ROOT, config, digest
+        cfg, cfg_path = config()
+        receipt = json.loads((folder.parent / "eval_receipt.json").read_text(encoding="utf-8-sig"))
+        source = receipt.get("evaluation_plan") or {}
+        policy_path = Path(source.get("path", ""))
+        if (digest(cfg_path) != score.get("score_config_sha256") or
+                not policy_path.is_file() or digest(policy_path) != source.get("sha256") or
+                source["sha256"] != score.get("maintenance_source_sha256")):
+            raise ValueError("EX-42 E3 P1 evaluation policy or score config differs")
+        ctx = SimpleNamespace(root=ROOT, cfg=cfg, cfg_path=cfg_path, digest=digest, plan=plan,
+                              stage_id="E3", plan_path=policy_path, checkpoint=Path(score["checkpoint"]),
+                              evaluation=folder.parent, checkpoint_sha=score["checkpoint_sha256"],
+                              seed=score["conditions"]["eval_seed"])
+        replay = self.judge(ctx, score)
+        if (replay["stage_exit"] != exit_row or replay["e3_kind"] != current or
+                replay["judgement"] != judgment):
+            raise ValueError("EX-42 E3 P1 exit differs from raw and approved plan replay")
         return {"stage_exit": exit_row}
 
 

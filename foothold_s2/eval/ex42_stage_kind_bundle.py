@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 from foothold_s2.eval.ex42_kind_flag_cells import read_kind_flag_cell
 from foothold_s2.eval.ex42_task_evidence import read_evidence
@@ -81,9 +82,14 @@ def read_stage_kind_bundle(folder: Path, *, stage_id: str, family: str, kind: st
     folder = Path(folder)
     request_path = folder / "forward" / "request.json"
     request = validate_request(request_path)
+    match = re.fullmatch(r"model_(\d+)\.pt", Path(request["checkpoint"]).name)
+    if match is None:
+        raise ValueError("EX-42 E3 named-kind checkpoint name invalid")
+    iteration = int(match.group(1))
     expected = {"stage_id": stage_id, "family": family, "kind": kind, "level": level,
                 "plan_sha256": plan_sha256, "checkpoint_sha256": checkpoint_sha256,
-                "seed": seed, "group": "kind", "envs": 64}
+                "seed": seed, "group": "kind", "envs": 64,
+                "window_index": max(1, iteration // plan["evaluation"]["interval_updates"])}
     if any(request.get(key) != value for key, value in expected.items()):
         raise ValueError("EX-42 stage kind request identity differs")
     source = preflight(request["source_mesh"])
