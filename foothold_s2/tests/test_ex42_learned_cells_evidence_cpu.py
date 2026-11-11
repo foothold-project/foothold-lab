@@ -48,11 +48,20 @@ def test_boundary_count_is_sha_checked(tmp_path):
         read_boundary(checkpoint, stage_id="E2", plan_sha256="a" * 64, interval=250)
 
 
+<<<<<<< HEAD
 def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
+=======
+def test_e2_missing_raw_and_below_threshold_cannot_pass(tmp_path):
+    checkpoint = tmp_path / "model_500.pt"
+    missing = judge_two_boundaries(checkpoint, stage_id="E2", plan={}, plan_sha256="a" * 64,
+                                   interval=250, min_episodes=32, previous_kind_pass=True)
+    assert missing["judgement"] == "HOLD" and "원자료" in missing["reason"]
+>>>>>>> feature/ex42-e2-exit-scripter
     (tmp_path / "params").mkdir()
     (tmp_path / "params" / "agent.yaml").write_text("perception:\n  p_map_off: 0\n")
     plan = {"stages": [
         {"id": "E0", "terrain": {"kind_task": {"continuous": ["flat"]}}},
+<<<<<<< HEAD
         {"id": "E3", "terrain": {"exposure_at_E3": {
             "default": {"exposure": 0, "level_cap": 0},
             "positive": [{"family": "B", "kind": "rough", "exposure": 1, "level_cap": 0}]}}}]}
@@ -98,3 +107,23 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
         judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
                              interval=250, min_episodes=32,
                              registered_kind_passes={('B', 'rough'): True})
+=======
+        {"id": "E2", "terrain": {"exposure_at_E2": {
+            "default": {"exposure": 0, "level_cap": 0},
+            "positive": [{"family": "A", "kind": "stepping_stones_low",
+                          "exposure": 1, "level_cap": 0}]}}}]}
+    for iteration in (250, 500):
+        path = _write_boundary(tmp_path, iteration, 15)
+        row = json.loads(path.read_text())
+        row["cells"] = [[0, 0, "forward", "map_on_adaptive", 15],
+                        [0, 0, "flag", "map_on_adaptive", 15]]
+        row["total"] = 30
+        row.pop("sha256")
+        row["sha256"] = hashlib.sha256(json.dumps(row, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        path.write_text(json.dumps(row, ensure_ascii=False))
+    short = judge_two_boundaries(checkpoint, stage_id="E2", plan=plan, plan_sha256="a" * 64,
+                                 interval=250, min_episodes=32, previous_kind_pass=True)
+    assert short["judgement"] == "HOLD"
+    assert {row[3] for row in short["pending"]} == {"forward", "flag"}
+    assert {row[-1] for row in short["pending"]} == {30}
+>>>>>>> feature/ex42-e2-exit-scripter
