@@ -182,23 +182,30 @@ class EX42StageTransitionConsumer:
         }
 
 
-def critic_mirror_proof(plan: EX42Plan, approvals_path: str | Path) -> dict[str, Any]:
-    """The D174 grant StartRunner.set_ex41_critic_mirror checks against the committed plan and approval bytes.
+def critic_mirror_proof(plan: EX42Plan, approvals_path: str | Path, stage_id: str = "E1") -> dict[str, Any]:
+    """The D174 grant StartRunner.set_ex41_critic_mirror checks against the plan and approval bytes.
 
-    Used at the in-process E0 -> E1 boundary and at the start of a stand-alone E1 process (whose parent
-    was saved with the mirror off). The runner re-reads both files from `config_commit`: an uncommitted or
-    edited plan / approval file makes it refuse (W72 HOLD style), so launch from a committed tree.
+    Used at the in-process E0 -> E1 boundary and at the start of a stand-alone stage whose parent was loaded with
+    the mirror off (E1, and every later stage: the mirror stays on once on). The runner re-reads both files:
+    - plan in a git tree: from `config_commit`; an uncommitted or edited file makes it refuse (W72 HOLD style).
+    - plan in a materialized outdir (a `transition.json` next to it): the runner checks both byte hashes against the
+      receipt and the transition record's new_plan_sha against the plan; the gate chain itself was checked by the
+      launcher before the trainer started (ex42_auto_authorization).
     """
     approvals_path = Path(approvals_path).resolve(strict=True)
-    commit = subprocess.check_output(
-        ["git", "-C", str(plan.path.parent), "rev-parse", "HEAD"],
-        stderr=subprocess.DEVNULL).decode().strip()
-    return {"format": "foothold-ex42-critic-mirror-approval/1",
-            "stage_id": "E1", "decision_id": "D174",
-            "plan_path": str(plan.path), "plan_sha256": plan.sha256,
-            "approval_path": str(approvals_path),
-            "approval_sha256": hashlib.sha256(approvals_path.read_bytes()).hexdigest(),
-            "config_commit": commit}
+    proof = {"format": "foothold-ex42-critic-mirror-approval/1",
+             "stage_id": stage_id, "decision_id": "D174",
+             "plan_path": str(plan.path), "plan_sha256": plan.sha256,
+             "approval_path": str(approvals_path),
+             "approval_sha256": hashlib.sha256(approvals_path.read_bytes()).hexdigest()}
+    transition = Path(plan.path).resolve().parent / "transition.json"
+    if transition.is_file():
+        proof["transition_path"] = str(transition)
+    else:
+        proof["config_commit"] = subprocess.check_output(
+            ["git", "-C", str(plan.path.parent), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL).decode().strip()
+    return proof
 
 
 class EX42Runtime:

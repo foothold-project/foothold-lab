@@ -44,14 +44,18 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     (None for the first, whose parent is the stage-zero m13000). Nothing here names a stage."""
     table: dict[str, dict[str, Any]] = {}
     previous = None
+    mirror = False                  # the critic mirror stays on from the stage that turns it on until a stage says off
     for row in stages:
+        mirror = row.get("critic_mirror", mirror)
+        if type(mirror) is not bool:
+            raise ValueError(f"EX-42 stage {row.get('id')} critic_mirror must be a bool")
         parent = row.get("parent")
         if not isinstance(parent, dict):
             continue
         table[row["id"]] = {
             "updates": row["minimum_updates"], "parent_local": parent["manifest_local_update"],
             "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
-            "critic_mirror": row.get("critic_mirror") is True,
+            "critic_mirror": mirror,
             "previous": previous}
         previous = row["id"]
     return table
