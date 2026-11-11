@@ -64,6 +64,23 @@ def test_e1_two_windows_require_both_thresholds_and_maintenance(tmp_path):
     assert judge_e1(score, baseline, measured, plan, previous=previous)["judgement"] == "FAIL"
 
 
+def test_e1_d44_missing_and_survival_floor_are_visible_with_passing_prior(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    previous = copy.deepcopy(score)
+    previous["d44_landing"] = _landing(plan, tmp_path)
+    missing = judge_e1(score, baseline, measured, plan, previous=previous)
+    assert missing["maintenance_judgement"] == "PASS"
+    assert missing["e1_exit"]["d44"]["previous"]["judgement"] == "PASS"
+    assert missing["e1_exit"]["d44"]["current"] == {"judgement": "HOLD", "reason": "평가 열 없음"}
+    assert missing["judgement"] == "HOLD"
+
+    score["d44_landing"] = _landing(
+        plan, tmp_path, survival=plan["evaluation"]["promotion"]["survival_min"] - 1)
+    below = judge_e1(score, baseline, measured, plan, previous=previous)
+    assert below["e1_exit"]["d44"]["current"]["judgement"] == "FAIL"
+    assert below["judgement"] == "FAIL"
+
+
 def test_e1_thresholds_are_read_from_plan_and_missing_prior_is_hold(tmp_path):
     score, baseline, measured, plan = _inputs()
     score["d44_landing"] = _landing(plan, tmp_path)
@@ -101,6 +118,15 @@ def test_e1_rejects_bad_landing_evidence(tmp_path):
         judge_e1(score, baseline, measured, plan, previous=score)
 
 
+def test_e1_rejects_changed_raw_bytes_with_same_counts(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    score["d44_landing"] = _landing(plan, tmp_path)
+    source = Path(score["d44_landing"]["raw_file"])
+    source.write_bytes(source.read_bytes() + b"\n")
+    with pytest.raises(ValueError, match="D44 landing raw evidence differs"):
+        judge_e1(score, baseline, measured, plan, previous=score)
+
+
 def test_real_m250_measure_as_e1_keeps_maintenance_pass_and_d44_hold():
     if not SAVED_E0.is_file():
         pytest.skip("local m250 source is unavailable")
@@ -130,6 +156,24 @@ def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path):
                                    stage_id="E1", output=output)
     assert result["judgment"] == "PASS" and result["stage_id"] == "E1"
     assert result["e1_exit"]["d44"]["current"]["success_count"] == plan["evaluation"]["promotion"]["success_min"]
+
+
+def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path):
+    score, baseline, measured, plan = _inputs()
+    score["d44_landing"] = _landing(plan, tmp_path)
+    judged = judge_e1(score, baseline, measured, plan, previous=copy.deepcopy(score))
+    checkpoint = tmp_path / "model_500.pt"
+    checkpoint.write_bytes(b"known checkpoint")
+    judged["checkpoint_sha256"] = digest(checkpoint)
+    judged["e1_exit"]["d44"]["current"]["judgement"] = "FAIL"
+    output = tmp_path / "m500"
+    output.mkdir()
+    (output / "ex42_score.json").write_text(json.dumps(judged), encoding="utf-8")
+    with pytest.raises(ValueError, match="E1 two-window exit evidence differs"):
+        p1_score_from_measure(judged, checkpoint=checkpoint, iteration=500,
+                              plan_path=ROOT / "foothold_s2/curriculum/ex42-prep.yaml",
+                              approvals_path=ROOT / "foothold_s2/curriculum/ex42-approvals.yaml",
+                              stage_id="E1", output=output)
 
 
 def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
