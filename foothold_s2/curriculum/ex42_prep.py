@@ -465,10 +465,10 @@ class EX42Plan:
         """Resolve the stage-zero or E0 parent by its pinned manifest SHA."""
         if stage_id == STAGE_ZERO_ID:
             selected = self.document["stage_zero"]["parent"]
-        elif stage_id in ("E0", "E1"):
-            selected = next(row for row in self.document["stages"] if row["id"] == stage_id)["parent"]
         else:
-            raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
+            selected = next((row.get("parent") for row in self.document["stages"] if row["id"] == stage_id), None)
+            if not isinstance(selected, dict):
+                raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
         if parent_pin is not None and any(selected.get(key) != value
                                           for key, value in parent_pin.items()):
             raise ValueError(f"EX-42 {stage_id} parent override differs from the pinned table")
