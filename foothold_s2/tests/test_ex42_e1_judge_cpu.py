@@ -351,3 +351,33 @@ def test_e1_adapter_verify_checks_the_26_cell_structure_before_the_two_window_ev
                   "eval_pred": {**good["cell_judgments"]["eval_pred"], "c0": {"role": "record_only", "judgment": "PASS"}}}}
     with pytest.raises(ValueError, match="cell evidence missing"):
         adapter.verify(wrong_role, "PASS", "PASS", plan={})
+
+
+@pytest.mark.parametrize("window,case_index,field,forged", [
+    ("current", 0, "success_count", 51),
+    ("current", 1, "survival_count", 59),
+    ("current", 2, "valid_count", 63),
+    ("current", 3, "raw_sha256", "0" * 64),
+    ("previous", 0, "success_count", 51),
+    ("previous", 1, "survival_count", 59),
+    ("previous", 2, "valid_count", 63),
+    ("previous", 3, "raw_file", "/missing/forged-landing.json"),
+    ("previous", 4, "success_min", 1),
+    ("previous", 5, "case_id", "wrong_case"),
+])
+def test_e1_p1_rejects_each_individual_window_cell_forgery(
+        tmp_path, window, case_index, field, forged):
+    """Ten independent changes to one D44 cell cannot hide behind PASS groups."""
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+
+    score, baseline, measured, plan = _inputs()
+    score["d44_cells"] = _cells(plan, tmp_path)
+    judged = judge_e1(score, baseline, measured, plan, previous=copy.deepcopy(score))
+    adapter = ADAPTERS["map39_e1_two_window"]
+    assert judged["judgement"] == "PASS"
+    assert adapter.verify(judged, "PASS", "PASS", plan=plan)["e1_exit"] == judged["e1_exit"]
+
+    changed = copy.deepcopy(judged)
+    changed["e1_exit"]["d44"]["cases"][CASES[case_index]][window][field] = forged
+    with pytest.raises(ValueError, match="landing|D44|two-window"):
+        adapter.verify(changed, "PASS", "PASS", plan=plan)
