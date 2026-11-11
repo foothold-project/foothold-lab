@@ -17,6 +17,7 @@ from foothold_s2.scripts.ex42_kit_sequence_rehearsal import SEQUENCE, build_repo
 
 BOUNDARIES = (250, 500, 750, 1000)
 STAGE_PREREQUISITES = {"E2": "W14", "E3": "W19"}
+FLAG_DEVICE = "cuda:1"
 
 
 def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
@@ -39,35 +40,84 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                       "blockers": ["recheck_must_use_manifest_checkpoint_sha",
                                    "existing_e1_p1_receipt_or_exact_argv_required"]})
 
-    steps.append({"id": "W09-flag-baseline", "kind": "flag_baseline_once",
-                  "checkpoint": str(run / "model_1000.pt") if run else None,
-                  "priority": 2, "gpu": 0,
-                  "requires": ["E1_P1_m1000=PASS", "E1_graduation_receipt"],
+    run_path = str(run) if run else "${E1_RUN}"
+    gate_path = f"{run_path}/eval/scores/m1000/p1_score.json"
+    checkpoint_path = f"{run_path}/model_1000.pt"
+    flag_chain_path = f"{run_path}/eval/w09-w08/chain_receipt.json"
+    steps.append({"id": "E1-exit-gate", "kind": "judge_e1_exit",
+                  "requires": [f"E1-P1-m{i}=complete" for i in BOUNDARIES],
+                  "decision_source": gate_path,
+                  "validator": "foothold_s2.scripts.ex42_flag_baseline_chain.check_e1_gate",
+                  "accepted_decisions": ["PASS", "HOLD", "FAIL"],
+                  "nonpass_policy": "notify_and_stop_without_stage_extension",
+                  "pass_next": "W09-W08-flag-chain",
+                  "hold_next": "E1-NONPASS-notify", "fail_next": "E1-NONPASS-notify",
+                  "hold_policy": "stop_post_e1_chain_and_wait_for_explicit_extension_approval",
+                  "queue_command": None, "blockers": []})
+    steps.append({"id": "E1-NONPASS-notify", "kind": "nonpass_notification",
+                  "requires_any": ["E1-exit-gate=HOLD", "E1-exit-gate=FAIL"],
+                  "skips": ["W09-W08-flag-chain", "W08-materialize-and-repin", "E1F-launch"],
+                  "extension_requires_lead_approval": True,
                   "queue_command": None,
-                  "blockers": ["W09_flag_cell_evaluator_command_missing",
-                               "E1_graduation_checkpoint_SHA_not_yet_available"]})
-    prior_w08 = "W09-flag-baseline"
-    for repeat in range(1, 6):
-        steps.append({"id": f"W08-flag-calibration-{repeat}",
-                      "kind": "flag_calibration_repeat", "repeat": repeat,
-                      "checkpoint": str(run / "model_1000.pt") if run else None,
-                      "priority": 2, "gpu": (repeat - 1) % 2,
-                      "requires": [f"{prior_w08}=complete"],
-                      "queue_command": None,
-                      "blockers": ["flag_cell_calibration_producer_missing",
-                                   "five-run_calibration_receipt_contract_missing"]})
-        prior_w08 = f"W08-flag-calibration-{repeat}"
+                  "argv": ["${ORCA_CLI_COMMAND}", "orchestration", "send", "--to",
+                           "${EX42_ORCHESTRATION_TO}", "--type", "status",
+                           "--subject", "EX-42 E1 gate HOLD", "--body",
+                           "E1 gate HOLD; W09/W08, materialization and E1F launch skipped; awaiting lead approval."],
+                  "blockers": []})
 
+    # #688's single-device CLI runs W09 and all five W08 rounds serially. The
+    # later --devices contract can replace this one device without changing the
+    # dependency chain or allowing E1F to overlap the calibration work.
+    flag_argv = ["${ISAAC311_PYTHON}", "-m", "foothold_s2.scripts.ex42_flag_baseline_chain",
+                 "--checkpoint", checkpoint_path,
+                 "--expected-checkpoint-sha256", "${E1_MODEL_1000_SHA256}",
+                 "--e1-gate", gate_path,
+                 "--plan", "${W09_W08_EVALUATION_PLAN}",
+                 "--mesh-dir", "${E1_MESH_DIR}",
+                 "--expected-mesh-sha256", "${E1_MESH_SHA256}",
+                 "--device", FLAG_DEVICE, "--out", f"{run_path}/eval/w09-w08", "--execute"]
+    steps.append({"id": "W09-W08-flag-chain", "kind": "flag_baseline_and_calibration",
+                  "checkpoint": checkpoint_path, "priority": 2, "gpu": 1, "device": FLAG_DEVICE,
+                  "execution": "single_device_serial_until_devices_cli",
+                  "round_order": ["W09-seed42", *(f"W08-repeat-{i}" for i in range(1, 6))],
+                  "requires": ["E1-exit-gate=PASS"], "queue_command": None,
+                  "argv": flag_argv,
+                  "completion_receipt": flag_chain_path,
+                  "completion_state": "complete_after_all_six_rounds",
+                  "blockers": []})
+
+    materialize_argv = ["${ISAAC311_PYTHON}", "-m", "foothold_s2.ex42_stage_materialize",
+                        "--plan", "${E1F_TEMPLATE_PLAN}", "--source-plan", "${E1_SOURCE_PLAN}",
+                        "--approvals", "${E1F_TEMPLATE_APPROVALS}", "--target", "E1F",
+                        "--parent-manifest", f"{run_path}/manifest.json",
+                        "--gate-receipt", gate_path,
+                        "--evidence", f"{run_path}/eval/materialize/E1F-stage-evidence.json",
+                        "--budget-basis", "${E1F_BUDGET_BASIS}",
+                        "--budget-limit", "${E1F_BUDGET_LIMIT}",
+                        "--budget-used", "${E1F_BUDGET_USED}",
+                        "--out", f"{run_path}/eval/materialize/E1F-repinned-" + "${SOURCE_HEAD}",
+                        "--materialize-only", "--flag-chain", flag_chain_path,
+                        "--expected-flag-chain-sha256", "${W09_W08_CHAIN_SHA256}"]
+    materialize_blockers = []
+    if not _supports_flag_materialize():
+        materialize_blockers.append("verifier_materialize_cli_not_merged")
     steps.append({"id": "W08-materialize-and-repin", "kind": "materialize_only",
-                  "priority": 2, "gpu": 0,
-                  "requires": ["W08-flag-calibration-5=complete"],
-                  "queue_command": None,
-                  "calibration_out": None, "repinned_plan_out": None,
-                  "blockers": ["W08_calibration_artifact_schema_missing",
-                               "materialize_only_and_plan_repin_command_missing"]})
+                  "priority": 2, "gpu": None,
+                  "requires": ["W09-W08-flag-chain=complete"],
+                  "queue_command": None, "argv": materialize_argv,
+                  "captures": "launch_env", "training_started": False,
+                  "blockers": materialize_blockers})
+
+    steps.append({"id": "E1F-launch", "kind": "launch_materialized_stage",
+                  "requires": ["W08-materialize-and-repin=complete"],
+                  "launcher": "foothold_s2.scripts.ex42_stage_launcher",
+                  "launch_env_source": "W08-materialize-and-repin.launch_env",
+                  "auto_action": "next_stage", "target_stage": "E1F",
+                  "device": "cuda:0", "ranks": 2, "queue_command": None,
+                  "blockers": ["materialized_launch_env_required_at_runtime"]})
 
     rehearsal = build_report(plan_path=plan_path, approvals_path=approvals_path)
-    previous_stage = "W08-materialize-and-repin"
+    previous_stage = "E1F-launch"
     for stage in SEQUENCE:
         prerequisite = STAGE_PREREQUISITES.get(stage)
         if stage == "E2":
@@ -90,7 +140,7 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                                        if row["stage_id"] == stage)})
         previous_stage = f"KIT-{stage}"
 
-    return {"format": "foothold-ex42-post-e1-gpu-chain/1", "plan_sha256": plan.sha256,
+    return {"format": "foothold-ex42-post-e1-gpu-chain/2", "plan_sha256": plan.sha256,
             "e1_run": str(run) if run else None,
             "schedule": steps,
             "state": "blocked" if any(row["blockers"] for row in steps) else "ready",
@@ -98,6 +148,16 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
             "training_started": False,
             "gpu_idle_guarantee": False if any(row["blockers"] for row in steps) else True,
             "reason": "No live jobs are registered until every command and prerequisite receipt is concrete."}
+
+
+def _supports_flag_materialize() -> bool:
+    """Return whether this checkout contains verifier's flag-chain publication CLI."""
+    try:
+        from foothold_s2 import ex42_stage_materialize
+        import inspect
+        return "flag_chain" in inspect.signature(ex42_stage_materialize.materialize).parameters
+    except (ImportError, AttributeError, TypeError):
+        return False
 
 
 def main(argv: Iterable[str] | None = None) -> int:
