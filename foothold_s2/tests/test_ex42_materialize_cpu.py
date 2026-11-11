@@ -34,19 +34,24 @@ def known(tmp_path):
     parent_sha = sha(checkpoint)
     manifest = run / 'manifest.json'
     dump(manifest, {'progress': {'completed_updates': 1000}, 'checkpoints': {checkpoint.name: parent_sha}})
-    landing = {'case_id':plan.document['evaluation']['paper_cells']['stairs_landing']['id'],
-               'envs':64, 'success_count':60, 'survival_count':64}
-    d44 = {}
-    for name in ('current','previous'):
-        ref = dump(run / f'{name}.json', landing)
-        d44[name] = dict(landing, judgement='PASS', raw_file=ref['path'], raw_sha256=ref['sha256'])
-    exit_row = dict(windows_required=2, maintenance=dict(current='PASS', previous='PASS'),
-                    d44=d44, judgement='PASS')
+    specs=plan.document['evaluation']['paper_cells']['stairs_landing']['case_specs']
+    case_ids=plan.document['evaluation']['paper_cells']['stairs_landing']['judge_cases']
+    cases={}
+    for case_id in case_ids:
+        cases[case_id]={}
+        for name in ('current','previous'):
+            trace=run/f'{name}-{case_id}.npz';trace.write_bytes(b'known raw trace')
+            landing=dict(case_id=case_id,envs=64,valid_count=64,success_count=60,survival_count=64,
+                         **specs[case_id],trace_file=str(trace),trace_sha256=sha(trace))
+            ref=dump(run/f'{name}-{case_id}.json',landing)
+            cases[case_id][name]=dict(landing,judgement='PASS',raw_file=ref['path'],raw_sha256=ref['sha256'])
+    d44=dict(cases=cases,judge_cases=case_ids,current={'judgement':'PASS'},previous={'judgement':'PASS'})
+    exit_row=dict(windows_required=2,maintenance=dict(current='PASS',previous='PASS'),d44=d44,judgement='PASS')
     cells = {m:{c:{'role':'record_only' if m=='probe_prop_only' else 'judge', 'judgment':'PASS'}
                   for c in commands('extended')} for m in ('eval_gt','eval_pred','probe_prop_only')}
     measure = run / 'score.json'
     dump(measure, dict(stage_id='E1', checkpoint_sha256=parent_sha, judgement='PASS',
-                       e1_exit=exit_row, cell_judgments=cells))
+                       e1_exit=exit_row, cell_judgments=cells,map64={m:{c:{} for c in items} for m,items in cells.items()}))
     rows = [{'map_mode':m,'command':c,'role':v['role']} for m,items in cells.items() for c,v in items.items()]
     gate = run / 'p1.json'
     dump(gate, dict(stage_id='E1', state='complete', judgment='PASS', checkpoint_iteration=1000,
@@ -243,3 +248,48 @@ def test_runtime_parent_reader_requires_transition_and_exact_parent_lineage(know
     t=Path(r['transition']);t.chmod(0o644);d=json.loads(t.read_text());d['parent_sha256']='f'*64;dump(t,d)
     with pytest.raises(ValueError,match='provenance'):
         plan.verify_parent_manifest(known['parent_manifest'],stage_id='E1F')
+
+
+def test_gate_execution_plan_and_scoring_policy_are_not_conflated(known):
+    policy_dir=known['plan'].parent.parent/'evaluation-policy'
+    shutil.copytree(known['plan'].parent,policy_dir)
+    policy_path=policy_dir/'ex42-prep.yaml'
+    policy_path.write_text(policy_path.read_text()+'\n# approved newer scoring policy\n')
+    gp=known['gate_receipt'];g=json.loads(gp.read_text());mp=Path(g['measurement']);m=json.loads(mp.read_text())
+    m['maintenance_source_sha256']=sha(policy_path);dump(mp,m);g['measurement_sha256']=sha(mp);dump(gp,g)
+    e=json.loads(known['evidence'].read_text());e['gate_sha256']=sha(gp);dump(known['evidence'],e)
+    with pytest.raises(ValueError,match='evaluation policy differs'):run(known)
+    e['evaluation_plan']={'path':str(policy_path),'sha256':sha(policy_path)};dump(known['evidence'],e)
+    r=run(known);t=json.loads(Path(r['transition']).read_text())
+    assert t['prior_plan_sha']==sha(known['source_plan'])
+    assert t['artifacts']['evaluation_plan']['sha256']==sha(policy_path)
+    assert t['prior_plan_sha']!=t['artifacts']['evaluation_plan']['sha256']
+
+
+def test_materialized_template_does_not_copy_old_transition_as_a_dependency(known):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_stage_materialize import validate_materialized_transition
+    first=run(known)
+    known['plan']=Path(first['plan']);known['approvals']=Path(first['approvals']);known['out']=known['out'].with_name('second')
+    second=run(known)
+    p=EX42Plan.load(second['plan'])
+    assert validate_materialized_transition(p,target_stage='E1F',gate_receipt_path=known['gate_receipt'],
+        expected_gate_sha256=sha(known['gate_receipt']))['source_stage_id']=='E1'
+
+
+def test_registered_boolean_requires_real_boolean_evidence(known):
+    # Table-driven branch budgets use boolean bindings; the CLI cannot invent one.
+    p=known['plan'];d=yaml.safe_load(p.read_text());row=next(s for s in d['stages'] if s['id']=='E1F')
+    row['authorization_contract']['required_boolean_paths'].append('budget.m_updates_count_toward_source_maximum')
+    a=yaml.safe_load(known['approvals'].read_text());a['stage_e1f_authorization']['budget']={'m_updates_count_toward_source_maximum':None}
+    known['approvals'].write_text(yaml.safe_dump(a));d['stage_zero']['approval_sha256']=sha(known['approvals']);p.write_text(yaml.safe_dump(d))
+    gp=known['gate_receipt'];g=json.loads(gp.read_text());g['plan_sha256']=sha(p);dump(gp,g)
+    e=json.loads(known['evidence'].read_text());e['source_plan_sha256']=sha(p);e['gate_sha256']=sha(gp)
+    log=Path(e['exposure_receipt']['path']);lines=log.read_text().splitlines()
+    for i in (0,1):
+        v=json.loads(lines[i].partition(' ')[2]);v['approval']['approvals_sha256']=sha(known['approvals']);lines[i]=lines[i].partition(' ')[0]+' '+json.dumps(v)
+    log.write_text('\n'.join(lines));e['exposure_receipt']['sha256']=sha(log)
+    record=gp.parent/'budget-evidence.json';ref=dump(record,{'count':True});ref['pointer']='count'
+    e['bindings']['budget.m_updates_count_toward_source_maximum']=ref;dump(known['evidence'],e)
+    r=run(known)
+    assert yaml.safe_load(Path(r['approvals']).read_text())['stage_e1f_authorization']['budget']['m_updates_count_toward_source_maximum'] is True

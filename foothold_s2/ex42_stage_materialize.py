@@ -39,6 +39,7 @@ def _json(path):
     value = json.loads(Path(path).read_text(encoding='utf-8-sig'), parse_constant=reject)
     if not isinstance(value, dict):
         raise ValueError(f'evidence must be an object: {path}')
+    _finite_tree(value)
     return value
 
 
@@ -100,10 +101,14 @@ def _measurement(gate, gate_path):
     return measured
 
 
-def validate_source_exit(source_plan, gate, gate_path):
+def validate_source_exit(source_plan, gate, gate_path, *, evaluation_plan=None):
     """Read producer evidence, never promote a common maintenance PASS by itself."""
     validate_ex42_map_score(gate, source_plan.document['evaluation']['map_modes'])
     measured = _measurement(gate, gate_path)
+    policy = evaluation_plan or source_plan
+    expected_policy = measured.get('maintenance_source_sha256')
+    if expected_policy is not None and expected_policy != policy.sha256:
+        raise ValueError('evaluation policy differs from measured maintenance_source_sha256')
     cells = measured.get('cell_judgments')
     if not isinstance(cells, dict) or cells != gate.get('cell_judgments'):
         raise ValueError('gate and measurement cell judgments differ')
@@ -121,7 +126,7 @@ def validate_source_exit(source_plan, gate, gate_path):
         except ImportError:
             adapter_for = None
         if adapter_for is not None:
-            adapter = adapter_for(source_plan.document, source)
+            adapter = adapter_for(policy.document, source)
             if adapter is None:
                 raise ValueError('E1 judge is unavailable')
             extras = adapter.verify(measured, 'PASS', 'PASS')
@@ -130,20 +135,28 @@ def validate_source_exit(source_plan, gate, gate_path):
             return
         from foothold_s2.ex42_e1_judge import _landing_window
         exit_row = measured.get('e1_exit', {})
-        if (exit_row != gate.get('e1_exit') or exit_row.get('judgement') != 'PASS'
-                or exit_row.get('windows_required') != source_plan.document['evaluation']['promotion']['windows']
+        case_ids=policy.document['evaluation']['paper_cells']['stairs_landing'].get('judge_cases')
+        if (not isinstance(case_ids,list) or not case_ids or len(set(case_ids))!=len(case_ids)
+                or exit_row != gate.get('e1_exit') or exit_row.get('judgement') != 'PASS'
+                or exit_row.get('windows_required') != policy.document['evaluation']['promotion']['windows']
                 or exit_row.get('maintenance') != {'current': 'PASS', 'previous': 'PASS'}
-                or set(exit_row.get('d44', {})) != {'current', 'previous'}):
+                or set(exit_row.get('d44', {}).get('cases',{})) != set(case_ids)
+                or any(exit_row.get('d44',{}).get(w,{}).get('judgement')!='PASS'
+                       for w in ('current','previous'))):
             raise ValueError('E1 exit evidence is not the two-window PASS')
-        for window in exit_row['d44'].values():
-            if _landing_window(window, source_plan.document).get('judgement') != 'PASS':
-                raise ValueError('E1 D44 raw evidence is not PASS')
+        for case_id in case_ids:
+            windows=exit_row['d44']['cases'][case_id]
+            if set(windows)!={'current','previous'}:
+                raise ValueError('E1 D44 two windows are incomplete')
+            for window in windows.values():
+                if _landing_window(window,policy.document,case_id).get('judgement')!='PASS':
+                    raise ValueError('E1 D44 raw evidence is not PASS')
         return
     try:
         from foothold_s2.ex42_stage_judges import adapter_for
     except ImportError as exc:
         raise ValueError('later-stage judge registry is unavailable') from exc
-    adapter = adapter_for(source_plan.document, source)
+    adapter = adapter_for(policy.document, source)
     if adapter is None:
         raise ValueError('later-stage judge is not registered in the source plan')
     extras = adapter.verify(measured, 'PASS', 'PASS')
@@ -209,7 +222,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     scope = cell.get('scope', {})
     expected = dict(stage_id=target, start_update=0, maximum_updates=first,
                     parent_sha256=scope.get('parent_sha256'), later_stages_authorized=False)
-    if scope != expected:
+    if _canonical(scope) != _canonical(expected) or type(scope.get('maximum_updates')) is not int or type(scope.get('start_update')) is not int or scope.get('later_stages_authorized') is not False:
         raise ValueError('scope differs from its table first segment; cannot enlarge authorization')
     ev_path = Path(evidence).resolve(strict=True); ev = _json(ev_path)
     gate_path = Path(gate_receipt).resolve(strict=True); gate = _json(gate_path)
@@ -232,7 +245,13 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     actual_sha = digest(checkpoint)
     validate_score_pair(expected_iteration=iteration,score=gate,manifest=manifest,
                         checkpoint_exists=True,checkpoint_sha256=actual_sha)
-    validate_source_exit(source, gate, gate_path)
+    evaluation_plan=None
+    if ev.get('evaluation_plan') is not None:
+        evaluation_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'],ev_path.parent))
+        measured=_measurement(gate,gate_path)
+        if measured.get('maintenance_source_sha256')!=evaluation_plan.sha256:
+            raise ValueError('evaluation plan has no matching measured policy SHA')
+    validate_source_exit(source, gate, gate_path,evaluation_plan=evaluation_plan)
     pin = dict(source_stage_id=stage,manifest_local_update=iteration,checkpoint_key=checkpoint.name,
                sha256=actual_sha,cumulative_update=source_row['parent']['cumulative_update']+iteration)
     if scope['parent_sha256'] not in (None, actual_sha):
@@ -263,10 +282,11 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('evidence bindings must be an object')
     required_shas = set(contract['required_sha256_paths'])
     required_strings = set(contract['required_string_paths'])
-    allowed = required_shas | required_strings
+    required_booleans = set(contract['required_boolean_paths']) - {'critic_mirror'}
+    allowed = required_shas | required_strings | required_booleans
     if set(bindings) - allowed:
         raise ValueError('unregistered evidence binding cannot change approval or scope')
-    artifacts = {}
+    artifacts = {'evaluation_plan':_ref(evaluation_plan.path)} if evaluation_plan else {}
     for key, ref in bindings.items():
         path = _checked_ref(ref, ev_path.parent)
         artifacts[key] = _ref(path)
@@ -278,7 +298,10 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
             if not isinstance(ref.get('pointer'), str):
                 raise ValueError('measured string binding requires a JSON pointer path')
             value = _approval_path_value(_json(path), ref['pointer'])
-            if not isinstance(value,str) or not value.strip():
+            if key in required_booleans:
+                if type(value) is not bool:
+                    raise ValueError('measured boolean binding is not explicit')
+            elif not isinstance(value,str) or not value.strip():
                 raise ValueError('measured string binding is empty')
             _put(cell,key,value)
     # Path and digest must name the same baseline file, never two supplied values.
@@ -343,7 +366,7 @@ def materialize(*, plan, source_plan, approvals, target, parent_manifest, gate_r
         inventory={}
         for path in template.path.parent.rglob('*'):
             if ('provenance' not in path.relative_to(template.path.parent).parts
-                    and path.is_file() and path.suffix in ('.yaml','.yml','.json')):
+                    and path.name != 'transition.json' and path.is_file() and path.suffix in ('.yaml','.yml','.json')):
                 if path.is_symlink() or not path.resolve().is_relative_to(template.path.parent):
                     raise ValueError('curriculum dependency escapes its source directory')
                 relative=path.relative_to(template.path.parent)
@@ -365,7 +388,7 @@ def materialize(*, plan, source_plan, approvals, target, parent_manifest, gate_r
             snapshot.mkdir(parents=True)
             for p in original.parent.rglob('*'):
                 relative=p.relative_to(original.parent)
-                if 'provenance' in relative.parts or not p.is_file() or p.suffix not in ('.yaml','.yml','.json'):
+                if 'provenance' in relative.parts or p.name == 'transition.json' or not p.is_file() or p.suffix not in ('.yaml','.yml','.json'):
                     continue
                 if p.is_symlink() or not p.resolve().is_relative_to(original.parent):
                     raise ValueError('source curriculum dependency escapes')
@@ -433,7 +456,7 @@ def validate_materialized_transition(plan: EX42Plan, *, target_stage, gate_recei
                         for p in template.path.parent.rglob('*')
                         if p.is_file() and p.suffix in ('.yaml','.yml','.json')
                         and 'provenance' not in p.relative_to(template.path.parent).parts
-                        and p.name != 'materialize-input-approvals.yaml'}
+                        and p.name not in ('materialize-input-approvals.yaml','transition.json')}
     if inventory != expected_inventory:
         raise ValueError('materialized dependency inventory differs from template snapshot')
     for relative,expected_sha in inventory.items():
