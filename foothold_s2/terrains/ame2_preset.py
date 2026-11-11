@@ -152,12 +152,14 @@ def build_tile(kind: str, level: int, seed: int) -> Tile:
         period = 3.
         slope = math.tan(math.radians(d["undulation_slope_deg"]))
         wave = slope * period / (2 * math.pi) * np.sin(2 * math.pi * axis / period)
-        rough = noise + wave[:, None]
-        # An entry landing clears the sampled rough surface under the reset
-        # footprint. The original rough field and its declared range remain.
-        entry_top = max(0., float(rough[:11, 49:72].max())) + .02
-        boxes.append(_box(0., .95, 5., 7., entry_top,
-                          z0=min(-.2, entry_top - .2)))
+        raw_rough = noise + wave[:, None]
+        # Join the supported flat start to the sampled rough field within the
+        # field itself. The first metre is level with x=1, y=6; from x=1 to 2
+        # the original field fades in continuously. Beyond x=2 it is exact.
+        # A separate raised box made an undeclared drop at its trailing edge.
+        entry_height = float(raw_rough[10, 60])
+        fade = np.clip((axis - 1.) / 1., 0., 1.)[:, None]
+        rough = entry_height + fade * (raw_rough - entry_height)
     elif kind == "boxes":
         boxes.append(_box(0, SIZE, 0, SIZE, 0))
         for _ in range(20):
@@ -271,8 +273,16 @@ def spawn_origin(tile: Tile) -> np.ndarray:
     """
     if tile.kind not in SAFE_ENTRY_KINDS:
         return tile.origin.copy()
+    if tile.kind == "rough":
+        if tile.rough_height_m is None or tile.rough_height_m.shape != (121, 121):
+            raise ValueError("AME-2 rough entry heightfield missing")
+        patch = tile.rough_height_m[1:10, 57:64]
+        z = float(tile.rough_height_m[5, 60])
+        if not np.isfinite(patch).all() or np.ptp(patch) > .15 + 1e-9 or np.max(np.abs(patch - z)) > .15 + 1e-9:
+            raise ValueError("AME-2 rough entry support relief too large")
+        return np.array([.5, 6., z], dtype=float)
     anchors = {"stair_up": (.5, 6.), "stair_down": (.5, 6.),
-               "rough": (.5, 6.), "consecutive": (.5, 6.),
+               "consecutive": (.5, 6.),
                "pallets": (.5, 6.), "stones": (.5, 6.), "beam": (1., 6.)}
     # The sparse physical floor is a fall surface, not a valid reset support.
     supports = [box for box in tile.boxes
