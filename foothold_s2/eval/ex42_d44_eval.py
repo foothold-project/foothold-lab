@@ -157,8 +157,15 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
             term.vel_command_b[:, 0] = settings["restart_vx_mps"]
         term.stand.copy_(torch.linalg.norm(term.vel_command_b[:, :3], dim=1) == 0)
         map_mode_cells.assert_heading_off_for_fixed_eval(term)
+        if bool(term.is_flag_env.any()):
+            raise RuntimeError("D44 fixed command evaluation contains a flag environment")
+        requested = term.vel_command_b[:, :3].clone()
         action = policy(obs)
         obs, _reward, done, _extras = env.step(action)
+        active = alive & ~done.bool()
+        if bool(active.any()) and not torch.allclose(
+                term.vel_command_b[active, :3], requested[active], atol=1e-5, rtol=0):
+            raise RuntimeError("D44 command changed during the policy step")
         policy.reset(done)
         alive &= ~done.bool()
         if checkpoint_preparation["checkpoint_pose_commands"]:
