@@ -63,7 +63,7 @@ CPU 격자의 중심 이동 방식은 설치된 Isaac Lab `terrain_generator.py:
 
 ## 4. 실측과 답을 아는 시험
 
-원자료는 저장소 밖 `/home/jay/mai/tmp/analyst-lx/jump_f_seed42_1111/build1`과 `build2`에 있다. 저장소에는 [해시와 실측 요약](evidence/jump-f-cpu-1111.json)만 넣었다.
+원자료는 저장소 밖 `/home/jay/mai/tmp/analyst-lx/jump_f_seed42_1111/build1`과 `build2`에 있다. 전달용 메시·manifest는 `/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_F_jump_fa8372d9`이며, 이 폴더의 네 파일 해시도 두 빌드와 모두 같다. 저장소에는 [해시와 실측 요약](evidence/jump-f-cpu-1111.json)만 넣었다.
 
 | 확인 | 결과 | 등급 |
 |---|---|---|

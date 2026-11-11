@@ -93,5 +93,7 @@
       3
     ]
   },
-  "design_blob_sha256": "f296354307d0ec9eea76d518a2fd9a65961665bcf1b0d32212b12523f8e55beb"
+  "design_blob_sha256": "f296354307d0ec9eea76d518a2fd9a65961665bcf1b0d32212b12523f8e55beb",
+  "delivered_bundle": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_F_jump_fa8372d9",
+  "delivered_file_hashes_match": true
 }
