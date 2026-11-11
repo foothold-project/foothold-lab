@@ -474,3 +474,165 @@ stage_e6b_authorization:
     stage_judgment_policy: pending
   critic_mirror: null
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+
+# J0~J4 (DESIGN-JUMP v0.2): jump stages are NOT approved. approved: false until the team lead writes a decision here;
+# the table rows are enabled: false too, so no automatic launch exists for them.
+stage_j0_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J0
+    start_update: 0
+    maximum_updates: 250
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6b
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j1_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J1
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J0
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j2_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J2
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J1
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j3_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J3
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J2
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
+
+stage_j4_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source: null
+  scope:
+    stage_id: J4
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: J3
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: sonnet-code-lx / DESIGN-JUMP-draft v0.2 s2.2
