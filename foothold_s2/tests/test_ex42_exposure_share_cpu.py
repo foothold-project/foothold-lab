@@ -185,3 +185,41 @@ def test_apply_exposure_with_shares_accepts_the_parent_and_without_shares_still_
         ex.apply_exposure(terrain(), exposure, caps, parent_env_state={"terrain_types": torch.full((3072,), [i for i, w in enumerate(exposure) if w == 0][0]),
                                                                        "terrain_levels": levels},
                           table=table, parent_same_mesh=True)
+
+
+@needs_mesh
+@pytest.mark.parametrize("shares", [(0.6, 0.4), (0.7, 0.5), (0.999, 0.002)])
+def test_shares_summing_to_one_or_more_are_refused_even_with_a_weight_rule_present(shares):
+    # A weight rule is present, so only the `total_share >= 1` guard can refuse (the earlier test also lacked one).
+    table = _table()
+    plan, terrain = _stage_terrain()
+    spec = deepcopy(terrain)
+    spec["exposure_at_E2"] = {"default": {"exposure": 0.0, "level_cap": 0}, "positive": [
+        {"family": "A", "kinds_of": "continuous", "exposure": 1.0, "level_cap": 5},
+        {"family": "A", "kind": "stepping_stones_low", "share": shares[0], "level_cap": 3},
+        {"family": "A", "kind": "stepping_stones_high", "share": shares[1], "level_cap": 3}]}
+    with pytest.raises(ValueError, match="positive remainder"):
+        ex.exposure_by_column(spec, table, "E2")
+
+
+@needs_mesh
+@pytest.mark.parametrize("shares_arg", ["none_list", "no_argument"])
+def test_a_list_without_any_share_keeps_the_exposure_zero_refusal(shares_arg):
+    # column_shares returns [None, ...] for a weight-only stage; that must behave exactly like shares=None.
+    table = _table()
+    plan, terrain = _stage_terrain()
+    spec = deepcopy(terrain)
+    spec["exposure_at_E2"] = {"default": {"exposure": 0.0, "level_cap": 0}, "positive": [
+        {"family": "A", "kinds_of": "continuous", "exposure": 1.0, "level_cap": 5}]}
+    exposure, caps = ex.exposure_by_column(spec, table, "E2")
+    shares = ex.column_shares(spec, table, "E2")
+    assert shares and not any(shares)
+    zero_col = [i for i, w in enumerate(exposure) if w == 0][0]
+    levels = torch.zeros(3072, dtype=torch.long)
+    state = {"terrain_types": torch.full((3072,), zero_col), "terrain_levels": levels}
+    t = __import__("types").SimpleNamespace(
+        terrain_levels=torch.zeros(3072, dtype=torch.long), terrain_types=torch.zeros(3072, dtype=torch.long),
+        terrain_origins=torch.zeros(10, len(table), 3), env_origins=torch.zeros(3072, 3), update_env_origins=lambda *a: None)
+    extra = {"shares": shares} if shares_arg == "none_list" else {}
+    with pytest.raises(ValueError, match="exposure 0"):
+        ex.apply_exposure(t, exposure, caps, parent_env_state=state, table=table, parent_same_mesh=True, **extra)
