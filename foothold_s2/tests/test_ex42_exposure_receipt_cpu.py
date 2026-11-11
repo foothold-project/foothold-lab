@@ -64,7 +64,7 @@ def test_the_receipt_carries_the_real_contract_and_opened_kinds_follow_the_expos
     assert set(body["opened_kinds"]) == {f"{r['family']}/{r['kind']}" for r in body["column_rows"] if r["open"]}
     assert er.verify_receipt(body) == body["opened_kinds"]
     path = er.write_receipt(tmp_path, body)
-    assert path.name == "exposure_receipt_0.json" and not list(tmp_path.glob("*.tmp"))
+    assert path.name == "exposure_receipt_start_0.json" and not list(tmp_path.glob("*.tmp"))
     assert er.verify_receipt(json.loads(path.read_text())) == body["opened_kinds"]
 
 
@@ -107,7 +107,8 @@ def test_ranks_fold_only_when_they_agree(tmp_path):
     contract = _contract()
     docs = [er.build_receipt(contract, stage_id="E3", plan_sha256=PSHA, iteration=250, kind="boundary",
                              rank=r, world_size=2) for r in (0, 1)]
-    assert er.receipt_name(250, 1, 2) == "exposure_receipt_250_rank1.json"
+    assert er.receipt_name("boundary", 250, 1, 2) == "exposure_receipt_250_rank1.json"
+    assert er.receipt_name("start", 250, 1, 2) == "exposure_receipt_start_250_rank1.json"
     assert er.fold_ranks(docs)["rank"] == 0
     with pytest.raises(ValueError, match="cover every rank"):
         er.fold_ranks(docs[:1])
@@ -148,13 +149,13 @@ def test_the_runtime_writes_the_start_receipt_once_and_one_per_save_boundary(tmp
     rt.stage_id = "E3"
     rt.on_update_start(7)                              # a segment continued from update 6
     rt.on_update_start(8)
-    assert sorted(p.name for p in tmp_path.glob("exposure_receipt_*")) == ["exposure_receipt_6.json"]
-    start = json.loads((tmp_path / "exposure_receipt_6.json").read_text())
+    assert sorted(p.name for p in tmp_path.glob("exposure_receipt_*")) == ["exposure_receipt_start_6.json"]
+    start = json.loads((tmp_path / "exposure_receipt_start_6.json").read_text())
     assert start["kind"] == "start" and start["boundary_index"] == 2 and start["live"]["envs"] == 3
     rt._exposure_receipt(250, "boundary")
     rt._exposure_receipt(500, "boundary")
     got = sorted(p.name for p in tmp_path.glob("exposure_receipt_*"))
-    assert got == ["exposure_receipt_250.json", "exposure_receipt_500.json", "exposure_receipt_6.json"]
+    assert got == ["exposure_receipt_250.json", "exposure_receipt_500.json", "exposure_receipt_start_6.json"]
     for name in got:
         er.verify_receipt(json.loads((tmp_path / name).read_text()))
 
@@ -170,3 +171,44 @@ def test_the_apply_seam_keeps_the_contract_on_the_env_for_the_receipt():
     src = pathlib.Path(te.__file__).read_text(encoding="utf-8")
     assert "env.unwrapped._ex42_env_contract = contract" in src
     assert 'self._exposure_receipt(iteration, "boundary")' in src and 'self._exposure_receipt(update - 1, "start")' in src
+
+
+@need_mesh
+def test_a_continued_segment_start_receipt_does_not_erase_the_boundary_receipt_of_the_same_update(tmp_path):
+    """stop-evaluate-continue: boundary 250 ends one process, the next one starts at update 250 (its first update is 251)."""
+    contract = _contract()
+    first = _runtime(tmp_path, contract); first.stage_id = "E3"
+    first._exposure_receipt(250, "boundary")
+    boundary = (tmp_path / "exposure_receipt_250.json").read_bytes()
+    second = _runtime(tmp_path, contract); second.stage_id = "E3"
+    second.on_update_start(251)                         # iteration 250, kind start
+    assert (tmp_path / "exposure_receipt_250.json").read_bytes() == boundary
+    assert json.loads((tmp_path / "exposure_receipt_start_250.json").read_text())["kind"] == "start"
+
+
+@need_mesh
+def test_an_existing_receipt_is_never_overwritten(tmp_path, capsys):
+    body = er.build_receipt(_contract(), stage_id="E3", plan_sha256=PSHA, iteration=250, kind="boundary")
+    er.write_receipt(tmp_path, body)
+    before = (tmp_path / "exposure_receipt_250.json").read_bytes()
+    with pytest.raises(FileExistsError, match="not overwritten"):
+        er.write_receipt(tmp_path, {**body, "plan_sha256": "b" * 64})
+    assert (tmp_path / "exposure_receipt_250.json").read_bytes() == before and not list(tmp_path.glob("*.tmp"))
+    rt = _runtime(tmp_path, _contract()); rt.stage_id = "E3"
+    rt._exposure_receipt(250, "boundary")               # the runtime reports it and keeps training
+    assert "EX42_EXPOSURE_RECEIPT_FAILED" in capsys.readouterr().out
+    assert (tmp_path / "exposure_receipt_250.json").read_bytes() == before
+
+
+@need_mesh
+def test_two_ranks_write_into_one_folder_and_the_boundary_files_fold(tmp_path, monkeypatch):
+    contract = _contract()
+    for rank in (0, 1):
+        monkeypatch.setenv("RANK", str(rank)); monkeypatch.setenv("WORLD_SIZE", "2")
+        rt = _runtime(tmp_path, contract); rt.stage_id = "E3"      # both ranks get the same --ex42_log_dir (train_start: output_dir)
+        rt.on_update_start(1); rt._exposure_receipt(250, "boundary")
+    names = sorted(p.name for p in tmp_path.glob("exposure_receipt_*"))
+    assert names == ["exposure_receipt_250_rank0.json", "exposure_receipt_250_rank1.json",
+                     "exposure_receipt_start_0_rank0.json", "exposure_receipt_start_0_rank1.json"]
+    docs = [json.loads((tmp_path / n).read_text()) for n in names if n.startswith("exposure_receipt_250")]
+    assert er.fold_ranks(docs)["world_size"] == 2
