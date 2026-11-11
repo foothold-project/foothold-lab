@@ -64,7 +64,7 @@ def test_the_pin_constant_matches_the_plan_and_the_shipped_cell_is_bounded_to_th
     assert (E1_PARENT, 250) in entry.REWARD_CONTRACT_PARENTS
     shipped = validate_stage_e1_authorization(plan, APPROVALS, E1_PARENT)       # the lead filled the cell (#632)
     assert shipped["scope"]["maximum_updates"] == 1000 and shipped["later_stages_authorized"] is False
-    assert shipped["extension_authorized"] is False and shipped["boundary_evaluation_interval_updates"] == 250
+    assert shipped["extension_authorized"] is True and shipped["boundary_evaluation_interval_updates"] == 250
     assert shipped["e0_rejudgment_prerequisite"]["required_result"] == "PASS"
 
 

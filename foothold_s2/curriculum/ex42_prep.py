@@ -34,6 +34,8 @@ BOUNDARY_FORMAT = "foothold-ex42-boundary/1"
 APPROVAL_FORMAT = "foothold-ex42-approvals/1"
 ALL_STAGES_DECISION_ID = "teamlead-2026-11-11-1307-ex42-all-stages"
 ALL_STAGES_DECISION_SHA = "2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d"
+E1_EXTENSION_DECISION_ID = "teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension"
+E1_EXTENSION_DECISION_SHA = "7121e0188cf1cbe558704764227e306e6097149f"
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -166,8 +168,8 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     """Read the separately approved, bounded E1 first segment (E0 m250 -> 1000 updates).
 
     Same fail-closed shape as the E0 cell: a missing or incomplete `stage_e1_authorization` raises.
-    E1F and later stages are never opened by it. The extension (+500 x 2) and the L+ cap raise are
-    separate boundaries and are not covered by this cell.
+    E1F and later stages are never opened by it. A separately pinned 19:38 decision
+    may authorize HOLD-only +500 x 2. Old frozen cells with extension=false stay valid.
     """
     path = Path(approvals_path).resolve(strict=True)
     approvals = _read_yaml(path)
@@ -214,15 +216,21 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
             or rejudgment.get("checkpoint_key") != stage["parent"]["checkpoint_key"]
             or rejudgment.get("checkpoint_sha256") != e1_parent_sha256):
         raise ValueError("EX-42 E1 approval lacks the E0 re-judgement PASS prerequisite on the pinned parent")
-    if cell.get("extension_authorized") is not False:
-        raise ValueError("EX-42 E1 approval must keep the +500 extension unauthorized")
+    extension = cell.get("extension_authorized")
+    if extension is True:
+        if (stage.get("extension_max_count") != 2
+                or cell.get("extension_contract") != stage_extension_contract(stage)):
+            raise ValueError("EX-42 E1 extension unauthorized: requires the exact 19:38 HOLD +500 x 2 decision")
+    elif extension is not False:
+        raise ValueError("EX-42 E1 extension unauthorized: explicit boolean required")
     interval = cell.get("boundary_evaluation_interval_updates")
     plan_interval = plan.document.get("evaluation", {}).get("interval_updates")
     if (type(interval) is not int or interval <= 0 or interval != plan_interval
             or expected_scope["maximum_updates"] % interval):
         raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide 1000")
     return {"state": "stage_e1_only_authorized", "scope": expected_scope,
-            "boundary_evaluation_interval_updates": interval, "extension_authorized": False,
+            "boundary_evaluation_interval_updates": interval, "extension_authorized": extension,
+            **({"extension_contract": cell["extension_contract"]} if extension else {}),
             "e0_rejudgment_prerequisite": rejudgment,
             "decision_id": decision_id, "approved_at": approved_at,
             "approvals_path": str(path),
@@ -434,9 +442,10 @@ def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
     if (any(type(v) is not int for v in (cap, step, count))
             or cap <= 0 or step <= 0 or count <= 0):
         raise ValueError('EX-42 extension step/count/base cap is invalid')
+    decision_id, decision_sha = (E1_EXTENSION_DECISION_ID, E1_EXTENSION_DECISION_SHA) if row.get('id') == 'E1' else (ALL_STAGES_DECISION_ID, ALL_STAGES_DECISION_SHA)
     return {'judgment': 'HOLD', 'after_updates': cap, 'max_count': count,
             'maximum_updates': cap + step * count, 'increment_updates': step,
-            'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
+            'decision_id': decision_id, 'decision_source': decision_sha}
 
 
 def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
