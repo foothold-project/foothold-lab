@@ -97,6 +97,7 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
     from isaaclab.utils.warp import convert_to_warp_mesh, raycast_mesh
     from foothold_s2.terrains.ex42_combined import combine_family_parts, family_column_summary
     from foothold_s2.terrains.mesh_rng import seeded_mesh_rng
+    from foothold_s2.terrains.columns import column_types
 
     parts, seconds = [], {}
     # cfg.seed alone does not seed boxes (Torch) or random_rough (legacy NumPy).
@@ -108,8 +109,13 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
             generated = TerrainGenerator(cfg)
             seconds[family] = time.perf_counter() - started
             parts.append({"name": family, "mesh": generated.terrain_mesh,
-                          "origins": generated.terrain_origins})
+                          "origins": generated.terrain_origins, "size": cfg.size,
+                          "kinds": column_types({k: v.proportion for k, v in cfg.sub_terrains.items()},
+                                                cfg.num_cols)})
     combined = combine_family_parts(parts, axis=1)
+    flag_started = time.perf_counter()
+    flags, flag_provenance = build_flags(parts, combined)
+    flag_seconds = time.perf_counter() - flag_started
     vertices = combined["vertices"].astype(np.float32)
     faces = combined["faces"].astype(np.int32)
     mesh_sha = hashlib.sha256(vertices.tobytes() + faces.tobytes()).hexdigest()
@@ -154,8 +160,7 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
         "ray_count_per_second": rays_per_cast / mean,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(out_dir / "terrain_mesh.npz", vertices=vertices, faces=faces,
-                        origins=combined["origins"], column_family=np.array(combined["column_family"]))
+    write_mesh_arrays(out_dir / "terrain_mesh.npz", combined, flags)
     # File identity includes origins and column metadata, unlike mesh_sha above.
     with (out_dir / "terrain_mesh.npz").open("rb") as stream:
         mesh_file_sha = hashlib.file_digest(stream, "sha256").hexdigest()
@@ -164,6 +169,7 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
     manifest = {
         "format": "foothold-ex42-combined-mesh/1", "seed": seed, "device": device,
         "rng_provenance": rng_provenance, "mesh_file_sha256": mesh_file_sha,
+        "flag_provenance": flag_provenance, "flag_generation_seconds": flag_seconds,
         "families_present": families, "families_missing": sorted(set(ALL_FAMILIES) - set(families)),
         "mesh_sha256": mesh_sha, "vertex_count": int(len(vertices)), "face_count": int(len(faces)),
         "origins_shape": list(combined["origins"].shape), "join_axis": combined["axis"],
@@ -181,6 +187,30 @@ def build_and_measure(families: list[str], *, seed: int, device: str, out_dir: P
     }
     (out_dir / "mesh_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def build_flags(parts, combined):
+    """CPU route producer, after all random geometry is fixed; no RNG replay."""
+    from foothold_s2.terrains.ex42_flag_producer import family_flags, combine_flags
+    for part in parts:
+        part['flags'], part['flag_metadata'] = family_flags(
+            part['mesh'].vertices, part['mesh'].faces, part['origins'],
+            part['name'], part['kinds'], part['size'])
+    return combine_flags(parts, combined)
+
+
+def write_mesh_arrays(path, combined, flags):
+    """Same geometry/origins bytes as before; additive #657 world-XY field."""
+    import numpy as np
+    # Consumer validation is exercised after writing in the CPU roundtrip test.
+    expected = (*combined['origins'].shape[:2], 4, 2)
+    if flags.shape != expected:
+        raise ValueError(f'flags shape must be {expected}')
+    if not (np.isfinite(flags).all(axis=(2, 3)) | np.isnan(flags).all(axis=(2, 3))).all():
+        raise ValueError('flags require wholly finite or wholly missing cells')
+    np.savez_compressed(path, vertices=combined['vertices'].astype(np.float32),
+                        faces=combined['faces'].astype(np.int32), origins=combined['origins'],
+                        column_family=np.array(combined['column_family']), flags=flags)
 
 
 def build_parser(app_launcher: Any | None = None) -> argparse.ArgumentParser:

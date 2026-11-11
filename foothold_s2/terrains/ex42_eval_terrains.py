@@ -79,8 +79,10 @@ def _stairs(kind, seed):
         boxes.append((4-width/2,4+width/2,4-width/2,4+width/2,-.20,top-k*rise))
     origin = np.array([4.,4.,top] if landing else [.5,4.,0.])
     anchors = {'approach':[.5,4.,0.], 'landing_center':[4.,4.,top],
+               'course_exit':[7.5,4.,0.],
                'landing_bounds_xy':[4-platform/2,4+platform/2,4-platform/2,4+platform/2],
-               'stop_band_x':[1+2*tread,1+3*tread]}
+               'stop_band_x':[1+2*tread,1+3*tread],
+               'stop_band_interior_surface_z_m':3*rise}
     dims = {'step_height_m':rise,'tread_m':tread,'landing_depth_m':platform,
             'landing_width_m':platform,'riser_count':rings+1,'top_height_m':top}
     if kind in records.STAIR_RECORDS:
@@ -249,8 +251,8 @@ does not initialize a live training GPU. No Kit or model is loaded here.
          'row_semantics':'one fixed geometry row; nominal START L9 is column metadata, not curriculum row',
          'mesh_sha256':hashlib.sha256(vertices.tobytes()+faces.tobytes()).hexdigest(),
          'mesh_file_sha256':hashlib.sha256(npz.read_bytes()).hexdigest(),'columns':columns,
-         'evaluation_cases':[records.case_contract(case) for case in (*kinds,*records.REVERSE_CASES)
-                             if records.REVERSE_CASES.get(case,case) in kinds],
+         'evaluation_cases':[records.case_contract(case) for case in (*kinds,*records.CASE_ALIASES)
+                             if records.CASE_ALIASES.get(case,case) in kinds],
          'exterior_border_m':20.,'border_source':'rough_go2_cfg.py:42-43; outside grid only, pits preserved',
          'rng_provenance':receipt,'source_sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}}
     (folder/'mesh_manifest.json').write_text(json.dumps(doc,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
