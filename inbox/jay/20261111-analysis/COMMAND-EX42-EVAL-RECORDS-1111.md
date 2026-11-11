@@ -6,7 +6,7 @@
 > 요지: GPU 학습 종료 뒤 lead가 실행할 한 줄 명령. 파일에는 명령만 있고 실행하지 않았다.
 > 상태: bash -n 통과 · Kit 미실행
 
-제목의 작업은 평가 메시 장착 확인이다. 학습 중 실행하지 않는다. 먼저 landing, 그 다음 paper·start·surface·records. 각 파일은 한 줄 명령이며 코드 tree와 출력 덮어쓰기를 검사한다.
+학습 중 실행하지 않는다. 먼저 landing, 그 다음 paper·start·surface·records. 각 파일은 한 줄 명령이며 코드 tree와 출력 덮어쓰기를 검사한다.
 
 | 묶음 | 한 줄 명령 파일 | 결과 JSON |
 |---|---|---|
@@ -16,4 +16,4 @@
 | surface | `/home/jay/mai/tmp/analyst-lx/mount-eval-surface-v3-1111.sh` | `/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/mount_surface_cuda0_v3.json` |
 | records | `/home/jay/mai/tmp/analyst-lx/mount-eval-records-v3-1111.sh` | `/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/mount_records_cuda0_v3.json` |
 
-기대: rc 0 · status passed · evaluation_only=true · per_column 실패 0 · scanner_checked=true. 이는 생성·시작점 장착 확인이지 정책의 과제 성공 판정이 아니다. 실패하면 JSON과 log를 보존하고 같은 출력 경로에 재실행하지 않는다.
+기대: rc 0 · state=passed · evaluation_only=true · per_column 실패 0 · scanner_checked=true. 이는 생성·시작점 장착 확인이지 정책의 과제 성공 판정이 아니다. 실패하면 JSON과 log를 보존하고 같은 출력 경로에 재실행하지 않는다.
