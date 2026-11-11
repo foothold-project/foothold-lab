@@ -43,6 +43,22 @@ def test_capture_env_requests_rgb_array_and_fixed_viewport_resolution():
     assert cfg.viewer.resolution == (video.WIDTH, video.HEIGHT)
 
 
+def test_render_product_is_created_by_warmup_before_mask_attachment():
+    class RawEnv:
+        def __init__(self):
+            self.calls = 0
+            self._render_product = None
+
+        def render(self):
+            self.calls += 1
+            if self.calls == video.RENDER_WARMUP_FRAMES:
+                self._render_product = "ready-product"
+
+    raw = RawEnv()
+    assert video.prepare_render_product(raw) == "ready-product"
+    assert raw.calls == video.RENDER_WARMUP_FRAMES
+
+
 def test_d44_video_commands_follow_eval_timing_and_latched_band_entry():
     common = {"settle": 0, "approach": 200, "stop": 100, "turn_rate": 1.2,
               "approach_speed": 1., "restart_speed": 1., "stop_band": (1., 2.)}

@@ -22,6 +22,7 @@ VIDEO_CASES = ("turn_left_eval_gt", "turn_left_eval_pred",
                "turn_right_eval_gt", "turn_right_eval_pred",
                "stop_restart_eval_gt", "stop_restart_eval_pred")
 WIDTH, HEIGHT, FPS = 1280, 720, 25
+RENDER_WARMUP_FRAMES = 12
 
 
 def command_order(task: str) -> tuple[str, ...]:
@@ -144,6 +145,16 @@ def make_capture_env(gym, task_id: str, env_cfg):
     return gym.make(task_id, cfg=env_cfg, render_mode="rgb_array")
 
 
+def prepare_render_product(raw):
+    """Warm the lazy Isaac Lab RGB annotator before consumers attach masks."""
+    for _ in range(RENDER_WARMUP_FRAMES):
+        raw.render()
+    product = getattr(raw, "_render_product", None)
+    if product is None:
+        raise RuntimeError("D44 RGB render product was not created during viewport warmup")
+    return product
+
+
 def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
               case_id: str, settings: dict, anchors: dict, dt: float,
               tile_origin, foot_ids, output: Path, camera,
@@ -195,11 +206,10 @@ def _one_case(env, raw, robot, sensor, sensor_ids, term, policy, obs, *,
     annotator = None
     try:
         import omni.replicator.core as rep
-        if not hasattr(raw, "_render_product"):
-            raise RuntimeError("D44 video viewport render product missing")
+        render_product = prepare_render_product(raw)
         annotator = rep.AnnotatorRegistry.get_annotator(
             "instance_id_segmentation_fast", init_params={"colorize": False}, device="cpu")
-        annotator.attach([raw._render_product])
+        annotator.attach([render_product])
     except Exception as exc:
         raise RuntimeError("D44 video requires per-frame robot instance evidence") from exc
     raw_path = output.with_name(output.stem + ".raw.mp4")
