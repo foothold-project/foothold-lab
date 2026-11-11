@@ -68,6 +68,19 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
         row["sha256"] = hashlib.sha256(json.dumps(row, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         path.write_text(json.dumps(row, ensure_ascii=False))
     checkpoint = tmp_path / "model_500.pt"
+    missing = judge_two_boundaries(
+        checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
+        interval=250, min_episodes=32, registered_kind_passes={('B', 'rough'): True})
+    assert missing["judgement"] == "HOLD" and "노출" in missing["reason"]
+    exposure = {"format": "foothold-ex42-stage-exposure/1", "stage_id": "E3",
+                "plan_sha256": "a" * 64, "mesh_sha256": "b" * 64,
+                "boundary_index": 0, "ladder_outcomes": [],
+                "column_table": [{"family": "B", "kind": "rough"}],
+                "exposure": [1.0], "level_caps": [0],
+                "k_ladder": {"boundary_index": 0, "moves": []}}
+    exposure["sha256"] = hashlib.sha256(json.dumps(exposure, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt = tmp_path / "ex42_stage_exposure.json"
+    receipt.write_text(json.dumps(exposure, ensure_ascii=False))
     result = judge_two_boundaries(
         checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
         interval=250, min_episodes=32, registered_kind_passes={('B', 'rough'): True})
@@ -77,3 +90,11 @@ def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
         checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
         interval=250, min_episodes=65, registered_kind_passes={('B', 'rough'): True})
     assert pending["judgement"] == "HOLD" and len(pending["pending"]) == 2
+    exposure["exposure"] = [0.0]
+    exposure["sha256"] = hashlib.sha256(json.dumps({k: v for k, v in exposure.items() if k != "sha256"},
+                                                     sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    receipt.write_text(json.dumps(exposure, ensure_ascii=False))
+    with pytest.raises(ValueError, match="recomputed exposure"):
+        judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256="a" * 64,
+                             interval=250, min_episodes=32,
+                             registered_kind_passes={('B', 'rough'): True})

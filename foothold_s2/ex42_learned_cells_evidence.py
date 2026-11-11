@@ -12,6 +12,43 @@ FORMAT = "foothold-ex42-learned-cells/1"
 BANDS = [[0, 2], [3, 5], [6, 9]]
 GROUPS = ["forward", "reverse", "side_left", "side_right", "turn_left", "turn_right", "stand", "flag"]
 MODES = ["map_on_adaptive", "map_off"]
+EXPOSURE_FORMAT = "foothold-ex42-stage-exposure/1"
+
+
+def read_stage_exposure(checkpoint: Path, *, stage_id: str, plan: dict,
+                        plan_sha256: str, column_table: list[dict]) -> dict | None:
+    """Recompute the training segment's K ladder before trusting its saved exposure."""
+    path = Path(checkpoint).parent / "ex42_stage_exposure.json"
+    if not path.is_file():
+        return None
+    row = json.loads(path.read_text(encoding="utf-8-sig"))
+    digest = row.pop("sha256", None)
+    expected = hashlib.sha256(json.dumps(row, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    stages = [stage for stage in plan.get("stages", []) if stage.get("id") == stage_id]
+    e0 = [stage for stage in plan.get("stages", []) if stage.get("id") == "E0"]
+    if (digest != expected or row.get("format") != EXPOSURE_FORMAT or
+            row.get("stage_id") != stage_id or row.get("plan_sha256") != plan_sha256 or
+            row.get("column_table") != column_table or
+            not isinstance(row.get("mesh_sha256"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", row["mesh_sha256"]) or
+            type(row.get("boundary_index")) is not int or row["boundary_index"] < 0 or
+            not isinstance(row.get("ladder_outcomes"), list) or
+            len(stages) != 1 or len(e0) != 1):
+        raise ValueError("EX-42 stage exposure identity or SHA differs")
+    profile_name = stages[0].get("training_mesh_profile")
+    if profile_name is not None:
+        profile = (plan.get("training_mesh_profiles") or {}).get(profile_name) or {}
+        if row["mesh_sha256"] != profile.get("geometry_sha256"):
+            raise ValueError("EX-42 stage exposure mesh SHA differs from plan")
+    from foothold_s2.terrains.ex42_exposure import exposure_by_column
+    from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
+    terrain = {**stages[0]["terrain"], "kind_task": e0[0]["terrain"]["kind_task"]}
+    terrain, moves = ladder_terrain(terrain, stage_id, row["boundary_index"], row["ladder_outcomes"])
+    exposure, caps = exposure_by_column(terrain, column_table, stage_id)
+    if (row.get("exposure") != exposure or row.get("level_caps") != caps or
+            row.get("k_ladder") != {"boundary_index": row["boundary_index"], "moves": moves}):
+        raise ValueError("EX-42 stage exposure differs from recomputed exposure")
+    return {**row, "sha256": digest, "path": str(path)}
 
 
 def read_boundary(checkpoint: Path, *, stage_id: str, plan_sha256: str, interval: int) -> dict:
@@ -147,7 +184,15 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
     e0 = next(row for row in plan["stages"] if row["id"] == "E0")
     terrain = {**stage["terrain"], "kind_task": e0["terrain"]["kind_task"]}
     table = current["column_table"]
-    exposure, caps = exposure_by_column(terrain, table, stage_id)
+    if stage_id == "E2":
+        exposure, caps = exposure_by_column(terrain, table, stage_id)
+    else:
+        actual = read_stage_exposure(checkpoint, stage_id=stage_id, plan=plan,
+                                     plan_sha256=plan_sha256, column_table=table)
+        if actual is None:
+            return {"role": "judge", "judgement": "HOLD", "source": "assigned_mode_cumulative",
+                    "reason": "학습 단계 노출 영수증 없음", "receipts": receipts}
+        exposure, caps = actual["exposure"], actual["level_caps"]
     continuous = set(e0["terrain"]["kind_task"]["continuous"])
     registered = set()
     for column, row in enumerate(table):
@@ -186,4 +231,6 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
             "p_map_off": p_off, "agent_config": {"path": str(agent_path),
                                                  "sha256": hashlib.sha256(agent_path.read_bytes()).hexdigest()},
             "registered_count": len(registered), "pending": pending,
+            **({"stage_exposure": {"path": actual["path"], "sha256": actual["sha256"]}}
+               if stage_id != "E2" else {}),
             "receipts": receipts, "total": previous["total"] + current["total"]}
