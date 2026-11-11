@@ -289,7 +289,7 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
                               num_envs: int | None, map_input: str | None, force_gt: bool,
                               machine_profile: dict[str, Any] | None = None,
                               approved_switch: bool, speed_probe: bool = False,
-                              world_size: int = 1, rank: int = 0
+                              world_size: int = 1, rank: int = 0, resume_same_run: bool = False
                               ) -> tuple[EX42Plan, dict[str, Any], dict[str, Any]]:
     """Validate the explicitly approved E-stage CLI without importing Kit.
 
@@ -322,7 +322,10 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     if map_input not in (None, "reconstruction") or force_gt is not False:
         raise ValueError(f"EX-42 {stage_id} must consume reconstructed maps without forced GT")
     output = Path(log_dir).resolve()
-    if output.exists() and rank == 0:             # every rank gets the same argv; rank 0 creates the run directory
+    if resume_same_run:                           # a boundary segment continues in the run directory that holds its checkpoint
+        if not (output / "manifest.json").is_file():
+            raise ValueError(f"EX-42 {stage_id} resume needs the existing run directory with its manifest")
+    elif output.exists() and rank == 0:           # every rank gets the same argv; rank 0 creates the run directory
         raise ValueError(f"EX-42 {stage_id} output must be new")
     plan = EX42Plan.load(plan_path)
     if stage_id == STAGE_E0_ID:
@@ -355,6 +358,22 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     return plan, parent, request
 
 
+def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
+                              origin: int = 0) -> int:
+    """Where a boundary segment stops. None means the whole stage (the old single-process run).
+
+    The stop must be a boundary the approval cell names (a multiple of its evaluation interval), after the
+    segment's origin and inside the stage bound. E0 has one boundary, its end.
+    """
+    if segment_end is None:
+        return stage_updates
+    allowed = stage_updates if stage_id == STAGE_E0_ID else interval
+    if (type(segment_end) is not int or type(allowed) is not int or allowed <= 0
+            or segment_end % allowed != 0 or not origin < segment_end <= stage_updates):
+        raise ValueError(f"EX-42 {stage_id} segment end must be a boundary after update {origin} and inside {stage_updates}")
+    return segment_end
+
+
 def speed_probe_builds_chain(speed_probe: bool, rank: int) -> bool:
     """Only rank 0 builds the training chain (P1 score command, queue, dispatch) during a speed probe.
 
@@ -379,8 +398,9 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
     Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
     A real run needs a measured manifest (else ValueError). A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
     """
-    if stage_zero_requested or resume_requested:
-        raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches")
+    if stage_zero_requested or (resume_requested and cli.get("stage_id") != STAGE_E1_ID):
+        raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches (only E1 resumes at a boundary)")
+    cli["resume_same_run"] = bool(resume_requested)
     if not e0_approved:
         raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
     plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
@@ -408,8 +428,15 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
                                    maximum_updates: int = STAGE_ZERO_UPDATES,
                                    resume_smoke_updates: int | None = None,
                                    require_latest: bool = True,
-                                   relocation_receipt_path: str | Path | None = None) -> dict[str, Any]:
+                                   relocation_receipt_path: str | Path | None = None,
+                                   stage_id: str = "EX42_0_T0_prime",
+                                   parent_cumulative_update: int = 12000,
+                                   segment_end: int | None = None) -> dict[str, Any]:
     """Validate a self-resume checkpoint against its manifest and W65 pins.
+
+    Stage zero by default. An E stage passes its own `stage_id`, the cumulative update of its parent and, for a
+    boundary segment, `segment_end` (the local update this process stops at; the stage bound stays
+    `maximum_updates`, so the saved curriculum state keeps matching).
 
     The checkpoint is read on CPU. The caller must validate a fresh target run
     directory separately before creating it or starting Kit.
@@ -486,13 +513,13 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
             or curriculum.get("plan_sha256") != plan_sha256
             or curriculum.get("approval_sha256") != approval_sha256
             or curriculum.get("parent_sha256") != expected_parent
-            or curriculum.get("stage_id") != "EX42_0_T0_prime"
+            or curriculum.get("stage_id") != stage_id
             or curriculum.get("dr_scale") != 1.0
             or curriculum.get("finished") is not False):
         raise ValueError("EX-42 self-resume curriculum pins or stage identity differ")
     if (not isinstance(transfer, dict)
             or transfer.get("parent_sha256") != expected_parent
-            or transfer.get("parent_cumulative_update") != 12000
+            or transfer.get("parent_cumulative_update") != parent_cumulative_update
             or transfer.get("map_input") != "reconstruction"
             or transfer.get("force_gt") is not False):
         raise ValueError("EX-42 self-resume pinned EX-41 parent transfer differs")
@@ -502,6 +529,10 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
             or any(key not in saved["rng"] for key in ("torch", "numpy", "python"))):
         raise ValueError("EX-42 self-resume RNG or map-switch state is incomplete")
     remaining = maximum_updates - local_iteration
+    if segment_end is not None:
+        if type(segment_end) is not int or not local_iteration < segment_end <= maximum_updates:
+            raise ValueError("EX-42 self-resume segment end must lie after the checkpoint and inside the stage bound")
+        remaining = segment_end - local_iteration
     if resume_smoke_updates is not None:
         if (type(resume_smoke_updates) is not int
                 or not 1 <= resume_smoke_updates <= min(5, remaining)):
@@ -518,8 +549,9 @@ def validate_ex42_stage_zero_resume(*, checkpoint_path: str | Path,
         "source_manifest_total_env_steps": int(progress.get("total_env_steps", 0)),
         "local_update_origin": local_iteration,
         "first_resumed_local_update": local_iteration + 1,
-        "cumulative_update_origin": 12000 + local_iteration,
-        "first_resumed_cumulative_update": 12001 + local_iteration,
+        "cumulative_update_origin": parent_cumulative_update + local_iteration,
+        "first_resumed_cumulative_update": parent_cumulative_update + 1 + local_iteration,
+        "stage_id": stage_id, "segment_end": segment_end,
         "maximum_updates": maximum_updates, "requested_updates": updates,
         "remaining_after_resume": maximum_updates - local_iteration - updates,
         "plan_sha256": plan_sha256, "approval_sha256": approval_sha256,

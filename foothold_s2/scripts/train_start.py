@@ -16,6 +16,7 @@ import atexit
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -85,6 +86,9 @@ _pre.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
                   help="Explicit prior receipt for a run copied unchanged to a new host path")
 _pre.add_argument("--ex42_resume_smoke", action="store_true",
                   help="Permit only the bounded one-to-five-update CUDA:0 W65 resume check")
+_pre.add_argument("--ex42_segment_end", type=int, default=None,
+                  help="E stage boundary segment: stop at this local update (a boundary of the approval cell); "
+                       "--max_iterations stays the stage bound")
 _pre.add_argument("--ex42_resume_updates", type=int, default=None,
                   help="Bounded W65 self-resume smoke update count")
 _pre.add_argument("--resume_from")
@@ -129,6 +133,7 @@ EX42_STAGE_ZERO_APPROVAL = None
 EX42_STAGE_ZERO_PREFLIGHT = None
 EX42_STAGE_ZERO_REWARD_CONTRACT = None
 EX42_STAGE_ZERO_RESUME = None
+EX42_SEGMENT_END = None          # E stage: local update at which this process stops (boundary segment)
 EX42_STAGE_ZERO_RESUME_PROOF = None
 EX42_STAGE_ZERO_RESUME_TARGET = None
 EX42_STAGE_ZERO_RESUME_SAME_RUN = False
@@ -473,7 +478,8 @@ _ex42_requested = (any(value is not None for value in _ex42_values.values())
                    or bool(_pre_args.ex42_resume_from)
                    or bool(_pre_args.ex42_resume_relocation_receipt)
                    or bool(_pre_args.ex42_resume_smoke)
-                   or _pre_args.ex42_resume_updates is not None)
+                   or _pre_args.ex42_resume_updates is not None
+                   or _pre_args.ex42_segment_end is not None)
 if _ex42_requested:
     _missing_ex42 = [name for name, value in _ex42_values.items() if not value]
     if _missing_ex42:
@@ -497,6 +503,8 @@ if _ex42_requested:
                                   stage_zero_requested=_stage_zero_requested,
                                   stage_e0_requested=_stage_e0_requested)
     if _stage_e0_requested:
+        if _pre_args.ex42_resume_smoke or _pre_args.ex42_resume_updates is not None or _pre_args.ex42_resume_relocation_receipt:
+            raise ValueError("EX-42 E boundary resume takes only --ex42_resume_from and --ex42_segment_end")
         _e0_preflight = run_ex42_stage_e0_entry(
             dry_run=_e_dry_run, stage_zero_requested=_stage_zero_requested,
             resume_requested=bool(_pre_args.ex42_resume_from or _pre_args.ex42_resume_smoke),
@@ -514,7 +522,7 @@ if _ex42_requested:
             world_size=int(os.environ.get("WORLD_SIZE", "1")), rank=int(os.environ.get("RANK", "0")))
         print(f"EX42_STAGE_{EX42_STAGE_ID}_PREFLIGHT " + json.dumps({
             **_e0_preflight, "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
-        if _e_dry_run:
+        if _e_dry_run and not _pre_args.ex42_resume_from:
             raise SystemExit(0)
         # Real E0: reuse the stage-zero variables (lead-lx 04:58, fork 2). The parent is m13000.
         from foothold_s2.curriculum.ex42_prep import EX42Plan as _EX42Plan
@@ -539,6 +547,40 @@ if _ex42_requested:
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
             parent_update=EX42_STAGE_PARENT_UPDATES[1])
+        from foothold_s2.scripts.ex42_training_entry import validate_ex42_segment_end, validate_ex42_stage_zero_resume
+
+        _interval = EX42_STAGE_ZERO_APPROVAL.get("boundary_evaluation_interval_updates")
+        if _pre_args.ex42_resume_from:
+            # E1 boundary resume: the checkpoint is a boundary save of this very run directory
+            _resume_manifest = Path(_pre_args.ex42_resume_from).resolve().parent / "manifest.json"
+            _named = re.fullmatch(r"model_(\d+)\.pt", Path(_pre_args.ex42_resume_from).name)
+            _origin = int(_named.group(1)) if _named else 0
+            EX42_SEGMENT_END = validate_ex42_segment_end(
+                _pre_args.ex42_segment_end, stage_id=EX42_STAGE_ID, stage_updates=EX42_STAGE_UPDATES,
+                interval=_interval, origin=_origin)
+            EX42_STAGE_ZERO_RESUME_PROOF = validate_ex42_stage_zero_resume(
+                checkpoint_path=_pre_args.ex42_resume_from, manifest_path=_resume_manifest,
+                plan_sha256=EX42_STAGE_ZERO_PLAN.sha256,
+                approval_sha256=EX42_STAGE_ZERO_APPROVAL["approvals_sha256"],
+                parent_receipt=EX42_STAGE_ZERO_PARENT, maximum_updates=EX42_STAGE_UPDATES,
+                require_latest=True, stage_id=EX42_STAGE_ID,
+                parent_cumulative_update=EX42_STAGE_PARENT_UPDATES[1], segment_end=EX42_SEGMENT_END)
+            EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
+            EX42_STAGE_ZERO_RESUME_SAME_RUN = (
+                Path(_pre_args.ex42_log_dir).resolve() == Path(EX42_STAGE_ZERO_RESUME).resolve().parent)
+            if not EX42_STAGE_ZERO_RESUME_SAME_RUN:
+                raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
+            print(f"EX42_STAGE_{EX42_STAGE_ID}_RESUME_PREFLIGHT " + json.dumps(
+                EX42_STAGE_ZERO_RESUME_PROOF, ensure_ascii=False, sort_keys=True), flush=True)
+        else:
+            EX42_SEGMENT_END = validate_ex42_segment_end(
+                _pre_args.ex42_segment_end, stage_id=EX42_STAGE_ID, stage_updates=EX42_STAGE_UPDATES,
+                interval=_interval)
+        if _e_dry_run:                     # a boundary-resume dry run ends here, still on CPU
+            print(f"EX42_STAGE_{EX42_STAGE_ID}_SEGMENT " + json.dumps({
+                "segment_end": EX42_SEGMENT_END, "resume": EX42_STAGE_ZERO_RESUME_PROOF,
+                "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
+            raise SystemExit(0)
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
             validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
@@ -735,6 +777,8 @@ parser.add_argument("--ex42_resume_relocation_receipt", type=str, default=None,
                     help="Explicit prior receipt for a run copied unchanged to a new host path")
 parser.add_argument("--ex42_resume_smoke", action="store_true",
                     help="Bounded one-to-five-update self-resume smoke, cuda:0 only")
+parser.add_argument("--ex42_segment_end", type=int, default=None,
+                    help="E stage boundary segment: stop at this local update")
 parser.add_argument("--ex42_resume_updates", type=int, default=None,
                     help="Update count for the bounded self-resume smoke")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
@@ -783,6 +827,7 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_resume_relocation_receipt != _pre_args.ex42_resume_relocation_receipt
         or args_cli.ex42_resume_smoke != _pre_args.ex42_resume_smoke
         or args_cli.ex42_resume_updates != _pre_args.ex42_resume_updates
+        or args_cli.ex42_segment_end != _pre_args.ex42_segment_end
         or args_cli.max_iterations != _pre_args.max_iterations
         or args_cli.num_envs != _pre_args.num_envs
         or args_cli.map_input != _pre_args.map_input
@@ -1186,6 +1231,13 @@ def main(env_cfg, agent_cfg):
             if ex42_resume_saved is None:
                 raise RuntimeError("EX-42 self-resume checkpoint was not loaded before reset")
             resume_saved = ex42_resume_saved
+            if EX42_STAGE_ID == "E1":
+                # D174: the checkpoint was saved with the mirror on; the runner must start with it on (load checks
+                # the flag) and carry the live, committed grant so the plan re-pin between boundaries cannot drop it.
+                from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
+
+                runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(
+                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals))
             runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
             runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
             ex42_transfer = {
@@ -1194,8 +1246,8 @@ def main(env_cfg, agent_cfg):
                 "source_manifest_sha256": EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"],
                 "local_update_origin": runner.current_learning_iteration,
                 "first_resumed_local_update": runner.current_learning_iteration + 1,
-                "cumulative_update_origin": 12000 + runner.current_learning_iteration,
-                "first_resumed_cumulative_update": 12001 + runner.current_learning_iteration,
+                "cumulative_update_origin": EX42_STAGE_ZERO_RESUME_PROOF["cumulative_update_origin"],
+                "first_resumed_cumulative_update": EX42_STAGE_ZERO_RESUME_PROOF["first_resumed_cumulative_update"],
                 "restored_groups": EX42_STAGE_ZERO_RESUME_PROOF["restored_groups"],
             }
             if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
@@ -1572,6 +1624,8 @@ def main(env_cfg, agent_cfg):
     elif ex41_runtime is not None and ex41_runtime.max_updates is not None:
         completed = EX41_RESUME_PREFLIGHT["completed_updates"] if EX41_RESUME_PREFLIGHT else 0
         remaining = max(0, ex41_runtime.max_updates - completed)
+    elif EX42_SEGMENT_END is not None:
+        remaining = EX42_SEGMENT_END - done          # E stage boundary segment (the stage bound stays max_iterations)
     else:
         remaining = agent_cfg.max_iterations - done
     if remaining <= 0:
