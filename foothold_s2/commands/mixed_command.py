@@ -248,6 +248,9 @@ class MixedVelocityCommand(CommandTerm):
         if len(flag) > 0:
             self.params.flag_vmax = self.range_curriculum.flag_vmax        # 깃발 속도 커리큘럼 (14 §4)
             mc.flag_resample(self.flag_state, self._flag_row[flag], self.gen, self.params)
+            record_flag = getattr(getattr(self, "stage_runtime", None), "record_flag_command_sample", None)
+            if record_flag is not None:
+                record_flag(flag)
             self.stand[flag] = False
             self.spin[flag] = False
             self.heading[flag] = False
