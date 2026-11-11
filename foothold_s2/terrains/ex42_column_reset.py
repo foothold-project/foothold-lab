@@ -25,7 +25,7 @@ DEFAULT_RANGES: dict[str, tuple[float, float]] = {"x": (-0.5, 0.5), "y": (-0.5, 
 FAMILY_KIND_SOURCES = {"B": ("foothold_s2.terrains.ame2_preset", "KINDS"),
                        "C": ("foothold_s2.terrains.jeplo_preset", "KINDS"),
                        "D": ("foothold_s2.terrains.hipan_posture", "KINDS"),
-                       "F": ("foothold_s2.terrains.jump_go2_v1", "KINDS")}      # the jump bundle (analyst's generator)
+                       "F": ("foothold_s2.terrains.jump_preset", "KINDS")}
 
 
 def _clean(ranges: dict[str, Any]) -> dict[str, tuple[float, float]]:
@@ -65,7 +65,7 @@ def kind_ranges_of(family: str) -> dict[str, dict[str, tuple[float, float]]]:
     """The generator module's own RESET_RANGES declaration ({} if it has none)."""
     module = {"A": "foothold_s2.terrains.start_go2_v2", "B": "foothold_s2.terrains.ame2_preset", "C": "foothold_s2.terrains.jeplo_preset",
               "D": "foothold_s2.terrains.hipan_posture", "E": "foothold_s2.terrains.ex42",
-              "F": "foothold_s2.terrains.jump_go2_v1"}.get(family)
+              "F": "foothold_s2.terrains.jump_preset"}.get(family)
     if module is None:
         return {}
     try:

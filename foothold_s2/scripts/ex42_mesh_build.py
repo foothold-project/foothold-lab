@@ -27,6 +27,7 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[2]
 ALL_FAMILIES = ("A", "B", "C", "D", "E")
+SUPPORTED_FAMILIES = ALL_FAMILIES + ("F",)  # F is opt-in; existing training geometry stays unchanged.
 AGGREGATE_KEYS = ("peak_memory_gib", "generation_seconds", "ray_count_per_second")
 ENVS = 3072
 HEIGHT_SCAN_RAYS = 17 * 11          # EX-40 env.yaml height_scanner 0.1 m grid [1.6, 1.0]
@@ -39,7 +40,9 @@ def aggregate_files(families_present: list[str], values: dict[str, float]) -> tu
     """File name + payload. Final names only when every family is present."""
     if any(not isinstance(values.get(k), (int, float)) or not values[k] > 0 for k in AGGREGATE_KEYS):
         raise ValueError("aggregate values must be positive numbers")
-    if sorted(families_present) == sorted(ALL_FAMILIES):
+    if len(families_present) != len(set(families_present)) or set(families_present) - set(SUPPORTED_FAMILIES):
+        raise ValueError('families must be known and unique')
+    if set(ALL_FAMILIES).issubset(families_present):
         return "aggregate_measurements.json", {k: float(values[k]) for k in AGGREGATE_KEYS}
     return "aggregate_partial_mesh.json", {
         **{f"partial_{k}": float(values[k]) for k in AGGREGATE_KEYS},
@@ -60,6 +63,10 @@ def grid_offsets(nx: int, ny: int, pitch: float = 0.1):
 
 def _family_generator(family: str, seed: int):
     """(TerrainGeneratorCfg, columns) for one family's full grid. Kit python only."""
+    if family == "F":
+        from foothold_s2.terrains.jump_preset import build_family_generator
+
+        return build_family_generator(seed=seed)
     from foothold_s2.terrains import columns
     from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
 
@@ -217,8 +224,8 @@ def build_parser(app_launcher: Any | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--family", action="append", choices=ALL_FAMILIES,
-                        help="repeatable; default: every family with generator code (A B C D E)")
+    parser.add_argument("--family", action="append", choices=SUPPORTED_FAMILIES,
+                        help="repeatable; default A B C D E; F jump terrain is opt-in")
     parser.add_argument("--seed", type=int, default=42)
     if app_launcher is None:
         parser.add_argument("--device", default="cuda:1")
