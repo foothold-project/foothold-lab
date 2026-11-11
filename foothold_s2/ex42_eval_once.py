@@ -126,6 +126,39 @@ def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
             for count in ("flag_one", "flag_four")]
 
 
+def e2_kind_kit_commands(checkpoint, output, device, *, task, plan_path,
+                         plan, mesh_dir, mesh_sha256, seed):
+    """Pinned E2 L0 forward and four-flag subcells, each in all three map modes."""
+    from foothold_s2.eval.ex42_flag_cells import MODES
+
+    spec = plan["evaluation"]["e2_kind_cells"]
+    if (spec.get("family") != "A" or spec.get("kind") != "stepping_stones_low" or
+            spec.get("level") != 0 or spec.get("forward_command") != "fwd1.0" or
+            spec.get("flag_count") != "flag_four" or
+            spec.get("judge_modes") != ["eval_gt", "eval_pred"] or
+            spec.get("record_modes") != ["probe_prop_only"] or
+            type(spec.get("forward_steps")) is not int or spec["forward_steps"] < 1 or
+            type(seed) is not int or seed < 0):
+        raise ValueError("EX-42 E2 named-kind evaluation plan differs")
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    common = [str(machine_path("conda_python")), "-m"]
+    forward = [*common, "foothold_s2.eval.eval_map_modes", "--task", task,
+               "--checkpoint", str(checkpoint), "--envs", "64", "--steps", str(spec["forward_steps"]),
+               "--modes", ",".join(MODES), "--command-suite", "core", "--commands", "fwd1.0",
+               "--fixed-terrain", "--fixed-level", str(spec["level"]),
+               "--mesh-dir", str(mesh_dir), "--ex42-kind-family", spec["family"],
+               "--ex42-kind-name", spec["kind"], "--eval-seed", str(seed),
+               "--out", str(Path(output) / "kind_cells" / "forward"), "--device", device, *kit]
+    flag = [*common, "foothold_s2.eval.ex42_flag_eval", "--task", task,
+            "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+            "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha256,
+            "--kind-family", spec["family"], "--kind-name", spec["kind"],
+            "--kind-level", str(spec["level"]), "--count", spec["flag_count"],
+            "--seed", str(seed), "--envs", "64", "--out",
+            str(Path(output) / "kind_cells" / "flag_four"), "--device", device, *kit]
+    return [("e2_kind_forward", forward), ("e2_kind_flag_four", flag)]
+
+
 def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
                           mesh_sha256, checkpoint_sha256, seed, plan, process, env,
                           physical_gpu, record):
@@ -152,6 +185,45 @@ def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_d
         record(count, child)
         if child.get("state") != "done":
             raise ValueError(f"E1F {count} Kit child failed or lacks durable receipt")
+
+
+def execute_e2_kind_children(checkpoint, output, device, *, task, plan_path, plan,
+                             mesh_dir, mesh, checkpoint_sha256, seed, process, env,
+                             physical_gpu, record):
+    """Both E2 subcells must finish with pinned raw evidence before scoring."""
+    from foothold_s2.eval.ex42_kind_completion import read_start_kind_cell
+    from foothold_s2.eval.ex42_kind_flag_cells import read_kind_flag_cell
+
+    spec = plan.document["evaluation"]["e2_kind_cells"]
+    for phase, argv in e2_kind_kit_commands(checkpoint, output, device, task=task,
+                                            plan_path=plan_path, plan=plan.document,
+                                            mesh_dir=mesh_dir, mesh_sha256=mesh["mesh_sha256"], seed=seed):
+        child = process.hidden_child(argv, Path(output) / "children" / phase, env=env)
+        if child.get("state") == "done":
+            folder = Path(output) / "kind_cells" / ("forward" if phase == "e2_kind_forward" else "flag_four")
+            receipt = json.loads((folder / ("map_modes.json" if phase == "e2_kind_forward"
+                                          else "flag_cells.json")).read_text(encoding="utf-8-sig"))
+            identity = receipt.get("run_identity") or {}
+            observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+            if (identity.get("device") != device or
+                    observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                raise ValueError(f"EX-42 {phase} physical GPU identity differs")
+            if phase == "e2_kind_forward":
+                for mode in ("eval_gt", "eval_pred", "probe_prop_only"):
+                    read_start_kind_cell(folder, mesh=mesh, checkpoint_sha256=checkpoint_sha256,
+                                         seed=seed, family=spec["family"], kind=spec["kind"],
+                                         level=spec["level"], mode=mode,
+                                         seconds=spec["forward_seconds"],
+                                         settle_s=spec["completion_settle_s"])
+            else:
+                read_kind_flag_cell(folder, plan=plan.document, plan_sha256=plan.sha256,
+                                    mesh=mesh, checkpoint_sha256=checkpoint_sha256,
+                                    seed=seed, family=spec["family"], kind=spec["kind"],
+                                    level=spec["level"])
+            child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        record(phase, child)
+        if child.get("state") != "done":
+            raise ValueError(f"EX-42 {phase} Kit child failed or lacks durable receipt")
 
 
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
@@ -434,6 +506,23 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
             _atomic(output / "eval_receipt.json", row)
             return 5
+    if p1_stage_id == "E2" and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        try:
+            plan = EX42Plan.load(p1_plan)
+            def record_kind(phase, child):
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            execute_e2_kind_children(checkpoint, output, device, task=cfg["task"],
+                                     plan_path=p1_plan, plan=plan, mesh_dir=mesh_dir, mesh=mesh,
+                                     checkpoint_sha256=expected_sha256, seed=seed,
+                                     process=process, env=env, physical_gpu=physical_gpu,
+                                     record=record_kind)
+        except (OSError, ValueError, KeyError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 E2 kind evaluation failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -562,6 +651,15 @@ def main(argv=None):
                                       task=config()[0]["task"], plan_path=args.p1_plan,
                                       mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
                                       seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
+        if args.p1_stage_id == "E2" and args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            plan_doc = EX42Plan.load(args.p1_plan).document
+            plan["e2_kind_cells"] = {"state": "planned", "commands": [argv for _, argv in
+                e2_kind_kit_commands(args.checkpoint, args.out, args.device,
+                                     task=config()[0]["task"], plan_path=args.p1_plan,
+                                     plan=plan_doc, mesh_dir=args.mesh_dir,
+                                     mesh_sha256=args.expected_mesh_sha256,
+                                     seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,

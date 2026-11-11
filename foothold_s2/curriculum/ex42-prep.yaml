@@ -393,6 +393,7 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E2
+  exit_judge: kind_two_window_e2
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -696,6 +697,22 @@ evaluation:
       flag_four_eval_gt: {count: flag_four, map_mode: eval_gt, role: judge}
       flag_four_eval_pred: {count: flag_four, map_mode: eval_pred, role: judge}
       flag_four_probe_prop_only: {count: flag_four, map_mode: probe_prop_only, role: record_only}
+  # Lead 2026-11-11 16:10, 16:13: E2 kind L0 has one forward and one four-flag
+  # 64-env subcell per map mode. The 12 s forward window covers START x=7 m;
+  # 300 maintenance steps cover only 6 s and cannot reach that finish at 1 m/s.
+  e2_kind_cells:
+    family: A
+    kind: stepping_stones_low
+    level: 0
+    forward_command: fwd1.0
+    forward_steps: 600
+    forward_seconds: 12.0
+    completion_settle_s: 0.5
+    flag_count: flag_four
+    valid_min_each: 48
+    weak_subcell_warning_fraction_of_success_floor: 0.5
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
   paper_cells:
     judge_from_stage: E4
     slope:
