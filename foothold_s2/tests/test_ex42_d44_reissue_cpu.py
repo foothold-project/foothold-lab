@@ -132,3 +132,18 @@ def test_four_boundary_gate_requires_final_measured_p1(
     assert result["p1_score"].endswith("m1000/p1_score.json")
     chain = reissue._read(tmp_path / "four/chain_receipt.json")
     assert [item["iteration"] for item in chain["completed"]] == [250, 500, 750, 1000]
+
+
+def test_multiple_source_chains_require_explicit_identity(tmp_path, monkeypatch):
+    run, plan, approvals, policy, _ = _input(tmp_path, monkeypatch)
+    chain = run / "eval/e1-p1-chain-source.json"
+    second = run / "eval/e1-p1-chain-retry.json"
+    second.write_bytes(chain.read_bytes())
+    with pytest.raises(ValueError, match="must be unique"):
+        reissue.reissue(run, tmp_path / "ambiguous", p1_plan=plan,
+                        approvals=approvals, evaluation_plan=policy, iterations=(250,))
+    assert not (tmp_path / "ambiguous").exists()
+    result = reissue.reissue(run, tmp_path / "selected", p1_plan=plan,
+                             approvals=approvals, evaluation_plan=policy,
+                             iterations=(250,), source_chain=chain)
+    assert result["state"] == "partial_not_gate_ready"

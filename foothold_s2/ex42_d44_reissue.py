@@ -129,10 +129,13 @@ def _reissue_one(item: dict, output: Path, policy: EX42Plan, plan_path: Path,
 
 
 def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
-            evaluation_plan: Path, iterations: tuple[int, ...] = BOUNDARIES) -> dict:
+            evaluation_plan: Path, iterations: tuple[int, ...] = BOUNDARIES,
+            source_chain: Path | None = None) -> dict:
     if not iterations or any(i not in BOUNDARIES for i in iterations) or tuple(sorted(set(iterations))) != iterations:
         raise ValueError("E1 reissue iterations must be ordered distinct boundaries")
     run, out = run.resolve(strict=True), out.resolve()
+    if run == out or run in out.parents:
+        raise ValueError("E1 CPU reissue output must be outside the live run")
     if out.exists():
         raise ValueError("E1 CPU reissue requires a fresh output root")
     p1_plan, approvals, evaluation_plan = (p.resolve(strict=True) for p in
@@ -142,10 +145,15 @@ def reissue(run: Path, out: Path, *, p1_plan: Path, approvals: Path,
     source_manifest, column = source_tile(Path(settings["source_mesh_dir"]))
     if source_manifest["mesh_sha256"] != settings["source_mesh_sha256"]:
         raise ValueError("E1 D44 source mesh differs from approved plan")
-    chain_receipts = list((run / "eval").glob("e1-p1-chain-*.json"))
-    if len(chain_receipts) != 1:
-        raise ValueError("E1 original P1 chain receipt must be unique")
-    original_chain = chain_receipts[0]
+    if source_chain is None:
+        chain_receipts = list((run / "eval").glob("e1-p1-chain-*.json"))
+        if len(chain_receipts) != 1:
+            raise ValueError("E1 original P1 chain receipt must be unique or given by --source-chain")
+        original_chain = chain_receipts[0]
+    else:
+        original_chain = source_chain.resolve(strict=True)
+        if original_chain.parent != run / "eval":
+            raise ValueError("E1 source chain must be inside the original run eval directory")
     chain = _read(original_chain)
     chain_sha = digest(original_chain)
     if (chain.get("format") != "foothold-ex42-e1-p1-boundary-chain-receipt/1"
@@ -192,13 +200,15 @@ def main(argv=None) -> int:
     parser.add_argument("--p1-plan", type=Path, required=True)
     parser.add_argument("--approvals", type=Path, required=True)
     parser.add_argument("--evaluation-plan", type=Path, required=True)
+    parser.add_argument("--source-chain", type=Path,
+                        help="select the original chain when the run has multiple chain receipts")
     parser.add_argument("--iterations", default="250,500,750,1000")
     args = parser.parse_args(argv)
     try:
         iterations = tuple(int(part) for part in args.iterations.split(","))
         decision = reissue(args.run, args.out, p1_plan=args.p1_plan,
                            approvals=args.approvals, evaluation_plan=args.evaluation_plan,
-                           iterations=iterations)
+                           iterations=iterations, source_chain=args.source_chain)
         print(json.dumps(decision, ensure_ascii=False, sort_keys=True))
         return 0
     except (OSError, ValueError, KeyError, TypeError) as exc:
