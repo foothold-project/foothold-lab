@@ -144,6 +144,60 @@ def validate_stage_e0_authorization(plan: "EX42Plan", approvals_path: str | Path
             "production_launch_allowed": False, "later_stages_authorized": False}
 
 
+def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path,
+                                    e1_parent_sha256: str) -> dict[str, Any]:
+    """Read the separately approved, bounded E1 first segment (E0 m250 -> 1000 updates).
+
+    Same fail-closed shape as the E0 cell: a missing or incomplete `stage_e1_authorization` raises.
+    E1F and later stages are never opened by it. The extension (+500 x 2) and the L+ cap raise are
+    separate boundaries and are not covered by this cell.
+    """
+    path = Path(approvals_path).resolve(strict=True)
+    approvals = _read_yaml(path)
+    if (approvals.get("format") != APPROVAL_FORMAT
+            or approvals.get("status") != "blocked"
+            or approvals.get("production_launch_allowed") is not False
+            or approvals.get("automatic_launch_allowed") is not False):
+        raise ValueError("EX-42 full-plan launch guard must remain blocked")
+    cell = approvals.get("stage_e1_authorization")
+    if not isinstance(cell, dict) or cell.get("approved") is not True:
+        raise ValueError("EX-42 E1 authorization is missing")
+    stage = next((row for row in plan.document["stages"] if row.get("id") == "E1"), None)
+    if (stage is None or stage.get("enabled") is not True
+            or stage.get("minimum_updates") != 1000 or stage.get("maximum_updates") != 2000
+            or stage.get("extension_updates") != 500 or stage.get("critic_mirror") is not True):
+        raise ValueError("EX-42 E1 stage in the curriculum table is not the 1000-update first segment with the D174 mirror")
+    expected_scope = {
+        "stage_id": "E1",
+        "start_update": 0,
+        "maximum_updates": 1000,
+        "parent_sha256": e1_parent_sha256,
+        "later_stages_authorized": False,
+    }
+    if cell.get("scope") != expected_scope:
+        raise ValueError("EX-42 E1 approval scope differs from the bounded E1 first segment")
+    decision_id = cell.get("decision_id")
+    approved_at = cell.get("approved_at")
+    if (not isinstance(decision_id, str) or not decision_id.strip()
+            or not isinstance(approved_at, str) or not approved_at.strip()
+            or not isinstance(cell.get("approver"), str) or not cell["approver"].strip()):
+        raise ValueError("EX-42 E1 approval identity or timestamp is missing")
+    dr = approvals.get("domain_randomization", {})
+    if (not isinstance(dr, dict) or dr.get("approved") is not True
+            or dr.get("stage_scales", {}).get("E1") != 1.0):
+        raise ValueError("EX-42 E1 DR scale must be explicitly approved as 1.0")
+    mirror = approvals.get("fields", {}).get("critic_mirror")
+    if (not isinstance(mirror, dict) or mirror.get("approved") is not True
+            or mirror.get("decision_id") != "D174" or mirror.get("choices") != [True]
+            or mirror.get("boundaries") != ["E1"]):
+        raise ValueError("EX-42 E1 critic mirror requires its explicit D174 approval")
+    return {"state": "stage_e1_only_authorized", "scope": expected_scope,
+            "decision_id": decision_id, "approved_at": approved_at,
+            "approvals_path": str(path),
+            "approvals_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "production_launch_allowed": False, "later_stages_authorized": False}
+
+
 @dataclass(frozen=True)
 class EX42Plan:
     path: Path
@@ -381,8 +435,8 @@ class EX42Plan:
         """Resolve the stage-zero or E0 parent by its pinned manifest SHA."""
         if stage_id == STAGE_ZERO_ID:
             selected = self.document["stage_zero"]["parent"]
-        elif stage_id == "E0":
-            selected = next(row for row in self.document["stages"] if row["id"] == "E0")["parent"]
+        elif stage_id in ("E0", "E1"):
+            selected = next(row for row in self.document["stages"] if row["id"] == stage_id)["parent"]
         else:
             raise ValueError(f"EX-42 unknown pinned parent stage: {stage_id}")
         if parent_pin is not None and any(selected.get(key) != value

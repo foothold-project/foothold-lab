@@ -151,15 +151,8 @@ class EX42StageTransitionConsumer:
                                     value=True, boundary=next_stage_id)
             if next_stage_id != "E1" or not callable(setter):
                 raise ValueError("EX-42 E1 critic mirror needs the existing StartRunner setter")
-            commit = subprocess.check_output(
-                ["git", "-C", str(self.plan.path.parent), "rev-parse", "HEAD"],
-                stderr=subprocess.DEVNULL).decode().strip()
-            proof = {"format": "foothold-ex42-critic-mirror-approval/1",
-                     "stage_id": "E1", "decision_id": "D174",
-                     "plan_path": str(self.plan.path), "plan_sha256": self.plan.sha256,
-                     "approval_path": str(self.approvals_path),
-                     "approval_sha256": hashlib.sha256(self.approvals_path.read_bytes()).hexdigest(),
-                     "config_commit": commit}
+            proof = critic_mirror_proof(self.plan, self.approvals_path)
+            commit = proof["config_commit"]
             setter(True, approval=proof)
             mirror_receipt.update(decision_id="D174", applied=True,
                                   authorization={"plan_sha256": proof["plan_sha256"],
@@ -187,6 +180,25 @@ class EX42StageTransitionConsumer:
             "critic_mirror_receipt": mirror_receipt,
             **evidence,
         }
+
+
+def critic_mirror_proof(plan: EX42Plan, approvals_path: str | Path) -> dict[str, Any]:
+    """The D174 grant StartRunner.set_ex41_critic_mirror checks against the committed plan and approval bytes.
+
+    Used at the in-process E0 -> E1 boundary and at the start of a stand-alone E1 process (whose parent
+    was saved with the mirror off). The runner re-reads both files from `config_commit`: an uncommitted or
+    edited plan / approval file makes it refuse (W72 HOLD style), so launch from a committed tree.
+    """
+    approvals_path = Path(approvals_path).resolve(strict=True)
+    commit = subprocess.check_output(
+        ["git", "-C", str(plan.path.parent), "rev-parse", "HEAD"],
+        stderr=subprocess.DEVNULL).decode().strip()
+    return {"format": "foothold-ex42-critic-mirror-approval/1",
+            "stage_id": "E1", "decision_id": "D174",
+            "plan_path": str(plan.path), "plan_sha256": plan.sha256,
+            "approval_path": str(approvals_path),
+            "approval_sha256": hashlib.sha256(approvals_path.read_bytes()).hexdigest(),
+            "config_commit": commit}
 
 
 class EX42Runtime:

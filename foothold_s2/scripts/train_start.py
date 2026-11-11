@@ -75,6 +75,8 @@ _pre.add_argument("--ex42_stage_zero_dry_run", action="store_true")
 _pre.add_argument("--ex42_speed_probe", action="store_true")
 _pre.add_argument("--ex42_stage_e0_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e0_dry_run", action="store_true")
+_pre.add_argument("--ex42_stage_e1_approved", action="store_true")
+_pre.add_argument("--ex42_stage_e1_dry_run", action="store_true")
 _pre.add_argument("--ex42_terrain_manifest")
 _pre.add_argument("--ex42_terrain_mesh_dir")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
@@ -94,9 +96,14 @@ _pre.add_argument("--force_gt", action="store_true")
 _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
-EX42_E0_REQUESTED = bool(_pre_args.ex42_stage_e0_approved or _pre_args.ex42_stage_e0_dry_run)
-EX42_STAGE_ID = "E0" if EX42_E0_REQUESTED else "EX42_0_T0_prime"
-EX42_STAGE_UPDATES = 250 if EX42_E0_REQUESTED else 1000      # bound of the single-stage run (E0: m13000 -> 250)
+_E0_FLAGS = bool(_pre_args.ex42_stage_e0_approved or _pre_args.ex42_stage_e0_dry_run)
+_E1_FLAGS = bool(_pre_args.ex42_stage_e1_approved or _pre_args.ex42_stage_e1_dry_run)
+if _E0_FLAGS and _E1_FLAGS:
+    raise ValueError("EX-42 E0 and E1 cannot be requested together")
+EX42_E0_REQUESTED = _E0_FLAGS or _E1_FLAGS          # "an E stage is requested" (the E0 code path carries E1 too)
+EX42_STAGE_ID = "E1" if _E1_FLAGS else "E0" if _E0_FLAGS else "EX42_0_T0_prime"
+EX42_STAGE_UPDATES = 1000 if _E1_FLAGS else 250 if _E0_FLAGS else 1000      # bound of the single-stage run (E0: m13000 -> 250; E1 first segment: E0 m250 -> 1000)
+EX42_STAGE_PARENT_UPDATES = (250, 13250) if _E1_FLAGS else (1000, 13000)   # (parent local update, cumulative) of the E stages
 # ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
 EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
 EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLIT else 0
@@ -478,8 +485,9 @@ if _ex42_requested:
 
     _stage_zero_requested = bool(_pre_args.ex42_stage_zero_approved
                                  or _pre_args.ex42_stage_zero_dry_run)
-    _stage_e0_requested = bool(_pre_args.ex42_stage_e0_approved
-                               or _pre_args.ex42_stage_e0_dry_run)
+    _stage_e0_requested = EX42_E0_REQUESTED          # E0 or E1 (see EX42_STAGE_ID)
+    _e_approved = bool(_pre_args.ex42_stage_e1_approved if EX42_STAGE_ID == "E1" else _pre_args.ex42_stage_e0_approved)
+    _e_dry_run = bool(_pre_args.ex42_stage_e1_dry_run if EX42_STAGE_ID == "E1" else _pre_args.ex42_stage_e0_dry_run)
     from foothold_s2.scripts.ex42_training_entry import (
         run_ex42_stage_e0_entry,
         speed_probe_builds_chain, validate_speed_probe_switches,
@@ -490,41 +498,47 @@ if _ex42_requested:
                                   stage_e0_requested=_stage_e0_requested)
     if _stage_e0_requested:
         _e0_preflight = run_ex42_stage_e0_entry(
-            dry_run=_pre_args.ex42_stage_e0_dry_run, stage_zero_requested=_stage_zero_requested,
+            dry_run=_e_dry_run, stage_zero_requested=_stage_zero_requested,
             resume_requested=bool(_pre_args.ex42_resume_from or _pre_args.ex42_resume_smoke),
-            e0_approved=_pre_args.ex42_stage_e0_approved, stage_id="E0",
+            e0_approved=_e_approved, stage_id=EX42_STAGE_ID,
             terrain_manifest_path=_pre_args.ex42_terrain_manifest,
             plan_path=_pre_args.ex42_plan, approvals_path=_pre_args.ex42_approvals,
             experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
             parent_checkpoint_path=os.path.join(os.path.dirname(os.path.abspath(
-                _pre_args.ex42_parent_manifest)), "model_1000.pt"),
+                _pre_args.ex42_parent_manifest)), "model_250.pt" if EX42_STAGE_ID == "E1" else "model_1000.pt"),
             log_dir=_pre_args.ex42_log_dir, task=_pre_args.task or "",
             device=_pre_args.device or "", headless=_pre_args.headless,
             distributed=_pre_args.distributed, max_iterations=_pre_args.max_iterations,
             num_envs=_pre_args.num_envs, map_input=_pre_args.map_input,
             force_gt=_pre_args.force_gt, speed_probe=_pre_args.ex42_speed_probe,
             world_size=int(os.environ.get("WORLD_SIZE", "1")), rank=int(os.environ.get("RANK", "0")))
-        print("EX42_STAGE_E0_PREFLIGHT " + json.dumps({
+        print(f"EX42_STAGE_{EX42_STAGE_ID}_PREFLIGHT " + json.dumps({
             **_e0_preflight, "app_launcher_started": False}, ensure_ascii=False, sort_keys=True), flush=True)
-        if _pre_args.ex42_stage_e0_dry_run:
+        if _e_dry_run:
             raise SystemExit(0)
         # Real E0: reuse the stage-zero variables (lead-lx 04:58, fork 2). The parent is m13000.
         from foothold_s2.curriculum.ex42_prep import EX42Plan as _EX42Plan
         from foothold_s2.scripts.ex42_training_entry import (
-            inspect_ex42_stage_e0_parent, load_ex42_stage_zero_source, make_ex42_stage_zero_plan_view)
+            inspect_ex42_stage_e0_parent, inspect_ex42_stage_e1_parent,
+            load_ex42_stage_zero_source, make_ex42_stage_zero_plan_view)
 
         EX42_STAGE_ZERO_PLAN = _EX42Plan.load(_pre_args.ex42_plan)
-        EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e0_parent(
-            plan=EX42_STAGE_ZERO_PLAN, approvals_path=_pre_args.ex42_approvals,
-            experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
-            parent_manifest_path=_pre_args.ex42_parent_manifest)
+        if EX42_STAGE_ID == "E1":       # parent = the finished E0 run's m250 (pinned in the plan)
+            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e1_parent(
+                plan=EX42_STAGE_ZERO_PLAN, approvals_path=_pre_args.ex42_approvals,
+                parent_manifest_path=_pre_args.ex42_parent_manifest)
+        else:
+            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e0_parent(
+                plan=EX42_STAGE_ZERO_PLAN, approvals_path=_pre_args.ex42_approvals,
+                experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
+                parent_manifest_path=_pre_args.ex42_parent_manifest)
         EX42_STAGE_ZERO_PREFLIGHT = _e0_preflight
         EX42_STAGE_ZERO_APPROVAL = EX42_STAGE_ZERO_PARENT["approval"]
         EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE = load_ex42_stage_zero_source(
             EX42_STAGE_ZERO_PLAN)
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
-            parent_update=13000)
+            parent_update=EX42_STAGE_PARENT_UPDATES[1])
     if _stage_zero_requested:
         from foothold_s2.scripts.ex42_training_entry import (
             validate_ex42_stage_zero_cli, validate_ex42_stage_zero_resume,
@@ -604,6 +618,9 @@ if _ex42_requested:
             score_argv_json=_pre_args.ex42_p1_score_argv_json,
             machine_profile=load_machine_profile(),
             current_stage_id=EX42_STAGE_ID,        # E0: the parent is m13000, not the stage-zero parent
+            # score only at the end of the single-stage run: training holds both GPUs (13.8 GB each), so no
+            # P1 evaluation may start mid-run (E0: 250 = the default; E1 first segment: 1000, not every 250)
+            **({"p1_interval": EX42_STAGE_UPDATES} if EX42_E0_REQUESTED else {}),
         )
 
     if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(
@@ -700,6 +717,10 @@ parser.add_argument("--ex42_stage_e0_approved", action="store_true",
                     help="Scoped approval for EX-42 E0 only (m13000, 250 updates)")
 parser.add_argument("--ex42_stage_e0_dry_run", action="store_true",
                     help="CPU-only E0 preflight; exits before AppLauncher")
+parser.add_argument("--ex42_stage_e1_approved", action="store_true",
+                    help="Scoped approval for the EX-42 E1 first segment only (E0 m250, 1000 updates, D174 critic mirror)")
+parser.add_argument("--ex42_stage_e1_dry_run", action="store_true",
+                    help="CPU-only E1 preflight; exits before AppLauncher")
 parser.add_argument("--ex42_terrain_manifest", type=str, default=None,
                     help="Measured EX-42 terrain_manifest.json; a real E0 run needs it (fails closed)")
 parser.add_argument("--ex42_terrain_mesh_dir", type=str, default=None,
@@ -750,6 +771,8 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_speed_probe != _pre_args.ex42_speed_probe
         or args_cli.ex42_stage_e0_approved != _pre_args.ex42_stage_e0_approved
         or args_cli.ex42_stage_e0_dry_run != _pre_args.ex42_stage_e0_dry_run
+        or args_cli.ex42_stage_e1_approved != _pre_args.ex42_stage_e1_approved
+        or args_cli.ex42_stage_e1_dry_run != _pre_args.ex42_stage_e1_dry_run
         or args_cli.ex42_terrain_manifest != _pre_args.ex42_terrain_manifest
         or args_cli.ex42_terrain_mesh_dir != _pre_args.ex42_terrain_mesh_dir
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
@@ -937,15 +960,16 @@ def main(env_cfg, agent_cfg):
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
     EX42_E0_ENV_CONTRACT = None
-    if args_cli.ex42_stage_e0_approved:
-        # Unreachable until the E0 launch path stops exiting 3 above; wired so it cannot be forgotten.
+    if args_cli.ex42_stage_e0_approved or args_cli.ex42_stage_e1_approved:
+        # The E0 / E1 launch path (EX42_STAGE_ID): combined mesh, per-column reset ranges, push gate, exposure.
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         from foothold_s2.scripts.ex42_training_entry import prepare_e0_env_cfg
 
         if not args_cli.ex42_terrain_mesh_dir:
             raise ValueError("EX-42 E0 needs --ex42_terrain_mesh_dir (combined mesh); refusing the default terrain")
         EX42_E0_ENV_CONTRACT = prepare_e0_env_cfg(
-            env_cfg, EX42Plan.load(Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"), args_cli.ex42_terrain_mesh_dir)
+            env_cfg, EX42Plan.load(Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"), args_cli.ex42_terrain_mesh_dir,
+            stage_id=EX42_STAGE_ID)
         print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
@@ -973,7 +997,8 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.scripts.ex42_training_entry import apply_e0_exposure
 
         print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(
-            env, EX42_E0_ENV_CONTRACT, EX42_STAGE_ZERO_CHECKPOINT["env_state"]), sort_keys=True), flush=True)
+            env, EX42_E0_ENV_CONTRACT, EX42_STAGE_ZERO_CHECKPOINT["env_state"],
+            parent_same_mesh=(EX42_STAGE_ID == "E1")), sort_keys=True), flush=True)
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None
@@ -1090,7 +1115,8 @@ def main(env_cfg, agent_cfg):
             parent_path=EX42_STAGE_ZERO_PARENT["parent_path"],
             parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
             updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES),
-            **({"stage_e0": True, "parent_local_update": 1000, "parent_cumulative_update": 13000}
+            **({"stage_id": EX42_STAGE_ID, "parent_local_update": EX42_STAGE_PARENT_UPDATES[0],
+                "parent_cumulative_update": EX42_STAGE_PARENT_UPDATES[1]}
                if EX42_E0_REQUESTED else {}))
         agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
         agent_cfg.seed = int(EX42_STAGE_ZERO_CHECKPOINT["env_seed"])
@@ -1183,7 +1209,15 @@ def main(env_cfg, agent_cfg):
         else:
             ex42_transfer = runner.load_ex42_stage_zero_parent(
                 EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT,
-                stage_e0=(EX42_STAGE_ID == "E0"))      # E0 parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
+                stage_e0=(EX42_STAGE_ID == "E0"),      # E0 parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
+                stage_e1=(EX42_STAGE_ID == "E1"))      # E1 parent is the E0 m250 (250 / 13250)
+            if EX42_STAGE_ID == "E1":
+                # D174: the parent was saved with the mirror off; the committed plan + approval grant turns it on here.
+                from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
+
+                runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(
+                    EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals))
+                ex42_transfer["critic_mirror"] = {"enabled": bool(runner.ex41_critic_mirror), "decision_id": "D174"}
             print("EX42_STAGE_ZERO_PARENT_TRANSFER "
                   + json.dumps(ex42_transfer, sort_keys=True), flush=True)
     runner.add_git_repo_to_log(__file__)

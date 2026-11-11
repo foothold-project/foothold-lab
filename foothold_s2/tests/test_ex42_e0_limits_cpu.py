@@ -28,8 +28,11 @@ def test_runtime_bound_is_250_for_e0_and_1000_for_stage_zero():
     for stage, wrong in (("E0", 1000), ("E0", 249), (STAGE_ZERO, 250), (STAGE_ZERO, 999)):
         with pytest.raises(ValueError, match="remain bounded to"):
             _runtime(stage, wrong)
-    with pytest.raises(ValueError, match="stage zero or E0 only"):
+    assert _runtime("E1", 1000).maximum_updates == 1000
+    with pytest.raises(ValueError, match="remain bounded to"):
         _runtime("E1", 250)
+    with pytest.raises(ValueError, match="stage zero, E0 or E1 only"):
+        _runtime("E1F", 250)
 
 
 def test_runtime_speed_probe_counts_only_with_the_probe_switch():
@@ -82,8 +85,10 @@ class _Manager:
 
 
 def test_reward_contract_accepts_exactly_the_two_pinned_parents():
-    assert entry.REWARD_CONTRACT_PARENTS == ((entry.STAGE_ZERO_PARENT_SHA256, 6000), (E_PARENT_SHA, 1000))
-    for sha, update, label in ((entry.STAGE_ZERO_PARENT_SHA256, 6000, "EX-41 m6000"), (E_PARENT_SHA, 1000, "m13000")):
+    assert entry.REWARD_CONTRACT_PARENTS == ((entry.STAGE_ZERO_PARENT_SHA256, 6000), (E_PARENT_SHA, 1000),
+                                             (entry.E1_PARENT_SHA256, 250))
+    for sha, update, label in ((entry.STAGE_ZERO_PARENT_SHA256, 6000, "EX-41 m6000"), (E_PARENT_SHA, 1000, "m13000"),
+                               (entry.E1_PARENT_SHA256, 250, "E0 m250")):
         cfg = _Cfg()
         receipt = entry.apply_stage_zero_parent_reward_contract(cfg, parent_sha256=sha, parent_update=update)
         assert cfg.rewards.lin_vel_z.weight == 0.0 and receipt["weight"] == 0.0
@@ -91,7 +96,8 @@ def test_reward_contract_accepts_exactly_the_two_pinned_parents():
         env = types.SimpleNamespace(reward_manager=_Manager())
         out = entry.apply_stage_zero_parent_reward_manager(env, parent_sha256=sha, parent_update=update)
         assert env.reward_manager.cfg.weight == 0.0 and out is not None
-    for sha, update in ((E_PARENT_SHA, 6000), (entry.STAGE_ZERO_PARENT_SHA256, 1000), ("0" * 64, 1000), (E_PARENT_SHA, 0)):
+    for sha, update in ((E_PARENT_SHA, 6000), (entry.STAGE_ZERO_PARENT_SHA256, 1000), ("0" * 64, 1000), (E_PARENT_SHA, 0),
+                        (entry.E1_PARENT_SHA256, 1000), (E_PARENT_SHA, 250)):
         with pytest.raises(ValueError, match="pinned EX-41 m6000 parent"):
             entry.apply_stage_zero_parent_reward_contract(_Cfg(), parent_sha256=sha, parent_update=update)
         with pytest.raises(ValueError, match="pinned EX-41 m6000 parent"):

@@ -20,7 +20,8 @@ from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.curriculum.ex42_runtime import EX42Runtime
-from foothold_s2.curriculum.ex42_prep import validate_stage_zero_authorization, validate_stage_e0_authorization
+from foothold_s2.curriculum.ex42_prep import (
+    validate_stage_zero_authorization, validate_stage_e0_authorization, validate_stage_e1_authorization)
 
 
 STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
@@ -33,12 +34,23 @@ SPEED_PROBE_ENVS = (1536, 3072)
 STAGE_E0_ID = "E0"
 STAGE_E0_DEVICE = "cuda:0"
 STAGE_E0_UPDATES = 250
+STAGE_E1_ID = "E1"
+STAGE_E1_UPDATES = 1000                       # first E1 segment (plan minimum); the +500 extensions are separate boundaries
+# stage id -> (updates, parent local update, parent cumulative update); the parent of E1 is the finished E0 run's m250
+E_STAGES = {STAGE_E0_ID: (STAGE_E0_UPDATES, 1000, 13000), STAGE_E1_ID: (STAGE_E1_UPDATES, 250, 13250)}
 # m13000 = stage-zero model_1000.pt (experiments/EX-42.yaml operational_values.e_stage_parent; a test keeps both equal).
 E0_PARENT_SHA256 = "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
 STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613"
 # Reward contract parents: (sha256, local update). Stage zero starts from m12000 (EX-41 local 6000);
 # E0 starts from m13000 (stage-zero local 1000), which was trained with the same lin_vel_z = 0 term.
-REWARD_CONTRACT_PARENTS = ((STAGE_ZERO_PARENT_SHA256, 6000), (E0_PARENT_SHA256, 1000))
+E1_PARENT_SHA256 = "680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e"   # E0 run model_250.pt (= plan stages[E1].parent)
+# E1 starts from the finished E0 m250, trained with the same lin_vel_z = 0 term.
+REWARD_CONTRACT_PARENTS = ((STAGE_ZERO_PARENT_SHA256, 6000), (E0_PARENT_SHA256, 1000), (E1_PARENT_SHA256, 250))
+
+
+def _reward_source(parent_update: int) -> str:
+    return {6000: "EX-41 m6000 runtime readback", 1000: "EX-42 stage-zero m13000 runtime readback",
+            250: "EX-42 E0 m250 runtime readback"}[parent_update]
 
 
 def e0_terrain_mesh_swap_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -90,7 +102,7 @@ def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
     return off
 
 
-def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> dict[str, Any]:
+def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage_id: str = STAGE_E0_ID) -> dict[str, Any]:
     """The one E0 env-cfg seam: combined mesh + per-column reset ranges + per-column push gate.
 
     Call after the DR events are installed (the push term must exist) and before gym.make.
@@ -121,8 +133,9 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> di
         raise ValueError(f"EX-42 E0 mesh columns without a kind_task row: {undeclared}")
     # kind_task also lists evaluation-only names (family 'evaluation'); only mesh families gate columns
     from foothold_s2.terrains.ex42_exposure import exposure_by_column
-    stage_terrain = _e0_stage(plan)["terrain"]
-    exposure, level_caps = exposure_by_column(stage_terrain, table)       # plan values; raises if none positive
+    # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
+    stage_terrain = {**_e_stage(plan, stage_id)["terrain"], "kind_task": _e0_stage(plan)["terrain"]["kind_task"]}
+    exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     apply_column_reset(env_cfg, table)
@@ -134,16 +147,24 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path) -> di
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
 
 
+def _e_stage(plan: EX42Plan, stage_id: str) -> dict[str, Any]:
+    return next(row for row in plan.document["stages"] if row.get("id") == stage_id)
+
+
 def _e0_stage(plan: EX42Plan) -> dict[str, Any]:
-    return next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
+    return _e_stage(plan, STAGE_E0_ID)
 
 
-def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict[str, Any]) -> dict[str, Any]:
-    """After gym.make: start from the parent's (column, level) per env, then cut at the column caps (Kit side)."""
+def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict[str, Any],
+                      parent_same_mesh: bool = False) -> dict[str, Any]:
+    """After gym.make: start from the parent's (column, level) per env, then cut at the column caps (Kit side).
+
+    `parent_same_mesh`: the E1 parent is an E0 run on this same mesh (no 23-column parent layout to translate)."""
     from foothold_s2.terrains.ex42_exposure import apply_exposure
 
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
-                          parent_env_state=parent_env_state, table=contract["column_table"])
+                          parent_env_state=parent_env_state, table=contract["column_table"],
+                          parent_same_mesh=parent_same_mesh)
 
 
 def _kind_task(plan: EX42Plan) -> dict[str, Any]:
@@ -270,53 +291,64 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
                               approved_switch: bool, speed_probe: bool = False,
                               world_size: int = 1, rank: int = 0
                               ) -> tuple[EX42Plan, dict[str, Any], dict[str, Any]]:
-    """Validate the explicitly approved E0 CLI (m13000 -> 250 updates) without importing Kit.
+    """Validate the explicitly approved E-stage CLI without importing Kit.
 
-    Only E0 is accepted; E1 and later stage ids are refused. No torch: the parent is pinned by
-    the sha256 of the bytes beside it, and the checkpoint contents are read by the launcher.
+    E0 (m13000 -> 250 updates) and the E1 first segment (E0 m250 -> 1000 updates, D174 mirror); E1F and
+    later stage ids are refused. No torch: the parent is pinned by the sha256 of the bytes beside it
+    (E0: experiments/EX-42.yaml; E1: the plan's E1 parent pin), and the checkpoint contents are read
+    by the launcher.
     """
     if approved_switch is not True:
-        raise ValueError("EX-42 E0 requires its explicit scoped approval switch")
-    if stage_id != STAGE_E0_ID:
-        raise ValueError("EX-42 stage entry accepts E0 only; E1 and later stages are not authorized")
+        raise ValueError(f"EX-42 {stage_id} requires its explicit scoped approval switch")
+    if stage_id not in E_STAGES:
+        raise ValueError("EX-42 stage entry accepts E0 or E1 only; E1F and later stages are not authorized")
+    updates = E_STAGES[stage_id][0]
     if task != STAGE_ZERO_TASK_ID:
-        raise ValueError("EX-42 E0 task differs from the approved task")
+        raise ValueError(f"EX-42 {stage_id} task differs from the approved task")
     if machine_profile is not None:
         from foothold_s2.machine_profile import validate_training_device
         validate_training_device(device, machine_profile=machine_profile)
     if device != STAGE_E0_DEVICE or headless is not True:
-        raise ValueError("EX-42 E0 requires headless cuda:0")
+        raise ValueError(f"EX-42 {stage_id} requires headless cuda:0")
     if speed_probe:
         if (type(distributed) is not bool or max_iterations not in SPEED_PROBE_UPDATES
                 or num_envs not in SPEED_PROBE_ENVS):
-            raise ValueError("EX-42 E0 speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
-    elif max_iterations != 250 or num_envs != STAGE_ZERO_NUM_ENVS:
-        raise ValueError("EX-42 E0 is bounded to exactly 250 updates and 3072 environments per process")
+            raise ValueError(f"EX-42 {stage_id} speed probe is bounded to 20 or 50 updates and 1536 or 3072 environments per process")
+    elif max_iterations != updates or num_envs != STAGE_ZERO_NUM_ENVS:
+        raise ValueError(f"EX-42 {stage_id} is bounded to exactly {updates} updates and 3072 environments per process")
     elif distributed is not (world_size == 2) or world_size not in (1, 2) or not 0 <= rank < world_size:
         # M3 decision: one process (3072) or a two-GPU torchrun with 3072 per rank (6144 = plan num_envs)
-        raise ValueError("EX-42 E0 is bounded to exactly 250 updates on one process or a two-rank torchrun (distributed iff world size 2)")
+        raise ValueError(f"EX-42 {stage_id} is bounded to exactly {updates} updates on one process or a two-rank torchrun (distributed iff world size 2)")
     if map_input not in (None, "reconstruction") or force_gt is not False:
-        raise ValueError("EX-42 E0 must consume reconstructed maps without forced GT")
+        raise ValueError(f"EX-42 {stage_id} must consume reconstructed maps without forced GT")
     output = Path(log_dir).resolve()
     if output.exists() and rank == 0:             # every rank gets the same argv; rank 0 creates the run directory
-        raise ValueError("EX-42 E0 output must be new")
+        raise ValueError(f"EX-42 {stage_id} output must be new")
     plan = EX42Plan.load(plan_path)
-    parent = read_e_stage_parent(experiment_path)
+    if stage_id == STAGE_E0_ID:
+        parent = read_e_stage_parent(experiment_path)
+        parent_label = "m13000"
+    else:
+        parent = dict(_e_stage(plan, stage_id)["parent"])
+        parent_label = "E0 m250"
     checkpoint = Path(parent_checkpoint_path).resolve(strict=True)
     digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     if checkpoint.name != parent["checkpoint_key"] or digest != parent["sha256"]:
-        raise ValueError("EX-42 E0 parent checkpoint differs from the pinned m13000")
-    approval = validate_stage_e0_authorization(plan, approvals_path, parent["sha256"])
+        raise ValueError(f"EX-42 {stage_id} parent checkpoint differs from the pinned {parent_label}")
+    validator = validate_stage_e0_authorization if stage_id == STAGE_E0_ID else validate_stage_e1_authorization
+    approval = validator(plan, approvals_path, parent["sha256"])
     request = {
-        "state": "stage_e0_preflight_passed", "stage_id": STAGE_E0_ID,
+        "state": f"stage_{stage_id.lower()}_preflight_passed", "stage_id": stage_id,
         "task": task, "device": device, "num_envs": num_envs,
         "max_iterations": max_iterations, "map_input": "reconstruction", "force_gt": False,
         "output_dir": str(output), "parent_path": str(checkpoint), "parent_sha256": digest,
-        "parent_cumulative_update": 13000,
+        "parent_cumulative_update": E_STAGES[stage_id][2],
         "production_launch_allowed": False, "later_stages_authorized": False,
         "approval": approval, "world_size": world_size, "rank": rank,
         "total_envs": num_envs * world_size,
     }
+    if stage_id == STAGE_E1_ID:
+        request["critic_mirror"] = {"enabled_at_start": True, "decision_id": "D174"}
     if speed_probe:
         request["speed_probe"] = {"updates": max_iterations, "num_envs": num_envs,
                                   "distributed": bool(distributed)}
@@ -341,7 +373,7 @@ def validate_speed_probe_switches(*, speed_probe: bool, stage_zero_requested: bo
 
 def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume_requested: bool,
                             e0_approved: bool, terrain_manifest_path: str | Path | None = None,
-                            **cli: Any) -> dict[str, Any]:
+                            **cli: Any) -> dict[str, Any]:  # cli carries stage_id ("E0" or "E1")
     """E0 entry as train_start calls it: validates the CLI and returns the request.
 
     Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
@@ -811,9 +843,9 @@ class EX42StageZeroRuntime:
                  approval_sha256: str, parent_sha256: str, maximum_updates: int = 1000,
                  push_vmax_mps: float, speed_probe: bool = False, stage_id: str = "EX42_0_T0_prime"):
         # E0 (m13000 -> 250 updates) reuses this single-stage runtime with its own id and bound.
-        bound = STAGE_E0_UPDATES if stage_id == STAGE_E0_ID else STAGE_ZERO_UPDATES
-        if stage_id not in ("EX42_0_T0_prime", STAGE_E0_ID):
-            raise ValueError("EX-42 single-stage runtime accepts stage zero or E0 only")
+        bound = E_STAGES[stage_id][0] if stage_id in E_STAGES else STAGE_ZERO_UPDATES
+        if stage_id not in ("EX42_0_T0_prime", *E_STAGES):
+            raise ValueError("EX-42 single-stage runtime accepts stage zero, E0 or E1 only")
         if maximum_updates != bound and not (
                 speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
             raise ValueError(f"EX-42 stage-zero runtime must remain bounded to {bound} updates")
@@ -849,7 +881,7 @@ class EX42StageZeroRuntime:
         self.env_stage = torch.zeros(raw.num_envs, dtype=torch.long, device=raw.device)
         command_term.stage_runtime = self
         raw._ex42_stage_id = self.stage_id
-        raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 uses the same environment as stage zero
+        raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 / E1 use the same environment as stage zero
         raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
         raw._ex40_dr_scale = 1.0
         raw._ex41_push_vmax_mps = self.push_vmax_mps
@@ -1017,8 +1049,7 @@ def apply_stage_zero_parent_reward_contract(env_cfg: Any, *,
         raise ValueError("EX-42 stage-zero config lacks the parent lin_vel_z reward term")
     term.weight = 0.0
     return {"term": "lin_vel_z", "weight": 0.0,
-            "source": ("EX-41 m6000 runtime readback" if parent_update == 6000
-                       else "EX-42 stage-zero m13000 runtime readback"),
+            "source": _reward_source(parent_update),
             "parent_sha256": parent_sha256}
 
 
@@ -1039,8 +1070,7 @@ def apply_stage_zero_parent_reward_manager(env: Any, *,
     if actual != 0.0:
         raise ValueError("EX-42 stage-zero live lin_vel_z reward did not match parent")
     return {"term": "lin_vel_z", "weight": actual,
-            "source": ("EX-41 m6000 runtime readback" if parent_update == 6000
-                       else "EX-42 stage-zero m13000 runtime readback"),
+            "source": _reward_source(parent_update),
             "parent_sha256": parent_sha256}
 
 
@@ -1088,9 +1118,12 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
                                          updates: int = STAGE_ZERO_UPDATES,
                                          parent_local_update: int = 6000,
                                          parent_cumulative_update: int = 12000,
-                                         stage_e0: bool = False) -> dict[str, Any]:
-    """Match the saved learner/perception contract while bounding stage zero (or E0 with stage_e0)."""
-    approved_updates = STAGE_E0_UPDATES if stage_e0 else STAGE_ZERO_UPDATES
+                                         stage_e0: bool = False,
+                                         stage_id: str | None = None) -> dict[str, Any]:
+    """Match the saved learner/perception contract while bounding stage zero (E0 with stage_e0, or stage_id E0 / E1)."""
+    if stage_id is None:
+        stage_id = STAGE_E0_ID if stage_e0 else "EX42_0_T0_prime"
+    approved_updates = E_STAGES[stage_id][0] if stage_id in E_STAGES else STAGE_ZERO_UPDATES
     if updates != approved_updates and updates not in SPEED_PROBE_UPDATES:
         raise ValueError("EX-42 stage-zero update bound is not an approved value")
     saved_cfg = checkpoint.get("perception_cfg")
@@ -1268,6 +1301,72 @@ def inspect_ex42_stage_e0_parent(*, plan: EX42Plan, approvals_path: str | Path,
         "continuation_state_fields": list(required),
         "ex41_environment_state_restored": False,
         "ex41_curriculum_state_restored": False,
+        "terrain_mesh_swap": e0_terrain_mesh_swap_receipt(),
+        "approval": approval,
+    }
+    return checkpoint, receipt
+
+
+def inspect_ex42_stage_e1_parent(*, plan: EX42Plan, approvals_path: str | Path,
+                                 parent_manifest_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load and validate the finished E0 run's model_250.pt as the E1 parent.
+
+    The continuation contract is the E0 one (learner, perception, AdaSmpl, map switch, RNG and
+    normalization carry over; the critic mirror starts OFF in the parent and is switched on by the
+    D174 grant after load). Unlike E0 the parent's environment placement is kept: its env_state is
+    on the very same 76-column mesh. The approval cell is read through validate_stage_e1_authorization
+    and fails closed.
+    """
+    import torch
+
+    pin = dict(_e_stage(plan, STAGE_E1_ID)["parent"])
+    approval = validate_stage_e1_authorization(plan, approvals_path, pin["sha256"])
+    parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=STAGE_E1_ID)
+    path = Path(parent["checkpoint_path"]).resolve(strict=True)
+    if path.name != pin["checkpoint_key"]:
+        raise ValueError("EX-42 E1 parent checkpoint is not the pinned model_250.pt")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != pin["sha256"]:
+        raise ValueError("EX-42 E1 parent checkpoint SHA differs from the pinned E0 m250")
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    if (not isinstance(checkpoint, dict)
+            or checkpoint.get("format") != "foothold-start/1"
+            or checkpoint.get("iter") != 250
+            or checkpoint.get("ex41_pose_commands") is not True
+            or checkpoint.get("ex41_critic_mirror") is not False):
+        raise ValueError("EX-42 E1 parent is not the E0 model_250.pt pose_cmd checkpoint with the mirror off")
+    cfg = checkpoint.get("perception_cfg") or {}
+    if cfg.get("map_input") != "reconstruction" or cfg.get("force_gt") is not False:
+        raise ValueError("EX-42 E1 parent must consume reconstructed maps without GT forcing")
+    state = checkpoint.get("continuous_curriculum")
+    if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
+            or state.get("stage_id") != STAGE_E0_ID or state.get("iteration") != 250
+            or state.get("maximum_updates") != 250):
+        raise ValueError("EX-42 E1 parent curriculum state is not the finished E0 state")
+    required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
+                "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
+                "normalization_state", "rng", "map_switch", "continuous_curriculum", "env_state")
+    missing = [key for key in required if key not in checkpoint or checkpoint[key] is None]
+    if missing:
+        raise ValueError("EX-42 E1 parent lacks continuation state: " + ", ".join(missing))
+    model = checkpoint["model_state_dict"]
+    actor, critic = model.get("actor.0.weight"), model.get("critic.0.weight")
+    if (actor is None or tuple(actor.shape) != (512, 98)
+            or critic is None or tuple(critic.shape) != (512, 666)):
+        raise ValueError("EX-42 E1 parent actor/critic dimensions must be 98/666")
+    receipt = {
+        "state": "parent_verified_for_stage_e1",
+        "parent_path": str(path), "manifest_path": parent["manifest_path"],
+        "parent_sha256": digest, "parent_local_update": 250,
+        "parent_cumulative_update": 13250,
+        "actor_input_dim": 98, "critic_input_dim": 666,
+        "pose_cmd": {"present": True, "width": 2, "zero_on_first_stage": False},
+        "map_input": cfg["map_input"], "force_gt": cfg["force_gt"],
+        "parent_p_map_off": checkpoint["map_switch"].get("p_map_off"),
+        "continuation_state_fields": list(required),
+        "ex41_environment_state_restored": False,
+        "ex41_curriculum_state_restored": False,
+        "parent_placement": "env_state_on_same_mesh",
         "terrain_mesh_swap": e0_terrain_mesh_swap_receipt(),
         "approval": approval,
     }

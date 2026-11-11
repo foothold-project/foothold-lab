@@ -75,7 +75,7 @@ def test_cli_refuses_same_name_different_bytes(tmp_path, parent_file, monkeypatc
 
 
 @pytest.mark.parametrize("over,match", [
-    ({"stage_id": "E1"}, "E0 only"), ({"stage_id": "E2"}, "E0 only"), ({"stage_id": "EX42_0_T0_prime"}, "E0 only"),
+    ({"stage_id": "E1F"}, "E0 or E1 only"), ({"stage_id": "E2"}, "E0 or E1 only"), ({"stage_id": "EX42_0_T0_prime"}, "E0 or E1 only"),
     ({"headless": False}, "headless cuda:0"), ({"device": "cuda:1"}, "headless cuda:0|device"),
     ({"map_input": "ground_truth"}, "reconstructed maps"), ({"force_gt": True}, "reconstructed maps"),
     ({"max_iterations": 251}, "bounded"), ({"num_envs": 1}, "bounded"), ({"distributed": True}, "bounded"),

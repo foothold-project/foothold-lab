@@ -248,6 +248,13 @@ stages:
         side_right: 0.03
 - id: E1
   name: continuous_terrain_and_commands
+  # Parent = the finished E0 run's model_250.pt (cumulative 13250). Pin recorded from that run's manifest
+  # (completed_updates 250); the lead confirms it when the E0 re-judgement passes.
+  parent:
+    cumulative_update: 13250
+    manifest_local_update: 250
+    checkpoint_key: model_250.pt
+    sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
   minimum_updates: 1000
   maximum_updates: 2000
   extension_updates: 500
@@ -257,6 +264,12 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # CG E1: continuous 7 kinds 100 %, level cap stays at the E0 value (5) until the L5 window passes
+    # (the cap 5 -> 6 raise is its own L+ boundary, not part of the first segment). kind_task is E0's.
+    exposure_at_E1:
+      default: {exposure: 0.0, level_cap: 0}
+      positive:
+      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}
     floors:
       global_command_floor:
         reverse: 0.05
