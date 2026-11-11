@@ -6,8 +6,10 @@ receipt before the next child starts. Output must be a fresh directory.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
+from threading import Event
 
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.eval.ex42_flag_cells import contract, read_evidence, summarize_repeats
@@ -102,9 +104,22 @@ def check_e1_gate(path: Path, *, checkpoint_sha256: str) -> dict:
             "measurement": str(measurement), "measurement_sha256": row["measurement_sha256"]}
 
 
-def run_chain(checkpoint: Path, output: Path, device: str, *, plan_path: Path,
+def round_devices(device: str | None, devices: tuple[str, ...] | None) -> tuple[str, ...]:
+    """W09 plus two W08 repeats on GPU0, three W08 repeats on GPU1."""
+    if devices is None:
+        if device not in ("cuda:0", "cuda:1"):
+            raise ValueError("W09/W08 requires one registered CUDA device")
+        return (device,) * 6
+    if device is not None or tuple(devices) != ("cuda:0", "cuda:1"):
+        raise ValueError("W09/W08 dual assignment requires --devices cuda:0,cuda:1")
+    return ("cuda:0",) * 3 + ("cuda:1",) * 3
+
+
+def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: Path,
               mesh_dir: Path, expected_checkpoint_sha256: str,
-              expected_mesh_sha256: str, e1_gate: Path, task: str, execute: bool) -> dict:
+              expected_mesh_sha256: str, e1_gate: Path, task: str, execute: bool,
+              devices: tuple[str, ...] | None = None) -> dict:
+    assigned = round_devices(device, devices)
     checkpoint = Path(checkpoint).resolve(strict=True)
     plan_path = Path(plan_path).resolve(strict=True)
     mesh_dir = Path(mesh_dir).resolve(strict=True)
@@ -122,44 +137,65 @@ def run_chain(checkpoint: Path, output: Path, device: str, *, plan_path: Path,
         raise ValueError("W09/W08 pinned mesh SHA differs")
     roots = [output / "w09", *(output / "w08" / f"repeat_{i:02d}" for i in range(5))]
     seeds = [42, *plan.document["evaluation"]["flag_cells"]["repeat_seeds"]]
-    commands = [flag_kit_commands(checkpoint, root, device, task=task,
+    commands = [flag_kit_commands(checkpoint, root, assigned[index], task=task,
                                   plan_path=plan_path, mesh_dir=mesh_dir,
                                   mesh_sha256=expected_mesh_sha256, seed=seed)
-                for root, seed in zip(roots, seeds)]
+                for index, (root, seed) in enumerate(zip(roots, seeds))]
     preview = {"format": "foothold-ex42-w09-w08-chain/1", "state": "DRY" if not execute else "running",
                "checkpoint": str(checkpoint), "checkpoint_sha256": checkpoint_sha,
                "e1_gate": gate,
                "plan": str(plan_path), "plan_sha256": plan.sha256,
                "mesh_dir": str(mesh_dir), "mesh_sha256": expected_mesh_sha256,
-               "rounds": [{"root": str(root), "seed": seed, "children": [argv for _, argv in batch]}
-                          for root, seed, batch in zip(roots, seeds, commands)]}
+               "rounds": [{"root": str(root), "seed": seed, "device": assigned[index],
+                           "children": [argv for _, argv in batch]}
+                          for index, (root, seed, batch) in enumerate(zip(roots, seeds, commands))]}
     if not execute:
         return preview
     from foothold_s2 import ex41_eval_once as process
-    physical_gpu = gpu_identity(device)
+    physical = {name: gpu_identity(name) for name in set(assigned)}
     env = child_env()
     output.mkdir(parents=True)
     _atomic(output / "chain_receipt.json", preview)
     try:
-        for root, seed in zip(roots, seeds):
-            run_round(checkpoint, root, device, plan=plan, plan_path=plan_path,
-                      mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
-                      checkpoint_sha256=checkpoint_sha, seed=seed, task=task,
-                      process=process, env=env, physical_gpu=physical_gpu)
-            if root == roots[0]:
-                baseline = make_baseline(root, plan=plan, checkpoint_sha256=checkpoint_sha,
-                                         mesh_sha256=expected_mesh_sha256, seed=seed)
-                _atomic(output / "w09_baseline.json", baseline)
+        stop = Event()
+        def group(indices):
+            for index in indices:
+                if stop.is_set():
+                    return
+                try:
+                    run_round(checkpoint, roots[index], assigned[index], plan=plan, plan_path=plan_path,
+                              mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
+                              checkpoint_sha256=checkpoint_sha, seed=seeds[index], task=task,
+                              process=process, env=env, physical_gpu=physical[assigned[index]])
+                except Exception:
+                    stop.set()
+                    raise
+
+        if devices is None:
+            group(range(6))
+        else:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [pool.submit(group, range(3)), pool.submit(group, range(3, 6))]
+                for future in futures:
+                    future.result()
+        baseline = make_baseline(roots[0], plan=plan, checkpoint_sha256=checkpoint_sha,
+                                 mesh_sha256=expected_mesh_sha256, seed=seeds[0])
+        _atomic(output / "w09_baseline.json", baseline)
         calibration = make_calibration(roots[1:], plan=plan, checkpoint_sha256=checkpoint_sha)
         _atomic(output / "w08_calibration.json", calibration)
         q4 = make_q4(calibration, plan=plan)
         q4["calibration_sha256"] = digest(output / "w08_calibration.json")
         _atomic(output / "w08_proposed_q4.json", q4)
-    except (OSError, ValueError, KeyError) as exc:
+    except Exception as exc:  # A child or one GPU may fail; the chain still needs a durable HOLD receipt.
         preview.update(state="HOLD", reason=f"{type(exc).__name__}: {exc}")
         _atomic(output / "chain_receipt.json", preview)
         raise
-    preview.update(state="complete", w09_baseline={"path": str(output / "w09_baseline.json"),
+    preview.update(state="complete", round_receipts=[
+                       {"path": str(root / "round_receipt.json"),
+                        "sha256": digest(root / "round_receipt.json"),
+                        "device": assigned[index], "seed": seeds[index]}
+                       for index, root in enumerate(roots)],
+                   w09_baseline={"path": str(output / "w09_baseline.json"),
                                                   "sha256": digest(output / "w09_baseline.json")},
                    w08_calibration={"path": str(output / "w08_calibration.json"),
                                     "sha256": digest(output / "w08_calibration.json")})
@@ -175,7 +211,9 @@ def main(argv=None) -> int:
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--mesh-dir", type=Path, required=True)
     parser.add_argument("--expected-mesh-sha256", required=True)
-    parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
+    device_args = parser.add_mutually_exclusive_group(required=True)
+    device_args.add_argument("--device", choices=("cuda:0", "cuda:1"))
+    device_args.add_argument("--devices", choices=("cuda:0,cuda:1",))
     parser.add_argument("--task", default="FootholdS2-Go2-S2-SB-v0")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
@@ -185,7 +223,8 @@ def main(argv=None) -> int:
                        expected_checkpoint_sha256=args.expected_checkpoint_sha256,
                        expected_mesh_sha256=args.expected_mesh_sha256,
                        e1_gate=args.e1_gate, task=args.task,
-                       execute=args.execute)
+                       execute=args.execute,
+                       devices=tuple(args.devices.split(",")) if args.devices else None)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0
 
