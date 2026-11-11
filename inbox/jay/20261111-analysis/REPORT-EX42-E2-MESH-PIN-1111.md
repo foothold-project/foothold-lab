@@ -52,3 +52,11 @@
 합성 부모 파일에는 `CPU-ONLY synthetic E1F parent; NOT A TRAINABLE CHECKPOINT`를 적었으며 실제 모델을 사칭하지 않았다. fixture와 README는 `cpu-fixture-final/`에 있다. 학습 출력 폴더 생성도 없었다. 최초 시험 사본에서 tools 패키지를 빠뜨려 import가 실패한 기록도 보존했고, 최종 사본에는 같은 커밋의 tools를 포함해 위 결과를 얻었다.
 
 최종 원출력: `dry-results-final.json`, `actual_unfilled-final.stderr.log`, `cpu_fixture-final.stdout.log`, `locked-source-final.json`, `dry_probe.py`. 실제 운영 사슬은 E1 관문 및 E1F 완료 뒤 실제 materialize 영수증이 필요하다. 이번 PR은 그 미완료를 우회하지 않는다.
+
+## Reviewer 후속: 시험 공백 두 곳
+
+생산 코드·계획·승인 파일을 바꾸지 않고 시험만 보강했다. 선언된 프로필 이름이 null·빈 문자열·미등록 이름이거나 프로필 등록부가 없을 때 직접 함수와 실제 launcher가 모두 거절하는지 확인한다. E1F처럼 프로필 선언 자체가 없는 경우의 공통 경로 허용은 별도로 유지한다.
+
+`no_empty_flags` 시험은 실제 NPZ에서 flags 키를 뺀 경우와 flags 전부가 NaN인 경우를 각각 만든다. NPZ 파일 SHA와 mesh_manifest 내부 NPZ SHA 및 manifest 파일 SHA를 모두 다시 고정해, 오래된 SHA 때문이 아니라 `no usable named-kind flag table` 계약으로 거절되는지 확인했다.
+
+최종 두 파일 시험 원출력: **50 passed in 8.20s**. 프로필 결측 때 예외 대신 None을 반환하는 돌연변이는 4개 반례에서 `DID NOT RAISE ValueError`로 실패했다. 깃발 표 검사를 끈 돌연변이는 all_nan 반례에서 같은 이유로 실패했다. None 배열에 대한 우연한 TypeError를 검출 근거로 삼지 않았다. 원출력·시험 프로세스 안 치환 스크립트는 `/home/jay/mai/tmp/verifier-lx/e2-mesh-pin-1111/review-tests/`의 `green.log`, `mutant-profile.log`, `mutant-flags.log`, `review_mutant.py`다. pyflakes와 diff 검사 통과. GPU/Kit·원자료·앞서 잠근 사본은 변경하거나 실행하지 않았다.

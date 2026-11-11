@@ -87,7 +87,8 @@ def test_missing_or_modified_pinned_file_is_refused(tmp_path, pinned, filename, 
         pinned_stage_mesh(d, 'E2')
 
 
-def test_geometric_hash_is_not_the_npz_file_hash_and_no_empty_flags(tmp_path, pinned):
+@pytest.mark.parametrize('flags_case', ['absent', 'all_nan'])
+def test_geometric_hash_is_not_the_npz_file_hash_and_no_empty_flags(tmp_path, pinned, flags_case):
     from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
     d = document(pinned); d['training_mesh_profiles']['known']['geometry_sha256'] = pinned['files']['terrain_mesh.npz']
     with pytest.raises(ValueError, match='mesh'):
@@ -95,6 +96,45 @@ def test_geometric_hash_is_not_the_npz_file_hash_and_no_empty_flags(tmp_path, pi
     d = document(pinned); d['training_mesh_profiles']['known']['directory'] = str(tmp_path / 'absent')
     with pytest.raises(ValueError, match='mesh'):
         pinned_stage_mesh(d, 'E2')
+
+
+    # Make a genuinely flag-free / empty-flag NPZ and re-pin every affected
+    # byte hash. The rejection must be the flag contract, not a stale SHA.
+    root = Path(pinned['directory'])
+    with np.load(root / 'terrain_mesh.npz', allow_pickle=False) as saved:
+        arrays = {key: saved[key].copy() for key in saved.files if key != 'flags'}
+    if flags_case == 'all_nan':
+        arrays['flags'] = np.full((1, 1, 4, 2), np.nan, dtype=np.float32)
+    np.savez(root / 'terrain_mesh.npz', **arrays)
+    manifest = json.loads((root / 'mesh_manifest.json').read_text())
+    manifest['mesh_file_sha256'] = sha(root / 'terrain_mesh.npz')
+    (root / 'mesh_manifest.json').write_text(json.dumps(manifest))
+    d = document(pinned)
+    profile = d['training_mesh_profiles']['known']
+    for name in ('terrain_mesh.npz', 'mesh_manifest.json'):
+        profile['files'][name] = sha(root / name)
+    with pytest.raises(ValueError, match='no usable named-kind flag table'):
+        pinned_stage_mesh(d, 'E2')
+
+
+@pytest.mark.parametrize('missing', ['null_name', 'empty_name', 'unknown_name', 'registry'])
+def test_declared_profile_missing_never_falls_back_to_common_mesh(tmp_path, pinned, missing):
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    d = document(pinned)
+    assert pinned_stage_mesh(d, 'E1F') is None  # No declaration: legitimate common path.
+    row = next(r for r in d['stages'] if r['id'] == 'E2')
+    if missing == 'registry':
+        d.pop('training_mesh_profiles')
+    else:
+        row['training_mesh_profile'] = {'null_name': None, 'empty_name': '', 'unknown_name': 'absent'}[missing]
+    with pytest.raises(ValueError, match='stage mesh profile is missing'):
+        pinned_stage_mesh(d, 'E2')
+    # A usable common path must not make the actual launcher silently accept it.
+    plan = tmp_path / 'plan.yaml'; plan.write_text(yaml.safe_dump(d))
+    env = _env(tmp_path, stage='E2')
+    env.update(EX42_AUTO_PLAN=str(plan), EX42_AUTO_APPROVALS=str(launcher.APPROVALS))
+    with pytest.raises(launcher.LaunchRefused, match='stage mesh profile is missing'):
+        launcher.build(env, dry_run=True)
 
 
 def test_materialize_preserves_profile_and_records_file_refs(known, pinned):
