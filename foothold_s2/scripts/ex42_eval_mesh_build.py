@@ -5,18 +5,22 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from foothold_s2.terrains.ex42_eval_terrains import KINDS, LANDING, PAPER, write_mesh
+from foothold_s2.terrains.ex42_eval_terrains import KINDS, LANDING, PAPER, START, SURFACE_SPIN, write_mesh
+from foothold_s2.terrains.ex42_eval_records import KINDS as RECORDS
 from foothold_s2.eval.ex42_eval_mesh import preflight
 from foothold_s2.scripts.ex42_mesh_mount_check import part_a
+
+GROUPS = {'landing': (LANDING,), 'paper': PAPER, 'start': START,
+          'surface': (SURFACE_SPIN,), 'records': RECORDS, 'all': KINDS}
 
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--group',choices=['landing','paper','start','all'],default='all')
+    p.add_argument('--group',choices=list(GROUPS),default='all')
     p.add_argument('--seed',type=int,default=42)
     a=p.parse_args(argv)
-    kinds={'landing':(LANDING,),'paper':PAPER,'start':KINDS[8:],'all':KINDS}[a.group]
+    kinds=GROUPS[a.group]
     doc=write_mesh(a.out,kinds=kinds,seed=a.seed)
     record=preflight(a.out)
     cpu=part_a(record)

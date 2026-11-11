@@ -143,14 +143,14 @@ def test_a_launcher_that_is_not_an_absolute_executable_file_is_refused_before_an
 
 
 # ---- evaluation tail: notice, state and launch -------------------------------------------------------
-def _tail(known, tmp_path, launcher, *, gate=None, gpu_wait=None):
+def _tail(known, tmp_path, launcher, *, gate=None, gpu_wait=None, register=None):
     plan, _, manifest, gp = known
     out = _out(tmp_path)
     (out / "p1_score.json").write_text(json.dumps(gate or _gate(known)))
     p1 = json.loads((out / "p1_score.json").read_text())
     approvals = known[1]
     notice = once._hand_off(plan, approvals, "E0", 250, p1, manifest.parent / "model_250.pt", out, launcher,
-                           gpu_wait=gpu_wait)
+                           gpu_wait=gpu_wait, register=register)
     return notice, out
 
 
@@ -249,3 +249,88 @@ def test_real_e0_pass_and_the_shipped_e1_cell_decide_to_launch_e1():
     assert decision["action"] == "launch", decision
     assert decision["authorization"]["scope"]["stage_id"] == "E1"
     assert decision["authorization"]["scope"]["parent_sha256"].startswith("680c820b")
+
+
+# ---- the auto-started training goes into the GPU queue (no queued evaluation over it) -----------------------
+DISPATCH = ROOT / "_out" / "tools" / "gpu_jobs" / "dispatch.py"
+needs_dispatch = pytest.mark.skipif(not DISPATCH.is_file(), reason="the GPU dispatcher is not in this checkout")
+
+
+def _exec_launcher(tmp_path):
+    return _launcher(tmp_path, body="exec sleep 60\n")
+
+
+@needs_dispatch
+def test_a_started_training_is_registered_as_a_running_external_item_on_both_gpus(known, tmp_path):
+    import os
+    import signal
+    queue = tmp_path / "queue.json"
+    notice, out = _tail(known, tmp_path, _exec_launcher(tmp_path),
+                        register=lambda pid, log, title: handoff.register_launched_training(
+                            queue, DISPATCH, pid=pid, log=log, title=title))
+    try:
+        items = json.loads(queue.read_text())["items"]
+        assert notice["state"] == "next_stage_started" and notice["queue_registration"].startswith("registered")
+        assert sorted(it["gpu"] for it in items) == [0, 1]
+        assert all(it["external"] and it["state"] == "실행" and it["pid"] == notice["launcher_pid"] for it in items)
+        os.kill(notice["launcher_pid"], 0)                    # the registered process is still the live training
+    finally:
+        os.killpg(notice["launcher_pid"], signal.SIGTERM)
+
+
+def test_a_failed_registration_is_reported_but_does_not_undo_the_started_training(known, tmp_path):
+    import os
+    import signal
+
+    def broken(pid, log, title):
+        raise ValueError("queue locked")
+
+    notice, _ = _tail(known, tmp_path, _exec_launcher(tmp_path), register=broken)
+    try:
+        assert notice["state"] == "next_stage_started" and notice["automatic_launch_started"] is True
+        assert notice["queue_registration_error"] == "queue locked"
+    finally:
+        os.killpg(notice["launcher_pid"], signal.SIGTERM)
+
+
+def test_nothing_is_registered_when_nothing_was_started(known, tmp_path):
+    calls = []
+    notice, _ = _tail(known, tmp_path, None, register=lambda *a: calls.append(a))
+    assert calls == [] and "queue_registration" not in notice
+    (tmp_path / "h").mkdir()
+    notice, _ = _tail(known, tmp_path / "h", _launcher(tmp_path / "h"), gate={**_gate(known), "judgment": "HOLD"},
+                      register=lambda *a: calls.append(a))
+    assert calls == []
+
+
+def test_the_run_and_the_cli_carry_the_queue_registration():
+    import inspect
+    assert "handoff.register_launched_training(" in inspect.getsource(once.run)
+    source = inspect.getsource(once.main)
+    assert "--next-stage-queue" in source and "--next-stage-dispatch" in source
+
+
+def test_chain_validator_takes_the_queue_pair_only_together_with_a_launcher(tmp_path):
+    from foothold_s2.tests.test_ex42_split_eval_cpu import _argv, _mesh, _profile_p1_on_gpu1
+    from foothold_s2.ex42_chain import _validate_p1_score_command
+    ck = tmp_path / "run" / "model_250.pt"
+    ck.parent.mkdir()
+    ck.write_bytes(b"x")
+    mesh_dir, mesh_sha = _mesh(tmp_path)
+    argv = _argv(ck, tmp_path / "score_250", mesh_dir, mesh_sha)
+    launcher, dispatch = _launcher(tmp_path), tmp_path / "dispatch.py"
+    dispatch.write_text("x")
+    base = argv + ["--next-stage-launcher", str(launcher)]
+    ok = base + ["--next-stage-queue", str(tmp_path / "q.json"), "--next-stage-dispatch", str(dispatch)]
+
+    def check(trial):
+        _validate_p1_score_command(trial, machine_profile=_profile_p1_on_gpu1(), iteration=250,
+                                   checkpoint_path=ck, expected_stage_id="E1")
+
+    check(ok)
+    for bad in (base + ["--next-stage-queue", str(tmp_path / "q.json")],
+                argv + ["--next-stage-queue", str(tmp_path / "q.json"), "--next-stage-dispatch", str(dispatch)],
+                base + ["--next-stage-queue", "q.json", "--next-stage-dispatch", str(dispatch)],
+                base + ["--next-stage-queue", str(tmp_path / "q.json"), "--next-stage-dispatch", str(tmp_path / "gone.py")]):
+        with pytest.raises(ValueError, match="next-stage queue"):
+            check(bad)

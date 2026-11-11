@@ -204,3 +204,21 @@ def test_boundary_resume_keeps_the_e1_mirror_on_instead_of_the_w72_hold(tmp_path
     monkeypatch.setattr(start_runner.StartRunner, "_valid_ex42_mirror_approval", valid_for())
     runner.load(str(path), map_location="cpu")
     assert runner.alg.mirror_enabled is False and len(hold) == 1
+
+
+# ---- reviewer fix 1 (#643): a boundary resume only continues in the run directory of its checkpoint -----------
+def test_a_resume_in_another_directory_is_refused_and_the_same_directory_passes(tmp_path):
+    run = tmp_path / "run"
+    run.mkdir()
+    checkpoint = run / "model_250.pt"
+    checkpoint.write_bytes(b"x")
+    assert entry.require_same_run_resume(run, checkpoint) is True
+    assert entry.require_same_run_resume(run / ".." / "run", checkpoint) is True       # same place by another spelling
+    for other in (tmp_path / "other", tmp_path, run / "sub"):
+        with pytest.raises(ValueError, match="run directory of its checkpoint"):
+            entry.require_same_run_resume(other, checkpoint)
+
+
+def test_train_start_resume_goes_through_the_same_run_guard_and_nothing_else_decides_it():
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)" in text

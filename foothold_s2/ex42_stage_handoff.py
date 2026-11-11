@@ -7,7 +7,9 @@ approval and of the predecessor PASS is `ex42_auto_authorization.validate_automa
 """
 from __future__ import annotations
 
+import datetime as _dt
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -117,3 +119,21 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
     record.update(state="started", pid=child.pid)
     (output / LAUNCH_RECORD).write_text(json.dumps(record, ensure_ascii=False, sort_keys=True), encoding="utf-8")
     return record
+
+
+def register_launched_training(queue_path, dispatch_path, *, pid, log, title, gpus=(0, 1), now=None):
+    """Put the launched training into the GPU queue as an external process (`queue external`), so the dispatcher sees
+    both GPUs busy and starts no queued evaluation on them. The launcher must `exec` the trainer: the registered PID is
+    the launcher's, and the queue settles the item when that process ends."""
+    now = _dt.datetime.now() if now is None else now
+    spec = importlib.util.spec_from_file_location("ex42_handoff_dispatch", str(dispatch_path))
+    if spec is None or spec.loader is None:
+        raise ValueError("EX-42 GPU dispatcher unavailable")
+    dispatch = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dispatch)
+    stamp = "%m-%d %H:%M"
+    from types import SimpleNamespace
+    args = SimpleNamespace(qaction="external", title=title, gpu=list(gpus), priority=1, pid=int(pid),
+                           start=(now - _dt.timedelta(minutes=1)).strftime(stamp),
+                           end=(now + _dt.timedelta(hours=12)).strftime(stamp), log=str(log), owner="ex42-auto")
+    return dispatch.queue_cmd(args, {"queue": str(queue_path)})

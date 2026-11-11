@@ -76,6 +76,13 @@ def _validate_p1_score_command(argv: list[str], *, machine_profile: dict[str, An
         launcher = Path(option("--next-stage-launcher"))
         if not launcher.is_absolute() or not launcher.is_file() or not os.access(launcher, os.X_OK):
             raise ValueError("EX-42 Linux P1 next-stage launcher must be an absolute executable file")
+    if ("--next-stage-queue" in argv) != ("--next-stage-dispatch" in argv) or (
+            "--next-stage-queue" in argv and "--next-stage-launcher" not in argv):
+        raise ValueError("EX-42 Linux P1 next-stage queue and dispatcher go together and need a launcher")
+    if "--next-stage-queue" in argv and not (Path(option("--next-stage-dispatch")).is_absolute()
+                                              and Path(option("--next-stage-dispatch")).is_file()
+                                              and Path(option("--next-stage-queue")).is_absolute()):
+        raise ValueError("EX-42 Linux P1 next-stage queue and dispatcher must be absolute paths to existing files")
     if (option("--eval-seed") != "42" or "--sha-from-manifest" not in argv
             or "--execute" not in argv or "--score-existing" in argv):
         raise ValueError("EX-42 Linux P1 requires seed 42, manifest checkpoint SHA and execution")

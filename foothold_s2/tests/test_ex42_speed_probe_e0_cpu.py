@@ -443,7 +443,7 @@ def test_train_start_passes_the_manifest_path_and_only_dry_run_exits():
     text = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
     assert "terrain_manifest_path=_pre_args.ex42_terrain_manifest" in text
     assert "raise SystemExit(0 if _pre_args.ex42_stage_e0_dry_run else 3)" not in text      # real E0 no longer exits 3
-    assert "if _e_dry_run:\n            raise SystemExit(0)" in text                        # only the dry run exits (E0 and E1 flags)
+    assert "if _e_dry_run and not _pre_args.ex42_resume_from:\n            raise SystemExit(0)" in text                        # only the dry run exits (E0 and E1 flags)
     assert text.count("--ex42_terrain_manifest") == 2
 
 

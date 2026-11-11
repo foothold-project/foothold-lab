@@ -33,11 +33,45 @@ SPEED_PROBE_UPDATES = (20, 50)
 SPEED_PROBE_ENVS = (1536, 3072)
 STAGE_E0_ID = "E0"
 STAGE_E0_DEVICE = "cuda:0"
-STAGE_E0_UPDATES = 250
 STAGE_E1_ID = "E1"
-STAGE_E1_UPDATES = 1000                       # first E1 segment (plan minimum); the +500 extensions are separate boundaries
-# stage id -> (updates, parent local update, parent cumulative update); the parent of E1 is the finished E0 run's m250
-E_STAGES = {STAGE_E0_ID: (STAGE_E0_UPDATES, 1000, 13000), STAGE_E1_ID: (STAGE_E1_UPDATES, 250, 13250)}
+
+
+def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Every plan stage that pins its parent (stages[].parent), in plan order: the stages this entry can start.
+
+    A stage without a parent pin (E1F and later today) is not startable: its parent is the previous stage's finished
+    run, and the pin is written into the plan when that is known. `previous` is the stage whose run is the parent
+    (None for the first, whose parent is the stage-zero m13000). Nothing here names a stage."""
+    table: dict[str, dict[str, Any]] = {}
+    previous = None
+    for row in stages:
+        parent = row.get("parent")
+        if not isinstance(parent, dict):
+            continue
+        table[row["id"]] = {
+            "updates": row["minimum_updates"], "parent_local": parent["manifest_local_update"],
+            "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
+            "critic_mirror": row.get("critic_mirror") is True,
+            "previous": previous}
+        previous = row["id"]
+    return table
+
+
+def _shipped_stages() -> list[dict[str, Any]]:
+    import yaml
+    path = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8-sig"))["stages"]
+
+
+E_STAGE_SPECS = e_stage_table(_shipped_stages())
+# stage id -> (updates, parent local update, parent cumulative update), read from the plan (E1: the first segment, the
+# plan minimum; the +500 extensions are separate boundaries)
+E_STAGES = {stage: (spec["updates"], spec["parent_local"], spec["parent_cumulative"])
+            for stage, spec in E_STAGE_SPECS.items()}
+STAGE_E0_UPDATES = E_STAGES[STAGE_E0_ID][0]
+STAGE_E1_UPDATES = E_STAGES[STAGE_E1_ID][0]
+# approval cell validator per stage; a stage without a line here is refused (its approval cell is not reviewed yet)
+APPROVAL_VALIDATORS = {STAGE_E0_ID: validate_stage_e0_authorization, STAGE_E1_ID: validate_stage_e1_authorization}
 # m13000 = stage-zero model_1000.pt (experiments/EX-42.yaml operational_values.e_stage_parent; a test keeps both equal).
 E0_PARENT_SHA256 = "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768"
 STAGE_ZERO_PARENT_SHA256 = "1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613"
@@ -136,12 +170,16 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
     stage_terrain = {**_e_stage(plan, stage_id)["terrain"], "kind_task": _e0_stage(plan)["terrain"]["kind_task"]}
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
+    from foothold_s2.terrains.ex42_exposure import column_shares
+    shares = column_shares(stage_terrain, table, stage_id)
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
+    from foothold_s2.terrains.ex42_flags import attach_mesh_flags
+    flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
-            "exposure": exposure, "level_caps": level_caps,
+            "exposure": exposure, "level_caps": level_caps, "shares": shares, "flag_table": flag_table,
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
@@ -163,6 +201,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     from foothold_s2.terrains.ex42_exposure import apply_exposure
 
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
+                          shares=contract.get("shares"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
                           parent_same_mesh=parent_same_mesh)
 
@@ -301,7 +340,8 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     if approved_switch is not True:
         raise ValueError(f"EX-42 {stage_id} requires its explicit scoped approval switch")
     if stage_id not in E_STAGES:
-        raise ValueError("EX-42 stage entry accepts E0 or E1 only; E1F and later stages are not authorized")
+        raise ValueError(f"EX-42 stage entry accepts {' or '.join(E_STAGES)} only; "
+                         "a stage without a pinned parent in the plan is not authorized")
     updates = E_STAGES[stage_id][0]
     if task != STAGE_ZERO_TASK_ID:
         raise ValueError(f"EX-42 {stage_id} task differs from the approved task")
@@ -328,17 +368,20 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     elif output.exists() and rank == 0:           # every rank gets the same argv; rank 0 creates the run directory
         raise ValueError(f"EX-42 {stage_id} output must be new")
     plan = EX42Plan.load(plan_path)
-    if stage_id == STAGE_E0_ID:
+    spec = E_STAGE_SPECS[stage_id]
+    if spec["previous"] is None:
         parent = read_e_stage_parent(experiment_path)
         parent_label = "m13000"
     else:
         parent = dict(_e_stage(plan, stage_id)["parent"])
-        parent_label = "E0 m250"
+        parent_label = f"{spec['previous']} m{spec['parent_local']}"
     checkpoint = Path(parent_checkpoint_path).resolve(strict=True)
     digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     if checkpoint.name != parent["checkpoint_key"] or digest != parent["sha256"]:
         raise ValueError(f"EX-42 {stage_id} parent checkpoint differs from the pinned {parent_label}")
-    validator = validate_stage_e0_authorization if stage_id == STAGE_E0_ID else validate_stage_e1_authorization
+    validator = APPROVAL_VALIDATORS.get(stage_id)
+    if validator is None:
+        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
     approval = validator(plan, approvals_path, parent["sha256"])
     request = {
         "state": f"stage_{stage_id.lower()}_preflight_passed", "stage_id": stage_id,
@@ -350,12 +393,20 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         "approval": approval, "world_size": world_size, "rank": rank,
         "total_envs": num_envs * world_size,
     }
-    if stage_id == STAGE_E1_ID:
+    if spec["critic_mirror"]:
         request["critic_mirror"] = {"enabled_at_start": True, "decision_id": "D174"}
     if speed_probe:
         request["speed_probe"] = {"updates": max_iterations, "num_envs": num_envs,
                                   "distributed": bool(distributed)}
     return plan, parent, request
+
+
+def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) -> bool:
+    """A boundary segment continues in the run directory that holds its checkpoint (manifest, chain receipts and the
+    queued evaluations all live there); any other log directory splits the run in two and is refused."""
+    if Path(log_dir).resolve() != Path(resume_checkpoint).resolve().parent:
+        raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
+    return True
 
 
 def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
@@ -367,7 +418,7 @@ def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_u
     """
     if segment_end is None:
         return stage_updates
-    allowed = stage_updates if stage_id == STAGE_E0_ID else interval
+    allowed = interval if interval else stage_updates      # a stage whose cell names no interval has one boundary, its end
     if (type(segment_end) is not int or type(allowed) is not int or allowed <= 0
             or segment_end % allowed != 0 or not origin < segment_end <= stage_updates):
         raise ValueError(f"EX-42 {stage_id} segment end must be a boundary after update {origin} and inside {stage_updates}")
@@ -398,8 +449,10 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
     Dry-run reports the terrain manifest state and the blockers, then train_start exits 0.
     A real run needs a measured manifest (else ValueError). A missing or incomplete E0 approval cell fails closed in validate_ex42_stage_e_cli.
     """
-    if stage_zero_requested or (resume_requested and cli.get("stage_id") != STAGE_E1_ID):
-        raise ValueError("EX-42 E0 cannot be combined with stage-zero or resume switches (only E1 resumes at a boundary)")
+    resumable = [stage for stage, spec in E_STAGE_SPECS.items() if spec["previous"] is not None]
+    if stage_zero_requested or (resume_requested and cli.get("stage_id") not in resumable):
+        raise ValueError("EX-42 the first E stage cannot be combined with stage-zero or resume switches "
+                         f"(only {', '.join(resumable)} resumes at a boundary)")
     cli["resume_same_run"] = bool(resume_requested)
     if not e0_approved:
         raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
@@ -877,7 +930,7 @@ class EX42StageZeroRuntime:
         # E0 (m13000 -> 250 updates) reuses this single-stage runtime with its own id and bound.
         bound = E_STAGES[stage_id][0] if stage_id in E_STAGES else STAGE_ZERO_UPDATES
         if stage_id not in ("EX42_0_T0_prime", *E_STAGES):
-            raise ValueError("EX-42 single-stage runtime accepts stage zero, E0 or E1 only")
+            raise ValueError(f"EX-42 single-stage runtime accepts stage zero, {' or '.join(E_STAGES)} only")
         if maximum_updates != bound and not (
                 speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
             raise ValueError(f"EX-42 stage-zero runtime must remain bounded to {bound} updates")
@@ -1339,9 +1392,13 @@ def inspect_ex42_stage_e0_parent(*, plan: EX42Plan, approvals_path: str | Path,
     return checkpoint, receipt
 
 
-def inspect_ex42_stage_e1_parent(*, plan: EX42Plan, approvals_path: str | Path,
-                                 parent_manifest_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Load and validate the finished E0 run's model_250.pt as the E1 parent.
+def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: str | Path,
+                              parent_manifest_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load and validate the finished previous stage's run checkpoint (the plan's pin) as the parent of `stage_id`.
+
+    Everything stage specific is read from the plan table (E_STAGE_SPECS): the pinned checkpoint, its local and
+    cumulative update, the previous stage id and update bound its curriculum state must carry, and whether the previous
+    stage trained with the critic mirror. Stages that have no plan pin or no reviewed approval validator are refused.
 
     The continuation contract is the E0 one (learner, perception, AdaSmpl, map switch, RNG and
     normalization carry over; the critic mirror starts OFF in the parent and is switched on by the
@@ -1351,46 +1408,55 @@ def inspect_ex42_stage_e1_parent(*, plan: EX42Plan, approvals_path: str | Path,
     """
     import torch
 
-    pin = dict(_e_stage(plan, STAGE_E1_ID)["parent"])
-    approval = validate_stage_e1_authorization(plan, approvals_path, pin["sha256"])
-    parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=STAGE_E1_ID)
+    spec = E_STAGE_SPECS.get(stage_id)
+    if spec is None or spec["previous"] is None:
+        raise ValueError(f"EX-42 {stage_id} is not a stage that continues a previous stage's run")
+    validator = APPROVAL_VALIDATORS.get(stage_id)
+    if validator is None:
+        raise ValueError(f"EX-42 {stage_id} has no reviewed approval cell validator")
+    previous, local, cumulative = spec["previous"], spec["parent_local"], spec["parent_cumulative"]
+    mirror_before = E_STAGE_SPECS[previous]["critic_mirror"]
+    pin = dict(_e_stage(plan, stage_id)["parent"])
+    approval = validator(plan, approvals_path, pin["sha256"])
+    parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=stage_id)
     path = Path(parent["checkpoint_path"]).resolve(strict=True)
     if path.name != pin["checkpoint_key"]:
-        raise ValueError("EX-42 E1 parent checkpoint is not the pinned model_250.pt")
+        raise ValueError(f"EX-42 {stage_id} parent checkpoint is not the pinned {pin['checkpoint_key']}")
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != pin["sha256"]:
-        raise ValueError("EX-42 E1 parent checkpoint SHA differs from the pinned E0 m250")
+        raise ValueError(f"EX-42 {stage_id} parent checkpoint SHA differs from the pinned {previous} m{local}")
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     if (not isinstance(checkpoint, dict)
             or checkpoint.get("format") != "foothold-start/1"
-            or checkpoint.get("iter") != 250
+            or checkpoint.get("iter") != local
             or checkpoint.get("ex41_pose_commands") is not True
-            or checkpoint.get("ex41_critic_mirror") is not False):
-        raise ValueError("EX-42 E1 parent is not the E0 model_250.pt pose_cmd checkpoint with the mirror off")
+            or checkpoint.get("ex41_critic_mirror") is not mirror_before):
+        raise ValueError(f"EX-42 {stage_id} parent is not the {previous} {pin['checkpoint_key']} pose_cmd checkpoint "
+                         f"with the mirror {'on' if mirror_before else 'off'}")
     cfg = checkpoint.get("perception_cfg") or {}
     if cfg.get("map_input") != "reconstruction" or cfg.get("force_gt") is not False:
-        raise ValueError("EX-42 E1 parent must consume reconstructed maps without GT forcing")
+        raise ValueError(f"EX-42 {stage_id} parent must consume reconstructed maps without GT forcing")
     state = checkpoint.get("continuous_curriculum")
     if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
-            or state.get("stage_id") != STAGE_E0_ID or state.get("iteration") != 250
-            or state.get("maximum_updates") != 250):
-        raise ValueError("EX-42 E1 parent curriculum state is not the finished E0 state")
+            or state.get("stage_id") != previous or state.get("iteration") != local
+            or state.get("maximum_updates") != E_STAGES[previous][0]):
+        raise ValueError(f"EX-42 {stage_id} parent curriculum state is not the finished {previous} state")
     required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
                 "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
                 "normalization_state", "rng", "map_switch", "continuous_curriculum", "env_state")
     missing = [key for key in required if key not in checkpoint or checkpoint[key] is None]
     if missing:
-        raise ValueError("EX-42 E1 parent lacks continuation state: " + ", ".join(missing))
+        raise ValueError(f"EX-42 {stage_id} parent lacks continuation state: " + ", ".join(missing))
     model = checkpoint["model_state_dict"]
     actor, critic = model.get("actor.0.weight"), model.get("critic.0.weight")
     if (actor is None or tuple(actor.shape) != (512, 98)
             or critic is None or tuple(critic.shape) != (512, 666)):
-        raise ValueError("EX-42 E1 parent actor/critic dimensions must be 98/666")
+        raise ValueError(f"EX-42 {stage_id} parent actor/critic dimensions must be 98/666")
     receipt = {
-        "state": "parent_verified_for_stage_e1",
+        "state": f"parent_verified_for_stage_{stage_id.lower()}",
         "parent_path": str(path), "manifest_path": parent["manifest_path"],
-        "parent_sha256": digest, "parent_local_update": 250,
-        "parent_cumulative_update": 13250,
+        "parent_sha256": digest, "parent_local_update": local,
+        "parent_cumulative_update": cumulative,
         "actor_input_dim": 98, "critic_input_dim": 666,
         "pose_cmd": {"present": True, "width": 2, "zero_on_first_stage": False},
         "map_input": cfg["map_input"], "force_gt": cfg["force_gt"],
@@ -1403,6 +1469,13 @@ def inspect_ex42_stage_e1_parent(*, plan: EX42Plan, approvals_path: str | Path,
         "approval": approval,
     }
     return checkpoint, receipt
+
+
+def inspect_ex42_stage_e1_parent(*, plan: EX42Plan, approvals_path: str | Path,
+                                 parent_manifest_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """E1 through the plan-driven inspector (kept for the callers and tests that name E1)."""
+    return inspect_ex42_stage_parent(plan=plan, stage_id=STAGE_E1_ID, approvals_path=approvals_path,
+                                     parent_manifest_path=parent_manifest_path)
 
 
 def build_ex42_training_chain(*, plan_path: str | Path,

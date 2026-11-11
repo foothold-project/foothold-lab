@@ -67,9 +67,13 @@ def test_saved_bytes_repeat_and_manifest_pins_every_input(tmp_path):
     et.write_mesh(q, kinds=et.KINDS, seed=42)
     assert (p/'terrain_mesh.npz').read_bytes() == (q/'terrain_mesh.npz').read_bytes()
     r = preflight(p)
-    assert len(r['columns']) == 20
-    assert r['origins'].shape == (1,20,3)
+    assert len(r['columns']) == 32
+    assert r['origins'].shape == (1,32,3)
     assert r['manifest']['training_allowed'] is False
+    cases={c['case_id']:c for c in r['manifest']['evaluation_cases']}
+    assert len(cases)==34  # 32 meshes and two reverse-command aliases.
+    assert cases['eval_stairs_020_reverse']['geometry_id']=='eval_stairs_020'
+    assert all(c['training_allowed'] is False for c in cases.values())
     assert r['manifest']['rng_provenance']['caller_state_restored']
     assert all(c['sources'] for c in r['columns'])
     assert r['manifest']['mesh_file_sha256'] == hashlib.sha256((p/'terrain_mesh.npz').read_bytes()).hexdigest()

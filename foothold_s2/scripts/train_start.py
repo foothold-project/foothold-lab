@@ -78,6 +78,9 @@ _pre.add_argument("--ex42_stage_e0_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e0_dry_run", action="store_true")
 _pre.add_argument("--ex42_stage_e1_approved", action="store_true")
 _pre.add_argument("--ex42_stage_e1_dry_run", action="store_true")
+_pre.add_argument("--ex42_stage", default=None)            # any plan stage that pins its parent (E0 / E1 flags above are aliases)
+_pre.add_argument("--ex42_stage_approved", action="store_true")
+_pre.add_argument("--ex42_stage_dry_run", action="store_true")
 _pre.add_argument("--ex42_terrain_manifest")
 _pre.add_argument("--ex42_terrain_mesh_dir")
 _pre.add_argument("--ex42_resume_from", type=str, default=None,
@@ -100,14 +103,31 @@ _pre.add_argument("--force_gt", action="store_true")
 _pre.add_argument("--headless", action="store_true")
 _pre.add_argument("--distributed", action="store_true")
 _pre_args, _pre_unknown = _pre.parse_known_args()
-_E0_FLAGS = bool(_pre_args.ex42_stage_e0_approved or _pre_args.ex42_stage_e0_dry_run)
-_E1_FLAGS = bool(_pre_args.ex42_stage_e1_approved or _pre_args.ex42_stage_e1_dry_run)
-if _E0_FLAGS and _E1_FLAGS:
-    raise ValueError("EX-42 E0 and E1 cannot be requested together")
-EX42_E0_REQUESTED = _E0_FLAGS or _E1_FLAGS          # "an E stage is requested" (the E0 code path carries E1 too)
-EX42_STAGE_ID = "E1" if _E1_FLAGS else "E0" if _E0_FLAGS else "EX42_0_T0_prime"
-EX42_STAGE_UPDATES = 1000 if _E1_FLAGS else 250 if _E0_FLAGS else 1000      # bound of the single-stage run (E0: m13000 -> 250; E1 first segment: E0 m250 -> 1000)
-EX42_STAGE_PARENT_UPDATES = (250, 13250) if _E1_FLAGS else (1000, 13000)   # (parent local update, cumulative) of the E stages
+# One requested E stage (the plan's stages[] table decides which ids exist and what they are bound to).
+_E_REQUESTS = [(stage_id, approved, dry_run) for stage_id, approved, dry_run in (
+    ("E0", _pre_args.ex42_stage_e0_approved, _pre_args.ex42_stage_e0_dry_run),
+    ("E1", _pre_args.ex42_stage_e1_approved, _pre_args.ex42_stage_e1_dry_run),
+    (_pre_args.ex42_stage, _pre_args.ex42_stage_approved, _pre_args.ex42_stage_dry_run)) if approved or dry_run
+    or (stage_id is not None and stage_id == _pre_args.ex42_stage)]
+if len({request[0] for request in _E_REQUESTS}) > 1:
+    raise ValueError("EX-42 two different stages cannot be requested together")
+EX42_E0_REQUESTED = bool(_E_REQUESTS)               # "an E stage is requested" (the E0 code path carries every E stage)
+EX42_E_APPROVED = any(request[1] for request in _E_REQUESTS)
+EX42_E_DRY_RUN = any(request[2] for request in _E_REQUESTS)
+EX42_STAGE_ID = _E_REQUESTS[0][0] if _E_REQUESTS else "EX42_0_T0_prime"
+EX42_STAGE_SPEC = None
+if EX42_E0_REQUESTED:
+    from foothold_s2.scripts.ex42_training_entry import E_STAGE_SPECS as _E_STAGE_SPECS
+    if EX42_STAGE_ID not in _E_STAGE_SPECS:
+        raise ValueError(f"EX-42 stage {EX42_STAGE_ID} has no pinned parent in the plan (stages: {', '.join(_E_STAGE_SPECS)})")
+    EX42_STAGE_SPEC = _E_STAGE_SPECS[EX42_STAGE_ID]
+# bound of the single-stage run (first segment: the plan minimum) and the parent (local update, cumulative update)
+EX42_STAGE_UPDATES = EX42_STAGE_SPEC["updates"] if EX42_STAGE_SPEC else 1000
+EX42_STAGE_PARENT_UPDATES = ((EX42_STAGE_SPEC["parent_local"], EX42_STAGE_SPEC["parent_cumulative"])
+                             if EX42_STAGE_SPEC else (1000, 13000))
+# a stage whose parent is the previous stage's finished run (not the stage-zero m13000)
+EX42_CONTINUES_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["previous"] is not None)
+EX42_MIRROR_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["critic_mirror"])      # plan stages[].critic_mirror (D174)
 # ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
 EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
 EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLIT else 0
@@ -492,8 +512,8 @@ if _ex42_requested:
     _stage_zero_requested = bool(_pre_args.ex42_stage_zero_approved
                                  or _pre_args.ex42_stage_zero_dry_run)
     _stage_e0_requested = EX42_E0_REQUESTED          # E0 or E1 (see EX42_STAGE_ID)
-    _e_approved = bool(_pre_args.ex42_stage_e1_approved if EX42_STAGE_ID == "E1" else _pre_args.ex42_stage_e0_approved)
-    _e_dry_run = bool(_pre_args.ex42_stage_e1_dry_run if EX42_STAGE_ID == "E1" else _pre_args.ex42_stage_e0_dry_run)
+    _e_approved = EX42_E_APPROVED
+    _e_dry_run = EX42_E_DRY_RUN
     from foothold_s2.scripts.ex42_training_entry import (
         run_ex42_stage_e0_entry,
         speed_probe_builds_chain, validate_speed_probe_switches,
@@ -513,7 +533,7 @@ if _ex42_requested:
             plan_path=_pre_args.ex42_plan, approvals_path=_pre_args.ex42_approvals,
             experiment_path=os.path.join(REPO, "experiments", "EX-42.yaml"),
             parent_checkpoint_path=os.path.join(os.path.dirname(os.path.abspath(
-                _pre_args.ex42_parent_manifest)), "model_250.pt" if EX42_STAGE_ID == "E1" else "model_1000.pt"),
+                _pre_args.ex42_parent_manifest)), EX42_STAGE_SPEC["parent_key"] if EX42_STAGE_SPEC else "model_1000.pt"),
             log_dir=_pre_args.ex42_log_dir, task=_pre_args.task or "",
             device=_pre_args.device or "", headless=_pre_args.headless,
             distributed=_pre_args.distributed, max_iterations=_pre_args.max_iterations,
@@ -527,13 +547,13 @@ if _ex42_requested:
         # Real E0: reuse the stage-zero variables (lead-lx 04:58, fork 2). The parent is m13000.
         from foothold_s2.curriculum.ex42_prep import EX42Plan as _EX42Plan
         from foothold_s2.scripts.ex42_training_entry import (
-            inspect_ex42_stage_e0_parent, inspect_ex42_stage_e1_parent,
+            inspect_ex42_stage_e0_parent, inspect_ex42_stage_parent,
             load_ex42_stage_zero_source, make_ex42_stage_zero_plan_view)
 
         EX42_STAGE_ZERO_PLAN = _EX42Plan.load(_pre_args.ex42_plan)
-        if EX42_STAGE_ID == "E1":       # parent = the finished E0 run's m250 (pinned in the plan)
-            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e1_parent(
-                plan=EX42_STAGE_ZERO_PLAN, approvals_path=_pre_args.ex42_approvals,
+        if EX42_CONTINUES_STAGE:        # parent = the previous stage's finished run (pinned in the plan)
+            EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_parent(
+                plan=EX42_STAGE_ZERO_PLAN, stage_id=EX42_STAGE_ID, approvals_path=_pre_args.ex42_approvals,
                 parent_manifest_path=_pre_args.ex42_parent_manifest)
         else:
             EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT = inspect_ex42_stage_e0_parent(
@@ -566,10 +586,9 @@ if _ex42_requested:
                 require_latest=True, stage_id=EX42_STAGE_ID,
                 parent_cumulative_update=EX42_STAGE_PARENT_UPDATES[1], segment_end=EX42_SEGMENT_END)
             EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
-            EX42_STAGE_ZERO_RESUME_SAME_RUN = (
-                Path(_pre_args.ex42_log_dir).resolve() == Path(EX42_STAGE_ZERO_RESUME).resolve().parent)
-            if not EX42_STAGE_ZERO_RESUME_SAME_RUN:
-                raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
+            from foothold_s2.scripts.ex42_training_entry import require_same_run_resume
+
+            EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)
             print(f"EX42_STAGE_{EX42_STAGE_ID}_RESUME_PREFLIGHT " + json.dumps(
                 EX42_STAGE_ZERO_RESUME_PROOF, ensure_ascii=False, sort_keys=True), flush=True)
         else:
@@ -665,8 +684,10 @@ if _ex42_requested:
             # Training holds both GPUs (13.8 GB each), so E1 queues them with a wait on this training process and
             # they run after training ends.
             **({"p1_interval": (_e0_preflight["approval"]["boundary_evaluation_interval_updates"]
-                                if EX42_STAGE_ID == "E1" else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),
-            **({"defer_until_pid": os.getpid()} if _E1_FLAGS else {}),
+                                if "boundary_evaluation_interval_updates" in _e0_preflight["approval"]
+                                else EX42_STAGE_UPDATES)} if EX42_E0_REQUESTED else {}),
+            **({"defer_until_pid": os.getpid()}
+               if EX42_E0_REQUESTED and "boundary_evaluation_interval_updates" in _e0_preflight["approval"] else {}),
         )
 
     if EX42_STAGE_ZERO_PLAN is not None and not speed_probe_builds_chain(
@@ -767,6 +788,10 @@ parser.add_argument("--ex42_stage_e1_approved", action="store_true",
                     help="Scoped approval for the EX-42 E1 first segment only (E0 m250, 1000 updates, D174 critic mirror)")
 parser.add_argument("--ex42_stage_e1_dry_run", action="store_true",
                     help="CPU-only E1 preflight; exits before AppLauncher")
+parser.add_argument("--ex42_stage", default=None,
+                    help="EX-42 stage id from the plan's stages[] table (any stage that pins its parent); E0 / E1 flags above are aliases")
+parser.add_argument("--ex42_stage_approved", action="store_true", help="Scoped approval for the stage named by --ex42_stage")
+parser.add_argument("--ex42_stage_dry_run", action="store_true", help="CPU-only preflight of the stage named by --ex42_stage")
 parser.add_argument("--ex42_terrain_manifest", type=str, default=None,
                     help="Measured EX-42 terrain_manifest.json; a real E0 run needs it (fails closed)")
 parser.add_argument("--ex42_terrain_mesh_dir", type=str, default=None,
@@ -821,6 +846,9 @@ if (args_cli.ex42_stage_zero_approved != _pre_args.ex42_stage_zero_approved
         or args_cli.ex42_stage_e0_dry_run != _pre_args.ex42_stage_e0_dry_run
         or args_cli.ex42_stage_e1_approved != _pre_args.ex42_stage_e1_approved
         or args_cli.ex42_stage_e1_dry_run != _pre_args.ex42_stage_e1_dry_run
+        or args_cli.ex42_stage != _pre_args.ex42_stage
+        or args_cli.ex42_stage_approved != _pre_args.ex42_stage_approved
+        or args_cli.ex42_stage_dry_run != _pre_args.ex42_stage_dry_run
         or args_cli.ex42_terrain_manifest != _pre_args.ex42_terrain_manifest
         or args_cli.ex42_terrain_mesh_dir != _pre_args.ex42_terrain_mesh_dir
         or args_cli.ex42_resume_from != _pre_args.ex42_resume_from
@@ -1009,8 +1037,8 @@ def main(env_cfg, agent_cfg):
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
     EX42_E0_ENV_CONTRACT = None
-    if args_cli.ex42_stage_e0_approved or args_cli.ex42_stage_e1_approved:
-        # The E0 / E1 launch path (EX42_STAGE_ID): combined mesh, per-column reset ranges, push gate, exposure.
+    if EX42_E_APPROVED:
+        # The E stage launch path (EX42_STAGE_ID): combined mesh, per-column reset ranges, push gate, exposure.
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         from foothold_s2.scripts.ex42_training_entry import prepare_e0_env_cfg
 
@@ -1047,7 +1075,7 @@ def main(env_cfg, agent_cfg):
 
         print("EX42_E0_EXPOSURE " + json.dumps(apply_e0_exposure(
             env, EX42_E0_ENV_CONTRACT, EX42_STAGE_ZERO_CHECKPOINT["env_state"],
-            parent_same_mesh=(EX42_STAGE_ID == "E1")), sort_keys=True), flush=True)
+            parent_same_mesh=EX42_CONTINUES_STAGE), sort_keys=True), flush=True)
     ex41_w86_receipt = None
     ex41_dr_readback = None
     ex41_rehearsal_dr_proof = None
@@ -1231,7 +1259,7 @@ def main(env_cfg, agent_cfg):
             if ex42_resume_saved is None:
                 raise RuntimeError("EX-42 self-resume checkpoint was not loaded before reset")
             resume_saved = ex42_resume_saved
-            if EX42_STAGE_ID == "E1":
+            if EX42_MIRROR_STAGE:
                 # D174: the checkpoint was saved with the mirror on; the runner must start with it on (load checks
                 # the flag) and carry the live, committed grant so the plan re-pin between boundaries cannot drop it.
                 from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
@@ -1265,9 +1293,9 @@ def main(env_cfg, agent_cfg):
         else:
             ex42_transfer = runner.load_ex42_stage_zero_parent(
                 EX42_STAGE_ZERO_CHECKPOINT, EX42_STAGE_ZERO_PARENT,
-                stage_e0=(EX42_STAGE_ID == "E0"),      # E0 parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
-                stage_e1=(EX42_STAGE_ID == "E1"))      # E1 parent is the E0 m250 (250 / 13250)
-            if EX42_STAGE_ID == "E1":
+                stage_e0=not EX42_CONTINUES_STAGE,     # first stage: parent is m13000 (1000 / 13000), not the stage-zero 6000 / 12000
+                stage_e1=EX42_CONTINUES_STAGE)         # later stage: parent is the previous stage's run (E1: E0 m250, 250 / 13250)
+            if EX42_MIRROR_STAGE:
                 # D174: the parent was saved with the mirror off; the committed plan + approval grant turns it on here.
                 from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
 
