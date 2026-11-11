@@ -60,7 +60,12 @@ def build_replicas(mesh_dir: Path, output: Path, *, anchor: str, grid: int = 8) 
     from foothold_s2.terrains.ex42_eval_terrains import build_tile
 
     tile = build_tile(LANDING, seed=manifest["seed"])
-    if (tile.anchors != column["anchors_local_m"] or tile.dimensions != column["dimensions"]
+    # Every anchor pinned in the published manifest must regenerate exactly; anchors the builder learned to
+    # report after the tile was published (11/11: course_exit, stop_band_interior_surface_z_m) may be extra,
+    # because the geometry itself is pinned by the file SHA above and by dimensions and origin here.
+    pinned = column["anchors_local_m"]
+    if (any(tile.anchors.get(key) != value for key, value in pinned.items())
+            or tile.dimensions != column["dimensions"]
             or list(tile.origin) != column["origin_world_m"]):
         raise ValueError("D44 regenerated tile differs from pinned anchors or dimensions")
     output = Path(output)
