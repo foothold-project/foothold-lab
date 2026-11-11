@@ -137,21 +137,25 @@ class EX42StageTransitionConsumer:
             observed_score_iteration=observed_score_iteration,
         )
         stage = self.stages[next_index]
-        mirror_enabled = stage.get("critic_mirror", False)
-        if type(mirror_enabled) is not bool:
-            raise ValueError("EX-42 stage critic mirror must be a bool")
+        mirror_enabled = False                      # on from the stage that turns it on until a stage says off
+        for row in self.stages[:next_index + 1]:
+            mirror_enabled = row.get("critic_mirror", mirror_enabled)
+            if type(mirror_enabled) is not bool:
+                raise ValueError("EX-42 stage critic mirror must be a bool")
         mirror_receipt = {"stage_id": next_stage_id, "enabled": mirror_enabled,
                           "decision_id": None, "applied": False}
         setter = getattr(runner, "set_ex41_critic_mirror", None) if runner is not None else None
-        if mirror_enabled:
+        if mirror_enabled and getattr(runner, "ex41_critic_mirror", False) is True:
+            mirror_receipt["inherited"] = True      # already on from an earlier stage's grant: nothing to apply
+        elif mirror_enabled:
             rule = {"field": "critic_mirror", "decision_id": "D174",
                     "choices": [True], "boundaries": ["E1"]}
             from foothold_s2.ex42_gate_checks import validate_automatic_rule
             validate_automatic_rule(rule=rule, approval=self.approval_doc,
                                     value=True, boundary=next_stage_id)
-            if next_stage_id != "E1" or not callable(setter):
+            if not callable(setter):
                 raise ValueError("EX-42 E1 critic mirror needs the existing StartRunner setter")
-            proof = critic_mirror_proof(self.plan, self.approvals_path)
+            proof = critic_mirror_proof(self.plan, self.approvals_path, next_stage_id)
             commit = proof["config_commit"]
             setter(True, approval=proof)
             mirror_receipt.update(decision_id="D174", applied=True,
