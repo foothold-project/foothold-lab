@@ -62,6 +62,36 @@ def sparse_assignment(num_envs: int, names, rows: int, level: int):
     return np.full(num_envs, level, dtype=i.dtype), ids[i % len(ids)]
 
 
+def kind_assignment(num_envs: int, rows: int, table: list[dict],
+                    family: str, kind: str, level: int):
+    """Assign all envs to one named family/kind and level, cycling its columns."""
+    level = check_level(level, rows)
+    if type(num_envs) is not int or num_envs <= 0 or level is None:
+        raise ValueError("kind evaluation needs envs and a fixed level")
+    ids = [i for i, row in enumerate(table)
+           if row.get("family") == family and row.get("kind") == kind]
+    if not ids:
+        raise ValueError(f"kind evaluation column missing: {family}/{kind}")
+    selected = np.asarray(ids, dtype=np.int64)
+    return np.full(num_envs, level, dtype=np.int64), selected[np.arange(num_envs) % len(selected)]
+
+
+def apply_kind(raw, table: list[dict], family: str, kind: str, level: int) -> dict:
+    """Mount a named combined-mesh kind after reset; caller resets once more."""
+    terrain = raw.scene.terrain
+    rows, cols = int(terrain.terrain_origins.shape[0]), int(terrain.terrain_origins.shape[1])
+    if len(table) != cols:
+        raise ValueError("kind evaluation column table differs from physical mesh")
+    levels, types = kind_assignment(int(terrain.terrain_levels.shape[0]), rows,
+                                    table, family, kind, level)
+    record = apply_assignment(raw, levels, types, rows, cols, 1, fixed_level=level)
+    record.update(family=family, kind=kind,
+                  tiles=[{"env": i, "family": family, "kind": kind,
+                          "level": int(levels[i]), "col": int(types[i])}
+                         for i in range(len(types))])
+    return record
+
+
 def apply_sparse(raw, level) -> dict:
     """raw = env.unwrapped (50 열 생성기). 듬성 5 종 열만 고정 칸으로 덮어쓴다. 기록에 종류 이름 · 열 · 레벨(tiles)을 남긴다."""
     from foothold_s2.terrains import columns
@@ -83,6 +113,16 @@ def apply_sparse(raw, level) -> dict:
 
 def assignment_sha256(levels, types) -> str:
     return hashlib.sha256(np.asarray(levels, dtype=np.int64).tobytes() + np.asarray(types, dtype=np.int64).tobytes()).hexdigest()
+
+
+def verify_kind_foot_arrays(contact, foot_local, alive) -> None:
+    """Reject incomplete or nonfinite four-foot raw evidence before a kind receipt is written."""
+    contact, foot_local, alive = np.asarray(contact), np.asarray(foot_local), np.asarray(alive)
+    if (alive.ndim != 2 or contact.shape != (*alive.shape, 4)
+            or foot_local.shape != (*alive.shape, 4, 3)
+            or contact.dtype != np.dtype(bool) or alive.dtype != np.dtype(bool)
+            or not np.isfinite(foot_local[alive]).all()):
+        raise ValueError("EX-42 kind foot evidence shape, dtype or finite values differ")
 
 
 def apply(raw, level=None, *, cols=None) -> dict:
