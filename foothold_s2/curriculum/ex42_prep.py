@@ -228,98 +228,196 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
             "production_launch_allowed": False, "later_stages_authorized": False}
 
 
-def _validate_future_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
-                                         parent_sha256: str, stage_id: str) -> dict[str, Any]:
-    """Parse a future bounded cell. Stage-specific gate consumers are not implemented here."""
+def _approval_path_value(document: dict[str, Any], dotted: str) -> Any:
+    value: Any = document
+    for part in dotted.split('.'):
+        if not isinstance(value, dict):
+            return None
+        value = value.get(part)
+    return value
+
+
+def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
+    rows = [row for row in plan.document['stages'] if row.get('id') == stage_id]
+    if len(rows) != 1:
+        raise ValueError('EX-42 automatic target has no unique supported approval cell')
+    return rows[0]
+
+
+def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
+    """Build dispatch from the table, including disabled/unapproved rows (which fail closed)."""
+    from functools import partial
+    ids = [row.get('id') for row in plan.document['stages']]
+    if (any(not isinstance(stage_id, str) or not stage_id for stage_id in ids)
+            or len(set(ids)) != len(ids)):
+        raise ValueError('EX-42 authorization stage IDs are missing or duplicated')
+    return {stage_id: partial(validate_stage_authorization, plan, stage_id=stage_id) for stage_id in ids}
+
+
+def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
+                                  allow_unresolved_source: bool = False) -> dict[str, Any]:
+    contract = row.get('authorization_contract')
+    required = {'validator', 'source_stage_ids', 'entry_gate_adapter', 'required_sha256_paths',
+                'required_string_paths', 'required_boolean_paths', 'required_stage_values', 'required_values'}
+    if not isinstance(contract, dict) or set(contract) != required:
+        raise ValueError('EX-42 stage authorization contract is incomplete')
+    sources = contract['source_stage_ids']
+    known = set(plan.runtime_stage_ids)
+    if (not isinstance(sources, list) or (not sources and not allow_unresolved_source)
+            or any(not isinstance(x, str) or x not in known or x == row['id'] for x in sources)
+            or len(set(sources)) != len(sources)):
+        raise ValueError('EX-42 stage source contract is unresolved or invalid')
+    if contract['validator'] not in ('bounded', 'legacy_e0', 'legacy_e1'):
+        raise ValueError('EX-42 unknown approval validator contract')
+    if contract['entry_gate_adapter'] not in ('map39', 'pending'):
+        raise ValueError('EX-42 stage entry gate adapter is unknown')
+    for key in ('required_sha256_paths', 'required_string_paths', 'required_boolean_paths'):
+        paths = contract[key]
+        if (not isinstance(paths, list)
+                or any(not isinstance(x, str) or not re.fullmatch(r'[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*', x) for x in paths)
+                or len(set(paths)) != len(paths)):
+            raise ValueError('EX-42 required approval evidence paths are invalid')
+    if contract['validator'] == 'bounded' and not contract['required_sha256_paths']:
+        raise ValueError('EX-42 bounded stage evidence contract is empty')
+    if (not isinstance(contract['required_values'], dict)
+            or any(not isinstance(x, str) or not re.fullmatch(r'[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*', x)
+                   for x in contract['required_values'])):
+        raise ValueError('EX-42 approval required values must use dotted mapping paths')
+    if not isinstance(contract['required_stage_values'], dict):
+        raise ValueError('EX-42 required stage values must be a mapping')
+    return contract
+
+
+def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
+                                 parent_sha256: str, *, stage_id: str) -> dict[str, Any]:
+    """One bounded validator, parameterized by the selected stage's authorization contract."""
+    row = _stage_approval_row(plan, stage_id)
     path = Path(approvals_path).resolve(strict=True)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != plan.document["stage_zero"].get("approval_sha256"):
-        raise ValueError("EX-42 future approval SHA differs from plan pin")
+    if digest != plan.document['stage_zero'].get('approval_sha256'):
+        raise ValueError('EX-42 approval SHA differs from plan pin')
     approvals = _read_yaml(path)
-    if (approvals.get("format") != APPROVAL_FORMAT or approvals.get("status") != "blocked"
-            or approvals.get("production_launch_allowed") is not False
-            or not bounded_automatic_policy(approvals.get("automatic_launch_allowed"))):
-        raise ValueError("EX-42 full-plan launch guard must remain blocked")
-    cell = approvals.get(f"stage_{stage_id.lower()}_authorization")
-    if not isinstance(cell, dict) or cell.get("approved") is not True:
-        raise ValueError(f"EX-42 {stage_id} authorization is missing or not approved")
-    first, maximum, predecessor, axis = {
-        "E1F": (750, 1250, "E1", "command_allocation"),
-        "E2": (1500, 2500, "E1F", "terrain_exposure"),
-    }[stage_id]
-    stage = next(row for row in plan.document["stages"] if row["id"] == stage_id)
-    if (stage.get("enabled") is not True or stage.get("minimum_updates") != first
-            or stage.get("maximum_updates") != maximum or stage.get("extension_updates") != 500
-            or stage.get("boundary_axes") != [axis]):
-        raise ValueError(f"EX-42 {stage_id} canonical stage limits or axis differ")
-    def digest_valid(value: Any, length: int = 64) -> bool:
-        return isinstance(value, str) and bool(re.fullmatch(r"[0-9a-f]{%d}" % length, value)) and value != "0" * length
-    if not digest_valid(parent_sha256):
-        raise ValueError(f"EX-42 {stage_id} parent SHA is unfilled")
-    scope = {"stage_id": stage_id, "start_update": 0, "maximum_updates": first,
-             "parent_sha256": parent_sha256, "later_stages_authorized": False}
-    if cell.get("scope") != scope:
-        raise ValueError(f"EX-42 {stage_id} scope differs from its bounded first segment")
-    if (any(not isinstance(cell.get(k), str) or not cell[k].strip()
-            for k in ("decision_id", "approved_at", "approval_statement"))
-            or cell.get("approver") != "teamlead"):
-        raise ValueError(f"EX-42 {stage_id} team approval identity is unfilled")
-    source = cell.get("decision_source")
-    if (not isinstance(source, dict) or not digest_valid(source.get("commit"), 40)
-            or source.get("path") != "inbox/jay/20261104-ex41-restart/decisions.tsv"):
-        raise ValueError(f"EX-42 {stage_id} decision source is unfilled")
-    if (cell.get("extension_authorized") is not False
-            or cell.get("boundary_evaluation_interval_updates") != 250
-            or cell.get("boundary_evaluation_interval_updates") != plan.document["evaluation"]["interval_updates"]):
-        raise ValueError(f"EX-42 {stage_id} extension or evaluation interval differs")
-    prerequisites = cell.get("prerequisites", {})
-    if not isinstance(prerequisites, dict):
-        raise ValueError(f"EX-42 {stage_id} prerequisites are unfilled")
-    exit_gate = prerequisites.get("predecessor_exit", {})
-    baseline = prerequisites.get("flag_baseline", {})
-    if (not isinstance(exit_gate, dict) or not isinstance(baseline, dict)
-            or exit_gate.get("stage_id") != predecessor or exit_gate.get("required_result") != "PASS"
-            or exit_gate.get("same_plan_sha256") is not True
-            or not digest_valid(exit_gate.get("evaluation_mesh_sha256"))
-            or not isinstance(baseline.get("path"), str) or not baseline["path"].strip()
-            or not digest_valid(baseline.get("sha256"))):
-        raise ValueError(f"EX-42 {stage_id} predecessor, landing mesh or flag baseline is unfilled")
-    if stage_id == "E2" and not digest_valid(prerequisites.get("m0_m3_receipt_sha256")):
-        raise ValueError("EX-42 E2 requires M0-M3 receipt pin")
-    if cell.get("critic_mirror") is not True:
-        raise ValueError(f"EX-42 {stage_id} inherited critic mirror decision is unfilled")
-    if (approvals.get("domain_randomization", {}).get("approved") is not True
-            or approvals.get("domain_randomization", {}).get("stage_scales", {}).get(stage_id) != 1.0):
-        raise ValueError(f"EX-42 {stage_id} must preserve DR 1.0")
-    boundary = cell.get("boundary", {})
-    if (not isinstance(boundary, dict) or boundary.get("axis") != axis
-            or boundary.get("terrain_change") != "none"
-            or boundary.get("boundary_mode") != "stop_evaluate_resume"):
-        raise ValueError(f"EX-42 {stage_id} boundary contract differs")
-    if stage_id == "E1F":
-        if (boundary.get("shares_delta") != {"flag": 0.10, "forward": -0.06, "spin_left": -0.02, "spin_right": -0.02}
-                or boundary.get("exposure_at_E1F") != "same_as_E1_end"):
-            raise ValueError("EX-42 E1F approved shares delta or exposure differs")
-        shares = dict(plan.document["stage_zero"]["shares"])
-        shares.update(flag=0.10, forward=0.17, spin_left=0.07, spin_right=0.07)
-        if (stage.get("shares") != shares
-                or stage.get("terrain", {}).get("exposure_at_E1F") != "same_as_E1_end"):
-            raise ValueError("EX-42 E1F shares or exposure differ from CG E1F")
-    # A filled approval does not supply D44/flag two-window or sparse-entry evaluation consumers.
-    return {"state": f"stage_{stage_id.lower()}_approval_only", "scope": scope,
-            "decision_id": cell["decision_id"], "approvals_path": str(path),
-            "approvals_sha256": digest, "later_stages_authorized": False,
-            "entry_gate_adapter_ready": False, "training_started": False}
+    if (approvals.get('format') != APPROVAL_FORMAT or approvals.get('status') != 'blocked'
+            or approvals.get('production_launch_allowed') is not False
+            or not bounded_automatic_policy(approvals.get('automatic_launch_allowed'))):
+        raise ValueError('EX-42 full-plan launch guard must remain blocked')
+    cell = approvals.get(f'stage_{stage_id.lower()}_authorization')
+    if not isinstance(cell, dict) or cell.get('approved') is not True:
+        raise ValueError(f'EX-42 {stage_id} authorization is missing or not approved')
+    contract = _read_stage_approval_contract(plan, row)
+    if row.get('enabled') is not True:
+        raise ValueError(f'EX-42 {stage_id} is disabled in the plan')
+    first = row.get('minimum_updates')
+    if type(first) is not int or first <= 0:
+        raise ValueError('EX-42 first-segment update count is invalid')
+    def valid_digest(value: Any, length: int = 64) -> bool:
+        return isinstance(value, str) and bool(re.fullmatch(r'[0-9a-f]{%d}' % length, value)) and value != '0' * length
+    if not valid_digest(parent_sha256):
+        raise ValueError(f'EX-42 {stage_id} parent SHA is unfilled')
+    scope = {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': first,
+             'parent_sha256': parent_sha256, 'later_stages_authorized': False}
+    if cell.get('scope') != scope:
+        raise ValueError(f'EX-42 {stage_id} scope differs from its table first segment')
+    if isinstance(row.get('parent'), dict) and row['parent'].get('sha256') != parent_sha256:
+        raise ValueError(f'EX-42 {stage_id} parent SHA differs from table pin')
+    legacy = {'legacy_e0': validate_stage_e0_authorization, 'legacy_e1': validate_stage_e1_authorization}
+    if contract['validator'] in legacy:
+        proof = legacy[contract['validator']](plan, path, parent_sha256)
+        if proof['scope'] != scope:
+            raise ValueError('EX-42 legacy validator scope differs from selected table row')
+    else:
+        if (any(not isinstance(cell.get(k), str) or not cell[k].strip()
+                for k in ('decision_id', 'approved_at', 'approval_statement'))
+                or cell.get('approver') != 'teamlead'):
+            raise ValueError(f'EX-42 {stage_id} team approval identity is unfilled')
+        source = cell.get('decision_source')
+        if (not isinstance(source, dict) or not valid_digest(source.get('commit'), 40)
+                or source.get('path') != 'inbox/jay/20261104-ex41-restart/decisions.tsv'):
+            raise ValueError(f'EX-42 {stage_id} decision source is unfilled')
+        interval = plan.document['evaluation']['interval_updates']
+        if (cell.get('extension_authorized') is not False or type(interval) is not int or interval <= 0
+                or type(cell.get('boundary_evaluation_interval_updates')) is not int
+                or cell['boundary_evaluation_interval_updates'] != interval or first % interval):
+            raise ValueError(f'EX-42 {stage_id} extension or evaluation interval differs')
+        boundary = cell.get('boundary', {})
+        if not isinstance(boundary, dict) or boundary.get('axis') not in row['boundary_axes']:
+            raise ValueError(f'EX-42 {stage_id} boundary axis is not allowed by the table')
+        proof = {'state': f'stage_{stage_id.lower()}_approval_only', 'scope': scope,
+                 'decision_id': cell['decision_id'], 'approvals_path': str(path),
+                 'approvals_sha256': digest, 'later_stages_authorized': False}
+    for dotted in contract['required_sha256_paths']:
+        if not valid_digest(_approval_path_value(cell, dotted)):
+            raise ValueError(f'EX-42 {stage_id} required SHA is unfilled: {dotted}')
+    for dotted in contract['required_string_paths']:
+        value = _approval_path_value(cell, dotted)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f'EX-42 {stage_id} required string is unfilled: {dotted}')
+    for dotted in contract['required_boolean_paths']:
+        if type(_approval_path_value(cell, dotted)) is not bool:
+            raise ValueError(f'EX-42 {stage_id} required boolean is unfilled: {dotted}')
+    predecessor = _approval_path_value(cell, 'prerequisites.predecessor_exit.stage_id')
+    if predecessor is not None and predecessor not in contract['source_stage_ids']:
+        raise ValueError(f'EX-42 {stage_id} predecessor differs from the table')
+    for dotted, expected in contract['required_values'].items():
+        value = _approval_path_value(cell, dotted)
+        if type(value) is not type(expected) or value != expected:
+            raise ValueError(f'EX-42 {stage_id} required approval value differs: {dotted}')
+    for dotted, expected in contract['required_stage_values'].items():
+        value = _approval_path_value(row, dotted)
+        if type(value) is not type(expected) or value != expected:
+            raise ValueError(f'EX-42 {stage_id} required stage value differs: {dotted}')
+    dr = approvals.get('domain_randomization', {})
+    if (not isinstance(dr, dict) or dr.get('approved') is not True
+            or not isinstance(dr.get('stage_scales'), dict)
+            or type(dr['stage_scales'].get(stage_id)) not in (int, float)
+            or dr['stage_scales'][stage_id] != 1.0):
+        raise ValueError(f'EX-42 {stage_id} must preserve approved DR 1.0')
+    return {**proof, 'source_stage_ids': list(contract['source_stage_ids']),
+            'entry_gate_adapter': contract['entry_gate_adapter'],
+            'entry_gate_adapter_ready': contract['entry_gate_adapter'] == 'map39',
+            'training_started': False}
+
+
+def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
+    """Generate an unapproved cell only; never copy an earlier stage's approval or parent."""
+    from copy import deepcopy
+    row = _stage_approval_row(plan, stage_id)
+    contract = _read_stage_approval_contract(plan, row, allow_unresolved_source=True)
+    result = {'approved': False, 'decision_id': None, 'approved_at': None, 'approver': None,
+              'approval_statement': None,
+              'decision_source': {'commit': None, 'path': 'inbox/jay/20261104-ex41-restart/decisions.tsv'},
+              'scope': {'stage_id': stage_id, 'start_update': 0, 'maximum_updates': row['minimum_updates'],
+                        'parent_sha256': None, 'later_stages_authorized': False},
+              'extension_authorized': False,
+              'boundary_evaluation_interval_updates': plan.document['evaluation']['interval_updates'],
+              'boundary': {'axis': row['boundary_axes'][0] if len(row['boundary_axes']) == 1 else None},
+              'later_stage_entry_gate_adapter': contract['entry_gate_adapter'],
+              'missing_evidence_policy': 'reject_launch_then_fill_and_repin'}
+    def set_value(dotted: str, value: Any) -> None:
+        if dotted.split('.')[0] in {'approved', 'decision_id', 'approved_at', 'approver',
+                'approval_statement', 'decision_source', 'scope', 'extension_authorized',
+                'boundary_evaluation_interval_updates', 'missing_evidence_policy'}:
+            raise ValueError('EX-42 draft contract cannot overwrite approval identity or scope')
+        target = result
+        parts = dotted.split('.')
+        for part in parts[:-1]:
+            target = target.setdefault(part, {})
+        target[parts[-1]] = deepcopy(value)
+    for dotted in [*contract['required_sha256_paths'], *contract['required_string_paths'], *contract['required_boolean_paths']]:
+        set_value(dotted, None)
+    for dotted, value in contract.get('required_values', {}).items():
+        set_value(dotted, value)
+    return result
 
 
 def validate_stage_e1f_authorization(plan: "EX42Plan", approvals_path: str | Path,
                                      parent_sha256: str) -> dict[str, Any]:
-    return _validate_future_stage_authorization(plan, approvals_path, parent_sha256, "E1F")
+    return validate_stage_authorization(plan, approvals_path, parent_sha256, stage_id='E1F')
 
 
 def validate_stage_e2_authorization(plan: "EX42Plan", approvals_path: str | Path,
                                     parent_sha256: str) -> dict[str, Any]:
-    return _validate_future_stage_authorization(plan, approvals_path, parent_sha256, "E2")
+    return validate_stage_authorization(plan, approvals_path, parent_sha256, stage_id='E2')
 
 
 @dataclass(frozen=True)

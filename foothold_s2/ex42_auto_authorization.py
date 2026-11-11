@@ -7,9 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from foothold_s2.curriculum.ex42_prep import (
-    EX42Plan, STAGE_ZERO_ID, _read_yaml, scoped_automatic_policy,
-    validate_stage_e0_authorization, validate_stage_e1_authorization,
-    validate_stage_e1f_authorization, validate_stage_e2_authorization,
+    EX42Plan, _read_yaml, scoped_automatic_policy, authorization_validators,
 )
 from foothold_s2.ex42_gate_checks import validate_ex42_map_score, validate_score_pair
 
@@ -29,27 +27,26 @@ def validate_automatic_stage_launch(
         raise ValueError('EX-42 automatic approval SHA differs from plan pin')
     if not scoped_automatic_policy(_read_yaml(path).get('automatic_launch_allowed')):
         raise ValueError('EX-42 scoped automatic policy is not enabled')
-    validators = {'E0': validate_stage_e0_authorization, 'E1': validate_stage_e1_authorization,
-                  'E1F': validate_stage_e1f_authorization, 'E2': validate_stage_e2_authorization}
+    validators = authorization_validators(plan)
     if target_stage not in validators:
         raise ValueError('EX-42 automatic target has no supported approval cell')
-    if target_stage in ("E1F", "E2"):
-        cell = _read_yaml(path).get(f"stage_{target_stage.lower()}_authorization", {})
-        proof = validators[target_stage](plan, path, cell.get("scope", {}).get("parent_sha256"))
-        # Never treat the generic 26-cell PASS as D44/flag or sparse-entry proof.
-        if proof.get("entry_gate_adapter_ready") is not True:
-            raise ValueError(f"EX-42 {target_stage} stage-specific entry gate adapter is pending")
+    cell = _read_yaml(path).get(f"stage_{target_stage.lower()}_authorization", {})
+    scope = cell.get("scope", {}) if isinstance(cell, dict) else {}
+    proof = validators[target_stage](path, scope.get("parent_sha256") if isinstance(scope, dict) else None)
+    if proof.get("entry_gate_adapter_ready") is not True:
+        raise ValueError(f"EX-42 {target_stage} stage-specific entry gate adapter is pending")
     parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=target_stage)
-    proof = validators[target_stage](plan, path, parent['checkpoint_sha256'])
+    if parent['checkpoint_sha256'] != proof['scope']['parent_sha256']:
+        raise ValueError('EX-42 automatic parent differs from approval')
     gate_path = Path(gate_receipt_path).resolve(strict=True)
     raw = gate_path.read_bytes()
     gate_sha = hashlib.sha256(raw).hexdigest()
     if gate_sha != expected_gate_sha256:
         raise ValueError('EX-42 automatic gate receipt SHA differs')
     gate = json.loads(raw)
-    source_stage = {'E0': STAGE_ZERO_ID, 'E1': 'E0'}[target_stage]
+    source_stage = gate.get('stage_id') if isinstance(gate, dict) else None
     if (not isinstance(gate, dict) or gate.get('judgment') != 'PASS'
-            or gate.get('stage_id') != source_stage or gate.get('plan_sha256') != plan.sha256):
+            or source_stage not in proof['source_stage_ids'] or gate.get('plan_sha256') != plan.sha256):
         raise ValueError('EX-42 automatic gate must be predecessor PASS under this plan')
     stage = next(row for row in plan.document['stages'] if row['id'] == target_stage)
     iteration = stage['parent']['manifest_local_update']

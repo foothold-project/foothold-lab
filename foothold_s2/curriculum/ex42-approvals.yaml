@@ -182,10 +182,22 @@ stage_e2_authorization:
       sha256: null
       source: W09_baseline_then_fixed
     m0_m3_receipt_sha256: null
+    calibration_sha256: null
+    kind_cell_evaluator: pending
+    stage_judgment_policy: pending
   boundary:
     axis: terrain_exposure
     terrain_change: none
     boundary_mode: stop_evaluate_resume
+    exposure_delta:
+      family: A
+      kind: stepping_stones_low
+      prep_alias: start_stones_l0
+      share:
+        from: 0.0
+        to: 0.05
+      level_cap: 0
+      donor: continuous
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
   critic_mirror: null
@@ -196,3 +208,264 @@ stage_e2_authorization:
   - landing_evaluation_mesh_sha256
   - flag_baseline
   - m0_m3_receipt_sha256
+  kind_choice:
+    prep: start_stones_l0
+    mesh_kind: stepping_stones_low
+  exit_gate:
+    cells:
+    - family: A
+      kind: stepping_stones_low
+      level: 0
+      command: forward_1.0
+    completion: last_support_0.5s
+    denominator: forward+flag_all
+    success_min: 52
+    survival_min: 60
+    windows: 2
+    learned_cells_min: 32
+    exchange_learning_watch: true
+    maintenance_table: pass
+    learned_cells_min_grade: assumption
+  judge_cells_added:
+  - family: A
+    kind: stepping_stones_low
+    level: 0
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  record_cells_added:
+  - family: A
+    kind: stepping_stones_low
+    level: 0
+    command: flag_reach
+    flags: 1
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_e3_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E3
+    start_update: 0
+    maximum_updates: 3000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E2
+    kind_opening_order_recorded: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_e4_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E4
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E3
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_e5_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E5
+    start_update: 0
+    maximum_updates: 1500
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E4
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_m_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: M
+    start_update: 0
+    maximum_updates: 500
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: map_off_probability
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    entry_condition_receipt_sha256: null
+    branch_origin_stage_id: null
+    return_stage_id: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  optional_branch: true
+  source_stage_contract_status: unresolved_not_linear_E5
+  budget:
+    m_updates_count_toward_source_maximum: null
+    source_window_counter_after_return: null
+  on_exhausted: null
+  entry:
+    source_stage: null
+    same_boundary_other_axis_change: forbidden
+    carry_over:
+      exposure: same_as_source_at_entry
+      level_caps: same_as_source_at_entry
+      command_shares: same
+  exit:
+    return_to: source_stage
+    return_receipt_sha256: null
+    consumer_status: pending
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_e6a_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E6a
+    start_update: 0
+    maximum_updates: 1000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      stage_id: E5
+      required_result: PASS
+      same_plan_sha256: true
+    stage_judgment_policy: pending
+    posture_command_code: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
+  parent_lineage:
+    direct_source: E5_exit
+    conditional_source: M_exit_with_source_E5
+    m_return_receipt_sha256: null
+    consumer_status: pending
+
+# DRAFT ONLY: requires a separate team decision and evidence re-pin.
+stage_e6b_authorization:
+  approved: false
+  decision_id: null
+  approved_at: null
+  approver: null
+  approval_statement: null
+  decision_source:
+    commit: null
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
+  scope:
+    stage_id: E6b
+    start_update: 0
+    maximum_updates: 2000
+    parent_sha256: null
+    later_stages_authorized: false
+  extension_authorized: false
+  boundary_evaluation_interval_updates: 250
+  boundary:
+    axis: null
+    boundary_mode: stop_evaluate_resume
+  later_stage_entry_gate_adapter: pending
+  missing_evidence_policy: reject_launch_then_fill_and_repin
+  prerequisites:
+    calibration_sha256: null
+    predecessor_exit:
+      evaluation_mesh_sha256: null
+      required_result: PASS
+      same_plan_sha256: true
+      stage_id: E6a
+    q12_sensor_decision: null
+    stage_judgment_policy: pending
+  critic_mirror: null
+  draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md

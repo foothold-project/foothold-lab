@@ -61,6 +61,7 @@ def prepared(tmp_path, stage):
     c['critic_mirror']=True
     if stage=='E2':
         c['prerequisites']['m0_m3_receipt_sha256']='e'*64
+        c['prerequisites']['calibration_sha256']='f'*64
     ap=tmp_path/'approvals.yaml';ap.write_text(yaml.safe_dump(a))
     d['stage_zero']['approval_sha256']=hashlib.sha256(ap.read_bytes()).hexdigest()
     return replace(p, document=d),ap,a
