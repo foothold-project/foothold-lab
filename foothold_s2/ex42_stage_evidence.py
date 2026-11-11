@@ -14,6 +14,34 @@ from foothold_s2.ex42_stage_materialize import (_checked_ref, _json, _ref, _row,
                                                validate_source_exit, EVIDENCE_FORMAT, digest)
 
 
+def validate_m0_m3(path, template):
+    """Consume the measurement producer's verdict and pins; SHA alone is not PASS."""
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    path = Path(path)
+    report = _json(path)
+    if (report.get('format') != 'foothold-ex42-m0-m3/1' or report.get('stage_id') != 'E2'
+            or report.get('status') != 'PASS'):
+        raise ValueError('M0~M3 measurement receipt is not E2 PASS')
+    checks = report.get('checks')
+    if not isinstance(checks, dict) or set(checks) != {'M0', 'M1', 'M2', 'M3'}:
+        raise ValueError('M0~M3 measurement checks missing')
+    for key, item in checks.items():
+        if (not isinstance(item, dict) or item.get('status') != 'PASS'
+                or not isinstance(item.get('evidence'), list) or not item['evidence']):
+            raise ValueError(f'M0~M3 {key} has no measured PASS evidence')
+        for ref in item['evidence']:
+            _checked_ref(ref, path.parent)
+    pinned = pinned_stage_mesh(template.document, 'E2')
+    mesh = report.get('mesh') or {}
+    if not pinned or mesh.get('geometry_sha256') != pinned['geometry_sha256']:
+        raise ValueError('M0~M3 mesh geometry differs from E2 profile')
+    files = mesh.get('files') or {}
+    for name in ('terrain_mesh.npz', 'mesh_manifest.json'):
+        measured = _checked_ref(files.get(name), path.parent)
+        if digest(measured) != pinned['files'][name]['sha256']:
+            raise ValueError('M0~M3 mesh file differs from E2 profile')
+
+
 def produce(*, template_path, source_path, target, gate_path, manifest_path, output_dir, bindings_path=None):
     from foothold_s2.ex42_stage_handoff import measured_budget
     template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
@@ -39,6 +67,8 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
             if key not in paths:
                 raise ValueError(f'unregistered binding: {key}')
             path = _checked_ref(value, Path(bindings_path).parent)
+            if key == 'prerequisites.m0_m3_receipt_sha256':
+                validate_m0_m3(path, template)
             bindings[key] = dict(value, path=str(path))
     mesh_key = 'prerequisites.predecessor_exit.evaluation_mesh_sha256'
     if mesh_key in paths:

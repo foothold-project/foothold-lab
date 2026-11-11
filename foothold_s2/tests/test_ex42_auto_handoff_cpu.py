@@ -85,7 +85,15 @@ def e1f_exit(ready):
     materialize_tests.dump(run/'eval_receipt.json',{'state':'running','checkpoint_sha256':digest(cp),
         'ex42_mesh':{'mesh_npz':str(mesh/'terrain_mesh.npz'),'manifest':str(mesh/'mesh_manifest.json'),
                      'mesh_sha256':chain['mesh_sha256']}})
-    m0=run/'fixture-only-M0-M3.json';materialize_tests.dump(m0,{'fixture_only':True,'known_measurements':'CPU test'})
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    mesh_pin = pinned_stage_mesh(source.document, 'E2')
+    witness = run/'fixture-only-measurement.json'
+    materialize_tests.dump(witness, {'fixture_only': True, 'no_gpu_measurement': True})
+    m0=run/'fixture-only-M0-M3.json'
+    materialize_tests.dump(m0, {'format': 'foothold-ex42-m0-m3/1', 'status': 'PASS', 'stage_id': 'E2',
+        'mesh': {'geometry_sha256': mesh_pin['geometry_sha256'], 'files': mesh_pin['files']},
+        'checks': {k: {'status': 'PASS', 'evidence': [{'path': str(witness), 'sha256': digest(witness)}]}
+                   for k in ('M0','M1','M2','M3')}, 'fixture_only': True})
     bindings=run/'bindings.json';materialize_tests.dump(bindings,{'E2':{
         'prerequisites.m0_m3_receipt_sha256':{'path':str(m0),'sha256':digest(m0)}}})
     return source,Path(made['approvals']),manifest,gp,bindings
@@ -190,3 +198,43 @@ def test_actual_eval_handoff_reaches_launcher_once_and_registers(e1f_exit, tmp_p
                          Path(launcher.__file__).with_suffix('.sh'))
     assert repeated['automatic_launch_started'] is False
     assert len([c for c in calls if c[0] == 'launch']) == before
+
+
+@pytest.mark.parametrize('bad', ['HOLD', 'missing_check', 'changed_raw', 'wrong_mesh'])
+def test_m0_m3_sha_alone_does_not_authorize_unmeasured_probe(e1f_exit, tmp_path, bad):
+    from foothold_s2.ex42_stage_evidence import produce
+    source, _, manifest, gate, bindings = e1f_exit
+    declaration = json.loads(bindings.read_text())
+    pin = declaration['E2']['prerequisites.m0_m3_receipt_sha256']
+    path = Path(pin['path']); report = json.loads(path.read_text())
+    if bad == 'HOLD': report['status'] = 'HOLD'; report['checks']['M2']['status'] = 'HOLD'
+    elif bad == 'missing_check': del report['checks']['M3']
+    elif bad == 'changed_raw': Path(report['checks']['M0']['evidence'][0]['path']).write_text('{}')
+    else: report['mesh']['geometry_sha256'] = '0' * 64
+    path.write_text(json.dumps(report)); pin['sha256'] = handoff._sha256(path)
+    bindings.write_text(json.dumps(declaration))
+    with pytest.raises(ValueError, match='M0.M3|SHA differs'):
+        produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                manifest_path=manifest, output_dir=tmp_path / 'no-publish', bindings_path=bindings)
+    assert not (tmp_path / 'no-publish').exists()
+
+
+def test_preexisting_evidence_file_cannot_skip_m0_pass_check(e1f_exit, tmp_path):
+    from foothold_s2.ex42_stage_evidence import produce
+    source, approval, manifest, gate, bindings = e1f_exit
+    output = tmp_path / 'provided'
+    generated = produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                        manifest_path=manifest, output_dir=output, bindings_path=bindings)
+    evidence = json.loads(generated.read_text())
+    pin = evidence['bindings']['prerequisites.m0_m3_receipt_sha256']
+    path = Path(pin['path']); report = json.loads(path.read_text()); report['status'] = 'HOLD'
+    path.write_text(json.dumps(report)); pin['sha256'] = handoff._sha256(path)
+    (output / 'E2.json').write_text(json.dumps(evidence))
+    env = {'EX42_MATERIALIZE_TEMPLATE_PLAN': str(source.path),
+           'EX42_MATERIALIZE_TEMPLATE_APPROVALS': str(approval),
+           'EX42_MATERIALIZE_EVIDENCE_DIR': str(output),
+           'EX42_MATERIALIZE_OUT_ROOT': str(tmp_path / 'no-publish')}
+    with pytest.raises(ValueError, match='M0.M3.*not E2 PASS'):
+        handoff.materializer_from_env(env)(target_stage='E2', gate_receipt=gate,
+                                           parent_manifest=manifest, source_plan=source.path)
+    assert not (tmp_path / 'no-publish').exists()

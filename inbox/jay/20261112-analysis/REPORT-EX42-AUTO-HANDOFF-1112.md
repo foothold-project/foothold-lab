@@ -28,6 +28,13 @@
 - 평가 뒤 메시 바이트 변경, 평가 영수증 checkpoint 섞임, M0~M3 binding SHA 다름을 거절했다.
 - 원출력: `/home/jay/mai/tmp/verifier-lx/handoff-1112/regression.log`, `actual.log`, `test3/…/E2-cli.log`.
 
+### 고정 사본과 추가 반례
+
+- 커밋 0f9a066c의 git archive 고정 사본: 새 시험 `12 passed in 66.92s`. 경로 `/home/jay/mai/tmp/verifier-lx/handoff-1112/locked-0f9a066c`.
+- launcher 인자 누락, 예산 0 고정, 메시 SHA 검사 제거, 필수 생산자 누락 허용, checkpoint 섞임 허용 돌연변이 5개를 각각 잡았다. 원문 `mutants.json` 및 이름별 `.log`.
+- M0~M3는 파일 SHA만 맞는 HOLD, 항목 누락, 원자료 변조, 다른 메시를 거절한다. 새 파일 생산 시뿐 아니라 기존 E2.json을 주는 경로도 검사한다. 두 경로 모두 고침 전 DID NOT RAISE를 직접 확인했고 고침 뒤 `16 passed in 82.23s` + 기존 파일 우회 시험 `1 passed in 6.80s`.
+- M0~M3 제안 꼴은 `format=foothold-ex42-m0-m3/1`, `status=PASS`, `stage_id=E2`, `checks.M0~M3.status/evidence`, `mesh.geometry_sha256/files`. analyst 생산자와 키 조율 중이다. 이 검사는 실측을 대신 수행하지 않는다.
+
 ## 단계별 입력 생산자
 
 | 단계 | 자동으로 잇는 것 | 별도 필수 생산자 / 미확인 |

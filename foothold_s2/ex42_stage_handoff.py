@@ -227,6 +227,13 @@ def materializer_from_env(env):
                                output_dir=env["EX42_MATERIALIZE_EVIDENCE_DIR"],
                                bindings_path=env.get("EX42_MATERIALIZE_BINDINGS_FILE"))
         from foothold_s2.ex42_stage_materialize import FLAG_CHAIN_TARGET, materialize
+        if target_stage == "E2":
+            from foothold_s2.ex42_stage_materialize import _json, _checked_ref
+            from foothold_s2.ex42_stage_evidence import validate_m0_m3
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            supplied = _json(evidence).get("bindings", {}).get("prerequisites.m0_m3_receipt_sha256")
+            validate_m0_m3(_checked_ref(supplied, evidence.parent),
+                           EX42Plan.load(env["EX42_MATERIALIZE_TEMPLATE_PLAN"]))
         flag_chain = None
         if target_stage == FLAG_CHAIN_TARGET:
             chain = env.get("EX42_FLAG_CHAIN")
