@@ -184,17 +184,21 @@ def mount_e0_terrain_mesh(manifest: dict[str, Any]) -> None:
     return None
 
 
-def e0_push_off_kinds(plan: EX42Plan) -> dict[str, set[str]]:
-    """{family: kinds whose E0 `kind_task` says push: off}, read from the plan (not typed here)."""
-    stage = next((row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID), None)
-    tasks = ((stage or {}).get("terrain") or {}).get("kind_task")
-    if not isinstance(tasks, dict) or not tasks:
-        raise ValueError("EX-42 E0 stage lacks terrain.kind_task (per-kind push declarations)")
+def required_mesh_families(stage_id: str) -> tuple[str, ...]:
+    """The mesh families a stage trains on: A~E, and F (the jump bundle) for the jump stages only."""
+    from foothold_s2.curriculum.ex42_prep import JUMP_STAGE_IDS
+    return tuple("ABCDEF") if stage_id in JUMP_STAGE_IDS else tuple("ABCDE")
+
+
+def e0_push_off_kinds(plan: EX42Plan, stage_id: str = STAGE_E0_ID) -> dict[str, set[str]]:
+    """{family: kinds whose `kind_task` says push: off}, read from the plan (not typed here). E0 registers the kinds
+    once; the jump stages add family F from J0's own `kind_task` (E0's mesh has no F)."""
+    tasks = _kind_task(plan, stage_id)
     off: dict[str, set[str]] = {}
     for family, kinds in tasks.items():
         for kind, row in kinds.items():
             if not isinstance(row, dict) or type(row.get("push")) is not bool:
-                raise ValueError(f"EX-42 E0 kind_task {family}/{kind} needs an explicit push: on|off")
+                raise ValueError(f"EX-42 kind_task {family}/{kind} needs an explicit push: on|off")
             if row["push"] is False:
                 off.setdefault(family, set()).add(kind)
     return off
@@ -226,11 +230,15 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     sha = expected_sha_from_manifest(mesh_dir / "mesh_manifest.json")
     data = load_combined_mesh(npz, sha)
     families = list(data["column_family"])
-    missing = sorted(set("ABCDE") - set(families))
+    required = required_mesh_families(stage_id)
+    missing = sorted(set(required) - set(families))
     if missing:
-        raise ValueError(f"EX-42 E0 mesh lacks families {missing}; all five are required")
+        raise ValueError(f"EX-42 {stage_id} mesh lacks families {missing}; all {'six' if len(required) == 6 else 'five'} are required")
+    extra = sorted(set(families) - set(required))
+    if extra:
+        raise ValueError(f"EX-42 {stage_id} mesh carries families {extra}, which only the jump stages use")
     table = build_column_table(families)
-    declared = {(f, k) for f, kinds in _kind_task(plan).items() for k in kinds}
+    declared = {(f, k) for f, kinds in _kind_task(plan, stage_id).items() for k in kinds}
     undeclared = sorted({(r["family"], r["kind"]) for r in table if (r["family"], r["kind"]) not in declared})
     if undeclared:
         raise ValueError(f"EX-42 E0 mesh columns without a kind_task row: {undeclared}")
@@ -238,7 +246,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     from foothold_s2.terrains.ex42_exposure import exposure_by_column
     # kind_task is registered once, at E0 (CG: later boundaries never add it); exposure is the stage's own
     stage_row = _e_stage(plan, stage_id)["terrain"]
-    stage_terrain = {**stage_row, "kind_task": stage_row.get("kind_task") or _e0_stage(plan)["terrain"]["kind_task"]}
+    stage_terrain = {**stage_row, "kind_task": _kind_task(plan, stage_id)}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
     stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
@@ -246,7 +254,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     shares = column_shares(stage_terrain, table, stage_id)
     from foothold_s2.terrains.ex42_exposure import low_level_floor
     floor = low_level_floor(stage_terrain, table, stage_id)
-    mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan).items() if f in set(families)})
+    mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan, stage_id).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
     flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
@@ -283,10 +291,19 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
                           parent_same_mesh=parent_same_mesh)
 
 
-def _kind_task(plan: EX42Plan) -> dict[str, Any]:
-    e0_push_off_kinds(plan)                      # validates the shape
-    stage = next(row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID)
-    return stage["terrain"]["kind_task"]
+def _kind_task(plan: EX42Plan, stage_id: str = STAGE_E0_ID) -> dict[str, Any]:
+    stage = next((row for row in plan.document["stages"] if row.get("id") == STAGE_E0_ID), None)
+    tasks = ((stage or {}).get("terrain") or {}).get("kind_task")
+    if not isinstance(tasks, dict) or not tasks:
+        raise ValueError("EX-42 E0 stage lacks terrain.kind_task (per-kind push declarations)")
+    from foothold_s2.curriculum.ex42_prep import JUMP_STAGE_IDS
+    if stage_id not in JUMP_STAGE_IDS:
+        return tasks
+    jump = next((row for row in plan.document["stages"] if row.get("id") == JUMP_STAGE_IDS[0]), None)
+    added = ((jump or {}).get("terrain") or {}).get("kind_task")
+    if not isinstance(added, dict) or set(added) != {"F"}:
+        raise ValueError("EX-42 jump stages need J0 terrain.kind_task with the family F kinds (and only F)")
+    return {**tasks, **added}
 
 
 def stage_zero_updates(max_iterations: int | None, speed_probe: bool) -> int:

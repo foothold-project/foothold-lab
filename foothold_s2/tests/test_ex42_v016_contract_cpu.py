@@ -77,7 +77,7 @@ def test_v016_makes_known_values_decisions_but_keeps_unmeasured_values_open():
     assert stage_zero["force_gt"] is False
     plan = EX42Plan.load(TABLE)
     assert plan.runtime_stage_ids == (
-        "EX42_0_T0_prime", *(stage["id"] for stage in doc["stages"]),
+        "EX42_0_T0_prime", *(stage["id"] for stage in doc["stages"] if not stage["id"].startswith("J")),   # J: separate DR decision
     )
     assert plan.runtime_stages[0]["shares"] == doc["stage_zero"]["shares"]
 

@@ -104,7 +104,7 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
         boundary = type(interval) is int and interval > 0 and 0 < iteration <= limit and iteration % interval == 0
     if not boundary:
         return None
-    following = stages[index + 1]["id"] if index + 1 < len(stages) else None
+    following = plan.following_stage_id(stage_id)
     p1 = json.loads(Path(p1_path).read_text(encoding="utf-8-sig"))
     base = {"stage_id": stage_id, "boundary_iteration": iteration, "judgment": p1.get("judgment"),
             "next_stage_id": following, "checkpoint_sha256": p1.get("checkpoint_sha256"),
@@ -115,7 +115,7 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
         return {**base, "action": "notify", "state": "not_ready",
                 "reason": "no following stage" if following is None else f"gate judgment is {p1.get('judgment')}"}
     launch_plan, launch_approvals, pair = plan, approvals_path, {}
-    if materialize is not None and not isinstance(stages[index + 1].get("parent"), dict):
+    if materialize is not None and not isinstance(next(r for r in stages if r["id"] == following).get("parent"), dict):
         try:
             made = materialize(target_stage=following, gate_receipt=p1_path, parent_manifest=manifest_path,
                                source_plan=plan.path)

@@ -15,6 +15,13 @@ import yaml
 
 
 STAGE_IDS = ("E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b")
+# DESIGN-JUMP v0.2 s2.2: the jump stages follow E6b in the same table. They are optional (a plan without them is the
+# ten-stage plan), disabled until their approval cells say otherwise, and RUNTIME_STAGE_IDS stays the EX-42 list.
+JUMP_STAGE_IDS = ("J0", "J1", "J2", "J3", "J4")
+JUMP_AXES = {"J0": {"parent_contract_check"}, "J1": {"command_velocity_cap"},
+             "J2": {"jump_height_cap", "terrain_exposure"}, "J3": {"jump_gap_cap", "terrain_exposure"},
+             "J4": {"jump_height_cap", "terrain_exposure", "command_velocity_cap"}}
+JUMP_SHARE_CAP = 0.20            # new jump kinds: at most 20 % of all envs (DESIGN-JUMP s2.3, assumption)
 STAGE_ZERO_ID = "EX42_0_T0_prime"
 RUNTIME_STAGE_IDS = (STAGE_ZERO_ID, *STAGE_IDS)
 FAMILIES = ("A", "B", "C", "D", "E", "continuous")
@@ -517,6 +524,25 @@ def validate_stage_e2_authorization(plan: "EX42Plan", approvals_path: str | Path
     return validate_stage_authorization(plan, approvals_path, parent_sha256, stage_id='E2')
 
 
+def _validate_jump_row(row: dict[str, Any]) -> None:
+    """A jump stage is never enabled by the table alone; its axes are its own and height / gap never share a boundary;
+    the jump kinds (family F) stay under the 20 % share cap at the start of the stage."""
+    sid = row["id"]
+    if row.get("enabled") is not False:
+        raise ValueError(f"EX-42 jump stage {sid} must be disabled in the table (its approval cell enables it)")
+    axes = row.get("boundary_axes")
+    if not isinstance(axes, list) or not set(axes) <= JUMP_AXES[sid] or len(set(axes)) != len(axes):
+        raise ValueError(f"EX-42 jump stage {sid} boundary axes must come from {sorted(JUMP_AXES[sid])}")
+    if {"jump_height_cap", "jump_gap_cap"} <= set(axes):
+        raise ValueError(f"EX-42 jump stage {sid} raises height and gap at the same boundary")
+    positive = row.get("terrain", {}).get(f"exposure_at_{sid}", {}).get("positive")
+    if not isinstance(positive, list):
+        raise ValueError(f"EX-42 jump stage {sid} has no exposure_at_{sid}.positive")
+    jump = sum(float(rule["share"]) for rule in positive if rule.get("family") == "F" and "share" in rule)
+    if jump > JUMP_SHARE_CAP + 1e-9:
+        raise ValueError(f"EX-42 jump stage {sid} jump kinds hold {jump:.3f} of the envs, over {JUMP_SHARE_CAP}")
+
+
 @dataclass(frozen=True)
 class EX42Plan:
     path: Path
@@ -545,8 +571,12 @@ class EX42Plan:
         if tuple(env.get("training_presets", {}).keys()) != FAMILIES:
             raise ValueError("EX-42 terrain preset families/order differ from the contract")
         stages = doc.get("stages")
-        if not isinstance(stages, list) or tuple(row.get("id") for row in stages) != STAGE_IDS:
-            raise ValueError("EX-42 stage table must contain the ten canonical stages in order")
+        ids = tuple(row.get("id") for row in stages) if isinstance(stages, list) else None
+        if ids not in (STAGE_IDS, STAGE_IDS + JUMP_STAGE_IDS):
+            raise ValueError("EX-42 stage table must contain the ten canonical stages in order (J0~J4 may follow)")
+        for row in stages:
+            if row.get("id") in JUMP_STAGE_IDS:
+                _validate_jump_row(row)
         stage_zero = doc.get("stage_zero")
         if not isinstance(stage_zero, dict) or stage_zero.get("id") != STAGE_ZERO_ID:
             raise ValueError("EX-42 must define the explicit EX-41 T0-prime bridge as stage zero")
@@ -655,11 +685,23 @@ class EX42Plan:
                  "shares": zero["shares"], "ranges": zero["ranges"],
                  "force_gt": zero["force_gt"], "terrain": zero["terrain"],
                  "critic_mirror": False}
-        return (first, *tuple(self.document["stages"]))
+        # The jump stages are not part of EX-42's own sequence: the approved DR schedule covers the EX-42 stages only and
+        # a J scale is a separate team-lead decision, so a J stage cannot be resolved here until that cell exists.
+        return (first, *tuple(row for row in self.document["stages"] if row.get("id") not in JUMP_STAGE_IDS))
 
     @property
     def runtime_stage_ids(self) -> tuple[str, ...]:
         return tuple(row["id"] for row in self.runtime_stages)
+
+    def following_stage_id(self, stage_id: str) -> str | None:
+        """The stage after `stage_id` in the runtime order: the document's stages without the jump stages (the runtime
+        list names the first row by its stage-zero id, the document by "E0"). The last EX-42 stage has no following
+        stage, so it goes on with the same stage; a J stage follows the document order."""
+        ids = [row["id"] for row in self.document["stages"]]
+        order = [i for i in ids if i not in JUMP_STAGE_IDS] if stage_id not in JUMP_STAGE_IDS else ids
+        if stage_id not in order:
+            return None
+        return order[order.index(stage_id) + 1] if order.index(stage_id) + 1 < len(order) else None
 
     def stage_id_at(self, local_iteration: int, *, transitions: tuple[dict[str, Any], ...] = ()) -> str:
         """Resolve a checkpoint's stage from the shared sequence and applied receipts.
