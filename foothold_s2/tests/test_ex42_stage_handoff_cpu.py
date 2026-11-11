@@ -432,8 +432,9 @@ def test_the_materializer_needs_every_setting_and_the_evidence_file_and_one_fold
     assert handoff.materializer_from_env({}) is None
     env = {"EX42_MATERIALIZE_TEMPLATE_PLAN": "/t/p.yaml", "EX42_MATERIALIZE_TEMPLATE_APPROVALS": "/t/a.yaml",
            "EX42_MATERIALIZE_EVIDENCE_DIR": str(tmp_path / "ev"), "EX42_MATERIALIZE_OUT_ROOT": str(tmp_path / "out")}
+    monkeypatch.setattr(handoff, "measured_budget", lambda *a: {"limit":20000, "used":1000, "basis":"b"})
     run = handoff.materializer_from_env(env)
-    with pytest.raises(ValueError, match="BUDGET_LIMIT"):
+    with pytest.raises(ValueError, match="evidence .* is missing"):
         run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
     env.update(EX42_MATERIALIZE_BUDGET_LIMIT="20000", EX42_MATERIALIZE_BUDGET_USED="1000", EX42_MATERIALIZE_BUDGET_BASIS="b")
     with pytest.raises(ValueError, match="evidence .* is missing"):
@@ -475,6 +476,7 @@ def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_deci
 
 
 def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known, tmp_path, monkeypatch):
+    monkeypatch.setattr(handoff, "measured_budget", lambda *a: {"limit":20000, "used":1000, "basis":"b"})
     import foothold_s2.ex42_stage_materialize as materialize
     base, ap, manifest, gp = known
     gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))

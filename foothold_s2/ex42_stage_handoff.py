@@ -167,12 +167,45 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
     return record
 
 
+def measured_budget(template_path, source_path, manifest_path, gate_path):
+    """Active lineage only: origin checkpoint + this completed segment, not a fixed env counter."""
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_gate_checks import validate_score_pair
+    template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8-sig"))
+    gate = json.loads(Path(gate_path).read_text(encoding="utf-8-sig"))
+    if gate.get("state") != "complete" or gate.get("plan_sha256") != source.sha256:
+        raise ValueError("budget source gate plan/state differs")
+    iteration = gate.get("checkpoint_iteration")
+    if type(iteration) is not int or iteration <= 0 or manifest.get("progress", {}).get("completed_updates") != iteration:
+        raise ValueError("budget source is not the completed boundary checkpoint")
+    checkpoint = Path(manifest_path).resolve().parent / f"model_{iteration}.pt"
+    validate_score_pair(expected_iteration=iteration, score=gate, manifest=manifest,
+                        checkpoint_exists=checkpoint.is_file(), checkpoint_sha256=_sha256(checkpoint))
+    stage = next((r for r in source.document["stages"] if r["id"] == gate.get("stage_id")), None)
+    cumulative = ((stage or {}).get("parent") or {}).get("cumulative_update")
+    origin = next(r for r in template.document["stages"] if r["id"] == "E0")["parent"]["cumulative_update"]
+    budget = template.document.get("training_budget") or {}
+    limit = budget.get("maximum_updates")
+    if (any(type(n) is not int for n in (cumulative, origin, limit)) or cumulative < origin
+            or budget.get("basis") != "ex42_new_updates" or budget.get("count_m_updates") is not True):
+        raise ValueError("budget plan has no valid EX42 cumulative origin or approved counter")
+    used = cumulative + iteration - origin
+    if used > limit:
+        raise ValueError("actual cumulative EX42 budget exhausted")
+    return {"basis": budget["basis"], "limit": limit, "used": used, "local_updates": iteration,
+            "parent_cumulative_update": cumulative, "origin_cumulative_update": origin,
+            "stage": gate["stage_id"], "source_plan_sha256": source.sha256,
+            "manifest_sha256": _sha256(manifest_path), "gate_sha256": _sha256(gate_path)}
+
+
 def materializer_from_env(env):
     """The `materialize` callable of `decide_next_stage`, or None when no template is configured. Everything comes from
     the environment (machine profile): EX42_MATERIALIZE_TEMPLATE_PLAN / _TEMPLATE_APPROVALS (the approved template),
     _EVIDENCE_DIR (the runner writes <target>.json there from the finished stage's logs and baselines), _OUT_ROOT (one
-    immutable folder per target and gate is created under it) and the explicit budget triple _BUDGET_LIMIT / _USED /
-    _BASIS. A missing piece refuses the materialization (a notice), it is never guessed.
+    immutable folder per target and gate is created under it). Budget is derived from the stage boundary's plan,
+    manifest and gate. Fixed _BUDGET_* environment values are ignored.
+    A missing artifact refuses the materialization (a notice), it is never guessed.
     E1F is published together with the completed W09+W08 flag chain (`EX42_FLAG_CHAIN`, optional pin
     `EX42_FLAG_CHAIN_SHA256`): its approval needs `calibration_sha256` and the `flag_baseline`, so without the chain the
     handoff does not start it (fail closed, a notice) instead of freezing a plan with an empty calibration."""
@@ -181,12 +214,18 @@ def materializer_from_env(env):
         return None
 
     def run(*, target_stage, gate_receipt, parent_manifest, source_plan):
-        missing = [n for n in names + ("BUDGET_LIMIT", "BUDGET_USED", "BUDGET_BASIS") if not env.get("EX42_MATERIALIZE_" + n)]
+        missing = [n for n in names if not env.get("EX42_MATERIALIZE_" + n)]
         if missing:
             raise ValueError("materialize setting missing: " + ", ".join("EX42_MATERIALIZE_" + n for n in missing))
         evidence = Path(env["EX42_MATERIALIZE_EVIDENCE_DIR"]) / f"{target_stage}.json"
         if not evidence.is_file():
-            raise ValueError(f"materialize evidence {evidence} is missing (written from the finished stage's own records)")
+            if target_stage == "E1F":
+                raise ValueError(f"materialize evidence {evidence} is missing (W09/W08 bridge produces E1F evidence)")
+            from foothold_s2.ex42_stage_evidence import produce
+            evidence = produce(template_path=env["EX42_MATERIALIZE_TEMPLATE_PLAN"], source_path=source_plan,
+                               target=target_stage, gate_path=gate_receipt, manifest_path=parent_manifest,
+                               output_dir=env["EX42_MATERIALIZE_EVIDENCE_DIR"],
+                               bindings_path=env.get("EX42_MATERIALIZE_BINDINGS_FILE"))
         from foothold_s2.ex42_stage_materialize import FLAG_CHAIN_TARGET, materialize
         flag_chain = None
         if target_stage == FLAG_CHAIN_TARGET:
@@ -198,11 +237,11 @@ def materializer_from_env(env):
             if pin and _sha256(chain) != pin:
                 raise ValueError("EX42_FLAG_CHAIN differs from its EX42_FLAG_CHAIN_SHA256 pin")
             flag_chain = chain
+        budget = measured_budget(env["EX42_MATERIALIZE_TEMPLATE_PLAN"], source_plan, parent_manifest, gate_receipt)
         return materialize(
             plan=env["EX42_MATERIALIZE_TEMPLATE_PLAN"], source_plan=source_plan,
             approvals=env["EX42_MATERIALIZE_TEMPLATE_APPROVALS"], target=target_stage, parent_manifest=parent_manifest,
-            gate_receipt=gate_receipt, evidence=evidence, budget_limit=int(env["EX42_MATERIALIZE_BUDGET_LIMIT"]),
-            budget_used=int(env["EX42_MATERIALIZE_BUDGET_USED"]), budget_basis=env["EX42_MATERIALIZE_BUDGET_BASIS"],
+            gate_receipt=gate_receipt, evidence=evidence, budget_limit=budget["limit"], budget_used=budget["used"], budget_basis=budget["basis"],
             out=Path(env["EX42_MATERIALIZE_OUT_ROOT"]) / f"{target_stage}_{_sha256(gate_receipt)[:12]}",
             flag_chain=flag_chain)
     return run

@@ -1,0 +1,192 @@
+"""No Kit: actual launcher args, manifest-derived budget and next-stage evidence."""
+import json
+from pathlib import Path
+import pytest
+from foothold_s2.scripts import ex42_stage_launcher as launcher
+from foothold_s2 import ex42_stage_handoff as handoff
+from foothold_s2.tests.test_ex42_stage_launcher_cpu import _env, _flag
+from foothold_s2.tests import test_ex42_materialize_cpu as materialize_tests
+known = materialize_tests.known
+
+
+def test_launcher_own_p1_command_carries_complete_next_stage_chain(tmp_path):
+    env=_env(tmp_path)
+    argv,child,summary=launcher.build(env,dry_run=True,now=0)
+    p1=json.loads(_flag(argv,'--ex42_p1_score_argv_json'))
+    assert Path(p1[p1.index('--next-stage-launcher')+1])==Path(launcher.__file__).with_suffix('.sh')
+    assert p1[p1.index('--next-stage-queue')+1]==env['GPU_JOBS_QUEUE']
+    assert p1[p1.index('--next-stage-dispatch')+1]==str(launcher.DISPATCH)
+    assert child['EX42_MATERIALIZE_TEMPLATE_PLAN']==str(launcher.PLAN)
+    assert child['EX42_MATERIALIZE_TEMPLATE_APPROVALS']==str(launcher.APPROVALS)
+    assert 'EX42_MATERIALIZE_BUDGET_USED' not in child
+
+
+def test_budget_is_actual_parent_lineage_not_environment_or_plan_cap(known):
+    row=handoff.measured_budget(known['plan'],known['source_plan'],known['parent_manifest'],known['gate_receipt'])
+    assert row['used']==1250  # E1 parent13250 + actual1000 - E0 parent13000; stage zero excluded
+    assert row['limit']==20000 and row['basis']=='ex42_new_updates'
+    assert row['local_updates']==1000 and row['parent_cumulative_update']==13250
+
+
+@pytest.mark.parametrize('bad',['missing_save','wrong_sha','progress','plan_sha'])
+def test_budget_rejects_unpublished_or_mixed_exit(known,bad):
+    p=known['parent_manifest'];m=json.loads(p.read_text());g=json.loads(known['gate_receipt'].read_text())
+    if bad=='missing_save':m['checkpoints']={}
+    elif bad=='wrong_sha':m['checkpoints']['model_1000.pt']='0'*64
+    elif bad=='progress':m['progress']['completed_updates']=750
+    else:g['plan_sha256']='0'*64
+    p.write_text(json.dumps(m));known['gate_receipt'].write_text(json.dumps(g))
+    with pytest.raises(ValueError):handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
+
+
+from foothold_s2.tests import test_ex42_calibration_materialize_cpu as flag_tests
+@pytest.fixture
+def ready(known, monkeypatch):
+    import yaml
+    valid_min = yaml.safe_load(launcher.PLAN.read_text())["evaluation"]["flag_cells"]["valid_min"]
+    original = flag_tests.flags
+    monkeypatch.setattr(flag_tests, "flags", lambda: dict(original(), valid_min=valid_min))
+    return flag_tests.ready.__wrapped__(known)
+
+
+@pytest.fixture
+def e1f_exit(ready):
+    from foothold_s2.ex42_stage_materialize import materialize, digest
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_e1f_judge import _calibration, _flag_window
+    from foothold_s2.eval.ex42_flag_cells import read_evidence
+    made=materialize(**ready)
+    source=EX42Plan.load(made['plan'])
+    run=ready['out'].parent/'e1f-run';run.mkdir()
+    cp=run/'model_500.pt';cp.write_bytes(b'CPU fixture E1F m500')
+    manifest=run/'manifest.json'
+    materialize_tests.dump(manifest,{'progress':{'completed_updates':500},'checkpoints':{cp.name:digest(cp)}})
+    gate=json.loads(ready['gate_receipt'].read_text())
+    score=json.loads(Path(gate['measurement']).read_text())
+    items={'maintenance_current':{'role':'judge','judgement':'PASS'},'maintenance_previous':{'role':'judge','judgement':'PASS'},
+           'flag_calibration':{'role':'judge',**_calibration(source.document)}}
+    chain=json.loads(ready['flag_chain'].read_text())
+    mesh=Path(chain['mesh_dir'])
+    for which in ('current','previous'):
+        folder=run/which
+        flag_tests.write_round(folder,source.document,source.sha256,digest(cp),chain['mesh_sha256'],42)
+        for count in ('flag_one','flag_four'):
+            cells=read_evidence(folder/'flag_cells'/count,plan=source.document,plan_sha256=source.sha256,
+                                checkpoint_sha256=digest(cp),seed=42,count=count)
+            for case,value in cells.items():items[f'{case}_{which}']={'role':'judge',**_flag_window(value,source.document,case)}
+    stage_exit={'adapter':'flag_two_window','judgement':'PASS','windows':2,'items':items}
+    score.update(stage_id='E1F',checkpoint_sha256=digest(cp),stage_exit=stage_exit,maintenance_source_sha256=source.sha256)
+    score.pop('e1_exit',None)
+    measure=run/'ex42_score.json';materialize_tests.dump(measure,score)
+    gate.update(stage_id='E1F',checkpoint_iteration=500,checkpoint_sha256=digest(cp),stage_exit=stage_exit,
+                plan_sha256=source.sha256,measurement=str(measure),measurement_sha256=digest(measure))
+    gate.pop('e1_exit',None)
+    gp=run/'p1_score.json';materialize_tests.dump(gp,gate)
+    materialize_tests.dump(run/'eval_receipt.json',{'state':'running','checkpoint_sha256':digest(cp),
+        'ex42_mesh':{'mesh_npz':str(mesh/'terrain_mesh.npz'),'manifest':str(mesh/'mesh_manifest.json'),
+                     'mesh_sha256':chain['mesh_sha256']}})
+    m0=run/'fixture-only-M0-M3.json';materialize_tests.dump(m0,{'fixture_only':True,'known_measurements':'CPU test'})
+    bindings=run/'bindings.json';materialize_tests.dump(bindings,{'E2':{
+        'prerequisites.m0_m3_receipt_sha256':{'path':str(m0),'sha256':digest(m0)}}})
+    return source,Path(made['approvals']),manifest,gp,bindings
+
+
+def test_e1f_pass_to_e2_real_materialize_then_cpu_launcher_cli(e1f_exit,tmp_path):
+    import os
+    import subprocess
+    import sys
+    source,approval,manifest,gate,bindings=e1f_exit
+    env={'EX42_MATERIALIZE_TEMPLATE_PLAN':str(source.path),'EX42_MATERIALIZE_TEMPLATE_APPROVALS':str(approval),
+         'EX42_MATERIALIZE_EVIDENCE_DIR':str(tmp_path/'generated'),
+         'EX42_MATERIALIZE_OUT_ROOT':str(tmp_path/'transitions'),
+         'EX42_MATERIALIZE_BINDINGS_FILE':str(bindings),
+         'EX42_MATERIALIZE_BUDGET_USED':'999999'}  # deliberately stale, must be ignored
+    decision=handoff.decide_next_stage(source.path,approval,'E1F',500,gate,manifest,
+                                       materialize=handoff.materializer_from_env(env))
+    assert decision['action']=='launch',decision
+    assert decision['target_stage']=='E2'
+    plan=Path(decision['plan']);transition=json.loads((plan.parent/'transition.json').read_text())
+    assert transition['budget']['used']==1750  # E0 250 + adopted E1 1000 + E1F 500
+    launch_env=dict(os.environ,**env,EX42_AUTO_ACTION='next_stage',EX42_AUTO_TARGET_STAGE='E2',
+        EX42_AUTO_PLAN=str(plan),EX42_AUTO_APPROVALS=decision['approvals'],
+        EX42_AUTO_PARENT_MANIFEST=str(manifest),EX42_AUTO_PARENT_CHECKPOINT=str(manifest.parent/'model_500.pt'),
+        EX42_AUTO_GATE_RECEIPT=str(gate),EX42_AUTO_GATE_SHA256=handoff._sha256(gate),
+        EX42_MAIN_ROOT=str(tmp_path/'not-launched'),EX42_SOURCE_REF='CPU-fixture',
+        ISAAC311_PYTHON=sys.executable,GPU_JOBS_QUEUE=str(tmp_path/'not-live-queue.json'))
+    argv,child,summary=launcher.build(launch_env,dry_run=True)
+    assert '--ex42_stage_dry_run' in argv and child['CUDA_VISIBLE_DEVICES']==''
+    done=subprocess.run(argv,cwd=launcher.SOURCE_ROOT,env=child,capture_output=True,text=True,timeout=90)
+    (tmp_path/'E2-cli.log').write_text(done.stdout+done.stderr)
+    assert done.returncode==0,done.stdout+done.stderr
+    preflight = json.loads(next(line.split(' ', 1)[1] for line in done.stdout.splitlines()
+                                if line.startswith('EX42_STAGE_E2_PREFLIGHT ')))
+    assert preflight['app_launcher_started'] is False and preflight['training_blockers'] == []
+    assert not Path(summary['run_dir']).exists()
+
+
+def test_evidence_missing_m0_m3_never_turns_into_assumed_pass(e1f_exit,tmp_path):
+    from foothold_s2.ex42_stage_evidence import produce
+    source,approval,manifest,gate,_=e1f_exit
+    with pytest.raises(ValueError,match='missing measured producers: prerequisites.m0_m3'):
+        produce(template_path=source.path,source_path=source.path,target='E2',gate_path=gate,
+                manifest_path=manifest,output_dir=tmp_path/'missing')
+    assert not (tmp_path/'missing').exists()
+
+
+@pytest.mark.parametrize("bad", ["mesh_bytes", "receipt_checkpoint", "binding_sha"])
+def test_measured_producers_reject_changed_or_mixed_artifacts(e1f_exit, tmp_path, bad):
+    from foothold_s2.ex42_stage_evidence import produce
+    source, _, manifest, gate, bindings = e1f_exit
+    receipt_path = gate.parent / 'eval_receipt.json'
+    receipt = json.loads(receipt_path.read_text())
+    if bad == 'mesh_bytes':
+        Path(receipt['ex42_mesh']['mesh_npz']).write_bytes(b'changed after evaluation')
+    elif bad == 'receipt_checkpoint':
+        receipt['checkpoint_sha256'] = '0' * 64
+        receipt_path.write_text(json.dumps(receipt))
+    else:
+        document = json.loads(bindings.read_text())
+        document['E2']['prerequisites.m0_m3_receipt_sha256']['sha256'] = '0' * 64
+        bindings.write_text(json.dumps(document))
+    with pytest.raises(ValueError, match='SHA differs|different checkpoint'):
+        produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                manifest_path=manifest, output_dir=tmp_path / 'must-not-publish', bindings_path=bindings)
+    assert not (tmp_path / 'must-not-publish').exists()
+
+
+def test_actual_eval_handoff_reaches_launcher_once_and_registers(e1f_exit, tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.ex42_eval_once import _hand_off
+    source, approval, manifest, gate, bindings = e1f_exit
+    settings = {'TEMPLATE_PLAN': source.path, 'TEMPLATE_APPROVALS': approval,
+                'EVIDENCE_DIR': tmp_path / 'generated', 'OUT_ROOT': tmp_path / 'transitions',
+                'BINDINGS_FILE': bindings}
+    for key, value in settings.items():
+        monkeypatch.setenv('EX42_MATERIALIZE_' + key, str(value))
+    calls = []
+    real_start = handoff.start_launcher
+
+    def fake_popen(argv, **kwargs):
+        calls.append(('launch', argv, kwargs['env']))
+        return SimpleNamespace(pid=31415)
+
+    def start(*args, **kwargs):
+        return real_start(*args, **kwargs, popen=fake_popen)
+
+    monkeypatch.setattr(handoff, 'start_launcher', start)
+    notice = _hand_off(source.path, approval, 'E1F', 500, json.loads(gate.read_text()),
+                       manifest.parent / 'model_500.pt', gate.parent,
+                       Path(launcher.__file__).with_suffix('.sh'),
+                       gpu_wait=lambda: calls.append(('wait',)),
+                       register=lambda *args: calls.append(('register', args)) or {'state': 'fixture_registered'})
+    assert notice['automatic_launch_started'] is True and notice['state'] == 'next_stage_started'
+    assert [c[0] for c in calls] == ['wait', 'launch', 'register']
+    assert calls[1][2]['EX42_AUTO_TARGET_STAGE'] == 'E2'
+    assert calls[1][2]['EX42_AUTO_GATE_SHA256'] == handoff._sha256(gate)
+    before = len([c for c in calls if c[0] == 'launch'])
+    # Replaying the same gate must never create another child.
+    repeated = _hand_off(source.path, approval, 'E1F', 500, json.loads(gate.read_text()),
+                         manifest.parent / 'model_500.pt', gate.parent,
+                         Path(launcher.__file__).with_suffix('.sh'))
+    assert repeated['automatic_launch_started'] is False
+    assert len([c for c in calls if c[0] == 'launch']) == before
