@@ -46,58 +46,86 @@ def _finite(value: Any) -> None:
             _finite(child)
 
 
-def _parse_applied_cap(log_path: Path, *, plan: EX42Plan, run: Path) -> int:
+def _read_applied_cap_compat(ref, *, base, source_plan, stage, parent_manifest):
+    """#678 read_applied_cap contract, for checkouts before that PR is integrated."""
     preflights, exposures = [], []
-    for line in log_path.read_text(encoding="utf-8", errors="strict").splitlines():
-        for prefix, dest in (("EX42_STAGE_E1_PREFLIGHT ", preflights),
-                             ("EX42_E0_EXPOSURE ", exposures)):
-            if line.startswith(prefix):
-                row = json.loads(line[len(prefix):], parse_constant=lambda x: (_ for _ in ()).throw(
-                    ValueError(f"non-finite log value {x}")))
-                if not isinstance(row, dict):
-                    raise ValueError(f"invalid {prefix.strip()} log row")
-                _finite(row)
-                dest.append(row)
+    log = Path(ref["path"])
+    if not log.is_absolute():
+        log = Path(base) / log
+    log = log.resolve(strict=True)
+    if _sha(log) != ref.get("sha256"):
+        raise ValueError("applied-cap exposure log SHA differs")
+    for line in log.read_text(encoding="utf-8", errors="strict").splitlines():
+        if line.startswith(f"EX42_STAGE_{stage}_PREFLIGHT "):
+            dest = preflights
+            prefix = f"EX42_STAGE_{stage}_PREFLIGHT "
+        elif line.startswith("EX42_E0_EXPOSURE "):
+            dest = exposures
+            prefix = "EX42_E0_EXPOSURE "
+        else:
+            continue
+        try:
+            row = json.loads(line[len(prefix):], parse_constant=lambda value: (_ for _ in ()).throw(
+                ValueError(f"non-finite log value {value}")))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid {prefix.strip()} log row") from exc
+        if not isinstance(row, dict):
+            raise ValueError(f"invalid {prefix.strip()} log row")
+        _finite(row)
+        dest.append(row)
     if not preflights:
-        raise ValueError("training log has no actual E1 preflight/readback")
+        raise ValueError("applied cap log lacks source-stage preflight")
     world = preflights[0].get("world_size")
-    if (type(world) is not int or world < 1 or len(preflights) != world or len(exposures) != world
-            or sorted(row.get("rank", -1) for row in preflights) != list(range(world))
-            or sorted(row.get("rank", -1) for row in exposures) != list(range(world))):
-        raise ValueError("E1 training log has missing or duplicate rank readbacks")
-    expected_approval = plan.document["stage_zero"]["approval_sha256"]
-    run = run.resolve(strict=True)
+    if (type(world) is not int or world <= 0 or len(preflights) != world or len(exposures) != world
+            or sorted(row.get("rank", -1) for row in preflights) != list(range(world))):
+        raise ValueError("applied cap log has incomplete/duplicate ranks")
+    parent_manifest = Path(parent_manifest).resolve(strict=True)
     caps = []
     for preflight in preflights:
         approval = preflight.get("approval") or {}
-        if (preflight.get("stage_id") != "E1" or preflight.get("world_size") != world
-                or approval.get("approvals_sha256") != expected_approval):
-            raise ValueError("E1 preflight plan/approval identity differs")
-        if preflight.get("rank") == 0 and Path(preflight.get("output_dir", "")).resolve() != run:
-            raise ValueError("rank0 E1 preflight output directory differs from checkpoint run")
+        if (preflight.get("stage_id") != stage or preflight.get("world_size") != world
+                or approval.get("approvals_sha256") != source_plan.document["stage_zero"]["approval_sha256"]
+                or (preflight.get("rank") == 0 and
+                    Path(preflight.get("output_dir", "")).resolve() != parent_manifest.parent)):
+            raise ValueError("applied cap source run identity differs")
     for exposure in exposures:
-        if exposure.get("world_size", world) != world or exposure.get("stage_id", "E1") != "E1":
-            raise ValueError("E1 exposure rank identity differs")
         columns, values = exposure.get("exposed_columns"), exposure.get("level_caps")
         if (not isinstance(columns, list) or not columns or len(set(columns)) != len(columns)
                 or not isinstance(values, list) or not values
-                or any(type(col) is not int or col < 0 or col >= len(values) for col in columns)
+                or any(type(column) is not int or column < 0 or column >= len(values) for column in columns)
                 or any(type(cap) is not int or cap < 0 for cap in values)):
-            raise ValueError("E1 applied cap readback is malformed")
-        active = {values[col] for col in columns}
+            raise ValueError("applied level cap receipt invalid")
+        active = {values[column] for column in columns}
         if len(active) != 1:
-            raise ValueError("E1 inherited cap differs across exposed columns")
+            raise ValueError("continuous inherited caps are heterogeneous")
         caps.append(active.pop())
     if len(set(caps)) != 1:
-        raise ValueError("E1 applied cap differs by rank")
-    return caps[0]
+        raise ValueError("applied level cap differs across ranks")
+    return caps[0], {"path": str(log), "sha256": _sha(log)}
+
+
+def _parse_applied_cap(log_path: Path, *, plan: EX42Plan, run: Path, manifest_path: Path) -> int:
+    # Use the verifier's implementation when #678 is present in the integrated checkout.
+    try:
+        from foothold_s2.ex42_stage_materialize import read_applied_cap
+    except ModuleNotFoundError as exc:
+        if exc.name != "foothold_s2.ex42_stage_materialize":
+            raise
+        read_applied_cap = _read_applied_cap_compat
+    cap, _exposure_ref = read_applied_cap(
+        {"path": str(log_path.resolve(strict=True)), "sha256": _sha(log_path)},
+        base=log_path.parent, source_plan=plan, stage="E1", parent_manifest=manifest_path)
+    return cap
 
 
 def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | Path,
                    gate_receipt_path: str | Path, training_log_path: str | Path,
-                   evaluation_mesh_path: str | Path, w09_baseline_path: str | Path) -> dict[str, Any]:
+                   evaluation_mesh_path: str | Path, w09_baseline_path: str | Path,
+                   evaluation_plan_path: str | Path | None = None) -> dict[str, Any]:
     plan_path = Path(source_plan_path).resolve(strict=True)
     plan = EX42Plan.load(plan_path)
+    evaluation_path = Path(evaluation_plan_path).resolve(strict=True) if evaluation_plan_path else plan_path
+    evaluation_plan = EX42Plan.load(evaluation_path)
     if "E1" not in plan.runtime_stage_ids:
         raise ValueError("source plan does not contain E1")
     manifest_path = Path(parent_manifest_path).resolve(strict=True)
@@ -128,13 +156,15 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     if _sha(measurement) != measurement_sha:
         raise ValueError("E1 boundary measurement receipt SHA differs")
     measured = _json(measurement)
+    measured_policy_sha = measured.get("maintenance_source_sha256")
     if (measured.get("checkpoint_sha256") != checkpoint_sha
             or measured.get("judgement") != "PASS"
-            or measured.get("maintenance_source_sha256") not in (None, plan.sha256)):
+            or (evaluation_plan.sha256 != plan.sha256 and measured_policy_sha != evaluation_plan.sha256)
+            or (evaluation_plan.sha256 == plan.sha256 and measured_policy_sha not in (None, plan.sha256))):
         raise ValueError("E1 measurement checkpoint or plan identity differs")
 
     training_log = Path(training_log_path).resolve(strict=True)
-    cap = _parse_applied_cap(training_log, plan=plan, run=run)
+    cap = _parse_applied_cap(training_log, plan=plan, run=run, manifest_path=manifest_path)
     mesh_path = Path(evaluation_mesh_path).resolve(strict=True)
     mesh_doc = _json(mesh_path.parent / "mesh_manifest.json")
     terrain = plan.document["assumptions_pending_lead"]["terrain_manifest_measurements"]
@@ -147,7 +177,7 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     baseline = _json(baseline_path)
     if not baseline:
         raise ValueError("W09 baseline artifact is empty")
-    return {
+    evidence = {
         "format": FORMAT,
         "target_stage": "E1F",
         "source_stage": "E1",
@@ -163,6 +193,9 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
                 "path": str(baseline_path), "sha256": _sha(baseline_path)},
         },
     }
+    if evaluation_plan.sha256 != plan.sha256:
+        evidence["evaluation_plan"] = {"path": str(evaluation_path), "sha256": _sha(evaluation_path)}
+    return evidence
 
 
 def write_evidence(*, out_path: str | Path, **inputs) -> dict[str, Any]:
@@ -189,6 +222,7 @@ def main(argv=None) -> int:
     for name in ("source-plan", "parent-manifest", "gate-receipt", "training-log",
                  "evaluation-mesh", "w09-baseline", "out"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--evaluation-plan")
     args = vars(parser.parse_args(argv))
     out = args.pop("out")
     try:

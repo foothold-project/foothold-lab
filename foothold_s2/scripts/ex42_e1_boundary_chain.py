@@ -95,7 +95,8 @@ def execute_chain(plan: dict[str, Any], *, item_runner: Callable = run_item,
                    reason="P1 complete; invoke materialize-only when the W09 artifact exists",
                    materialize_inputs={key: plan.get(key) for key in
                                        ("plan_path", "parent_manifest", "gate_receipt", "training_log",
-                                        "evaluation_mesh_path", "w09_baseline", "evidence_path")})
+                                        "evaluation_mesh_path", "evaluation_plan_path",
+                                        "w09_baseline", "evidence_path")})
         _write_receipt(receipt_path, row)
         print(f"EX42_E1F_EVIDENCE_WAITING_FOR_W09 path={baseline or 'unspecified'}", flush=True)
         return row
@@ -107,7 +108,8 @@ def execute_chain(plan: dict[str, Any], *, item_runner: Callable = run_item,
             parent_manifest_path=plan["parent_manifest"], gate_receipt_path=plan["gate_receipt"],
             training_log_path=plan["training_log"],
             evaluation_mesh_path=plan["evaluation_mesh_path"],
-            w09_baseline_path=plan["w09_baseline"])
+            w09_baseline_path=plan["w09_baseline"],
+            evaluation_plan_path=plan["evaluation_plan_path"])
         row.update(evidence_state="ready", applied_level_cap=evidence["applied_level_cap"],
                    evidence_sha256=hashlib.sha256(Path(plan["evidence_path"]).read_bytes()).hexdigest())
     except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -125,6 +127,7 @@ def materialize_only(*, receipt_path: str | Path, source_plan_path: str | Path,
                      parent_manifest_path: str | Path, gate_receipt_path: str | Path,
                      training_log_path: str | Path, evaluation_mesh_path: str | Path,
                      w09_baseline_path: str | Path, evidence_out: str | Path,
+                     evaluation_plan_path: str | Path,
                      evidence_writer: Callable = write_evidence) -> dict[str, Any]:
     """Finish E1F evidence after the separate W09 baseline step without rerunning P1."""
     receipt_path = Path(receipt_path).resolve(strict=True)
@@ -137,7 +140,7 @@ def materialize_only(*, receipt_path: str | Path, source_plan_path: str | Path,
         out_path=evidence_out, source_plan_path=source_plan_path,
         parent_manifest_path=parent_manifest_path, gate_receipt_path=gate_receipt_path,
         training_log_path=training_log_path, evaluation_mesh_path=evaluation_mesh_path,
-        w09_baseline_path=w09_baseline_path)
+        w09_baseline_path=w09_baseline_path, evaluation_plan_path=evaluation_plan_path)
     row.update(state="complete", evidence_state="ready", evidence_path=str(Path(evidence_out).resolve()),
                applied_level_cap=evidence["applied_level_cap"],
                evidence_sha256=hashlib.sha256(Path(evidence_out).read_bytes()).hexdigest(),
@@ -154,8 +157,10 @@ def main(argv=None) -> int:
     parser.add_argument("--e1-run", type=Path, required=True)
     parser.add_argument("--plan", type=Path, default=repo_default / "foothold_s2/curriculum/ex42-prep.yaml")
     parser.add_argument("--approvals", type=Path, default=repo_default / "foothold_s2/curriculum/ex42-approvals.yaml")
-    parser.add_argument("--training-log", type=Path,
-                        help="completed E1 rank log; defaults to <run>/torchrun.stdout.log")
+    parser.add_argument("--training-log", type=Path, required=True,
+                        help="explicit completed E1 rank log path")
+    parser.add_argument("--evaluation-plan", type=Path, required=True,
+                        help="integrated plan used for D44/maintenance measurement identity")
     parser.add_argument("--w09-baseline", type=Path,
                         help="measured W09 baseline JSON; required for E1F evidence production")
     parser.add_argument("--evidence-out", type=Path)
@@ -173,7 +178,7 @@ def main(argv=None) -> int:
     try:
         if args.materialize_only:
             required = (args.chain_receipt, args.w09_baseline, args.evidence_out,
-                        args.training_log, args.evaluation_mesh)
+                        args.training_log, args.evaluation_mesh, args.evaluation_plan)
             if any(value is None for value in required):
                 raise ValueError("materialize-only requires chain receipt, training log, W09 baseline, and evidence output")
             source_plan = args.plan.resolve(strict=True)
@@ -185,13 +190,15 @@ def main(argv=None) -> int:
                 gate_receipt_path=e1_run / "eval/scores/m1000/p1_score.json",
                 training_log_path=args.training_log,
                 evaluation_mesh_path=args.evaluation_mesh,
-                w09_baseline_path=args.w09_baseline, evidence_out=args.evidence_out)
+                w09_baseline_path=args.w09_baseline, evidence_out=args.evidence_out,
+                evaluation_plan_path=args.evaluation_plan)
             print(json.dumps(result, ensure_ascii=False, sort_keys=True))
             return 0
         if args.execute and args.evidence_out is None:
             raise ValueError("execution requires an explicit E1F evidence output path")
         plan = build_queue_plan(repo=args.repo, e1_run=args.e1_run, plan_path=args.plan,
                                 approvals_path=args.approvals, e1_ended=args.e1_ended,
+                                evaluation_plan_path=args.evaluation_plan,
                                 training_log_path=args.training_log,
                                 w09_baseline_path=args.w09_baseline,
                                 require_clean=True, require_locked=True)

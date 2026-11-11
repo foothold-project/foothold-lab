@@ -46,18 +46,28 @@ def build_chain(*, plan_path: str | Path, approvals_path: str | Path,
                   "queue_command": None,
                   "blockers": ["W09_flag_cell_evaluator_command_missing",
                                "E1_graduation_checkpoint_SHA_not_yet_available"]})
+    prior_w08 = "W09-flag-baseline"
     for repeat in range(1, 6):
         steps.append({"id": f"W08-flag-calibration-{repeat}",
                       "kind": "flag_calibration_repeat", "repeat": repeat,
                       "checkpoint": str(run / "model_1000.pt") if run else None,
                       "priority": 2, "gpu": (repeat - 1) % 2,
-                      "requires": ["W09-flag-baseline=complete"],
+                      "requires": [f"{prior_w08}=complete"],
                       "queue_command": None,
                       "blockers": ["flag_cell_calibration_producer_missing",
                                    "five-run_calibration_receipt_contract_missing"]})
+        prior_w08 = f"W08-flag-calibration-{repeat}"
+
+    steps.append({"id": "W08-materialize-and-repin", "kind": "materialize_only",
+                  "priority": 2, "gpu": 0,
+                  "requires": ["W08-flag-calibration-5=complete"],
+                  "queue_command": None,
+                  "calibration_out": None, "repinned_plan_out": None,
+                  "blockers": ["W08_calibration_artifact_schema_missing",
+                               "materialize_only_and_plan_repin_command_missing"]})
 
     rehearsal = build_report(plan_path=plan_path, approvals_path=approvals_path)
-    previous_stage = "W08-flag-calibration-5"
+    previous_stage = "W08-materialize-and-repin"
     for stage in SEQUENCE:
         prerequisite = STAGE_PREREQUISITES.get(stage)
         if stage == "E2":

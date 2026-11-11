@@ -46,8 +46,8 @@ def _fixture(tmp_path: Path):
         preflight = {"stage_id": "E1", "rank": rank, "world_size": 2,
                      "output_dir": str(run if rank == 0 else run / "rank1"),
                      "approval": {"approvals_sha256": approval_sha}}
-        exposure = {"stage_id": "E1", "rank": rank, "world_size": 2,
-                    "exposed_columns": [0, 1], "level_caps": [5, 5]}
+        exposure = {"envs": 3072, "exposed_columns": [0, 1],
+                    "level_caps": [5, 5], "start": "parent_env_state"}
         rows.extend(("EX42_STAGE_E1_PREFLIGHT " + json.dumps(preflight),
                      "EX42_E0_EXPOSURE " + json.dumps(exposure)))
     log.write_text("\n".join(rows) + "\n", encoding="utf-8")
@@ -98,6 +98,35 @@ def test_e1f_evidence_rejects_unbound_or_incomplete_sources(tmp_path, mutation):
         build_evidence(source_plan_path=PLAN, parent_manifest_path=run / "manifest.json",
                        gate_receipt_path=gate, training_log_path=log,
                        evaluation_mesh_path=mesh, w09_baseline_path=baseline)
+
+
+def test_e1f_evidence_separates_source_plan_from_evaluation_plan(tmp_path):
+    plan, run, gate, log, mesh, baseline, cp_sha = _fixture(tmp_path)
+    eval_dir = tmp_path / "evaluation-plan"
+    eval_dir.mkdir()
+    source_template = PLAN.parent / "ex41-fixed5000.yaml"
+    (eval_dir / source_template.name).write_bytes(source_template.read_bytes())
+    for dependency in ("ex42-boundary.yaml", "ex42-approvals.yaml"):
+        (eval_dir / dependency).write_bytes((PLAN.parent / dependency).read_bytes())
+    evaluation_plan = eval_dir / PLAN.name
+    evaluation_plan.write_bytes(PLAN.read_bytes() + b"\n# D44 evaluation contract copy\n")
+    evaluation_sha = _sha(evaluation_plan)
+    measurement_path = Path(json.loads(gate.read_text())["measurement"])
+    measured = json.loads(measurement_path.read_text())
+    measured["maintenance_source_sha256"] = evaluation_sha
+    _write(measurement_path, measured)
+    gate_row = json.loads(gate.read_text())
+    gate_row["measurement_sha256"] = _sha(measurement_path)
+    gate.write_text(json.dumps(gate_row), encoding="utf-8")
+
+    evidence = build_evidence(source_plan_path=PLAN, evaluation_plan_path=evaluation_plan,
+                              parent_manifest_path=run / "manifest.json", gate_receipt_path=gate,
+                              training_log_path=log, evaluation_mesh_path=mesh,
+                              w09_baseline_path=baseline)
+    assert evidence["source_plan_sha256"] == plan.sha256
+    assert evidence["evaluation_plan"] == {
+        "path": str(evaluation_plan.resolve()), "sha256": evaluation_sha}
+    assert evidence["checkpoint_sha256"] == cp_sha
 
 
 def test_e1f_evidence_rejects_nonpass_measurement_even_if_gate_says_pass(tmp_path):

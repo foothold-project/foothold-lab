@@ -43,9 +43,10 @@ def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000):
             "stage_id": "E1", "rank": rank, "world_size": 2,
             "output_dir": str(run) if rank == 0 else str(run / "rank1"),
             "approval": {"approvals_sha256": approval_sha}}))
+        # Real exposure rows have no rank, stage_id, or world_size fields.
         lines.append("EX42_E0_EXPOSURE " + json.dumps({
-            "stage_id": "E1", "rank": rank, "world_size": 2,
-            "exposed_columns": [0], "level_caps": [5]}))
+            "envs": 3072, "exposed_columns": [0], "level_caps": [5],
+            "start": "parent_env_state"}))
     (run / "torchrun.stdout.log").write_text("\n".join(lines) + "\n", encoding="utf-8")
     baseline = run / "w09-flag-baseline.json"
     baseline.write_text('{"state":"measured","source":"W09"}\n', encoding="utf-8")
@@ -58,7 +59,8 @@ def _build(tmp_path: Path, *, e1_ended: bool = True, through: int = 1000):
                     "mesh_sha256": E0_MESH_SHA,
                     "mesh_file_sha256": hashlib.sha256(mesh_npz.read_bytes()).hexdigest()}), encoding="utf-8")
     return build_queue_plan(repo=ROOT, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
-                           e1_ended=e1_ended,
+                           evaluation_plan_path=PLAN, e1_ended=e1_ended,
+                           training_log_path=run / "torchrun.stdout.log",
                            mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA, "mesh_npz": str(mesh_npz)},
                            landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
                            python_path=sys.executable, queue_path=tmp_path / "queue.json",
@@ -91,6 +93,8 @@ def test_e1_front_queue_is_exact_ordered_p1_and_never_mutates_queue(tmp_path):
     chain_argv = json.loads(fallback[fallback.index("--argv-json") + 1])
     assert chain_argv[-2] == "--w09-baseline"
     assert chain_argv[-1] == result["w09_baseline"]
+    assert chain_argv[chain_argv.index("--training-log") + 1] == result["training_log"]
+    assert chain_argv[chain_argv.index("--evaluation-plan") + 1] == result["evaluation_plan_path"]
     assert "ex42_e1_boundary_chain" in " ".join(chain_argv)
     assert chain_argv[chain_argv.index("--p1-done") + 1] == result["chain_done"]
     assert result["cancel_targets"][0]["id"] == 4
@@ -122,8 +126,10 @@ def test_e1_queue_refuses_before_end_or_without_all_manifest_checkpoints(tmp_pat
 def test_queue_preparation_refuses_unlocked_checkout_and_wrong_mesh_identity(tmp_path):
     run = tmp_path / "e1"
     _e1_run(run)
+    (run / "torchrun.stdout.log").write_text("test log\n", encoding="utf-8")
     with pytest.raises(ValueError, match="locked read-only"):
         build_queue_plan(repo=ROOT, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
+                         evaluation_plan_path=PLAN, training_log_path=run / "torchrun.stdout.log",
                          e1_ended=True, require_locked=True,
                          mesh_check=lambda _path: {"mesh_sha256": E0_MESH_SHA},
                          landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
@@ -131,6 +137,7 @@ def test_queue_preparation_refuses_unlocked_checkout_and_wrong_mesh_identity(tmp
                          mesh_root_path=tmp_path / "s2_lab")
     with pytest.raises(ValueError, match="combined mesh"):
         build_queue_plan(repo=ROOT, e1_run=run, plan_path=PLAN, approvals_path=APPROVALS,
+                         evaluation_plan_path=PLAN, training_log_path=run / "torchrun.stdout.log",
                          e1_ended=True, mesh_check=lambda _path: {"mesh_sha256": "0" * 64},
                          landing_mesh_check=lambda _path: {"mesh_sha256": LANDING_SHA},
                          python_path=Path(__file__).resolve(), queue_path=tmp_path / "queue.json",
@@ -199,6 +206,7 @@ def test_direct_chain_runs_both_gpus_in_checkpoint_order_and_writes_e1f_evidence
                 "evidence_path": str(tmp_path / "evidence.json"), "plan_path": str(PLAN),
                 "parent_manifest": str(tmp_path / "manifest.json"), "gate_receipt": str(tmp_path / "p1.json"),
                 "training_log": str(tmp_path / "train.log"),
+                "evaluation_plan_path": str(PLAN),
                 "evaluation_mesh_path": str(tmp_path / "mesh.npz")}
     calls = []
 
@@ -218,6 +226,7 @@ def test_direct_chain_runs_both_gpus_in_checkpoint_order_and_writes_e1f_evidence
     assert [iteration for iteration, _ in calls] == list(BOUNDARIES)
     assert row["state"] == "complete" and row["evidence_state"] == "ready"
     assert len(evidence_calls) == 1 and [x["iteration"] for x in row["completed"]] == list(BOUNDARIES)
+    assert evidence_calls[0]["evaluation_plan_path"] == plan["evaluation_plan_path"]
     assert json.loads(Path(plan["chain_receipt"]).read_text())["state"] == "complete"
     marker = json.loads(Path(plan["p1_done_path"]).read_text())
     assert marker["completed_iterations"] == list(BOUNDARIES)
@@ -240,6 +249,7 @@ def test_chain_waits_for_w09_then_materializes_without_rerunning_p1(tmp_path):
             "evidence_path": str(evidence_path), "plan_path": str(PLAN),
             "parent_manifest": str(tmp_path / "manifest.json"), "gate_receipt": str(tmp_path / "p1.json"),
             "training_log": str(tmp_path / "train.log"),
+            "evaluation_plan_path": str(PLAN),
             "evaluation_mesh_path": str(tmp_path / "mesh.npz")}
     p1_calls = []
 
@@ -267,9 +277,11 @@ def test_chain_waits_for_w09_then_materializes_without_rerunning_p1(tmp_path):
         receipt_path=receipt_path, source_plan_path=PLAN,
         parent_manifest_path=plan["parent_manifest"], gate_receipt_path=plan["gate_receipt"],
         training_log_path=plan["training_log"], evaluation_mesh_path=plan["evaluation_mesh_path"],
-        w09_baseline_path=baseline, evidence_out=evidence_path, evidence_writer=evidence_writer)
+        w09_baseline_path=baseline, evidence_out=evidence_path,
+        evaluation_plan_path=plan["evaluation_plan_path"], evidence_writer=evidence_writer)
     assert finished["state"] == "complete" and finished["evidence_state"] == "ready"
     assert len(materialize_calls) == 1
+    assert materialize_calls[0]["evaluation_plan_path"] == plan["evaluation_plan_path"]
     assert p1_calls == list(BOUNDARIES)
 
 

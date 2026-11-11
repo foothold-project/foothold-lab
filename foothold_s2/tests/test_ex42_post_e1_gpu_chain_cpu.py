@@ -27,6 +27,18 @@ def test_post_e1_sequence_order_and_gpu_distribution_are_explicit() -> None:
                                         "eval/scores/m1000/p1_score.json",
                                         "eval/scores/m250/p1_score.json",
                                         "eval/scores/m500/p1_score.json"]
+    for repeat in range(1, 6):
+        row = schedule[4 + repeat]
+        expected = "W09-flag-baseline" if repeat == 1 else f"W08-flag-calibration-{repeat - 1}"
+        assert row["id"] == f"W08-flag-calibration-{repeat}"
+        assert row["requires"] == [f"{expected}=complete"]
+    repin = schedule[10]
+    assert repin["id"] == "W08-materialize-and-repin"
+    assert repin["requires"] == ["W08-flag-calibration-5=complete"]
+    assert repin["calibration_out"] is None and repin["repinned_plan_out"] is None
+    assert "materialize_only_and_plan_repin_command_missing" in repin["blockers"]
+    assert "W08-materialize-and-repin=complete" in schedule[11]["requires"]
+    assert schedule[11]["id"] == "KIT-E1F"
     assert ids.index("KIT-E1F") < ids.index("W14-E2-repeat-width") < ids.index("KIT-E2")
     assert ids.index("KIT-E2") < ids.index("W19-E3-kind-repeat-width") < ids.index("KIT-E3")
     assert "KIT-E1F=complete" in schedule[ids.index("KIT-E2")]["requires"]
@@ -42,3 +54,4 @@ def test_unresolved_commands_keep_entire_chain_out_of_live_queue() -> None:
     assert all(row["queue_command"] is None for row in plan["schedule"])
     assert "W09_flag_cell_evaluator_command_missing" in plan["schedule"][4]["blockers"]
     assert "five-run_calibration_receipt_contract_missing" in plan["schedule"][5]["blockers"]
+    assert "materialize_only_and_plan_repin_command_missing" in plan["schedule"][10]["blockers"]
