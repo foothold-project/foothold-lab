@@ -1,0 +1,11 @@
+# 분류: B/항법 · 방 명세 (PLAN-HIPAN-V2 §5.3 · 리뷰 #730 수정)
+# 작성: sonnet-code-lx · 2026-11-12
+# 근거: 22-NAV-ENV §5 (답 아는 방) · 패치는 sparse_terrains.build_tile 생성기 그대로
+# 요지: 8 x 8 m 패치 하나 (stepping_beams · 레벨 1) 의 띠 위 (y 8~12) 말고는 위아래를 벽으로 막아, 이 띠를 건너야만 x 5 -> 15 로 갈 수 있다.
+# 상태: 시험 전용
+seed: 0
+size_m: 20.0
+primitives:
+  - {type: wall, x0: 6.0, y0: 0.0, x1: 14.0, y1: 7.9, h: 2.0}
+  - {type: wall, x0: 6.0, y0: 12.1, x1: 14.0, y1: 20.0, h: 2.0}
+  - {type: patch, kind: stepping_beams, level: 1, x: 6.0, y: 6.0}
