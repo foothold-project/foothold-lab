@@ -35,3 +35,13 @@ E1F부터 뒤 단계의 첫 점검 최소 250회와 HOLD 연장 간격·횟수�
 CPU 원출력·제거본은 `/home/jay/mai/tmp/verifier-lx/decision-1938-1111/`에 있다. GPU·Kit·실제 자식 학습 기동은 하지 않았다. 최종 원출력 `final.log`: **202 passed in 59.71s**, 실패·skip 없음. 승인·단계표·회차·E1 진입·materialize·K 사다리·handoff·이어 가기 표적 11개 시험 파일을 실행했다. 제거본 `mutant.log`: 7 failed, 4 deselected (의도한 관문 제거를 모두 검출). `git diff --check` 통과, 수정 생산 코드와 새 시험 pyflakes 0. 기존 handoff 시험 파일의 pytest fixture import 경고는 이번 변경 전부터 있어 손대지 않았다.
 
 최종 prep SHA는 `97735c66968701ff54473fe2fe3e00419f24389f655e1a522280760627893d94`다. 승인·prep 반영 범위는 완료이며, 실제 예산 누적과 M 복귀 소비자는 남은 실행 경계다.
+
+## Reviewer 후속: DR 설치 소비자와 낡은 거절 시험
+
+`ex41_startup._authorized_initial_dr_scale`이 E1 증명에서 `extension_authorized is False`만 받던 경로를 직접 재현했다. 실제 승인 validator가 반환한 새 true 증명으로 수정 전 `test_dr_scale_one_is_authorized_by_the_real_e1_cell_and_only_by_it`가 실패했다. DR 소비자는 과거 false 증명을 계속 받고, true는 기본 상한 1000 및 원장 `7121e018`의 HOLD·1000 이후·500씩 2회·최대 2000 계약이 정확히 일치할 때만 받는다. scope의 기본 상한을 연장 총상한으로 바꾸는 입력도 거절한다. 다른 단계와 EX-41 0.5 경로는 변경하지 않았다.
+
+scoped-auto의 옛 `extension_authorized=True` 거절 시험은 이미 true인 승인 값을 다시 넣는 무효 반례였다. `extension_contract=None`으로 바꿔 계약 없는 true를 거절하는 시험으로 수정했다. DR 소비자 시험에는 과거 false 허용과 계약 결측·원장·조건·증분·횟수·상한 변경 거절을 추가했다.
+
+표적 두 파일은 **57 passed in 10.10s**. 옛 false-only 조건으로 되돌린 제거본과 계약 대조를 삭제한 제거본은 각각 실제 승인 소비 시험에서 1 failed로 검출했다. 파일을 바꾼 채 운영 경로를 실행하지 않고 시험 프로세스 안 함수만 치환했다. CPU 원출력은 같은 scratch의 `reviewer-red.log`, `reviewer-targeted.log`, `reviewer-mutant-old.log`, `reviewer-mutant-unchecked.log`에 보존했다.
+
+전체 EX-42 CPU 파일 `foothold_s2/tests/test_ex42*_cpu.py`를 CUDA 숨김으로 실행한 최종 원출력 `reviewer-full.log`: **1096 passed, 3 skipped in 301.03s (0:05:01)**, rc 0. skipped 세 건을 통과로 세지 않았다. `git diff --check`와 수정 Python 세 파일 pyflakes도 통과했다. 실제 GPU/Kit 재개는 실행하지 않았고, 승인·prep 바이트와 해시는 이번 후속에서 변경하지 않았다.

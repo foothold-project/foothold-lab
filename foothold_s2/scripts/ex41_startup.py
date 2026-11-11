@@ -1208,11 +1208,18 @@ def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] |
         # Bounded E0 cell (validate_stage_e0_authorization): m13000 -> 250 updates, nothing later.
         return scope.get("stage_id") == "E0" and scope.get("maximum_updates") == 250
     if scoped_approval.get("state") == "stage_e1_only_authorized":
-        # Bounded E1 first segment (validate_stage_e1_authorization): E0 m250 -> the cell's own maximum, no extension
-        # and no later stage. The bound is read from the approved cell, not written here.
+        # Keep historical false proofs; an extension needs the exact 19:38 HOLD contract.
+        from foothold_s2.curriculum.ex42_prep import stage_extension_contract
         bound, interval = scope.get("maximum_updates"), scoped_approval.get("boundary_evaluation_interval_updates")
+        expected_extension = stage_extension_contract({
+            "id": "E1", "maximum_updates": 1000, "extension_updates": 500, "extension_max_count": 2,
+        })
+        extension_ok = (scoped_approval.get("extension_authorized") is False
+                        or (scoped_approval.get("extension_authorized") is True
+                            and bound == 1000
+                            and scoped_approval.get("extension_contract") == expected_extension))
         return (scope.get("stage_id") == "E1" and type(bound) is int and bound > 0
-                and scoped_approval.get("extension_authorized") is False
+                and extension_ok
                 and type(interval) is int and 0 < interval <= bound and bound % interval == 0)
     return (scoped_approval.get("state") == "stage_zero_only_authorized"
             and scope.get("stage_id") == "EX42_0_T0_prime"
