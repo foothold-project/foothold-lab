@@ -271,3 +271,18 @@ def test_a_transition_missing_a_key_is_refused_and_a_matching_plan_needs_no_tran
     path.write_text(json.dumps(record))
     with pytest.raises(ValueError, match="lacks"):
         _call_with(known, gate_sha, path)
+
+
+def test_the_transition_record_beside_the_plan_is_found_when_no_path_is_given(known, tmp_path, monkeypatch):
+    gate_sha = _other_plan_gate(known, tmp_path)
+    calls = _rebuilt(monkeypatch)
+    plan, ap, manifest, gp = known
+    beside = replace(plan, path=tmp_path / 'ex42-prep.yaml')            # the plan folder holds the transition.json
+    _transition(tmp_path, known, gate_sha)
+    proof = validate_automatic_stage_launch(beside, ap, target_stage='E1', parent_manifest_path=manifest,
+                                            gate_receipt_path=gp, expected_gate_sha256=gate_sha)
+    assert proof['transition']['gate_sha256'] == gate_sha and calls == [('E1', gate_sha)]
+    (tmp_path / 'transition.json').unlink()
+    with pytest.raises(ValueError, match='no transition record'):
+        validate_automatic_stage_launch(beside, ap, target_stage='E1', parent_manifest_path=manifest,
+                                        gate_receipt_path=gp, expected_gate_sha256=gate_sha)

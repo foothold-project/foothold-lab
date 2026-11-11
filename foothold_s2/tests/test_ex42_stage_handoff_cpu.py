@@ -446,3 +446,25 @@ def test_the_materializer_needs_every_setting_and_the_evidence_file_and_one_fold
     run(target_stage="E1F", gate_receipt=known[3], parent_manifest=known[2], source_plan="/s/p.yaml")
     assert got["target"] == "E1F" and got["budget_limit"] == 20000 and got["budget_used"] == 1000
     assert got["out"].parent == tmp_path / "out" and got["out"].name.startswith("E1F_") and got["plan"] == "/t/p.yaml"
+
+
+def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_decision_carries_it(known, tmp_path, monkeypatch):
+    import shutil
+    import foothold_s2.ex42_auto_authorization as auto
+    base, ap, manifest, gp = known
+    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
+    folder = tmp_path / "published"
+    shutil.copytree(base.path.parent, folder)
+    made = {"plan": str(folder / "ex42-prep.yaml"), "approvals": str(folder / "ex42-approvals.yaml"), "plan_sha256": "9" * 64}
+    seen = {}
+
+    def fake(plan, approvals, **kw):
+        seen.update(plan=str(plan.path), approvals=str(approvals), **kw)
+        return {"gate_sha256": kw["expected_gate_sha256"], "automatic_launch_authorized": True}
+    monkeypatch.setattr(auto, "validate_automatic_stage_launch", fake)
+    decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=lambda **kw: made)
+    assert decision["action"] == "launch" and decision["target_stage"] == "E1F"
+    assert seen["plan"] == made["plan"] and seen["approvals"] == made["approvals"]          # not the original pair
+    assert seen["plan"] != str(base.path) and seen["target_stage"] == "E1F"
+    assert (decision["plan"], decision["approvals"], decision["materialized_plan_sha256"]) == (
+        made["plan"], made["approvals"], made["plan_sha256"])
