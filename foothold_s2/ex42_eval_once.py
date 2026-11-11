@@ -192,29 +192,34 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
 
 
 def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher):
-    """The notice is always written at the last boundary. When the gate passed and the next stage has a bounded approval
-    cell (#639), the lead's launcher starts it, once; every other case stays a notice (reason included)."""
+    """Every boundary writes a notice. The gate passed (at or after the stage minimum) and the next stage has its
+    bounded approval cell (#639): the lead's launcher starts the next stage. Otherwise an E1 boundary goes on with
+    the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
+    stays a notice with its reason."""
     from foothold_s2.ex42_stage_handoff import decide_next_stage, start_launcher
-    notice = next_stage_notice(plan_path, stage_id, iteration, p1)
-    if notice is None:
+    manifest = Path(checkpoint).parent / "manifest.json"
+    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest)
+    if decision is None:
         return None
-    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json",
-                                 Path(checkpoint).parent / "manifest.json")
-    notice["notification_required"] = True
-    notice["reason"] = decision.get("reason")
-    if decision["action"] != "launch":
+    notice = {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
+              "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),
+              "next_stage_id": decision["next_stage_id"], "state": decision["state"],
+              "automatic_launch_started": False, "notification_required": True, "reason": decision.get("reason")}
+    if decision["action"] == "continue":
+        notice.update(segment_end=decision["segment_end"], resume_checkpoint=decision["resume_checkpoint"])
+    if decision["action"] not in ("launch", "continue"):
         return notice
-    notice.update(state="next_stage_authorized", note="The gate passed and the next stage has its own bounded approval cell.")
     if launcher is None:
-        notice.update(state="next_stage_authorized_no_launcher", reason="no --next-stage-launcher was given")
+        notice.update(state=decision["state"] + "_no_launcher", reason="no --next-stage-launcher was given")
         return notice
     try:
-        record = start_launcher(decision, launcher, output, parent_manifest=Path(checkpoint).parent / "manifest.json",
+        record = start_launcher(decision, launcher, output, parent_manifest=manifest,
                                 parent_checkpoint=checkpoint, gate_receipt=output / "p1_score.json")
     except (ValueError, OSError) as exc:
-        notice.update(state="next_stage_authorized_launch_failed", reason=str(exc))
+        notice.update(state=decision["state"] + "_launch_failed", reason=str(exc))
         return notice
-    notice.update(state="next_stage_started", automatic_launch_started=True, launcher_pid=record["pid"])
+    notice.update(state="stage_continued" if decision["action"] == "continue" else "next_stage_started",
+                  automatic_launch_started=True, launcher_pid=record["pid"])
     return notice
 
 
