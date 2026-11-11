@@ -106,6 +106,61 @@ def test_a_shortfall_with_no_resetting_continuous_env_stays_visible_and_nothing_
     assert moved == 0 and t.low_level_floor.last_deficit > 0
 
 
+def _origin_share(terrain):
+    """Independent of the floor object: match every env_origins row back to its terrain_origins level."""
+    cont = torch.tensor([r["family"] == "A" for r in TABLE])[terrain.terrain_types]
+    levels = []
+    for env in range(terrain.env_origins.shape[0]):
+        col = terrain.terrain_origins[:, int(terrain.terrain_types[env])]
+        levels.append(int((col - terrain.env_origins[env]).abs().amax(dim=-1).argmin()))
+    levels = torch.tensor(levels)
+    return float(((levels <= 2) & cont).sum() / cont.sum()), levels
+
+
+@needs_isaac
+def test_the_floor_moves_the_real_origins_to_l0_2_cells_not_only_the_level_table():
+    t = _terrain()
+    _apply(t)
+    g = torch.Generator().manual_seed(2)
+    for _ in range(25):
+        ids = torch.randperm(3072, generator=g)[:600]
+        t.update_env_origins(ids, torch.ones(600, dtype=torch.bool), torch.zeros(600, dtype=torch.bool))
+    share, origin_levels = _origin_share(t)
+    assert share >= 0.30 - 1e-9
+    assert bool((origin_levels == t.terrain_levels).all())                  # table and origin agree for every env
+    receipt = t.low_level_floor.receipt()
+    assert receipt["origin_low_level_envs"] >= receipt["origin_required"] > 0
+    assert receipt["origin_level_table_mismatch"] == 0 and receipt["origin_unmatched_envs"] == 0
+    assert math.isclose(receipt["origin_share_of_continuous"], share, abs_tol=1e-6)
+    assert sum(receipt["origin_per_level_continuous"]) == receipt["continuous_envs"]
+
+
+@needs_isaac
+def test_a_floor_that_only_edits_the_level_table_is_caught_by_the_origin_receipt(monkeypatch):
+    t = _terrain()
+    _apply(t)
+    t.low_level_floor.refresh = lambda ids: None                            # the fake floor: table moves, origin stays
+    g = torch.Generator().manual_seed(3)
+    for _ in range(25):
+        ids = torch.randperm(3072, generator=g)[:600]
+        t.update_env_origins(ids, torch.ones(600, dtype=torch.bool), torch.zeros(600, dtype=torch.bool))
+    assert _share_low(t) >= 0.30 - 1e-9                                     # the level table claims the floor
+    share, _ = _origin_share(t)
+    receipt = t.low_level_floor.receipt()
+    assert share < 0.30 and receipt["origin_share_of_continuous"] < 0.30    # the origins do not
+    assert receipt["origin_level_table_mismatch"] > 0
+    assert receipt["origin_low_level_envs"] < receipt["origin_required"]
+
+
+def test_origins_outside_the_mesh_are_counted_as_unmatched_and_never_as_low():
+    cols = len(TABLE)
+    t = types.SimpleNamespace(terrain_origins=torch.randn(10, cols, 3), terrain_levels=torch.zeros(20, dtype=torch.long),
+                              terrain_types=torch.zeros(20, dtype=torch.long), env_origins=torch.full((20, 3), 99.0))
+    floor = ex.LowLevelFloor(t, ex.low_level_floor(SPEC, TABLE, "E1F"), lambda ids: None)
+    r = floor.origin_counts()
+    assert r["origin_unmatched_envs"] == 20 and r["origin_low_level_envs"] == 0 and r["origin_share_of_continuous"] == 0.0
+
+
 def test_floor_spec_comes_from_the_stage_row_and_is_validated():
     assert ex.low_level_floor({"floors": {}}, TABLE, "E1") is None
     spec = ex.low_level_floor(SPEC, TABLE, "E1F")

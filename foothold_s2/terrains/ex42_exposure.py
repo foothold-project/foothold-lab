@@ -248,6 +248,28 @@ class LowLevelFloor:
         low = int((cont & (self.terrain.terrain_levels <= self.hi)).sum())
         return {"continuous_envs": total, "low_level_envs": low, "required": math.ceil(self.fraction * total)}
 
+    def origin_counts(self) -> dict[str, Any]:
+        """Where the envs really stand: the level of the terrain-origin row each env_origins entry matches (the level
+        table alone can say L0~2 while the origin still sits high). Unmatched origins are counted, never guessed."""
+        import math
+        import torch
+
+        t = self.terrain
+        rows = int(t.terrain_origins.shape[0])
+        cont = self.continuous[t.terrain_types]
+        column = t.terrain_origins[:, t.terrain_types]                       # (rows, envs, 3)
+        hit = (column - t.env_origins.unsqueeze(0)).abs().amax(dim=-1) < 1e-4  # (rows, envs)
+        matched = hit.any(dim=0)
+        origin_level = torch.where(matched, hit.float().argmax(dim=0), torch.full_like(t.terrain_types, -1))
+        total = int(cont.sum())
+        low = int((cont & matched & (origin_level <= self.hi)).sum())
+        return {"origin_low_level_envs": low,
+                "origin_share_of_continuous": (low / total) if total else None,
+                "origin_unmatched_envs": int((cont & ~matched).sum()),
+                "origin_level_table_mismatch": int((cont & matched & (origin_level != t.terrain_levels)).sum()),
+                "origin_per_level_continuous": torch.bincount(origin_level[cont & matched], minlength=rows).tolist(),
+                "origin_required": math.ceil(self.fraction * total)}
+
     def enforce(self, env_ids) -> int:
         import torch
 
@@ -273,7 +295,7 @@ class LowLevelFloor:
 
     def receipt(self) -> dict[str, Any]:
         return {"format": "foothold-ex42-low-level-floor/1", "source": "CG:380", "levels": [self.lo, self.hi],
-                "fraction_of_continuous": self.fraction, **self.counts(), "reassigned_total": self.reassigned,
+                "fraction_of_continuous": self.fraction, **self.counts(), **self.origin_counts(), "reassigned_total": self.reassigned,
                 "checks": self.checks, "last_deficit": self.last_deficit}
 
 
