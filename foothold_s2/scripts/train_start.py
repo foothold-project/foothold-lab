@@ -124,7 +124,11 @@ if EX42_E0_REQUESTED:
         raise ValueError(f"EX-42 stage {EX42_STAGE_ID} has no pinned parent in the plan (stages: {', '.join(_E_STAGE_SPECS)})")
     EX42_STAGE_SPEC = _E_STAGE_SPECS[EX42_STAGE_ID]
 # bound of the single-stage run (first segment: the plan minimum) and the parent (local update, cumulative update)
-EX42_STAGE_UPDATES = EX42_STAGE_SPEC["updates"] if EX42_STAGE_SPEC else 1000
+if EX42_STAGE_SPEC:       # the base cap, or the cap plus whole extensions when this segment ends past the cap (HOLD-only)
+    from foothold_s2.scripts.ex42_training_entry import stage_bound as _stage_bound
+    EX42_STAGE_UPDATES = _stage_bound(EX42_STAGE_ID, _pre_args.ex42_segment_end, _pre_args.ex42_approvals)
+else:
+    EX42_STAGE_UPDATES = 1000
 EX42_STAGE_PARENT_UPDATES = ((EX42_STAGE_SPEC["parent_local"], EX42_STAGE_SPEC["parent_cumulative"])
                              if EX42_STAGE_SPEC else (1000, 13000))
 # a stage whose parent is the previous stage's finished run (not the stage-zero m13000)

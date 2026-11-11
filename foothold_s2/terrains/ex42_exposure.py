@@ -88,6 +88,23 @@ def column_shares(plan_terrain: dict[str, Any], table: list[dict[str, Any]], sta
     return out
 
 
+def low_level_floor(plan_terrain: dict[str, Any], table: list[dict[str, Any]], stage_id: str):
+    """The stage's CG:380 floor (continuous envs kept at levels lo..hi: at least `fraction` of the continuous envs),
+    or None when the stage row has none (E0 / E1 run without it). Continuous = the family A columns."""
+    spec = (plan_terrain.get("floors") or {}).get("continuous_low_level_floor")
+    if spec is None:
+        return None
+    levels, fraction = spec.get("levels"), spec.get("fraction_of_continuous")
+    if (not isinstance(levels, list) or len(levels) != 2 or any(type(v) is not int for v in levels)
+            or not 0 <= levels[0] <= levels[1] or not isinstance(fraction, (int, float)) or isinstance(fraction, bool)
+            or not 0.0 < float(fraction) < 1.0):
+        raise ValueError(f"EX-42 {stage_id} continuous low-level floor is malformed")
+    continuous = [row["family"] == "A" for row in table]
+    if not any(continuous):
+        raise ValueError(f"EX-42 {stage_id} continuous low-level floor needs continuous (family A) columns")
+    return {"levels": [int(levels[0]), int(levels[1])], "fraction": float(fraction), "continuous": continuous}
+
+
 def rebalance_to_shares(types, levels, exposure, shares, generator=None):
     """Inherited placement at a K boundary: make the share columns hold their share of the envs.
 
@@ -204,8 +221,64 @@ def restore_parent_placement(parent_env_state: dict[str, Any], table: list[dict[
     return types, levels
 
 
+class LowLevelFloor:
+    """CG:380: at least `fraction` of the continuous envs stand on levels lo..hi (forgetting guard).
+
+    Level promotion alone pushes every env to the cap (E1 window 451~700: 33 of 18,608 episodes on L0~2). After each
+    level update the envs that are being reset right now (their new origin is applied at this reset, so nothing is
+    moved mid-episode) are sent back to a random level in lo..hi until the count reaches ceil(fraction x continuous)
+    or there are no more such envs; the shortfall stays visible in the receipt and closes at the next resets."""
+
+    def __init__(self, terrain, spec, refresh, generator=None):
+        import torch
+
+        self.terrain, self.refresh, self.generator = terrain, refresh, generator
+        self.lo, self.hi, self.fraction = spec["levels"][0], spec["levels"][1], spec["fraction"]
+        device = terrain.terrain_levels.device
+        self.continuous = torch.as_tensor(spec["continuous"], dtype=torch.bool, device=device)
+        self.reassigned = 0
+        self.checks = 0
+        self.last_deficit = 0
+
+    def counts(self) -> dict[str, int]:
+        import math
+
+        cont = self.continuous[self.terrain.terrain_types]
+        total = int(cont.sum())
+        low = int((cont & (self.terrain.terrain_levels <= self.hi)).sum())
+        return {"continuous_envs": total, "low_level_envs": low, "required": math.ceil(self.fraction * total)}
+
+    def enforce(self, env_ids) -> int:
+        import torch
+
+        have = self.counts()
+        deficit = have["required"] - have["low_level_envs"]
+        self.checks += 1
+        self.last_deficit = max(deficit, 0)
+        if deficit <= 0:
+            return 0
+        levels, types = self.terrain.terrain_levels, self.terrain.terrain_types
+        ids = env_ids[self.continuous[types[env_ids]] & (levels[env_ids] > self.hi)]
+        if not ids.numel():
+            return 0
+        order = torch.randperm(int(ids.numel()), generator=self.generator)[:deficit].to(ids.device)
+        picked = ids[order]
+        span = self.hi - self.lo + 1
+        draw = torch.randint(0, span, (int(picked.numel()),), generator=self.generator).to(picked.device)
+        levels[picked] = self.lo + draw
+        self.refresh(picked)
+        self.reassigned += int(picked.numel())
+        self.last_deficit = max(deficit - int(picked.numel()), 0)
+        return int(picked.numel())
+
+    def receipt(self) -> dict[str, Any]:
+        return {"format": "foothold-ex42-low-level-floor/1", "source": "CG:380", "levels": [self.lo, self.hi],
+                "fraction_of_continuous": self.fraction, **self.counts(), "reassigned_total": self.reassigned,
+                "checks": self.checks, "last_deficit": self.last_deficit}
+
+
 def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None,
-                   parent_same_mesh: bool = False, shares=None) -> dict[str, Any]:
+                   parent_same_mesh: bool = False, shares=None, low_floor=None) -> dict[str, Any]:
     """Runtime step on the TerrainImporter (call once after the env exists, before the first reset):
     start from the parent's (column, level) per env when given (else assign only to exposed columns),
     cut levels at the caps, and wrap update_env_origins so every later level change is cut the same
@@ -246,16 +319,24 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
     everyone = torch.arange(num_envs, device=device)
     refresh(everyone)
     original = terrain.update_env_origins
+    floor = None
+    if low_floor is not None:
+        floor = LowLevelFloor(terrain, low_floor, refresh, generator)
+        floor.enforce(everyone)             # before the first reset every env may be placed
+    terrain.low_level_floor = floor
 
     def capped_update(env_ids, move_up, move_down):
         original(env_ids, move_up, move_down)
         refresh(env_ids)
+        if floor is not None:
+            floor.enforce(torch.as_tensor(env_ids, device=device, dtype=torch.long))
 
     terrain.update_env_origins = capped_update
     terrain.exposure_wrapped = True
     return {"exposed_columns": [c for c, w in enumerate(exposure) if w > 0],
             "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
             "start": "parent_env_state" if inherited else "assigned",
+            **({"low_level_floor": floor.receipt()} if floor is not None else {}),
             **({"rebalance": rebalance} if inherited and rebalance else {})}
 
 

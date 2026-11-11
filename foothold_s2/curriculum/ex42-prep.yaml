@@ -395,6 +395,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
   authorization_contract:
     validator: bounded
@@ -447,6 +450,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   kind_alternatives:
   - start_beam_l0
   - start_gap_l0
@@ -505,6 +511,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
   authorization_contract:
     validator: bounded
@@ -606,6 +615,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
   families_in_scope:
   - A
   - B
@@ -769,6 +781,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
   authorization_contract:
     validator: bounded
@@ -925,6 +940,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
   authorization_contract:
     validator: bounded
@@ -1082,6 +1100,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
   authorization_contract:
     validator: bounded
@@ -1243,6 +1264,9 @@ stages:
         reverse: 0.05
         side_left: 0.03
         side_right: 0.03
+      # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
+      # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
+      continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 evaluation:
   judge_cells: 26
   record_only_cells: 13
