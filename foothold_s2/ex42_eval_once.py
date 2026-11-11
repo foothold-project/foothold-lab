@@ -150,67 +150,16 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
     plan = EX42Plan.load(plan_path)
     judgment = score.get("judgement", "HOLD")
     if judgment in ("PASS", "FAIL"):
-        cells = score.get("cell_judgments") or {}
-        if (stage_id not in ("E0", "E1") or set(cells) != set(MODES) or
-                any(set(cells[mode]) != set(score["map64"].get(mode, {})) for mode in MODES) or
-                any(cells[mode][case].get("role") != "judge" for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]) or
-                any(cells["probe_prop_only"][case].get("role") != "record_only"
-                    for case in cells["probe_prop_only"]) or
-                any(cells[mode][case].get("judgment") not in ("PASS", "HOLD", "FAIL")
-                    for mode in ("eval_gt", "eval_pred") for case in cells[mode])):
+        from foothold_s2.ex42_stage_judges import adapter_for
+        adapter = adapter_for(plan.document, stage_id)
+        if adapter is None:
             raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
-        verdicts = [cells[mode][case]["judgment"] for mode in ("eval_gt", "eval_pred")
-                    for case in cells[mode]]
-        expected = "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"
-        if len(verdicts) != 26:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E0" and expected != judgment:
-            raise ValueError("EX-42 P1 aggregate judgment differs from 26 cells")
-        if stage_id == "E1":
-            exit_row = score.get("e1_exit") or {}
-            maintenance = exit_row.get("maintenance", {})
-            landing = exit_row.get("d44", {})
-            required = plan.document["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases")
-            cases = landing.get("cases")
-            if (required is None):
-                required = []
-            if (not isinstance(required, list) or
-                    any(not isinstance(case_id, str) or not case_id for case_id in required) or
-                    len(set(required)) != len(required)
-                    or not isinstance(cases, dict) or set(cases) != set(required)
-                    or landing.get("required_cases") != required):
-                raise ValueError("EX-42 P1 E1 D44 case evidence missing")
-            case_states = [cases[case_id].get(which, {}).get("judgement")
-                           for case_id in required for which in ("current", "previous")]
-            if any(state not in ("PASS", "HOLD", "FAIL") for state in case_states):
-                raise ValueError("EX-42 P1 E1 D44 case judgment invalid")
-            from foothold_s2.ex42_e1_judge import _landing_window
-            for case_id in required:
-                current_row = _landing_window((score.get("d44_cells") or {}).get(case_id),
-                                              plan.document, case_id)
-                if cases[case_id]["current"] != current_row:
-                    raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
-                previous_row = cases[case_id]["previous"]
-                if previous_row["judgement"] in ("PASS", "FAIL") and _landing_window(
-                        previous_row, plan.document, case_id) != previous_row:
-                    raise ValueError("EX-42 P1 E1 prior D44 raw evidence differs")
-            current_states = [cases[case_id]["current"]["judgement"] for case_id in required]
-            previous_states = [cases[case_id]["previous"]["judgement"] for case_id in required]
-            def aggregate(states):
-                return "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
-            states = (expected, maintenance.get("previous"),
-                      landing.get("current", {}).get("judgement"),
-                      landing.get("previous", {}).get("judgement"))
-            overall = aggregate(states)
-            if (score.get("stage_id") != "E1" or exit_row.get("judgement") != judgment or
-                    maintenance.get("current") != expected or
-                    set(landing) != {"required_cases", "cases", "current", "previous"} or
-                    landing["current"].get("judgement") != aggregate(current_states) or
-                    landing["previous"].get("judgement") != aggregate(previous_states) or
-                    any(state not in ("PASS", "HOLD", "FAIL") for state in states) or
-                    overall != judgment):
-                raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
+        verdicts = [v["judgment"] for mode in ("eval_gt", "eval_pred")
+                    for v in (score.get("cell_judgments") or {}).get(mode, {}).values() if isinstance(v, dict)]
+        extra_fields = adapter.verify(score, judgment, "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS",
+                                      plan=plan.document)
+    else:
+        extra_fields = {}
     if stage_id not in plan.runtime_stage_ids:
         raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
     read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
@@ -223,7 +172,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
               "stage_id": stage_id, "judgment": judgment,
               "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
               "cell_judgments": score.get("cell_judgments"),
-              **({"e1_exit": score["e1_exit"]} if stage_id == "E1" and "e1_exit" in score else {}),
+              **extra_fields,
               "measurement": str(Path(output) / "ex42_score.json"),
               "measurement_sha256": digest(Path(output) / "ex42_score.json")}
     validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
