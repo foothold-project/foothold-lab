@@ -73,7 +73,9 @@ def cpu_measure_boundary(monkeypatch):
     warp_utils.convert_to_warp_mesh = lambda v, f, device: (v, f)
     warp_utils.raycast_mesh = lambda *args: None
     monkeypatch.setitem(sys.modules, 'isaaclab.utils.warp', warp_utils)
-    monkeypatch.setattr(mb, '_family_generator', lambda family, seed: types.SimpleNamespace(seed=seed))
+    monkeypatch.setattr(mb, '_family_generator', lambda family, seed: types.SimpleNamespace(
+        seed=seed, size=(8.,8.), num_cols=1,
+        sub_terrains={'boxes':types.SimpleNamespace(proportion=1.)}))
     monkeypatch.setattr(mb, 'ENVS', 1)
     monkeypatch.setattr(mb, 'WARMUP', 0)
     monkeypatch.setattr(mb, 'TIMED', 1)

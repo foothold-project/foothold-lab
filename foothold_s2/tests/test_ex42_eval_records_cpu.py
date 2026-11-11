@@ -83,3 +83,24 @@ def test_later_record_columns_do_not_change_original_twenty_one():
     from foothold_s2.scripts.ex42_eval_mesh_build import GROUPS
     assert len(GROUPS['start'])==12
     assert len(GROUPS['records'])==11
+
+
+def test_side_and_diagonal_cases_follow_same_stairs_without_changing_judge_cells():
+    from foothold_s2.terrains import ex42_eval_records as records
+    assert len(records.DIRECTION_CASES)==18
+    for case,geometry in records.DIRECTION_CASES.items():
+        contract=records.case_contract(case)
+        assert contract['geometry_id']==geometry
+        assert geometry in ('eval_stairs_015','eval_stairs_020','eval_stairs_025')
+        assert contract['role']=='record' and contract['judge_from_stage'] is None
+        assert contract['start_anchor']=='approach'
+        assert contract['exit_anchor']=='course_exit'
+        v=np.array(contract['body_command_xy_unit'])
+        theta=contract['approach_yaw_rad']
+        r=np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+        assert r@v==pytest.approx([1.,0.],abs=1e-12)
+        assert contract['speed_mps_requires_evaluator_contract'] is True
+    for kind in ('eval_stairs_010','eval_stairs_015','eval_stairs_020','eval_stairs_025',
+                 'eval_slope_30','eval_slope_35'):
+        assert records.case_contract(kind)['role']=='judge'
+        assert records.case_contract(kind)['judge_from_stage']=='E4'

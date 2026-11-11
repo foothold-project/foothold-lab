@@ -316,3 +316,38 @@ def test_prior_window_uses_iteration_even_when_current_finishes_first(tmp_path):
         "checkpoint_iteration": 250, "checkpoint_sha256": digest(prior_checkpoint),
         "measurement_sha256": digest(score_path)}), encoding="utf-8")
     assert previous_e1_score(checkpoint, current_dir, 250, "b" * 64) == score
+
+
+def test_the_two_reviewed_adapters_are_registered_and_a_stage_without_one_judges_nothing():
+    from foothold_s2 import ex42_stage_judges as sj
+    doc = {"stages": [{"id": "E0"}, {"id": "E1"}, {"id": "E1F"}, {"id": "E2", "exit_judge": "nope"},
+                      {"id": "E3", "exit_judge": "map39_e0"}]}
+    assert sj.adapter_for(doc, "E0").name == "map39_e0" and sj.adapter_for(doc, "E1").name == "map39_e1_two_window"
+    assert sj.adapter_for(doc, "E1F") is None
+    assert sj.adapter_for(doc, "E3") is sj.ADAPTERS["map39_e0"]            # the plan can name an adapter for any stage
+    with pytest.raises(ValueError, match="unknown judge adapter"):
+        sj.adapter_for(doc, "E2")
+    with pytest.raises(ValueError, match="not in the plan"):
+        sj.adapter_for(doc, "Z9")
+    assert sj.aggregate(["PASS", "HOLD"]) == "HOLD" and sj.aggregate(["PASS", "FAIL", "HOLD"]) == "FAIL"
+    assert sj.aggregate([]) == "HOLD" and sj.aggregate(["PASS"]) == "PASS"
+
+
+def test_e1_adapter_verify_checks_the_26_cell_structure_before_the_two_window_evidence():
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+    adapter = ADAPTERS["map39_e1_two_window"]
+    cases = [f"c{i}" for i in range(13)]
+    good = {"cell_judgments": {"eval_gt": {c: {"role": "judge", "judgment": "PASS"} for c in cases},
+                               "eval_pred": {c: {"role": "judge", "judgment": "PASS"} for c in cases},
+                               "probe_prop_only": {"p": {"role": "record_only"}}},
+            "map64": {"eval_gt": {c: {} for c in cases}, "eval_pred": {c: {} for c in cases}, "probe_prop_only": {"p": {}}}}
+    with pytest.raises(ValueError, match="needs the plan document"):         # the cell structure passes, then the plan is missing
+        adapter.verify(good, "PASS", "PASS")
+    dropped = {**good, "cell_judgments": {**good["cell_judgments"], "eval_gt": {c: v for c, v in
+                                          list(good["cell_judgments"]["eval_gt"].items())[:-1]}}}
+    with pytest.raises(ValueError, match="cell evidence missing"):           # 25 judged cells: refused before the plan is read
+        adapter.verify(dropped, "PASS", "PASS", plan={})
+    wrong_role = {**good, "cell_judgments": {**good["cell_judgments"],
+                  "eval_pred": {**good["cell_judgments"]["eval_pred"], "c0": {"role": "record_only", "judgment": "PASS"}}}}
+    with pytest.raises(ValueError, match="cell evidence missing"):
+        adapter.verify(wrong_role, "PASS", "PASS", plan={})
