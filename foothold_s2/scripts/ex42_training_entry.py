@@ -216,6 +216,10 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     Fails closed: a missing family, a mesh column whose kind has no `kind_task` row, a `kind_task`
     name that is not a mesh column, or a missing push term all raise before anything trains.
     """
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    mesh_pin = pinned_stage_mesh(plan.document, stage_id)
+    if mesh_pin and Path(mesh_dir).resolve() != Path(mesh_pin['directory']):
+        raise ValueError('training mesh directory differs from pinned stage profile')
     from foothold_s2.terrains.ex42_column_reset import (
         apply_column_push_gate, apply_column_reset, build_column_table, push_gate_mask, push_gate_report)
     from foothold_s2.terrains.ex42_mesh_mount import (
@@ -546,6 +550,13 @@ def run_ex42_stage_e0_entry(*, dry_run: bool, stage_zero_requested: bool, resume
     if not e0_approved:
         raise ValueError("EX-42 E0 dry-run also requires the scoped approval switch")
     plan, _parent, request = validate_ex42_stage_e_cli(approved_switch=e0_approved, **cli)
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    mesh_pin = pinned_stage_mesh(plan.document, cli.get('stage_id', STAGE_E0_ID))
+    if mesh_pin:
+        if (terrain_manifest_path is None or Path(terrain_manifest_path).resolve()
+                != Path(mesh_pin['files']['terrain_manifest.json']['path'])):
+            raise ValueError('training mesh manifest differs from pinned stage profile')
+        request['training_mesh'] = mesh_pin
     if dry_run:
         try:
             manifest = read_e0_terrain_manifest(plan, terrain_manifest_path)
