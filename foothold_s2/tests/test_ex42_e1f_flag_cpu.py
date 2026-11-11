@@ -451,7 +451,8 @@ def test_failed_child_still_writes_p1_score_and_handoff(tmp_path, monkeypatch):
                         lambda mesh_dir: {"mesh_sha256": "b" * 64})
     monkeypatch.setattr(once, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
     monkeypatch.setattr(once, "commands", lambda *args, **kwargs: [])
-    monkeypatch.setattr(EX42Plan, "load", lambda path: SimpleNamespace(document=_plan(), sha256=PLAN_SHA))
+    monkeypatch.setattr(EX42Plan, "load", lambda path: SimpleNamespace(
+        document=_plan(), sha256=PLAN_SHA, runtime_stage_ids=("E1F",)))
     monkeypatch.setattr(once, "execute_flag_children", lambda *args, **kwargs: {"flag_four": "Kit child rc=1"})
 
     def measure_with_marker(*args, **kwargs):

@@ -76,7 +76,7 @@ def _median(values, label):
 
 
 def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
-            expected_mesh_sha256=None, stage_id=None):
+            expected_mesh_sha256=None, stage_id=None, evaluation_plan_path=None):
     """Read durable Kit artifacts; never infer a pass from an EX-41 score."""
     cfg, cfg_path = config(config_path)
     seed = cfg["eval_seed"] if expected_seed is None else expected_seed
@@ -103,9 +103,10 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
     if (commands != {key: list(value) for key, value in expected_commands("extended").items()} or
             any(set(map_row["modes"][mode]) != set(commands) for mode in MODES)):
         raise ValueError("EX-42 map64 extended 13-command coverage incomplete")
+    policy_path = Path(evaluation_plan_path).resolve(strict=True) if evaluation_plan_path else ROOT / cfg["maintenance_source"]
     out = {"format": "foothold-ex42-maintenance-score/1", "checkpoint": str(checkpoint),
            "checkpoint_sha256": checkpoint_sha, "score_config_sha256": digest(cfg_path),
-           "maintenance_source_sha256": digest(ROOT / cfg["maintenance_source"]),
+           "maintenance_source_sha256": digest(policy_path),
            "baseline": None, "judgement": "HOLD", "reason": "EX-42 maintenance baseline and repeat width not pinned",
            "conditions": {"envs": cfg["envs"], "steps": cfg["steps"],
                           "eval_seed": seed, "modes": list(MODES)},
@@ -220,13 +221,13 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
         # the plan names the stage's exit judge (E0 / E1 default to their reviewed adapters); no name = nothing judged
         from types import SimpleNamespace
         from foothold_s2.ex42_stage_judges import adapter_for
-        plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+        plan = yaml.safe_load(policy_path.read_text(encoding="utf-8-sig"))
         adapter = adapter_for(plan, stage_id) if stage_id else None
         if adapter is None:
             out["reason"] = f"{stage_id} has no exit judge adapter in the plan; this stage requires its own judgment policy"
         else:
             ctx = SimpleNamespace(root=ROOT, cfg=cfg, cfg_path=cfg_path, digest=digest, plan=plan, stage_id=stage_id,
-                                  plan_path=ROOT / cfg["maintenance_source"], checkpoint=checkpoint,
+                                  plan_path=policy_path, checkpoint=checkpoint,
                                   evaluation=evaluation, checkpoint_sha=checkpoint_sha, seed=seed)
             out = adapter.judge(ctx, out)
     return out

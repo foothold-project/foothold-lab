@@ -230,6 +230,47 @@ def test_p1_bridge_accepts_e1_two_window_evidence(tmp_path, monkeypatch):
     assert result["e1_exit"]["d44"]["cases"][CASES[0]]["current"]["success_count"] == plan["evaluation"]["promotion"]["success_min"]
 
 
+def test_p1_bridge_uses_evaluation_policy_but_preserves_source_plan_identity(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+
+    score, baseline, measured, policy_doc = _inputs()
+    source_doc = copy.deepcopy(policy_doc)
+    source_doc["evaluation"]["paper_cells"]["stairs_landing"]["judge_cases"] = None
+    policy_path = tmp_path / "evaluation-plan.yaml"
+    policy_path.write_text(yaml.safe_dump(policy_doc), encoding="utf-8")
+    source_path = tmp_path / "source-plan.yaml"
+    source_path.write_text(yaml.safe_dump(source_doc), encoding="utf-8")
+    approvals_path = ROOT / "foothold_s2/curriculum/ex42-approvals.yaml"
+    approvals = yaml.safe_load(approvals_path.read_text(encoding="utf-8-sig"))
+    ids = tuple(approvals["domain_randomization"]["stage_scales"])
+    def load(path):
+        path = Path(path)
+        return SimpleNamespace(document=policy_doc if path == policy_path else source_doc,
+                               runtime_stage_ids=ids, sha256=digest(path))
+    monkeypatch.setattr(EX42Plan, "load", load)
+    score["d44_cells"] = _cells(policy_doc, tmp_path)
+    judged = judge_e1(score, baseline, measured, policy_doc, previous=copy.deepcopy(score))
+    checkpoint = tmp_path / "model_500.pt"
+    checkpoint.write_bytes(b"known E1 checkpoint")
+    judged["checkpoint_sha256"] = digest(checkpoint)
+    judged["maintenance_source_sha256"] = digest(policy_path)
+    output = tmp_path / "m500"
+    output.mkdir()
+    (output / "ex42_score.json").write_text(json.dumps(judged), encoding="utf-8")
+    row = p1_score_from_measure(judged, checkpoint=checkpoint, iteration=500,
+                                plan_path=source_path, evaluation_plan_path=policy_path,
+                                approvals_path=approvals_path, stage_id="E1", output=output)
+    assert row["judgment"] == "PASS"
+    assert row["plan_sha256"] == digest(source_path)
+    assert row["evaluation_plan"] == {"path": str(policy_path), "sha256": digest(policy_path)}
+    judged["maintenance_source_sha256"] = digest(source_path)
+    with pytest.raises(ValueError, match="evaluation policy SHA differs"):
+        p1_score_from_measure(judged, checkpoint=checkpoint, iteration=500,
+                              plan_path=source_path, evaluation_plan_path=policy_path,
+                              approvals_path=approvals_path, stage_id="E1", output=output)
+
+
 def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path, monkeypatch):
     from types import SimpleNamespace
     from foothold_s2.curriculum.ex42_prep import EX42Plan
