@@ -95,8 +95,18 @@ def build(env, *, dry_run=False, now=None):
     python = env.get("ISAAC311_PYTHON")
     if not python:
         raise LaunchRefused("missing ISAAC311_PYTHON (machine profile)")
-    mesh_dir = _need(env, "MESH_DIR", stage)
-    mesh_sha = _need(env, "MESH_SHA256", stage)
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh, mesh_launch_env
+    import yaml
+    try:
+        mesh_receipt = pinned_stage_mesh(yaml.safe_load(plan.read_text(encoding="utf-8-sig")), stage)
+    except (ValueError, OSError) as error:
+        raise LaunchRefused(str(error)) from error
+    mesh_env = mesh_launch_env(mesh_receipt, stage)
+    for key, value in mesh_env.items():
+        if env.get(key) and env[key] != value:
+            raise LaunchRefused(f"stage mesh override differs from pinned plan: {key}")
+    mesh_dir = mesh_receipt['directory'] if mesh_receipt else _need(env, "MESH_DIR", stage)
+    mesh_sha = mesh_receipt['geometry_sha256'] if mesh_receipt else _need(env, "MESH_SHA256", stage)
     terrain_manifest = str(Path(mesh_dir) / "terrain_manifest.json")
     if not Path(terrain_manifest).is_file():
         raise LaunchRefused(f"{terrain_manifest} is missing (the mesh builder writes it)")
@@ -135,11 +145,13 @@ def build(env, *, dry_run=False, now=None):
                 str(TRAIN_START)] + flags
     child = dict(env, CUDA_DEVICE_ORDER="PCI_BUS_ID", OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1",
                  PYTHONPATH=str(SOURCE_ROOT) + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""))
+    child.update(mesh_env)
     child.pop("CUDA_VISIBLE_DEVICES", None)
     if dry_run:
-        child.update(WORLD_SIZE="2", RANK="0")
+        child.update(WORLD_SIZE="2", RANK="0", CUDA_VISIBLE_DEVICES="")
     return argv, child, {"action": action, "stage": stage, "run_dir": run_dir, "updates": updates,
-                         "resume": resume, "segment_end": segment_end}
+                         "resume": resume, "segment_end": segment_end,
+                         **({"training_mesh": mesh_receipt} if mesh_receipt else {})}
 
 
 def notify(env, summary, *, runner=subprocess.run, clock=time.strftime):

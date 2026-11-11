@@ -233,6 +233,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
              budget_limit, budget_used, budget_basis, flag_chain=None):
     template, source = EX42Plan.load(plan), EX42Plan.load(source_plan)
     row = deepcopy(_row(template, target))
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    training_mesh = pinned_stage_mesh(template.document, target)
     approval_path = Path(approvals).resolve(strict=True)
     if digest(approval_path) != template.document['stage_zero']['approval_sha256']:
         raise ValueError('template approval pin differs')
@@ -325,6 +327,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     if set(bindings) - allowed:
         raise ValueError('unregistered evidence binding cannot change approval or scope')
     artifacts = {'evaluation_plan':_ref(evaluation_plan.path)} if evaluation_plan else {}
+    if training_mesh:
+        artifacts.update({f'training_mesh.{name}': ref for name, ref in training_mesh['files'].items()})
     for key, ref in bindings.items():
         path = _checked_ref(ref, ev_path.parent)
         artifacts[key] = _ref(path)
@@ -385,6 +389,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         'new_plan_sha':hashlib.sha256(plan_bytes).hexdigest(),'approval_sha256':document['stage_zero']['approval_sha256'],
         'inputs':refs,'parent':pin,'artifacts':artifacts,
         'budget':{'limit':budget_limit,'used':budget_used,'basis':budget_basis,'reserved':base_cap},'training_started':False}
+    if training_mesh:
+        transition['training_mesh'] = training_mesh
     return template,document,plan_bytes,approval_bytes,transition
 
 
@@ -460,7 +466,9 @@ def materialize(*, plan, source_plan, approvals, target, parent_manifest, gate_r
         result={'state':'materialized','plan':str(destination/'ex42-prep.yaml'),
             'approvals':str(destination/'ex42-approvals.yaml'),'transition':str(destination/'transition.json'),
             'plan_sha256':transition['new_plan_sha'],'approval':{**approval_proof,'approvals_path':str(destination/'ex42-approvals.yaml')},'training_started':False}
-        result['launch_env']={'EX42_AUTO_PLAN':result['plan'],'EX42_AUTO_APPROVALS':result['approvals']}
+        from foothold_s2.ex42_stage_mesh import mesh_launch_env
+        result['launch_env']={'EX42_AUTO_PLAN':result['plan'],'EX42_AUTO_APPROVALS':result['approvals'],
+            **mesh_launch_env(transition.get('training_mesh'), target)}
         return result
     finally:
         if staging is not None:
