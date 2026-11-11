@@ -9,16 +9,16 @@ from pathlib import Path
 from foothold_s2.ex42_e0_judge import judge as judge_maintenance
 
 
-def _landing_window(value: dict | None, plan: dict) -> dict:
+def _landing_window(value: dict | None, plan: dict, case_id: str) -> dict:
     if value is None:
         return {"judgement": "HOLD", "reason": "평가 열 없음"}
     promotion = plan["evaluation"]["promotion"]
-    case_id = plan["evaluation"]["paper_cells"]["stairs_landing"]["id"]
     envs = promotion["window_episodes"]
     if (not isinstance(value, dict) or value.get("case_id") != case_id or
             type(value.get("envs")) is not int or value["envs"] != envs or
             any(type(value.get(key)) is not int or not 0 <= value[key] <= envs
-                for key in ("success_count", "survival_count")) or
+                for key in ("valid_count", "success_count", "survival_count")) or
+            value["success_count"] > value["valid_count"] or
             not isinstance(value.get("raw_file"), str) or
             not isinstance(value.get("raw_sha256"), str) or
             re.fullmatch(r"[0-9a-f]{64}", value["raw_sha256"]) is None):
@@ -31,12 +31,14 @@ def _landing_window(value: dict | None, plan: dict) -> dict:
         raise ValueError("EX-42 E1 D44 landing raw evidence unavailable") from exc
     if (hashlib.sha256(raw).hexdigest() != value["raw_sha256"] or
             any(source.get(key) != value[key] for key in
-                ("case_id", "envs", "success_count", "survival_count"))):
+                ("case_id", "envs", "valid_count", "success_count", "survival_count"))):
         raise ValueError("EX-42 E1 D44 landing raw evidence differs")
     passed = value["success_count"] >= promotion["success_min"] and value["survival_count"] >= promotion["survival_min"]
-    return {"judgement": "PASS" if passed else "FAIL", "case_id": case_id,
-            "envs": envs, "success_count": value["success_count"],
+    judgement = "HOLD" if value["valid_count"] != envs else "PASS" if passed else "FAIL"
+    return {"judgement": judgement, "case_id": case_id,
+            "envs": envs, "valid_count": value["valid_count"], "success_count": value["success_count"],
             "survival_count": value["survival_count"],
+            **({"reason": "D44 무판정 env 있음"} if judgement == "HOLD" else {}),
             "success_min": promotion["success_min"], "survival_min": promotion["survival_min"],
             "raw_file": str(path), "raw_sha256": value["raw_sha256"]}
 
@@ -49,9 +51,31 @@ def judge_e1(score: dict, baseline: dict, measured: dict, plan: dict,
     windows = plan["evaluation"]["promotion"]["windows"]
     if windows != 2:
         raise ValueError("EX-42 E1 exit requires the approved two-window plan")
-    current_landing = _landing_window(score.get("d44_landing"), plan)
-    previous_landing = (_landing_window(previous.get("d44_landing"), plan) if previous is not None
-                        else {"judgement": "HOLD", "reason": "직전 창 없음"})
+    case_ids = plan["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases")
+    if case_ids is None:
+        case_ids = []
+    if not isinstance(case_ids, list) or any(
+            not isinstance(case_id, str) or not case_id for case_id in case_ids) or len(set(case_ids)) != len(case_ids):
+        raise ValueError("EX-42 E1 D44 judge case contract invalid")
+    current_cells = score.get("d44_cells", {})
+    previous_cells = previous.get("d44_cells", {}) if previous is not None else {}
+    if not isinstance(current_cells, dict) or not isinstance(previous_cells, dict):
+        raise ValueError("EX-42 E1 D44 cells must be objects")
+    if set(current_cells) - set(case_ids) or set(previous_cells) - set(case_ids):
+        raise ValueError("EX-42 E1 D44 cell outside the approved case list")
+    cases = {}
+    for case_id in case_ids:
+        cases[case_id] = {"current": _landing_window(current_cells.get(case_id), plan, case_id),
+                          "previous": (_landing_window(previous_cells.get(case_id), plan, case_id)
+                                       if previous is not None else {"judgement": "HOLD", "reason": "직전 창 없음"})}
+    if not case_ids:
+        current_landing = {"judgement": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+        previous_landing = {"judgement": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+    else:
+        def group(which):
+            verdicts = [cases[case_id][which]["judgement"] for case_id in case_ids]
+            return {"judgement": "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"}
+        current_landing, previous_landing = group("current"), group("previous")
     maintenance = {"current": current["judgement"],
                    "previous": earlier["judgement"] if earlier else "HOLD"}
     all_verdicts = [*maintenance.values(), current_landing["judgement"], previous_landing["judgement"]]
@@ -62,7 +86,8 @@ def judge_e1(score: dict, baseline: dict, measured: dict, plan: dict,
     result["judgement"] = overall
     result["reason"] = "E1 exit: maintenance floor and D44 landing in two windows"
     result["e1_exit"] = {"windows_required": windows, "maintenance": maintenance,
-                         "d44": {"current": current_landing, "previous": previous_landing},
+                         "d44": {"required_cases": case_ids, "cases": cases,
+                                 "current": current_landing, "previous": previous_landing},
                          "judgement": overall}
     return result
 

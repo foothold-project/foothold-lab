@@ -134,6 +134,7 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
 
     if score.get("checkpoint_sha256") != digest(checkpoint):
         raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
+    plan = EX42Plan.load(plan_path)
     judgment = score.get("judgement", "HOLD")
     if judgment in ("PASS", "FAIL"):
         cells = score.get("cell_judgments") or {}
@@ -157,17 +158,36 @@ def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_
             exit_row = score.get("e1_exit") or {}
             maintenance = exit_row.get("maintenance", {})
             landing = exit_row.get("d44", {})
+            required = plan.document["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases")
+            cases = landing.get("cases")
+            if (required is None):
+                required = []
+            if (not isinstance(required, list) or
+                    any(not isinstance(case_id, str) or not case_id for case_id in required) or
+                    len(set(required)) != len(required)
+                    or not isinstance(cases, dict) or set(cases) != set(required)
+                    or landing.get("required_cases") != required):
+                raise ValueError("EX-42 P1 E1 D44 case evidence missing")
+            case_states = [cases[case_id].get(which, {}).get("judgement")
+                           for case_id in required for which in ("current", "previous")]
+            if any(state not in ("PASS", "HOLD", "FAIL") for state in case_states):
+                raise ValueError("EX-42 P1 E1 D44 case judgment invalid")
+            current_states = [cases[case_id]["current"]["judgement"] for case_id in required]
+            previous_states = [cases[case_id]["previous"]["judgement"] for case_id in required]
+            def aggregate(states):
+                return "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
             states = (expected, maintenance.get("previous"),
                       landing.get("current", {}).get("judgement"),
                       landing.get("previous", {}).get("judgement"))
-            aggregate = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states else "PASS"
+            overall = aggregate(states)
             if (score.get("stage_id") != "E1" or exit_row.get("judgement") != judgment or
                     maintenance.get("current") != expected or
-                    set(landing) != {"current", "previous"} or
+                    set(landing) != {"required_cases", "cases", "current", "previous"} or
+                    landing["current"].get("judgement") != aggregate(current_states) or
+                    landing["previous"].get("judgement") != aggregate(previous_states) or
                     any(state not in ("PASS", "HOLD", "FAIL") for state in states) or
-                    aggregate != judgment):
+                    overall != judgment):
                 raise ValueError("EX-42 P1 E1 two-window exit evidence differs")
-    plan = EX42Plan.load(plan_path)
     if stage_id not in plan.runtime_stage_ids:
         raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
     read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
