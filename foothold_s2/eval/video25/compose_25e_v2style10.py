@@ -287,6 +287,43 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
     return panel
 
 
+def command_runs_from_trace(cmd, t) -> list[dict]:
+    """The command strip comes from the recorded per-step command (cmd_post, review_feet.npz "command"), never from the
+    evaluation phase list: one run per maximal stretch of identical commands. Any change in any component, even one
+    step long, starts a new run."""
+    cmd = np.asarray(cmd)
+    t = np.asarray(t, np.float64)
+    if cmd.ndim != 2 or cmd.shape[1] < 3 or len(cmd) != len(t) or len(cmd) < 2:
+        raise ValueError("command trace must be (steps, >=3) and match the time axis")
+    dt = float(t[1] - t[0])
+    cuts = [0, *(np.flatnonzero(np.any(cmd[1:] != cmd[:-1], axis=1)) + 1).tolist(), len(cmd)]
+    return [{"name": "command", "target": [float(v) for v in cmd[a, :3]], "start_s": a * dt,
+             "duration_s": (b - a) * dt, "rows": (a, b)} for a, b in zip(cuts[:-1], cuts[1:])]
+
+
+def assert_runs_match_trace(runs: list[dict], cmd) -> None:
+    """Expand the runs back to one command per step; a single differing step is an error."""
+    cmd = np.asarray(cmd)
+    if not runs or runs[0]["rows"][0] != 0 or runs[-1]["rows"][1] != len(cmd) or any(
+            a["rows"][1] != b["rows"][0] for a, b in zip(runs[:-1], runs[1:])):
+        raise ValueError("command strip runs do not tile the steps")
+    expanded = np.concatenate([np.tile(np.asarray(r["target"], cmd.dtype), (r["rows"][1] - r["rows"][0], 1)) for r in runs])
+    if not np.array_equal(expanded, cmd[:, :3]):
+        raise ValueError("command strip differs from the recorded command trace")
+
+
+def command_block_color(target, active: bool):
+    """Block colour from the real command value: stopped = grey, forward = blue, anything else = green (BGR)."""
+    vx, vy, wz = (float(v) for v in target[:3])
+    if max(abs(vx), abs(vy), abs(wz)) < 1e-9:
+        base = (84, 84, 84)
+    elif abs(vy) < 1e-9 and abs(wz) < 1e-9 and vx > 0:
+        base = (156, 115, 71)
+    else:
+        base = (96, 150, 96)
+    return tuple(min(255, int(v * 1.35)) for v in base) if active else tuple(int(v * 0.72) for v in base)
+
+
 def command_segment_label(command: dict) -> str:
     target = command.get("target", [])
     vx = float(target[0]) if len(target) > 0 else 0.0
@@ -328,11 +365,33 @@ def question_strip(scene: np.ndarray) -> np.ndarray:
     return scene
 
 
+def command_band_receipt(capture: Path, z, command_runs: bool) -> dict:
+    """Receipt entry: where the strip came from (cmd trace sha256) and the runs drawn."""
+    if not command_runs:
+        return {"source": "phase_blocks"}
+    cmd = np.ascontiguousarray(np.asarray(z["command"]))
+    runs = command_runs_from_trace(cmd, z["t"])
+    assert_runs_match_trace(runs, cmd)
+    return {"source": "cmd trace (review_feet.npz command = cmd_post)",
+            "cmd_trace_sha256": hashlib.sha256(cmd.tobytes()).hexdigest(),
+            "review_feet_sha256": sha256(Path(capture) / "review_feet.npz"),
+            "runs": [{"target": r["target"], "start_step": r["rows"][0], "end_step": r["rows"][1]} for r in runs]}
+
+
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
-                commands: list[dict] | None = None, lit_from: int | None = None) -> np.ndarray:
+                commands: list[dict] | None = None, lit_from: int | None = None,
+                command_runs: bool = True, phase_labels: dict | None = None) -> np.ndarray:
     band = np.full((360, 1920, 3), (18, 22, 27), np.uint8)
     L, R = BOTTOM_GRAPH_X, 1880
     W = R - L
+    phases = commands
+    runs = None
+    if command_runs:
+        # v12 (lead 11/12, team lead 13:22): default for every composite. The strip is the robot's real command per step;
+        # evaluation phase names (from the capture contract) go on a thin row beneath.
+        runs = command_runs_from_trace(z["command"], z["t"])
+        assert_runs_match_trace(runs, z["command"])
+        commands = runs
     commands = commands or [
         {"name": name, "start_s": i * duration_s / 4, "duration_s": duration_s / 4}
         for i, name in enumerate(WALK_SEG_NAMES if __import__("os").environ.get("COMPOSE_SEG_NAMES") == "walk" else SEG_NAMES)
@@ -343,8 +402,21 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
         x0 = L + int(np.clip(start_s / duration_s, 0.0, 1.0) * W)
         x1 = L + int(np.clip((start_s + segment_s) / duration_s, 0.0, 1.0) * W) - 4
         x1 = max(x0, x1)
-        active = int(z["seg"][row]) == i
-        cv2.rectangle(band, (x0, 14), (x1, 34), (156, 115, 71) if active else (70, 70, 70), -1)
+        if runs:
+            active = command["rows"][0] <= row < command["rows"][1]
+            cv2.rectangle(band, (x0, 10), (x1, 30), command_block_color(command["target"], active), -1)
+        else:
+            active = int(z["seg"][row]) == i
+            cv2.rectangle(band, (x0, 14), (x1, 34), (156, 115, 71) if active else (70, 70, 70), -1)
+    labels = phase_labels or {}
+    if runs and phases and (labels or any(ph.get("label") for ph in phases)):
+        items = []
+        for i, ph in enumerate(phases):
+            x0 = L + int(np.clip(float(ph["start_s"]) / duration_s, 0.0, 1.0) * W)
+            cv2.line(band, (x0, 33), (x0, 47), (110, 110, 110), 1)
+            items.append(((x0 + 4, 33), ph.get("label") or labels.get(ph["name"], ph["name"]),
+                          (235, 235, 200) if int(z["seg"][row]) == i else (150, 150, 150)))
+        band = text(band, items, 13)
     # vx and wz traces
     for top, key, lim in ((50, "vx", 1.6), (150, "wz", 1.6)):
         h = 86
@@ -877,6 +949,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
 
 
 def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None,
+           command_runs: bool = True, phase_labels: dict | None = None,
            push_events: Path | None = None, push_rollout_key: str | None = None, push_env_id: int | None = None) -> dict:
     """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 물음 띠 안 물음 뒤에 붙는 짧은 영상 안 결과(아래 타임라인 쪽에는 그리지 않는다), label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
@@ -968,7 +1041,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
             scene = draw_push_overlay(scene, push_overlay, now_s, legend_rect=LEGEND_RECT,
                                       geometry=arrow_geometry)
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
-        wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
+        wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from, command_runs, phase_labels)), 0))
     wr.release()
     cap.release()
     import subprocess
@@ -993,7 +1066,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
            "speed": speed, "duration_s": duration_s, "fps": fps,
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),
-           "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256"),
+           "label": meta.get("label"), "style": meta.get("style"), "question": question, "command_band": command_band_receipt(capture, z, command_runs), "checkpoint_sha256": meta.get("checkpoint_sha256"),
            "map_panel": {"min_color_span_cm": MAP_MIN_SPAN_M * 100,
                          "attention_tokens": 128, "attention_fixed_range": [0.0, ATTENTION_MAX],
                          "feet_markers": "airborne-hollow-black-gray-all-three-map-panels"},

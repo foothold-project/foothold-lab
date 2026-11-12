@@ -367,7 +367,8 @@ def write_capture_and_compose(film, spec, case_id, picked, dt, checkpoint_sha, m
                  ("restart_to_top", (settings["restart_vx_mps"], 0.0, 0.0), t["restart_limit_s"])]
     commands, start = [], 0.0
     for name, target, span in names:
-        commands.append({"name": name, "target": list(target), "start_s": start, "duration_s": float(span)})
+        commands.append({"name": name, "label": PHASE_LABELS.get(name, name), "target": list(target),
+                         "start_s": start, "duration_s": float(span)})
         start += float(span)
     if abs(start - duration) > 1e-6:
         raise RuntimeError("D44 command spans differ from recorded duration")
@@ -406,6 +407,10 @@ def write_capture_and_compose(film, spec, case_id, picked, dt, checkpoint_sha, m
     extra = f"env {args.film_env} · {'성공' if ok else '실패'} {picked.get('reason')} · 64환경 판정과 일치"
     return composer.render(cap, "seq", "1x", out, question=question, extra_line=extra,
                            extra_color=(200, 235, 200) if ok else (150, 150, 255))
+
+
+PHASE_LABELS = {"settle": "대기", "approach_to_stop_band": "계단 중간 정지 띠까지 접근", "stop_band_hold": "정지 2 초",
+                "restart_to_top": "꼭대기까지 재출발 · 꼭대기 정지", "turn_left": "제자리 좌회전", "turn_right": "제자리 우회전"}
 
 
 def main():
