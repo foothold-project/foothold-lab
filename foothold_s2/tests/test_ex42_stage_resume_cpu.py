@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import types
 from pathlib import Path
 
 import pytest
@@ -262,3 +263,95 @@ def test_a_second_rank_resumes_the_same_run_from_its_private_directory(tmp_path)
         read_same_run_manifest(run, rank=0, source_manifest_sha256=proof)
     with pytest.raises(FileNotFoundError):
         read_same_run_manifest(tmp_path / "gone", rank=1, source_manifest_sha256=proof)
+
+
+# ---- root XY readback after an E stage resume (2026-11-12 18:41: KeyError 'pose_range' inside Kit, both ranks) ----
+
+class _Asset:
+    def __init__(self, count, default_xy=(0.0, 0.0)):
+        default = torch.zeros(count, 13)
+        default[:, 0], default[:, 1], default[:, 2], default[:, 3] = default_xy[0], default_xy[1], 0.4, 1.0
+        self.device = "cpu"
+        self.data = types.SimpleNamespace(default_root_state=default, root_pos_w=torch.zeros(count, 3))
+
+    def write_root_pose_to_sim(self, pose, env_ids):
+        self.data.root_pos_w[env_ids] = pose[:, :3]
+
+    def write_root_velocity_to_sim(self, velocity, env_ids):
+        pass
+
+
+def _e_stage_env(count=440, default_xy=(0.0, 0.0)):
+    """A fake env reset by the real E stage reset term, with the params shape the real E1 env.yaml carries:
+    reset_base.func = ex42_column_reset:reset_root_state_by_column, params = {lo, hi (columns x 6 tensors), velocity_range}."""
+    from foothold_s2.terrains import ex42_column_reset as cr
+
+    zero = {"x": (0.0, 0.0), "y": (0.0, 0.0), "yaw": (0.0, 0.0)}
+    table = cr.build_column_table(["C"] * 7 + ["E"] * 4, {"C": {"gap": zero}})        # column 0 starts exactly on its patch
+    lo, hi = cr.table_tensors(table)
+    params = {"lo": lo, "hi": hi, "velocity_range": {"x": (0.0, 0.0)}}                  # what apply_column_reset installs
+    columns = torch.arange(count) % len(table)
+    origins = torch.stack((columns * 9.0, torch.arange(count) * 1.0, torch.zeros(count)), dim=1)
+    asset = _Asset(count, default_xy)
+    scene = {"robot": asset}
+    holder = types.SimpleNamespace(env_origins=origins, terrain=types.SimpleNamespace(terrain_types=columns))
+    scene_like = type("Scene", (), {"__getitem__": lambda self, key: scene[key], "env_origins": origins,
+                                    "terrain": holder.terrain})()
+    env = types.SimpleNamespace(scene=scene_like)
+    torch.manual_seed(3)
+    cr.reset_root_state_by_column(env, torch.arange(count), lo, hi, params["velocity_range"])
+    return env, asset, params, columns, table
+
+
+def test_the_readback_after_an_e_stage_resume_reads_the_per_column_reset_ranges():
+    env, asset, params, columns, table = _e_stage_env()
+    assert set(params) == {"lo", "hi", "velocity_range"} and "pose_range" not in params          # the 18:41 KeyError
+    assert params["lo"].shape == (len(table), 6) and table[0]["ranges"]["x"] == (0.0, 0.0)
+    row = entry.build_resume_root_xy_readback(env, reset_params=params)
+    assert json.loads(json.dumps(row)) == row and row["env_count"] == 440 and row["outside_reset_bounds_count"] == 0
+    assert row["reset_pose_bounds_xy_m"] == {"basis": "per_column_reset_ranges", "x": [-0.5, 0.5], "y": [-0.5, 0.5]}
+    assert 0.0 == row["distance_xy_m"]["min"] < row["distance_xy_m"]["p95"] <= row["distance_xy_m"]["max"] <= 0.5 * 2 ** 0.5 + 1e-6
+    on_patch = int(torch.nonzero(columns == 0)[0])             # a zero-jitter column: one centimetre off is outside
+    wide = int(torch.nonzero(columns == 1)[0])                 # a default column: 0.6 m off is outside, 0.4 m is not
+    asset.data.root_pos_w[on_patch, 0] += 0.01
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_env_ids_first_16"] == [on_patch]
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([0.0, 0.6])
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 2
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([-0.6, 0.0])      # below the low line
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 2
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([-0.4, 0.4])
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_env_ids_first_16"] == [on_patch]
+
+
+def test_the_readback_follows_the_default_root_offset_the_reset_adds():
+    env, _, params, _, _ = _e_stage_env(default_xy=(0.2, -0.1))
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 0
+
+
+def test_stage_zero_keeps_its_single_pose_range_readback():
+    env, _, _, _, _ = _e_stage_env()
+    pose = {"pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}, "velocity_range": {}}
+    assert entry.build_resume_root_xy_readback(env, reset_params=pose) == \
+        entry.build_stage_zero_resume_root_xy_readback(env, pose_range=pose["pose_range"])
+    assert entry.build_resume_root_xy_readback(env, reset_params=pose)["reset_pose_bounds_xy_m"] == {"x": [-0.5, 0.5], "y": [-0.5, 0.5]}
+
+
+@pytest.mark.parametrize("damage, match", [
+    (lambda env, params: params.pop("lo"), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: params.update(hi=params["hi"][:3]), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: params.update(lo=params["lo"].tolist()), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: setattr(env.scene.terrain, "terrain_types", None), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: env.scene.terrain.terrain_types.__setitem__(0, 99), "has no reset range row"),
+    (lambda env, params: env.scene["robot"].data.root_pos_w.__setitem__((0, 0), float("nan")), "not finite"),
+])
+def test_the_readback_refuses_what_it_cannot_check(damage, match):
+    env, _, params, _, _ = _e_stage_env()
+    damage(env, params)
+    with pytest.raises(ValueError, match=match):
+        entry.build_resume_root_xy_readback(env, reset_params=params)
+
+
+def test_train_start_hands_the_readback_the_reset_params_of_the_live_env_cfg():
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "env, reset_params=env_cfg.events.reset_base.params)" in text
+    assert 'reset_base.params["pose_range"]' not in text

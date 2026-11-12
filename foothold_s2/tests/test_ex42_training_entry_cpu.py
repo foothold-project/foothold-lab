@@ -178,7 +178,7 @@ def test_resume_terrain_restore_precedes_the_real_reset_and_root_readback_follow
     restore = text.index("terrain_restore = restore_stage_zero_resume_terrain_before_reset(")
     reset = text.index("env.reset()", restore)
     load = text.index("runner.load(EX42_STAGE_ZERO_RESUME, map_location=\"cpu\")", reset)
-    root_readback = text.index("build_stage_zero_resume_root_xy_readback(", load)
+    root_readback = text.index("build_resume_root_xy_readback(", load)
     learn = text.index("runner.learn(", root_readback)
     assert local_init < checkpoint_load < restore < reset < load < root_readback < learn
     assert "restore_stage_zero_resume_terrain_before_reset(\n                env, ex42_resume_saved)" in text
