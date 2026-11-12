@@ -356,3 +356,109 @@ def test_e2_eval_parent_persists_child_failure_marker_before_scoring(monkeypatch
     parent = json.loads((output / "eval_receipt.json").read_text())
     assert parent["e2_kind_child_failure"] == {
         "path": str(marker), "sha256": ex42_eval_once.digest(marker)}
+
+
+def _run_boundary(monkeypatch, tmp_path, record_phases, children, split_device=None):
+    """The E2 parent test's fixture with the record-only G1 children and the brief stood in; returns (rc, output, calls)."""
+    import json
+    import sys
+    from types import SimpleNamespace
+    from foothold_s2 import ex41_eval_once
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.eval import ex42_friction, ex42_mesh_eval
+
+    checkpoint = tmp_path / "model_250.pt"
+    checkpoint.write_bytes(b"known checkpoint")
+    for name in ("prep.yaml", "approvals.yaml"):
+        (tmp_path / name).write_text("known " + name)
+    cfg_path = tmp_path / "score.json"
+    cfg_path.write_text("{}")
+    mesh_dir = tmp_path / "mesh"
+    mesh_dir.mkdir()
+    output = tmp_path / "evaluation"
+    sha = ex42_eval_once.digest(checkpoint)
+    policy = SimpleNamespace(runtime_stage_ids=("E2",), document={"evaluation": {}}, sha256="a" * 64)
+    calls = {"children": [], "brief": []}
+    monkeypatch.setattr(EX42Plan, "load", staticmethod(lambda *_: policy))
+    monkeypatch.setattr(ex42_friction, "load_policy", lambda *_: {})
+    monkeypatch.setattr(ex42_mesh_eval, "preflight", lambda *_: {"mesh_sha256": "b" * 64})
+    monkeypatch.setattr(ex42_eval_once, "machine_path", lambda name: Path(sys.executable))
+    monkeypatch.setattr(ex42_eval_once.subprocess, "check_output", lambda cmd, **_: "" if "status" in cmd else "fixedhead")
+    monkeypatch.setattr(ex42_eval_once, "gpu_identity", lambda *_: {"gpu_uuid": "GPU-" + "a" * 32})
+    monkeypatch.setattr(ex42_eval_once, "receipt_device_fields", lambda *_: {"device": "cuda:1"})
+    monkeypatch.setattr(ex42_eval_once, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
+    monkeypatch.setattr(ex42_eval_once, "config", lambda: ({"task": "test", "eval_seed": 42}, cfg_path))
+    monkeypatch.setattr(ex42_eval_once, "commands", lambda *_a, **_k: [])
+    monkeypatch.setattr(ex42_eval_once, "retained_paper_cells", lambda *_: ())
+    monkeypatch.setattr(ex42_eval_once, "execute_e2_kind_children", lambda *_a, **_k: None)
+    monkeypatch.setattr(ex42_eval_once, "g1_record_commands", lambda *_a, **_k: record_phases(tmp_path))
+    monkeypatch.setattr(ex42_eval_once, "measure", lambda *_a, **_k: {"checkpoint_sha256": sha, "judgement": "HOLD"})
+    monkeypatch.setattr(ex42_eval_once, "p1_score_from_measure", lambda *_a, **_k: {"state": "complete"})
+    monkeypatch.setattr(ex42_eval_once, "_hand_off", lambda *_a, **_k: calls["children"].append("hand_off"))
+
+    def hidden(argv, folder, env=None, timeout=None):
+        calls["children"].append(Path(folder).name)
+        calls.setdefault("timeouts", []).append(timeout)
+        return children(Path(folder).name)
+    monkeypatch.setattr(ex41_eval_once, "hidden_child", hidden)
+    monkeypatch.setattr(ex41_eval_once, "prepare_phase_output", lambda argv: None)
+
+    def brief(output_, **kw):
+        calls["brief"].append(kw)
+        calls["children"].append("brief")
+        return {"state": "done"}
+    monkeypatch.setattr(ex42_eval_once, "write_boundary_brief", brief)
+    rc = ex42_eval_once.run(checkpoint, sha, output, "cuda:1", eval_seed=42, mesh_dir=mesh_dir,
+                            expected_mesh_sha256="b" * 64, p1_plan=tmp_path / "prep.yaml",
+                            p1_approvals=tmp_path / "approvals.yaml", p1_stage_id="E2",
+                            checkpoint_iteration=250, prev_brief=tmp_path / "prev.json", split_device=split_device)
+    return rc, output, calls, json.loads((output / "eval_receipt.json").read_text())
+
+
+def _two(tmp):
+    return [{"name": n, "device": "cuda:1", "argv": ["x", "--out", str(tmp / n)]} for n in ("hipan_g1", "hipan_g1b")]
+
+
+def test_boundary_hands_off_first_then_runs_g1_children_and_brief(monkeypatch, tmp_path):
+    rc, _, calls, receipt = _run_boundary(monkeypatch, tmp_path, _two, lambda n: {"state": "done", "rc": 0})
+    assert rc == 0
+    assert calls["children"] == ["hand_off", "record_hipan_g1", "record_hipan_g1b", "brief"]
+    assert calls["timeouts"] == [ex42_eval_once.RECORD_ONLY_TIMEOUT_SECONDS] * 2
+    assert calls["brief"][0]["label"] == "E2_m250" and calls["brief"][0]["prev_brief"] == tmp_path / "prev.json"
+    assert set(receipt["record_only"]) == {"hipan_g1", "hipan_g1b"}
+
+
+def test_a_failed_g1_child_is_recorded_and_never_holds_the_boundary(monkeypatch, tmp_path):
+    rc, _, calls, receipt = _run_boundary(monkeypatch, tmp_path, _two, lambda n: {"state": "HOLD", "rc": 5})
+    assert rc == 0 and receipt["state"] == "done"
+    assert receipt["record_only"]["hipan_g1"]["state"] == "HOLD" and "brief" in calls["children"]
+
+
+def test_commands_that_cannot_be_built_do_not_hold_the_boundary(monkeypatch, tmp_path):
+    def broken(_tmp):
+        raise KeyError("envs")
+    rc, _, calls, receipt = _run_boundary(monkeypatch, tmp_path, broken, lambda n: {"state": "done"})
+    assert rc == 0 and receipt["record_only"]["commands"]["state"] == "failed"
+
+
+def test_a_child_that_raises_or_times_out_is_recorded_and_the_rest_still_run(monkeypatch, tmp_path):
+    def children(name):
+        if name == "record_hipan_g1":
+            raise OSError("no kit")
+        return {"state": "timeout", "reason": "exceeded 900 s"}
+    rc, _, calls, receipt = _run_boundary(monkeypatch, tmp_path, _two, children)
+    assert rc == 0 and receipt["state"] == "done"
+    assert receipt["record_only"]["hipan_g1"]["state"] == "failed" and "no kit" in receipt["record_only"]["hipan_g1"]["reason"]
+    assert receipt["record_only"]["hipan_g1b"]["state"] == "timeout"
+    assert calls["children"][-1] == "brief"
+
+
+def test_split_evaluation_runs_no_record_only_child_but_still_writes_the_brief(monkeypatch, tmp_path):
+    seen = []
+    monkeypatch.setattr(ex42_eval_once, "write_boundary_brief", lambda *a, **k: seen.append("brief") or {"state": "done"})
+    monkeypatch.setattr(ex42_eval_once, "g1_record_commands", lambda *a, **k: seen.append("children") or [])
+    row = {}
+    ex42_eval_once.run_record_only(tmp_path / "c.pt", tmp_path, "cuda:0", {}, seed=1, mesh_dir=None, policy_path=None,
+                                   process=None, env={}, row=row, label="E2_m250", iteration=250,
+                                   score_path=tmp_path / "s.json", prev_brief=None, split_device="cuda:1")
+    assert seen == ["brief"] and "record_only" not in row and row["boundary_brief"]["state"] == "done"
