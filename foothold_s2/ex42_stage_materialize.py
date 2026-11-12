@@ -229,6 +229,32 @@ def source_exit_bounds(source, template, stage):
 FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_sha256 / flag_baseline from the W09+W08 chain
 
 
+def registered_entry_axis(row, evidence):
+    """The axis the stage's first boundary changes, read from the plan's registered `boundary` block (never from evidence).
+
+    One allowed axis is that axis. Several need the registered `axis_order`: the first axis whose CG condition is met
+    (`evidence.axis_eligible`: {axis: bool}, absent = every axis met) is taken, an unmet axis is skipped, and with none
+    met the boundary changes no axis, so there is nothing to materialize. Evidence may only repeat the registered choice."""
+    axes=row['boundary_axes']
+    if len(axes)==1:
+        order=list(axes)
+    else:
+        block=row.get('boundary')
+        order=block.get('axis_order') if isinstance(block,dict) else None
+        if (not isinstance(order,list) or not order or set(order)!=set(axes) or len(order)!=len(set(order))
+                or block.get('entry_axis')!=order[0]):
+            raise ValueError('multi-axis stage has no registered axis order')
+    eligible=evidence.get('axis_eligible',{})
+    if not isinstance(eligible,dict) or set(eligible)-set(axes) or any(type(v) is not bool for v in eligible.values()):
+        raise ValueError('axis_eligible must map allowed axes to booleans')
+    chosen=next((a for a in order if eligible.get(a,True)),None)
+    if chosen is None:
+        raise ValueError('no axis meets its condition: the boundary changes no axis (nothing to materialize)')
+    if evidence.get('boundary_axis') not in (None,chosen):
+        raise ValueError('evidence names a boundary axis other than the registered order gives')
+    return chosen
+
+
 def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
              budget_limit, budget_used, budget_basis, flag_chain=None):
     template, source = EX42Plan.load(plan), EX42Plan.load(source_plan)
@@ -363,10 +389,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         _put(cell,'prerequisites.predecessor_exit.exposure_receipt_sha256',exposure_ref['sha256'])
         artifacts['exposure_receipt']=exposure_ref
     if contract['validator'] == 'bounded' and cell.get('boundary',{}).get('axis') is None:
-        axis=ev.get('boundary_axis')
-        if axis not in row['boundary_axes']:
-            raise ValueError('multi-axis boundary needs a declared allowed axis')
-        cell['boundary']['axis']=axis
+        cell['boundary']['axis']=registered_entry_axis(row,ev)
     document=deepcopy(template.document)
     document['stages']=[row if x['id']==target else x for x in document['stages']]
     if flag_artifacts:
