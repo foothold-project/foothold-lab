@@ -16,9 +16,12 @@ from matplotlib.patches import Rectangle
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import make_lineage_v2 as v2  # noqa: E402
+if __name__ == "__main__" and sys.argv[1:] == ["plan_v4"]:
+    v2 = None  # plan_v4 only: v2 reads Windows-only paths at import, plan_v4 needs none of them
+else:
+    import make_lineage_v2 as v2  # noqa: E402
 
-PLAN = v2.PLAN42
+PLAN = v2.PLAN42 if v2 else None
 SEC_PER_IT = 27.8  # analyst v6 assumption (EX-41 measured 27.1~27.9 s per update on this PC)
 
 # plain names for the E stages; ids kept small for people who read the plan text
@@ -311,7 +314,94 @@ def wrap_all():
     _ = head, H
 
 
+def plan_v4(path):
+    """Figure 6 v4: EX-42 plan as decided by 2026-11-12 19:50 (decisions ledger 11/11 19:38 · 11/12 11:28~19:31).
+
+    Values are the ledger's, typed here; v3 (11/07 40,000 proposal) is kept as history.
+    """
+    plt.rcParams["font.family"] = ["Malgun Gothic", "NanumGothic"]  # same font as make_lineage.py, Linux fallback
+    plt.rcParams["axes.unicode_minus"] = False
+    stages = [("0 단계", 1000, "끝 11/08"), ("E0", 250, "끝 11/11"), ("E1", 1750, "진행 중"), ("E1F", 750, ""),
+              ("E2", 1500, ""), ("E3", 4000, ""), ("E4", 3000, ""), ("E5", 1500, ""), ("E6a", 1000, ""), ("E6b", 3000, "")]
+    assert [n for _, n, _ in stages] == [1000, 250, 1750, 750, 1500, 4000, 3000, 1500, 1000, 3000]
+    total = sum(n for _, n, _ in stages)
+    fc = {"끝": "#c8e6c9", "진행 중": "#ffe082"}
+
+    fig = plt.figure(figsize=(24, 15), dpi=100)
+    fig.text(0.04, 0.975, "EX-42 학습 계획 · 11/12 결정 반영", fontsize=28, weight="bold", va="top")
+    fig.text(0.04, 0.938, "부모 m13250 (EX-41 m12000 → 0 단계 1,000 회 m13000 → E0 250 회 m13250) · 기준 2026-11-12 19:50",
+             fontsize=15, color="#37474f", va="top")
+
+    # band: one box per stage, width = iterations
+    ax = fig.add_axes([0.04, 0.66, 0.92, 0.22])
+    ax.set_xlim(0, total)
+    ax.set_ylim(-0.12, 1)
+    ax.axis("off")
+    ax.text(0, 1.0, "단계 띠 (칸 너비 = 회 수)", fontsize=16, weight="bold", va="top")
+    x = 0
+    spans = {}
+    for name, n, st in stages:
+        col = fc["끝"] if st.startswith("끝") else fc.get(st, "#e3f2fd")
+        ax.add_patch(Rectangle((x, 0.35), n, 0.38, facecolor=col, edgecolor="#ffb300" if name == "E1" else "#455a64",
+                               lw=3.0 if name == "E1" else 1.4, zorder=3 if name == "E1" else 2))
+        small = n < 600
+        ax.text(x + n / 2, 0.54 if not small else 0.78, name, ha="center", va="center" if not small else "bottom",
+                fontsize=17 if not small else 14, weight="bold")
+        ax.text(x + n / 2, 0.30, f"{n:,}", ha="center", va="top", fontsize=13, color="#263238")
+        if st:
+            ax.text(x + n / 2, 0.08 if name == "E0" else 0.17, st, ha="center", va="top", fontsize=12.5,
+                    color="#1b5e20" if st.startswith("끝") else "#e65100", weight="bold")
+        spans[name] = (x, n)
+        x += n
+    ax.text(total, -0.12, "M 은 조건부 · 원 단계 최대에 안 셈 · 20,000 에는 셈 (띠에는 그리지 않음)", ha="right", va="bottom",
+            fontsize=12.5, color="#37474f")
+    ax.text(0, -0.12, "EX-42 자체 20,000 회 · 연장은 남은 예산 안 (원장 11/11 19:38)", ha="left", va="bottom",
+            fontsize=12.5, color="#0d47a1", weight="bold")
+
+    # E1 detail: seven segments of 250
+    bx = fig.add_axes([0.04, 0.27, 0.92, 0.33])
+    bx.set_xlim(0, 7)
+    bx.set_ylim(0, 1)
+    bx.axis("off")
+    bx.add_patch(Rectangle((0, 0), 7, 1, facecolor="#fffdf5", edgecolor="#ffb300", lw=1.6))
+    bx.text(0.08, 0.96, "E1 자세히 (위 띠의 주황 테두리 칸) · 한 실행 일곱 구간 · 구간마다 250 회 (합 1,750)", fontsize=16, weight="bold", va="top")
+    caps = [5, 5, 5, 6, 7, 8, 9]
+    seg_state = {0: ("끝 11/12 18:16 · 유지 PASS", "#c8e6c9", "#1b5e20"), 1: ("진행 중 (18:56 ~)", "#ffe082", "#e65100")}
+    y0, h = 0.36, 0.22
+    for i, c in enumerate(caps):
+        lab, col, tc = seg_state.get(i, ("", "#ffffff", "black"))
+        bx.add_patch(Rectangle((i + 0.06, y0), 0.88, h, facecolor=col, edgecolor="#455a64", lw=1.2))
+        bx.text(i + 0.5, y0 + h * 0.70, f"구간 {i + 1}", ha="center", va="center", fontsize=15, weight="bold")
+        bx.text(i + 0.5, y0 + h * 0.30, f"상한 {c} · 250", ha="center", va="center", fontsize=13)
+        if lab:
+            bx.text(i + 0.5, y0 - 0.03, lab, ha="center", va="top", fontsize=12, color=tc, weight="bold")
+    # brackets over 1~3 and 4~7
+    for a_, b_, t in ((0.06, 2.94, "구간 1~3 · 지형 상한 5 + 넓힌 명령\n옆 |vy| 0.1~0.8 · 옆 몫 왼/오 0.09 · 전진 0.19\n후진·옆·대각 25 % 에 |wz| 0.2~0.6"),
+                      (3.06, 6.94, "구간 4~7 · 상한 6 → 7 → 8 → 9\n명령 고정")):
+        yb = y0 + h + 0.04
+        bx.plot([a_, a_, b_, b_], [yb, yb + 0.03, yb + 0.03, yb], color="#455a64", lw=1.4)
+        bx.text((a_ + b_) / 2, yb + 0.05, t, ha="center", va="bottom", fontsize=13, linespacing=1.4)
+    bx.text(0.08, 0.13, "경계마다 조정 규칙표대로 · 승인 한계 안 (옆 상한 ≤1.0 · 옆 몫 ≤0.12 · 걸으며 돌기 vx ≤1.5 · 덧붙임 ≤0.4 |wz| ≤0.8)"
+            " · 유지표 PASS 일 때만 다음 구간", fontsize=12.5, va="center")
+    bx.text(0.08, 0.05, "근거: 원장 11/12 11:28 · 12:52 · 13:03 · 14:23 · 16:58 · 19:31", fontsize=12, va="center", color="#546e7a")
+
+    # old E1 runs (control)
+    cx = fig.add_axes([0.04, 0.10, 0.50, 0.11])
+    cx.axis("off")
+    cx.add_patch(Rectangle((0, 0), 1, 1, facecolor="#fbe9e7", edgecolor="#bf360c", lw=1.2, transform=cx.transAxes))
+    cx.text(0.02, 0.70, "옛 E1 두 번 (11/11 · 11/12 새벽) · 대조군", fontsize=14, weight="bold", va="center", transform=cx.transAxes)
+    cx.text(0.02, 0.30, "상한 리터럴 5 로 끝까지 상한 5 · 관문 FAIL", fontsize=13.5, va="center", transform=cx.transAxes)
+    fig.text(0.96, 0.10, "그림 6 v4 · 11/07 제안판 (v3 · 40,000 회) 은 이력으로 남김", ha="right", va="bottom", fontsize=12, color="#546e7a")
+    fig.savefig(path, facecolor="white")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["plan_v4"]:
+        plan_v4(HERE / "06-ex42-plan-v4.png")
+        print("ok")
+        sys.exit(0)
     plan_v3(HERE / "06-ex42-plan-v3.png")
+    plan_v4(HERE / "06-ex42-plan-v4.png")
     wrap_all()
     print("ok")
