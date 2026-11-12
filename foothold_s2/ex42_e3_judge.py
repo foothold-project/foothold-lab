@@ -79,8 +79,9 @@ FLAG_SIGMAS = 4.0
 def flag_share(checkpoint: Path, *, plan: dict, plan_sha256: str, sigmas: float = FLAG_SIGMAS) -> dict:
     """Consume the training command_shares receipts (#739) written after the E3 C boundary.
 
-    Only receipts of stage E3 under this plan whose configured vector equals the plan's C boundary vector count; both
-    ranks must have written the same iteration. PASS needs the flag fraction of reset assignments (continuous
+    Only receipts of stage E3 under this plan whose configured vector equals the plan's C boundary vector count, and
+    only those of the judged save's own iteration (decisions.tsv 2026-11-12 19:46: an earlier receipt never stands in);
+    every rank must have written it. PASS needs the flag fraction of reset assignments (continuous
     denominator, the one the flag allocation draws over) within `sigmas` binomial standard deviations of the boundary
     flag share. The all-environment fraction is recorded, not judged. Nothing here is invented: no receipt is HOLD."""
     row = next((r for r in plan["stages"] if r["id"] == "E3"), {})
@@ -97,14 +98,14 @@ def flag_share(checkpoint: Path, *, plan: dict, plan_sha256: str, sigmas: float 
                 doc.get("plan_sha256") != plan_sha256 or
                 (doc.get("configured") or {}).get("shares") != target):
             continue                      # before the C boundary, another stage or another plan
-        if doc["iteration"] > limit:
-            continue
+        if doc["iteration"] != limit:
+            continue                      # the judged save's own update only
         found.setdefault(doc["iteration"], {})[doc["rank"]] = (path, doc)
     ready = [(it, ranks) for it, ranks in sorted(found.items())
              if set(ranks) == set(range(next(iter(ranks.values()))[1]["world_size"]))]
     if not ready:
         return {"role": "judge", "judgement": "HOLD",
-                "reason": "E3 C 경계 뒤 command_shares 영수증 없음 (두 rank 모두 필요)"}
+                "reason": f"저장본 회차 {limit} 의 E3 C 경계 command_shares 영수증 없음 (모든 rank 필요 · 다른 회차는 안 씀)"}
     iteration, ranks = ready[-1]
     rows, states = [], []
     for rank, (path, doc) in sorted(ranks.items()):
