@@ -16,7 +16,7 @@ from foothold_s2.eval.ex41_stage_video import publish_playlists
 def make_receipt(tmp_path: Path, schema: str, *, done: bool = False,
                  stage_suite: str = "W57") -> dict:
     row: dict = {"schema": schema, "checkpoint_sha256": "c" * 64,
-                 "video_rule_version": "v3.4-D168"}
+                 "video_rule_version": "v3.5"}
     if schema == "foothold-ex41-stage-video/1":
         row.update(suite=stage_suite,
                    case="fwd0.5" if stage_suite == "W57" else "stairs_side_left",

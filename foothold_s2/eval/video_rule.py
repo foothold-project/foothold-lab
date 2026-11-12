@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 
-VIDEO_RULE_VERSION = "v3.4-D168"
+VIDEO_RULE_VERSION = "v3.5"
 
 
 def composer_version(path: Path) -> str:

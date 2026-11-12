@@ -36,7 +36,7 @@ def test_gt_and_reconstruction_keep_colour_when_policy_uses_prediction():
     muted = compose.map_tile(pred[0], False, 11, (centre, span))
     expected_policy = compose.attention_heatmap_tile(np.zeros(128), muted, 11)
     assert np.array_equal(panel[y + 30, x2 + 30], expected_policy[30, 30])
-    assert compose.VIDEO_RULE_VERSION == "v3.4-D168"
+    assert compose.VIDEO_RULE_VERSION == "v3.5"
 
 
 def test_legacy_scene_keeps_foot_scan_legend_but_new_recording_does_not():

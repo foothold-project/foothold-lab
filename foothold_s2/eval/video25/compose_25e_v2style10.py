@@ -42,7 +42,7 @@ from foothold_s2.eval.video25.push_event_overlay import (  # noqa: E402
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
-VIDEO_RULE_VERSION = "v3.4-D168"
+VIDEO_RULE_VERSION = "v3.5"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 AIR_FOOT_EDGE_BGR = (105, 105, 105)
