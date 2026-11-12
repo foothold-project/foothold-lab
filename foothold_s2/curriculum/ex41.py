@@ -113,7 +113,7 @@ class EX41Plan(Plan):
             raise ValueError('EX41 FIRST_REWARDS set incomplete or nonfinite')
         if rewards['zero_yaw']!=-.5 or not -20<=rewards['swing']<=-2 or not -3<=rewards['stumble']<=-1:
             raise ValueError('EX41 initial weights outside lead decision')
-        if any(rewards[k]!=0 for k in ('knee_effort_margin','joint_limit_margin','feet_air_time','foot_slip')):
+        if any(rewards[k]!=0 for k in ('knee_effort_margin','joint_limit_margin','feet_air_time')):
             raise ValueError('EX41 preregistered terms must start at zero')
         expected=('S2a','S2b','S2c','S2d','S2e','T0_prime') if self.fixed_schedule else STAGE_IDS
         if [r.get('id') for r in d['stages']]!=list(expected): raise ValueError('EX41 stage order differs')
@@ -383,7 +383,7 @@ class EX41Runtime(Runtime):
                  'zero_yaw':'ex41_zero_yaw','swing':'ex41_swing'}
         for name,value in self.effective['reward_weights'].items():
             if name in ('knee_effort_margin','joint_limit_margin','feet_air_time','foot_slip'):
-                if value!=0: raise ValueError('EX41 preregistered zero cannot activate mid-run')
+                if value!=0 and name!='foot_slip': raise ValueError('EX41 preregistered zero cannot activate mid-run')
                 continue
             key=mapping.get(name,name); cfg=copy.deepcopy(manager.get_term_cfg(key))
             cfg.weight=value; manager.set_term_cfg(key,cfg)

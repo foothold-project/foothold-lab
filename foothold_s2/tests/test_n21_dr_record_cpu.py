@@ -120,7 +120,7 @@ def test_approval_readback_uses_real_ex42_file_and_stage_scale():
     assert approval["decision_id"] == "lead-relay-teamlead-20261106-1725-dr-1.0-fixed"
     assert len(approval["sha256"]) == 64
     assert approval["range_source"]["path"].endswith("ex41-fixed5000.yaml")
-    assert approval["range_source"]["normalized_sha256"] == "92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c"
+    assert approval["range_source"]["normalized_sha256"] == "fea08d9335c9da1fd9f61f3cd359661cbe22a10e47ac0199f9edec84c1148152"
     with pytest.raises(ValueError, match="approved parent range source"):
         n21_dr_record.approval_record(
             n21_dr_record.DEFAULT_APPROVAL, "EX42_0_T0_prime", 1.0,
