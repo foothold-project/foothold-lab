@@ -81,9 +81,9 @@ def test_e1f_materialize_evidence_binds_training_cap_gate_mesh_and_w09_baseline(
         "path": str(mesh.resolve()), "sha256": _sha(mesh)}
 
 
-@pytest.mark.parametrize("iteration", [250, 1000, 1500, 2000])
+@pytest.mark.parametrize("iteration", [250, 1000, 1500, 1900, 3000])
 def test_e1f_evidence_is_built_only_from_an_e1_exit_boundary(tmp_path, iteration):
-    """CG v0.17j: E1 hands over at 1750 (or a whole +500 extension), never at an earlier or in-between boundary."""
+    """CG v0.17j: E1 hands over at 1750 or at a boundary of its HOLD extensions (to 2750), never earlier or off a boundary."""
     _plan, run, gate, log, mesh, baseline, _cp_sha = _fixture(tmp_path)
     row = json.loads(gate.read_text())
     row["checkpoint_iteration"] = iteration

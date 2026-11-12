@@ -332,6 +332,15 @@ stages:
     turn_overlay:              # reverse, side and diagonal commands: this share also turns
       fraction: 0.25
       wz_abs: [0.2, 0.6]
+  command_adjust_limits:       # decisions.tsv 2026-11-12 14:23: the lines a segment adjustment may not cross. The run
+    ranges:                    # starts on `commands` above; a cell not named here is limited to its `commands` value.
+      side_vy_abs: [0.1, 1.0]
+      walk_vx: [0.3, 1.5]
+    turn_overlay: {fraction_max: 0.4, wz_abs: [0.2, 0.8]}
+    shares:
+      forward: [0.13, 0.23]
+      side_left: [0.07, 0.12]
+      side_right: [0.07, 0.12]
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:

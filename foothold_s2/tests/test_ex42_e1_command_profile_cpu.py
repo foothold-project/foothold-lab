@@ -151,3 +151,49 @@ def test_the_profile_reader_returns_none_without_a_cell_and_validated_values_wit
 def test_a_malformed_profile_is_refused(plan, change, match):
     with pytest.raises(ValueError, match=match):
         ex42_shares.stage_commands(_doc(plan, change), "E1")
+
+
+# ---- adjustment limits (decisions.tsv 2026-11-12 14:23): the plan is frozen once E1 starts, so the lines are in the row ----
+
+def _limits(plan, change):
+    doc = copy.deepcopy(plan.document)
+    change(next(s for s in doc["stages"] if s["id"] == "E1"))
+    return types.SimpleNamespace(document=doc)
+
+
+def test_e1_limits_are_the_approved_lines_and_the_start_profile_is_inside(plan):
+    limits = ex42_shares.command_adjust_limits(plan, "E1")
+    assert limits["ranges"]["side_vy_abs"] == (0.1, 1.0) and limits["ranges"]["walk_vx"] == (0.3, 1.5)
+    assert limits["turn_overlay"] == (0.4, 0.2, 0.8)
+    assert (limits["shares"]["forward"], limits["shares"]["side_left"], limits["shares"]["side_right"]) == \
+        ((0.13, 0.23), (0.07, 0.12), (0.07, 0.12))
+    base = ex42_shares.stage_commands(plan, "E1")
+    named = {"side_vy_abs", "walk_vx"}                      # every other cell may only stay or narrow
+    assert all(limits["ranges"][k] == v for k, v in base["ranges"].items() if k not in named)
+    assert all(limits["shares"][k] == (v, v) for k, v in base["shares"].items() if k not in ("forward", "side_left", "side_right"))
+    assert 2 * 0.12 + 0.13 + sum(v for k, v in base["shares"].items() if k not in ("forward", "side_left", "side_right")) == pytest.approx(1.0)
+    assert ex42_shares.command_adjust_limits(plan, "E1F") is None and ex42_shares.command_adjust_limits(plan, "E0") is None
+
+
+@pytest.mark.parametrize("change, match", [
+    (lambda row: row["command_adjust_limits"]["ranges"].update(side_vy_abs=[0.1, 0.7]), "start outside"),      # start 0.8 above the line
+    (lambda row: row["command_adjust_limits"]["ranges"].update(side_vy_abs=[0.2, 1.0]), "start outside"),      # the slow floor moved
+    (lambda row: row["command_adjust_limits"]["shares"].update(side_left=[0.07, 0.08]), "start outside"),
+    (lambda row: row["command_adjust_limits"]["turn_overlay"].update(fraction_max=0.2), "start outside"),
+    (lambda row: row["command_adjust_limits"]["turn_overlay"].update(wz_abs=[0.3, 0.8]), "start outside"),
+    (lambda row: row["command_adjust_limits"]["ranges"].update(side_vy=[0.1, 1.0]), "unknown cell or a malformed"),
+    (lambda row: row["command_adjust_limits"]["shares"].update(flag=[0.0, 0.1]), "unknown cell or a malformed"),
+    (lambda row: row["command_adjust_limits"]["ranges"].update(walk_vx=[1.5, 0.3]), "unknown cell or a malformed"),
+    (lambda row: row["command_adjust_limits"]["turn_overlay"].update(fraction_max=1.5), "unknown cell or a malformed"),
+    (lambda row: row["command_adjust_limits"].update(rewards={}), "exactly ranges, turn_overlay, shares"),
+    (lambda row: row.pop("commands"), "needs a commands profile"),
+])
+def test_a_malformed_limits_cell_is_refused(plan, change, match):
+    with pytest.raises(ValueError, match=match):
+        ex42_shares.command_adjust_limits(_limits(plan, change), "E1")
+
+
+def test_the_start_refuses_a_plan_whose_limits_cell_is_malformed(plan, source):
+    broken = _limits(plan, lambda row: row["command_adjust_limits"]["ranges"].update(side_vy_abs=[0.1, 0.7]))
+    with pytest.raises(ValueError, match="start outside"):
+        te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=broken, stage_id="E1")

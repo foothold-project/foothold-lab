@@ -156,7 +156,7 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
         raise ValueError("W09/W08 requires a fresh output directory")
     checkpoint_sha, iteration = manifest_checkpoint_sha(checkpoint)
     from foothold_s2.curriculum.ex42_prep import stage_exit_updates
-    exit_updates = stage_exit_updates(EX42Plan.load(plan_path).document, "E1")      # base cap or a whole HOLD extension
+    exit_updates = stage_exit_updates(EX42Plan.load(plan_path).document, "E1")      # 1750, or a boundary of a HOLD extension
     if checkpoint_sha != expected_checkpoint_sha256 or iteration not in exit_updates:
         raise ValueError("W09 parent is not the pinned E1 exit checkpoint")
     gate = check_e1_gate(e1_gate, checkpoint_sha256=checkpoint_sha, exit_updates=(iteration,))

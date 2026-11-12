@@ -50,3 +50,16 @@ def test_e1_file_repin_preserves_old_scopes_and_rejects_an_extra_line(tmp_path):
     with pytest.raises(ValueError, match='approval SHA256'):
         validate_stage_zero_authorization(plan, altered)
     assert 'explicit_lead_approval_missing' in plan.launch_blockers(APPROVALS, None, None)
+
+
+def test_e1_first_check_must_fall_on_an_evaluation_boundary(tmp_path):
+    """reviewer 11/12 14:29: a plan row whose first exit check is not a multiple of the 250 interval is refused."""
+    from foothold_s2.curriculum.ex42_prep import validate_stage_e1_authorization
+    assert validate_stage_e1_authorization(EX42Plan.load(TABLE), APPROVALS, E1_PARENT)['scope']['maximum_updates'] == 1750
+    import copy
+    import dataclasses
+    plan = EX42Plan.load(TABLE)
+    document = copy.deepcopy(plan.document)
+    next(row for row in document['stages'] if row['id'] == 'E1')['minimum_updates'] = 1700
+    with pytest.raises(ValueError, match='divide the first check'):
+        validate_stage_e1_authorization(dataclasses.replace(plan, document=document), APPROVALS, E1_PARENT)
