@@ -63,7 +63,9 @@ def contract(plan: dict) -> dict:
                 or name != f"{spec.get('task')}_{spec.get('map_mode')}"
                 or spec.get("role") != ("judge" if name in judges else "record_only")):
             raise ValueError(f"D44 prep case {name} has invalid task, mode or role")
-        if (name in judges) != (spec["map_mode"] in ("eval_gt", "eval_pred")):
+        # A map-off case is never a judge. A map-on case is a judge unless the plan lists it as a record
+        # (E1 exit option: stop-restart recorded while the landing column is not yet taught).
+        if name in judges and spec["map_mode"] not in ("eval_gt", "eval_pred"):
             raise ValueError(f"D44 prep case {name} map mode and judgment role differ")
     for key in ("settle_s", "approach_limit_s", "stop_s", "restart_limit_s",
                 "stop_hold_s", "top_hold_s", "stop_speed_mps", "foot_below_top_m",
