@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import pathlib
 import hashlib
 import importlib.util
 import json
@@ -161,12 +162,40 @@ def test_stop_is_root_band_and_speed_only_with_foot_height_diagnostic():
 
 def test_top_latch_and_command_are_per_env_after_post_step_entry():
     root = np.array([[3.75, 4.0], [3.75, 4.0], [4.7, 4.0], [3.75, 4.61]])
-    feet = np.array([[3.4, 3.5, 3.6, 3.7], [3.39, 3.5, 3.6, 3.7], [3.8]*4, [3.8]*4])
+    feet_x = np.array([[3.4, 3.5, 3.6, 3.7], [3.39, 3.5, 3.6, 3.7], [3.8]*4, [3.8]*4])
+    feet = np.stack((feet_x, np.full_like(feet_x, 4.0)), axis=-1)             # every foot on the landing's centre line
     latch = top_latch_mask(root, feet, np.ones(4, bool), ANCHORS["landing_bounds_xy"])
     assert latch.tolist() == [True, False, False, False]
+    with pytest.raises(ValueError, match="top latch geometry"):
+        top_latch_mask(root, feet_x, np.ones(4, bool), ANCHORS["landing_bounds_xy"])      # the /2 call: x only
     phase, vx = restart_command(latch, 1.0)
     assert phase.tolist() == [4, 3, 3, 3]
     assert vx.tolist() == [0.0, 1.0, 1.0, 1.0]
+
+
+def test_a_foot_beside_the_landing_does_not_latch_the_top():
+    """decisions.tsv 2026-11-12 11:28: with four feet at x >= 3.4 the robot latched while a hind foot stood one step
+    lower. On the concentric stairs that is a foot outside the landing in y (or past its far edge in x)."""
+    xmin, xmax, ymin, ymax = ANCHORS["landing_bounds_xy"]
+    assert (xmin, xmax, ymin, ymax) == (3.4, 4.6, 3.4, 4.6)
+    on = np.array([[3.6, 3.8], [3.6, 4.2], [4.2, 3.8], [4.2, 4.2]])           # four feet on the landing
+    cases = {"on": on}
+    for name, foot, value in (("left", (0, 1), 3.39), ("right", (1, 1), 4.61), ("front", (0, 0), 3.39), ("far", (3, 0), 4.61)):
+        feet = on.copy()
+        feet[foot] = value
+        cases[name] = feet
+    edge = on.copy()
+    edge[0], edge[3] = (3.4, 3.4), (4.6, 4.6)                                 # exactly on the edge counts as on it
+    cases["edge"] = edge
+    names = list(cases)
+    root = np.tile([4.0, 4.0], (len(names), 1))
+    latch = top_latch_mask(root, np.stack([cases[n] for n in names]), np.ones(len(names), bool), ANCHORS["landing_bounds_xy"])
+    assert dict(zip(names, latch.tolist())) == {"on": True, "left": False, "right": False, "front": False, "far": False,
+                                                 "edge": True}
+    dead = np.ones(len(names), bool)
+    dead[0] = False
+    assert not top_latch_mask(root, np.stack([cases[n] for n in names]), dead, ANCHORS["landing_bounds_xy"])[0]
+    assert TRACE_FORMAT.endswith("/3") and RECEIPT_FORMAT.endswith("/3")      # /2 results were judged on x only
 
 
 def test_top_stand_six_known_inputs_and_old_trace_rejection():
@@ -193,6 +222,18 @@ def test_top_stand_six_known_inputs_and_old_trace_rejection():
     no_latch["top_latched_at"][:] = -1
     no_latch["foot_pos_w"][70:, :, :, 0] = 3.2
     assert summarize(no_latch, **kwargs)["per_env"][0]["reason"] == "no_top_latch"
+    beside = copy.deepcopy(no_latch)                    # feet past the front edge, one hind foot beside the landing
+    beside["foot_pos_w"][70:, :, :, 0] = 4.0
+    beside["foot_pos_w"][70:, :, 3, 1] = 3.3
+    assert summarize(beside, **kwargs)["per_env"][0]["reason"] == "no_top_latch"      # /2 latched here on x alone
+    claimed = copy.deepcopy(beside)                     # a trace that says it latched there is not this geometry
+    claimed["phase_id"][71:] = 4
+    claimed["cmd_post"][71:, :, 0] = 0.0
+    claimed["top_latched_at"][:] = 70
+    with pytest.raises(ValueError, match="top latch or phase 4 differs"):
+        summarize(claimed, **kwargs)
+    kit = (pathlib.Path(__file__).resolve().parents[1] / "eval" / "ex42_d44_eval.py").read_text(encoding="utf-8")
+    assert "candidate = top_latch_mask(local_root[:, :2], local_feet[:, :, :2]," in kit      # the live latch sees y too
     no_stand = copy.deepcopy(good)
     no_stand["body_vel_b"][71:, :, 0] = .2
     assert summarize(no_stand, **kwargs)["success_count"] == 0
