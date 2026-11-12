@@ -48,8 +48,13 @@ def test_boundary_count_is_sha_checked(tmp_path):
         read_boundary(checkpoint, stage_id="E2", plan_sha256="a" * 64, interval=250)
 
 
-def test_e3_registered_kind_requires_two_real_boundaries(tmp_path):
+def test_e3_registered_kind_requires_two_real_boundaries(tmp_path, monkeypatch):
+    import foothold_s2.ex42_exposure_receipt as exposure_receipt
     from foothold_s2.ex42_exposure_receipt import build_receipt
+    # The replay rebuilds the column table from the mesh the plan pins for the stage. This known-input plan pins no mesh, so the
+    # one-column table of its made-up mesh is supplied at that seam; the receipt rows are still compared against it.
+    monkeypatch.setattr(exposure_receipt, "mesh_column_table",
+                        lambda body, plan, mesh_dir=None: [{"family": "B", "kind": "rough"}])
     (tmp_path / "params").mkdir()
     (tmp_path / "params" / "agent.yaml").write_text("perception:\n  p_map_off: 0\n")
     plan = {"stages": [
