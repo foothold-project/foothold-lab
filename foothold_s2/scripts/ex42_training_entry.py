@@ -510,6 +510,25 @@ def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) 
     return True
 
 
+def continuation_state_matches(live: Any, saved: Any) -> bool:
+    """After a resumed segment loaded its checkpoint: the live runtime state is the checkpoint's, apart from the two
+    fields a later segment carries higher, the L+ level cap and the stage bound of a HOLD extension. `load_state_dict`
+    has already refused any value outside their allowance, so they are left out of this readback."""
+    def rest(state):
+        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None}}
+    return isinstance(live, dict) and isinstance(saved, dict) and rest(live) == rest(saved)
+
+
+def read_same_run_manifest(log_dir: str | Path, *, rank: int, source_manifest_sha256: str) -> dict[str, Any]:
+    """The manifest a same-run segment goes on writing. Rank 0 owns the run directory: its manifest must still be the
+    one the resume preflight read. Another rank of a two-rank run keeps its own manifest in its private directory
+    (never the resume source), so there is nothing of the preflight to compare it with."""
+    raw = (Path(log_dir) / "manifest.json").read_bytes()
+    if rank == 0 and hashlib.sha256(raw).hexdigest() != source_manifest_sha256:
+        raise ValueError("EX-42 same-run source manifest changed after self-resume preflight")
+    return json.loads(raw.decode("utf-8-sig"))
+
+
 def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
                               origin: int = 0) -> int:
     """Where a boundary segment stops. None means the whole stage (the old single-process run).
@@ -994,6 +1013,64 @@ def build_stage_zero_resume_root_xy_readback(env: Any, *,
             "max": float(sorted_distances[-1].item()),
         },
         "reset_pose_bounds_xy_m": {"x": list(x_bounds), "y": list(y_bounds)},
+        "outside_reset_bounds_count": len(root_ids),
+        "outside_reset_bounds_env_ids_first_16": root_ids[:16],
+    }
+
+
+def build_resume_root_xy_readback(env: Any, *, reset_params: dict[str, Any]) -> dict[str, Any]:
+    """The resumed roots against the reset range of the event term the env really carries. Stage zero: one
+    `pose_range` for every env. An E stage: the per-column ranges of `ex42_column_reset` (`lo` / `hi`, one row per
+    mesh column), read through each env's terrain column."""
+    import torch
+
+    if "pose_range" in reset_params:
+        return build_stage_zero_resume_root_xy_readback(env, pose_range=reset_params["pose_range"])
+    lo, hi = reset_params.get("lo"), reset_params.get("hi")
+    raw = getattr(env, "unwrapped", env)
+    scene = getattr(raw, "scene", None)
+    try:
+        robot = scene["robot"]
+    except (TypeError, KeyError, AttributeError):
+        robot = getattr(scene, "robot", None)
+    origins = getattr(scene, "env_origins", None)
+    root = getattr(getattr(robot, "data", None), "root_pos_w", None)
+    columns = getattr(getattr(scene, "terrain", None), "terrain_types", None)
+    if origins is None or root is None or root.ndim != 2 or root.shape[1] < 2:
+        raise ValueError("EX-42 resume root/origin readback is unavailable")
+    if origins.ndim != 2 or origins.shape[1] < 2 or origins.shape[0] != root.shape[0]:
+        raise ValueError("EX-42 resume root/origin readback shapes differ")
+    if (not torch.is_tensor(lo) or not torch.is_tensor(hi) or lo.ndim != 2 or lo.shape != hi.shape or lo.shape[1] < 2
+            or columns is None or columns.shape[0] != root.shape[0]):
+        raise ValueError("EX-42 resume readback needs a reset pose_range or per-column lo / hi with the terrain columns")
+    columns = columns.to(root.device).long()
+    if int(columns.min()) < 0 or int(columns.max()) >= lo.shape[0]:
+        raise ValueError("EX-42 resume readback: a terrain column has no reset range row")
+    low, high = lo.to(root.device)[columns, :2], hi.to(root.device)[columns, :2]       # per env, x and y
+    default = getattr(getattr(robot, "data", None), "default_root_state", None)       # the reset adds it to the origin
+    delta = (root[:, :2] - origins[:, :2]).detach()
+    if default is not None:
+        delta = delta - default[:, :2].to(root.device)
+    distance = torch.linalg.vector_norm(delta, dim=1)
+    if not bool(torch.isfinite(distance).all()):
+        raise ValueError("EX-42 resume root/origin distances are not finite")
+    tolerance = 1e-4
+    outside = ((delta < low - tolerance) | (delta > high + tolerance)).any(dim=1)
+    sorted_distances = distance.sort().values
+    p95_index = max(0, int(0.95 * (sorted_distances.numel() - 1)))
+    root_ids = torch.nonzero(outside, as_tuple=False).flatten().detach().to("cpu").tolist()
+    return {
+        "state": "root_xy_checked_against_restored_env_origins",
+        "env_count": int(root.shape[0]),
+        "distance_xy_m": {
+            "min": float(sorted_distances[0].item()),
+            "mean": float(distance.mean().item()),
+            "p95": float(sorted_distances[p95_index].item()),
+            "max": float(sorted_distances[-1].item()),
+        },
+        "reset_pose_bounds_xy_m": {"basis": "per_column_reset_ranges",
+                                   "x": [float(low[:, 0].min().item()), float(high[:, 0].max().item())],
+                                   "y": [float(low[:, 1].min().item()), float(high[:, 1].max().item())]},
         "outside_reset_bounds_count": len(root_ids),
         "outside_reset_bounds_env_ids_first_16": root_ids[:16],
     }
