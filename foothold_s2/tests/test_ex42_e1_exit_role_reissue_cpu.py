@@ -127,7 +127,7 @@ def test_evaluation_plan_with_any_other_difference_is_refused(tmp_path):
     assert reissue.demoted_cases(plan, EX42Plan.load(policy.path)) == STOP
 
 
-def _boundary(run, iteration, plan, *, kit_plan_sha256=None):
+def _boundary(run, iteration, plan):
     source = run / "eval" / "scores" / f"m{iteration}"
     d44 = source / "d44"
     d44.mkdir(parents=True)
@@ -159,22 +159,21 @@ def _boundary(run, iteration, plan, *, kit_plan_sha256=None):
         row = {"case_id": case_id, **spec, "trace_file": str(trace), "trace_sha256": _sha(trace)}
         _put(d44 / f"{case_id}.json", row)
         indexed[case_id] = {"raw_sha256": _sha(d44 / f"{case_id}.json"), "trace_sha256": _sha(trace)}
-    kit_plan = plan.sha256 if kit_plan_sha256 is None else kit_plan_sha256
     _put(d44 / "d44_cells.json", {
         "format": ex42_d44_cells.RECEIPT_FORMAT, "state": "done", "checkpoint_sha256": _sha(checkpoint),
-        "source_mesh_sha256": settings["source_mesh_sha256"], "plan_sha256": kit_plan, "seed": 42,
+        "source_mesh_sha256": settings["source_mesh_sha256"], "plan_sha256": plan.sha256, "seed": 42,
         "envs": 64, "cases": indexed})
     _put(source / "eval_receipt.json", {
         "state": "done", "checkpoint": str(checkpoint), "checkpoint_sha256": _sha(checkpoint), "eval_seed": 42,
-        "evaluation_plan": {"path": str(plan.path), "sha256": kit_plan},
+        "evaluation_plan": {"path": str(plan.path), "sha256": plan.sha256},
         "steps": {"d44": {"state": "done"}}, "ex42_mesh": {"mesh_sha256": "b" * 64}})
 
 
-def _run(tmp_path, monkeypatch, iterations=(250, 500), **kit):
+def _run(tmp_path, monkeypatch, iterations=(250, 500)):
     plan = _real_plan(tmp_path)
     run = tmp_path / "run"
     for iteration in iterations:
-        _boundary(run, iteration, plan, **kit)
+        _boundary(run, iteration, plan)
     anchors = {"landing_center": [4., 4., 1.44], "landing_bounds_xy": [3.4, 4.6, 3.4, 4.6],
                "stop_band_x": [1.6, 1.9]}
     tile = ({"mesh_sha256": _landing(plan.document)["source_mesh_sha256"]}, {"anchors_local_m": anchors})
@@ -268,8 +267,16 @@ def test_window_reissue_refusals_leave_no_output(tmp_path, monkeypatch):
     assert not out.exists()
 
 
-def test_originals_must_be_kit_evidence_of_the_run_plan(tmp_path, monkeypatch):
-    run, plan, _ = _run(tmp_path, monkeypatch, kit_plan_sha256="c" * 64)
+@pytest.mark.parametrize("stale", ["d44/d44_cells.json", "eval_receipt.json"])
+def test_originals_must_be_kit_evidence_of_the_run_plan(tmp_path, monkeypatch, stale):
+    run, plan, _ = _run(tmp_path, monkeypatch)
+    path = run / "eval" / "scores" / "m500" / stale          # one receipt at a time names another plan
+    row = reissue._read(path)
+    if stale.startswith("d44"):
+        row["plan_sha256"] = "c" * 64
+    else:
+        row["evaluation_plan"]["sha256"] = "c" * 64
+    _put(path, row)
     with pytest.raises(ValueError, match="original Kit or P1 identity incomplete"):
         _windows(run, plan, tmp_path / "other-plan")
     assert not (tmp_path / "other-plan").exists()
