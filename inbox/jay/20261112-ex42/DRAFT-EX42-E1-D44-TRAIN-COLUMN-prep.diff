@@ -1,0 +1,71 @@
+diff --git a/foothold_s2/curriculum/ex42-prep.yaml b/foothold_s2/curriculum/ex42-prep.yaml
+index 7557948..78d7363 100644
+--- a/foothold_s2/curriculum/ex42-prep.yaml
++++ b/foothold_s2/curriculum/ex42-prep.yaml
+@@ -96,6 +96,18 @@ environment:
+   terrain_presets:
+     A:
+       balance_beams_l9_width_m: 0.09
++      # Candidate B (draft, not approved): the D44 situation as a training column. Concentric square stairs on an
++      # 8 x 8 m tile like eval_stairs_landing_016 (terrains/ex42_eval_terrains.py:66~92): nine risers, 1.2 m top.
++      # Same dimensions on all ten rows (the stage_stairs precedent: fixed 0.15 m on every level). The robot starts
++      # on the ground at the approach anchor and walks +x: up nine steps, over the top, down the far side.
++      stairs_landing_016:
++        step_height_m: 0.16
++        tread_m: 0.3
++        landing_m: 1.2
++        risers: 9
++        fixed_on_all_levels: true
++        start: approach_ground
++        column: appended_last
+     B:
+       climb_up_l9_m: 0.53
+       rough:
+@@ -215,6 +227,11 @@ stages:
+         hf_pyramid_slope_inv: {push: on}
+         stage_stairs: {push: on}
+         flat: {push: on}
++        stairs_landing_016:
++          push: on
++          command_set: [forward_1.0, stand]
++          command_weights: {forward_1.0: 0.8, stand: 0.2}
++          completion: tile_end_reach
+       B:
+         stones: {push: off}
+         beam: {push: off}
+@@ -298,7 +315,15 @@ stages:
+   extension_max_count: 2
+   critic_mirror: true
+   boundary_axes:
++  - terrain_mesh_swap
++  - terrain_exposure
+   - terrain_level_cap
++  # Candidate B (draft): one axis per boundary. Entry = the mesh with the appended column (S), then the new
++  # column opens at 5 % (K), then the continuous cap raises (L+, candidate A).
++  boundary:
++    entry_axis: terrain_mesh_swap
++    axis_order: [terrain_mesh_swap, terrain_exposure, terrain_level_cap, terrain_level_cap]
++    rule: fixed_sequence
+   enabled: true
+   hold_policy: hold_exposure_continue_training
+   terrain:
+@@ -308,6 +333,10 @@ stages:
+       default: {exposure: 0.0, level_cap: 0}
+       positive:
+       - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}
++    k_ladder:
++      grades: {new: 0.05}
++      order:
++      - {family: A, kind: stairs_landing_016, level_cap: 0}
+     floors:
+       global_command_floor:
+         reverse: 0.05
+@@ -2691,7 +2720,7 @@ evaluation:
+     stop_seconds: 2.0
+ terrain_manifest_contract:
+   kind_count_by_family:
+-    A: 13
++    A: 14
+     B: 12
+     C: 7
+     D: 3
