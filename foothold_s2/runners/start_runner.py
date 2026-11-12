@@ -48,7 +48,7 @@ from foothold_s2.commands import mixed_core as mc
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
-from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn
+from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, flag_env_command_bad
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
@@ -702,6 +702,7 @@ class StartRunner(OnPolicyRunner):
                             bad_now = command_bad(consumed, term.slot_current.to(self.device),
                                                   term.heading.to(self.device),
                                                   continuous.env_stage.to(self.device), continuous.plan)
+                            bad_now = flag_env_command_bad(term, consumed, bad_now)   # flag envs: the flag command, not a slot
                         elif self.pcfg["contract"] == "basic_gait_ex39":
                             heading = self._command_term().heading.detach().clone().to(self.device)
                             bad_now = command_sample_bad(self.pcfg["contract"], consumed, heading)
