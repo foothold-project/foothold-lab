@@ -80,6 +80,17 @@ HIPAN_G1_COMMANDS = {
     "side+0.8": (0.0, 0.8, 0.0),
     "diag0.8+0.4": (0.8, 0.4, 0.0),
 }
+# G1 보강 (lead 11/12 13:0x): 배운 범위 안 순수 옆걸음과 느린 값 죽은 구간 기준선 (planner 12:56 제안)
+HIPAN_G1B_COMMANDS = {
+    "side+0.2": (0.0, 0.2, 0.0),
+    "side+0.3": (0.0, 0.3, 0.0),
+    "side+0.4": (0.0, 0.4, 0.0),
+    "side+0.6": (0.0, 0.6, 0.0),
+    "side-0.4": (0.0, -0.4, 0.0),
+    "fwd0.1": (0.1, 0.0, 0.0),
+    "fwd0.2": (0.2, 0.0, 0.0),
+    "spin+0.3": (0.0, 0.0, 0.3),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -111,6 +122,8 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(N21_COMMANDS)
     if suite == "hipan_g1":
         return dict(HIPAN_G1_COMMANDS)
+    if suite == "hipan_g1b":
+        return dict(HIPAN_G1B_COMMANDS)
     raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
 
 
