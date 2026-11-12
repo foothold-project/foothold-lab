@@ -194,7 +194,7 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
         if phase == 3 and spec["task"] == "stop_restart":
             local_root = robot.data.root_pos_w.detach().cpu().numpy() - offset
             local_feet = robot.data.body_pos_w[:, body_ids].detach().cpu().numpy() - offset[:, None, :]
-            candidate = top_latch_mask(local_root[:, :2], local_feet[:, :, 0],
+            candidate = top_latch_mask(local_root[:, :2], local_feet[:, :, :2],
                                        alive.detach().cpu().numpy(),
                                        tile["anchors_local_m"]["landing_bounds_xy"])
             newly = candidate & ~top_latched.detach().cpu().numpy()

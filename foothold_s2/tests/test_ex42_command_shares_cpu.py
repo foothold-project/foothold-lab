@@ -96,7 +96,10 @@ def test_actual_sample_conditional_denominator_and_record(tmp_path):
     assert doc['cumulative']['steps']==s
     assert doc['cumulative']['reset_modes']['continuous']['total']==5000
     assert doc['checkpoint']['sha256']
-    with pytest.raises(FileExistsError):c.write(tmp_path,250,checkpoint,plan_sha='a'*64,stage_id='E3')
+    # 2026-11-12 19:46: a name left behind is moved aside (never lost), and the live counts are written
+    again=c.write(tmp_path,250,checkpoint,plan_sha='a'*64,stage_id='E3')
+    assert json.loads((tmp_path/'superseded'/'command_shares_250_rank0.0.json').read_text())==doc
+    assert json.loads((tmp_path/'command_shares_250_rank0.json').read_text())==again
 
 
 def test_rng_continuation_and_counters_are_exact():

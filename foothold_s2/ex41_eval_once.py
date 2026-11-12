@@ -108,7 +108,7 @@ def commands(checkpoint, out, cfg, *, scope='all', gpu0_training_markers=None,
     return result
 
 
-def hidden_child(argv, folder, *, env=None, cwd=ROOT):
+def hidden_child(argv, folder, *, env=None, cwd=ROOT, timeout=None):
     """W71: no inherited Windows standard handle, logs outside fresh Kit out."""
     folder.mkdir(parents=True, exist_ok=False)
     flags = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
@@ -123,8 +123,13 @@ def hidden_child(argv, folder, *, env=None, cwd=ROOT):
                                      stdout=stdout, stderr=stderr, creationflags=flags, close_fds=True)
             row['pid'] = child.pid
             _atomic(folder/'child.json', row)
-            row['rc'] = child.wait()
-        row['state'] = 'done' if row['rc'] == 0 else 'failed'
+            try:
+                row['rc'] = child.wait(timeout=timeout)
+                row['state'] = 'done' if row['rc'] == 0 else 'failed'
+            except subprocess.TimeoutExpired:       # only a caller that asked for a limit ever gets here; its own child
+                child.kill()
+                row['rc'] = child.wait()
+                row.update(state='timeout', reason=f'exceeded {timeout} s')
     except OSError as exc:
         row.update(rc=-1, state='failed', reason=f'{type(exc).__name__}: {exc}')
     row['seconds'] = time.monotonic()-start

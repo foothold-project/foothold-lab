@@ -16,21 +16,23 @@ import numpy as np
 
 TASKS = ("turn_left", "turn_right", "stop_restart")
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
-TRACE_FORMAT = "foothold-ex42-d44-trace/2"
-RECEIPT_FORMAT = "foothold-ex42-d44-eval/2"
+# /3 (decisions.tsv 2026-11-12 11:28): the top latch needs every foot inside the landing square. /2 looked at the
+# feet's x only; on the concentric stairs a foot beside the landing (y outside it) stands one step lower.
+TRACE_FORMAT = "foothold-ex42-d44-trace/3"
+RECEIPT_FORMAT = "foothold-ex42-d44-eval/3"
 
 
-def top_latch_mask(root_xy, foot_x, alive, bounds):
-    """Post-step entry into the landing with every foot past its front edge."""
-    root_xy, foot_x, alive = np.asarray(root_xy), np.asarray(foot_x), np.asarray(alive)
+def top_latch_mask(root_xy, foot_xy, alive, bounds):
+    """Post-step entry into the landing: the root and every foot inside the landing square (x and y)."""
+    root_xy, foot_xy, alive = np.asarray(root_xy), np.asarray(foot_xy), np.asarray(alive)
     xmin, xmax, ymin, ymax = bounds
-    if (root_xy.ndim != 2 or root_xy.shape[1] != 2 or foot_x.shape != (len(root_xy), 4)
+    if (root_xy.ndim != 2 or root_xy.shape[1] != 2 or foot_xy.shape != (len(root_xy), 4, 2)
             or alive.shape != (len(root_xy),) or alive.dtype != bool
-            or not np.isfinite(root_xy).all() or not np.isfinite(foot_x).all()):
+            or not np.isfinite(root_xy).all() or not np.isfinite(foot_xy).all()):
         raise ValueError("D44 top latch geometry shape or finite values differ")
-    return (alive & (root_xy[:, 0] >= xmin) & (root_xy[:, 0] <= xmax)
-            & (root_xy[:, 1] >= ymin) & (root_xy[:, 1] <= ymax)
-            & (foot_x >= xmin).all(axis=1))
+    inside = lambda xy: ((xy[..., 0] >= xmin) & (xy[..., 0] <= xmax)      # noqa: E731
+                         & (xy[..., 1] >= ymin) & (xy[..., 1] <= ymax))
+    return alive & inside(root_xy) & inside(foot_xy).all(axis=1)
 
 
 def restart_command(latched, speed):
@@ -202,7 +204,7 @@ def summarize(trace: dict, *, spec: dict, anchors: dict, settings: dict, dt: flo
         stop = phases[:, env] == 2
         restart = phases[:, env] == 3
         top_stop = phases[:, env] == 4
-        candidate = top_latch_mask(local_root[:, env, :2], local_feet[:, env, :, 0],
+        candidate = top_latch_mask(local_root[:, env, :2], local_feet[:, env, :, :2],
                                    alive[:, env], anchors["landing_bounds_xy"])
         first = np.flatnonzero(restart & candidate)
         expected_latch = int(first[0]) if len(first) else -1

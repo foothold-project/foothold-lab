@@ -180,3 +180,4 @@ from foothold_s2 import ex42_e1f_judge  # noqa: E402,F401
 from foothold_s2 import ex42_e2_judge  # noqa: E402,F401
 from foothold_s2 import ex42_e3_judge  # noqa: E402,F401
 from foothold_s2 import ex42_late_stage_judge  # noqa: E402,F401
+from foothold_s2 import ex42_late_exit_judges  # noqa: E402,F401
