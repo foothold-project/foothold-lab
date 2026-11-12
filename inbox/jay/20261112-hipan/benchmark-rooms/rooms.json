@@ -1,0 +1,154 @@
+{
+ "source": "arXiv 2604.26504v1 Fig. 5 (page 6)",
+ "ruler": "trajectory arrows sampled every 0.5 m",
+ "arrow_period_px": {
+  "Room red": [
+   18.04,
+   0.83
+  ],
+  "Room green": [
+   17.23,
+   0.58
+  ],
+  "Corridor green": [
+   17.06,
+   0.73
+  ],
+  "Complex-1 magenta": [
+   16.94,
+   0.66
+  ],
+  "Complex-1 magenta vertical": [
+   17.63,
+   0.6
+  ]
+ },
+ "px_per_m": 34.46,
+ "ruler_spread_fraction": 0.064,
+ "cell_m": 0.1,
+ "grid_values": {
+  "0": "free",
+  "1": "overhanging obstacle",
+  "2": "vertical obstacle (wall, pillar)"
+ },
+ "grid_axes": "row 0 = top of the figure, column 0 = left; rooms.npz keys use _ for -",
+ "not_readable": "the corner under each panel name tag (about 6.3 x 1.5 m) is taken as free",
+ "rooms": {
+  "Corridor": {
+   "frame_px": [
+    694,
+    344
+   ],
+   "size_m_measured": [
+    20.14,
+    9.98
+   ],
+   "grid_cells_xy": [
+    200,
+    100
+   ],
+   "size_m_rounded": [
+    20.0,
+    10.0
+   ],
+   "cells": {
+    "free": 14925,
+    "overhang": 0,
+    "vertical": 5075
+   },
+   "components": {
+    "overhang": 0,
+    "vertical": 4
+   },
+   "hipan_path_pixels_on_vertical": 0,
+   "hipan_path_pixels": 3755
+  },
+  "Room": {
+   "frame_px": [
+    694,
+    343
+   ],
+   "size_m_measured": [
+    20.14,
+    9.95
+   ],
+   "grid_cells_xy": [
+    200,
+    100
+   ],
+   "size_m_rounded": [
+    20.0,
+    10.0
+   ],
+   "cells": {
+    "free": 14953,
+    "overhang": 217,
+    "vertical": 4830
+   },
+   "components": {
+    "overhang": 1,
+    "vertical": 3
+   },
+   "hipan_path_pixels_on_vertical": 0,
+   "hipan_path_pixels": 4783
+  },
+  "Complex-1": {
+   "frame_px": [
+    695,
+    696
+   ],
+   "size_m_measured": [
+    20.17,
+    20.2
+   ],
+   "grid_cells_xy": [
+    200,
+    200
+   ],
+   "size_m_rounded": [
+    20.0,
+    20.0
+   ],
+   "cells": {
+    "free": 22722,
+    "overhang": 2098,
+    "vertical": 15180
+   },
+   "components": {
+    "overhang": 12,
+    "vertical": 25
+   },
+   "hipan_path_pixels_on_vertical": 0,
+   "hipan_path_pixels": 2632
+  },
+  "Complex-2": {
+   "frame_px": [
+    695,
+    696
+   ],
+   "size_m_measured": [
+    20.17,
+    20.2
+   ],
+   "grid_cells_xy": [
+    200,
+    200
+   ],
+   "size_m_rounded": [
+    20.0,
+    20.0
+   ],
+   "cells": {
+    "free": 29197,
+    "overhang": 2520,
+    "vertical": 8283
+   },
+   "components": {
+    "overhang": 14,
+    "vertical": 27
+   },
+   "hipan_path_pixels_on_vertical": 0,
+   "hipan_path_pixels": 3044
+  }
+ }
+}
