@@ -1254,11 +1254,8 @@ class EX42StageZeroRuntime:
         if contract is None or log_dir is None or (kind == "start" and getattr(self, "_exposure_start_done", False)):
             return
         try:
-            from foothold_s2.ex42_exposure_receipt import build_receipt, receipt_name, write_receipt
+            from foothold_s2.ex42_exposure_receipt import build_receipt, write_receipt
             from foothold_s2.terrains.ex42_exposure import level_counts
-            if kind == "boundary" and (Path(log_dir) / receipt_name(
-                    kind, iteration, int(os.environ.get("RANK", "0")), int(os.environ.get("WORLD_SIZE", "1")))).is_file():
-                return                         # this rank already left it at the end of the update (flush_consumption)
             terrain = getattr(getattr(raw, "scene", None), "terrain", None)
             live = (level_counts(terrain) if getattr(terrain, "terrain_levels", None) is not None else None)
             body = build_receipt(contract, stage_id=self.stage_id, plan_sha256=self.plan_sha256, iteration=iteration,

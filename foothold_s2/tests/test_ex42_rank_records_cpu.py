@@ -165,8 +165,9 @@ def test_both_ranks_boundary_exposure_receipts_fold_and_a_second_call_is_quiet(t
     for rank in (1, 0):
         runtime, env, run, private = _rank(tmp_path, monkeypatch, rank=rank)
         runtime.stage_id, env._ex42_env_contract, env.scene = "E3", contract, None
-        runtime._exposure_receipt(250, "boundary")
-        runtime._exposure_receipt(250, "boundary")      # flush_consumption, then on_checkpoint
+        runtime._boundary_records(250)                  # the end of the update (flush_consumption)
+        runtime._boundary_records(250)                  # rank 0 again after the save (on_checkpoint): nothing twice
+        assert runtime.learned_cells.written == [(str(run), 250)]
         path = run / f"exposure_receipt_250_rank{rank}.json"
         documents.append(json.loads(path.read_text(encoding="utf-8")))
         assert list(private.iterdir()) == []
