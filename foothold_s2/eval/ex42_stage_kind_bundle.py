@@ -93,7 +93,7 @@ def read_global_flag_rows(folder: Path | None, *, plan: dict, plan_sha256: str,
 
 def read_e3_window(folder: Path, *, inventory: dict, plan: dict, plan_sha256: str,
                    mesh: dict, checkpoint_sha256: str, seed: int,
-                   global_flag_dir: Path | None = None) -> dict:
+                   global_flag_dir: Path | None = None, stage_id: str = "E3") -> dict:
     """Recount every opened representative cell; a missing child never becomes a pass."""
     folder = Path(folder)
     if global_flag_dir is None:
@@ -109,7 +109,7 @@ def read_e3_window(folder: Path, *, inventory: dict, plan: dict, plan_sha256: st
     if observed != set(expected):
         raise ValueError("EX-42 E3 named-kind raw cell coverage differs")
     return {key: read_stage_kind_bundle(folder / cell["family"] / cell["kind"] / f"L{cell['level']}",
-                                        stage_id="E3", family=cell["family"], kind=cell["kind"],
+                                        stage_id=stage_id, family=cell["family"], kind=cell["kind"],
                                         level=cell["level"], plan=plan, plan_sha256=plan_sha256,
                                         mesh=mesh, checkpoint_sha256=checkpoint_sha256, seed=seed,
                                         flag_source=cell.get("flag_source", KIND_FLAGS),
