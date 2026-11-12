@@ -22,7 +22,7 @@ def test_unfilled_shipped_cap_is_not_defaulted_to_five():
         exposure_by_column(terrain,table,'E1F')
 
 
-@pytest.mark.parametrize('cap',[5,6])
+@pytest.mark.parametrize('cap',[5,6,7,8,9])
 def test_filled_cap_is_consumed(tmp_path,cap):
     plan,path,data,validate=filled(tmp_path,'E1F')
     doc=deepcopy(plan.document)
@@ -35,7 +35,7 @@ def test_filled_cap_is_consumed(tmp_path,cap):
 
 
 
-@pytest.mark.parametrize('bad',[None,4,7,True])
+@pytest.mark.parametrize('bad',[None,4,10,True])
 def test_missing_or_out_of_range_predecessor_cap_rejected(tmp_path,bad):
     plan,path,data,validate=filled(tmp_path,'E1F')
     data['stage_e1f_authorization']['prerequisites']['predecessor_exit']['continuous_level_cap']=bad

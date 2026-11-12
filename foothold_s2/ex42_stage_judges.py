@@ -178,3 +178,4 @@ register(_E1())
 # is ready. Importing only this registry must be sufficient for adapter_for().
 from foothold_s2 import ex42_e1f_judge  # noqa: E402,F401
 from foothold_s2 import ex42_e2_judge  # noqa: E402,F401
+from foothold_s2 import ex42_e3_judge  # noqa: E402,F401

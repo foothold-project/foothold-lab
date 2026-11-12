@@ -110,6 +110,7 @@ class Stage:
     heading_arm: str | None
     heading_cfg: dict[str, float]
     adds: dict
+    turn_overlay: tuple[float, float, float] | None = None      # (fraction, |wz| low, |wz| high) on reverse / side / diagonal
 
 
 class Plan:
@@ -798,6 +799,8 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             zero = lambda z: z.abs() <= tol
             bounded = lambda z, key: (z >= stage.ranges[key][0] - tol) & (z <= stage.ranges[key][1] + tol)
             absolute = lambda z, key: (z.abs() >= stage.ranges[key][0] - tol) & (z.abs() <= stage.ranges[key][1] + tol)
+            overlay = getattr(stage, "turn_overlay", None)      # a registered share of these slots also turns
+            turned = (lambda z: zero(z) | ((z.abs() >= overlay[1] - tol) & (z.abs() <= overlay[2] + tol))) if overlay else zero
             h = heading[ids]
             if name == "forward":
                 good = bounded(x, "forward_vx") & zero(y) & torch.where(
@@ -814,12 +817,12 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             elif name == "stand":
                 good = zero(x) & zero(y) & zero(w) & ~h
             elif name == "reverse":
-                good = bounded(x, "reverse_vx") & zero(y) & zero(w) & ~h
+                good = bounded(x, "reverse_vx") & zero(y) & turned(w) & ~h
             elif name.startswith("side_"):
-                good = zero(x) & absolute(y, "side_vy_abs") & zero(w) & ~h
+                good = zero(x) & absolute(y, "side_vy_abs") & turned(w) & ~h
                 good &= y > 0 if name.endswith("left") else y < 0
             else:
-                good = absolute(x, "diag_vx_abs") & absolute(y, "diag_vy_abs") & zero(w) & ~h
+                good = absolute(x, "diag_vx_abs") & absolute(y, "diag_vy_abs") & turned(w) & ~h
                 good &= x > 0 if name.startswith("diag_fwd") else x < 0
                 good &= y > 0 if name.endswith("left") else y < 0
             bad[ids] = bad[ids] | ~good

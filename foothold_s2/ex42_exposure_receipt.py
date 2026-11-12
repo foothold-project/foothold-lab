@@ -160,6 +160,8 @@ def recompute_from_plan(body: dict[str, Any], plan: Any, mesh_dir: Any = None) -
                                   body["ladder_outcomes"])
     if json.loads(json.dumps(moves, sort_keys=True)) != json.loads(json.dumps(body["k_ladder_moves"], sort_keys=True)):
         raise ValueError("EX-42 exposure receipt k moves differ from the plan replay of its ladder_outcomes")
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
+    moved, _ = raise_continuous_cap(moved, stage_id, int(body["boundary_index"]))     # the L+ cap of that segment
     table = mesh_column_table(body, plan, mesh_dir)
     if [{"family": r["family"], "kind": r["kind"]} for r in body["column_rows"]] != table:
         raise ValueError("EX-42 exposure receipt column rows (family, kind) differ from the columns of its mesh")

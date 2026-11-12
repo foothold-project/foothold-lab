@@ -1211,12 +1211,13 @@ def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] |
         # Keep historical false proofs; an extension needs the exact 19:38 HOLD contract.
         from foothold_s2.curriculum.ex42_prep import stage_extension_contract
         bound, interval = scope.get("maximum_updates"), scoped_approval.get("boundary_evaluation_interval_updates")
-        expected_extension = stage_extension_contract({
-            "id": "E1", "maximum_updates": 1000, "extension_updates": 500, "extension_max_count": 2,
-        })
+        # The contract is the one the cell's own base cap gives (validate_stage_e1_authorization ties that cap to
+        # the plan row): +500 x 2 after the cap, by the 19:38 decision.
+        expected_extension = (stage_extension_contract({
+            "id": "E1", "maximum_updates": bound, "extension_updates": 500, "extension_max_count": 2,
+        }) if type(bound) is int and bound > 0 else None)
         extension_ok = (scoped_approval.get("extension_authorized") is False
                         or (scoped_approval.get("extension_authorized") is True
-                            and bound == 1000
                             and scoped_approval.get("extension_contract") == expected_extension))
         return (scope.get("stage_id") == "E1" and type(bound) is int and bound > 0
                 and extension_ok

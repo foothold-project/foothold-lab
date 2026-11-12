@@ -58,8 +58,32 @@ def test_geometry_timing_cannot_fail_perfect_forward_due_to_short_window():
 def test_direction_judgment_cannot_open_before_e5_and_kind_scope_is_explicit():
     rows=case_specs(plan(),stage='E4',group='directions',family='C',kind='box',window_index=2,steps=300)
     assert all(v['role']=='record_only' for v in rows.values())
-    with pytest.raises(ValueError,match='completion evaluator'):
+    with pytest.raises(ValueError,match='unavailable at this stage'):
         case_specs(plan(),stage='E2',group='kind',family='B',kind='stones',window_index=2,steps=300)
+
+
+def test_named_kind_completion_contract_matches_plan_and_stage():
+    p=plan()
+    expected={
+        ('A','stepping_stones_low'):'last_support_0.5s',
+        ('B','stair_up'):'last_support_0.5s',
+        ('B','rough'):'tile_end_reach',
+        ('C','pyramid_stairs'):'last_support_0.5s',
+        ('C','flat'):'tile_end_reach',
+    }
+    for (family,kind),task in expected.items():
+        rows=case_specs(p,stage='E3',group='kind',family=family,kind=kind,window_index=2,steps=300)
+        assert len(rows)==3
+        assert rows[f'{family}_{kind}_forward_eval_gt']['task']==task
+        assert rows[f'{family}_{kind}_forward_eval_pred']['role']=='judge'
+        assert rows[f'{family}_{kind}_forward_probe_prop_only']['role']=='record_only'
+    with pytest.raises(ValueError,match='absent'):
+        case_specs(p,stage='E3',group='kind',family='B',kind='typo',window_index=2,steps=300)
+    with pytest.raises(ValueError,match='unavailable'):
+        case_specs(p,stage='E3',group='kind',family='B',kind='stones',window_index=2,steps=300)
+    assert case_specs(p,stage='E4',group='kind',family='B',kind='stones',window_index=2,steps=300)
+    assert case_specs(p,stage='E4',group='kind',family='C',kind='box',window_index=2,steps=300)[
+        'C_box_forward_eval_gt']['task']=='box_center_pass'
 
 
 def test_pre_result_geometry_table_sha_and_measured_row_are_enforced(tmp_path):
