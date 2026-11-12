@@ -1077,6 +1077,8 @@ class EX42StageZeroRuntime:
         from foothold_s2.commands.ex42_shares import CommandShares
         contract = getattr(stage_zero_plan, "command_contract", None)
         self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
+        from foothold_s2.commands.ex42_command_stats import CommandStats
+        self.command_stats = CommandStats(self.stage_config)          # what the sampler actually drew (train_extra, record only)
         self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
                           "terrain": {"policy": "performance", "level_cap": self.level_cap}}
@@ -1128,6 +1130,21 @@ class EX42StageZeroRuntime:
         self.command_samples += int(len(env_ids))
         if self.command_allocation is not None:
             self.command_allocation.samples(env_ids, slots)
+        if self.command_stats is not None:
+            try:
+                self.command_stats.add(commands, slots, heading)
+            except Exception as exc:          # noqa: BLE001 (the record must not stop the training)
+                self.command_stats = None
+                print("EX42_COMMAND_STATS_OFF " + f"{type(exc).__name__}: {exc}", flush=True)
+
+    def take_command_stats(self) -> dict | None:
+        """One update's sampled-command record for train_extra (`ex42_command_samples`); None when nothing was drawn."""
+        try:
+            return self.command_stats.take() if self.command_stats is not None else None
+        except Exception as exc:              # noqa: BLE001
+            self.command_stats = None
+            print("EX42_COMMAND_STATS_OFF " + f"{type(exc).__name__}: {exc}", flush=True)
+            return None
 
     def record_flag_command_sample(self, env_ids: Any) -> None:
         if self.command_allocation is not None:
