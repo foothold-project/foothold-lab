@@ -120,6 +120,13 @@ def test_the_speed_limit_follows_the_flag_speed_curriculum():
     assert not bool(flag_env_command_bad(term([True], params, flag_vmax=1.25), fast, torch.zeros(1, dtype=torch.bool))[0])
 
 
+def test_backing_off_is_accepted_only_when_the_term_has_it_switched_on():
+    slow = torch.tensor([[0.12, 0.16, 0.0]])                         # 0.2 m/s without a turn: a back-off and nothing else
+    none = torch.zeros(1, dtype=torch.bool)
+    assert bool(flag_env_command_bad(term([True], mc.CommandParams()), slow, none)[0])
+    assert not bool(flag_env_command_bad(term([True], mc.CommandParams(**BACKOFF_PARAMS)), slow, none)[0])
+
+
 def step_check(stages, commands, slots, flags, params, *, dynamic=True):
     """The rollout check of start_runner: the slot validator, then the flag rows by the flag domain."""
     n = len(flags)
