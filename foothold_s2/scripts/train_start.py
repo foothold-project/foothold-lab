@@ -162,6 +162,7 @@ EX42_STAGE_ZERO_PREFLIGHT = None
 EX42_STAGE_ZERO_REWARD_CONTRACT = None
 EX42_STAGE_ZERO_RESUME = None
 EX42_SEGMENT_END = None          # E stage: local update at which this process stops (boundary segment)
+EX42_SEGMENT_COMMANDS = None     # E stage: the segment's command profile and reward cells (plan row or adjustment file)
 EX42_STAGE_ZERO_RESUME_PROOF = None
 EX42_STAGE_ZERO_RESUME_TARGET = None
 EX42_STAGE_ZERO_RESUME_SAME_RUN = False
@@ -1057,6 +1058,13 @@ def main(env_cfg, agent_cfg):
             parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
+        if EX42_SEGMENT_COMMANDS is not None:
+            # the segment's tracking widths go on the env config before the env is built (the two weights went on the
+            # stage's reward table in start_segment, which prepare_ex41_env_cfg has just read)
+            from foothold_s2.commands.ex42_segment_adjust import apply_reward_params as _apply_reward_params
+
+            print("EX42_SEGMENT_REWARD_PARAMS " + json.dumps(
+                _apply_reward_params(env_cfg, EX42_SEGMENT_COMMANDS), sort_keys=True), flush=True)
     EX42_E0_ENV_CONTRACT = None
     if EX42_E_APPROVED:
         # The E stage launch path (EX42_STAGE_ID): combined mesh, per-column reset ranges, push gate, exposure.
@@ -1199,6 +1207,12 @@ def main(env_cfg, agent_cfg):
                 env, ex42_resume_saved)
             print("EX42_SELF_RESUME_TERRAIN_BEFORE_RESET "
                   + json.dumps(terrain_restore, sort_keys=True), flush=True)
+        if EX42_SEGMENT_COMMANDS is not None:
+            # the live reward manager must carry what the segment asked for, before any rollout
+            from foothold_s2.commands.ex42_segment_adjust import write_reward_readback as _write_reward_readback
+
+            print("EX42_SEGMENT_REWARDS_READBACK " + json.dumps(_write_reward_readback(
+                env, EX42_SEGMENT_COMMANDS, EX42_RUN_LOG_DIR), sort_keys=True), flush=True)
         env.reset()
         ex42_stage_zero_reset_readback = build_stage_zero_reset_readback(
             env, ex42_dr_readback, EX42_STAGE_ZERO_ENV_CONTRACT)

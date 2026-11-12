@@ -209,6 +209,8 @@ def _adjusted_inside(claim: dict[str, Any], src: Sources) -> tuple[str, str, Any
         if body.get("source") == "adjust_file" and body.get("entry") not in expect["boundaries"]:
             problems.append(f"segment {k}: adjusted at boundary {body.get('entry')}, canon allows {expect['boundaries']}")
         ranges, shares, overlay = commands.get("ranges") or {}, commands.get("shares") or {}, commands.get("turn_overlay") or []
+        if isinstance(overlay, dict):          # records now carry the input shape {fraction, wz_abs}; older ones a list
+            overlay = [overlay.get("fraction"), *(overlay.get("wz_abs") or [])]
         if ranges.keys() != expect["ranges"].keys() or any(not inside(ranges[n], expect["ranges"][n]) for n in ranges):
             problems.append(f"segment {k}: ranges {ranges!r} leave the canon's {expect['ranges']!r}")
         if shares.keys() != expect["shares"].keys() or any(not inside([shares[n], shares[n]], expect["shares"][n]) for n in shares):

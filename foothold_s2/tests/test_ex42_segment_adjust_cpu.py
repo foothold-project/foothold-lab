@@ -36,7 +36,7 @@ def view(plan, source):
 
 
 def base(plan):
-    return adj.resolve(plan, "E1", None, 0)[0]
+    return adj.resolve(plan, "E1", None, 0)["commands"]
 
 
 def entry(plan, **change):
@@ -195,7 +195,9 @@ def test_an_entry_for_a_boundary_not_reached_is_refused(plan, view, tmp_path):
     (lambda d: d.update(note="extra"), "needs exactly schema"),
     (lambda d: d["segments"]["1"].update(reason="  "), "needs decided_at, reason, evidence"),
     (lambda d: d["segments"]["1"].pop("evidence"), "needs decided_at, reason, evidence"),
-    (lambda d: d["segments"]["1"].update(rewards={"foot_slip": -0.3}), "needs decided_at, reason, evidence"),
+    (lambda d: d["segments"]["1"].update(rewards={"foot_slip": -0.3}), "rewards needs exactly"),
+    (lambda d: d["segments"]["1"].update(note="extra"), "needs decided_at, reason, evidence"),
+    (lambda d: d["segments"]["1"].pop("commands"), "needs decided_at, reason, evidence"),
     (lambda d: d["segments"]["1"]["commands"].update(rewards={"foot_slip": -0.3}), "needs exactly shares, ranges and turn_overlay"),
     (lambda d: d.update(segments={}), "may only name boundaries"),
 ])
@@ -238,13 +240,201 @@ def test_the_same_segment_started_again_must_carry_the_same_record(plan, view, t
         start(view, plan, tmp_path, 1, document(plan, b1=entry(plan, ranges__side_vy_abs=[0.2, 0.6])))
 
 
-def test_a_stage_without_a_command_profile_takes_no_file(plan, tmp_path):
-    holder = types.SimpleNamespace(stages=[object()])
-    assert adj.start_segment(holder, plan, "E1F", boundary_index=1, path=None, log_dir=str(tmp_path), write=True) is None
+def test_a_stage_without_a_command_profile_takes_no_command_entry(plan, tmp_path):
+    stage = object()
+    holder = types.SimpleNamespace(stages=[stage])
+    record = adj.start_segment(holder, plan, "E1F", boundary_index=1, path=None, log_dir=str(tmp_path), write=True)
+    assert record["commands"] is None and record["rewards"]["values"] is None and holder.stages == [stage]
     path = tmp_path / "a.json"
-    path.write_text(json.dumps(document(plan, b1=entry(plan, **NARROW))), encoding="utf-8")
-    with pytest.raises(ValueError, match="no command profile to adjust"):
+    doc = {**document(plan, b1=entry(plan, **NARROW)), "stage_id": "E1F"}
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"may only name boundaries \[\] for commands"):
         adj.start_segment(holder, plan, "E1F", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+
+
+# ---- reward cells (lead 2026-11-12 21:27): tracking widths and two weights, any boundary, limits outside the plan ----
+
+REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.4, "feet_air_time": 0.2, "foot_slip": -0.2}
+
+
+def reward_entry(**change):
+    return {"decided_at": "2026-11-12T22:10+09:00", "reason": "slow commands stand still", "evidence": "boundary 750 sheet",
+            "rewards": {**REWARDS, **change}}
+
+
+def test_the_shipped_reward_limits_are_the_relayed_lines():
+    limits = adj.reward_limits()
+    assert limits["cells"] == {"track_lin_vel_std": (0.25, 0.5), "track_ang_vel_std": (0.25, 0.5),
+                               "feet_air_time": (0.0, 0.5), "foot_slip": (-0.25, -0.05)}
+    assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
+
+
+@pytest.mark.parametrize("text", [
+    "schema: ex42-reward-adjust-limits/0\ncells: {}",
+    "schema: ex42-reward-adjust-limits/1\ncells: {track_lin_vel_std: [0.25, 0.5]}",
+    "schema: ex42-reward-adjust-limits/1\ncells: {track_lin_vel_std: [0.5, 0.25], track_ang_vel_std: [0.25, 0.5], "
+    "feet_air_time: [0, 0.5], foot_slip: [-0.25, -0.05]}",
+])
+def test_a_malformed_limits_file_is_refused(tmp_path, text):
+    path = tmp_path / "limits.yaml"
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(ValueError, match="reward adjust limits need"):
+        adj.reward_limits(path)
+
+
+def test_rewards_may_change_where_the_cap_rises_and_reach_the_stage_and_the_record(plan, view, tmp_path):
+    before = dict(view.stages[0].rewards)
+    start(view, plan, tmp_path, 1)
+    start(view, plan, tmp_path, 2)
+    record = start(view, plan, tmp_path, 3, document(plan, b3=reward_entry()))      # boundary 750: commands stay fixed
+    stage = view.stages[0]
+    assert stage.rewards["foot_slip"] == -0.2 and stage.rewards["feet_air_time"] == 0.2
+    assert {k: v for k, v in stage.rewards.items() if k not in ("foot_slip", "feet_air_time")} == \
+        {k: v for k, v in before.items() if k not in ("foot_slip", "feet_air_time")}
+    assert stage.ranges["side_vy_abs"] == (0.1, 0.8)                                 # the plan command profile
+    assert record["source"] == "plan" and record["entry"] is None and record["commands"] == base(plan)
+    assert record["rewards"] == {"source": "adjust_file", "entry": 3, "values": REWARDS,
+                                 "decided_at": "2026-11-12T22:10+09:00", "reason": "slow commands stand still",
+                                 "evidence": "boundary 750 sheet", "limits_sha256": adj.reward_limits()["sha256"]}
+    assert json.loads((tmp_path / "segment_commands_b3.json").read_text(encoding="utf-8")) == record
+
+
+def test_no_entry_leaves_the_plan_rewards(plan, view, tmp_path):
+    before = dict(view.stages[0].rewards)
+    record = start(view, plan, tmp_path, 1)
+    assert view.stages[0].rewards == before and before["foot_slip"] == -0.15 and before["feet_air_time"] == 0.0
+    assert record["rewards"]["source"] == "plan" and record["rewards"]["values"] is None
+
+
+@pytest.mark.parametrize("change", [
+    {"track_lin_vel_std": 0.2}, {"track_lin_vel_std": 0.6}, {"track_ang_vel_std": 0.24}, {"track_ang_vel_std": 0.51},
+    {"feet_air_time": -0.1}, {"feet_air_time": 0.6}, {"foot_slip": -0.3}, {"foot_slip": -0.04},
+])
+def test_rewards_outside_the_limits_are_refused(plan, view, tmp_path, change):
+    with pytest.raises(ValueError, match="leaves the approved limits"):
+        start(view, plan, tmp_path, 1, document(plan, b1=reward_entry(**change)))
+    assert view.stages[0].rewards["foot_slip"] == -0.15
+
+
+def test_reward_cells_are_exactly_the_four_and_need_the_limits_file(plan, view, tmp_path):
+    for broken in ({**REWARDS, "action_rate": -0.02}, {k: v for k, v in REWARDS.items() if k != "foot_slip"},
+                   {**REWARDS, "foot_slip": "low"}):
+        doc = document(plan, b1={**reward_entry(), "rewards": broken})
+        with pytest.raises(ValueError, match="rewards needs exactly"):
+            start(view, plan, tmp_path, 1, doc)
+    path = tmp_path / "adjust.json"
+    path.write_text(json.dumps(document(plan, b1=reward_entry())), encoding="utf-8")
+    with pytest.raises(ValueError, match="no reward adjust limits file"):
+        adj.start_segment(view, plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=False,
+                          limits_path=tmp_path / "absent.yaml")
+
+
+def test_commands_and_rewards_are_held_apart_until_a_later_entry_of_their_kind(plan, view, tmp_path):
+    doc1 = document(plan, b1=reward_entry())
+    start(view, plan, tmp_path, 1, doc1)
+    doc2 = {**doc1, "segments": {**doc1["segments"], "2": entry(plan, **NARROW)}}        # commands only at 500
+    record = start(view, plan, tmp_path, 2, doc2)
+    assert record["entry"] == 2 and record["rewards"]["entry"] == 1 and record["rewards"]["values"] == REWARDS
+    doc4 = {**doc2, "segments": {**doc2["segments"], "4": reward_entry(foot_slip=-0.1)}}
+    start(view, plan, tmp_path, 3, doc2)
+    record = start(view, plan, tmp_path, 4, doc4)
+    assert record["entry"] == 2 and view.stages[0].ranges["side_vy_abs"] == (0.1, 0.4)       # commands still from 500
+    assert record["rewards"]["entry"] == 4 and view.stages[0].rewards["foot_slip"] == -0.1
+    both = {**doc1, "segments": {"1": {**reward_entry(), "commands": entry(plan, **NARROW)["commands"]}}}
+    other = tmp_path / "both"
+    other.mkdir()
+    record = start(view, plan, other, 1, both)                                               # one entry, both kinds
+    assert record["entry"] == 1 and record["rewards"]["entry"] == 1
+
+
+def test_a_later_start_must_reproduce_the_rewards_the_earlier_segments_ran_with(plan, view, tmp_path):
+    start(view, plan, tmp_path, 1, document(plan, b1=reward_entry()))
+    with pytest.raises(ValueError, match="differs from what segment 1 ran with"):
+        start(view, plan, tmp_path, 2, document(plan, b1=reward_entry(foot_slip=-0.1)))
+    with pytest.raises(ValueError, match="differs from what segment 1 ran with"):
+        start(view, plan, tmp_path, 2)
+    assert start(view, plan, tmp_path, 2, document(plan, b1=reward_entry()))["rewards"]["entry"] == 1
+
+
+def test_a_record_written_before_the_reward_cells_still_counts_and_a_record_can_be_pasted_back(plan, view, tmp_path):
+    """The running E1 folder holds segment_commands_b1.json from the earlier code: the overlay as a list, no rewards."""
+    record = start(view, plan, tmp_path, 1, document(plan, b1=entry(plan, **NARROW)))
+    overlay = record["commands"]["turn_overlay"]
+    assert overlay == {"fraction": 0.25, "wz_abs": [0.2, 0.6]}                         # the shape of the input now
+    old = {k: v for k, v in record.items() if k != "rewards"}
+    old["commands"] = {**record["commands"], "turn_overlay": [overlay["fraction"], *overlay["wz_abs"]]}
+    (tmp_path / "segment_commands_b1.json").write_text(json.dumps(old), encoding="utf-8")
+    pasted = {**entry(plan), "commands": record["commands"]}                           # lead 21:24: a record's cell, as is
+    later = start(view, plan, tmp_path, 2, document(plan, b1=entry(plan, **NARROW), b2=pasted))
+    assert later["entry"] == 2 and view.stages[0].ranges["side_vy_abs"] == (0.1, 0.4)
+    assert cpc.check({**CLAIMS, "claims": [c for c in CLAIMS["claims"] if c["id"] == ROW]}, CANON,
+                     cpc.Sources("E1", run_dir=tmp_path))["rows"][0]["verdict"] == "PASS"   # both shapes are read
+
+
+def test_a_stage_with_no_command_profile_still_takes_rewards(plan, source, tmp_path):
+    holder = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=plan, stage_id="E1F")
+    doc = {"schema": adj.SCHEMA, "stage_id": "E1F", "plan_sha256": plan.sha256, "segments": {"1": reward_entry()}}
+    path = tmp_path / "adjust.json"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    record = adj.start_segment(holder, plan, "E1F", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+    assert record["commands"] is None and record["rewards"]["values"] == REWARDS
+    assert holder.stages[0].rewards["foot_slip"] == -0.2 and holder.stages[0].ranges["side_vy_abs"] == (0.2, 0.6)
+
+
+class _Term:
+    def __init__(self, weight=0.0, std=None):
+        self.weight, self.params = weight, ({"std": std, "command_name": "base_velocity"} if std is not None else {})
+
+
+def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15):
+    terms = {"track_lin_vel": _Term(2.0, lin), "track_ang_vel": _Term(1.0, ang),
+             "ex41_feet_air_time": _Term(air), "ex41_foot_slip": _Term(slip)}
+    return types.SimpleNamespace(get_term_cfg=lambda name: terms[name]), terms
+
+
+def test_the_tracking_widths_go_on_the_env_config_only_when_an_entry_asks(plan, view, tmp_path):
+    _, terms = _manager()
+    env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=terms["track_lin_vel"],
+                                                                  track_ang_vel=terms["track_ang_vel"]))
+    plain = start(view, plan, tmp_path, 1)
+    assert adj.apply_reward_params(env_cfg, plain) == {"track_lin_vel_std": {"before": 0.5, "after": 0.5},
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.5}}
+    assert adj.apply_reward_params(env_cfg, None)["track_lin_vel_std"]["after"] == 0.5
+    other = tmp_path / "adjusted"
+    other.mkdir()
+    asked = start(view, plan, other, 1, document(plan, b1=reward_entry()))
+    assert adj.apply_reward_params(env_cfg, asked) == {"track_lin_vel_std": {"before": 0.5, "after": 0.35},
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.4}}
+    assert terms["track_lin_vel"].params == {"std": 0.35, "command_name": "base_velocity"} and terms["track_lin_vel"].weight == 2.0
+
+
+def test_the_live_reward_manager_is_read_back_and_must_carry_what_was_asked(plan, view, tmp_path, monkeypatch):
+    monkeypatch.setenv("RANK", "1")
+    monkeypatch.setenv("WORLD_SIZE", "2")
+    asked = start(view, plan, tmp_path, 3, document(plan, b3=reward_entry()), write=False)
+    manager, _ = _manager(lin=0.35, ang=0.4, air=0.2, slip=-0.2)
+    env = types.SimpleNamespace(unwrapped=types.SimpleNamespace(reward_manager=manager))
+    body = adj.write_reward_readback(env, asked, tmp_path)
+    assert body["live"] == REWARDS and body["asked"] == REWARDS and body["source"] == "adjust_file" and body["entry"] == 3
+    assert json.loads((tmp_path / "segment_rewards_b3_rank1.json").read_text(encoding="utf-8")) == body
+    for wrong in (dict(lin=0.5), dict(ang=0.5), dict(air=0.0), dict(slip=-0.15)):
+        manager, _ = _manager(**{**dict(lin=0.35, ang=0.4, air=0.2, slip=-0.2), **wrong})
+        with pytest.raises(ValueError, match="the live reward manager carries"):
+            adj.reward_readback(types.SimpleNamespace(reward_manager=manager), asked)
+    plain = start(view, plan, tmp_path, 0, write=False)
+    manager, _ = _manager()
+    body = adj.write_reward_readback(types.SimpleNamespace(reward_manager=manager), plain, tmp_path)
+    assert body["asked"] is None and body["live"]["foot_slip"] == -0.15 and body["source"] == "plan"
+    assert not list(tmp_path.glob("segment_rewards_b0*"))                              # the first segment leaves none
+
+
+def test_train_start_puts_the_widths_on_the_config_and_reads_the_manager_back_before_the_reset():
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    prepared = text.index('print("EX42_STAGE_ZERO_REWARD_CONFIG "')
+    applied = text.index("_apply_reward_params(env_cfg, EX42_SEGMENT_COMMANDS)")
+    read = text.index("env, EX42_SEGMENT_COMMANDS, EX42_RUN_LOG_DIR), sort_keys=True), flush=True)")
+    assert prepared < applied < text.index("ex42_stage_zero_runtime = EX42StageZeroRuntime(") < read
+    assert read < text.index("env.reset()", read) and "EX42_SEGMENT_COMMANDS = None" in text
 
 
 def test_stage_commands_and_the_adjustment_share_one_validator(plan):
