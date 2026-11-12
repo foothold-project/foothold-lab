@@ -89,11 +89,12 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
     except (ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "continue_not_authorized",
                 "reason": f"not authorized to continue by itself: {exc}"}
-    # Team lead rule: a HOLD in the boundary's maintenance table never starts the next segment by itself.
+    # Team lead rule (16:58): only a PASS maintenance table starts the next segment by itself; HOLD, FAIL and an
+    # unreadable table are all a notice.
     maintenance = _maintenance_verdict(p1)
-    if maintenance in (None, "HOLD"):
+    if maintenance != "PASS":
         return {**base, "action": "notify", "state": "continue_held_by_maintenance",
-                "reason": ("maintenance table is HOLD at this boundary" if maintenance == "HOLD"
+                "reason": (f"maintenance table is {maintenance} at this boundary" if maintenance
                            else "maintenance table verdict is not readable from the pinned measurement")
                           + f": the next segment (end {end}) was not started; resume by hand after a decision"}
     return {**base, "action": "continue", "state": "stage_continues", "target_stage": stage_id,

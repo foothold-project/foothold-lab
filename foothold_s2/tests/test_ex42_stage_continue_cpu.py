@@ -203,12 +203,13 @@ def test_the_shipped_plan_and_cell_have_the_shape_the_decision_reads():
 
 
 @needs_run
+@pytest.mark.parametrize("maintenance", ["HOLD", "FAIL"])
 @pytest.mark.parametrize("judgment", ["HOLD", "FAIL", "PASS"])
-def test_a_maintenance_table_hold_never_starts_the_next_segment_and_says_so(tmp_path, judgment):
+def test_a_maintenance_table_that_is_not_pass_never_starts_the_next_segment_and_says_so(tmp_path, judgment, maintenance):
     iteration, end = _inside_boundaries()[0]
-    decision, _ = _decide(tmp_path, iteration, judgment, maintenance="HOLD")
+    decision, _ = _decide(tmp_path, iteration, judgment, maintenance=maintenance)
     assert decision["action"] == "notify" and decision["state"] == "continue_held_by_maintenance"
-    assert "maintenance table is HOLD" in decision["reason"] and str(end) in decision["reason"]
+    assert f"maintenance table is {maintenance}" in decision["reason"] and str(end) in decision["reason"]
     assert "resume_checkpoint" not in decision and "segment_end" not in decision
 
 
