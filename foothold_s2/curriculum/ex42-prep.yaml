@@ -1041,6 +1041,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  exit_judge: mapoff_two_window_m
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1222,6 +1223,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  exit_judge: posture_two_window_e6a
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1409,6 +1411,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  exit_judge: kind_two_window_e6b
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1418,8 +1421,10 @@ stages:
     required_sha256_paths:
     - prerequisites.calibration_sha256
     - prerequisites.predecessor_exit.evaluation_mesh_sha256
-    required_string_paths:
-    - prerequisites.q12_sensor_decision
+    # Q12 (ceiling sensing) does not gate E6b: decisions.tsv 2026-11-11 01:1x, the ceiling is handled by the depth
+    # camera and the upper policy's crouch command. The approval cell may still record a note under
+    # prerequisites.q12_sensor_decision; it is no longer required.
+    required_string_paths: []
     required_boolean_paths:
     - critic_mirror
     required_values:
