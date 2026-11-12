@@ -4,7 +4,23 @@
 > 작성: planner-lx · 2026-11-12 10:37
 > 근거: lead 11/12 10:21 카드 · 원장 `decisions.tsv` 11/06 22:3x · 22:5x · 23:2x · 11/07 16:3x · 17:2x · 11/08 19:0x · 22:5x · 11/11 13:07 · 19:38 · 정본 CURRICULUM-GATES v0.17e (`feature/fable-25a-jay` 66efd331) · 통합 d237d904 코드 · E1 실행 둘의 `params` (읽기 전용)
 > 요지: 정본은 E1 을 「연속 상한 5 → 9 · 경계마다 +1」 로 적지만 실행 경로는 상한 5 를 다섯 자리에 박아 두었다. 그래서 끝난 E1 과 재학습 E1 은 2,000 회를 상한 5 로 돌았다. 이 문서는 정본에 더할 문장과 prep 설정 diff 를 내고, 고쳐야 할 코드 자리와 담당을 적는다. 메시는 바꾸지 않는다.
-> 상태: 초안 · 팀장 결정 대기 (갈림 둘은 6 절) · 이 PR 은 설정 칸만 등록하고 소비 코드는 없다
+> 상태: 구현 포함 (11:32 갱신 · lead 11:05 지시 · 팀장 11:28 재시작안 승인은 lead 전달) · 0 절이 지금 PR 의 내용이고 1 절부터는 10:37 초안 그대로다 (초안의 start 5 · hold 키는 0 절로 대체)
+
+## 0. 이 PR 에 구현된 것 (lead 11/12 11:05 · 고침 a~d)
+
+| 고침 | 자리 | 내용 |
+|---|---|---|
+| a | `terrains/ex42_exposure.py` `raise_continuous_cap` · `scripts/ex42_training_entry.py` `prepare_e0_env_cfg` · `ex42_exposure_receipt.py` `recompute_from_plan` | 단계 행의 `terrain.continuous_level_cap {start, step_per_boundary, end}` 로 구간 상한 = min(start + step × 지난 경계 수, end). 연속 규칙의 열별 상한을 그 값으로 덮고 contract 에 `continuous_level_cap` 으로 적는다. plan 은 구간 사이에 안 바뀐다 (plan SHA 그대로 이어 받기) |
+| b | `scripts/ex42_training_entry.py` `EX42StageZeroRuntime` | 승급 상한 리터럴 5 세 곳을 contract 의 구간 상한으로 (`_ex41_terrain.level_cap` · `effective` · `state_dict`). 이어 받기는 「저장된 상한 ≤ 지금 상한」 을 받는다 (5 미만 · 더 큰 값 · 정책 다름은 거절) |
+| c | `scripts/ex42_stage_launcher.py` | 새 출발 (`next_stage`) 에도 `EX42_AUTO_SEGMENT_END` 가 있으면 `--ex42_segment_end` 로 넘긴다. 쓴 뒤 자식 환경에서 지워 뒤 기동이 물려받지 않게 한다 |
+| d | `curriculum/ex41-fixed5000.yaml` · `curriculum/ex41.py` 두 줄 · prep `stage_zero.source.normalized_sha256` | 실험 가지 `sonnet-code/ex42-e1-slip-b379-1111` 67d2506d 의 `foot_slip` −0.15 네 줄을 통합 위로 |
+| 설정 | `curriculum/ex42-prep.yaml` | E1 `continuous_level_cap {start 6, step_per_boundary 1, end 9}` · `exposure_at_E1` 연속 상한 6 · E1F 물려받는 상한 허용 5~9 |
+
+- 운영 규칙 (코드 아님): 유지표가 HOLD 면 다음 구간을 띄우지 않는다. 주의: 자동 이어 가기 (`ex42_stage_handoff.py:41~80`) 는 유지표와 무관하게 다음 구간을 띄우므로, 이 규칙을 지키려면 자동 정책을 끄거나 구간을 손으로 띄워야 한다.
+- 부모: m13250 (prep `stages[E1].parent` · 승인 `scope.parent_sha256` 그대로). m13000 은 핀만 바꿔서는 안 된다 (E1 부모 검사가 E0 실행을 요구).
+- 띄우는 꼴: 첫 구간은 `EX42_AUTO_ACTION=next_stage` + `EX42_AUTO_SEGMENT_END=250`, 다음 구간은 `continue` + 그 경계 저장본 + 구간 끝 500 · 750 · 1,000. 구간 상한은 6 · 7 · 8 · 9.
+- 병합 뒤 할 것: prep 과 `ex41-fixed5000.yaml` 이 바뀌어 plan SHA 와 0 단계 원본 SHA 가 바뀐다. 승인 칸 재고정 (verifier) · 20 회 실기동에서 로그 `EX42_E0_EXPOSURE` 의 `level_caps` 와 `_ex41_terrain.level_cap` 이 같은지 (runner).
+- 미확인: E1F 넘김 때 `read_applied_cap` (`ex42_stage_materialize.py:170~204`) 이 구간마다 다른 상한이 적힌 로그를 받는지. `foot_slip` 네 줄은 E1 뿐 아니라 그 원본을 읽는 뒤 단계 전체에 적용된다.
 
 ## 1. 지금 상태 (통합 d237d904 · 실측 · 코드)
 
