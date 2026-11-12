@@ -510,6 +510,16 @@ def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) 
     return True
 
 
+def read_same_run_manifest(log_dir: str | Path, *, rank: int, source_manifest_sha256: str) -> dict[str, Any]:
+    """The manifest a same-run segment goes on writing. Rank 0 owns the run directory: its manifest must still be the
+    one the resume preflight read. Another rank of a two-rank run keeps its own manifest in its private directory
+    (never the resume source), so there is nothing of the preflight to compare it with."""
+    raw = (Path(log_dir) / "manifest.json").read_bytes()
+    if rank == 0 and hashlib.sha256(raw).hexdigest() != source_manifest_sha256:
+        raise ValueError("EX-42 same-run source manifest changed after self-resume preflight")
+    return json.loads(raw.decode("utf-8-sig"))
+
+
 def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
                               origin: int = 0) -> int:
     """Where a boundary segment stops. None means the whole stage (the old single-process run).
