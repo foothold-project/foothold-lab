@@ -1055,7 +1055,7 @@ def main(env_cfg, agent_cfg):
             stage_zero_approval=EX42_STAGE_ZERO_APPROVAL)
         EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_contract(
             env_cfg, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
+            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]), stage_id=EX42_STAGE_ID)
         print("EX42_STAGE_ZERO_REWARD_CONFIG "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
         if EX42_SEGMENT_COMMANDS is not None:
@@ -1197,7 +1197,7 @@ def main(env_cfg, agent_cfg):
         ex42_stage_zero_runtime.attach_environment(env, command_term)
         EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_manager(
             env, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
-            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]))
+            parent_update=int(EX42_STAGE_ZERO_CHECKPOINT["iter"]), stage_id=EX42_STAGE_ID)
         print("EX42_STAGE_ZERO_REWARD_MANAGER "
               + json.dumps(EX42_STAGE_ZERO_REWARD_CONTRACT, sort_keys=True), flush=True)
         if EX42_STAGE_ZERO_RESUME:
