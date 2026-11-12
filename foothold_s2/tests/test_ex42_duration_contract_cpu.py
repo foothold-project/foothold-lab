@@ -136,3 +136,29 @@ def test_e1_extension_is_separately_approved_by_the_1938_decision():
     from foothold_s2.ex42_stage_materialize import source_exit_bounds
     plan = EX42Plan.load(PLAN)
     assert source_exit_bounds(plan, plan, 'E1') == (1750, 2750)
+
+
+def test_stage_exit_updates_are_the_cap_and_each_whole_hold_extension():
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+    document = EX42Plan.load(PLAN).document
+    assert stage_exit_updates(document, 'E1') == (1750, 2000, 2250, 2500, 2750)
+    assert stage_exit_updates(document, 'E1F') == (250, 500, 750, 1000, 1250)
+    assert stage_exit_updates(document, 'E0') == (250,)
+
+
+@pytest.mark.parametrize('update', [2000, 2250, 2500, 2750])
+def test_e1_pass_at_a_boundary_of_its_hold_extension_materializes_e1f(known, update):
+    """reviewer 11/12 14:29: the extension boundaries must stay exit boundaries, or a HOLD-extended E1 could never hand
+    over. The evidence builder and the flag baseline chain take the same updates (stage_exit_updates)."""
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+    assert update in stage_exit_updates(EX42Plan.load(PLAN).document, 'E1')
+    _e1_gate_at(known, update)
+    row = next(r for r in EX42Plan.load(run(known)['plan']).document['stages'] if r['id'] == 'E1F')
+    assert row['parent']['manifest_local_update'] == update and row['parent']['cumulative_update'] == 13250 + update
+
+
+@pytest.mark.parametrize('update', [3000, 3250])
+def test_e1_pass_past_its_extensions_does_not_materialize_e1f(known, update):
+    _e1_gate_at(known, update)
+    with pytest.raises(ValueError, match='valid exit boundary'):
+        run(known)
