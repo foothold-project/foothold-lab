@@ -547,6 +547,7 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  exit_judge: kind_two_window_e3
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -2660,6 +2661,23 @@ evaluation:
     weak_subcell_warning_fraction_of_success_floor: 0.5
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]
+  # CG v0.17b E3: the explicit START list has five kinds (lead 11/12 01:5x).
+  # These are exit targets, not a claim that their learning exposure already exists.
+  e3_kind_exit:
+    continuous_family: A
+    continuous_min_level: 9
+    start_min_level: 5
+    easy_min_level: 3
+    flag_share_min: 0.15
+    learned_cells_min: 32
+    start_kinds: [stepping_stones_low, stepping_stones_high, balance_beams, stepping_beams, gaps]
+    easy_kinds:
+      B: [stair_up, stair_down, rough, boxes]
+      C: [pyramid_stairs, inverted_pyramid_stairs, discrete_grid, flat]
+    representative_levels: [0, 5, current_cap]
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
+    source: CG-v0.17b-E3-275-283
   paper_cells:
     judge_from_stage: E4
     slope:

@@ -12,6 +12,95 @@ FORMAT = "foothold-ex42-learned-cells/1"
 BANDS = [[0, 2], [3, 5], [6, 9]]
 GROUPS = ["forward", "reverse", "side_left", "side_right", "turn_left", "turn_right", "stand", "flag"]
 MODES = ["map_on_adaptive", "map_off"]
+def read_stage_exposure(checkpoint: Path, *, stage_id: str, plan: dict,
+                        plan_sha256: str, column_table: list[dict]) -> dict | None:
+    """Recompute each rank's live placement and the approved K ladder from its boundary receipt."""
+    from foothold_s2.ex42_exposure_receipt import fold_ranks, opened_kinds, recompute_from_plan
+    from types import SimpleNamespace
+    from foothold_s2.terrains.ex42_exposure import column_shares, exposure_by_column, low_level_floor
+    from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
+
+    checkpoint = Path(checkpoint)
+    match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
+    if match is None:
+        raise ValueError("EX-42 stage exposure checkpoint name invalid")
+    iteration = int(match.group(1))
+    directory = checkpoint.parent
+    ranked = sorted(directory.glob(f"exposure_receipt_{iteration}_rank*.json"))
+    single = directory / f"exposure_receipt_{iteration}.json"
+    if single.is_file() and ranked:
+        raise ValueError("EX-42 stage exposure single and ranked receipts mixed")
+    paths = ranked or ([single] if single.is_file() else [])
+    if not paths:
+        return None
+    documents = [json.loads(path.read_text(encoding="utf-8-sig")) for path in paths]
+    row = fold_ranks(documents)
+    for doc in documents:
+        recompute_from_plan(doc, SimpleNamespace(document=plan))
+    if any(path.name != (f"exposure_receipt_{iteration}.json" if doc["world_size"] == 1 else
+                         f"exposure_receipt_{iteration}_rank{doc['rank']}.json")
+           for path, doc in zip(paths, documents)):
+        raise ValueError("EX-42 stage exposure receipt name differs")
+    stages = [stage for stage in plan.get("stages", []) if stage.get("id") == stage_id]
+    e0 = [stage for stage in plan.get("stages", []) if stage.get("id") == "E0"]
+    if (row.get("stage_id") != stage_id or row.get("plan_sha256") != plan_sha256 or
+            row.get("iteration") != iteration or row.get("kind") != "boundary" or
+            any(doc.get("ladder_outcomes") != row.get("ladder_outcomes") for doc in documents) or
+            [(r.get("family"), r.get("kind")) for r in row["column_rows"]] !=
+            [(r.get("family"), r.get("kind")) for r in column_table] or
+            not isinstance(row.get("mesh_sha256"), str) or
+            not re.fullmatch(r"[0-9a-f]{64}", row["mesh_sha256"]) or
+            type(row.get("boundary_index")) is not int or row["boundary_index"] < 0 or
+            not isinstance(row.get("ladder_outcomes"), list) or
+            len(row["ladder_outcomes"]) != row["boundary_index"] or
+            len(stages) != 1 or len(e0) != 1):
+        raise ValueError("EX-42 stage exposure identity or SHA differs")
+    profile_name = stages[0].get("training_mesh_profile")
+    if profile_name is not None:
+        profile = (plan.get("training_mesh_profiles") or {}).get(profile_name) or {}
+        if row["mesh_sha256"] != profile.get("geometry_sha256"):
+            raise ValueError("EX-42 stage exposure mesh SHA differs from plan")
+    terrain = {**stages[0]["terrain"], "kind_task": e0[0]["terrain"]["kind_task"]}
+    terrain, moves = ladder_terrain(terrain, stage_id, row["boundary_index"], row["ladder_outcomes"])
+    exposure, caps = exposure_by_column(terrain, column_table, stage_id)
+    shares = column_shares(terrain, column_table, stage_id)
+    expected_rows = [{"column": i, "family": item["family"], "kind": item["kind"],
+                      "exposure": exposure[i], "level_cap": caps[i], "share": shares[i],
+                      "open": bool(exposure[i] > 0)} for i, item in enumerate(column_table)]
+    if (row["column_rows"] != expected_rows or row["opened_kinds"] != opened_kinds(expected_rows) or
+            row.get("k_ladder_moves") != moves or
+            row.get("low_floor") != low_level_floor(terrain, column_table, stage_id)):
+        raise ValueError("EX-42 stage exposure differs from recomputed exposure")
+    for doc in documents:
+        live = doc.get("live")
+        if not isinstance(live, dict) or type(live.get("envs")) is not int or live["envs"] < 1:
+            raise ValueError("EX-42 stage exposure live placement absent")
+        cells = live.get("per_column_level")
+        if not isinstance(cells, dict) or not cells:
+            raise ValueError("EX-42 stage exposure live cells absent")
+        counted_levels = {}
+        counted_columns = set()
+        total = 0
+        for key, count in cells.items():
+            parts = re.fullmatch(r"(0|[1-9]\d*):(0|[1-9]\d*)", key)
+            if parts is None or type(count) is not int or count < 1:
+                raise ValueError("EX-42 stage exposure live cell invalid")
+            col, level = (int(part) for part in parts.groups())
+            if col >= len(exposure) or exposure[col] <= 0 or level > caps[col]:
+                raise ValueError("EX-42 stage exposure live cell outside approved exposure")
+            total += count
+            counted_columns.add(col)
+            counted_levels[level] = counted_levels.get(level, 0) + count
+        per_level = live.get("per_level")
+        if (total != live["envs"] or live.get("columns_used") != sorted(counted_columns) or
+                not isinstance(per_level, list) or
+                any(type(value) is not int or value < 0 for value in per_level) or
+                any(counted_levels.get(level, 0) != value for level, value in enumerate(per_level)) or
+                max(counted_levels) >= len(per_level) or live.get("levels_max") != max(counted_levels)):
+            raise ValueError("EX-42 stage exposure live totals differ")
+    return {**row, "exposure": exposure, "level_caps": caps,
+            "receipts": [{"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                         for path in paths]}
 
 
 def read_boundary(checkpoint: Path, *, stage_id: str, plan_sha256: str, interval: int) -> dict:
@@ -108,10 +197,17 @@ def read_boundary(checkpoint: Path, *, stage_id: str, plan_sha256: str, interval
 
 def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                          plan_sha256: str, interval: int, min_episodes: int,
-                         previous_kind_pass: bool) -> dict:
+                         previous_kind_pass: bool = False,
+                         registered_kind_passes: dict[tuple[str, str], bool] | None = None) -> dict:
     """CG:381 registration, two adjacent save windows, no proxy counts."""
-    if stage_id != "E2" or type(min_episodes) is not int or min_episodes < 1:
-        raise ValueError("EX-42 learned_cells E2 threshold invalid")
+    if (not isinstance(stage_id, str) or not stage_id or
+            type(min_episodes) is not int or min_episodes < 1):
+        raise ValueError("EX-42 learned_cells stage threshold invalid")
+    if stage_id != "E2" and (not isinstance(registered_kind_passes, dict) or
+            any(not isinstance(key, tuple) or len(key) != 2 or
+                any(not isinstance(part, str) or not part for part in key) or
+                type(value) is not bool for key, value in registered_kind_passes.items())):
+        raise ValueError("EX-42 learned_cells prior kind pass registry invalid")
     checkpoint = Path(checkpoint)
     iteration = int(re.fullmatch(r"model_(\d+)\.pt", checkpoint.name).group(1))
     current = read_boundary(checkpoint, stage_id=stage_id,
@@ -140,17 +236,27 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
     e0 = next(row for row in plan["stages"] if row["id"] == "E0")
     terrain = {**stage["terrain"], "kind_task": e0["terrain"]["kind_task"]}
     table = current["column_table"]
-    exposure, caps = exposure_by_column(terrain, table, stage_id)
+    if stage_id == "E2":
+        exposure, caps = exposure_by_column(terrain, table, stage_id)
+    else:
+        actual = read_stage_exposure(checkpoint, stage_id=stage_id, plan=plan,
+                                     plan_sha256=plan_sha256, column_table=table)
+        if actual is None:
+            return {"role": "judge", "judgement": "HOLD", "source": "assigned_mode_cumulative",
+                    "reason": "학습 단계 노출 영수증 없음", "receipts": receipts}
+        exposure, caps = actual["exposure"], actual["level_caps"]
     continuous = set(e0["terrain"]["kind_task"]["continuous"])
     registered = set()
     for column, row in enumerate(table):
         family, kind = row["family"], row["kind"]
-        if exposure[column] <= 0 or family != "A":
+        if exposure[column] <= 0 or (stage_id == "E2" and family != "A"):
             continue
-        if kind in continuous:
+        if family == "A" and kind in continuous:
             groups = GROUPS  # the flag group opened at E1F, before E2
             modes = MODES if p_off > 0 and kind in ELIGIBLE_NAMES else MODES[:1]
-        elif kind == "stepping_stones_low" and previous_kind_pass:
+        elif stage_id == "E2" and kind == "stepping_stones_low" and previous_kind_pass:
+            groups, modes = ("forward", "flag"), MODES[:1]
+        elif stage_id != "E2" and registered_kind_passes.get((family, kind)) is True:
             groups, modes = ("forward", "flag"), MODES[:1]
         else:
             continue  # new kind registers only after its first passing window
@@ -161,7 +267,7 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                 for mode in modes:
                     registered.add((family, kind, band, group, mode))
     if not registered:
-        raise ValueError("EX-42 learned_cells has no registered E2 cells")
+        raise ValueError(f"EX-42 learned_cells has no registered {stage_id} cells")
     counted = {}
     for window in (previous, current):
         for column, band, group, mode, n in window["cells"]:
@@ -177,4 +283,6 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
             "p_map_off": p_off, "agent_config": {"path": str(agent_path),
                                                  "sha256": hashlib.sha256(agent_path.read_bytes()).hexdigest()},
             "registered_count": len(registered), "pending": pending,
+            **({"stage_exposure": actual["receipts"]}
+               if stage_id != "E2" else {}),
             "receipts": receipts, "total": previous["total"] + current["total"]}
