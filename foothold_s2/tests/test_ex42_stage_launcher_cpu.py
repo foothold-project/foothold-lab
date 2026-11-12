@@ -262,7 +262,13 @@ def test_the_shipped_e1_plan_passes_the_canon_gate_and_the_summary_says_so(tmp_p
 
 @pytest.mark.parametrize("edit,match", [
     (lambda row, folder: row["terrain"].pop("continuous_level_cap"), "E1.continuous_level_cap FAIL"),      # the old plan
-    (lambda row, folder: row["terrain"]["continuous_level_cap"].update(start=5), "E1.continuous_level_cap FAIL"),
+    (lambda row, folder: row["terrain"]["continuous_level_cap"].update(first_raise_boundary=1), "E1.continuous_level_cap FAIL"),
+    (lambda row, folder: row["commands"]["ranges"].update(side_vy_abs=[0.1, 1.0]), "E1.command_ranges FAIL"),
+    (lambda row, folder: row["commands"]["turn_overlay"].update(fraction=0.5), "E1.command_turn_overlay FAIL"),
+    (lambda row, folder: row["commands"]["shares"].update(forward=0.23, side_left=0.07, side_right=0.07), "E1.command_shares FAIL"),
+    (lambda row, folder: row.pop("commands"), "E1.command_ranges NO_DATA"),
+    (lambda row, folder: row.update(minimum_updates=250), "E1.no_exit_before_the_end FAIL"),
+    (lambda row, folder: row.update(maximum_updates=1000, minimum_updates=1000), "E1.maximum_updates FAIL"),
     (lambda row, folder: row.update(critic_mirror=False), "E1.critic_mirror FAIL"),
     (lambda row, folder: row["parent"].update(cumulative_update=13000), "E1.parent FAIL"),
     (lambda row, folder: (folder / "ex41-fixed5000.yaml").write_text(

@@ -84,6 +84,19 @@ def test_the_cap_stays_at_the_end_value_in_an_extension(tmp_path):
     assert verdicts(run(tmp_path, caps=(6, 7, 8, 9, 9, 9)))["cap"] == "PASS"
 
 
+def test_a_schedule_whose_first_raise_waits_is_judged_segment_by_segment(tmp_path):
+    claims = copy.deepcopy(CLAIMS)
+    claims["claims"][0]["expect"].update(start=5, first_raise_boundary=3)
+    assert verdicts(run(tmp_path / "ok", claims=claims, caps=(5, 5, 5, 6, 7, 8, 9)))["cap"] == "PASS"
+    for n, caps in enumerate([(6, 7, 8, 9), (5, 6, 7, 8, 9), (5, 5, 5, 5), (5, 5, 6, 7)]):
+        assert verdicts(run(tmp_path / f"red{n}", claims=claims, caps=caps))["cap"] == "FAIL"
+    row = lambda *schedule: stage_row(schedule=None) | {"terrain": {"continuous_level_cap": dict(   # noqa: E731
+        zip(("start", "step_per_boundary", "end", "first_raise_boundary"), schedule))}}
+    plan_cap = lambda folder, r: cpc.check(claims, CANON, cpc.Sources("E1", plan=plan_file(tmp_path / folder, row=r)))["rows"][0]["verdict"]   # noqa: E731
+    assert plan_cap("p3", row(5, 1, 9, 3)) == "PASS"
+    assert plan_cap("p1", row(5, 1, 9)) == "FAIL" and plan_cap("p2", row(5, 1, 9, 2)) == "FAIL" and plan_cap("p6", row(6, 1, 9, 3)) == "FAIL"
+
+
 def test_a_segment_without_a_receipt_or_with_mixed_caps_is_red(tmp_path):
     gap = [receipt(0, [6, 6]), receipt(2, [8, 8])]
     assert "has no receipt" in run(tmp_path / "a", receipts=gap)["rows"][0]["detail"]
@@ -214,4 +227,4 @@ def test_the_shipped_table_matches_the_canon_in_this_tree_and_the_shipped_plan()
     ids = [c["id"] for c in table["claims"]]
     assert len(ids) == len(set(ids)) and all(c["canon_quote"] in text for c in table["claims"])
     report = cpc.launch_gate("E1", cpc.CLAIMS.parent / "ex42-prep.yaml")
-    assert report["passed"] and all(row["verdict"] == "PASS" for row in report["rows"]) and len(report["rows"]) == 6
+    assert report["passed"] and all(row["verdict"] == "PASS" for row in report["rows"]) and len(report["rows"]) == 10

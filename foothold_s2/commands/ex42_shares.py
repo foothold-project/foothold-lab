@@ -43,6 +43,36 @@ def read_contract(plan, stage_id):
             'mode_selection': 'episode_reset', 'other_columns': 'unchanged_source_stage'}
 
 
+def stage_commands(plan, stage_id):
+    """The stage's own command profile `stages[].commands` = {shares, ranges, turn_overlay}, validated; None when the
+    row has none (the stage keeps the stage-zero profile). shares: the 13 free slots, sum 1. ranges: exactly the
+    stage-zero range keys. turn_overlay: {fraction, wz_abs} for the reverse / side / diagonal slots."""
+    stage = next((s for s in plan.document['stages'] if s['id'] == stage_id), {})
+    cell = stage.get('commands')
+    if cell is None:
+        return None
+    number = lambda v: type(v) in (int, float) and math.isfinite(v)   # noqa: E731
+    if not isinstance(cell, dict) or set(cell) != {'shares', 'ranges', 'turn_overlay'}:
+        raise ValueError(f'EX-42 {stage_id} commands needs exactly shares, ranges and turn_overlay')
+    shares, ranges, overlay = cell['shares'], cell['ranges'], cell['turn_overlay']
+    if (not isinstance(shares, dict) or set(shares) != set(EX39_SLOTS) or any(not number(v) or not 0 <= v <= 1 for v in shares.values())
+            or not math.isclose(sum(shares.values()), 1., abs_tol=1e-9)):
+        raise ValueError(f'EX-42 {stage_id} commands.shares needs the 13 free slots as probabilities that sum to 1')
+    if not isinstance(ranges, dict) or set(ranges) != set(plan.document['stage_zero']['ranges']):
+        raise ValueError(f'EX-42 {stage_id} commands.ranges needs exactly the stage-zero range keys')
+    for key, pair in ranges.items():
+        if (not isinstance(pair, list) or len(pair) != 2 or any(not number(v) for v in pair) or not pair[0] < pair[1]
+                or (key.endswith('_abs') and pair[0] < 0)):
+            raise ValueError(f'EX-42 {stage_id} commands.ranges.{key} must be [low, high] with low < high (absolute ranges from 0)')
+    if (not isinstance(overlay, dict) or set(overlay) != {'fraction', 'wz_abs'} or not number(overlay['fraction'])
+            or not 0 < overlay['fraction'] <= 1 or not isinstance(overlay['wz_abs'], list) or len(overlay['wz_abs']) != 2
+            or any(not number(v) for v in overlay['wz_abs']) or not 0 < overlay['wz_abs'][0] < overlay['wz_abs'][1]):
+        raise ValueError(f'EX-42 {stage_id} commands.turn_overlay needs fraction in (0, 1] and wz_abs [low, high] above 0')
+    return {'shares': {k: float(v) for k, v in shares.items()},
+            'ranges': {k: (float(v[0]), float(v[1])) for k, v in ranges.items()},
+            'turn_overlay': (float(overlay['fraction']), float(overlay['wz_abs'][0]), float(overlay['wz_abs'][1]))}
+
+
 def configure_env(env_cfg, contract):
     if contract is None:
         return

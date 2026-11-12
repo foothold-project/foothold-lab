@@ -189,14 +189,15 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     if not isinstance(cell, dict) or cell.get("approved") is not True:
         raise ValueError("EX-42 E1 authorization is missing")
     stage = next((row for row in plan.document["stages"] if row.get("id") == "E1"), None)
+    first, cap = (stage or {}).get("minimum_updates"), (stage or {}).get("maximum_updates")
     if (stage is None or stage.get("enabled") is not True
-            or stage.get("minimum_updates") != 250 or stage.get("maximum_updates") != 1000
+            or type(first) is not int or type(cap) is not int or not 0 < first <= cap
             or stage.get("extension_updates") != 500 or stage.get("critic_mirror") is not True):
-        raise ValueError("EX-42 E1 stage in the curriculum table is not the 250-update first check / 1000-update base cap with the D174 mirror")
+        raise ValueError("EX-42 E1 stage in the curriculum table lacks its first check / base cap / +500 extension step with the D174 mirror")
     expected_scope = {
         "stage_id": "E1",
         "start_update": 0,
-        "maximum_updates": 1000,
+        "maximum_updates": cap,                # the approval cell must repeat the table row's base cap exactly
         "parent_sha256": e1_parent_sha256,
         "later_stages_authorized": False,
     }
@@ -233,8 +234,8 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     interval = cell.get("boundary_evaluation_interval_updates")
     plan_interval = plan.document.get("evaluation", {}).get("interval_updates")
     if (type(interval) is not int or interval <= 0 or interval != plan_interval
-            or expected_scope["maximum_updates"] % interval):
-        raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide 1000")
+            or expected_scope["maximum_updates"] % interval or first % interval):
+        raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide the first check and the base cap")
     return {"state": "stage_e1_only_authorized", "scope": expected_scope,
             "boundary_evaluation_interval_updates": interval, "extension_authorized": extension,
             **({"extension_contract": cell["extension_contract"]} if extension else {}),

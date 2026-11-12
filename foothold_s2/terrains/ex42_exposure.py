@@ -76,9 +76,11 @@ def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]
 def raise_continuous_cap(plan_terrain: dict[str, Any], stage_id: str, boundary_index: int) -> tuple[dict[str, Any], int | None]:
     """(terrain, cap) after `boundary_index` boundaries of a stage whose row carries the L+ schedule
 
-        continuous_level_cap: {start: 6, step_per_boundary: 1, end: 9}      # CG E.2 E1 "레벨" row
+        continuous_level_cap: {start: 5, step_per_boundary: 1, end: 9, first_raise_boundary: 3}      # CG E.2 E1 "레벨" row
 
-    The cap of the continuous rule (the positive rule with `kinds_of`) becomes min(start + step * boundaries, end).
+    The cap of the continuous rule (the positive rule with `kinds_of`) in segment k (0 = the first) is
+    min(start + step * max(0, k - first_raise_boundary + 1), end): `start` until the boundary `first_raise_boundary`
+    (default 1, the first boundary), then one step per boundary.
     The plan itself never changes between segments, so a continued segment keeps its plan SHA. A stage row without
     the cell is returned as is with cap None."""
     cell = plan_terrain.get("continuous_level_cap")
@@ -86,10 +88,11 @@ def raise_continuous_cap(plan_terrain: dict[str, Any], stage_id: str, boundary_i
         return dict(plan_terrain), None
     if type(boundary_index) is not int or boundary_index < 0:
         raise ValueError("EX-42 continuous level cap boundary count must be a nonnegative integer")
-    if not isinstance(cell, dict) or set(cell) != {"start", "step_per_boundary", "end"} \
+    if not isinstance(cell, dict) or set(cell) - {"first_raise_boundary"} != {"start", "step_per_boundary", "end"} \
             or any(type(cell[k]) is not int for k in cell) or not 0 <= cell["start"] <= cell["end"] \
-            or cell["step_per_boundary"] < 1:
-        raise ValueError(f"EX-42 {stage_id} continuous_level_cap needs integer start <= end and step_per_boundary >= 1")
+            or cell["step_per_boundary"] < 1 or cell.get("first_raise_boundary", 1) < 1:
+        raise ValueError(f"EX-42 {stage_id} continuous_level_cap needs integer start <= end, step_per_boundary >= 1 "
+                         f"and first_raise_boundary >= 1")
     block = plan_terrain.get(f"exposure_at_{stage_id}")
     rules = block.get("positive") if isinstance(block, dict) else None
     hits = [i for i, rule in enumerate(rules or []) if "kinds_of" in rule]
@@ -97,7 +100,8 @@ def raise_continuous_cap(plan_terrain: dict[str, Any], stage_id: str, boundary_i
         raise ValueError(f"EX-42 {stage_id} continuous_level_cap needs exactly one kinds_of rule in exposure_at_{stage_id}")
     if rules[hits[0]].get("level_cap") != cell["start"]:
         raise ValueError(f"EX-42 {stage_id} continuous rule level_cap differs from continuous_level_cap.start")
-    cap = min(cell["start"] + cell["step_per_boundary"] * boundary_index, cell["end"])
+    raises = max(0, boundary_index - cell.get("first_raise_boundary", 1) + 1)
+    cap = min(cell["start"] + cell["step_per_boundary"] * raises, cell["end"])
     positive = [dict(rule, level_cap=cap) if i == hits[0] else rule for i, rule in enumerate(rules)]
     return {**plan_terrain, f"exposure_at_{stage_id}": {**block, "positive": positive}}, cap
 

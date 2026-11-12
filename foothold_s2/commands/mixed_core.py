@@ -317,6 +317,12 @@ def resample_stage(gen, n, stage, yaw):
             heading |= spin & (spin_heading_draw < stage.heading_cfg["spin_target_fraction"])
         psi_star = torch.where(forward & heading, yaw, torch.where(spin & heading, target_spin, zeros))
         wz = torch.where(heading, zeros, wz)
+    overlay = getattr(stage, "turn_overlay", None)
+    if overlay is not None:      # CG E.2 E1 "명령 범위": a share of the reverse / side / diagonal commands also turns
+        fraction, low, high = overlay
+        pick = (reverse | side | diagonal) & (_u(gen, (n,)) < fraction)
+        turn = _u(gen, (n,), low, high) * torch.where(_u(gen, (n,)) < 0.5, 1.0, -1.0)
+        wz = torch.where(pick, turn, wz)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
             "heading": heading, "psi_star": psi_star, "slot": slot}
 

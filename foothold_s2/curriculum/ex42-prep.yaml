@@ -292,31 +292,65 @@ stages:
     manifest_local_update: 250
     checkpoint_key: model_250.pt
     sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
-  minimum_updates: 250
-  maximum_updates: 1000
+  # CG E.2 E1 (v0.17k, decisions.tsv 2026-11-12 12:52 and 13:03): one run of seven 250-update segments. Segments
+  # 1-3 keep cap 5 and train the widened commands; segments 4-7 raise the cap 6, 7, 8, 9. No exit before 1750.
+  minimum_updates: 1750
+  maximum_updates: 1750
   extension_updates: 500
   extension_max_count: 2
   critic_mirror: true
   boundary_axes:
   - terrain_level_cap
+  # Command profile of the whole stage (opened once at the stage start, not widened per segment).
+  # Shares: stage zero with forward 0.23 -> 0.19 and each side 0.07 -> 0.09 (decisions.tsv 2026-11-12 13:03).
+  # Ranges and turn overlay: decisions.tsv 2026-11-12 12:52. Stage zero had side 0.2~0.6, walk vx 0.3~0.8,
+  # walk wz 0.2~1.0, spin 0.3~1.5 and no turn overlay.
+  commands:
+    shares:
+      forward: 0.19
+      walk_left: 0.06
+      walk_right: 0.06
+      spin_left: 0.09
+      spin_right: 0.09
+      stand: 0.1
+      reverse: 0.14
+      side_left: 0.09
+      side_right: 0.09
+      diag_fwd_left: 0.02
+      diag_fwd_right: 0.02
+      diag_back_left: 0.025
+      diag_back_right: 0.025
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 1.2]
+      walk_wz_abs: [0.1, 1.0]
+      spin_wz_abs: [0.15, 1.5]
+      reverse_vx: [-1.3, -0.2]
+      side_vy_abs: [0.1, 0.8]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    turn_overlay:              # reverse, side and diagonal commands: this share also turns
+      fraction: 0.25
+      wz_abs: [0.2, 0.6]
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
-    # CG E.2 E1 "레벨" row (v0.17f): continuous 7 kinds 100 %, level cap up to 9, +1 at every boundary, promotion by
-    # performance (decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x). Four 250-update segments run with the
-    # cap 6, 7, 8, 9 (lead 2026-11-12 11:05: start 6; the cap 5 block already ran 2,250 updates). The cap in force is
-    # min(start + step * boundaries passed, end) for both caps: the promotion cap _ex41_terrain.level_cap and the
-    # per-column level_caps (terrains/ex42_exposure.py raise_continuous_cap). The plan does not change between
-    # segments. Operation: when the retention table (CG E.3.1) is on HOLD the next segment is not started.
-    # exposure_at_E1 holds the start value. kind_task is E0's. Registered before any result.
+    # CG E.2 E1 "레벨" row (v0.17j): continuous 7 kinds 100 %, promotion by performance. Segments 1-3 (updates
+    # 1-750) keep cap 5, segments 4-7 run with cap 6, 7, 8, 9: the first raise is at the third boundary
+    # (decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-12 11:28, 12:52). The cap in force is
+    # min(start + step * max(0, boundaries passed - first_raise_boundary + 1), end) for both caps: the promotion cap
+    # _ex41_terrain.level_cap and the per-column level_caps (terrains/ex42_exposure.py raise_continuous_cap). The
+    # plan does not change between segments. Operation: when the retention table (CG E.3.1) is on HOLD the next
+    # segment is not started. exposure_at_E1 holds the start value. kind_task is E0's. Registered before any result.
     continuous_level_cap:
-      start: 6
+      start: 5
       step_per_boundary: 1
       end: 9
+      first_raise_boundary: 3
     exposure_at_E1:
       default: {exposure: 0.0, level_cap: 0}
       positive:
-      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 6}
+      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}
     floors:
       global_command_floor:
         reverse: 0.05
