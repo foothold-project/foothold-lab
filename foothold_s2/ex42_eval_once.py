@@ -355,6 +355,36 @@ def write_boundary_brief(output, *, label, iteration, score_path, events_dir, pr
     return {"state": "done", "path": str(output / "brief.json")}
 
 
+RECORD_ONLY_TIMEOUT_SECONDS = 900
+
+
+def run_record_only(checkpoint, output, device, cfg, *, seed, mesh_dir, policy_path, process, env, row, label,
+                    iteration, score_path, prev_brief, split_device=None, timeout=RECORD_ONLY_TIMEOUT_SECONDS):
+    """After the next stage has been handed off: G1 / G1b children (each under `timeout`), then brief.json.
+    Nothing here raises or holds the boundary; every outcome is written to the receipt."""
+    output = Path(output)
+    if split_device is None:
+        row["record_only"] = {}
+        try:
+            phases = g1_record_commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
+                                        evaluation_plan=policy_path)
+        except (OSError, ValueError, KeyError) as exc:
+            phases = []
+            row["record_only"]["commands"] = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+        for phase in phases:
+            try:
+                process.prepare_phase_output(phase["argv"])
+                child = process.hidden_child(phase["argv"], output / "children" / ("record_" + phase["name"]),
+                                             env=env, timeout=timeout)
+            except Exception as exc:     # record only: whatever a child does, the boundary is already handed off
+                child = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+            row["record_only"][phase["name"]] = child
+            _atomic(output / "eval_receipt.json", row)
+    row["boundary_brief"] = write_boundary_brief(output, label=label, iteration=iteration, score_path=score_path,
+                                                  events_dir=Path(checkpoint).parent, prev_brief=prev_brief)
+    _atomic(output / "eval_receipt.json", row)
+
+
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
                     replica_dir, replica_sha256, seed):
     """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
@@ -715,22 +745,6 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                              "reason": f"{type(exc).__name__}: {exc}"})
             row["e3_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
             _atomic(output / "eval_receipt.json", row)
-    if p1_plan is not None and split_device is None:
-        row["record_only"] = {}
-        try:
-            record_phases = g1_record_commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
-                                               evaluation_plan=policy_path)
-        except (OSError, ValueError, KeyError) as exc:
-            record_phases = []
-            row["record_only"]["commands"] = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
-        for phase in record_phases:
-            try:
-                process.prepare_phase_output(phase["argv"])
-                child = process.hidden_child(phase["argv"], output / "children" / ("record_" + phase["name"]), env=env)
-            except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
-                child = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
-            row["record_only"][phase["name"]] = child
-            _atomic(output / "eval_receipt.json", row)
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -745,9 +759,6 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 evaluation_plan_path=policy_path if evaluation_plan is not None else None)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
-            row["boundary_brief"] = write_boundary_brief(
-                output, label=f"{p1_stage_id}_m{checkpoint_iteration}", iteration=checkpoint_iteration,
-                score_path=output / "ex42_score.json", events_dir=Path(checkpoint).parent, prev_brief=prev_brief)
             from foothold_s2 import ex42_eval_split as split
             from foothold_s2 import ex42_stage_handoff as handoff
             notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
@@ -759,6 +770,10 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 _atomic(output / "next_stage_notice.json", notice)
                 row["next_stage_notice"] = notice["state"]
                 print("EX42_NEXT_STAGE_NOTICE " + json.dumps(notice, ensure_ascii=False, sort_keys=True), flush=True)
+            run_record_only(checkpoint, output, device, cfg, seed=seed, mesh_dir=mesh_dir, policy_path=policy_path,
+                            process=process, env=env, row=row, label=f"{p1_stage_id}_m{checkpoint_iteration}",
+                            iteration=checkpoint_iteration, score_path=output / "ex42_score.json",
+                            prev_brief=prev_brief, split_device=split_device)
         row.update(state="done", score=str(output / "ex42_score.json"), judgement=score["judgement"])
     except (ValueError, KeyError, OSError) as exc:
         row.update(state="HOLD", reason=f"EX-42 evidence invalid: {exc}")

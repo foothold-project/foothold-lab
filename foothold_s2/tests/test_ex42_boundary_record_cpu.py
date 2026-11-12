@@ -59,3 +59,42 @@ def test_a_broken_source_is_recorded_and_does_not_raise(tmp_path):
     res = once.write_boundary_brief(tmp_path, label="E1_m500", iteration=500, score_path=tmp_path / "none.json",
                                     events_dir=None)
     assert res["state"] == "failed" and not (tmp_path / "brief.json").exists()
+
+
+def test_g1_commands_keep_the_fixed_terrain_flag_and_the_measurement_size(tmp_path):
+    cfg = config()[0]
+    for r in _rows(tmp_path):
+        a = r["argv"]
+        assert "--fixed-terrain" in a and a[a.index("--commands") + 1] == "all"
+        assert a[a.index("--envs") + 1] == str(cfg["envs"]) and a[a.index("--steps") + 1] == str(cfg["steps"])
+        assert a[a.index("--ex42-evaluation-plan") + 1] and a[a.index("--task") + 1] == cfg["task"]
+
+
+G1_TABLE = {
+    "ref_fwd0.5": (0.5, 0.0, 0.0), "ref_walk0.5_wz0.5": (0.5, 0.0, 0.5), "ref_side0.4": (0.0, 0.4, 0.0),
+    "ref_spin0.8": (0.0, 0.0, 0.8), "fast1.0_wz+0.5": (1.0, 0.0, 0.5), "fast1.0_wz-0.5": (1.0, 0.0, -0.5),
+    "fast1.2_wz+0.8": (1.2, 0.0, 0.8), "back0.5_wz+0.5": (-0.5, 0.0, 0.5), "back0.5_wz-0.5": (-0.5, 0.0, -0.5),
+    "side+0.4_wz+0.5": (0.0, 0.4, 0.5), "side-0.4_wz-0.5": (0.0, -0.4, -0.5),
+    "diag0.5+0.3_wz+0.5": (0.5, 0.3, 0.5), "diag0.5-0.3_wz-0.5": (0.5, -0.3, -0.5),
+    "tri0.8_0.3_0.3": (0.8, 0.3, 0.3), "side+0.1": (0.0, 0.1, 0.0), "walk0.5_wz+0.1": (0.5, 0.0, 0.1),
+    "spin+0.15": (0.0, 0.0, 0.15), "creep0.05": (0.05, 0.0, 0.0), "side+0.8": (0.0, 0.8, 0.0),
+    "diag0.8+0.4": (0.8, 0.4, 0.0)}
+G1B_TABLE = {
+    "side+0.2": (0.0, 0.2, 0.0), "side+0.3": (0.0, 0.3, 0.0), "side+0.4": (0.0, 0.4, 0.0), "side+0.6": (0.0, 0.6, 0.0),
+    "side-0.4": (0.0, -0.4, 0.0), "fwd0.1": (0.1, 0.0, 0.0), "fwd0.2": (0.2, 0.0, 0.0), "spin+0.3": (0.0, 0.0, 0.3)}
+
+
+def test_the_two_suites_carry_the_registered_command_values():
+    """The brief reads G1 / G1b rows by these names and values; a silent edit of the suite must show here."""
+    from foothold_s2.eval import map_mode_cells
+    assert map_mode_cells.commands("hipan_g1") == G1_TABLE
+    assert map_mode_cells.commands("hipan_g1b") == G1B_TABLE
+
+
+def test_hidden_child_kills_its_own_child_after_the_timeout_and_keeps_the_default_unbounded(tmp_path):
+    import sys
+    from foothold_s2 import ex41_eval_once as process
+    slow = process.hidden_child([sys.executable, "-c", "import time; time.sleep(30)"], tmp_path / "slow", timeout=1)
+    assert slow["state"] == "timeout" and slow["rc"] != 0 and "exceeded 1" in slow["reason"]
+    fast = process.hidden_child([sys.executable, "-c", "pass"], tmp_path / "fast")
+    assert fast["state"] == "done" and fast["rc"] == 0
