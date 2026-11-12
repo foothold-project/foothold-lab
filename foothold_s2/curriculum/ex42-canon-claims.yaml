@@ -2,29 +2,41 @@
 # One row = one sentence of the canon (CURRICULUM-GATES.md) that fixes a value the training run must carry.
 # `canon_quote` is copied from the canon as is: when the canon no longer holds it, the row turns STALE (red)
 # and has to be registered again from the new sentence. Nothing here is a new rule; the rule is the quote.
-schema: ex42-canon-claims/1
+# `gated_stages`: the launcher refuses to start these stages unless every row of the stage passes on the plan.
+schema: ex42-canon-claims/2
 canon:
   path: inbox/jay/20261026-experiments/CURRICULUM-GATES.md
-  version: v0.17e
-  branch: feature/fable-25a-jay
-  commit: 66efd331
+  version: v0.17g
+  sha256: 66af9fd4cea82be5d01d7714d554868a8d9cd7d955ec1fa514d31067463d6e36
+  source: feature/fable-25a-jay 936bba5c
+gated_stages: [E1]
 claims:
 - id: E1.continuous_level_cap
   stage: E1
-  canon_section: "E.2 E1 레벨"
-  canon_quote: "| 레벨 | 상한 5 → **9** · 경계마다 +1 · 성과 승급"
-  ledger: ["2026-11-06T22:3x", "2026-11-06T23:2x", "2026-11-07T17:25", "2026-11-08 19:0x"]
-  actual: {source: stage_config, path: terrain.exposure_at_E1.positive.0.level_cap}
-  expect:
-    kind: raise_per_boundary
-    start: 5
-    step: 1
-    end: 9
-    # Where the plan registers the raise (plan mode) and where a run records a boundary without a raise.
-    # Both are empty until the raise is wired in; an empty cell means "no raise and no recorded hold" is red.
-    plan_schedule_path: terrain.continuous_level_cap
-    hold_event: null
+  canon_section: "E.11 row 27 (decisions.tsv 2026-11-12 11:28)"
+  canon_quote: "250 회 네 구간 · 지형 상한 6 → 7 → 8 → 9"
+  # plan: the registered schedule cell. run: the cap of the open columns in every segment-start exposure receipt.
+  actual: {source: exposure_receipts, plan_path: terrain.continuous_level_cap}
+  expect: {kind: raise_per_boundary, start: 6, step: 1, end: 9}
   observe: {source: map_switch, field: on.terrain_level_mean}
+- id: E1.parent
+  stage: E1
+  canon_section: "E.11 row 27 (decisions.tsv 2026-11-12 11:28)"
+  canon_quote: "E1 재시작안 승인: 부모 m13250"
+  actual: {source: stage_config, path: parent.cumulative_update}
+  expect: {kind: equals, value: 13250}
+- id: E1.foot_slip
+  stage: E1
+  canon_section: "E.11 row 27 (decisions.tsv 2026-11-12 11:28)"
+  canon_quote: "critic 대칭 켬 · `foot_slip` −0.15"
+  actual: {source: env_yaml, path: rewards.ex41_foot_slip.weight, plan_file: ex41-fixed5000.yaml, plan_path: first_rewards.foot_slip}
+  expect: {kind: equals, value: -0.15}
+- id: E1.critic_mirror
+  stage: E1
+  canon_section: "E.2 E1 critic 대칭"
+  canon_quote: "E1 경계에서 켜고 뒤 단계 내내 켠다(0 단계 · E0 은 끔)"
+  actual: {source: stage_config, path: critic_mirror}
+  expect: {kind: equals, value: true}
 - id: E1.continuous_exposure
   stage: E1
   canon_section: "E.2 E1 env 몫"
@@ -34,32 +46,9 @@ claims:
     kind: equals_ignoring
     ignore_keys: [level_cap]
     value: [{family: A, kinds_of: continuous, exposure: 1.0}]
-- id: E1.critic_mirror
-  stage: E1
-  canon_section: "E.2 E1 critic 대칭"
-  canon_quote: "E1 경계에서 켜고 뒤 단계 내내 켠다(0 단계 · E0 은 끔)"
-  ledger: ["2026-11-09 00:4x"]
-  actual: {source: stage_config, path: critic_mirror}
-  expect: {kind: equals, value: true}
 - id: E1.maximum_updates
   stage: E1
   canon_section: "E.2 E1 최대 회차"
   canon_quote: "| 최대 회차 | 1,000 | 회차 · **가정** |"
   actual: {source: agent_yaml, path: max_iterations, plan_path: maximum_updates}
   expect: {kind: equals, value: 1000}
-- id: E1.foot_slip.control
-  stage: E1
-  variant: control
-  canon_section: "E.2 E1 보상 가중"
-  canon_quote: "`foot_slip` 0 → −0.25 하나만 바꿈"
-  ledger: ["2026-11-11 23:49"]
-  actual: {source: env_yaml, path: rewards.ex41_foot_slip.weight}
-  expect: {kind: equals, value: 0.0}
-- id: E1.foot_slip.retrain
-  stage: E1
-  variant: slip_retrain
-  canon_section: "E.2 E1 보상 가중"
-  canon_quote: "`foot_slip` 0 → −0.25 하나만 바꿈"
-  ledger: ["2026-11-11 23:49"]
-  actual: {source: env_yaml, path: rewards.ex41_foot_slip.weight}
-  expect: {kind: equals, value: -0.25}

@@ -92,6 +92,13 @@ def build(env, *, dry_run=False, now=None):
     stage = _need(env, "AUTO_TARGET_STAGE")
     plan, approvals = plan_paths(env)
     updates = _stage_updates(stage, plan)
+    from foothold_s2.ex42_canon_params_check import failures, launch_gate
+    try:                                             # a gated stage starts only when its plan carries the canon values
+        canon_report = launch_gate(stage, plan)
+    except (ValueError, OSError, KeyError) as error:
+        raise LaunchRefused(f"the canon check of stage {stage} could not run: {error}") from error
+    if canon_report is not None and not canon_report["passed"]:
+        raise LaunchRefused(f"the plan of stage {stage} does not carry the canon values: {failures(canon_report)}")
     parent_manifest = _need(env, "AUTO_PARENT_MANIFEST")
     python = env.get("ISAAC311_PYTHON")
     if not python:
@@ -160,6 +167,7 @@ def build(env, *, dry_run=False, now=None):
         child.update(WORLD_SIZE="2", RANK="0", CUDA_VISIBLE_DEVICES="")
     return argv, child, {"action": action, "stage": stage, "run_dir": run_dir, "updates": updates,
                          "resume": resume, "segment_end": segment_end,
+                         "canon_params": "passed" if canon_report is not None else "not_gated",
                          **({"training_mesh": mesh_receipt} if mesh_receipt else {})}
 
 

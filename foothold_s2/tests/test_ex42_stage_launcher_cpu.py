@@ -238,3 +238,49 @@ def test_a_fresh_start_may_stop_at_its_first_boundary_and_the_value_is_not_inher
 def test_a_fresh_start_segment_end_outside_the_stage_bound_is_refused(tmp_path, end):
     with pytest.raises(L.LaunchRefused, match="EX42_AUTO_SEGMENT_END"):
         L.build({**_env(tmp_path), "EX42_AUTO_SEGMENT_END": end}, now=0)
+
+
+# ---- the canon check is a launch gate for the stages the table names -------------------------------------------
+def _plan_pair(tmp_path, edit):
+    import shutil
+    import yaml
+    folder = tmp_path / "pair"
+    folder.mkdir()
+    shutil.copy(L.PLAN.parent / "ex41-fixed5000.yaml", folder / "ex41-fixed5000.yaml")
+    document = yaml.safe_load(L.PLAN.read_text(encoding="utf-8"))
+    edit(next(row for row in document["stages"] if row["id"] == STAGE), folder)
+    plan = folder / "plan.yaml"
+    plan.write_text(yaml.safe_dump(document, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    shutil.copy(L.APPROVALS, folder / "approvals.yaml")
+    return {"EX42_AUTO_PLAN": str(plan), "EX42_AUTO_APPROVALS": str(folder / "approvals.yaml")}
+
+
+def test_the_shipped_e1_plan_passes_the_canon_gate_and_the_summary_says_so(tmp_path):
+    assert L.build(_env(tmp_path), now=0)[2]["canon_params"] == "passed"
+    assert L.build({**_env(tmp_path), **_plan_pair(tmp_path, lambda row, folder: None)}, now=0)[2]["canon_params"] == "passed"
+
+
+@pytest.mark.parametrize("edit,match", [
+    (lambda row, folder: row["terrain"].pop("continuous_level_cap"), "E1.continuous_level_cap FAIL"),      # the old plan
+    (lambda row, folder: row["terrain"]["continuous_level_cap"].update(start=5), "E1.continuous_level_cap FAIL"),
+    (lambda row, folder: row.update(critic_mirror=False), "E1.critic_mirror FAIL"),
+    (lambda row, folder: row["parent"].update(cumulative_update=13000), "E1.parent FAIL"),
+    (lambda row, folder: (folder / "ex41-fixed5000.yaml").write_text(
+        (folder / "ex41-fixed5000.yaml").read_text().replace("foot_slip: -0.15", "foot_slip: 0.0")), "E1.foot_slip FAIL"),
+    (lambda row, folder: (folder / "ex41-fixed5000.yaml").unlink(), "E1.foot_slip NO_DATA"),
+])
+def test_a_plan_that_differs_from_the_canon_is_not_launched(tmp_path, edit, match):
+    with pytest.raises(L.LaunchRefused, match=match):
+        L.build({**_env(tmp_path), **_plan_pair(tmp_path, edit)}, now=0)
+
+
+def test_the_gate_reads_the_pinned_canon_and_names_only_registered_stages(tmp_path, monkeypatch):
+    from foothold_s2 import ex42_canon_params_check as cpc
+    assert cpc.launch_gate("E0", L.PLAN) is None                                 # not in gated_stages: no gate
+    assert cpc.launch_gate(STAGE, L.PLAN)["passed"] is True
+    with pytest.raises(ValueError, match="canon file"):
+        cpc.launch_gate(STAGE, L.PLAN, root=tmp_path)
+    monkeypatch.setattr(cpc, "SOURCE_ROOT", tmp_path)                            # the launcher fails closed on it
+    monkeypatch.setattr(cpc.launch_gate, "__kwdefaults__", {**cpc.launch_gate.__kwdefaults__, "root": tmp_path})
+    with pytest.raises(L.LaunchRefused, match="could not run"):
+        L.build(_env(tmp_path), now=0)
