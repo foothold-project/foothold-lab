@@ -139,6 +139,15 @@ def test_chain_dry_order_and_no_output_or_gpu(tmp_path, monkeypatch):
                         task="test", execute=False)
     assert not (tmp_path / "wrong_checkpoint").exists()
     assert not (tmp_path / "wrong_mesh").exists()
+    for wrong in (250, 1000, 1500, 2000):          # CG v0.17j: only the E1 exit (1750 or a whole extension) is a graduate
+        monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path, wrong=wrong: (chain.digest(path), wrong))
+        with pytest.raises(ValueError, match="pinned E1 exit checkpoint"):
+            chain.run_chain(checkpoint, tmp_path / f"not_exit_{wrong}", "cuda:1",
+                            plan_path=plan_path, mesh_dir=tmp_path,
+                            expected_checkpoint_sha256=chain.digest(checkpoint),
+                            expected_mesh_sha256="a" * 64, e1_gate=gate,
+                            task="test", execute=False)
+        assert not (tmp_path / f"not_exit_{wrong}").exists()
 
 
 def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):

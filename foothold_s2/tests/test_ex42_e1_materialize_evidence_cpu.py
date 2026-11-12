@@ -28,17 +28,17 @@ def _fixture(tmp_path: Path):
     approval_sha = plan.document["stage_zero"]["approval_sha256"]
     run = tmp_path / "run"
     run.mkdir()
-    checkpoint = run / "model_1000.pt"
+    checkpoint = run / "model_1750.pt"
     checkpoint.write_bytes(b"known E1 checkpoint")
     cp_sha = _sha(checkpoint)
-    _write(run / "manifest.json", {"progress": {"completed_updates": 1000},
+    _write(run / "manifest.json", {"progress": {"completed_updates": 1750},
                                     "checkpoints": {checkpoint.name: cp_sha}})
     measurement = _write(run / "eval/m1000/measurement.json", {
         "checkpoint_sha256": cp_sha, "judgement": "PASS",
         "maintenance_source_sha256": plan.sha256})
     gate = _write(run / "eval/m1000/p1_score.json", {
         "state": "complete", "stage_id": "E1", "judgment": "PASS", "plan_sha256": plan.sha256,
-        "checkpoint_iteration": 1000, "checkpoint_sha256": cp_sha,
+        "checkpoint_iteration": 1750, "checkpoint_sha256": cp_sha,
         "measurement": str(measurement), "measurement_sha256": _sha(measurement)})
     log = run / "torchrun.stdout.log"
     rows = []
@@ -79,6 +79,19 @@ def test_e1f_materialize_evidence_binds_training_cap_gate_mesh_and_w09_baseline(
         "path": str(baseline.resolve()), "sha256": _sha(baseline)}
     assert evidence["bindings"]["prerequisites.predecessor_exit.evaluation_mesh_sha256"] == {
         "path": str(mesh.resolve()), "sha256": _sha(mesh)}
+
+
+@pytest.mark.parametrize("iteration", [250, 1000, 1500, 2000])
+def test_e1f_evidence_is_built_only_from_an_e1_exit_boundary(tmp_path, iteration):
+    """CG v0.17j: E1 hands over at 1750 (or a whole +500 extension), never at an earlier or in-between boundary."""
+    _plan, run, gate, log, mesh, baseline, _cp_sha = _fixture(tmp_path)
+    row = json.loads(gate.read_text())
+    row["checkpoint_iteration"] = iteration
+    gate.write_text(json.dumps(row), encoding="utf-8")
+    with pytest.raises(ValueError, match="E1 exit boundary"):
+        build_evidence(source_plan_path=PLAN, parent_manifest_path=run / "manifest.json",
+                       gate_receipt_path=gate, training_log_path=log,
+                       evaluation_mesh_path=mesh, w09_baseline_path=baseline)
 
 
 @pytest.mark.parametrize("mutation", ["gate", "cap_rank", "missing_baseline", "mesh"])
