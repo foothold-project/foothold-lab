@@ -445,6 +445,23 @@ stages:
   extension_max_count: 2
   boundary_axes:
   - terrain_exposure
+  # Command shares = the E1F vector. CG E.2 E2 one-axis row: the K boundary changes no continuous cap, no command share and
+  # no flag share (연속 상한 · 명령 몫 · 깃발 변경 0).
+  shares:
+    forward: 0.17
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+    flag: 0.1
   enabled: true
   kind_choice: start_stones_l0
   hold_policy: hold_exposure_continue_training
@@ -505,9 +522,60 @@ stages:
   - terrain_exposure
   - terrain_level_cap
   - command_allocation
+  # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
+  # CG order as written: D, K, L+, C (E.1 E3 row and E.2 E3 one-axis row). The entry axis is the first one.
+  # L+ is the continuous cap +1 per boundary up to L9: decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x.
+  # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
+  boundary:
+    entry_axis: terrain_kind_level_cap
+    axis_order: [terrain_kind_level_cap, terrain_exposure, terrain_level_cap, command_allocation]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.17c E.1 E3 row, E.2 E3 one-axis row
+      decisions: ['2026-11-06 22:3x', '2026-11-06 23:2x', '2026-11-08 19:0x']
+  # Command shares (CG E.2 E3 one-axis row). Start = the E1F vector (E2 changes no command share). The C boundary of this
+  # stage moves shares.flag 0.10 -> 0.15; donors are the CG assumption: forward 0.17 -> 0.14, walk 0.06 + 0.06 -> 0.05 + 0.05.
+  shares:
+    forward: 0.17
+    walk_left: 0.06
+    walk_right: 0.06
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+    flag: 0.1
+  command_allocation_boundary:
+    class: assumption
+    donor: {forward: -0.03, walk_left: -0.01, walk_right: -0.01}
+    shares:
+      forward: 0.14
+      walk_left: 0.05
+      walk_right: 0.05
+      spin_left: 0.07
+      spin_right: 0.07
+      stand: 0.1
+      reverse: 0.14
+      side_left: 0.07
+      side_right: 0.07
+      diag_fwd_left: 0.02
+      diag_fwd_right: 0.02
+      diag_back_left: 0.025
+      diag_back_right: 0.025
+      flag: 0.15
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
+    # Start block = the E2 end state plus the entry axis D only: stepping_stones_low level_cap 0 -> 1 (lead 2026-11-12 02:00,
+    # one axis per boundary D163; team lead confirmation pending at the morning report). The share stays 0.05 (new), the
+    # continuous cap stays the E2 value and C/flat opens first on the K ladder instead of in this block.
     # planner 표 (CG:275~281); 세 등급 몫 · 시작 상한은 가정
     exposure_at_E3:
       default:
@@ -517,19 +585,16 @@ stages:
       - family: A
         kinds_of: continuous
         exposure: 1.0
-        level_cap: 6
+        level_cap: 5
       - family: A
         kind: stepping_stones_low
-        share: 0.1
-        level_cap: 1
-      - family: C
-        kind: flat
         share: 0.05
-        level_cap: 0
+        level_cap: 1
     # K 경계 사다리 (planner §2 여는 순서 · 가정): 경계마다 종류 하나 열기 (5 %), 다음 경계 현재 (10 %), 그다음 쉬움 (3 %)
     k_ladder:
       grades: {new: 0.05, current: 0.1, easy: 0.03}
       order:
+      - {family: C, kind: flat, level_cap: 0}
       - {family: B, kind: rough, level_cap: 0}
       - {family: C, kind: discrete_grid, level_cap: 0}
       - {family: A, kind: stepping_stones_high, level_cap: 0}
@@ -577,6 +642,56 @@ stages:
   - terrain_exposure
   - terrain_kind_level_cap
   - command_allocation
+  # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
+  # CG order as written: K, D, C (E.1 E4 row and E.2 E4 one-axis row). The entry axis is the first one.
+  # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
+  boundary:
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap, command_allocation]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.17c E.1 E4 row, E.2 E4 one-axis row
+      decisions: ['2026-11-12 01:40 lead']
+  # Command shares (CG E.2 E4 one-axis row). Start = the E3 vector after its C boundary (flag 0.15). The C boundary of this
+  # stage moves shares.flag 0.15 -> 0.20; donors are the CG assumption: forward 0.14 -> 0.11, diagonal sum 0.09 -> 0.07.
+  # CG gives only the diagonal sum; the four slots keep their ratio (lead 2026-11-12 02:13).
+  shares:
+    forward: 0.14
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.02
+    diag_fwd_right: 0.02
+    diag_back_left: 0.025
+    diag_back_right: 0.025
+    flag: 0.15
+  command_allocation_boundary:
+    class: assumption
+    donor: {forward: -0.03, diagonal_total: -0.02}
+    targets: {flag: 0.2, forward: 0.11, diagonal_total: 0.07}
+    # Diagonal slots keep their ratio and scale by 0.07 / 0.09 (lead 2026-11-12 02:13, team lead confirmation pending).
+    shares:
+      forward: 0.11
+      walk_left: 0.05
+      walk_right: 0.05
+      spin_left: 0.07
+      spin_right: 0.07
+      stand: 0.1
+      reverse: 0.14
+      side_left: 0.07
+      side_right: 0.07
+      diag_fwd_left: 0.0155555556
+      diag_fwd_right: 0.0155555556
+      diag_back_left: 0.0194444444
+      diag_back_right: 0.0194444444
+      flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -708,6 +823,35 @@ stages:
   boundary_axes:
   - terrain_exposure
   - command_allocation
+  # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
+  # CG order as written: K, C, never both at one boundary (E.1 E5 row and E.2 E5 one-axis row).
+  # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
+  boundary:
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, command_allocation]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.17c E.1 E5 row, E.2 E5 one-axis row
+      decisions: ['2026-11-12 01:40 lead']
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -1050,6 +1194,32 @@ stages:
   boundary_axes:
   - posture_height
   - posture_roll
+  # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
+  # CG fixes three boundaries in this order: narrow delta_h, full delta_h, roll (C8a, C8b, C8c).
+  boundary:
+    entry_axis: posture_height
+    axis_order: [posture_height, posture_height, posture_roll]
+    rule: fixed_sequence
+    source:
+      canon: CURRICULUM-GATES v0.17c E.1 E6a row, E.2 E6a one-axis row
+      decisions: ['2026-11-12 01:40 lead']
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
@@ -1211,6 +1381,35 @@ stages:
   boundary_axes:
   - terrain_exposure
   - terrain_kind_level_cap
+  # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
+  # CG order as written: K, D (E.1 E6b row and E.2 E6b one-axis row). The entry axis is the first one.
+  # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
+  boundary:
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.17c E.1 E6b row, E.2 E6b one-axis row
+      decisions: ['2026-11-12 01:40 lead']
+  # Command shares: the E4 vector after its C boundary (flag 0.20, CG E.2 E5 env-share row: 깃발 env 20 %; diagonal slots
+  # scaled 7/9, lead 2026-11-12 02:13). No command share moves in this stage.
+  shares:
+    forward: 0.11
+    walk_left: 0.05
+    walk_right: 0.05
+    spin_left: 0.07
+    spin_right: 0.07
+    stand: 0.1
+    reverse: 0.14
+    side_left: 0.07
+    side_right: 0.07
+    diag_fwd_left: 0.0155555556
+    diag_fwd_right: 0.0155555556
+    diag_back_left: 0.0194444444
+    diag_back_right: 0.0194444444
+    flag: 0.2
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
