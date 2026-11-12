@@ -42,6 +42,14 @@ def test_q12_is_not_a_required_cell_of_the_e6b_approval(document):
     assert Q12 not in [*contract["required_sha256_paths"], *contract["required_boolean_paths"], *contract["required_values"]]
 
 
+@pytest.mark.parametrize("stage_id", ["E2", "E3", "E4", "E5", "M", "E6a", "E6b"])
+def test_the_critic_mirror_stays_a_required_cell_of_the_bounded_stages(document, stage_id):
+    # the mirror is on from E1 to the end (D174); an approval cell that does not say so explicitly must not pass.
+    # (reviewer 2026-11-13 00:52: dropping the cell from the E6b row was caught by no test)
+    contract = row(document, stage_id)["authorization_contract"]
+    assert contract["validator"] == "bounded" and "critic_mirror" in contract["required_boolean_paths"]
+
+
 def test_the_jump_rows_are_left_as_they_were(document):
     # out of this change (the jump study is decided separately): they still list the Q12 cell
     for stage_id in ("J0", "J1", "J2", "J3", "J4"):
