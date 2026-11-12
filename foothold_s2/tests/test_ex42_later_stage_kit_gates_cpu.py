@@ -127,6 +127,10 @@ def test_the_live_reward_manager_takes_it_too(e1f):
     {"parent_update": PARENT_UPDATE},                      # no stage: only the three reviewed pins
     {"parent_update": PARENT_UPDATE, "stage_id": "E1"},    # E1 keeps its reviewed pin
     {"parent_update": PARENT_UPDATE, "stage_id": "E2"},    # a stage with no parent pin in the table
+    # E1's own table update with a sha that is not its reviewed pin: E0 and E1 never go through the stage table
+    # (reviewer 2026-11-13 04:01: this case survived a mutation that let E1 in)
+    {"parent_update": 250, "stage_id": "E1"},
+    {"parent_update": 1000, "stage_id": "E0"},
 ])
 def test_an_unknown_parent_is_still_refused(e1f, kwargs):
     with pytest.raises(ValueError, match="requires the pinned EX-41 m6000 parent"):
