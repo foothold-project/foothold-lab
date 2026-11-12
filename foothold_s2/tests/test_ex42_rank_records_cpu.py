@@ -65,18 +65,50 @@ def test_rank_one_leaves_its_command_counts_in_the_run_directory(tmp_path, monke
     assert sorted(p.name for p in run.glob("command_shares_*")) == ["command_shares_250_rank1.json"]
 
 
-def test_a_rank_that_cannot_leave_its_counts_stops_before_the_save(tmp_path, monkeypatch):
+def test_a_failed_write_is_tried_again_and_the_record_is_left(tmp_path, monkeypatch, capsys):
+    """Team lead 2026-11-12 19:58: the aim is that the record is always left; blocking the save is the last alarm."""
+    monkeypatch.setattr(entry.EX42StageZeroRuntime, "COMMAND_SHARES_WAIT_S", 0.0)
+    runtime, _, run, _ = _rank(tmp_path, monkeypatch, rank=1)
+    runtime.command_allocation = _shares()
+    real, calls = runtime.command_allocation.write, []
+
+    def flaky(*args, **kwargs):
+        calls.append(1)
+        if len(calls) < 3:
+            raise OSError("busy")
+        return real(*args, **kwargs)
+    runtime.command_allocation.write = flaky
+    runtime.flush_consumption(250)
+    assert len(calls) == 3 and (run / "command_shares_250_rank1.json").is_file()
+    out = capsys.readouterr().out
+    assert out.count("EX42_COMMAND_SHARES_RECORD_FAILED") == 2 and "EX42_COMMAND_SHARES_SAVE_BLOCKED" not in out
+    assert '"written_on_attempt": 3' in out and not (run / "alerts.jsonl").exists()
+    assert runtime.learned_cells.written == [(str(run), 250)]       # the rest of the boundary is recorded as usual
+
+
+def test_a_rank_that_cannot_leave_its_counts_after_every_attempt_blocks_the_save_and_says_so(tmp_path, monkeypatch, capsys):
+    waits = []
+    monkeypatch.setattr("time.sleep", waits.append)
     runtime, _, run, _ = _rank(tmp_path, monkeypatch, rank=0)
     runtime.command_allocation = _shares()
+    calls = []
 
     def broken(*args, **kwargs):
+        calls.append(1)
         raise OSError("disk full")
     runtime.command_allocation.write = broken
-    with pytest.raises(OSError, match="disk full"):     # was printed and swallowed: the save went on without the record
-        runtime.flush_consumption(250)
+    with pytest.raises(RuntimeError, match="could not be written after 3 attempts; the save is blocked") as failure:
+        runtime.flush_consumption(250)                  # was printed and swallowed: the save went on without the record
+    assert isinstance(failure.value.__cause__, OSError) and len(calls) == 3 and waits == [2.0, 2.0]
+    out = capsys.readouterr().out
+    assert out.count("EX42_COMMAND_SHARES_RECORD_FAILED") == 3 and "EX42_COMMAND_SHARES_SAVE_BLOCKED" in out
+    alert = json.loads((run / "alerts.jsonl").read_text(encoding="utf-8").strip())
+    assert alert == {"event": "command_shares_save_blocked", "stage_id": "E1", "iteration": 250, "rank": 0,
+                     "attempts": 3, "error": "OSError: disk full"}
     assert runtime.learned_cells.written == []          # nothing of the boundary is recorded after the failure
     runtime.iteration = 251
     runtime.flush_consumption(251)                      # between saves the counts are not written at all
+    assert len(calls) == 3
 
 
 def test_a_name_left_by_a_dead_process_is_moved_aside_and_the_live_counts_are_written(tmp_path, monkeypatch):

@@ -1339,11 +1339,46 @@ class EX42StageZeroRuntime:
             return
         # The update of a save: every rank leaves its records in the run directory before rank 0 saves.
         if self.command_allocation is not None:
-            # Not swallowed (decisions.tsv 2026-11-12 19:46): a rank that cannot leave its counts stops here, so no
-            # checkpoint of this update exists without them.
-            self.command_allocation.write(self._record_dir(), update, None,
-                                          plan_sha=self.plan_sha256, stage_id=self.stage_id)
+            self._write_command_shares(update)
         self._boundary_records(update)      # rank 0 used to be the only one (on_checkpoint): the readers need every rank
+
+    COMMAND_SHARES_ATTEMPTS = 3            # team lead 2026-11-12 19:58: the record must be left; blocking the save is the last alarm
+    COMMAND_SHARES_WAIT_S = 2.0
+
+    def _write_command_shares(self, update: int) -> None:
+        """Leave this rank's counts for the save of `update` in the run directory. `CommandShares.write` writes a temp
+        file, gives it its name atomically and moves a name left by a dead process aside. A failed attempt is tried
+        again; when every attempt fails the failure is printed, appended to the run's alerts.jsonl and raised, so the
+        rank stops before the save: no checkpoint of this update exists without its record."""
+        import time
+
+        error = None
+        for attempt in range(1, self.COMMAND_SHARES_ATTEMPTS + 1):
+            try:
+                self.command_allocation.write(self._record_dir(), update, None,
+                                              plan_sha=self.plan_sha256, stage_id=self.stage_id)
+                if attempt > 1:
+                    print("EX42_COMMAND_SHARES_RECORD_RETRIED " + json.dumps(
+                        {"iteration": update, "written_on_attempt": attempt}, sort_keys=True), flush=True)
+                return
+            except Exception as exc:          # noqa: BLE001 (every kind of failure is retried, then raised)
+                error = exc
+                print("EX42_COMMAND_SHARES_RECORD_FAILED " + json.dumps(
+                    {"iteration": update, "attempt": attempt, "error": f"{type(exc).__name__}: {exc}"},
+                    sort_keys=True), flush=True)
+                if attempt < self.COMMAND_SHARES_ATTEMPTS:
+                    time.sleep(self.COMMAND_SHARES_WAIT_S)
+        row = {"event": "command_shares_save_blocked", "stage_id": self.stage_id, "iteration": update,
+               "rank": int(os.environ.get("RANK", "0")), "attempts": self.COMMAND_SHARES_ATTEMPTS,
+               "error": f"{type(error).__name__}: {error}"}
+        print("EX42_COMMAND_SHARES_SAVE_BLOCKED " + json.dumps(row, sort_keys=True), flush=True)
+        try:
+            with open(Path(self._record_dir()) / "alerts.jsonl", "a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, sort_keys=True) + chr(10))
+        except Exception:                     # noqa: BLE001 (the alert file is best effort; the raise below is not)
+            pass
+        raise RuntimeError(f"EX-42 command_shares record of update {update} could not be written after "
+                           f"{self.COMMAND_SHARES_ATTEMPTS} attempts; the save is blocked") from error
 
     def _record_dir(self):
         return self.record_dir or getattr(self.runner, "log_dir", None)
