@@ -131,7 +131,7 @@ stage_zero:
     experiment_id: EX-41
     stage_id: T0_prime
     path: ex41-fixed5000.yaml
-    normalized_sha256: 92d77208d823d59fc28d2672cdeaacaa4c30a15f2e84ab0da9bac046cf2c155c
+    normalized_sha256: fea08d9335c9da1fd9f61f3cd359661cbe22a10e47ac0199f9edec84c1148152
   parent:
     cumulative_update: 12000
     manifest_local_update: 6000
@@ -302,22 +302,21 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
-    # CG E.2 E1 "레벨" row (v0.17b): continuous 7 kinds 100 %, level cap 5 -> 9, +1 at every boundary, promotion by
-    # performance (decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x). A boundary keeps the cap only while the
-    # retention table (CG E.3.1) is on HOLD: a new hard cell that falls short never stops the raise
-    # (2026-11-07 16:3x, 17:2x); training continues either way, and such a boundary is recorded as hold_event.
-    # exposure_at_E1 holds the start value; the cap in force is start + raises (both caps: the promotion cap
-    # _ex41_terrain.level_cap and the per-column level_caps). kind_task is E0's. Registered before any result.
+    # CG E.2 E1 "레벨" row (v0.17f): continuous 7 kinds 100 %, level cap up to 9, +1 at every boundary, promotion by
+    # performance (decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x). Four 250-update segments run with the
+    # cap 6, 7, 8, 9 (lead 2026-11-12 11:05: start 6; the cap 5 block already ran 2,250 updates). The cap in force is
+    # min(start + step * boundaries passed, end) for both caps: the promotion cap _ex41_terrain.level_cap and the
+    # per-column level_caps (terrains/ex42_exposure.py raise_continuous_cap). The plan does not change between
+    # segments. Operation: when the retention table (CG E.3.1) is on HOLD the next segment is not started.
+    # exposure_at_E1 holds the start value. kind_task is E0's. Registered before any result.
     continuous_level_cap:
-      start: 5
+      start: 6
       step_per_boundary: 1
       end: 9
-      hold_when: retention_table_hold
-      hold_event: level_cap_hold
     exposure_at_E1:
       default: {exposure: 0.0, level_cap: 0}
       positive:
-      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 5}
+      - {family: A, kinds_of: continuous, exposure: 1.0, level_cap: 6}
     floors:
       global_command_floor:
         reverse: 0.05

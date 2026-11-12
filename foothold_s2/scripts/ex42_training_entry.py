@@ -27,6 +27,7 @@ from foothold_s2.curriculum.ex42_prep import (
 
 STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
 STAGE_ZERO_UPDATES = 1000
+STAGE_ZERO_LEVEL_CAP = 5
 STAGE_ZERO_NUM_ENVS = 3072
 STAGE_ZERO_DEVICE = "cuda:0"
 # Throughput probe only (--ex42_speed_probe): bounded update counts, per-process env counts, two ranks.
@@ -249,6 +250,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     stage_terrain = {**stage_row, "kind_task": _kind_task(plan, stage_id)}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
     stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
+    stage_terrain, continuous_cap = raise_continuous_cap(stage_terrain, stage_id, boundary_index)   # L+: +1 per boundary passed
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
@@ -262,6 +265,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
+            "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
                          "outcomes": [dict(entry) for entry in list(ladder_outcomes or [])[:boundary_index]]},   # the evidence the k moves were computed from
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
@@ -1067,8 +1071,9 @@ class EX42StageZeroRuntime:
         from foothold_s2.commands.ex42_shares import CommandShares
         contract = getattr(stage_zero_plan, "command_contract", None)
         self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
+        self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
-                          "terrain": {"policy": "performance", "level_cap": 5}}
+                          "terrain": {"policy": "performance", "level_cap": self.level_cap}}
         self.iteration = 0
         self._last_boundary = None
         self.finished = False
@@ -1091,7 +1096,13 @@ class EX42StageZeroRuntime:
             self.command_allocation.attach(raw, command_term, self)
         raw._ex42_stage_id = self.stage_id
         raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 / E1 use the same environment as stage zero
-        raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
+        contract_cap = (getattr(raw, "_ex42_env_contract", None) or {}).get("continuous_level_cap")
+        if contract_cap is not None:                 # apply_e0_exposure ran before this: both caps are the same number
+            if type(contract_cap) is not int or contract_cap < STAGE_ZERO_LEVEL_CAP:
+                raise ValueError("EX-42 continuous level cap of the segment is not an integer at or above the stage-zero cap")
+            self.level_cap = contract_cap
+            self.effective["terrain"]["level_cap"] = contract_cap
+        raw._ex41_terrain = {"policy": "performance", "level_cap": self.level_cap}
         raw._ex40_dr_scale = 1.0
         raw._ex41_push_vmax_mps = self.push_vmax_mps
 
@@ -1246,7 +1257,7 @@ class EX42StageZeroRuntime:
                 "plan_sha256": self.plan_sha256,
                 "approval_sha256": self.approval_sha256,
                 "parent_sha256": self.parent_sha256,
-                "terrain": {"policy": "performance", "level_cap": 5},
+                "terrain": {"policy": "performance", "level_cap": self.level_cap},
                 "command_samples": self.command_samples,
                 **({"command_allocation": self.command_allocation.state_dict()}
                    if self.command_allocation is not None else {}),
@@ -1263,6 +1274,11 @@ class EX42StageZeroRuntime:
                     "push_vmax_mps"):
             if key == "maximum_updates" and self.stage_id in E_STAGES:      # an earlier segment may have run to a lower cap
                 if state.get(key) in _stage_caps(self.stage_id) and state[key] <= expected[key]:
+                    continue
+            if key == "terrain":            # an earlier segment ran with a lower L+ cap (cap 5 everywhere: exact match)
+                saved = state.get(key)
+                if (isinstance(saved, dict) and set(saved) == {"policy", "level_cap"} and saved["policy"] == expected[key]["policy"]
+                        and type(saved["level_cap"]) is int and STAGE_ZERO_LEVEL_CAP <= saved["level_cap"] <= expected[key]["level_cap"]):
                     continue
             if state.get(key) != expected[key]:
                 raise ValueError(f"EX-42 stage-zero continuation {key} differs")

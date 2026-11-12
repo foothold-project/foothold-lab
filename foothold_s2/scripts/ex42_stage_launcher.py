@@ -2,6 +2,7 @@
 
 `ex42_stage_handoff.start_launcher` runs it once per authorized decision with `EX42_AUTO_*` in the environment:
   next_stage : EX42_AUTO_ACTION=next_stage, TARGET_STAGE, PARENT_MANIFEST, PARENT_CHECKPOINT, GATE_RECEIPT, GATE_SHA256
+               (optional EX42_AUTO_SEGMENT_END: the fresh run stops at that first boundary instead of the stage bound)
   continue   : the same plus EX42_AUTO_RESUME_CHECKPOINT and EX42_AUTO_SEGMENT_END (same stage, same run folder)
 This module turns those into the one `torch.distributed.run ... train_start.py` command line, sends the one-line
 notice to the run inbox, and then `exec`s the trainer, so the PID the GPU queue registered for the launcher is the
@@ -127,7 +128,9 @@ def build(env, *, dry_run=False, now=None):
         if not (Path(run_dir) / "manifest.json").is_file():
             raise LaunchRefused(f"{run_dir} has no manifest.json: not the run folder of the checkpoint")
     else:
-        resume = segment_end = None
+        resume, segment_end = None, env.get("EX42_AUTO_SEGMENT_END") or None      # a fresh start may stop at its first boundary
+        if segment_end is not None and (not segment_end.isdigit() or not 0 < int(segment_end) <= updates):
+            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{updates}")
         stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(now))
         run_dir = f"{_need(env, 'MAIN_ROOT').rstrip('/')}/EX-42-B-{stage}_{stamp}"
     flags = [f"--task={TASK}", "--device=cuda:0", f"--num_envs={env.get('EX42_NUM_ENVS', '3072')}",
@@ -141,6 +144,8 @@ def build(env, *, dry_run=False, now=None):
              f"--ex42_terrain_manifest={terrain_manifest}", f"--ex42_terrain_mesh_dir={mesh_dir}"]
     if resume:
         flags += [f"--ex42_resume_from={resume}", f"--ex42_segment_end={segment_end}"]
+    elif segment_end:
+        flags += [f"--ex42_segment_end={segment_end}"]
     if dry_run:
         argv = [python, str(TRAIN_START)] + flags
     else:
@@ -150,6 +155,7 @@ def build(env, *, dry_run=False, now=None):
                  PYTHONPATH=str(SOURCE_ROOT) + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""))
     child.update(mesh_env)
     child.pop("CUDA_VISIBLE_DEVICES", None)
+    child.pop("EX42_AUTO_SEGMENT_END", None)         # consumed here: a later launch from below must not inherit it
     if dry_run:
         child.update(WORLD_SIZE="2", RANK="0", CUDA_VISIBLE_DEVICES="")
     return argv, child, {"action": action, "stage": stage, "run_dir": run_dir, "updates": updates,
