@@ -57,7 +57,7 @@ def call(known, stage='E1', expected_sha=None):
 def test_only_approved_next_stage_with_matching_pass_is_authorized(known):
     proof = call(known)
     assert proof['scope']['stage_id'] == 'E1'
-    assert proof['scope']['maximum_updates'] == 1000
+    assert proof['scope']['maximum_updates'] == 1750
     assert proof['notification_required'] is True
     assert proof['training_started'] is False
 

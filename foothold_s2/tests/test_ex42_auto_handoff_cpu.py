@@ -23,16 +23,16 @@ def test_launcher_own_p1_command_carries_complete_next_stage_chain(tmp_path):
 
 def test_budget_is_actual_parent_lineage_not_environment_or_plan_cap(known):
     row=handoff.measured_budget(known['plan'],known['source_plan'],known['parent_manifest'],known['gate_receipt'])
-    assert row['used']==1250  # E1 parent13250 + actual1000 - E0 parent13000; stage zero excluded
+    assert row['used']==2000  # E1 parent13250 + actual1750 - E0 parent13000; stage zero excluded
     assert row['limit']==20000 and row['basis']=='ex42_new_updates'
-    assert row['local_updates']==1000 and row['parent_cumulative_update']==13250
+    assert row['local_updates']==1750 and row['parent_cumulative_update']==13250
 
 
 @pytest.mark.parametrize('bad',['missing_save','wrong_sha','progress','plan_sha'])
 def test_budget_rejects_unpublished_or_mixed_exit(known,bad):
     p=known['parent_manifest'];m=json.loads(p.read_text());g=json.loads(known['gate_receipt'].read_text())
     if bad=='missing_save':m['checkpoints']={}
-    elif bad=='wrong_sha':m['checkpoints']['model_1000.pt']='0'*64
+    elif bad=='wrong_sha':m['checkpoints']['model_1750.pt']='0'*64
     elif bad=='progress':m['progress']['completed_updates']=750
     else:g['plan_sha256']='0'*64
     p.write_text(json.dumps(m));known['gate_receipt'].write_text(json.dumps(g))
@@ -121,7 +121,7 @@ def test_e1f_pass_to_e2_real_materialize_then_cpu_launcher_cli(e1f_exit,tmp_path
     assert decision['action']=='launch',decision
     assert decision['target_stage']=='E2'
     plan=Path(decision['plan']);transition=json.loads((plan.parent/'transition.json').read_text())
-    assert transition['budget']['used']==1750  # E0 250 + adopted E1 1000 + E1F 500
+    assert transition['budget']['used']==2500  # E0 250 + adopted E1 1750 + E1F 500
     launch_env=dict(os.environ,**env,EX42_AUTO_ACTION='next_stage',EX42_AUTO_TARGET_STAGE='E2',
         EX42_AUTO_PLAN=str(plan),EX42_AUTO_APPROVALS=decision['approvals'],
         EX42_AUTO_PARENT_MANIFEST=str(manifest),EX42_AUTO_PARENT_CHECKPOINT=str(manifest.parent/'model_500.pt'),
@@ -298,12 +298,12 @@ def _template_with_limit(known, tmp_path, limit):
 
 
 def test_budget_over_the_approved_limit_is_refused(known, tmp_path):
-    template = _template_with_limit(known, tmp_path, 1249)          # the lineage already used 1250
+    template = _template_with_limit(known, tmp_path, 1999)          # the lineage already used 2000
     with pytest.raises(ValueError, match='budget exhausted'):
         handoff.measured_budget(template, known['source_plan'], known['parent_manifest'], known['gate_receipt'])
 
 
 def test_budget_exactly_at_the_limit_is_allowed(known, tmp_path):
-    template = _template_with_limit(known, tmp_path, 1250)
+    template = _template_with_limit(known, tmp_path, 2000)
     assert handoff.measured_budget(template, known['source_plan'], known['parent_manifest'],
-                                   known['gate_receipt'])['used'] == 1250
+                                   known['gate_receipt'])['used'] == 2000

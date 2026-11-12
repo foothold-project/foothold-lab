@@ -30,10 +30,10 @@ def known(tmp_path):
     shutil.copytree(CURRICULUM, template, ignore=shutil.ignore_patterns('__pycache__'))
     plan = EX42Plan.load(template / 'ex42-prep.yaml')
     run = tmp_path / 'run'; run.mkdir()
-    checkpoint = run / 'model_1000.pt'; checkpoint.write_bytes(b'known E1 complete checkpoint')
+    checkpoint = run / 'model_1750.pt'; checkpoint.write_bytes(b'known E1 complete checkpoint')
     parent_sha = sha(checkpoint)
     manifest = run / 'manifest.json'
-    dump(manifest, {'progress': {'completed_updates': 1000}, 'checkpoints': {checkpoint.name: parent_sha}})
+    dump(manifest, {'progress': {'completed_updates': 1750}, 'checkpoints': {checkpoint.name: parent_sha}})
     specs=plan.document['evaluation']['paper_cells']['stairs_landing']['case_specs']
     case_ids=plan.document['evaluation']['paper_cells']['stairs_landing']['judge_cases']
     cases={}
@@ -59,7 +59,7 @@ def known(tmp_path):
                        e1_exit=exit_row, d44_cells=current_cells, cell_judgments=cells,map64={m:{c:{} for c in items} for m,items in cells.items()}))
     rows = [{'map_mode':m,'command':c,'role':v['role']} for m,items in cells.items() for c,v in items.items()]
     gate = run / 'p1.json'
-    dump(gate, dict(stage_id='E1', state='complete', judgment='PASS', checkpoint_iteration=1000,
+    dump(gate, dict(stage_id='E1', state='complete', judgment='PASS', checkpoint_iteration=1750,
                     checkpoint_sha256=parent_sha, plan_sha256=plan.sha256, e1_exit=exit_row,
                     measurement=str(measure), measurement_sha256=sha(measure), map_matrix=rows,
                     judge_count=26, record_only_count=13, cell_judgments=cells))
@@ -79,7 +79,7 @@ def known(tmp_path):
                   'prerequisites.flag_baseline.sha256':baseline}))
     return dict(plan=plan.path, source_plan=plan.path, approvals=template/'ex42-approvals.yaml',
         target='E1F', parent_manifest=manifest, gate_receipt=gate, evidence=evidence,
-        budget_limit=20000,budget_used=1250,budget_basis='ex42_new_updates',out=tmp_path/'published')
+        budget_limit=20000,budget_used=2000,budget_basis='ex42_new_updates',out=tmp_path/'published')
 
 
 def run(known):
@@ -95,12 +95,12 @@ def test_publish_relocatable_scope_and_parent_chain_without_changing_inputs(know
     ap = Path(result['approvals']); a=yaml.safe_load(ap.read_text())['stage_e1f_authorization']
     assert a['scope']['maximum_updates'] == 750
     assert a['prerequisites']['predecessor_exit']['continuous_level_cap'] == 5
-    assert a['scope']['parent_sha256'] == sha(known['parent_manifest'].parent/'model_1000.pt')
+    assert a['scope']['parent_sha256'] == sha(known['parent_manifest'].parent/'model_1750.pt')
     row = next(x for x in plan.document['stages'] if x['id']=='E1F')
     assert row['authorization_contract']['entry_gate_adapter']=='flag_two_window'
     assert a['later_stage_entry_gate_adapter']=='flag_two_window'
     assert row['parent']['source_stage_id']=='E1'
-    assert row['parent']['cumulative_update']==14250
+    assert row['parent']['cumulative_update']==15000
     assert row['terrain']['exposure_at_E1F']['positive'][0]['level_cap']==5
     proof=authorization_validators(plan)['E1F'](ap,a['scope']['parent_sha256'])
     assert proof['scope']['maximum_updates']==750
@@ -112,7 +112,7 @@ def test_publish_relocatable_scope_and_parent_chain_without_changing_inputs(know
     with pytest.raises((ValueError,FileExistsError)): run(known)
 
 
-@pytest.mark.parametrize('field,value', [('budget_limit',1249),('budget_used',-1),('budget_used',True),
+@pytest.mark.parametrize('field,value', [('budget_limit',1999),('budget_used',-1),('budget_used',True),
     ('budget_basis',''),('target','J')])
 def test_invalid_budget_or_target_publishes_nothing(known,field,value):
     known[field]=value
@@ -127,7 +127,7 @@ def test_fail_closed_before_publication(known,change):
         d['plan_sha256' if change=='stale_gate' else 'judgment']='0'*64 if change=='stale_gate' else 'HOLD'
         dump(p,d);e=json.loads(known['evidence'].read_text());e['gate_sha256']=sha(p);dump(known['evidence'],e)
     elif change=='checkpoint':
-        (known['parent_manifest'].parent/'model_1000.pt').write_bytes(b'corrupt')
+        (known['parent_manifest'].parent/'model_1750.pt').write_bytes(b'corrupt')
     elif change in ('scope','unapproved'):
         p=known['approvals'];a=yaml.safe_load(p.read_text());cell=a['stage_e1f_authorization']
         if change=='scope': cell['scope']['maximum_updates']=1250
