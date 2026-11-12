@@ -164,7 +164,8 @@ def e2_kind_kit_commands(checkpoint, output, device, *, task, plan_path,
 
 def e3_kind_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
                          mesh_sha256, seed, window_index, cells):
-    """Every opened E3 representative level gets a forward and four-flag raw trace."""
+    """Every opened E3 representative level gets a forward raw trace, and a four-flag raw trace of its own unless the cell
+    takes the stage's global flag_cells/flag_four evidence (continuous A kinds: the pinned mesh has no per-kind flag targets)."""
     if type(window_index) is not int or window_index < 1 or type(seed) is not int or seed < 0:
         raise ValueError("EX-42 E3 window or seed invalid")
     kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
@@ -187,7 +188,9 @@ def e3_kind_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_di
                 "--kind-family", family, "--kind-name", kind, "--kind-level", str(level),
                 "--count", "flag_four", "--seed", str(seed), "--envs", "64",
                 "--out", str(folder / "flag_four"), "--device", device, *kit]
-        rows.extend(((f"e3_{key}_forward", forward), (f"e3_{key}_flag_four", flag)))
+        rows.append((f"e3_{key}_forward", forward))
+        if cell.get("flag_source", "kind_flag_four") != "global_flag_cells":
+            rows.append((f"e3_{key}_flag_four", flag))
     return rows
 
 
@@ -228,11 +231,14 @@ def execute_e3_kind_children(checkpoint, output, device, *, task, execution_plan
             raise ValueError(f"EX-42 {phase} Kit physical GPU identity differs")
         child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
         record(phase, child)
-        if phase.endswith("_flag_four"):
+        source = cell.get("flag_source", "kind_flag_four")
+        if phase.endswith("_flag_four") or source == "global_flag_cells":   # the cell's last child: recount it now
             read_stage_kind_bundle(cell_folder, stage_id="E3", family=cell["family"],
                                    kind=cell["kind"], level=cell["level"],
                                    plan=evaluation_plan.document, plan_sha256=evaluation_plan.sha256,
-                                   mesh=mesh, checkpoint_sha256=checkpoint_sha256, seed=seed)
+                                   mesh=mesh, checkpoint_sha256=checkpoint_sha256, seed=seed,
+                                   flag_source=source,
+                                   global_flag_dir=Path(output) / "flag_cells" / "flag_four")
     return inventory
 
 

@@ -52,16 +52,23 @@ def recount(score: dict, *, plan: dict, evaluation: Path, mesh: dict) -> dict:
     inventory = e3_target_inventory(plan, exposure["opened_kinds"])
     if exposure["mesh_sha256"] != mesh["mesh_sha256"]:
         raise ValueError("EX-42 E3 training and evaluation mesh differ")
+    global_flags = evaluation / "flag_cells" / "flag_four"
+    sources = sorted({cell.get("flag_source", "kind_flag_four") for cell in inventory["opened_cells"]})
+    if "global_flag_cells" in sources and not (global_flags / "flag_cells.json").is_file():
+        # Continuous A kinds take the stage's global flag evidence (lead 2026-11-12 02:18). Without it nothing is invented.
+        return {"judgement": "HOLD", "reason": "E3 전역 깃발 flag_cells/flag_four 영수증 없음",
+                "inventory": inventory, "stage_exposure": exposure["receipts"],
+                "mesh_sha256": mesh["mesh_sha256"], "evaluation": str(folder)}
     cells = (read_e3_window(folder, inventory=inventory, plan=plan,
                             plan_sha256=score["maintenance_source_sha256"], mesh=mesh,
                             checkpoint_sha256=score["checkpoint_sha256"],
-                            seed=score["conditions"]["eval_seed"])
+                            seed=score["conditions"]["eval_seed"], global_flag_dir=global_flags)
              if inventory["opened_cells"] else {})
     states = [row[mode]["judgement"] for row in cells.values()
               for mode in ("eval_gt", "eval_pred")]
     if inventory["missing_targets"] or not states:
         states.append("HOLD")
-    return {"judgement": aggregate(states), "inventory": inventory, "cells": cells,
+    return {"judgement": aggregate(states), "inventory": inventory, "cells": cells, "flag_sources": sources,
             "stage_exposure": exposure["receipts"],
             "mesh_sha256": mesh["mesh_sha256"], "evaluation": str(folder)}
 
