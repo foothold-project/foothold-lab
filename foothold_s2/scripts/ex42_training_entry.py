@@ -152,6 +152,23 @@ def _reward_source(parent_update: int) -> str:
             250: "EX-42 E0 m250 runtime readback"}[parent_update]
 
 
+def reward_contract_source(parent_sha256: str, parent_update: int, stage_id: str | None = None) -> str:
+    """Whose lin_vel_z weight (0) the stage keeps, as the receipt's source line; ValueError for an unknown parent.
+
+    Stage zero, E0 and E1 have reviewed (sha, update) pins. A later stage (`stage_id` given, E1F and after) continues
+    the previous stage's run: its parent is that run's checkpoint at the update the plan's stage table pins, and that
+    run kept the same weight by this very contract. The parent's sha was checked against the plan pin when the parent
+    was inspected; here the update must be the table's."""
+    if (parent_sha256, parent_update) in REWARD_CONTRACT_PARENTS:
+        return _reward_source(parent_update)
+    spec = E_STAGE_SPECS.get(stage_id) if stage_id not in (None, STAGE_E0_ID, STAGE_E1_ID) else None
+    if (spec is not None and spec["previous"] is not None and type(parent_update) is int
+            and parent_update == spec["parent_local"]
+            and isinstance(parent_sha256, str) and re.fullmatch(r"[0-9a-f]{64}", parent_sha256)):
+        return f"EX-42 {spec['previous']} m{parent_update} runtime readback"
+    raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
+
+
 def e0_terrain_mesh_swap_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     """E0 axis ``terrain_mesh_swap`` (ex42-prep.yaml stages E0): the single E0 change.
 
@@ -1524,25 +1541,23 @@ def _runtime_reward_weight(env: Any, name: str) -> float:
 
 def apply_stage_zero_parent_reward_contract(env_cfg: Any, *,
                                            parent_sha256: str,
-                                           parent_update: int) -> dict[str, Any]:
-    """Keep the approved EX-41 m6000 parent reward term unchanged for stage zero."""
-    if (parent_sha256, parent_update) not in REWARD_CONTRACT_PARENTS:
-        raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
+                                           parent_update: int, stage_id: str | None = None) -> dict[str, Any]:
+    """Keep the approved EX-41 m6000 parent reward term unchanged for stage zero (and for every stage after it)."""
+    source = reward_contract_source(parent_sha256, parent_update, stage_id)
     term = getattr(getattr(env_cfg, "rewards", None), "lin_vel_z", None)
     if term is None or not hasattr(term, "weight"):
         raise ValueError("EX-42 stage-zero config lacks the parent lin_vel_z reward term")
     term.weight = 0.0
     return {"term": "lin_vel_z", "weight": 0.0,
-            "source": _reward_source(parent_update),
+            "source": source,
             "parent_sha256": parent_sha256}
 
 
 def apply_stage_zero_parent_reward_manager(env: Any, *,
                                            parent_sha256: str,
-                                           parent_update: int) -> dict[str, Any]:
+                                           parent_update: int, stage_id: str | None = None) -> dict[str, Any]:
     """Apply the same parent reward term to the live manager before first reset."""
-    if (parent_sha256, parent_update) not in REWARD_CONTRACT_PARENTS:
-        raise ValueError("EX-42 stage-zero reward transfer requires the pinned EX-41 m6000 parent")
+    source = reward_contract_source(parent_sha256, parent_update, stage_id)
     raw = getattr(env, "unwrapped", env)
     manager = getattr(raw, "reward_manager", None)
     if manager is None:
@@ -1554,7 +1569,7 @@ def apply_stage_zero_parent_reward_manager(env: Any, *,
     if actual != 0.0:
         raise ValueError("EX-42 stage-zero live lin_vel_z reward did not match parent")
     return {"term": "lin_vel_z", "weight": actual,
-            "source": _reward_source(parent_update),
+            "source": source,
             "parent_sha256": parent_sha256}
 
 

@@ -1195,6 +1195,20 @@ def _authorized_initial_dr_scale(scale: float, scoped_approval: dict[str, Any] |
     if float(scale) != 1.0 or not isinstance(scoped_approval, dict):
         return False
     scope = scoped_approval.get("scope")
+    stage = scope.get("stage_id") if isinstance(scope, dict) else None
+    if (isinstance(stage, str) and stage not in ("EX42_0_T0_prime", "E0", "E1")
+            and scoped_approval.get("state") == f"stage_{stage.lower()}_approval_only"):
+        # The bounded cell of a later stage (ex42_prep.validate_stage_authorization: E1F and after). Its proof names
+        # the stage's own row: start 0, the base cap, the pinned parent, nothing later, cut at every evaluation
+        # boundary. That validator already refuses an approval file whose production_launch_allowed is not False,
+        # and its proof does not repeat the flag, so the flag is not asked for here.
+        bound, interval = scope.get("maximum_updates"), scoped_approval.get("boundary_evaluation_interval_updates")
+        return bool(scoped_approval.get("later_stages_authorized") is False
+                    and scope.get("start_update") == 0 and scope.get("later_stages_authorized") is False
+                    and re.fullmatch(r"[0-9a-f]{64}", str(scope.get("parent_sha256", "")))
+                    and re.fullmatch(r"[0-9a-f]{64}", str(scoped_approval.get("approvals_sha256", "")))
+                    and type(bound) is int and bound > 0
+                    and type(interval) is int and 0 < interval <= bound and bound % interval == 0)
     common = (scoped_approval.get("production_launch_allowed") is False
               and scoped_approval.get("later_stages_authorized") is False
               and isinstance(scope, dict)
