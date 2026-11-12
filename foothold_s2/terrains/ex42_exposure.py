@@ -73,6 +73,35 @@ def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]]
     return exposure, caps
 
 
+def raise_continuous_cap(plan_terrain: dict[str, Any], stage_id: str, boundary_index: int) -> tuple[dict[str, Any], int | None]:
+    """(terrain, cap) after `boundary_index` boundaries of a stage whose row carries the L+ schedule
+
+        continuous_level_cap: {start: 6, step_per_boundary: 1, end: 9}      # CG E.2 E1 "레벨" row
+
+    The cap of the continuous rule (the positive rule with `kinds_of`) becomes min(start + step * boundaries, end).
+    The plan itself never changes between segments, so a continued segment keeps its plan SHA. A stage row without
+    the cell is returned as is with cap None."""
+    cell = plan_terrain.get("continuous_level_cap")
+    if cell is None:
+        return dict(plan_terrain), None
+    if type(boundary_index) is not int or boundary_index < 0:
+        raise ValueError("EX-42 continuous level cap boundary count must be a nonnegative integer")
+    if not isinstance(cell, dict) or set(cell) != {"start", "step_per_boundary", "end"} \
+            or any(type(cell[k]) is not int for k in cell) or not 0 <= cell["start"] <= cell["end"] \
+            or cell["step_per_boundary"] < 1:
+        raise ValueError(f"EX-42 {stage_id} continuous_level_cap needs integer start <= end and step_per_boundary >= 1")
+    block = plan_terrain.get(f"exposure_at_{stage_id}")
+    rules = block.get("positive") if isinstance(block, dict) else None
+    hits = [i for i, rule in enumerate(rules or []) if "kinds_of" in rule]
+    if len(hits) != 1:
+        raise ValueError(f"EX-42 {stage_id} continuous_level_cap needs exactly one kinds_of rule in exposure_at_{stage_id}")
+    if rules[hits[0]].get("level_cap") != cell["start"]:
+        raise ValueError(f"EX-42 {stage_id} continuous rule level_cap differs from continuous_level_cap.start")
+    cap = min(cell["start"] + cell["step_per_boundary"] * boundary_index, cell["end"])
+    positive = [dict(rule, level_cap=cap) if i == hits[0] else rule for i, rule in enumerate(rules)]
+    return {**plan_terrain, f"exposure_at_{stage_id}": {**block, "positive": positive}}, cap
+
+
 def column_shares(plan_terrain: dict[str, Any], table: list[dict[str, Any]], stage_id: str) -> list[float | None]:
     """Per mesh column: its fraction of ALL envs when a `share` rule names it, else None (a weight column)."""
     spec = plan_terrain.get(f"exposure_at_{stage_id}") or {}

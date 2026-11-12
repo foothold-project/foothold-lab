@@ -221,3 +221,20 @@ def test_a_materialized_plan_pair_must_come_as_a_pair_of_existing_absolute_files
         L.plan_paths({"EX42_AUTO_PLAN": str(plan), "EX42_AUTO_APPROVALS": "rel.yaml"})
     assert L.plan_paths({"EX42_AUTO_PLAN": str(plan), "EX42_AUTO_APPROVALS": str(plan)}) == (plan, plan)
     assert L.plan_paths({}) == (L.PLAN, L.APPROVALS)
+
+
+def test_a_fresh_start_may_stop_at_its_first_boundary_and_the_value_is_not_inherited(tmp_path):
+    env = {**_env(tmp_path), "EX42_AUTO_SEGMENT_END": "250"}
+    argv, child, summary = L.build(env, now=0)
+    assert _flag(argv, "--ex42_segment_end") == "250" and summary["segment_end"] == "250" and summary["resume"] is None
+    assert not any(a.startswith("--ex42_resume_from") for a in argv)
+    assert _flag(argv, "--max_iterations") == str(E_STAGE_SPECS[STAGE]["updates"])       # the stage bound stays
+    assert "EX42_AUTO_SEGMENT_END" not in child
+    _, child, _ = L.build(_env(tmp_path, action="continue"))
+    assert "EX42_AUTO_SEGMENT_END" not in child
+
+
+@pytest.mark.parametrize("end", ["0", "abc", "-250", str(E_STAGE_SPECS[STAGE]["updates"] + 250)])
+def test_a_fresh_start_segment_end_outside_the_stage_bound_is_refused(tmp_path, end):
+    with pytest.raises(L.LaunchRefused, match="EX42_AUTO_SEGMENT_END"):
+        L.build({**_env(tmp_path), "EX42_AUTO_SEGMENT_END": end}, now=0)

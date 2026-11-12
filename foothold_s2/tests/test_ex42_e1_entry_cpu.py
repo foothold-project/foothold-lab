@@ -165,7 +165,9 @@ def test_real_e0_m250_is_a_valid_e1_parent_and_its_placement_is_restored_with_di
     exposure, caps = ex.exposure_by_column(stage, table, "E1")
     e0_exposure, e0_caps = ex.exposure_by_column(
         next(r for r in plan.document["stages"] if r["id"] == "E0")["terrain"], table, "E0")
-    assert (exposure, caps) == (e0_exposure, e0_caps) and max(caps) == 5 and sum(w > 0 for w in exposure) == 23
+    # E1 first segment: the E0 columns with the L+ start cap 6 (continuous_level_cap.start); the parent sits at <= 5
+    assert exposure == e0_exposure and caps == [6 if c == 5 else c for c in e0_caps] and max(e0_caps) == 5
+    assert sum(w > 0 for w in exposure) == 23 and int(checkpoint["env_state"]["terrain_levels"].max()) <= 5
     env_state = checkpoint["env_state"]
     terrain = types.SimpleNamespace(
         terrain_levels=torch.zeros(3072, dtype=torch.long), terrain_types=torch.zeros(3072, dtype=torch.long),
