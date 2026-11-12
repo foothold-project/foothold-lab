@@ -1284,7 +1284,7 @@ def main(env_cfg, agent_cfg):
         ex42_stage_zero_runtime.attach_runner(runner)
         runner.ex40_dr_runtime = ex42_dr_readback
         if EX42_STAGE_ZERO_RESUME:
-            from foothold_s2.scripts.ex42_training_entry import build_stage_zero_resume_root_xy_readback
+            from foothold_s2.scripts.ex42_training_entry import build_resume_root_xy_readback
 
             if ex42_resume_saved is None:
                 raise RuntimeError("EX-42 self-resume checkpoint was not loaded before reset")
@@ -1314,8 +1314,9 @@ def main(env_cfg, agent_cfg):
                     or not continuation_state_matches(runner.continuous_curriculum.state_dict(),
                                                       resume_saved["continuous_curriculum"])):
                 raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
-            ex42_stage_zero_root_xy_readback = build_stage_zero_resume_root_xy_readback(
-                env, pose_range=env_cfg.events.reset_base.params["pose_range"])
+            # stage zero carries one pose_range; an E stage the per-column reset ranges (ex42_column_reset lo / hi)
+            ex42_stage_zero_root_xy_readback = build_resume_root_xy_readback(
+                env, reset_params=env_cfg.events.reset_base.params)
             ex42_transfer["root_xy_readback"] = ex42_stage_zero_root_xy_readback
             if ex42_stage_zero_root_xy_readback["outside_reset_bounds_count"] != 0:
                 raise ValueError("EX-42 resumed root XY is outside reset bounds from restored env origins")
