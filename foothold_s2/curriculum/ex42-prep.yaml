@@ -302,8 +302,18 @@ stages:
   enabled: true
   hold_policy: hold_exposure_continue_training
   terrain:
-    # CG E1: continuous 7 kinds 100 %, level cap stays at the E0 value (5) until the L5 window passes
-    # (the cap 5 -> 6 raise is its own L+ boundary, not part of the first segment). kind_task is E0's.
+    # CG E.2 E1 "레벨" row (v0.17b): continuous 7 kinds 100 %, level cap 5 -> 9, +1 at every boundary, promotion by
+    # performance (decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x). A boundary keeps the cap only while the
+    # retention table (CG E.3.1) is on HOLD: a new hard cell that falls short never stops the raise
+    # (2026-11-07 16:3x, 17:2x); training continues either way, and such a boundary is recorded as hold_event.
+    # exposure_at_E1 holds the start value; the cap in force is start + raises (both caps: the promotion cap
+    # _ex41_terrain.level_cap and the per-column level_caps). kind_task is E0's. Registered before any result.
+    continuous_level_cap:
+      start: 5
+      step_per_boundary: 1
+      end: 9
+      hold_when: retention_table_hold
+      hold_event: level_cap_hold
     exposure_at_E1:
       default: {exposure: 0.0, level_cap: 0}
       positive:
@@ -362,6 +372,9 @@ stages:
       allowed_values:
       - 5
       - 6
+      - 7
+      - 8
+      - 9
       template:
         default:
           exposure: 0.0
