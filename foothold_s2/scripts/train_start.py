@@ -603,6 +603,18 @@ if _ex42_requested:
             EX42_SEGMENT_END = validate_ex42_segment_end(
                 _pre_args.ex42_segment_end, stage_id=EX42_STAGE_ID, stage_updates=EX42_STAGE_UPDATES,
                 interval=_interval)
+        from foothold_s2.commands.ex42_segment_adjust import start_segment as _start_segment_commands
+
+        # the command profile of this segment: the plan row, or the boundary's adjustment file (EX42_SEGMENT_ADJUST)
+        EX42_SEGMENT_COMMANDS = _start_segment_commands(
+            EX42_STAGE_ZERO_PLAN_VIEW, EX42_STAGE_ZERO_PLAN, EX42_STAGE_ID,
+            boundary_index=(EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"] // _interval
+                            if EX42_STAGE_ZERO_RESUME_PROOF is not None and _interval else 0),
+            path=os.environ.get("EX42_SEGMENT_ADJUST"), log_dir=_pre_args.ex42_log_dir,
+            write=not _e_dry_run and os.environ.get("RANK", "0") == "0")
+        if EX42_SEGMENT_COMMANDS is not None:
+            print("EX42_SEGMENT_COMMANDS " + json.dumps(EX42_SEGMENT_COMMANDS, ensure_ascii=False, sort_keys=True),
+                  flush=True)
         if _e_dry_run:                     # a boundary-resume dry run ends here, still on CPU
             print(f"EX42_STAGE_{EX42_STAGE_ID}_SEGMENT " + json.dumps({
                 "segment_end": EX42_SEGMENT_END, "resume": EX42_STAGE_ZERO_RESUME_PROOF,

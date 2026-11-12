@@ -290,3 +290,11 @@ def test_the_gate_reads_the_pinned_canon_and_names_only_registered_stages(tmp_pa
     monkeypatch.setattr(cpc.launch_gate, "__kwdefaults__", {**cpc.launch_gate.__kwdefaults__, "root": tmp_path})
     with pytest.raises(L.LaunchRefused, match="could not run"):
         L.build(_env(tmp_path), now=0)
+
+
+def test_a_segment_adjustment_file_follows_the_running_stage_and_never_a_fresh_start(tmp_path):
+    """CG E.2 E1 "구간 명령 조정": the same stage's next segment inherits the file, a newly started stage does not."""
+    _, child, _ = L.build({**_env(tmp_path, action="continue"), "EX42_SEGMENT_ADJUST": "/a/adjust.json"})
+    assert child["EX42_SEGMENT_ADJUST"] == "/a/adjust.json"
+    _, child, _ = L.build({**_env(tmp_path), "EX42_SEGMENT_ADJUST": "/a/adjust.json"}, now=0)
+    assert "EX42_SEGMENT_ADJUST" not in child

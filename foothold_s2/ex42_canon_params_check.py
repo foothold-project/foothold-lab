@@ -190,7 +190,39 @@ def _raise_per_boundary(claim: dict[str, Any], src: Sources) -> tuple[str, str, 
     return "PASS", f"segment caps {[cap_of(k) for k, _ in series]} over {len(series)} segment(s)", seen
 
 
-KINDS = {"equals": _equals, "equals_ignoring": _equals, "raise_per_boundary": _raise_per_boundary}
+def _adjusted_inside(claim: dict[str, Any], src: Sources) -> tuple[str, str, Any]:
+    """Every started segment's command record (`segment_commands_b<k>.json`) stays inside the canon's approved values,
+    and an adjustment entered only at the boundaries the canon names."""
+    expect = claim["expect"]
+    if src.mode == "plan":
+        return "SKIP", "segment command records exist only in a run folder", None
+    bodies = sorted((json.loads(path.read_text(encoding="utf-8")) for path in src.run_dir.glob("segment_commands_b*.json")),
+                    key=lambda body: body.get("boundary_index", -1))
+    bodies = [body for body in bodies if body.get("stage_id") == src.stage]
+    if not bodies:
+        return "NO_DATA", f"no segment command record for stage {src.stage}", None
+    inside = lambda pair, outer: outer[0] - 1e-9 <= pair[0] and pair[1] <= outer[1] + 1e-9   # noqa: E731
+    problems, seen = [], []
+    for body in bodies:
+        k, commands = body.get("boundary_index"), body.get("commands") or {}
+        seen.append((k, body.get("source"), body.get("entry")))
+        if body.get("source") == "adjust_file" and body.get("entry") not in expect["boundaries"]:
+            problems.append(f"segment {k}: adjusted at boundary {body.get('entry')}, canon allows {expect['boundaries']}")
+        ranges, shares, overlay = commands.get("ranges") or {}, commands.get("shares") or {}, commands.get("turn_overlay") or []
+        if ranges.keys() != expect["ranges"].keys() or any(not inside(ranges[n], expect["ranges"][n]) for n in ranges):
+            problems.append(f"segment {k}: ranges {ranges!r} leave the canon's {expect['ranges']!r}")
+        if shares.keys() != expect["shares"].keys() or any(not inside([shares[n], shares[n]], expect["shares"][n]) for n in shares):
+            problems.append(f"segment {k}: shares {shares!r} leave the canon's {expect['shares']!r}")
+        if (len(overlay) != 3 or overlay[0] > expect["turn_overlay"]["fraction"] + 1e-9
+                or not inside(overlay[1:], expect["turn_overlay"]["wz_abs"])):
+            problems.append(f"segment {k}: turn overlay {overlay!r} leaves the canon's {expect['turn_overlay']!r}")
+    if problems:
+        return "FAIL", "; ".join(problems), seen
+    return "PASS", f"{len(bodies)} segment command record(s) inside the approved values", seen
+
+
+KINDS = {"equals": _equals, "equals_ignoring": _equals, "raise_per_boundary": _raise_per_boundary,
+         "adjusted_inside": _adjusted_inside}
 
 
 def check(claims: dict[str, Any], canon_text: str, src: Sources, variant: str | None = None) -> dict[str, Any]:
