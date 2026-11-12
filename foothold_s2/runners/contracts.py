@@ -77,6 +77,41 @@ def ex39_contract_bad(c: torch.Tensor, heading: torch.Tensor, tol: float = TOL) 
     return ~(finite & torch.where(heading, heading_command, ordinary))
 
 
+def flag_contract_bad(c: torch.Tensor, *, vmax: float, spin_threshold: float, spin_wz: float, wz_clip: float,
+                      backoff: tuple[float, float] | None = None, tol: float = TOL) -> torch.Tensor:
+    """깃발 env 가 한 step 에 따른 명령의 정의역 (`mixed_core.flag_step` 이 내는 네 꼴). 벗어나면 True.
+
+    걷기: 깃발 쪽 방향 x 속력 (속력 in [spin_threshold, vmax]) 에 |wz| <= wz_clip.
+    제자리 회전 · 끝난 뒤 세 칸 0: xy = 0 이고 |wz| <= spin_wz.
+    물러나기 (backoff 를 줄 때만): 속력 in backoff 이고 wz = 0. NaN · Inf 도 위반.
+    """
+    finite = torch.isfinite(c).all(dim=-1)
+    z = torch.nan_to_num(c, nan=0.0, posinf=1e9, neginf=-1e9)
+    speed, wz = torch.linalg.norm(z[..., :2], dim=-1), z[..., 2].abs()
+    ok = (speed >= spin_threshold - tol) & (speed <= vmax + tol) & (wz <= wz_clip + tol)
+    ok |= (speed <= tol) & (wz <= spin_wz + tol)
+    if backoff is not None:
+        ok |= (speed >= backoff[0] - tol) & (speed <= backoff[1] + tol) & (wz <= tol)
+    return ~(finite & ok)
+
+
+def flag_env_command_bad(term, command: torch.Tensor, bad: torch.Tensor) -> torch.Tensor:
+    """Where the registered shares allot flag envs (dynamic_flags: EX-42 E1F and after), a flag env is judged
+    by the flag command domain of its own term parameters instead of a stage slot. Other rows keep `bad`."""
+    flags = getattr(term, "is_flag_env", None)
+    if flags is None or getattr(getattr(term, "cfg", None), "dynamic_flags", False) is not True:
+        return bad
+    flags = flags.to(command.device)
+    if not bool(flags.any()):
+        return bad
+    p = term.params
+    flag_bad = flag_contract_bad(
+        command, vmax=float(term.range_curriculum.flag_vmax), spin_threshold=float(p.flag_spin_threshold),
+        spin_wz=float(p.flag_spin_wz), wz_clip=float(p.flag_wz_clip),
+        backoff=(float(p.backoff_vmin), float(p.backoff_vmax)) if p.backoff_prob > 0.0 else None)
+    return torch.where(flags, flag_bad, bad)
+
+
 def contract_bad_fn(name):
     """계약 이름 -> 검사 함수. 이름이 None 이면 None(검사 없음), 모르는 이름이면 거절."""
     if name is None:

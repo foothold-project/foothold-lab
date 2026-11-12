@@ -702,6 +702,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+  exit_judge: kind_two_window_e4
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -892,6 +893,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+  exit_judge: kind_two_window_e5
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -2747,6 +2749,20 @@ evaluation:
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]
     source: CG-v0.17b-E3-275-283
+  # E4 / E5 exit kind targets (CG E4 row 306 / E5 row 316-318). learned_cells_min 32 is the CG:480 general value, an assumption
+  # registered here because the E4 / E5 approval cells carry no exit_gate of their own.
+  late_kind_exit:
+    learned_cells_min: 32
+    learned_cells_min_grade: assumption
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
+    representative_levels: [0, 5, current_cap]
+    E4:
+      min_level: 3
+      level_overrides: {E/slope_steep: 6, E/slope_steep_inv: 6}
+    E5:
+      min_level: 0
+    source: CG-v0.17b-E4-306-E5-316
   paper_cells:
     judge_from_stage: E4
     slope:
