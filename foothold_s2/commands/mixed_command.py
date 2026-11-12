@@ -254,6 +254,10 @@ class MixedVelocityCommand(CommandTerm):
             self.stand[flag] = False
             self.spin[flag] = False
             self.heading[flag] = False
+            # The flag command is written by flag_step at the next compute. Until then the env must not follow
+            # the command of an earlier free episode: a reset outside env.step (the start-up resets) has no
+            # compute after it, and the first action would follow that stale command.
+            self.vel_command_b[flag] = 0.0
 
     def _update_command(self):
         self._stepped = True                                  # 흩기는 학습(첫 step) 시작 뒤에는 다시 하지 않는다
