@@ -353,7 +353,7 @@ def test_chain_validator_takes_the_queue_pair_only_together_with_a_launcher(tmp_
 
 
 # ---- a later stage goes on from its own boundary through its own table-driven cell (no E1-only branch) ----------
-def _later_stage(tmp_path, iteration=1000, judgment="HOLD"):
+def _later_stage(tmp_path, iteration=1000, judgment="HOLD", maintenance="PASS"):
     from foothold_s2.tests.test_ex42_table_authorization_cpu import fixture
     tmp_path.mkdir(parents=True, exist_ok=True)
     plan, approvals, _ = fixture(tmp_path, "E3")
@@ -367,8 +367,11 @@ def _later_stage(tmp_path, iteration=1000, judgment="HOLD"):
     digest = hashlib.sha256(data).hexdigest()
     (run / "manifest.json").write_text(json.dumps({"checkpoints": {f"model_{iteration}.pt": digest},
                                                    "progress": {"completed_updates": iteration}}))
+    measured = tmp_path / "ex42_score.json"       # pinned by the gate receipt; the maintenance table verdict is read from it
+    measured.write_text(json.dumps({"stage_exit": {"items": {"maintenance_current": {"judgement": maintenance}}}}))
     gate = tmp_path / "p1.json"
-    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest}))
+    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest, "measurement": str(measured),
+                                "measurement_sha256": hashlib.sha256(measured.read_bytes()).hexdigest()}))
     return replace(plan, document=doc), approvals, run / "manifest.json", gate
 
 
@@ -505,3 +508,9 @@ def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known
     assert called[0]["flag_chain"] == str(good)
     handoff.materializer_from_env({**env, "EX42_FLAG_CHAIN": ""})(target_stage="E3", gate_receipt=gp, parent_manifest=manifest, source_plan="/s/p.yaml")
     assert called[1]["flag_chain"] is None                                       # the chain is E1F's, later stages do not take it
+
+
+def test_a_later_stage_boundary_with_a_held_maintenance_table_only_notifies(tmp_path):
+    plan, approvals, manifest, gate = _later_stage(tmp_path, maintenance="HOLD")
+    decision = handoff.decide_next_stage(plan, approvals, "E3", 1000, gate, manifest)
+    assert decision["action"] == "notify" and decision["state"] == "continue_held_by_maintenance"

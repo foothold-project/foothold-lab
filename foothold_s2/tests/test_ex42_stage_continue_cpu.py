@@ -36,18 +36,21 @@ def _past_the_extensions():
     return row["maximum_updates"] + row["extension_updates"] * row["extension_max_count"] + _interval()
 
 
-def _boundary(tmp_path, iteration, judgment="HOLD"):
+def _boundary(tmp_path, iteration, judgment="HOLD", maintenance="PASS"):
     path, manifest, *_ = _boundary_checkpoint(tmp_path, iteration)
-    p1 = {"state": "complete", "judgment": judgment, "stage_id": "E1", "checkpoint_iteration": iteration,
-          "checkpoint_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
     out = tmp_path / "eval"
     out.mkdir()
+    measured = out / "ex42_score.json"          # the measured score the gate receipt pins; carries the maintenance table verdict
+    measured.write_text(json.dumps({"maintenance_judgement": maintenance}))
+    p1 = {"state": "complete", "judgment": judgment, "stage_id": "E1", "checkpoint_iteration": iteration,
+          "checkpoint_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+          "measurement": str(measured), "measurement_sha256": hashlib.sha256(measured.read_bytes()).hexdigest()}
     (out / "p1_score.json").write_text(json.dumps(p1))
     return path, manifest, out, p1
 
 
-def _decide(tmp_path, iteration, judgment="HOLD", approvals=APPROVALS):
-    path, manifest, out, _ = _boundary(tmp_path, iteration, judgment)
+def _decide(tmp_path, iteration, judgment="HOLD", approvals=APPROVALS, maintenance="PASS"):
+    path, manifest, out, _ = _boundary(tmp_path, iteration, judgment, maintenance)
     return handoff.decide_next_stage(TABLE, approvals, "E1", iteration, out / "p1_score.json", manifest), path
 
 
@@ -197,3 +200,39 @@ def test_the_shipped_plan_and_cell_have_the_shape_the_decision_reads():
     assert e1["maximum_updates"] == cell["scope"]["maximum_updates"]  # the cell approves the base cap
     assert cell["boundary_evaluation_interval_updates"] == 250 and cell["extension_authorized"] is True
     assert os.path.isfile(TABLE)
+
+
+@needs_run
+@pytest.mark.parametrize("maintenance", ["HOLD", "FAIL"])
+@pytest.mark.parametrize("judgment", ["HOLD", "FAIL", "PASS"])
+def test_a_maintenance_table_that_is_not_pass_never_starts_the_next_segment_and_says_so(tmp_path, judgment, maintenance):
+    iteration, end = _inside_boundaries()[0]
+    decision, _ = _decide(tmp_path, iteration, judgment, maintenance=maintenance)
+    assert decision["action"] == "notify" and decision["state"] == "continue_held_by_maintenance"
+    assert f"maintenance table is {maintenance}" in decision["reason"] and str(end) in decision["reason"]
+    assert "resume_checkpoint" not in decision and "segment_end" not in decision
+
+
+@needs_run
+def test_a_hold_at_the_approved_bound_does_not_extend_while_the_maintenance_table_holds(tmp_path):
+    decision, _ = _decide(tmp_path, _e1_maximum(), "HOLD", maintenance="HOLD")
+    assert decision["action"] == "notify" and decision["state"] == "continue_held_by_maintenance"
+
+
+@needs_run
+def test_an_unpinned_or_altered_measurement_is_not_read_as_a_maintenance_pass(tmp_path):
+    iteration, _ = _inside_boundaries()[0]
+    path, manifest, out, p1 = _boundary(tmp_path, iteration, "HOLD", "PASS")
+    (out / "ex42_score.json").write_text(json.dumps({"maintenance_judgement": "PASS", "edited": True}))   # differs from the pin
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", iteration, out / "p1_score.json", manifest)
+    assert decision["state"] == "continue_held_by_maintenance" and "not readable" in decision["reason"]
+    unpinned = {k: v for k, v in p1.items() if k not in ("measurement", "measurement_sha256")}
+    (out / "p1_score.json").write_text(json.dumps(unpinned))
+    assert handoff.decide_next_stage(TABLE, APPROVALS, "E1", iteration, out / "p1_score.json", manifest)["state"] == "continue_held_by_maintenance"
+
+
+def test_later_stages_record_the_table_under_stage_exit_items(tmp_path):
+    measured = tmp_path / "s.json"
+    measured.write_text(json.dumps({"stage_exit": {"items": {"maintenance_current": {"judgement": "HOLD"}}}}))
+    p1 = {"measurement": str(measured), "measurement_sha256": hashlib.sha256(measured.read_bytes()).hexdigest()}
+    assert handoff._maintenance_verdict(p1) == "HOLD"
