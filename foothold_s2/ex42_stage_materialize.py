@@ -230,29 +230,29 @@ FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_s
 
 
 def registered_entry_axis(row, evidence):
-    """The axis the stage's first boundary changes, read from the plan's registered `boundary` block (never from evidence).
+    """The axis the stage's first boundary changes: the first entry of the plan's registered `boundary.axis_order`.
 
-    One allowed axis is that axis. Several need the registered `axis_order`: the first axis whose CG condition is met
-    (`evidence.axis_eligible`: {axis: bool}, absent = every axis met) is taken, an unmet axis is skipped, and with none
-    met the boundary changes no axis, so there is nothing to materialize. Evidence may only repeat the registered choice."""
+    The order is fixed before any result is seen (CG v0.17c, lead decision), so evidence never picks, skips or reorders:
+    a repeated axis in the order is legal (E6a height, height, roll) and the entry axis is `order[0]` as written.
+    One allowed axis is that axis. If `evidence.axis_eligible` says the entry axis' condition is not met, the answer is a
+    HOLD (ValueError, the caller notifies), never the next axis."""
     axes=row['boundary_axes']
     if len(axes)==1:
         order=list(axes)
     else:
         block=row.get('boundary')
         order=block.get('axis_order') if isinstance(block,dict) else None
-        if (not isinstance(order,list) or not order or set(order)!=set(axes) or len(order)!=len(set(order))
-                or block.get('entry_axis')!=order[0]):
+        if (not isinstance(order,list) or not order or set(order)!=set(axes) or block.get('entry_axis')!=order[0]):
             raise ValueError('multi-axis stage has no registered axis order')
+    entry=order[0]
     eligible=evidence.get('axis_eligible',{})
     if not isinstance(eligible,dict) or set(eligible)-set(axes) or any(type(v) is not bool for v in eligible.values()):
         raise ValueError('axis_eligible must map allowed axes to booleans')
-    chosen=next((a for a in order if eligible.get(a,True)),None)
-    if chosen is None:
-        raise ValueError('no axis meets its condition: the boundary changes no axis (nothing to materialize)')
-    if evidence.get('boundary_axis') not in (None,chosen):
+    if not eligible.get(entry,True):
+        raise ValueError(f'HOLD: entry axis {entry} does not meet its condition; the registered order is not skipped')
+    if evidence.get('boundary_axis') not in (None,entry):
         raise ValueError('evidence names a boundary axis other than the registered order gives')
-    return chosen
+    return entry
 
 
 def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_receipt, evidence,
