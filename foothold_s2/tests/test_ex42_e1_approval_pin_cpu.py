@@ -15,12 +15,14 @@ APPROVALS = ROOT / 'foothold_s2/curriculum/ex42-approvals.yaml'
 E1_PARENT = '680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e'
 
 
-def test_e1_record_is_1000_updates_from_e0_and_requires_rejudgment_pass():
+def test_e1_record_is_1750_updates_from_e0_and_requires_rejudgment_pass():
     doc = yaml.safe_load(APPROVALS.read_text())
     cell = doc['stage_e1_authorization']
     assert cell['approved'] is True
     assert cell['decision_source']['commit'] == '7ef023f58027f43c985c34a521d53a52252cabdf'
-    assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1000,
+    assert cell['scope_amendment']['decision_source']['commits'] == [          # team lead 2026-11-12 12:52 and 13:03
+        '3bb9b1e7bec3a24c46fa32a3b6f8c74477601523', 'c556f1b36e1018f92f1ab8f1f67adf1d099eea0f']
+    assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1750,
                                  parent_sha256=E1_PARENT, later_stages_authorized=False)
     assert cell['extension_authorized'] is True
     assert cell['extension_contract']['decision_source'] == '7121e0188cf1cbe558704764227e306e6097149f'

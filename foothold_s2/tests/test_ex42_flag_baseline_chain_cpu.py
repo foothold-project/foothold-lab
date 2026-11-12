@@ -77,36 +77,36 @@ def test_w09_requires_a_pinned_e1_graduation_gate(tmp_path):
     measurement.write_text('{"judgement":"PASS"}\n', encoding="utf-8")
     measurement_sha = hashlib.sha256(measurement.read_bytes()).hexdigest()
     gate = tmp_path / "p1_score.json"
-    row = {"state": "complete", "stage_id": "E1", "checkpoint_iteration": 1000,
+    row = {"state": "complete", "stage_id": "E1", "checkpoint_iteration": 1750,
            "judgment": "PASS", "checkpoint_sha256": CHECKPOINT_SHA,
            "measurement": str(measurement), "measurement_sha256": measurement_sha}
     gate.write_text(json.dumps(row), encoding="utf-8")
-    result = check_e1_gate(gate, checkpoint_sha256=CHECKPOINT_SHA)
+    result = check_e1_gate(gate, checkpoint_sha256=CHECKPOINT_SHA, exit_updates=(1750,))
     assert result["measurement_sha256"] == measurement_sha
     for key, value in (("judgment", "HOLD"), ("stage_id", "E0"),
                        ("checkpoint_iteration", 750), ("measurement_sha256", "0" * 64),
                        ("checkpoint_sha256", "0" * 64)):
         changed = {**row, key: value}
         gate.write_text(json.dumps(changed), encoding="utf-8")
-        with pytest.raises(ValueError, match="E1 m1000 PASS"):
-            check_e1_gate(gate, checkpoint_sha256=CHECKPOINT_SHA)
+        with pytest.raises(ValueError, match="E1 exit PASS"):
+            check_e1_gate(gate, checkpoint_sha256=CHECKPOINT_SHA, exit_updates=(1750,))
 
 
 def test_chain_dry_order_and_no_output_or_gpu(tmp_path, monkeypatch):
     from foothold_s2.scripts import ex42_flag_baseline_chain as chain
 
-    checkpoint = tmp_path / "model_1000.pt"
+    checkpoint = tmp_path / "model_1750.pt"
     checkpoint.write_bytes(b"known graduate")
     gate_measure = tmp_path / "score.json"
     gate_measure.write_bytes(b"{}")
     gate = tmp_path / "p1_score.json"
     gate.write_text(json.dumps({"state": "complete", "stage_id": "E1",
-                                "checkpoint_iteration": 1000, "judgment": "PASS",
+                                "checkpoint_iteration": 1750, "judgment": "PASS",
                                 "checkpoint_sha256": chain.digest(checkpoint),
                                 "measurement": str(gate_measure),
                                 "measurement_sha256": chain.digest(gate_measure)}), encoding="utf-8")
     plan_path = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
-    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1000))
+    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1750))
     monkeypatch.setattr(chain, "preflight", lambda path: {"mesh_sha256": "a" * 64})
     monkeypatch.setattr(chain, "flag_kit_commands",
                         lambda checkpoint, output, device, **kwargs:
@@ -125,7 +125,7 @@ def test_chain_dry_order_and_no_output_or_gpu(tmp_path, monkeypatch):
     assert not (tmp_path / "out").exists()
     # Each pin is an independent launch identity gate. A forged expected SHA
     # must not be substituted into the later receipt or accepted as a dry run.
-    with pytest.raises(ValueError, match="pinned E1 m1000 checkpoint"):
+    with pytest.raises(ValueError, match="pinned E1 exit checkpoint"):
         chain.run_chain(checkpoint, tmp_path / "wrong_checkpoint", "cuda:1",
                         plan_path=plan_path, mesh_dir=tmp_path,
                         expected_checkpoint_sha256="0" * 64,
@@ -147,19 +147,19 @@ def test_six_rounds_write_w09_and_recountable_w08(tmp_path, monkeypatch):
     import foothold_s2.ex42_eval_once as once
     from foothold_s2.scripts import ex42_flag_baseline_chain as chain
 
-    checkpoint = tmp_path / "model_1000.pt"
+    checkpoint = tmp_path / "model_1750.pt"
     checkpoint.write_bytes(b"known graduate")
     measurement = tmp_path / "score.json"
     measurement.write_bytes(b"{}")
     gate = tmp_path / "p1_score.json"
     gate.write_text(json.dumps({"state": "complete", "stage_id": "E1",
-                                "checkpoint_iteration": 1000, "judgment": "PASS",
+                                "checkpoint_iteration": 1750, "judgment": "PASS",
                                 "checkpoint_sha256": chain.digest(checkpoint),
                                 "measurement": str(measurement),
                                 "measurement_sha256": chain.digest(measurement)}), encoding="utf-8")
     plan = _p()
     monkeypatch.setattr(chain.EX42Plan, "load", lambda path: plan)
-    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1000))
+    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1750))
     monkeypatch.setattr(chain, "preflight", lambda path: {"mesh_sha256": "a" * 64})
     monkeypatch.setattr(chain, "gpu_identity", lambda device: {"gpu_uuid": "GPU-" + "a" * 32})
     monkeypatch.setattr(chain, "child_env", lambda: {"CUDA_DEVICE_ORDER": "PCI_BUS_ID"})
@@ -215,7 +215,7 @@ def test_failed_kit_child_is_a_durable_hold_not_a_baseline(tmp_path, monkeypatch
     monkeypatch.setattr(chain, "execute_flag_children", failed)
     out = tmp_path / "round"
     with pytest.raises(ValueError, match="flag round HOLD"):
-        chain.run_round(tmp_path / "model_1000.pt", out, "cuda:1", plan=_p(),
+        chain.run_round(tmp_path / "model_1750.pt", out, "cuda:1", plan=_p(),
                         plan_path=tmp_path / "plan.yaml", mesh_dir=tmp_path,
                         mesh_sha256="a" * 64, checkpoint_sha256=CHECKPOINT_SHA,
                         seed=42, task="test", process=SimpleNamespace(), env={},
@@ -230,17 +230,17 @@ def test_dual_device_keeps_seed_order_and_runs_two_groups_concurrently(tmp_path,
     import foothold_s2
     from foothold_s2.scripts import ex42_flag_baseline_chain as chain
 
-    checkpoint = tmp_path / "model_1000.pt"
+    checkpoint = tmp_path / "model_1750.pt"
     checkpoint.write_bytes(b"known graduate")
     measurement = tmp_path / "score.json"
     measurement.write_bytes(b"{}")
     gate = tmp_path / "p1_score.json"
     gate.write_text(json.dumps({"state": "complete", "stage_id": "E1",
-                                "checkpoint_iteration": 1000, "judgment": "PASS",
+                                "checkpoint_iteration": 1750, "judgment": "PASS",
                                 "checkpoint_sha256": chain.digest(checkpoint),
                                 "measurement": str(measurement),
                                 "measurement_sha256": chain.digest(measurement)}), encoding="utf-8")
-    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1000))
+    monkeypatch.setattr(chain, "manifest_checkpoint_sha", lambda path: (chain.digest(path), 1750))
     monkeypatch.setattr(chain.EX42Plan, "load", lambda path: _p())
     monkeypatch.setattr(chain, "preflight", lambda path: {"mesh_sha256": "a" * 64})
     monkeypatch.setattr(chain, "gpu_identity", lambda device: {"device": device, "gpu_uuid": device})
@@ -291,7 +291,7 @@ def test_dual_device_cli_accepts_exact_pair(monkeypatch, tmp_path, capsys):
     from foothold_s2.scripts import ex42_flag_baseline_chain as chain
     received = []
     monkeypatch.setattr(chain, "run_chain", lambda *args, **kwargs: received.append(kwargs) or {"state": "DRY"})
-    base = ["--checkpoint", str(tmp_path / "model_1000.pt"),
+    base = ["--checkpoint", str(tmp_path / "model_1750.pt"),
             "--expected-checkpoint-sha256", "a" * 64, "--e1-gate", str(tmp_path / "gate.json"),
             "--plan", str(tmp_path / "plan.yaml"), "--mesh-dir", str(tmp_path),
             "--expected-mesh-sha256", "b" * 64, "--out", str(tmp_path / "out")]
@@ -317,7 +317,7 @@ def test_cuda1_round_rejects_cuda0_child_identity(tmp_path, monkeypatch):
 
     output = tmp_path / "cuda1"
     with pytest.raises(ValueError, match="flag round HOLD"):
-        chain.run_round(tmp_path / "model_1000.pt", output, "cuda:1", plan=_p(),
+        chain.run_round(tmp_path / "model_1750.pt", output, "cuda:1", plan=_p(),
                         plan_path=tmp_path / "plan.yaml", mesh_dir=tmp_path,
                         mesh_sha256="a" * 64, checkpoint_sha256=CHECKPOINT_SHA,
                         seed=42, task="test", process=SimpleNamespace(hidden_child=child),

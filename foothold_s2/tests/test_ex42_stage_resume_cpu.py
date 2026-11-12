@@ -30,7 +30,7 @@ def _boundary_checkpoint(tmp_path, iteration=250, *, edit=None, completed=None):
     approval_sha = hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
     saved["iter"] = iteration
     saved["ex41_critic_mirror"] = True                       # an E1 boundary save carries the D174 mirror
-    saved["continuous_curriculum"].update(stage_id="E1", iteration=iteration, maximum_updates=1000, finished=False,
+    saved["continuous_curriculum"].update(stage_id="E1", iteration=iteration, maximum_updates=1750, finished=False,
                                           plan_sha256=plan.sha256, approval_sha256=approval_sha, parent_sha256=E1_PARENT)
     saved["ex42_parent_transfer"].update(parent_sha256=E1_PARENT, parent_cumulative_update=13250)
     if edit:
@@ -48,7 +48,7 @@ def _boundary_checkpoint(tmp_path, iteration=250, *, edit=None, completed=None):
 
 def _validate(path, manifest, plan_sha, approval_sha, **over):
     kw = dict(checkpoint_path=path, manifest_path=manifest, plan_sha256=plan_sha, approval_sha256=approval_sha,
-              parent_receipt={"parent_sha256": E1_PARENT}, maximum_updates=1000, stage_id="E1",
+              parent_receipt={"parent_sha256": E1_PARENT}, maximum_updates=1750, stage_id="E1",
               parent_cumulative_update=13250, segment_end=500)
     return entry.validate_ex42_stage_zero_resume(**(kw | over))
 
@@ -60,26 +60,26 @@ def test_e1_boundary_resume_reads_the_real_state_and_maps_250_to_251_cumulative_
     assert proof["local_update_origin"] == 250 and proof["first_resumed_local_update"] == 251
     assert proof["cumulative_update_origin"] == 13500 and proof["first_resumed_cumulative_update"] == 13501
     assert proof["segment_end"] == 500 and proof["requested_updates"] == 250
-    assert proof["remaining_after_resume"] == 500 and proof["maximum_updates"] == 1000
+    assert proof["remaining_after_resume"] == 1250 and proof["maximum_updates"] == 1750
     assert {"ppo_optimizer", "perception_optimizer", "adasmpl", "curriculum", "rng",
             "environment_terrain_and_command_rng"} <= set(proof["restored_groups"])
     (tmp_path / "b").mkdir()
-    last = _validate(*_boundary_checkpoint(tmp_path / "b", 750), segment_end=1000)
+    last = _validate(*_boundary_checkpoint(tmp_path / "b", 1500), segment_end=1750)
     assert last["requested_updates"] == 250 and last["remaining_after_resume"] == 0
 
 
 @needs_run
 def test_resume_without_a_segment_end_runs_to_the_stage_bound(tmp_path):
-    assert _validate(*_boundary_checkpoint(tmp_path), segment_end=None)["requested_updates"] == 750
+    assert _validate(*_boundary_checkpoint(tmp_path), segment_end=None)["requested_updates"] == 1500
 
 
 @needs_run
 @pytest.mark.parametrize("name,over", [
     ("segment end not after the checkpoint", {"segment_end": 250}),
-    ("segment end past the stage bound", {"segment_end": 1250}),
+    ("segment end past the stage bound", {"segment_end": 2000}),
     ("stage id of an E0 checkpoint", {"stage_id": "E0"}),
     ("wrong parent cumulative update", {"parent_cumulative_update": 13000}),
-    ("wrong stage bound", {"maximum_updates": 1750}),          # not the cap and not cap + whole extensions
+    ("wrong stage bound", {"maximum_updates": 1250}),          # not the cap and not cap + whole extensions
     ("wrong plan pin", {"plan_sha256": "0" * 64}),
     ("wrong approval pin", {"approval_sha256": "0" * 64}),
     ("wrong parent", {"parent_receipt": {"parent_sha256": "0" * 64}}),

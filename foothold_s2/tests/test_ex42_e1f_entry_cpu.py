@@ -75,6 +75,6 @@ def test_stage_bound_grants_an_extension_only_to_an_authorized_cell_and_inside_t
 
 def test_a_resume_from_the_base_cap_save_into_the_extension_is_accepted_by_the_saved_bound_check():
     from foothold_s2.scripts.ex42_training_entry import _saved_bound_fits
-    assert _saved_bound_fits(1000, 1500, "E1") and _saved_bound_fits(1000, 1000, "E1") and _saved_bound_fits(1500, 2000, "E1")
-    assert not _saved_bound_fits(1500, 1000, "E1") and not _saved_bound_fits(1250, 1500, "E1")
+    assert _saved_bound_fits(1750, 2250, "E1") and _saved_bound_fits(1750, 1750, "E1") and _saved_bound_fits(2250, 2750, "E1")
+    assert not _saved_bound_fits(2250, 1750, "E1") and not _saved_bound_fits(2000, 2250, "E1") and not _saved_bound_fits(1000, 1750, "E1")
     assert _saved_bound_fits(1000, 1000, "EX42_0_T0_prime") and not _saved_bound_fits(1000, 1500, "EX42_0_T0_prime")

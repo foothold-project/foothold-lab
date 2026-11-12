@@ -446,13 +446,14 @@ def test_next_stage_notice_only_at_the_stage_end_and_never_starts_anything():
     assert ids.index("E1") + 1 < len(ids)
     following = ids[ids.index("E1") + 1]
     row = next(r for r in EX42Plan.load(plan).document["stages"] if r["id"] == "E1")
-    first = row["minimum_updates"]                               # the first check (PASS here already asks for the next stage)
+    first = row["minimum_updates"]                               # E1 (v0.17j): the first exit check is the stage end, 1750
     passed = {"judgment": "PASS", "checkpoint_sha256": "a" * 64}
     ready = once.next_stage_notice(plan, "E1", first, passed)
     assert ready["state"] == "next_stage_ready_for_approval" and ready["next_stage_id"] == following
     assert ready["automatic_launch_started"] is False
     assert once.next_stage_notice(plan, "E1", first, {**passed, "judgment": "HOLD"})["state"] == "not_ready"
-    for later in (first + 250, first + 500, row["maximum_updates"]):     # later boundaries get no first-check notice
+    assert first == row["maximum_updates"] == 1750
+    for later in (250, first - 250, first + 250, first + 500):           # no other boundary gets the exit notice
         assert once.next_stage_notice(plan, "E1", later, passed) is None
     assert once.next_stage_notice(plan, "NOPE", first, passed) is None
 

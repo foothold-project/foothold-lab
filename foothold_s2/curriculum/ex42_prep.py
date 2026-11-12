@@ -471,6 +471,15 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
             'training_started': False}
 
 
+def stage_exit_updates(plan_document: dict[str, Any], stage_id: str) -> tuple[int, ...]:
+    """The local updates at which a stage may hand over: its base cap, then the cap plus whole extensions."""
+    row = next(r for r in plan_document['stages'] if r.get('id') == stage_id)
+    cap, step, count = row['maximum_updates'], row.get('extension_updates') or 0, row.get('extension_max_count') or 0
+    if type(cap) is not int or cap <= 0 or type(step) is not int or type(count) is not int or step < 0 or count < 0:
+        raise ValueError(f'EX-42 {stage_id} base cap or extension is invalid')
+    return tuple(cap + k * step for k in range(count + 1)) if step else (cap,)
+
+
 def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
     """CG E.1/E.4: a base cap and a separate, counted HOLD extension budget."""
     cap, step, count = (row.get(k) for k in ('maximum_updates', 'extension_updates', 'extension_max_count'))

@@ -40,7 +40,7 @@ def _gate(known):
 def test_gate_pass_and_approved_cell_decide_to_launch_the_next_stage(known):
     decision = _decide(known)
     assert decision["action"] == "launch" and decision["next_stage_id"] == "E1"
-    assert decision["authorization"]["scope"]["maximum_updates"] == 1000
+    assert decision["authorization"]["scope"]["maximum_updates"] == 1750
     assert decision["authorization"]["training_started"] is False and decision["gate_sha256"]
 
 
@@ -56,9 +56,9 @@ def test_a_gate_that_did_not_pass_only_notifies(known, judgment):
 
 
 def test_the_last_stage_with_an_approved_cell_cannot_start_a_following_stage(known):
-    # E1 ends at 1000 updates; E1F has no approval cell, so even a PASS only notifies
-    gate = {**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}
-    decision = _decide(known, stage="E1", iteration=1000, p1=gate)
+    # E1 ends at 1750 updates; E1F has no approval cell, so even a PASS only notifies
+    gate = {**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1750}
+    decision = _decide(known, stage="E1", iteration=1750, p1=gate)
     assert decision["action"] == "notify" and decision["state"] == "next_stage_ready_for_approval"
     assert "not authorized to start by itself" in decision["reason"]
 
@@ -413,7 +413,7 @@ def test_the_launcher_gets_the_plan_pair_of_a_continue_and_of_a_materialized_nex
 
 
 def test_a_next_stage_without_a_parent_pin_is_materialized_first_and_a_refusal_only_notifies(known):
-    gate = {**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}
+    gate = {**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1750}
     calls = []
 
     def refuse(**kw):
@@ -421,7 +421,7 @@ def test_a_next_stage_without_a_parent_pin_is_materialized_first_and_a_refusal_o
         raise ValueError("evidence missing")
     base, ap, manifest, gp = known
     gp.write_text(json.dumps(gate))
-    decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=refuse)
+    decision = handoff.decide_next_stage(base, ap, "E1", 1750, gp, manifest, materialize=refuse)
     assert calls == ["E1F"] and decision["action"] == "notify" and "materialize refused: evidence missing" in decision["reason"]
     gp.write_text(json.dumps(_gate(known) | {"stage_id": "E0"}))
     assert handoff.decide_next_stage(base, ap, "E0", 250, gp, manifest, materialize=refuse)["action"] in ("launch", "notify")
@@ -457,7 +457,7 @@ def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_deci
     import shutil
     import foothold_s2.ex42_auto_authorization as auto
     base, ap, manifest, gp = known
-    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
+    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1750}))
     folder = tmp_path / "published"
     shutil.copytree(base.path.parent, folder)
     made = {"plan": str(folder / "ex42-prep.yaml"), "approvals": str(folder / "ex42-approvals.yaml"), "plan_sha256": "9" * 64}
@@ -467,7 +467,7 @@ def test_the_next_stage_is_authorized_against_the_materialized_pair_and_the_deci
         seen.update(plan=str(plan.path), approvals=str(approvals), **kw)
         return {"gate_sha256": kw["expected_gate_sha256"], "automatic_launch_authorized": True}
     monkeypatch.setattr(auto, "validate_automatic_stage_launch", fake)
-    decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=lambda **kw: made)
+    decision = handoff.decide_next_stage(base, ap, "E1", 1750, gp, manifest, materialize=lambda **kw: made)
     assert decision["action"] == "launch" and decision["target_stage"] == "E1F"
     assert seen["plan"] == made["plan"] and seen["approvals"] == made["approvals"]          # not the original pair
     assert seen["plan"] != str(base.path) and seen["target_stage"] == "E1F"
@@ -479,7 +479,7 @@ def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known
     monkeypatch.setattr(handoff, "measured_budget", lambda *a: {"limit":20000, "used":1000, "basis":"b"})
     import foothold_s2.ex42_stage_materialize as materialize
     base, ap, manifest, gp = known
-    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1000}))
+    gp.write_text(json.dumps({**_gate(known), "stage_id": "E1", "checkpoint_iteration": 1750}))
     (tmp_path / "ev").mkdir()
     (tmp_path / "ev" / "E1F.json").write_text("{}")
     (tmp_path / "ev" / "E3.json").write_text("{}")
@@ -491,7 +491,7 @@ def test_e1f_is_not_materialized_without_the_flag_chain_and_nothing_starts(known
     for chain in (None, str(tmp_path / "missing.json")):                        # unset, or a path with no file
         if chain:
             env["EX42_FLAG_CHAIN"] = chain
-        decision = handoff.decide_next_stage(base, ap, "E1", 1000, gp, manifest, materialize=handoff.materializer_from_env(env))
+        decision = handoff.decide_next_stage(base, ap, "E1", 1750, gp, manifest, materialize=handoff.materializer_from_env(env))
         assert decision["action"] == "notify" and "flag chain" in decision["reason"]
     assert called == []                                                          # no plan was frozen, no launch decision
     good = tmp_path / "chain_receipt.json"
