@@ -122,8 +122,11 @@ def test_real_runtime_and_train_cfg_hooks():
     source,old=entry.load_ex42_stage_zero_source(p)
     view=entry.make_ex42_stage_zero_plan_view(source,old,{"parent_sha256":"b"*64},ex42_plan=p,stage_id='E3')
     assert view.command_contract==k
-    # Keep the source/reward adapter's single T0 stage intact.
-    assert view.stages==[old]
+    # The source/reward adapter's single T0 stage, with the command ranges and turn overlay the row carries (E1's).
+    from dataclasses import replace
+    profile=cs.stage_commands(p,'E3')
+    assert view.stages==[replace(old,shares=profile['shares'],ranges=profile['ranges'],turn_overlay=profile['turn_overlay'])]
+    assert view.stages[0].ranges['side_vy_abs']==(0.1,0.8) and old.ranges['side_vy_abs']==(0.2,0.6)
     cfg=NS(commands=NS(base_velocity=NS(dynamic_flags=False,flag_stride=0,force_flag_provider=None)))
     cs.configure_env(cfg,k)
     assert cfg.commands.base_velocity.dynamic_flags is True
