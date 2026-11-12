@@ -42,9 +42,9 @@ def test_e1_extension_uses_new_decision_and_bounded_hold_contract():
     row=next(r for r in plan.document['stages'] if r['id']=='E1')
     proof=validate_stage_authorization(plan, APPROVALS, row['parent']['sha256'], stage_id='E1')
     assert proof['extension_authorized'] is True
-    assert proof['extension_contract'] == dict(judgment='HOLD',after_updates=1000,max_count=2,
-        maximum_updates=2000,increment_updates=500,decision_id=DECISION_ID,decision_source=DECISION)
-    assert source_exit_bounds(plan,plan,'E1') == (250,2000)
+    assert proof['extension_contract'] == dict(judgment='HOLD',after_updates=1750,max_count=2,
+        maximum_updates=2750,increment_updates=500,decision_id=DECISION_ID,decision_source=DECISION)
+    assert source_exit_bounds(plan,plan,'E1') == (1750,2750)
 
 
 @pytest.mark.parametrize('field,value', [('decision_source','0'*40),('decision_id','old'),

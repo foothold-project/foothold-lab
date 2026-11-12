@@ -1,6 +1,6 @@
 """EX-42 E1 first segment on the E0 path: real E0 m250 parent, real mesh, real chain, real runner mirror switch.
 
-E1 (CG E.2): E0 m250 -> 1000 updates, the same continuous exposure with level cap 5, D174 critic mirror on
+E1 (CG E.2): E0 m250 -> 1750 updates (seven 250-update segments), the same continuous exposure with level cap 5, D174 critic mirror on
 at the start. CPU only; the real E0 run's model_250.pt / manifest.json are used when this machine has them.
 """
 from __future__ import annotations
@@ -33,7 +33,7 @@ needs_run = pytest.mark.skipif(not (E0_RUN / "model_250.pt").is_file(), reason="
 E1_PARENT = entry.E1_PARENT_SHA256
 
 
-def _approvals(tmp_path, *, cell=True, scale=1.0, later=False, parent=E1_PARENT, maximum=1000, mirror=True, name="approvals.yaml",
+def _approvals(tmp_path, *, cell=True, scale=1.0, later=False, parent=E1_PARENT, maximum=1750, mirror=True, name="approvals.yaml",
                cell_edit=None):
     doc = yaml.safe_load(APPROVALS.read_text(encoding="utf-8"))
     doc.pop("stage_e1_authorization", None)
@@ -63,7 +63,7 @@ def test_the_pin_constant_matches_the_plan_and_the_shipped_cell_is_bounded_to_th
                    "sha256": E1_PARENT}
     assert (E1_PARENT, 250) in entry.REWARD_CONTRACT_PARENTS
     shipped = validate_stage_e1_authorization(plan, APPROVALS, E1_PARENT)       # the lead filled the cell (#632)
-    assert shipped["scope"]["maximum_updates"] == 1000 and shipped["later_stages_authorized"] is False
+    assert shipped["scope"]["maximum_updates"] == 1750 and shipped["later_stages_authorized"] is False
     assert shipped["extension_authorized"] is True and shipped["boundary_evaluation_interval_updates"] == 250
     assert shipped["e0_rejudgment_prerequisite"]["required_result"] == "PASS"
 
@@ -71,7 +71,7 @@ def test_the_pin_constant_matches_the_plan_and_the_shipped_cell_is_bounded_to_th
 def test_e1_cell_is_bounded_and_every_guard_refuses_on_its_own(tmp_path):
     plan = EX42Plan.load(TABLE)
     proof = validate_stage_e1_authorization(plan, _approvals(tmp_path), E1_PARENT)
-    assert proof["state"] == "stage_e1_only_authorized" and proof["scope"]["maximum_updates"] == 1000
+    assert proof["state"] == "stage_e1_only_authorized" and proof["scope"]["maximum_updates"] == 1750
     assert proof["later_stages_authorized"] is False
     assert proof["boundary_evaluation_interval_updates"] == 250 and proof["extension_authorized"] is False
     assert proof["e0_rejudgment_prerequisite"]["required_result"] == "PASS"
@@ -120,7 +120,7 @@ def test_e1_cell_conditions_are_read_not_assumed(tmp_path):
 def _cli(tmp_path, parent_file, **over):
     base = dict(stage_id="E1", plan_path=TABLE, approvals_path=_approvals(tmp_path), experiment_path=ROOT / "experiments/EX-42.yaml",
                 parent_checkpoint_path=parent_file, log_dir=tmp_path / "e1run", task=entry.STAGE_ZERO_TASK_ID,
-                device="cuda:0", headless=True, distributed=True, max_iterations=1000, num_envs=3072,
+                device="cuda:0", headless=True, distributed=True, max_iterations=1750, num_envs=3072,
                 map_input="reconstruction", force_gt=False, approved_switch=True, world_size=2, rank=0)
     return base | over
 
@@ -129,11 +129,11 @@ def _cli(tmp_path, parent_file, **over):
 def test_e1_cli_passes_on_the_real_m250_and_is_bounded_to_1000_updates_on_two_ranks(tmp_path):
     parent_file = E0_RUN / "model_250.pt"
     plan, parent, request = entry.validate_ex42_stage_e_cli(**_cli(tmp_path, parent_file))
-    assert request["state"] == "stage_e1_preflight_passed" and request["max_iterations"] == 1000
+    assert request["state"] == "stage_e1_preflight_passed" and request["max_iterations"] == 1750
     assert request["parent_cumulative_update"] == 13250 and request["total_envs"] == 6144
     assert request["critic_mirror"] == {"enabled_at_start": True, "decision_id": "D174"}
-    for over, match in (({"max_iterations": 250}, "exactly 1000 updates"), ({"stage_id": "E1F"}, "E0 or E1 only"),
-                        ({"distributed": False}, "exactly 1000 updates"), ({"num_envs": 1536}, "exactly 1000 updates"),
+    for over, match in (({"max_iterations": 250}, "exactly 1750 updates"), ({"stage_id": "E1F"}, "E0 or E1 only"),
+                        ({"distributed": False}, "exactly 1750 updates"), ({"num_envs": 1536}, "exactly 1750 updates"),
                         ({"force_gt": True}, "without forced GT"), ({"device": "cuda:1"}, "cuda:0")):
         with pytest.raises(ValueError, match=match):
             entry.validate_ex42_stage_e_cli(**_cli(tmp_path, parent_file, **over))
@@ -165,9 +165,8 @@ def test_real_e0_m250_is_a_valid_e1_parent_and_its_placement_is_restored_with_di
     exposure, caps = ex.exposure_by_column(stage, table, "E1")
     e0_exposure, e0_caps = ex.exposure_by_column(
         next(r for r in plan.document["stages"] if r["id"] == "E0")["terrain"], table, "E0")
-    # E1 first segment: the E0 columns with the L+ start cap 6 (continuous_level_cap.start); the parent sits at <= 5
-    assert exposure == e0_exposure and caps == [6 if c == 5 else c for c in e0_caps] and max(e0_caps) == 5
-    assert sum(w > 0 for w in exposure) == 23 and int(checkpoint["env_state"]["terrain_levels"].max()) <= 5
+    # E1 first segment: the E0 columns and the E0 cap 5 (the command segments keep it; the raise starts at boundary 3)
+    assert (exposure, caps) == (e0_exposure, e0_caps) and max(caps) == 5 and sum(w > 0 for w in exposure) == 23
     env_state = checkpoint["env_state"]
     terrain = types.SimpleNamespace(
         terrain_levels=torch.zeros(3072, dtype=torch.long), terrain_types=torch.zeros(3072, dtype=torch.long),
@@ -197,9 +196,9 @@ def test_real_m250_and_its_receipt_load_with_stage_e1_only(tmp_path):
     assert result["state"] == "loaded_for_ex42_stage_e1" and result["parent_cumulative_update"] == 13250
     assert result["local_iteration_origin"] == 0 and runner.current_learning_iteration == 0
     cfg = entry.configure_ex42_stage_zero_train_cfg({}, checkpoint, parent_path=receipt["parent_path"],
-                                                    parent_sha256=receipt["parent_sha256"], updates=1000,
+                                                    parent_sha256=receipt["parent_sha256"], updates=1750,
                                                     parent_local_update=250, parent_cumulative_update=13250, stage_id="E1")
-    assert cfg["max_iterations"] == 1000 and cfg["ex41_critic_mirror"] is False         # the grant turns it on after load
+    assert cfg["max_iterations"] == 1750 and cfg["ex41_critic_mirror"] is False         # the grant turns it on after load
     with pytest.raises(ValueError, match="not an approved value"):
         entry.configure_ex42_stage_zero_train_cfg({}, checkpoint, parent_path="p", parent_sha256="0" * 64, updates=250, stage_id="E1")
 
@@ -325,10 +324,10 @@ def test_train_start_wires_e1_the_same_way_as_e0():
 def test_e1_runtime_stamps_the_env_with_the_e1_stage_id_the_first_reset_check_compares():
     plan = types.SimpleNamespace(stages=[types.SimpleNamespace(name="s")])
     runtime = entry.EX42StageZeroRuntime(stage_zero_plan=plan, plan_sha256="1" * 64, approval_sha256="2" * 64,
-                                         parent_sha256=E1_PARENT, maximum_updates=1000, push_vmax_mps=2.0, stage_id="E1")
+                                         parent_sha256=E1_PARENT, maximum_updates=1750, push_vmax_mps=2.0, stage_id="E1")
     env = types.SimpleNamespace(num_envs=4, device="cpu")
     runtime.attach_environment(env, types.SimpleNamespace())
-    assert env._ex42_stage_id == "E1" and runtime.maximum_updates == 1000
+    assert env._ex42_stage_id == "E1" and runtime.maximum_updates == 1750
     assert env._ex41_terrain == {"policy": "performance", "level_cap": 5}          # the E1 first segment keeps cap 5
 
 
@@ -350,8 +349,8 @@ def test_the_stage_table_is_the_plan_and_a_stage_without_a_pin_is_not_startable(
     assert list(table) == ["E0", "E1"] == list(entry.E_STAGES)
     assert table["E0"]["previous"] is None and table["E1"]["previous"] == "E0"
     assert (table["E0"]["updates"], table["E0"]["parent_cumulative"]) == (250, 13000)
-    assert (table["E1"]["updates"], table["E1"]["parent_cumulative"], table["E1"]["critic_mirror"]) == (1000, 13250, True)
-    pinned = [{"id": "E1F", "minimum_updates": 750, "parent": {"manifest_local_update": 1000, "cumulative_update": 14250,
+    assert (table["E1"]["updates"], table["E1"]["parent_cumulative"], table["E1"]["critic_mirror"]) == (1750, 13250, True)
+    pinned = [{"id": "E1F", "minimum_updates": 750, "parent": {"manifest_local_update": 1750, "cumulative_update": 15000,
                                                               "checkpoint_key": "model_1000.pt"}}]
     later = entry.e_stage_table(plan["stages"][:2] + pinned)
     assert later["E1F"]["previous"] == "E1" and later["E1F"]["updates"] == 750

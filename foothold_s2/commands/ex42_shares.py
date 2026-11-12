@@ -43,6 +43,66 @@ def read_contract(plan, stage_id):
             'mode_selection': 'episode_reset', 'other_columns': 'unchanged_source_stage'}
 
 
+def stage_commands(plan, stage_id):
+    """The stage's own command profile `stages[].commands` = {shares, ranges, turn_overlay}, validated; None when the
+    row has none (the stage keeps the stage-zero profile). shares: the 13 free slots, sum 1. ranges: exactly the
+    stage-zero range keys. turn_overlay: {fraction, wz_abs} for the reverse / side / diagonal slots."""
+    stage = next((s for s in plan.document['stages'] if s['id'] == stage_id), {})
+    cell = stage.get('commands')
+    if cell is None:
+        return None
+    number = lambda v: type(v) in (int, float) and math.isfinite(v)   # noqa: E731
+    if not isinstance(cell, dict) or set(cell) != {'shares', 'ranges', 'turn_overlay'}:
+        raise ValueError(f'EX-42 {stage_id} commands needs exactly shares, ranges and turn_overlay')
+    shares, ranges, overlay = cell['shares'], cell['ranges'], cell['turn_overlay']
+    if (not isinstance(shares, dict) or set(shares) != set(EX39_SLOTS) or any(not number(v) or not 0 <= v <= 1 for v in shares.values())
+            or not math.isclose(sum(shares.values()), 1., abs_tol=1e-9)):
+        raise ValueError(f'EX-42 {stage_id} commands.shares needs the 13 free slots as probabilities that sum to 1')
+    if not isinstance(ranges, dict) or set(ranges) != set(plan.document['stage_zero']['ranges']):
+        raise ValueError(f'EX-42 {stage_id} commands.ranges needs exactly the stage-zero range keys')
+    for key, pair in ranges.items():
+        if (not isinstance(pair, list) or len(pair) != 2 or any(not number(v) for v in pair) or not pair[0] < pair[1]
+                or (key.endswith('_abs') and pair[0] < 0)):
+            raise ValueError(f'EX-42 {stage_id} commands.ranges.{key} must be [low, high] with low < high (absolute ranges from 0)')
+    if (not isinstance(overlay, dict) or set(overlay) != {'fraction', 'wz_abs'} or not number(overlay['fraction'])
+            or not 0 < overlay['fraction'] <= 1 or not isinstance(overlay['wz_abs'], list) or len(overlay['wz_abs']) != 2
+            or any(not number(v) for v in overlay['wz_abs']) or not 0 < overlay['wz_abs'][0] < overlay['wz_abs'][1]):
+        raise ValueError(f'EX-42 {stage_id} commands.turn_overlay needs fraction in (0, 1] and wz_abs [low, high] above 0')
+    return {'shares': {k: float(v) for k, v in shares.items()},
+            'ranges': {k: (float(v[0]), float(v[1])) for k, v in ranges.items()},
+            'turn_overlay': (float(overlay['fraction']), float(overlay['wz_abs'][0]), float(overlay['wz_abs'][1]))}
+
+
+def command_adjust_limits(plan, stage_id):
+    """`stages[].command_adjust_limits`: the outer lines of every `commands` cell for a segment adjustment, validated.
+    {ranges: {key: (low, high)}, turn_overlay: (fraction_max, wz low, wz high), shares: {slot: (low, high)}}; a cell the
+    row does not name is limited to its `commands` value. None when the row has no limits. The start profile must lie
+    inside them."""
+    stage = next((s for s in plan.document['stages'] if s['id'] == stage_id), {})
+    cell, base = stage.get('command_adjust_limits'), stage_commands(plan, stage_id)
+    if cell is None:
+        return None
+    pair = lambda v: (isinstance(v, list) and len(v) == 2 and all(type(x) in (int, float) and math.isfinite(x) for x in v)   # noqa: E731
+                      and v[0] <= v[1])
+    if base is None or not isinstance(cell, dict) or set(cell) != {'ranges', 'turn_overlay', 'shares'}:
+        raise ValueError(f'EX-42 {stage_id} command_adjust_limits needs a commands profile and exactly ranges, turn_overlay, shares')
+    ranges, overlay, shares = cell['ranges'], cell['turn_overlay'], cell['shares']
+    if (not isinstance(ranges, dict) or not set(ranges) <= set(base['ranges']) or not all(pair(v) for v in ranges.values())
+            or not isinstance(shares, dict) or not set(shares) <= set(base['shares']) or not all(pair(v) for v in shares.values())
+            or not isinstance(overlay, dict) or set(overlay) != {'fraction_max', 'wz_abs'} or not pair(overlay['wz_abs'])
+            or type(overlay['fraction_max']) not in (int, float) or not 0 < overlay['fraction_max'] <= 1):
+        raise ValueError(f'EX-42 {stage_id} command_adjust_limits names an unknown cell or a malformed [low, high]')
+    out = {'ranges': {k: tuple(map(float, ranges.get(k, v))) for k, v in base['ranges'].items()},
+           'shares': {k: tuple(map(float, shares.get(k, (v, v)))) for k, v in base['shares'].items()},
+           'turn_overlay': (float(overlay['fraction_max']), float(overlay['wz_abs'][0]), float(overlay['wz_abs'][1]))}
+    fraction, low, high = base['turn_overlay']
+    if (any(not out['ranges'][k][0] <= v[0] < v[1] <= out['ranges'][k][1] for k, v in base['ranges'].items())
+            or any(not out['shares'][k][0] <= v <= out['shares'][k][1] for k, v in base['shares'].items())
+            or fraction > out['turn_overlay'][0] or not out['turn_overlay'][1] <= low < high <= out['turn_overlay'][2]):
+        raise ValueError(f'EX-42 {stage_id} commands start outside command_adjust_limits')
+    return out
+
+
 def configure_env(env_cfg, contract):
     if contract is None:
         return

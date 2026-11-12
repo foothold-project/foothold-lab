@@ -28,9 +28,10 @@ def test_runtime_bound_is_250_for_e0_and_1000_for_stage_zero():
     for stage, wrong in (("E0", 1000), ("E0", 249), (STAGE_ZERO, 250), (STAGE_ZERO, 999)):
         with pytest.raises(ValueError, match="remain bounded to"):
             _runtime(stage, wrong)
-    assert _runtime("E1", 1000).maximum_updates == 1000
-    with pytest.raises(ValueError, match="remain bounded to"):
-        _runtime("E1", 250)
+    assert _runtime("E1", 1750).maximum_updates == 1750
+    for wrong in (250, 1000):
+        with pytest.raises(ValueError, match="remain bounded to"):
+            _runtime("E1", wrong)
     with pytest.raises(ValueError, match="stage zero, E0 or E1 only"):
         _runtime("E1F", 250)
 

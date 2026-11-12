@@ -136,7 +136,7 @@ def test_a_contract_with_mismatched_columns_is_refused():
 def _runtime(tmp_path, contract):
     plan = types.SimpleNamespace(stages=[types.SimpleNamespace(name="s")])
     rt = te.EX42StageZeroRuntime(stage_zero_plan=plan, plan_sha256=PSHA, approval_sha256="2" * 64,
-                                 parent_sha256="3" * 64, maximum_updates=1000, push_vmax_mps=2.0, stage_id="E1")
+                                 parent_sha256="3" * 64, maximum_updates=1750, push_vmax_mps=2.0, stage_id="E1")
     terrain = types.SimpleNamespace(terrain_levels=torch.tensor([0, 1, 2]), terrain_types=torch.tensor([0, 0, 1]),
                                     terrain_origins=torch.zeros(10, 4, 3))
     rt.env = types.SimpleNamespace(num_envs=3, device="cpu", scene=types.SimpleNamespace(terrain=terrain),

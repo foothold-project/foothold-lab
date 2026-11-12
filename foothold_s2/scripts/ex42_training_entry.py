@@ -1027,8 +1027,14 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                                    parent_receipt: dict[str, Any], *, parent_update: int = 12000,
                                    ex42_plan=None, stage_id="EX42_0_T0_prime"):
     """Keep the reward/source adapter intact; later command shares have a separate contract."""
-    from foothold_s2.commands.ex42_shares import read_contract
+    from foothold_s2.commands.ex42_shares import command_adjust_limits, read_contract, stage_commands
     command_contract = read_contract(ex42_plan, stage_id) if ex42_plan is not None else None
+    profile = stage_commands(ex42_plan, stage_id) if ex42_plan is not None else None
+    if ex42_plan is not None:
+        command_adjust_limits(ex42_plan, stage_id)       # a malformed limits cell must refuse the start: the plan is frozen after it
+    if profile is not None:        # the stage's own shares, ranges and turn overlay replace the stage-zero ones
+        from dataclasses import replace
+        stage = replace(stage, shares=profile["shares"], ranges=profile["ranges"], turn_overlay=profile["turn_overlay"])
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,

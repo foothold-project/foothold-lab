@@ -158,6 +158,14 @@ known = chain_tests.known
 ready = chain_tests.ready
 
 
+# CG v0.17j (decisions.tsv 2026-11-12 11:28, 12:52, 13:03): E1 is restarted as one run of seven segments to 1750.
+# The finished retrain run stopped at 1000, which is no exit boundary of that plan, so this bridge (adopt the retrain
+# m1000 as the E1 graduate and start E1F) refuses. strict: the mark fails the suite if the bridge starts working again.
+# Whether the bridge is removed or rebuilt for the new E1 end is the lead's decision.
+RETRAIN_ADOPTION_CLOSED = pytest.mark.xfail(strict=True, reason="retrain m1000 is not an E1 exit under the 1750 plan")
+
+
+@RETRAIN_ADOPTION_CLOSED
 @pytest.mark.parametrize('actual_frozen_source,dry_rc', [(False,0), (True,0), (False,2)])
 def test_old_source_new_policy_gate_to_e1f_uses_materialize_and_real_authorization(ready, monkeypatch, actual_frozen_source, dry_rc):
     import shutil

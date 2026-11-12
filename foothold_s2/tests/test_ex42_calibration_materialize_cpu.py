@@ -60,7 +60,7 @@ def ready(known):
     doc=yaml.safe_load(known['plan'].read_text());doc['evaluation']['flag_cells']=flags()
     known['plan'].write_text(yaml.safe_dump(doc))
     flag_plan=known['plan'].parent/'flag-eval.yaml';flag_plan.write_bytes(known['plan'].read_bytes())
-    cp=known['parent_manifest'].parent/'model_1000.pt';cp_sha=sha(cp)
+    cp=known['parent_manifest'].parent/'model_1750.pt';cp_sha=sha(cp)
     root=known['out'].parent/'flag-chain';root.mkdir()
     mesh_sha='a'*64;rounds=[]
     mesh_dir=root/'mesh';mesh_dir.mkdir();mesh_file=mesh_dir/'terrain_mesh.npz';mesh_file.write_bytes(b'known mounted mesh bytes')

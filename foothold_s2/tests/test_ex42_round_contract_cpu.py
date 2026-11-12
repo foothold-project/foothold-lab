@@ -60,17 +60,17 @@ def _with_extension(monkeypatch, plan_row_changes, authorized=True):
     (None, True, "stage_bound_reached_not_ready"), ("HOLD", False, "stage_bound_reached_not_ready")])
 def test_a_hold_at_the_approved_bound_goes_on_only_when_the_extension_is_open(tmp_path, monkeypatch, judgment, authorized, state):
     _with_extension(monkeypatch, {"extension_updates": 500, "extension_max_count": 2}, authorized)
-    path, manifest, out, _ = _boundary(tmp_path, 1000, judgment)
-    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 1000, out / "p1_score.json", manifest)
+    path, manifest, out, _ = _boundary(tmp_path, 1750, judgment)
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 1750, out / "p1_score.json", manifest)
     assert decision["state"] == state
     if state == "stage_continues":
-        assert decision["segment_end"] == 1250 and decision["resume_checkpoint"] == str(path)     # one interval into the extension
+        assert decision["segment_end"] == 2000 and decision["resume_checkpoint"] == str(path)     # one interval into the extension
         assert decision["plan"] == str(TABLE) and decision["approvals"]
 
 
 @needs_run
 def test_when_every_extension_is_used_the_stage_ends_with_a_notice(tmp_path, monkeypatch):
     _with_extension(monkeypatch, {"extension_updates": 500, "extension_max_count": 2})
-    path, manifest, out, _ = _boundary(tmp_path, 2000, "HOLD")
-    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 2000, out / "p1_score.json", manifest)
+    path, manifest, out, _ = _boundary(tmp_path, 2750, "HOLD")
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", 2750, out / "p1_score.json", manifest)
     assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"

@@ -103,9 +103,19 @@ stage_e1_authorization:
   scope:
     stage_id: E1
     start_update: 0
-    maximum_updates: 1000
+    maximum_updates: 1750
     parent_sha256: 680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e
     later_stages_authorized: false
+  scope_amendment:
+    decision_ids:
+    - teamlead-2026-11-12-1252-e1-command-segments-750
+    - teamlead-2026-11-12-1303-side-share-and-seven-segments
+    decision_source:
+      commits:
+      - 3bb9b1e7bec3a24c46fa32a3b6f8c74477601523
+      - c556f1b36e1018f92f1ab8f1f67adf1d099eea0f
+      path: inbox/jay/20261104-ex41-restart/decisions.tsv
+    statement: E1 한 실행 일곱 구간 1,750 회 (앞 셋 상한 5 + 넓힌 명령 · 뒤 넷 상한 6→7→8→9) · 부모 m13250 그대로
   prerequisites:
     e0_rejudgment:
       required_result: PASS
@@ -114,9 +124,9 @@ stage_e1_authorization:
   extension_authorized: true
   extension_contract:
     judgment: HOLD
-    after_updates: 1000
+    after_updates: 1750
     max_count: 2
-    maximum_updates: 2000
+    maximum_updates: 2750
     increment_updates: 500
     decision_id: teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension
     decision_source: 7121e0188cf1cbe558704764227e306e6097149f

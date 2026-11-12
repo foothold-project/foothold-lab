@@ -159,19 +159,21 @@ def _equals(claim: dict[str, Any], src: Sources) -> tuple[str, str, Any]:
 
 
 def _raise_per_boundary(claim: dict[str, Any], src: Sources) -> tuple[str, str, Any]:
-    """The cap of segment k is min(start + step * k, end): the registered schedule (plan) or what every segment's
-    exposure receipt says the open columns were cut at (run)."""
+    """The cap of segment k is min(start + step * max(0, k - first_raise_boundary + 1), end): the registered schedule
+    (plan) or what every segment's exposure receipt says the open columns were cut at (run)."""
     where, expect = claim["actual"], claim["expect"]
-    start, step, end = expect["start"], expect["step"], expect["end"]
+    start, step, end, first = expect["start"], expect["step"], expect["end"], expect.get("first_raise_boundary", 1)
+    cap_of = lambda k: min(start + step * max(0, k - first + 1), end)   # noqa: E731
     if src.mode == "plan":
         cell = dig(src.plan_row, where["plan_path"])
         if cell is MISSING or not isinstance(cell, dict):
             return "FAIL", (f"plan row has no raise schedule at {where['plan_path']}; "
                             f"canon says {start} -> {end}, +{step} per boundary"), None
-        got = [cell.get("start"), cell.get("step_per_boundary"), cell.get("end")]
-        if not _same(got, [start, step, end]):
-            return "FAIL", f"plan schedule (start, step, end) = {tuple(got)}, canon says {(start, step, end)}", got
-        return "PASS", f"plan schedule {start} -> {end}, +{step} per boundary", got
+        got = [cell.get("start"), cell.get("step_per_boundary"), cell.get("end"), cell.get("first_raise_boundary", 1)]
+        if not _same(got, [start, step, end, first]):
+            return "FAIL", (f"plan schedule (start, step, end, first raise boundary) = {tuple(got)}, "
+                            f"canon says {(start, step, end, first)}"), got
+        return "PASS", f"plan schedule {start} -> {end}, +{step} per boundary from boundary {first}", got
     segments = src.segment_caps()
     if not segments:
         return "NO_DATA", f"no segment-start exposure receipt for stage {src.stage}", None
@@ -179,13 +181,13 @@ def _raise_per_boundary(claim: dict[str, Any], src: Sources) -> tuple[str, str, 
     if [k for k, _ in series] != list(range(len(series))):
         problems.append(f"segments {[k for k, _ in series]} are not 0..{len(series) - 1}: a segment has no receipt")
     for k, caps in series:
-        want = min(start + step * k, end)
+        want = cap_of(k)
         if caps != {want}:
             problems.append(f"segment {k}: open columns cut at {sorted(caps, key=str)}, canon says {want}")
     seen = [(k, sorted(caps, key=str)) for k, caps in series]
     if problems:
         return "FAIL", "; ".join(problems), seen
-    return "PASS", f"segment caps {[min(start + step * k, end) for k, _ in series]} over {len(series)} segment(s)", seen
+    return "PASS", f"segment caps {[cap_of(k) for k, _ in series]} over {len(series)} segment(s)", seen
 
 
 KINDS = {"equals": _equals, "equals_ignoring": _equals, "raise_per_boundary": _raise_per_boundary}

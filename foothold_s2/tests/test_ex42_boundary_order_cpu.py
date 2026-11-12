@@ -124,11 +124,11 @@ def test_every_stage_the_share_contract_reads_has_an_explicit_vector():
 
 
 def test_e1_registers_the_continuous_cap_raise_before_results():
-    """CG E.2 E1 "레벨" row: four segments with cap 6, 7, 8, 9; the E1F row accepts every end value (5 = no raise)."""
+    """CG E.2 E1 "레벨" row (v0.17j): cap 5 for three segments, then 6, 7, 8, 9; the E1F row accepts every end value."""
     rows = _rows()
     cell = rows["E1"]["terrain"]["continuous_level_cap"]
     assert rows["E1"]["boundary_axes"] == ["terrain_level_cap"]
-    assert cell == {"start": 6, "step_per_boundary": 1, "end": 9}
+    assert cell == {"start": 5, "step_per_boundary": 1, "end": 9, "first_raise_boundary": 3}
     assert rows["E1"]["terrain"]["exposure_at_E1"]["positive"][0]["level_cap"] == cell["start"]
     template = rows["E1F"]["authorization_contract"]["inherited_stage_templates"][0]
     assert template["allowed_values"] == [5, 6, 7, 8, 9]

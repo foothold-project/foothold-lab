@@ -1,7 +1,8 @@
-"""E1 L+ schedule: the continuous level cap of a segment is start + boundaries passed (CG E.2 E1 "레벨" row, v0.17f).
+"""E1 L+ schedule: the continuous level cap of a segment follows the registered schedule (CG E.2 E1 "레벨" row, v0.17j).
 
-Four 250-update segments run with cap 6, 7, 8, 9. Both caps follow the same number: the per-column level caps of the
-exposure contract and the promotion cap the curriculum term reads (`_ex41_terrain.level_cap`)."""
+Seven 250-update segments: 5, 5, 5 (command reinforcement), then 6, 7, 8, 9. Both caps follow the same number: the
+per-column level caps of the exposure contract and the promotion cap the curriculum term reads
+(`_ex41_terrain.level_cap`)."""
 from __future__ import annotations
 
 import copy
@@ -42,6 +43,13 @@ def test_the_cap_rises_one_per_boundary_and_stops_at_the_end(boundaries, cap):
     assert caps == [cap, 1, cap, 0]                                            # only the continuous columns move
 
 
+@pytest.mark.parametrize("first,caps", [(1, [6, 7, 8, 9, 9]), (3, [6, 6, 6, 7, 8, 9, 9]), (5, [6, 6, 6, 6, 6, 7])])
+def test_the_first_raise_may_wait_for_a_later_boundary(first, caps):
+    terrain = copy.deepcopy(TERRAIN)
+    terrain["continuous_level_cap"]["first_raise_boundary"] = first
+    assert [ex.raise_continuous_cap(terrain, "E1", k)[1] for k in range(len(caps))] == caps
+
+
 def test_a_stage_without_the_cell_is_unchanged():
     plain = {k: v for k, v in TERRAIN.items() if k != "continuous_level_cap"}
     terrain, cap = ex.raise_continuous_cap(plain, "E1", 3)
@@ -57,6 +65,7 @@ def _with(**cell):
 @pytest.mark.parametrize("terrain,k", [
     (TERRAIN, -1), (TERRAIN, True), (TERRAIN, 1.0),
     (_with(start=6.0), 0), (_with(start=True), 0), (_with(end=5), 0), (_with(step_per_boundary=0), 0),
+    (_with(first_raise_boundary=0), 0), (_with(first_raise_boundary=True), 0), (_with(first_raise_boundary=2.0), 0),
     (_with(hold_when="retention_table_hold"), 0), (_with(hold=1), 0),          # a key nothing reads is refused
     (_with(start=5), 0),                                                       # differs from the rule's own level_cap
     ({**TERRAIN, "continuous_level_cap": [6, 1, 9]}, 0),
@@ -76,16 +85,17 @@ def test_the_schedule_needs_exactly_one_continuous_rule():
             ex.raise_continuous_cap(terrain, "E1", 0)
 
 
-def test_the_shipped_plan_gives_e1_six_to_nine_and_no_other_stage_a_schedule():
+def test_the_shipped_plan_gives_e1_three_segments_at_five_then_six_to_nine_and_no_other_stage_a_schedule():
     rows = {row["id"]: row for row in yaml.safe_load(PLAN.read_text(encoding="utf-8"))["stages"]}
-    assert [ex.raise_continuous_cap(rows["E1"]["terrain"], "E1", k)[1] for k in range(4)] == [6, 7, 8, 9]
+    assert [ex.raise_continuous_cap(rows["E1"]["terrain"], "E1", k)[1] for k in range(9)] == [5, 5, 5, 6, 7, 8, 9, 9, 9]
+    assert rows["E1"]["maximum_updates"] == rows["E1"]["minimum_updates"] == 7 * 250          # seven segments, no early exit
     assert [stage for stage, row in rows.items() if "continuous_level_cap" in (row.get("terrain") or {})] == ["E1"]
 
 
 # ---- the promotion cap of the running segment -------------------------------------------------------------
 def _runtime(stage="E1", cap=None):
     plan = types.SimpleNamespace(stages=[types.SimpleNamespace(name="s")])
-    bound = 1000
+    bound = te.E_STAGES[stage][0] if stage in te.E_STAGES else 1000
     runtime = te.EX42StageZeroRuntime(stage_zero_plan=plan, plan_sha256="1" * 64, approval_sha256="2" * 64,
                                       parent_sha256="3" * 64, maximum_updates=bound, push_vmax_mps=2.0, stage_id=stage)
     env = types.SimpleNamespace(num_envs=4, device="cpu")
@@ -168,7 +178,7 @@ def _contract(stage, k):
 
 
 @need_mesh
-@pytest.mark.parametrize("k,cap", [(0, 6), (1, 7), (2, 8), (3, 9)])
+@pytest.mark.parametrize("k,cap", [(0, 5), (2, 5), (3, 6), (4, 7), (6, 9)])
 def test_the_real_e1_contract_carries_the_segment_cap_on_every_continuous_column(isaac_stubs, k, cap):
     contract = _contract("E1", k)
     assert contract["continuous_level_cap"] == cap
@@ -184,9 +194,9 @@ def test_a_stage_without_the_schedule_keeps_its_plan_caps(isaac_stubs):
 
 @need_mesh
 def test_the_receipt_replay_follows_the_same_schedule(isaac_stubs):
-    body = er.build_receipt(_contract("E1", 2), stage_id="E1", plan_sha256="a" * 64, iteration=500, kind="start")
+    body = er.build_receipt(_contract("E1", 4), stage_id="E1", plan_sha256="a" * 64, iteration=1000, kind="start")
     er.recompute_from_plan(body, EX42Plan.load(PLAN), MESH)
-    wrong = er.build_receipt(_contract("E1", 1), stage_id="E1", plan_sha256="a" * 64, iteration=500, kind="start")
-    wrong["boundary_index"] = 2
+    wrong = er.build_receipt(_contract("E1", 2), stage_id="E1", plan_sha256="a" * 64, iteration=1000, kind="start")
+    wrong["boundary_index"] = 4                                                # cap 5 written for the cap 7 segment
     with pytest.raises(ValueError):
         er.recompute_from_plan(wrong, EX42Plan.load(PLAN), MESH)
