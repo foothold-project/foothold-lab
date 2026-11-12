@@ -44,6 +44,9 @@ def restart_command(latched, speed):
     return np.where(latched, 4, 3).astype(np.int16), np.where(latched, 0.0, speed)
 
 
+RECORDABLE_MAP_ON_TASK = "stop_restart"
+
+
 def contract(plan: dict) -> dict:
     landing = plan["evaluation"]["paper_cells"]["stairs_landing"]
     judges = landing.get("judge_cases")
@@ -67,6 +70,12 @@ def contract(plan: dict) -> dict:
         # (E1 exit option: stop-restart recorded while the landing column is not yet taught).
         if name in judges and spec["map_mode"] not in ("eval_gt", "eval_pred"):
             raise ValueError(f"D44 prep case {name} map mode and judgment role differ")
+    # The only map-on cases a plan may record are the stop-restart pair, both together (E1 exit option
+    # scope). The landing turns stay judges in every plan.
+    map_on = {name for name, spec in cases.items() if spec["map_mode"] in ("eval_gt", "eval_pred")}
+    recorded = map_on - set(judges)
+    if recorded and recorded != {name for name in map_on if cases[name]["task"] == RECORDABLE_MAP_ON_TASK}:
+        raise ValueError("D44 prep may record only the stop-restart map-on pair")
     for key in ("settle_s", "approach_limit_s", "stop_s", "restart_limit_s",
                 "stop_hold_s", "top_hold_s", "stop_speed_mps", "foot_below_top_m",
                 "foot_stop_z_tolerance_m"):
