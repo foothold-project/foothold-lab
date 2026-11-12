@@ -6,9 +6,9 @@
 schema: ex42-canon-claims/2
 canon:
   path: inbox/jay/20261026-experiments/CURRICULUM-GATES.md
-  version: v0.17k
-  sha256: d0876d353c119cdd20798d556146e183f9947b116e8bbd200ae7cf43ab50c6d8
-  source: feature/fable-25a-jay d83cdf35
+  version: v0.17l
+  sha256: cbac474810577ed4a27dfa2aa0717718121fe1da449c25275e4ad5f904c6af3d
+  source: feature/fable-25a-jay 75dd2ae6
 gated_stages: [E1]
 claims:
 - id: E1.continuous_level_cap
@@ -74,6 +74,38 @@ claims:
       diag_fwd_right: 0.02
       diag_back_left: 0.025
       diag_back_right: 0.025
+- id: E1.segment_command_adjustment
+  stage: E1
+  canon_section: "E.2 E1 구간 명령 조정 (v0.17l · decisions.tsv 2026-11-12 13:36)"
+  canon_quote: "몫은 0 단계 몫과 E1 몫 사이(전진 0.19~0.23 · 옆 0.07~0.09 씩 · 나머지 열 슬롯은 고정) · 합 1"
+  actual: {source: segment_commands}
+  expect:
+    kind: adjusted_inside
+    boundaries: [1, 2]
+    ranges:
+      forward_vx: [0.1, 1.5]
+      walk_vx: [0.3, 1.2]
+      walk_wz_abs: [0.1, 1.0]
+      spin_wz_abs: [0.15, 1.5]
+      reverse_vx: [-1.3, -0.2]
+      side_vy_abs: [0.1, 0.8]
+      diag_vx_abs: [0.3, 0.6]
+      diag_vy_abs: [0.2, 0.5]
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+    shares:
+      forward: [0.19, 0.23]
+      walk_left: [0.06, 0.06]
+      walk_right: [0.06, 0.06]
+      spin_left: [0.09, 0.09]
+      spin_right: [0.09, 0.09]
+      stand: [0.1, 0.1]
+      reverse: [0.14, 0.14]
+      side_left: [0.07, 0.09]
+      side_right: [0.07, 0.09]
+      diag_fwd_left: [0.02, 0.02]
+      diag_fwd_right: [0.02, 0.02]
+      diag_back_left: [0.025, 0.025]
+      diag_back_right: [0.025, 0.025]
 - id: E1.parent
   stage: E1
   canon_section: "E.11 row 27 (decisions.tsv 2026-11-12 11:28)"

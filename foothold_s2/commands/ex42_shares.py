@@ -49,8 +49,11 @@ def stage_commands(plan, stage_id):
     stage-zero range keys. turn_overlay: {fraction, wz_abs} for the reverse / side / diagonal slots."""
     stage = next((s for s in plan.document['stages'] if s['id'] == stage_id), {})
     cell = stage.get('commands')
-    if cell is None:
-        return None
+    return None if cell is None else validate_commands(plan, cell, stage_id)
+
+
+def validate_commands(plan, cell, stage_id):
+    """One `commands` cell (a stage row's, or a segment adjustment's) as the validated profile."""
     number = lambda v: type(v) in (int, float) and math.isfinite(v)   # noqa: E731
     if not isinstance(cell, dict) or set(cell) != {'shares', 'ranges', 'turn_overlay'}:
         raise ValueError(f'EX-42 {stage_id} commands needs exactly shares, ranges and turn_overlay')
