@@ -14,7 +14,7 @@ from foothold_s2.terrains import columns
 # M-T6 끔 대상 지형(DESIGN-MAPRATIO v0.6 3.2): 새 에피소드가 놓인 칸의 지형 이름이 연속 7 종 또는 flat 이면 허용, 듬성 5 종은 불허. 레벨은 보지 않는다
 ELIGIBLE_NAMES = frozenset(columns.CONTINUOUS) | {"flat"}
 SPARSE_NAMES = frozenset(columns.SPARSE) - {"flat"}
-NON_A_FAMILIES = frozenset("BCDE")      # EX-42 합친 메시의 A 가 아닌 족 (terrains.generator_columns 의 이름 규칙)
+NON_A_FAMILIES = frozenset("BCDEF")      # EX-42 합친 메시의 A 가 아닌 족 (terrains.generator_columns 의 이름 규칙)
 
 
 def is_sparse_name(name: str) -> bool:

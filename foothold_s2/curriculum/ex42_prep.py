@@ -15,6 +15,13 @@ import yaml
 
 
 STAGE_IDS = ("E0", "E1", "E1F", "E2", "E3", "E4", "E5", "M", "E6a", "E6b")
+# DESIGN-JUMP v0.2 s2.2: the jump stages follow E6b in the same table. They are optional (a plan without them is the
+# ten-stage plan), disabled until their approval cells say otherwise, and RUNTIME_STAGE_IDS stays the EX-42 list.
+JUMP_STAGE_IDS = ("J0", "J1", "J2", "J3", "J4")
+JUMP_AXES = {"J0": {"parent_contract_check"}, "J1": {"command_velocity_cap"},
+             "J2": {"jump_height_cap", "terrain_exposure"}, "J3": {"jump_gap_cap", "terrain_exposure"},
+             "J4": {"jump_height_cap", "terrain_exposure", "command_velocity_cap"}}
+JUMP_SHARE_CAP = 0.20            # new jump kinds: at most 20 % of all envs (DESIGN-JUMP s2.3, assumption)
 STAGE_ZERO_ID = "EX42_0_T0_prime"
 RUNTIME_STAGE_IDS = (STAGE_ZERO_ID, *STAGE_IDS)
 FAMILIES = ("A", "B", "C", "D", "E", "continuous")
@@ -34,6 +41,8 @@ BOUNDARY_FORMAT = "foothold-ex42-boundary/1"
 APPROVAL_FORMAT = "foothold-ex42-approvals/1"
 ALL_STAGES_DECISION_ID = "teamlead-2026-11-11-1307-ex42-all-stages"
 ALL_STAGES_DECISION_SHA = "2b94ea586fd6d4fb5f5c29bd36d8d4d1449dc98d"
+E1_EXTENSION_DECISION_ID = "teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-extension"
+E1_EXTENSION_DECISION_SHA = "7121e0188cf1cbe558704764227e306e6097149f"
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -166,8 +175,8 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
     """Read the separately approved, bounded E1 first segment (E0 m250 -> 1000 updates).
 
     Same fail-closed shape as the E0 cell: a missing or incomplete `stage_e1_authorization` raises.
-    E1F and later stages are never opened by it. The extension (+500 x 2) and the L+ cap raise are
-    separate boundaries and are not covered by this cell.
+    E1F and later stages are never opened by it. A separately pinned 19:38 decision
+    may authorize HOLD-only +500 x 2. Old frozen cells with extension=false stay valid.
     """
     path = Path(approvals_path).resolve(strict=True)
     approvals = _read_yaml(path)
@@ -214,15 +223,21 @@ def validate_stage_e1_authorization(plan: "EX42Plan", approvals_path: str | Path
             or rejudgment.get("checkpoint_key") != stage["parent"]["checkpoint_key"]
             or rejudgment.get("checkpoint_sha256") != e1_parent_sha256):
         raise ValueError("EX-42 E1 approval lacks the E0 re-judgement PASS prerequisite on the pinned parent")
-    if cell.get("extension_authorized") is not False:
-        raise ValueError("EX-42 E1 approval must keep the +500 extension unauthorized")
+    extension = cell.get("extension_authorized")
+    if extension is True:
+        if (stage.get("extension_max_count") != 2
+                or cell.get("extension_contract") != stage_extension_contract(stage)):
+            raise ValueError("EX-42 E1 extension unauthorized: requires the exact 19:38 HOLD +500 x 2 decision")
+    elif extension is not False:
+        raise ValueError("EX-42 E1 extension unauthorized: explicit boolean required")
     interval = cell.get("boundary_evaluation_interval_updates")
     plan_interval = plan.document.get("evaluation", {}).get("interval_updates")
     if (type(interval) is not int or interval <= 0 or interval != plan_interval
             or expected_scope["maximum_updates"] % interval):
         raise ValueError("EX-42 E1 boundary evaluation interval must match the plan evaluation interval and divide 1000")
     return {"state": "stage_e1_only_authorized", "scope": expected_scope,
-            "boundary_evaluation_interval_updates": interval, "extension_authorized": False,
+            "boundary_evaluation_interval_updates": interval, "extension_authorized": extension,
+            **({"extension_contract": cell["extension_contract"]} if extension else {}),
             "e0_rejudgment_prerequisite": rejudgment,
             "decision_id": decision_id, "approved_at": approved_at,
             "approvals_path": str(path),
@@ -247,8 +262,33 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
 
 
 # Entry gate adapters a stage row may name: the predecessor's exit judge (foothold_s2.ex42_stage_judges registers the
-# module; an unregistered name fails closed there, at score time) or `pending` (not ready, the stage cannot start).
-ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending')
+# module; readiness also checks registration before launch) or `pending` (not ready, the stage cannot start).
+ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending',
+                       'kind_two_window_e2', 'kind_two_window_e3', 'kind_two_window_e4',
+                       'kind_two_window_e5', 'posture_two_window_e6a')
+
+
+def entry_gate_adapter_ready(plan: "EX42Plan", row: dict[str, Any], contract: dict[str, Any]) -> bool:
+    """A declared name is not an implementation. Resolve the actual predecessor judges."""
+    name = contract['entry_gate_adapter']
+    if name == 'pending':
+        return False
+    if contract['validator'] in ('legacy_e0', 'legacy_e1'):
+        return name == 'map39'  # Reviewed E0/E1 alias, including the EX-41 bridge.
+    from foothold_s2.ex42_stage_judges import ADAPTERS, adapter_for
+    try:
+        judges = [adapter_for(plan.document, source) for source in contract['source_stage_ids']]
+    except ValueError:
+        return False
+    if not judges or any(judge is None for judge in judges):
+        return False
+    if name == 'stage_exit_v1':
+        return True  # M resolves its measured source-stage list; no hard-coded E5 source.
+    # Preserve the already approved E1 -> E1F entry alias. New later entries name
+    # the predecessor's exit judge literally and cannot substitute a weaker one.
+    if row['id'] == 'E1F' and contract['source_stage_ids'] == ['E1'] and name == 'flag_two_window':
+        return name in ADAPTERS and judges[0].name == 'map39_e1_two_window'
+    return name in ADAPTERS and all(judge.name == name for judge in judges)
 
 
 def authorization_validators(plan: "EX42Plan") -> dict[str, Any]:
@@ -277,7 +317,9 @@ def _read_stage_approval_contract(plan: "EX42Plan", row: dict[str, Any], *,
         raise ValueError('EX-42 stage source contract is unresolved or invalid')
     if contract['validator'] not in ('bounded', 'legacy_e0', 'legacy_e1'):
         raise ValueError('EX-42 unknown approval validator contract')
-    if contract['entry_gate_adapter'] not in ENTRY_GATE_ADAPTERS:
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+    if (not isinstance(contract['entry_gate_adapter'], str)
+            or contract['entry_gate_adapter'] not in (*ENTRY_GATE_ADAPTERS, *ADAPTERS)):
         raise ValueError('EX-42 stage entry gate adapter is unknown')
     for key in ('required_sha256_paths', 'required_string_paths', 'required_boolean_paths'):
         paths = contract[key]
@@ -424,7 +466,7 @@ def validate_stage_authorization(plan: "EX42Plan", approvals_path: str | Path,
         raise ValueError(f'EX-42 {stage_id} must preserve approved DR 1.0')
     return {**proof, 'source_stage_ids': list(contract['source_stage_ids']),
             'entry_gate_adapter': contract['entry_gate_adapter'],
-            'entry_gate_adapter_ready': contract['entry_gate_adapter'] != 'pending',
+            'entry_gate_adapter_ready': entry_gate_adapter_ready(plan, row, contract),
             'training_started': False}
 
 
@@ -434,9 +476,10 @@ def stage_extension_contract(row: dict[str, Any]) -> dict[str, Any]:
     if (any(type(v) is not int for v in (cap, step, count))
             or cap <= 0 or step <= 0 or count <= 0):
         raise ValueError('EX-42 extension step/count/base cap is invalid')
+    decision_id, decision_sha = (E1_EXTENSION_DECISION_ID, E1_EXTENSION_DECISION_SHA) if row.get('id') == 'E1' else (ALL_STAGES_DECISION_ID, ALL_STAGES_DECISION_SHA)
     return {'judgment': 'HOLD', 'after_updates': cap, 'max_count': count,
             'maximum_updates': cap + step * count, 'increment_updates': step,
-            'decision_id': ALL_STAGES_DECISION_ID, 'decision_source': ALL_STAGES_DECISION_SHA}
+            'decision_id': decision_id, 'decision_source': decision_sha}
 
 
 def draft_stage_authorization(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
@@ -481,6 +524,25 @@ def validate_stage_e2_authorization(plan: "EX42Plan", approvals_path: str | Path
     return validate_stage_authorization(plan, approvals_path, parent_sha256, stage_id='E2')
 
 
+def _validate_jump_row(row: dict[str, Any]) -> None:
+    """A jump stage is never enabled by the table alone; its axes are its own and height / gap never share a boundary;
+    the jump kinds (family F) stay under the 20 % share cap at the start of the stage."""
+    sid = row["id"]
+    if row.get("enabled") is not False:
+        raise ValueError(f"EX-42 jump stage {sid} must be disabled in the table (its approval cell enables it)")
+    axes = row.get("boundary_axes")
+    if not isinstance(axes, list) or not set(axes) <= JUMP_AXES[sid] or len(set(axes)) != len(axes):
+        raise ValueError(f"EX-42 jump stage {sid} boundary axes must come from {sorted(JUMP_AXES[sid])}")
+    if {"jump_height_cap", "jump_gap_cap"} <= set(axes):
+        raise ValueError(f"EX-42 jump stage {sid} raises height and gap at the same boundary")
+    positive = row.get("terrain", {}).get(f"exposure_at_{sid}", {}).get("positive")
+    if not isinstance(positive, list):
+        raise ValueError(f"EX-42 jump stage {sid} has no exposure_at_{sid}.positive")
+    jump = sum(float(rule["share"]) for rule in positive if rule.get("family") == "F" and "share" in rule)
+    if jump > JUMP_SHARE_CAP + 1e-9:
+        raise ValueError(f"EX-42 jump stage {sid} jump kinds hold {jump:.3f} of the envs, over {JUMP_SHARE_CAP}")
+
+
 @dataclass(frozen=True)
 class EX42Plan:
     path: Path
@@ -509,8 +571,12 @@ class EX42Plan:
         if tuple(env.get("training_presets", {}).keys()) != FAMILIES:
             raise ValueError("EX-42 terrain preset families/order differ from the contract")
         stages = doc.get("stages")
-        if not isinstance(stages, list) or tuple(row.get("id") for row in stages) != STAGE_IDS:
-            raise ValueError("EX-42 stage table must contain the ten canonical stages in order")
+        ids = tuple(row.get("id") for row in stages) if isinstance(stages, list) else None
+        if ids not in (STAGE_IDS, STAGE_IDS + JUMP_STAGE_IDS):
+            raise ValueError("EX-42 stage table must contain the ten canonical stages in order (J0~J4 may follow)")
+        for row in stages:
+            if row.get("id") in JUMP_STAGE_IDS:
+                _validate_jump_row(row)
         stage_zero = doc.get("stage_zero")
         if not isinstance(stage_zero, dict) or stage_zero.get("id") != STAGE_ZERO_ID:
             raise ValueError("EX-42 must define the explicit EX-41 T0-prime bridge as stage zero")
@@ -619,11 +685,23 @@ class EX42Plan:
                  "shares": zero["shares"], "ranges": zero["ranges"],
                  "force_gt": zero["force_gt"], "terrain": zero["terrain"],
                  "critic_mirror": False}
-        return (first, *tuple(self.document["stages"]))
+        # The jump stages are not part of EX-42's own sequence: the approved DR schedule covers the EX-42 stages only and
+        # a J scale is a separate team-lead decision, so a J stage cannot be resolved here until that cell exists.
+        return (first, *tuple(row for row in self.document["stages"] if row.get("id") not in JUMP_STAGE_IDS))
 
     @property
     def runtime_stage_ids(self) -> tuple[str, ...]:
         return tuple(row["id"] for row in self.runtime_stages)
+
+    def following_stage_id(self, stage_id: str) -> str | None:
+        """The stage after `stage_id` in the runtime order: the document's stages without the jump stages (the runtime
+        list names the first row by its stage-zero id, the document by "E0"). The last EX-42 stage has no following
+        stage, so it goes on with the same stage; a J stage follows the document order."""
+        ids = [row["id"] for row in self.document["stages"]]
+        order = [i for i in ids if i not in JUMP_STAGE_IDS] if stage_id not in JUMP_STAGE_IDS else ids
+        if stage_id not in order:
+            return None
+        return order[order.index(stage_id) + 1] if order.index(stage_id) + 1 < len(order) else None
 
     def stage_id_at(self, local_iteration: int, *, transitions: tuple[dict[str, Any], ...] = ()) -> str:
         """Resolve a checkpoint's stage from the shared sequence and applied receipts.

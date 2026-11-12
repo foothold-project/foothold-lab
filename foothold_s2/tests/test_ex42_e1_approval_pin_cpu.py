@@ -22,7 +22,8 @@ def test_e1_record_is_1000_updates_from_e0_and_requires_rejudgment_pass():
     assert cell['decision_source']['commit'] == '7ef023f58027f43c985c34a521d53a52252cabdf'
     assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1000,
                                  parent_sha256=E1_PARENT, later_stages_authorized=False)
-    assert cell['extension_authorized'] is False
+    assert cell['extension_authorized'] is True
+    assert cell['extension_contract']['decision_source'] == '7121e0188cf1cbe558704764227e306e6097149f'
     assert cell['boundary_evaluation_interval_updates'] == 250
     required = cell['prerequisites']['e0_rejudgment']
     assert required['required_result'] == 'PASS'

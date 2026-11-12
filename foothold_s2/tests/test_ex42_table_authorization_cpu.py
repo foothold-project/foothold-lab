@@ -57,7 +57,7 @@ def fixture(tmp_path,stage='E3'):
 def test_base_cap_comes_from_selected_table_row(tmp_path):
     p,ap,a=fixture(tmp_path)
     proof=validate_stage_authorization(p,ap,'b'*64,stage_id='E3')
-    assert proof['scope']['maximum_updates']==3000
+    assert proof['scope']['maximum_updates']==4000
     d=deepcopy(p.document);next(r for r in d['stages'] if r['id']=='E3')['maximum_updates']=3250
     with pytest.raises(ValueError,match='scope differs'):
         validate_stage_authorization(replace(p,document=d),ap,'b'*64,stage_id='E3')
@@ -92,7 +92,7 @@ def test_generated_draft_has_no_inherited_authority_or_parent(tmp_path):
     assert draft['approved'] is False
     assert all(draft[k] is None for k in ('decision_id','approved_at','approver','approval_statement'))
     assert draft['decision_source']['commit'] is None
-    assert draft['scope']=={'stage_id':'E3','start_update':0,'maximum_updates':3000,
+    assert draft['scope']=={'stage_id':'E3','start_update':0,'maximum_updates':4000,
                             'parent_sha256':None,'later_stages_authorized':False}
     assert draft['extension_authorized'] is False
     assert draft['boundary_evaluation_interval_updates']==250
@@ -145,8 +145,8 @@ def test_parent_and_approval_file_are_pinned(tmp_path):
 def test_shipped_stage_cells_use_table_limits_and_generator_stays_unapproved():
     from foothold_s2.curriculum.ex42_prep import draft_stage_authorization
     p=EX42Plan.load(TABLE);a=yaml.safe_load(APPROVALS.read_text())
-    # CG v0.16 E.2: first segment, excluding any conditional extensions.
-    limits={'E2':1500,'E3':3000,'E4':2000,'E5':1500,'M':500,'E6a':1000,'E6b':2000}
+    # CG v0.16 E.2 plus 7121e018 caps, excluding conditional extensions.
+    limits={'E2':1500,'E3':4000,'E4':3000,'E5':1500,'M':500,'E6a':1000,'E6b':3000}
     for stage,limit in limits.items():
         generated=draft_stage_authorization(p,stage)
         cell=a[f'stage_{stage.lower()}_authorization']
@@ -156,7 +156,7 @@ def test_shipped_stage_cells_use_table_limits_and_generator_stays_unapproved():
         assert cell['scope']['maximum_updates']==limit
         assert cell['critic_mirror'] is None
         assert cell['extension_authorized'] is False
-        assert cell['later_stage_entry_gate_adapter']=='pending'
+        assert cell['later_stage_entry_gate_adapter']==next(r for r in p.document['stages'] if r['id']==stage)['authorization_contract']['entry_gate_adapter']
     m=next(r for r in p.document['stages'] if r['id']=='M')
     assert m['enabled'] is False
     assert m['authorization_contract']['source_stage_ids']==[]  # No invented linear predecessor.
@@ -186,13 +186,13 @@ def test_m_branch_cannot_replace_e5_graduation():
     assert row['authorization_contract']['source_stage_ids']==['E5']
     assert row['authorization_contract']['required_values']['prerequisites.predecessor_exit.stage_id']=='E5'
     a=yaml.safe_load(APPROVALS.read_text())
-    assert a['stage_m_authorization']['budget']['m_updates_count_toward_source_maximum'] is None
-    assert a['stage_m_authorization']['on_exhausted'] is None
+    assert a['stage_m_authorization']['budget']['m_updates_count_toward_source_maximum'] is False
+    assert a['stage_m_authorization']['on_exhausted'] == 'notify_and_return_to_source_stage'
     assert a['stage_e6a_authorization']['parent_lineage']['consumer_status']=='pending'
 
 
-@pytest.mark.parametrize('adapter,ready',[('map39',True),('flag_two_window',True),('pending',False)])
-def test_entry_gate_adapter_names_a_registered_gate_and_only_pending_is_not_ready(tmp_path,adapter,ready):
+@pytest.mark.parametrize('adapter,ready',[('map39',False),('flag_two_window',True),('stage_exit_v1',True),('pending',False)])
+def test_entry_gate_adapter_must_resolve_the_registered_predecessor(tmp_path,adapter,ready):
     p,ap,_=fixture(tmp_path,'E3');d=deepcopy(p.document)
     row=next(r for r in d['stages'] if r['id']=='E3')
     row['authorization_contract']['source_stage_ids']=['E1F']

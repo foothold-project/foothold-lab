@@ -87,9 +87,12 @@ def test_a_pass_at_any_boundary_from_the_first_check_goes_to_the_next_stage_not_
 
 @needs_run
 @pytest.mark.parametrize("judgment", ["HOLD", "FAIL", None])
-def test_the_stage_bound_without_a_pass_ends_the_stage_with_a_notice(tmp_path, judgment):
+def test_the_stage_bound_extends_only_for_the_newly_authorized_hold(tmp_path, judgment):
     decision, _ = _decide(tmp_path, _e1_maximum(), judgment)
-    assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
+    if judgment == "HOLD":
+        assert decision["action"] == "continue" and decision["segment_end"] == 1250
+    else:
+        assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
 
 
 @needs_run
@@ -125,7 +128,7 @@ def test_a_save_that_is_not_the_scored_latest_one_does_not_continue(tmp_path):
 @pytest.mark.parametrize("name,edit", [
     ("policy off", lambda a: a.__setitem__("automatic_launch_allowed", False)),
     ("cell removed", lambda a: a.pop("stage_e1_authorization")),
-    ("extension opened", lambda a: a["stage_e1_authorization"].__setitem__("extension_authorized", True)),
+    ("extension proof removed", lambda a: a["stage_e1_authorization"].pop("extension_contract")),
     ("scope widened", lambda a: a["stage_e1_authorization"]["scope"].__setitem__("maximum_updates", 2000)),
 ])
 def test_an_approval_that_is_off_or_widened_does_not_continue(tmp_path, name, edit):
@@ -176,8 +179,10 @@ def test_the_tail_without_a_launcher_or_at_the_bound_only_notifies(tmp_path):
     assert not (out / handoff.LAUNCH_RECORD).exists()
     sub = tmp_path / "bound"
     sub.mkdir()
-    path, manifest, out, p1 = _boundary(sub, _e1_maximum())
-    notice = once._hand_off(TABLE, APPROVALS, "E1", _e1_maximum(), p1, path, out, _launcher(sub))
+    row = _e1_row()
+    exhausted = row["maximum_updates"] + row["extension_updates"] * row["extension_max_count"]
+    path, manifest, out, p1 = _boundary(sub, exhausted)
+    notice = once._hand_off(TABLE, APPROVALS, "E1", exhausted, p1, path, out, _launcher(sub))
     assert notice["state"] == "stage_bound_reached_not_ready" and notice["automatic_launch_started"] is False
     assert not (sub / "ran.txt").exists()
 
@@ -188,5 +193,5 @@ def test_the_shipped_plan_and_cell_have_the_shape_the_decision_reads():
     cell = yaml.safe_load(APPROVALS.read_text())["stage_e1_authorization"]
     assert e1["minimum_updates"] == _interval()                       # the first check is the first boundary
     assert e1["maximum_updates"] == cell["scope"]["maximum_updates"]  # the cell approves the base cap
-    assert cell["boundary_evaluation_interval_updates"] == 250 and cell["extension_authorized"] is False
+    assert cell["boundary_evaluation_interval_updates"] == 250 and cell["extension_authorized"] is True
     assert os.path.isfile(TABLE)

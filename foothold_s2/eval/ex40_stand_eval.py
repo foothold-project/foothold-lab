@@ -18,7 +18,9 @@ import rsl_rl.runners  # noqa: F401
 from isaaclab.app import AppLauncher
 
 
+from foothold_s2.eval import ex42_friction
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--ex42-evaluation-plan", type=Path)
 parser.add_argument("--task", default="FootholdS2-Go2-S2-SB-v0")
 parser.add_argument("--checkpoint", type=Path, required=True)
 parser.add_argument("--mode", choices=("eval_gt", "probe_prop_only", "eval_pred"), required=True)
@@ -30,6 +32,7 @@ parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--out", type=Path, required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+friction_policy = ex42_friction.load_policy(args.ex42_evaluation_plan) if args.ex42_evaluation_plan else None
 if (args.envs < 1 or args.seconds <= args.skip_seconds or args.skip_seconds < 0
         or args.seed < 0 or not args.checkpoint.is_file()):
     parser.error("invalid stance duration, environment count, seed, or checkpoint")
@@ -95,6 +98,7 @@ def _configure():
     env_cfg.commands.base_velocity.resampling_time_range = (1.0e9, 1.0e9)
     env_cfg.commands.base_velocity.flag_stride = 0
     env_cfg.commands.base_velocity.dynamic_flags = False
+    ex42_friction.configure(env_cfg, friction_policy)
     return env_cfg, agent_cfg
 
 
@@ -129,6 +133,7 @@ def main():
             env_cfg, args.checkpoint)
         env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
         raw = env.unwrapped
+        ex42_friction.install_and_verify(raw, friction_policy)
         robot, sensor = raw.scene["robot"], raw.scene["contact_forces"]
         body_ids, sensor_ids = _foot_indices(robot, sensor)
         term = raw.command_manager.get_term("base_velocity")
@@ -217,7 +222,8 @@ def main():
                                for name, values in map_error_series.items()},
                             **{name: value for name, value in map_error_aggregate.items()})
         checkpoint_sha = hashlib.sha256(args.checkpoint.read_bytes()).hexdigest()
-        result = {"format": "foothold-ex40-stand/1", "checkpoint": str(args.checkpoint),
+        result = {"evaluation_friction": ex42_friction.verify(raw, friction_policy),
+                  "format": "foothold-ex40-stand/1", "checkpoint": str(args.checkpoint),
                   "checkpoint_sha256": checkpoint_sha,
                   "run_identity": run_identity.safe_collect(args.device, checkpoint_sha, eval_seed=args.seed),
                   "ex41_checkpoint_preparation": checkpoint_preparation,

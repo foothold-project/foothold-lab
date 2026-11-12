@@ -330,6 +330,9 @@ def run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
             _atomic_json(partial, result)
             print("AXIS_V2_CASE", mode, spec["name"], result["modes"][mode][spec["name"]]["alive_at_end"], flush=True)
         runner.perception.ie.mask_map_tokens = False
+    if getattr(args, "ex42_friction_policy", None) is not None:
+        from foothold_s2.eval.ex42_friction import verify
+        result["evaluation_friction"] = verify(raw, args.ex42_friction_policy)
     _atomic_json(final, result)
     partial.unlink()
     print("AXIS_V2_DONE", final, flush=True)
