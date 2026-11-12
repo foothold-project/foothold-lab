@@ -259,3 +259,51 @@ def test_m0_raw_measurement_consumer_is_required(e1f_exit, tmp_path, monkeypatch
     with pytest.raises(ValueError, match='M0.M3 raw measurement'):
         produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
                 manifest_path=manifest, output_dir=tmp_path / 'no-publish', bindings_path=bindings)
+
+
+def test_missing_m0_m3_verifier_module_is_a_hold_not_a_pass(e1f_exit, tmp_path, monkeypatch):
+    import sys
+    from foothold_s2.ex42_stage_evidence import produce
+    source, _, manifest, gate, bindings = e1f_exit
+    monkeypatch.setitem(sys.modules, 'foothold_s2.tools.ex42_m0_m3', None)     # import raises ImportError
+    with pytest.raises(ValueError, match='verifier unavailable'):
+        produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                manifest_path=manifest, output_dir=tmp_path / 'no-publish', bindings_path=bindings)
+    assert not (tmp_path / 'no-publish').exists()
+
+
+@pytest.mark.parametrize('judgment', ['HOLD', 'FAIL', None])
+def test_evidence_producer_refuses_a_predecessor_that_did_not_pass(e1f_exit, tmp_path, judgment):
+    from foothold_s2.ex42_stage_evidence import produce
+    source, _, manifest, gate, bindings = e1f_exit
+    document = json.loads(gate.read_text())
+    document['judgment'] = judgment
+    gate.write_text(json.dumps(document))
+    with pytest.raises(ValueError, match='actual predecessor PASS'):
+        produce(template_path=source.path, source_path=source.path, target='E2', gate_path=gate,
+                manifest_path=manifest, output_dir=tmp_path / 'no-publish', bindings_path=bindings)
+    assert not (tmp_path / 'no-publish').exists()
+
+
+def _template_with_limit(known, tmp_path, limit):
+    import shutil
+    import yaml
+    folder = tmp_path / 'budget-limit-template'
+    shutil.copytree(Path(known['plan']).parent, folder)
+    path = folder / Path(known['plan']).name
+    plan = yaml.safe_load(path.read_text())
+    plan['training_budget']['maximum_updates'] = limit
+    path.write_text(yaml.safe_dump(plan))
+    return path
+
+
+def test_budget_over_the_approved_limit_is_refused(known, tmp_path):
+    template = _template_with_limit(known, tmp_path, 1249)          # the lineage already used 1250
+    with pytest.raises(ValueError, match='budget exhausted'):
+        handoff.measured_budget(template, known['source_plan'], known['parent_manifest'], known['gate_receipt'])
+
+
+def test_budget_exactly_at_the_limit_is_allowed(known, tmp_path):
+    template = _template_with_limit(known, tmp_path, 1250)
+    assert handoff.measured_budget(template, known['source_plan'], known['parent_manifest'],
+                                   known['gate_receipt'])['used'] == 1250
