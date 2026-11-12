@@ -136,7 +136,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: e64284789730d426eba1732c2e41186bfc5a46b7007eba595567a0a7cf220db7
+  approval_sha256: 8e22268e87b9bf18a14d47392ded26ddde296ba4ae4df71131f4793854b2b5f3
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
