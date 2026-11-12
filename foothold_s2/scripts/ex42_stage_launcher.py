@@ -79,9 +79,14 @@ def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
             "--device", env.get("EX42_P1_DEVICE", "cuda:1"), "--eval-seed", env.get("EX42_EVAL_SEED", "42"),
             "--mesh-dir", mesh_dir, "--expected-mesh-sha256", mesh_sha,
             "--p1-plan", str(plan), "--p1-approvals", str(approvals), "--p1-stage-id", stage]
+    queue = env.get("GPU_JOBS_QUEUE")
+    if not queue:
+        raise LaunchRefused("missing GPU_JOBS_QUEUE (the next-stage queue path)")
     if env.get("EX42_P1_SPLIT_DEVICE"):
         argv += ["--split-device", env["EX42_P1_SPLIT_DEVICE"]]
-    return argv + ["--execute"]
+    return argv + ["--next-stage-launcher", str(Path(__file__).with_suffix(".sh")),
+                   "--next-stage-queue", queue,
+                   "--next-stage-dispatch", str(DISPATCH), "--execute"]
 
 
 def build(env, *, dry_run=False, now=None):
@@ -161,6 +166,13 @@ def build(env, *, dry_run=False, now=None):
     child = dict(env, CUDA_DEVICE_ORDER="PCI_BUS_ID", OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1",
                  PYTHONPATH=str(SOURCE_ROOT) + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""))
     child.update(mesh_env)
+    # Carry this run's immutable calibration/parent pins into the following
+    # transition. Each boundary generates its own evidence and actual budget.
+    child.update(EX42_MATERIALIZE_TEMPLATE_PLAN=str(plan), EX42_MATERIALIZE_TEMPLATE_APPROVALS=str(approvals),
+                 EX42_MATERIALIZE_EVIDENCE_DIR=str(Path(run_dir) / "handoff/evidence"),
+                 EX42_MATERIALIZE_OUT_ROOT=str(Path(run_dir) / "handoff/transitions"))
+    for name in ("BUDGET_USED", "BUDGET_LIMIT", "BUDGET_BASIS"):
+        child.pop("EX42_MATERIALIZE_" + name, None)
     child.pop("CUDA_VISIBLE_DEVICES", None)
     child.pop("EX42_AUTO_SEGMENT_END", None)         # consumed here: a later launch from below must not inherit it
     if dry_run:
