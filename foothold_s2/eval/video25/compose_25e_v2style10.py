@@ -59,7 +59,7 @@ MAP_MIN_SPAN_M = 0.05
 ATTENTION_MAX = 0.30
 BOTTOM_GRAPH_X = 58
 BOTTOM_LABEL_RIGHT = 44
-FONT = Path("C:/Windows/Fonts/malgun.ttf")
+FONT = next((Path(c) for c in ("C:/Windows/Fonts/malgun.ttf", "/usr/share/fonts/truetype/nanum/NanumGothic.ttf") if Path(c).is_file()), Path("C:/Windows/Fonts/malgun.ttf"))
 SEG_NAMES = ("전진 0.5", "전진 1.0", "좌회전", "우회전")
 WALK_SEG_NAMES = ("걸으며 좌 0.5/0.35", "걸으며 우 0.5/-0.35", "걸으며 좌 0.8/0.5", "걸으며 우 0.8/-0.5")
 LEGEND = ("Right: top-down maps, up = forward, one colour scale, \"정책에는 0\" = not used by the policy   |   "
@@ -257,13 +257,13 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
                 cv2.circle(panel, q, 6, (255, 255, 255), 1, cv2.LINE_AA)
             else:
                 cv2.circle(panel, q, 6, AIR_FOOT_EDGE_BGR, 1, cv2.LINE_AA)
-    lab = [((24, 455), "Attention: 128 cells, fixed 0.00..0.30", (200, 200, 200)),
-           ((24, 530), f"Mean | Reconstructed - GT |  =  {float(err[row]) if err is not None else float('nan'):.1f} cm   (lower is better, 0 = perfect)", (200, 200, 200)),
-           ((24, 490), f"Map colour range: {c0 - common[1]:+.3f}..{c0 + common[1]:+.3f} m (centre {c0:+.3f}, span ±{common[1] * 100:.1f} cm)", (190, 190, 190))]
+    lab = [((24, 455), "입력 지도만 표시 · attention 은 영상에서 제외", (200, 200, 200)),
+           ((24, 530), f"복원 오차 평균 = {float(err[row]) if err is not None else float('nan'):.1f} cm  (작을수록 좋음)", (200, 200, 200)),
+           ((24, 490), f"색 범위 {c0 - common[1]:+.2f}..{c0 + common[1]:+.2f} m (중심 {c0:+.2f})", (190, 190, 190))]
     map_labels = (
         "정답 지도" if use_gt else "정답 지도 · 정책에는 0",
         "복원 지도 · 정책에는 0" if use_gt else "복원 지도",
-        "정책 입력 + attention",
+        "정책 입력 지도",
     )
     headings = [((x, 60), label,
                  (150, 150, 150) if "정책에는 0" in label else
@@ -275,9 +275,9 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
         panel[452:464, 442:602] = cv2.applyColorMap(ramp, cv2.COLORMAP_INFERNO)
         panel = text(panel, [((438, 467), "0.00", (190, 190, 190)),
                              ((560, 467), "0.30", (190, 190, 190))], 13)
-    panel = text(panel, lab, 17)
+    panel = text(panel, lab, 20)
     panel = text(panel, [((24, 16), "위에서 본 높이 지도 (위 = 앞)", (235, 235, 235))], 17)
-    panel = text(panel, headings, 17)
+    panel = text(panel, headings, 19)
     err_top = max(4.0, float(np.nanmax(err))) if err is not None else 4.0
     tick_right = MAP_GRAPH_X - 6
     panel = text_right(panel, [((tick_right, 556), f"{err_top:.0f}", (160, 160, 160)),
@@ -399,11 +399,11 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
 
 SCENE_KEY = (("dot", (77, 255, 51), "GT height map"), ("grid", (255, 153, 64), "Reconstructed map"),
              ("bar", (31, 31, 255), "Recon. error > 2 cm"), ("dot", (13, 230, 255), "Foot scan (20 cm)"),
-             ("dot", (0, 140, 255), "Attention 128 cells (0~0.30)"), ("arrow", (51, 230, 26), "Command"),
+             ("arrow", (51, 230, 26), "Command"),
              ("arrow", (255, 89, 38), "Actual"), ("line", (200, 200, 200), "Foot trail 1.5 s"))
 
 
-LEGEND_ROW, LEGEND_FONT = 17, 12  # v8: smaller legend so the gauge panel starts higher
+LEGEND_ROW, LEGEND_FONT = 17, 14  # v8: smaller legend so the gauge panel starts higher
 GAUGE_X0, GAUGE_X1 = 1280 - 196, 1280 - 8  # shared left edge and exclusive right edge of the terrain/speed column
 LEGEND_RECT = (GAUGE_X0, 34, GAUGE_X1 - GAUGE_X0, 14 + LEGEND_ROW * len(SCENE_KEY))
 GAUGE_Y0 = LEGEND_RECT[1] + LEGEND_RECT[3] + 8
