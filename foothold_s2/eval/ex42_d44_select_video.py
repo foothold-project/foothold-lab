@@ -144,8 +144,32 @@ class Film:
         self.stream.options = {"crf": "20", "preset": "medium"}
         self.screen, self.robots, self.active = [], [], True
         self.intrinsics = None
+        self.capture_dir = path.with_name(path.stem + "_capture")
+        self.capture_dir.mkdir(parents=True, exist_ok=False)
+        self.clean = av.open(str(self.capture_dir / "review.mp4"), mode="w")
+        self.clean_stream = self.clean.add_stream("libx264", rate=FPS)
+        self.clean_stream.width, self.clean_stream.height, self.clean_stream.pix_fmt = WIDTH, HEIGHT, "yuv420p"
+        self.clean_stream.options = {"crf": "18", "preset": "medium"}
+        self.rows = {key: [] for key in ("t", "seg", "foot_pos_w", "foot_contact", "root_pos_w", "root_quat_w",
+                                        "roll", "pitch", "vx", "vy", "wz", "command", "done", "time_out",
+                                        "map_use_gt", "gt_map", "refined_map")}
+        self.snap, self.overlay, self.overlay_info, self.frame_ticks = {}, None, [], []
 
-    def frame(self, env_id, root, hud_lines, expected_static=False):
+    def tick(self, k, dt, seg, foot_pos, contact, root, quat, vel, wz, command, done, map_snap):
+        import numpy as np
+        w, x, y, z = (float(v) for v in quat)
+        roll = float(np.arctan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)))
+        pitch = float(np.arcsin(np.clip(2 * (w * y - z * x), -1.0, 1.0)))
+        for key, value in (("t", k * dt), ("seg", seg), ("foot_pos_w", foot_pos), ("foot_contact", contact),
+                           ("root_pos_w", root), ("root_quat_w", quat), ("roll", roll), ("pitch", pitch),
+                           ("vx", float(vel[0])), ("vy", float(vel[1])), ("wz", float(wz)),
+                           ("command", command), ("done", bool(done)), ("time_out", False),
+                           ("map_use_gt", bool(map_snap.get("use_gt", False))),
+                           ("gt_map", map_snap.get("gt_map", np.empty((0,), np.float32)).reshape(-1)),
+                           ("refined_map", map_snap.get("refined_map", np.empty((0,), np.float32)).reshape(-1))):
+            self.rows[key].append(np.asarray(value))
+
+    def frame(self, env_id, root, hud_lines, expected_static=False, command=(0.0, 0.0, 0.0)):
         import av
         import numpy as np
         import torch
@@ -157,6 +181,8 @@ class Film:
         raw = self.raw
         eye, target = follow_camera_pose(root)
         raw.sim.set_camera_view(eye=eye, target=target)
+        if self.overlay is not None:
+            self.overlay_info.append({"frame": len(self.screen), **self.overlay.draw(command, self.snap)})
         before = (int(raw.common_step_counter), raw.scene["robot"].data.root_pos_w.detach().cpu().clone())
         for _ in range(2 if self.screen else 8):   # first frame: camera move and annotator need a few renders to settle
             raw.sim.render()
@@ -177,6 +203,8 @@ class Film:
                                       env_count=args.envs, height=HEIGHT, width=WIDTH)
         require_single_visible_robot(pixels)
         self.robots.append(pixels)
+        for packet in self.clean_stream.encode(av.VideoFrame.from_ndarray(image, format="rgb24")):
+            self.clean.mux(packet)
         pil = Image.fromarray(image)
         draw = ImageDraw.Draw(pil, "RGBA")
         draw.rectangle((0, 0, WIDTH, 59), fill=(0, 0, 0, 190))
@@ -191,6 +219,9 @@ class Film:
                 self.writer.mux(packet)
         finally:
             self.writer.close()
+            for packet in self.clean_stream.encode():
+                self.clean.mux(packet)
+            self.clean.close()
             self.annotator.detach()
 
 
@@ -287,24 +318,94 @@ def _run_cell(env, raw, robot, sensor, body_ids, sensor_ids, term, runner, case_
         rows["alive"].append(alive.detach().cpu().numpy().copy())
         rows["phase_id"].append(phase_ids.detach().cpu().numpy().copy())
         rows["cmd_post"].append(term.vel_command_b[:, :3].detach().cpu().numpy().copy())
-        if film is not None and film.active and k % round(1.0 / (25 * dt)) == 0:
+        if film is not None:
             e = args.film_env
             root_e = data.root_pos_w[e].detach().cpu().numpy().copy()
-            vel_e, wz_e = data.root_lin_vel_b[e].detach().cpu().numpy(), float(data.root_ang_vel_b[e, 2])
-            cmd_e = term.vel_command_b[e, :3].detach().cpu().numpy()
-            local_x_e = float(root_e[0] - offset[e, 0])
-            film.frame(e, root_e, [
-                f"{case_id} | env {e} | phase {phase} | t={k * dt:.2f}s | alive={bool(alive[e])}",
-                f"cmd vx={cmd_e[0]:+.2f} wz={cmd_e[2]:+.2f} | actual vx={vel_e[0]:+.2f} wz={wz_e:+.2f}",
-                f"local_x={local_x_e:+.2f} m | feet contact={int((force[e] > 1.0).sum())}/4"],
-                       expected_static=(spec["task"] == "stop_restart" and not bool(np.any(cmd_e != 0.0))))
-            if not bool(alive[e]):
-                film.active = False
+            vel_e, wz_e = data.root_lin_vel_b[e].detach().cpu().numpy().copy(), float(data.root_ang_vel_b[e, 2])
+            cmd_e = requested[e].detach().cpu().numpy().copy()
+            film.tick(k, dt, int(phase), data.body_pos_w[e, body_ids].detach().cpu().numpy().copy(),
+                      (force[e] > 1.0).detach().cpu().numpy().copy(), root_e,
+                      data.root_quat_w[e].detach().cpu().numpy().copy(), vel_e, wz_e, cmd_e,
+                      bool(done[e]), film.snap)
+            if k % round(1.0 / (25 * dt)) == 0:
+                film.frame_ticks.append(k)
+                local_x_e = float(root_e[0] - offset[e, 0])
+                film.frame(e, root_e, [
+                    f"{case_id} | env {e} | phase {phase} | t={k * dt:.2f}s | alive={bool(alive[e])}",
+                    f"cmd vx={cmd_e[0]:+.2f} wz={cmd_e[2]:+.2f} | actual vx={vel_e[0]:+.2f} wz={wz_e:+.2f}",
+                    f"local_x={local_x_e:+.2f} m | feet contact={int((force[e] > 1.0).sum())}/4"],
+                           expected_static=(spec["task"] == "stop_restart" and not bool(np.any(cmd_e != 0.0))),
+                           command=tuple(float(v) for v in cmd_e))
     trace = {key: np.stack(value) for key, value in rows.items()}
     trace.update(trace_format=np.asarray(TRACE_FORMAT), top_latched_at=top_latched_at,
                  tile_offset_w=offset, approach_entered=entered.detach().cpu().numpy(), dt=np.asarray(dt),
                  case_id=np.asarray(case_id), map_mode=np.asarray(spec["map_mode"]))
     return trace
+
+
+def write_capture_and_compose(film, spec, case_id, picked, dt, checkpoint_sha, mesh_sha):
+    """25e capture folder (review.mp4/json/feet.npz/done) from the filmed env, then rule 4 composition."""
+    import numpy as np
+    from foothold_s2.eval import video_style
+    from foothold_s2.eval.video25 import compose_25e_v2style10 as composer
+    cap = film.capture_dir
+    steps = len(film.rows["t"])
+    sample = film.frame_ticks
+    frames = len(sample)
+    duration = steps * dt
+    if abs(duration * 25 - frames) > 1e-6 or sample != list(range(0, steps, round(1.0 / (25 * dt)))):
+        raise RuntimeError("D44 capture frames do not tile the recorded physics steps")
+    t = settings["timing"]
+    if spec["task"].startswith("turn_"):
+        names = [("settle", (0.0, 0.0, 0.0), settings["timing"]["settle_s"]),
+                 (spec["task"], (0.0, 0.0, settings["turn_rate_radps"] * (1 if spec["task"] == "turn_left" else -1)),
+                  settings["turn_seconds"])]
+    else:
+        names = [("settle", (0.0, 0.0, 0.0), t["settle_s"]),
+                 ("approach_to_stop_band", (settings["approach_vx_mps"], 0.0, 0.0), t["approach_limit_s"]),
+                 ("stop_band_hold", (0.0, 0.0, 0.0), t["stop_s"]),
+                 ("restart_to_top", (settings["restart_vx_mps"], 0.0, 0.0), t["restart_limit_s"])]
+    commands, start = [], 0.0
+    for name, target, span in names:
+        commands.append({"name": name, "target": list(target), "start_s": start, "duration_s": float(span)})
+        start += float(span)
+    if abs(start - duration) > 1e-6:
+        raise RuntimeError("D44 command spans differ from recorded duration")
+    arrays = {k: np.stack(v) for k, v in film.rows.items() if k not in ("gt_map", "refined_map")}
+    for key in ("gt_map", "refined_map"):
+        sizes = {row.size for row in film.rows[key]}
+        arrays[key] = (np.stack(film.rows[key]).astype(np.float32) if len(sizes) == 1 and 0 not in sizes
+                       else np.empty((0,), np.float32))
+    arrays["body_height_foot_center_m"] = (arrays["root_pos_w"][:, 2] - arrays["foot_pos_w"][:, :, 2].mean(axis=1)).astype(np.float32)
+    arrays["seg"] = arrays["seg"].astype(np.int8)
+    arrays["dt"] = np.float64(dt)
+    np.savez_compressed(cap / "review_feet.npz", **arrays)
+    style = {"style_id": video_style.STYLE_ID, "approved": True, "allow_unapproved": False,
+             "values": dict(video_style.APPROVED_STYLE), "approved_values": dict(video_style.APPROVED_STYLE)}
+    meta = {"label": "D44", "scene": f"D44 {spec['task']} env {args.film_env}",
+            "task_selection": {"terrain_type": "D44 eval_stairs_landing_016", "selected_tile": {"level": 0}},
+            "selected_environment": {"env_id": args.film_env, "kind": spec["task"], "level": 0, "col": 0,
+                                     "selection_role": "D44 per_env " + str(picked.get("reason"))},
+            "map_modes": {"map_mode": {"requested": spec["map_mode"]}},
+            "step_contract": {"duration_s": duration, "physics_dt_s": dt, "physics_steps": steps,
+                              "video_fps": 25, "video_frames": frames, "video_sample_step_indices": sample,
+                              "commands": commands, "policy_modes": {"latent": "mean", "action": "mean"}},
+            "camera_screen_projection": film.screen, "robot_instance_evidence": film.robots,
+            "overlay_25e": {"legend": film.legend, "scene_foot_scan_visible": False,
+                            "attention_hook": film.overlay.attn_hook_ok,
+                            "saturation_multiplier": film.overlay.saturation_multiplier,
+                            "frames": film.overlay_info, "attention_rows_per_step": film.overlay.attn_rows},
+            "style": style, "lighting": film.style["lighting"], "checkpoint_sha256": checkpoint_sha,
+            "mesh_sha256": mesh_sha, "per_env_row": picked, "case_id": case_id}
+    (cap / "review.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    (cap / "review.done").write_text("done\n", encoding="utf-8")
+    ok = bool(picked.get("success"))
+    out = film.path.with_name(film.path.stem + "_v34D168.mp4")
+    question = ("정지 밴드에서 멈춘 뒤 다시 출발해 윗 단에 네 발로 올라서는가"
+                if spec["task"] == "stop_restart" else "제자리 회전 6초 동안 발판 위에서 도는가")
+    extra = f"env {args.film_env} · {'성공' if ok else '실패'} {picked.get('reason')} · 64환경 판정과 일치"
+    return composer.render(cap, "seq", "1x", out, question=question, extra_line=extra,
+                           extra_color=(200, 235, 200) if ok else (150, 150, 255))
 
 
 def main():
@@ -362,6 +463,35 @@ def main():
         dt = float(raw.step_dt)
         runner, _saved = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint,
                                                  args.device, checkpoint_state=checkpoint_state)
+        if film is not None:
+            import numpy as _np
+            from foothold_s2.eval.video25.overlay_25e import SceneOverlay, LEGEND
+            perception = runner.perception
+            original_advance = perception._advance
+            film_env = args.film_env
+
+            def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
+                result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+                out = result[2]
+
+                def row(values):
+                    if values is None or not values.numel():
+                        return _np.empty((0,), dtype=_np.float32)
+                    return values[film_env].reshape(-1).detach().float().cpu().numpy()
+                film.snap.clear()
+                film.snap.update({"depth": depth2[film_env, -1].detach().float().cpu().numpy(),
+                                  "gt_map": gt_map[film_env].detach().float().cpu().numpy(),
+                                  "rough_map": row(out.get("rough")), "refined_map": row(out.get("refined")),
+                                  "use_gt": bool(use_gt[film_env].item()),
+                                  "first_after_reset": bool(first[film_env].item())})
+                return result
+            perception._advance = tapped_advance
+            foot_ids_r, _foot_names = robot.find_bodies(".*_foot")
+            # The attention hook turns off torch's MHA fastpath, which changes the policy's numerics and
+            # breaks bit-faithful replay of the evaluator; the overlay gets a perception without `ie`.
+            film.overlay = SceneOverlay(raw, robot, foot_ids_r, type("NoAttention", (), {})(), env_index=film_env,
+                                        saturation_multiplier=film.style["values"]["overlay_saturation"])
+            film.legend = LEGEND
         checkpoint_sha = hashlib.sha256(args.checkpoint.read_bytes()).hexdigest()
         args.out.mkdir(parents=True, exist_ok=True)
         cases = {}
@@ -416,6 +546,9 @@ def main():
                            "screen_evidence": film.screen, "robot_instance_evidence": film.robots}
                 final.with_suffix(".json").write_text(json.dumps(receipt, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
                 print("D44_SELECT_VIDEO_DONE", final, audit["pass"], flush=True)
+                composed = write_capture_and_compose(film, spec, case_id, picked, dt, hashlib.sha256(
+                    args.checkpoint.read_bytes()).hexdigest(), replica["mesh_sha256"])
+                print("D44_COMPOSED", composed["output"], composed["frames"], composed["video_rule_version"], flush=True)
             raw_file = args.out / f"{case_id}.npz"
             np.savez_compressed(raw_file, **trace)
             row = {"case_id": case_id, "task": spec["task"], "map_mode": spec["map_mode"],
