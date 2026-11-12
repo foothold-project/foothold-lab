@@ -67,8 +67,8 @@ def test_r6_uses_three_columns_without_the_pose_switch_and_five_with_it():
     cmd = np.array([[0.5, 0.1, 0.2, 0.05, 0.1]])
     act = np.array([[0.4, 0.1, 0.0, 0.0, 0.0]])
     s = _state(cmd=cmd, cmd_prev=cmd, cmd_prev2=cmd, actual=act)
-    assert np.isclose(rw.reward_terms(s, False)["r6"][0], 0.1 ** 2 + 0.2 ** 2)
-    assert np.isclose(rw.reward_terms(s, True)["r6"][0], 0.1 ** 2 + 0.2 ** 2 + 0.05 ** 2 + 0.1 ** 2)
+    assert np.isclose(rw.reward_terms(s, False)["r6"][0], np.sqrt(0.1 ** 2 + 0.2 ** 2))
+    assert np.isclose(rw.reward_terms(s, True)["r6"][0], np.sqrt(0.1 ** 2 + 0.2 ** 2 + 0.05 ** 2 + 0.1 ** 2))
     with pytest.raises(ValueError):
         rw.reward_terms(_state(), True)                                                         # 3 칸 상태로 자세 켬은 거절
 

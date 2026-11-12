@@ -78,7 +78,7 @@ def reward_terms(s: HLState, pose_active: bool = False) -> dict:
         "r3": np.exp(-np.abs(s.v_des - speed) / V_TOL),
         "r4": np.sum((s.cmd - s.cmd_prev) ** 2, axis=1),
         "r5": np.sum((s.cmd - 2.0 * s.cmd_prev + s.cmd_prev2) ** 2, axis=1),
-        "r6": np.sum((s.cmd[:, :cols] - s.actual[:, :cols]) ** 2, axis=1),
+        "r6": np.linalg.norm(s.cmd[:, :cols] - s.actual[:, :cols], axis=1),             # 논문 ‖c - 실제‖2 (제곱 아님)
         "r7": s.v_z ** 2 + np.sum(s.omega_xy ** 2, axis=1),
         "r8": np.sum((s.q - s.q0[None]) ** 2, axis=1),
         "r9": s.limited.astype(np.float64),
