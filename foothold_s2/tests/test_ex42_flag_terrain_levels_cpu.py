@@ -94,3 +94,57 @@ def test_the_readback_counts_flag_moves():
     run(env, 4)
     counts = env._ex41_terrain_diagnostics.tolist()        # fixed resets, performance resets, up, down, unchanged, mismatch
     assert counts == [0, 4, 1, 2, 1, 0]
+
+
+# ---- the promotion cap of a stage without the L+ schedule (E1F and after) ------------------------------------------
+def _attach(stage, contract):
+    import types
+    from foothold_s2.scripts import ex42_training_entry as te
+    plan = types.SimpleNamespace(stages=[types.SimpleNamespace(name="s")])
+    bound = te.E_STAGES[stage][0] if stage in te.E_STAGES else 1000
+    runtime = te.EX42StageZeroRuntime(stage_zero_plan=plan, plan_sha256="1" * 64, approval_sha256="2" * 64,
+                                      parent_sha256="3" * 64, maximum_updates=bound, push_vmax_mps=2.0, stage_id=stage)
+    env = types.SimpleNamespace(num_envs=4, device="cpu")
+    if contract is not None:
+        env._ex42_env_contract = contract
+    runtime.attach_environment(env, types.SimpleNamespace())
+    return runtime, env
+
+
+@pytest.mark.parametrize("cap", [6, 7, 8, 9])
+def test_e1f_promotes_up_to_the_cap_it_inherits_from_e1(tmp_path, cap):
+    # the exposure of the real E1F row with the predecessor cap filled in (as the materializer fills it)
+    from copy import deepcopy
+    from dataclasses import replace
+    from foothold_s2.terrains.ex42_exposure import exposure_by_column
+    from foothold_s2.tests.test_ex42_e1f_exposure_shape_cpu import table_and_terrain
+    from foothold_s2.tests.test_ex42_filled_approval_guards_cpu import filled, pin
+    plan, path, data, _ = filled(tmp_path, "E1F")
+    doc = deepcopy(plan.document)
+    next(r for r in doc["stages"] if r["id"] == "E1F")["terrain"]["exposure_at_E1F"]["positive"][0]["level_cap"] = cap
+    data["stage_e1f_authorization"]["prerequisites"]["predecessor_exit"]["continuous_level_cap"] = cap
+    plan = pin(replace(plan, document=doc), path, data)
+    table, terrain = table_and_terrain(plan)
+    exposure, level_caps = exposure_by_column(terrain, table, "E1F")
+    assert level_caps == [cap, cap, 0, 0]
+    # prepare_e0_env_cfg gives E1F no L+ schedule cap (the row has no continuous_level_cap cell)
+    runtime, env = _attach("E1", {"continuous_level_cap": None, "exposure": exposure, "level_caps": level_caps})
+    assert env._ex41_terrain == {"policy": "performance", "level_cap": cap}
+    assert runtime.state_dict()["terrain"] == {"policy": "performance", "level_cap": cap}
+    # and the rule then lets a flag env at the old stage-zero cap go up
+    flag_env, _ = make([True, False], [4, 0], [600.] * 2, levels=[5, 5], cmd=[[0., 0.], [200., 0.]], dist=[0., 5.], cap=cap)
+    assert run(flag_env, 2) == [6, 6]
+
+
+def test_the_cap_of_a_closed_column_does_not_count_and_five_stays_five():
+    _, env = _attach("E1", {"continuous_level_cap": None, "exposure": [1.0, 0.0], "level_caps": [5, 9]})
+    assert env._ex41_terrain["level_cap"] == 5
+    _, env = _attach("E1", {"continuous_level_cap": None, "exposure": [1.0, 0.02], "level_caps": [9, 5]})
+    assert env._ex41_terrain["level_cap"] == 9              # highest open cap; the sparse column is cut at its own 5
+    _, env = _attach("E1", None)
+    assert env._ex41_terrain["level_cap"] == 5
+
+
+def test_the_schedule_cap_of_e1_is_untouched():
+    _, env = _attach("E1", {"continuous_level_cap": 7, "exposure": [1.0], "level_caps": [9]})
+    assert env._ex41_terrain["level_cap"] == 7

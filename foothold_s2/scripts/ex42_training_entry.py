@@ -1200,7 +1200,16 @@ class EX42StageZeroRuntime:
             self.command_allocation.attach(raw, command_term, self)
         raw._ex42_stage_id = self.stage_id
         raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 / E1 use the same environment as stage zero
-        contract_cap = (getattr(raw, "_ex42_env_contract", None) or {}).get("continuous_level_cap")
+        contract = getattr(raw, "_ex42_env_contract", None) or {}
+        contract_cap = contract.get("continuous_level_cap")
+        if contract_cap is None and contract.get("level_caps") is not None and contract.get("exposure") is not None:
+            # A stage without the L+ schedule (E1F and after) trains at the caps its exposure gives the open columns
+            # (E1F: the cap E1 ended with, CG E.2 "same_as_E1_end"). The promotion rule must not stop at the
+            # stage-zero cap below them, or the levels above it could only go down. The highest open cap is the
+            # rule's cap; apply_exposure cuts every column at its own.
+            open_caps = [int(cap) for share, cap in zip(contract["exposure"], contract["level_caps"]) if share > 0]
+            if open_caps and max(open_caps) > STAGE_ZERO_LEVEL_CAP:
+                contract_cap = max(open_caps)
         if contract_cap is not None:                 # apply_e0_exposure ran before this: both caps are the same number
             if type(contract_cap) is not int or contract_cap < STAGE_ZERO_LEVEL_CAP:
                 raise ValueError("EX-42 continuous level cap of the segment is not an integer at or above the stage-zero cap")
