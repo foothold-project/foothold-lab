@@ -163,7 +163,7 @@ def e2_kind_kit_commands(checkpoint, output, device, *, task, plan_path,
 
 
 def e3_kind_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
-                         mesh_sha256, seed, window_index, cells):
+                         mesh_sha256, seed, window_index, cells, stage_id="E3"):
     """Every opened E3 representative level gets a forward raw trace, and a four-flag raw trace of its own unless the cell
     takes the stage's global flag_cells/flag_four evidence (continuous A kinds: the pinned mesh has no per-kind flag targets)."""
     if type(window_index) is not int or window_index < 1 or type(seed) is not int or seed < 0:
@@ -175,12 +175,12 @@ def e3_kind_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_di
         if family not in ("A", "B", "C") or not kind or type(level) is not int or level < 0:
             raise ValueError("EX-42 E3 named kind cell invalid")
         key = f"{family}_{kind}_L{level}"
-        folder = Path(output) / "kind_cells_e3" / family / kind / f"L{level}"
+        folder = Path(output) / f"kind_cells_{stage_id.lower()}" / family / kind / f"L{level}"
         forward = [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_task_suite",
                    "--plan", str(plan_path), "--checkpoint", str(checkpoint),
                    "--source-mesh", str(mesh_dir), "--out", str(folder / "forward"),
                    "--family", family, "--kind", kind, "--level", str(level),
-                   "--stage", "E3", "--group", "kind", "--window-index", str(window_index),
+                   "--stage", stage_id, "--group", "kind", "--window-index", str(window_index),
                    "--steps", "600", "--seed", str(seed), "--execute", "--device", device]
         flag = [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_flag_eval",
                 "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
@@ -188,38 +188,42 @@ def e3_kind_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_di
                 "--kind-family", family, "--kind-name", kind, "--kind-level", str(level),
                 "--count", "flag_four", "--seed", str(seed), "--envs", "64",
                 "--out", str(folder / "flag_four"), "--device", device, *kit]
-        rows.append((f"e3_{key}_forward", forward))
+        rows.append((f"{stage_id.lower()}_{key}_forward", forward))
         if cell.get("flag_source", "kind_flag_four") != "global_flag_cells":
-            rows.append((f"e3_{key}_flag_four", flag))
+            rows.append((f"{stage_id.lower()}_{key}_flag_four", flag))
     return rows
 
 
 def execute_e3_kind_children(checkpoint, output, device, *, task, execution_plan,
                              evaluation_plan, mesh_dir, mesh, checkpoint_sha256, seed,
-                             window_index, process, env, physical_gpu, record):
-    """Refuse an incomplete exposure receipt; keep any child failure as a scored HOLD."""
+                             window_index, process, env, physical_gpu, record, stage_id="E3"):
+    """Refuse an incomplete exposure receipt; keep any child failure as a scored HOLD. E4 / E5 use the same children."""
     from foothold_s2.ex42_learned_cells_evidence import read_stage_exposure
     from foothold_s2.eval.ex42_stage_kind_bundle import e3_target_inventory, read_stage_kind_bundle
 
     column_table = [{"family": family, "kind": kind}
                     for family, kind in zip(mesh["column_family"], mesh["columns"])]
-    exposure = read_stage_exposure(checkpoint, stage_id="E3", plan=execution_plan.document,
+    exposure = read_stage_exposure(checkpoint, stage_id=stage_id, plan=execution_plan.document,
                                    plan_sha256=execution_plan.sha256, column_table=column_table)
     if exposure is None:
         raise ValueError("EX-42 E3 boundary exposure receipt absent")
-    inventory = e3_target_inventory(evaluation_plan.document, exposure["opened_kinds"])
+    if stage_id == "E3":
+        inventory = e3_target_inventory(evaluation_plan.document, exposure["opened_kinds"])
+    else:
+        from foothold_s2.eval.ex42_late_stage_kinds import target_inventory
+        inventory = target_inventory(evaluation_plan.document, stage_id, exposure["opened_kinds"])
     if not inventory["opened_cells"]:
         raise ValueError("EX-42 E3 no opened named-kind cells")
     for phase, argv in e3_kind_kit_commands(
             checkpoint, output, device, task=task, plan_path=evaluation_plan.path,
             mesh_dir=mesh_dir, mesh_sha256=mesh["mesh_sha256"], seed=seed,
-            window_index=window_index, cells=inventory["opened_cells"]):
+            window_index=window_index, cells=inventory["opened_cells"], stage_id=stage_id):
         child = process.hidden_child(argv, Path(output) / "children" / phase, env=env)
         record(phase, child)
         if child.get("state") != "done":
             raise ValueError(f"EX-42 {phase} Kit child failed or lacks durable receipt")
-        folder = Path(output) / "kind_cells_e3"
-        cell_key = phase.removeprefix("e3_").removesuffix("_forward").removesuffix("_flag_four")
+        folder = Path(output) / f"kind_cells_{stage_id.lower()}"
+        cell_key = phase.removeprefix(f"{stage_id.lower()}_").removesuffix("_forward").removesuffix("_flag_four")
         cell = next(c for c in inventory["opened_cells"]
                     if f"{c['family']}_{c['kind']}_L{c['level']}" == cell_key)
         cell_folder = folder / cell["family"] / cell["kind"] / f"L{cell['level']}"
@@ -233,13 +237,50 @@ def execute_e3_kind_children(checkpoint, output, device, *, task, execution_plan
         record(phase, child)
         source = cell.get("flag_source", "kind_flag_four")
         if phase.endswith("_flag_four") or source == "global_flag_cells":   # the cell's last child: recount it now
-            read_stage_kind_bundle(cell_folder, stage_id="E3", family=cell["family"],
+            read_stage_kind_bundle(cell_folder, stage_id=stage_id, family=cell["family"],
                                    kind=cell["kind"], level=cell["level"],
                                    plan=evaluation_plan.document, plan_sha256=evaluation_plan.sha256,
                                    mesh=mesh, checkpoint_sha256=checkpoint_sha256, seed=seed,
                                    flag_source=source,
                                    global_flag_dir=Path(output) / "flag_cells" / "flag_four")
     return inventory
+
+
+def late_task_kit_commands(checkpoint, output, device, *, plan_path, mesh_dir, seed, window_index, stage_id, specs):
+    """E4 paper cells / E5 direction cells: one task-suite child per required suite, request next to its result."""
+    from foothold_s2.eval.ex42_late_stage_tasks import suite_name
+    if stage_id not in ("E4", "E5") or type(window_index) is not int or window_index < 1 or type(seed) is not int or seed < 0:
+        raise ValueError("EX-42 late task stage, window or seed invalid")
+    rows = []
+    for spec in specs:
+        name = suite_name(spec)
+        rows.append((f"{stage_id.lower()}_task_{name}",
+                     [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_task_suite",
+                      "--plan", str(plan_path), "--checkpoint", str(checkpoint), "--source-mesh", str(mesh_dir),
+                      "--out", str(Path(output) / "task_cells" / name),
+                      "--family", spec["family"], "--kind", spec["kind"], "--level", str(spec["level"]),
+                      "--stage", stage_id, "--group", spec["group"], "--window-index", str(window_index),
+                      "--steps", "300", "--seed", str(seed), "--execute", "--device", device]))
+    return rows
+
+
+def execute_late_task_children(checkpoint, output, device, *, evaluation_plan, mesh_dir, seed, window_index, stage_id,
+                               process, env, physical_gpu, record):
+    """Run every required suite. A failed child is a recorded HOLD: the exit reader finds the suite missing and holds."""
+    from foothold_s2.eval.ex42_late_stage_tasks import requirements
+    failures = {}
+    for phase, argv in late_task_kit_commands(
+            checkpoint, output, device, plan_path=evaluation_plan.path, mesh_dir=mesh_dir, seed=seed,
+            window_index=window_index, stage_id=stage_id, specs=requirements(evaluation_plan.document, stage_id)):
+        try:
+            child = process.hidden_child(argv, Path(output) / "children" / phase, env=env)
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
+        if child.get("state") != "done":
+            failures[phase] = str(child.get("reason") or f"child state {child.get('state')}")
+            child["state"] = "HOLD"
+        record(phase, child)
+    return failures
 
 
 def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
@@ -674,6 +715,38 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                              "checkpoint_sha256": expected_sha256,
                              "reason": f"{type(exc).__name__}: {exc}"})
             row["e3_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
+            _atomic(output / "eval_receipt.json", row)
+    if p1_stage_id in ("E4", "E5") and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        late_stage = p1_stage_id
+        try:
+            execution = EX42Plan.load(p1_plan)
+            evaluation = EX42Plan.load(policy_path)
+            late_window = max(1, checkpoint_iteration // evaluation.document["evaluation"]["interval_updates"])
+
+            def record_late(phase, child):
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            task_failures = execute_late_task_children(
+                checkpoint, output, device, evaluation_plan=evaluation, mesh_dir=mesh_dir, seed=seed,
+                window_index=late_window, stage_id=late_stage, process=process, env=env,
+                physical_gpu=physical_gpu, record=record_late)
+            if task_failures:
+                row["late_task_child_failures"] = task_failures
+            row["late_kind_inventory"] = execute_e3_kind_children(
+                checkpoint, output, device, task=cfg["task"], execution_plan=execution,
+                evaluation_plan=evaluation, mesh_dir=mesh_dir, mesh=mesh,
+                checkpoint_sha256=expected_sha256, seed=seed, window_index=late_window,
+                process=process, env=env, physical_gpu=physical_gpu, record=record_late, stage_id=late_stage)
+            _atomic(output / "eval_receipt.json", row)
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            marker = output / f"kind_cells_{late_stage.lower()}" / "child_failures.json"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            _atomic(marker, {"format": f"foothold-ex42-{late_stage.lower()}-child-failures/1",
+                             "checkpoint_sha256": expected_sha256,
+                             "reason": f"{type(exc).__name__}: {exc}"})
+            row["late_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
             _atomic(output / "eval_receipt.json", row)
     try:
         score = measure(checkpoint, output, expected_seed=seed,

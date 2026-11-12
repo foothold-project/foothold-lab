@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-12
 > 근거: lead-lx 11/12 E4/E5 배정 · CURRICULUM-GATES v0.17b E4/E5 · scripter b97d60ce 공통 서명
 > 요지: 논문 과제와 후진·옆걸음의 NPZ를 다시 계산하고, 빠진 공통 근거는 HOLD로 남긴다.
-> 상태: 구현 중 · CPU 확인 · Kit 미실행
-> 판: v0.1
+> 상태: 공통 소비자 연결 · CPU 확인 · Kit 미실행
+> 판: v0.2
 
 ## 평가 요청과 원자료
 
@@ -44,16 +44,15 @@ compare(now, previous, *, measured, baseline, kind_now, kind_previous,
 
 근거: [CG E4/E5](https://github.com/foothold-project/foothold-lab/blob/feature/fable-25a-jay/inbox/jay/20261026-experiments/CURRICULUM-GATES.md), [작업 #729](https://github.com/foothold-project/foothold-lab/issues/729).
 
-## StageJudge 연결 포트 (E3 소비자 구현 대기)
+## StageJudge 연결 (v0.2 · 공통 소비자 연결됨)
 
-`ex42_late_stage_judge.LateKindTwoWindowJudge`는 E4/E5 이름을 등록한다. 선택적 E3 함수 `read_stage_bundle(ctx, current, previous=prior, stage_id=...)`는 원자료를 확인한 뒤 아래를 반환해야 한다. 함수가 없으면 `stage_common_kind_consumer_unavailable`로 HOLD다. 이 이름은 analyst가 제안한 추가 포트이며, b97d60ce에 이미 있다는 뜻이 아니다.
+`ex42_late_stage_judge.common_inputs`는 더 이상 선택적 E3 함수를 기다리지 않는다. E3 공통 읽개(`ex42_stage_kind_bundle.read_e3_window`, `read_stage_kind_bundle`, `ex42_e3_judge._mesh`)를 단계 id 인자로 재사용하는 `eval/ex42_late_stage_kinds.py`가 다음을 원자료에서 다시 센다.
 
-- `items`: `exposure`, `kind_current`, `kind_previous`, `level_targets` 네 판정. 모두 `role=judge`.
-- `kind_now`, `kind_previous`: 모드별 원자료 하위 칸. `kind_subcells`의 정확한 이름과 대응한다.
-- `registered_kind_passes`: `(family, kind)` 키의 bool. 직전 원자료 통과에서만 만든다.
-- `execution_plan`: 실제 학습 계획의 `path`, `sha256`. 템플릿 목표를 실제 노출로 간주하지 않는다.
-- 실제 노출과 대표 레벨이 평가 요청 목록과 맞는지는 `exposure`와 `level_targets`에서 확인한다. 공통 소비자는 `current`의 실제 D44·깃발 원자료를 읽어 교환 감시에 제공한다.
+- 열린 종류: 그 단계의 학습 노출 영수증(`read_stage_exposure(stage_id=E4/E5)`). 정적 계획의 목표 레벨은 노출 증거가 아니다. 영수증이 없으면 `exposure` HOLD이고 원자료를 읽지 않는다.
+- 레벨 목표: prep `evaluation.late_kind_exit`(E4: 연 종류 전부 L3 이상 · 확장 E 경사 L6 · 이미 높은 상한은 낮추지 않음 / E5: 현재 상한 유지). 선언된 종류가 안 열렸거나 낮으면 `level_targets` HOLD. 모든 칸이 PASS여도 이것이 HOLD면 출구 HOLD.
+- 대표 레벨 칸: L0 · L5 · 현재 상한. 칸마다 전진 NPZ와 깃발 NPZ(연속 A는 단계 전역 flag_four)를 두 판정 모드로 다시 세어 `kind_current`, 직전 창은 `kind_previous`.
+- `learned_cells`: 실행 계획 SHA(점수의 `execution_plan_sha256`)와 직전 창 원자료 통과 종류로 `judge_two_boundaries`. 문턱 32는 prep `late_kind_exit.learned_cells_min`(CG:480 일반값 · **가정**).
+- `exchange_watch`: 두 창에 공통인 칸마다 `compare(kind_score_key='late_kind')`. 비교할 직전 칸이 없으면 HOLD.
+- 자식 실행: `ex42_eval_once`가 E4/E5 경계에서 `ex42_task_suite` 자식(E4 paper 6종 · E5 directions)과 종류 자식(`kind_cells_e4` / `kind_cells_e5`)을 띄우고, 자식 실패는 표식 파일 HOLD다.
 
-공통 함수에는 `stage_id`, `kind_score_key='late_kind'`, `kind_subcells`를 넘긴다. `learned_cells_min=32` 승인 칸도 실제 실행 계획의 승인 파일에서 확인한다. 이 승인 칸이나 공통 종류 원자료가 아직 없으면 HOLD다. 출구 판정은 학습 프로세스를 종료시키는 명령이 아니다.
-
-P1 검증은 저장된 결과의 PASS 문자열을 믿지 않는다. 체크포인트·계획·설정 SHA를 대조한 뒤 현재·직전 NPZ와 공통 소비자를 다시 실행한다.
+승인 파일(`ex42-approvals.yaml`)은 바꾸지 않았다. 문턱을 승인 칸이 아니라 prep에 둔 것은 E4/E5 승인 칸에 `exit_gate`가 없기 때문이며, prep SHA가 바뀌므로 재고정은 lead 몫이다.
