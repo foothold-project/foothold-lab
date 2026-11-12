@@ -1193,6 +1193,7 @@ def main(env_cfg, agent_cfg):
             maximum_updates=(args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES),
             push_vmax_mps=push_vmax, speed_probe=args_cli.ex42_speed_probe,
             stage_id=EX42_STAGE_ID)
+        ex42_stage_zero_runtime.record_dir = EX42_RUN_LOG_DIR      # every rank's boundary records go to the run directory
         ex42_stage_zero_runtime.attach_environment(env, command_term)
         EX42_STAGE_ZERO_REWARD_CONTRACT = apply_stage_zero_parent_reward_manager(
             env, parent_sha256=EX42_STAGE_ZERO_PARENT["parent_sha256"],
