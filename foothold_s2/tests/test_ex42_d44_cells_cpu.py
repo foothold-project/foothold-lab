@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import pathlib
 import hashlib
 import importlib.util
 import json
@@ -221,6 +222,18 @@ def test_top_stand_six_known_inputs_and_old_trace_rejection():
     no_latch["top_latched_at"][:] = -1
     no_latch["foot_pos_w"][70:, :, :, 0] = 3.2
     assert summarize(no_latch, **kwargs)["per_env"][0]["reason"] == "no_top_latch"
+    beside = copy.deepcopy(no_latch)                    # feet past the front edge, one hind foot beside the landing
+    beside["foot_pos_w"][70:, :, :, 0] = 4.0
+    beside["foot_pos_w"][70:, :, 3, 1] = 3.3
+    assert summarize(beside, **kwargs)["per_env"][0]["reason"] == "no_top_latch"      # /2 latched here on x alone
+    claimed = copy.deepcopy(beside)                     # a trace that says it latched there is not this geometry
+    claimed["phase_id"][71:] = 4
+    claimed["cmd_post"][71:, :, 0] = 0.0
+    claimed["top_latched_at"][:] = 70
+    with pytest.raises(ValueError, match="top latch or phase 4 differs"):
+        summarize(claimed, **kwargs)
+    kit = (pathlib.Path(__file__).resolve().parents[1] / "eval" / "ex42_d44_eval.py").read_text(encoding="utf-8")
+    assert "candidate = top_latch_mask(local_root[:, :2], local_feet[:, :, :2]," in kit      # the live latch sees y too
     no_stand = copy.deepcopy(good)
     no_stand["body_vel_b"][71:, :, 0] = .2
     assert summarize(no_stand, **kwargs)["success_count"] == 0
