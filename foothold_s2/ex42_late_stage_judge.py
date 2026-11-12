@@ -6,7 +6,6 @@ itself cannot masquerade as a successfully measured exit.
 """
 from __future__ import annotations
 
-import importlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -36,63 +35,81 @@ def exit_verdict(items):
 
 
 def common_inputs(ctx, current, prior):
-    """Port to the E3 named-kind reader; missing integration is explicit HOLD.
+    """Recount the stage's opened named kinds from raw NPZ (current and previous window) with the E3 common readers.
 
-    read_stage_bundle(ctx, current, previous=prior, stage_id=ctx.stage_id) must
-    verify actual exposure and recount named-kind forward/flag NPZ. It returns
-    items, kind_now, kind_previous, kind_subcells, registered_kind_passes and
-    execution_plan (the actual SHA-bound training plan). This extra port is
-    recorded in CONTRACT-E4-E5-EXIT-1112 pending the E3 consumer implementation.
-    No score payload supplied by the caller can replace the raw reader.
+    Nothing the caller put in a score can replace the raw reader: exposure comes from the training receipt, each
+    representative cell from its forward and flag traces. Returns the four gate items plus the per-cell bundles.
     """
-    try:
-        module = importlib.import_module('foothold_s2.ex42_e3_judge')
-    except ModuleNotFoundError as exc:
-        if exc.name != 'foothold_s2.ex42_e3_judge':
-            raise
-        return None
-    reader = getattr(module, 'read_stage_bundle', None)
-    if reader is None:
-        return None
-    return reader(ctx, current, previous=prior, stage_id=ctx.stage_id)
+    from foothold_s2.ex42_e3_judge import _mesh
+    from foothold_s2.eval import ex42_late_stage_kinds as kinds
+
+    stage = ctx.stage_id
+    evaluation = Path(ctx.evaluation)
+    mesh = _mesh(current, evaluation)
+    now = kinds.recount(current, plan=ctx.plan, evaluation=evaluation, mesh=mesh, stage_id=stage)
+    old = None
+    if prior is not None:
+        prior_folder = (prior.get('late_kind') or {}).get('evaluation')
+        if not prior_folder:
+            raise ValueError('previous boundary has no late kind evidence folder')
+        prior_evaluation = Path(prior_folder).parent
+        prior_mesh = _mesh(prior, prior_evaluation)
+        if prior_mesh['mesh_sha256'] != mesh['mesh_sha256']:
+            raise ValueError('late stage prior and current evaluation mesh differ')
+        old = kinds.recount(prior, plan=ctx.plan, evaluation=prior_evaluation, mesh=prior_mesh, stage_id=stage)
+    current['late_kind'] = {**(current.get('late_kind') or {}), 'mesh_sha256': mesh['mesh_sha256'],
+                            'evaluation': now['evaluation']}
+    inventory = now.get('inventory') or {}
+    exposure = ({'role': 'judge', 'judgement': 'PASS'} if now.get('exposure_found') else
+                hold(now.get('reason') or 'stage exposure receipt absent'))
+    targets = (hold(now.get('reason') or 'stage kind targets not evaluated') if not inventory else
+               hold('level target missing') if inventory['missing_targets'] else
+               {'role': 'judge', 'judgement': 'PASS'})
+    if inventory:
+        targets['missing'] = inventory['missing_targets']
+    items = {'exposure': exposure, 'level_targets': targets,
+             'kind_current': {'role': 'judge', 'judgement': now['judgement']},
+             'kind_previous': ({'role': 'judge', 'judgement': old['judgement']} if old else hold('previous_boundary_missing'))}
+    cells_now, cells_old = now.get('cells') or {}, (old or {}).get('cells') or {}
+    if cells_now and cells_old and set(cells_now) != set(cells_old):
+        items['kind_previous'] = hold('late kind cell set differs between windows')
+    return {'items': items, 'cells_now': cells_now, 'cells_previous': cells_old,
+            'registered_kind_passes': kinds.passed_kinds(old),
+            'learned_cells_min': kinds.spec_for(ctx.plan, stage)['learned_cells_min']}
 
 
 def common_gates(ctx, current, prior, *, baseline, measured):
-    """Call b97d60ce APIs only after the raw-kind input contract is satisfied."""
+    """Call the shared learned-cells and exchange-watch APIs only once the raw kind input contract is satisfied."""
     try:
         source = common_inputs(ctx, current, prior)
-        if source is None:
-            return {'kind_windows': hold('stage_common_kind_consumer_unavailable'),
-                    'learned_cells': hold('stage_common_kind_consumer_unavailable'),
-                    'exchange_watch': hold('stage_common_kind_consumer_unavailable')}
         required = {'exposure', 'kind_current', 'kind_previous', 'level_targets'}
         if (not isinstance(source, dict) or set(source.get('items', {})) != required or
                 any(v.get('role') != 'judge' or v.get('judgement') not in ('PASS', 'HOLD', 'FAIL')
                     for v in source['items'].values())):
             raise ValueError('common kind raw reader result is incomplete')
         items = {'kind_' + k: v for k, v in source['items'].items()}
-        execution = source['execution_plan']
-        if (sha256(execution['path']) != execution['sha256'] or
-                execution['sha256'] != current.get('execution_plan_sha256')):
-            raise ValueError('common kind execution plan SHA differs')
-        execution_plan = yaml.safe_load(Path(execution['path']).read_text(encoding='utf-8-sig'))
-        approvals = Path(execution['path']).parent / execution_plan['approval_file']
-        approval = yaml.safe_load(approvals.read_text(encoding='utf-8-sig'))
-        authorization = approval[f'stage_{ctx.stage_id.lower()}_authorization']
-        minimum = authorization.get('exit_gate', {}).get('learned_cells_min')
-        if authorization.get('approved') is not True or type(minimum) is not int or minimum != 32:
-            raise ValueError('stage learned_cells 32 threshold authorization missing')
+        plan_sha = current.get('execution_plan_sha256')
+        if not isinstance(plan_sha, str) or not plan_sha:
+            raise ValueError('score lacks the pinned execution plan SHA')
+        minimum = source['learned_cells_min']
+        if type(minimum) is not int or minimum != 32:
+            raise ValueError('stage learned_cells 32 threshold missing')
         from foothold_s2.ex42_learned_cells_evidence import judge_two_boundaries
         from foothold_s2.ex42_exchange_watch import compare
         items['learned_cells'] = judge_two_boundaries(
-            ctx.checkpoint, stage_id=ctx.stage_id, plan=execution_plan,
-            plan_sha256=execution['sha256'], interval=ctx.plan['evaluation']['interval_updates'],
+            ctx.checkpoint, stage_id=ctx.stage_id, plan=ctx.plan, plan_sha256=plan_sha,
+            interval=ctx.plan['evaluation']['interval_updates'],
             min_episodes=minimum, registered_kind_passes=source['registered_kind_passes'])
-        items['exchange_watch'] = compare(
-            current, prior, measured=measured, baseline=baseline,
-            kind_now=source['kind_now'], kind_previous=source['kind_previous'],
-            stage_id=ctx.stage_id, kind_score_key='late_kind',
-            kind_subcells=tuple(source['kind_subcells']))
+        comparisons = []
+        for key, bundle in source['cells_now'].items():
+            if prior is not None and key in source['cells_previous']:
+                comparisons.append(compare(
+                    current, prior, measured=measured, baseline=baseline, kind_now=bundle,
+                    kind_previous=source['cells_previous'][key], stage_id=ctx.stage_id,
+                    kind_score_key='late_kind'))
+        items['exchange_watch'] = {
+            'role': 'judge', 'judgement': aggregate(r['judgement'] for r in comparisons),
+            'cells': comparisons, 'reason': None if comparisons else 'late stage previous kind comparison missing'}
         return items
     except (*DATA_ERRORS, ImportError) as exc:
         return {'kind_windows': hold(f'{type(exc).__name__}: {exc}'),

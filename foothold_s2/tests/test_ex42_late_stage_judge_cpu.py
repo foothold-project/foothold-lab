@@ -80,14 +80,14 @@ def test_common_port_requires_all_gates_before_calling_shared_apis(tmp_path, mon
     assert all(v['judgement'] == 'HOLD' for v in result.values())
 
 
-def test_common_pass_names_without_pinned_execution_plan_are_hold(tmp_path, monkeypatch):
+def test_common_pass_names_without_the_pinned_execution_plan_sha_are_hold(tmp_path, monkeypatch):
     ctx, score = inputs(tmp_path, 'E4')
     source = {'items': {key: {'role': 'judge', 'judgement': 'PASS'} for key in
                        ('exposure', 'kind_current', 'kind_previous', 'level_targets')},
-              'execution_plan': {'path': str(tmp_path / 'absent'), 'sha256': 'a' * 64}}
+              'cells_now': {}, 'cells_previous': {}, 'registered_kind_passes': {}, 'learned_cells_min': 32}
     monkeypatch.setattr(late, 'common_inputs', lambda *args: source)
     result = late.common_gates(ctx, score, None, baseline={}, measured={})
-    assert result['kind_windows']['judgement'] == 'HOLD'
+    assert result['kind_windows']['judgement'] == 'HOLD'      # the score carries no execution_plan_sha256
 
 
 def test_prep_only_declares_two_adapters_without_changing_approvals():

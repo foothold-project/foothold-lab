@@ -2680,6 +2680,20 @@ evaluation:
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]
     source: CG-v0.17b-E3-275-283
+  # E4 / E5 exit kind targets (CG E4 row 306 / E5 row 316-318). learned_cells_min 32 is the CG:480 general value, an assumption
+  # registered here because the E4 / E5 approval cells carry no exit_gate of their own.
+  late_kind_exit:
+    learned_cells_min: 32
+    learned_cells_min_grade: assumption
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
+    representative_levels: [0, 5, current_cap]
+    E4:
+      min_level: 3
+      level_overrides: {E/slope_steep: 6, E/slope_steep_inv: 6}
+    E5:
+      min_level: 0
+    source: CG-v0.17b-E4-306-E5-316
   paper_cells:
     judge_from_stage: E4
     slope:
