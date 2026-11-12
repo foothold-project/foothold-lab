@@ -815,9 +815,21 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
         return terrain.terrain_levels.float().mean()
     term=env.command_manager.get_term(command_name)
     if not world_frame or not hasattr(term,'cmd_sum_w'): raise ValueError('EX41 requires world-frame command displacement')
-    if term.is_flag_env[ids].any(): raise ValueError('EX41 has no flag slots; new terrain contract required')
+    flags=term.is_flag_env[ids]
+    # EX-41 itself has no flag slots. A flag episode is judged only where the EX-42 registered shares allocate flags
+    # (ex42_shares.configure_env turns dynamic_flags on: E1F and after).
+    if flags.any() and getattr(getattr(term,'cfg',None),'dynamic_flags',False) is not True:
+        raise ValueError('EX41 has no flag slots; new terrain contract required')
     summed=term.cmd_sum_w[ids]*env.step_dt/resample_s
     moves=rules.judge_free(term.max_dist[ids],summed,size_x=rules.promotion_size_x(terrain,ids),resample_s=resample_s)
+    if flags.any():
+        # CG E.3 env level promotion: a flag env is judged by the flags it reached (rules.judge_flag: all of the
+        # walked share up, under half down), as terrain_levels_mixed does. An episode with no step (the resets at
+        # start-up) reached nothing and proves nothing: it stays.
+        reached=rules.judge_flag(term.goals[ids],torch.full((ids.numel(),),int(term.cfg.flag_count),device=ids.device),
+                                 term.walk_frac[ids])
+        reached=torch.where(term.ep_steps[ids]>0,reached,torch.zeros_like(reached))
+        moves=torch.where(flags,reached.to(moves.device),moves)
     before=terrain.terrain_levels[ids].clone()
     moves=capped_moves(before,moves,settings['level_cap'])
     terrain.update_env_origins(ids,moves>0,moves<0)
