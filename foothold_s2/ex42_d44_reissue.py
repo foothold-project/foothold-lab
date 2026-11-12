@@ -233,6 +233,13 @@ def write_demoted_plan(plan: EX42Plan, destination: Path, record: tuple[str, ...
     judges, records = landing["judge_cases"], landing["record_cases"]
     if not record or len(set(record)) != len(record) or any(name not in judges for name in record):
         raise ValueError("E1 exit record request must name distinct current landing judge cases")
+    preview = copy.deepcopy(plan.document)           # shape and scope are settled before anything is written
+    row = _landing(preview)
+    row["judge_cases"] = [name for name in judges if name not in record]
+    row["record_cases"] = [*records, *record]
+    for name in record:
+        row["case_specs"][name]["role"] = "record_only"
+    contract(preview)
     text = plan.path.read_text(encoding="utf-8")
     edits = [(f"judge_cases: [{', '.join(judges)}]",
               f"judge_cases: [{', '.join(n for n in judges if n not in record)}]"),

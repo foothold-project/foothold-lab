@@ -68,6 +68,16 @@ def test_contract_lets_a_map_on_case_be_recorded_but_never_a_map_off_case_judge(
     row["case_specs"][name]["role"] = "judge"
     with pytest.raises(ValueError, match="map mode and judgment role differ"):
         ex42_d44_cells.contract(blind)
+    # the option is the stop-restart pair and nothing else: no turn, not one of the two, not the pair plus a turn
+    for extra in (["turn_left_eval_gt"], ["turn_left_eval_gt", "turn_left_eval_pred"], [STOP[0]], [*STOP, "turn_right_eval_pred"]):
+        other = copy.deepcopy(document)
+        row = _landing(other)
+        row["judge_cases"] = [name for name in row["judge_cases"] if name not in extra]
+        row["record_cases"] = [*row["record_cases"], *extra]
+        for name in extra:
+            row["case_specs"][name]["role"] = "record_only"
+        with pytest.raises(ValueError, match="only the stop-restart map-on pair"):
+            ex42_d44_cells.contract(other)
     # an empty judge list is not a contract
     empty = copy.deepcopy(recorded)
     row = _landing(empty)
@@ -102,11 +112,16 @@ def test_derived_plan_differs_from_the_run_plan_only_in_the_two_landing_roles(tm
     (("stop_restart_probe_prop_only",), "must name distinct current landing judge"),
     (("unknown_case",), "must name distinct current landing judge"),
     (tuple([*TURNS, *STOP]), "case list or timing contract missing"),
+    (("turn_left_eval_gt",), "only the stop-restart map-on pair"),
+    (("turn_left_eval_gt", "turn_left_eval_pred"), "only the stop-restart map-on pair"),
+    (("stop_restart_eval_gt",), "only the stop-restart map-on pair"),
+    ((*STOP, "turn_right_eval_gt"), "only the stop-restart map-on pair"),
 ])
-def test_record_request_must_name_current_judges_and_leave_one(tmp_path, record, message):
+def test_record_request_is_the_stop_restart_pair_of_current_judges(tmp_path, record, message):
     plan = _real_plan(tmp_path)
     with pytest.raises(ValueError, match=message):
         reissue.write_demoted_plan(plan, tmp_path / "out" / "p" / "ex42-prep.yaml", record)
+    assert not (tmp_path / "out").exists()                  # refused before anything is written
 
 
 def test_evaluation_plan_with_any_other_difference_is_refused(tmp_path):
@@ -251,7 +266,9 @@ def test_window_reissue_refusals_leave_no_output(tmp_path, monkeypatch):
             ({"iterations": ()}, "consecutive boundaries"),
             ({"iterations": (500, 750)}, "No such file|m750"),
             ({"expected_scorer_sha256": "0" * 64}, "scorer SHA differs"),
-            ({"record": ("turn_left_probe_prop_only",)}, "must name distinct current landing judge")):
+            ({"record": ("turn_left_probe_prop_only",)}, "must name distinct current landing judge"),
+            ({"record": ("turn_left_eval_gt", "turn_left_eval_pred")}, "only the stop-restart map-on pair"),
+            ({"record": ("stop_restart_eval_pred",)}, "only the stop-restart map-on pair")):
         with pytest.raises((ValueError, OSError), match=message):
             _windows(run, plan, out, **kwargs)
         assert not out.exists()
