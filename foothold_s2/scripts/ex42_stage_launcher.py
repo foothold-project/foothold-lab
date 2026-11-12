@@ -175,6 +175,8 @@ def build(env, *, dry_run=False, now=None):
         child.pop("EX42_MATERIALIZE_" + name, None)
     child.pop("CUDA_VISIBLE_DEVICES", None)
     child.pop("EX42_AUTO_SEGMENT_END", None)         # consumed here: a later launch from below must not inherit it
+    if action != "continue":
+        child.pop("EX42_SEGMENT_ADJUST", None)       # a segment adjustment belongs to the stage that is running, never to a fresh start
     if dry_run:
         child.update(WORLD_SIZE="2", RANK="0", CUDA_VISIBLE_DEVICES="")
     return argv, child, {"action": action, "stage": stage, "run_dir": run_dir, "updates": updates,

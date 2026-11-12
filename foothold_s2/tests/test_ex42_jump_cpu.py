@@ -218,8 +218,11 @@ def _gate_and_manifest(tmp_path, iteration, judgment="PASS"):
     digest = hashlib.sha256(data).hexdigest()
     manifest = tmp_path / "manifest.json"
     manifest.write_text(json.dumps({"checkpoints": {f"model_{iteration}.pt": digest}, "progress": {"completed_updates": iteration}}))
+    measured = tmp_path / "ex42_score.json"
+    measured.write_text(json.dumps({"maintenance_judgement": "PASS"}))
     gate = tmp_path / "p1.json"
-    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest}))
+    gate.write_text(json.dumps({"judgment": judgment, "checkpoint_sha256": digest, "measurement": str(measured),
+                                "measurement_sha256": hashlib.sha256(measured.read_bytes()).hexdigest()}))
     return gate, manifest
 
 
