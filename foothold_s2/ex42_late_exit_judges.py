@@ -57,6 +57,7 @@ def posture_window(row: dict | None, boundary_index: int) -> dict:
         raise ValueError("posture evidence boundary or axis differs from the fixed E6a order")
     error, limit = _number(row["tracking_error_median"]), POSTURE_LIMITS[axis]
     return {"role": "judge", "judgement": "PASS" if error <= limit else "FAIL", "axis": axis,
+            "boundary_index": boundary_index,
             "tracking_error_median": error, "limit": limit}
 
 
@@ -115,7 +116,7 @@ class _LateJudge(StageJudge):
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
                  f"{self.item}_current": now, f"{self.item}_previous": old, **extra}
         verdict = aggregate(row["judgement"] for row in items.values())
-        current.update(stage_id=self.stage_id, judgement=verdict,
+        current.update(stage_id=self.stage_id, judgement=verdict, evaluation=str(ctx.evaluation),
                        stage_exit={"adapter": self.name, "judgement": verdict, "windows": 2, "items": items})
         return current
 
@@ -156,6 +157,13 @@ class E6aPostureTwoWindowJudge(_LateJudge):
                     (score or {}).get("checkpoint_sha256", ctx.checkpoint_sha))
         index = None if row is None else row.get("boundary_index")
         return posture_window(row, index if type(index) is int and 0 <= index < len(E6A_AXES) else 0)
+
+    def extra_items(self, ctx, score, now, old):
+        """Both windows must measure the same boundary (same number, hence same axis); two axes never make one exit."""
+        same = (now.get("boundary_index") is not None and now.get("boundary_index") == old.get("boundary_index")
+                and now.get("axis") == old.get("axis"))
+        return {"same_boundary": {"role": "judge", "judgement": "PASS" if same else "HOLD",
+                                  **({} if same else {"reason": "두 창의 경계 번호 또는 축이 다름"})}}
 
 
 class MapOffTwoWindowJudge(_LateJudge):

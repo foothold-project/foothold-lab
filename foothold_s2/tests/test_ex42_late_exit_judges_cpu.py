@@ -95,7 +95,7 @@ def _run(ctx, judge):
 def test_e6a_passes_only_with_both_windows_and_the_maintenance_table(tmp_path, stand_in):
     ctx = _ctx(tmp_path, "E6a")
     _posture(ctx.evaluation, 1, 0.01)
-    _posture(ctx.evaluation.parent / "m250", 0, 0.015)
+    _posture(ctx.evaluation.parent / "m250", 1, 0.015)
     judge = late.E6aPostureTwoWindowJudge()
     assert _run(ctx, judge)["judgement"] == "PASS"
     stand_in["maintenance"] = "HOLD"
@@ -103,7 +103,7 @@ def test_e6a_passes_only_with_both_windows_and_the_maintenance_table(tmp_path, s
     stand_in["maintenance"], stand_in["prior_maintenance"] = "PASS", "HOLD"
     assert _run(ctx, judge)["judgement"] == "HOLD"                    # nor the previous window's table
     stand_in["prior_maintenance"] = "PASS"
-    _posture(ctx.evaluation.parent / "m250", 0, 0.5)
+    _posture(ctx.evaluation.parent / "m250", 1, 0.5)
     assert _run(ctx, judge)["judgement"] == "FAIL"                    # a failed prior window fails the exit
 
 
@@ -178,3 +178,111 @@ def test_verify_refuses_another_stages_score_or_adapter():
         judge.verify(_exit_score("M", judge.name, ["PASS"], "PASS"), "PASS", "PASS", plan={})
     with pytest.raises(ValueError, match="aggregate differs"):
         judge.verify(_exit_score("E6a", "kind_two_window_e3", ["PASS"], "PASS"), "PASS", "PASS", plan={})
+
+
+def test_e6a_absent_posture_file_never_passes(tmp_path, stand_in):
+    ctx = _ctx(tmp_path, "E6a")
+    _posture(ctx.evaluation.parent / "m250", 1, 0.01)                 # prior fine, current file absent
+    items = _run(ctx, late.E6aPostureTwoWindowJudge())
+    assert items["judgement"] == "HOLD" and items["items"]["posture_current"]["judgement"] == "HOLD"
+
+
+def test_e6a_absent_previous_window_never_passes(tmp_path, stand_in):
+    ctx = _ctx(tmp_path, "E6a")
+    _posture(ctx.evaluation, 1, 0.01)
+    judge = late.E6aPostureTwoWindowJudge()
+    assert _run(ctx, judge)["judgement"] == "HOLD"                    # prior score exists, its evidence folder is empty
+    stand_in["prior"] = None
+    items = _run(ctx, judge)                                          # no prior score at all
+    assert items["judgement"] == "HOLD" and items["items"]["maintenance_previous"]["judgement"] == "HOLD"
+    assert items["items"]["posture_previous"]["judgement"] == "HOLD"           # the stage's own previous window is HOLD too
+
+
+@pytest.mark.parametrize("now,prior,state", [((0, "posture_height"), (1, "posture_height"), "HOLD"),
+                                              ((1, "posture_height"), (2, "posture_roll"), "HOLD"),
+                                              ((2, "posture_roll"), (1, "posture_height"), "HOLD"),
+                                              ((2, "posture_roll"), (2, "posture_roll"), "PASS"),
+                                              ((0, "posture_height"), (0, "posture_height"), "PASS")])
+def test_e6a_two_windows_must_be_the_same_boundary_and_axis(tmp_path, stand_in, now, prior, state):
+    ctx = _ctx(tmp_path, "E6a")
+    _posture(ctx.evaluation, now[0], 0.01, axis=now[1])
+    _posture(ctx.evaluation.parent / "m250", prior[0], 0.01, axis=prior[1])
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == state
+
+
+def test_e6a_boundary_number_fixes_the_axis_and_limit(tmp_path, stand_in):
+    ctx = _ctx(tmp_path, "E6a")
+    for folder in (ctx.evaluation, ctx.evaluation.parent / "m250"):
+        _posture(folder, 2, 0.03)                                      # roll error 0.03 is inside 0.05 but height's 0.02 would fail
+    items = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]
+    assert items["posture_current"]["limit"] == 0.05 and items["posture_current"]["judgement"] == "PASS"
+    for folder in (ctx.evaluation, ctx.evaluation.parent / "m250"):
+        _posture(folder, 1, 0.03)
+    items = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]
+    assert items["posture_current"]["limit"] == 0.02 and items["posture_current"]["judgement"] == "FAIL"
+    (ctx.evaluation / "posture_cells" / "posture_cells.json").write_text(json.dumps({
+        "format": late.POSTURE_FORMAT, "checkpoint_sha256": SHA, "boundary_index": 3, "axis": "posture_roll",
+        "tracking_error_median": 0.0}))
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == "HOLD"     # a fourth boundary does not exist
+
+
+@pytest.fixture
+def replay(tmp_path, monkeypatch, stand_in):
+    """A judged M score on disk plus the config / digest / receipt the P1 verify replays from."""
+    from foothold_s2 import ex42_score
+    ctx = _ctx(tmp_path, "M")
+    policy = tmp_path / "policy.yaml"
+    policy.write_text("p")
+    (ctx.evaluation / "eval_receipt.json").write_text(json.dumps({"evaluation_plan": {"path": str(policy), "sha256": "d" * 64}}))
+    monkeypatch.setattr(ex42_score, "config", lambda: ({"baseline": {"sha256": "b" * 64}}, tmp_path / "cfg.json"))
+    monkeypatch.setattr(ex42_score, "digest", lambda path: "d" * 64)
+    monkeypatch.setattr(ex42_score, "ROOT", tmp_path)
+    judge = late.MapOffTwoWindowJudge()
+    base = {"checkpoint": str(ctx.checkpoint), "checkpoint_sha256": SHA, "score_config_sha256": "d" * 64,
+            "conditions": {"eval_seed": 1}}
+
+    def judged():
+        return judge.judge(ctx, dict(base))
+    return ctx, judge, judged
+
+
+def test_verify_replays_the_raw_evidence_and_accepts_an_honest_pass(replay):
+    ctx, judge, judged = replay
+    _mapoff(ctx.evaluation, (0, 0, 0))
+    _mapoff(ctx.evaluation.parent / "m250", (1, 1, 1))
+    score = judged()
+    assert score["judgement"] == "PASS"
+    assert judge.verify(score, "PASS", "PASS", plan=ctx.plan)["stage_exit"] == score["stage_exit"]
+
+
+def test_verify_recomputes_the_verdict_from_the_raw_evidence(replay):
+    ctx, judge, judged = replay
+    _mapoff(ctx.evaluation, (0, 0, 0))
+    _mapoff(ctx.evaluation.parent / "m250", (1, 1, 1))
+    score = judged()
+    _mapoff(ctx.evaluation, (0, 0, 9))                                # the raw file changes after the score was written
+    with pytest.raises(ValueError, match="replay"):
+        judge.verify(score, "PASS", "PASS", plan=ctx.plan)
+    (ctx.evaluation / "map_off_cells" / "map_off_cells.json").unlink()   # or disappears
+    with pytest.raises(ValueError, match="replay"):
+        judge.verify(score, "PASS", "PASS", plan=ctx.plan)
+
+
+def test_verify_refuses_a_forged_item_even_when_the_aggregate_is_consistent(replay):
+    ctx, judge, judged = replay
+    _mapoff(ctx.evaluation, (0, 0, 9))
+    _mapoff(ctx.evaluation.parent / "m250", (1, 1, 1))
+    score = judged()
+    assert score["judgement"] == "FAIL"
+    score["stage_exit"]["items"]["mapoff_current"] = {"role": "judge", "judgement": "PASS"}
+    score["stage_exit"]["judgement"] = score["judgement"] = "PASS"
+    with pytest.raises(ValueError, match="replay"):
+        judge.verify(score, "PASS", "PASS", plan=ctx.plan)
+
+
+def test_verify_refuses_when_the_26_cell_aggregate_differs_from_the_maintenance_item(replay):
+    ctx, judge, judged = replay
+    _mapoff(ctx.evaluation, (0, 0, 0))
+    _mapoff(ctx.evaluation.parent / "m250", (1, 1, 1))
+    with pytest.raises(ValueError, match="aggregate differs"):
+        judge.verify(judged(), "PASS", "HOLD", plan=ctx.plan)
