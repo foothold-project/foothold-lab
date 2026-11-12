@@ -454,7 +454,7 @@ EX-41 `ex41-fixed5000.yaml` 의 칸(`stages[].id · start · duration · shares 
 | `stages[].terrain.kind_task.<kind>.command_set` · `.command_weights` | [str] · map str → float(합 1) | | `[forward_1.0, flag]` · `{forward_1.0: 0.63, flag: 0.37}` | 새 종류 env 의 명령 집합과 분포(B3) · E5 의 C 경계(`command_allocation` · 두 경로 다 등록) 에서만 늘림 · 파서는 `command_weights` 의 키 = `command_set` · 비음수 · 합 1(오차 1e-9) 아니면 거절 |
 | `stages[].terrain.continuous_level_cap` | int | 레벨 | 5 | L+ 경계에서만 +1 · E1 에서 9 까지 경계마다 +1(v0.17b · 원장 11/06 22:3x · 23:2x) · 뒤 단계 시작값은 앞 단계 끝 값(원장 11/11 13:07) |
 | `stages[].terrain.continuous_level_cap.{start, step_per_boundary, end, first_raise_boundary}` | map | 레벨 | E1: 5 · 1 · 9 · 3 | v0.17j: 구간 k(0 부터)의 상한 = min(start + step × max(0, k − first_raise_boundary + 1), end). plan 은 구간 사이에 안 바뀐다(이어 받기의 plan SHA 조건) |
-| `stages[].commands.{shares, ranges, turn_overlay}` | map | 명령 | 0 단계 값 | v0.17j: 단계가 0 단계와 다른 명령 몫 · 범위 · 회전 덧붙임을 쓸 때만 적는다. `turn_overlay` = {slots, fraction, wz_abs}. 없는 단계는 0 단계 값 그대로(E0) |
+| `stages[].commands.{shares, ranges, turn_overlay}` | map | 명령 | 0 단계 값 | v0.17j: 단계가 0 단계와 다른 명령 몫 · 범위 · 회전 덧붙임을 쓸 때만 적는다. `turn_overlay` = {fraction, wz_abs} 이고 후진 · 옆 · 대각 슬롯에만 걸린다. 없는 단계는 0 단계 값 그대로(E0) |
 | `stages[].terrain.exposure.<family>.<kind>.share` | float | 비율 | 0.0 | family ∈ `A · B · C · D` · kind 는 manifest 이름 · 합(연속 포함) = 1.0 |
 | `stages[].terrain.exposure.<family>.<kind>.level_cap` | int | 레벨 | 0 | D 경계에서만 +1 |
 | `stages[].terrain.floors.continuous_share_min` · `opened_kind_share_min` · `continuous_low_level_frac_min` | float | 비율 | 0.43 · 0.02 · 0.30 | §E.3 망각 방지(지형) · 아래면 거절 · v0.15: 0.20 → 0.43(D176 ④ 전체 하한의 실효값 · **계산**) |
