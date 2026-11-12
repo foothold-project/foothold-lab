@@ -2,10 +2,11 @@
 # Outside the plan and approval SHA on purpose: a run that has already started (E1) resumes on the same plan, yet may
 # change these cells at a boundary through the segment adjustment file (EX42_SEGMENT_ADJUST, `rewards`).
 # The start of every cell is whatever the stage's plan gives (nothing changes until an entry asks for it).
-# Values: as relayed by lead-lx 2026-11-12 21:27 (team lead 20:37). The decisions.tsv row had not been written when
-# this file was made; the commit of that row belongs in `decision` once it exists.
+# Values: decisions.tsv 2026-11-12 20:37 (team lead; ledger commit 3e746a19, read directly). The limits are a fence:
+# the values inside them are chosen from the boundary evaluation. The stop threshold is not a cell (in EX-42 a stop is
+# the stand slot, so it has no effect).
 schema: ex42-reward-adjust-limits/1
-decision: {ledger: "decisions.tsv 2026-11-12 20:37 (row pending)", relayed_by: "lead-lx 2026-11-12 21:27"}
+decision: {ledger: "decisions.tsv 2026-11-12 20:37", commit: "3e746a19"}
 cells:
   track_lin_vel_std: [0.25, 0.5]     # rewards.track_lin_vel.params.std (plan value 0.5)
   track_ang_vel_std: [0.25, 0.5]     # rewards.track_ang_vel.params.std (plan value 0.5)
