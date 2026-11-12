@@ -1154,6 +1154,8 @@ class EX42StageZeroRuntime:
         from foothold_s2.commands.ex42_shares import CommandShares
         contract = getattr(stage_zero_plan, "command_contract", None)
         self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
+        self.record_dir = None                 # the run directory every rank was given; train_start sets it (a rank other
+                                               # than 0 logs to a private directory the judges never read)
         from foothold_s2.commands.ex42_command_stats import CommandStats
         self.command_stats = CommandStats(self.stage_config)          # what the sampler actually drew (train_extra, record only)
         self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
@@ -1247,7 +1249,7 @@ class EX42StageZeroRuntime:
     def _exposure_receipt(self, iteration: int, kind: str) -> None:
         """E3 raw material: the env contract (k_ladder exposure, level caps, opened kinds) plus the live placement as
         exposure_receipt_<it>.json. `start` once per process, `boundary` at every save boundary. Never stops training."""
-        raw, log_dir = self.env, getattr(self.runner, "log_dir", None)
+        raw, log_dir = self.env, self._record_dir()
         contract = getattr(raw, "_ex42_env_contract", None)
         if contract is None or log_dir is None or (kind == "start" and getattr(self, "_exposure_start_done", False)):
             return
@@ -1330,13 +1332,53 @@ class EX42StageZeroRuntime:
         if update != self.iteration:
             raise ValueError("EX-42 stage-zero command consumption iteration differs")
         # All ranks call this, unlike on_checkpoint (rank 0 only). No GPU collective or checkpoint wait.
-        if (self.command_allocation is not None and self.runner is not None
-                and update % int(self.runner.save_interval) == 0):
+        if self.runner is None or update % int(self.runner.save_interval) != 0:
+            return
+        # The update of a save: every rank leaves its records in the run directory before rank 0 saves.
+        if self.command_allocation is not None:
+            self._write_command_shares(update)
+        self._boundary_records(update)      # rank 0 used to be the only one (on_checkpoint): the readers need every rank
+
+    COMMAND_SHARES_ATTEMPTS = 3            # team lead 2026-11-12 19:58: the record must be left; blocking the save is the last alarm
+    COMMAND_SHARES_WAIT_S = 2.0
+
+    def _write_command_shares(self, update: int) -> None:
+        """Leave this rank's counts for the save of `update` in the run directory. `CommandShares.write` writes a temp
+        file, gives it its name atomically and moves a name left by a dead process aside. A failed attempt is tried
+        again; when every attempt fails the failure is printed, appended to the run's alerts.jsonl and raised, so the
+        rank stops before the save: no checkpoint of this update exists without its record."""
+        import time
+
+        error = None
+        for attempt in range(1, self.COMMAND_SHARES_ATTEMPTS + 1):
             try:
-                self.command_allocation.write(self.runner.log_dir, update, None,
+                self.command_allocation.write(self._record_dir(), update, None,
                                               plan_sha=self.plan_sha256, stage_id=self.stage_id)
-            except Exception as exc:
-                print("EX42_COMMAND_SHARES_RECORD_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
+                if attempt > 1:
+                    print("EX42_COMMAND_SHARES_RECORD_RETRIED " + json.dumps(
+                        {"iteration": update, "written_on_attempt": attempt}, sort_keys=True), flush=True)
+                return
+            except Exception as exc:          # noqa: BLE001 (every kind of failure is retried, then raised)
+                error = exc
+                print("EX42_COMMAND_SHARES_RECORD_FAILED " + json.dumps(
+                    {"iteration": update, "attempt": attempt, "error": f"{type(exc).__name__}: {exc}"},
+                    sort_keys=True), flush=True)
+                if attempt < self.COMMAND_SHARES_ATTEMPTS:
+                    time.sleep(self.COMMAND_SHARES_WAIT_S)
+        row = {"event": "command_shares_save_blocked", "stage_id": self.stage_id, "iteration": update,
+               "rank": int(os.environ.get("RANK", "0")), "attempts": self.COMMAND_SHARES_ATTEMPTS,
+               "error": f"{type(error).__name__}: {error}"}
+        print("EX42_COMMAND_SHARES_SAVE_BLOCKED " + json.dumps(row, sort_keys=True), flush=True)
+        try:
+            with open(Path(self._record_dir()) / "alerts.jsonl", "a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, sort_keys=True) + chr(10))
+        except Exception:                     # noqa: BLE001 (the alert file is best effort; the raise below is not)
+            pass
+        raise RuntimeError(f"EX-42 command_shares record of update {update} could not be written after "
+                           f"{self.COMMAND_SHARES_ATTEMPTS} attempts; the save is blocked") from error
+
+    def _record_dir(self):
+        return self.record_dir or getattr(self.runner, "log_dir", None)
 
     def record_map_reset(self, env_ids: Any, use_gt: Any, map_off: Any = None) -> None:
         import torch
@@ -1413,16 +1455,21 @@ class EX42StageZeroRuntime:
 
     def _boundary_records(self, iteration: int) -> None:
         """Per save boundary: learned_cells_<it>.json (episodes that ended, by cell) and continuous_floor_<it>.json
-        (the CG:380 L0~2 floor receipt). Failures are printed; the files are then absent and the exit items HOLD."""
-        log_dir = getattr(self.runner, "log_dir", None)
-        if log_dir is None:
+        (the CG:380 L0~2 floor receipt). Failures are printed; the files are then absent and the exit items HOLD.
+        Once per rank and update, in the run directory: every rank at the end of a save update (flush_consumption),
+        rank 0 again after the save (on_checkpoint), which also covers a final save off the save interval."""
+        log_dir = self._record_dir()
+        if log_dir is None or getattr(self, "_boundary_recorded", None) == iteration:
             return
+        self._boundary_recorded = iteration        # learned_cells.write closes its window: never twice for one update
+        ranks = int(os.environ.get("WORLD_SIZE", "1"))
+        suffix = "" if ranks <= 1 else f"_rank{int(os.environ.get('RANK', '0'))}"
         self._exposure_receipt(iteration, "boundary")
         terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
         floor = getattr(terrain, "low_level_floor", None)
         try:
             if floor is not None:
-                path = Path(log_dir) / f"continuous_floor_{iteration}.json"
+                path = Path(log_dir) / f"continuous_floor_{iteration}{suffix}.json"
                 path.write_text(json.dumps({**floor.receipt(), "iteration": iteration, "stage_id": self.stage_id},
                                            sort_keys=True), encoding="utf-8")
             if getattr(self, "learned_cells", None) is not None:

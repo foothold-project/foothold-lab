@@ -238,4 +238,15 @@ def test_flag_share_ignores_receipts_before_the_boundary_other_stage_plan_or_aft
     for rank in (0, 1):
         _share_receipt(tmp_path, plan, rank=rank, iteration=200)
     assert flag_share(model, plan=plan, plan_sha256="x" * 64)["judgement"] == "HOLD"   # another plan
-    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["iteration"] == 200
+    held = flag_share(model, plan=plan, plan_sha256="p" * 64)                            # 200 is not the judged save (250)
+    assert held["judgement"] == "HOLD" and "저장본 회차 250" in held["reason"] and "iteration" not in held
+    aside = tmp_path / "superseded"                                                     # a moved-aside record never counts
+    aside.mkdir()
+    for rank in (0, 1):
+        _share_receipt(aside, plan, rank=rank, iteration=250)
+    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["judgement"] == "HOLD"
+    _share_receipt(tmp_path, plan, rank=0, iteration=250)
+    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["judgement"] == "HOLD"     # the save's update, one rank only
+    _share_receipt(tmp_path, plan, rank=1, iteration=250)
+    passed = flag_share(model, plan=plan, plan_sha256="p" * 64)
+    assert passed["judgement"] == "PASS" and passed["iteration"] == 250 and passed["sigmas"] == 4.0

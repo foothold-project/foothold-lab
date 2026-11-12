@@ -229,6 +229,13 @@ class CommandShares:
                'checkpoint_binding': 'consumer must bind the saved model and manifest for this plan/stage/iteration',
                'counting': 'rank-local cumulative since count_origin_update; resume starts a new count segment'}
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
+        if target.exists():
+            # A process that died between this record and its save left the name behind; the run came back to the
+            # iteration from an earlier save. Keep the old record out of the judges' glob and write the live counts.
+            aside = target.parent/'superseded'
+            aside.mkdir(exist_ok=True)
+            index = len(list(aside.glob(f'{target.stem}.*.json')))
+            os.replace(target, aside/f'{target.stem}.{index}.json')
         fd, temp = tempfile.mkstemp(dir=target.parent, prefix='.command-shares-')
         try:
             with os.fdopen(fd,'w',encoding='utf-8') as stream:
