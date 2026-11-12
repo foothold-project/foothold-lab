@@ -73,6 +73,57 @@ def recount(score: dict, *, plan: dict, evaluation: Path, mesh: dict) -> dict:
             "mesh_sha256": mesh["mesh_sha256"], "evaluation": str(folder)}
 
 
+FLAG_SIGMAS = 4.0
+
+
+def flag_share(checkpoint: Path, *, plan: dict, plan_sha256: str, sigmas: float = FLAG_SIGMAS) -> dict:
+    """Consume the training command_shares receipts (#739) written after the E3 C boundary.
+
+    Only receipts of stage E3 under this plan whose configured vector equals the plan's C boundary vector count; both
+    ranks must have written the same iteration. PASS needs the flag fraction of reset assignments (continuous
+    denominator, the one the flag allocation draws over) within `sigmas` binomial standard deviations of the boundary
+    flag share. The all-environment fraction is recorded, not judged. Nothing here is invented: no receipt is HOLD."""
+    row = next((r for r in plan["stages"] if r["id"] == "E3"), {})
+    target = (row.get("command_allocation_boundary") or {}).get("shares")
+    if not target:
+        raise ValueError("EX-42 E3 plan has no C boundary command vector")
+    expected = float(target["flag"])
+    checkpoint = Path(checkpoint)
+    limit = int(checkpoint.stem.rsplit("_", 1)[-1])       # model_<iteration>.pt: nothing written after it counts
+    found: dict[int, dict[int, tuple[Path, dict]]] = {}
+    for path in sorted(checkpoint.parent.glob("command_shares_*_rank*.json")):
+        doc = json.loads(path.read_text(encoding="utf-8-sig"))
+        if (doc.get("format") != "ex42-command-shares/1" or doc.get("stage_id") != "E3" or
+                doc.get("plan_sha256") != plan_sha256 or
+                (doc.get("configured") or {}).get("shares") != target):
+            continue                      # before the C boundary, another stage or another plan
+        if doc["iteration"] > limit:
+            continue
+        found.setdefault(doc["iteration"], {})[doc["rank"]] = (path, doc)
+    ready = [(it, ranks) for it, ranks in sorted(found.items())
+             if set(ranks) == set(range(next(iter(ranks.values()))[1]["world_size"]))]
+    if not ready:
+        return {"role": "judge", "judgement": "HOLD",
+                "reason": "E3 C 경계 뒤 command_shares 영수증 없음 (두 rank 모두 필요)"}
+    iteration, ranks = ready[-1]
+    rows, states = [], []
+    for rank, (path, doc) in sorted(ranks.items()):
+        cumulative = doc["cumulative"]["reset_modes"]
+        cont, every = cumulative["continuous"], cumulative["all"]
+        n, flags = cont["total"], cont["counts"]["flag"]
+        z = None
+        if n:
+            z = (flags / n - expected) / ((expected * (1 - expected) / n) ** .5)
+        states.append("PASS" if n and abs(z) <= sigmas else "HOLD")
+        rows.append({"rank": rank, "receipt": str(path), "receipt_sha256": _sha(path),
+                     "count_origin_update": doc.get("count_origin_update"),
+                     "continuous_resets": n, "flag_resets": flags, "z": z,
+                     "all_resets": every["total"], "all_flag_resets": every["counts"]["flag"]})
+    return {"role": "judge", "judgement": aggregate(states), "iteration": iteration, "expected": expected,
+            "sigmas": sigmas, "ranks": rows,
+            "reason": None if all(state == "PASS" for state in states) else "E3 깃발 명령 몫이 15% 에서 4 시그마 밖"}
+
+
 def _retained(score: dict, *, evaluation: Path, plan: dict, plan_sha256: str,
               checkpoint_sha256: str, seed: int) -> list[str]:
     from foothold_s2.eval.ex42_d44_cells import read_evidence as read_d44
@@ -151,9 +202,7 @@ class E3KindTwoWindowJudge(StageJudge):
                                                stage_id="E3", kind_score_key="e3_kind"))
         exchange = {"role": "judge", "judgement": aggregate(r["judgement"] for r in comparisons),
                     "cells": comparisons, "reason": "E3 직전 경계 종류별 비교 결측" if not comparisons else None}
-        # The command share must be demonstrated by a pinned training readback.
-        # Neither the E3 prep stage nor the current exposure receipt records it yet.
-        flag_share = {"role": "judge", "judgement": "HOLD", "reason": "E3 깃발 명령 15% 실현 원자료 없음"}
+        flag_item = flag_share(ctx.checkpoint, plan=ctx.plan, plan_sha256=now.get("execution_plan_sha256", ""))
         items = {
             "maintenance_current": {"role": "judge", "judgement": now["judgement"]},
             "maintenance_previous": {"role": "judge", "judgement": old["judgement"] if old else "HOLD"},
@@ -162,7 +211,7 @@ class E3KindTwoWindowJudge(StageJudge):
             "kind_coverage": {"role": "judge", "judgement": aggregate(kind_states)},
             "retained_cells": {"role": "judge", "judgement": "HOLD" if retained_missing else "PASS",
                                "missing": retained_missing},
-            "learned_cells": learned, "exchange_watch": exchange, "flag_share": flag_share,
+            "learned_cells": learned, "exchange_watch": exchange, "flag_share": flag_item,
         }
         verdict = aggregate(row["judgement"] for row in items.values())
         now.update(judgement=verdict, stage_exit={"adapter": self.name, "judgement": verdict,

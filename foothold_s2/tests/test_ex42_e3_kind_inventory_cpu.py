@@ -148,3 +148,94 @@ def test_e3_recount_holds_without_the_global_flag_receipt_and_names_the_sources(
                         {"A/pyramid_stairs/L0": {"eval_gt": {"judgement": "PASS"}, "eval_pred": {"judgement": "PASS"}}})
     result = judge.recount(score, plan=plan, evaluation=evaluation, mesh=mesh)
     assert seen["global_flag_dir"] == receipt and result["flag_sources"] == ["global_flag_cells", "kind_flag_four"]
+
+
+def _recount_setup(monkeypatch, tmp_path, *, opened, exposure_mesh="b" * 64, exposure=True):
+    import foothold_s2.ex42_e3_judge as judge
+    import foothold_s2.ex42_learned_cells_evidence as evidence
+
+    plan = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
+    evaluation = tmp_path / "m250"
+    (evaluation / "kind_cells_e3").mkdir(parents=True)
+    monkeypatch.setattr(evidence, "read_stage_exposure",
+                        lambda *_a, **_k: {"opened_kinds": opened, "mesh_sha256": exposure_mesh, "receipts": []}
+                        if exposure else None)
+    score = {"stage_id": "E3", "checkpoint_sha256": "a" * 64, "checkpoint": str(tmp_path / "model_250.pt"),
+             "execution_plan_sha256": "c" * 64, "maintenance_source_sha256": "d" * 64, "conditions": {"eval_seed": 42}}
+    mesh = {"mesh_sha256": "b" * 64, "column_family": ["B"], "columns": ["rough"]}
+    return judge, plan, evaluation, score, mesh
+
+
+def test_e3_recount_never_passes_while_targets_are_unopened(monkeypatch, tmp_path):
+    judge, plan, evaluation, score, mesh = _recount_setup(monkeypatch, tmp_path, opened={"B/rough": 3})
+    passing = {"eval_gt": {"judgement": "PASS"}, "eval_pred": {"judgement": "PASS"}}
+    monkeypatch.setattr(judge, "read_e3_window", lambda *_a, **_k: {"B/rough/L0": passing, "B/rough/L3": passing})
+    result = judge.recount(score, plan=plan, evaluation=evaluation, mesh=mesh)
+    assert result["inventory"]["missing_targets"] and result["judgement"] == "HOLD"
+
+
+def test_e3_recount_holds_without_a_training_exposure_receipt_and_reads_no_raw(monkeypatch, tmp_path):
+    judge, plan, evaluation, score, mesh = _recount_setup(monkeypatch, tmp_path, opened={}, exposure=False)
+    monkeypatch.setattr(judge, "read_e3_window", lambda *_a, **_k: pytest.fail("raw window must not be read"))
+    result = judge.recount(score, plan=plan, evaluation=evaluation, mesh=mesh)
+    assert result["judgement"] == "HOLD" and "노출 영수증" in result["reason"] and "cells" not in result
+
+
+def test_e3_recount_refuses_a_training_mesh_that_differs_from_the_evaluation_mesh(monkeypatch, tmp_path):
+    judge, plan, evaluation, score, mesh = _recount_setup(monkeypatch, tmp_path, opened={"B/rough": 3},
+                                                          exposure_mesh="e" * 64)
+    monkeypatch.setattr(judge, "read_e3_window", lambda *_a, **_k: pytest.fail("raw window must not be read"))
+    with pytest.raises(ValueError, match="training and evaluation mesh differ"):
+        judge.recount(score, plan=plan, evaluation=evaluation, mesh=mesh)
+
+
+def _share_receipt(folder, plan, *, iteration=250, rank=0, world_size=2, flag=0.15, continuous=(850, 150),
+                   stage_id="E3", plan_sha="p" * 64):
+    import json
+    boundary = next(r for r in plan["stages"] if r["id"] == "E3")["command_allocation_boundary"]["shares"]
+    shares = dict(boundary) if flag == 0.15 else dict(next(r for r in plan["stages"] if r["id"] == "E3")["shares"])
+    total = sum(continuous)
+    doc = {"format": "ex42-command-shares/1", "stage_id": stage_id, "iteration": iteration, "rank": rank,
+           "world_size": world_size, "plan_sha256": plan_sha, "configured": {"shares": shares},
+           "count_origin_update": 0,
+           "cumulative": {"reset_modes": {
+               "continuous": {"total": total, "counts": {"free": continuous[0], "flag": continuous[1]}},
+               "all": {"total": total * 2, "counts": {"free": continuous[0] * 2, "flag": continuous[1]}}}}}
+    (folder / f"command_shares_{iteration}_rank{rank}.json").write_text(json.dumps(doc), encoding="utf-8")
+
+
+def test_flag_share_consumes_both_rank_receipts_after_the_c_boundary(tmp_path):
+    from foothold_s2.ex42_e3_judge import flag_share
+
+    plan = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
+    model = tmp_path / "model_250.pt"
+    kwargs = dict(plan=plan, plan_sha256="p" * 64)
+    assert flag_share(model, **kwargs)["judgement"] == "HOLD"                 # no receipt, nothing invented
+    _share_receipt(tmp_path, plan, rank=0)
+    assert flag_share(model, **kwargs)["judgement"] == "HOLD"                 # one rank is not both ranks
+    _share_receipt(tmp_path, plan, rank=1)
+    item = flag_share(model, **kwargs)
+    assert item["judgement"] == "PASS" and item["iteration"] == 250 and len(item["ranks"]) == 2
+    assert item["ranks"][0]["all_resets"] == 2000 and item["expected"] == 0.15
+    (tmp_path / "command_shares_250_rank1.json").unlink()
+    _share_receipt(tmp_path, plan, rank=1, continuous=(700, 300))              # 30 % flag: far outside 4 sigma
+    assert flag_share(model, **kwargs)["judgement"] == "HOLD"
+
+
+def test_flag_share_ignores_receipts_before_the_boundary_other_stage_plan_or_after_the_checkpoint(tmp_path):
+    from foothold_s2.ex42_e3_judge import flag_share
+
+    plan = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
+    model = tmp_path / "model_250.pt"
+    for rank in (0, 1):
+        _share_receipt(tmp_path, plan, rank=rank, flag=0.10, continuous=(900, 100))    # E3 start vector, flag 0.10
+    _share_receipt(tmp_path, plan, rank=0, iteration=500)
+    _share_receipt(tmp_path, plan, rank=1, iteration=500)                              # later than model_250
+    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["judgement"] == "HOLD"
+    for rank in (0, 1):
+        _share_receipt(tmp_path, plan, rank=rank, iteration=100, stage_id="E2")
+    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["judgement"] == "HOLD"
+    for rank in (0, 1):
+        _share_receipt(tmp_path, plan, rank=rank, iteration=200)
+    assert flag_share(model, plan=plan, plan_sha256="x" * 64)["judgement"] == "HOLD"   # another plan
+    assert flag_share(model, plan=plan, plan_sha256="p" * 64)["iteration"] == 200
