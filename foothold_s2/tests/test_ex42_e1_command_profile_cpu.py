@@ -124,7 +124,7 @@ def _doc(plan, change):
 
 
 def test_the_profile_reader_returns_none_without_a_cell_and_validated_values_with_one(plan):
-    assert ex42_shares.stage_commands(plan, "E0") is None and ex42_shares.stage_commands(plan, "E1F") is None
+    assert ex42_shares.stage_commands(plan, "E0") is None and ex42_shares.stage_commands(plan, "J0") is None      # rows with no cell
     profile = ex42_shares.stage_commands(plan, "E1")
     assert profile["turn_overlay"] == (0.25, 0.2, 0.6) and profile["ranges"]["walk_vx"] == (0.3, 1.2)
     assert set(profile["shares"]) == set(mc.EX39_SLOTS)

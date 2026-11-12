@@ -366,6 +366,14 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E1F
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
@@ -470,6 +478,14 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E2
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   exit_judge: kind_two_window_e2
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
@@ -547,6 +563,14 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -669,6 +693,14 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -851,6 +883,14 @@ stages:
   - E
   - continuous
 - id: E5
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1040,6 +1080,14 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1221,6 +1269,14 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
@@ -1408,6 +1464,14 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
+  # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
+  # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
+  # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
+  commands:
+    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
+    turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
     validator: bounded
