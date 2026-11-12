@@ -133,7 +133,11 @@ def test_E2_stage_override_routes_training_and_evaluation_without_changing_E1F(t
            'EX42_MESH_SHA256': 'a'*64, 'EX42_MESH_SHA256_E2': 'a'*64}
     assert _need(env, 'MESH_DIR', 'E1F') == '/old'
     assert _need(env, 'MESH_DIR', 'E2') == '/flags'
-    argv = p1_argv(env, 'E2', '/run', _need(env, 'MESH_DIR', 'E2'),
-                   _need(env, 'MESH_SHA256', 'E2'), '/python', tmp_path/'plan', tmp_path/'approvals')
+    from foothold_s2.scripts.ex42_stage_launcher import LaunchRefused
+    args = ('E2', '/run', _need(env, 'MESH_DIR', 'E2'),
+            _need(env, 'MESH_SHA256', 'E2'), '/python', tmp_path/'plan', tmp_path/'approvals')
+    with pytest.raises(LaunchRefused):
+        p1_argv(env, *args)
+    argv = p1_argv(dict(env, GPU_JOBS_QUEUE='/queue.json'), *args)
     assert argv[argv.index('--mesh-dir')+1] == '/flags'
     assert argv[argv.index('--expected-mesh-sha256')+1] == 'a'*64

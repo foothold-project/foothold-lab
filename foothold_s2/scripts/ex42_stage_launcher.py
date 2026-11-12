@@ -2,6 +2,7 @@
 
 `ex42_stage_handoff.start_launcher` runs it once per authorized decision with `EX42_AUTO_*` in the environment:
   next_stage : EX42_AUTO_ACTION=next_stage, TARGET_STAGE, PARENT_MANIFEST, PARENT_CHECKPOINT, GATE_RECEIPT, GATE_SHA256
+               (optional EX42_AUTO_SEGMENT_END: the fresh run stops at that first boundary instead of the stage bound)
   continue   : the same plus EX42_AUTO_RESUME_CHECKPOINT and EX42_AUTO_SEGMENT_END (same stage, same run folder)
 This module turns those into the one `torch.distributed.run ... train_start.py` command line, sends the one-line
 notice to the run inbox, and then `exec`s the trainer, so the PID the GPU queue registered for the launcher is the
@@ -78,9 +79,14 @@ def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
             "--device", env.get("EX42_P1_DEVICE", "cuda:1"), "--eval-seed", env.get("EX42_EVAL_SEED", "42"),
             "--mesh-dir", mesh_dir, "--expected-mesh-sha256", mesh_sha,
             "--p1-plan", str(plan), "--p1-approvals", str(approvals), "--p1-stage-id", stage]
+    queue = env.get("GPU_JOBS_QUEUE")
+    if not queue:
+        raise LaunchRefused("missing GPU_JOBS_QUEUE (the next-stage queue path)")
     if env.get("EX42_P1_SPLIT_DEVICE"):
         argv += ["--split-device", env["EX42_P1_SPLIT_DEVICE"]]
-    return argv + ["--execute"]
+    return argv + ["--next-stage-launcher", str(Path(__file__).with_suffix(".sh")),
+                   "--next-stage-queue", queue,
+                   "--next-stage-dispatch", str(DISPATCH), "--execute"]
 
 
 def build(env, *, dry_run=False, now=None):
@@ -91,6 +97,13 @@ def build(env, *, dry_run=False, now=None):
     stage = _need(env, "AUTO_TARGET_STAGE")
     plan, approvals = plan_paths(env)
     updates = _stage_updates(stage, plan)
+    from foothold_s2.ex42_canon_params_check import failures, launch_gate
+    try:                                             # a gated stage starts only when its plan carries the canon values
+        canon_report = launch_gate(stage, plan)
+    except (ValueError, OSError, KeyError) as error:
+        raise LaunchRefused(f"the canon check of stage {stage} could not run: {error}") from error
+    if canon_report is not None and not canon_report["passed"]:
+        raise LaunchRefused(f"the plan of stage {stage} does not carry the canon values: {failures(canon_report)}")
     parent_manifest = _need(env, "AUTO_PARENT_MANIFEST")
     python = env.get("ISAAC311_PYTHON")
     if not python:
@@ -127,7 +140,9 @@ def build(env, *, dry_run=False, now=None):
         if not (Path(run_dir) / "manifest.json").is_file():
             raise LaunchRefused(f"{run_dir} has no manifest.json: not the run folder of the checkpoint")
     else:
-        resume = segment_end = None
+        resume, segment_end = None, env.get("EX42_AUTO_SEGMENT_END") or None      # a fresh start may stop at its first boundary
+        if segment_end is not None and (not segment_end.isdigit() or not 0 < int(segment_end) <= updates):
+            raise LaunchRefused(f"EX42_AUTO_SEGMENT_END {segment_end!r} is not an update in 1..{updates}")
         stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(now))
         run_dir = f"{_need(env, 'MAIN_ROOT').rstrip('/')}/EX-42-B-{stage}_{stamp}"
     flags = [f"--task={TASK}", "--device=cuda:0", f"--num_envs={env.get('EX42_NUM_ENVS', '3072')}",
@@ -141,6 +156,8 @@ def build(env, *, dry_run=False, now=None):
              f"--ex42_terrain_manifest={terrain_manifest}", f"--ex42_terrain_mesh_dir={mesh_dir}"]
     if resume:
         flags += [f"--ex42_resume_from={resume}", f"--ex42_segment_end={segment_end}"]
+    elif segment_end:
+        flags += [f"--ex42_segment_end={segment_end}"]
     if dry_run:
         argv = [python, str(TRAIN_START)] + flags
     else:
@@ -149,11 +166,22 @@ def build(env, *, dry_run=False, now=None):
     child = dict(env, CUDA_DEVICE_ORDER="PCI_BUS_ID", OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1",
                  PYTHONPATH=str(SOURCE_ROOT) + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""))
     child.update(mesh_env)
+    # Carry this run's immutable calibration/parent pins into the following
+    # transition. Each boundary generates its own evidence and actual budget.
+    child.update(EX42_MATERIALIZE_TEMPLATE_PLAN=str(plan), EX42_MATERIALIZE_TEMPLATE_APPROVALS=str(approvals),
+                 EX42_MATERIALIZE_EVIDENCE_DIR=str(Path(run_dir) / "handoff/evidence"),
+                 EX42_MATERIALIZE_OUT_ROOT=str(Path(run_dir) / "handoff/transitions"))
+    for name in ("BUDGET_USED", "BUDGET_LIMIT", "BUDGET_BASIS"):
+        child.pop("EX42_MATERIALIZE_" + name, None)
     child.pop("CUDA_VISIBLE_DEVICES", None)
+    child.pop("EX42_AUTO_SEGMENT_END", None)         # consumed here: a later launch from below must not inherit it
+    if action != "continue":
+        child.pop("EX42_SEGMENT_ADJUST", None)       # a segment adjustment belongs to the stage that is running, never to a fresh start
     if dry_run:
         child.update(WORLD_SIZE="2", RANK="0", CUDA_VISIBLE_DEVICES="")
     return argv, child, {"action": action, "stage": stage, "run_dir": run_dir, "updates": updates,
                          "resume": resume, "segment_end": segment_end,
+                         "canon_params": "passed" if canon_report is not None else "not_gated",
                          **({"training_mesh": mesh_receipt} if mesh_receipt else {})}
 
 

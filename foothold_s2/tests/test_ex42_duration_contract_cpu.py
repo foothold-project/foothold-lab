@@ -17,7 +17,7 @@ run, dump, sha = materialize_tests.run, materialize_tests.dump, materialize_test
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = ROOT / 'foothold_s2/curriculum/ex42-prep.yaml'
 # CG v0.16 E.1/E.4, amended E3/E4/E6b by decision 7121e018 (19:38).
-EXPECTED = {'E0': (250, 0, 0), 'E1': (1000, 500, 2), 'E1F': (750, 500, 1),
+EXPECTED = {'E0': (250, 0, 0), 'E1': (1750, 500, 2), 'E1F': (750, 500, 1),
             'E2': (1500, 500, 2), 'E3': (4000, 1000, 2), 'E4': (3000, 1000, 2),
             'E5': (1500, 500, 2), 'M': (500, 500, 1), 'E6a': (1000, 500, 1),
             'E6b': (3000, 1000, 2)}
@@ -28,7 +28,8 @@ def test_canonical_first_check_base_cap_and_extension_count(stage):
     plan = EX42Plan.load(PLAN)
     row = next(r for r in plan.document['stages'] if r['id'] == stage)
     cap, step, count = EXPECTED[stage]
-    assert row['minimum_updates'] == 250
+    # E1 (CG v0.17j): seven planned segments, no exit before the last one; every other stage checks first at 250
+    assert row['minimum_updates'] == (1750 if stage == 'E1' else 250)
     assert (row['maximum_updates'], row['extension_updates'], row['extension_max_count']) == (cap, step, count)
     assert draft_stage_authorization(plan, stage)['scope']['maximum_updates'] == cap
     if count:
@@ -39,25 +40,37 @@ def test_canonical_first_check_base_cap_and_extension_count(stage):
         assert contract['maximum_updates'] == cap + step * count
 
 
-def test_e1_early_pass_at_250_materializes_e1f_with_base_750_scope(known):
+def _e1_gate_at(known, update):
+    """Rewrite the known E1 exit so that its PASS gate sits at local update `update`."""
     parent = known['parent_manifest'].parent
-    checkpoint = parent / 'model_250.pt'
-    checkpoint.write_bytes(b'known early E1 PASS')
+    checkpoint = parent / f'model_{update}.pt'
+    checkpoint.write_bytes(b'known E1 PASS at %d' % update)
     digest = sha(checkpoint)
-    dump(known['parent_manifest'], {'progress': {'completed_updates': 250}, 'checkpoints': {checkpoint.name: digest}})
+    dump(known['parent_manifest'], {'progress': {'completed_updates': update}, 'checkpoints': {checkpoint.name: digest}})
     gate = json.loads(known['gate_receipt'].read_text())
     measure = Path(gate['measurement']); m = json.loads(measure.read_text()); m['checkpoint_sha256'] = digest
     dump(measure, m)
-    gate.update(checkpoint_iteration=250, checkpoint_sha256=digest, measurement_sha256=sha(measure))
+    gate.update(checkpoint_iteration=update, checkpoint_sha256=digest, measurement_sha256=sha(measure))
     dump(known['gate_receipt'], gate)
     ev = json.loads(known['evidence'].read_text()); ev.update(checkpoint_sha256=digest, gate_sha256=sha(known['gate_receipt']))
     dump(known['evidence'], ev)
+
+
+@pytest.mark.parametrize('update', [250, 750, 1000, 1500])
+def test_e1_pass_before_its_last_segment_does_not_materialize_e1f(known, update):
+    _e1_gate_at(known, update)
+    with pytest.raises(ValueError, match='valid exit boundary'):
+        run(known)
+
+
+def test_e1_pass_at_1750_materializes_e1f_with_base_750_scope(known):
+    _e1_gate_at(known, 1750)
     result = run(known)
     plan = EX42Plan.load(result['plan'])
     row = next(r for r in plan.document['stages'] if r['id'] == 'E1F')
     approval = yaml.safe_load(Path(result['approvals']).read_text())['stage_e1f_authorization']
-    assert row['parent']['manifest_local_update'] == 250
-    assert row['parent']['cumulative_update'] == 13500
+    assert row['parent']['manifest_local_update'] == 1750
+    assert row['parent']['cumulative_update'] == 15000
     assert row['minimum_updates'] == 250
     assert approval['scope']['maximum_updates'] == row['maximum_updates'] == 750
     assert approval['extension_contract']['after_updates'] == 750
@@ -79,7 +92,7 @@ def test_extension_cannot_start_before_cap_or_expand_or_follow_pass(known, field
         validate_stage_authorization(replace(plan, document=d), changed, cell['scope']['parent_sha256'], stage_id='E1F')
 
 
-def test_corrected_template_allows_early_exit_without_rewriting_frozen_source(known):
+def test_corrected_template_governs_the_exit_timing_without_rewriting_frozen_source(known):
     # Running E1 was pinned when min/max were incorrectly 1000/2000. New approved
     # timing governs eligibility; source receipt still hashes the untouched old plan.
     # The pre-19:38 frozen run had extension=false, not today's new authorization.
@@ -106,7 +119,7 @@ def test_corrected_template_allows_early_exit_without_rewriting_frozen_source(kn
     dump(known['gate_receipt'], gate)
     ev = json.loads(known['evidence'].read_text()); ev.update(source_plan_sha256=sha(source), gate_sha256=sha(known['gate_receipt']))
     dump(known['evidence'], ev)
-    test_e1_early_pass_at_250_materializes_e1f_with_base_750_scope(known)
+    test_e1_pass_at_1750_materializes_e1f_with_base_750_scope(known)
     assert source.read_bytes() == before
 
 
@@ -122,4 +135,30 @@ def test_source_extension_requires_actual_pinned_authorization_not_table_count(k
 def test_e1_extension_is_separately_approved_by_the_1938_decision():
     from foothold_s2.ex42_stage_materialize import source_exit_bounds
     plan = EX42Plan.load(PLAN)
-    assert source_exit_bounds(plan, plan, 'E1') == (250, 2000)
+    assert source_exit_bounds(plan, plan, 'E1') == (1750, 2750)
+
+
+def test_stage_exit_updates_are_the_cap_and_each_whole_hold_extension():
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+    document = EX42Plan.load(PLAN).document
+    assert stage_exit_updates(document, 'E1') == (1750, 2000, 2250, 2500, 2750)
+    assert stage_exit_updates(document, 'E1F') == (250, 500, 750, 1000, 1250)
+    assert stage_exit_updates(document, 'E0') == (250,)
+
+
+@pytest.mark.parametrize('update', [2000, 2250, 2500, 2750])
+def test_e1_pass_at_a_boundary_of_its_hold_extension_materializes_e1f(known, update):
+    """reviewer 11/12 14:29: the extension boundaries must stay exit boundaries, or a HOLD-extended E1 could never hand
+    over. The evidence builder and the flag baseline chain take the same updates (stage_exit_updates)."""
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+    assert update in stage_exit_updates(EX42Plan.load(PLAN).document, 'E1')
+    _e1_gate_at(known, update)
+    row = next(r for r in EX42Plan.load(run(known)['plan']).document['stages'] if r['id'] == 'E1F')
+    assert row['parent']['manifest_local_update'] == update and row['parent']['cumulative_update'] == 13250 + update
+
+
+@pytest.mark.parametrize('update', [3000, 3250])
+def test_e1_pass_past_its_extensions_does_not_materialize_e1f(known, update):
+    _e1_gate_at(known, update)
+    with pytest.raises(ValueError, match='valid exit boundary'):
+        run(known)

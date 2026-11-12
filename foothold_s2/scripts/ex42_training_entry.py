@@ -27,6 +27,7 @@ from foothold_s2.curriculum.ex42_prep import (
 
 STAGE_ZERO_TASK_ID = "FootholdS2-Go2-S2-SB-v0"
 STAGE_ZERO_UPDATES = 1000
+STAGE_ZERO_LEVEL_CAP = 5
 STAGE_ZERO_NUM_ENVS = 3072
 STAGE_ZERO_DEVICE = "cuda:0"
 # Throughput probe only (--ex42_speed_probe): bounded update counts, per-process env counts, two ranks.
@@ -249,6 +250,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     stage_terrain = {**stage_row, "kind_task": _kind_task(plan, stage_id)}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
     stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
+    stage_terrain, continuous_cap = raise_continuous_cap(stage_terrain, stage_id, boundary_index)   # L+: +1 per boundary passed
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
@@ -262,7 +265,9 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
-            "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt},
+            "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
+            "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
+                         "outcomes": [dict(entry) for entry in list(ladder_outcomes or [])[:boundary_index]]},   # the evidence the k moves were computed from
             "column_table": [{"family": r["family"], "kind": r["kind"]} for r in table],
             "reset_declared_columns": [c for c, r in enumerate(table) if r["from_declaration"]],
             "push_terms_wrapped": wrapped, **push_gate_report(table, mask)}
@@ -285,6 +290,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
 
     env.unwrapped._ex42_column_table = contract["column_table"]          # the learned_cells recorder names columns by it
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
+    env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
@@ -463,6 +469,8 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
     elif output.exists() and rank == 0:           # every rank gets the same argv; rank 0 creates the run directory
         raise ValueError(f"EX-42 {stage_id} output must be new")
     plan = EX42Plan.load(plan_path)
+    from foothold_s2.commands.ex42_shares import read_contract
+    command_contract = read_contract(plan, stage_id)  # Before dry-run return or AppLauncher.
     spec = E_STAGE_SPECS[stage_id]
     if spec["previous"] is None:
         parent = read_e_stage_parent(experiment_path)
@@ -484,7 +492,7 @@ def validate_ex42_stage_e_cli(*, stage_id: str, plan_path: str | Path, approvals
         "parent_cumulative_update": E_STAGES[stage_id][2],
         "production_launch_allowed": False, "later_stages_authorized": False,
         "approval": approval, "world_size": world_size, "rank": rank,
-        "total_envs": num_envs * world_size,
+        "total_envs": num_envs * world_size, "command_allocation": command_contract,
     }
     if spec["critic_mirror"]:
         request["critic_mirror"] = {"enabled_at_start": True, "decision_id": "D174"}
@@ -500,6 +508,25 @@ def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) 
     if Path(log_dir).resolve() != Path(resume_checkpoint).resolve().parent:
         raise ValueError("EX-42 E boundary resume must continue in the run directory of its checkpoint")
     return True
+
+
+def continuation_state_matches(live: Any, saved: Any) -> bool:
+    """After a resumed segment loaded its checkpoint: the live runtime state is the checkpoint's, apart from the two
+    fields a later segment carries higher, the L+ level cap and the stage bound of a HOLD extension. `load_state_dict`
+    has already refused any value outside their allowance, so they are left out of this readback."""
+    def rest(state):
+        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None}}
+    return isinstance(live, dict) and isinstance(saved, dict) and rest(live) == rest(saved)
+
+
+def read_same_run_manifest(log_dir: str | Path, *, rank: int, source_manifest_sha256: str) -> dict[str, Any]:
+    """The manifest a same-run segment goes on writing. Rank 0 owns the run directory: its manifest must still be the
+    one the resume preflight read. Another rank of a two-rank run keeps its own manifest in its private directory
+    (never the resume source), so there is nothing of the preflight to compare it with."""
+    raw = (Path(log_dir) / "manifest.json").read_bytes()
+    if rank == 0 and hashlib.sha256(raw).hexdigest() != source_manifest_sha256:
+        raise ValueError("EX-42 same-run source manifest changed after self-resume preflight")
+    return json.loads(raw.decode("utf-8-sig"))
 
 
 def validate_ex42_segment_end(segment_end: int | None, *, stage_id: str, stage_updates: int, interval: int | None,
@@ -991,6 +1018,64 @@ def build_stage_zero_resume_root_xy_readback(env: Any, *,
     }
 
 
+def build_resume_root_xy_readback(env: Any, *, reset_params: dict[str, Any]) -> dict[str, Any]:
+    """The resumed roots against the reset range of the event term the env really carries. Stage zero: one
+    `pose_range` for every env. An E stage: the per-column ranges of `ex42_column_reset` (`lo` / `hi`, one row per
+    mesh column), read through each env's terrain column."""
+    import torch
+
+    if "pose_range" in reset_params:
+        return build_stage_zero_resume_root_xy_readback(env, pose_range=reset_params["pose_range"])
+    lo, hi = reset_params.get("lo"), reset_params.get("hi")
+    raw = getattr(env, "unwrapped", env)
+    scene = getattr(raw, "scene", None)
+    try:
+        robot = scene["robot"]
+    except (TypeError, KeyError, AttributeError):
+        robot = getattr(scene, "robot", None)
+    origins = getattr(scene, "env_origins", None)
+    root = getattr(getattr(robot, "data", None), "root_pos_w", None)
+    columns = getattr(getattr(scene, "terrain", None), "terrain_types", None)
+    if origins is None or root is None or root.ndim != 2 or root.shape[1] < 2:
+        raise ValueError("EX-42 resume root/origin readback is unavailable")
+    if origins.ndim != 2 or origins.shape[1] < 2 or origins.shape[0] != root.shape[0]:
+        raise ValueError("EX-42 resume root/origin readback shapes differ")
+    if (not torch.is_tensor(lo) or not torch.is_tensor(hi) or lo.ndim != 2 or lo.shape != hi.shape or lo.shape[1] < 2
+            or columns is None or columns.shape[0] != root.shape[0]):
+        raise ValueError("EX-42 resume readback needs a reset pose_range or per-column lo / hi with the terrain columns")
+    columns = columns.to(root.device).long()
+    if int(columns.min()) < 0 or int(columns.max()) >= lo.shape[0]:
+        raise ValueError("EX-42 resume readback: a terrain column has no reset range row")
+    low, high = lo.to(root.device)[columns, :2], hi.to(root.device)[columns, :2]       # per env, x and y
+    default = getattr(getattr(robot, "data", None), "default_root_state", None)       # the reset adds it to the origin
+    delta = (root[:, :2] - origins[:, :2]).detach()
+    if default is not None:
+        delta = delta - default[:, :2].to(root.device)
+    distance = torch.linalg.vector_norm(delta, dim=1)
+    if not bool(torch.isfinite(distance).all()):
+        raise ValueError("EX-42 resume root/origin distances are not finite")
+    tolerance = 1e-4
+    outside = ((delta < low - tolerance) | (delta > high + tolerance)).any(dim=1)
+    sorted_distances = distance.sort().values
+    p95_index = max(0, int(0.95 * (sorted_distances.numel() - 1)))
+    root_ids = torch.nonzero(outside, as_tuple=False).flatten().detach().to("cpu").tolist()
+    return {
+        "state": "root_xy_checked_against_restored_env_origins",
+        "env_count": int(root.shape[0]),
+        "distance_xy_m": {
+            "min": float(sorted_distances[0].item()),
+            "mean": float(distance.mean().item()),
+            "p95": float(sorted_distances[p95_index].item()),
+            "max": float(sorted_distances[-1].item()),
+        },
+        "reset_pose_bounds_xy_m": {"basis": "per_column_reset_ranges",
+                                   "x": [float(low[:, 0].min().item()), float(high[:, 0].max().item())],
+                                   "y": [float(low[:, 1].min().item()), float(high[:, 1].max().item())]},
+        "outside_reset_bounds_count": len(root_ids),
+        "outside_reset_bounds_env_ids_first_16": root_ids[:16],
+    }
+
+
 def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
     """Read the pinned EX-41 T0-prime stage as the stage-zero config source."""
     from foothold_s2.curriculum.continuous import load_plan
@@ -1016,9 +1101,19 @@ def load_ex42_stage_zero_source(plan: EX42Plan, *, arm: str = "B"):
 
 
 def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
-                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000):
-    """Provide EX-41's existing config adapters the approved single T0-prime stage."""
+                                   parent_receipt: dict[str, Any], *, parent_update: int = 12000,
+                                   ex42_plan=None, stage_id="EX42_0_T0_prime"):
+    """Keep the reward/source adapter intact; later command shares have a separate contract."""
+    from foothold_s2.commands.ex42_shares import command_adjust_limits, read_contract, stage_commands
+    command_contract = read_contract(ex42_plan, stage_id) if ex42_plan is not None else None
+    profile = stage_commands(ex42_plan, stage_id) if ex42_plan is not None else None
+    if ex42_plan is not None:
+        command_adjust_limits(ex42_plan, stage_id)       # a malformed limits cell must refuse the start: the plan is frozen after it
+    if profile is not None:        # the stage's own shares, ranges and turn overlay replace the stage-zero ones
+        from dataclasses import replace
+        stage = replace(stage, shares=profile["shares"], ranges=profile["ranges"], turn_overlay=profile["turn_overlay"])
     return SimpleNamespace(
+        command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
         initial_dr_scale=1.0, stand_cfg=source_plan.stand_cfg,
         heading_cfg=source_plan.heading_cfg, terrain_curriculum="performance",
@@ -1056,8 +1151,14 @@ class EX42StageZeroRuntime:
         self.push_vmax_mps = float(push_vmax_mps)
         self.stage_id = stage_id
         self.stage_config = stage_zero_plan.stages[0]
+        from foothold_s2.commands.ex42_shares import CommandShares
+        contract = getattr(stage_zero_plan, "command_contract", None)
+        self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
+        from foothold_s2.commands.ex42_command_stats import CommandStats
+        self.command_stats = CommandStats(self.stage_config)          # what the sampler actually drew (train_extra, record only)
+        self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
-                          "terrain": {"policy": "performance", "level_cap": 5}}
+                          "terrain": {"policy": "performance", "level_cap": self.level_cap}}
         self.iteration = 0
         self._last_boundary = None
         self.finished = False
@@ -1076,9 +1177,17 @@ class EX42StageZeroRuntime:
         self.env = raw
         self.env_stage = torch.zeros(raw.num_envs, dtype=torch.long, device=raw.device)
         command_term.stage_runtime = self
+        if self.command_allocation is not None:
+            self.command_allocation.attach(raw, command_term, self)
         raw._ex42_stage_id = self.stage_id
         raw._ex42_stage_config = {"id": self.stage_id, "source": "T0_prime"}  # E0 / E1 use the same environment as stage zero
-        raw._ex41_terrain = {"policy": "performance", "level_cap": 5}
+        contract_cap = (getattr(raw, "_ex42_env_contract", None) or {}).get("continuous_level_cap")
+        if contract_cap is not None:                 # apply_e0_exposure ran before this: both caps are the same number
+            if type(contract_cap) is not int or contract_cap < STAGE_ZERO_LEVEL_CAP:
+                raise ValueError("EX-42 continuous level cap of the segment is not an integer at or above the stage-zero cap")
+            self.level_cap = contract_cap
+            self.effective["terrain"]["level_cap"] = contract_cap
+        raw._ex41_terrain = {"policy": "performance", "level_cap": self.level_cap}
         raw._ex40_dr_scale = 1.0
         raw._ex41_push_vmax_mps = self.push_vmax_mps
 
@@ -1090,16 +1199,39 @@ class EX42StageZeroRuntime:
         self._learned_cells_init()
 
     def on_reset(self, env_ids: Any) -> None:
-        return None
+        if self.command_allocation is not None:
+            self.command_allocation.reset(env_ids)
 
     def record_command_sample(self, env_ids: Any, commands: Any, slots: Any,
                               heading: Any) -> None:
         self.command_samples += int(len(env_ids))
+        if self.command_allocation is not None:
+            self.command_allocation.samples(env_ids, slots)
+        if self.command_stats is not None:
+            try:
+                self.command_stats.add(commands, slots, heading)
+            except Exception as exc:          # noqa: BLE001 (the record must not stop the training)
+                self.command_stats = None
+                print("EX42_COMMAND_STATS_OFF " + f"{type(exc).__name__}: {exc}", flush=True)
+
+    def take_command_stats(self) -> dict | None:
+        """One update's sampled-command record for train_extra (`ex42_command_samples`); None when nothing was drawn."""
+        try:
+            return self.command_stats.take() if self.command_stats is not None else None
+        except Exception as exc:              # noqa: BLE001
+            self.command_stats = None
+            print("EX42_COMMAND_STATS_OFF " + f"{type(exc).__name__}: {exc}", flush=True)
+            return None
+
+    def record_flag_command_sample(self, env_ids: Any) -> None:
+        if self.command_allocation is not None:
+            self.command_allocation.samples(env_ids, None)
 
     def on_update_start(self, update: int) -> None:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
             raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
+        self._exposure_receipt(update - 1, "start")
         if update == 1 and self.env is not None:
             terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
             if getattr(terrain, "terrain_levels", None) is not None:
@@ -1111,6 +1243,27 @@ class EX42StageZeroRuntime:
             raw._ex42_stage_id = self.stage_id
             raw._ex40_dr_scale = 1.0
             raw._ex41_push_vmax_mps = self.push_vmax_mps
+
+    def _exposure_receipt(self, iteration: int, kind: str) -> None:
+        """E3 raw material: the env contract (k_ladder exposure, level caps, opened kinds) plus the live placement as
+        exposure_receipt_<it>.json. `start` once per process, `boundary` at every save boundary. Never stops training."""
+        raw, log_dir = self.env, getattr(self.runner, "log_dir", None)
+        contract = getattr(raw, "_ex42_env_contract", None)
+        if contract is None or log_dir is None or (kind == "start" and getattr(self, "_exposure_start_done", False)):
+            return
+        try:
+            from foothold_s2.ex42_exposure_receipt import build_receipt, write_receipt
+            from foothold_s2.terrains.ex42_exposure import level_counts
+            terrain = getattr(getattr(raw, "scene", None), "terrain", None)
+            live = (level_counts(terrain) if getattr(terrain, "terrain_levels", None) is not None else None)
+            body = build_receipt(contract, stage_id=self.stage_id, plan_sha256=self.plan_sha256, iteration=iteration,
+                                 kind=kind, live=live, rank=int(os.environ.get("RANK", "0")),
+                                 world_size=int(os.environ.get("WORLD_SIZE", "1")))
+            write_receipt(log_dir, body)
+            if kind == "start":
+                self._exposure_start_done = True
+        except Exception as exc:          # noqa: BLE001 (the receipt must not stop the training)
+            print("EX42_EXPOSURE_RECEIPT_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
 
     def _learned_cells_init(self) -> None:
         """CG:380/381 boundary_log recorder (E1F on). Never stops training: any failure switches it off and says so."""
@@ -1143,6 +1296,8 @@ class EX42StageZeroRuntime:
             raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
         self._step_pending = True
         self.pre_step_count += 1
+        if self.command_allocation is not None:
+            self.command_allocation.pre_step()
         if getattr(self, "learned_cells", None) is not None:
             try:
                 raw = self.env
@@ -1174,6 +1329,14 @@ class EX42StageZeroRuntime:
     def flush_consumption(self, update: int) -> None:
         if update != self.iteration:
             raise ValueError("EX-42 stage-zero command consumption iteration differs")
+        # All ranks call this, unlike on_checkpoint (rank 0 only). No GPU collective or checkpoint wait.
+        if (self.command_allocation is not None and self.runner is not None
+                and update % int(self.runner.save_interval) == 0):
+            try:
+                self.command_allocation.write(self.runner.log_dir, update, None,
+                                              plan_sha=self.plan_sha256, stage_id=self.stage_id)
+            except Exception as exc:
+                print("EX42_COMMAND_SHARES_RECORD_FAILED " + f"{type(exc).__name__}: {exc}", flush=True)
 
     def record_map_reset(self, env_ids: Any, use_gt: Any, map_off: Any = None) -> None:
         import torch
@@ -1194,8 +1357,10 @@ class EX42StageZeroRuntime:
                 "plan_sha256": self.plan_sha256,
                 "approval_sha256": self.approval_sha256,
                 "parent_sha256": self.parent_sha256,
-                "terrain": {"policy": "performance", "level_cap": 5},
+                "terrain": {"policy": "performance", "level_cap": self.level_cap},
                 "command_samples": self.command_samples,
+                **({"command_allocation": self.command_allocation.state_dict()}
+                   if self.command_allocation is not None else {}),
                 "push_vmax_mps": self.push_vmax_mps,
                 "pre_step_count": self.pre_step_count,
                 "post_step_count": self.post_step_count,
@@ -1210,12 +1375,22 @@ class EX42StageZeroRuntime:
             if key == "maximum_updates" and self.stage_id in E_STAGES:      # an earlier segment may have run to a lower cap
                 if state.get(key) in _stage_caps(self.stage_id) and state[key] <= expected[key]:
                     continue
+            if key == "terrain":            # an earlier segment ran with a lower L+ cap (cap 5 everywhere: exact match)
+                saved = state.get(key)
+                if (isinstance(saved, dict) and set(saved) == {"policy", "level_cap"} and saved["policy"] == expected[key]["policy"]
+                        and type(saved["level_cap"]) is int and STAGE_ZERO_LEVEL_CAP <= saved["level_cap"] <= expected[key]["level_cap"]):
+                    continue
             if state.get(key) != expected[key]:
                 raise ValueError(f"EX-42 stage-zero continuation {key} differs")
         iteration = state.get("iteration")
         if type(iteration) is not int or not 0 <= iteration <= self.maximum_updates:
             raise ValueError("EX-42 stage-zero continuation iteration is invalid")
         self.iteration = iteration
+        if self.command_allocation is not None:
+            saved_allocation = state.get("command_allocation")
+            if not isinstance(saved_allocation, dict) or saved_allocation.get("contract") != self.command_allocation.contract:
+                raise ValueError("EX-42 command allocation continuation contract differs")
+            self.command_allocation.restart_counts(iteration)
         self.command_samples = int(state.get("command_samples", 0))
         self.pre_step_count = int(state.get("pre_step_count", 0))
         self.post_step_count = int(state.get("post_step_count", 0))
@@ -1242,6 +1417,7 @@ class EX42StageZeroRuntime:
         log_dir = getattr(self.runner, "log_dir", None)
         if log_dir is None:
             return
+        self._exposure_receipt(iteration, "boundary")
         terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
         floor = getattr(terrain, "low_level_floor", None)
         try:

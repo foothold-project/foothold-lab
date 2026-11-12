@@ -118,16 +118,16 @@ def run_round(checkpoint: Path, output: Path, device: str, *, plan: EX42Plan,
     return receipt
 
 
-def check_e1_gate(path: Path, *, checkpoint_sha256: str) -> dict:
+def check_e1_gate(path: Path, *, checkpoint_sha256: str, exit_updates: tuple[int, ...]) -> dict:
     """W09 is based on a measured E1 graduate, never only a saved model."""
     path = Path(path).resolve(strict=True)
     row = json.loads(path.read_text(encoding="utf-8-sig"))
     measurement = Path(row.get("measurement", ""))
     if (row.get("state") != "complete" or row.get("stage_id") != "E1" or
-            row.get("checkpoint_iteration") != 1000 or row.get("judgment") != "PASS" or
+            row.get("checkpoint_iteration") not in exit_updates or row.get("judgment") != "PASS" or
             row.get("checkpoint_sha256") != checkpoint_sha256 or
             not measurement.is_file() or digest(measurement) != row.get("measurement_sha256")):
-        raise ValueError("W09 requires a complete E1 m1000 PASS gate and pinned measurement")
+        raise ValueError("W09 requires a complete E1 exit PASS gate and pinned measurement")
     return {"path": str(path), "sha256": digest(path),
             "measurement": str(measurement), "measurement_sha256": row["measurement_sha256"]}
 
@@ -155,9 +155,11 @@ def run_chain(checkpoint: Path, output: Path, device: str | None, *, plan_path: 
     if output.exists():
         raise ValueError("W09/W08 requires a fresh output directory")
     checkpoint_sha, iteration = manifest_checkpoint_sha(checkpoint)
-    if checkpoint_sha != expected_checkpoint_sha256 or iteration != 1000:
-        raise ValueError("W09 parent is not the pinned E1 m1000 checkpoint")
-    gate = check_e1_gate(e1_gate, checkpoint_sha256=checkpoint_sha)
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+    exit_updates = stage_exit_updates(EX42Plan.load(plan_path).document, "E1")      # 1750, or a boundary of a HOLD extension
+    if checkpoint_sha != expected_checkpoint_sha256 or iteration not in exit_updates:
+        raise ValueError("W09 parent is not the pinned E1 exit checkpoint")
+    gate = check_e1_gate(e1_gate, checkpoint_sha256=checkpoint_sha, exit_updates=(iteration,))
     plan = EX42Plan.load(plan_path)
     contract(plan.document)
     mesh = preflight(mesh_dir)

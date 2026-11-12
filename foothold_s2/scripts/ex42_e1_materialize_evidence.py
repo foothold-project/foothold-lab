@@ -133,10 +133,11 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     manifest = _json(manifest_path)
     gate_path = Path(gate_receipt_path).resolve(strict=True)
     gate = _json(gate_path)
+    from foothold_s2.curriculum.ex42_prep import stage_exit_updates
     if (gate.get("state") != "complete" or gate.get("stage_id") != "E1"
-            or gate.get("judgment") != "PASS" or gate.get("checkpoint_iteration") != 1000
+            or gate.get("judgment") != "PASS" or gate.get("checkpoint_iteration") not in stage_exit_updates(plan.document, "E1")
             or gate.get("plan_sha256") != plan.sha256):
-        raise ValueError("E1 m1000 boundary evaluation receipt is not complete PASS for the source plan")
+        raise ValueError("E1 exit boundary evaluation receipt is not complete PASS for the source plan")
     iteration = gate.get("checkpoint_iteration")
     checkpoint_sha = gate.get("checkpoint_sha256")
     checkpoints = manifest.get("checkpoints") or {}

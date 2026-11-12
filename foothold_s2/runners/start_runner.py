@@ -813,6 +813,10 @@ class StartRunner(OnPolicyRunner):
             slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
             if slot_stats is not None:
                 extra["command_slots"] = slot_stats
+            take_command_stats = getattr(continuous, "take_command_stats", None)     # EX-42: the commands actually drawn this update
+            command_stats = take_command_stats() if callable(take_command_stats) else None
+            if command_stats is not None:
+                extra["ex42_command_samples"] = command_stats
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats

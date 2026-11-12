@@ -28,11 +28,17 @@ parser.add_argument("--plan", type=Path, required=True)
 parser.add_argument("--mesh-dir", type=Path, required=True)
 parser.add_argument("--expected-mesh-sha256", required=True)
 parser.add_argument("--count", choices=tuple(COUNTS), required=True)
+parser.add_argument("--kind-family")
+parser.add_argument("--kind-name")
+parser.add_argument("--kind-level", type=int)
 parser.add_argument("--seed", type=int, required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--out", type=Path, required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+kind_cell = any(value is not None for value in (args.kind_family, args.kind_name, args.kind_level))
+if kind_cell and (not args.kind_family or not args.kind_name or args.kind_level is None):
+    parser.error("EX-42 kind flag evaluation needs family, kind and level together")
 if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out.exists():
     parser.error("E1F flag evaluation requires 64 envs, a pinned checkpoint and fresh output")
 plan_bytes = args.plan.read_bytes()
@@ -43,6 +49,16 @@ friction_policy = ex42_friction.load_policy(args.plan)
 mesh = preflight(args.mesh_dir)
 if mesh["mesh_sha256"] != args.expected_mesh_sha256:
     parser.error("E1F flag evaluation mesh SHA differs")
+if kind_cell:
+    import numpy as np
+    from foothold_s2.eval.fixed_terrain import kind_assignment
+    from foothold_s2.terrains.ex42_flags import load_flag_table
+
+    table = [{"family": family, "kind": name} for family, name in zip(mesh["column_family"], mesh["columns"])]
+    levels, types = kind_assignment(args.envs, 10, table, args.kind_family, args.kind_name, args.kind_level)
+    flags = load_flag_table(mesh["mesh_npz"], 10, len(table))
+    if flags is None or not np.isfinite(flags[levels, types, :COUNTS[args.count]]).all():
+        parser.error("EX-42 named kind flags missing from the pinned mesh")
 app = AppLauncher(args).app
 
 import gymnasium as gym  # noqa: E402
@@ -69,6 +85,15 @@ def _configure():
     mounted = attach(env_cfg, args.mesh_dir)
     if mounted["mesh_sha256"] != args.expected_mesh_sha256:
         raise RuntimeError("E1F flag mounted mesh differs from preflight")
+    if kind_cell:
+        from foothold_s2.terrains.ex42_flags import attach_mesh_flags, load_flag_table
+        from foothold_s2.eval.fixed_terrain import kind_assignment
+        table = [{"family": family, "kind": name} for family, name in zip(mesh["column_family"], mesh["columns"])]
+        levels, types = kind_assignment(args.envs, 10, table, args.kind_family, args.kind_name, args.kind_level)
+        flags = load_flag_table(mesh["mesh_npz"], 10, len(table))
+        if flags is None or not np.isfinite(flags[levels, types, :COUNTS[args.count]]).all():
+            raise ValueError("EX-42 named kind flags missing from the pinned mesh")
+        attach_mesh_flags(env_cfg, mesh["mesh_npz"], 10, len(table))
     env_cfg.observations.policy.enable_corruption = False
     from foothold_s2.sensors import start_obs
     start_obs.AUG.enabled = False
@@ -98,21 +123,31 @@ def _configure():
 
 def _run_case(env, raw, robot, term, runner, mode, dt):
     n = args.envs
-    assignment = fixed_terrain.apply(raw, cols=mesh["eval_cols"])
+    table = [{"family": family, "kind": name} for family, name in zip(mesh["column_family"], mesh["columns"])]
+    assignment = (fixed_terrain.apply_kind(raw, table, args.kind_family, args.kind_name, args.kind_level)
+                  if kind_cell else fixed_terrain.apply(raw, cols=mesh["eval_cols"]))
     env.reset()
     terrain = raw.scene.terrain
-    expected_levels, expected_types = fixed_terrain.fixed_assignment(n, assignment["rows"], mesh["eval_cols"])
+    expected_levels, expected_types = (
+        fixed_terrain.kind_assignment(n, assignment["rows"], table,
+                                      args.kind_family, args.kind_name, args.kind_level)
+        if kind_cell else fixed_terrain.fixed_assignment(n, assignment["rows"], mesh["eval_cols"]))
     if (not np.array_equal(terrain.terrain_levels.detach().cpu().numpy(), expected_levels)
             or not np.array_equal(terrain.terrain_types.detach().cpu().numpy(), expected_types)):
         raise RuntimeError("E1F flag fixed terrain assignment changed during reset")
     if not bool(term.is_flag_env.all()) or len(term.flag_ids) != n or term.flag_state.flags.shape != (n, COUNTS[args.count], 2):
         raise RuntimeError("E1F flag command term did not select every env")
-    expected_flags = np.stack([
-        np.stack([terrain.env_origins[i, :2].detach().cpu().numpy() + np.array([.5 + j, 0.])
-                  for j in range(COUNTS[args.count])]) for i in range(n)])
+    if kind_cell:
+        from foothold_s2.terrains.ex42_flags import load_flag_table
+        expected_flags = load_flag_table(mesh["mesh_npz"], assignment["rows"], len(table))[
+            expected_levels, expected_types, :COUNTS[args.count]]
+    else:
+        expected_flags = np.stack([
+            np.stack([terrain.env_origins[i, :2].detach().cpu().numpy() + np.array([.5 + j, 0.])
+                      for j in range(COUNTS[args.count])]) for i in range(n)])
     actual_flags = term.flag_state.flags.detach().cpu().numpy()
     if not np.allclose(actual_flags, expected_flags, atol=1e-5, rtol=0):
-        raise RuntimeError("E1F flag targets differ from approved straight A23 line")
+        raise RuntimeError("EX-42 flag targets differ from the pinned mesh or A23 line")
     term.flag_state.v.fill_(settings["flag_speed_mps"])
     term._update_command()
     map_mode_cells.disable_heading_for_fixed_eval(term)
@@ -180,6 +215,8 @@ def main():
                    "checkpoint": str(args.checkpoint.resolve()), "checkpoint_sha256": _sha(args.checkpoint),
                    "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(),
                    "mesh_sha256": mounted["mesh_sha256"], "seed": args.seed,
+                   "kind_cell": ({"family": args.kind_family, "kind": args.kind_name,
+                                  "level": args.kind_level} if kind_cell else None),
                    "envs": args.envs, "count": args.count, "dt": dt,
                    "dr_disabled": disabled, "checkpoint_preparation": checkpoint_preparation,
                    "run_identity": run_identity.safe_collect(args.device, _sha(args.checkpoint), eval_seed=args.seed),

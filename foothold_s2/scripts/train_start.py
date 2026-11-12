@@ -141,6 +141,7 @@ EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLI
 if _pre_args.ex42_speed_probe and _pre_args.distributed:
     # Linux L1 measured NCCL shared-memory failure; scope the workaround to the two-rank probe.
     os.environ.setdefault("NCCL_SHM_DISABLE", "1")
+EX42_RUN_LOG_DIR = _pre_args.ex42_log_dir      # the run directory every rank was given, before the rank split below
 if EX42_RANK_SPLIT and _pre_args.ex42_log_dir and EX42_SPEED_PROBE_RANK != 0:
     # Speed probe: only rank 0 writes into the shared run directory; the others get a private scratch directory.
     from foothold_s2.scripts.ex42_training_entry import speed_probe_rank_log_dir
@@ -573,7 +574,8 @@ if _ex42_requested:
             EX42_STAGE_ZERO_PLAN)
         EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(
             EX42_STAGE_ZERO_SOURCE_PLAN, EX42_STAGE_ZERO_SOURCE_STAGE, EX42_STAGE_ZERO_PARENT,
-            parent_update=EX42_STAGE_PARENT_UPDATES[1])
+            parent_update=EX42_STAGE_PARENT_UPDATES[1],
+            ex42_plan=EX42_STAGE_ZERO_PLAN, stage_id=EX42_STAGE_ID)
         from foothold_s2.scripts.ex42_training_entry import validate_ex42_segment_end, validate_ex42_stage_zero_resume
 
         _interval = EX42_STAGE_ZERO_APPROVAL.get("boundary_evaluation_interval_updates")
@@ -595,13 +597,26 @@ if _ex42_requested:
             EX42_STAGE_ZERO_RESUME = os.path.abspath(_pre_args.ex42_resume_from)
             from foothold_s2.scripts.ex42_training_entry import require_same_run_resume
 
-            EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)
+            # the run directory as given: a rank other than 0 writes to a private directory, yet it resumes the same run
+            EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(EX42_RUN_LOG_DIR, EX42_STAGE_ZERO_RESUME)
             print(f"EX42_STAGE_{EX42_STAGE_ID}_RESUME_PREFLIGHT " + json.dumps(
                 EX42_STAGE_ZERO_RESUME_PROOF, ensure_ascii=False, sort_keys=True), flush=True)
         else:
             EX42_SEGMENT_END = validate_ex42_segment_end(
                 _pre_args.ex42_segment_end, stage_id=EX42_STAGE_ID, stage_updates=EX42_STAGE_UPDATES,
                 interval=_interval)
+        from foothold_s2.commands.ex42_segment_adjust import start_segment as _start_segment_commands
+
+        # the command profile of this segment: the plan row, or the boundary's adjustment file (EX42_SEGMENT_ADJUST)
+        EX42_SEGMENT_COMMANDS = _start_segment_commands(
+            EX42_STAGE_ZERO_PLAN_VIEW, EX42_STAGE_ZERO_PLAN, EX42_STAGE_ID,
+            boundary_index=(EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"] // _interval
+                            if EX42_STAGE_ZERO_RESUME_PROOF is not None and _interval else 0),
+            path=os.environ.get("EX42_SEGMENT_ADJUST"), log_dir=EX42_RUN_LOG_DIR,       # the records of the earlier segments
+            write=not _e_dry_run and os.environ.get("RANK", "0") == "0")
+        if EX42_SEGMENT_COMMANDS is not None:
+            print("EX42_SEGMENT_COMMANDS " + json.dumps(EX42_SEGMENT_COMMANDS, ensure_ascii=False, sort_keys=True),
+                  flush=True)
         if _e_dry_run:                     # a boundary-resume dry run ends here, still on CPU
             print(f"EX42_STAGE_{EX42_STAGE_ID}_SEGMENT " + json.dumps({
                 "segment_end": EX42_SEGMENT_END, "resume": EX42_STAGE_ZERO_RESUME_PROOF,
@@ -993,12 +1008,11 @@ def main(env_cfg, agent_cfg):
         agent_cfg.resume = False
         agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
         if EX42_STAGE_ZERO_RESUME_SAME_RUN:
-            source_manifest_path = Path(log_dir) / "manifest.json"
-            if hashlib.sha256(source_manifest_path.read_bytes()).hexdigest() != (
-                    EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"]):
-                raise ValueError("EX-42 same-run source manifest changed after self-resume preflight")
-            with source_manifest_path.open(encoding="utf-8-sig") as stream:
-                manifest = json.load(stream)
+            from foothold_s2.scripts.ex42_training_entry import read_same_run_manifest
+
+            manifest = read_same_run_manifest(
+                log_dir, rank=EX42_SPEED_PROBE_RANK,
+                source_manifest_sha256=EX42_STAGE_ZERO_RESUME_PROOF["source_manifest_sha256"])
     elif args_cli.resume_from:
         # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
         resume_path = os.path.abspath(args_cli.resume_from)
@@ -1061,6 +1075,9 @@ def main(env_cfg, agent_cfg):
             ladder_outcomes=(json.loads(Path(os.environ["EX42_LADDER_OUTCOMES"]).read_text(encoding="utf-8"))
                              if os.environ.get("EX42_LADDER_OUTCOMES") else None))
         print("EX42_E0_ENV_CONFIG " + json.dumps(EX42_E0_ENV_CONTRACT, sort_keys=True), flush=True)
+    if EX42_STAGE_ZERO_PLAN_VIEW is not None:
+        from foothold_s2.commands.ex42_shares import configure_env as configure_ex42_command_env
+        configure_ex42_command_env(env_cfg, EX42_STAGE_ZERO_PLAN_VIEW.command_contract)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task,
                            "resume_from": resume_path, "seed": agent_cfg.seed,
@@ -1267,7 +1284,7 @@ def main(env_cfg, agent_cfg):
         ex42_stage_zero_runtime.attach_runner(runner)
         runner.ex40_dr_runtime = ex42_dr_readback
         if EX42_STAGE_ZERO_RESUME:
-            from foothold_s2.scripts.ex42_training_entry import build_stage_zero_resume_root_xy_readback
+            from foothold_s2.scripts.ex42_training_entry import build_resume_root_xy_readback
 
             if ex42_resume_saved is None:
                 raise RuntimeError("EX-42 self-resume checkpoint was not loaded before reset")
@@ -1291,11 +1308,15 @@ def main(env_cfg, agent_cfg):
                 "first_resumed_cumulative_update": EX42_STAGE_ZERO_RESUME_PROOF["first_resumed_cumulative_update"],
                 "restored_groups": EX42_STAGE_ZERO_RESUME_PROOF["restored_groups"],
             }
+            from foothold_s2.scripts.ex42_training_entry import continuation_state_matches
+
             if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
-                    or runner.continuous_curriculum.state_dict() != resume_saved["continuous_curriculum"]):
+                    or not continuation_state_matches(runner.continuous_curriculum.state_dict(),
+                                                      resume_saved["continuous_curriculum"])):
                 raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
-            ex42_stage_zero_root_xy_readback = build_stage_zero_resume_root_xy_readback(
-                env, pose_range=env_cfg.events.reset_base.params["pose_range"])
+            # stage zero carries one pose_range; an E stage the per-column reset ranges (ex42_column_reset lo / hi)
+            ex42_stage_zero_root_xy_readback = build_resume_root_xy_readback(
+                env, reset_params=env_cfg.events.reset_base.params)
             ex42_transfer["root_xy_readback"] = ex42_stage_zero_root_xy_readback
             if ex42_stage_zero_root_xy_readback["outside_reset_bounds_count"] != 0:
                 raise ValueError("EX-42 resumed root XY is outside reset bounds from restored env origins")

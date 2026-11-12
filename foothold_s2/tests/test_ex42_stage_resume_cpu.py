@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import types
 from pathlib import Path
 
 import pytest
@@ -30,7 +31,7 @@ def _boundary_checkpoint(tmp_path, iteration=250, *, edit=None, completed=None):
     approval_sha = hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
     saved["iter"] = iteration
     saved["ex41_critic_mirror"] = True                       # an E1 boundary save carries the D174 mirror
-    saved["continuous_curriculum"].update(stage_id="E1", iteration=iteration, maximum_updates=1000, finished=False,
+    saved["continuous_curriculum"].update(stage_id="E1", iteration=iteration, maximum_updates=1750, finished=False,
                                           plan_sha256=plan.sha256, approval_sha256=approval_sha, parent_sha256=E1_PARENT)
     saved["ex42_parent_transfer"].update(parent_sha256=E1_PARENT, parent_cumulative_update=13250)
     if edit:
@@ -48,7 +49,7 @@ def _boundary_checkpoint(tmp_path, iteration=250, *, edit=None, completed=None):
 
 def _validate(path, manifest, plan_sha, approval_sha, **over):
     kw = dict(checkpoint_path=path, manifest_path=manifest, plan_sha256=plan_sha, approval_sha256=approval_sha,
-              parent_receipt={"parent_sha256": E1_PARENT}, maximum_updates=1000, stage_id="E1",
+              parent_receipt={"parent_sha256": E1_PARENT}, maximum_updates=1750, stage_id="E1",
               parent_cumulative_update=13250, segment_end=500)
     return entry.validate_ex42_stage_zero_resume(**(kw | over))
 
@@ -60,26 +61,26 @@ def test_e1_boundary_resume_reads_the_real_state_and_maps_250_to_251_cumulative_
     assert proof["local_update_origin"] == 250 and proof["first_resumed_local_update"] == 251
     assert proof["cumulative_update_origin"] == 13500 and proof["first_resumed_cumulative_update"] == 13501
     assert proof["segment_end"] == 500 and proof["requested_updates"] == 250
-    assert proof["remaining_after_resume"] == 500 and proof["maximum_updates"] == 1000
+    assert proof["remaining_after_resume"] == 1250 and proof["maximum_updates"] == 1750
     assert {"ppo_optimizer", "perception_optimizer", "adasmpl", "curriculum", "rng",
             "environment_terrain_and_command_rng"} <= set(proof["restored_groups"])
     (tmp_path / "b").mkdir()
-    last = _validate(*_boundary_checkpoint(tmp_path / "b", 750), segment_end=1000)
+    last = _validate(*_boundary_checkpoint(tmp_path / "b", 1500), segment_end=1750)
     assert last["requested_updates"] == 250 and last["remaining_after_resume"] == 0
 
 
 @needs_run
 def test_resume_without_a_segment_end_runs_to_the_stage_bound(tmp_path):
-    assert _validate(*_boundary_checkpoint(tmp_path), segment_end=None)["requested_updates"] == 750
+    assert _validate(*_boundary_checkpoint(tmp_path), segment_end=None)["requested_updates"] == 1500
 
 
 @needs_run
 @pytest.mark.parametrize("name,over", [
     ("segment end not after the checkpoint", {"segment_end": 250}),
-    ("segment end past the stage bound", {"segment_end": 1250}),
+    ("segment end past the stage bound", {"segment_end": 2000}),
     ("stage id of an E0 checkpoint", {"stage_id": "E0"}),
     ("wrong parent cumulative update", {"parent_cumulative_update": 13000}),
-    ("wrong stage bound", {"maximum_updates": 1750}),          # not the cap and not cap + whole extensions
+    ("wrong stage bound", {"maximum_updates": 1250}),          # not the cap and not cap + whole extensions
     ("wrong plan pin", {"plan_sha256": "0" * 64}),
     ("wrong approval pin", {"approval_sha256": "0" * 64}),
     ("wrong parent", {"parent_receipt": {"parent_sha256": "0" * 64}}),
@@ -221,4 +222,136 @@ def test_a_resume_in_another_directory_is_refused_and_the_same_directory_passes(
 
 def test_train_start_resume_goes_through_the_same_run_guard_and_nothing_else_decides_it():
     text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
-    assert "EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)" in text
+    assert "EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(EX42_RUN_LOG_DIR, EX42_STAGE_ZERO_RESUME)" in text
+
+
+def test_a_second_rank_resumes_the_same_run_from_its_private_directory(tmp_path):
+    """2026-11-12 18:17: the E1 segment-2 preflight died on rank 1. A rank other than 0 writes to a private scratch
+    directory (`speed_probe_rank_log_dir`), so its own log dir is never the checkpoint's; the same-run guard must
+    read the run directory every rank was given, and the rank keeps its own manifest."""
+    import hashlib
+    from foothold_s2.scripts.ex42_training_entry import (
+        read_same_run_manifest, require_same_run_resume, speed_probe_rank_log_dir)
+
+    run = tmp_path / "EX-42-B-E1_x"
+    run.mkdir()
+    checkpoint = run / "model_250.pt"
+    checkpoint.write_bytes(b"x")
+    private = speed_probe_rank_log_dir(str(run), 1, True)
+    assert Path(private) != run and speed_probe_rank_log_dir(str(run), 0, True) == str(run)
+    assert require_same_run_resume(str(run), checkpoint) is True                 # what train_start passes now: the given directory
+    with pytest.raises(ValueError, match="run directory of its checkpoint"):
+        require_same_run_resume(private, checkpoint)                            # what rank 1 passed before
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    kept = text.index("EX42_RUN_LOG_DIR = _pre_args.ex42_log_dir")
+    split = text.index("_pre_args.ex42_log_dir = speed_probe_rank_log_dir(_pre_args.ex42_log_dir, EX42_SPEED_PROBE_RANK, True)")
+    assert kept < split < text.index("require_same_run_resume(EX42_RUN_LOG_DIR, EX42_STAGE_ZERO_RESUME)")
+    assert "require_same_run_resume(_pre_args.ex42_log_dir" not in text
+    assert "log_dir, rank=EX42_SPEED_PROBE_RANK," in text and "read_same_run_manifest(" in text
+    # rank 0 owns the run directory: its manifest must be the one the preflight read. Rank 1 keeps its own.
+    shared, own = run / "manifest.json", tmp_path / "rank1"
+    own.mkdir()
+    shared.write_text('{"run": {"log_dir": "shared"}}', encoding="utf-8")
+    (own / "manifest.json").write_text('{"run": {"log_dir": "private"}}', encoding="utf-8")
+    proof = hashlib.sha256(shared.read_bytes()).hexdigest()
+    assert read_same_run_manifest(run, rank=0, source_manifest_sha256=proof)["run"]["log_dir"] == "shared"
+    assert read_same_run_manifest(own, rank=1, source_manifest_sha256=proof)["run"]["log_dir"] == "private"
+    with pytest.raises(ValueError, match="source manifest changed after self-resume preflight"):
+        read_same_run_manifest(own, rank=0, source_manifest_sha256=proof)
+    shared.write_text('{"run": {"log_dir": "edited"}}', encoding="utf-8")
+    with pytest.raises(ValueError, match="source manifest changed after self-resume preflight"):
+        read_same_run_manifest(run, rank=0, source_manifest_sha256=proof)
+    with pytest.raises(FileNotFoundError):
+        read_same_run_manifest(tmp_path / "gone", rank=1, source_manifest_sha256=proof)
+
+
+# ---- root XY readback after an E stage resume (2026-11-12 18:41: KeyError 'pose_range' inside Kit, both ranks) ----
+
+class _Asset:
+    def __init__(self, count, default_xy=(0.0, 0.0)):
+        default = torch.zeros(count, 13)
+        default[:, 0], default[:, 1], default[:, 2], default[:, 3] = default_xy[0], default_xy[1], 0.4, 1.0
+        self.device = "cpu"
+        self.data = types.SimpleNamespace(default_root_state=default, root_pos_w=torch.zeros(count, 3))
+
+    def write_root_pose_to_sim(self, pose, env_ids):
+        self.data.root_pos_w[env_ids] = pose[:, :3]
+
+    def write_root_velocity_to_sim(self, velocity, env_ids):
+        pass
+
+
+def _e_stage_env(count=440, default_xy=(0.0, 0.0)):
+    """A fake env reset by the real E stage reset term, with the params shape the real E1 env.yaml carries:
+    reset_base.func = ex42_column_reset:reset_root_state_by_column, params = {lo, hi (columns x 6 tensors), velocity_range}."""
+    from foothold_s2.terrains import ex42_column_reset as cr
+
+    zero = {"x": (0.0, 0.0), "y": (0.0, 0.0), "yaw": (0.0, 0.0)}
+    table = cr.build_column_table(["C"] * 7 + ["E"] * 4, {"C": {"gap": zero}})        # column 0 starts exactly on its patch
+    lo, hi = cr.table_tensors(table)
+    params = {"lo": lo, "hi": hi, "velocity_range": {"x": (0.0, 0.0)}}                  # what apply_column_reset installs
+    columns = torch.arange(count) % len(table)
+    origins = torch.stack((columns * 9.0, torch.arange(count) * 1.0, torch.zeros(count)), dim=1)
+    asset = _Asset(count, default_xy)
+    scene = {"robot": asset}
+    holder = types.SimpleNamespace(env_origins=origins, terrain=types.SimpleNamespace(terrain_types=columns))
+    scene_like = type("Scene", (), {"__getitem__": lambda self, key: scene[key], "env_origins": origins,
+                                    "terrain": holder.terrain})()
+    env = types.SimpleNamespace(scene=scene_like)
+    torch.manual_seed(3)
+    cr.reset_root_state_by_column(env, torch.arange(count), lo, hi, params["velocity_range"])
+    return env, asset, params, columns, table
+
+
+def test_the_readback_after_an_e_stage_resume_reads_the_per_column_reset_ranges():
+    env, asset, params, columns, table = _e_stage_env()
+    assert set(params) == {"lo", "hi", "velocity_range"} and "pose_range" not in params          # the 18:41 KeyError
+    assert params["lo"].shape == (len(table), 6) and table[0]["ranges"]["x"] == (0.0, 0.0)
+    row = entry.build_resume_root_xy_readback(env, reset_params=params)
+    assert json.loads(json.dumps(row)) == row and row["env_count"] == 440 and row["outside_reset_bounds_count"] == 0
+    assert row["reset_pose_bounds_xy_m"] == {"basis": "per_column_reset_ranges", "x": [-0.5, 0.5], "y": [-0.5, 0.5]}
+    assert 0.0 == row["distance_xy_m"]["min"] < row["distance_xy_m"]["p95"] <= row["distance_xy_m"]["max"] <= 0.5 * 2 ** 0.5 + 1e-6
+    on_patch = int(torch.nonzero(columns == 0)[0])             # a zero-jitter column: one centimetre off is outside
+    wide = int(torch.nonzero(columns == 1)[0])                 # a default column: 0.6 m off is outside, 0.4 m is not
+    asset.data.root_pos_w[on_patch, 0] += 0.01
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_env_ids_first_16"] == [on_patch]
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([0.0, 0.6])
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 2
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([-0.6, 0.0])      # below the low line
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 2
+    asset.data.root_pos_w[wide, :2] = env.scene.env_origins[wide, :2] + torch.tensor([-0.4, 0.4])
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_env_ids_first_16"] == [on_patch]
+
+
+def test_the_readback_follows_the_default_root_offset_the_reset_adds():
+    env, _, params, _, _ = _e_stage_env(default_xy=(0.2, -0.1))
+    assert entry.build_resume_root_xy_readback(env, reset_params=params)["outside_reset_bounds_count"] == 0
+
+
+def test_stage_zero_keeps_its_single_pose_range_readback():
+    env, _, _, _, _ = _e_stage_env()
+    pose = {"pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}, "velocity_range": {}}
+    assert entry.build_resume_root_xy_readback(env, reset_params=pose) == \
+        entry.build_stage_zero_resume_root_xy_readback(env, pose_range=pose["pose_range"])
+    assert entry.build_resume_root_xy_readback(env, reset_params=pose)["reset_pose_bounds_xy_m"] == {"x": [-0.5, 0.5], "y": [-0.5, 0.5]}
+
+
+@pytest.mark.parametrize("damage, match", [
+    (lambda env, params: params.pop("lo"), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: params.update(hi=params["hi"][:3]), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: params.update(lo=params["lo"].tolist()), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: setattr(env.scene.terrain, "terrain_types", None), "needs a reset pose_range or per-column lo / hi"),
+    (lambda env, params: env.scene.terrain.terrain_types.__setitem__(0, 99), "has no reset range row"),
+    (lambda env, params: env.scene["robot"].data.root_pos_w.__setitem__((0, 0), float("nan")), "not finite"),
+])
+def test_the_readback_refuses_what_it_cannot_check(damage, match):
+    env, _, params, _, _ = _e_stage_env()
+    damage(env, params)
+    with pytest.raises(ValueError, match=match):
+        entry.build_resume_root_xy_readback(env, reset_params=params)
+
+
+def test_train_start_hands_the_readback_the_reset_params_of_the_live_env_cfg():
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "env, reset_params=env_cfg.events.reset_base.params)" in text
+    assert 'reset_base.params["pose_range"]' not in text
