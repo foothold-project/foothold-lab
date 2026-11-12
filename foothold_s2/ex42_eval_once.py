@@ -315,6 +315,46 @@ def execute_e2_kind_children(checkpoint, output, device, *, task, plan_path, pla
             raise ValueError(f"EX-42 {phase} Kit child failed or lacks durable receipt")
 
 
+G1_SUITES = ("hipan_g1", "hipan_g1b")
+
+
+def g1_record_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, evaluation_plan):
+    """HiPAN G1 / G1b command bundles (eval_gt only). Record-only: the scorer never reads them, a failure is noted not held."""
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction = load_policy(evaluation_plan or DEFAULT_PLAN)
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    rows = []
+    for suite in G1_SUITES:
+        args = ["--ex42-evaluation-plan", friction["plan_path"], "--task", cfg["task"], "--checkpoint", str(checkpoint),
+                "--envs", str(cfg["envs"]), "--modes", "eval_gt", "--fixed-terrain", "--eval-seed", str(eval_seed),
+                "--steps", str(cfg["steps"]), "--command-suite", suite, "--commands", "all"]
+        if mesh_dir is not None:
+            args += ["--mesh-dir", str(mesh_dir)]
+        rows.append({"name": suite, "device": device,
+                     "argv": [str(machine_path("conda_python")), "-m", "foothold_s2.eval.eval_map_modes", *args,
+                              "--out", str(Path(output) / "record_only" / suite), "--device", device, *kit]})
+    return rows
+
+
+def write_boundary_brief(output, *, label, iteration, score_path, events_dir, prev_brief=None):
+    """brief.json next to the boundary score. Never raises: a missing source stays 없음, a tool failure is returned."""
+    from foothold_s2.tools import ex42_boundary_brief as brief
+    output = Path(output)
+    argv = ["--label", label, "--at", str(iteration), "--score", str(score_path), "--d44", str(output / "d44"),
+            "--g1", str(output / "record_only" / "hipan_g1" / "map_modes.json"),
+            "--g1b", str(output / "record_only" / "hipan_g1b" / "map_modes.json"),
+            "--out", str(output / "brief.json")]
+    if events_dir is not None:
+        argv += ["--events", str(events_dir)]
+    if prev_brief is not None:
+        argv += ["--prev", str(prev_brief)]
+    try:
+        brief.main(argv)
+    except Exception as exc:          # the brief is a reading aid, it must never stop the boundary
+        return {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+    return {"state": "done", "path": str(output / "brief.json")}
+
+
 def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
                     replica_dir, replica_sha256, seed):
     """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
@@ -458,7 +498,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
         evaluation_plan=None,
         p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None,
-        next_stage_queue=None):
+        next_stage_queue=None, prev_brief=None):
     from foothold_s2 import ex41_eval_once as process
     checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
     if digest(checkpoint) != expected_sha256:
@@ -675,6 +715,22 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                              "reason": f"{type(exc).__name__}: {exc}"})
             row["e3_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
             _atomic(output / "eval_receipt.json", row)
+    if p1_plan is not None and split_device is None:
+        row["record_only"] = {}
+        try:
+            record_phases = g1_record_commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
+                                               evaluation_plan=policy_path)
+        except (OSError, ValueError, KeyError) as exc:
+            record_phases = []
+            row["record_only"]["commands"] = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+        for phase in record_phases:
+            try:
+                process.prepare_phase_output(phase["argv"])
+                child = process.hidden_child(phase["argv"], output / "children" / ("record_" + phase["name"]), env=env)
+            except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+                child = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+            row["record_only"][phase["name"]] = child
+            _atomic(output / "eval_receipt.json", row)
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -689,6 +745,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                 evaluation_plan_path=policy_path if evaluation_plan is not None else None)
             _atomic(output / "p1_score.json", p1)
             row["p1_score"] = str(output / "p1_score.json")
+            row["boundary_brief"] = write_boundary_brief(
+                output, label=f"{p1_stage_id}_m{checkpoint_iteration}", iteration=checkpoint_iteration,
+                score_path=output / "ex42_score.json", events_dir=Path(checkpoint).parent, prev_brief=prev_brief)
             from foothold_s2 import ex42_eval_split as split
             from foothold_s2 import ex42_stage_handoff as handoff
             notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
@@ -726,6 +785,7 @@ def main(argv=None):
     parser.add_argument("--p1-stage-id")
     parser.add_argument("--next-stage-launcher", type=Path, default=None,
                         help="executable that starts the next stage; run only after a gate PASS with an approved cell")
+    parser.add_argument("--prev-brief", type=Path, default=None, help="the previous boundary brief.json (label link only)")
     parser.add_argument("--next-stage-queue", type=Path, default=None,
                         help="GPU queue file: the auto-started training is registered there as an external process")
     parser.add_argument("--next-stage-dispatch", type=Path, default=None,
@@ -855,7 +915,8 @@ def main(argv=None):
                p1_stage_id=args.p1_stage_id,
                checkpoint_iteration=iteration, split_device=args.split_device,
                next_stage_launcher=args.next_stage_launcher,
-               next_stage_queue=((args.next_stage_queue, args.next_stage_dispatch) if args.next_stage_queue else None))
+               next_stage_queue=((args.next_stage_queue, args.next_stage_dispatch) if args.next_stage_queue else None),
+               prev_brief=args.prev_brief)
 
 
 if __name__ == "__main__":
