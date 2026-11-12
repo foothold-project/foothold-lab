@@ -38,6 +38,22 @@ def _extension_authorized(approvals_path, stage_id) -> bool:
     return isinstance(cell, dict) and cell.get("extension_authorized") is True
 
 
+def _maintenance_verdict(p1) -> str | None:
+    """The boundary's maintenance table verdict, read from the measured score the gate receipt pins by SHA256.
+    E1 records it as `maintenance_judgement`, later stages as `stage_exit.items.maintenance_current`. Anything
+    unreadable, unpinned or differing from the pin is None: an unproven table is never read as a pass."""
+    try:
+        path, pin = Path(p1["measurement"]), p1["measurement_sha256"]
+        if _sha256(path) != pin:
+            return None
+        score = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (KeyError, TypeError, OSError, ValueError):
+        return None
+    items = (score.get("stage_exit") or {}).get("items") or {}
+    verdict = score.get("maintenance_judgement") or (items.get("maintenance_current") or {}).get("judgement")
+    return verdict if verdict in ("PASS", "HOLD", "FAIL") else None
+
+
 def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1):
     """Same stage, from this boundary's saved checkpoint: allowed only inside the bounds of the stage's own approval
     cell (scope maximum, cell interval; read through the stage's own validator) under the scoped automatic policy.
@@ -73,6 +89,14 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
     except (ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "continue_not_authorized",
                 "reason": f"not authorized to continue by itself: {exc}"}
+    # Team lead rule (16:58): only a PASS maintenance table starts the next segment by itself; HOLD, FAIL and an
+    # unreadable table are all a notice.
+    maintenance = _maintenance_verdict(p1)
+    if maintenance != "PASS":
+        return {**base, "action": "notify", "state": "continue_held_by_maintenance",
+                "reason": (f"maintenance table is {maintenance} at this boundary" if maintenance
+                           else "maintenance table verdict is not readable from the pinned measurement")
+                          + f": the next segment (end {end}) was not started; resume by hand after a decision"}
     return {**base, "action": "continue", "state": "stage_continues", "target_stage": stage_id,
             "resume_checkpoint": str(checkpoint), "segment_end": end,
             "plan": str(plan.path), "approvals": str(Path(approvals_path).resolve()),     # the run's own pinned pair
