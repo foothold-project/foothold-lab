@@ -401,7 +401,7 @@ def write_capture_and_compose(film, spec, case_id, picked, dt, checkpoint_sha, m
     (cap / "review.done").write_text("done\n", encoding="utf-8")
     ok = bool(picked.get("success"))
     out = film.path.with_name(film.path.stem + "_v34D168.mp4")
-    question = ("정지 밴드에서 멈춘 뒤 다시 출발해 윗 단에 네 발로 올라서는가"
+    question = ("꼭대기 도착 때 옆으로 얼마나 비켜 있나 · 왜 (머리 방향 틀어짐)"
                 if spec["task"] == "stop_restart" else "제자리 회전 6초 동안 발판 위에서 도는가")
     extra = f"env {args.film_env} · {'성공' if ok else '실패'} {picked.get('reason')} · 64환경 판정과 일치"
     return composer.render(cap, "seq", "1x", out, question=question, extra_line=extra,

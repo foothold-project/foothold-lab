@@ -318,11 +318,14 @@ def question_strip(scene: np.ndarray) -> np.ndarray:
     """v10 (팀장 10/29 D51): 「이 영상이 답할 물음」 은 왼쪽 3D 장면 안 하단에 한 줄, 반투명 바탕으로 얹는다. 글자 크기 10 그대로."""
     if not EXTRA_LINE["question"]:
         return scene
-    y0, y1 = 703, 719
+    y0, y1 = 672, 719
     roi = scene[y0:y1, 0:1080].astype(np.float32)
-    scene[y0:y1, 0:1080] = (roi * 0.45 + np.array((30, 35, 43), np.float32) * 0.55).astype(np.uint8)
-    line = "이 영상이 답할 물음  " + EXTRA_LINE["question"] + (("   |   " + EXTRA_LINE["text"]) if EXTRA_LINE["text"] else "")   # 물음 | 결과 순 (팀장 10/29 19:2x)
-    return text(scene, [((8, y0 + 1), line, (225, 225, 190))], 10, limit=1072)
+    scene[y0:y1, 0:1080] = (roi * 0.35 + np.array((30, 35, 43), np.float32) * 0.65).astype(np.uint8)
+    # v11 (lead 11/12): two larger lines, question then in-video result
+    scene = text(scene, [((10, y0 + 3), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (235, 235, 200))], 18, limit=1064)
+    if EXTRA_LINE["text"]:
+        scene = text(scene, [((10, y0 + 26), EXTRA_LINE["text"], tuple(EXTRA_LINE["color"]))], 16, limit=1064)
+    return scene
 
 
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
