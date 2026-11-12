@@ -221,4 +221,44 @@ def test_a_resume_in_another_directory_is_refused_and_the_same_directory_passes(
 
 def test_train_start_resume_goes_through_the_same_run_guard_and_nothing_else_decides_it():
     text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
-    assert "EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(_pre_args.ex42_log_dir, EX42_STAGE_ZERO_RESUME)" in text
+    assert "EX42_STAGE_ZERO_RESUME_SAME_RUN = require_same_run_resume(EX42_RUN_LOG_DIR, EX42_STAGE_ZERO_RESUME)" in text
+
+
+def test_a_second_rank_resumes_the_same_run_from_its_private_directory(tmp_path):
+    """2026-11-12 18:17: the E1 segment-2 preflight died on rank 1. A rank other than 0 writes to a private scratch
+    directory (`speed_probe_rank_log_dir`), so its own log dir is never the checkpoint's; the same-run guard must
+    read the run directory every rank was given, and the rank keeps its own manifest."""
+    import hashlib
+    from foothold_s2.scripts.ex42_training_entry import (
+        read_same_run_manifest, require_same_run_resume, speed_probe_rank_log_dir)
+
+    run = tmp_path / "EX-42-B-E1_x"
+    run.mkdir()
+    checkpoint = run / "model_250.pt"
+    checkpoint.write_bytes(b"x")
+    private = speed_probe_rank_log_dir(str(run), 1, True)
+    assert Path(private) != run and speed_probe_rank_log_dir(str(run), 0, True) == str(run)
+    assert require_same_run_resume(str(run), checkpoint) is True                 # what train_start passes now: the given directory
+    with pytest.raises(ValueError, match="run directory of its checkpoint"):
+        require_same_run_resume(private, checkpoint)                            # what rank 1 passed before
+    text = (ROOT / "foothold_s2" / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    kept = text.index("EX42_RUN_LOG_DIR = _pre_args.ex42_log_dir")
+    split = text.index("_pre_args.ex42_log_dir = speed_probe_rank_log_dir(_pre_args.ex42_log_dir, EX42_SPEED_PROBE_RANK, True)")
+    assert kept < split < text.index("require_same_run_resume(EX42_RUN_LOG_DIR, EX42_STAGE_ZERO_RESUME)")
+    assert "require_same_run_resume(_pre_args.ex42_log_dir" not in text
+    assert "log_dir, rank=EX42_SPEED_PROBE_RANK," in text and "read_same_run_manifest(" in text
+    # rank 0 owns the run directory: its manifest must be the one the preflight read. Rank 1 keeps its own.
+    shared, own = run / "manifest.json", tmp_path / "rank1"
+    own.mkdir()
+    shared.write_text('{"run": {"log_dir": "shared"}}', encoding="utf-8")
+    (own / "manifest.json").write_text('{"run": {"log_dir": "private"}}', encoding="utf-8")
+    proof = hashlib.sha256(shared.read_bytes()).hexdigest()
+    assert read_same_run_manifest(run, rank=0, source_manifest_sha256=proof)["run"]["log_dir"] == "shared"
+    assert read_same_run_manifest(own, rank=1, source_manifest_sha256=proof)["run"]["log_dir"] == "private"
+    with pytest.raises(ValueError, match="source manifest changed after self-resume preflight"):
+        read_same_run_manifest(own, rank=0, source_manifest_sha256=proof)
+    shared.write_text('{"run": {"log_dir": "edited"}}', encoding="utf-8")
+    with pytest.raises(ValueError, match="source manifest changed after self-resume preflight"):
+        read_same_run_manifest(run, rank=0, source_manifest_sha256=proof)
+    with pytest.raises(FileNotFoundError):
+        read_same_run_manifest(tmp_path / "gone", rank=1, source_manifest_sha256=proof)

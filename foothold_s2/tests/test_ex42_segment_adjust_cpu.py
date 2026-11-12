@@ -124,7 +124,7 @@ def test_train_start_applies_the_segment_commands_before_the_dry_run_ends():
     block = text[call:text.index("if EX42_SEGMENT_COMMANDS is not None:", call)]
     for piece in ("EX42_STAGE_ZERO_PLAN_VIEW, EX42_STAGE_ZERO_PLAN, EX42_STAGE_ID,",
                   'EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"] // _interval',
-                  'path=os.environ.get("EX42_SEGMENT_ADJUST"), log_dir=_pre_args.ex42_log_dir,',
+                  'path=os.environ.get("EX42_SEGMENT_ADJUST"), log_dir=EX42_RUN_LOG_DIR,',      # every rank reads the shared records
                   'write=not _e_dry_run and os.environ.get("RANK", "0") == "0")'):
         assert piece in block
     made = text.index("EX42_STAGE_ZERO_PLAN_VIEW = make_ex42_stage_zero_plan_view(")
