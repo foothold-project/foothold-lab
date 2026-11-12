@@ -1,0 +1,65 @@
+# EX-42 canon sentence -> training value table, read by foothold_s2/ex42_canon_params_check.py.
+# One row = one sentence of the canon (CURRICULUM-GATES.md) that fixes a value the training run must carry.
+# `canon_quote` is copied from the canon as is: when the canon no longer holds it, the row turns STALE (red)
+# and has to be registered again from the new sentence. Nothing here is a new rule; the rule is the quote.
+schema: ex42-canon-claims/1
+canon:
+  path: inbox/jay/20261026-experiments/CURRICULUM-GATES.md
+  version: v0.17e
+  branch: feature/fable-25a-jay
+  commit: 66efd331
+claims:
+- id: E1.continuous_level_cap
+  stage: E1
+  canon_section: "E.2 E1 레벨"
+  canon_quote: "| 레벨 | 상한 5 → **9** · 경계마다 +1 · 성과 승급"
+  ledger: ["2026-11-06T22:3x", "2026-11-06T23:2x", "2026-11-07T17:25", "2026-11-08 19:0x"]
+  actual: {source: stage_config, path: terrain.exposure_at_E1.positive.0.level_cap}
+  expect:
+    kind: raise_per_boundary
+    start: 5
+    step: 1
+    end: 9
+    # Where the plan registers the raise (plan mode) and where a run records a boundary without a raise.
+    # Both are empty until the raise is wired in; an empty cell means "no raise and no recorded hold" is red.
+    plan_schedule_path: terrain.continuous_level_cap
+    hold_event: null
+  observe: {source: map_switch, field: on.terrain_level_mean}
+- id: E1.continuous_exposure
+  stage: E1
+  canon_section: "E.2 E1 env 몫"
+  canon_quote: "| env 몫 | 연속 7 종 100 % | % |"
+  actual: {source: stage_config, path: terrain.exposure_at_E1.positive}
+  expect:
+    kind: equals_ignoring
+    ignore_keys: [level_cap]
+    value: [{family: A, kinds_of: continuous, exposure: 1.0}]
+- id: E1.critic_mirror
+  stage: E1
+  canon_section: "E.2 E1 critic 대칭"
+  canon_quote: "E1 경계에서 켜고 뒤 단계 내내 켠다(0 단계 · E0 은 끔)"
+  ledger: ["2026-11-09 00:4x"]
+  actual: {source: stage_config, path: critic_mirror}
+  expect: {kind: equals, value: true}
+- id: E1.maximum_updates
+  stage: E1
+  canon_section: "E.2 E1 최대 회차"
+  canon_quote: "| 최대 회차 | 1,000 | 회차 · **가정** |"
+  actual: {source: agent_yaml, path: max_iterations, plan_path: maximum_updates}
+  expect: {kind: equals, value: 1000}
+- id: E1.foot_slip.control
+  stage: E1
+  variant: control
+  canon_section: "E.2 E1 보상 가중"
+  canon_quote: "`foot_slip` 0 → −0.25 하나만 바꿈"
+  ledger: ["2026-11-11 23:49"]
+  actual: {source: env_yaml, path: rewards.ex41_foot_slip.weight}
+  expect: {kind: equals, value: 0.0}
+- id: E1.foot_slip.retrain
+  stage: E1
+  variant: slip_retrain
+  canon_section: "E.2 E1 보상 가중"
+  canon_quote: "`foot_slip` 0 → −0.25 하나만 바꿈"
+  ledger: ["2026-11-11 23:49"]
+  actual: {source: env_yaml, path: rewards.ex41_foot_slip.weight}
+  expect: {kind: equals, value: -0.25}
