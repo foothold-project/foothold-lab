@@ -9,10 +9,9 @@ approval file (EX42_SEGMENT_ADJUST), because a resumed segment must carry the pl
                         "commands": {"shares": {...}, "ranges": {...}, "turn_overlay": {...}}}}}
 
 `segments[k]` holds from boundary k on; the segments where the cap rises keep the last entry. An entry for a boundary
-the run has not reached is refused. Every value stays inside what the plan row already carries: a range inside the
-row's range, the overlay fraction at most the row's and its wz inside the row's, each share between the stage-zero
-share and the row's share. Each started segment leaves `segment_commands_b<k>.json` in the run folder; a later start
-must reproduce what the earlier segments recorded.
+the run has not reached is refused. Every value stays inside the row's `command_adjust_limits` (the lines the plan
+fixed before the run started; a stage without that cell takes no adjustment). Each started segment leaves
+`segment_commands_b<k>.json` in the run folder; a later start must reproduce what the earlier segments recorded.
 """
 from __future__ import annotations
 
@@ -21,7 +20,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from foothold_s2.commands.ex42_shares import stage_commands, validate_commands
+from foothold_s2.commands.ex42_shares import command_adjust_limits, stage_commands, validate_commands
 
 SCHEMA = "ex42-segment-adjust/1"
 RECEIPT = "ex42-segment-commands/1"
@@ -32,7 +31,7 @@ def adjustable_boundaries(plan, stage_id) -> tuple[int, ...]:
     """The boundaries where the profile may change: after the first segment, before the level cap first rises."""
     row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
     first = (row.get("terrain", {}).get("continuous_level_cap") or {}).get("first_raise_boundary", 1)
-    return tuple(range(1, first)) if row.get("commands") is not None and type(first) is int else ()
+    return tuple(range(1, first)) if row.get("command_adjust_limits") is not None and type(first) is int else ()
 
 
 def _plain(profile) -> dict:
@@ -41,17 +40,16 @@ def _plain(profile) -> dict:
 
 
 def _inside(plan, stage_id, profile, label) -> None:
-    base, zero = stage_commands(plan, stage_id), plan.document["stage_zero"]["shares"]
+    limits = command_adjust_limits(plan, stage_id)
     for key, (low, high) in profile["ranges"].items():
-        if low < base["ranges"][key][0] - TOL or high > base["ranges"][key][1] + TOL:
-            raise ValueError(f"EX-42 {label} ranges.{key} leaves the approved range {list(base['ranges'][key])}")
-    (fraction, low, high), (top, floor, ceiling) = profile["turn_overlay"], base["turn_overlay"]
+        if low < limits["ranges"][key][0] - TOL or high > limits["ranges"][key][1] + TOL:
+            raise ValueError(f"EX-42 {label} ranges.{key} leaves the approved limits {list(limits['ranges'][key])}")
+    (fraction, low, high), (top, floor, ceiling) = profile["turn_overlay"], limits["turn_overlay"]
     if fraction > top + TOL or low < floor - TOL or high > ceiling + TOL:
-        raise ValueError(f"EX-42 {label} turn_overlay leaves the approved fraction {top} or wz range {[floor, ceiling]}")
+        raise ValueError(f"EX-42 {label} turn_overlay leaves the approved limits: fraction {top}, wz {[floor, ceiling]}")
     for slot, share in profile["shares"].items():
-        ends = sorted((float(zero[slot]), base["shares"][slot]))
-        if not ends[0] - TOL <= share <= ends[1] + TOL:
-            raise ValueError(f"EX-42 {label} shares.{slot} leaves the approved values {ends}")
+        if not limits["shares"][slot][0] - TOL <= share <= limits["shares"][slot][1] + TOL:
+            raise ValueError(f"EX-42 {label} shares.{slot} leaves the approved limits {list(limits['shares'][slot])}")
 
 
 def resolve(plan, stage_id, document, boundary_index):

@@ -113,7 +113,9 @@ def test_the_sampler_and_the_step_check_use_the_adjusted_profile(plan, view, tmp
     assert abs(float(side.float().mean()) - 0.14) < 0.004                              # 0.07 + 0.07, the plan row has 0.18
     turned = side & (out["cmd"][:, 2].abs() > 0)
     assert 0.3 <= float(out["cmd"][turned, 2].abs().min()) and float(out["cmd"][turned, 2].abs().max()) <= 0.5
-    assert not bool(continuous.command_bad(stage, out["slot"], out["cmd"]).any())
+    bad = continuous.command_bad(out["cmd"], out["slot"], out["heading"], torch.zeros(n, dtype=torch.long),
+                                 types.SimpleNamespace(stages=[stage]))
+    assert not bool(bad.any())
 
 
 def test_train_start_applies_the_segment_commands_before_the_dry_run_ends():
@@ -141,19 +143,34 @@ def test_later_segments_keep_the_last_adjustment(plan, view, tmp_path):
         assert record["entry"] == 2 and view.stages[0].ranges["side_vy_abs"] == (0.2, 0.5)
 
 
+def test_the_approved_limits_themselves_are_reachable(plan, view, tmp_path):
+    """decisions.tsv 2026-11-12 14:23: side speed 1.0, side share 0.12 each (forward 0.13), walk 1.5, overlay 0.4, wz 0.8."""
+    change = {"ranges__side_vy_abs": [0.1, 1.0], "ranges__walk_vx": [0.3, 1.5], "turn_overlay__fraction": 0.4,
+              "turn_overlay__wz_abs": [0.2, 0.8], "shares__forward": 0.13, "shares__side_left": 0.12, "shares__side_right": 0.12}
+    record = start(view, plan, tmp_path, 1, document(plan, b1=entry(plan, **change)))
+    stage = view.stages[0]
+    assert stage.ranges["side_vy_abs"] == (0.1, 1.0) and stage.ranges["walk_vx"] == (0.3, 1.5)
+    assert stage.turn_overlay == (0.4, 0.2, 0.8) and (stage.shares["forward"], stage.shares["side_left"]) == (0.13, 0.12)
+    assert record["source"] == "adjust_file" and sum(stage.shares.values()) == pytest.approx(1.0)
+
+
 @pytest.mark.parametrize("change", [
-    {"ranges__side_vy_abs": [0.1, 1.0]},              # above the approved side speed
-    {"ranges__side_vy_abs": [0.05, 0.8]},             # below the approved floor
-    {"ranges__walk_vx": [0.3, 1.3]},
-    {"turn_overlay__fraction": 0.3},                  # more than the approved quarter
-    {"turn_overlay__wz_abs": [0.2, 0.7]},
+    {"ranges__side_vy_abs": [0.1, 1.1]},              # above the approved side speed
+    {"ranges__side_vy_abs": [0.05, 0.8]},             # below the slow floor
+    {"ranges__walk_vx": [0.3, 1.6]},
+    {"ranges__walk_vx": [0.2, 1.2]},
+    {"ranges__forward_vx": [0.1, 1.6]},               # a range the limits do not name may only narrow
+    {"ranges__spin_wz_abs": [0.1, 1.5]},
+    {"turn_overlay__fraction": 0.45},
+    {"turn_overlay__wz_abs": [0.2, 0.9]},
     {"turn_overlay__wz_abs": [0.1, 0.6]},
-    {"shares__forward": 0.17, "shares__side_left": 0.10, "shares__side_right": 0.10},   # side share above the approved 0.09
+    {"shares__forward": 0.11, "shares__side_left": 0.13, "shares__side_right": 0.13},   # side share above 0.12
+    {"shares__forward": 0.18, "shares__reverse": 0.15},                               # only an upper line is crossed
     {"shares__forward": 0.25, "shares__side_left": 0.06, "shares__side_right": 0.06},
-    {"shares__stand": 0.08, "shares__forward": 0.21},                                 # a slot the approval did not move
+    {"shares__stand": 0.08, "shares__forward": 0.21},                                 # a slot the limits do not name
 ])
-def test_values_outside_the_approved_ones_are_refused(plan, view, tmp_path, change):
-    with pytest.raises(ValueError, match="leaves the approved"):
+def test_values_outside_the_approved_limits_are_refused(plan, view, tmp_path, change):
+    with pytest.raises(ValueError, match="leaves the approved limits"):
         start(view, plan, tmp_path, 1, document(plan, b1=entry(plan, **change)))
     assert view.stages[0].ranges["side_vy_abs"] == (0.1, 0.8) and list(tmp_path.glob("segment_commands_b*.json")) == []
 
@@ -201,6 +218,13 @@ def test_a_later_start_must_reproduce_what_the_earlier_segments_ran_with(plan, v
 
 def test_a_segment_that_ran_on_plan_values_cannot_be_given_an_entry_afterwards(plan, view, tmp_path):
     start(view, plan, tmp_path, 1)
+    with pytest.raises(ValueError, match="differs from what segment 1 ran with"):
+        start(view, plan, tmp_path, 2, document(plan, b1=entry(plan, **NARROW)))
+    assert start(view, plan, tmp_path, 2, document(plan, b2=entry(plan, **NARROW)))["entry"] == 2
+
+
+def test_a_segment_that_left_no_record_ran_on_plan_values(plan, view, tmp_path):
+    """The recorder may reach the run folder after segment 2 started: that segment then ran on the plan row."""
     with pytest.raises(ValueError, match="differs from what segment 1 ran with"):
         start(view, plan, tmp_path, 2, document(plan, b1=entry(plan, **NARROW)))
     assert start(view, plan, tmp_path, 2, document(plan, b2=entry(plan, **NARROW)))["entry"] == 2
@@ -254,8 +278,8 @@ def test_gate_row_has_no_data_without_records_and_skips_in_plan_mode(tmp_path):
 
 
 @pytest.mark.parametrize("damage, text", [
-    (lambda b: b["commands"]["ranges"].update(side_vy_abs=[0.1, 1.0]), "ranges"),
-    (lambda b: b["commands"]["shares"].update(side_left=0.12), "shares"),
+    (lambda b: b["commands"]["ranges"].update(side_vy_abs=[0.1, 1.2]), "ranges"),
+    (lambda b: b["commands"]["shares"].update(side_left=0.2), "shares"),
     (lambda b: b["commands"].update(turn_overlay=[0.5, 0.2, 0.6]), "turn overlay"),
     (lambda b: b.update(entry=3), "adjusted at boundary 3"),
 ])
@@ -267,6 +291,16 @@ def test_gate_row_fails_on_a_record_outside_the_canon(plan, view, tmp_path, dama
     path.write_text(json.dumps(body), encoding="utf-8")
     row = verdict(tmp_path)
     assert row["verdict"] == "FAIL" and text in row["detail"]
+
+
+def test_gate_row_reads_only_the_records_of_its_own_stage(plan, view, tmp_path):
+    start(view, plan, tmp_path, 1, document(plan, b1=entry(plan, **NARROW)))
+    path = tmp_path / "segment_commands_b1.json"
+    body = json.loads(path.read_text(encoding="utf-8"))
+    body["commands"]["ranges"]["side_vy_abs"] = [0.1, 1.2]
+    body["stage_id"] = "E1F"
+    path.write_text(json.dumps(body), encoding="utf-8")
+    assert verdict(tmp_path)["verdict"] == "NO_DATA"
 
 
 def test_the_real_table_still_passes_the_e1_plan_gate():

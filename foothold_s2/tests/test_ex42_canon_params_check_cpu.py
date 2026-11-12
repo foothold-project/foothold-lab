@@ -229,5 +229,5 @@ def test_the_shipped_table_matches_the_canon_in_this_tree_and_the_shipped_plan()
     report = cpc.launch_gate("E1", cpc.CLAIMS.parent / "ex42-prep.yaml")
     verdicts = {row["id"]: row["verdict"] for row in report["rows"]}
     skipped = {"E1.segment_command_adjustment"}          # segment command records exist only in a run folder
-    assert report["passed"] and len(verdicts) == 11
+    assert report["passed"] and len(verdicts) == 12
     assert all(verdict == ("SKIP" if name in skipped else "PASS") for name, verdict in verdicts.items())
