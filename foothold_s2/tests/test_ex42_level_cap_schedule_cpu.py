@@ -142,6 +142,29 @@ def test_a_continued_segment_accepts_the_lower_cap_the_earlier_segment_saved():
             later.load_state_dict({**saved, "terrain": terrain})
 
 
+def test_the_readback_after_load_accepts_the_raised_cap_and_nothing_else():
+    """2026-11-12: train_start compared the whole live state with the checkpoint after the load. From the 750 boundary
+    on the segment's cap is one above the saved one, so the E1 launch would have been refused inside Kit."""
+    saved = _runtime(cap=5)[0].state_dict()
+    for cap in (5, 6):                                   # the same cap, and the first raised segment
+        later = _runtime(cap=cap)[0]
+        later.load_state_dict(saved)
+        live = later.state_dict()
+        assert (live == saved) is (cap == 5) and te.continuation_state_matches(live, saved)
+    live = _runtime(cap=6)[0]
+    live.load_state_dict(saved)
+    for key, value in (("command_samples", 7), ("iteration", 3), ("plan_sha256", "9" * 64), ("pre_step_count", 1),
+                       ("push_vmax_mps", 1.0), ("finished", True), ("stage_id", "E1F")):
+        assert not te.continuation_state_matches({**live.state_dict(), key: value}, saved)
+    assert not te.continuation_state_matches({**live.state_dict(), "terrain": {"policy": "fixed", "level_cap": 6}}, saved)
+    assert not te.continuation_state_matches(None, saved) and not te.continuation_state_matches(live.state_dict(), None)
+    extended = {**saved, "maximum_updates": 2250}        # a HOLD extension resumes a save that ran to the base cap
+    assert te.continuation_state_matches(extended, saved)
+    text = (pathlib.Path(te.__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert "runner.continuous_curriculum.state_dict() != resume_saved" not in text
+    assert "or not continuation_state_matches(runner.continuous_curriculum.state_dict()," in text
+
+
 def test_stage_zero_keeps_the_exact_terrain_match():
     zero, _ = _runtime(stage="EX42_0_T0_prime")
     saved = zero.state_dict()

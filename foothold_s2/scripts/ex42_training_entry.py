@@ -510,6 +510,15 @@ def require_same_run_resume(log_dir: str | Path, resume_checkpoint: str | Path) 
     return True
 
 
+def continuation_state_matches(live: Any, saved: Any) -> bool:
+    """After a resumed segment loaded its checkpoint: the live runtime state is the checkpoint's, apart from the two
+    fields a later segment carries higher, the L+ level cap and the stage bound of a HOLD extension. `load_state_dict`
+    has already refused any value outside their allowance, so they are left out of this readback."""
+    def rest(state):
+        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None}}
+    return isinstance(live, dict) and isinstance(saved, dict) and rest(live) == rest(saved)
+
+
 def read_same_run_manifest(log_dir: str | Path, *, rank: int, source_manifest_sha256: str) -> dict[str, Any]:
     """The manifest a same-run segment goes on writing. Rank 0 owns the run directory: its manifest must still be the
     one the resume preflight read. Another rank of a two-rank run keeps its own manifest in its private directory

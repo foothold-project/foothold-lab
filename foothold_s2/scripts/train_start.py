@@ -1308,8 +1308,11 @@ def main(env_cfg, agent_cfg):
                 "first_resumed_cumulative_update": EX42_STAGE_ZERO_RESUME_PROOF["first_resumed_cumulative_update"],
                 "restored_groups": EX42_STAGE_ZERO_RESUME_PROOF["restored_groups"],
             }
+            from foothold_s2.scripts.ex42_training_entry import continuation_state_matches
+
             if (runner.current_learning_iteration != EX42_STAGE_ZERO_RESUME_PROOF["local_update_origin"]
-                    or runner.continuous_curriculum.state_dict() != resume_saved["continuous_curriculum"]):
+                    or not continuation_state_matches(runner.continuous_curriculum.state_dict(),
+                                                      resume_saved["continuous_curriculum"])):
                 raise ValueError("EX-42 self-resume live readback differs from the manifest-pinned checkpoint")
             ex42_stage_zero_root_xy_readback = build_stage_zero_resume_root_xy_readback(
                 env, pose_range=env_cfg.events.reset_base.params["pose_range"])
