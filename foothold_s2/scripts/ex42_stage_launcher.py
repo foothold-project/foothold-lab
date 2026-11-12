@@ -78,10 +78,13 @@ def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
             "--device", env.get("EX42_P1_DEVICE", "cuda:1"), "--eval-seed", env.get("EX42_EVAL_SEED", "42"),
             "--mesh-dir", mesh_dir, "--expected-mesh-sha256", mesh_sha,
             "--p1-plan", str(plan), "--p1-approvals", str(approvals), "--p1-stage-id", stage]
+    queue = env.get("GPU_JOBS_QUEUE")
+    if not queue:
+        raise LaunchRefused("missing GPU_JOBS_QUEUE (the next-stage queue path)")
     if env.get("EX42_P1_SPLIT_DEVICE"):
         argv += ["--split-device", env["EX42_P1_SPLIT_DEVICE"]]
     return argv + ["--next-stage-launcher", str(Path(__file__).with_suffix(".sh")),
-                   "--next-stage-queue", env["GPU_JOBS_QUEUE"],
+                   "--next-stage-queue", queue,
                    "--next-stage-dispatch", str(DISPATCH), "--execute"]
 
 
