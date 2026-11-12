@@ -12,7 +12,9 @@ from foothold_s2.tests.test_ex42_exposure_cpu import PLAN, REAL
 needs_mesh = pytest.mark.skipif(not (REAL / "terrain_mesh.npz").is_file(), reason="real mesh missing")
 STAGES = ["E2", "E3", "E4", "E5", "M", "E6a", "E6b"]
 # sparse share added up at the stage start (planner table, computed): the sparse part must stay inside 57.1 % (CG:380)
-SPARSE = {"E2": 0.05, "E3": 0.15, "E4": 0.245, "E5": 0.56, "M": 0.56, "E6a": 0.56, "E6b": 0.47}
+# E3 starts as the E2 end state plus the entry axis D only (stepping_stones_low level_cap 0 -> 1): its sparse share stays
+# 0.05 and C/flat opens on the K ladder (lead 2026-11-12 02:00, one axis per boundary).
+SPARSE = {"E2": 0.05, "E3": 0.05, "E4": 0.245, "E5": 0.56, "M": 0.56, "E6a": 0.56, "E6b": 0.47}
 
 
 def _rows():
@@ -37,4 +39,4 @@ def test_each_stage_start_block_resolves_on_the_real_mesh_with_its_planned_share
 def test_a_later_stage_block_is_present_for_every_stage_and_the_sparse_columns_grow_by_stage():
     rows = _rows()
     assert all(f"exposure_at_{stage}" in rows[stage]["terrain"] for stage in STAGES)
-    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [2, 3, 15, 29, 30]
+    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [2, 2, 15, 29, 30]

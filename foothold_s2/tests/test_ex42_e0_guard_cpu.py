@@ -128,5 +128,7 @@ def test_e1_p1_aggregate_must_match_all_26_judged_cells(tmp_path):
 
 def test_e2_p1_e0_verdict_cannot_be_reused_for_later_stage(tmp_path):
     checkpoint, output, score = _p1_inputs(tmp_path)
-    with pytest.raises(ValueError, match="judged E0 cell evidence missing or stage differs"):
+    score["execution_plan_sha256"] = digest(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
+    score["stage_id"] = "E0"
+    with pytest.raises(ValueError, match="E2 P1 plan or stage identity missing"):
         _p1(score, checkpoint, output, "E2")

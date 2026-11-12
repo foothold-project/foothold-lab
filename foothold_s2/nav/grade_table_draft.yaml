@@ -10,6 +10,8 @@ body_height_m: 0.4            # 가정
 stand_clearance_m: 0.5        # 가정 (몸 높이 + 0.1)
 crawl_clearance_m: 0.3        # 가정 (자세 스위치 켜짐일 때)
 max_gap_cross_m: 0.7          # 가정 (S1 · S2 레벨표가 정함)
+max_stride_m: 0.7             # 가정 · 하위가 한 걸음에 건너는 막힌 틈 (같은 패치 안 듬성한 셀 사이 · gvd_astar 건너뛰기 간선). 보폭 실측 영수증 없음 (evidence: null):
+                              # 틈 건넘 가정 max_gap_cross_m 과 같은 값으로 둠. EX-42 끝 단계 영수증이 오면 거기서 읽어 교체 (M13)
 rows:
   - {family: A, kind: stepping_stones_low, max_passed_level: 3, evidence: null}
   - {family: A, kind: stepping_stones_high, max_passed_level: 2, evidence: null}

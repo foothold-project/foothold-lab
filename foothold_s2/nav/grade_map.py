@@ -42,6 +42,8 @@ class GradeMap:
     pose_active: bool
     table_sha256: str
     res: float = rg.RES
+    stride_m: float = 0.0             # 하위가 한 걸음에 건너는 막힌 틈 (등급표 max_stride_m). 0 = 건너뛰기 간선 없음
+    patch: np.ndarray | None = None   # (200, 200) int16 같은 지형 패치 번호 (없으면 -1). 건너뛰기 간선이 「같은 패치」 를 가르는 데 쓴다
 
 
 def make_grade_map(room: rg.Room, table: dict, pose_active: bool = False) -> GradeMap:
@@ -69,13 +71,16 @@ def make_grade_map(room: rg.Room, table: dict, pose_active: bool = False) -> Gra
     crawl = over & ~stand & bool(pose_active) & (room.clearance >= table["crawl_clearance_m"])
     put(stand, OVERHEAD, costs["overhead_stand"])
     put(crawl, OVERHEAD, costs["overhead_crawl"])
+    patch = np.full(c.shape, -1, np.int16)
+    for i, o in enumerate(o for o in room.objects if o["kind"] == "patch"):
+        patch[int(round(o["x0"] / rg.RES)):int(round(o["x1"] / rg.RES)), int(round(o["y0"] / rg.RES)):int(round(o["y1"] / rg.RES))] = i
     return GradeMap(g, cost, room.height.astype(np.float32), room.clearance.astype(np.float32),
-                    bool(pose_active), table["sha256"])
+                    bool(pose_active), table["sha256"], stride_m=float(table.get("max_stride_m", 0.0)), patch=patch)
 
 
 def save_grade_map(gm: GradeMap, path) -> None:
     np.savez_compressed(path, grade=gm.grade, cost=gm.cost, height=gm.height, clearance=gm.clearance,
-                        res=np.float64(gm.res), pose_active=np.bool_(gm.pose_active), table_sha256=np.array(gm.table_sha256))
+                        res=np.float64(gm.res), stride_m=np.float64(gm.stride_m), patch=gm.patch if gm.patch is not None else np.zeros((0,), np.int16), pose_active=np.bool_(gm.pose_active), table_sha256=np.array(gm.table_sha256))
 
 
 def load_grade_map(path) -> GradeMap:
@@ -83,7 +88,8 @@ def load_grade_map(path) -> GradeMap:
     g = d["grade"]
     if g.ndim != 2 or d["cost"].shape != g.shape or g.dtype != np.uint8:
         raise ValueError("grade_map.npz shapes differ")
-    return GradeMap(g, d["cost"], d["height"], d["clearance"], bool(d["pose_active"]), str(d["table_sha256"]), float(d["res"]))
+    patch = d["patch"] if "patch" in d and d["patch"].shape == g.shape else None
+    return GradeMap(g, d["cost"], d["height"], d["clearance"], bool(d["pose_active"]), str(d["table_sha256"]), float(d["res"]), float(d["stride_m"]) if "stride_m" in d else 0.0, patch)
 
 
 def passable(gm: GradeMap) -> np.ndarray:

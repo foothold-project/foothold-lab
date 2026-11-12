@@ -76,7 +76,8 @@ def _median(values, label):
 
 
 def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
-            expected_mesh_sha256=None, stage_id=None, evaluation_plan_path=None):
+            expected_mesh_sha256=None, stage_id=None, evaluation_plan_path=None,
+            execution_plan_path=None):
     """Read durable Kit artifacts; never infer a pass from an EX-41 score."""
     cfg, cfg_path = config(config_path)
     seed = cfg["eval_seed"] if expected_seed is None else expected_seed
@@ -111,6 +112,8 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
            "conditions": {"envs": cfg["envs"], "steps": cfg["steps"],
                           "eval_seed": seed, "modes": list(MODES)},
            "map64": {}, "stand": {}, "axis_v2": {}, "maintenance_items": {}}
+    if execution_plan_path is not None:
+        out["execution_plan_sha256"] = digest(Path(execution_plan_path).resolve(strict=True))
     for mode in MODES:
         out["map64"][mode] = {}
         for case, entry in map_row["modes"][mode].items():
