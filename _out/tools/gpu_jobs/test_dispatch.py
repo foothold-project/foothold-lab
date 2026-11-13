@@ -245,6 +245,7 @@ class BoardViewTests(LiveTests):
         table.write_text("stages:\n- id: S2a\n  start: {fixed_update: 0}\n- id: S2b\n  start: {fixed_update: 751}\n"
                          "- id: S2c\n  start: {fixed_update: 1751}\n", encoding="utf-8")
         self.cfg.update({"queue": str(root / "queue.json"), "stage_table": str(table), "parent_iter": 6000,
+                         "experiment": "EX-41",
                          "stage_end": [750, 1750, 2750], "eval_root": str(root / "evalroot"),
                          "eval_minutes_assumed": 40, "stage_end_minutes_assumed": 120,
                          "c_layer_total_cells": 81})
@@ -652,6 +653,60 @@ class HeightTests(BoardViewTests):
         self.assertEqual(board.short_cell("stepping_stones_low_L4_probe_prop_only"), "디딤돌 L4 끔")
         self.assertEqual(board.short_cell("pyramid_stairs_inv_L2_eval_pred"), "내림계단 L2 복원")
         self.assertEqual(board.short_cell(None), "-")
+
+
+class Ex42LiveBoardTests(unittest.TestCase):
+    """The active EX-42 run supplies its own display and P1 score paths."""
+
+    def setUp(self):
+        LiveTests.setUp(self)
+        root = Path(self.temp.name)
+        run = root / "EX-42-B-E1-again"
+        run.mkdir()
+        self.run = run
+        self.status_file = run / "train_start_status.json"
+        (root / "TRAINING_BUSY_GPU0").write_text(json.dumps({"pid": os.getpid(), "run": str(run)}), encoding="utf-8")
+        self.cfg.update({"queue": str(root / "queue.json"), "stage_table": "", "parent_iter": 0,
+                         "stage_end": [0], "eval_root": "", "experiment": "학습",
+                         "eval_minutes_assumed": 40, "stage_end_minutes_assumed": 120,
+                         "c_layer_total_cells": 81})
+        self.now = 1793710000.0
+        self.status_file.write_text(json.dumps({"state": "running", "iter": 210,
+                                                "tot_iter": 250, "iter_s": 22.0}), encoding="utf-8")
+        (run / "manifest.json").write_text(json.dumps({"run": {"name": "generic-run-name",
+            "cli_args": {"ex42_stage_e1_approved": True, "ex42_stage": None,
+                         "max_iterations": 1750, "ex42_segment_end": 250}}}), encoding="utf-8")
+        (run / "startup_receipt.json").write_text(json.dumps({"experiment": "EX-42",
+            "parent": {"cumulative_update": 13250}}), encoding="utf-8")
+
+    def test_run_identity_and_boundary_count_come_from_receipts(self):
+        slow = board.slow_data(self.cfg, self.procs)
+        runtime = slow["runtime_cfg"]
+        self.assertEqual((runtime["experiment"], runtime["stage_display"], runtime["parent_iter"]),
+                         ("EX-42", "E1 다시", 13250))
+        self.assertEqual((runtime["boundary"], runtime["stage_end"], runtime["auto_horizon"]),
+                         (250, [1750], 7))
+        self.assertEqual(runtime["eval_root"], str(self.run / "eval/scores"))
+        out = board.board(self.smi, self.procs, self.cfg, now=self.now, width=160, detail=True)
+        self.assertIn("EX-42 학습 · E1 다시 (m13251~m15000)", out)
+        self.assertIn("m13460 · 210/250", out)
+        self.assertIn("다음 경계 250", out)
+        self.assertIn("EX-42 250 경계 평가", out)
+        self.assertIn("EX-42 1750 단계 끝 평가", out)
+        self.assertNotIn("EX-41 학습", out)
+
+    def test_score_folders_are_the_seen_boundaries(self):
+        root = self.run / "eval/scores/m250"
+        root.mkdir(parents=True)
+        (root / "p1_score.json").write_text('{"state":"complete","checkpoint_iteration":250}', encoding="utf-8")
+        self.assertEqual(board.eval_attempts(str(root.parent))[0]["iteration"], 250)
+        self.assertFalse(any("EX-42 250 경계" in e["title"] for e in board.auto_items(
+            board.training_config(self.cfg, board.current_training(self.cfg)),
+            board.current_training(self.cfg), self.now, [], board.eval_attempts(str(root.parent)))))
+
+    def test_bad_run_identity_does_not_invent_ex42_stage(self):
+        (self.run / "startup_receipt.json").write_text('{"experiment":"EX-42","parent":{}}', encoding="utf-8")
+        self.assertNotIn("stage_id", board.training_config(self.cfg, board.current_training(self.cfg)))
 
 
 class DispatchTests(unittest.TestCase):
