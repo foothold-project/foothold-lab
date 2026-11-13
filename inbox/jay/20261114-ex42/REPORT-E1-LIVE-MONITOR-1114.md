@@ -40,7 +40,7 @@
 ## CPU 증거
 
 - `isaac311`에서 새 지표·조정·시작 계약 CPU 시험을 했다. 실제 CPU 두 rank `gloo`로 합친 GT 느린 전진 표본 2, 비율 0.75를 확인했다. 한계 밖 요청 거절·rank 되읽기 차이 거절·영수증 삭제 및 값 변조 중단·Run 받은편지함 argv 시험을 포함한다.
-- Draft 가지 관련 시험은 181 passed, 1 skipped였다. v27 바탕 `1114218d` 위에 보행 접촉·KL 원자료 생산자를 더하고 `attach_runner`에서 KL 기록기를 설치했다. v27의 진입점·보상·지표·보행 접촉 CPU 시험은 211 passed, 1 skipped였다. time_out 원시값을 쓰는 시작 경로 시험도 포함한다. Kit, GPU, 실제 학습 속도는 측정하지 않았다.
+- Draft 가지 관련 시험은 181 passed, 1 skipped였다. v27 확정 바탕 `8cb66c49` 위에 보행 접촉·KL 원자료 생산자를 더하고 `attach_runner`에서 KL 기록기를 설치했다. 새 `slow_progress`의 0 요청 적용·0.001 요청 거절을 포함한 관련 CPU 시험은 225 passed, 1 skipped였다. time_out 원시값을 쓰는 시작 경로 시험도 포함한다. Kit, GPU, 실제 학습 속도는 측정하지 않았다.
 - 실제 `EX-42-B-E1-again` m250/m500 `ex42_score.json`의 L0 fwd0.1 R은 GT 0.44670→0.31197, PRED 0.40742→0.33361이다. 두 지도에서 0.05 초과 하락 신호를 내는 답안 시험을 넣었다. 평가 R과 학습 env 회차 지표는 정의가 다르므로 수치 자체를 같은 판정으로 쓰지 않는다. 원자료 SHA256: m250 `0493348af8db731503dd6b2da3b7b2de53b62e08469aa21dd00c93614283a1ee`, m500 `ce60361dbb39c1ff7467abf6107ee040c3a136aaee82c006f00b5fb62e7c4414`.
 
 ## 남은 확인
