@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import yaml
 
-from foothold_s2.ex42_e1_v2 import judge_cells, measure_cells, treatment
+from foothold_s2.ex42_e1_v2 import judge_cells, judge_e1_v2, measure_cells, treatment
 from foothold_s2.tools.ex42_boundary_autojudge import body_forward_per_env
 from foothold_s2.eval.map_mode_cells import commands
 from foothold_s2.ex42_eval_once import e1_v2_commands
@@ -31,10 +31,10 @@ def _pass_cells():
                     for mode in ("eval_gt", "eval_pred", "probe_prop_only")}}
 
 
-def test_body_forward_shared_formula_is_signed_and_alive_weighted():
+def test_body_forward_shared_formula_is_signed_and_scheduled_time_weighted():
     vx = np.array([[.1, -.1], [.2, 99.]], dtype=float)
     alive = np.array([[1, 1], [1, 0]], dtype=bool)
-    assert np.allclose(body_forward_per_env(vx, alive, .02, .1), [1.5, -1])
+    assert np.allclose(body_forward_per_env(vx, alive, .02, .1), [1.5, -.5])
 
 
 def test_pass_requires_every_direction_and_mode_and_keeps_off_record_only():
@@ -128,6 +128,53 @@ def test_approved_threshold_mutations_change_only_the_target_cell():
     cells = _pass_cells()
     cells["yaw"]["eval_gt"]["fwd1.0"].update(median_abs_rad=.11, p90_abs_rad=.15)
     assert judge_cells(cells, PLAN)["items"]["yaw/eval_gt/fwd1.0"]["judgement"] == "FAIL"
+    cells = _pass_cells()
+    cells["yaw"]["eval_gt"]["fwd1.0"]["survival"] = 59
+    assert judge_cells(cells, PLAN)["items"]["yaw/eval_gt/fwd1.0"]["judgement"] == "FAIL"
+
+
+def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_path):
+    from foothold_s2.tests.test_ex42_e1_judge_cpu import _cells, _inputs, _landing
+
+    score, baseline, measured, plan = _inputs()
+    plan["evaluation"]["e1_exit_v2"] = PLAN["evaluation"]["e1_exit_v2"]
+    score["d44_cells"] = _cells(plan, tmp_path)
+    previous = copy.deepcopy(score)
+    for boundary in (1, 2):
+        (tmp_path / f"segment_commands_b{boundary}.json").write_text(json.dumps(
+            {"boundary_index": boundary, "stage_id": "E1", "commands": {"forward": .2}}))
+        for rank in (0, 1):
+            (tmp_path / f"segment_rewards_b{boundary}_rank{rank}.json").write_text(json.dumps(
+                {"boundary_index": boundary, "stage_id": "E1", "live": {"zero_yaw": -1}}))
+    current_cells, prior_cells = _pass_cells(), _pass_cells()
+    prior_cells["yaw"]["eval_gt"]["fwd1.0"]["p90_abs_rad"] = .19
+    assert judge_cells(prior_cells, plan)["judgement"] == "HOLD"
+    previous["e1_v2_cells"] = prior_cells
+    previous["e1_exit_v2"] = {"current": judge_cells(prior_cells, plan, repeats={
+        7: copy.deepcopy(prior_cells), 13: copy.deepcopy(prior_cells)})}
+    previous["e1_v2_treatment"] = treatment(tmp_path / "model_250.pt", 250)
+    score["e1_v2_cells"] = current_cells
+    for case in ("stop_restart_eval_gt", "stop_restart_eval_pred"):
+        score["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)
+        previous["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)
+    result = judge_e1_v2(score, baseline, measured, plan, previous=previous,
+                         checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
+    assert result["judgement"] == "PASS"
+    assert result["e1_exit_v2"]["previous"]["judgement"] == "PASS"
+    assert set(result["e1_exit_v2"]["d44_stop_restart"]) == {
+        "stop_restart_eval_gt", "stop_restart_eval_pred"}
+    assert result["e1_exit_v2"]["d44_stop_restart_role"] == "record_only"
+    (tmp_path / "segment_rewards_b2_rank1.json").write_text(json.dumps(
+        {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
+    with pytest.raises(ValueError, match="identity differs"):
+        judge_e1_v2(score, baseline, measured, plan, previous=previous,
+                    checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
+
+
+def test_legacy_e1_score_cannot_be_promoted_under_v2_policy():
+    from foothold_s2.ex42_stage_judges import ADAPTERS
+    with pytest.raises(ValueError, match="v2 score evidence missing"):
+        ADAPTERS["map39_e1_v2_two_window"].verify({"stage_id": "E1"}, "PASS", "PASS", plan=PLAN)
 
 
 def test_p1_low_children_use_actual_eval_map_modes_parser_options(tmp_path):

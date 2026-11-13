@@ -177,17 +177,17 @@ def metrics(levels: dict, score: dict | None) -> dict:
 
 
 def body_forward_per_env(vx, alive, dt: float, command_speed: float):
-    """Signed body-forward R for every env, shared with the E1 exit judge."""
+    """Signed body-forward R over the scheduled window, including time after a reset."""
     vx, alive = np.asarray(vx, dtype=np.float64), np.asarray(alive, dtype=bool)
     if (vx.ndim != 2 or vx.shape != alive.shape or not np.isfinite(vx).all()
             or not np.isfinite(dt) or dt <= 0 or not np.isfinite(command_speed)
-            or command_speed <= 0 or np.any(alive.sum(axis=0) == 0)):
+            or command_speed <= 0 or vx.shape[0] == 0):
         raise ValueError("body-forward ratio source shape or denominator differs")
-    return (vx * alive).sum(axis=0) * dt / (command_speed * alive.sum(axis=0) * dt)
+    return (vx * alive).sum(axis=0) * dt / (command_speed * vx.shape[0] * dt)
 
 
 def body_forward_ratios(levels: dict, checkpoint_sha256: str) -> tuple[dict, list[dict]]:
-    """Signed body-forward progress per alive time, median across 64 envs."""
+    """Signed body-forward progress per scheduled time, median across 64 envs."""
     values, sources = {}, []
     for level in LEVELS:
         block = levels[level]["blocks"].get("g1b")

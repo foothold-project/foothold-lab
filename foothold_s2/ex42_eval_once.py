@@ -620,6 +620,11 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         split_gpu = gpu_identity(split_device)
     cfg, cfg_path = config()
     seed = cfg["eval_seed"] if eval_seed is None else eval_seed
+    if (policy_path is not None and p1_stage_id == "E1" and
+            next(stage for stage in policy.document["stages"] if stage["id"] == "E1").get(
+                "exit_judge") == "map39_e1_v2_two_window" and
+            seed != policy.document["evaluation"]["e1_exit_v2"]["repeat_seeds"][0]):
+        raise ValueError("EX-42 E1 v2 primary evaluation seed differs from approved plan")
     mesh = None
     if mesh_dir is not None:
         from foothold_s2.eval.ex42_mesh_eval import preflight
