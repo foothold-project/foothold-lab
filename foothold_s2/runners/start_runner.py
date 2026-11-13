@@ -818,6 +818,12 @@ class StartRunner(OnPolicyRunner):
             command_stats = take_command_stats() if callable(take_command_stats) else None
             if command_stats is not None:
                 extra["ex42_command_samples"] = command_stats
+            live_metrics = getattr(continuous, "live_metrics", None)
+            if live_metrics is not None:
+                # Every rank participates in this one reduction per update.
+                combined = live_metrics.end()
+                if combined is not None:
+                    extra["ex42_live_metrics"] = combined
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats
@@ -825,7 +831,7 @@ class StartRunner(OnPolicyRunner):
                                       "_ex40_stand_evidence", None)
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra) and self.log_dir is not None and not self.disable_logs:
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl

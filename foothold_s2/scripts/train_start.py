@@ -1065,6 +1065,12 @@ def main(env_cfg, agent_cfg):
 
             print("EX42_SEGMENT_REWARD_PARAMS " + json.dumps(
                 _apply_reward_params(env_cfg, EX42_SEGMENT_COMMANDS), sort_keys=True), flush=True)
+        if EX42_STAGE_ZERO_PLAN is not None:
+            _stage_live = next((row for row in EX42_STAGE_ZERO_PLAN.document["stages"]
+                                if row["id"] == EX42_STAGE_ID), {}).get("live_monitor", {})
+            if _stage_live.get("enabled") is True:
+                from foothold_s2.rewards.ex42_slow_track import register as _register_slow_track
+                _register_slow_track(env_cfg)
     EX42_E0_ENV_CONTRACT = None
     if EX42_E_APPROVED:
         # The E stage launch path (EX42_STAGE_ID): combined mesh, per-column reset ranges, push gate, exposure.
@@ -1296,6 +1302,10 @@ def main(env_cfg, agent_cfg):
 
         attach_ex42_training_chain(runner, EX42_TRAINING_CHAIN)
     if EX42_STAGE_ZERO_PLAN is not None:
+        _live_stage = next((row for row in EX42_STAGE_ZERO_PLAN.document["stages"]
+                            if row["id"] == EX42_STAGE_ID), {})
+        ex42_stage_zero_runtime.live_monitor_config = _live_stage.get("live_monitor")
+        ex42_stage_zero_runtime.live_adjustment_config = _live_stage.get("live_adjustment")
         ex42_stage_zero_runtime.attach_runner(runner)
         runner.ex40_dr_runtime = ex42_dr_readback
         if EX42_STAGE_ZERO_RESUME:
