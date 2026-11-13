@@ -1,0 +1,778 @@
+{
+  "format": "analyst-ex42-e1-boundary-demotion/1",
+  "rule_commit": "a76e783d7b0380115b1559aa49f6e1a6e656e955",
+  "iteration": 250,
+  "state": "BASELINE_ONLY",
+  "apply_ready": false,
+  "learning_mutation": false,
+  "seed": 42,
+  "history_iterations": [],
+  "errors": [],
+  "cells": [
+    {
+      "cell": "low/L0/fwd0.1/R",
+      "threshold": 0.1,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.17369824864921002,
+        "best_value": 0.17369824864921002,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.1704635633250291,
+        "best_value": 0.1704635633250291,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L0/fwd0.2/R",
+      "threshold": 0.02,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.790825471736025,
+        "best_value": 0.790825471736025,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.80548942751581,
+        "best_value": 0.80548942751581,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L0/side+0.2/R",
+      "threshold": 0.03,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.6654063542683919,
+        "best_value": 0.6654063542683919,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.670929972330729,
+        "best_value": 0.670929972330729,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L0/side-0.2/R",
+      "threshold": 0.03,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.7209191640218098,
+        "best_value": 0.7209191640218098,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.7233116467793781,
+        "best_value": 0.7233116467793781,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L0/side+0.4/R",
+      "threshold": 0.04,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.8855858484903969,
+        "best_value": 0.8855858484903969,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.894704500834147,
+        "best_value": 0.894704500834147,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L0/side-0.4/R",
+      "threshold": 0.04,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.8466156005859374,
+        "best_value": 0.8466156005859374,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.8427369435628254,
+        "best_value": 0.8427369435628254,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/fwd0.1/R",
+      "threshold": 0.1,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.16822611813646896,
+        "best_value": 0.16822611813646896,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.16060266073133486,
+        "best_value": 0.16060266073133486,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/fwd0.2/R",
+      "threshold": 0.02,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.7709419435200592,
+        "best_value": 0.7709419435200592,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.7773006806964986,
+        "best_value": 0.7773006806964986,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/side+0.2/R",
+      "threshold": 0.03,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.6576491991678872,
+        "best_value": 0.6576491991678872,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.6654489199320475,
+        "best_value": 0.6654489199320475,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/side-0.2/R",
+      "threshold": 0.03,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.7174551010131835,
+        "best_value": 0.7174551010131835,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.7161473274230956,
+        "best_value": 0.7161473274230956,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/side+0.4/R",
+      "threshold": 0.04,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.8134293556213379,
+        "best_value": 0.8134293556213379,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.8331819534301756,
+        "best_value": 0.8331819534301756,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "low/L5/side-0.4/R",
+      "threshold": 0.04,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.814475917816162,
+        "best_value": 0.814475917816162,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.8070232391357421,
+        "best_value": 0.8070232391357421,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "map/mixed012/side+0.5/R",
+      "threshold": 0.02,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.8642672220865886,
+        "best_value": 0.8642672220865886,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.8644610595703126,
+        "best_value": 0.8644610595703126,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "map/mixed012/side-0.5/R",
+      "threshold": 0.02,
+      "unit": "ratio",
+      "direction": "higher",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.8283554331461589,
+        "best_value": 0.8283554331461589,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.822091776529948,
+        "best_value": 0.822091776529948,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "yaw/L2/fwd0.5/median_abs_rad",
+      "threshold": 0.02,
+      "unit": "rad",
+      "direction": "lower",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.07191359996795654,
+        "best_value": 0.07191359996795654,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.07524429261684418,
+        "best_value": 0.07524429261684418,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "yaw/L2/fwd0.5/p90_abs_rad",
+      "threshold": 0.05,
+      "unit": "rad",
+      "direction": "lower",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.15887001752853402,
+        "best_value": 0.15887001752853402,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.15518018007278445,
+        "best_value": 0.15518018007278445,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "yaw/L2/fwd1.0/median_abs_rad",
+      "threshold": 0.03,
+      "unit": "rad",
+      "direction": "lower",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.16374385356903076,
+        "best_value": 0.16374385356903076,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.15226618945598602,
+        "best_value": 0.15226618945598602,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    },
+    {
+      "cell": "yaw/L2/fwd1.0/p90_abs_rad",
+      "threshold": 0.06,
+      "unit": "rad",
+      "direction": "lower",
+      "state": "FIRST_BOUNDARY",
+      "same_direction": false,
+      "trigger_modes": [],
+      "errors": [],
+      "eval_gt": {
+        "value": 0.22310932874679565,
+        "best_value": 0.22310932874679565,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      },
+      "eval_pred": {
+        "value": 0.22559283971786503,
+        "best_value": 0.22559283971786503,
+        "best_iteration": 250,
+        "adverse_delta": 0.0,
+        "threshold_crossed": false,
+        "previous": null,
+        "previous_delta": null
+      }
+    }
+  ],
+  "demoted_cells": [],
+  "map_off_survival": {
+    "state": "PASS",
+    "items": [
+      {
+        "cell": "e1_v2/L0/fwd0.1",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L0/fwd0.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L0/side+0.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L0/side+0.4",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L0/side-0.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L0/side-0.4",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L5/fwd0.1",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "e1_v2/L5/fwd0.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/back0.5",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/back1.0",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/diag-back+side+",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/diag-back+side-",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/diag-fwd+side+",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/diag-fwd+side-",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/fwd0.5",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/fwd1.0",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/side+0.5",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/side-0.5",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/spin+1.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/spin-1.2",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      },
+      {
+        "cell": "map64/stop",
+        "survival": 64,
+        "valid": 64,
+        "minimum": 60,
+        "judgement": "PASS",
+        "previous": null,
+        "tracking_role": "record_only"
+      }
+    ],
+    "missing": [],
+    "rollback_cells": []
+  },
+  "unchanged_rules": [
+    "maintenance_gt_pred_26",
+    "wide_cells_existing_judge"
+  ],
+  "history": [
+    {
+      "iteration": 250,
+      "checkpoint_sha256": "b33b9f004f700f7b5b0311bbadb1dfe3ed8962f856805ef3439391ff88086b76",
+      "plan_sha256": "794e4602a04013897f146d2bf3f9527c03137647a3b3c76dfe52f9c5335315cb",
+      "score_path": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/ex42_score.json",
+      "sources": {
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/ex42_score.json": "d13a69739de35473bcec206f7764a972a44ba1077bc5050b2a0da7e2a24113ab",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/map_modes.json": "949f9f6616f0517b8f956da93161dd4dae5c330ecdea7d90ce124bf58b5f8ef1",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_fwd0.1.npz": "40c696119326199b694a423d0cb147e247fd0e3d2209eb21ee23339c78307534",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_fwd0.2.npz": "b7a505fc0b8617e38c46d7f8d32b0027dde754c76d61f03527bb77a090a440d9",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_fwd0.1.npz": "42327e07cd8d92db7892c106756677afc438b9760c4d39ea62797620aa41aeb3",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_fwd0.2.npz": "47b6fb5c22432763099e58530994f4614dc0751f4ed441c4f876d17f65457d48",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_fwd0.1.npz": "e354825901be2552d605c3010ccf7f4b7751853902bffbd04103ec241ed98dd2",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_fwd0.2.npz": "c7b5c7047770efc4ce929f1652d7873c5eec02ae80fa8a9a8bf4237f56026567",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/map_modes.json": "86f53e80b475dd5b466e58932e6d5c39ceacc77afdff9cb924a88bcf0288595b",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_fwd0.1.npz": "56cbd6d4ef8e0d42719642829fd0e9f52c50246857be9a65f031ea8841e1beba",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_fwd0.2.npz": "1673e3290e8232e0b1abdbeb88c24902c4b8dc8762b1f0432126e617badd6380",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_fwd0.1.npz": "abf49fcfcfec5f3e249517cadb2b6addb838f53c68c2e4209eb26df9fdae148e",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_fwd0.2.npz": "bccf1adcfb2d1da64ff6010cdfe7da8c673d6d985d4c66ae7c519eb543898db9",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_fwd0.1.npz": "52c59be7d4f1e84a5e979372c812ff9dd49d1de172933b6c5986ee693c5f72d6",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_fwd0.2.npz": "bdbb758c876becc0ce2fa4e1add0a0756638a1b615505dec4a61523f88b25081",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/map_modes.json": "4998bd23d2d325b6263a8134cf97cf4ca9b57172896c666994587e854ce28b24",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2.json": "fb301230e49e14c0a8bf616f4c48005faed9cbe24ab86f0e5d26ffe1f771db61",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd0.5.npz": "051cb0a6fc11b8b2519ced41a010ec93efbd3d1c59a89b9ea6f886c754366379",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd1.0.npz": "a6ee2f4d917074fa2c54da161f0e8df51b0ff44923cf168d7c22dc8441a153b3",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd0.5.npz": "a60e71dc840e69675a10f9c77238f88768ea5204c0d2840afc023fa6274d9756",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd1.0.npz": "86d79ca8226d39ec00500346eec3fbecad4585708d24c30689418936db8de5f5",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd0.5.npz": "6ec764eb46d2688c87aaa55258778f1bde61a694e900a1f531664666b4e4fae8",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd1.0.npz": "dfe0f9ed1b4692971b8bb54d743f68d7640819a261cd50cef2854cc57b4f7732",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_eval_gt/stand.json": "1adb9b39230a50ea104c3078402321763230ccb4dd348300565a4353ad63b69b",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_eval_gt/stand_raw.npz": "ed2722f1daa15005b940d2e5d3ea947c555f1d118922cc7e5aaa8961e5b421b3",
+        "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27/foothold_s2/curriculum/ex40_score_config.json": "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_eval_pred/stand.json": "6b0b3142735e920947d553092ada7e67a8044dfd2e61522339037a70d926f6e8",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_eval_pred/stand_raw.npz": "bef09b69f1c4a18808d5b4ee2793f1da59c207eb07f207b3213e34d21dbb2233",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_probe_prop_only/stand.json": "ddc13618715bbafcc2c58c3bc2e69d21b320a646254329f8d0ee3705981bb458",
+        "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/stand_probe_prop_only/stand_raw.npz": "2c01e0b5f027701b6a46d4c88ee930c533ff4abb880f0767efbbf78b7cf34f76"
+      },
+      "audit_sources": {
+        "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/ex42_score.json": "d13a69739de35473bcec206f7764a972a44ba1077bc5050b2a0da7e2a24113ab",
+        "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/p1_score.json": "bef518889dec556b155a3f3a47d4a69bf053057eee1707f937a2e3d7931f96e2",
+        "/home/jay/mai/tmp/lead/E1_v27_20261114_022748/eval_policy/ex42-prep.yaml": "b86943a02da96c5fe397d041ec458928697c7bf396bd5d3a415c996c9f801921",
+        "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27/foothold_s2/eval/ex42_d44_cells.py": "fd4c85d4a6174037f474aec94e4936e48e7200ac244fee2906b323458ac9804c"
+      }
+    }
+  ],
+  "run_root": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748",
+  "code_root": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27",
+  "run_sources": {
+    "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/startup_receipt.json": "10964a9ae6bbcde4a8debd7ef4381b04dc8ec2a16fc4216d97dce08b5b443c5d",
+    "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/manifest.json": "6dfeb1492786a5ac131162ba86b1665472f5b86845bd2e3995eeac9eac647360",
+    "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27/foothold_s2/curriculum/ex42-prep.yaml": "794e4602a04013897f146d2bf3f9527c03137647a3b3c76dfe52f9c5335315cb"
+  },
+  "created_at": "2026-11-14T05:05:15.812183+09:00",
+  "reader_sources": {
+    "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/boundary_demote.py": "e7ad6b7f9cca4ec034b0e37d38e19f87859802a768c02241a2cd0bb4fba82d8f",
+    "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/boundary_read.py": "fd18ea2509724ea39e07659566131963abbbf537737fc2d2e74de1b2b985bc46",
+    "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/approved_source.py": "2a502e3788dc8632ae9c9e7df16ed9f040516620177422ab04c648d475976328",
+    "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/boundary_approved.py": "ca267b7836cd9c959e3c3b1e8445d0e0607fb94eb4b91f891da8d2eb25e77633"
+  }
+}

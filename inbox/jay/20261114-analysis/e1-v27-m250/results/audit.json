@@ -1,0 +1,3401 @@
+{
+  "iteration": 250,
+  "errors": [],
+  "wide_errors": [],
+  "cells": {
+    "low/L0/eval_gt/fwd0.1": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.17369824864921007,
+      "mae_mps": 0.0828026607632637,
+      "survival": 64,
+      "command_mps": 0.1,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_fwd0.1.npz",
+      "raw_sha256": "40c696119326199b694a423d0cb147e247fd0e3d2209eb21ee23339c78307534",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_gt/fwd0.2": {
+      "judgement": "FAIL",
+      "near_threshold": true,
+      "R": 0.7908254717360251,
+      "mae_mps": 0.04862288199365139,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_fwd0.2.npz",
+      "raw_sha256": "b7a505fc0b8617e38c46d7f8d32b0027dde754c76d61f03527bb77a090a440d9",
+      "success": 9,
+      "reason": "세 시드 재측정 필요",
+      "valid": 64
+    },
+    "low/L0/eval_gt/side+0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.665406354268392,
+      "mae_mps": 0.06812693923711777,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_side+0.2.npz",
+      "raw_sha256": "5dabed5d2dec2a3410caafb372205039898471dba3ddd13a8da2f0303f7d140d",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_gt/side-0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.7209191640218099,
+      "mae_mps": 0.05876333266496658,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_side-0.2.npz",
+      "raw_sha256": "2a11e59727b4fe165a4916fe90c3708591d227b13330929d15a9e93b7a26bbf6",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_gt/side+0.4": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "R": 0.8855858484903971,
+      "mae_mps": 0.05369418114423752,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_side+0.4.npz",
+      "raw_sha256": "fc923d2305b76e911fc83553518466e8390453ca52271cacf76bd924fcc84596",
+      "success": 60,
+      "valid": 64
+    },
+    "low/L0/eval_gt/side-0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8466156005859375,
+      "mae_mps": 0.06427440047264099,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_gt_side-0.4.npz",
+      "raw_sha256": "e6998f2b8d76c5cb79276c096c1e272532310be208a0638e7d05ab62591099ee",
+      "success": 48,
+      "valid": 64
+    },
+    "low/L5/eval_gt/fwd0.1": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.16822611813646898,
+      "mae_mps": 0.08322195336222649,
+      "survival": 64,
+      "command_mps": 0.1,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_fwd0.1.npz",
+      "raw_sha256": "56cbd6d4ef8e0d42719642829fd0e9f52c50246857be9a65f031ea8841e1beba",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_gt/fwd0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.7709419435200592,
+      "mae_mps": 0.054846497252583504,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_fwd0.2.npz",
+      "raw_sha256": "1673e3290e8232e0b1abdbeb88c24902c4b8dc8762b1f0432126e617badd6380",
+      "success": 9,
+      "valid": 64
+    },
+    "low/L5/eval_gt/side+0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.6576491991678874,
+      "mae_mps": 0.07014671713113785,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_side+0.2.npz",
+      "raw_sha256": "34f956d5b4e4bc2fcbaa968f6352f6f134eec502284c4e2bd8322a169c763d4e",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_gt/side-0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.7174551010131837,
+      "mae_mps": 0.060989467427134514,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_side-0.2.npz",
+      "raw_sha256": "86013533808680d069c9e85a73df715525198fa93bfb9de966db4feb20cca2be",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_gt/side+0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8134293556213379,
+      "mae_mps": 0.07993382588028908,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_side+0.4.npz",
+      "raw_sha256": "3427801f60cd493b82ef9cd4286c547a2e95d58f8e53eb88670312c37e695aaf",
+      "success": 32,
+      "valid": 64
+    },
+    "low/L5/eval_gt/side-0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8144759178161621,
+      "mae_mps": 0.078241515904665,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_gt_side-0.4.npz",
+      "raw_sha256": "a1b53b2768238a41ea63e1f60c4c36989171d59585dbd6a491931a0de25a5c63",
+      "success": 33,
+      "valid": 64
+    },
+    "side05/eval_gt/side+0.5": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "R": 0.8642672220865886,
+      "mae_mps": 0.07412790134549141,
+      "survival": 64,
+      "command_mps": 0.5,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_eval_gt_side+0.5.npz",
+      "raw_sha256": "071c3f79691631485ed5b3a001bf79de20a4c3cfe316e6316e831bb00e6a6c9f",
+      "success": 56,
+      "valid": 64
+    },
+    "side05/eval_gt/side-0.5": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8283554331461589,
+      "mae_mps": 0.08614683151245117,
+      "survival": 64,
+      "command_mps": 0.5,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_eval_gt_side-0.5.npz",
+      "raw_sha256": "2dd6812459feecf39b32766e88d51ecc29bd3bf048c520b70a2bfbc6a545b671",
+      "success": 46,
+      "valid": 64
+    },
+    "yaw/eval_gt/fwd0.5": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "median_abs_rad": 0.07191359996795654,
+      "p90_abs_rad": 0.15887001752853402,
+      "survival": 64,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd0.5.npz",
+      "raw_sha256": "051cb0a6fc11b8b2519ced41a010ec93efbd3d1c59a89b9ea6f886c754366379",
+      "valid": 64
+    },
+    "yaw/eval_gt/fwd1.0": {
+      "judgement": "FAIL",
+      "near_threshold": true,
+      "median_abs_rad": 0.16374385356903076,
+      "p90_abs_rad": 0.22310932874679565,
+      "survival": 64,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd1.0.npz",
+      "raw_sha256": "a6ee2f4d917074fa2c54da161f0e8df51b0ff44923cf168d7c22dc8441a153b3",
+      "reason": "세 시드 재측정 필요",
+      "valid": 64
+    },
+    "symmetry/0/eval_gt/0.2": {
+      "judgement": "PASS",
+      "S": 0.922997178430204,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/0/eval_gt/0.4": {
+      "judgement": "PASS",
+      "S": 0.955994951849231,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/5/eval_gt/0.2": {
+      "judgement": "PASS",
+      "S": 0.9166416103797452,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/5/eval_gt/0.4": {
+      "judgement": "PASS",
+      "S": 0.9987150483250256,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/mixed012/eval_gt/0.5": {
+      "judgement": "PASS",
+      "S": 0.9584482807831953,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "low/L0/eval_pred/fwd0.1": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.1704635633250291,
+      "mae_mps": 0.08303268253803253,
+      "survival": 64,
+      "command_mps": 0.1,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_fwd0.1.npz",
+      "raw_sha256": "42327e07cd8d92db7892c106756677afc438b9760c4d39ea62797620aa41aeb3",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_pred/fwd0.2": {
+      "judgement": "FAIL",
+      "near_threshold": true,
+      "R": 0.8054894275158101,
+      "mae_mps": 0.04837561585009098,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_fwd0.2.npz",
+      "raw_sha256": "47b6fb5c22432763099e58530994f4614dc0751f4ed441c4f876d17f65457d48",
+      "success": 10,
+      "reason": "세 시드 재측정 필요",
+      "valid": 64
+    },
+    "low/L0/eval_pred/side+0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.6709299723307292,
+      "mae_mps": 0.0676846019923687,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_side+0.2.npz",
+      "raw_sha256": "0f900d98b92339ee2787962ba4dfa2dd65320c7ab8f5e65f39cebce9c817fc5f",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_pred/side-0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.7233116467793783,
+      "mae_mps": 0.059697726741433144,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_side-0.2.npz",
+      "raw_sha256": "4e996064c5ac3503ef045f97f13fc174c255fd0cd6434100aa4c688a2881a175",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L0/eval_pred/side+0.4": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "R": 0.8947045008341472,
+      "mae_mps": 0.05116429552435875,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_side+0.4.npz",
+      "raw_sha256": "8b8b0e6929b669033a8a0f697331458aea9da544fe887f8f6bf859f82df0e84d",
+      "success": 62,
+      "valid": 64
+    },
+    "low/L0/eval_pred/side-0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8427369435628256,
+      "mae_mps": 0.06615867465734482,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_eval_pred_side-0.4.npz",
+      "raw_sha256": "1b1ae7f0068ddd8dcd30a9c3974d1353fb4b9e4c97cfb094e244e7958327040d",
+      "success": 51,
+      "valid": 64
+    },
+    "low/L5/eval_pred/fwd0.1": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.16060266073133486,
+      "mae_mps": 0.0842055007815361,
+      "survival": 64,
+      "command_mps": 0.1,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_fwd0.1.npz",
+      "raw_sha256": "abf49fcfcfec5f3e249517cadb2b6addb838f53c68c2e4209eb26df9fdae148e",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_pred/fwd0.2": {
+      "judgement": "FAIL",
+      "near_threshold": true,
+      "R": 0.7773006806964986,
+      "mae_mps": 0.05314462073147297,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_fwd0.2.npz",
+      "raw_sha256": "bccf1adcfb2d1da64ff6010cdfe7da8c673d6d985d4c66ae7c519eb543898db9",
+      "success": 7,
+      "reason": "세 시드 재측정 필요",
+      "valid": 64
+    },
+    "low/L5/eval_pred/side+0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.6654489199320476,
+      "mae_mps": 0.0684608556330204,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_side+0.2.npz",
+      "raw_sha256": "3cc258ded7de896fb8288550cadf49322186f94911665477f6882a277857cba2",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_pred/side-0.2": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.7161473274230957,
+      "mae_mps": 0.06148481369018555,
+      "survival": 64,
+      "command_mps": 0.2,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_side-0.2.npz",
+      "raw_sha256": "a45864be9629e2e1759a6023a10fc80eb5031b8bcb7a04fc7d19e00961d0e238",
+      "success": 0,
+      "valid": 64
+    },
+    "low/L5/eval_pred/side+0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8331819534301759,
+      "mae_mps": 0.07058246061205864,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_side+0.4.npz",
+      "raw_sha256": "e0a2f78d70bd7851ba71aeb990def34209b12084799c514ca61bb07026334ae8",
+      "success": 36,
+      "valid": 64
+    },
+    "low/L5/eval_pred/side-0.4": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.8070232391357423,
+      "mae_mps": 0.08060488849878311,
+      "survival": 64,
+      "command_mps": 0.4,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_eval_pred_side-0.4.npz",
+      "raw_sha256": "2f9ef4f5fd3bd1743dc6b44bafa16528e1c45c92dfe8cb99014f0f3a535e28d9",
+      "success": 32,
+      "valid": 64
+    },
+    "side05/eval_pred/side+0.5": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "R": 0.8644610595703126,
+      "mae_mps": 0.07186924666166306,
+      "survival": 64,
+      "command_mps": 0.5,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_eval_pred_side+0.5.npz",
+      "raw_sha256": "87d413591a4ef9a3e2105702fbc39b9ce9b1dc491b726a3c341d8ab6daa09e0c",
+      "success": 56,
+      "valid": 64
+    },
+    "side05/eval_pred/side-0.5": {
+      "judgement": "FAIL",
+      "near_threshold": false,
+      "R": 0.822091776529948,
+      "mae_mps": 0.09015389159321785,
+      "survival": 64,
+      "command_mps": 0.5,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_eval_pred_side-0.5.npz",
+      "raw_sha256": "c6b1cfc17c4dd65fa9a2aeef847af8a75e954111293f92744880873b4c06761a",
+      "success": 46,
+      "valid": 64
+    },
+    "yaw/eval_pred/fwd0.5": {
+      "judgement": "PASS",
+      "near_threshold": false,
+      "median_abs_rad": 0.07524428842589259,
+      "p90_abs_rad": 0.15518018007278445,
+      "survival": 64,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd0.5.npz",
+      "raw_sha256": "a60e71dc840e69675a10f9c77238f88768ea5204c0d2840afc023fa6274d9756",
+      "valid": 64
+    },
+    "yaw/eval_pred/fwd1.0": {
+      "judgement": "FAIL",
+      "near_threshold": true,
+      "median_abs_rad": 0.15226618945598602,
+      "p90_abs_rad": 0.22559283971786503,
+      "survival": 64,
+      "envs": 64,
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd1.0.npz",
+      "raw_sha256": "86d79ca8226d39ec00500346eec3fbecad4585708d24c30689418936db8de5f5",
+      "reason": "세 시드 재측정 필요",
+      "valid": 64
+    },
+    "symmetry/0/eval_pred/0.2": {
+      "judgement": "PASS",
+      "S": 0.9275807673194755,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/0/eval_pred/0.4": {
+      "judgement": "PASS",
+      "S": 0.9419165129683919,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/5/eval_pred/0.2": {
+      "judgement": "PASS",
+      "S": 0.9292067350534203,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/5/eval_pred/0.4": {
+      "judgement": "PASS",
+      "S": 0.9686038395494054,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "symmetry/mixed012/eval_pred/0.5": {
+      "judgement": "PASS",
+      "S": 0.9509876326165292,
+      "near_threshold": false,
+      "valid": 64
+    },
+    "maintenance/eval_gt/fwd0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/fwd1.0": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/spin+1.2": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/spin-1.2": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/back0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/back1.0": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/side+0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/side-0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/diag-fwd+side+": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/diag-fwd+side-": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/diag-back+side+": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/diag-back+side-": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_gt/stop": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/fwd0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/fwd1.0": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/spin+1.2": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/spin-1.2": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/back0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/back1.0": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/side+0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/side-0.5": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/diag-fwd+side+": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/diag-fwd+side-": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/diag-back+side+": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/diag-back+side-": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "maintenance/eval_pred/stop": {
+      "judgement": "PASS",
+      "valid": 64
+    },
+    "d44/turn_left_eval_gt": {
+      "judgement": "PASS",
+      "case_id": "turn_left_eval_gt",
+      "envs": 64,
+      "valid_count": 64,
+      "success_count": 64,
+      "survival_count": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "raw_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/d44/turn_left_eval_gt.json",
+      "raw_sha256": "ed4db38cfe36ddffa6c315669b454b51f5f057649deb0cfbd0a2ff040abc81b5",
+      "valid": 64
+    },
+    "d44/turn_left_eval_pred": {
+      "judgement": "PASS",
+      "case_id": "turn_left_eval_pred",
+      "envs": 64,
+      "valid_count": 64,
+      "success_count": 64,
+      "survival_count": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "raw_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/d44/turn_left_eval_pred.json",
+      "raw_sha256": "aba3cf25fe3a9f032d7fdaac1ccc2f60b9d8325dd883d599013e9de116d5c8cc",
+      "valid": 64
+    },
+    "d44/turn_right_eval_gt": {
+      "judgement": "PASS",
+      "case_id": "turn_right_eval_gt",
+      "envs": 64,
+      "valid_count": 64,
+      "success_count": 64,
+      "survival_count": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "raw_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/d44/turn_right_eval_gt.json",
+      "raw_sha256": "4c8c130666491c49dc1257214dc217444d5d6c38308406dab7694dd906869a08",
+      "valid": 64
+    },
+    "d44/turn_right_eval_pred": {
+      "judgement": "PASS",
+      "case_id": "turn_right_eval_pred",
+      "envs": 64,
+      "valid_count": 64,
+      "success_count": 64,
+      "survival_count": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "raw_file": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/d44/turn_right_eval_pred.json",
+      "raw_sha256": "530fccc01fd3cde3915226edeff1c498b305c29e8960e0f06c2c8f7ed9ece642",
+      "valid": 64
+    },
+    "wide_L3_fwd1.0/eval_gt": {
+      "role": "judge",
+      "judgement": "FAIL",
+      "success": 16,
+      "valid": 64,
+      "survival": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "cap": 5,
+      "source_role": "judge_if_exposed"
+    },
+    "side+0.8/eval_gt": {
+      "role": "judge",
+      "judgement": "PASS",
+      "success": 52,
+      "valid": 64,
+      "survival": 64,
+      "success_min": 52,
+      "survival_min": 60
+    },
+    "side-0.8/eval_gt": {
+      "role": "judge",
+      "judgement": "FAIL",
+      "success": 29,
+      "valid": 64,
+      "survival": 64,
+      "success_min": 52,
+      "survival_min": 60
+    },
+    "symmetry/side0.8/eval_gt": {
+      "role": "judge",
+      "judgement": "PASS",
+      "S": 0.9252061801773556
+    },
+    "wide_L3_fwd1.0/eval_pred": {
+      "role": "judge",
+      "judgement": "FAIL",
+      "success": 17,
+      "valid": 64,
+      "survival": 64,
+      "success_min": 52,
+      "survival_min": 60,
+      "cap": 5,
+      "source_role": "judge_if_exposed"
+    },
+    "side+0.8/eval_pred": {
+      "role": "judge",
+      "judgement": "PASS",
+      "success": 52,
+      "valid": 64,
+      "survival": 63,
+      "success_min": 52,
+      "survival_min": 60
+    },
+    "side-0.8/eval_pred": {
+      "role": "judge",
+      "judgement": "FAIL",
+      "success": 36,
+      "valid": 64,
+      "survival": 64,
+      "success_min": 52,
+      "survival_min": 60
+    },
+    "symmetry/side0.8/eval_pred": {
+      "role": "judge",
+      "judgement": "PASS",
+      "S": 0.9252909686250896
+    }
+  },
+  "gaps": {
+    "low/L0/eval_gt/fwd0.1/R": 0.62630175135079,
+    "low/L0/eval_gt/fwd0.1/mae_mps": 0.0628026607632637,
+    "low/L0/eval_gt/fwd0.1/success": 52,
+    "low/L0/eval_gt/fwd0.1/survival": 0,
+    "low/L0/eval_gt/fwd0.2/R": 0.009174528263974913,
+    "low/L0/eval_gt/fwd0.2/mae_mps": 0.008622881993651382,
+    "low/L0/eval_gt/fwd0.2/success": 43,
+    "low/L0/eval_gt/fwd0.2/survival": 0,
+    "low/L0/eval_gt/side+0.2/R": 0.13459364573160804,
+    "low/L0/eval_gt/side+0.2/mae_mps": 0.02812693923711776,
+    "low/L0/eval_gt/side+0.2/success": 52,
+    "low/L0/eval_gt/side+0.2/survival": 0,
+    "low/L0/eval_gt/side-0.2/R": 0.07908083597819016,
+    "low/L0/eval_gt/side-0.2/mae_mps": 0.018763332664966575,
+    "low/L0/eval_gt/side-0.2/success": 52,
+    "low/L0/eval_gt/side-0.2/survival": 0,
+    "low/L0/eval_gt/side+0.4/R": 0.0,
+    "low/L0/eval_gt/side+0.4/mae_mps": 0.0,
+    "low/L0/eval_gt/side+0.4/success": 0.0,
+    "low/L0/eval_gt/side+0.4/survival": 0,
+    "low/L0/eval_gt/side-0.4/R": 0.0,
+    "low/L0/eval_gt/side-0.4/mae_mps": 0.0,
+    "low/L0/eval_gt/side-0.4/success": 4,
+    "low/L0/eval_gt/side-0.4/survival": 0,
+    "low/L5/eval_gt/fwd0.1/R": 0.631773881863531,
+    "low/L5/eval_gt/fwd0.1/mae_mps": 0.06322195336222648,
+    "low/L5/eval_gt/fwd0.1/success": 52,
+    "low/L5/eval_gt/fwd0.1/survival": 0,
+    "low/L5/eval_gt/fwd0.2/R": 0.029058056479940864,
+    "low/L5/eval_gt/fwd0.2/mae_mps": 0.014846497252583496,
+    "low/L5/eval_gt/fwd0.2/success": 43,
+    "low/L5/eval_gt/fwd0.2/survival": 0,
+    "low/L5/eval_gt/side+0.2/R": 0.1423508008321126,
+    "low/L5/eval_gt/side+0.2/mae_mps": 0.03014671713113784,
+    "low/L5/eval_gt/side+0.2/success": 52,
+    "low/L5/eval_gt/side+0.2/survival": 0,
+    "low/L5/eval_gt/side-0.2/R": 0.08254489898681638,
+    "low/L5/eval_gt/side-0.2/mae_mps": 0.020989467427134506,
+    "low/L5/eval_gt/side-0.2/success": 52,
+    "low/L5/eval_gt/side-0.2/survival": 0,
+    "low/L5/eval_gt/side+0.4/R": 0.0,
+    "low/L5/eval_gt/side+0.4/mae_mps": 0.0,
+    "low/L5/eval_gt/side+0.4/success": 20,
+    "low/L5/eval_gt/side+0.4/survival": 0,
+    "low/L5/eval_gt/side-0.4/R": 0.0,
+    "low/L5/eval_gt/side-0.4/mae_mps": 0.0,
+    "low/L5/eval_gt/side-0.4/success": 19,
+    "low/L5/eval_gt/side-0.4/survival": 0,
+    "side05/eval_gt/side+0.5/R": 0.0,
+    "side05/eval_gt/side+0.5/mae_mps": 0.0,
+    "side05/eval_gt/side+0.5/success": 0.0,
+    "side05/eval_gt/side+0.5/survival": 0,
+    "side05/eval_gt/side-0.5/R": 0.0,
+    "side05/eval_gt/side-0.5/mae_mps": 0.0,
+    "side05/eval_gt/side-0.5/success": 6,
+    "side05/eval_gt/side-0.5/survival": 0,
+    "yaw/eval_gt/fwd0.5/median_abs_rad": 0.0,
+    "yaw/eval_gt/fwd0.5/p90_abs_rad": 0.0,
+    "yaw/eval_gt/fwd0.5/survival": 0,
+    "yaw/eval_gt/fwd1.0/median_abs_rad": 0.06374385356903076,
+    "yaw/eval_gt/fwd1.0/p90_abs_rad": 0.023109328746795638,
+    "yaw/eval_gt/fwd1.0/survival": 0,
+    "symmetry/0/eval_gt/0.2/S": 0.0,
+    "symmetry/0/eval_gt/0.4/S": 0.0,
+    "symmetry/5/eval_gt/0.2/S": 0.0,
+    "symmetry/5/eval_gt/0.4/S": 0.0,
+    "symmetry/mixed012/eval_gt/0.5/S": 0.0,
+    "low/L0/eval_pred/fwd0.1/R": 0.629536436674971,
+    "low/L0/eval_pred/fwd0.1/mae_mps": 0.06303268253803253,
+    "low/L0/eval_pred/fwd0.1/success": 52,
+    "low/L0/eval_pred/fwd0.1/survival": 0,
+    "low/L0/eval_pred/fwd0.2/R": 0.0,
+    "low/L0/eval_pred/fwd0.2/mae_mps": 0.008375615850090973,
+    "low/L0/eval_pred/fwd0.2/success": 42,
+    "low/L0/eval_pred/fwd0.2/survival": 0,
+    "low/L0/eval_pred/side+0.2/R": 0.1290700276692709,
+    "low/L0/eval_pred/side+0.2/mae_mps": 0.02768460199236869,
+    "low/L0/eval_pred/side+0.2/success": 52,
+    "low/L0/eval_pred/side+0.2/survival": 0,
+    "low/L0/eval_pred/side-0.2/R": 0.07668835322062173,
+    "low/L0/eval_pred/side-0.2/mae_mps": 0.019697726741433136,
+    "low/L0/eval_pred/side-0.2/success": 52,
+    "low/L0/eval_pred/side-0.2/survival": 0,
+    "low/L0/eval_pred/side+0.4/R": 0.0,
+    "low/L0/eval_pred/side+0.4/mae_mps": 0.0,
+    "low/L0/eval_pred/side+0.4/success": 0.0,
+    "low/L0/eval_pred/side+0.4/survival": 0,
+    "low/L0/eval_pred/side-0.4/R": 0.0,
+    "low/L0/eval_pred/side-0.4/mae_mps": 0.0,
+    "low/L0/eval_pred/side-0.4/success": 1,
+    "low/L0/eval_pred/side-0.4/survival": 0,
+    "low/L5/eval_pred/fwd0.1/R": 0.6393973392686652,
+    "low/L5/eval_pred/fwd0.1/mae_mps": 0.0642055007815361,
+    "low/L5/eval_pred/fwd0.1/success": 52,
+    "low/L5/eval_pred/fwd0.1/survival": 0,
+    "low/L5/eval_pred/fwd0.2/R": 0.022699319303501442,
+    "low/L5/eval_pred/fwd0.2/mae_mps": 0.013144620731472961,
+    "low/L5/eval_pred/fwd0.2/success": 45,
+    "low/L5/eval_pred/fwd0.2/survival": 0,
+    "low/L5/eval_pred/side+0.2/R": 0.13455108006795247,
+    "low/L5/eval_pred/side+0.2/mae_mps": 0.028460855633020393,
+    "low/L5/eval_pred/side+0.2/success": 52,
+    "low/L5/eval_pred/side+0.2/survival": 0,
+    "low/L5/eval_pred/side-0.2/R": 0.08385267257690432,
+    "low/L5/eval_pred/side-0.2/mae_mps": 0.02148481369018554,
+    "low/L5/eval_pred/side-0.2/success": 52,
+    "low/L5/eval_pred/side-0.2/survival": 0,
+    "low/L5/eval_pred/side+0.4/R": 0.0,
+    "low/L5/eval_pred/side+0.4/mae_mps": 0.0,
+    "low/L5/eval_pred/side+0.4/success": 16,
+    "low/L5/eval_pred/side+0.4/survival": 0,
+    "low/L5/eval_pred/side-0.4/R": 0.0,
+    "low/L5/eval_pred/side-0.4/mae_mps": 0.000604888498783096,
+    "low/L5/eval_pred/side-0.4/success": 20,
+    "low/L5/eval_pred/side-0.4/survival": 0,
+    "side05/eval_pred/side+0.5/R": 0.0,
+    "side05/eval_pred/side+0.5/mae_mps": 0.0,
+    "side05/eval_pred/side+0.5/success": 0.0,
+    "side05/eval_pred/side+0.5/survival": 0,
+    "side05/eval_pred/side-0.5/R": 0.0,
+    "side05/eval_pred/side-0.5/mae_mps": 0.0,
+    "side05/eval_pred/side-0.5/success": 6,
+    "side05/eval_pred/side-0.5/survival": 0,
+    "yaw/eval_pred/fwd0.5/median_abs_rad": 0.0,
+    "yaw/eval_pred/fwd0.5/p90_abs_rad": 0.0,
+    "yaw/eval_pred/fwd0.5/survival": 0,
+    "yaw/eval_pred/fwd1.0/median_abs_rad": 0.05226618945598602,
+    "yaw/eval_pred/fwd1.0/p90_abs_rad": 0.025592839717865024,
+    "yaw/eval_pred/fwd1.0/survival": 0,
+    "symmetry/0/eval_pred/0.2/S": 0.0,
+    "symmetry/0/eval_pred/0.4/S": 0.0,
+    "symmetry/5/eval_pred/0.2/S": 0.0,
+    "symmetry/5/eval_pred/0.4/S": 0.0,
+    "symmetry/mixed012/eval_pred/0.5/S": 0.0,
+    "maintenance/eval_gt/fwd0.5/alive_at_end": 0.0,
+    "maintenance/eval_gt/fwd0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/fwd0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/fwd0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/fwd1.0/alive_at_end": 0.0,
+    "maintenance/eval_gt/fwd1.0/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/fwd1.0/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/fwd1.0/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/spin+1.2/alive_at_end": 0.0,
+    "maintenance/eval_gt/spin+1.2/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/spin+1.2/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/spin+1.2/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/spin-1.2/alive_at_end": 0.0,
+    "maintenance/eval_gt/spin-1.2/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/spin-1.2/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/spin-1.2/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/back0.5/alive_at_end": 0.0,
+    "maintenance/eval_gt/back0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/back0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/back0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/back1.0/alive_at_end": 0.0,
+    "maintenance/eval_gt/back1.0/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/back1.0/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/back1.0/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/side+0.5/alive_at_end": 0.0,
+    "maintenance/eval_gt/side+0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/side+0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/side+0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/side-0.5/alive_at_end": 0.0,
+    "maintenance/eval_gt/side-0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/side-0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/side-0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side+/alive_at_end": 0.0,
+    "maintenance/eval_gt/diag-fwd+side+/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side+/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side+/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side-/alive_at_end": 0.0,
+    "maintenance/eval_gt/diag-fwd+side-/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side-/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-fwd+side-/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/diag-back+side+/alive_at_end": 0.0,
+    "maintenance/eval_gt/diag-back+side+/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-back+side+/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-back+side+/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/diag-back+side-/alive_at_end": 0.0,
+    "maintenance/eval_gt/diag-back+side-/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-back+side-/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/diag-back+side-/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_gt/stop/alive_at_end": 0.0,
+    "maintenance/eval_gt/stop/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/stop/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_gt/stop/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/fwd0.5/alive_at_end": 0.0,
+    "maintenance/eval_pred/fwd0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/fwd0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/fwd0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/fwd1.0/alive_at_end": 0.0,
+    "maintenance/eval_pred/fwd1.0/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/fwd1.0/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/fwd1.0/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/spin+1.2/alive_at_end": 0.0,
+    "maintenance/eval_pred/spin+1.2/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/spin+1.2/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/spin+1.2/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/spin-1.2/alive_at_end": 0.0,
+    "maintenance/eval_pred/spin-1.2/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/spin-1.2/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/spin-1.2/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/back0.5/alive_at_end": 0.0,
+    "maintenance/eval_pred/back0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/back0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/back0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/back1.0/alive_at_end": 0.0,
+    "maintenance/eval_pred/back1.0/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/back1.0/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/back1.0/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/side+0.5/alive_at_end": 0.0,
+    "maintenance/eval_pred/side+0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/side+0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/side+0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/side-0.5/alive_at_end": 0.0,
+    "maintenance/eval_pred/side-0.5/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/side-0.5/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/side-0.5/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side+/alive_at_end": 0.0,
+    "maintenance/eval_pred/diag-fwd+side+/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side+/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side+/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side-/alive_at_end": 0.0,
+    "maintenance/eval_pred/diag-fwd+side-/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side-/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-fwd+side-/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/diag-back+side+/alive_at_end": 0.0,
+    "maintenance/eval_pred/diag-back+side+/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-back+side+/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-back+side+/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/diag-back+side-/alive_at_end": 0.0,
+    "maintenance/eval_pred/diag-back+side-/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-back+side-/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/diag-back+side-/wz_abs_error_median_radps": 0.0,
+    "maintenance/eval_pred/stop/alive_at_end": 0.0,
+    "maintenance/eval_pred/stop/vx_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/stop/vy_abs_error_median_mps": 0.0,
+    "maintenance/eval_pred/stop/wz_abs_error_median_radps": 0.0,
+    "off/map64/fwd0.5": 0,
+    "off/map64/fwd1.0": 0,
+    "off/map64/spin+1.2": 0,
+    "off/map64/spin-1.2": 0,
+    "off/map64/back0.5": 0,
+    "off/map64/back1.0": 0,
+    "off/map64/side+0.5": 0,
+    "off/map64/side-0.5": 0,
+    "off/map64/diag-fwd+side+": 0,
+    "off/map64/diag-fwd+side-": 0,
+    "off/map64/diag-back+side+": 0,
+    "off/map64/diag-back+side-": 0,
+    "off/map64/stop": 0,
+    "off/e1_v2/L0/fwd0.1": 0,
+    "off/e1_v2/L0/fwd0.2": 0,
+    "off/e1_v2/L0/side+0.2": 0,
+    "off/e1_v2/L0/side-0.2": 0,
+    "off/e1_v2/L0/side+0.4": 0,
+    "off/e1_v2/L0/side-0.4": 0,
+    "off/e1_v2/L5/fwd0.1": 0,
+    "off/e1_v2/L5/fwd0.2": 0,
+    "d44/turn_left_eval_gt/success_count": 0,
+    "d44/turn_left_eval_gt/survival_count": 0,
+    "d44/turn_left_eval_pred/success_count": 0,
+    "d44/turn_left_eval_pred/survival_count": 0,
+    "d44/turn_right_eval_gt/success_count": 0,
+    "d44/turn_right_eval_gt/survival_count": 0,
+    "d44/turn_right_eval_pred/success_count": 0,
+    "d44/turn_right_eval_pred/survival_count": 0,
+    "wide_L3_fwd1.0/eval_gt/success": 36,
+    "wide_L3_fwd1.0/eval_gt/survival": 0,
+    "side+0.8/eval_gt/success": 0,
+    "side+0.8/eval_gt/survival": 0,
+    "side+0.8/eval_gt/R": 0.0,
+    "side+0.8/eval_gt/mae_mps": 0.0,
+    "side-0.8/eval_gt/success": 23,
+    "side-0.8/eval_gt/survival": 0,
+    "side-0.8/eval_gt/R": 0.0022608439127603797,
+    "side-0.8/eval_gt/mae_mps": 0.0018086621165275263,
+    "symmetry/side0.8/eval_gt/S": 0.0,
+    "wide_L3_fwd1.0/eval_pred/success": 35,
+    "wide_L3_fwd1.0/eval_pred/survival": 0,
+    "side+0.8/eval_pred/success": 0,
+    "side+0.8/eval_pred/survival": 0.0,
+    "side+0.8/eval_pred/R": 0.0,
+    "side+0.8/eval_pred/mae_mps": 0.0,
+    "side-0.8/eval_pred/success": 16,
+    "side-0.8/eval_pred/survival": 0,
+    "side-0.8/eval_pred/R": 0.0,
+    "side-0.8/eval_pred/mae_mps": 0.0,
+    "symmetry/side0.8/eval_pred/S": 0.0
+  },
+  "off_cells": {
+    "map64/fwd0.5": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_fwd0.5.npz",
+      "raw_sha256": "d28f193136bf61347b94e7f2ba4719fee4801a23db3160d17543301d6e287267"
+    },
+    "map64/fwd1.0": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_fwd1.0.npz",
+      "raw_sha256": "30ed3aca078fe0d2a4cbc850d9449653a4d4b0077ff7ab34be79a4e0be7ab690"
+    },
+    "map64/spin+1.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.0,
+          1.2
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_spin+1.2.npz",
+      "raw_sha256": "026e85386371309ff7c8f2e59e626393788d03780c8a6d0794d0317aad096547"
+    },
+    "map64/spin-1.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.0,
+          -1.2
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_spin-1.2.npz",
+      "raw_sha256": "404bbb9b72bf58f233dbf494926e84d375b06ebef4b4609bcbebdbd9356bf57b"
+    },
+    "map64/back0.5": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          -0.5,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_back0.5.npz",
+      "raw_sha256": "bc7ecc51583ffe3f9328ff222c2a3678ee0a00889031342583bbe89c8b80245a"
+    },
+    "map64/back1.0": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_back1.0.npz",
+      "raw_sha256": "d0d22b49289fcd13352d57b01ecb01ac01b7e90d5fcc8025bc53707838d40829"
+    },
+    "map64/side+0.5": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_side+0.5.npz",
+      "raw_sha256": "c87440a210c2b990a4d1b7a6f2efb8780c9f45c1aeeeea37123fbacb861caac5"
+    },
+    "map64/side-0.5": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_side-0.5.npz",
+      "raw_sha256": "5797365bd47a364b6c0bd64ebb9c541f2a112b1e503754170b6add3e844f4dd8"
+    },
+    "map64/diag-fwd+side+": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.5,
+          0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_diag-fwd+side+.npz",
+      "raw_sha256": "f1d98ca5528e195dc0ce9b9acffca1c23827270e6358434ce9c29be4497a4a73"
+    },
+    "map64/diag-fwd+side-": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.5,
+          -0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_diag-fwd+side-.npz",
+      "raw_sha256": "f2b020785661240bca4c10e78f5f0b189450a5ecdeb78a8a0679c92370bd24e6"
+    },
+    "map64/diag-back+side+": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          -0.5,
+          0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_diag-back+side+.npz",
+      "raw_sha256": "d0c16dafd0b9a2822e75cad5411c568132c231cebc2e67dcdd8e13cf9a7f9074"
+    },
+    "map64/diag-back+side-": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          -0.5,
+          -0.5,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_diag-back+side-.npz",
+      "raw_sha256": "2d11cdfda799fbfa27292fd11161a6e39f155f09f5ba91bbe097ddefe6e2538c"
+    },
+    "map64/stop": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/map64/env_arrays_probe_prop_only_stop.npz",
+      "raw_sha256": "85051759260943f3713f82dca4c2e3d0e5573cf63b17c640457944440c24adb1"
+    },
+    "e1_v2/L0/fwd0.1": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.1,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_fwd0.1.npz",
+      "raw_sha256": "e354825901be2552d605c3010ccf7f4b7751853902bffbd04103ec241ed98dd2"
+    },
+    "e1_v2/L0/fwd0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.2,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_fwd0.2.npz",
+      "raw_sha256": "c7b5c7047770efc4ce929f1652d7873c5eec02ae80fa8a9a8bf4237f56026567"
+    },
+    "e1_v2/L0/side+0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.2,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_side+0.2.npz",
+      "raw_sha256": "db199495f55fa0f8957961a0992e68c36824fb8f542f2358a584f7c658465c5a"
+    },
+    "e1_v2/L0/side-0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          -0.2,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_side-0.2.npz",
+      "raw_sha256": "a37f3988c43f8ea22e9881e7f36239bc3d156f539a900d64237cf0a09a2ba0d6"
+    },
+    "e1_v2/L0/side+0.4": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.4,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_side+0.4.npz",
+      "raw_sha256": "50d5753a9b4599fad377e749c98c29820aa79fff1f00bc5d5de12206d4471da9"
+    },
+    "e1_v2/L0/side-0.4": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          -0.4,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "1cbf2878be7dcd514e830d597c677a4945efa06509088b6f9a81c02e29571417"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L0/env_arrays_probe_prop_only_side-0.4.npz",
+      "raw_sha256": "e3ac9de6b073bf6d96e5da6449b4b3dc337318a0eb488f9b2e565526c048e7d3"
+    },
+    "e1_v2/L5/fwd0.1": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.1,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_fwd0.1.npz",
+      "raw_sha256": "52c59be7d4f1e84a5e979372c812ff9dd49d1de172933b6c5986ee693c5f72d6"
+    },
+    "e1_v2/L5/fwd0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.2,
+          0.0,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_fwd0.2.npz",
+      "raw_sha256": "bdbb758c876becc0ce2fa4e1add0a0756638a1b615505dec4a61523f88b25081"
+    }
+  },
+  "off_record_cells": {
+    "e1_v2/L5/side+0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.2,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_side+0.2.npz",
+      "raw_sha256": "32ec14a3e103955d480c6f9b4220db4df15e4a0d036c6b43f6e3599cba067d76"
+    },
+    "e1_v2/L5/side-0.2": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          -0.2,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_side-0.2.npz",
+      "raw_sha256": "9d374d9692b3422ebe14abc784e8347e1cacacb087859a8914bab3e0ce16c3b0"
+    },
+    "e1_v2/L5/side+0.4": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          0.4,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_side+0.4.npz",
+      "raw_sha256": "1e7c3a35054eed6253ae565ecbbfa58139087475523c3b2c533c9dcca197ab27"
+    },
+    "e1_v2/L5/side-0.4": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "command": [
+          0.0,
+          -0.4,
+          0.0
+        ],
+        "steps": 300,
+        "dt": 0.02,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "assignment": "4c0c5d34d3f3f84023242fed2875047d7770266f5dd3649257a4b9182eb0a9c3"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/e1_v2/L5/env_arrays_probe_prop_only_side-0.4.npz",
+      "raw_sha256": "7c9f429acd4beefd91bf31d815db57e50a511c05069f34999ca1deb7c8ea3d4b"
+    },
+    "axis/L2/fwd0.5": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "level": 2,
+        "case": "fwd0.5",
+        "steps": 300,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd0.5.npz",
+      "raw_sha256": "6ec764eb46d2688c87aaa55258778f1bde61a694e900a1f531664666b4e4fae8"
+    },
+    "axis/L2/fwd1.0": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "seed": 42,
+        "level": 2,
+        "case": "fwd1.0",
+        "steps": 300,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95"
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd1.0.npz",
+      "raw_sha256": "dfe0f9ed1b4692971b8bb54d743f68d7640819a261cd50cef2854cc57b4f7732"
+    },
+    "wide/L3/fwd1.0": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "level": 3,
+        "seed": 42,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "steps": 475
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/L3/env_arrays_probe_prop_only_fwd1.0.npz",
+      "raw_sha256": "e5b88817204619fddc7aaa1763a03233de71a38abc28acf561ac36516331ad93"
+    },
+    "endpoints/side+0.8": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "case": "side+0.8",
+        "seed": 42,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "steps": 300
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/endpoints/env_arrays_probe_prop_only_side+0.8.npz",
+      "raw_sha256": "7d2d52e349d4037ce27badfda194b404b08046a83b05fa2a3789aad07a213419"
+    },
+    "endpoints/side-0.8": {
+      "survival": 64,
+      "valid": 64,
+      "fingerprint": {
+        "case": "side-0.8",
+        "seed": 42,
+        "mesh": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+        "steps": 300
+      },
+      "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/endpoints/env_arrays_probe_prop_only_side-0.8.npz",
+      "raw_sha256": "232167b47d0cfc2d217159569cffda4aa81a5fd4859c1e1a589d95cb40cab179"
+    }
+  },
+  "required_complete": true,
+  "all_judge_pass": false,
+  "wide": {
+    "reached_level": {
+      "eval_gt": null,
+      "eval_pred": null,
+      "probe_prop_only": null
+    },
+    "cap": 5,
+    "L9": {
+      "eval_gt": {
+        "valid_count": 64,
+        "success_count": 16,
+        "survival_count": 64,
+        "by_kind": {
+          "pyramid_stairs": {
+            "envs": 15,
+            "success": 4,
+            "survival": 15
+          },
+          "pyramid_stairs_inv": {
+            "envs": 15,
+            "success": 2,
+            "survival": 15
+          },
+          "boxes": {
+            "envs": 12,
+            "success": 4,
+            "survival": 12
+          },
+          "random_rough": {
+            "envs": 12,
+            "success": 5,
+            "survival": 12
+          },
+          "hf_pyramid_slope": {
+            "envs": 4,
+            "success": 1,
+            "survival": 4
+          },
+          "hf_pyramid_slope_inv": {
+            "envs": 4,
+            "success": 0,
+            "survival": 4
+          },
+          "stage_stairs": {
+            "envs": 2,
+            "success": 0,
+            "survival": 2
+          }
+        },
+        "per_env": [
+          {
+            "env": 0,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 1,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 2,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 3,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 4,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 5,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 255,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 6,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 7,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 8,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 9,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 10,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 11,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 12,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 13,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 14,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 15,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 219,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 16,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 256,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 17,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 253,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 18,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 19,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 217,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 20,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 21,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 22,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 23,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 24,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 25,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 26,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 27,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 196,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 28,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 29,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 30,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 31,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 32,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 33,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 34,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 35,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 206,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 36,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 37,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 38,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 162,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 39,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 40,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 232,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 41,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 42,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 43,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 44,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 45,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 46,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 202,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 47,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 249,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 48,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 222,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 49,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 50,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 51,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 52,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 53,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 54,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 55,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 265,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 56,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 57,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 207,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 58,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 179,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 59,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 270,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 60,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 61,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 62,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 63,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          }
+        ],
+        "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/L9/env_arrays_eval_gt_fwd1.0.npz",
+        "raw_sha256": "b87a287a80c62d889c5df2db57238e3bd29d0c978e6b26fff5f16f7383fafcfc"
+      },
+      "eval_pred": {
+        "valid_count": 64,
+        "success_count": 15,
+        "survival_count": 64,
+        "by_kind": {
+          "pyramid_stairs": {
+            "envs": 15,
+            "success": 3,
+            "survival": 15
+          },
+          "pyramid_stairs_inv": {
+            "envs": 15,
+            "success": 2,
+            "survival": 15
+          },
+          "boxes": {
+            "envs": 12,
+            "success": 4,
+            "survival": 12
+          },
+          "random_rough": {
+            "envs": 12,
+            "success": 5,
+            "survival": 12
+          },
+          "hf_pyramid_slope": {
+            "envs": 4,
+            "success": 1,
+            "survival": 4
+          },
+          "hf_pyramid_slope_inv": {
+            "envs": 4,
+            "success": 0,
+            "survival": 4
+          },
+          "stage_stairs": {
+            "envs": 2,
+            "success": 0,
+            "survival": 2
+          }
+        },
+        "per_env": [
+          {
+            "env": 0,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 1,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 2,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 3,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 4,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 5,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 274,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 6,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 7,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 8,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 9,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 10,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 11,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 12,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 13,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 14,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 15,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 212,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 16,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 254,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 17,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 245,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 18,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 19,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 208,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 20,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 21,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 22,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 23,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 24,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 25,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 26,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 27,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 198,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 28,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 29,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 30,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 31,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 32,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 33,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 34,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 35,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 205,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 36,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 37,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 38,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 162,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 39,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 40,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 235,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 41,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 42,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 43,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 44,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 45,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 46,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 197,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 47,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 48,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 222,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 49,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 50,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 51,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 52,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 53,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 54,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 55,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 254,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 56,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 57,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 218,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 58,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 177,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 59,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 264,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 60,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 61,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 62,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 63,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          }
+        ],
+        "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/L9/env_arrays_eval_pred_fwd1.0.npz",
+        "raw_sha256": "c5a21dc2d799e9da6c54035a3421c270688817a976f0ce73e2083c51eda57db9"
+      },
+      "probe_prop_only": {
+        "valid_count": 64,
+        "success_count": 13,
+        "survival_count": 64,
+        "by_kind": {
+          "pyramid_stairs": {
+            "envs": 15,
+            "success": 4,
+            "survival": 15
+          },
+          "pyramid_stairs_inv": {
+            "envs": 15,
+            "success": 0,
+            "survival": 15
+          },
+          "boxes": {
+            "envs": 12,
+            "success": 3,
+            "survival": 12
+          },
+          "random_rough": {
+            "envs": 12,
+            "success": 5,
+            "survival": 12
+          },
+          "hf_pyramid_slope": {
+            "envs": 4,
+            "success": 1,
+            "survival": 4
+          },
+          "hf_pyramid_slope_inv": {
+            "envs": 4,
+            "success": 0,
+            "survival": 4
+          },
+          "stage_stairs": {
+            "envs": 2,
+            "success": 0,
+            "survival": 2
+          }
+        },
+        "per_env": [
+          {
+            "env": 0,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 1,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 2,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 3,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 4,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 5,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 6,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 7,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 8,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 9,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 10,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 11,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 12,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 13,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 14,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 15,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 217,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 16,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 259,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 17,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 252,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 18,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 19,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 209,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 20,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 21,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 22,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 23,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 24,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 25,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 26,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 27,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 184,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 28,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 29,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 30,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 31,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 32,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 33,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 34,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 35,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 199,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 36,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 37,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 38,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 164,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 39,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 40,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 238,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 41,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 42,
+            "kind": "hf_pyramid_slope",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 43,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 44,
+            "kind": "hf_pyramid_slope_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 45,
+            "kind": "stage_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 46,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 187,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 47,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 266,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 48,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 211,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 49,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 50,
+            "kind": "pyramid_stairs",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 51,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 52,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 53,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 54,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 55,
+            "kind": "pyramid_stairs_inv",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 56,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 57,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 205,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 58,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": 184,
+            "success": true,
+            "survival": true
+          },
+          {
+            "env": 59,
+            "kind": "boxes",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 60,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 61,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 62,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          },
+          {
+            "env": 63,
+            "kind": "random_rough",
+            "level": 9,
+            "time_steps": 300,
+            "first_reach_step": null,
+            "success": false,
+            "survival": true
+          }
+        ],
+        "raw_file": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/wide/L9/env_arrays_probe_prop_only_fwd1.0.npz",
+        "raw_sha256": "8b1c7f90975f6f0b79e1a46caf347bfb57a25535d0d8fd0b443c63587410a63c"
+      }
+    },
+    "code_sha256": "ca0dd171f984f4608f1b7a8f8c5efb2fc56065a6bbd5868a5b969d8e7596d1eb",
+    "code": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27"
+  },
+  "sources": {
+    "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/ex42_score.json": "d13a69739de35473bcec206f7764a972a44ba1077bc5050b2a0da7e2a24113ab",
+    "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/eval/scores/m250/p1_score.json": "bef518889dec556b155a3f3a47d4a69bf053057eee1707f937a2e3d7931f96e2",
+    "/home/jay/mai/tmp/lead/E1_v27_20261114_022748/eval_policy/ex42-prep.yaml": "b86943a02da96c5fe397d041ec458928697c7bf396bd5d3a415c996c9f801921",
+    "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v27/foothold_s2/eval/ex42_d44_cells.py": "fd4c85d4a6174037f474aec94e4936e48e7200ac244fee2906b323458ac9804c"
+  },
+  "checkpoint_sha256": "b33b9f004f700f7b5b0311bbadb1dfe3ed8962f856805ef3439391ff88086b76",
+  "evaluation_sha256": "b86943a02da96c5fe397d041ec458928697c7bf396bd5d3a415c996c9f801921",
+  "execution_sha256": "794e4602a04013897f146d2bf3f9527c03137647a3b3c76dfe52f9c5335315cb",
+  "treatment_sha256": "5b5506bcf4b213c916d9a36796965997f1e688f168f1ac72bcdfa49170d54fbf"
+}

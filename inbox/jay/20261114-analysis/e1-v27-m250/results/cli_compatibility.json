@@ -1,0 +1,20 @@
+{
+  "standalone": {
+    "state": "HOLD",
+    "errors": [
+      "m250: [Errno 2] No such file or directory: '/home/jay/mai/tmp/lead/foothold_s2/eval/ex42_d44_cells.py'"
+    ]
+  },
+  "legacy_full": {
+    "state": "EVIDENCE_HOLD",
+    "errors": [
+      "checkpoint not pinned to this run manifest at requested local iteration",
+      "baseline is not this runs pinned parent",
+      "plan/manifest reward keys mismatch",
+      "current_reward_missing:slow_track",
+      "current_reward_missing:zero_yaw",
+      "current_reward_missing:feet_air_time",
+      "current_reward_missing:feet_air_time_threshold"
+    ]
+  }
+}
