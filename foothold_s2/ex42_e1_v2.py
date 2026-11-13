@@ -76,7 +76,7 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
             raw_mae = (np.abs(z["vx"] - command[0]) * alive).sum(0) / np.maximum(alive_steps, 1)
             if not np.allclose(raw_mae, errors, rtol=2e-5, atol=1e-6):
                 raise ValueError(f"E1 v2 body-forward MAE differs: {raw}")
-        ratio = body_forward_per_env(z["vx"], alive, dt, speed) if command[0] else projection / (speed * alive_steps * dt)
+        ratio = body_forward_per_env(z["vx"], alive, dt, speed) if command[0] else projection / (speed * alive.shape[0] * dt)
         if (not np.isfinite(ratio).all() or
                 int(alive[-1].sum()) != row["alive_envs_at_end"] or
                 any(r["env"] != i or r["samples_alive"] != int(alive_steps[i])
@@ -301,6 +301,8 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     """Two consecutive, same-treatment windows. D44 stop/restart stays visible as record."""
     from foothold_s2.ex42_e1_judge import judge_e1
 
+    if seed != plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][0]:
+        raise ValueError("EX-42 E1 v2 primary seed differs from approved plan")
     if not isinstance(score.get("d44_cells"), dict):
         score = {**score, "d44_cells": {}}
     case_specs = plan["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"]
@@ -333,8 +335,12 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                              previous_cells=previous_cells)
     if repeats and set(repeats) != expected_repeats:
         current_v2["repeat_evidence"] = {"judgement": "HOLD", "reason": "세 시드 자료 일부 결측"}
-    prior_v2 = judge_cells(previous.get("e1_v2_cells", {}), plan) if previous is not None else {
-        "judgement": "HOLD", "reason": "직전 창 없음"}
+    # The prior P1 receipt has already judged its own seed 42/7/13 bundle.
+    # Rejudging seed 42 alone here would turn a valid near-threshold PASS back
+    # into HOLD and make graduation impossible on the following boundary.
+    prior_v2 = ((previous.get("e1_exit_v2") or {}).get("current") if previous is not None else None)
+    if not isinstance(prior_v2, dict) or prior_v2.get("judgement") not in ("PASS", "HOLD", "FAIL"):
+        prior_v2 = {"judgement": "HOLD", "reason": "직전 창 v2 판정 없음"}
     match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")

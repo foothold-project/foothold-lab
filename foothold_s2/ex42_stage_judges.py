@@ -202,6 +202,8 @@ class _E1V2(_E1):
         from foothold_s2.ex42_score import ROOT, config, digest
         if plan is None or score.get("stage_id") != "E1":
             raise ValueError("EX-42 P1 E1 v2 plan or stage missing")
+        if any(key not in score for key in ("checkpoint", "e1_v2_evaluation", "e1_v2_cells", "e1_exit_v2")):
+            raise ValueError("EX-42 P1 E1 v2 score evidence missing")
         if _map39_cell_check(score, judgment, self.modes) != expected:
             raise ValueError("EX-42 P1 E1 v2 maintenance cells differ")
         cfg, cfg_path = config()

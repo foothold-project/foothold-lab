@@ -8,6 +8,7 @@ import pytest
 import yaml
 from foothold_s2.curriculum.ex42_prep import (
     EX42Plan, validate_stage_e1f_authorization, validate_stage_e2_authorization,
+    entry_gate_adapter_ready,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -77,6 +78,18 @@ def test_filled_fixture_is_only_a_bounded_approval_not_a_launch(tmp_path,stage,v
     assert proof['later_stages_authorized'] is False
     assert proof['entry_gate_adapter_ready'] is True
     assert proof['training_started'] is False
+
+
+def test_e1f_entry_resolves_v2_or_legacy_but_never_e0(tmp_path):
+    plan, _, _ = prepared(tmp_path, 'E1F')
+    row = next(r for r in plan.document['stages'] if r['id'] == 'E1F')
+    contract = row['authorization_contract']
+    assert entry_gate_adapter_ready(plan, row, contract)
+    altered = deepcopy(plan.document)
+    next(r for r in altered['stages'] if r['id'] == 'E1')['exit_judge'] = 'map39_e1_two_window'
+    assert entry_gate_adapter_ready(replace(plan, document=altered), row, contract)
+    next(r for r in altered['stages'] if r['id'] == 'E1')['exit_judge'] = 'map39_e0'
+    assert not entry_gate_adapter_ready(replace(plan, document=altered), row, contract)
 
 
 @pytest.mark.parametrize('field,value', [('decision_id',None),('approval_statement',None),
