@@ -273,10 +273,20 @@ def judge_cells(cells: dict, plan: dict, *, repeats: dict[int, dict] | None = No
     return {"judgement": verdict, "items": rows}
 
 
-def treatment(checkpoint: Path, iteration: int) -> dict:
-    """Pin the command and reward treatment actually selected for this 250-update window."""
+def treatment(checkpoint: Path, iteration: int, plan: dict) -> dict:
+    """Pin the segment that produced this boundary, never the segment started afterward."""
+    if type(iteration) is not int or iteration <= 0 or iteration % 250:
+        raise ValueError("E1 v2 treatment needs a completed 250-update boundary")
     root = Path(checkpoint).parent
-    boundary = math.ceil(iteration / 250)
+    boundary = iteration // 250 - 1
+    if boundary == 0:
+        stage = next((row for row in plan["stages"] if row["id"] == "E1"), None)
+        if not isinstance(stage, dict):
+            raise ValueError("E1 v2 starting treatment plan row missing")
+        actual = {"commands": stage["commands"], "rewards": stage["rewards"],
+                  "low_forward_fraction": stage.get("low_forward_fraction")}
+        fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        return {"state": "complete", "source": "plan", "boundary_index": 0, "sha256": fingerprint}
     commands_path = root / f"segment_commands_b{boundary}.json"
     rewards_path = root / f"segment_rewards_b{boundary}_rank0.json"
     rank1_path = root / f"segment_rewards_b{boundary}_rank1.json"
@@ -288,9 +298,14 @@ def treatment(checkpoint: Path, iteration: int) -> dict:
             commands.get("stage_id") != "E1" or rewards.get("stage_id") != "E1" or
             rank1.get("stage_id") != "E1" or rank1.get("live") != rewards.get("live")):
         raise ValueError("E1 v2 treatment boundary identity differs")
-    actual = {"commands": commands["commands"], "rewards": rewards["live"]}
+    low = commands.get("low_forward_fraction")
+    if (not isinstance(low, dict) or type(low.get("value")) not in (int, float)
+            or not math.isfinite(low["value"])):
+        raise ValueError("E1 v2 treatment slow-forward share missing")
+    actual = {"commands": commands["commands"], "rewards": rewards["live"],
+              "low_forward_fraction": low["value"]}
     fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    return {"state": "complete", "sha256": fingerprint,
+    return {"state": "complete", "source": "segment_receipt", "boundary_index": boundary, "sha256": fingerprint,
             "commands_path": str(commands_path), "commands_sha256": _sha(commands_path),
             "rewards_path": str(rewards_path), "rewards_sha256": _sha(rewards_path),
             "rank1_path": str(rank1_path), "rank1_sha256": _sha(rank1_path)}
@@ -344,8 +359,13 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")
-    current_treatment = treatment(checkpoint, int(match.group(1)))
-    previous_treatment = previous.get("e1_v2_treatment") if previous is not None else None
+    iteration = int(match.group(1))
+    current_treatment = treatment(checkpoint, iteration, plan)
+    # A P1 score is written before the next segment starts. Earlier scores may
+    # therefore contain a legacy HOLD for a not-yet-created b<k> receipt.
+    # Reconstruct that completed window from its own plan or b<k-1> receipt.
+    previous_treatment = (treatment(Path(checkpoint).with_name(f"model_{iteration - 250}.pt"),
+                                    iteration - 250, plan) if previous is not None and iteration > 250 else None)
     if (current_treatment["state"] != "complete" or not isinstance(previous_treatment, dict)
             or previous_treatment.get("state") != "complete"):
         treatment_state = "HOLD"
