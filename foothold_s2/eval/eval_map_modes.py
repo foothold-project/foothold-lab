@@ -33,7 +33,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
-parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21", "hipan_g1", "hipan_g1b", "e1_v2"), default="core")
+parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21", "hipan_g1", "hipan_g1b", "e1_v2", "e1_wide_fixed", "e1_wide_endpoint"), default="core")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
@@ -343,6 +343,9 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
                                      "contact_threshold_n": 1.0,
                                      "valid_mask": "alive excludes post-reset samples",
                                      "completion": "unjudged_raw_only"}
+    if args.command_suite == "e1_wide_fixed":
+        extra["root_x_local_m"] = fw
+        extra["root_y_local_m"] = POS[:, :, 1].cpu().numpy()
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),

@@ -189,6 +189,16 @@ class _E1V2(_E1):
                 checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         score["e1_v2_evaluation"] = str(ctx.evaluation)
         score["e1_v2_cells"] = measure_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed)
+        from foothold_s2.ex42_e1_wide import active as wide_active
+        if wide_active(score, ctx.plan):
+            from foothold_s2.ex42_e1_wide import read_cells, cap_from_training
+            from foothold_s2.ex42_score import _json
+            mesh_sha = _json(ctx.evaluation / "map64" / "map_modes.json")["ex42_mesh"]["mesh_sha256"]
+            score["e1_wide_evaluation"] = str(ctx.evaluation)
+            score["e1_wide_cells"] = read_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed,
+                                                 ctx.plan, mesh_sha)
+            score["e1_wide_cap"] = cap_from_training(ctx.checkpoint,
+                                                     score["execution_plan_sha256"], mesh_sha)
         prior = previous_e1_score(ctx.checkpoint, ctx.evaluation, ctx.plan["evaluation"]["interval_updates"],
                                   ctx.digest(ctx.cfg_path))
         return judge_e1_v2(score, baseline, measured, ctx.plan, previous=prior,
@@ -214,6 +224,17 @@ class _E1V2(_E1):
         actual = measure_cells(evaluation, score["checkpoint_sha256"], score["conditions"]["eval_seed"])
         if actual != score.get("e1_v2_cells"):
             raise ValueError("EX-42 P1 E1 v2 raw cell evidence differs")
+        from foothold_s2.ex42_e1_wide import active as wide_active
+        if wide_active(score, plan):
+            from foothold_s2.ex42_e1_wide import read_cells, cap_from_training
+            from foothold_s2.ex42_score import _json
+            mesh_sha = _json(evaluation / "map64" / "map_modes.json")["ex42_mesh"]["mesh_sha256"]
+            counted_wide = read_cells(evaluation, score["checkpoint_sha256"],
+                                      score["conditions"]["eval_seed"], plan, mesh_sha)
+            counted_cap = cap_from_training(checkpoint, score["execution_plan_sha256"], mesh_sha)
+            if (counted_wide != score.get("e1_wide_cells") or counted_cap != score.get("e1_wide_cap")
+                    or score.get("e1_wide_evaluation") != str(evaluation)):
+                raise ValueError("EX-42 P1 E1 C1 raw cell or cap evidence differs")
         prior = previous_e1_score(checkpoint, evaluation, plan["evaluation"]["interval_updates"],
                                   score["score_config_sha256"])
         if prior is not None and "e1_v2_cells" in prior:

@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 from foothold_s2.ex42_score import MODES, config, digest, measure
 from foothold_s2.ex42_stage_judges import retained_paper_cells
@@ -253,6 +255,70 @@ def e1_v2_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, eval
               "--eval-seed", str(eval_seed), "--steps", "300", "--command-suite", "e1_v2",
               "--commands", "all", "--out", str(Path(output) / "e1_v2" / f"L{level}"),
               "--device", device, *kit]) for level in (0, 5)]
+
+
+def run_e1_repeat_seeds(checkpoint, output, devices, cfg, *, seeds, mesh_dir,
+                        policy_path, expected_sha256, physical, process, env,
+                        stagger_s=30, sleep=time.sleep):
+    """Run the two near-threshold seeds on distinct GPUs with isolated Kit paths."""
+    from foothold_s2.ex42_e1_v2 import measure_cells
+    from foothold_s2.scripts.ex42_flag_baseline_chain import isolated_kit_argv
+    if len(seeds) != 2 or len(devices) != 2 or len(set(seeds)) != 2 or len(set(devices)) != 2:
+        raise ValueError("E1 v2 repeat needs two distinct seeds and GPUs")
+    started = threading.Event()
+
+    def one(seed, device, first):
+        repeat_root = Path(output) / f"e1_v2_repeat_seed{seed}"
+        repeat_root.mkdir(parents=True, exist_ok=False)
+        rows = e1_v2_commands(checkpoint, repeat_root, device, cfg, eval_seed=seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path)
+        rows += [(phase["name"], phase["argv"]) for phase in commands(
+            checkpoint, repeat_root, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
+            evaluation_plan=policy_path,
+            shard={"map64": list(MODES), "axis_v2": list(MODES), "stand": []})]
+        children = {}
+        for phase, argv in rows:
+            process.prepare_phase_output(argv)
+            name = f"{phase}@{device}"
+            runtime = repeat_root / "kit_runtime" / device.replace(":", "_") / phase
+            temporary, cache = runtime / "tmp", runtime / "cache"
+            temporary.mkdir(mode=0o700, parents=True, exist_ok=False)
+            cache.mkdir()
+            isolated_env = dict(env, TMPDIR=str(temporary), TEMP=str(temporary),
+                                TMP=str(temporary), XDG_CACHE_HOME=str(cache),
+                                XDG_RUNTIME_DIR=str(temporary))
+            isolated_argv = isolated_kit_argv(argv, repeat_root, device, phase)
+            if first and not started.is_set():
+                started.set()
+            child = process.hidden_child(isolated_argv, repeat_root / "children" / phase,
+                                         env=isolated_env)
+            child["isolated_runtime"] = {"tmpdir": str(temporary), "kit_cache": str(cache)}
+            if child.get("state") == "done":
+                if phase.startswith("e1_v2_L"):
+                    source = json.loads((repeat_root / "e1_v2" /
+                                         phase.removeprefix("e1_v2_") /
+                                         "map_modes.json").read_text(encoding="utf-8-sig"))
+                    identity = source.get("run_identity") or {}
+                    observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                    if identity.get("device") != device or observed != physical[device]["gpu_uuid"].lower().removeprefix("gpu-"):
+                        raise ValueError("E1 v2 repeat low physical GPU identity differs")
+                else:
+                    observed_child_identity(repeat_root, phase, physical[device])
+            children[name] = child
+            if child.get("state") != "done":
+                raise ValueError(f"E1 v2 repeat {name} Kit child failed")
+        measure_cells(repeat_root, expected_sha256, seed)
+        return children
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(one, seeds[0], devices[0], True)
+        if not started.wait(timeout=60):
+            first.result() if first.done() else None
+            raise ValueError("E1 v2 first repeat Kit child did not start")
+        sleep(stagger_s)
+        second = pool.submit(one, seeds[1], devices[1], False)
+        a, b = first.result(), second.result()
+    return {**a, **b}
 
 
 def g1_record_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, evaluation_plan):
@@ -652,40 +718,77 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                                      judge_cells(measured_v2, policy.document,
                                                  previous_cells=(prior or {}).get("e1_v2_cells"))["items"].values())
                 if boundary_close:
-                    for repeat_seed in policy.document["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]:
-                        repeat_root = output / f"e1_v2_repeat_seed{repeat_seed}"
-                        repeat_rows = [(name, argv) for name, argv in e1_v2_commands(
-                            checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
-                            mesh_dir=mesh_dir, evaluation_plan=policy_path)]
-                        repeat_rows += [(entry["name"], entry["argv"]) for entry in commands(
-                            checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
-                            mesh_dir=mesh_dir, evaluation_plan=policy_path,
-                            shard={"map64": list(MODES), "axis_v2": list(MODES), "stand": []})]
-                        for phase, argv in repeat_rows:
-                            process.prepare_phase_output(argv)
-                            child = process.hidden_child(argv, output / "children" /
-                                                         f"e1_v2_repeat_seed{repeat_seed}_{phase}", env=env)
-                            if child.get("state") == "done":
-                                if phase.startswith("e1_v2_L"):
-                                    source = json.loads((repeat_root / "e1_v2" /
-                                                         phase.removeprefix("e1_v2_") /
-                                                         "map_modes.json").read_text(encoding="utf-8-sig"))
-                                    identity = source.get("run_identity") or {}
-                                    if (identity.get("device") != device or not identity.get("gpu_uuid") or
-                                            str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
-                                            physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
-                                        raise ValueError("E1 v2 repeat low physical GPU identity differs")
-                                else:
-                                    observed_child_identity(repeat_root, phase, physical_gpu)
-                            row["steps"][f"e1_v2_repeat_seed{repeat_seed}_{phase}"] = child
-                            if child.get("state") != "done":
-                                break
-                        else:
-                            measure_cells(repeat_root, expected_sha256, repeat_seed)
+                    repeat_seeds = policy.document["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]
+                    if split_device is not None:
+                        row["steps"].update(run_e1_repeat_seeds(
+                            checkpoint, output, [split_device, device], cfg, seeds=repeat_seeds,
+                            mesh_dir=mesh_dir, policy_path=policy_path,
+                            expected_sha256=expected_sha256,
+                            physical={device: physical_gpu, split_device: split_gpu},
+                            process=process, env=env))
                         _atomic(output / "eval_receipt.json", row)
-            except (OSError, ValueError, KeyError) as exc:
+                    else:
+                        for repeat_seed in repeat_seeds:
+                          repeat_root = output / f"e1_v2_repeat_seed{repeat_seed}"
+                          repeat_rows = [(name, argv) for name, argv in e1_v2_commands(
+                              checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path)]
+                          repeat_rows += [(entry["name"], entry["argv"]) for entry in commands(
+                              checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path,
+                              shard={"map64": list(MODES), "axis_v2": list(MODES), "stand": []})]
+                          for phase, argv in repeat_rows:
+                              process.prepare_phase_output(argv)
+                              child = process.hidden_child(argv, output / "children" /
+                                                           f"e1_v2_repeat_seed{repeat_seed}_{phase}", env=env)
+                              if child.get("state") == "done":
+                                  if phase.startswith("e1_v2_L"):
+                                      source = json.loads((repeat_root / "e1_v2" /
+                                                           phase.removeprefix("e1_v2_") /
+                                                           "map_modes.json").read_text(encoding="utf-8-sig"))
+                                      identity = source.get("run_identity") or {}
+                                      if (identity.get("device") != device or not identity.get("gpu_uuid") or
+                                              str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
+                                              physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                                          raise ValueError("E1 v2 repeat low physical GPU identity differs")
+                                  else:
+                                      observed_child_identity(repeat_root, phase, physical_gpu)
+                              row["steps"][f"e1_v2_repeat_seed{repeat_seed}_{phase}"] = child
+                              if child.get("state") != "done":
+                                  break
+                          else:
+                              measure_cells(repeat_root, expected_sha256, repeat_seed)
+                          _atomic(output / "eval_receipt.json", row)
+            except (OSError, ValueError, KeyError, TypeError) as exc:
                 row["e1_v2_repeat_failure"] = {"state": "HOLD", "reason": str(exc)}
                 _atomic(output / "eval_receipt.json", row)
+    if (p1_stage_id == "E1" and evaluation_plan is not None
+            and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+        from foothold_s2.ex42_e1_wide import kit_commands as wide_commands, read_cells as read_wide
+        try:
+            for phase, argv in wide_commands(checkpoint, output, device, task=cfg["task"],
+                                             plan_path=policy_path, plan=policy.document,
+                                             mesh_dir=mesh_dir, seed=seed):
+                process.prepare_phase_output(argv)
+                child = process.hidden_child(argv, output / "children" / phase, env=env)
+                if child.get("state") == "done":
+                    source = json.loads((output / "wide" /
+                                         ("endpoints" if phase == "wide_endpoints" else phase.removeprefix("wide_")) /
+                                         "map_modes.json").read_text(encoding="utf-8-sig"))
+                    identity = source.get("run_identity") or {}
+                    if (identity.get("device") != device or not identity.get("gpu_uuid") or
+                            str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
+                            physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                        raise ValueError("E1 C1 child physical GPU identity differs")
+                    child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+                if child.get("state") != "done":
+                    raise ValueError(f"{phase} Kit child failed or lacks durable receipt")
+            read_wide(output, expected_sha256, seed, policy.document, mesh["mesh_sha256"])
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            row["e1_wide_child_failure"] = {"state": "HOLD", "reason": str(exc)}
+            _atomic(output / "eval_receipt.json", row)
     if "flag_cells" in retained:
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         try:
@@ -871,6 +974,14 @@ def main(argv=None):
                               e1_v2_commands(args.checkpoint, args.out, args.device, config()[0],
                                              eval_seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed,
                                              mesh_dir=args.mesh_dir, evaluation_plan=policy_path)]}
+        if (args.p1_stage_id == "E1" and args.evaluation_plan is not None
+                and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+            from foothold_s2.ex42_e1_wide import kit_commands as wide_commands
+            plan["e1_widened"] = {"state": "planned", "commands": [argv for _, argv in
+                                   wide_commands(args.checkpoint, args.out, args.device,
+                                                 task=config()[0]["task"], plan_path=policy_path,
+                                                 plan=policy.document, mesh_dir=args.mesh_dir,
+                                                 seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
         if "flag_cells" in retained:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             from foothold_s2.eval.ex42_flag_cells import contract

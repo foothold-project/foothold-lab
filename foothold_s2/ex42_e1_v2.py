@@ -372,7 +372,28 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     else:
         treatment_state = "PASS" if current_treatment["sha256"] == previous_treatment.get("sha256") else "HOLD"
     result["e1_v2_treatment"] = current_treatment
-    verdicts = (result["judgement"], current_v2["judgement"], prior_v2["judgement"], treatment_state)
+    verdicts = [result["judgement"], current_v2["judgement"], prior_v2["judgement"], treatment_state]
+    from foothold_s2.ex42_e1_wide import active as wide_active, judge_cells as judge_wide
+    wide = None
+    if wide_active(score, plan):
+        current_wide = judge_wide(score["e1_wide_cells"], plan, score["e1_wide_cap"])
+        if previous is not None and "e1_wide_cells" in previous:
+            from foothold_s2.ex42_e1_wide import read_cells as read_wide, cap_from_training
+            prior_cells = read_wide(Path(previous["e1_wide_evaluation"]),
+                                    previous["checkpoint_sha256"],
+                                    previous["conditions"]["eval_seed"], plan,
+                                    score["e1_wide_cells"]["mesh_sha256"])
+            prior_cap = cap_from_training(Path(previous["checkpoint"]),
+                                          previous["execution_plan_sha256"],
+                                          score["e1_wide_cells"]["mesh_sha256"])
+            if prior_cells != previous["e1_wide_cells"] or prior_cap != previous["e1_wide_cap"]:
+                raise ValueError("E1 C1 previous window raw or cap evidence differs")
+        previous_wide = ((previous.get("e1_exit_v2") or {}).get("wide_current")
+                         if previous is not None else None)
+        if not isinstance(previous_wide, dict) or previous_wide.get("judgement") not in ("PASS", "HOLD", "FAIL"):
+            previous_wide = {"judgement": "HOLD", "reason": "직전 창 C1 판정 없음"}
+        wide = {"current": current_wide, "previous": previous_wide}
+        verdicts += [current_wide["judgement"], previous_wide["judgement"]]
     overall = "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS"
     result["judgement"] = overall
     result["reason"] = "E1 v2: maintenance, D44 turns, S1/S2/Y1, fixed treatment in two windows"
@@ -380,6 +401,8 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                            "previous": prior_v2, "treatment": {"judgement": treatment_state,
                            "current": current_treatment, "previous": previous_treatment},
                            "repeat_sources": {str(s): row["sources"] for s, row in repeats.items()},
+                           **({"wide_current": wide["current"], "wide_previous": wide["previous"]}
+                              if wide is not None else {}),
                            "d44_stop_restart_role": "record_only",
                            "d44_stop_restart": {case: value for case, value in score["d44_cells"].items()
                                                 if case.startswith("stop_restart_")}}
