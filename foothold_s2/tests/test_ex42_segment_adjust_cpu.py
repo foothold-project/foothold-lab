@@ -256,7 +256,7 @@ def test_a_stage_without_a_command_profile_takes_no_command_entry(plan, tmp_path
 # ---- reward cells (lead 2026-11-12 21:27): tracking widths and two weights, any boundary, limits outside the plan ----
 
 REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.4, "feet_air_time": 0.2, "foot_slip": -0.2,
-           "zero_yaw": -0.5}       # the shipped limits hold zero_yaw at its plan value until the ledger approves a range
+           "zero_yaw": -0.5}       # the plan value here; the zero_yaw tests below move it
 
 
 def reward_entry(**change):
@@ -268,7 +268,7 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
     limits = adj.reward_limits()
     assert limits["cells"] == {"track_lin_vel_std": (0.25, 0.5), "track_ang_vel_std": (0.25, 0.5),
                                "feet_air_time": (0.0, 0.5), "foot_slip": (-0.25, -0.05),
-                               "zero_yaw": (-0.5, -0.5)}                  # pending: only the plan value
+                               "zero_yaw": (-2.0, -0.5)}                  # decisions.tsv 2026-11-13 09:52
     assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
 
 
@@ -276,7 +276,7 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
     "schema: ex42-reward-adjust-limits/0\ncells: {}",
     "schema: ex42-reward-adjust-limits/1\ncells: {track_lin_vel_std: [0.25, 0.5]}",
     "schema: ex42-reward-adjust-limits/1\ncells: {track_lin_vel_std: [0.5, 0.25], track_ang_vel_std: [0.25, 0.5], "
-    "feet_air_time: [0, 0.5], foot_slip: [-0.25, -0.05], zero_yaw: [-0.5, -0.5]}",
+    "feet_air_time: [0, 0.5], foot_slip: [-0.25, -0.05], zero_yaw: [-2.0, -0.5]}",
     "schema: ex42-reward-adjust-limits/1\ncells: {track_lin_vel_std: [0.25, 0.5], track_ang_vel_std: [0.25, 0.5], "
     "feet_air_time: [0, 0.5], foot_slip: [-0.25, -0.05]}",                                  # the zero_yaw cell is missing
 ])
@@ -314,7 +314,7 @@ def test_no_entry_leaves_the_plan_rewards(plan, view, tmp_path):
 @pytest.mark.parametrize("change", [
     {"track_lin_vel_std": 0.2}, {"track_lin_vel_std": 0.6}, {"track_ang_vel_std": 0.24}, {"track_ang_vel_std": 0.51},
     {"feet_air_time": -0.1}, {"feet_air_time": 0.6}, {"foot_slip": -0.3}, {"foot_slip": -0.04},
-    {"zero_yaw": -1.0}, {"zero_yaw": -0.25},                 # no ledger row yet: the shipped file admits -0.5 only
+    {"zero_yaw": -2.1}, {"zero_yaw": -0.4}, {"zero_yaw": 0.0},
 ])
 def test_rewards_outside_the_limits_are_refused(plan, view, tmp_path, change):
     with pytest.raises(ValueError, match="leaves the approved limits"):
@@ -504,57 +504,33 @@ def test_the_real_table_still_passes_the_e1_plan_gate():
     assert cpc.launch_gate("E1", PLAN)["passed"] is True
 
 
-# ---- zero_yaw (2026-11-13): the weight on the yaw rate while the turn command is zero. The cell exists; its range
-# waits for the ledger, so these use a limits file that carries the proposed range. ----
+# ---- zero_yaw (decisions.tsv 2026-11-13 09:52): the weight on the yaw rate while the turn command is zero ----
 
-def proposed_limits(tmp_path, pair="[-2.0, -0.5]"):
-    text = adj.REWARD_LIMITS.read_text(encoding="utf-8")
-    assert text.count("zero_yaw: [-0.5, -0.5]") == 1
-    path = tmp_path / "proposed-limits.yaml"
-    path.write_text(text.replace("zero_yaw: [-0.5, -0.5]", f"zero_yaw: {pair}"), encoding="utf-8")
-    return path
-
-
-def start_with(view, plan, folder, k, doc, limits, write=True):
-    path = folder / f"adjust_b{k}.json"
-    path.write_text(json.dumps(doc), encoding="utf-8")
-    return adj.start_segment(view, plan, "E1", boundary_index=k, path=str(path), log_dir=str(folder), write=write,
-                             limits_path=limits)
-
-
-def test_zero_yaw_reaches_the_stage_and_the_record_once_its_range_is_registered(plan, view, tmp_path):
-    limits = proposed_limits(tmp_path)
+def test_zero_yaw_reaches_the_stage_and_the_record(plan, view, tmp_path):
     before = dict(view.stages[0].rewards)
-    assert before["zero_yaw"] == -0.5
+    assert before["zero_yaw"] == -0.5                                   # the plan value until an entry asks
     start(view, plan, tmp_path, 1)
     entry = reward_entry(track_lin_vel_std=0.5, track_ang_vel_std=0.5, feet_air_time=0.0, foot_slip=-0.15, zero_yaw=-1.0)
-    record = start_with(view, plan, tmp_path, 2, document(plan, b2=entry), limits)
+    record = start(view, plan, tmp_path, 2, document(plan, b2=entry))
     stage = view.stages[0]
     assert stage.rewards["zero_yaw"] == -1.0
     assert {k: v for k, v in stage.rewards.items() if k != "zero_yaw"} == {k: v for k, v in before.items() if k != "zero_yaw"}
     assert record["rewards"]["values"]["zero_yaw"] == -1.0 and record["rewards"]["entry"] == 2
-    assert record["rewards"]["limits_sha256"] == adj.reward_limits(limits)["sha256"] != adj.reward_limits()["sha256"]
-    # the next segment carries the same file and sees the same value; the earlier segment is still the plan's
-    again = start_with(view, plan, tmp_path, 3, document(plan, b2=entry), limits)
-    assert again["rewards"]["values"]["zero_yaw"] == -1.0
-    for outside in (-2.1, -0.4, 0.0):
-        with pytest.raises(ValueError, match="rewards.zero_yaw leaves the approved limits"):
-            start_with(view, plan, tmp_path, 3, document(plan, b3=reward_entry(zero_yaw=outside)), limits, write=False)
+    again = start(view, plan, tmp_path, 3, document(plan, b2=entry))       # the next segment carries the same file
+    assert again["rewards"]["values"]["zero_yaw"] == -1.0 and view.stages[0].rewards["zero_yaw"] == -1.0
+    for inside in (-2.0, -0.5):
+        start(view, plan, tmp_path, 3, document(plan, b2=entry, b3=reward_entry(zero_yaw=inside)), write=False)
+        assert view.stages[0].rewards["zero_yaw"] == inside
 
 
-def test_the_shipped_limits_do_not_let_zero_yaw_move_before_the_ledger(plan, view, tmp_path):
+def test_the_shipped_zero_yaw_limits_are_the_ledger_row():
     text = adj.REWARD_LIMITS.read_text(encoding="utf-8")
-    assert "ledger pending" in text and "proposed limits [-2.0, -0.5]" in text
-    with pytest.raises(ValueError, match="rewards.zero_yaw leaves the approved limits"):
-        start(view, plan, tmp_path, 1, document(plan, b1=reward_entry(zero_yaw=-1.0)))
-    assert view.stages[0].rewards["zero_yaw"] == -0.5
-    start(view, plan, tmp_path, 1, document(plan, b1=reward_entry()))                # the other cells still move
-    assert view.stages[0].rewards["foot_slip"] == -0.2 and view.stages[0].rewards["zero_yaw"] == -0.5
+    assert "zero_yaw: [-2.0, -0.5]" in text and "2026-11-13 09:52" in text and "c2032256" in text
+    assert "pending" not in text
 
 
 def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
-    limits = proposed_limits(tmp_path)
-    asked = start_with(view, plan, tmp_path, 3, document(plan, b3=reward_entry(zero_yaw=-1.5)), limits, write=False)
+    asked = start(view, plan, tmp_path, 3, document(plan, b3=reward_entry(zero_yaw=-1.5)), write=False)
     manager, _ = _manager(lin=0.35, ang=0.4, air=0.2, slip=-0.2, yaw=-1.5)
     body = adj.reward_readback(types.SimpleNamespace(reward_manager=manager), asked)
     assert body["live"]["zero_yaw"] == -1.5 and body["asked"]["zero_yaw"] == -1.5

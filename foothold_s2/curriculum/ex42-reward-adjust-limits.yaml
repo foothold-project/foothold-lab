@@ -6,12 +6,12 @@
 # the values inside them are chosen from the boundary evaluation. The stop threshold is not a cell (in EX-42 a stop is
 # the stand slot, so it has no effect).
 schema: ex42-reward-adjust-limits/1
-decision: {ledger: "decisions.tsv 2026-11-12 20:37", commit: "3e746a19"}
+decision: {ledger: "decisions.tsv 2026-11-12 20:37", commit: "3e746a19"}     # zero_yaw: 2026-11-13 09:52, c2032256
 cells:
   track_lin_vel_std: [0.25, 0.5]     # rewards.track_lin_vel.params.std (plan value 0.5)
   track_ang_vel_std: [0.25, 0.5]     # rewards.track_ang_vel.params.std (plan value 0.5)
   feet_air_time: [0.0, 0.5]          # weight of ex41_feet_air_time (plan value 0.0)
   foot_slip: [-0.25, -0.05]          # weight of ex41_foot_slip (plan value -0.15)
-  # zero_yaw: proposed limits [-2.0, -0.5] (planner draft EX42-E1-REMEDY-draft-1113, 2026-11-13). No ledger row yet,
-  # so until the team lead approves them the cell admits the plan value only: an adjustment cannot move it.
-  zero_yaw: [-0.5, -0.5]             # weight of ex41_zero_yaw (plan value -0.5) · ledger pending
+  # zero_yaw: decisions.tsv 2026-11-13 09:52 (team lead; ledger commit c2032256, read directly): the cell and its
+  # limits approved first, first value -1.0. The yaw rate while the turn command is zero (heading drift).
+  zero_yaw: [-2.0, -0.5]             # weight of ex41_zero_yaw (plan value -0.5)
