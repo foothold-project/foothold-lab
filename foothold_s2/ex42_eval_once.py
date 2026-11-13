@@ -435,6 +435,8 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
               "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),
               "next_stage_id": decision["next_stage_id"], "state": decision["state"],
               "automatic_launch_started": False, "notification_required": True, "reason": decision.get("reason")}
+    if decision.get("extension_evidence") is not None:
+        notice["extension_evidence"] = decision["extension_evidence"]
     if decision["action"] == "continue":
         notice.update(segment_end=decision["segment_end"], resume_checkpoint=decision["resume_checkpoint"])
     if decision["action"] not in ("launch", "continue"):

@@ -54,7 +54,7 @@ def _maintenance_verdict(p1) -> str | None:
     return verdict if verdict in ("PASS", "HOLD", "FAIL") else None
 
 
-def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1):
+def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1, p1_path):
     """Same stage, from this boundary's saved checkpoint: allowed only inside the bounds of the stage's own approval
     cell (scope maximum, cell interval; read through the stage's own validator) under the scoped automatic policy.
     No PASS is needed to go on. The plan's first stage has no boundary to continue from."""
@@ -77,6 +77,7 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
                 or manifest.get("progress", {}).get("completed_updates") != iteration):
             raise ValueError("the boundary checkpoint is not the manifest's latest save that was scored")
         end = min(iteration + interval, bound)
+        extension = None
         if iteration >= bound:
             row = next(r for r in plan.document["stages"] if r["id"] == stage_id)
             ceiling = (extension_ceiling(iteration, bound, row.get("extension_updates"), row.get("extension_max_count", 0))
@@ -86,6 +87,8 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
                         "reason": f"update {iteration} is the approved bound {bound} (extensions used or not open) "
                                   f"and the gate did not pass"}
             end = min(iteration + interval, ceiling)
+            from foothold_s2.ex42_extension_evidence import improvement_evidence
+            extension = improvement_evidence(plan, stage_id, iteration, interval, Path(p1_path))
     except (ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "continue_not_authorized",
                 "reason": f"not authorized to continue by itself: {exc}"}
@@ -97,8 +100,13 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
                 "reason": (f"maintenance table is {maintenance} at this boundary" if maintenance
                            else "maintenance table verdict is not readable from the pinned measurement")
                           + f": the next segment (end {end}) was not started; resume by hand after a decision"}
+    if extension is not None and extension["state"] != "PASS":
+        return {**base, "action": "notify", "state": "extension_needs_lead_review",
+                "reason": f"HOLD extension has no verified improvement evidence: {extension['reason']}",
+                "extension_evidence": extension}
     return {**base, "action": "continue", "state": "stage_continues", "target_stage": stage_id,
             "resume_checkpoint": str(checkpoint), "segment_end": end,
+            **({"extension_evidence": extension} if extension is not None else {}),
             "plan": str(plan.path), "approvals": str(Path(approvals_path).resolve()),     # the run's own pinned pair
             "authorization": proof}
 
@@ -135,7 +143,7 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
             "gate_sha256": _sha256(p1_path)}
     if not (p1.get("judgment") == "PASS" and iteration >= minimum and following is not None):
         if index > 0:      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
-            return _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1)
+            return _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1, p1_path)
         return {**base, "action": "notify", "state": "not_ready",
                 "reason": "no following stage" if following is None else f"gate judgment is {p1.get('judgment')}"}
     launch_plan, launch_approvals, pair = plan, approvals_path, {}
@@ -172,6 +180,8 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
               "gate_sha256": decision["gate_sha256"], "state": "starting",
               **({"resume_checkpoint": decision["resume_checkpoint"], "segment_end": decision["segment_end"]}
                  if kind == "continue" else {})}
+    if decision.get("extension_evidence") is not None:
+        record["extension_evidence"] = decision["extension_evidence"]
     with open(output / LAUNCH_RECORD, "x", encoding="utf-8") as handle:
         json.dump(record, handle, ensure_ascii=False, sort_keys=True)
     env = {**os.environ, "EX42_AUTO_ACTION": kind, "EX42_AUTO_TARGET_STAGE": decision["target_stage"],

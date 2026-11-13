@@ -1,5 +1,6 @@
 """Round contract consumers: the stage table's execution cap is `maximum_updates` (not the first check), and a HOLD
-at the cap goes on through the HOLD-only extensions (`extension_updates` x `extension_max_count`) only. Real plan,
+at the cap can use the HOLD-only extension budget (`extension_updates` x `extension_max_count`) only with numeric
+improvement evidence. Real plan,
 real approvals, a boundary save built on the real E0 m250; only the extension flag is stood in for. No training.
 """
 from __future__ import annotations
@@ -56,7 +57,7 @@ def _with_extension(monkeypatch, plan_row_changes, authorized=True):
 
 @needs_run
 @pytest.mark.parametrize("judgment,authorized,state", [
-    ("HOLD", True, "stage_continues"), ("FAIL", True, "stage_bound_reached_not_ready"),
+    ("HOLD", True, "extension_needs_lead_review"), ("FAIL", True, "stage_bound_reached_not_ready"),
     (None, True, "stage_bound_reached_not_ready"), ("HOLD", False, "stage_bound_reached_not_ready")])
 def test_a_hold_at_the_approved_bound_goes_on_only_when_the_extension_is_open(tmp_path, monkeypatch, judgment, authorized, state):
     _with_extension(monkeypatch, {"extension_updates": 500, "extension_max_count": 2}, authorized)
