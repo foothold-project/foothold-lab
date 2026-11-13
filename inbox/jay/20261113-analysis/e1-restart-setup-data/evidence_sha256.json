@@ -1,0 +1,162 @@
+[
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/model_250.pt",
+    "sha256": "680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/map_modes.json",
+    "sha256": "eaaea7652a82c2f30729b186e66bd7270accfa30e15dd3901edf020bab240094"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_side+0.2.npz",
+    "sha256": "35f7efff5e80a837e5929aac50a922dd24dc97714918fc2a85c6dcabe7582fb3"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_side+0.3.npz",
+    "sha256": "bd746dd137dc513962ba4592ec00c6a6d7fffe71a396cdea00827ed7a74e5311"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_side+0.4.npz",
+    "sha256": "675225b716f0ab291fb6ba6c127e8a7583b2c4a1a00fcf9be974798d403de041"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_side+0.6.npz",
+    "sha256": "42592d13f10bd98da432f25696fb254f0bf241df8c84cd87da3b4db405f96b6e"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_side-0.4.npz",
+    "sha256": "e3ff0adab1623d4abffa3551a510b45b8be3aa8714e03bf455549e59afb3e72d"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_fwd0.1.npz",
+    "sha256": "130b2de0a48ebd52bfbb94ef96193b09c3d2cb9323aa78c8300af6413c20187c"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L0/env_arrays_eval_gt_fwd0.2.npz",
+    "sha256": "8f62ae8403a4277f4c988a14109a662996c93fec7c317504142bc4ba9e5a6c06"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/map_modes.json",
+    "sha256": "2f71a9a9477c69ca6bbfcda9cbe0dc84bf6db3af94ed32d997ea55b2e8e7f3f9"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_side+0.2.npz",
+    "sha256": "2be96a844bd93af4b1a1b00ccccb8819fe40eaf84916979352357eb2c3c3f2d8"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_side+0.3.npz",
+    "sha256": "c96c65369ef7808b7a3981204a9adf6a21aa31f44487c4fcbc7522955d26bc9e"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_side+0.4.npz",
+    "sha256": "9c2b9eb56075d389ddf03969bd994668cdbdf2eb8a29188b14cc1d4e691b1a7c"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_side+0.6.npz",
+    "sha256": "a6b72bc4f5bf9d41f81d7afb104f31a58e45f65ca1c355ec9825f201a1d6f65b"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_side-0.4.npz",
+    "sha256": "b5730361e833e394b46c3a97b2ce97166e9b4908f581971aadff2a7fe7a09a3e"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_fwd0.1.npz",
+    "sha256": "961e630d9e68614c5c7b710ba9755d9d73d341751d3546142be2c127a51cedad"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/G1b_L5/env_arrays_eval_gt_fwd0.2.npz",
+    "sha256": "64c3b84defcbf6ad1527ea85240bc9667e8c2c55ae73bad6ef5186f1d735f7f0"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2.json",
+    "sha256": "183ab39194220c8f2efb59320982211a01c10f65afc7d59de5adda8865130752"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd0.5.npz",
+    "sha256": "5f4fafc927e1f7ad4ec928eb1e2e96bdc0d00377e2938da4cddd95acb1fdbf64"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd1.0.npz",
+    "sha256": "da1c35f973198f633c6c3187ecbb4e5e852595bdedbd8472e985402e7cb00288"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd0.5.npz",
+    "sha256": "f548722a2122efde1c0fe73e6fa2459a3c87e7953ace4fba6c27f540ebcc2ad4"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd1.0.npz",
+    "sha256": "5c7818c5898d044d4ff4e47892efedc2bbab89d923d43dc0f6fd21cc6a805819"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd0.5.npz",
+    "sha256": "a7c2208c9cd01214fae08b7287cfce4586a7b9e7b2c4f26b640c8fd21544bd55"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd1.0.npz",
+    "sha256": "a986c4aff4994590a4bf0312b66ad88960018a49e70f27693cff815183995939"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/params/env.yaml",
+    "sha256": "c03afda630c8a1e69f62606351b3589336c84ebcdaa9abdd3909e1c4c4912c9e"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/curriculum/ex42-prep.yaml",
+    "sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/curriculum/ex41.py",
+    "sha256": "50b3453d9b0f2237f23fb07c554bdea6afa698c65e6bfc5351a93fcc846ee9be"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/segment_commands_b1.json",
+    "sha256": "8358913019f64493805fb8449c4159baecd7bfc725c90660b12b400ea7a377ce"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/segment_commands_b8.json",
+    "sha256": "d92c00125517ccff8de2d4363552a7ffe5487c82ae11364a742d065ba2d051ec"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/commands/mixed_core.py",
+    "sha256": "bd84fa0fee3ce1385a11824817328165578e47ed279b97c9116d7a5b7b9044d5"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/commands/ex42_command_stats.py",
+    "sha256": "f1500830f76f8b763a0e8ccbf283c3ff0f1e7987fa061b23e858b607217a8239"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/commands/ex42_shares.py",
+    "sha256": "8c965c32b1be754ed872c5bba497264d7a311067e27f4fc728403f3750d6577d"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/rewards/w86.py",
+    "sha256": "5239716e6151e69fc5873bc7f44344096d7f0e6cf9f444fe2a22f3c2aa1098fe"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/rewards/w86_runtime.py",
+    "sha256": "7f80cc8f3a9c840be422fdc2bba984872d96b14d96b2c79f34a9bd015164f670"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/rewards/basic_gait_bundle.py",
+    "sha256": "3620c1e761a78796eeabe8d8fcba19e66fabd24c5e5cf05a137ddeddf9a9d941"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/ex42_stage_handoff.py",
+    "sha256": "9f326e55b19c5749284011c03e2c4f3a93fa00dffa5ed436e5291e87af9b2dde"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v11b/foothold_s2/scripts/ex42_remeasure.py",
+    "sha256": "197aca56dca08737ff030a25b447f463e92f1cead2376f404297e483e82ae0b6"
+  },
+  {
+    "path": "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/envs/mdp/rewards.py",
+    "sha256": "918a18c90ecf9815ca646973de05060dbcd90f6615cd93b0fd4e6d629490191d"
+  },
+  {
+    "path": "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/managers/reward_manager.py",
+    "sha256": "6be44a98df5aed8a0ebac2913ebea33010633e007e816697a6d99f7ccfd731db"
+  },
+  {
+    "path": "/home/jay/mai/wt/foothold-lab/analyst-lx-jeplo-c/inbox/jay/20261113-analysis/e1-seed-repeat-data/ranges.csv",
+    "sha256": "849d67fcd1dbb7f6c2f6f93fcb487b6103628fba05341b90dff9a312fdfb087e"
+  }
+]
