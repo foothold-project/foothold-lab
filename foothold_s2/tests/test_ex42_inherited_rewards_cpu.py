@@ -177,7 +177,9 @@ def test_live_adjustment_before_the_last_segment_remains_the_actual_inherited_va
     assert refs['inherited_rewards.live_adjustment']['sha256'] == parent_tests.sha(receipt)
 
 
-def test_adjustment_at_checkpoint_update_is_included_but_a_later_one_is_not(known):
+@pytest.mark.parametrize('receipt_iteration,expected_weight', [(249, 0.3), (250, 0.3), (251, 0.2)])
+def test_adjustment_before_or_at_checkpoint_update_is_included_but_a_later_one_is_not(
+        known, receipt_iteration, expected_weight):
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.ex42_live_adjust import RECEIPT
     from foothold_s2.ex42_stage_materialize import inherited_rewards
@@ -187,15 +189,17 @@ def test_adjustment_at_checkpoint_update_is_included_but_a_later_one_is_not(know
     source = EX42Plan.load(known['source_plan'])
     run_dir = known['parent_manifest'].parent
     limits = Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml'
-    for number, weight in ((250, 0.25), (251, 0.3)):
-        (run_dir / f'ex42_update_adjust_m{number}.json').write_text(json.dumps({
-            'format': RECEIPT, 'stage_id': 'E1', 'plan_sha256': source.sha256,
-            'iteration': number, 'after': {'rewards': {'slow_track': weight},
-                                           'commands': {}, 'monitor': {}}}))
+    receipt = run_dir / f'ex42_update_adjust_m{receipt_iteration}.json'
+    receipt.write_text(json.dumps({
+        'format': RECEIPT, 'stage_id': 'E1', 'plan_sha256': source.sha256,
+        'iteration': receipt_iteration, 'after': {'rewards': {'slow_track': 0.3},
+                                                  'commands': {}, 'monitor': {}}}))
     row, refs = inherited_rewards(source, 'E1', known['parent_manifest'], 250, limits)
-    assert row['values']['slow_track'] == 0.25
-    assert refs['inherited_rewards.live_adjustment']['sha256'] == parent_tests.sha(
-        run_dir / 'ex42_update_adjust_m250.json')
+    assert row['values']['slow_track'] == expected_weight
+    if receipt_iteration <= 250:
+        assert refs['inherited_rewards.live_adjustment']['sha256'] == parent_tests.sha(receipt)
+    else:
+        assert 'inherited_rewards.live_adjustment' not in refs
 
 
 def test_the_last_started_segment_speaks_even_when_it_ran_across_later_boundaries(known):
