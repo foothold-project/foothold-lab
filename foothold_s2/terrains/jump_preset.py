@@ -30,9 +30,9 @@ TILE_SIZE = (8., 8.)
 LAYOUT_ROWS = 10
 GAP_DEPTH_M = 1.0
 FLOOR_THICKNESS_M = .10
-# Keep existing reset defaults; the first support patch accommodates XY +-0.5
-# and all yaw angles of the 0.70 x 0.50 m support-test rectangle.
-RESET_RANGES = {}
+# The jump sequence targets proceed along +x. Keep the existing XY range and
+# align only the initial yaw, as in the fixed-forward START entry contract.
+RESET_RANGES = {kind: {"yaw": (0., 0.)} for kind in KINDS}
 
 
 @dataclass(frozen=True)

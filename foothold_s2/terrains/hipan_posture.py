@@ -14,6 +14,9 @@ import warnings
 import numpy as np
 
 KINDS = ('high_ledge', 'wall', 'crawl')
+# The D-family route begins along the tile's +x direction, matching the
+# fixed-forward START entry convention. Keep the existing XY reset range.
+RESET_RANGES = {kind: {"yaw": (0., 0.)} for kind in KINDS}
 PRESET_ID = 'posture_go2_v1'
 PRESET_SOURCE = 'project_inference_20261111'
 LEVEL_COUNTS = {'high_ledge': 3, 'wall': 1, 'crawl': 10}

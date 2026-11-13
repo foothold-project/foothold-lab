@@ -35,6 +35,10 @@ PAPER_EXT_SPECS = (
                                ("border_width", 1.0), ("holes", False))),
 )
 
+# E-family routes advance along +x. Keep XY randomization and fix only the
+# initial heading, using the same per-kind reset contract as START entries.
+RESET_RANGES = {spec.kind: {"yaw": (0., 0.)} for spec in PAPER_EXT_SPECS}
+
 
 def evaluation_dimensions(dimensions: dict[str, float], *, gap_scale: float = 1.15,
                           support_scale: float = 0.85) -> dict[str, float]:
