@@ -1,0 +1,178 @@
+[
+  {
+    "command": "fwd0.1",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "fwd0.2",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "fwd0.3",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "fwd0.5",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "fwd1.0",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "side+0.1",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "side-0.1",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "side+0.2",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "side-0.2",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "back0.1",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  },
+  {
+    "command": "back0.2",
+    "run_identity": "{\"checkpoint_sha256\": \"680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e\", \"code_dirty_files\": 4, \"code_head\": \"d433b74675c9d0e05ab388c2a5c40b65af7b6654\", \"device\": \"cuda:0\", \"eval_seed\": 42, \"gpu_index\": 0, \"gpu_name\": \"NVIDIA GeForce RTX 5080\", \"gpu_total_mem_mib\": 15839, \"gpu_uuid\": \"c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b\", \"torch\": \"2.7.0+cu128\", \"torch_cuda\": \"12.8\"}",
+    "kind": [
+      "flat"
+    ],
+    "levels": [
+      0
+    ],
+    "shape": [
+      300,
+      64
+    ],
+    "dt": 0.02,
+    "alive_end": 64
+  }
+]

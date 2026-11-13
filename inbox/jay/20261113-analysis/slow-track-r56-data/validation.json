@@ -1,0 +1,7 @@
+{
+  "test": "known inputs: reward endpoints/exclusions, lateral error, censoring, reset gaps PASS",
+  "math_rows": 30,
+  "gait_rows": 88,
+  "flights_rows": 27538,
+  "files_verified": 24
+}
