@@ -305,6 +305,10 @@ def _live_adjustments(root: Path, iteration: int, plan: dict, plan_sha: str) -> 
     row = next((stage for stage in plan["stages"] if stage["id"] == "E1"), None)
     if not isinstance(row, dict):
         raise ValueError("E1 v2 treatment plan row missing")
+    if row.get("live_adjustment") is None:
+        if list(root.glob("ex42_update_adjust_m*.json")):
+            raise ValueError("E1 v2 live adjustment receipts need a matching plan contract")
+        return {"start": None, "events": []}  # read-only pre-v27 runs had no live adjustment contract
     limits = limits_from_plan(row["live_adjustment"])
     start, events = None, []
     for path in sorted(root.glob("ex42_update_adjust_m*.json"),
