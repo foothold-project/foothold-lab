@@ -15,12 +15,14 @@ cells:
   # zero_yaw: decisions.tsv 2026-11-13 09:52 (team lead; ledger commit c2032256, read directly): the cell and its
   # limits approved first, first value -1.0. The yaw rate while the turn command is zero (heading drift).
   zero_yaw: [-2.0, -0.5]             # weight of ex41_zero_yaw (plan value -0.5)
-  # Slow forward cells (decisions.tsv 2026-11-13 15:30, lead; registered now, closed until analyst-lx's formula and
-  # values are fixed and recorded in the ledger): each fence holds the one value the stage starts with, so nothing can
-  # move yet. feet_air_time_threshold: seconds a foot must stay in the air for ex41_feet_air_time to pay (0.5).
-  # slow_track: weight of ex42_slow_track (0 = the reward manager skips the term). The other three are its constants.
-  feet_air_time_threshold: [0.5, 0.5]
-  slow_track: [0.0, 0.0]
+  # Slow forward cells (decisions.tsv 2026-11-13 15:30, lead: registered). feet_air_time_threshold: seconds a foot
+  # must stay in the air for ex41_feet_air_time to pay (stage start 0.5). slow_track: weight of ex42_slow_track (stage
+  # start 0 = the reward manager skips the term). decisions.tsv 2026-11-13 17:31 (lead under the team lead's 15:22;
+  # ledger commit 73abb340, read directly; analyst-lx #779 985ce6ab): slow_track [0, 0.3] (rule R6: 0 -> 0.2, once to
+  # 0.3) and feet_air_time_threshold [0.04, 0.5] (new rule R5: 0.04 s). The three constants of ex42_slow_track stay
+  # closed on the value the stage starts with (sigma 0.5, speeds 0.1 to 0.3: the values rule R6 names).
+  feet_air_time_threshold: [0.04, 0.5]
+  slow_track: [0.0, 0.3]
   slow_track_sigma: [0.5, 0.5]
   slow_track_speed_min: [0.1, 0.1]
   slow_track_speed_max: [0.3, 0.3]

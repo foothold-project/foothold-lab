@@ -279,7 +279,10 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
     assert limits["cells"] == {"track_lin_vel_std": (0.25, 0.5), "track_ang_vel_std": (0.25, 0.5),
                                "feet_air_time": (0.0, 0.5), "foot_slip": (-0.25, -0.05),
                                "zero_yaw": (-2.0, -0.5),                  # decisions.tsv 2026-11-13 09:52
-                               **{name: (value, value) for name, value in SLOW.items()}}       # closed for now
+                               # decisions.tsv 2026-11-13 17:31 (73abb340): two of the slow forward cells are open
+                               "feet_air_time_threshold": (0.04, 0.5), "slow_track": (0.0, 0.3),
+                               "slow_track_sigma": (0.5, 0.5), "slow_track_speed_min": (0.1, 0.1),
+                               "slow_track_speed_max": (0.3, 0.3)}                        # the constants stay closed
     assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
 
 

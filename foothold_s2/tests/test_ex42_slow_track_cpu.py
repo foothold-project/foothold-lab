@@ -172,20 +172,46 @@ def terms():
             "ex41_zero_yaw": _Term(-1.0)}
 
 
-def test_the_shipped_row_starts_with_the_term_off_and_the_fences_closed(plan, tmp_path):
+def _row_doc(plan, row, **change):
+    return {"schema": adj.SCHEMA, "stage_id": "E1", "plan_sha256": plan.sha256,
+            "segments": {"1": {"decided_at": "t", "reason": "r", "evidence": "e", "rewards": {**row, **change}}}}
+
+
+def test_the_shipped_row_starts_with_the_term_off_and_the_shipped_fences_are_the_ledger_row(plan, tmp_path):
+    """decisions.tsv 2026-11-13 17:31 (73abb340): slow_track [0, 0.3], feet_air_time_threshold [0.04, 0.5]. The three
+    constants of the term stay closed on the value the stage starts with."""
     row = adj.stage_rewards(plan, "E1")
     assert (row["slow_track"], row["feet_air_time_threshold"], row["feet_air_time"]) == (0.0, 0.5, 0.0)
     assert (row["slow_track_sigma"], row["slow_track_speed_min"], row["slow_track_speed_max"]) == (0.5, 0.1, 0.3)
     limits = adj.reward_limits()["cells"]
+    assert limits["slow_track"] == (0.0, 0.3) and limits["feet_air_time_threshold"] == (0.04, 0.5)
     assert all(limits[name] == (row[name], row[name]) for name in
-               ("slow_track", "feet_air_time_threshold", "slow_track_sigma", "slow_track_speed_min", "slow_track_speed_max"))
-    for change in ({"slow_track": 0.1}, {"feet_air_time_threshold": 0.3}, {"slow_track_sigma": 0.4}):
-        doc = {"schema": adj.SCHEMA, "stage_id": "E1", "plan_sha256": plan.sha256,
-               "segments": {"1": {"decided_at": "t", "reason": "r", "evidence": "e", "rewards": {**row, **change}}}}
-        path = tmp_path / "adjust.json"
-        path.write_text(json.dumps(doc), encoding="utf-8")
+               ("slow_track_sigma", "slow_track_speed_min", "slow_track_speed_max"))
+    text = adj.REWARD_LIMITS.read_text(encoding="utf-8")
+    assert "2026-11-13 17:31" in text and "73abb340" in text
+    path = tmp_path / "adjust.json"
+    for change in ({"slow_track": 0.31}, {"slow_track": -0.01}, {"feet_air_time_threshold": 0.03},
+                   {"feet_air_time_threshold": 0.51}, {"slow_track_sigma": 0.4}, {"slow_track_speed_min": 0.05},
+                   {"slow_track_speed_max": 0.4}):
+        path.write_text(json.dumps(_row_doc(plan, row, **change)), encoding="utf-8")
         with pytest.raises(ValueError, match="leaves the approved limits"):
             adj.start_segment(view(plan), plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=False)
+
+
+@pytest.mark.parametrize("change", [{"slow_track": 0.2}, {"slow_track": 0.3},                       # rule R6 and its one step up
+                                    {"feet_air_time_threshold": 0.04, "feet_air_time": 0.1}])       # the new rule R5
+def test_the_values_of_the_boundary_rules_pass_the_shipped_limits_and_reach_the_env_config(plan, tmp_path, change):
+    row = adj.stage_rewards(plan, "E1")
+    path = tmp_path / "adjust.json"
+    path.write_text(json.dumps(_row_doc(plan, row, **change)), encoding="utf-8")
+    record = adj.start_segment(view(plan), plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+    assert record["rewards"]["source"] == "adjust_file" and record["rewards"]["values"] == {**row, **change}
+    live = terms()
+    env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(**{k: live[k] for k in
+                                                                    ("track_lin_vel", "track_ang_vel", "ex41_feet_air_time")}))
+    adj.apply_reward_params(env_cfg, record, _Cfg)
+    assert env_cfg.rewards.ex42_slow_track.weight == change.get("slow_track", 0.0)
+    assert live["ex41_feet_air_time"].params["threshold"] == change.get("feet_air_time_threshold", 0.5)
 
 
 def test_the_first_segment_registers_the_term_and_changes_nothing_else(plan, tmp_path):
