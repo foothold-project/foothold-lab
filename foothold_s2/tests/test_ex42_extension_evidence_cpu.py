@@ -203,6 +203,20 @@ def test_malformed_score_shape_is_a_hold_notice_not_an_exception(tmp_path, malfo
 
 
 @needs_run
+@pytest.mark.parametrize("malformed", [[], {"stage_exit": ["broken"]}])
+def test_malformed_maintenance_score_is_also_a_hold_notice(tmp_path, malformed):
+    gate, manifest = _receipts(tmp_path)
+    folder = _folders(gate)[2]
+    score_path, receipt_path = folder / "ex42_score.json", folder / "p1_score.json"
+    score_path.write_text(json.dumps(malformed))
+    receipt = json.loads(receipt_path.read_text()); receipt["measurement_sha256"] = _sha(score_path)
+    receipt_path.write_text(json.dumps(receipt))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert decision["state"] == "continue_held_by_maintenance"
+
+
+@needs_run
 @pytest.mark.parametrize("mutation", ["score", "gate_plan", "missing", "nan", "policy", "v2_missing"])
 def test_missing_or_changed_boundary_evidence_cannot_extend(tmp_path, mutation):
     gate, manifest = _receipts(tmp_path)
