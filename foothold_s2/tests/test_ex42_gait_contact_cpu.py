@@ -237,6 +237,18 @@ def test_foot_sole_height_sign_is_positive_above_flat_support():
     assert result[1, 0, 0] > result[0, 0, 0]
 
 
+def test_foot_sole_height_uses_signed_go2_center_offset_after_rotation():
+    pos = np.zeros((1, 1, 4, 3), dtype=float)
+    pos[..., 2] = 0.022
+    quat = np.zeros((1, 1, 4, 4), dtype=float)
+    quat[..., 0] = np.sqrt(0.5)
+    quat[..., 2] = np.sqrt(0.5)  # +90 degrees about body Y rotates local -X upward.
+
+    result = foot_sole_height_m(pos, quat, np.array([0.0]))
+
+    assert result[0, 0, 0] == pytest.approx(0.002)
+
+
 def test_r5_drag_height_threshold_is_strictly_below_two_centimeters(tmp_path):
     force, height, speed, alive = _known_r5_arrays()
     height[50:300] = 0.03
