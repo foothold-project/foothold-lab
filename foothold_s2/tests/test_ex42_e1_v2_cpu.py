@@ -86,8 +86,9 @@ def test_fixed_treatment_fingerprint_distinguishes_adjustment(tmp_path):
         {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
     with pytest.raises(ValueError, match="identity differs"):
         treatment(checkpoint, 500)
-    (tmp_path / "segment_rewards_b2_rank1.json").write_text(json.dumps(
-        {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
+    for rank in (0, 1):
+        (tmp_path / f"segment_rewards_b2_rank{rank}.json").write_text(json.dumps(
+            {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
     assert treatment(checkpoint, 500)["sha256"] != first["sha256"]
 
 
@@ -169,6 +170,13 @@ def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_p
     with pytest.raises(ValueError, match="identity differs"):
         judge_e1_v2(score, baseline, measured, plan, previous=previous,
                     checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
+    for rank in (0, 1):
+        (tmp_path / f"segment_rewards_b2_rank{rank}.json").write_text(json.dumps(
+            {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
+    changed = judge_e1_v2(score, baseline, measured, plan, previous=previous,
+                          checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
+    assert changed["judgement"] == "HOLD"
+    assert changed["e1_exit_v2"]["treatment"]["judgement"] == "HOLD"
 
 
 def test_legacy_e1_score_cannot_be_promoted_under_v2_policy():
