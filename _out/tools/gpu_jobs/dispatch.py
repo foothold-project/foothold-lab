@@ -14,6 +14,7 @@ import os
 import sys
 from pathlib import Path
 import re
+import shlex
 from datetime import datetime, timezone
 import time
 import uuid
@@ -616,7 +617,24 @@ def stage_of(it: int, rows) -> tuple[str, int, int] | None:
     return next((r for r in rows if r[1] <= max(it, 1) <= r[2]), None)
 
 
-def eval_attempts(root: str) -> list[dict]:
+def _eval_process_alive(folder: Path, procs: list[dict]) -> bool:
+    target = folder.resolve()
+    for proc in procs:
+        try:
+            tokens = shlex.split(proc.get("cmdline", ""))
+        except ValueError:
+            continue
+        if not any("ex42_eval_once" in token or "eval_map_modes" in token for token in tokens):
+            continue
+        for index, token in enumerate(tokens):
+            value = (tokens[index + 1] if token == "--out" and index + 1 < len(tokens)
+                     else token.partition("=")[2] if token.startswith("--out=") else None)
+            if value and Path(value).resolve().is_relative_to(target):
+                return True
+    return False
+
+
+def eval_attempts(root: str, procs: list[dict] | None = None, now: float | None = None) -> list[dict]:
     """Per 250-boundary score attempt: iteration, start, end (if finished), state."""
     out = []
     if Path(root).name == "scores":
@@ -625,11 +643,16 @@ def eval_attempts(root: str) -> list[dict]:
             if not match or not d.is_dir():
                 continue
             score = d / "p1_score.json"
+            started = d.stat().st_mtime
             try:
                 state = read_json(score).get("state", "complete") if score.is_file() else "running"
             except (OSError, ValueError):
                 state = "invalid_score"
-            out.append({"iteration": int(match.group(1)), "start": d.stat().st_mtime,
+            if (state == "running" and procs is not None and psutil is not None
+                    and (now if now is not None else time.time()) - started > 120
+                    and not _eval_process_alive(d, procs)):
+                state = "중단"
+            out.append({"iteration": int(match.group(1)), "start": started,
                         "end": score.stat().st_mtime if score.is_file() else None, "state": state})
         return out
     for d in sorted(Path(root).glob("model_*_*")) if Path(root).is_dir() else []:
@@ -725,6 +748,11 @@ def auto_items(cfg: dict, train: dict | None, now: float, jobs: list[dict], atte
             items.append({"title": title, "priority": 1, "gpu": 1,
                           "start": a["start"], "end": a["start"] + eval_min * 60, "state": "실행",
                           "owner": "score_watch", "source": eval_src, "kind": "eval"})
+        elif a["state"] == "중단":
+            items.append({"title": f"{experiment} {a['iteration']} 경계 평가 · 중단",
+                          "priority": 1, "gpu": 1, "start": a["start"], "end": None,
+                          "state": "중단", "owner": "score_watch", "kind": "eval",
+                          "source": "완료 점수 없음 · 평가 프로세스 없음"})
     if train and type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
         it, s, b = train["iter"], train["iter_s"], cfg["boundary"]
         done_iters = {a["iteration"] for a in attempts}
@@ -733,7 +761,7 @@ def auto_items(cfg: dict, train: dict | None, now: float, jobs: list[dict], atte
         horizon = cfg.get("auto_horizon", 4)
         for k in range(0, horizon + 1):
             nxt = (it // b + k) * b
-            if nxt < b or nxt > cfg["stage_end"][-1] or nxt in done_iters:
+            if nxt < cfg.get("first_eval", b) or nxt > cfg["stage_end"][-1] or nxt in done_iters:
                 continue
             save_lag = 0 if cfg.get("eval_kind") == "ex42" else SAVE_EVERY
             start = now + max(0, nxt + save_lag - it) * s
@@ -832,7 +860,7 @@ def warnings(cfg: dict, queue: list[dict], auto: list[dict], jobs: list[dict], i
         due = (train["iter"] // b) * b
         seen = eval_attempts(cfg["eval_root"]) if attempts is None else attempts
         lag = 0 if cfg.get("eval_kind") == "ex42" else SAVE_EVERY
-        if due >= b and train["iter"] >= due + lag + 5 and due not in {a["iteration"] for a in seen}:
+        if due >= cfg.get("first_eval", b) and train["iter"] >= due + lag + 5 and due not in {a["iteration"] for a in seen}:
             out.append(f"{cfg.get('experiment', 'EX-41')} {due} 경계를 지났는데 평가 기록 없음")
     return out
 
@@ -987,19 +1015,42 @@ def training_config(cfg: dict, train: dict | None) -> dict:
         parent = receipt["parent"]["cumulative_update"]
         maximum = args["max_iterations"]
         interval = args["ex42_segment_end"]
+        stage_ends = [maximum]
+        first_eval = interval
         if any(type(v) is not int or v < 1 for v in (parent, maximum, interval)):
             return result
         stage = args.get("ex42_stage") or next(
             (name for name in ("e1", "e0") if args.get(f"ex42_stage_{name}_approved")), None)
         if not isinstance(stage, str) or not stage:
             return result
+        plan_path = args.get("ex42_plan")
+        if isinstance(plan_path, str) and Path(plan_path).is_file():
+            import yaml
+            plan = yaml.safe_load(read_shared_text(plan_path))
+            evaluation = plan.get("evaluation", {})
+            planned_interval = evaluation.get("interval_updates")
+            if type(planned_interval) is int and planned_interval > 0:
+                interval = planned_interval
+                first_eval = interval
+            planned_first = evaluation.get("first_evaluation_update")
+            if type(planned_first) is int and planned_first > 0:
+                first_eval = planned_first
+            row = next((row for row in plan.get("stages", []) if row.get("id") == stage.upper()), None)
+            if row:
+                base = row.get("maximum_updates")
+                step = row.get("extension_updates", 0)
+                count = row.get("extension_max_count", 0)
+                if all(type(value) is int and value >= 0 for value in (base, step, count)) and base > 0:
+                    caps = [base + step * index for index in range(count + 1)]
+                    stage_ends = [cap for cap in caps if cap <= maximum] or [maximum]
     except (OSError, ValueError, KeyError, TypeError):
         return result
     stage = stage.upper()
     name = str(manifest["run"].get("name", ""))
     display = stage + (" 다시" if "again" in (name + " " + run.name).casefold() else "")
     result.update(experiment="EX-42", stage_id=stage, stage_display=display,
-                  parent_iter=parent, stage_end=[maximum], boundary=interval,
+                  parent_iter=parent, stage_end=stage_ends, boundary=interval,
+                  first_eval=first_eval,
                   eval_root=str(run / "eval/scores"), stage_table="", eval_kind="ex42",
                   auto_horizon=max(1, (maximum + interval - 1) // interval))
     return result
@@ -1024,7 +1075,8 @@ def slow_data(cfg=LIVE, procs=None) -> dict:
         if item.get("external"):
             settle_external(item, observed_at)  # Display only; do not write the queue.
     return {"procs": procs, "train": train, "queue": queue, "qerr": qerr,
-            "attempts": eval_attempts(runtime_cfg["eval_root"]), "rows": stage_rows(runtime_cfg),
+            "attempts": eval_attempts(runtime_cfg["eval_root"], procs=procs, now=observed_at),
+            "rows": stage_rows(runtime_cfg),
             "pending": watcher_pending(runtime_cfg["eval_root"]), "runtime_cfg": runtime_cfg,
             "c_files": c_layer_files(cfg),
             "read_at": observed_at}
@@ -1135,9 +1187,9 @@ def gpu_box(d: dict, i: int, width: int, paint: Paint) -> list[str]:
     for j in here:
         if j["kind"] == "training" and train and type(train.get("iter")) is int:
             it, p = train["iter"], cfg["parent_iter"]
-            last = (train["tot_iter"] if cfg.get("eval_kind") == "ex42"
-                    and type(train.get("tot_iter")) is int and train["tot_iter"] > 0
-                    else cfg["stage_end"][-1])
+            # EX-42's status tot_iter is the current torchrun segment (250), while the
+            # plan's last cap is the whole stage, including an approved extension.
+            last = cfg["stage_end"][-1]
             st = stage_of(it, d["rows"])
             stage = f"{st[0]} (m{p + st[1]}~m{p + st[2]})" if st else "단계 미확인"
             label = f"{cfg.get('experiment', 'EX-41')} 학습"
