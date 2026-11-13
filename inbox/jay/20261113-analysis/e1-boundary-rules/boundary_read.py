@@ -18,12 +18,15 @@ from zipfile import BadZipFile
 from types import SimpleNamespace
 import numpy as np
 import yaml
-from boundary_rules import MODES, LOW_KEYS, finite, decide
+from boundary_rules import MODES, JUDGE_MODES, LOW_KEYS, finite, decide
 
 CODE=Path('/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v19')
 PARENT=Path('/home/jay/data/foothold/s2_lab/ex42_p1reh_20261113_144455/m13250/ex42_score.json')
 RUN=Path('/home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400')
 FORMAT='analyst-ex42-e1-boundary-draft/1'
+MAINTENANCE_CASES=('fwd0.5','fwd1.0','spin+1.2','spin-1.2','back0.5','back1.0',
+                   'side+0.5','side-0.5','diag-fwd+side+','diag-fwd+side-',
+                   'diag-back+side+','diag-back+side-','stop')
 REWARD_FIELDS={
     'track_lin_vel_std':'rewards.track_lin_vel.params.std',
     'track_ang_vel_std':'rewards.track_ang_vel.params.std',
@@ -77,13 +80,29 @@ def _npz_alive(z,checkpoint,seed):
         raise ValueError('NPZ identity or alive denominator mismatch')
     return alive
 
+def maintenance_mode_status(score):
+    """Require the named GT/PRED 26-cell contract, not any 26 judged rows."""
+    modes=score.get('cell_judgments',{})
+    if set(modes)!=set(MODES):raise ValueError('maintenance map modes incomplete')
+    status={}
+    for mode in MODES:
+        rows=modes[mode]
+        if set(rows)!=set(MAINTENANCE_CASES):raise ValueError('maintenance command coverage differs: '+mode)
+        role='judge' if mode in JUDGE_MODES else 'record_only'
+        if any(row.get('role')!=role for row in rows.values()):raise ValueError('maintenance mode role differs: '+mode)
+        if mode not in JUDGE_MODES:continue
+        judgments=[row.get('judgment') for row in rows.values()]
+        if any(x not in ('PASS','FAIL','HOLD') for x in judgments):raise ValueError('invalid maintenance judgment: '+mode)
+        status[mode]='FAIL' if 'FAIL' in judgments else 'HOLD' if 'HOLD' in judgments else 'PASS'
+    return status
+
 def load_snapshot(score_path,iteration=None,code_root=CODE,legacy_low=None,seed=42,repeat=False):
     score_path=Path(score_path);folder=score_path.parent;r=Reader()
     if iteration is None:
         match=re.fullmatch(r'm([1-9][0-9]*|0)',folder.name)
         iteration=int(match[1]) if match else None
     s=dict(iteration=iteration,score_path=str(score_path),metrics={},fingerprints={},errors=[],warnings=[],
-           maintenance=None,overall=None,comparable=True,repeats={},sources=r.sources)
+           maintenance=None,maintenance_modes={},overall=None,comparable=True,repeats={},sources=r.sources)
     def add(key,value,fp):
         if not finite(value):raise ValueError('nonfinite metric '+key)
         s['metrics'][key]=value;s['fingerprints'][key]=fp
@@ -102,9 +121,8 @@ def load_snapshot(score_path,iteration=None,code_root=CODE,legacy_low=None,seed=
         s.update(checkpoint_sha256=cp,plan_sha256=score.get('execution_plan_sha256'),
                  maintenance=score.get('maintenance_judgement'),overall=score.get('judgement'),
                  score_config_sha256=score.get('score_config_sha256'))
-        judges=[row for mode in score.get('cell_judgments',{}).values() for row in mode.values() if row.get('role')=='judge']
-        if len(judges)!=26:raise ValueError('maintenance 26-cell coverage missing')
-        if s['maintenance']=='PASS' and any(row.get('judgment')!='PASS' for row in judges):
+        s['maintenance_modes']=maintenance_mode_status(score)
+        if s['maintenance']=='PASS' and any(x!='PASS' for x in s['maintenance_modes'].values()):
             raise ValueError('maintenance PASS contradicts per-cell verdict')
         if iteration is None:raise ValueError('provide --iteration for non mN folder')
     except (OSError,ValueError,KeyError,TypeError) as exc:
@@ -219,7 +237,7 @@ def load_snapshot(score_path,iteration=None,code_root=CODE,legacy_low=None,seed=
                         recorded=score['e1_v2_cells']['low'][f'L{level}'][mode][case]['R']
                         if not math.isclose(recorded,s['metrics'][key],abs_tol=1e-7):raise ValueError('recorded low R mismatch')
                     except (KeyError,ValueError,TypeError) as exc:s['errors'].append(key+':'+str(exc))
-    if legacy_low:s['warnings'].append('Historical GT-only G1b replay; old source code differs; not a causal treatment comparison.')
+    if legacy_low:s['warnings'].append('Historical G1b has GT only. PRED low cells remain missing; no GT substitution and no causal treatment claim.')
     return s
 
 def comparison_rows(now,parent,previous):
@@ -235,6 +253,18 @@ def comparison_rows(now,parent,previous):
                          previous=prev,previous_delta=value-prev if finite(prev) else None,
                          parent_conditions_match=comparable))
     return rows
+
+def comparisons_by_mode(rows):
+    """Put independent GT/PRED values beside the off-mode record, without pooling."""
+    grouped={}
+    for row in rows:
+        suite,level,mode,case,metric=row['cell'].split('/')
+        if mode not in MODES:raise ValueError('unknown comparison mode: '+mode)
+        key='/'.join((suite,level,case,metric))
+        group=grouped.setdefault(key,dict(cell=key,unit=row['unit'],**{m:None for m in MODES}))
+        if group[mode] is not None:raise ValueError('duplicate comparison cell: '+row['cell'])
+        group[mode]=row
+    return [grouped[k] for k in sorted(grouped)]
 
 def load_treatment(run_root,iteration,code_root=CODE):
     r=Reader();run_root=Path(run_root);code_root=Path(code_root)
@@ -367,6 +397,7 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
             if not rep['errors']:snap['repeats'][str(seed)]=rep['metrics']
             else:snap['warnings'].append({'repeat_seed':seed,'errors':rep['errors']})
     comparisons=comparison_rows(now,base,prev)
+    mode_comparisons=comparisons_by_mode(comparisons)
     mismatches=[r['cell'] for r in comparisons if r['parent'] is not None and not r['parent_conditions_match']]
     now['comparable']=not mismatches
     if historical:
@@ -391,6 +422,7 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
     result=dict(format=FORMAT,created_at=datetime.now().astimezone().isoformat(),decision=decision,
                 iteration=n,current=now,parent=base,previous=prev,earlier=prior,treatment=t,
                 parent_condition_mismatches=mismatches,comparisons=comparisons,
+                mode_comparisons=mode_comparisons,
                 historical_counterfactual=historical,consumer_validation=validation)
     out.mkdir(parents=True,exist_ok=True)
     write=lambda name,obj:(out/name).write_text(json.dumps(obj,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
@@ -400,22 +432,35 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
     with (out/'cells.csv').open('w',encoding='utf-8',newline='') as f:
         writer=csv.DictWriter(f,fieldnames=['cell','unit','value','parent','parent_delta','previous','previous_delta','parent_conditions_match'],lineterminator='\n')
         writer.writeheader();writer.writerows(comparisons)
+    numeric=('value','parent','parent_delta','previous','previous_delta')
+    with (out/'mode_cells.csv').open('w',encoding='utf-8',newline='') as f:
+        writer=csv.DictWriter(f,fieldnames=['cell','unit']+[m+'_'+k for m in MODES for k in numeric],lineterminator='\n')
+        writer.writeheader()
+        for group in mode_comparisons:
+            writer.writerow(dict(cell=group['cell'],unit=group['unit'],**{
+                m+'_'+k:(group[m] or {}).get(k) for m in MODES for k in numeric}))
     def show(x):return '미확인' if x is None else f'{x:.6f}' if isinstance(x,float) else str(x)
     changes=' · '.join(f'{k} {t["current"].get(k)}→{v}' for k,v in decision['changes'].items()) or '현재 값 유지'
     one=f'm{n}: {decision["rule"]} · {changes} · 다음 구간 {decision["next_segment"]} · 초안만'
     text=['# E1 경계 규칙 판독',f'> 분류: A/평가',f'> 작성: analyst-lx · {datetime.now():%Y-%m-%d %H:%M}',
-          '> 근거: 원장 73abb340 · 15:03 R2/R3/R4 · 18:42 네 칸 비증가 해석',
+          '> 근거: 원장 73abb340 · 15:03 R2/R3/R4 · 04f50b4f GT·PRED 여덟 칸 정정',
           '> 요지: '+one,'> 상태: CPU 원자료 재계산 · 실행 설정 미적용','',one,'',
           f'기존 유지: {now["maintenance"]}; 전체 졸업: {now["overall"]}. 둘은 별개다.',
+          f'지도별 유지: {now["maintenance_modes"]}. GT·PRED 판정, 지도 끔 기록 전용.',
           '되돌림은 처방 직전 고정 기준과 같은 칸 두 경계를 비교한다. parent_delta와 previous_delta는 참고 열이다.',
           f'현재 설정 근거: {t["readback"]}. 초기 manifest는 RewardManager 실시간 재측정이 아니다.',
           f'소비 형식 검사: {validation}. 역사 재생: {historical}.',
           'R1·옛 R5 폐기. R5는 동일 접촉 정의 자료 없으면 보류. 시드·모드·레벨은 합치지 않는다.','',
           '발동: '+', '.join(decision['triggered']),'',*decision['notes'],'',
-          '| 칸 | 단위 | 현재 | 부모 | 부모 대비 | 직전 | 직전 대비 | 조건 일치 |',
-          '|---|---|---:|---:|---:|---:|---:|---|']
-    for row in comparisons:
-        text.append('| '+' | '.join([row['cell'],row['unit'],*(show(row[k]) for k in ('value','parent','parent_delta','previous','previous_delta')),str(row['parent_conditions_match'])])+' |')
+          '각 지도 열: 현재; 부모(차이); 직전(차이). 없는 지도 값은 미확인으로 남긴다.',
+          '| 칸 | 단위 | GT 판정 | PRED 판정 | 지도 끔 기록 |',
+          '|---|---|---|---|---|']
+    def mode_show(row):
+        if row is None:return '미확인'
+        return (f'{show(row["value"])}; 부모 {show(row["parent"])} (Δ {show(row["parent_delta"])}); '
+                f'직전 {show(row["previous"])} (Δ {show(row["previous_delta"])})')
+    for group in mode_comparisons:
+        text.append('| '+' | '.join([group['cell'],group['unit'],*(mode_show(group[m]) for m in MODES)])+' |')
     text+=['','입력 오류: '+json.dumps(now['errors']+t['errors'],ensure_ascii=False),
            '주의: '+json.dumps(now['warnings'],ensure_ascii=False),'',
            '원자료별 SHA와 고정 기준의 경계별 악화 항목은 report.json에 있다. 조정 JSON의 payload는 초안이며 이 도구가 적용하지 않는다.']

@@ -24,6 +24,7 @@ def snapshot(iteration=250, low=.9, yaw=.03):
         m[f'map/mixed012/{mode}/stop/speed_median_mps']=.01
         m[f'map/mixed012/{mode}/stop/yaw_speed_median_radps']=.01
     return dict(iteration=iteration, metrics=m, maintenance='PASS', errors=[],
+                maintenance_modes={'eval_gt':'PASS','eval_pred':'PASS'},
                 comparable=True, repeats={}, overall='FAIL')
 
 def treatment(at=None, before=0., after=0.):

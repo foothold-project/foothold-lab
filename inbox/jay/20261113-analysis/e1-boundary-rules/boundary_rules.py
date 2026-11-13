@@ -1,4 +1,4 @@
-"""CPU-only EX-42 E1 rule evaluation. Ledger 73abb340 + lead 18:42 clarification.
+"""CPU-only EX-42 E1 rules. Ledger 73abb340 + lead 19:28 GT/PRED decision.
 
 This module has no training imports or write-to-run path. Decisions are drafts.
 R1 and old R5 are superseded, not fallback actions when evidence is absent.
@@ -7,7 +7,9 @@ from __future__ import annotations
 import math
 
 MODES=('eval_gt','eval_pred','probe_prop_only')
-LOW_KEYS=tuple(f'low/L{level}/eval_gt/fwd{speed}/R' for level in (0,5) for speed in (.1,.2))
+JUDGE_MODES=MODES[:2]
+LOW_KEYS=tuple(f'low/L{level}/{mode}/fwd{speed}/R'
+               for mode in JUDGE_MODES for level in (0,5) for speed in (.1,.2))
 YAW_KEYS=tuple(f'yaw/L2/{mode}/fwd1.0/{metric}' for mode in MODES[:2]
               for metric in ('median_abs_rad','p90_abs_rad'))
 
@@ -18,10 +20,10 @@ def r5_observation_complete(iteration, activated_at):
     """R5 needs 500 updates after R6 activation, independently of clean windows."""
     return activated_at is not None and iteration>=activated_at+500
 
-def rollback_limits():
+def rollback_limits(modes=JUDGE_MODES):
     """Fixed-anchor adverse change, separated by mode/case/metric, #779 section 4."""
     out={}
-    for mode in MODES:
+    for mode in modes:
         for case in ('spin+1.2','spin-1.2'):
             out[f'map/mixed012/{mode}/{case}/yaw_follow']=(-1,.05,False)
         for level in (0,5):
@@ -37,9 +39,9 @@ def rollback_limits():
         out[f'map/mixed012/{mode}/stop/yaw_speed_median_radps']=(1,.05,False)
     return out
 
-def regression(current, anchor):
+def regression(current, anchor, modes=JUDGE_MODES):
     bad,missing,detail=[],[],[]
-    for key,(sign,limit,inclusive) in rollback_limits().items():
+    for key,(sign,limit,inclusive) in rollback_limits(modes).items():
         a,b=current['metrics'].get(key),anchor['metrics'].get(key)
         if not finite(a) or not finite(b):
             missing.append(key);continue
@@ -66,19 +68,23 @@ def repeat_confirmed(now, keys, predicate, previous=None):
 
 def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
     out=dict(rule='KEEP',changes={},triggered=[],next_segment='UNCHANGED',
-             notes=[],apply_ready=False,rule_commit='73abb340',r6_raise_contract='2026-11-13 lead 18:42 all_four_nonincreasing')
+             notes=[],apply_ready=False,rule_commit='04f50b4f',base_rule_commit='73abb340',
+             r6_raise_contract='2026-11-13 lead 19:28 all_eight_gt_pred_nonincreasing',
+             judge_modes=list(JUDGE_MODES),record_only_modes=list(MODES[2:]))
     def choose(rule, changes=None, note=None):
         out['rule']=rule;out['changes']=changes or {}
         if rule not in out['triggered']:out['triggered'].append(rule)
         if note:out['notes'].append(note)
         return out
     t=treatment or {};values=t.get('current',{});last=t.get('last_change')
-    if now.get('maintenance') in ('HOLD','FAIL'):
+    statuses=now.get('maintenance_modes',{})
+    if now.get('maintenance') in ('HOLD','FAIL') or any(statuses.get(m) in ('HOLD','FAIL') for m in JUDGE_MODES):
         out['next_segment']='DO_NOT_START'
         changes={k:last['before'][k] for k in last['fields']} if last else {}
         return choose('R4',changes,'기존 유지 비통과. 다음 구간 미기동·lead 확인; 처방은 직전 값 초안.')
     errors=list(now.get('errors',[]))+list(parent.get('errors',[]))+list(t.get('errors',[]))
     if now.get('maintenance')!='PASS':errors.append('maintenance_judgement_missing')
+    if any(statuses.get(m)!='PASS' for m in JUDGE_MODES):errors.append('GT_PRED_maintenance_coverage_missing')
     if not now.get('comparable',False):errors.append('comparison_conditions_differ')
     for key in (*LOW_KEYS,*YAW_KEYS):
         if not finite(now['metrics'].get(key)):errors.append('missing_or_nonfinite:'+key)
@@ -98,10 +104,12 @@ def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
     latest_reg=regression(now,anchor) if anchor else None
     consecutive=(previous is not None and previous['iteration']==now['iteration']-250)
     previous_after=(last and consecutive and previous['iteration']>last['iteration'] and
-                    previous.get('maintenance')=='PASS' and not previous.get('errors'))
+                    previous.get('maintenance')=='PASS' and not previous.get('errors') and
+                    all(previous.get('maintenance_modes',{}).get(m)=='PASS' for m in JUDGE_MODES))
     prior_reg=regression(previous,anchor) if anchor and previous_after else None
     if latest_reg:
         out['regression']=latest_reg
+        out['regression_record_only']=regression(now,anchor,MODES[2:])
     if prior_reg:
         same=sorted(set(latest_reg['bad']) & set(prior_reg['bad']))
         out['two_window_regression']=same
@@ -127,12 +135,13 @@ def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
             return choose('OBSERVE',note='최근 처방의 확인이 부족하거나 slow_track 되돌림 뒤라 재활성을 자동 제안하지 않음.')
         return choose('R6',{'slow_track':.2},'R1 대신 R6. R2가 겹쳐도 이 처방 하나만.')
     if values['slow_track']==.2 and not t.get('r6_raised',False) and consecutive:
-        if previous.get('errors'):
-            return choose('EVIDENCE_HOLD',note='직전 점수의 증거 오류로 R6 증량 비교 보류.')
+        if (previous.get('errors') or previous.get('maintenance')!='PASS' or
+                any(previous.get('maintenance_modes',{}).get(m)!='PASS' for m in JUDGE_MODES)):
+            return choose('EVIDENCE_HOLD',note='직전 GT·PRED 유지 미통과 또는 증거 오류로 R6 증량 비교 보류.')
         missing=[k for k in LOW_KEYS if not finite(previous['metrics'].get(k))]
         missing += [k+':previous_conditions_differ' for k in LOW_KEYS
                     if now.get('fingerprints',{}).get(k)!=previous.get('fingerprints',{}).get(k)]
-        if missing:return choose('EVIDENCE_HOLD',note='R6 증량 비교의 직전 네 칸 부족.')
+        if missing:return choose('EVIDENCE_HOLD',note='R6 증량 비교의 직전 GT·PRED 여덟 칸 부족.')
         delta={k:current[k]-previous['metrics'][k] for k in LOW_KEYS}
         out['r6_raise_deltas']=delta
         if all(v<=0 for v in delta.values()):
@@ -143,8 +152,8 @@ def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
             near=any(abs(v)<=(.007 if 'fwd0.1/' in k else .026) for k,v in delta.items())
             if near and not repeat_confirmed(now,LOW_KEYS,lambda a,b:all(a[k]<=b[k] for k in LOW_KEYS),previous):
                 return choose('REPEAT_REQUIRED',note='R6 비증가가 반복 폭 근처. 두 저장본의 seed 7·13 짝 재측정 필요.')
-            return choose('R6_RAISE',{'slow_track':.3},'네 칸 모두 비증가. 한 번만 0.2→0.3.')
-        out['notes'].append('저속 네 칸 중 증가가 있어 0.2 유지. 다음 경계 다시 비교.')
+            return choose('R6_RAISE',{'slow_track':.3},'GT·PRED 여덟 칸 모두 비증가. 한 번만 0.2→0.3.')
+        out['notes'].append('GT·PRED 저속 여덟 칸 중 증가가 있어 0.2 유지. 다음 경계 다시 비교.')
     if last and (not previous_after or latest_reg['bad'] or latest_reg['missing'] or
                  prior_reg is None or prior_reg['bad'] or prior_reg['missing'] or
                  previous.get('maintenance')!='PASS' or previous.get('errors')):

@@ -61,7 +61,7 @@ def main():
                                     encoding='utf-8', timeout=60, check=False)
             (out/f'{name}.txt').write_text(result.stdout, encoding='utf-8')
             failed = re.findall(r'^FAILED (.+)$', result.stdout, re.MULTILINE)
-            ok = (result.returncode == 0 and '24 passed' in result.stdout) if name == 'control' else (
+            ok = (result.returncode == 0 and re.search(r'\b[1-9][0-9]* passed\b', result.stdout) is not None) if name == 'control' else (
                 result.returncode == 1 and any(expected_test in test for test in failed)
                 and 'AssertionError' in result.stdout and not re.search(r'^ERROR ', result.stdout, re.MULTILINE))
             evidence['results'].append(dict(name=name, returncode=result.returncode,

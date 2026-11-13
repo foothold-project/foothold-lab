@@ -116,3 +116,19 @@ def test_rank_readback_disagreement_blocks_adjustment(tmp_path):
 def test_missing_score_keeps_requested_boundary_in_failure_report(tmp_path):
     s=load_snapshot(tmp_path/'m250/ex42_score.json',code_root=CODE)
     assert s['iteration']==250 and s['errors']
+
+@pytest.mark.parametrize('iteration', [500,750])
+def test_historical_gt_only_low_cannot_produce_an_eight_cell_draft(tmp_path,iteration):
+    import csv
+    low=DATA/f'hipan_g1_20261112/m{iteration}seg'
+    result=run(OLD/f'eval/scores/m{iteration}/ex42_score.json',PARENT,LIVE,CODE,tmp_path,
+               iteration=iteration,legacy_low=low,historical=True)
+    assert result['decision']['rule']=='EVIDENCE_HOLD'
+    assert sum('eval_pred/fwd' in key for key in result['decision']['missing'])==4
+    assert json.loads((tmp_path/'adjustment.draft.json').read_text())['payload'] is None
+    with (tmp_path/'mode_cells.csv').open() as f:
+        rows={row['cell']:row for row in csv.DictReader(f)}
+    row=rows['low/L0/fwd0.2/R']
+    assert float(row['eval_gt_value'])>0
+    assert row['eval_pred_value']==''
+    assert row['probe_prop_only_value']==''

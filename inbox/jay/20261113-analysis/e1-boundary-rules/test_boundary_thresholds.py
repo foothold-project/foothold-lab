@@ -9,10 +9,11 @@ from test_boundary_rules import snapshot, treatment
 
 
 @pytest.mark.parametrize('level', [0, 5])
+@pytest.mark.parametrize('mode', ['eval_gt', 'eval_pred'])
 @pytest.mark.parametrize('ratio,want', [(.55, 'R6'), (.6, 'KEEP'), (.61, 'KEEP')])
-def test_r6_fwd02_threshold_is_060_not_050(level, ratio, want):
+def test_r6_fwd02_threshold_is_060_not_050(level, mode, ratio, want):
     now = snapshot()
-    now['metrics'][f'low/L{level}/eval_gt/fwd0.2/R'] = ratio
+    now['metrics'][f'low/L{level}/{mode}/fwd0.2/R'] = ratio
     result = decide(now, snapshot(0), treatment=treatment())
     assert result['rule'] == want
     assert result['changes'] == ({'slow_track': .2} if want == 'R6' else {})
@@ -62,10 +63,11 @@ def test_r5_full_decision_waits_for_two_post_activation_boundaries(elapsed, want
 
 @pytest.mark.parametrize('passed,want', [(61, 'OBSERVE'), (60, 'ROLLBACK'),
                                        (59, 'ROLLBACK')])
-def test_stand_drop_includes_exactly_four_envs(passed, want):
+@pytest.mark.parametrize('mode', ['eval_gt', 'eval_pred'])
+def test_stand_drop_includes_exactly_four_envs(passed, want, mode):
     anchor = snapshot(250, low=.65)
     first, second = snapshot(500, low=.7), snapshot(750, low=.75)
-    key = 'stand/flat/eval_gt/stand/success'
+    key = f'stand/flat/{mode}/stand/success'
     first['metrics'][key] = second['metrics'][key] = passed
     current = treatment(250, 0., .2)
     current['anchor'] = anchor

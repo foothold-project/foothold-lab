@@ -2,10 +2,10 @@
 
 > 분류: A/평가
 > 작성: analyst-lx · 2026-11-13
-> 근거: 이슈 #765 · 원장 73abb340 446·452행 · #779 985ce6ab §3~4 · lead 18:42 네 칸 결합 답
+> 근거: 이슈 #765 · 원장 73abb340 · 04f50b4f의 19:24 GT·PRED 정정 · #779 985ce6ab §3~4
 > 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
-> 상태: CPU 답 아는 입력 49개 통과 · 요청 돌연변이 4개 검출 · m250 실제 경계는 결과 대기
-> 판: v1.1
+> 상태: CPU 답 아는 입력 76개 통과 · 요청 돌연변이 4개 검출 · m250 실제 경계는 결과 대기
+> 판: v1.2
 
 **이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
 
@@ -21,6 +21,7 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 |---|---|
 | `REPORT.md` | 한 줄 처방·칸별 현재/부모/직전·차이·단위·조건 일치 |
 | `cells.csv` | 표의 원 숫자. 반올림 전 계산값 보존 |
+| `mode_cells.csv` | GT·PRED 판정 열과 지도 끔 기록 열을 같은 명령·레벨·성분끼리 나란히 배치. 없는 값은 빈 칸 |
 | `report.json` | 입력별 SHA·유지/졸업 판정 분리·현재 보상·처방 직전 고정 기준·규칙별 사유 |
 | `adjustment.draft.json` | `apply_ready=false` 포장 안의 `payload`. 변경이 없거나 자료가 불완전하면 null |
 | `next_segment.txt` | 다음 구간 처방 한 줄 |
@@ -34,18 +35,20 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | 규칙 | 구현한 조건 | 제안 |
 |---|---|---|
 | R4 | `maintenance_judgement`가 FAIL/HOLD. 전체 졸업 `judgement`와 구별 | 다음 구간 미기동·lead 확인. 최근 보상 처방의 직전 값만 복원 초안 |
-| 두 경계 되돌림 | #779 §4의 **같은 모드·명령·레벨·성분**이 처방 직전 고정 기준보다 두 연속 유효 경계 악화 | 가장 최근 처방의 직전 값. checkpoint/optimizer를 되돌리지 않음 |
-| R6 첫 활성 | GT L0/L5 × 전진0.1/0.2 중 하나라도 R<0.3/0.6 | slow_track 0→0.2. 첫 경계부터 적용 가능 |
-| R6 증량 | 0.2 상태에서 네 칸 모두 직전보다 비증가. 한 칸이라도 증가하면 그대로. 유지 회귀·결측이 있으면 증량 보류 | 0.2→0.3 최대 한 번 |
+| 두 경계 되돌림 | GT 또는 PRED의 **같은 모드·명령·레벨·성분**이 처방 직전 고정 기준보다 두 연속 유효 경계 악화 | 가장 최근 처방의 직전 값. checkpoint/optimizer를 되돌리지 않음. 지도 끔은 기록 |
+| R6 첫 활성 | GT·PRED × L0/L5 × 전진0.1/0.2 여덟 칸 중 하나라도 R<0.3/0.6 | slow_track 0→0.2. 첫 경계부터 적용 가능 |
+| R6 증량 | 0.2 상태에서 여덟 칸 모두 직전보다 비증가. GT·PRED 어느 한 칸이라도 증가하면 그대로. 유지 회귀·결측이면 증량 보류 | 0.2→0.3 최대 한 번 |
 | R2 | GT/PRED 각각 전진1.0 Y1 중앙값>0.10 또는 p90>0.20 rad | zero_yaw −1→−1.25. 더 큰 벌점으로 반복 강화하지 않음 |
 | R3 | R6와 R2가 겹침 | R6 묶음 하나만 |
-| 새 R5 | R6 이후 두 경계 무회귀, 전진0.2 L0/L5 모두 R≥0.5, 같은 접촉 정의 발 자료 충족 | 공중 시간 기준 0.04초·가중 0.1 한 묶음 |
+| 새 R5 | R6 이후 GT·PRED 두 경계 무회귀, 기존 GT 전진0.2 L0/L5 모두 R≥0.5, 같은 접촉 정의 발 자료 충족 | 공중 시간 기준 0.04초·가중 0.1 한 묶음. R5 진입 바닥값은 이번 R6 정정에서 바꾸지 않음 |
 
 R1 폭 좁히기와 옛 R5는 73abb340으로 대체됐다. 결측 때 되살리지 않는다. R5보다 R2를 먼저 확인하며, 처방 변경 뒤 두 경계 관찰 중에는 다른 묶음을 추가하지 않는다. 원장의 명시적 예외인 R6의 다음 경계 증량은 따로 판독한다.
 
 반복 폭은 실행 plan의 v2 값과 같은 0.1 R 0.007, 0.2 R 0.026, Y1 중앙값 0.02 rad, p90 0.04 rad를 쓴다. 문턱 근처에서 처방을 새로 제안하려면 seed7·13의 같은 조건도 필요하다. 증량 비교가 0 근처이면 두 저장본의 같은 시드끼리 비교한다. 시드끼리 평균하거나 GT/PRED/끔을 합치지 않는다. 해당 자료가 없으면 `REPEAT_REQUIRED`다.
 
 두 경계 되돌림은 회전 비율 감소>0.05, 옆 각 방향 R 감소>0.05, Y1 중앙값 증가>0.02 rad 또는 p90 증가>0.04 rad, stand 성공 감소≥4 env, stop 몸속도 증가>0.02 m/s 또는 각속도 크기 증가>0.05 rad/s를 그대로 읽는다. 대칭비만 좋아지거나 나빠진 것을 단독 처방 이유로 쓰지 않는다. 부족한 창은 회복이나 연속 악화로 세지 않는다.
+
+유지 점수는 GT 13칸·PRED 13칸의 명령 이름과 `judge` 역할을 각각 확인한다. 합계가 26이라는 이유만으로 GT·지도 끔을 잘못 받아들이지 않는다. PRED 유지 실패는 전체 요약이 PASS여도 R4이며, 직전 PRED 유지 실패를 증량 근거로 쓰지 않는다. 지도 끔의 수치와 기준 대비 악화는 `regression_record_only`에 남기되 처방을 발동시키지 않는다.
 
 ## 수치·현재 설정의 출처
 
@@ -66,28 +69,28 @@ R5는 `--gait`로 동일 checkpoint의 `norm_Fxyz_gt_1N` 발 자료를 받는다
 | 입력 | 기대한 결과 |
 |---|---|
 | 부모 P1 예행 자체 | `BASELINE_ONLY`, 부모 대비 수치 차이 모두 0. 전체 졸업 FAIL을 R4로 오인하지 않음 |
-| cmd7seg m500 | R6. R2 조건은 해당하지 않음 |
-| cmd7seg m750 | R2·R6 모두 조건 해당, R3에 따라 R6만 초안 |
+| cmd7seg m500 | `EVIDENCE_HOLD`. GT 저속 값은 재계산 가능하지만 PRED 저속 네 칸이 원자료에 없음. 초안 없음 |
+| cmd7seg m750 | `EVIDENCE_HOLD`. 동일하게 PRED 저속 네 칸 미확인. GT만으로 처방하지 않음 |
 
-과거 G1b는 `ex42_mesh=null`인 별도 생성 지형이다. 부모와 메시가 같다고 주장하지 않는다. `--historical`은 이 차이를 경고로 남겨 **규칙의 반사실 재생**만 허용한다. 조정 초안에도 역사 재생 표식이 남는다. 새 운영 경계에는 이 옵션을 쓰지 않는다.
+과거 G1b는 `ex42_mesh=null`인 별도 생성 지형이며 GT만 있다. 부모와 메시가 같다고 주장하지 않는다. `--historical`은 이 차이를 경고로 남겨 **규칙의 반사실 재생**만 허용한다. PRED 값을 GT로 복사하거나 지도·지형·시드를 평균해 채우지 않는다. 19:24 정정 전 v1.1의 GT-only R6 재생과 달리 v1.2는 두 과거 저장본 모두 증거 부족으로 남는다. 새 운영 경계에는 `--historical`을 쓰지 않는다.
 
 ```bash
 CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/replay_known.py
 CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B -m pytest /home/jay/mai/tmp/analyst/e1-boundary-rules-1113 -q -p no:cacheprovider --basetemp=/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/pytest-recheck
 ```
 
-원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42 네 칸 결합은 이번 사용자 메시지로 추가 확정됐으며 외부 발송·실행 승인을 새로 만들지 않는다.
+원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a), [19:24 정정 04f50b4f](https://github.com/foothold-project/foothold-lab/commit/04f50b4faca0b2b351d6bb089c868ddf3eae4cf7). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42의 GT 네 칸 결합은 19:24 원장 정정과 lead 19:28 지시로 GT·PRED 여덟 칸으로 대체됐다.
 
 ## #784 문턱 시험 보강
 
-확인됨: 정상 코드 49개 통과. 아래 네 고침을 **각각 격리 사본**에 넣으면 해당 행의 시험이 실패한다. 원래 판정 수치와 연산자는 바꾸지 않았다. `mutation_validation.json`에 실패한 시험 이름과 로그 경로를 남겼다.
+확인됨: 정상 코드 76개 통과. 아래 네 고침을 **각각 격리 사본**에 넣으면 해당 행의 시험이 실패한다. 판정 수치와 연산자는 유지하고 적용 지도만 새 결정에 맞췄다. `mutation_validation.json`에 실패한 시험 이름과 로그 경로를 남겼다.
 
 | 잘못 바꾼 값 | 답을 아는 입력과 정상 결과 | 검출 |
 |---|---|---|
-| R6 전진 0.2 문턱 0.60 → 0.50 | 다른 칸은 양호, L0 또는 L5의 R=0.55이면 R6. R=0.60에서는 비발동 | 2개 실패 |
+| R6 전진 0.2 문턱 0.60 → 0.50 | 다른 칸은 양호, GT·PRED 중 L0 또는 L5의 R=0.55이면 R6. R=0.60에서는 비발동 | 4개 실패 |
 | R2 중앙값 0.10 → 0.15 | p90=0.19, GT 또는 PRED 중앙값=0.13이면 R2. 0.10에서는 비발동 | 2개 실패 |
 | R5 관찰 기간 500 → 250 | 활성 뒤 250·499회는 관찰 미완료, 500회부터 완료 | 2개 실패 |
-| 서 있기 하락 4개 이상 → 4개 초과 | 고정 기준 64, 두 창 모두 60이면 되돌림. 61이면 비발동 | 1개 실패 |
+| 서 있기 하락 4개 이상 → 4개 초과 | GT 또는 PRED 고정 기준 64, 두 창 모두 60이면 되돌림. 61이면 비발동 | 2개 실패 |
 
 R5 시간 조건은 기존의 두 경계 확인 조건과 겹친다. 정상 250회 경계 이력에서는 시간 조건만 잘못 바꿔도 다른 조건이 조기 R5를 막으므로, 시간 조건을 실제 `decide()`가 호출하는 `r5_observation_complete()`로 분리했다. **시간 조건의 단위 시험**과 **+250회 비발동·+500회 발동의 전체 판정 시험**을 함께 둔다. 이 차이를 숨기거나 불가능한 처방 이력으로 전체 판정 반례를 만들지 않았다.
 
@@ -99,3 +102,4 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 |---|---|
 | v1.0 | 확정 규칙·원자료 판독·초안·기존 구간 보존·25개 CPU 시험 |
 | v1.1 | 요청 문턱 네 곳을 겨냥한 24개 시험 추가, 네 돌연변이 실행 검증, R5 시간 조건만 같은 식으로 분리 |
+| v1.2 | 19:24 결정: GT·PRED 여덟 칸 R6, 두 지도 유지·되돌림, 지도 끔 기록, 나란한 표, PRED 없는 과거 재생 보류 |
