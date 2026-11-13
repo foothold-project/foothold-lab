@@ -21,6 +21,8 @@ from foothold_s2.commands.mixed_core import EX39_SLOTS
 MODES = ("gt", "pred", "off")
 SKILLS = ("slow_forward", "side_left", "side_right")
 FIELDS = ("samples", "ratio_sum", "stalled", "reward_sum", "reward_samples")
+SLOW_SPEED_BANDS = (("0.1-0.15", 0.1, 0.15), ("0.15-0.2", 0.15, 0.2),
+                    ("0.2-0.3", 0.2, 0.3))
 SLOT_INDEX = {name: i for i, name in enumerate(EX39_SLOTS)}
 SLOW_SLOTS = ("forward", "reverse", "side_left", "side_right", "diag_fwd_left", "diag_fwd_right",
               "diag_back_left", "diag_back_right")
@@ -132,6 +134,7 @@ class LiveMetrics:
             raise RuntimeError("EX-42 live metrics previous update was not completed")
         self.iteration = int(iteration)
         self.values = torch.zeros((3, 3, len(FIELDS)), dtype=torch.float64, device=device)
+        self.forward_bands = torch.zeros((3, len(SLOW_SPEED_BANDS), 3), dtype=torch.float64, device=device)
         # total, active, value, heading total, heading active
         self.slow_slots = torch.zeros((3, len(EX39_SLOTS), 5), dtype=torch.float64, device=device)
         self.survival = torch.zeros((3, 3), dtype=torch.float64, device=device)  # steps, resets, falls
@@ -197,6 +200,15 @@ class LiveMetrics:
             self.values[:, :, 0].reshape(-1).scatter_add_(0, index, torch.ones_like(ratio))
             self.values[:, :, 1].reshape(-1).scatter_add_(0, index, ratio)
             self.values[:, :, 2].reshape(-1).scatter_add_(0, index, stall[chosen].double())
+            if name == "slow_forward":
+                for band, (_, low, high) in enumerate(SLOW_SPEED_BANDS):
+                    in_band = chosen & (target >= low) & (target < high)
+                    band_index = mode[in_band] * len(SLOW_SPEED_BANDS) + band
+                    band_ratio = (actual / safe_target)[in_band].double()
+                    self.forward_bands[:, :, 0].reshape(-1).scatter_add_(
+                        0, band_index, torch.ones_like(band_ratio))
+                    self.forward_bands[:, :, 1].reshape(-1).scatter_add_(0, band_index, band_ratio)
+                    self.forward_bands[:, :, 2].reshape(-1).scatter_add_(0, band_index, stall[in_band].double())
             reward_chosen = chosen & slow
             reward_index = mode[reward_chosen] * len(SKILLS) + k
             self.values[:, :, 3].reshape(-1).scatter_add_(0, reward_index, slow_value[reward_chosen].double())
@@ -207,19 +219,23 @@ class LiveMetrics:
         if self.iteration is None:
             raise RuntimeError("EX-42 live metrics update not started")
         local_slots = self.slow_slots.detach().cpu().tolist()
+        local_bands = self.forward_bands.detach().cpu().tolist()
         local_survival = self.survival.detach().cpu().tolist()
         local_family = self.survival_family.detach().cpu().tolist()
         if self.world_size > 1:
             import torch.distributed as dist
             if not dist.is_initialized() or dist.get_world_size() != self.world_size:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
-            for tensor in (self.values, self.slow_slots, self.survival, self.survival_family, self.invalid):
+            for tensor in (self.values, self.forward_bands, self.slow_slots, self.survival,
+                           self.survival_family, self.invalid):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
-            dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_track_slots": local_slots,
+            dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_forward_bands": local_bands,
+                                               "slow_track_slots": local_slots,
                                                "survival": local_survival, "survival_by_family": local_family})
         else:
-            rank_rows = [{"rank": self.rank, "slow_track_slots": local_slots, "survival": local_survival,
+            rank_rows = [{"rank": self.rank, "slow_forward_bands": local_bands,
+                          "slow_track_slots": local_slots, "survival": local_survival,
                           "survival_by_family": local_family}]
         it = self.iteration
         self.iteration = None
@@ -228,8 +244,15 @@ class LiveMetrics:
         if self.rank != 0:
             return None
         rows = {}
+        speed_bands = {}
         for m, mode in enumerate(MODES):
             rows[mode] = {}
+            speed_bands[mode] = {}
+            for b, (label, _, _) in enumerate(SLOW_SPEED_BANDS):
+                n, ratio, stalled = self.forward_bands[m, b].tolist()
+                speed_bands[mode][label] = {"samples": int(n),
+                                            "tracking_ratio": ratio / n if n else None,
+                                            "stall_fraction": stalled / n if n else None}
             for k, name in enumerate(SKILLS):
                 n, ratio, stalled, reward, reward_n = self.values[m, k].tolist()
                 rows[mode][name] = {"samples": int(n), "tracking_ratio": ratio / n if n else None,
@@ -323,6 +346,7 @@ class LiveMetrics:
                "world_size": self.world_size, "skills": rows, "moving20": moving,
                "slow_track_weight": self.slow_weight,
                "slow_track_slots": slot_rows, "slow_track_moving20": slow_moving,
+               "slow_forward_speed_bands": speed_bands,
                "rank_local": rank_rows, "survival": survival, "survival_by_family": by_family,
                "off_50_block": off_block_fraction,
                "monitor": {"stage": self.stage.copy(), "high": self.high.copy(), "alerts": alerts,
