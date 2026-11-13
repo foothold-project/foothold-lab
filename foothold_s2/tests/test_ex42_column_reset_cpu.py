@@ -74,6 +74,32 @@ def _env(columns):
     return types.SimpleNamespace(scene=scene), asset
 
 
+def test_fixed_flag_eval_reset_uses_safe_column_midpoints_without_pose_range():
+    lo = torch.tensor([[-0.5, -0.5, 0, 0, 0, -3.14], [0.2, -0.1, 0, 0, 0, 0]])
+    hi = torch.tensor([[0.5, 0.5, 0, 0, 0, 3.14], [0.4, 0.1, 0, 0, 0, 0]])
+    event = types.SimpleNamespace(func=cr.reset_root_state_by_column,
+                                  params={"lo": lo.clone(), "hi": hi.clone(),
+                                          "velocity_range": {"x": (0.0, 0.0)}})
+    cr.pin_column_reset_midpoint(event)
+    expected = torch.tensor([[0, 0, 0, 0, 0, 0], [0.3, 0, 0, 0, 0, 0]])
+    assert torch.allclose(event.params["lo"], expected, atol=1e-7)
+    assert torch.allclose(event.params["hi"], expected, atol=1e-7)
+    assert "pose_range" not in event.params
+    assert event.params["velocity_range"] == {"x": (0.0, 0.0)}
+
+
+def test_fixed_flag_eval_reset_rejects_old_pose_range_and_invalid_bounds():
+    event = types.SimpleNamespace(func=cr.reset_root_state_by_column,
+                                  params={"lo": torch.zeros(1, 6), "hi": torch.zeros(1, 6),
+                                          "velocity_range": {}, "pose_range": {}})
+    with pytest.raises(ValueError, match="installed contract"):
+        cr.pin_column_reset_midpoint(event)
+    del event.params["pose_range"]
+    event.params["hi"][0, 0] = -1
+    with pytest.raises(ValueError, match="ranges are invalid"):
+        cr.pin_column_reset_midpoint(event)
+
+
 def test_zero_columns_start_exactly_on_the_origin_and_others_jitter():
     table = [{"ranges": {**cr.DEFAULT_RANGES, **ZERO}}, {"ranges": dict(cr.DEFAULT_RANGES)}]
     lo, hi = cr.table_tensors(table)

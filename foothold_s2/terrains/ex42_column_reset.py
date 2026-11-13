@@ -171,6 +171,25 @@ def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> None:
         params={"lo": lo, "hi": hi, "velocity_range": old["velocity_range"]})
 
 
+def pin_column_reset_midpoint(event_cfg) -> None:
+    """Make an evaluation reset deterministic inside each column's safe range."""
+    import torch
+
+    if event_cfg.func is not reset_root_state_by_column:
+        raise ValueError("EX-42 fixed evaluation requires the column reset term")
+    params = event_cfg.params
+    if set(params) != {"lo", "hi", "velocity_range"}:
+        raise ValueError("EX-42 column reset parameters differ from the installed contract")
+    lo, hi = params["lo"], params["hi"]
+    if (lo.shape != hi.shape or lo.ndim != 2 or lo.shape[1] != 6
+            or not bool(torch.isfinite(lo).all()) or not bool(torch.isfinite(hi).all())
+            or bool((lo > hi).any())):
+        raise ValueError("EX-42 column reset ranges are invalid")
+    midpoint = lo + (hi - lo) * 0.5
+    params["lo"] = midpoint.clone()
+    params["hi"] = midpoint.clone()
+
+
 # ---- push gate: no interval push on narrow-support (sparse) columns -----------------------------
 # Team-lead decision 01:54: pushes stay on for continuous / flat columns, off on narrow-support
 # terrain. The kind list is planner's; until it lands the caller passes the table:
