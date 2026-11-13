@@ -1,0 +1,54 @@
+{
+  "created_at": "2026-11-13T19:17:59.350864+09:00",
+  "source_sha256": "921117da419356db56f9835a89f70d32721eebc9cb95c6d83fc7ab390995bd4d",
+  "scope": "four requested mutations; CPU; isolated copies",
+  "results": [
+    {
+      "name": "control",
+      "returncode": 0,
+      "verified": true,
+      "failed_tests": [],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check/control.txt"
+    },
+    {
+      "name": "r6_fwd02_060_to_050",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_thresholds.py::test_r6_fwd02_threshold_is_060_not_050[0.55-R6-0]",
+        "test_boundary_thresholds.py::test_r6_fwd02_threshold_is_060_not_050[0.55-R6-5]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check/r6_fwd02_060_to_050.txt"
+    },
+    {
+      "name": "r2_median_010_to_015",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_thresholds.py::test_r2_median_threshold_is_010_not_015[0.13-R2-eval_gt]",
+        "test_boundary_thresholds.py::test_r2_median_threshold_is_010_not_015[0.13-R2-eval_pred]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check/r2_median_010_to_015.txt"
+    },
+    {
+      "name": "r5_500_to_250",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_thresholds.py::test_r5_observation_requires_500_updates[250-False]",
+        "test_boundary_thresholds.py::test_r5_observation_requires_500_updates[499-False]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check/r5_500_to_250.txt"
+    },
+    {
+      "name": "stand_four_inclusive_to_exclusive",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[60-ROLLBACK]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check/stand_four_inclusive_to_exclusive.txt"
+    }
+  ],
+  "all_verified": true
+}

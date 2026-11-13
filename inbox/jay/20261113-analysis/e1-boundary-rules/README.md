@@ -4,8 +4,8 @@
 > 작성: analyst-lx · 2026-11-13
 > 근거: 이슈 #765 · 원장 73abb340 446·452행 · #779 985ce6ab §3~4 · lead 18:42 네 칸 결합 답
 > 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
-> 상태: CPU 답 아는 입력 25개 통과 · 운영 파일 변경 없음 · m250 실제 경계는 결과 대기
-> 판: v1.0
+> 상태: CPU 답 아는 입력 49개 통과 · 요청 돌연변이 4개 검출 · m250 실제 경계는 결과 대기
+> 판: v1.1
 
 **이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
 
@@ -78,6 +78,24 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 
 원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42 네 칸 결합은 이번 사용자 메시지로 추가 확정됐으며 외부 발송·실행 승인을 새로 만들지 않는다.
 
+## #784 문턱 시험 보강
+
+확인됨: 정상 코드 49개 통과. 아래 네 고침을 **각각 격리 사본**에 넣으면 해당 행의 시험이 실패한다. 원래 판정 수치와 연산자는 바꾸지 않았다. `mutation_validation.json`에 실패한 시험 이름과 로그 경로를 남겼다.
+
+| 잘못 바꾼 값 | 답을 아는 입력과 정상 결과 | 검출 |
+|---|---|---|
+| R6 전진 0.2 문턱 0.60 → 0.50 | 다른 칸은 양호, L0 또는 L5의 R=0.55이면 R6. R=0.60에서는 비발동 | 2개 실패 |
+| R2 중앙값 0.10 → 0.15 | p90=0.19, GT 또는 PRED 중앙값=0.13이면 R2. 0.10에서는 비발동 | 2개 실패 |
+| R5 관찰 기간 500 → 250 | 활성 뒤 250·499회는 관찰 미완료, 500회부터 완료 | 2개 실패 |
+| 서 있기 하락 4개 이상 → 4개 초과 | 고정 기준 64, 두 창 모두 60이면 되돌림. 61이면 비발동 | 1개 실패 |
+
+R5 시간 조건은 기존의 두 경계 확인 조건과 겹친다. 정상 250회 경계 이력에서는 시간 조건만 잘못 바꿔도 다른 조건이 조기 R5를 막으므로, 시간 조건을 실제 `decide()`가 호출하는 `r5_observation_complete()`로 분리했다. **시간 조건의 단위 시험**과 **+250회 비발동·+500회 발동의 전체 판정 시험**을 함께 둔다. 이 차이를 숨기거나 불가능한 처방 이력으로 전체 판정 반례를 만들지 않았다.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/check_mutations.py --out /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check
+```
+
 | 판 | 변경 |
 |---|---|
 | v1.0 | 확정 규칙·원자료 판독·초안·기존 구간 보존·25개 CPU 시험 |
+| v1.1 | 요청 문턱 네 곳을 겨냥한 24개 시험 추가, 네 돌연변이 실행 검증, R5 시간 조건만 같은 식으로 분리 |

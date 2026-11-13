@@ -14,6 +14,10 @@ YAW_KEYS=tuple(f'yaw/L2/{mode}/fwd1.0/{metric}' for mode in MODES[:2]
 def finite(value):
     return type(value) in (float,int) and math.isfinite(value)
 
+def r5_observation_complete(iteration, activated_at):
+    """R5 needs 500 updates after R6 activation, independently of clean windows."""
+    return activated_at is not None and iteration>=activated_at+500
+
 def rollback_limits():
     """Fixed-anchor adverse change, separated by mode/case/metric, #779 section 4."""
     out={}
@@ -155,7 +159,7 @@ def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
     r5_ready=(values['slow_track']>0 and values['feet_air_time']==0 and last and previous_after and
               latest_reg and not latest_reg['bad'] and not latest_reg['missing'] and prior_reg and
               not prior_reg['bad'] and not prior_reg['missing'] and
-              t.get('r6_activated_at') is not None and now['iteration']>=t['r6_activated_at']+500 and
+              r5_observation_complete(now['iteration'],t.get('r6_activated_at')) and
               all(current[f'low/L{lev}/eval_gt/fwd0.2/R']>=.5 for lev in (0,5)))
     if r5_ready:
         if not gait or not gait.get('valid') or not gait.get('valid_conditions') or gait.get('contact_definition')!='norm_Fxyz_gt_1N':
