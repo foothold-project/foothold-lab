@@ -1,0 +1,9 @@
+{
+  "draws": 1000000,
+  "seed": 42,
+  "low_forward_fraction": 0.2,
+  "forward_01_02_expected_fraction_all_commands": 0.016000000000000004,
+  "forward_01_02_draw_fraction_all_commands": 0.0160910002887249,
+  "forward_01_02_free_wz_draw_fraction_all_commands": 0.011122000403702259,
+  "note": "CPU sampler draws, not measured rollout exposure. Stage heading fraction from frozen config."
+}
