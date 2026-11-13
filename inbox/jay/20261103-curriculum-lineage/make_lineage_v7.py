@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import statistics
 import subprocess
@@ -18,6 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.text import Text
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import yaml
 
 plt.rcParams["font.family"] = ["NanumGothic", "DejaVu Sans"]
@@ -34,6 +36,14 @@ DECISION_FILE = "inbox/jay/20261104-ex41-restart/decisions.tsv"
 MODES = ("eval_gt", "eval_pred")
 MODE_NAME = {"eval_gt": "GT 정답", "eval_pred": "PRED 복원"}
 MODE_COLOR = {"eval_gt": "#007c78", "eval_pred": "#d45824"}
+LEARNING_TAGS = (
+    ("Train/mean_reward", "평균 보상"),
+    ("Train/mean_episode_length", "평균 에피소드 길이"),
+    ("Policy/mean_noise_std", "정책 잡음 표준편차"),
+    ("Loss/learning_rate", "학습률 · 로그 축"),
+    ("Loss/value_function", "값 손실"),
+    ("Loss/value_mirror", "거울 값 손실"),
+)
 
 
 def json_file(path: Path) -> dict:
@@ -125,6 +135,31 @@ def load_boundaries(run: Path, analyst: Path, bounds: list[int]) -> tuple[dict, 
     return parent, observations
 
 
+def load_learning(run: Path, cutoff: int | None) -> tuple[dict[str, dict[int, float]], list[str], int]:
+    paths = sorted(run.glob("events.out.tfevents*"))
+    assert paths, f"training events missing: {run}"
+    values: dict[str, dict[int, float]] = {tag: {} for tag, _ in LEARNING_TAGS}
+    for path in paths:
+        reader = EventAccumulator(str(path), size_guidance={"scalars": 0})
+        reader.Reload()
+        available = set(reader.Tags().get("scalars", ()))
+        for tag in values:
+            if tag not in available:
+                continue
+            for event in reader.Scalars(tag):
+                if cutoff is not None and event.step > cutoff:
+                    continue
+                assert event.step > 0 and math.isfinite(event.value), (path, tag, event.step, event.value)
+                prior = values[tag].get(event.step)
+                assert prior is None or prior == event.value, (tag, event.step, prior, event.value)
+                values[tag][event.step] = float(event.value)
+    last = max(values[LEARNING_TAGS[0][0]], default=0)
+    assert last >= max(250, cutoff or 0), (last, cutoff)
+    for tag in values:
+        assert set(values[tag]) == set(range(1, last + 1)), (tag, len(values[tag]), last)
+    return values, [path.name for path in paths], last
+
+
 def segment_cap(e1: dict, index: int) -> int:
     cap = e1["terrain"]["continuous_level_cap"]
     passed = index - 1
@@ -133,7 +168,7 @@ def segment_cap(e1: dict, index: int) -> int:
 
 
 def stage_band(fig, stages):
-    ax = fig.add_axes([0.04, 0.74, 0.92, 0.105])
+    ax = fig.add_axes([0.04, 0.775, 0.92, 0.085])
     total = 1000 + sum(n for sid, n, on in stages if on and sid != "M" and not sid.startswith("J"))
     ax.set(xlim=(0, total + 2500), ylim=(0, 1))
     ax.axis("off")
@@ -159,7 +194,7 @@ def stage_band(fig, stages):
 
 
 def segment_band(fig, e1, obs, rows):
-    ax = fig.add_axes([0.04, 0.525, 0.92, 0.20])
+    ax = fig.add_axes([0.04, 0.600, 0.92, 0.16])
     ax.set(xlim=(0, 7), ylim=(0, 1))
     ax.axis("off")
     ax.add_patch(Rectangle((0, 0), 7, 1, facecolor="#fffdf4", edgecolor="#f9a825"))
@@ -170,23 +205,30 @@ def segment_band(fig, e1, obs, rows):
         done = it in obs
         running = ix == 2 and not done and "20:27" in rows["20:28"]
         color = "#c8e6c9" if done else ("#fff3cd" if running else "#eceff1")
-        ax.add_patch(Rectangle((ix - 1 + 0.05, 0.46), 0.90, 0.35, facecolor=color, edgecolor="#607d8b"))
-        ax.text(ix - 0.5, 0.77, f"구간 {ix} · 상한 L{segment_cap(e1, ix)}", ha="center", va="top", fontsize=11)
+        ax.add_patch(Rectangle((ix - 1 + 0.05, 0.27), 0.90, 0.57, facecolor=color, edgecolor="#607d8b"))
+        ax.text(ix - 0.5, 0.80, f"구간 {ix} · 상한 L{segment_cap(e1, ix)}", ha="center", va="top", fontsize=11)
         if done:
             report = obs[it]["report"]
             rule = report["decision"]["rule"]
             maint = report["current"]["maintenance_modes"]
             status = f"m{it} {rule}\n유지 GT {maint['eval_gt']} · PRED {maint['eval_pred']}"
+            if ix == 1:
+                observed = report["current"]
+                f01 = [metric(observed, "low", "L0", mode, "fwd0.1", "R") for mode in MODES]
+                f02 = [metric(observed, "low", "L0", mode, "fwd0.2", "R") for mode in MODES]
+                yaw = [metric(observed, "yaw", "L2", mode, "fwd1.0", "median_abs_rad") for mode in MODES]
+                status += (f"\nL0 R 0.1 {f01[0]:.2f}/{f01[1]:.2f} · 0.2 {f02[0]:.2f}/{f02[1]:.2f}"
+                           f"\nY1 L2 {yaw[0]:.2f}/{yaw[1]:.2f} rad")
         elif running:
             status = "20:27 기동\n같은 설정 · 진행 중"
         else:
             status = f"m{it} 계획\n판정 미측"
-        ax.text(ix - 0.5, 0.62, status, ha="center", va="center", fontsize=10)
+        ax.text(ix - 0.5, 0.59, status, ha="center", va="center", fontsize=9.2 if ix == 1 else 10)
         if ix == 1 and done:
             ax.text(ix - 0.5, 0.33, "19:16 끝", ha="center", va="center", fontsize=10, color="#1b5e20")
         elif running:
             ax.text(ix - 0.5, 0.33, "v22 · NO_ADJUST", ha="center", va="center", fontsize=10, color="#795548")
-    ax.text(0.06, 0.12, "녹색 = 원자료 판정 있음 · 노랑 = 기동 기록만 · 회색 = 계획. 유지 판정과 E1 졸업 판정은 별개입니다.",
+    ax.text(0.06, 0.08, "녹색 = 원자료 판정 있음 · 노랑 = 기동 기록만 · 회색 = 계획. 유지 판정과 E1 졸업 판정은 별개입니다.",
             fontsize=11, color="#455a64", va="center")
 
 
@@ -203,18 +245,46 @@ def plot_series(ax, snapshots, bounds, command, title):
     ax.legend(loc="upper left", fontsize=8.4, frameon=False)
 
 
+def plot_learning(fig, learning: dict[str, dict[int, float]], last: int, interval: int):
+    fig.text(0.04, 0.580, f"(가) E1 다시 학습 곡선 · TensorBoard 회차 1~{last}", fontsize=17, weight="bold")
+    xcap = max(interval * math.ceil(last / interval), interval * 2)
+    colors = ("#0b6f6b", "#bd5e16", "#405ab5", "#a7386f", "#456b22", "#68418e")
+    for index, (tag, title) in enumerate(LEARNING_TAGS):
+        col, row = index % 3, index // 3
+        ax = fig.add_axes([0.05 + col * 0.315, 0.455 - row * 0.13, 0.27, 0.105])
+        xs = sorted(learning[tag])
+        ys = [learning[tag][step] for step in xs]
+        if tag == "Loss/learning_rate":
+            xs, ys = zip(*[(step, max(1e-5, value)) for step, value in zip(xs, ys) if step >= 10])
+            ax.set_yscale("log")
+            ax.set_ylim(1e-5, max(ys) * 1.25)
+            ax.set_yticks([1e-5, 1e-4], ["1e-5", "1e-4"])
+            ax.axhline(1e-5, color="#b04d3f", ls=":", lw=1, label="1e-5 바닥")
+            ax.legend(loc="upper right", fontsize=8.5, frameon=False)
+        ax.plot(xs, ys, color=colors[index], lw=1.7)
+        for boundary in range(interval, xcap + 1, interval):
+            ax.axvline(boundary, color="#388e3c" if boundary <= last else "#b0bec5",
+                       ls="--", lw=1, alpha=0.8)
+        ax.set(xlim=(0 if tag != "Loss/learning_rate" else 10, xcap), title=title)
+        ax.set_xticks(range(interval, xcap + 1, interval))
+        ax.grid(alpha=0.19)
+        ax.tick_params(labelsize=8.5)
+    fig.text(0.05, 0.312, "세로 점선 = 250 회 경계 · 녹색은 기록됨 · 회색은 예정. 재기동 때 학습 평균의 집계 창이 다시 시작됩니다. 독립 평가가 아닙니다.",
+             fontsize=10.5, color="#455a64")
+
+
 def plot_evaluation(fig, parent, obs):
     bounds = list(obs)
     snapshots = {0: parent, **{it: obs[it]["report"]["current"] for it in bounds}}
-    fig.text(0.04, 0.492, "(가) E1 다시 평가 · 부모 m13250 → " + " → ".join(f"m{it}" for it in bounds),
+    fig.text(0.04, 0.296, "(가) E1 다시 평가 · 부모 m13250 → " + " → ".join(f"m{it}" for it in bounds),
              fontsize=17, weight="bold")
-    left = fig.add_axes([0.05, 0.285, 0.26, 0.17])
-    right = fig.add_axes([0.355, 0.285, 0.26, 0.17])
+    left = fig.add_axes([0.05, 0.175, 0.26, 0.105])
+    right = fig.add_axes([0.355, 0.175, 0.26, 0.105])
     plot_series(left, snapshots, bounds, "fwd0.1", "전진 0.1 R · L0/L5 평균")
     plot_series(right, snapshots, bounds, "fwd0.2", "전진 0.2 R · L0/L5 평균")
     for ax in (left, right):
         ax.set_ylabel("실제 몸앞 전진 / 명령")
-    side = fig.add_axes([0.05, 0.065, 0.26, 0.16])
+    side = fig.add_axes([0.05, 0.045, 0.26, 0.105])
     latest = snapshots[bounds[-1]]
     commands = ("side+0.2", "side-0.2", "side+0.4", "side-0.4")
     for ix, cmd in enumerate(commands):
@@ -229,7 +299,7 @@ def plot_evaluation(fig, parent, obs):
     side.set_title(f"옆 ±0.2 · ±0.4 · L0/L5 평균 · m{bounds[-1]} (회색 = 부모)")
     side.grid(axis="y", alpha=0.25)
     side.text(0.02, 0.97, "청록 GT · 주황 PRED", transform=side.transAxes, va="top", fontsize=8.5)
-    yaw = fig.add_axes([0.355, 0.065, 0.26, 0.16])
+    yaw = fig.add_axes([0.355, 0.045, 0.26, 0.105])
     xs = [0] + bounds
     for mode in MODES:
         for field, style in (("median_abs_rad", "-"), ("p90_abs_rad", "--")):
@@ -246,7 +316,7 @@ def plot_evaluation(fig, parent, obs):
 
 
 def decision_panel(fig, obs):
-    ax = fig.add_axes([0.655, 0.06, 0.32, 0.405])
+    ax = fig.add_axes([0.655, 0.045, 0.32, 0.24])
     ax.axis("off")
     latest = list(obs)[-1]
     report = obs[latest]["report"]
@@ -283,17 +353,18 @@ def decision_panel(fig, obs):
         y -= 0.035
 
 
-def draw(output: Path, bounds: list[int], run: Path, analyst: Path):
+def draw(output: Path, bounds: list[int], run: Path, analyst: Path, learning_cutoff: int | None):
     rows = decisions()
     stages, e1 = plan_data()
     parent, obs = load_boundaries(run, analyst, bounds)
-    fig = plt.figure(figsize=(28, 22), dpi=100)
-    fig.text(0.04, 0.978, "EX-42 학습 계보 · (가) E1 다시", fontsize=28, weight="bold", va="top")
-    fig.text(0.04, 0.950, "EX-41 m6000 → m12000 → 0 단계 m13000 → E0 m13250 → (가) E1 다시 · 부모 m13250",
+    learning, event_files, last_step = load_learning(run, learning_cutoff)
+    fig = plt.figure(figsize=(28, 34), dpi=100)
+    fig.text(0.04, 0.981, "EX-42 학습 계보 · (가) E1 다시", fontsize=28, weight="bold", va="top")
+    fig.text(0.04, 0.957, "EX-41 m6000 → m12000 → 0 단계 m13000 → E0 m13250 → (가) E1 다시 · 부모 m13250",
              fontsize=14, color="#37474f", va="top")
-    fig.text(0.04, 0.930, "17:44 기동 v19 · 19:16 1 구간 끝 · 20:27 2 구간 v22 기동 · 1,750 회 계획",
+    fig.text(0.04, 0.938, "17:44 기동 v19 · 19:16 1 구간 끝 · 20:27 2 구간 v22 기동 · 1,750 회 계획",
              fontsize=14, color="#37474f", va="top")
-    read = fig.add_axes([0.04, 0.855, 0.92, 0.062])
+    read = fig.add_axes([0.04, 0.872, 0.92, 0.055])
     read.axis("off")
     read.add_patch(Rectangle((0, 0), 1, 1, transform=read.transAxes,
                              facecolor="#f5f7fa", edgecolor="#b0bec5"))
@@ -303,11 +374,12 @@ def draw(output: Path, bounds: list[int], run: Path, analyst: Path):
         read.text(0.012, 0.75 - ix * 0.42, line, fontsize=12.5, va="top", transform=read.transAxes)
     stage_band(fig, stages)
     segment_band(fig, e1, obs, rows)
+    plot_learning(fig, learning, last_step, 250)
     plot_evaluation(fig, parent, obs)
     decision_panel(fig, obs)
-    fig.text(0.04, 0.018, f"원자료: {run}/eval/scores · {analyst}/m<N>/report.json · "
-             f"1차 G1b briefs · decisions.tsv {DECISION_SHA[:8]} · 요청 경계 {','.join(map(str, bounds))}",
-             fontsize=10, color="#455a64")
+    fig.text(0.04, 0.012, f"원자료: {run}/eval/scores · TensorBoard {len(event_files)}개 · "
+             f"{analyst}/m<N>/report.json · 1차 G1b briefs · decisions.tsv {DECISION_SHA[:8]} · "
+             f"요청 경계 {','.join(map(str, bounds))}", fontsize=10, color="#455a64")
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     for label in fig.findobj(match=Text):
@@ -320,7 +392,8 @@ def draw(output: Path, bounds: list[int], run: Path, analyst: Path):
     plt.close(fig)
     return {"bounds": bounds, "scores": {str(it): obs[it]["score_sha256"] for it in bounds},
             "reports": {str(it): obs[it]["report_sha256"] for it in bounds},
-            "parent_checkpoint_sha256": parent["checkpoint_sha256"], "decisions_commit": DECISION_SHA}
+            "parent_checkpoint_sha256": parent["checkpoint_sha256"], "decisions_commit": DECISION_SHA,
+            "learning_last_step": last_step, "event_files": event_files}
 
 
 def main():
@@ -328,10 +401,11 @@ def main():
     parser.add_argument("--boundaries", default="250", help="Comma-separated completed local boundaries, for example 250,500")
     parser.add_argument("--run-dir", type=Path, default=RUN)
     parser.add_argument("--analyst-dir", type=Path, default=ANALYST)
+    parser.add_argument("--learning-cutoff", type=int, help="Freeze the live event curve at this recorded update")
     parser.add_argument("--output", type=Path, default=HERE / "06-ex42-plan-v7.png")
     args = parser.parse_args()
     bounds = [int(value) for value in args.boundaries.split(",")]
-    print(json.dumps(draw(args.output, bounds, args.run_dir, args.analyst_dir), ensure_ascii=False, indent=2))
+    print(json.dumps(draw(args.output, bounds, args.run_dir, args.analyst_dir, args.learning_cutoff), ensure_ascii=False, indent=2))
     print("png", args.output)
 
 
