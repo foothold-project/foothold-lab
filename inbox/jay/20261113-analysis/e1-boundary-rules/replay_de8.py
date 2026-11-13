@@ -11,7 +11,7 @@ from boundary_read import run,RUN,PARENT,CODE
 def main():
     p=argparse.ArgumentParser();p.add_argument('--out',type=Path,required=True)
     p.add_argument('--iterations',type=int,nargs='+',default=[250,500])
-    p.add_argument('--effective-from',type=int,choices=(750,1000),default=1000)
+    p.add_argument('--effective-from',type=int,choices=(250,750,1000),default=1000)
     p.add_argument('--c1-code-root',type=Path);a=p.parse_args()
     rows=[]
     for n in a.iterations:

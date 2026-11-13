@@ -566,7 +566,7 @@ def main():
     p.add_argument('--legacy-low',type=Path);p.add_argument('--gait',type=Path)
     p.add_argument('--c1-code-root',type=Path,help='고정된 C1 코드 사본. 생략하면 P1 평가 plan의 사본을 사용')
     p.add_argument('--extension-code-root',type=Path,help='v26 확장 증거 소비자 사본. m1750에서 없으면 연장 HOLD')
-    p.add_argument('--effective-from',type=int,choices=(750,1000),default=1000,help='새 표 적용 경계. 원장 7ba9f2be에 따라 기본1000, 750은 이전 지시 재생용')
+    p.add_argument('--effective-from',type=int,choices=(250,750,1000),default=1000,help='현재 again 기본1000. 새 재출발은 250 명시, 750은 이전 지시 재생용')
     p.add_argument('--historical',action='store_true')
     a=p.parse_args();result=run(a.score,a.parent,a.run_root,a.code_root,a.out,a.iteration,a.previous,a.earlier,a.legacy_low,a.gait,a.historical,
                               a.c1_code_root,a.extension_code_root,a.effective_from)

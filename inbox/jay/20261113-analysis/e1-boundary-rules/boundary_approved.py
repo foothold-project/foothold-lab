@@ -92,7 +92,7 @@ def departure(now,previous,earlier,extension):
 
 
 def apply_approved(core,now,previous,earlier,treatment,extension,effective_from=1000):
-    if effective_from not in (750,1000):raise ValueError('approved activation must be 750 or 1000')
+    if effective_from not in (250,750,1000):raise ValueError('approved activation must be 250, 750 or 1000')
     out=deepcopy(core);out['approved_rule_commit']=LEDGER
     # Historical windows are record-only. The first active pair is 1000/1250.
     off_previous=previous

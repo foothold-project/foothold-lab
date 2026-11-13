@@ -21,6 +21,7 @@ MUTANTS=[
  ('rollback_overwritten_by_reward','boundary_approved.py',"elif off['state']=='ROLLBACK':","elif False:"),
  ('retroactive_application','boundary_approved.py',"if now['iteration']<effective_from:","if False:"),
  ('record_used_as_active_window','boundary_approved.py',"off_previous=None","off_previous=previous"),
+ ('new250_rejected','boundary_approved.py',"effective_from not in (250,750,1000)","effective_from not in (750,1000)"),
  ('curve_boundary_shift','curve_read.py',"def summarize_events(events,iteration,window=250,desired_kl=.01):",
   "def summarize_events(events,iteration,window=250,desired_kl=.01):\n    iteration += 1"),
  ('curve_old_duplicate_wins','curve_read.py',"wall>latest[key][0]","wall<latest[key][0]"),

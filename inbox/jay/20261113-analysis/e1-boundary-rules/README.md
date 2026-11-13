@@ -174,3 +174,10 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 m1750에서 연장 증거를 읽으려면 `boundary_read.py`에 `--extension-code-root /home/jay/mai/wt/foothold-lab/ex42-launch-e1-v26`을 준다.
 C1 자료가 생기면 `--c1-code-root`에는 **검토를 마친 실제 평가 코드의 고정 사본**을 준다. 이 옵션은 해당 폴더의 평가기를 CPU로 읽을 뿐 Kit을 기동하지 않는다.
 별도 평가 plan은 기존 P1 영수증에 고정된 파일을 읽는다. 경로 옵션으로 학습 plan이나 P1 영수증을 바꾸지 않는다.
+
+### 재출발 첫 경계 적용 (2026-11-14 · #802 지적분)
+
+현재 again run의 기본1000은 보존한다. 새 재출발 run에는 `--effective-from 250`을 명시한다.
+첫 m250은 앞 경계가 없으므로 생존 한 번 미달은 기록, 같은 칸 m250·m500 두 번 미달이면 되돌림 초안이다.
+새 run의 `--score`·`--run-root`·`--code-root`·부모 경로는 그 실행의 고정 영수증을 가리켜야 한다.
+옵션250을 추가한 것으로 기존 실행이나 승인 파일을 변경하지 않는다. `replay_de8.py`는 과거 자료 재생용이다.

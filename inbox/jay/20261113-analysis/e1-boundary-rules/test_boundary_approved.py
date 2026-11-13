@@ -133,3 +133,27 @@ def test_750_record_does_not_become_first_active_off_failure():
     d=apply_approved(core,a,b,None,{'last_change':None},None)
     assert d['rule']=='OBSERVE'
     assert d['map_off_survival']['state']=='SINGLE_FAIL_RECORD'
+
+
+def test_new_run_first_250_then_500_is_the_first_off_pair():
+    core=dict(rule='OBSERVE',changes={},next_segment='UNCHANGED',notes=[],triggered=[])
+    a=audit(250);a['off_cells']['map/fwd0.5']['survival']=59
+    try:d=apply_approved(core,a,None,None,{'last_change':None},None,effective_from=250)
+    except ValueError:d=None
+    assert d is not None, 'new run activation 250 must be supported'
+    assert d['rule']=='OBSERVE' and d['map_off_survival']['state']=='SINGLE_FAIL_RECORD'
+    assert 'de8_counterfactual' not in d
+    b=audit(500);b['off_cells']['map/fwd0.5']['survival']=59
+    d=apply_approved(core,b,a,None,{'last_change':None},None,effective_from=250)
+    assert d['rule']=='OFF_SURVIVAL_ROLLBACK'
+    with pytest.raises(ValueError):apply_approved(core,b,a,None,{},None,effective_from=1)
+
+
+@pytest.mark.parametrize('name',['boundary_read.py','replay_de8.py'])
+def test_cli_allows_new_run_250(name):
+    from pathlib import Path
+    import subprocess,sys
+    proc=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name(name)),
+                         '--effective-from','250','--help'],capture_output=True,text=True)
+    assert proc.returncode==0,proc.stderr
+    assert '{250,750,1000}' in proc.stdout

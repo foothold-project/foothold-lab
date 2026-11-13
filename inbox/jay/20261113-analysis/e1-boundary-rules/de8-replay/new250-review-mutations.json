@@ -1,0 +1,103 @@
+{
+  "control_pass": false,
+  "killed": 15,
+  "total": 15,
+  "results": [
+    {
+      "name": "control",
+      "rc": 1,
+      "killed": null,
+      "control_pass": false
+    },
+    {
+      "name": "off60_exclusive",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "off_one_failure_rollback",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "off_different_boundary",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "off_valid63",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "off_different_condition",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "one_deficit_enough",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "other_regression_ignored",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "exit_one_window",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "treatment_pin_ignored",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "rollback_overwritten_by_reward",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "retroactive_application",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "record_used_as_active_window",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "new250_rejected",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "curve_boundary_shift",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    },
+    {
+      "name": "curve_old_duplicate_wins",
+      "rc": 1,
+      "killed": true,
+      "control_pass": null
+    }
+  ]
+}
