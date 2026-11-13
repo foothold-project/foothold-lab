@@ -24,7 +24,7 @@ def _spec(plan: dict) -> dict:
     promotion = plan["evaluation"]["promotion"]
     if (spec.get("family") != "A" or spec.get("kind") != "stepping_stones_low" or
             spec.get("level") != 0 or spec.get("flag_count") != "flag_four" or
-            spec.get("valid_min_each") != 48 or
+            spec.get("valid_min_each") != 64 or   # ledger de8a3b7f item 4 / CG:272: valid < 64 is HOLD
             spec.get("judge_modes") != ["eval_gt", "eval_pred"] or
             spec.get("record_modes") != ["probe_prop_only"] or
             promotion.get("window_episodes") != 64 or promotion.get("windows") != 2):
@@ -34,7 +34,7 @@ def _spec(plan: dict) -> dict:
 
 def score_mode(forward: dict, flag: dict, *, valid_min_each: int,
                success_min: int, survival_min: int, weak_fraction: float) -> dict:
-    """Each 64-env subcell must have >=48 valid; score the combined denominator."""
+    """Each 64-env subcell must have all 64 valid (valid < 64 is HOLD); score the combined denominator."""
     values = (forward, flag)
     if (any(type(row.get("valid_count")) is not int or not 0 <= row["valid_count"] <= 64 or
             any(type(row.get(key)) is not int or not 0 <= row[key] <= row["valid_count"]

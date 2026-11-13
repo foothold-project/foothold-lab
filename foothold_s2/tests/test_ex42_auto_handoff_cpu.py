@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import pytest
+import yaml
 from foothold_s2.scripts import ex42_stage_launcher as launcher
 from foothold_s2 import ex42_stage_handoff as handoff
 from foothold_s2.tests.test_ex42_stage_launcher_cpu import _env, _flag
@@ -81,8 +82,11 @@ def e1f_exit(ready, monkeypatch):
             cells=read_evidence(folder/'flag_cells'/count,plan=source.document,plan_sha256=source.sha256,
                                 checkpoint_sha256=digest(cp),seed=42,count=count)
             for case,value in cells.items():items[f'{case}_{which}']={'role':'judge',**_flag_window(value,source.document,case)}
-    stage_exit={'adapter':'flag_two_window','judgement':'PASS','windows':2,'items':items}
-    score.update(stage_id='E1F',checkpoint_sha256=digest(cp),stage_exit=stage_exit,maintenance_source_sha256=source.sha256)
+    stage_exit={'adapter':'flag_two_window','judgement':'PASS','windows':2,'items':items,
+                'previous_identity':{'plan_sha256':source.sha256,'eval_seed':42,'checkpoint_sha256':digest(cp),
+                                     'evaluation':str(run/'previous'/'flag_cells')}}
+    score.update(stage_id='E1F',checkpoint_sha256=digest(cp),stage_exit=stage_exit,maintenance_source_sha256=source.sha256,
+                 conditions={**score.get('conditions',{}),'eval_seed':42})
     score.pop('e1_exit',None)
     measure=run/'ex42_score.json';materialize_tests.dump(measure,score)
     gate.update(stage_id='E1F',checkpoint_iteration=500,checkpoint_sha256=digest(cp),stage_exit=stage_exit,
@@ -122,6 +126,13 @@ def test_e1f_pass_to_e2_real_materialize_then_cpu_launcher_cli(e1f_exit,tmp_path
     assert decision['target_stage']=='E2'
     plan=Path(decision['plan']);transition=json.loads((plan.parent/'transition.json').read_text())
     assert transition['budget']['used']==2500  # E0 250 + adopted E1 1750 + E1F 500
+    # audit H4: E2 continues with the continuous cap the E1F row carries, not the template's assumed 5
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    e1f_cap=next(r for r in source.document['stages'] if r['id']=='E1F')['terrain']['exposure_at_E1F']['positive'][0]['level_cap']
+    e2_row=next(r for r in EX42Plan.load(plan).document['stages'] if r['id']=='E2')
+    assert type(e1f_cap) is int and e2_row['terrain']['exposure_at_E2']['positive'][0]['level_cap']==e1f_cap
+    approval_doc=yaml.safe_load(Path(decision['approvals']).read_text())
+    assert approval_doc['stage_e2_authorization']['prerequisites']['predecessor_exit']['continuous_level_cap']==e1f_cap
     launch_env=dict(os.environ,**env,EX42_AUTO_ACTION='next_stage',EX42_AUTO_TARGET_STAGE='E2',
         EX42_AUTO_PLAN=str(plan),EX42_AUTO_APPROVALS=decision['approvals'],
         EX42_AUTO_PARENT_MANIFEST=str(manifest),EX42_AUTO_PARENT_CHECKPOINT=str(manifest.parent/'model_500.pt'),

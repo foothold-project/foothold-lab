@@ -17,27 +17,29 @@ def _cell(valid, success, survival):
 
 
 def _score(forward, flag):
-    return score_mode(forward, flag, valid_min_each=48, success_min=52,
+    return score_mode(forward, flag, valid_min_each=64, success_min=52,
                       survival_min=60, weak_fraction=.5)
 
 
 def test_e2_combines_two_64_env_subcells_with_scaled_thresholds():
-    row = _score(_cell(60, 49, 57), _cell(56, 46, 52))
-    assert (row["valid_count"], row["success_min"], row["survival_min"]) == (116, 95, 109)
+    row = _score(_cell(64, 52, 60), _cell(64, 52, 60))
+    assert (row["valid_count"], row["success_min"], row["survival_min"]) == (128, 104, 120)
     assert row["judgement"] == "PASS"
     assert row["weak_subcell_warnings"] == []
-    assert _score(_cell(60, 48, 57), _cell(56, 46, 52))["judgement"] == "FAIL"
-    assert _score(_cell(60, 49, 56), _cell(56, 46, 52))["judgement"] == "FAIL"
+    assert _score(_cell(64, 51, 60), _cell(64, 52, 60))["judgement"] == "FAIL"
+    assert _score(_cell(64, 52, 59), _cell(64, 52, 60))["judgement"] == "FAIL"
 
 
-def test_e2_each_subcell_needs_48_valid_even_when_combined_counts_pass():
-    row = _score(_cell(47, 47, 47), _cell(64, 64, 64))
-    assert row["judgement"] == "HOLD"
-    assert row["valid_count"] == 111
+def test_e2_each_subcell_needs_all_64_valid_even_when_combined_counts_pass():
+    # Ledger de8a3b7f item 4 / CG:272: valid < 64 is HOLD. 48 valid with every count at 39/45 used to PASS.
+    for valid in (63, 48, 47):
+        row = _score(_cell(valid, valid, valid), _cell(64, 64, 64))
+        assert row["judgement"] == "HOLD", valid
+        assert row["valid_count"] == valid + 64
 
 
 def test_e2_half_floor_warns_and_preserves_combined_judgment():
-    row = _score(_cell(48, 18, 48), _cell(64, 64, 64))
+    row = _score(_cell(64, 18, 64), _cell(64, 64, 64))
     assert row["judgement"] == "FAIL"
     assert row["weak_subcell_warnings"] == ["forward"]
     with pytest.raises(ValueError, match="invalid"):

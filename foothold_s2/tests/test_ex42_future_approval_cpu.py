@@ -62,9 +62,9 @@ def prepared(tmp_path, stage):
     if stage=='E2':
         c['prerequisites']['m0_m3_receipt_sha256']='e'*64
         c['prerequisites']['calibration_sha256']='f'*64
-    if stage=='E1F':
+    if stage in ('E1F','E2'):
         c['prerequisites']['predecessor_exit'].update(continuous_level_cap=5,exposure_receipt_sha256='e'*64)
-        next(r for r in d['stages'] if r['id']=='E1F')['terrain']['exposure_at_E1F']['positive'][0]['level_cap']=5
+        next(r for r in d['stages'] if r['id']==stage)['terrain'][f'exposure_at_{stage}']['positive'][0]['level_cap']=5
     ap=tmp_path/'approvals.yaml';ap.write_text(yaml.safe_dump(a))
     d['stage_zero']['approval_sha256']=hashlib.sha256(ap.read_bytes()).hexdigest()
     return replace(p, document=d),ap,a

@@ -78,7 +78,9 @@ def test_e3_start_block_is_the_e2_end_state_plus_the_entry_axis_only():
     e2 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
     e3 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
     assert set(e3) == set(e2)                                            # no kind opens at the stage entry
-    assert e3["continuous"] == e2["continuous"]                          # the continuous cap does not move (L+ is its own boundary)
+    assert e2["continuous"]["level_cap"] is None                         # E2 inherits the parent's cap at materialize (audit H4)
+    assert {k: v for k, v in e3["continuous"].items() if k != "level_cap"} == \
+           {k: v for k, v in e2["continuous"].items() if k != "level_cap"}   # the continuous cap does not move (L+ is its own boundary)
     low2, low3 = e2["stepping_stones_low"], e3["stepping_stones_low"]
     assert low3["share"] == low2["share"] and low3["level_cap"] == low2["level_cap"] + 1   # D: that kind's cap +1, share unchanged
     assert rows["E3"]["terrain"]["k_ladder"]["order"][0] == {"family": "C", "kind": "flat", "level_cap": 0}

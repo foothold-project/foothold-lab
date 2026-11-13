@@ -226,6 +226,32 @@ def source_exit_bounds(source, template, stage):
     return minimum, expected['maximum_updates']
 
 
+def _row_value(document, dotted):
+    """`a.b.0.c` through dicts and lists; None when any step is absent."""
+    value = document
+    for part in dotted.split('.'):
+        try:
+            value = value[int(part)] if isinstance(value, list) else value[part]
+        except (KeyError, IndexError, TypeError, ValueError):
+            return None
+    return value
+
+
+def inherited_cap(contract, exposure_receipt, *, target, source, stage, base, parent_manifest):
+    """(cap, exposure ref) a target stage continues with. E1 raises its continuous cap during the run, so the cap in force
+    at its exit is read from the rank logs (`exposure_receipt`). A later stage whose source stage changes no cap (E2 follows
+    E1F, CG E.2 E2 one-axis row) continues with the cap the source stage's own materialized row carries: it was filled from
+    E1's receipts and validated there. An unfilled value is refused, never replaced by the template's assumed number."""
+    if exposure_receipt is not None or target == 'E1F':
+        return read_applied_cap(exposure_receipt, base=base, source_plan=source, stage=stage, parent_manifest=parent_manifest)
+    row = _row(source, stage)
+    caps = [_row_value(row, binding['stage_path'].replace(f'exposure_at_{target}', f'exposure_at_{stage}')
+                       + '.' + binding['value_path']) for binding in contract['inherited_stage_templates']]
+    if len(set(caps)) != 1 or type(caps[0]) is not int:
+        raise ValueError(f'{stage} continuous cap is unfilled in the source plan; {target} cannot inherit it')
+    return caps[0], None
+
+
 FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_sha256 / flag_baseline from the W09+W08 chain
 
 
@@ -378,16 +404,17 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         if path_key in required_strings:
             _put(cell,path_key,ref['path'])
     if contract.get('inherited_stage_templates'):
-        cap, exposure_ref = read_applied_cap(ev.get('exposure_receipt'),base=ev_path.parent,
-            source_plan=source,stage=stage,parent_manifest=parent_manifest)
+        cap, exposure_ref = inherited_cap(contract, ev.get('exposure_receipt'), target=target, source=source, stage=stage,
+                                          base=ev_path.parent, parent_manifest=parent_manifest)
         for binding in contract['inherited_stage_templates']:
             if cap not in binding['allowed_values']:
                 raise ValueError('measured cap outside the registered inheritance contract')
             _put(cell,binding['approval_path'],cap)
             filled=deepcopy(binding['template']);_put(filled,binding['value_path'],cap)
             _put(row,binding['stage_path'],filled)
-        _put(cell,'prerequisites.predecessor_exit.exposure_receipt_sha256',exposure_ref['sha256'])
-        artifacts['exposure_receipt']=exposure_ref
+        if exposure_ref is not None:
+            _put(cell,'prerequisites.predecessor_exit.exposure_receipt_sha256',exposure_ref['sha256'])
+            artifacts['exposure_receipt']=exposure_ref
     if contract['validator'] == 'bounded' and cell.get('boundary',{}).get('axis') is None:
         cell['boundary']['axis']=registered_entry_axis(row,ev)
     document=deepcopy(template.document)
