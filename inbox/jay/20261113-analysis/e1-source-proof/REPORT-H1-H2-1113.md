@@ -4,7 +4,7 @@
 > 작성: 오흥재(analyst-lx) · 2026-11-13 22:40
 > 근거: #555 · verifier VERIFY-CRITERIA-CODE-1113 H1/H2 · lead 22:20 의뢰 · v24 a19cd6a2
 > 요지: 다른 저장본·시드·계획 영수증과 접촉 측정이 아닌 파일이 판정 근거로 통과하는 두 경로를 막는다.
-> 상태: CPU 172개 통과 · 새 돌연변이 12/12 검출 · reviewer 검토 대기 · 운영 사본 미변경
+> 상태: CPU 64+118개 통과 · 출처/접촉 돌연변이 19/19 검출 · 조건부 PASS 후 지적분 재검 요청 · 운영 사본 미변경
 
 ## 바뀐 동작
 
@@ -50,9 +50,19 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 /home/jay/mi
 
 이 명령은 a19cd6a2를 scratch에 풀고 H1 변경만 얹어 반례·돌연변이를 실행한다. 원본·운영 사본을 수정하지 않는다. 전체 H1 회귀는 생성된 `v24-overlay`에서 `test_ex42_e1_source_identity_cpu.py`, `test_ex42_e1_v2_cpu.py`, `test_ex42_e1_judge_cpu.py` 세 파일, H2 회귀는 별도 Python 프로세스에서 `e1-boundary-rules`를 pytest로 실행한다.
 
+## 23:06 지적분 고침
+
+reviewer가 `d874e69c`를 독립 재실행하여 전체 1,934개 통과와 조건부 PASS를 보고했다(`msg_1807c440326f`). reviewer가 새로 지운 다섯 검사에는 시험이 반응하지 않았다. 이전 창 원자료 재검증, 이전 창 계획 SHA, 지형 배치 SHA, yaw 파일 이름, 요청 보상과 두 rank 실제 보상의 일치를 각각 단독으로 깨뜨리는 시험을 추가했다. 다섯 돌연변이가 모두 해당 반례로 실패한다.
+
+같은 파일의 `/home/jay/data`와 `/mnt/win-d` 경로 차이는 실제 m250에서 재현했다. 경로 값만 `Path.resolve(strict=True)`로 정규화한 뒤 비교한다. 현재·이전 창 셀과 최종 StageJudge 검증에 적용하며 저장된 원 영수증은 고치지 않는다. 다른 파일에 같은 바이트를 복사한 경우와 수치만 바뀐 경우는 계속 거절한다. 경로 별칭 허용 시험 세 개는 고침 전 실패, 고침 뒤 통과했다. 첫 시험 준비에서 완벽한 yaw 0도 기존 반복 측정 하한에 걸려 정상 대조가 HOLD였으므로, 기준과 떨어진 0.06 rad 입력으로 대조를 고쳤다. 제품의 반복 문턱은 바꾸지 않았다.
+
+- 고침 뒤 H1 회귀: **64 PASS**, `/home/jay/mai/tmp/analyst/e1-h1h2-1113/followup-green.log`.
+- 출처/접촉 돌연변이: **19/19 검출**, 정상 대조 두 개 통과. 기존 12개에 reviewer 지적 5개와 경로 비교 2개를 더했다. [결과](mutations.json).
+- H2 생산 코드 변화 없음. R5 모드별 합성 여부는 lead 결정 대기이며 완전한 실제 접촉 원자료가 아직 없다는 제한도 유지한다.
+
 ## 전달 범위
 
-- 실행용 v24에 필요한 H1 코드: `foothold_s2/ex42_e1_v2.py`와 `foothold_s2/ex42_stage_judges.py`의 사전 `measure_cells` 호출 제거 한 줄. 다른 단계 adapter를 통째로 덮어쓰지 않는다.
+- 실행용 v24에 필요한 H1 코드: `foothold_s2/ex42_e1_v2.py`와 `foothold_s2/ex42_stage_judges.py`의 `_E1V2` 클래스 안 고침. 사전 `measure_cells` 제거와 최종 비교의 경로 정규화다. 다른 단계 adapter·import를 통째로 덮어쓰지 않는다.
 - #784 판독기 H2: `boundary_read.py`와 **새 `r5_contact.py`를 함께** 사용. README·template·SHA256SUMS 동반.
 - 새 브랜치는 통합 `5d819f8e`에서 출발하고 a19cd6a2의 두 파일 수정만 `8005e6e3`으로 먼저 옮겼다. 실행 중인 고정 사본이나 원장은 수정하지 않았다.
 - reviewer 요청 범위는 H1/H2 및 위 반례·돌연변이다. 다른 감사 지적은 해당 주인 작업에 남긴다.

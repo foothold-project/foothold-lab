@@ -362,9 +362,21 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                 "e1_exit_v2": {"judgement": "HOLD", "provenance_error": reason}}
 
 
+def canonical_evidence(value):
+    """Resolve only evidence paths; preserve numbers, identities and file hashes."""
+    path_keys = {"path", "raw_file", "trace_file", "commands_path", "rewards_path", "rank1_path"}
+    if isinstance(value, dict):
+        return {key: (str(Path(item).resolve(strict=True)) if key in path_keys
+                      else canonical_evidence(item)) for key, item in value.items()}
+    if isinstance(value, list):
+        return [canonical_evidence(item) for item in value]
+    return value
+
+
 def _verified_cells(score: dict, evaluation: Path, seed: int) -> dict:
     actual = measure_cells(evaluation, score["checkpoint_sha256"], seed)
-    if "e1_v2_cells" in score and actual != score["e1_v2_cells"]:
+    if ("e1_v2_cells" in score
+            and canonical_evidence(actual) != canonical_evidence(score["e1_v2_cells"])):
         raise ValueError("E1 v2 cached cells differ from source identity or raw values")
     return actual
 
