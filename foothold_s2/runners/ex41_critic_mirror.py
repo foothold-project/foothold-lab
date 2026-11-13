@@ -75,6 +75,12 @@ class CriticMirrorPPO(PPO):
     """
 
     mirror_enabled = False
+    kl_audit = None
+
+    def act(self, obs):
+        if self.kl_audit is not None:
+            self.kl_audit.observe("capture_rollout", self.storage.step)
+        return super().act(obs)
 
     def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
         self.storage = ValidRolloutStorage(training_type, num_envs, num_transitions_per_env,
@@ -90,6 +96,8 @@ class CriticMirrorPPO(PPO):
         step = self.storage.step
         self.storage.valid[step].copy_(valid)
         super().process_env_step(obs, rewards, dones, extras)
+        if self.kl_audit is not None:
+            self.kl_audit.observe("after_env_step", dones)
         if not bool(valid.all()):
             # A quarantined transition is a terminal boundary.  This also
             # prevents its next-state value from entering the previous GAE.
@@ -169,6 +177,15 @@ class CriticMirrorPPO(PPO):
         self.optimizer.step()
 
     def update(self) -> dict[str, float]:
+        if self.kl_audit is None:
+            return self._update_impl()
+        self.kl_audit.observe("begin_update")
+        try:
+            return self._update_impl()
+        finally:
+            self.kl_audit.observe("end_update")
+
+    def _update_impl(self) -> dict[str, float]:
         parameters = tuple(self.policy.parameters())
         if not bool(torch.stack([torch.isfinite(param).all() for param in parameters]).all()):
             skipped = float(self.num_learning_epochs * self.num_mini_batches)

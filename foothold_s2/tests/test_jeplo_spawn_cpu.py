@@ -72,20 +72,20 @@ def test_adapter_consumes_spawn_origin_not_reference_centre():
     assert meshes[0].bounds[1, 0] == 9.
 
 
-@pytest.mark.parametrize('kind', ['flat', 'discrete_grid', 'pyramid_stairs', 'inverted_pyramid_stairs'])
+@pytest.mark.parametrize('kind', ['flat', 'pyramid_stairs', 'inverted_pyramid_stairs'])
 def test_direct_command_terrain_origin_unchanged(kind):
     tile = jp.build_heightfield(kind, 9, 42)
     np.testing.assert_array_equal(jp.spawn_origin(tile), tile.origin)
 
 
-def test_reset_table_uses_actual_global_columns_and_only_three_zero_ranges():
-    assert set(jp.RESET_RANGES) == {'gap', 'box', 'discrete_obstacles'}
+def test_reset_table_uses_actual_global_columns_and_target_yaw_contract():
+    assert set(jp.RESET_RANGES) == set(jp.KINDS)
     table = jp.reset_ranges_by_column({50+i: kind for i, kind in enumerate(jp.KINDS)})
     assert set(table) == set(range(50, 57))
-    for col in (50, 52, 53):
+    for col in (50, 52, 53, 54):
         assert table[col] == {'x': (0., 0.), 'y': (0., 0.), 'yaw': (0., 0.)}
-    for col in (51, 54, 55, 56):
-        assert table[col] == {'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}
+    for col in (51, 55, 56):
+        assert table[col] == {'yaw': (0., 0.)}
     table[50]['x'] = (-.5, .5)
     assert jp.RESET_RANGES['gap']['x'] == (0., 0.)
 

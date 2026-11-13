@@ -1,0 +1,7 @@
+{
+  "format": "analyst-adjustment-review-only/1",
+  "apply_ready": false,
+  "historical_counterfactual": false,
+  "consumer_validation": null,
+  "payload": null
+}

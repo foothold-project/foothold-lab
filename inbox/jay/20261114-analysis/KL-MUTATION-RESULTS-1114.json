@@ -1,0 +1,65 @@
+[
+  {
+    "name": "control",
+    "rc": 0,
+    "caught": false,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/control/pytest.log"
+  },
+  {
+    "name": "epsilon_removed",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/epsilon_removed/pytest.log"
+  },
+  {
+    "name": "after_optimizer",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/after_optimizer/pytest.log"
+  },
+  {
+    "name": "wrong_env_id",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/wrong_env_id/pytest.log"
+  },
+  {
+    "name": "quarantine_included",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/quarantine_included/pytest.log"
+  },
+  {
+    "name": "sample_weighted_rank_mean",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/sample_weighted_rank_mean/pytest.log"
+  },
+  {
+    "name": "missing_pair_hidden",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/missing_pair_hidden/pytest.log"
+  },
+  {
+    "name": "off_overridden_by_gt",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/off_overridden_by_gt/pytest.log"
+  },
+  {
+    "name": "reset_not_marked",
+    "rc": 1,
+    "caught": true,
+    "valid_test_run": true,
+    "log": "/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/reset_not_marked/pytest.log"
+  }
+]

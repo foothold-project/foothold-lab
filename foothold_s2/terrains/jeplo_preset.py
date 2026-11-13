@@ -16,10 +16,16 @@ from foothold_s2.terrains.sparse_terrains import level_of, seed_of
 KINDS = ('gap', 'flat', 'box', 'discrete_obstacles', 'discrete_grid',
          'pyramid_stairs', 'inverted_pyramid_stairs')
 WAYPOINT_KINDS = frozenset(('gap', 'box', 'discrete_obstacles'))
+SAFE_START_KINDS = WAYPOINT_KINDS | {'discrete_grid'}
 # Consumer contract: ex42_column_reset reads this by canonical kind name.
 # Missing kinds keep the caller's existing default XY +/-0.5 and yaw +/-3.14.
 RESET_RANGES = {kind: {axis: (0., 0.) for axis in ('x', 'y', 'yaw')}
                 for kind in sorted(WAYPOINT_KINDS)}
+RESET_RANGES.update({kind: {'yaw': (0., 0.)}
+                     for kind in ('flat', 'pyramid_stairs', 'inverted_pyramid_stairs')})
+# The non-flat grid needs the same certified point for both the terrain anchor
+# and the fixed reset; XY jitter could put the default feet into a high cell.
+RESET_RANGES['discrete_grid'] = {axis: (0., 0.) for axis in ('x', 'y', 'yaw')}
 H, V, SIZE, BORDER, INNER = 0.08, 0.005, 9.0, 7, 99
 
 
@@ -202,8 +208,8 @@ def reset_ranges_by_column(column_kinds):
     Input is an explicit mapping of actual global column numbers to KINDS.
     Never infer columns from env IDs or assume C starts at column 50. Columns
     outside C are omitted by the caller and retain its normal reset settings.
-    Decision 2026-11-11 01:44: three waypoint kinds have no XY/yaw jitter;
-    the other four retain the existing ranges. This does not alter joints,
+    Waypoint kinds and the discrete grid have no XY/yaw jitter. Other direct
+    kinds preserve XY sampling and fix only yaw. This does not alter joints,
     initial velocity, commands or the terrain curriculum.
     """
     result = {}
@@ -217,18 +223,14 @@ def reset_ranges_by_column(column_kinds):
 
 
 def spawn_origin(tile, *, vertices=None, faces=None):
-    """Return a support-checked entry anchor without changing any geometry.
+    """Return a support-checked, non-overlapping entry anchor.
 
-    The three waypoint kinds require reset_ranges_by_column's zero XY/yaw.
-    Inspect the actual snapped triangles over a 0.70 x 0.50 m rectangle, not
-    just the height under the body centre. Prefer the entry near (1,4.48),
-    constrain it to x<=1.6 and within 0.4 m of the route centreline. Accept
-    at most 0.15 m relief and only ground in [-0.10,0.15] m; pit floors and
-    box tops above 0.15 m are not fallback starts. These bounds are our reset
-    contract, not a published JEPLO success threshold. No candidate -> error.
-    Direct-command kinds retain the reference origin and their reset ranges.
+    Waypoint kinds retain their 0.70 x 0.50 m support check. Grid and obstacle
+    starts additionally reject a candidate if the default Go2 foot spheres
+    intersect any nearby mesh triangle. Grid starts use zero XY/yaw ranges;
+    the other direct JEPLO kinds keep XY sampling but start facing +x.
     """
-    if tile.kind not in WAYPOINT_KINDS:
+    if tile.kind not in SAFE_START_KINDS:
         return tile.origin.copy()
     if (vertices is None) != (faces is None):
         raise ValueError('vertices and faces must be supplied together')
@@ -241,29 +243,119 @@ def spawn_origin(tile, *, vertices=None, faces=None):
     candidates = np.array([(x*H, y*H) for x in range(5, 21) for y in range(51, 62)])
     distance = ((candidates - (1., 4.48))**2).sum(1)
     for centre in candidates[np.argsort(distance, kind='stable')]:
-        intersects = (np.all(upper >= centre-(.35, .25), axis=1)
-                      & np.all(lower <= centre+(.35, .25), axis=1))
-        patch = triangles[intersects]
-        if not len(patch):
+        height = _surface_height_at(triangles, centre)
+        if height is None:
             continue
-        z = patch[:, :, 2]
-        if z.min() < -.1-1e-7 or z.max() > .15+1e-7 or np.ptp(z) > .15+1e-7:
-            continue
-        # Interpolate the true surface at the anchor; cliffs can displace the
-        # nominal heightfield sample XY by one cell during triangulation.
-        a = patch[:, 0]
-        u, v = patch[:, 1, :2]-a[:, :2], patch[:, 2, :2]-a[:, :2]
-        det = u[:, 0]*v[:, 1]-u[:, 1]*v[:, 0]
-        nonvertical = abs(det) > 1e-12
-        a, u, v, det, patch = (item[nonvertical] for item in (a, u, v, det, patch))
-        delta = centre-a[:, :2]
-        s = (delta[:, 0]*v[:, 1]-delta[:, 1]*v[:, 0])/det
-        t = (u[:, 0]*delta[:, 1]-u[:, 1]*delta[:, 0])/det
-        hit = (s >= -1e-7) & (t >= -1e-7) & (s+t <= 1+1e-7)
-        if hit.any():
-            height = a[:, 2]+s*(patch[:, 1, 2]-a[:, 2])+t*(patch[:, 2, 2]-a[:, 2])
-            return np.r_[centre, height[hit].max()]
+        if tile.kind in WAYPOINT_KINDS:
+            intersects = (np.all(upper >= centre-(.35, .25), axis=1)
+                          & np.all(lower <= centre+(.35, .25), axis=1))
+            patch = triangles[intersects]
+            if not len(patch):
+                continue
+            z = patch[:, :, 2]
+            if z.min() < -.1-1e-7 or z.max() > .15+1e-7 or np.ptp(z) > .15+1e-7:
+                continue
+        if tile.kind in {'discrete_grid', 'discrete_obstacles'}:
+            if _default_go2_feet_clear(triangles, centre, height):
+                return np.r_[centre, height]
+        else:
+            return np.r_[centre, height]
     raise ValueError(f'no safe entry support: kind={tile.kind} level={tile.level} seed={tile.seed}')
+
+
+def _surface_height_at(triangles, point):
+    """Highest actual mesh-triangle height at one XY point, or None."""
+    lower, upper = triangles[:, :, :2].min(1), triangles[:, :, :2].max(1)
+    selected = np.all((lower <= point + 1e-8) & (upper >= point - 1e-8), axis=1)
+    patch = triangles[selected]
+    if not len(patch):
+        return None
+    a = patch[:, 0]
+    u, v = patch[:, 1, :2]-a[:, :2], patch[:, 2, :2]-a[:, :2]
+    det = u[:, 0]*v[:, 1]-u[:, 1]*v[:, 0]
+    nonvertical = np.abs(det) > 1e-12
+    a, u, v, det, patch = (item[nonvertical] for item in (a, u, v, det, patch))
+    if not len(det):
+        return None
+    delta = point-a[:, :2]
+    s = (delta[:, 0]*v[:, 1]-delta[:, 1]*v[:, 0])/det
+    t = (u[:, 0]*delta[:, 1]-u[:, 1]*delta[:, 0])/det
+    hit = (s >= -1e-7) & (t >= -1e-7) & (s+t <= 1+1e-7)
+    if not hit.any():
+        return None
+    height = a[:, 2]+s*(patch[:, 1, 2]-a[:, 2])+t*(patch[:, 2, 2]-a[:, 2])
+    return float(height[hit].max())
+
+
+def _point_triangle_distance(point, triangles):
+    """Vectorized closest distance from one point to each nondegenerate triangle."""
+    a, b, c = triangles[:, 0], triangles[:, 1], triangles[:, 2]
+    ab, ac, ap = b-a, c-a, point-a
+    d1, d2 = np.einsum('ij,ij->i', ab, ap), np.einsum('ij,ij->i', ac, ap)
+    closest = np.empty_like(a)
+    assigned = np.zeros(len(a), dtype=bool)
+
+    def set_region(mask, values):
+        mask &= ~assigned
+        closest[mask] = values[mask]
+        assigned[mask] = True
+
+    set_region((d1 <= 0) & (d2 <= 0), a)
+    bp = point-b
+    d3, d4 = np.einsum('ij,ij->i', ab, bp), np.einsum('ij,ij->i', ac, bp)
+    set_region((d3 >= 0) & (d4 <= d3), b)
+    vc = d1*d4-d3*d2
+    mask = (vc <= 0) & (d1 >= 0) & (d3 <= 0)
+    v = np.divide(d1, d1-d3, out=np.zeros_like(d1), where=np.abs(d1-d3) > 1e-15)
+    set_region(mask, a+v[:, None]*ab)
+    cp = point-c
+    d5, d6 = np.einsum('ij,ij->i', ab, cp), np.einsum('ij,ij->i', ac, cp)
+    set_region((d6 >= 0) & (d5 <= d6), c)
+    vb = d5*d2-d1*d6
+    mask = (vb <= 0) & (d2 >= 0) & (d6 <= 0)
+    w = np.divide(d2, d2-d6, out=np.zeros_like(d2), where=np.abs(d2-d6) > 1e-15)
+    set_region(mask, a+w[:, None]*ac)
+    va = d3*d6-d5*d4
+    mask = (va <= 0) & ((d4-d3) >= 0) & ((d5-d6) >= 0)
+    w = np.divide(d4-d3, (d4-d3)+(d5-d6), out=np.zeros_like(d4),
+                  where=np.abs((d4-d3)+(d5-d6)) > 1e-15)
+    set_region(mask, b+w[:, None]*(c-b))
+    face = ~assigned
+    denom = va+vb+vc
+    v = np.divide(vb, denom, out=np.zeros_like(vb), where=np.abs(denom) > 1e-15)
+    w = np.divide(vc, denom, out=np.zeros_like(vc), where=np.abs(denom) > 1e-15)
+    closest[face] = a[face]+ab[face]*v[face, None]+ac[face]*w[face, None]
+    return np.linalg.norm(closest-point, axis=1)
+
+
+def _default_go2_feet_clear(triangles, xy_origin, terrain_z):
+    """Reject a spawn whose default FK foot collision spheres intersect mesh faces."""
+    from foothold_s2.robots.go2_kinematics import (
+        DEFAULT_ROOT_HEIGHT_M, FOOT_RADIUS_M, foot_centers,
+    )
+
+    feet = foot_centers()
+    centers = np.column_stack((xy_origin+feet[:, :2],
+                               terrain_z+DEFAULT_ROOT_HEIGHT_M+feet[:, 2]))
+    bounds_lo, bounds_hi = triangles.min(axis=1), triangles.max(axis=1)
+    for center in centers:
+        surface_z = _surface_height_at(triangles, center[:2])
+        foot_bottom = center[2]-FOOT_RADIUS_M
+        # A sphere can be wholly buried below the top surface without crossing
+        # the zero-thickness triangle. Treat that as terrain overlap as well.
+        if surface_z is None or surface_z > foot_bottom+1e-7:
+            return False
+        nearby = np.all(bounds_lo <= center+FOOT_RADIUS_M, axis=1) & np.all(
+            bounds_hi >= center-FOOT_RADIUS_M, axis=1)
+        patch = triangles[nearby]
+        if len(patch):
+            # Degenerate triangles have no collision area and are omitted.
+            area2 = np.linalg.norm(np.cross(patch[:, 1]-patch[:, 0],
+                                            patch[:, 2]-patch[:, 0]), axis=1)
+            patch = patch[area2 > 1e-12]
+        if len(patch) and np.min(_point_triangle_distance(center, patch)) < FOOT_RADIUS_M-1e-7:
+            return False
+    return True
 
 
 def tile_function(difficulty, cfg):
