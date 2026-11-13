@@ -98,8 +98,8 @@ def draw(path):
     basic_updates = sum(n for sid, n, on in stages if on and sid in ("E0", "E1", "E1F"))
     assert basic_updates == 2750 and basic_updates + 20000 == 22750
     fig = plt.figure(figsize=(28, 22), dpi=100)
-    fig.text(0.04, 0.978, "EX-42 학습 계보 · E1 첫 실행과 재시작 결정", fontsize=28, weight="bold", va="top")
-    fig.text(0.04, 0.952, "계보: EX-41 m6000 → m12000 → 0 단계 m13000 → E0 m13250 → E1 1차 m2250 (11/13 06:27 종료)",
+    fig.text(0.04, 0.978, "EX-42 학습 계보 · E1 1차 m2000과 보완 A m2250", fontsize=28, weight="bold", va="top")
+    fig.text(0.04, 0.952, "계보: EX-41 m6000 → m12000 → 0 단계 m13000 → E0 m13250 → E1 1차 m2000 08:12 종료 · 보완 A m2250 13:25",
              fontsize=14, color="#37474f", va="top")
     fig.text(0.04, 0.935, "다음: (가) E1 을 m13250 에서 다시 · zero_yaw −1.0 + track_lin_vel_std 0.35 · 느린 명령 몫 0.4 · 1,750 회 (11/13 결정)",
              fontsize=14, color="#37474f", va="top")
@@ -149,7 +149,7 @@ def draw(path):
     ax.set_ylim(0, 1)
     ax.axis("off")
     ax.add_patch(Rectangle((0, 0), 7, 1, facecolor="#fffdf5", edgecolor="#f9a825", lw=1.4))
-    ax.text(0.05, 0.97, "E1 1차 · m13250 출발 · m2000→m2250 별도 보완 A 포함, 06:27 종료 · 새 (가) 재시작 성과 미측정", fontsize=15,
+    ax.text(0.05, 0.97, "E1 1차 m2000 08:12 종료 · 보완 A m2250 13:25 · 새 (가) 재시작 성과 미측정", fontsize=15,
             weight="bold", va="top")
     seg = [("구간 1", 5, "넓힌 명령 시작\n옆 몫 0.09 · 전진 0.19", 250, "끝 18:16"),
            ("구간 2", 5, "그대로\n(규칙: 바꿀 것 없음)", 500, "끝 20:28"),
@@ -178,7 +178,8 @@ def draw(path):
     xs = BOUNDS
     lab = ["출발\nm13250"] + [f"m{b}" for b in BOUNDS[1:]]
     ax.plot(xs, [res[b]["S"] for b in xs], "o-", color="#1565c0", lw=2.2, label="옆걸음 점수 (기준 0.85)")
-    ax.plot(xs, [res[b]["L0"]["fwd0.2"] for b in xs], "s-", color="#e65100", lw=2.2, label="전진 0.2 m/s 따름")
+    ax.plot(xs, [res[b]["L0"]["fwd0.2"] for b in xs], "s-", color="#e65100", lw=2.2,
+            label="전진 0.2 따름 (brief 따름 지표 · 졸업 v2 R 과 다른 정의)")
     ax.plot(xs, [res[b]["L0"]["fwd0.1"] for b in xs], marker="^", color="#bf360c", lw=1.6, ls="--", label="전진 0.1 m/s 따름")
     ax.axhline(0.85, color="#1565c0", lw=1, ls=":")
     for b in xs:
@@ -191,7 +192,7 @@ def draw(path):
     ax.set_xticklabels(lab, fontsize=9)
     ax.set_ylim(-0.05, 1.12)
     ax.grid(alpha=0.3)
-    ax.legend(loc="upper left", bbox_to_anchor=(0.0, 0.93), fontsize=9.5, ncol=3, frameon=False)
+    ax.legend(loc="upper left", bbox_to_anchor=(0.0, 0.93), fontsize=8.5, ncol=3, frameon=False)
     ax.set_title("E1 1차 명령 반응 추이 · m2250 보완 A와 새 재시작판 제외", fontsize=13, loc="left")
     ax2 = fig.add_axes([0.06, 0.20, 0.38, 0.05])
     ax2.axis("off")
@@ -221,7 +222,7 @@ def draw(path):
     ax.axis("off")
     blocks = [
         ("정한 것 (팀장 · 원장 decisions.tsv)", "#1b5e20", "■", [
-            "11/13: E1 1차 m13250→m2250 · 06:27 종료. (가)로 같은 부모에서 다시 시작",
+            "11/13: E1 1차 m2000 08:12 종료 · 보완 A m2250 13:25 · (가) 같은 부모 재시작",
             "새 시작 짝: zero_yaw −1.0 + track_lin_vel_std 0.35 · 느린 명령 몫 0.4 · 1,750 회",
             "예산: E0/E1/E1F 2,750 회 + E2~ 20,000 회 = EX-42 최대 22,750 회",
             "0 단계 1,000 회는 별도. 연장은 지표가 기준 쪽으로 움직일 때만",
