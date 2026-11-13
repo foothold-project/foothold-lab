@@ -226,6 +226,59 @@ def source_exit_bounds(source, template, stage):
     return minimum, expected['maximum_updates']
 
 
+def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
+    """The reward cells the source stage really ran with in the segment that produced `model_<iteration>.pt`.
+
+    decisions.tsv 2026-11-13 21:50: a target row without its own `rewards` cell does not fall back to the code's stage
+    table; it continues with the live readback of the source run's last segment, boundary adjustments included.
+    None when the source row registers no reward cells (stages before the cells existed keep their old behaviour).
+    The segment is the last one the source run started before that checkpoint: the manifest lists every resumed
+    segment (`ex42_resume_segments[*].local_update_origin`). A run that was never resumed ran its plan row throughout
+    and leaves no readback file, so it inherits the row itself. A resumed segment must have left
+    `segment_rewards_b<k>[_rank<r>].json`; a missing or differing file is refused, never replaced by defaults."""
+    from foothold_s2.commands.ex42_segment_adjust import REWARD_CELLS, TOL, reward_limits, stage_rewards
+    row = _row(source, stage)
+    if row.get('rewards') is None:
+        return None, {}
+    limits = reward_limits(limits_path)      # the target template's limits: the values must be startable there
+    interval = source.document['evaluation']['interval_updates']
+    segments = _json(parent_manifest).get('ex42_resume_segments', [])
+    origins = [segment.get('local_update_origin') if isinstance(segment, dict) else None for segment in segments] \
+        if isinstance(segments, list) else [None]
+    if any(type(origin) is not int or origin <= 0 or origin % interval for origin in origins):
+        raise ValueError(f'{stage} manifest resumed-segment record is invalid')
+    started = [origin for origin in origins if origin < iteration]
+    boundary = max(started) // interval if started else 0
+    if boundary < 1:
+        values = stage_rewards(source, stage, limits)
+        return {'source_stage': stage, 'boundary_index': 0, 'origin': 'source plan row', 'values': values}, {}
+    run = Path(parent_manifest).resolve().parent
+    paths = sorted(run.glob(f'segment_rewards_b{boundary}_rank*.json')) or [run / f'segment_rewards_b{boundary}.json']
+    values, refs = None, {}
+    for index, path in enumerate(paths):
+        if not path.is_file():
+            raise ValueError(f'{stage} last-segment reward readback is missing: {path.name}')
+        body = _json(path)
+        live, asked = body.get('live'), body.get('asked')
+        if (body.get('format') != 'ex42-segment-rewards/1' or body.get('stage_id') != stage
+                or body.get('plan_sha256') != source.sha256 or body.get('boundary_index') != boundary
+                or not isinstance(live, dict) or set(live) != set(REWARD_CELLS)
+                or any(type(v) not in (int, float) or not math.isfinite(v) for v in live.values())):
+            raise ValueError(f'{stage} last-segment reward readback identity differs: {path.name}')
+        if asked is not None:      # the run itself checked live against asked; keep the asked number, not float noise
+            if set(asked) != set(REWARD_CELLS) or any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):
+                raise ValueError(f'{stage} last-segment reward readback differs from what the segment asked for')
+            live = asked
+        current = {name: float(live[name]) for name in REWARD_CELLS}
+        if values is not None and current != values:
+            raise ValueError(f'{stage} last-segment reward readback differs across ranks')
+        values = current
+        refs[f'inherited_rewards.readback{index}'] = _ref(path)
+    from foothold_s2.commands.ex42_segment_adjust import _rewards
+    values = _rewards(values, limits, f'{stage} last-segment readback')      # inside the approved limits, or refused
+    return {'source_stage': stage, 'boundary_index': boundary, 'origin': 'segment_rewards readback', 'values': values}, refs
+
+
 FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_sha256 / flag_baseline from the W09+W08 chain
 
 
@@ -306,6 +359,12 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
             cell['extension_authorized'] = True
             from foothold_s2.curriculum.ex42_prep import stage_extension_contract
             cell['extension_contract'] = stage_extension_contract(row)
+    inherited, inherited_refs = (None, {})
+    if row.get('rewards') is None:
+        inherited, inherited_refs = inherited_rewards(source, stage, parent_manifest, iteration,
+                                                      template.path.parent / 'ex42-reward-adjust-limits.yaml')
+        if inherited is not None:
+            row['rewards'] = dict(inherited['values'])
     flag_artifacts = {}
     if flag_chain is not None:
         if target != FLAG_CHAIN_TARGET:
@@ -329,6 +388,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     artifacts = {'evaluation_plan':_ref(evaluation_plan.path)} if evaluation_plan else {}
     if training_mesh:
         artifacts.update({f'training_mesh.{name}': ref for name, ref in training_mesh['files'].items()})
+    artifacts.update(inherited_refs)
     for key, ref in bindings.items():
         path = _checked_ref(ref, ev_path.parent)
         artifacts[key] = _ref(path)
@@ -389,6 +449,8 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         'new_plan_sha':hashlib.sha256(plan_bytes).hexdigest(),'approval_sha256':document['stage_zero']['approval_sha256'],
         'inputs':refs,'parent':pin,'artifacts':artifacts,
         'budget':{'limit':budget_limit,'used':budget_used,'basis':budget_basis,'reserved':base_cap},'training_started':False}
+    if inherited is not None:
+        transition['inherited_rewards'] = inherited
     if training_mesh:
         transition['training_mesh'] = training_mesh
     return template,document,plan_bytes,approval_bytes,transition

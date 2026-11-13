@@ -42,7 +42,8 @@ def known(tmp_path):
     checkpoint = run / 'model_1750.pt'; checkpoint.write_bytes(b'known E1 complete checkpoint')
     parent_sha = sha(checkpoint)
     manifest = run / 'manifest.json'
-    dump(manifest, {'progress': {'completed_updates': 1750}, 'checkpoints': {checkpoint.name: parent_sha}})
+    dump(manifest, {'progress': {'completed_updates': 1750}, 'checkpoints': {checkpoint.name: parent_sha},
+                    'ex42_resume_segments': [{'local_update_origin': k * 250} for k in range(1, 7)]})
     specs=plan.document['evaluation']['paper_cells']['stairs_landing']['case_specs']
     case_ids=plan.document['evaluation']['paper_cells']['stairs_landing']['judge_cases']
     cases={}
@@ -78,6 +79,11 @@ def known(tmp_path):
         output_dir=str(run),approval={'approvals_sha256':plan.document['stage_zero']['approval_sha256']}))+'\n'
         for r in range(2)) + ''.join('EX42_E0_EXPOSURE '+json.dumps(dict(envs=3072, exposed_columns=[0,1],
         level_caps=[5,5,0],start='parent_env_state'))+'\n' for _ in range(2)))
+    # The last segment (boundary 6 -> model_1750) left its live reward readback on both ranks; E1F inherits it.
+    last_rewards = dict(plan.document['stages'][[x['id'] for x in plan.document['stages']].index('E1')]['rewards'])
+    for rank in range(2):
+        dump(run / f'segment_rewards_b6_rank{rank}.json', dict(format='ex42-segment-rewards/1', stage_id='E1',
+             plan_sha256=plan.sha256, boundary_index=6, source='plan', entry=None, asked=last_rewards, live=last_rewards))
     mesh = dump(run / 'mesh.json', {'kind':'known mesh'})
     baseline = dump(run / 'flag_baseline.json', {'state':'measured', 'threshold':0.75})
     evidence = run / 'evidence.json'
@@ -300,6 +306,8 @@ def test_registered_boolean_requires_real_boolean_evidence(known):
     a=yaml.safe_load(known['approvals'].read_text());a['stage_e1f_authorization']['budget']={'m_updates_count_toward_source_maximum':None}
     known['approvals'].write_text(yaml.safe_dump(a));d['stage_zero']['approval_sha256']=sha(known['approvals']);p.write_text(yaml.safe_dump(d))
     gp=known['gate_receipt'];g=json.loads(gp.read_text());g['plan_sha256']=sha(p);dump(gp,g)
+    for readback in gp.parent.glob('segment_rewards_b6_rank*.json'):      # the last segment ran under the rewritten plan too
+        dump(readback, dict(json.loads(readback.read_text()), plan_sha256=sha(p)))
     e=json.loads(known['evidence'].read_text());e['source_plan_sha256']=sha(p);e['gate_sha256']=sha(gp)
     log=Path(e['exposure_receipt']['path']);lines=log.read_text().splitlines()
     for i in (0,1):
