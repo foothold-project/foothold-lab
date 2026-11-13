@@ -277,11 +277,12 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
                 raise ValueError(f'{stage} last-segment reward readback differs across ranks')
             values = current
             refs[f'inherited_rewards.readback{index}'] = _ref(path)
-    # The last segment can receive a later update-boundary adjustment without
-    # another segment restart. Its receipt is the latest readback in that case.
+    # on_update_start(N) applies the adjustment before rollout N; model_N is
+    # saved after that rollout. The final receipt at or before N is therefore
+    # the actual reward state, even if an earlier segment readback followed it.
     live_paths = sorted(run.glob('ex42_update_adjust_m*.json'),
                         key=lambda p: int(p.stem.rsplit('m', 1)[-1]))
-    live_paths = [path for path in live_paths if boundary * interval <= int(path.stem.rsplit('m', 1)[-1]) < iteration]
+    live_paths = [path for path in live_paths if int(path.stem.rsplit('m', 1)[-1]) <= iteration]
     if live_paths:
         from foothold_s2.ex42_live_adjust import RECEIPT, check_limited_values, limits_from_plan
         path = live_paths[-1]

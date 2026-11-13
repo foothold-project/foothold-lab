@@ -157,6 +157,47 @@ def test_last_live_adjustment_after_segment_readback_is_inherited(known):
                           Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml')
 
 
+def test_live_adjustment_before_the_last_segment_remains_the_actual_inherited_value(known):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_live_adjust import RECEIPT
+    from foothold_s2.ex42_stage_materialize import inherited_rewards
+    _manifest(known, [{'local_update_origin': 250}, {'local_update_origin': 500}])
+    run_dir = known['parent_manifest'].parent
+    for rank, path in enumerate(_readbacks(known)):
+        _rewrite(path, boundary_index=2)
+        path.rename(run_dir / f'segment_rewards_b2_rank{rank}.json')
+    source = EX42Plan.load(known['source_plan'])
+    receipt = run_dir / 'ex42_update_adjust_m300.json'
+    receipt.write_text(json.dumps({'format': RECEIPT, 'stage_id': 'E1', 'plan_sha256': source.sha256,
+                                   'iteration': 300, 'after': {'rewards': {'slow_track': 0.25},
+                                                               'commands': {}, 'monitor': {}}}))
+    row, refs = inherited_rewards(source, 'E1', known['parent_manifest'], 1750,
+                                  Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml')
+    assert row['values']['slow_track'] == 0.25
+    assert refs['inherited_rewards.live_adjustment']['sha256'] == parent_tests.sha(receipt)
+
+
+def test_adjustment_at_checkpoint_update_is_included_but_a_later_one_is_not(known):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_live_adjust import RECEIPT
+    from foothold_s2.ex42_stage_materialize import inherited_rewards
+    _manifest(known, [])
+    for path in _readbacks(known):
+        path.unlink()
+    source = EX42Plan.load(known['source_plan'])
+    run_dir = known['parent_manifest'].parent
+    limits = Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml'
+    for number, weight in ((250, 0.25), (251, 0.3)):
+        (run_dir / f'ex42_update_adjust_m{number}.json').write_text(json.dumps({
+            'format': RECEIPT, 'stage_id': 'E1', 'plan_sha256': source.sha256,
+            'iteration': number, 'after': {'rewards': {'slow_track': weight},
+                                           'commands': {}, 'monitor': {}}}))
+    row, refs = inherited_rewards(source, 'E1', known['parent_manifest'], 250, limits)
+    assert row['values']['slow_track'] == 0.25
+    assert refs['inherited_rewards.live_adjustment']['sha256'] == parent_tests.sha(
+        run_dir / 'ex42_update_adjust_m250.json')
+
+
 def test_the_last_started_segment_speaks_even_when_it_ran_across_later_boundaries(known):
     # resumed at 250 and 500 only, then one long segment to 1750: boundary 2's readback is the one in force at the exit
     from foothold_s2.curriculum.ex42_prep import EX42Plan
