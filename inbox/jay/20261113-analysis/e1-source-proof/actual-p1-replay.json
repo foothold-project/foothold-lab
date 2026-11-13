@@ -1,0 +1,16 @@
+[
+  {
+    "iteration": 250,
+    "old_judgement": "FAIL",
+    "new_judgement": "FAIL",
+    "reason": "E1 v2: maintenance, D44 turns, S1/S2/Y1, fixed treatment in two windows",
+    "numeric_cells_unchanged": true,
+    "treatment": {
+      "state": "complete",
+      "source": "plan",
+      "boundary_index": 0,
+      "sha256": "202f5d5641d25a0d241a6f185a2941be16b119c9b9d92ad6454f33cb0fce1987"
+    },
+    "provenance_error": null
+  }
+]

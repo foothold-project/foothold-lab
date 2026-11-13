@@ -1,0 +1,94 @@
+{
+  "base_ref": "a19cd6a2",
+  "source_sha256": {
+    "foothold_s2/ex42_e1_v2.py": "52f9fbcd5bcd5ea6eb356257e0831444db13a4d70a8eac8caf2b7555c5f64b07",
+    "inbox/jay/20261113-analysis/e1-boundary-rules/boundary_read.py": "dbfa36ebc34cb37b30a9f70cb40b32cef07591f1cfac3b438a8fdcbbf376e142",
+    "inbox/jay/20261113-analysis/e1-boundary-rules/r5_contact.py": "b9159e7c704642927e5fc60352b7979d5cd5e85a062bfe4c8e41b99df83426b8"
+  },
+  "results": [
+    {
+      "name": "h1_control",
+      "expected_observed": true,
+      "rc": 0,
+      "summary": "13 passed in 1.30s"
+    },
+    {
+      "name": "h1_checkpoint",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 1 passed, 11 deselected in 0.13s"
+    },
+    {
+      "name": "h1_seed",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 1 passed, 11 deselected in 0.12s"
+    },
+    {
+      "name": "h1_header",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 12 deselected in 0.13s"
+    },
+    {
+      "name": "h1_receipt_plan",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 12 deselected in 0.25s"
+    },
+    {
+      "name": "h1_startup_plan",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 12 deselected in 0.27s"
+    },
+    {
+      "name": "h1_cached",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 12 deselected in 0.32s"
+    },
+    {
+      "name": "h2_control",
+      "expected_observed": true,
+      "rc": 0,
+      "summary": "12 passed in 0.25s"
+    },
+    {
+      "name": "h2_plain_bytes",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 11 deselected in 0.09s"
+    },
+    {
+      "name": "h2_schema",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 6 passed, 5 deselected in 0.22s"
+    },
+    {
+      "name": "h2_checkpoint",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 6 passed, 5 deselected in 0.22s"
+    },
+    {
+      "name": "h2_foot_order",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 6 passed, 5 deselected in 0.23s"
+    },
+    {
+      "name": "h2_norm_vs_fz",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 11 deselected in 0.11s"
+    },
+    {
+      "name": "h2_declared_metrics",
+      "expected_observed": true,
+      "rc": 1,
+      "summary": "1 failed, 11 deselected in 0.12s"
+    }
+  ]
+}
