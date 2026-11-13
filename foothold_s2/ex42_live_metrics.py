@@ -74,8 +74,8 @@ def send_orca_alert(run_id, iteration, alerts, evidence_path):
 
 class LiveMetrics:
     def __init__(self, log_dir, *, rank=0, world_size=1, stage_id="E1", slow_min=0.1, slow_max=0.3,
-                 slow_sigma=0.5, slow_weight=0.0, stall_mps=0.05, moving_updates=20, decline_from_peak=0.05,
-                 off_survival_updates=50, off_survival_drop=0.05, initial=None, alert_run_id=None,
+                 slow_sigma=0.5, slow_weight=0.0, stall_mps=0.05, moving_updates=20, decline_from_peak=None,
+                 off_survival_updates=50, off_survival_drop=None, initial=None, alert_run_id=None,
                  plan_sha256=None, include_heading=False):
         if (type(moving_updates) is not int or moving_updates < 1
                 or type(off_survival_updates) is not int or off_survival_updates < 1

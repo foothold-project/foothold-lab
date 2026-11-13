@@ -66,7 +66,7 @@ def test_slow_forward_speed_band_edges_and_missing_samples(tmp_path):
 
 
 def test_twenty_update_weighted_mean_and_historical_drop(tmp_path):
-    m = LiveMetrics(tmp_path)
+    m = LiveMetrics(tmp_path, decline_from_peak=0.05)
     for it in range(1, 21):
         m.begin(it, device="cpu")
         _step(m, ratio=1.0)
@@ -85,6 +85,7 @@ def test_twenty_update_weighted_mean_and_historical_drop(tmp_path):
 
 def test_no_mode_samples_does_not_become_zero_score(tmp_path):
     m = LiveMetrics(tmp_path)
+    assert m.decline_from_peak is None and m.off_survival_drop is None
     m.begin(1, device="cpu")
     row = m.end()
     assert row["skills"]["gt"]["slow_forward"]["tracking_ratio"] is None
@@ -101,7 +102,7 @@ def test_plan_sha_is_pinned_across_resume(tmp_path):
 
 
 def test_map_off_fifty_update_reset_drop_alert(tmp_path):
-    m = LiveMetrics(tmp_path)
+    m = LiveMetrics(tmp_path, off_survival_drop=0.05)
     for it in range(1, 101):
         m.begin(it, device="cpu")
         _step(m, done=it > 50)
@@ -109,7 +110,7 @@ def test_map_off_fifty_update_reset_drop_alert(tmp_path):
     assert row["off_50_block"] == 0
     assert row["monitor"]["alerts"][-1]["signal"] == "map_off_survival_50_drop"
     assert (tmp_path / "alerts.jsonl").is_file()
-    restored = LiveMetrics(tmp_path)
+    restored = LiveMetrics(tmp_path, off_survival_drop=0.05)
     assert restored.previous_off_block == 0
 
 
@@ -167,7 +168,8 @@ def test_failed_alert_send_waits_a_whole_window_before_retry(monkeypatch, tmp_pa
     from foothold_s2 import ex42_live_metrics as lm
     calls = []
     monkeypatch.setattr(lm, "send_orca_alert", lambda *args: (calls.append(args) or {"delivered": False}))
-    m = LiveMetrics(tmp_path, off_survival_updates=1, alert_run_id="run_abc123")
+    m = LiveMetrics(tmp_path, off_survival_updates=1, off_survival_drop=0.05,
+                    alert_run_id="run_abc123")
     for it, fall in ((1, False), (2, True), (3, True)):
         if it == 3:
             m.previous_off_block = 1.0  # a separate current block with a new drop
