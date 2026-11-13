@@ -241,10 +241,11 @@ LIVE = {
     "idle_util": 10,
     # board (팀장 11/03 22:1x)
     "queue": "D:/mai-tmp/gpu/queue.json",
-    "stage_table": "D:/mai-wt/foothold-lab/ex41-launch-2ee5dc00/foothold_s2/curriculum/ex41-fixed5000.yaml",
-    "parent_iter": 6000,
-    "stage_end": [750, 1750, 2750, 4000, 4500, 5000],
-    "eval_root": "C:/Users/AI-WS01/s2_lab/ex41_main_20261103_195435/eval/score-watch",
+    "stage_table": "",
+    "parent_iter": 0,
+    "stage_end": [0],
+    "eval_root": "",
+    "experiment": "학습",
     "eval_minutes_assumed": 40,
     "stage_end_minutes_assumed": 120,
     "c_layer_total_cells": 81,
@@ -258,8 +259,6 @@ if OPS_PROFILE:
         train_marker=gpu_path(OPS_PROFILE, "TRAINING_BUSY_GPU0"),
         idle_state=gpu_path(OPS_PROFILE, "idle_since.json"),
         queue=gpu_path(OPS_PROFILE, "queue.json"),
-        stage_table=paths["stage_table"],
-        eval_root=paths["eval_root"],
         c_layer_manifest=paths["c_layer_manifest"],
     )
 KINDS = (("guard", ("score_watch", "mirror_guard", "auto_guard", "inbox_wait")),
@@ -599,7 +598,9 @@ def _queue_cmd(args, cfg=LIVE, now=None) -> str:
 
 
 def stage_rows(cfg: dict) -> list[tuple[str, int, int]]:
-    """[(id, first local update, last local update)] from the EX-41 table."""
+    """[(id, first local update, last local update)] from this run's stage."""
+    if cfg.get("stage_id"):
+        return [(cfg["stage_display"], 1, cfg["stage_end"][-1])]
     try:
         import yaml
         stages = yaml.safe_load(Path(cfg["stage_table"]).read_text(encoding="utf-8"))["stages"]
@@ -618,6 +619,19 @@ def stage_of(it: int, rows) -> tuple[str, int, int] | None:
 def eval_attempts(root: str) -> list[dict]:
     """Per 250-boundary score attempt: iteration, start, end (if finished), state."""
     out = []
+    if Path(root).name == "scores":
+        for d in sorted(Path(root).glob("m[0-9]*")) if Path(root).is_dir() else []:
+            match = re.fullmatch(r"m(\d+)", d.name)
+            if not match or not d.is_dir():
+                continue
+            score = d / "p1_score.json"
+            try:
+                state = read_json(score).get("state", "complete") if score.is_file() else "running"
+            except (OSError, ValueError):
+                state = "invalid_score"
+            out.append({"iteration": int(match.group(1)), "start": d.stat().st_mtime,
+                        "end": score.stat().st_mtime if score.is_file() else None, "state": state})
+        return out
     for d in sorted(Path(root).glob("model_*_*")) if Path(root).is_dir() else []:
         try:
             a = json.loads(read_shared_text(d / "attempt.json"))
@@ -703,9 +717,12 @@ def auto_items(cfg: dict, train: dict | None, now: float, jobs: list[dict], atte
     eval_min = (sum(a["end"] - a["start"] for a in finished) / len(finished) / 60) if finished else None
     eval_src = f"지난 {len(finished)} 회 실측 평균" if finished else f"가정 {cfg['eval_minutes_assumed']} 분"
     eval_min = eval_min or cfg["eval_minutes_assumed"]
+    experiment = cfg.get("experiment", "EX-41")
     for a in attempts:
         if a["state"] == "running":
-            items.append({"title": f"EX-41 {a['iteration']} 경계 평가 39 칸 + W78", "priority": 1, "gpu": 1,
+            title = (f"{experiment} {a['iteration']} 경계 평가" if cfg.get("eval_kind") == "ex42"
+                     else f"EX-41 {a['iteration']} 경계 평가 39 칸 + W78")
+            items.append({"title": title, "priority": 1, "gpu": 1,
                           "start": a["start"], "end": a["start"] + eval_min * 60, "state": "실행",
                           "owner": "score_watch", "source": eval_src, "kind": "eval"})
     if train and type(train.get("iter")) is int and isinstance(train.get("iter_s"), (int, float)):
@@ -713,20 +730,27 @@ def auto_items(cfg: dict, train: dict | None, now: float, jobs: list[dict], atte
         done_iters = {a["iteration"] for a in attempts}
         # score_watch starts model_N only when the manifest shows >= N+1 updates, and the manifest
         # is rewritten at checkpoint saves, so the N evaluation starts at the N+50 save.
-        for k in range(0, 5):
+        horizon = cfg.get("auto_horizon", 4)
+        for k in range(0, horizon + 1):
             nxt = (it // b + k) * b
             if nxt < b or nxt > cfg["stage_end"][-1] or nxt in done_iters:
                 continue
-            start = now + max(0, nxt + SAVE_EVERY - it) * s
+            save_lag = 0 if cfg.get("eval_kind") == "ex42" else SAVE_EVERY
+            start = now + max(0, nxt + save_lag - it) * s
             stage_end = nxt in cfg["stage_end"]
             dur = cfg["stage_end_minutes_assumed"] if stage_end else eval_min
             state = (f"대기 · 다음 저장 {datetime.fromtimestamp(start):%H:%M}" if pending == nxt else "대기")
-            items.append({"title": (f"EX-41 {nxt} 단계 끝 사슬(축 전부 + 밀기)" if stage_end
-                                    else f"EX-41 {nxt} 경계 평가 39 칸 + W78"),
+            title = ((f"{experiment} {nxt} 단계 끝 평가" if stage_end else f"{experiment} {nxt} 경계 평가")
+                     if cfg.get("eval_kind") == "ex42" else
+                     (f"EX-41 {nxt} 단계 끝 사슬(축 전부 + 밀기)" if stage_end
+                      else f"EX-41 {nxt} 경계 평가 39 칸 + W78"))
+            items.append({"title": title,
                           "priority": 1, "gpu": 1, "start": start, "end": start + dur * 60, "state": state,
                           "owner": "score_watch", "kind": "eval",
-                          "source": (f"시작 {nxt + SAVE_EVERY} 회 · manifest 는 다음 저장({nxt + SAVE_EVERY}) 때 갱신"
-                                     f" · 회당 {s:.1f} 초 · " + (f"가정 {dur} 분" if stage_end else eval_src)),
+                          "source": ((f"시작 {nxt + save_lag} 회 · 회당 {s:.1f} 초 · "
+                                      if cfg.get("eval_kind") == "ex42" else
+                                      f"시작 {nxt + SAVE_EVERY} 회 · manifest 는 다음 저장({nxt + SAVE_EVERY}) 때 갱신 · 회당 {s:.1f} 초 · ")
+                                     + (f"가정 {dur} 분" if stage_end else eval_src)),
                           "condition": f"model_{nxt}.pt"})
     rows, order = c_files if c_files is not None else c_layer_files(cfg)
     if rows:
@@ -807,8 +831,9 @@ def warnings(cfg: dict, queue: list[dict], auto: list[dict], jobs: list[dict], i
         b = cfg["boundary"]
         due = (train["iter"] // b) * b
         seen = eval_attempts(cfg["eval_root"]) if attempts is None else attempts
-        if due >= b and train["iter"] >= due + SAVE_EVERY + 5 and due not in {a["iteration"] for a in seen}:
-            out.append(f"EX-41 {due} 경계를 지났는데 평가 기록 없음")
+        lag = 0 if cfg.get("eval_kind") == "ex42" else SAVE_EVERY
+        if due >= b and train["iter"] >= due + lag + 5 and due not in {a["iteration"] for a in seen}:
+            out.append(f"{cfg.get('experiment', 'EX-41')} {due} 경계를 지났는데 평가 기록 없음")
     return out
 
 
@@ -947,6 +972,39 @@ def current_training(cfg=LIVE, alive=None) -> dict | None:
     return status
 
 
+def training_config(cfg: dict, train: dict | None) -> dict:
+    """Read the live run's identity instead of using an old experiment's display table."""
+    result = dict(cfg)
+    if not train or not isinstance(train.get("run"), str):
+        return result
+    run = Path(train["run"])
+    try:
+        manifest = read_json(run / "manifest.json")
+        args = manifest["run"]["cli_args"]
+        receipt = read_json(run / "startup_receipt.json")
+        if receipt.get("experiment") != "EX-42" or not isinstance(args, dict):
+            return result
+        parent = receipt["parent"]["cumulative_update"]
+        maximum = args["max_iterations"]
+        interval = args["ex42_segment_end"]
+        if any(type(v) is not int or v < 1 for v in (parent, maximum, interval)):
+            return result
+        stage = args.get("ex42_stage") or next(
+            (name for name in ("e1", "e0") if args.get(f"ex42_stage_{name}_approved")), None)
+        if not isinstance(stage, str) or not stage:
+            return result
+    except (OSError, ValueError, KeyError, TypeError):
+        return result
+    stage = stage.upper()
+    name = str(manifest["run"].get("name", ""))
+    display = stage + (" 다시" if "again" in (name + " " + run.name).casefold() else "")
+    result.update(experiment="EX-42", stage_id=stage, stage_display=display,
+                  parent_iter=parent, stage_end=[maximum], boundary=interval,
+                  eval_root=str(run / "eval/scores"), stage_table="", eval_kind="ex42",
+                  auto_horizon=max(1, (maximum + interval - 1) // interval))
+    return result
+
+
 def train_status_path(cfg=LIVE) -> str:
     t = current_training(cfg)
     return str(Path(t["run"]) / "train_start_status.json") if t and t.get("run") else ""
@@ -956,6 +1014,7 @@ def slow_data(cfg=LIVE, procs=None) -> dict:
     """The parts read every 10 s in watch mode: process command lines and files."""
     procs = procs if procs is not None else processes()
     train = current_training(cfg)
+    runtime_cfg = training_config(cfg, train)
     try:
         queue, qerr = read_queue(cfg["queue"])["items"], None
     except ValueError as exc:
@@ -965,8 +1024,8 @@ def slow_data(cfg=LIVE, procs=None) -> dict:
         if item.get("external"):
             settle_external(item, observed_at)  # Display only; do not write the queue.
     return {"procs": procs, "train": train, "queue": queue, "qerr": qerr,
-            "attempts": eval_attempts(cfg["eval_root"]), "rows": stage_rows(cfg),
-            "pending": watcher_pending(cfg["eval_root"]),
+            "attempts": eval_attempts(runtime_cfg["eval_root"]), "rows": stage_rows(runtime_cfg),
+            "pending": watcher_pending(runtime_cfg["eval_root"]), "runtime_cfg": runtime_cfg,
             "c_files": c_layer_files(cfg),
             "read_at": observed_at}
 
@@ -1038,6 +1097,7 @@ def board_data(smi=None, procs=None, cfg=LIVE, now=None, slow=None) -> dict:
     now = now if now is not None else datetime.now().timestamp()
     smi = smi if smi is not None else nvidia_smi()
     slow = slow if slow is not None else slow_data(cfg, procs)
+    cfg = slow.get("runtime_cfg", cfg)
     procs, train, queue, qerr = slow["procs"], slow["train"], slow["queue"], slow["qerr"]
     jobs = live_jobs(smi, procs)
     idle = idle_update(smi, jobs, cfg["idle_state"], cfg["idle_util"], now)
@@ -1074,10 +1134,14 @@ def gpu_box(d: dict, i: int, width: int, paint: Paint) -> list[str]:
         body.append(paint(f"쉼 · {clock(since, now)} 부터 관측", "보류") if since else "프로세스 없음")
     for j in here:
         if j["kind"] == "training" and train and type(train.get("iter")) is int:
-            it, p, last = train["iter"], cfg["parent_iter"], cfg["stage_end"][-1]
+            it, p = train["iter"], cfg["parent_iter"]
+            last = (train["tot_iter"] if cfg.get("eval_kind") == "ex42"
+                    and type(train.get("tot_iter")) is int and train["tot_iter"] > 0
+                    else cfg["stage_end"][-1])
             st = stage_of(it, d["rows"])
             stage = f"{st[0]} (m{p + st[1]}~m{p + st[2]})" if st else "단계 미확인"
-            body.append(paint("EX-41 학습", "실행") + " · " + fit(stage, inner - 13).rstrip())
+            label = f"{cfg.get('experiment', 'EX-41')} 학습"
+            body.append(paint(label, "실행") + " · " + fit(stage, inner - cell_width(label) - 3).rstrip())
             body.append(f"{j['script']} · PID {j['pid']}")
             tail = f" m{p + it} · {it}/{last}"
             body.append(f"[{bar(it / last, inner - 2 - cell_width(tail))}]{tail}")
