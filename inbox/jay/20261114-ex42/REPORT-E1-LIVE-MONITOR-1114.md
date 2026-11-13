@@ -10,12 +10,12 @@
 - 느린 전진은 명령 속도 `[0.1,0.15)` · `[0.15,0.2)` · `[0.2,0.3)` m/s 세 칸으로도 나눈다. 각 칸에 지도 GT/PRED/끔별 표본 수·몸앞 속도 비율·멈춤 비율을 기록한다. 표본이 없으면 0 대신 `null`이다. 양 끝 경계와 0.3 제외 반례를 CPU로 확인했다.
 - `foothold_s2/ex42_live_metrics.py`: 각 rollout step에서 실제 소비 명령, 지도 모드, 슬롯, 물리 step 뒤 몸 좌표 속도를 집계한다. reset된 env는 추종 비율에서 뺀다. 종료는 time_out과 낙상으로 나누고, 실행 계약의 `push_off_columns`를 기준으로 좁은 받침 지형과 그 밖의 지형을 따로 기록한다. 두 rank는 회차 끝에 합치며 rank별 원시 수치도 남긴다. `ex42_live_metrics.jsonl`과 `train_extra.jsonl`에 지도 GT/PRED/끔별 느린 전진 추종 비율·정체 비율·옆 좌우 따로·표본 수·20회 이동 평균·slow_track 활성 env-step 비율을 기록한다. 활성 조건은 보상 항과 같은 속도 범위 0.1 이상 0.3 미만이다. 이번 승인 판에서는 heading 느린 명령도 포함하며 heading과 일반 명령 표본을 따로 기록한다. 깃발과 자유 회전 명령은 제외한다.
 - 지도 끔의 낙상 제외 생존은 50회 블록 간 변화를 기록한다. 학습 env 지표의 흔들림 폭이 아직 없어서 하락 문턱은 `null`이고, 지금은 변화 기록만 남긴다. 기동 전 Kit 흔들림 실측 뒤 문턱을 plan에 고정해야 자동 경보·감시 단계 내림을 켤 수 있다. 전송 실패 뒤에는 최소 두 50회 블록 동안 재전송을 미룬다.
-- `foothold_s2/ex42_live_adjust.py`: 매 회차 시작 때 rank 0이 `EX42_UPDATE_ADJUST` JSON 파일을 읽고 새 요청을 두 rank에 방송한다. 보상 셀 열 개는 현행 `ex42-reward-adjust-limits.yaml`의 SHA와 값을 따른다. Plan E1 행에서 되풀이한 여섯 셀의 한계가 그 파일과 다르면 시작을 거절한다. 승인 밖 요청은 거절 기록 후 학습을 계속한다. 승인 안 요청은 두 rank의 실제 RewardManager·명령 표집 설정을 바꾸고 되읽기 일치 뒤 `ex42_update_adjust_m<N>.json`을 fsync하여 남긴다. rank 불일치·영수증 누락·영수증 밖 값 변화는 다음 rollout 전에 중단한다.
-- 감시 단계는 초기 learning, 명시 조정으로 consolidating/solid/maintenance 전환, GT와 PRED 모두 최고 20회 평균 대비 0.05 초과 하락하면 learning 신호를 남긴다. 올림 숫자는 카드 §5.4에 미정이므로 자동 올림은 하지 않는다.
+- `foothold_s2/ex42_live_adjust.py`: 매 회차 시작 때 rank 0이 `EX42_UPDATE_ADJUST` JSON 파일을 읽고 새 요청을 두 rank에 방송한다. 보상 셀 열하나는 현행 `ex42-reward-adjust-limits.yaml`의 SHA와 값을 따른다. 새 `slow_progress` 셀은 [0,0]이라 승인 전에는 0만 허용한다. Plan E1 행에서 되풀이한 여섯 셀의 한계가 그 파일과 다르면 시작을 거절한다. 승인 밖 요청은 거절 기록 후 학습을 계속한다. 승인 안 요청은 두 rank의 실제 RewardManager·명령 표집 설정을 바꾸고 되읽기 일치 뒤 `ex42_update_adjust_m<N>.json`을 fsync하여 남긴다. rank 불일치·영수증 누락·영수증 밖 값 변화는 다음 rollout 전에 중단한다.
+- 감시 단계는 초기 learning, 명시 조정으로 consolidating/solid/maintenance 전환을 기록한다. GT와 PRED의 최고 20회 평균 대비 하락 문턱은 아직 `null`이므로 수치 변화만 남긴다. 올림 숫자는 카드 §5.4에 미정이므로 자동 올림은 하지 않는다.
 
 ## 파일 계약
 
-통합 v27 실행 plan `foothold_s2/curriculum/ex42-prep.yaml` SHA256은 **8fc3af99ee30e3cc9473cd238ad9dfd5b21f3ee70a7f45b4da28da5d4780132d**이다. 보상 한계 파일 SHA256은 `626193c1591a902edc973a02eff9851cc9c399a730a2f23eb7029776679d0c8c`이며 plan의 한계 파일 지문과 일치한다. 기존 run의 plan으로 재개할 수 없으며 새 출발 승인·영수증의 plan SHA를 lead가 재고정해야 한다. 실행 환경에는 `EX42_ALERT_RUN_ID=run_...`가 필수이고, 조정 파일을 쓸 경우 `EX42_UPDATE_ADJUST=/절대경로/adjust.json`을 준다.
+통합 v27 실행 plan `foothold_s2/curriculum/ex42-prep.yaml` SHA256은 **e996d3d2c1eb435bea52ac076f6755aea1a70d21d45046da9caadbf8fd67080f**이다. 보상 한계 파일 SHA256은 `ca0685e249611c89edc6eb7ba28a633eb24826abbfb8bed0c70e85370a759a1e`이며 plan의 한계 파일 지문과 일치한다. 기존 run의 plan으로 재개할 수 없으며 새 출발 승인·영수증의 plan SHA를 lead가 재고정해야 한다. 실행 환경에는 `EX42_ALERT_RUN_ID=run_...`가 필수이고, 조정 파일을 쓸 경우 `EX42_UPDATE_ADJUST=/절대경로/adjust.json`을 준다.
 
 ```json
 {

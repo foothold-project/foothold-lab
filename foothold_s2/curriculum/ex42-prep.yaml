@@ -297,7 +297,7 @@ stages:
     initial: {slow_forward: learning, side_left: learning, side_right: learning}
   live_adjustment:
     file_env: EX42_UPDATE_ADJUST
-    segment_reward_limits_sha256: 626193c1591a902edc973a02eff9851cc9c399a730a2f23eb7029776679d0c8c
+    segment_reward_limits_sha256: ca0685e249611c89edc6eb7ba28a633eb24826abbfb8bed0c70e85370a759a1e
     # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
     extra_reward_limits:
       zero_yaw: [-2.0, -0.5]
@@ -377,13 +377,12 @@ stages:
   # 2026-11-13 09:52. The other three are the values the finished E1 ran with.
   # Registered for later boundaries and unchanged at the start (decisions.tsv 2026-11-13 15:30): the feet_air_time
   # threshold 0.5 s (its weight is 0) and ex42_slow_track at weight 0 with the constants of its draft formula.
-  rewards: {track_lin_vel_std: 0.35, track_ang_vel_std: 0.5, feet_air_time: 0.1, foot_slip: -0.15, zero_yaw: -1.0,
-            feet_air_time_threshold: 0.04, slow_track: 0.2, slow_track_sigma: 0.5, slow_track_speed_min: 0.1,
-            slow_track_speed_max: 0.3}
-  # feet_air_time 0.1 with threshold 0.04 s from the first update (decisions.tsv 2026-11-14 01:08, ledger commit
-  # a8830b47; inside the limits [0, 0.5] and [0.04, 0.5]). m750 of the run before: slow_track 0.2 alone let forward 0.1
-  # fall further (0.312 -> 0.172, 63 of 64 envs standing). The term pays only when a foot lands under a moving command,
-  # so standing still under a slow command no longer ties with walking.
+  rewards: {track_lin_vel_std: 0.35, track_ang_vel_std: 0.5, feet_air_time: 0.0, foot_slip: -0.15, zero_yaw: -1.0,
+            feet_air_time_threshold: 0.5, slow_track: 0.2, slow_track_sigma: 0.5, slow_track_speed_min: 0.1,
+            slow_track_speed_max: 0.3, slow_progress: 0.0}
+  # feet_air_time stays 0 with threshold 0.5 (decisions.tsv 2026-11-14 01:21, ledger commit 06d4a1ae: the 0.1 / 0.04 s
+  # of 01:08 was withdrawn, too small to break the standing equilibrium). slow_progress is the one-sided progress term
+  # registered at weight 0 for the same reason; its limits are closed until the team lead approves them.
   # slow_track 0.2 from the first update of the E1 restart from m13250 (decisions.tsv 2026-11-14 00:21, ledger commit
   # 64de0cad; inside the limits [0, 0.3]). Left at 0 the slow forward progress fell 0.447 -> 0.312 in one boundary.
   # The share of the forward commands drawn below 0.3 m/s, from the first update of the stage (the source stage has

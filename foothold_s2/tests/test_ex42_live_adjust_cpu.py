@@ -23,6 +23,7 @@ class Manager:
             "ex41_foot_slip": SimpleNamespace(weight=-.15, params={}),
             "ex41_zero_yaw": SimpleNamespace(weight=-1., params={}),
             "ex42_slow_track": SimpleNamespace(weight=0., params={"sigma": .5, "speed_min": .1, "speed_max": .3}),
+            "ex42_slow_progress": SimpleNamespace(weight=0., params={}),
         }
 
     def get_term_cfg(self, name):
@@ -92,6 +93,17 @@ def test_outside_limit_rejected_and_training_can_continue(tmp_path):
     assert result["kind"] == "rejected"
     assert runtime.env.reward_manager.get_term_cfg("ex42_slow_track").weight == 0
     assert (tmp_path / "ex42_update_adjust_rejected_m2.json").is_file()
+
+
+def test_slow_progress_is_pinned_at_zero_until_approved(tmp_path):
+    ctl, runtime, _ = _setup(tmp_path, rewards={"slow_progress": 0.0})
+    record = ctl.on_update_start(2)
+    assert record["after"]["rewards"]["slow_progress"] == 0.0
+    assert runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight == 0.0
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    rejected, _, _ = _setup(outside, rewards={"slow_progress": 0.001})
+    assert rejected.on_update_start(2)["kind"] == "rejected"
 
 
 def test_new_forward_share_limit_is_exactly_point_five(tmp_path):
