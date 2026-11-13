@@ -1129,6 +1129,14 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
     if profile is not None:        # the stage's own shares, ranges and turn overlay replace the stage-zero ones
         from dataclasses import replace
         stage = replace(stage, shares=profile["shares"], ranges=profile["ranges"], turn_overlay=profile["turn_overlay"])
+    if ex42_plan is not None:
+        row = next((entry for entry in ex42_plan.document["stages"] if entry["id"] == stage_id), {})
+        slow_fraction = row.get("low_forward_fraction")
+        if slow_fraction is not None:
+            if type(slow_fraction) not in (int, float) or not 0 <= slow_fraction <= 1:
+                raise ValueError("EX-42 stage low_forward_fraction invalid")
+            from dataclasses import replace
+            stage = replace(stage, low_forward_fraction=float(slow_fraction))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
@@ -1225,6 +1233,39 @@ class EX42StageZeroRuntime:
         self.runner = runner
         runner.continuous_curriculum = self
         self._learned_cells_init()
+        config = getattr(self, "live_monitor_config", None)
+        if isinstance(config, dict) and config.get("enabled") is True:
+            from foothold_s2.ex42_live_metrics import LiveMetrics, narrow_support_mask
+            alert_env = config.get("alert_run_env")
+            if alert_env != "EX42_ALERT_RUN_ID" or not os.environ.get(alert_env):
+                raise ValueError("EX-42 E1 live monitor needs EX42_ALERT_RUN_ID before launch")
+            slow_cfg = self.env.reward_manager.get_term_cfg("ex42_slow_track")
+            slow_params = slow_cfg.params
+            table = getattr(self.env, "_ex42_column_table", None)
+            contract = getattr(self.env, "_ex42_env_contract", None)
+            self._live_sparse_by_col = narrow_support_mask(table, contract, device=self.env.device)
+            columns = self.env.scene.terrain.terrain_types
+            if int(columns.min()) < 0 or int(columns.max()) >= len(table):
+                raise ValueError("EX-42 live monitor terrain column is outside the table")
+            self.live_metrics = LiveMetrics(
+                self._record_dir(), rank=int(os.environ.get("RANK", "0")),
+                world_size=int(os.environ.get("WORLD_SIZE", "1")), stage_id=self.stage_id,
+                plan_sha256=self.plan_sha256,
+                slow_min=float(slow_params["speed_min"]), slow_max=float(slow_params["speed_max"]),
+                slow_sigma=float(slow_params["sigma"]), slow_weight=float(slow_cfg.weight),
+                include_heading=bool(slow_params.get("include_heading", False)),
+                moving_updates=config["moving_updates"], decline_from_peak=config["decline_from_peak"],
+                off_survival_updates=config["map_off_survival_updates"],
+                off_survival_drop=config["map_off_survival_drop_alert"], initial=config["initial"],
+                alert_run_id=os.environ[alert_env])
+            adjustment_config = getattr(self, "live_adjustment_config", None)
+            if not isinstance(adjustment_config, dict) or adjustment_config.get("file_env") != "EX42_UPDATE_ADJUST":
+                raise ValueError("EX-42 E1 live adjustment must be pinned in the plan")
+            from foothold_s2.ex42_live_adjust import LiveAdjustment
+            self.live_adjustment = LiveAdjustment(
+                self, adjustment_config, plan_sha256=self.plan_sha256,
+                path=os.environ.get("EX42_UPDATE_ADJUST"), log_dir=self._record_dir(),
+                rank=int(os.environ.get("RANK", "0")), world_size=int(os.environ.get("WORLD_SIZE", "1")))
 
     def on_reset(self, env_ids: Any) -> None:
         if self.command_allocation is not None:
@@ -1259,6 +1300,19 @@ class EX42StageZeroRuntime:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
             raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
+        if getattr(self, "live_adjustment", None) is not None:
+            receipt = self.live_adjustment.on_update_start(update)
+            if receipt is not None:
+                print("EX42_LIVE_ADJUST " + json.dumps(receipt, ensure_ascii=False, sort_keys=True), flush=True)
+        if getattr(self, "live_metrics", None) is not None:
+            slow_cfg = self.env.reward_manager.get_term_cfg("ex42_slow_track")
+            slow_params = slow_cfg.params
+            self.live_metrics.slow_min = float(slow_params["speed_min"])
+            self.live_metrics.slow_max = float(slow_params["speed_max"])
+            self.live_metrics.slow_sigma = float(slow_params["sigma"])
+            self.live_metrics.slow_weight = float(slow_cfg.weight)
+            self.live_metrics.include_heading = bool(slow_params.get("include_heading", False))
+            self.live_metrics.begin(update, device=self.env.device)
         self._exposure_receipt(update - 1, "start")
         if update == 1 and self.env is not None:
             terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
@@ -1324,6 +1378,17 @@ class EX42StageZeroRuntime:
             raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
         self._step_pending = True
         self.pre_step_count += 1
+        if getattr(self, "live_metrics", None) is not None:
+            term = self.env.command_manager.get_term("base_velocity")
+            pstate = self.runner.pstate
+            terrain = getattr(self.env.scene, "terrain", None)
+            if terrain is None or not hasattr(terrain, "terrain_types"):
+                raise ValueError("EX-42 live monitor needs the measured terrain column table")
+            columns = terrain.terrain_types.long()
+            self._live_pre = (self.runner._consumed_command(self.iteration).detach().clone(),
+                              term.slot_current.detach().clone(), term.heading.detach().clone(),
+                              term.is_flag_env.detach().clone(), pstate.use_gt.detach().clone(),
+                              pstate.map_off.detach().clone(), self._live_sparse_by_col[columns].detach().clone())
         if self.command_allocation is not None:
             self.command_allocation.pre_step()
         if getattr(self, "learned_cells", None) is not None:
@@ -1340,7 +1405,7 @@ class EX42StageZeroRuntime:
             except Exception as exc:      # noqa: BLE001
                 self._learned_cells_off(exc)
 
-    def record_post_step(self, done: Any) -> None:
+    def record_post_step(self, done: Any, time_out: Any = None) -> None:
         if not self._step_pending:
             raise RuntimeError("EX-42 stage-zero post-step has no matching pre-step")
         shape = getattr(done, "shape", None)
@@ -1348,6 +1413,17 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero done vector must match the environment batch")
         self._step_pending = False
         self.post_step_count += 1
+        if getattr(self, "live_metrics", None) is not None:
+            if time_out is None:
+                # RslRlVecEnvWrapper only copies this into extras for infinite-horizon tasks.
+                time_out = getattr(self.env, "reset_time_outs", None)
+            if time_out is None:
+                raise ValueError("EX-42 live monitor needs timeout reasons to exclude them from falls")
+            command, slot, heading, flag, gt, off, sparse = self._live_pre
+            velocity = self.env.scene["robot"].data.root_lin_vel_b.detach()
+            self.live_metrics.add(command, velocity, slot, heading, flag, gt, off, done,
+                                  time_out=time_out, sparse=sparse)
+            self._live_pre = None
         if getattr(self, "learned_cells", None) is not None:
             try:
                 self.learned_cells.post_step(done, self.runner.pstate.map_off, self.iteration)
