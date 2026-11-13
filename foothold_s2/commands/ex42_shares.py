@@ -38,9 +38,46 @@ def read_contract(plan, stage_id):
     families = {r['family'] for r in e0['exposure_at_E0']['positive'] if r.get('kinds_of') == 'continuous'}
     if not kinds or not families:
         raise ValueError('EX-42 continuous command columns are not declared')
+    kind_commands = read_kind_commands(stage)
     return {'stage_id': stage_id, 'shares': dict(shares), 'families': sorted(families),
             'continuous_kinds': sorted(kinds), 'conditional_denominator': 'continuous_environments',
-            'mode_selection': 'episode_reset', 'other_columns': 'unchanged_source_stage'}
+            'mode_selection': 'episode_reset',
+            'other_columns': 'kind_task_command_set' if kind_commands else 'unchanged_source_stage',
+            **({'kind_commands': kind_commands} if kind_commands else {})}
+
+
+KIND_COMMAND_NAMES = ('forward_1.0', 'flag')   # E5's C boundary widens this through extend_kind_commands, not here
+
+
+def read_kind_commands(stage):
+    """`stages[].terrain.kind_task.<family>.<kind>` = {command_set, command_weights} for every kind this stage opens
+    outside the continuous columns (CG E.3 kind_task row): {"<family>/<kind>": {'family', 'kind', 'flag': weight}}.
+    An opened kind without the two cells, a malformed cell, or a cell for a kind the stage does not open is refused;
+    nothing falls back to the free 13-slot commands."""
+    terrain = stage.get('terrain') or {}
+    positive = (terrain.get(f"exposure_at_{stage['id']}") or {}).get('positive') or []
+    if any('kinds_of' in r and r['kinds_of'] != 'continuous' for r in positive):
+        raise ValueError(f"EX-42 {stage['id']} exposure names a kind list other than continuous")
+    opened = [(r['family'], r['kind']) for r in positive if 'kind' in r]
+    cells = terrain.get('kind_task') or {}
+    declared = {(f, k) for f, kinds in cells.items() for k in kinds}
+    if declared - set(opened):
+        raise ValueError(f"EX-42 {stage['id']} kind_task commands for kinds it does not open: {sorted(declared - set(opened))}")
+    out = {}
+    for family, kind in opened:
+        cell = (cells.get(family) or {}).get(kind)
+        if not isinstance(cell, dict) or set(cell) != {'command_set', 'command_weights'}:
+            raise ValueError(f"EX-42 {stage['id']} opens {family}/{kind} without kind_task command_set and command_weights")
+        names, weights = cell['command_set'], cell['command_weights']
+        if (not isinstance(names, list) or len(set(names)) != len(names) or 'forward_1.0' not in names
+                or not set(names) <= set(KIND_COMMAND_NAMES)):
+            raise ValueError(f"EX-42 {stage['id']} {family}/{kind} command_set must hold forward_1.0 and only forward_1.0, flag")
+        if (not isinstance(weights, dict) or set(weights) != set(names)
+                or any(type(v) not in (int, float) or not math.isfinite(v) or not 0 <= v <= 1 for v in weights.values())
+                or not math.isclose(sum(weights.values()), 1., abs_tol=1e-9)):
+            raise ValueError(f"EX-42 {stage['id']} {family}/{kind} command_weights must match command_set and sum to 1")
+        out[f'{family}/{kind}'] = {'family': family, 'kind': kind, 'flag': float(weights.get('flag', 0.0))}
+    return out
 
 
 def stage_commands(plan, stage_id):
@@ -120,6 +157,11 @@ class CommandShares:
         self.contract = contract
         free_mass = 1. - contract['shares']['flag']
         self.free_stage = replace(source_stage, shares={k: contract['shares'][k]/free_mass for k in EX39_SLOTS})
+        self.kind_keys = sorted(contract.get('kind_commands', {}))
+        # One stage per kind bundle: forward exactly 1.0, no heading, no turn overlay (CG E.3 kind_task row).
+        self.kind_stages = [replace(source_stage, id=f'KIND_{key}', shares={'forward': 1.0},
+                                    ranges={**source_stage.ranges, 'forward_vx': (1.0, 1.0)}, low_forward_fraction=0.0,
+                                    heading_arm=None, turn_overlay=None) for key in self.kind_keys]
         self.names = (*EX39_SLOTS, 'flag')
         self.pending_counts = None
         self.count_origin_update = 0
@@ -133,8 +175,19 @@ class CommandShares:
             row['family'] in self.contract['families'] and row['kind'] in self.contract['continuous_kinds']
             for row in table], dtype=torch.bool, device=raw.device)
         self.raw, self.term, self.runtime = raw, term, runtime
-        runtime.plan.stages = [runtime.plan.stages[0], self.free_stage]
-        self.counts = {name: torch.zeros((2, width), dtype=torch.long, device=raw.device)
+        # Column -> kind bundle index (-1: no bundle). A mesh column holds one (family, kind).
+        by_kind = {(row['family'], row['kind']): i for i, row in enumerate(
+            self.contract['kind_commands'][key] for key in self.kind_keys)}
+        self.column_kind = torch.tensor([by_kind.get((row['family'], row['kind']), -1) for row in table],
+                                        dtype=torch.long, device=raw.device)
+        if bool(((self.column_kind >= 0) & self.column_continuous).any()):
+            raise ValueError('EX-42 a column is both continuous and a kind bundle')
+        missing = sorted(set(range(len(self.kind_keys))) - set(self.column_kind.tolist()))
+        if missing:
+            raise ValueError(f"EX-42 kind bundle without a mesh column: {[self.kind_keys[i] for i in missing]}")
+        runtime.plan.stages = [runtime.plan.stages[0], self.free_stage, *self.kind_stages]
+        rows = 2 + len(self.kind_keys)        # all, continuous, then one denominator per kind bundle
+        self.counts = {name: torch.zeros((rows, width), dtype=torch.long, device=raw.device)
                        for name, width in [('reset_modes', 2), ('samples', 14), ('steps', 14)]}
         if self.pending_counts is not None:
             self._restore_counts(self.pending_counts)
@@ -152,6 +205,10 @@ class CommandShares:
         count = self.counts[name]
         count[0] += torch.bincount(labels, minlength=count.shape[1])
         count[1] += torch.bincount(labels[eligible], minlength=count.shape[1])
+        if self.kind_keys:
+            kind = self.column_kind[self.raw.scene.terrain.terrain_types.long()[ids]]
+            for i in range(len(self.kind_keys)):
+                count[2 + i] += torch.bincount(labels[kind == i], minlength=count.shape[1])
 
     def reset(self, ids):
         import torch
@@ -162,6 +219,15 @@ class CommandShares:
         # No draws for other terrain, and no implicit flags assigned there.
         choices = torch.rand(len(selected), generator=self.term.gen, device=self.term.gen.device) < self.contract['shares']['flag']
         self.term.is_flag_env[selected] = choices.to(self.term.is_flag_env.device)
+        # Kind bundles draw after the continuous columns, so the continuous flag draws keep their stream.
+        if self.kind_keys:
+            kind = self.column_kind[self.raw.scene.terrain.terrain_types.long()[ids]]
+            for i, key in enumerate(self.kind_keys):
+                chosen = ids[kind == i]
+                flags = torch.rand(len(chosen), generator=self.term.gen, device=self.term.gen.device) \
+                    < self.contract['kind_commands'][key]['flag']
+                self.term.is_flag_env[chosen] = flags.to(self.term.is_flag_env.device)
+                self.runtime.env_stage[chosen[~flags.to(chosen.device)]] = 2 + i    # a flag env stays with the flag allocator
         self._add('reset_modes', ids, self.term.is_flag_env[ids].long())
 
     def samples(self, ids, slots):
@@ -214,7 +280,7 @@ class CommandShares:
         for name, count in self.counts.items():
             names = ('free', 'flag') if name == 'reset_modes' else self.names
             cumulative[name] = {}
-            for denominator, values in zip(('all', 'continuous'), count.cpu().tolist()):
+            for denominator, values in zip(('all', 'continuous', *(f'kind:{k}' for k in self.kind_keys)), count.cpu().tolist()):
                 total = sum(values)
                 cumulative[name][denominator] = {'counts': dict(zip(names, values)), 'total': total,
                     'fractions': {k: v/total if total else None for k,v in zip(names, values)}}

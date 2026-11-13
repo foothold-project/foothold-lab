@@ -33,6 +33,11 @@ def setup(stage_id='E3', n=10000):
     shares.update(reverse=.85, flag=.15)
     stage = next(s for s in plan.document['stages'] if s['id'] == stage_id)
     stage['shares'] = shares
+    # These tests are about the continuous columns; the kind bundle (test_ex42_kind_task_commands_cpu) is stripped here.
+    terrain = stage['terrain']
+    terrain.pop('kind_task', None)
+    positive = terrain[f'exposure_at_{stage_id}']['positive']
+    positive[:] = [r for r in positive if 'kind' not in r]
     source, old = entry.load_ex42_stage_zero_source(plan)
     contract = cs.read_contract(plan, stage_id)
     term = NS(gen=mc.make_generator(42), is_flag_env=torch.zeros(n, dtype=torch.bool),
