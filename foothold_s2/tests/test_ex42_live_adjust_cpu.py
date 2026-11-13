@@ -128,6 +128,16 @@ def test_changed_value_without_receipt_stops_before_next_update(tmp_path):
         ctl.on_update_start(3)
 
 
+@pytest.mark.parametrize('adjusted_first', [False, True])
+def test_within_limit_unchanged_reward_without_receipt_stops_before_rollout(tmp_path, adjusted_first):
+    ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2})
+    if adjusted_first:
+        ctl.on_update_start(2)
+    runtime.env.reward_manager.get_term_cfg("ex41_zero_yaw").weight = -1.5
+    with pytest.raises(RuntimeError, match="without a receipt"):
+        ctl.on_update_start(3 if adjusted_first else 1)
+
+
 def test_unchanged_cell_outside_limit_stops_before_next_rollout(tmp_path):
     ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2})
     ctl.on_update_start(2)

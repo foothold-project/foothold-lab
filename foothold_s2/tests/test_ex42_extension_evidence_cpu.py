@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from foothold_s2 import ex42_stage_handoff as handoff
 from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -74,6 +75,41 @@ def _edit_score(folder, edit, *, repin=True):
         receipt = json.loads(receipt_path.read_text())
         receipt["measurement_sha256"] = _sha(score_path)
         receipt_path.write_text(json.dumps(receipt))
+
+
+@needs_run
+@pytest.mark.parametrize('deficient_case', ['side+0.8', 'wide_L3_fwd1.0', 'wide_L6_fwd1.0'])
+def test_widened_judged_deficit_blocks_extension_despite_improving_yaw(tmp_path, deficient_case):
+    gate, manifest = _receipts(tmp_path)
+    from foothold_s2.ex42_e1_wide_plan import widened_contract
+    from foothold_s2.ex42_e1_wide import judge_cells as wide_judge
+    policy = yaml.safe_load(TABLE.read_text())
+    policy['evaluation']['e1_widened'] = widened_contract(policy)
+    policy_path = tmp_path / 'wide-policy.yaml'
+    policy_path.write_text(yaml.safe_dump(policy))
+    for folder in _folders(gate):
+        def add_wide(score):
+            wide = wide_judge({}, policy, 6)
+            for row in wide['items'].values():
+                if row['role'] != 'judge':
+                    continue
+                row.update(judgement='PASS')
+                if 'S' in row:
+                    row['S'] = 1.0
+                else:
+                    row.update(success=64, valid=64, survival=64)
+            for mode in ('eval_gt', 'eval_pred'):
+                wide['items'][f'{deficient_case}/{mode}'].update(judgement='FAIL', success=0)
+            wide['judgement'] = 'FAIL'
+            score['e1_exit_v2']['wide_current'] = wide
+        _edit_score(folder, add_wide)
+        receipt_path = folder / 'p1_score.json'
+        receipt = json.loads(receipt_path.read_text())
+        receipt['evaluation_plan'] = {'path': str(policy_path), 'sha256': _sha(policy_path)}
+        receipt_path.write_text(json.dumps(receipt))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, 'E1', _e1_maximum(), gate, manifest)
+    assert decision['action'] == 'notify' and decision['judgment'] == 'HOLD'
+    assert 'not every deficient metric improved' in decision['reason']
 
 
 @needs_run

@@ -180,6 +180,10 @@ class LiveAdjustment:
         self.last_sha = None
         self.expected = None
         self._restore()
+        # train_start has checked the plan or segment readback before attach_runner.
+        # Pin every reward cell here, including cells no request has changed.
+        self.expected_full = live_values(self.runtime, {"rewards": self.limits["rewards"],
+                                                       "commands": self.limits["commands"]})
 
     def _restore(self):
         receipts = sorted(self.log_dir.glob("ex42_update_adjust_m*.json"),
@@ -231,6 +235,8 @@ class LiveAdjustment:
             check_limited_values(full_live, self.limits)
         except ValueError as exc:
             raise RuntimeError(str(exc)) from exc
+        if full_live != self.expected_full:
+            raise RuntimeError("EX-42 live adjustment changed without a receipt or full reward readback")
         if self.expected is not None:
             previous = self.log_dir / f"ex42_update_adjust_m{self.expected['iteration']}.json"
             if not previous.is_file() or live_values(self.runtime, self.expected["values"]) != self.expected["values"]:
@@ -296,4 +302,6 @@ class LiveAdjustment:
         if not write_result["ok"]:
             raise RuntimeError("EX-42 live adjustment receipt missing after change")
         self.expected = {"iteration": iteration, "values": full}
+        self.expected_full = live_values(self.runtime, {"rewards": self.limits["rewards"],
+                                                       "commands": self.limits["commands"]})
         return receipt

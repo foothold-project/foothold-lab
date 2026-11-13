@@ -249,34 +249,61 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
         raise ValueError(f'{stage} manifest resumed-segment record is invalid')
     started = [origin for origin in origins if origin < iteration]
     boundary = max(started) // interval if started else 0
+    run = Path(parent_manifest).resolve().parent
     if boundary < 1:
         values = stage_rewards(source, stage, limits)
-        return {'source_stage': stage, 'boundary_index': 0, 'origin': 'source plan row', 'values': values}, {}
-    run = Path(parent_manifest).resolve().parent
-    paths = sorted(run.glob(f'segment_rewards_b{boundary}_rank*.json')) or [run / f'segment_rewards_b{boundary}.json']
-    values, refs = None, {}
-    for index, path in enumerate(paths):
-        if not path.is_file():
-            raise ValueError(f'{stage} last-segment reward readback is missing: {path.name}')
+        refs = {}
+        origin = 'source plan row'
+    else:
+        values, refs = None, {}
+        origin = 'segment_rewards readback'
+        paths = sorted(run.glob(f'segment_rewards_b{boundary}_rank*.json')) or [run / f'segment_rewards_b{boundary}.json']
+        for index, path in enumerate(paths):
+            if not path.is_file():
+                raise ValueError(f'{stage} last-segment reward readback is missing: {path.name}')
+            body = _json(path)
+            live, asked = complete_cells(body.get('live')), complete_cells(body.get('asked'))      # receipts older than an optional cell
+            if (body.get('format') != 'ex42-segment-rewards/1' or body.get('stage_id') != stage
+                    or body.get('plan_sha256') != source.sha256 or body.get('boundary_index') != boundary
+                    or not isinstance(live, dict) or set(live) != set(REWARD_CELLS)
+                    or any(type(v) not in (int, float) or not math.isfinite(v) for v in live.values())):
+                raise ValueError(f'{stage} last-segment reward readback identity differs: {path.name}')
+            if asked is not None:      # the run itself checked live against asked; keep the asked number, not float noise
+                if set(asked) != set(REWARD_CELLS) or any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):
+                    raise ValueError(f'{stage} last-segment reward readback differs from what the segment asked for')
+                live = asked
+            current = {name: float(live[name]) for name in REWARD_CELLS}
+            if values is not None and current != values:
+                raise ValueError(f'{stage} last-segment reward readback differs across ranks')
+            values = current
+            refs[f'inherited_rewards.readback{index}'] = _ref(path)
+    # The last segment can receive a later update-boundary adjustment without
+    # another segment restart. Its receipt is the latest readback in that case.
+    live_paths = sorted(run.glob('ex42_update_adjust_m*.json'),
+                        key=lambda p: int(p.stem.rsplit('m', 1)[-1]))
+    live_paths = [path for path in live_paths if boundary * interval <= int(path.stem.rsplit('m', 1)[-1]) < iteration]
+    if live_paths:
+        from foothold_s2.ex42_live_adjust import RECEIPT, check_limited_values, limits_from_plan
+        path = live_paths[-1]
         body = _json(path)
-        live, asked = complete_cells(body.get('live')), complete_cells(body.get('asked'))      # receipts older than an optional cell
-        if (body.get('format') != 'ex42-segment-rewards/1' or body.get('stage_id') != stage
-                or body.get('plan_sha256') != source.sha256 or body.get('boundary_index') != boundary
-                or not isinstance(live, dict) or set(live) != set(REWARD_CELLS)
-                or any(type(v) not in (int, float) or not math.isfinite(v) for v in live.values())):
-            raise ValueError(f'{stage} last-segment reward readback identity differs: {path.name}')
-        if asked is not None:      # the run itself checked live against asked; keep the asked number, not float noise
-            if set(asked) != set(REWARD_CELLS) or any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):
-                raise ValueError(f'{stage} last-segment reward readback differs from what the segment asked for')
-            live = asked
-        current = {name: float(live[name]) for name in REWARD_CELLS}
-        if values is not None and current != values:
-            raise ValueError(f'{stage} last-segment reward readback differs across ranks')
-        values = current
-        refs[f'inherited_rewards.readback{index}'] = _ref(path)
+        number = int(path.stem.rsplit('m', 1)[-1])
+        if (body.get('format') != RECEIPT or body.get('stage_id') != stage
+                or body.get('plan_sha256') != source.sha256 or body.get('iteration') != number):
+            raise ValueError(f'{stage} last live adjustment identity differs: {path.name}')
+        limits_live = limits_from_plan(row['live_adjustment'], segment_path=limits_path)
+        after = body.get('after')
+        check_limited_values(after, limits_live)
+        if set(after) != {'rewards', 'commands', 'monitor'}:
+            raise ValueError(f'{stage} last live adjustment groups differ: {path.name}')
+        changed = after.get('rewards')
+        if not isinstance(changed, dict):
+            raise ValueError(f'{stage} last live adjustment reward readback missing: {path.name}')
+        values = {**values, **changed}
+        origin += ' + live adjustment'
+        refs['inherited_rewards.live_adjustment'] = _ref(path)
     from foothold_s2.commands.ex42_segment_adjust import _rewards
     values = _rewards(values, limits, f'{stage} last-segment readback')      # inside the approved limits, or refused
-    return {'source_stage': stage, 'boundary_index': boundary, 'origin': 'segment_rewards readback', 'values': values}, refs
+    return {'source_stage': stage, 'boundary_index': boundary, 'origin': origin, 'values': values}, refs
 
 
 FLAG_CHAIN_TARGET = 'E1F'    # the one target whose approval takes calibration_sha256 / flag_baseline from the W09+W08 chain

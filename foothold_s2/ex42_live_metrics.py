@@ -65,9 +65,11 @@ def send_orca_alert(run_id, iteration, alerts, evidence_path):
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10, check=False)
         data = json.loads(result.stdout) if result.stdout.strip() else {}
-        return {"delivered": result.returncode == 0 and data.get("ok") is not False
-                and isinstance(data.get("messageId"), str) and bool(data["messageId"]),
-                "message_id": data.get("messageId"), "returncode": result.returncode}
+        payload = data.get("result") if isinstance(data, dict) else None
+        message_id = payload.get("messageId") if isinstance(payload, dict) else None
+        return {"delivered": result.returncode == 0 and isinstance(data, dict) and data.get("ok") is True
+                and isinstance(message_id, str) and bool(message_id),
+                "message_id": message_id, "returncode": result.returncode}
     except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
         return {"delivered": False, "reason": f"{type(exc).__name__}: {exc}"}
 

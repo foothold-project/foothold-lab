@@ -219,7 +219,7 @@ def test_alert_goes_only_to_run_inbox_with_time_and_evidence(monkeypatch, tmp_pa
     calls = []
     monkeypatch.setattr(lm.shutil, "which", lambda name: "/usr/bin/orca-ide")
     monkeypatch.setattr(lm.subprocess, "run", lambda argv, **kwargs: (
-        calls.append(argv) or SimpleNamespace(returncode=0, stdout='{"ok":true,"messageId":"msg_abc"}')))
+        calls.append(argv) or SimpleNamespace(returncode=0, stdout='{"ok":true,"result":{"messageId":"msg_abc"}}')))
     result = send_orca_alert("run_abc123", 500, [{"signal": "map_off_survival_50_drop"}], tmp_path / "raw.jsonl")
     assert result["delivered"] and result["message_id"] == "msg_abc"
     assert calls[0][calls[0].index("--to") + 1] == "run:run_abc123"
@@ -227,3 +227,13 @@ def test_alert_goes_only_to_run_inbox_with_time_and_evidence(monkeypatch, tmp_pa
     assert str(tmp_path / "raw.jsonl") in calls[0][calls[0].index("--body") + 1]
     with pytest.raises(ValueError, match="Run id"):
         send_orca_alert("term_other", 500, [], tmp_path / "raw.jsonl")
+
+
+def test_alert_does_not_claim_delivery_without_the_nested_orca_message_id(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+    from foothold_s2 import ex42_live_metrics as lm
+    monkeypatch.setattr(lm.shutil, "which", lambda name: "/usr/bin/orca-ide")
+    for payload in ('{"ok":true,"messageId":"stale_top_level"}', '{"ok":true,"result":{}}',
+                    '{"ok":false,"result":{"messageId":"msg_bad"}}'):
+        monkeypatch.setattr(lm.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=0, stdout=payload))
+        assert send_orca_alert("run_abc123", 500, [{"signal": "decline"}], tmp_path / "raw")['delivered'] is False
