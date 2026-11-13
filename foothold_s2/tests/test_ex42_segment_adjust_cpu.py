@@ -779,7 +779,7 @@ def test_the_shipped_e1_row_registers_low_forward_fraction_inside_the_limits(row
 
 def test_the_row_share_holds_from_the_first_update_and_reaches_the_sampler(row_plan, tmp_path):
     view = row_view(row_plan)
-    assert view.stages[0].low_forward_fraction == 0.2                       # the source stage, before the row is applied
+    assert view.stages[0].low_forward_fraction == 0.5                       # the approved exposure plan applies from update one
     record = adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
     assert record["slow_track_heading"] is True
     assert record["low_forward_fraction"] == {"source": "plan", "entry": None, "value": 0.5, "decided_at": None,
@@ -821,7 +821,7 @@ def test_the_live_objects_keep_the_share(row_plan, tmp_path):
     source = te.load_ex42_stage_zero_source(row_plan)
     flagged = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=row_plan,
                                                 stage_id="E1F")
-    assert flagged.command_contract is not None and flagged.stages[0].low_forward_fraction == 0.2   # before the row is applied
+    assert flagged.command_contract is not None and flagged.stages[0].low_forward_fraction == 0.4   # approved E1F source share
     record = adj.start_segment(flagged, row_plan, "E1F", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
     assert record["low_forward_fraction"]["value"] == 0.4 and record["low_forward_fraction"]["source"] == "plan"
     assert record["rewards"]["values"] is None                                # the E1F row has no reward cells

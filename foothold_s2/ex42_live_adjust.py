@@ -51,15 +51,16 @@ def _write_exclusive(path, body):
 
 
 def limits_from_plan(config, *, segment_path=REWARD_LIMITS):
-    """The old cells come from the existing segment fence; extra cells are pinned in the new plan SHA."""
+    """Use the segment fence; require the plan's repeated cells to agree byte-for-value."""
     segment = reward_limits(segment_path)
     if segment is None or segment["sha256"] != config.get("segment_reward_limits_sha256"):
         raise ValueError("EX-42 live adjustment segment limits SHA differs from the plan")
     extra = config.get("extra_reward_limits")
     commands = config.get("command_limits")
-    if (not isinstance(extra, dict) or set(extra) != set(REWARD_TERMS) - set(segment["cells"])
+    repeated = set(REWARD_TERMS) - {"track_lin_vel_std", "track_ang_vel_std", "feet_air_time", "foot_slip"}
+    if (set(segment["cells"]) != set(REWARD_TERMS) or not isinstance(extra, dict) or set(extra) != repeated
             or not isinstance(commands, dict) or set(commands) != {"low_forward_fraction"}):
-        raise ValueError("EX-42 live adjustment plan does not name its exact extra reward and command cells")
+        raise ValueError("EX-42 live adjustment plan and segment fence name different cells")
     result = dict(segment["cells"])
     for name, pair in {**extra, **commands}.items():
         if (not isinstance(pair, list) or len(pair) != 2
@@ -67,7 +68,8 @@ def limits_from_plan(config, *, segment_path=REWARD_LIMITS):
                 or pair[0] > pair[1]):
             raise ValueError(f"EX-42 live adjustment {name} limit invalid")
         if name in extra:
-            result[name] = tuple(map(float, pair))
+            if result[name] != tuple(map(float, pair)):
+                raise ValueError(f"EX-42 live adjustment {name} differs from segment fence")
     low, high = commands["low_forward_fraction"]
     if not 0 <= low <= high <= 1:
         raise ValueError("EX-42 live adjustment low_forward_fraction limit invalid")

@@ -1232,6 +1232,8 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero runtime requires its environment and run directory")
         self.runner = runner
         runner.continuous_curriculum = self
+        from foothold_s2.runners.ppo_kl_audit import install_runner_kl_audit
+        install_runner_kl_audit(runner, runtime=self)
         self._learned_cells_init()
         config = getattr(self, "live_monitor_config", None)
         if isinstance(config, dict) and config.get("enabled") is True:

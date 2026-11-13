@@ -33,8 +33,9 @@ class Manager:
 
 
 def _setup(tmp_path, *, iteration=2, rewards=None, commands=None, monitor=None):
+    from foothold_s2.commands.ex42_segment_adjust import REWARD_LIMITS
     segment = tmp_path / "segment.yaml"
-    segment.write_text("schema: ex42-reward-adjust-limits/1\ncells:\n  track_lin_vel_std: [0.25, 0.5]\n  track_ang_vel_std: [0.25, 0.5]\n  feet_air_time: [0, 0.5]\n  foot_slip: [-0.25, -0.05]\n")
+    segment.write_bytes(REWARD_LIMITS.read_bytes())
     config = {"segment_reward_limits_sha256": hashlib.sha256(segment.read_bytes()).hexdigest(),
               "extra_reward_limits": {"zero_yaw": [-2, -.5], "feet_air_time_threshold": [.04, .5],
                                       "slow_track": [0, .3], "slow_track_sigma": [.5, .5],
@@ -58,6 +59,18 @@ def _setup(tmp_path, *, iteration=2, rewards=None, commands=None, monitor=None):
     controller = LiveAdjustment(runtime, config, plan_sha256="a" * 64, path=file, log_dir=tmp_path,
                                 segment_limits_path=segment)
     return controller, runtime, file
+
+
+def test_repeated_plan_reward_fence_must_equal_segment_file(tmp_path):
+    from foothold_s2.ex42_live_adjust import limits_from_plan
+    from foothold_s2.commands.ex42_segment_adjust import REWARD_LIMITS
+    config = {"segment_reward_limits_sha256": hashlib.sha256(REWARD_LIMITS.read_bytes()).hexdigest(),
+              "extra_reward_limits": {"zero_yaw": [-2, -.5], "feet_air_time_threshold": [.04, .5],
+                                      "slow_track": [0, .4], "slow_track_sigma": [.5, .5],
+                                      "slow_track_speed_min": [.1, .1], "slow_track_speed_max": [.3, .3]},
+              "command_limits": {"low_forward_fraction": [.2, .5]}}
+    with pytest.raises(ValueError, match="slow_track differs from segment fence"):
+        limits_from_plan(config)
 
 
 def test_two_cells_apply_at_one_update_and_durable_receipt(tmp_path):

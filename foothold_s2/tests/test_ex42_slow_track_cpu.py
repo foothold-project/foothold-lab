@@ -117,7 +117,8 @@ def test_registration_adds_the_term_once_at_weight_zero_and_never_contains_the_t
     assert st.register(env_cfg, _Cfg) is True and st.register(env_cfg, _Cfg) is False
     term = env_cfg.rewards.ex42_slow_track
     assert term.weight == 0.0 and term.func is st.slow_track_term
-    assert term.params == {"command_name": "base_velocity", "speed_min": 0.1, "speed_max": 0.3, "sigma": 0.5}
+    assert term.params == {"command_name": "base_velocity", "speed_min": 0.1, "speed_max": 0.3,
+                           "sigma": 0.5, "include_heading": False}
     # start_runner picks the tracking columns by the substring "track_lin_vel" and needs exactly one of each
     assert "track_lin_vel" not in st.TERM and "track_ang_vel" not in st.TERM
 
