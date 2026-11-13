@@ -7,6 +7,7 @@ import math
 import copy
 import re
 from pathlib import Path
+from zipfile import BadZipFile
 
 import numpy as np
 
@@ -23,7 +24,10 @@ def _sha(path: Path) -> str:
 
 
 def _json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8-sig"))
+    doc = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(doc, dict):
+        raise ValueError("E1 v2 JSON source identity must be an object")
+    return doc
 
 
 def _finite(values, label: str):
@@ -33,11 +37,21 @@ def _finite(values, label: str):
     return values
 
 
+def _identity(identity: dict, checkpoint_sha: str, seed: int) -> None:
+    """Bind a producer receipt to the requested trial, not just to its summary."""
+    if (not isinstance(identity, dict) or not isinstance(checkpoint_sha, str)
+            or re.fullmatch(r"[0-9a-f]{64}", checkpoint_sha) is None
+            or identity.get("checkpoint_sha256") != checkpoint_sha
+            or type(identity.get("eval_seed")) is not int or identity["eval_seed"] != seed):
+        raise ValueError("E1 v2 raw checkpoint/seed identity differs")
+
+
 def _source(path: Path, checkpoint_sha: str, seed: int, modes: tuple[str, ...],
             *, level: int | None = None) -> dict:
     if not path.is_file():
         raise FileNotFoundError(path)
     doc = _json(path)
+    _identity(doc.get("run_identity"), checkpoint_sha, seed)
     if (doc.get("checkpoint_sha256") != checkpoint_sha or doc.get("eval_seed") != seed
             or doc.get("envs") != 64 or doc.get("steps") != 300
             or set(doc.get("modes", {})) != set(modes)
@@ -54,10 +68,14 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
     row = doc["modes"][mode][case]
     per_env = row["per_env"]
     name = doc["env_arrays"][f"{mode}/{case}"]
-    if Path(name).name != name or len(per_env) != 64 or row.get("env_count") != 64:
+    if (name != f"env_arrays_{mode}_{case}.npz" or row.get("command") != command
+            or len(per_env) != 64 or row.get("env_count") != 64):
         raise ValueError(f"E1 v2 env array identity differs: {case}")
     raw = path.with_name(name)
     with np.load(raw, allow_pickle=False) as z:
+        _identity(json.loads(str(z["run_identity"].item())), doc["checkpoint_sha256"], doc["eval_seed"])
+        if str(z["assignment_sha256"].item()) != doc["fixed_terrain"]["assignment_sha256"]:
+            raise ValueError("E1 v2 raw terrain assignment identity differs")
         alive, alive_steps = z["alive"].astype(bool), z["alive_steps"]
         dt = float(z["dt"])
         if (alive.shape != (300, 64) or not math.isclose(dt, .02, abs_tol=1e-8)
@@ -93,9 +111,16 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
 def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
     row = doc["modes"][mode][case]
     raw = path.with_name(Path(row["raw_file"]).name)
+    _identity(doc.get("run_identity"), doc["checkpoint_sha256"], doc["eval_seed"])
+    if raw.name != f"axis_v2_{mode}_{case}.npz":
+        raise ValueError("E1 v2 yaw case identity differs")
     if _sha(raw) != row["raw_sha256"]:
         raise ValueError(f"E1 v2 yaw raw SHA differs: {raw}")
     with np.load(raw, allow_pickle=False) as z:
+        # Older axis-v2 raw has no identity field. Its SHA is pinned by the
+        # checkpoint/seed-bound JSON receipt above. Validate it when present.
+        if "run_identity" in z:
+            _identity(json.loads(str(z["run_identity"].item())), doc["checkpoint_sha256"], doc["eval_seed"])
         yaw, alive = _finite(z["yaw"], "yaw"), z["alive"].astype(bool)
         if (yaw.shape != alive.shape or yaw.shape != (300, 64)
                 or not np.array_equal(alive, np.arange(300)[:, None] < alive.sum(0)[None, :])
@@ -273,11 +298,15 @@ def judge_cells(cells: dict, plan: dict, *, repeats: dict[int, dict] | None = No
     return {"judgement": verdict, "items": rows}
 
 
-def treatment(checkpoint: Path, iteration: int, plan: dict) -> dict:
+def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha256: str | None = None) -> dict:
     """Pin the segment that produced this boundary, never the segment started afterward."""
     if type(iteration) is not int or iteration <= 0 or iteration % 250:
         raise ValueError("E1 v2 treatment needs a completed 250-update boundary")
     root = Path(checkpoint).parent
+    plan_sha = _json(root / "startup_receipt.json").get("plan_sha256")
+    if (not isinstance(plan_sha, str) or re.fullmatch(r"[0-9a-f]{64}", plan_sha) is None
+            or (expected_plan_sha256 is not None and plan_sha != expected_plan_sha256)):
+        raise ValueError("E1 v2 execution plan identity differs from startup")
     boundary = iteration // 250 - 1
     if boundary == 0:
         stage = next((row for row in plan["stages"] if row["id"] == "E1"), None)
@@ -293,10 +322,19 @@ def treatment(checkpoint: Path, iteration: int, plan: dict) -> dict:
     if not all(path.is_file() for path in (commands_path, rewards_path, rank1_path)):
         return {"state": "HOLD", "reason": "처방 실현 영수증 없음"}
     commands, rewards, rank1 = _json(commands_path), _json(rewards_path), _json(rank1_path)
-    if (commands.get("boundary_index") != boundary or rewards.get("boundary_index") != boundary
+    if (any(row.get("plan_sha256") != plan_sha for row in (commands, rewards, rank1))
+            or commands.get("format") != "ex42-segment-commands/1"
+            or any(row.get("format") != "ex42-segment-rewards/1" for row in (rewards, rank1))):
+        raise ValueError("E1 v2 treatment plan/schema identity differs")
+    if (any(type(row.get("boundary_index")) is not int for row in (commands, rewards, rank1)) or
+            commands.get("boundary_index") != boundary or rewards.get("boundary_index") != boundary
             or rank1.get("boundary_index") != boundary or
             commands.get("stage_id") != "E1" or rewards.get("stage_id") != "E1" or
-            rank1.get("stage_id") != "E1" or rank1.get("live") != rewards.get("live")):
+            rank1.get("stage_id") != "E1" or rank1.get("live") != rewards.get("live")
+            or not isinstance(commands.get("commands"), dict)
+            or not isinstance(rewards.get("live"), dict)
+            or not isinstance(commands.get("rewards"), dict)
+            or commands["rewards"].get("values") != rewards.get("live")):
         raise ValueError("E1 v2 treatment boundary identity differs")
     low = commands.get("low_forward_fraction")
     if (not isinstance(low, dict) or type(low.get("value")) not in (int, float)
@@ -312,6 +350,26 @@ def treatment(checkpoint: Path, iteration: int, plan: dict) -> dict:
 
 
 def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
+                *, previous: dict | None, checkpoint: Path, evaluation: Path, seed: int) -> dict:
+    """Bad or missing provenance is HOLD even if cached numbers say PASS."""
+    try:
+        return _judge_e1_v2(score, baseline, measured, plan, previous=previous,
+                            checkpoint=checkpoint, evaluation=evaluation, seed=seed)
+    except (OSError, ValueError, KeyError, TypeError, BadZipFile) as exc:
+        reason = f"E1 v2 evidence invalid: {type(exc).__name__}: {exc}"
+        return {**score, "judgement": "HOLD", "reason": reason,
+                "e1_exit": {**score.get("e1_exit", {}), "judgement": "HOLD"},
+                "e1_exit_v2": {"judgement": "HOLD", "provenance_error": reason}}
+
+
+def _verified_cells(score: dict, evaluation: Path, seed: int) -> dict:
+    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed)
+    if "e1_v2_cells" in score and actual != score["e1_v2_cells"]:
+        raise ValueError("E1 v2 cached cells differ from source identity or raw values")
+    return actual
+
+
+def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                 *, previous: dict | None, checkpoint: Path, evaluation: Path, seed: int) -> dict:
     """Two consecutive, same-treatment windows. D44 stop/restart stays visible as record."""
     from foothold_s2.ex42_e1_judge import judge_e1
@@ -335,8 +393,7 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     previous_filtered = {**previous, "d44_cells": previous_turn} if previous is not None else None
     result = judge_e1(current_filtered, baseline, measured, legacy_plan, previous=previous_filtered)
     result["d44_cells"] = score["d44_cells"]
-    if "e1_v2_cells" not in score:
-        score["e1_v2_cells"] = measure_cells(evaluation, score["checkpoint_sha256"], seed)
+    score = {**score, "e1_v2_cells": _verified_cells(score, evaluation, seed)}
     result["e1_v2_cells"] = score["e1_v2_cells"]
     repeats = {}
     for repeat_seed in plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]:
@@ -344,6 +401,8 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
         if folder.exists():
             repeats[repeat_seed] = measure_cells(folder, score["checkpoint_sha256"], repeat_seed)
     previous_cells = previous.get("e1_v2_cells", {}) if previous is not None else {}
+    if previous_cells:
+        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed)
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
     current_v2 = judge_cells(result["e1_v2_cells"], plan,
                              repeats=repeats if set(repeats) == expected_repeats else None,
@@ -360,12 +419,18 @@ def judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")
     iteration = int(match.group(1))
-    current_treatment = treatment(checkpoint, iteration, plan)
+    expected_plan = score.get("execution_plan_sha256")
+    if not isinstance(expected_plan, str) or re.fullmatch(r"[0-9a-f]{64}", expected_plan) is None:
+        raise ValueError("E1 v2 score execution plan identity missing")
+    if previous is not None and previous.get("execution_plan_sha256") != expected_plan:
+        raise ValueError("E1 v2 previous execution plan identity differs")
+    current_treatment = treatment(checkpoint, iteration, plan, expected_plan_sha256=expected_plan)
     # A P1 score is written before the next segment starts. Earlier scores may
     # therefore contain a legacy HOLD for a not-yet-created b<k> receipt.
     # Reconstruct that completed window from its own plan or b<k-1> receipt.
     previous_treatment = (treatment(Path(checkpoint).with_name(f"model_{iteration - 250}.pt"),
-                                    iteration - 250, plan) if previous is not None and iteration > 250 else None)
+                                    iteration - 250, plan, expected_plan_sha256=expected_plan)
+                          if previous is not None and iteration > 250 else None)
     if (current_treatment["state"] != "complete" or not isinstance(previous_treatment, dict)
             or previous_treatment.get("state") != "complete"):
         treatment_state = "HOLD"

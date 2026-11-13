@@ -330,19 +330,26 @@ def load_gait(path,checkpoint):
     r=Reader();out={'valid':False,'valid_conditions':False,'issues':[],'sources':r.sources}
     try:
         d=r.json(path)
-        if (d.get('format')!='analyst-r5-contact-evidence/1' or d.get('checkpoint_sha256')!=checkpoint or
+        if (not isinstance(checkpoint,str) or re.fullmatch('[0-9a-f]{64}',checkpoint) is None or
+            d.get('format')!='analyst-r5-contact-evidence/1' or d.get('checkpoint_sha256')!=checkpoint or
             d.get('contact_definition')!='norm_Fxyz_gt_1N' or d.get('window_seconds')!=[1,6] or d.get('dt')!=.02):
             raise ValueError('R5 contact identity or definition differs')
         if set(d['feet'])!={'FL','FR','RL','RR'}:raise ValueError('four feet required')
+        from r5_contact import recompute
+        measured=recompute(r,d['sources'],checkpoint)
+        for name, foot in measured.items():
+            for field,value in foot.items():
+                declared=d['feet'][name].get(field)
+                if not finite(declared) or not math.isclose(declared,value,rel_tol=1e-8,abs_tol=1e-10):
+                    raise ValueError('R5 declared/raw per-foot metric differs: '+name+'/'+field)
         for foot in d['feet'].values():
             if foot['complete_intervals']<20 or foot['contributing_envs']<16:raise ValueError('insufficient foot events/envs')
             for field in ('single_sample_fraction','height_median_m','drag_fraction','negative_fraction_at_0p5'):
                 if not finite(foot[field]):raise ValueError('R5 metric missing')
             if foot['negative_fraction_at_0p5']<=.5:raise ValueError('short-interval premise unconfirmed')
-        if not d['sources']:raise ValueError('R5 raw sources absent')
-        for source in d['sources']:r.bytes(source['path'],source['sha256'])
-        out.update(valid=True,valid_conditions=True,contact_definition=d['contact_definition'])
-    except (OSError,KeyError,ValueError,TypeError) as exc:out['issues'].append(str(exc))
+        out.update(valid=True,valid_conditions=True,contact_definition=d['contact_definition'],
+                   checkpoint_sha256=checkpoint,feet=measured)
+    except (OSError,KeyError,ValueError,TypeError,AttributeError,BadZipFile,EOFError) as exc:out['issues'].append(str(exc))
     return out
 
 def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier=None,legacy_low=None,gait=None,historical=False):

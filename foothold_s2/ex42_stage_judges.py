@@ -188,7 +188,6 @@ class _E1V2(_E1):
                 ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
                 checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         score["e1_v2_evaluation"] = str(ctx.evaluation)
-        score["e1_v2_cells"] = measure_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed)
         prior = previous_e1_score(ctx.checkpoint, ctx.evaluation, ctx.plan["evaluation"]["interval_updates"],
                                   ctx.digest(ctx.cfg_path))
         return judge_e1_v2(score, baseline, measured, ctx.plan, previous=prior,
