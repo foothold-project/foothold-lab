@@ -349,8 +349,10 @@ stages:
   # Registered for later boundaries and unchanged at the start (decisions.tsv 2026-11-13 15:30): the feet_air_time
   # threshold 0.5 s (its weight is 0) and ex42_slow_track at weight 0 with the constants of its draft formula.
   rewards: {track_lin_vel_std: 0.35, track_ang_vel_std: 0.5, feet_air_time: 0.0, foot_slip: -0.15, zero_yaw: -1.0,
-            feet_air_time_threshold: 0.5, slow_track: 0.0, slow_track_sigma: 0.5, slow_track_speed_min: 0.1,
+            feet_air_time_threshold: 0.5, slow_track: 0.2, slow_track_sigma: 0.5, slow_track_speed_min: 0.1,
             slow_track_speed_max: 0.3}
+  # ^ KIT TEST ONLY (planner-lx 2026-11-13, lead 16:00): slow_track 0.2 from the first update so that a five-update
+  # Kit run calls ex42_slow_track once before any training boundary switches it on. NOT A TRAINING SOURCE.
   # The share of the forward commands drawn below 0.3 m/s, from the first update of the stage (the source stage has
   # 0.20; decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8: 0.2 -> 0.4). With the forward share 0.19 the
   # commands between 0.1 and 0.3 m/s go from 3.8 % to 7.6 % of all commands. Limits: ex42-reward-adjust-limits.yaml.

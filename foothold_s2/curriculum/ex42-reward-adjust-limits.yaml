@@ -20,7 +20,7 @@ cells:
   # move yet. feet_air_time_threshold: seconds a foot must stay in the air for ex41_feet_air_time to pay (0.5).
   # slow_track: weight of ex42_slow_track (0 = the reward manager skips the term). The other three are its constants.
   feet_air_time_threshold: [0.5, 0.5]
-  slow_track: [0.0, 0.0]
+  slow_track: [0.0, 1.0]     # KIT TEST ONLY (planner-lx 2026-11-13, lead 16:00): not an approved limit. NOT A TRAINING SOURCE.
   slow_track_sigma: [0.5, 0.5]
   slow_track_speed_min: [0.1, 0.1]
   slow_track_speed_max: [0.3, 0.3]
