@@ -21,9 +21,13 @@ SAFE_ENTRY_KINDS = frozenset(("stair_up", "stair_down", "rough", "boxes",
                               "pallets", "stones", "beam", "consecutive", "obstacles"))
 # The actual column number is supplied by the combined mesh, never inferred
 # from an env ID. These nine kinds use a checked entry anchor without XY
-# or yaw jitter; the three remaining B kinds retain the existing reset range.
+# or yaw jitter; the three remaining B kinds keep XY sampling but face +x.
 RESET_RANGES = {kind: {axis: (0., 0.) for axis in ("x", "y", "yaw")}
                 for kind in sorted(SAFE_ENTRY_KINDS)}
+# Directional targets in the climb/gap tasks use the established +x entry
+# heading. Preserve their existing XY sampling; only remove random yaw.
+RESET_RANGES.update({kind: {"yaw": (0., 0.)}
+                     for kind in ("climb_up", "climb_down", "gap")})
 PROPORTIONS = {kind: (.20 if kind == "climb_up" else .30 if kind == "stones" else .05)
                for kind in KINDS}
 SIZE = 12.0
