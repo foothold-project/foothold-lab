@@ -101,8 +101,8 @@ def _configure():
     for name in ("terrain_levels", "command_range"):
         if hasattr(env_cfg.curriculum, name):
             setattr(env_cfg.curriculum, name, None)
-    env_cfg.events.reset_base.params["pose_range"] = {
-        "x": (0.0, 0.0), "y": (0.0, 0.0), "yaw": (0.0, 0.0)}
+    from foothold_s2.terrains.ex42_column_reset import pin_column_reset_midpoint
+    pin_column_reset_midpoint(env_cfg.events.reset_base)
     env_cfg.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
     env_cfg.events.reset_robot_joints.params["velocity_range"] = (0.0, 0.0)
     cmd = env_cfg.commands.base_velocity
@@ -240,6 +240,11 @@ def main():
         (args.out / "flag_cells.json").write_text(
             json.dumps(receipt, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print("E1F_FLAG_EVAL_DONE", args.out, flush=True)
+    except BaseException:
+        # Kit shutdown can mask an initialization error with exit code 0.
+        import traceback
+        traceback.print_exc()
+        raise
     finally:
         if env is not None:
             env.close()
