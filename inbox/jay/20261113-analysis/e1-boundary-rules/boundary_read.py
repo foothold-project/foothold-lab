@@ -449,6 +449,14 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
     if n==0 and not now['errors']:
         decision.update(rule='BASELINE_ONLY',changes={},next_segment='NOT_A_BOUNDARY')
         decision['notes'].append('부모 자체 대조만. 실제 경계 처방이 아님.')
+    demotion=None
+    if n>0 and not historical:
+        from boundary_demote import read_review, write_review, markdown as demotion_markdown
+        audits={snap['iteration']:approved[name] for name,snap in
+                (('current',now),('previous',prev),('earlier',prior))
+                if snap and snap['iteration']>0 and name in approved}
+        demotion=read_review(score,run_root,code_root,cached=(now,prev,prior),audits=audits)
+        write_review(demotion,out)
     draft=make_adjustment(decision,t,n,str(out/'report.json'))
     validation=None
     if draft:
@@ -465,7 +473,8 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
                 parent_condition_mismatches=mismatches,comparisons=comparisons,
                 mode_comparisons=mode_comparisons,
                 historical_counterfactual=historical,consumer_validation=validation,
-                original_rule_decision=original_decision,approved_table=approved,curves=curves)
+                original_rule_decision=original_decision,approved_table=approved,curves=curves,
+                demotion_review=demotion)
     out.mkdir(parents=True,exist_ok=True)
     write=lambda name,obj:(out/name).write_text(json.dumps(obj,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
     write('report.json',result)
@@ -503,6 +512,8 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
                 f'직전 {show(row["previous"])} (Δ {show(row["previous_delta"])})')
     for group in mode_comparisons:
         text.append('| '+' | '.join([group['cell'],group['unit'],*(mode_show(group[m]) for m in MODES)])+' |')
+    if demotion:
+        text += ['',demotion_markdown(demotion)]
     if approved:
         off=decision['map_off_survival'];audit=approved['current']
         text += ['','## 23:04 승인표 재계산','',
@@ -571,6 +582,9 @@ def main():
     a=p.parse_args();result=run(a.score,a.parent,a.run_root,a.code_root,a.out,a.iteration,a.previous,a.earlier,a.legacy_low,a.gait,a.historical,
                               a.c1_code_root,a.extension_code_root,a.effective_from)
     print((a.out/'next_segment.txt').read_text().strip())
-    return 2 if result['decision']['rule']=='EVIDENCE_HOLD' else 0
+    if result['demotion_review']:
+        print((a.out/'demote.txt').read_text().strip())
+    return 2 if (result['decision']['rule']=='EVIDENCE_HOLD' or
+                 (result['demotion_review'] or {}).get('state')=='HOLD') else 0
 
 if __name__=='__main__':raise SystemExit(main())

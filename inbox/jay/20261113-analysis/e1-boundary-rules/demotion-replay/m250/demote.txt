@@ -1,0 +1,1 @@
+m250: BASELINE_ONLY · DEMOTE 칸 없음 · 지도 끔 PASS (생존 하한 60/64) · 판단용, 학습 설정 미적용
