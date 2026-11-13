@@ -14,6 +14,8 @@ from copy import deepcopy
 from pathlib import Path
 from statistics import mean, median
 
+import numpy as np
+
 FORMAT = "foothold-ex42-boundary-autojudge/1"
 COMMAND_RULE = "aa1f2dbadfb619da906ab9d3047021ab7ecf23ab"
 REWARD_RULE = "bdf2bb300d12ed373723931507afbb73efa552f8"
@@ -172,6 +174,46 @@ def metrics(levels: dict, score: dict | None) -> dict:
     out["Z_terrain_level"] = None   # Training curve is optional; an absent curve is not a zero.
     out["R_maintenance"] = (score or {}).get("maintenance_judgement")
     return out
+
+
+def body_forward_ratios(levels: dict, checkpoint_sha256: str) -> tuple[dict, list[dict]]:
+    """Signed body-forward progress per alive time, median across 64 envs."""
+    values, sources = {}, []
+    for level in LEVELS:
+        block = levels[level]["blocks"].get("g1b")
+        if block is None:
+            raise ValueError(f"G1b {level} is required for body-forward ratio")
+        map_path = Path(block["source"]["path"])
+        map_doc = document(map_path)
+        for case in ("fwd0.1", "fwd0.2"):
+            command_speed = finite(map_doc["commands"][case][0], f"{case} command")
+            if command_speed <= 0:
+                raise ValueError(f"{case} command must be forward")
+            name = map_doc.get("env_arrays", {}).get(f"eval_gt/{case}")
+            if not isinstance(name, str) or Path(name).name != name:
+                raise ValueError(f"{case} env array path is missing or escapes its source folder")
+            path = map_path.with_name(name)
+            with np.load(path, allow_pickle=False) as arrays:
+                identity = json.loads(str(arrays["run_identity"].item()))
+                vx = arrays["vx"].astype(np.float64)
+                alive = arrays["alive"]
+                dt = finite(arrays["dt"].item(), f"{case} dt")
+                if (identity.get("checkpoint_sha256") != checkpoint_sha256 or
+                        identity.get("eval_seed") != 42 or vx.shape != alive.shape or
+                        vx.ndim != 2 or vx.shape[1] != 64 or dt <= 0 or
+                        not np.isfinite(vx).all()):
+                    raise ValueError(f"{case} body-forward source identity or shape differs: {path}")
+                alive_count = alive.sum(axis=0)
+                if (np.any(alive_count == 0) or
+                        not np.array_equal(alive_count, arrays["alive_steps"])):
+                    raise ValueError(f"{case} alive denominator differs: {path}")
+                integral = (vx * alive).sum(axis=0) * dt
+                if not np.allclose(integral, arrays["body_vx_integral_m"], rtol=0, atol=1e-5):
+                    raise ValueError(f"{case} recorded body-vx integral differs: {path}")
+                ratio = float(np.median(integral / (command_speed * alive_count * dt)))
+                values[f"body_forward_ratio/{level}/{case}"] = ratio
+            sources.append({"path": str(path), "sha256": sha(path), "level": level, "case": case})
+    return values, sources
 
 
 def _degraded(name: str, old: float, new: float) -> float:
@@ -409,6 +451,8 @@ def run(score_root: Path, brief_root: Path, adjust_root: Path, output: Path,
     if len(parent_sha) != 4 or len(parent_checkpoints) != 1 or len(parent_iterations) != 1:
         raise ValueError("m0 G1/G1b L0/L5 baseline source incomplete")
     base = metrics(baseline_levels, None)
+    base_forward, base_forward_sources = body_forward_ratios(baseline_levels, next(iter(parent_checkpoints)))
+    base.update(base_forward)
     rows = []
     previous = earlier = previous_widths = None
     for iteration in iterations:
@@ -420,6 +464,8 @@ def run(score_root: Path, brief_root: Path, adjust_root: Path, output: Path,
                                   checkpoint_sha=score["checkpoint_sha256"])
                   for lev in LEVELS}
         values = metrics(levels, score)
+        forward_values, forward_sources = body_forward_ratios(levels, score["checkpoint_sha256"])
+        values.update(forward_values)
         widths, width_source = _widths(width_root, iteration, score["checkpoint_sha256"])
         active_row, before_row = _receipt(adjust_root, iteration)
         active, active_rewards = _profile(active_row, adjust_root)
@@ -432,6 +478,7 @@ def run(score_root: Path, brief_root: Path, adjust_root: Path, output: Path,
                                                          (iteration // 250 - 2, before_row))
                                           if rec is not None and k > 0],
                   "reward_readback": active_rewards + before_rewards,
+                  "body_forward_npz": forward_sources,
                   "raw": {lev: {name: block["source"] for name, block in levels[lev]["blocks"].items() if block}
                           for lev in LEVELS}}
         row = {"iteration": iteration, "checkpoint_sha256": score.get("checkpoint_sha256") if score else None,
@@ -449,7 +496,8 @@ def run(score_root: Path, brief_root: Path, adjust_root: Path, output: Path,
         earlier, previous, previous_widths = previous, values, widths
     result = {"format": FORMAT, "source_rules": {"command_commit": COMMAND_RULE,
               "reward_commit": REWARD_RULE}, "baseline": {"iteration": 0, "metrics": base,
-              "briefs": [baseline_levels[lev]["brief"] for lev in LEVELS]}, "boundaries": rows,
+              "briefs": [baseline_levels[lev]["brief"] for lev in LEVELS],
+              "body_forward_npz": base_forward_sources}, "boundaries": rows,
               "limitations": ["V needs three seeds at each boundary; available briefs have seed 42 only",
                               "repeat-width spike needs per-boundary repeated measurements",
                               "reward rule is a draft, suggestions do not authorize training"]}
@@ -482,19 +530,22 @@ def run(score_root: Path, brief_root: Path, adjust_root: Path, output: Path,
     lines = ["# EX-42 E1 경계 자동 판정", "", "> 분류: A/평가", "> 작성: scripter-lx · 2026-11-13",
              "> 근거: ex42_score.json · G1/G1b 원자료 · 구간 영수증 · 규칙 aa1f2dba · bdf2bb30",
              "> 요지: 출발점 대비와 직전 경계 대비를 재고, 결측은 결측으로 둔다.",
-             "> 상태: CPU 집계 · 조정 제안은 미실행", "", "| 경계 | 전체 점수 | 유지 | 옆 S (출발점 · 직전 증감) | 느린 전진 F1 | 느린 회전 P1 | 두 번 하락 | 큰 하락 | 부작용 | 명령 · 보상 제안 |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
+             "> 상태: CPU 집계 · 조정 제안은 미실행", "", "| 경계 | 전체 점수 | 유지 | 옆 S (출발점 · 직전 증감) | 몸앞 전진 L0 0.1 / 0.2 | 몸앞 전진 L5 0.1 / 0.2 | 느린 전진 F1 | 느린 회전 P1 | 두 번 하락 | 큰 하락 | 부작용 | 명령 · 보상 제안 |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     fmt = lambda x: "미측" if x is None else f"{x:.3f}" if type(x) in (int, float) else str(x)
     for row in rows:
         m = row["metrics"]; a = row["alarms"]; s = row["suggestion"]
         lines.append(f"| m{row['iteration']} | {row['overall_score_judgement'] or '미측'} | {m['R_maintenance'] or '미측'} | "
                      f"{fmt(m['S_side_progress'])} ({fmt(row['delta_from_parent']['S_side_progress'])} · "
                      f"{fmt(row['delta_from_previous']['S_side_progress'])}) | "
+                     f"{fmt(m['body_forward_ratio/L0/fwd0.1'])} / {fmt(m['body_forward_ratio/L0/fwd0.2'])} | "
+                     f"{fmt(m['body_forward_ratio/L5/fwd0.1'])} / {fmt(m['body_forward_ratio/L5/fwd0.2'])} | "
                      f"{fmt(m['F1_slow_forward'])} | {fmt(m['P1_slow_spin'])} | "
                      f"{len(a['two_consecutive_declines'])} | {len(a['one_boundary_large_declines'])} | "
                      f"{len(row['side_effects'])} | {s['command']['state']} · {s['reward']['state']} |")
     lines += ["", "V는 3시드 경계 자료가 없어 미측정이다. 현재 경계별 반복 폭도 없어 폭 급증 깃발은 미측정이다.",
               "G1이 brief에 없는 경계는 같은 저장본 SHA의 형제 map_modes.json을 재집계했다.",
+              "몸앞 전진 비율은 env별 부호 있는 Σ(vx_body·alive)dt ÷ (명령 vx·생존 시간)의 중앙값이다. 원점 X나 절댓값을 쓰지 않는다.",
               "유지 칸은 전체 점수와 구분해 maintenance_judgement를 읽었다.",
               "큰 하락 >0.05, 반복 폭 급증 >2배는 경보 표시에만 쓰는 가정이며 승인된 조정 문턱이 아니다.",
               "보상 규칙 bdf2bb30은 초안이다. JSON은 제안이며 학습 설정을 바꾸지 않는다.", ""]
