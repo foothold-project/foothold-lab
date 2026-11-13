@@ -1259,7 +1259,7 @@ class EX42StageZeroRuntime:
                 moving_updates=config["moving_updates"], decline_from_peak=config["decline_from_peak"],
                 off_survival_updates=config["map_off_survival_updates"],
                 off_survival_drop=config["map_off_survival_drop_alert"], initial=config["initial"],
-                alert_run_id=os.environ[alert_env])
+                alert_run_id=os.environ[alert_env], step_dt=float(self.env.step_dt))
             adjustment_config = getattr(self, "live_adjustment_config", None)
             if not isinstance(adjustment_config, dict) or adjustment_config.get("file_env") != "EX42_UPDATE_ADJUST":
                 raise ValueError("EX-42 E1 live adjustment must be pinned in the plan")
@@ -1390,7 +1390,9 @@ class EX42StageZeroRuntime:
             self._live_pre = (self.runner._consumed_command(self.iteration).detach().clone(),
                               term.slot_current.detach().clone(), term.heading.detach().clone(),
                               term.is_flag_env.detach().clone(), pstate.use_gt.detach().clone(),
-                              pstate.map_off.detach().clone(), self._live_sparse_by_col[columns].detach().clone())
+                              pstate.map_off.detach().clone(), self._live_sparse_by_col[columns].detach().clone(),
+                              self.env.scene["robot"].data.root_lin_vel_b[:, :2].square().sum(dim=1).sqrt().detach().clone(),
+                              (self.env.episode_length_buf == 0).detach().clone())
         if self.command_allocation is not None:
             self.command_allocation.pre_step()
         if getattr(self, "learned_cells", None) is not None:
@@ -1421,10 +1423,10 @@ class EX42StageZeroRuntime:
                 time_out = getattr(self.env, "reset_time_outs", None)
             if time_out is None:
                 raise ValueError("EX-42 live monitor needs timeout reasons to exclude them from falls")
-            command, slot, heading, flag, gt, off, sparse = self._live_pre
+            command, slot, heading, flag, gt, off, sparse, pre_speed, reset = self._live_pre
             velocity = self.env.scene["robot"].data.root_lin_vel_b.detach()
             self.live_metrics.add(command, velocity, slot, heading, flag, gt, off, done,
-                                  time_out=time_out, sparse=sparse)
+                                  time_out=time_out, sparse=sparse, pre_speed=pre_speed, reset=reset)
             self._live_pre = None
         if getattr(self, "learned_cells", None) is not None:
             try:

@@ -163,16 +163,29 @@ def test_missing_metadata_is_incomplete_not_silent_success(tmp_path):
 def test_rank_join_requires_all_ranks_and_uses_mean_of_rank_means():
     base = {"event": "minibatch", "iteration": 1, "epoch": 0, "minibatch": 0, "world_size": 2,
             "identity": {"run": "r"}, "status": "optimizer_step", "metadata_status": "complete",
-            "lr_before": .001, "lr_after": .001 / 1.5, "schedule": "adaptive", "desired_kl": .01}
+            "lr_before": .001, "lr_after": .001 / 1.5, "schedule": "adaptive", "desired_kl": .01,
+            "optimizer_group_lrs": [.001 / 1.5], "session": "cpu", "kl_dtype": "torch.float32"}
     rows = [{**base, "rank": 0, "valid_count": 4, "scheduler_kl_local_mean": .01},
             {**base, "rank": 1, "valid_count": 2, "scheduler_kl_local_mean": .05}]
-    result = join_rank_records(rows)[0]
+    receipts = [{**base, "event": "update_start", "rank": rank, "num_epochs": 1, "num_mini_batches": 1}
+                for rank in (0, 1)] + [
+                {**base, "event": "update_complete", "rank": rank, "status": "complete",
+                 "minibatches_observed": 1, "minibatches_expected": 1} for rank in (0, 1)]
+    result = join_rank_records(rows + receipts)[0]
     assert result["status"] == "complete" and result["scheduler_kl_rank_mean"] == pytest.approx(.03)
     assert result["scheduler_decision"] == "decrease" and result["lr_consistent"]
-    assert join_rank_records(rows[:1])[0]["status"] == "incomplete"
-    assert join_rank_records(rows + rows[:1])[0]["status"] == "incomplete"
+    assert join_rank_records(rows[:1] + receipts)[0]["status"] == "incomplete"
+    assert join_rank_records(rows + rows[:1] + receipts)[0]["status"] == "incomplete"
+    assert join_rank_records(rows)[0]["status"] == "incomplete"  # no completion receipts
+    assert join_rank_records(receipts)[0]["status"] == "incomplete"  # BOTH ranks lost a batch
     bad = copy.deepcopy(rows); bad[1]["lr_after"] = .002
-    assert not join_rank_records(bad)[0]["lr_consistent"]
+    assert not join_rank_records(bad + receipts)[0]["lr_consistent"]
+    boundary = copy.deepcopy(rows)
+    for r in boundary:
+        r.update(scheduler_kl_local_mean=float(torch.tensor(.005)), lr_after=.001,
+                 optimizer_group_lrs=[.001])
+    # Python float(.005 float32) < .005, but the real tensor threshold compares equal.
+    assert join_rank_records(boundary + receipts)[0]["scheduler_decision"] == "unchanged"
 
 
 def test_installer_reads_actual_pre_action_map_flags_and_env(tmp_path):
@@ -183,11 +196,14 @@ def test_installer_reads_actual_pre_action_map_flags_and_env(tmp_path):
     env = SimpleNamespace(command_manager=SimpleNamespace(get_term=lambda _: term),
                           scene=SimpleNamespace(terrain=terrain), episode_length_buf=torch.arange(4),
                           _ex42_column_table=[{"family": "A", "kind": "flat"}, {"family": "A", "kind": "stairs"}])
-    runtime = SimpleNamespace(iteration=751, stage_id="E1", plan=SimpleNamespace(sha256="a" * 64))
+    runtime = SimpleNamespace(iteration=751, stage_id="E1", plan_sha256="a" * 64,
+                              parent_sha256="b" * 64, plan=SimpleNamespace(is_ex41=False))
     runner = SimpleNamespace(alg=alg, env=SimpleNamespace(unwrapped=env), log_dir=str(tmp_path),
                              pstate=SimpleNamespace(use_gt=torch.tensor([True, False, True, False]),
                                                    map_off=torch.tensor([False, False, True, True])))
     audit = install_runner_kl_audit(runner, runtime=runtime)
+    assert _rows(audit)[0]["identity"] == {"run": str(tmp_path.resolve()), "plan_sha256": "a" * 64,
+                                         "parent_sha256": "b" * 64, "stage_id": "E1"}
     assert install_runner_kl_audit(runner, runtime=runtime) is audit  # no duplicate observer
     alg.act(obs)
     runner.pstate.map_off.fill_(False)  # post-step map changes must not overwrite the captured rows
@@ -198,4 +214,88 @@ def test_installer_reads_actual_pre_action_map_flags_and_env(tmp_path):
     by_env = {s["env_id"]: s for s in samples}
     assert [by_env[i]["map_mode"] for i in range(4)] == ["GT", "PRED", "OFF", "OFF"]
     assert by_env[1]["terrain_kind"] == "stairs" and by_env[1]["heading"] is True
+    audit.close()
+
+
+def _shared_installer_inputs(alg, directory, rank):
+    from pathlib import Path
+    directory = Path(directory)
+    term = SimpleNamespace(command=torch.zeros(4, 3), slot_current=torch.arange(4),
+                           heading=torch.zeros(4, dtype=torch.bool), is_flag_env=torch.zeros(4, dtype=torch.bool))
+    terrain = SimpleNamespace(terrain_types=torch.zeros(4, dtype=torch.long),
+                              terrain_levels=torch.zeros(4, dtype=torch.long))
+    env = SimpleNamespace(command_manager=SimpleNamespace(get_term=lambda _: term),
+                          scene=SimpleNamespace(terrain=terrain), episode_length_buf=torch.arange(4),
+                          _ex42_column_table=[{"family": "A", "kind": "flat"}])
+    # The real EX42 runtime has an EX41 compatibility plan without a SHA.
+    runtime = SimpleNamespace(iteration=1, stage_id="E1", record_dir=str(directory / "run"),
+                              plan_sha256="a" * 64, parent_sha256="b" * 64,
+                              plan=SimpleNamespace(is_ex41=False, stages=[]))
+    runner = SimpleNamespace(alg=alg, env=SimpleNamespace(unwrapped=env),
+                             disable_logs=rank != 0, log_dir=str(directory / f"rank{rank}-private"),
+                             pstate=SimpleNamespace(use_gt=torch.tensor([True, False, True, False]),
+                                                   map_off=torch.tensor([False, False, True, True])))
+    return runner, runtime
+
+
+@pytest.mark.parametrize("rank", [0, 1])
+def test_installer_uses_shared_records_even_when_rank_logging_disabled(tmp_path, rank):
+    alg, _ = _alg(steps=1, multi={"global_rank": rank, "local_rank": rank, "world_size": 2})
+    runner, runtime = _shared_installer_inputs(alg, tmp_path, rank)
+    audit = install_runner_kl_audit(runner, runtime=runtime)
+    assert audit.path == tmp_path / "run" / "ppo_kl_audit" / f"ppo_kl_rank{rank}.jsonl"
+    assert not (tmp_path / f"rank{rank}-private").exists()
+    assert _rows(audit)[0]["identity"] == {"run": str((tmp_path / "run").resolve()),
+        "plan_sha256": "a" * 64, "parent_sha256": "b" * 64, "stage_id": "E1"}
+    audit.close()
+
+
+@pytest.mark.parametrize("invalid", ["shared_missing", "plan_null", "plan_bad", "parent_null", "plan_conflict"])
+def test_installer_rejects_unbound_or_conflicting_identity_before_writing(tmp_path, invalid):
+    alg, _ = _alg(steps=1, multi={"global_rank": 1, "local_rank": 1, "world_size": 2})
+    runner, runtime = _shared_installer_inputs(alg, tmp_path, 1)
+    if invalid == "shared_missing": runtime.record_dir = None
+    elif invalid == "plan_null": runtime.plan_sha256 = None
+    elif invalid == "plan_bad": runtime.plan_sha256 = "z" * 64
+    elif invalid == "parent_null": runtime.parent_sha256 = None
+    else: runtime.plan.sha256 = "c" * 64
+    with pytest.raises(ValueError, match="KL audit"):
+        install_runner_kl_audit(runner, runtime=runtime)
+    assert not list(tmp_path.rglob("*.jsonl"))
+    assert getattr(alg, "kl_audit", None) is None
+
+
+def test_observer_write_failure_is_loud_and_does_not_stop_training(tmp_path, capsys):
+    alg, obs = _alg()
+    audit = PpoKLAudit(alg, lambda: _metadata(alg), tmp_path, identity={"run": "known"})
+    real_stream = audit._stream
+
+    class FullDisk:
+        def write(self, text): raise OSError("known full disk")
+
+    audit._stream = FullDisk()
+    for _ in range(2):
+        alg.act(obs)
+        alg.process_env_step(obs, torch.ones(4), torch.ones(4), {"ex41_ppo_valid": torch.ones(4, dtype=torch.bool)})
+    alg.compute_returns(obs)
+    alg.update()
+    assert "PPO_KL_AUDIT_WRITE_FAILED" in capsys.readouterr().err
+    assert audit.error_count > 0
+    audit._stream = real_stream
+    audit.close()
+
+
+def test_nonfinite_kl_is_explicit_and_json_remains_valid(tmp_path):
+    alg, obs = _alg(steps=1)
+    audit = PpoKLAudit(alg, lambda: _metadata(alg), tmp_path, identity={"run": "known"})
+    alg.act(obs)
+    alg.process_env_step(obs, torch.ones(4), torch.zeros(4), {"ex41_ppo_valid": torch.ones(4, dtype=torch.bool)})
+    audit.observe("begin_update")
+    audit.observe("begin_minibatch", 0, 0, torch.arange(4), alg.storage.mu[0], alg.storage.sigma[0])
+    alg.policy.act(obs)
+    with torch.no_grad(): alg.policy.distribution.loc[0, 0] = float('nan')
+    audit.observe("record_optimizer_step")  # Observe only; do not step a deliberately corrupt policy.
+    row = _rows(audit)[-1]
+    assert row["scheduler_kl_local_mean"] is None and row["nonfinite_count"] == 1
+    assert row["nonfinite_samples"][0]["env_id"] == 0 and row["nonfinite_samples"][0]["kl"] is None
     audit.close()

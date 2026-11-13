@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import deque
 from datetime import datetime
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -78,7 +79,7 @@ class LiveMetrics:
     def __init__(self, log_dir, *, rank=0, world_size=1, stage_id="E1", slow_min=0.1, slow_max=0.3,
                  slow_sigma=0.5, slow_weight=0.0, stall_mps=0.05, moving_updates=20, decline_from_peak=None,
                  off_survival_updates=50, off_survival_drop=None, initial=None, alert_run_id=None,
-                 plan_sha256=None, include_heading=False):
+                 plan_sha256=None, include_heading=False, step_dt=None):
         if (type(moving_updates) is not int or moving_updates < 1
                 or type(off_survival_updates) is not int or off_survival_updates < 1
                 or (decline_from_peak is not None and not 0 < decline_from_peak < 1)
@@ -90,6 +91,10 @@ class LiveMetrics:
         self.slow_min, self.slow_max, self.slow_sigma = slow_min, slow_max, slow_sigma
         self.slow_weight = slow_weight
         self.include_heading = bool(include_heading)
+        self.step_dt = None if step_dt is None else float(step_dt)
+        if self.step_dt is not None and (not math.isfinite(self.step_dt) or self.step_dt <= 0):
+            raise ValueError("EX-42 stand start needs a finite positive step_dt")
+        self._start_active = None  # per-env trials span PPO updates
         self.stall_mps = stall_mps
         self.alert_run_id = alert_run_id
         self.moving_updates = moving_updates
@@ -141,9 +146,47 @@ class LiveMetrics:
         self.slow_slots = torch.zeros((3, len(EX39_SLOTS), 5), dtype=torch.float64, device=device)
         self.survival = torch.zeros((3, 3), dtype=torch.float64, device=device)  # steps, resets, falls
         self.survival_family = torch.zeros((3, 2, 3), dtype=torch.float64, device=device)  # mode, continuous/sparse, same
+        self.start_counts = torch.zeros((3, 4), dtype=torch.float64, device=device)  # starts, forward, not forward, censored
         self.invalid = torch.zeros((), dtype=torch.float64, device=device)
 
-    def add(self, cmd, vel, slots, heading, flag, gt, off, done, *, time_out=None, sparse=None):
+    def _record_stand_start(self, cmd, vel, slot, flag, mode, done, finite, pre_speed, reset):
+        if self.step_dt is None:
+            raise ValueError("EX-42 stand start needs the environment step_dt")
+        n = len(done)
+        if pre_speed.shape != done.shape or reset.shape != done.shape or not torch.isfinite(pre_speed).all():
+            raise ValueError("EX-42 stand start pre-step evidence shape or value invalid")
+        if self._start_active is None:
+            self._start_active = torch.zeros(n, dtype=torch.bool, device=done.device)
+            self._start_age = torch.zeros(n, dtype=torch.long, device=done.device)
+            self._start_mode = torch.zeros(n, dtype=torch.long, device=done.device)
+            self._start_prev_stop = torch.zeros(n, dtype=torch.bool, device=done.device)
+            self._start_prev_done = torch.zeros(n, dtype=torch.bool, device=done.device)
+        elif self._start_active.shape != done.shape:
+            raise ValueError("EX-42 stand start environment count changed")
+        # A trial starts at the first slow-forward command after a stand command or reset.
+        # Forward means post-physics body vx exceeds the same 0.05 m/s stillness threshold.
+        slow_forward = (finite & ~flag & (slot == SLOT_INDEX["forward"])
+                        & (cmd[:, 0] >= .1) & (cmd[:, 0] < .15) & (cmd[:, 1].abs() < 1e-6))
+        new = (slow_forward & (pre_speed < .05) & (reset.bool() | self._start_prev_done | self._start_prev_stop)
+               & ~self._start_active & ~done)
+        self._start_mode[new] = mode[new]
+        self._start_age[new] = 0
+        self._start_active[new] = True
+        self.start_counts[:, 0] += torch.bincount(mode[new], minlength=3)
+        old_reset = reset.bool() & ~new
+        changed = self._start_active & (~slow_forward | (mode != self._start_mode)) & ~done & ~old_reset
+        forward = self._start_active & ~done & ~old_reset & ~changed & (vel[:, 0] > .05)
+        elapsed = self._start_age + 1
+        not_forward = self._start_active & ~forward & ~changed & (done | old_reset | (elapsed >= math.ceil(2.0 / self.step_dt)))
+        for column, mask in ((1, forward), (2, not_forward), (3, changed)):
+            self.start_counts[:, column] += torch.bincount(self._start_mode[mask], minlength=3)
+        self._start_active[forward | not_forward | changed] = False
+        self._start_age[self._start_active] = elapsed[self._start_active]
+        self._start_prev_stop = (cmd.abs().amax(dim=1) < 1e-6) & finite
+        self._start_prev_done = done.clone()
+
+    def add(self, cmd, vel, slots, heading, flag, gt, off, done, *, time_out=None, sparse=None,
+            pre_speed=None, reset=None):
         if self.iteration is None:
             raise RuntimeError("EX-42 live metrics update not started")
         cmd, vel = cmd.detach(), vel.detach()
@@ -161,6 +204,11 @@ class LiveMetrics:
         falls = done & ~time_out
         self.invalid += (~finite & ~done).sum()
         mode = torch.where(off.bool(), 2, torch.where(gt.bool(), 0, 1))
+        if (pre_speed is None) != (reset is None):
+            raise ValueError("EX-42 stand start needs both pre_speed and reset")
+        if pre_speed is not None:
+            self._record_stand_start(cmd, vel, slots.long(), flag.bool(), mode, done, finite,
+                                     pre_speed.detach(), reset.detach())
         active = ~done & finite
         slot = slots.long()
         valid_slot = (slot >= 0) & (slot < len(EX39_SLOTS)) & ~flag.bool()
@@ -224,21 +272,27 @@ class LiveMetrics:
         local_bands = self.forward_bands.detach().cpu().tolist()
         local_survival = self.survival.detach().cpu().tolist()
         local_family = self.survival_family.detach().cpu().tolist()
+        local_starts = self.start_counts.detach().cpu().tolist()
+        pending = (torch.bincount(self._start_mode[self._start_active], minlength=3).to(torch.float64)
+                   if self._start_active is not None else torch.zeros(3, dtype=torch.float64, device=self.start_counts.device))
+        local_pending = pending.detach().cpu().tolist()
         if self.world_size > 1:
             import torch.distributed as dist
             if not dist.is_initialized() or dist.get_world_size() != self.world_size:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
             for tensor in (self.values, self.forward_bands, self.slow_slots, self.survival,
-                           self.survival_family, self.invalid):
+                           self.survival_family, self.start_counts, pending, self.invalid):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
             dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_forward_bands": local_bands,
                                                "slow_track_slots": local_slots,
-                                               "survival": local_survival, "survival_by_family": local_family})
+                                               "survival": local_survival, "survival_by_family": local_family,
+                                               "stand_start_counts": local_starts, "stand_start_pending": local_pending})
         else:
             rank_rows = [{"rank": self.rank, "slow_forward_bands": local_bands,
                           "slow_track_slots": local_slots, "survival": local_survival,
-                          "survival_by_family": local_family}]
+                          "survival_by_family": local_family,
+                          "stand_start_counts": local_starts, "stand_start_pending": local_pending}]
         it = self.iteration
         self.iteration = None
         if float(self.invalid) != 0:
@@ -322,6 +376,14 @@ class LiveMetrics:
                 by_family[mode][family] = {"env_steps": int(total), "resets": int(resets), "falls": int(falls),
                                            "time_outs": int(resets - falls),
                                            "survival_fraction": 1 - falls / total if total else None}
+        stand_start = {}
+        for m, mode in enumerate(MODES):
+            starts, forward, not_forward, censored = (int(x) for x in self.start_counts[m].tolist())
+            completed = forward + not_forward
+            stand_start[mode] = {"starts": starts, "forward_within_2s": forward,
+                                 "not_forward_within_2s": not_forward, "censored": censored,
+                                 "pending": int(pending[m]), "completed": completed,
+                                 "forward_fraction": forward / completed if completed else None}
         self.off_block.append(survival["off"])
         off_signal = None
         off_block_fraction = None
@@ -349,6 +411,11 @@ class LiveMetrics:
                "slow_track_weight": self.slow_weight,
                "slow_track_slots": slot_rows, "slow_track_moving20": slow_moving,
                "slow_forward_speed_bands": speed_bands,
+               "stand_start_2s": stand_start,
+               "stand_start_definition": {"initial_body_speed_below_mps": .05,
+                                          "command_vx_mps": [0.1, 0.15], "command_upper_exclusive": True,
+                                          "forward_body_vx_above_mps": .05, "window_s": 2.0,
+                                          "step_dt_s": self.step_dt},
                "rank_local": rank_rows, "survival": survival, "survival_by_family": by_family,
                "off_50_block": off_block_fraction,
                "monitor": {"stage": self.stage.copy(), "high": self.high.copy(), "alerts": alerts,

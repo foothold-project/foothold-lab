@@ -65,6 +65,62 @@ def test_slow_forward_speed_band_edges_and_missing_samples(tmp_path):
     assert bands["gt"]["0.2-0.3"] == {"samples": 0, "tracking_ratio": None, "stall_fraction": None}
 
 
+def test_stand_start_two_seconds_three_modes_and_update_boundary(tmp_path):
+    m = LiveMetrics(tmp_path, step_dt=.5)
+    slot = torch.full((3,), SLOT_INDEX["forward"])
+    gt = torch.tensor([True, False, False])
+    off = torch.tensor([False, False, True])
+    flags = torch.zeros(3, dtype=torch.bool)
+    zero = torch.zeros(3, 3)
+    slow = zero.clone(); slow[:, 0] = .12
+    def add(cmd, body_vx, *, reset=False):
+        vel = zero.clone(); vel[:, 0] = torch.tensor(body_vx)
+        m.add(cmd, vel, slot, flags, flags, gt, off, flags,
+              pre_speed=torch.zeros(3), reset=torch.full((3,), reset))
+    m.begin(1, device="cpu")
+    add(zero, [0, 0, 0])  # the preceding command is a stand command
+    assert m.end()["stand_start_2s"]["gt"]["starts"] == 0
+    m.begin(2, device="cpu")
+    add(slow, [.06, .02, .07])
+    row = m.end()["stand_start_2s"]
+    assert row["gt"]["forward_fraction"] == row["off"]["forward_fraction"] == 1
+    assert row["pred"]["starts"] == 1 and row["pred"]["pending"] == 1
+    assert row["pred"]["forward_fraction"] is None
+    m.begin(3, device="cpu")
+    add(slow, [.06, .06, .07])
+    row = m.end()["stand_start_2s"]
+    assert row["pred"]["forward_within_2s"] == row["pred"]["completed"] == 1
+    assert row["pred"]["pending"] == 0
+    assert row["gt"]["starts"] == row["off"]["starts"] == 0
+
+
+def test_stand_start_reset_timeout_censor_and_speed_gate(tmp_path):
+    m = LiveMetrics(tmp_path, step_dt=1.0)
+    slot = torch.full((3,), SLOT_INDEX["forward"])
+    flags = torch.zeros(3, dtype=torch.bool)
+    gt = torch.tensor([True, False, False]); off = torch.tensor([False, False, True])
+    cmd = torch.zeros(3, 3); cmd[:, 0] = torch.tensor([.12, .12, .15])
+    vel = torch.zeros_like(cmd)
+    m.begin(1, device="cpu")
+    m.add(cmd, vel, slot, flags, flags, gt, off, flags,
+          pre_speed=torch.tensor([0., 0., 0.]), reset=torch.ones(3, dtype=torch.bool))
+    row = m.end()["stand_start_2s"]
+    assert row["gt"]["starts"] == row["pred"]["starts"] == 1
+    assert row["off"]["starts"] == 0  # 0.15 is outside the requested band
+    m.begin(2, device="cpu")
+    changed = cmd.clone(); changed[1, 0] = .2
+    m.add(changed, vel, slot, flags, flags, gt, off, flags,
+          pre_speed=torch.tensor([0., 0., 0.]), reset=flags)
+    row = m.end()["stand_start_2s"]
+    assert row["gt"]["not_forward_within_2s"] == 1
+    assert row["gt"]["forward_fraction"] == 0
+    assert row["pred"]["censored"] == 1 and row["pred"]["completed"] == 0
+    m.begin(3, device="cpu")
+    m.add(cmd, vel, slot, flags, flags, gt, off, flags,
+          pre_speed=torch.tensor([.06, .06, .06]), reset=torch.ones(3, dtype=torch.bool))
+    assert sum(item["starts"] for item in m.end()["stand_start_2s"].values()) == 0
+
+
 def test_twenty_update_weighted_mean_and_historical_drop(tmp_path):
     m = LiveMetrics(tmp_path, decline_from_peak=0.05)
     for it in range(1, 21):
