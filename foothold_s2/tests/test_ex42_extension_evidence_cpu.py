@@ -22,14 +22,35 @@ def _receipts(tmp_path, gaps=(0.3, 0.2, 0.1)):
     _, manifest, old_out, p1 = _boundary(tmp_path, cap)
     root = tmp_path / "eval" / "scores"
     limit = plan.document["evaluation"]["e1_exit_v2"]["yaw_median_max_rad"]
+    from foothold_s2.ex42_e1_v2 import judge_cells
+    expected = judge_cells({}, plan.document)["items"]
+    required_turns = [case for case, spec in plan.document["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"].items()
+                      if spec["role"] == "judge" and spec["task"] in ("turn_left", "turn_right")]
     for iteration, gap in zip((cap - 2 * interval, cap - interval, cap), gaps):
         folder = root / f"m{iteration}"
         folder.mkdir(parents=True)
+        items = {}
+        for key, expected_row in expected.items():
+            if expected_row.get("role") == "record":
+                continue
+            if key.startswith(("low/", "side05/")):
+                speed = float(key.rsplit("/", 1)[1].replace("fwd", "").replace("side+", "").replace("side-", ""))
+                items[key] = {"judgement": "PASS", "R": 1.0, "mae_mps": 0.0,
+                              "command_mps": speed, "success": 64, "survival": 64}
+            elif key.startswith("yaw/"):
+                bad = key == "yaw/eval_gt/fwd0.5" and gap > 0
+                items[key] = {"judgement": "FAIL" if bad else "PASS",
+                              "median_abs_rad": limit + gap if key == "yaw/eval_gt/fwd0.5" else 0,
+                              "p90_abs_rad": 0, "survival": 64}
+            else:
+                items[key] = {"judgement": "PASS", "S": 1.0}
+        d44 = {case: {"current": {"case_id": case, "success_count": 64,
+                                  "success_min": 52, "survival_count": 64, "survival_min": 60}}
+               for case in required_turns}
         score = {"stage_id": "E1", "checkpoint_sha256": p1["checkpoint_sha256"], "score_config_sha256": "a" * 64,
                  "execution_plan_sha256": plan.sha256, "maintenance_judgement": "PASS",
-                 "e1_exit_v2": {"current": {"items": {"yaw/eval_gt/fwd0.5": {
-                     "judgement": "FAIL" if gap > 0 else "PASS", "median_abs_rad": limit + gap, "p90_abs_rad": 0,
-                     "survival": 64}}}}}
+                 "e1_exit_v2": {"current": {"items": items}},
+                 "e1_exit": {"d44": {"required_cases": required_turns, "cases": d44}}}
         measured = folder / "ex42_score.json"
         measured.write_text(json.dumps(score))
         receipt = {**p1, "state": "complete", "stage_id": "E1", "checkpoint_iteration": iteration,
@@ -73,6 +94,60 @@ def test_verified_two_step_improvement_extends_and_carries_numbers(tmp_path):
     row = proof["metrics"][0]
     assert row["older_gap"] > row["previous_gap"] > row["current_gap"] > 0
     assert all(item["gate_sha256"] and item["score_sha256"] for item in proof["boundaries"])
+
+
+@needs_run
+@pytest.mark.parametrize("missing", ["yaw/eval_pred/fwd0.5", "low/L5/eval_gt/fwd0.1",
+                                     "side05/eval_pred/side-0.5", "symmetry/5/eval_gt/0.4"])
+def test_missing_graduation_cell_cannot_be_accepted_as_complete_evidence(tmp_path, missing):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit_v2"]["current"]["items"].pop(missing))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert missing in decision["reason"]
+
+
+@needs_run
+def test_one_missing_map_mode_blocks_extension_even_when_other_mode_improves(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit_v2"]["current"]["items"].update(
+            {key: {"judgement": "HOLD", "reason": "평가 열 없음"}
+             for key in list(s["e1_exit_v2"]["current"]["items"]) if "/eval_pred/" in key}))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+
+
+@needs_run
+def test_missing_required_d44_turn_blocks_extension(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit"]["d44"]["cases"].pop("turn_right_eval_pred"))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert "turn_right_eval_pred" in decision["reason"]
+
+
+@needs_run
+def test_verifier_gt_yaw_only_three_windows_cannot_extend(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit_v2"]["current"].update(
+            {"items": {"yaw/eval_gt/fwd0.5": s["e1_exit_v2"]["current"]["items"]["yaw/eval_gt/fwd0.5"]}}))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert "eval_pred" in decision["reason"]
+
+
+@needs_run
+def test_required_d44_case_list_cannot_silently_drop_a_turn(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit"]["d44"]["required_cases"].remove("turn_right_eval_pred"))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert "turn_right_eval_pred" in decision["reason"]
 
 
 @needs_run
@@ -140,9 +215,7 @@ def test_a_changed_d44_threshold_is_not_called_numeric_improvement(tmp_path):
     gate, manifest = _receipts(tmp_path)
     for folder, success in zip(_folders(gate), (40, 42, 44)):
         def add(score):
-            score["e1_exit"] = {"d44": {"required_cases": ["turn_left_eval_gt"],
-                "cases": {"turn_left_eval_gt": {"current": {"case_id": "turn_left_eval_gt",
-                    "success_count": success, "success_min": 52, "survival_count": 64, "survival_min": 60}}}}}
+            score["e1_exit"]["d44"]["cases"]["turn_left_eval_gt"]["current"]["success_count"] = success
         _edit_score(folder, add)
     assert handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)["action"] == "continue"
     _edit_score(_folders(gate)[1], lambda s: s["e1_exit"]["d44"]["cases"]["turn_left_eval_gt"]["current"].__setitem__("success_min", 51))
@@ -168,9 +241,9 @@ def test_v2_stop_restart_is_record_only_for_extension(tmp_path):
     gate, manifest = _receipts(tmp_path)
     for folder, success in zip(_folders(gate), (50, 40, 30)):
         def add(score):
-            score["e1_exit"] = {"d44": {"required_cases": ["stop_restart_eval_gt"],
-                "cases": {"stop_restart_eval_gt": {"current": {"case_id": "stop_restart_eval_gt",
-                    "success_count": success, "success_min": 52, "survival_count": 64, "survival_min": 60}}}}}
+            score["e1_exit"]["d44"]["cases"]["stop_restart_eval_gt"] = {"current": {
+                "case_id": "stop_restart_eval_gt", "success_count": success,
+                "success_min": 52, "survival_count": 64, "survival_min": 60}}
         _edit_score(folder, add)
     assert handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)["action"] == "continue"
 
@@ -183,9 +256,9 @@ def test_mae_limit_uses_the_command_speed(tmp_path):
     assert 0 < correct < wrong
     for folder, scale in zip(_folders(gate), (0.75, 0.5, 0.25)):
         def replace(score):
-            score["e1_exit_v2"]["current"]["items"] = {"low/L0/eval_gt/fwd0.2": {
+            score["e1_exit_v2"]["current"]["items"]["low/L0/eval_gt/fwd0.2"] = {
                 "judgement": "FAIL", "R": 1.0, "command_mps": 0.2,
-                "mae_mps": correct + scale * (wrong - correct), "success": 64, "survival": 64}}
+                "mae_mps": correct + scale * (wrong - correct), "success": 64, "survival": 64}
         _edit_score(folder, replace)
     decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
     assert decision["action"] == "continue"
