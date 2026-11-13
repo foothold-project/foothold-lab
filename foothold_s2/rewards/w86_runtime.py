@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 import copy
 import json
+import math
 import torch
 from foothold_s2.rewards import w86
 
@@ -204,6 +205,18 @@ class W86Runtime:
         value=x.detach().sum(0,dtype=torch.float64 if x.is_floating_point() else torch.int64)
         self.sums[name]=self.sums.get(name,torch.zeros_like(value))+value
 
+    def air_time_threshold(self):
+        """The feet_air_time threshold in seconds: 0.5 unless the live `ex41_feet_air_time` term carries `threshold`
+        (EX-42 reward cell feet_air_time_threshold). Read from the reward manager at every refresh, so the value the
+        read-back shows is the value in use."""
+        manager=getattr(self.env,'reward_manager',None)
+        if manager is None or not hasattr(manager,'get_term_cfg'): return .5
+        value=manager.get_term_cfg('ex41_feet_air_time').params.get('threshold')
+        if value is None: return .5
+        if type(value) not in (int,float) or not math.isfinite(value) or value<=0:
+            raise ValueError('W86 feet_air_time threshold must be a positive finite number')
+        return float(value)
+
     def refresh(self):
         key=int(self.env.common_step_counter)
         if self.key==key: return self.cache
@@ -254,7 +267,7 @@ class W86Runtime:
           'swing':w86.swing_clearance_cost(_safe(d['sole_z']),target,_safe(d['velocity_xy']),contact,ray_valid,moving),
           'knee_effort_margin':w86.effort_margin_cost(_safe(d['torque'])[:,knee_ids],effort),
           'joint_limit_margin':w86.joint_limit_cost(_safe(d['joint_pos']),limits[...,0],limits[...,1]),
-          'feet_air_time':w86.air_time_term(self.air_time,touchdown,moving),
+          'feet_air_time':w86.air_time_term(self.air_time,touchdown,moving,self.air_time_threshold()),
           'foot_slip':w86.slip_cost(_safe(d['velocity_xy']),contact),
           'stumble':w86.stumble_cost(_safe(d['forces'])),
           'stumble_force_floor_1n':w86.stumble_cost(_safe(d['forces']),1.),
@@ -431,7 +444,9 @@ def attach_runtime(env,plan,log_dir):
     return adapter
 
 
-def reward_term(env,name):
+def reward_term(env,name,threshold=None):
+    # `threshold` (EX-42 reward cell feet_air_time_threshold) is accepted so that the reward manager's parameter
+    # check lets the feet_air_time term carry it; the adapter reads it from that term's config (air_time_threshold).
     return env._ex41_w86.refresh()['terms'][name]
 
 

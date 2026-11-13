@@ -262,8 +262,11 @@ def test_a_stage_without_a_command_profile_takes_no_command_entry(plan, tmp_path
 
 # ---- reward cells (lead 2026-11-12 21:27): tracking widths and two weights, any boundary, limits outside the plan ----
 
+# the slow forward cells of 2026-11-13 15:30: registered, closed (each fence holds the one starting value)
+SLOW = {"feet_air_time_threshold": 0.5, "slow_track": 0.0, "slow_track_sigma": 0.5, "slow_track_speed_min": 0.1,
+        "slow_track_speed_max": 0.3}
 REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.4, "feet_air_time": 0.2, "foot_slip": -0.2,
-           "zero_yaw": -0.5}       # the plan value here; the zero_yaw tests below move it
+           "zero_yaw": -0.5, **SLOW}       # the plan value here; the zero_yaw tests below move it
 
 
 def reward_entry(**change):
@@ -275,7 +278,8 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
     limits = adj.reward_limits()
     assert limits["cells"] == {"track_lin_vel_std": (0.25, 0.5), "track_ang_vel_std": (0.25, 0.5),
                                "feet_air_time": (0.0, 0.5), "foot_slip": (-0.25, -0.05),
-                               "zero_yaw": (-2.0, -0.5)}                  # decisions.tsv 2026-11-13 09:52
+                               "zero_yaw": (-2.0, -0.5),                  # decisions.tsv 2026-11-13 09:52
+                               **{name: (value, value) for name, value in SLOW.items()}}       # closed for now
     assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
 
 
@@ -396,30 +400,47 @@ def test_a_stage_with_no_adjustable_commands_still_takes_rewards(plan, source, t
 
 
 class _Term:
-    def __init__(self, weight=0.0, std=None):
-        self.weight, self.params = weight, ({"std": std, "command_name": "base_velocity"} if std is not None else {})
+    def __init__(self, weight=0.0, std=None, **params):
+        self.weight = weight
+        self.params = {**({"std": std, "command_name": "base_velocity"} if std is not None else {}), **params}
 
 
-def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5):
+def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshold=None, sigma=0.5):
+    """The live reward manager of an E stage: the EX-41 terms as w86 registers them (feet_air_time has no `threshold`
+    parameter until a segment puts one there) and ex42_slow_track as `ex42_slow_track.register` adds it."""
+    air_params = {"name": "feet_air_time", **({} if threshold is None else {"threshold": threshold})}
     terms = {"track_lin_vel": _Term(2.0, lin), "track_ang_vel": _Term(1.0, ang),
-             "ex41_feet_air_time": _Term(air), "ex41_foot_slip": _Term(slip), "ex41_zero_yaw": _Term(yaw)}
+             "ex41_feet_air_time": _Term(air, **air_params), "ex41_foot_slip": _Term(slip), "ex41_zero_yaw": _Term(yaw),
+             "ex42_slow_track": _Term(slow, command_name="base_velocity", speed_min=0.1, speed_max=0.3, sigma=sigma)}
     return types.SimpleNamespace(get_term_cfg=lambda name: terms[name]), terms
+
+
+def _env_cfg(terms, with_slow_track=True):
+    """The env config before the env is built. Without `ex42_slow_track` the code under test registers it."""
+    names = ["track_lin_vel", "track_ang_vel", "ex41_feet_air_time"] + (["ex42_slow_track"] if with_slow_track else [])
+    return types.SimpleNamespace(rewards=types.SimpleNamespace(**{name: terms[name] for name in names}))
+
+
+UNCHANGED_SLOW = {"feet_air_time_threshold": {"before": 0.5, "after": 0.5}, "slow_track": {"before": 0.0, "after": 0.0},
+                  "slow_track_sigma": {"before": 0.5, "after": 0.5}, "slow_track_speed_min": {"before": 0.1, "after": 0.1},
+                  "slow_track_speed_max": {"before": 0.3, "after": 0.3}}
 
 
 def test_the_tracking_widths_go_on_the_env_config_only_when_an_entry_asks(plan, view, tmp_path):
     _, terms = _manager()
-    env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=terms["track_lin_vel"],
-                                                                  track_ang_vel=terms["track_ang_vel"]))
+    env_cfg = _env_cfg(terms)
     plain = start(view, plan, tmp_path, 1)
     assert adj.apply_reward_params(env_cfg, plain) == {"track_lin_vel_std": {"before": 0.5, "after": 0.5},
-                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.5}}
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.5}, **UNCHANGED_SLOW}
+    assert terms["ex41_feet_air_time"].params == {"name": "feet_air_time"}          # no reward cells: nothing is written
     assert adj.apply_reward_params(env_cfg, None)["track_lin_vel_std"]["after"] == 0.5
     other = tmp_path / "adjusted"
     other.mkdir()
     asked = start(view, plan, other, 1, document(plan, b1=reward_entry()))
     assert adj.apply_reward_params(env_cfg, asked) == {"track_lin_vel_std": {"before": 0.5, "after": 0.35},
-                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.4}}
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.4}, **UNCHANGED_SLOW}
     assert terms["track_lin_vel"].params == {"std": 0.35, "command_name": "base_velocity"} and terms["track_lin_vel"].weight == 2.0
+    assert terms["ex41_feet_air_time"].params == {"name": "feet_air_time", "threshold": 0.5}
 
 
 def test_the_live_reward_manager_is_read_back_and_must_carry_what_was_asked(plan, view, tmp_path, monkeypatch):
@@ -548,7 +569,8 @@ def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
 
 # ---- the stage row's own reward cells (E1 again from m13250, 2026-11-13): in force from the first update ----
 
-ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0}
+ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0,
+               **SLOW}
 
 
 @pytest.fixture()
@@ -579,8 +601,7 @@ def test_the_row_cells_hold_from_the_first_update_and_reach_the_stage_the_env_co
     assert view.stages[0].rewards["zero_yaw"] == -1.0 and view.stages[0].rewards["foot_slip"] == -0.15
     assert not list(tmp_path.glob("segment_commands_b0*"))       # the first segment leaves no record file
     _, terms = _manager()
-    env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=terms["track_lin_vel"],
-                                                                  track_ang_vel=terms["track_ang_vel"]))
+    env_cfg = _env_cfg(terms)
     assert adj.apply_reward_params(env_cfg, record)["track_lin_vel_std"] == {"before": 0.5, "after": 0.35}
     manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-1.0)
     assert adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)["live"] == ROW_REWARDS

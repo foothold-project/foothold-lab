@@ -6,7 +6,9 @@ file outside both (EX42_SEGMENT_ADJUST):
     {"schema": "ex42-segment-adjust/1", "stage_id": "E1", "plan_sha256": "<the run's plan>",
      "segments": {"3": {"decided_at": "...", "reason": "...", "evidence": "...",
                         "commands": {"shares": {...}, "ranges": {...}, "turn_overlay": {"fraction": f, "wz_abs": [a, b]}},
-                        "rewards": {"track_lin_vel_std": s, "track_ang_vel_std": s, "feet_air_time": w, "foot_slip": w, "zero_yaw": w}}}}
+                        "rewards": {"track_lin_vel_std": s, "track_ang_vel_std": s, "feet_air_time": w, "foot_slip": w, "zero_yaw": w,
+                                    "feet_air_time_threshold": s, "slow_track": w, "slow_track_sigma": s,
+                                    "slow_track_speed_min": v, "slow_track_speed_max": v}}}}
 
 An entry carries `commands`, `rewards`, `low_forward_fraction` or several of them and holds from its boundary on, each
 kind until a later entry of the same kind. An entry for a boundary the run has not reached is refused.
@@ -15,9 +17,10 @@ kind until a later entry of the same kind. An entry for a boundary the run has n
   rises (E1: 1 and 2), every value inside those limits.
 * rewards: the stage's plan row may register the cells for the whole stage (`rewards`, from its first update); a file
   entry changes them at any boundary from 1 on. Every value is inside `curriculum/ex42-reward-adjust-limits.yaml` (outside
-  the plan so that a run already started can use it; its SHA is recorded). The weight cells go on the stage's reward
-  table, the two tracking widths on the env config (`apply_reward_params`), and the live reward manager is read back
-  (`reward_readback`).
+  the plan so that a run already started can use it; its SHA is recorded). The EX-41 weight cells go on the stage's
+  reward table; the parameter cells (the two tracking widths, the feet_air_time threshold, the constants of
+  `ex42_slow_track`) and the weight of `ex42_slow_track` go on the env config (`apply_reward_params`, which also
+  registers that term at weight 0); the live reward manager is read back (`reward_readback`).
 
 * low_forward_fraction (2026-11-13): the share of the forward commands drawn from the slow end of the forward range
   (`mixed_core.resample_stage`: below 0.3 m/s; the source stage has 0.20). The stage's plan row may register it for
@@ -48,7 +51,16 @@ REWARD_LIMITS_SCHEMA = "ex42-reward-adjust-limits/1"
 WEIGHT_CELLS = {"feet_air_time": "ex41_feet_air_time", "foot_slip": "ex41_foot_slip",        # stage reward key -> live term
                 "zero_yaw": "ex41_zero_yaw"}       # yaw rate while the turn command is zero (heading drift, 2026-11-13)
 STD_CELLS = {"track_lin_vel_std": "track_lin_vel", "track_ang_vel_std": "track_ang_vel"}    # cell -> env reward term
-REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS)
+# decisions.tsv 2026-11-13 15:30 (slow forward): cells of the env config, in force from the env build.
+# cell -> (env reward term, parameter, value when the config does not carry the parameter)
+PARAM_CELLS = {**{cell: (term, "std", None) for cell, term in STD_CELLS.items()},
+               "feet_air_time_threshold": ("ex41_feet_air_time", "threshold", 0.5),
+               "slow_track_sigma": ("ex42_slow_track", "sigma", None),
+               "slow_track_speed_min": ("ex42_slow_track", "speed_min", None),
+               "slow_track_speed_max": ("ex42_slow_track", "speed_max", None)}
+ENV_WEIGHT_CELLS = {"slow_track": "ex42_slow_track"}       # cell -> env reward term whose weight it is
+REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS, "feet_air_time_threshold", "slow_track", "slow_track_sigma",
+                "slow_track_speed_min", "slow_track_speed_max")
 COMMAND_CELLS = ("low_forward_fraction",)          # command distribution cells outside the 13-slot profile
 
 
@@ -119,6 +131,10 @@ def _rewards(cell, limits, label) -> dict:
         low, high = limits["cells"][name]
         if not low - TOL <= value <= high + TOL:
             raise ValueError(f"EX-42 {label} rewards.{name} leaves the approved limits {[low, high]}")
+    if (not 0.0 < cell["slow_track_speed_min"] < cell["slow_track_speed_max"] or cell["slow_track_sigma"] <= 0.0
+            or cell["feet_air_time_threshold"] <= 0.0):
+        raise ValueError(f"EX-42 {label} rewards: slow_track needs 0 < speed_min < speed_max and sigma > 0, "
+                         f"feet_air_time_threshold > 0")
     return {name: float(cell[name]) for name in REWARD_CELLS}
 
 
@@ -276,16 +292,27 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
     return record
 
 
-def apply_reward_params(env_cfg, record) -> dict:
-    """Before the env is built: the segment's tracking widths on the env config. {cell: {before, after}}."""
+def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
+    """Before the env is built: the cells that live on the env config. Registers `ex42_slow_track` at weight 0 when
+    the config does not have it yet (every E stage carries the term), then puts the segment's parameter cells and the
+    slow_track weight on the config. {cell: {before, after}}; without reward cells nothing but the registration changes."""
+    from foothold_s2.rewards import ex42_slow_track
+
+    ex42_slow_track.register(env_cfg, term_cfg_class)
     values = ((record or {}).get("rewards") or {}).get("values")
     out = {}
-    for cell, term in STD_CELLS.items():
+    for cell, (term, param, default) in PARAM_CELLS.items():
         params = getattr(env_cfg.rewards, term).params
-        before = float(params["std"])
+        before = float(params[param] if default is None else params.get(param, default))
         if values is not None:
-            params["std"] = float(values[cell])
-        out[cell] = {"before": before, "after": float(params["std"])}
+            params[param] = float(values[cell])
+        out[cell] = {"before": before, "after": float(params[param] if default is None else params.get(param, default))}
+    for cell, term in ENV_WEIGHT_CELLS.items():
+        target = getattr(env_cfg.rewards, term)
+        before = float(target.weight)
+        if values is not None:
+            target.weight = float(values[cell])
+        out[cell] = {"before": before, "after": float(target.weight)}
     return out
 
 
@@ -293,8 +320,11 @@ def reward_readback(env, record) -> dict:
     """After the env is built: the cells as the live reward manager carries them. An adjusted segment must show
     exactly what its entry asked for; ValueError otherwise, before any rollout."""
     manager = getattr(env, "unwrapped", env).reward_manager
-    live = {cell: float(manager.get_term_cfg(term).params["std"]) for cell, term in STD_CELLS.items()}
-    live.update({cell: float(manager.get_term_cfg(term).weight) for cell, term in WEIGHT_CELLS.items()})
+    live = {}
+    for cell, (term, param, default) in PARAM_CELLS.items():
+        params = manager.get_term_cfg(term).params
+        live[cell] = float(params[param] if default is None else params.get(param, default))
+    live.update({cell: float(manager.get_term_cfg(term).weight) for cell, term in {**WEIGHT_CELLS, **ENV_WEIGHT_CELLS}.items()})
     rewards = (record or {}).get("rewards") or {}
     asked = rewards.get("values")
     if asked is not None and any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):

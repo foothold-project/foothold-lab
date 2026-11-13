@@ -15,6 +15,15 @@ cells:
   # zero_yaw: decisions.tsv 2026-11-13 09:52 (team lead; ledger commit c2032256, read directly): the cell and its
   # limits approved first, first value -1.0. The yaw rate while the turn command is zero (heading drift).
   zero_yaw: [-2.0, -0.5]             # weight of ex41_zero_yaw (plan value -0.5)
+  # Slow forward cells (decisions.tsv 2026-11-13 15:30, lead; registered now, closed until analyst-lx's formula and
+  # values are fixed and recorded in the ledger): each fence holds the one value the stage starts with, so nothing can
+  # move yet. feet_air_time_threshold: seconds a foot must stay in the air for ex41_feet_air_time to pay (0.5).
+  # slow_track: weight of ex42_slow_track (0 = the reward manager skips the term). The other three are its constants.
+  feet_air_time_threshold: [0.5, 0.5]
+  slow_track: [0.0, 0.0]
+  slow_track_sigma: [0.5, 0.5]
+  slow_track_speed_min: [0.1, 0.1]
+  slow_track_speed_max: [0.3, 0.3]
 # Command distribution cells (outside the 13-slot profile). low_forward_fraction: the share of the forward commands
 # drawn below 0.3 m/s (source stage 0.20). decisions.tsv 2026-11-13 15:17 (team lead; ledger commit a00ab2a8, read
 # directly): 0.2 -> 0.4 approved. The fence is the source value and the approved value.

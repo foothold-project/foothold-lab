@@ -207,3 +207,59 @@ def test_sanitize_owns_storage_without_changing_policy_or_observations(tensordic
     assert out['nested']['policy'][1].eq(0).all()
     assert out['nested']['policy'][2].eq(1).all()
     if tensordict: assert isinstance(out,TensorDict) and out.batch_size==torch.Size([3])
+
+
+# ---- EX-42 reward cells on this runtime (2026-11-13) ----
+
+def _air_time_at_touchdown(tmp_path, env, air_steps=15):
+    """One foot in contact, then `air_steps` control steps in the air, then down again: the feet_air_time term at
+    the touchdown step (command 0.5 m/s forward)."""
+    frames = [100.] + [0.] * air_steps + [100.]
+    state = {'i': 0}
+
+    def source():
+        d = sample(1)
+        d['forces'][:, :, 2] = 100.                    # the other three feet stay down
+        d['forces'][0, 0, 2] = frames[state['i']]
+        return d
+
+    adapter = wr.W86Runtime(env, tmp_path, source=source); env._ex41_w86 = adapter
+    for i in range(len(frames)):
+        state['i'] = i; env.common_step_counter = i + 1
+        value = wr.reward_term(env, 'feet_air_time')
+    return float(value[0])
+
+
+def test_feet_air_time_threshold_is_half_a_second_unless_the_live_term_carries_another(tmp_path):
+    """EX-42 reward cell feet_air_time_threshold: 15 steps of 0.02 s in the air = 0.30 s."""
+    plain = SimpleNamespace(num_envs=1, device='cpu', step_dt=.02, common_step_counter=0)
+    assert _air_time_at_touchdown(tmp_path / 'a', plain) == pytest.approx(0.30 - 0.5)             # a short step is a penalty
+    term = SimpleNamespace(params={'name': 'feet_air_time'})
+    manager = SimpleNamespace(get_term_cfg=lambda name: {'ex41_feet_air_time': term}[name])
+    carried = SimpleNamespace(num_envs=1, device='cpu', step_dt=.02, common_step_counter=0, reward_manager=manager)
+    assert _air_time_at_touchdown(tmp_path / 'b', carried) == pytest.approx(0.30 - 0.5)           # no `threshold`: 0.5
+    term.params['threshold'] = 0.2
+    assert _air_time_at_touchdown(tmp_path / 'c', carried) == pytest.approx(0.30 - 0.2)           # the same step is a reward
+    for bad in (0.0, -0.1, float('nan'), '0.2'):
+        term.params['threshold'] = bad
+        with pytest.raises(ValueError, match='threshold must be a positive finite number'):
+            _air_time_at_touchdown(tmp_path / f'bad{bad}', carried)
+
+
+def test_the_reward_term_accepts_the_threshold_argument_of_the_live_config():
+    """The reward manager refuses a term whose config carries a parameter the function does not name."""
+    import inspect
+    args = inspect.signature(wr.reward_term).parameters
+    assert list(args) == ['env', 'name', 'threshold'] and args['threshold'].default is None
+
+
+def test_the_moving_gate_is_strict_at_exactly_one_tenth(tmp_path):
+    """Why the gate stays at 0.1 (decisions.tsv 2026-11-13 15:30, corrected): a command of exactly 0.1 m/s is not
+    `moving`, so the swing term is off for it. Training never draws it (forward speeds come from a continuous range
+    whose lowest recorded value was 0.10016), so every slow forward env of the training already has the gate open."""
+    def swing(speed):
+        env = SimpleNamespace(num_envs=1, device='cpu', step_dt=.02, common_step_counter=1)
+        d = sample(1); d['command'] = torch.tensor([[speed, 0., 0.]])
+        env._ex41_w86 = wr.W86Runtime(env, tmp_path / str(speed), source=lambda: d)
+        return float(wr.reward_term(env, 'swing')[0])
+    assert swing(0.1) == 0.0 and swing(0.10016) > 0.0 and swing(0.2) > 0.0
