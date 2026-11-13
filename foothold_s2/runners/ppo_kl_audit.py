@@ -288,8 +288,18 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
     existing = getattr(runner.alg, "kl_audit", None)
     if existing is not None:
         return existing
-    if runner.log_dir is None:
+    record_dir = getattr(runtime, "record_dir", None) or runner.log_dir
+    if record_dir is None:
         raise ValueError("KL audit needs the run log directory on each rank")
+    # EX-42 speed probes give rank 1 a private runner.log_dir, while the
+    # runtime.record_dir is the shared run both ranks' evidence belongs to.
+    runtime_sha = getattr(runtime, "plan_sha256", None)
+    plan_sha = getattr(getattr(runtime, "plan", None), "sha256", None)
+    if runtime_sha is not None and plan_sha is not None and runtime_sha != plan_sha:
+        raise ValueError("KL audit runtime plan SHA differs from its plan")
+    source_sha = runtime_sha or plan_sha
+    if not isinstance(source_sha, str) or len(source_sha) != 64 or any(c not in "0123456789abcdef" for c in source_sha):
+        raise ValueError("KL audit needs the actual 64-hex training plan SHA")
     raw = getattr(runner.env, "unwrapped", runner.env)
     term = raw.command_manager.get_term("base_velocity")
     terrain = raw.scene.terrain
@@ -305,9 +315,9 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
                 "terrain_level": terrain.terrain_levels, "heading": term.heading, "flag": term.is_flag_env,
                 "map_mode": mode, "episode_length": raw.episode_length_buf}
 
-    return PpoKLAudit(runner.alg, provider, Path(runner.log_dir) / "ppo_kl_audit",
-                      identity={"run": str(Path(runner.log_dir).resolve()),
-                                "plan_sha256": getattr(getattr(runtime, "plan", None), "sha256", None)},
+    return PpoKLAudit(runner.alg, provider, Path(record_dir) / "ppo_kl_audit",
+                      identity={"run": str(Path(record_dir).resolve()),
+                                "plan_sha256": source_sha},
                       top_k=top_k, columns=columns, slots=EX39_SLOTS)
 
 

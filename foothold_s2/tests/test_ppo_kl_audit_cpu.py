@@ -199,3 +199,27 @@ def test_installer_reads_actual_pre_action_map_flags_and_env(tmp_path):
     assert [by_env[i]["map_mode"] for i in range(4)] == ["GT", "PRED", "OFF", "OFF"]
     assert by_env[1]["terrain_kind"] == "stairs" and by_env[1]["heading"] is True
     audit.close()
+
+
+@pytest.mark.parametrize('rank', [0, 1])
+def test_installer_uses_the_shared_ex42_record_dir_and_actual_plan_sha(tmp_path, rank):
+    alg, _ = _alg(steps=1, multi={'global_rank': rank, 'local_rank': rank, 'world_size': 2})
+    term = SimpleNamespace(command=torch.zeros(4, 3), slot_current=torch.arange(4),
+                           heading=torch.zeros(4, dtype=torch.bool), is_flag_env=torch.zeros(4, dtype=torch.bool))
+    terrain = SimpleNamespace(terrain_types=torch.zeros(4, dtype=torch.long),
+                              terrain_levels=torch.zeros(4, dtype=torch.long))
+    env = SimpleNamespace(command_manager=SimpleNamespace(get_term=lambda _: term),
+                          scene=SimpleNamespace(terrain=terrain), episode_length_buf=torch.zeros(4, dtype=torch.long),
+                          _ex42_column_table=[{'family': 'A', 'kind': 'flat'}])
+    shared = tmp_path / 'run'; private = tmp_path / f'rank{rank}-private'
+    runtime = SimpleNamespace(iteration=1, stage_id='E1', record_dir=str(shared),
+                              plan_sha256='b' * 64, plan=SimpleNamespace(is_ex41=False, stages=[]))
+    runner = SimpleNamespace(alg=alg, env=SimpleNamespace(unwrapped=env), log_dir=str(private), pstate=None)
+    audit = install_runner_kl_audit(runner, runtime=runtime)
+    assert audit.path == shared / 'ppo_kl_audit' / f'ppo_kl_rank{rank}.jsonl'
+    installed = _rows(audit)[0]
+    assert installed['identity'] == {'run': str(shared.resolve()), 'plan_sha256': 'b' * 64}
+    audit.close()
+    runtime.plan_sha256 = None
+    with pytest.raises(ValueError, match='actual 64-hex training plan SHA'):
+        install_runner_kl_audit(runner, runtime=runtime)
