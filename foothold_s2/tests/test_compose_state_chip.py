@@ -72,3 +72,5 @@ def test_diagonal_forward_is_not_labelled_plain_forward():
     assert lab({"target": [0.5, -0.5, 0.0]}) == "대각 전진 우"
     assert lab({"target": [0.5, 0.0, 0.0]}) == "전진 0.5" and lab({"target": [1.0, 0.0, 0.0]}) == "전진 1.0"
     assert lab({"target": [-0.5, 0.5, 0.0]}) == "대각 후진 좌"
+    assert lab({"target": [0.1, 0.0, 0.0]}) == "전진 0.1" and lab({"target": [0.2, 0.0, 0.0]}) == "전진 0.2"
+    assert lab({"target": [0.2, -0.1, 0.0]}) == "대각 전진 우"

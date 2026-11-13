@@ -341,6 +341,8 @@ def command_segment_label(command: dict) -> str:
         return "정지"
     if abs(vy) < 1e-6 and abs(wz) < 1e-6 and vx < 0:
         return "후진 %.1f" % abs(vx)
+    if abs(vy) < 1e-6 and abs(wz) < 1e-6 and vx > 0:               # 느린 전진(0.1 · 0.2) 도 곧은 전진이다
+        return "전진 %.1f" % vx
     if abs(vx) < 1e-6 and abs(wz) < 1e-6:
         return "옆 %s %.1f" % ("좌" if vy > 0 else "우", abs(vy))
     if abs(wz) < 1e-6:
