@@ -18,6 +18,8 @@ import numpy as np
 
 FORMAT = "foothold-ex42-boundary-autojudge/1"
 COMMAND_RULE = "aa1f2dbadfb619da906ab9d3047021ab7ecf23ab"
+# EX42-E1-AGAIN-SETUP-draft-1113.md section 1 (planner, lead instruction of 2026-11-13 14:31): S1 at boundary 250 only.
+COMMAND_RULE_AMENDMENT = "6b49546d65e9f0a1e1c830332510195ee81724dd"
 REWARD_RULE = "bdf2bb300d12ed373723931507afbb73efa552f8"
 LEVELS = ("L0", "L5")
 TURN_CASES = (
@@ -315,7 +317,8 @@ def side_effects(current: dict, previous: dict | None, active: dict | None,
 def propose(iteration: int, now: dict, baseline: dict, previous: dict | None,
             active: dict | None, before: dict | None) -> dict:
     """Recommendations only. Missing rule inputs prohibit an executable proposal."""
-    result = {"command_rule_commit": COMMAND_RULE, "reward_rule_commit": REWARD_RULE,
+    result = {"command_rule_commit": COMMAND_RULE, "command_rule_amendment_commit": COMMAND_RULE_AMENDMENT,
+              "reward_rule_commit": REWARD_RULE,
               "apply_ready": False, "command": {"state": "not_applicable"},
               "reward": {"state": "not_applicable", "rule_status": "draft"}}
     r = now.get("R_maintenance")
@@ -335,6 +338,10 @@ def propose(iteration: int, now: dict, baseline: dict, previous: dict | None,
         if t_drop or t_yaw_ok is False: safety.append("A2")
         if h is not None and h > 0.17: safety.append("A3")
         share = "S1" if s is not None and s < 0.85 else "S2" if s is not None else None
+        if share == "S1" and iteration >= 500:
+            # Rule table amendment of 2026-11-13 (COMMAND_RULE_AMENDMENT): from boundary 500 on, the forward share is
+            # not reduced. The low side progress is recorded and the shares stay as they are.
+            share = "S1b"
         widening = None
         if s is not None and v is not None and s >= 0.85 and v >= 181 and not safety:
             widening = "B1"

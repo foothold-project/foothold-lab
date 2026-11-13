@@ -41,11 +41,26 @@ def test_command_share_rule_keeps_missing_three_seed_safety_visible():
     baseline = {"T/L5/ref_walk0.5_wz0.5/wz": 1.0}
     now = {"R_maintenance": "PASS", "S_side_progress": 0.7, "V_fast_side_3seed": None,
            "H_zero_yaw_error": 0.1, "T/L5/ref_walk0.5_wz0.5/wz": 1.0}
-    result = judge.propose(500, now, baseline, None, profile(), None)["command"]
+    result = judge.propose(250, now, baseline, None, profile(), None)["command"]
     assert result["state"] == "PARTIAL" and result["share_rule"] == "S1"
     assert result["widen_rule"] is None and result["missing"] == ["V_3seed"]
     assert result["proposed_commands"]["shares"] == {
         "forward": 0.16, "side_left": 0.105, "side_right": 0.105, "other": 0.63}
+
+
+def test_from_boundary_500_the_forward_share_is_not_reduced():
+    """Rule table amendment of 2026-11-13: S1 moves the shares at boundary 250 only; at 500 the low side progress is
+    recorded (S1b) and the proposed profile keeps the shares it runs with."""
+    baseline = {"T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    now = {"R_maintenance": "PASS", "S_side_progress": 0.7, "V_fast_side_3seed": None,
+           "H_zero_yaw_error": 0.1, "T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    running = profile()
+    result = judge.propose(500, now, baseline, None, running, None)
+    assert result["command"]["share_rule"] == "S1b"
+    assert result["command"]["proposed_commands"]["shares"] == running["commands"]["shares"]
+    assert result["command_rule_amendment_commit"] == judge.COMMAND_RULE_AMENDMENT
+    assert judge.propose(250, now, baseline, None, profile(), None)["command"]["proposed_commands"]["shares"][
+        "forward"] == 0.16
 
 
 def test_safety_overrides_widening_and_reverts_prior_overlay():
@@ -145,8 +160,9 @@ def test_s1_threshold_is_085_not_080():
     now = {"R_maintenance": "PASS", "S_side_progress": 0.82,
            "V_fast_side_3seed": 190, "H_zero_yaw_error": 0.1,
            "T/L5/ref_walk0.5_wz0.5/wz": 1.0}
-    assert judge.propose(500, now, base, None, profile(), None)["command"]["share_rule"] == "S1"
+    assert judge.propose(250, now, base, None, profile(), None)["command"]["share_rule"] == "S1"
     now["S_side_progress"] = 0.85
+    assert judge.propose(250, now, base, None, profile(), None)["command"]["share_rule"] == "S2"
     assert judge.propose(500, now, base, None, profile(), None)["command"]["share_rule"] == "S2"
 
 
