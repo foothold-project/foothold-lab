@@ -95,6 +95,24 @@ def test_h1_p1_verify_rechecks_the_previous_window_identity(tmp_path, monkeypatc
         FlagTwoWindowJudge().verify(wrong_folder, "PASS", "PASS", plan=plan)
 
 
+def test_h1_p1_verify_refuses_a_previous_item_whose_raw_file_is_not_the_checked_windows(tmp_path, monkeypatch):
+    """Same counts, a truthful raw file of its own, but not the file the previous window wrote: only the raw sha
+    comparison catches it (the recount of the previous folder and the item's own raw check both still agree)."""
+    plan, ctx, score, _prior = _window(tmp_path, monkeypatch)
+    result = FlagTwoWindowJudge().judge(ctx, score)
+    forged = copy.deepcopy(result)
+    item = next(v for k, v in forged["stage_exit"]["items"].items() if k.endswith("_previous") and "evidence" in v)
+    original = Path(item["evidence"]["path"])
+    twin = original.with_name("twin_" + original.name)
+    body = json.loads(original.read_text(encoding="utf-8-sig"))
+    body["note"] = "same counts, other bytes"
+    twin.write_text(json.dumps(body), encoding="utf-8")
+    assert ft._sha(twin) != ft._sha(original)
+    item["evidence"] = {"path": str(twin), "sha256": ft._sha(twin)}
+    with pytest.raises(ValueError, match="not from the checked previous window"):
+        FlagTwoWindowJudge().verify(forged, "PASS", "PASS", plan=plan)
+
+
 def test_h2_the_plan_and_both_consumers_use_the_whole_64_window(tmp_path):
     plan = yaml.safe_load(TABLE.read_text(encoding="utf-8-sig"))
     assert plan["evaluation"]["flag_cells"]["valid_min"] == 64
