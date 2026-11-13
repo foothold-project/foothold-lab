@@ -11,6 +11,7 @@ never trusted) and answers HOLD when the file is absent. E6b reads the raw named
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -18,12 +19,13 @@ from pathlib import Path
 from foothold_s2.ex42_stage_judges import StageJudge, aggregate, previous_window, register
 
 POSTURE_LIMITS = {"posture_height": 0.02, "posture_roll": 0.05}                 # m, rad (CG E6a, assumption)
-POSTURE_FORMAT = "foothold-ex42-posture-cells/1"
+POSTURE_FORMAT = "foothold-ex42-posture-cells/2"
 MAPOFF_FORMAT = "foothold-ex42-mapoff-cells/1"
 MAPOFF_LEVELS = ("L3", "L6", "L9")
 MAPOFF_GAP_ENVS = 6                                                              # of 64 (D60 shape, assumption)
 M_MAX_UPDATES = 1000                                                             # 500 + 500 extension (CG E.1 M row)
 E6A_AXES = ("posture_height", "posture_height", "posture_roll")
+E6A_RANGES = ("narrow", "full", "roll")                                          # CG C8a / C8b / C8c: the 1st and 2nd height boundary differ by range
 SHA = re.compile(r"[0-9a-f]{64}")
 
 
@@ -52,11 +54,12 @@ def posture_window(row: dict | None, boundary_index: int) -> dict:
     if row is None:
         return hold("posture_cells 없음")
     axis = E6A_AXES[boundary_index]
-    if row.get("boundary_index") != boundary_index or row.get("axis") != axis:
-        raise ValueError("posture evidence boundary or axis differs from the fixed E6a order")
+    if (row.get("boundary_index") != boundary_index or row.get("axis") != axis or
+            row.get("range") != E6A_RANGES[boundary_index]):
+        raise ValueError("posture evidence boundary, axis or range differs from the fixed E6a order")
     error, limit = _number(row["tracking_error_median"]), POSTURE_LIMITS[axis]
     return {"role": "judge", "judgement": "PASS" if error <= limit else "FAIL", "axis": axis,
-            "boundary_index": boundary_index,
+            "boundary_index": boundary_index, "range": E6A_RANGES[boundary_index],
             "tracking_error_median": error, "limit": limit}
 
 
@@ -80,6 +83,16 @@ def mapoff_window(row: dict | None) -> dict:
             "gap_envs": gaps, "limit_envs": MAPOFF_GAP_ENVS}
 
 
+def _plan_axis_order(plan) -> tuple:
+    """The plan's registered E6a boundary order (CG: narrow height, full height, roll); a plan that differs is refused."""
+    rows = [r for r in (plan or {}).get("stages", []) if r.get("id") == "E6a"]
+    if not rows:
+        return E6A_AXES
+    if tuple((rows[0].get("boundary") or {}).get("axis_order") or ()) != E6A_AXES:
+        raise ValueError("plan E6a boundary.axis_order differs from the fixed E6a order")
+    return E6A_AXES
+
+
 def _prior_folder(ctx):
     match = re.fullmatch(r"model_(\d+)\.pt", Path(ctx.checkpoint).name)
     previous = int(match.group(1)) - ctx.plan["evaluation"]["interval_updates"]
@@ -92,7 +105,7 @@ class _LateJudge(StageJudge):
     def window_item(self, folder, ctx, score):              # one window of the stage's own evidence
         raise NotImplementedError
 
-    def extra_items(self, ctx, score, now, old):            # evidence beyond maintenance + the two windows
+    def extra_items(self, ctx, score, now, old, prior_score=None):   # evidence beyond maintenance + the two windows
         return {}
 
     def _counts_after_return(self, ctx) -> bool:
@@ -125,7 +138,7 @@ class _LateJudge(StageJudge):
             folder = _prior_folder(ctx)
             old = (self.window_item(folder, ctx, prior_score)
                    if prior_score and folder is not None else hold("직전 창 없음"))
-            extra = self.extra_items(ctx, score, now, old)
+            extra = self.extra_items(ctx, score, now, old, prior_score)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             now = old = hold(f"{type(exc).__name__}: {exc}")
             extra = {}
@@ -175,12 +188,70 @@ class E6aPostureTwoWindowJudge(_LateJudge):
         index = None if row is None else row.get("boundary_index")
         return posture_window(row, index if type(index) is int and 0 <= index < len(E6A_AXES) else 0)
 
-    def extra_items(self, ctx, score, now, old):
-        """Both windows must measure the same boundary (same number, hence same axis); two axes never make one exit."""
+    def extra_items(self, ctx, score, now, old, prior_score=None):
+        """Both windows must measure the same boundary (same number, hence same axis); two axes never make one exit.
+        One axis passing is only progress: the stage exits when every boundary of the fixed order has its own two PASS windows."""
         same = (now.get("boundary_index") is not None and now.get("boundary_index") == old.get("boundary_index")
                 and now.get("axis") == old.get("axis"))
         return {"same_boundary": {"role": "judge", "judgement": "PASS" if same else "HOLD",
-                                  **({} if same else {"reason": "두 창의 경계 번호 또는 축이 다름"})}}
+                                  **({} if same else {"reason": "두 창의 경계 번호 또는 축이 다름"})},
+                "axis_progress": self._axis_progress(ctx, score, prior_score)}
+
+    def _axis_progress(self, ctx, score, prior_score) -> dict:
+        """The completion history of the fixed axis order, rebuilt from every posture window of this run up to this one.
+
+        Nothing is stored apart from the raw posture_cells files themselves, so a resume reads the same history. A boundary
+        is completed by two consecutive PASS windows of that boundary; the next boundary cannot be skipped, a repeat of a
+        completed boundary never advances, and a window of another checkpoint or another range stops the whole history."""
+        try:
+            order = _plan_axis_order(ctx.plan)
+            interval = ctx.plan["evaluation"]["interval_updates"]
+            current = int(re.fullmatch(r"model_(\d+)\.pt", Path(ctx.checkpoint).name).group(1))
+            known = {current: (score or {}).get("checkpoint_sha256", ctx.checkpoint_sha)}
+            if prior_score:
+                known[current - interval] = prior_score.get("checkpoint_sha256")
+            windows = {}
+            for folder in Path(ctx.evaluation).parent.glob("m*"):
+                match = re.fullmatch(r"m(\d+)", folder.name)
+                path = folder / "posture_cells" / "posture_cells.json"
+                if match is None or int(match.group(1)) > current or not path.is_file():
+                    continue
+                n = int(match.group(1))
+                expected = known.get(n)
+                if expected is None:                                    # an older window: its own checkpoint file is the identity
+                    model = Path(ctx.checkpoint).parent / f"model_{n}.pt"
+                    if not model.is_file():
+                        raise ValueError(f"m{n} posture window has no checkpoint file to match")
+                    expected = hashlib.sha256(model.read_bytes()).hexdigest()
+                row = _read(folder / "posture_cells", "posture_cells.json", POSTURE_FORMAT, expected)
+                index = row.get("boundary_index")
+                if type(index) is not int or not 0 <= index < len(order):
+                    raise ValueError(f"m{n} posture window boundary is outside the fixed order")
+                windows[n] = {"index": index, "window": posture_window(row, index), "checkpoint_sha256": expected,
+                              "posture_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+            done, completed = 0, []
+            for n in sorted(windows):
+                row = windows[n]
+                if row["index"] > done:
+                    raise ValueError(f"m{n} measures boundary {row['index'] + 1} before boundary {done + 1} was completed")
+                before = windows.get(n - interval)
+                if (row["index"] == done and row["window"]["judgement"] == "PASS" and before is not None and
+                        before["index"] == done and before["window"]["judgement"] == "PASS"):
+                    completed.append({"boundary_index": done, "axis": order[done], "range": E6A_RANGES[done],
+                                      "windows": [n - interval, n],
+                                      "checkpoint_sha256": [before["checkpoint_sha256"], row["checkpoint_sha256"]],
+                                      "posture_sha256": [before["posture_sha256"], row["posture_sha256"]]})
+                    done += 1
+                    if done == len(order):
+                        break
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+            return hold(f"axis history unreadable: {type(exc).__name__}: {exc}")
+        row = {"role": "judge", "judgement": "PASS" if done == len(order) else "HOLD", "completed": completed,
+               "boundaries": len(order), "completed_now": bool(completed and completed[-1]["windows"][1] == current)}
+        if done < len(order):
+            row.update(next_boundary_index=done, next_axis=order[done], next_range=E6A_RANGES[done],
+                       reason=f"경계 {done} / {len(order)} 완료 · 다음 축 {order[done]} ({E6A_RANGES[done]}) · 단계 졸업 아님")
+        return row
 
 
 class MapOffTwoWindowJudge(_LateJudge):
@@ -213,7 +284,7 @@ class E6bKindTwoWindowJudge(_LateJudge):
             row["reason"] = now["reason"]
         return row
 
-    def extra_items(self, ctx, score, now, old):
+    def extra_items(self, ctx, score, now, old, prior_score=None):
         """A window with no cells, or two windows over different cells or meshes, never makes one exit."""
         same = (bool(now.get("cells")) and set(now["cells"]) == set(old.get("cells") or {})
                 and now.get("mesh_sha256") == old.get("mesh_sha256"))

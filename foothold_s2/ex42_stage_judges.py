@@ -188,7 +188,6 @@ class _E1V2(_E1):
                 ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
                 checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         score["e1_v2_evaluation"] = str(ctx.evaluation)
-        score["e1_v2_cells"] = measure_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed)
         prior = previous_e1_score(ctx.checkpoint, ctx.evaluation, ctx.plan["evaluation"]["interval_updates"],
                                   ctx.digest(ctx.cfg_path))
         return judge_e1_v2(score, baseline, measured, ctx.plan, previous=prior,
@@ -198,7 +197,7 @@ class _E1V2(_E1):
         from pathlib import Path
         from foothold_s2.ex42_e0_judge import load_baseline
         from foothold_s2.ex42_e1_judge import previous_e1_score
-        from foothold_s2.ex42_e1_v2 import judge_e1_v2, measure_cells
+        from foothold_s2.ex42_e1_v2 import judge_e1_v2, measure_cells, canonical_evidence
         from foothold_s2.ex42_score import ROOT, config, digest
         if plan is None or score.get("stage_id") != "E1":
             raise ValueError("EX-42 P1 E1 v2 plan or stage missing")
@@ -212,21 +211,21 @@ class _E1V2(_E1):
         measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         checkpoint, evaluation = Path(score["checkpoint"]), Path(score["e1_v2_evaluation"])
         actual = measure_cells(evaluation, score["checkpoint_sha256"], score["conditions"]["eval_seed"])
-        if actual != score.get("e1_v2_cells"):
+        if canonical_evidence(actual) != canonical_evidence(score.get("e1_v2_cells")):
             raise ValueError("EX-42 P1 E1 v2 raw cell evidence differs")
         prior = previous_e1_score(checkpoint, evaluation, plan["evaluation"]["interval_updates"],
                                   score["score_config_sha256"])
         if prior is not None and "e1_v2_cells" in prior:
             prior_raw = measure_cells(Path(prior["e1_v2_evaluation"]), prior["checkpoint_sha256"],
                                       prior["conditions"]["eval_seed"])
-            if prior_raw != prior["e1_v2_cells"]:
+            if canonical_evidence(prior_raw) != canonical_evidence(prior["e1_v2_cells"]):
                 raise ValueError("EX-42 P1 prior E1 v2 raw cell evidence differs")
         recalculated = judge_e1_v2(score, baseline, measured, plan, previous=prior,
                                    checkpoint=checkpoint, evaluation=evaluation,
                                    seed=score["conditions"]["eval_seed"])
         if (recalculated["judgement"] != judgment or
-                recalculated["e1_exit_v2"] != score.get("e1_exit_v2") or
-                recalculated["e1_exit"] != score.get("e1_exit")):
+                canonical_evidence(recalculated["e1_exit_v2"]) != canonical_evidence(score.get("e1_exit_v2")) or
+                canonical_evidence(recalculated["e1_exit"]) != canonical_evidence(score.get("e1_exit"))):
             raise ValueError("EX-42 P1 E1 v2 two-window judgment differs")
         return {"e1_exit": score["e1_exit"], "e1_exit_v2": score["e1_exit_v2"]}
 

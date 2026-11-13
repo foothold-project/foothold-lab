@@ -16,6 +16,8 @@ from foothold_s2.ex42_eval_once import e1_v2_commands
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text())
+V24 = json.loads((ROOT / "foothold_s2/tests/fixtures/ex42-e1-v24-treatment.json").read_text())
+next(s for s in PLAN["stages"] if s["id"] == "E1").update(V24["E1"])
 
 
 def _pass_cells():
@@ -69,27 +71,47 @@ def test_yaw_tail_and_three_seed_near_boundary():
     assert judge_cells(cells, PLAN, repeats=repeats)["items"]["yaw/eval_gt/fwd1.0"]["judgement"] == "HOLD"
 
 
-def test_fixed_treatment_fingerprint_distinguishes_adjustment(tmp_path):
-    checkpoint = tmp_path / "model_500.pt"
-    checkpoint.write_bytes(b"checkpoint")
-    for boundary in (1, 2):
-        (tmp_path / f"segment_commands_b{boundary}.json").write_text(json.dumps(
-            {"boundary_index": boundary, "stage_id": "E1", "commands": {"forward": .2}}))
-        (tmp_path / f"segment_rewards_b{boundary}_rank0.json").write_text(json.dumps(
-            {"boundary_index": boundary, "stage_id": "E1", "live": {"zero_yaw": -1}}))
-        (tmp_path / f"segment_rewards_b{boundary}_rank1.json").write_text(json.dumps(
-            {"boundary_index": boundary, "stage_id": "E1", "live": {"zero_yaw": -1}}))
-    first = treatment(tmp_path / "model_250.pt", 250)
-    second = treatment(checkpoint, 500)
-    assert first["sha256"] == second["sha256"]
-    (tmp_path / "segment_rewards_b2_rank0.json").write_text(json.dumps(
-        {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
-    with pytest.raises(ValueError, match="identity differs"):
-        treatment(checkpoint, 500)
+def _write_segment(tmp_path, boundary, plan=PLAN, *, zero_yaw=None):
+    (tmp_path / "startup_receipt.json").write_text(json.dumps({"plan_sha256": "a"*64}))
+    row = next(s for s in plan["stages"] if s["id"] == "E1")
+    rewards = {**row["rewards"]}
+    if zero_yaw is not None:
+        rewards["zero_yaw"] = zero_yaw
+    (tmp_path / f"segment_commands_b{boundary}.json").write_text(json.dumps({
+        "format": "ex42-segment-commands/1", "plan_sha256": "a"*64,
+        "boundary_index": boundary, "stage_id": "E1", "commands": row["commands"],
+        "rewards": {"values": rewards},
+        "low_forward_fraction": {"value": row["low_forward_fraction"]}}))
     for rank in (0, 1):
-        (tmp_path / f"segment_rewards_b2_rank{rank}.json").write_text(json.dumps(
-            {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
-    assert treatment(checkpoint, 500)["sha256"] != first["sha256"]
+        (tmp_path / f"segment_rewards_b{boundary}_rank{rank}.json").write_text(json.dumps({
+            "format": "ex42-segment-rewards/1", "plan_sha256": "a"*64,
+            "boundary_index": boundary, "stage_id": "E1", "live": rewards}))
+
+
+def test_treatment_uses_the_segment_that_made_each_boundary_not_the_next_one(tmp_path):
+    (tmp_path / "startup_receipt.json").write_text(json.dumps({"plan_sha256": "a"*64}))
+    first = treatment(tmp_path / "model_250.pt", 250, PLAN)
+    assert first["state"] == "complete" and first["source"] == "plan"
+    assert not list(tmp_path.glob("segment_*"))  # score m250 is written before b1 exists
+    _write_segment(tmp_path, 1)
+    second = treatment(tmp_path / "model_500.pt", 500, PLAN)
+    assert second["boundary_index"] == 1 and second["sha256"] == first["sha256"]
+    command_path = tmp_path / "segment_commands_b1.json"
+    changed_command = json.loads(command_path.read_text())
+    changed_command["low_forward_fraction"]["value"] = .2
+    command_path.write_text(json.dumps(changed_command))
+    assert treatment(tmp_path / "model_500.pt", 500, PLAN)["sha256"] != first["sha256"]
+    _write_segment(tmp_path, 1)
+    _write_segment(tmp_path, 2, zero_yaw=-2)
+    assert treatment(tmp_path / "model_500.pt", 500, PLAN)["sha256"] == first["sha256"]
+    for boundary in (3, 4, 5, 6):
+        _write_segment(tmp_path, boundary)
+    last = treatment(tmp_path / "model_1750.pt", 1750, PLAN)
+    assert last["boundary_index"] == 6 and last["sha256"] == first["sha256"]
+    (tmp_path / "segment_rewards_b6_rank1.json").write_text(json.dumps({
+        "boundary_index": 7, "stage_id": "E1", "live": next(s for s in PLAN["stages"] if s["id"] == "E1")["rewards"]}))
+    with pytest.raises(ValueError, match="identity differs"):
+        treatment(tmp_path / "model_1750.pt", 1750, PLAN)
 
 
 def test_failed_axis_is_not_hidden_by_near_threshold_or_repeat():
@@ -134,27 +156,28 @@ def test_approved_threshold_mutations_change_only_the_target_cell():
     assert judge_cells(cells, PLAN)["items"]["yaw/eval_gt/fwd1.0"]["judgement"] == "FAIL"
 
 
-def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_path):
+def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_path, monkeypatch):
     from foothold_s2.tests.test_ex42_e1_judge_cpu import _cells, _inputs, _landing
 
     score, baseline, measured, plan = _inputs()
+    next(s for s in plan["stages"] if s["id"] == "E1").update(copy.deepcopy(V24["E1"]))
+    score["execution_plan_sha256"] = "a"*64
+    score["e1_v2_evaluation"] = str(tmp_path)
     plan["evaluation"]["e1_exit_v2"] = PLAN["evaluation"]["e1_exit_v2"]
     score["d44_cells"] = _cells(plan, tmp_path)
     previous = copy.deepcopy(score)
-    for boundary in (1, 2):
-        (tmp_path / f"segment_commands_b{boundary}.json").write_text(json.dumps(
-            {"boundary_index": boundary, "stage_id": "E1", "commands": {"forward": .2}}))
-        for rank in (0, 1):
-            (tmp_path / f"segment_rewards_b{boundary}_rank{rank}.json").write_text(json.dumps(
-                {"boundary_index": boundary, "stage_id": "E1", "live": {"zero_yaw": -1}}))
+    _write_segment(tmp_path, 1, plan)
     current_cells, prior_cells = _pass_cells(), _pass_cells()
     prior_cells["yaw"]["eval_gt"]["fwd1.0"]["p90_abs_rad"] = .19
     assert judge_cells(prior_cells, plan)["judgement"] == "HOLD"
     previous["e1_v2_cells"] = prior_cells
     previous["e1_exit_v2"] = {"current": judge_cells(prior_cells, plan, repeats={
         7: copy.deepcopy(prior_cells), 13: copy.deepcopy(prior_cells)})}
-    previous["e1_v2_treatment"] = treatment(tmp_path / "model_250.pt", 250)
+    previous["e1_v2_treatment"] = {"state": "HOLD", "reason": "old scorer looked for b1 before it existed"}
     score["e1_v2_cells"] = current_cells
+    # This is the two-window combiner test. Real producer/raw validation is
+    # covered independently by test_ex42_e1_source_identity_cpu.py.
+    monkeypatch.setattr("foothold_s2.ex42_e1_v2._verified_cells", lambda s, *_: s["e1_v2_cells"])
     for case in ("stop_restart_eval_gt", "stop_restart_eval_pred"):
         score["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)
         previous["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)
@@ -165,14 +188,13 @@ def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_p
     assert set(result["e1_exit_v2"]["d44_stop_restart"]) == {
         "stop_restart_eval_gt", "stop_restart_eval_pred"}
     assert result["e1_exit_v2"]["d44_stop_restart_role"] == "record_only"
-    (tmp_path / "segment_rewards_b2_rank1.json").write_text(json.dumps(
-        {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
-    with pytest.raises(ValueError, match="identity differs"):
-        judge_e1_v2(score, baseline, measured, plan, previous=previous,
-                    checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
-    for rank in (0, 1):
-        (tmp_path / f"segment_rewards_b2_rank{rank}.json").write_text(json.dumps(
-            {"boundary_index": 2, "stage_id": "E1", "live": {"zero_yaw": -2}}))
+    changed_rewards = {**next(s for s in plan["stages"] if s["id"] == "E1")["rewards"], "zero_yaw": -2}
+    (tmp_path / "segment_rewards_b1_rank1.json").write_text(json.dumps(
+        {"boundary_index": 1, "stage_id": "E1", "live": changed_rewards}))
+    invalid = judge_e1_v2(score, baseline, measured, plan, previous=previous,
+                          checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
+    assert invalid["judgement"] == "HOLD" and "identity differs" in invalid["reason"]
+    _write_segment(tmp_path, 1, plan, zero_yaw=-2)
     changed = judge_e1_v2(score, baseline, measured, plan, previous=previous,
                           checkpoint=tmp_path / "model_500.pt", evaluation=tmp_path, seed=42)
     assert changed["judgement"] == "HOLD"
