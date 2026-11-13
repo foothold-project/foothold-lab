@@ -8,8 +8,8 @@ file outside both (EX42_SEGMENT_ADJUST):
                         "commands": {"shares": {...}, "ranges": {...}, "turn_overlay": {"fraction": f, "wz_abs": [a, b]}},
                         "rewards": {"track_lin_vel_std": s, "track_ang_vel_std": s, "feet_air_time": w, "foot_slip": w, "zero_yaw": w}}}}
 
-An entry carries `commands`, `rewards` or both and holds from its boundary on, each kind until a later entry of the
-same kind. An entry for a boundary the run has not reached is refused.
+An entry carries `commands`, `rewards`, `low_forward_fraction` or several of them and holds from its boundary on, each
+kind until a later entry of the same kind. An entry for a boundary the run has not reached is refused.
 
 * commands: only a stage whose plan row has `command_adjust_limits`, only at a boundary before its level cap first
   rises (E1: 1 and 2), every value inside those limits.
@@ -18,6 +18,12 @@ same kind. An entry for a boundary the run has not reached is refused.
   the plan so that a run already started can use it; its SHA is recorded). The weight cells go on the stage's reward
   table, the two tracking widths on the env config (`apply_reward_params`), and the live reward manager is read back
   (`reward_readback`).
+
+* low_forward_fraction (2026-11-13): the share of the forward commands drawn from the slow end of the forward range
+  (`mixed_core.resample_stage`: below 0.3 m/s; the source stage has 0.20). A number, at the boundaries where commands
+  may change, inside `command_cells.low_forward_fraction` of the same limits file. While that file has no such cell
+  (not approved yet) an entry that names it is refused. The command ranges do not change, so the per-step command
+  check is untouched.
 
 Each started segment leaves `segment_commands_b<k>.json` in the run folder, in the shape of the input (a record's
 `commands` / `rewards.values` can be pasted into the next file); a later start must reproduce what the earlier
@@ -42,6 +48,7 @@ WEIGHT_CELLS = {"feet_air_time": "ex41_feet_air_time", "foot_slip": "ex41_foot_s
                 "zero_yaw": "ex41_zero_yaw"}       # yaw rate while the turn command is zero (heading drift, 2026-11-13)
 STD_CELLS = {"track_lin_vel_std": "track_lin_vel", "track_ang_vel_std": "track_ang_vel"}    # cell -> env reward term
 REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS)
+COMMAND_CELLS = ("low_forward_fraction",)          # command distribution cells outside the 13-slot profile
 
 
 def adjustable_boundaries(plan, stage_id) -> tuple[int, ...]:
@@ -67,7 +74,13 @@ def reward_limits(path=REWARD_LIMITS) -> dict | None:
             or any(not isinstance(pair, list) or len(pair) != 2 or not all(number(v) for v in pair) or pair[0] > pair[1]
                    for pair in cells.values())):
         raise ValueError(f"EX-42 reward adjust limits need schema {REWARD_LIMITS_SCHEMA} and [low, high] for {list(REWARD_CELLS)}")
-    return {"sha256": hashlib.sha256(raw).hexdigest(), "cells": {name: (float(a), float(b)) for name, (a, b) in cells.items()}}
+    extra = document.get("command_cells", {})
+    if (not isinstance(extra, dict) or not set(extra) <= set(COMMAND_CELLS)
+            or any(not isinstance(pair, list) or len(pair) != 2 or not all(number(v) for v in pair)
+                   or not 0.0 <= pair[0] <= pair[1] <= 1.0 for pair in extra.values())):
+        raise ValueError(f"EX-42 adjust limits: command_cells may hold [low, high] inside 0..1 for {list(COMMAND_CELLS)} only")
+    return {"sha256": hashlib.sha256(raw).hexdigest(), "cells": {name: (float(a), float(b)) for name, (a, b) in cells.items()},
+            "command_cells": {name: (float(a), float(b)) for name, (a, b) in extra.items()}}
 
 
 def _plain(profile) -> dict | None:
@@ -108,6 +121,15 @@ def _rewards(cell, limits, label) -> dict:
     return {name: float(cell[name]) for name in REWARD_CELLS}
 
 
+def _low_forward(value, limits, label) -> float:
+    fence = ((limits or {}).get("command_cells") or {}).get("low_forward_fraction")
+    if fence is None:
+        raise ValueError(f"EX-42 {label} low_forward_fraction: the limits file has no approved limits for it")
+    if type(value) not in (int, float) or not math.isfinite(value) or not fence[0] - TOL <= value <= fence[1] + TOL:
+        raise ValueError(f"EX-42 {label} low_forward_fraction must be a number inside the approved limits {list(fence)}")
+    return float(value)
+
+
 def stage_rewards(plan, stage_id, limits=None) -> dict | None:
     """The reward cells the stage's own plan row registers (`rewards`): in force from the first update of the stage,
     inside the same limits as an adjustment. None when the row has no cell (the source stage's values stay)."""
@@ -124,7 +146,7 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
     nor an entry names them (the source stage's values stay); an entry number is None when the plan row holds."""
     base = stage_commands(plan, stage_id)
     out = {"commands": _plain(base), "commands_entry": None, "rewards": stage_rewards(plan, stage_id, limits),
-           "rewards_entry": None}
+           "rewards_entry": None, "low_forward_fraction": None, "low_forward_fraction_entry": None}
     if document is None:
         return out
     if (not isinstance(document, dict) or set(document) != {"schema", "stage_id", "plan_sha256", "segments"}
@@ -142,10 +164,11 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
         if int(key) > boundary_index:
             raise ValueError(f"EX-42 {stage_id} segment adjustment names boundary {key} before the run reached it")
         if (not isinstance(entry, dict) or not {"decided_at", "reason", "evidence"} <= set(entry)
-                or not set(entry) <= {"decided_at", "reason", "evidence", "commands", "rewards"}
-                or not {"commands", "rewards"} & set(entry)
+                or not set(entry) <= {"decided_at", "reason", "evidence", "commands", "rewards", *COMMAND_CELLS}
+                or not {"commands", "rewards", *COMMAND_CELLS} & set(entry)
                 or any(not isinstance(entry[name], str) or not entry[name].strip() for name in ("decided_at", "reason", "evidence"))):
-            raise ValueError(f"EX-42 {label} needs decided_at, reason, evidence (written text) and commands or rewards")
+            raise ValueError(f"EX-42 {label} needs decided_at, reason, evidence (written text) and commands, rewards "
+                             f"or low_forward_fraction")
         if "commands" in entry:
             if int(key) not in allowed:
                 raise ValueError(f"EX-42 {stage_id} segment adjustment may only name boundaries {list(allowed)} for commands")
@@ -154,6 +177,12 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
             out.update(commands=_plain(profile), commands_entry=int(key))
         if "rewards" in entry:
             out.update(rewards=_rewards(entry["rewards"], limits, label), rewards_entry=int(key))
+        if "low_forward_fraction" in entry:
+            if int(key) not in allowed:
+                raise ValueError(f"EX-42 {stage_id} segment adjustment may only name boundaries {list(allowed)} for "
+                                 f"low_forward_fraction")
+            out.update(low_forward_fraction=_low_forward(entry["low_forward_fraction"], limits, label),
+                       low_forward_fraction_entry=int(key))
     return out
 
 
@@ -164,8 +193,14 @@ def read(path, plan, stage_id, boundary_index, limits=None) -> dict:
     state = resolve(plan, stage_id, document, boundary_index, limits)
     told = lambda key: (document["segments"][str(key)] if key is not None else {})   # noqa: E731
     entry, reward_entry = told(state["commands_entry"]), told(state["rewards_entry"])
+    low_entry = told(state["low_forward_fraction_entry"])
     adjusted = state["commands_entry"] is not None
-    return {"format": RECEIPT, "stage_id": stage_id, "plan_sha256": plan.sha256, "boundary_index": int(boundary_index),
+    # only a run that uses the cell records it: the record of every other segment keeps the shape it had before
+    low = {} if state["low_forward_fraction_entry"] is None else {"low_forward_fraction": {
+        "entry": state["low_forward_fraction_entry"], "value": state["low_forward_fraction"],
+        "decided_at": low_entry.get("decided_at"), "reason": low_entry.get("reason"),
+        "evidence": low_entry.get("evidence"), "limits_sha256": limits["sha256"]}}
+    return {**low, "format": RECEIPT, "stage_id": stage_id, "plan_sha256": plan.sha256, "boundary_index": int(boundary_index),
             "source": "adjust_file" if adjusted else "plan", "entry": state["commands_entry"],
             "file_sha256": hashlib.sha256(raw).hexdigest() if path else None,
             "decided_at": entry.get("decided_at"), "reason": entry.get("reason"), "evidence": entry.get("evidence"),
@@ -203,7 +238,8 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
     for k in range(1, boundary_index):       # what this start says segment k ran with must be what segment k recorded
         said = resolve(plan, stage_id, _as_of(document, k), k, limits)
         ran = earlier.get(k) or {"commands": resolve(plan, stage_id, None, k, limits)["commands"]}
-        if said["commands"] != _plain(ran.get("commands")) or said["rewards"] != (ran.get("rewards") or {}).get("values"):
+        if (said["commands"] != _plain(ran.get("commands")) or said["rewards"] != (ran.get("rewards") or {}).get("values")
+                or said["low_forward_fraction"] != (ran.get("low_forward_fraction") or {}).get("value")):
             raise ValueError(f"EX-42 {stage_id} segment adjustment differs from what segment {k} ran with")
     stage, commands, rewards = plan_view.stages[0], record["commands"], record["rewards"]["values"]
     if commands is not None:
@@ -213,6 +249,8 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
                         turn_overlay=(overlay["fraction"], overlay["wz_abs"][0], overlay["wz_abs"][1]))
     if rewards is not None:
         stage = replace(stage, rewards={**stage.rewards, **{name: rewards[name] for name in WEIGHT_CELLS}})
+    if "low_forward_fraction" in record:
+        stage = replace(stage, low_forward_fraction=record["low_forward_fraction"]["value"])
     plan_view.stages = [stage]
     if write and boundary_index >= 1:
         target = Path(log_dir) / f"segment_commands_b{boundary_index}.json"

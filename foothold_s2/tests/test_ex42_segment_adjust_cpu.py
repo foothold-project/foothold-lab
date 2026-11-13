@@ -620,3 +620,104 @@ def test_a_row_cell_outside_the_limits_or_malformed_stops_the_start(row_plan, tm
         row["rewards"] = {k: v for k, v in ROW_REWARDS.items() if k != "zero_yaw"}
         adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path),
                           write=False)
+
+
+# ---- low_forward_fraction (2026-11-13): the share of forward commands drawn from the slow end, a cell outside the plan ----
+
+LOW_NOTE = {"decided_at": "t", "reason": "slow forward commands are rarely drawn", "evidence": "boundary 250 sheet"}
+
+
+def limits_with_low_forward(tmp_path, fence=(0.2, 0.4)):
+    path = tmp_path / "limits_low.yaml"
+    path.write_text(adj.REWARD_LIMITS.read_text(encoding="utf-8")
+                    + f"command_cells:\n  low_forward_fraction: [{fence[0]}, {fence[1]}]\n", encoding="utf-8")
+    return path
+
+
+def start_low(view, plan, tmp_path, k, value, limits, write=True, **more):
+    path = tmp_path / f"adjust_low_{k}.json"
+    path.write_text(json.dumps(document(plan, **{f"b{more.pop('at', k)}": {**LOW_NOTE, "low_forward_fraction": value, **more}})),
+                    encoding="utf-8")
+    return adj.start_segment(view, plan, "E1", boundary_index=k, path=str(path), log_dir=str(tmp_path), write=write,
+                             limits_path=limits)
+
+
+def slow_forward_share(stage, n=400_000):
+    import torch
+    from foothold_s2.commands import mixed_core as mc
+    out = mc.resample_stage(mc.make_generator(11), n, stage, torch.zeros(n))
+    forward = out["slot"] == mc.EX39_SLOTS.index("forward")
+    return (float((forward & (out["cmd"][:, 0] < 0.3)).float().mean()), float(forward.float().mean()), out)
+
+
+def test_the_shipped_limits_do_not_open_low_forward_fraction_yet(plan, view, tmp_path):
+    """Not approved yet: the shipped limits file has no command cell, so an entry that names it is refused."""
+    assert adj.reward_limits()["command_cells"] == {}
+    path = tmp_path / "adjust.json"
+    path.write_text(json.dumps(document(plan, b1={**LOW_NOTE, "low_forward_fraction": 0.4})), encoding="utf-8")
+    with pytest.raises(ValueError, match="no approved limits"):
+        adj.start_segment(view, plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+    assert view.stages[0].low_forward_fraction == 0.2 and not list(tmp_path.glob("segment_commands_b*"))
+
+
+def test_low_forward_fraction_reaches_the_sampler_and_the_record(plan, view, tmp_path):
+    import torch
+    from foothold_s2.curriculum import continuous
+    before, forward_before, _ = slow_forward_share(view.stages[0])
+    assert view.stages[0].low_forward_fraction == 0.2 and abs(before - 0.19 * 0.2) < 0.002      # 3.8 % of all commands
+    record = start_low(view, plan, tmp_path, 1, 0.4, limits_with_low_forward(tmp_path))
+    stage = view.stages[0]
+    after, forward_after, out = slow_forward_share(stage)
+    assert stage.low_forward_fraction == 0.4 and abs(after - 0.19 * 0.4) < 0.002                # 7.6 %
+    assert abs(forward_after - forward_before) < 0.003                                          # the forward share itself stays
+    assert record["low_forward_fraction"]["value"] == 0.4 and record["low_forward_fraction"]["entry"] == 1
+    assert record["source"] == "plan" and record["commands"] == base(plan)                      # the 13-slot profile is the plan's
+    assert json.loads((tmp_path / "segment_commands_b1.json").read_text(encoding="utf-8")) == record
+    n = out["cmd"].shape[0]                                                                     # ranges unchanged: the step check holds
+    bad = continuous.command_bad(out["cmd"], out["slot"], out["heading"], torch.zeros(n, dtype=torch.long),
+                                 types.SimpleNamespace(stages=[stage]))
+    assert not bool(bad.any())
+
+
+def test_a_segment_without_the_cell_keeps_the_old_record_shape(plan, view, tmp_path):
+    record = start(view, plan, tmp_path, 1)
+    assert "low_forward_fraction" not in record and view.stages[0].low_forward_fraction == 0.2
+
+
+@pytest.mark.parametrize("value", [0.41, 0.19, -0.1, 1.0, "0.4", None, True])
+def test_low_forward_fraction_outside_the_limits_or_not_a_number_is_refused(plan, view, tmp_path, value):
+    with pytest.raises(ValueError, match="low_forward_fraction must be a number inside the approved limits"):
+        start_low(view, plan, tmp_path, 1, value, limits_with_low_forward(tmp_path))
+    assert view.stages[0].low_forward_fraction == 0.2
+
+
+def test_low_forward_fraction_only_where_commands_may_change(plan, view, tmp_path):
+    limits = limits_with_low_forward(tmp_path)
+    with pytest.raises(ValueError, match="may only name boundaries"):
+        start_low(view, plan, tmp_path, 3, 0.4, limits)
+    record = start_low(view, plan, tmp_path, 2, 0.3, limits)
+    assert record["low_forward_fraction"]["entry"] == 2
+
+
+def test_later_segments_keep_it_and_a_start_that_drops_it_is_refused(plan, source, tmp_path):
+    limits = limits_with_low_forward(tmp_path)
+    fresh = lambda: te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64},   # noqa: E731
+                                                      ex42_plan=plan, stage_id="E1")
+    start_low(fresh(), plan, tmp_path, 1, 0.4, limits)
+    start_low(fresh(), plan, tmp_path, 2, 0.4, limits, at=1)                        # every segment leaves its record
+    later = fresh()
+    record = start_low(later, plan, tmp_path, 3, 0.4, limits, at=1)                 # segment 3, the entry of boundary 1 holds
+    assert later.stages[0].low_forward_fraction == 0.4 and record["low_forward_fraction"]["entry"] == 1
+    with pytest.raises(ValueError, match="differs from what segment 1 ran with"):  # the file no longer names it
+        adj.start_segment(fresh(), plan, "E1", boundary_index=3, path=None, log_dir=str(tmp_path), write=True,
+                          limits_path=limits)
+
+
+def test_a_limits_file_with_a_bad_command_cell_is_refused(tmp_path):
+    for fence in ((0.4, 0.2), (-0.1, 0.4), (0.2, 1.1)):
+        with pytest.raises(ValueError, match="command_cells may hold"):
+            adj.reward_limits(limits_with_low_forward(tmp_path, fence))
+    bad = tmp_path / "other.yaml"
+    bad.write_text(adj.REWARD_LIMITS.read_text(encoding="utf-8") + "command_cells:\n  other_cell: [0.1, 0.2]\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="command_cells may hold"):
+        adj.reward_limits(bad)
