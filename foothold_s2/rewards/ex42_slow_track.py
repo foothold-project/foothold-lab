@@ -29,7 +29,7 @@ DEFAULTS = {"speed_min": 0.1, "speed_max": 0.3, "sigma": 0.5}
 TERM = "ex42_slow_track"
 
 
-def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, excluded=None):
+def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, excluded=None, turn_exempt=None):
     """(N,) value of the term from body-frame planar velocity (N, 2), planar command (N, 2), turn command (N,) and the
     (N,) mask of the envs the contract leaves out (heading envs, flag envs)."""
     if not (0.0 < speed_min < speed_max and sigma > 0.0):
@@ -37,7 +37,10 @@ def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, exc
     if not (torch.isfinite(cmd_xy).all() and torch.isfinite(cmd_wz).all()):
         raise ValueError("slow track: nonfinite command")
     speed = torch.linalg.vector_norm(cmd_xy, dim=-1)
-    active = (speed >= speed_min) & (speed < speed_max) & (cmd_wz.abs() < 1e-6)
+    straight = cmd_wz.abs() < 1e-6
+    if turn_exempt is not None:
+        straight = straight | turn_exempt.bool()
+    active = (speed >= speed_min) & (speed < speed_max) & straight
     if excluded is not None:
         active &= ~excluded.bool()
     if (active & ~torch.isfinite(vel_xy).all(-1)).any():
@@ -47,7 +50,7 @@ def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, exc
     return torch.where(active, torch.exp(-(relative / sigma) ** 2), torch.zeros_like(speed))
 
 
-def slow_track_term(env, command_name, speed_min, speed_max, sigma):
+def slow_track_term(env, command_name, speed_min, speed_max, sigma, include_heading=False):
     """Reward manager term. The reward manager does not call it while its weight is 0."""
     command = env.command_manager.get_command(command_name)
     term = env.command_manager.get_term(command_name)
@@ -56,7 +59,9 @@ def slow_track_term(env, command_name, speed_min, speed_max, sigma):
         raise ValueError("slow track needs the command term's heading and is_flag_env masks")
     velocity = env.scene["robot"].data.root_lin_vel_b[:, :2]
     return slow_track_value(velocity, command[:, :2], command[:, 2], speed_min=float(speed_min),
-                            speed_max=float(speed_max), sigma=float(sigma), excluded=heading.bool() | flag.bool())
+                            speed_max=float(speed_max), sigma=float(sigma),
+                            excluded=flag.bool() if include_heading else heading.bool() | flag.bool(),
+                            turn_exempt=heading.bool() if include_heading else None)
 
 
 def register(env_cfg, term_cfg_class=None) -> bool:
@@ -66,5 +71,22 @@ def register(env_cfg, term_cfg_class=None) -> bool:
     if term_cfg_class is None:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, TERM, term_cfg_class(func=slow_track_term, weight=0.0,
-                                                  params={"command_name": "base_velocity", **DEFAULTS}))
+                                                  params={"command_name": "base_velocity", **DEFAULTS,
+                                                          "include_heading": False}))
     return True
+
+
+def configure_from_plan(env_cfg, row, term_cfg_class=None) -> dict:
+    """Apply the approved E1 start cells before the environment is constructed."""
+    monitor = row.get("live_monitor", {})
+    if monitor.get("enabled") is not True:
+        raise ValueError("EX-42 slow_track start needs an enabled live monitor")
+    weight = monitor.get("initial_slow_track_weight")
+    heading = row.get("slow_track_heading")
+    if type(weight) not in (int, float) or not 0 <= weight <= 0.3 or type(heading) is not bool:
+        raise ValueError("EX-42 slow_track start needs approved weight and heading cells")
+    register(env_cfg, term_cfg_class)
+    term = getattr(env_cfg.rewards, TERM)
+    term.weight = float(weight)
+    term.params["include_heading"] = heading
+    return {"weight": float(term.weight), "include_heading": bool(term.params["include_heading"])}

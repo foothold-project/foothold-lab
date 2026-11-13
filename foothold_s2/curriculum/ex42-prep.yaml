@@ -281,9 +281,11 @@ stages:
   live_monitor:
     enabled: true
     moving_updates: 20
-    decline_from_peak: 0.05
+    # Fix the training-env signal threshold after the Kit five-update noise probe.
+    decline_from_peak: null
     map_off_survival_updates: 50
-    map_off_survival_drop_alert: 0.05
+    map_off_survival_drop_alert: null
+    initial_slow_track_weight: 0.2
     alert_run_env: EX42_ALERT_RUN_ID
     initial: {slow_forward: learning, side_left: learning, side_right: learning}
   live_adjustment:
@@ -299,7 +301,10 @@ stages:
       slow_track_speed_min: [0.1, 0.1]
       slow_track_speed_max: [0.3, 0.3]
     command_limits:
-      low_forward_fraction: [0.2, 0.4]
+      low_forward_fraction: [0.2, 0.5]
+  # Team lead decision bc66f6ee. The start adapter must consume both cells.
+  low_forward_fraction: 0.5
+  slow_track_heading: true
   authorization_contract:
     validator: legacy_e1
     source_stage_ids:
