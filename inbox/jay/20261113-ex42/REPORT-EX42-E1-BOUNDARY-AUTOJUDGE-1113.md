@@ -6,33 +6,37 @@
 > 요지: 출발점 대비와 직전 경계 대비를 재고, 결측은 결측으로 둔다.
 > 상태: CPU 집계 · 조정 제안은 미실행
 
-| 경계 | 전체 점수 | 유지 | 옆 S (출발점 · 직전 증감) | 느린 전진 F1 | 느린 회전 P1 | 두 번 하락 | 큰 하락 | 부작용 | 명령 · 보상 제안 |
-|---|---|---|---|---|---|---|---|---|---|
-| m250 | FAIL | PASS | 0.760 (0.024 · 미측) | 0.036 | 0.734 | 0 | 0 | 0 | PARTIAL · not_applicable |
-| m500 | FAIL | PASS | 0.738 (0.003 · -0.022) | 0.053 | 0.735 | 0 | 9 | 0 | PARTIAL · not_applicable |
-| m750 | FAIL | PASS | 0.799 (0.064 · 0.061) | 0.001 | 0.740 | 6 | 6 | 0 | FROZEN · PROPOSED_DRAFT |
-| m1000 | FAIL | PASS | 0.778 (0.043 · -0.020) | 0.019 | 0.755 | 17 | 3 | 0 | FROZEN · PROPOSED_DRAFT |
-| m1250 | FAIL | PASS | 0.786 (0.051 · 0.008) | -0.015 | 0.690 | 2 | 20 | 0 | FROZEN · PROPOSED_DRAFT |
-| m1500 | FAIL | PASS | 0.689 (-0.047 · -0.098) | 0.002 | 0.718 | 14 | 9 | 0 | FROZEN · PROPOSED_DRAFT |
-| m1750 | FAIL | PASS | 0.731 (-0.004 · 0.042) | -0.004 | 0.745 | 18 | 15 | 0 | FROZEN · PROPOSED_DRAFT |
-| m2000 | FAIL | PASS | 0.715 (-0.021 · -0.016) | 0.077 | 0.746 | 6 | 8 | 0 | FROZEN · PROPOSED_DRAFT |
+| 경계 | 전체 점수 | 유지 | 옆 S (출발점 · 직전 증감) | 몸앞 전진 L0 0.1 / 0.2 | 몸앞 전진 L5 0.1 / 0.2 | 느린 전진 F1 | 느린 회전 P1 | 두 번 하락 | 큰 하락 | 부작용 | 명령 · 보상 제안 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| m250 | FAIL | PASS | 0.760 (0.024 · 미측) | 0.036 / 0.431 | 0.036 / 0.402 | 0.036 | 0.734 | 0 | 0 | 0 | PARTIAL · not_applicable |
+| m500 | FAIL | PASS | 0.738 (0.003 · -0.022) | 0.054 / 0.688 | 0.053 / 0.672 | 0.053 | 0.735 | 0 | 9 | 0 | PARTIAL · not_applicable |
+| m750 | FAIL | PASS | 0.799 (0.064 · 0.061) | 0.001 / 0.344 | -0.000 / 0.338 | 0.001 | 0.740 | 6 | 10 | 0 | FROZEN · PROPOSED_DRAFT |
+| m1000 | FAIL | PASS | 0.778 (0.043 · -0.020) | 0.020 / 0.351 | 0.019 / 0.346 | 0.019 | 0.755 | 17 | 3 | 0 | FROZEN · PROPOSED_DRAFT |
+| m1250 | FAIL | PASS | 0.786 (0.051 · 0.008) | -0.015 / 0.155 | -0.015 / 0.150 | -0.015 | 0.690 | 2 | 22 | 0 | FROZEN · PROPOSED_DRAFT |
+| m1500 | FAIL | PASS | 0.689 (-0.047 · -0.098) | 0.002 / 0.082 | 0.002 / 0.081 | 0.002 | 0.718 | 16 | 11 | 0 | FROZEN · PROPOSED_DRAFT |
+| m1750 | FAIL | PASS | 0.731 (-0.004 · 0.042) | -0.004 / 0.048 | -0.004 / 0.047 | -0.004 | 0.745 | 20 | 15 | 0 | FROZEN · PROPOSED_DRAFT |
+| m2000 | FAIL | PASS | 0.715 (-0.021 · -0.016) | 0.084 / 0.401 | 0.082 / 0.396 | 0.077 | 0.746 | 6 | 8 | 0 | FROZEN · PROPOSED_DRAFT |
 
 V는 3시드 경계 자료가 없어 미측정이다. 현재 경계별 반복 폭도 없어 폭 급증 깃발은 미측정이다.
 G1이 brief에 없는 경계는 같은 저장본 SHA의 형제 map_modes.json을 재집계했다.
+몸앞 전진 비율은 env별 부호 있는 Σ(vx_body·alive)dt ÷ (명령 vx·생존 시간)의 중앙값이다. 원점 X나 절댓값을 쓰지 않는다.
 유지 칸은 전체 점수와 구분해 maintenance_judgement를 읽었다.
 큰 하락 >0.05, 반복 폭 급증 >2배는 경보 표시에만 쓰는 가정이며 승인된 조정 문턱이 아니다.
 보상 규칙 bdf2bb30은 초안이다. JSON은 제안이며 학습 설정을 바꾸지 않는다.
+
 ## 재현 경로
 
 입력은 `/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m<N>/ex42_score.json`, 같은 실행 폴더의 `segment_commands_b<N>.json` 및 `segment_rewards_b<N>_rank{0,1}.json`, `/home/jay/data/foothold/s2_lab/hipan_g1_20261112/briefs/m<N>_L{0,5}.json`이다. 원자료와 영수증 SHA는 출력 JSON의 `source` 칸에 있다.
 
 ```bash
-python3 -m foothold_s2.tools.ex42_boundary_autojudge \
+/home/jay/miniforge3/envs/isaac311/bin/python -m foothold_s2.tools.ex42_boundary_autojudge \
   --score-root /home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores \
   --brief-root /home/jay/data/foothold/s2_lab/hipan_g1_20261112/briefs \
   --adjust-root /home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150 \
   --out /home/jay/mai/tmp/scripter/boundary-1113/actual
 ```
+
+몸앞 전진 비율은 `env_arrays_eval_gt_fwd{0.1,0.2}.npz`의 64 env별 `vx`와 `alive`로 직접 계산한다. verifier 독립 재계산 `/home/jay/mai/tmp/verifier-lx/g1b-ratio-1113/VERIFY-G1B-RATIO-1113.md`의 L0 16칸과 여섯 자리까지 일치한다. 이 비율은 세계 X 순변위가 아니다.
 
 산출은 `boundary_judgment.json` (경계별 숫자와 제안), `boundary_metrics.csv` (모든 지표의 출발점 및 직전 경계 차), `boundary_alarms.csv` (깃발별 지표), `REPORT.md`이다. 영수증 누락이나 신원 불일치는 예외로 멈춘다. 이 도구는 조정 값을 쓰거나 학습을 기동하지 않는다.
 

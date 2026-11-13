@@ -1,6 +1,8 @@
 """Known-answer CPU checks for EX-42 boundary rule ordering and source identity."""
 import json
 
+import numpy as np
+
 import pytest
 
 from foothold_s2.tools import ex42_boundary_autojudge as judge
@@ -136,3 +138,75 @@ def test_reward_profile_uses_two_live_ranks_and_rejects_mismatch(tmp_path):
     (tmp_path / "segment_rewards_b3_rank1.json").write_text(json.dumps(wrong), encoding="utf-8")
     with pytest.raises(ValueError, match="ranks or requested"):
         judge._profile(receipt, tmp_path)
+
+
+def test_s1_threshold_is_085_not_080():
+    base = {"T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    now = {"R_maintenance": "PASS", "S_side_progress": 0.82,
+           "V_fast_side_3seed": 190, "H_zero_yaw_error": 0.1,
+           "T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    assert judge.propose(500, now, base, None, profile(), None)["command"]["share_rule"] == "S1"
+    now["S_side_progress"] = 0.85
+    assert judge.propose(500, now, base, None, profile(), None)["command"]["share_rule"] == "S2"
+
+
+def test_a1_threshold_is_171_not_161():
+    base = {"T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    now = {"R_maintenance": "PASS", "S_side_progress": 0.9,
+           "V_fast_side_3seed": 165, "H_zero_yaw_error": 0.1,
+           "T/L5/ref_walk0.5_wz0.5/wz": 1.0}
+    assert "A1" in judge.propose(500, now, base, None, profile(), None)["command"]["safety_rules"]
+    now["V_fast_side_3seed"] = 171
+    assert "A1" not in judge.propose(500, now, base, None, profile(), None)["command"]["safety_rules"]
+
+
+def test_command_adjustment_stops_after_m500():
+    now = {"R_maintenance": "PASS", "S_side_progress": 0.5,
+           "V_fast_side_3seed": 150, "H_zero_yaw_error": 0.2}
+    result = judge.propose(750, now, {}, None, profile(), profile())["command"]
+    assert result["state"] == "FROZEN"
+    assert "proposed_commands" not in result
+
+
+def test_l1_floor_is_03_not_02():
+    now = {"R_maintenance": "PASS", "F1_slow_forward": 0.1,
+           "P1_slow_spin": 1.0, "Z_terrain_level": 0.0}
+    result = judge.propose(750, now, {}, None, profile(lin_std=0.3), profile(lin_std=0.3))["reward"]
+    assert result["rule"] is None and result["values"] is None
+    result = judge.propose(750, now, {}, None, profile(lin_std=0.4), profile(lin_std=0.4))["reward"]
+    assert result["rule"] == "L1" and result["values"]["track_lin_vel_std"] == 0.3
+
+
+def test_maintenance_fail_suppresses_both_adjustments():
+    now = {"R_maintenance": "FAIL", "S_side_progress": 0.5,
+           "V_fast_side_3seed": 150, "F1_slow_forward": 0.0, "P1_slow_spin": 0.0}
+    for iteration in (500, 750):
+        result = judge.propose(iteration, now, {}, None, profile(), None)
+        assert result["command"]["state"] == "HOLD"
+        assert result["reward"]["state"] == "HOLD"
+        assert "proposed_commands" not in result["command"]
+        assert result["reward"].get("values") is None
+
+
+def test_body_forward_ratio_keeps_sign_and_excludes_initial_world_position(tmp_path):
+    levels = {}
+    for level in judge.LEVELS:
+        source = tmp_path / level / "map_modes.json"
+        source.parent.mkdir()
+        source.write_text(json.dumps({"commands": {"fwd0.1": [0.1, 0, 0],
+                                                   "fwd0.2": [0.2, 0, 0]},
+                                      "env_arrays": {f"eval_gt/{case}": f"{case}.npz"
+                                                     for case in ("fwd0.1", "fwd0.2")}}), encoding="utf-8")
+        levels[level] = {"blocks": {"g1b": {"source": {"path": str(source)}}}}
+        for case in ("fwd0.1", "fwd0.2"):
+            vx = np.zeros((3, 64), dtype=np.float32)
+            vx[:, :33] = -float(case.removeprefix("fwd"))
+            alive = np.ones_like(vx, dtype=bool)
+            np.savez(source.with_name(f"{case}.npz"), vx=vx, alive=alive, dt=0.02,
+                     alive_steps=np.full(64, 3), body_vx_integral_m=vx.sum(axis=0) * 0.02,
+                     run_identity=json.dumps({"checkpoint_sha256": "a" * 64, "eval_seed": 42}),
+                     start_xy=np.tile([0.5, 0.0], (64, 1)))
+    values, sources = judge.body_forward_ratios(levels, "a" * 64)
+    assert len(sources) == 4
+    assert all(np.isclose(values[f"body_forward_ratio/{lev}/{case}"], -1.0, rtol=0, atol=1e-6)
+               for lev in judge.LEVELS for case in ("fwd0.1", "fwd0.2"))
