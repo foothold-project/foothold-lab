@@ -1,0 +1,83 @@
+# E1 경계 R2·R3·R4·새 R5·R6 읽기 전용 판독기
+
+> 분류: A/평가
+> 작성: analyst-lx · 2026-11-13
+> 근거: 이슈 #765 · 원장 73abb340 446·452행 · #779 985ce6ab §3~4 · lead 18:42 네 칸 결합 답
+> 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
+> 상태: CPU 답 아는 입력 25개 통과 · 운영 파일 변경 없음 · m250 실제 경계는 결과 대기
+> 판: v1.0
+
+**이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
+
+## 실행
+
+첫 경계 점수가 완성된 뒤 다음 한 줄을 실행한다. 이후에는 명령 안의 `m250` 두 곳을 같은 회차로 바꾼다. 직전 경계와 그 앞 경계가 같은 점수 폴더에 있으면 자동으로 읽는다. 따로 있는 경우 `--previous`·`--earlier`로 지정한다.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/boundary_read.py --score /home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400/eval/scores/m250/ex42_score.json --out /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/m250
+```
+
+| 산출 | 내용 |
+|---|---|
+| `REPORT.md` | 한 줄 처방·칸별 현재/부모/직전·차이·단위·조건 일치 |
+| `cells.csv` | 표의 원 숫자. 반올림 전 계산값 보존 |
+| `report.json` | 입력별 SHA·유지/졸업 판정 분리·현재 보상·처방 직전 고정 기준·규칙별 사유 |
+| `adjustment.draft.json` | `apply_ready=false` 포장 안의 `payload`. 변경이 없거나 자료가 불완전하면 null |
+| `next_segment.txt` | 다음 구간 처방 한 줄 |
+
+종료 코드 0은 **도구 계산 완료**이지 학습 승인이나 유지 PASS가 아니다. `R4`도 보고 생성에 성공하면 rc0이며 `next_segment=DO_NOT_START`를 반드시 읽는다. 입력 부족은 rc2다. 운영 폴더·s2_lab 아래로 결과를 쓰는 호출은 거절한다. 스크립트에는 `--apply` 옵션이 없다.
+
+초안 payload는 실제 `ex42_segment_adjust.resolve`로 형식을 검사한다. 기존 구간의 명령·보상·저속 표본 몫을 영수증에서 보존하며, 이번 경계에 바꿀 보상 묶음만 더한다. 기존 파일에 자동 덮어쓰기하거나 환경변수를 바꾸지 않는다. `DRAFT` 표식을 승인 문구로 바꾸는 일도 이 도구가 하지 않는다.
+
+## 고정 규칙
+
+| 규칙 | 구현한 조건 | 제안 |
+|---|---|---|
+| R4 | `maintenance_judgement`가 FAIL/HOLD. 전체 졸업 `judgement`와 구별 | 다음 구간 미기동·lead 확인. 최근 보상 처방의 직전 값만 복원 초안 |
+| 두 경계 되돌림 | #779 §4의 **같은 모드·명령·레벨·성분**이 처방 직전 고정 기준보다 두 연속 유효 경계 악화 | 가장 최근 처방의 직전 값. checkpoint/optimizer를 되돌리지 않음 |
+| R6 첫 활성 | GT L0/L5 × 전진0.1/0.2 중 하나라도 R<0.3/0.6 | slow_track 0→0.2. 첫 경계부터 적용 가능 |
+| R6 증량 | 0.2 상태에서 네 칸 모두 직전보다 비증가. 한 칸이라도 증가하면 그대로. 유지 회귀·결측이 있으면 증량 보류 | 0.2→0.3 최대 한 번 |
+| R2 | GT/PRED 각각 전진1.0 Y1 중앙값>0.10 또는 p90>0.20 rad | zero_yaw −1→−1.25. 더 큰 벌점으로 반복 강화하지 않음 |
+| R3 | R6와 R2가 겹침 | R6 묶음 하나만 |
+| 새 R5 | R6 이후 두 경계 무회귀, 전진0.2 L0/L5 모두 R≥0.5, 같은 접촉 정의 발 자료 충족 | 공중 시간 기준 0.04초·가중 0.1 한 묶음 |
+
+R1 폭 좁히기와 옛 R5는 73abb340으로 대체됐다. 결측 때 되살리지 않는다. R5보다 R2를 먼저 확인하며, 처방 변경 뒤 두 경계 관찰 중에는 다른 묶음을 추가하지 않는다. 원장의 명시적 예외인 R6의 다음 경계 증량은 따로 판독한다.
+
+반복 폭은 실행 plan의 v2 값과 같은 0.1 R 0.007, 0.2 R 0.026, Y1 중앙값 0.02 rad, p90 0.04 rad를 쓴다. 문턱 근처에서 처방을 새로 제안하려면 seed7·13의 같은 조건도 필요하다. 증량 비교가 0 근처이면 두 저장본의 같은 시드끼리 비교한다. 시드끼리 평균하거나 GT/PRED/끔을 합치지 않는다. 해당 자료가 없으면 `REPEAT_REQUIRED`다.
+
+두 경계 되돌림은 회전 비율 감소>0.05, 옆 각 방향 R 감소>0.05, Y1 중앙값 증가>0.02 rad 또는 p90 증가>0.04 rad, stand 성공 감소≥4 env, stop 몸속도 증가>0.02 m/s 또는 각속도 크기 증가>0.05 rad/s를 그대로 읽는다. 대칭비만 좋아지거나 나빠진 것을 단독 처방 이유로 쓰지 않는다. 부족한 창은 회복이나 연속 악화로 세지 않는다.
+
+## 수치·현재 설정의 출처
+
+- 전진0.1/0.2 R: NPZ 몸앞 vx를 생존 샘플에 대해 적분, **예정된 전체 6초·시작 64 env**를 분모로 사용. 생존자만 남기지 않는다. R과 추종 오차·정체 수는 별도 열이다.
+- Y1: 출발 yaw를 붙이고 각도를 unwrap한 뒤, env별 마지막 유효 시점의 **순 yaw 절댓값** 중앙값·p90. 부호 중앙값의 절댓값이나 누적 절대 회전량과 다르다.
+- 옆 R: map JSON의 env별 명령 방향 투영거리 / 명령 거리. 이 NPZ에는 vy 시계열이 없어 옆 거리를 NPZ에서 재계산했다고 쓰지 않는다.
+- stand 성공: 기존 `ex40_score._stand_pass`의 접촉·하중·발틈·몸속도·yaw 기준과 `ex40_score_config.json` 값을 사용한다. 생존만으로 성공을 대신하지 않는다.
+- 초기 보상: 고정 v19 plan SHA와 실행 manifest의 실제 env 설정을 대조. 첫 구간에는 별도 RewardManager 영수증이 없으므로 `configured_manifest_initial`로 한계를 표시한다.
+- 이후 보상: `segment_commands_bN.json`과 두 rank의 `segment_rewards_bN_rank*.json`을 대조한다. 이전 처방 앵커는 적용 직전 m(N×250)이며 비교 때 계속 고정한다.
+- 현재와 과거 점수는 실행 manifest의 같은 local 회차 checkpoint SHA·plan과 맞아야 한다. 부모는 startup이 핀한 m13250 SHA와 맞아야 한다. 학습 회차와 누적 회차를 섞지 않는다.
+
+R5는 `--gait`로 동일 checkpoint의 `norm_Fxyz_gt_1N` 발 자료를 받는다. 계약 예시는 `r5-contact-evidence.template.json`에 있다. 현재 Fz만 있는 자료는 이 계약을 충족하지 않는다. **R5 자료 미비는 R5만 보류하며 E1 전체를 중단하는 새 관문이 아니다.** 발별 완전 구간·참여 env·짧은 구간 비율·발 높이·끌림·원자료 SHA가 필요하다. 이 도구는 그 GPU 자료를 생성하지 않는다.
+
+## 답을 아는 실제 자료 재생
+
+`validation.json`과 아래 폴더는 생성기로 다시 만든다. 과거 자료는 당시 실제 설정을 새로 승인하는 용도가 아니다.
+
+| 입력 | 기대한 결과 |
+|---|---|
+| 부모 P1 예행 자체 | `BASELINE_ONLY`, 부모 대비 수치 차이 모두 0. 전체 졸업 FAIL을 R4로 오인하지 않음 |
+| cmd7seg m500 | R6. R2 조건은 해당하지 않음 |
+| cmd7seg m750 | R2·R6 모두 조건 해당, R3에 따라 R6만 초안 |
+
+과거 G1b는 `ex42_mesh=null`인 별도 생성 지형이다. 부모와 메시가 같다고 주장하지 않는다. `--historical`은 이 차이를 경고로 남겨 **규칙의 반사실 재생**만 허용한다. 조정 초안에도 역사 재생 표식이 남는다. 새 운영 경계에는 이 옵션을 쓰지 않는다.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/replay_known.py
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B -m pytest /home/jay/mai/tmp/analyst/e1-boundary-rules-1113 -q -p no:cacheprovider --basetemp=/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/pytest-recheck
+```
+
+원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42 네 칸 결합은 이번 사용자 메시지로 추가 확정됐으며 외부 발송·실행 승인을 새로 만들지 않는다.
+
+| 판 | 변경 |
+|---|---|
+| v1.0 | 확정 규칙·원자료 판독·초안·기존 구간 보존·25개 CPU 시험 |

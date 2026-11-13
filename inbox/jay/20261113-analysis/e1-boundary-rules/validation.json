@@ -1,0 +1,70 @@
+{
+  "created_at": "2026-11-13T19:05:19.752400+09:00",
+  "known_answers": {
+    "known-parent-self": {
+      "score": "/home/jay/data/foothold/s2_lab/ex42_p1reh_20261113_144455/m13250/ex42_score.json",
+      "score_sha256": "d49f190e6e4ffdaa9531700d1df3cfd9c86ff01974314f472a4443c1bf0dae75",
+      "rule": "BASELINE_ONLY",
+      "triggered": [
+        "R2",
+        "R6",
+        "R3"
+      ],
+      "changes": {},
+      "rows": 495,
+      "low": {
+        "low/L0/eval_gt/fwd0.1/R": 0.11879161206306889,
+        "low/L0/eval_gt/fwd0.2/R": 0.4013882264747129,
+        "low/L5/eval_gt/fwd0.1/R": 0.11184620786613474,
+        "low/L5/eval_gt/fwd0.2/R": 0.39244499472454963
+      },
+      "parent_condition_mismatches": 0,
+      "consumer_validation": null,
+      "historical_counterfactual": false
+    },
+    "known-cmd7seg-m500": {
+      "score": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m500/ex42_score.json",
+      "score_sha256": "3133ad28608b100c161f1604d0199bb0a006cb666154d500dcbe30b690c7ff3a",
+      "rule": "R6",
+      "triggered": [
+        "R6"
+      ],
+      "changes": {
+        "slow_track": 0.2
+      },
+      "rows": 331,
+      "low": {
+        "low/L0/eval_gt/fwd0.1/R": 0.0538871315230305,
+        "low/L0/eval_gt/fwd0.2/R": 0.6880926332940968,
+        "low/L5/eval_gt/fwd0.1/R": 0.053455333920283,
+        "low/L5/eval_gt/fwd0.2/R": 0.6721427310219344
+      },
+      "parent_condition_mismatches": 64,
+      "consumer_validation": "consumer_resolve_pass",
+      "historical_counterfactual": true
+    },
+    "known-cmd7seg-m750": {
+      "score": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m750/ex42_score.json",
+      "score_sha256": "02c9f062f31f5fda9bf31acf493c63e257444702db953921a1d8188ea333ab3a",
+      "rule": "R6",
+      "triggered": [
+        "R2",
+        "R6",
+        "R3"
+      ],
+      "changes": {
+        "slow_track": 0.2
+      },
+      "rows": 331,
+      "low": {
+        "low/L0/eval_gt/fwd0.1/R": 0.0010078299227946749,
+        "low/L0/eval_gt/fwd0.2/R": 0.3437201961321989,
+        "low/L5/eval_gt/fwd0.1/R": -0.00012192239810246973,
+        "low/L5/eval_gt/fwd0.2/R": 0.33840146636745577
+      },
+      "parent_condition_mismatches": 64,
+      "consumer_validation": "consumer_resolve_pass",
+      "historical_counterfactual": true
+    }
+  }
+}
