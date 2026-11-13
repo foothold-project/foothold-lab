@@ -47,10 +47,12 @@ def _maintenance_verdict(p1) -> str | None:
         if _sha256(path) != pin:
             return None
         score = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (KeyError, TypeError, OSError, ValueError):
+        if not isinstance(score, dict):
+            return None
+        items = (score.get("stage_exit") or {}).get("items") or {}
+        verdict = score.get("maintenance_judgement") or (items.get("maintenance_current") or {}).get("judgement")
+    except (AttributeError, KeyError, TypeError, OSError, ValueError):
         return None
-    items = (score.get("stage_exit") or {}).get("items") or {}
-    verdict = score.get("maintenance_judgement") or (items.get("maintenance_current") or {}).get("judgement")
     return verdict if verdict in ("PASS", "HOLD", "FAIL") else None
 
 
@@ -89,7 +91,7 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
             end = min(iteration + interval, ceiling)
             from foothold_s2.ex42_extension_evidence import improvement_evidence
             extension = improvement_evidence(plan, stage_id, iteration, interval, Path(p1_path))
-    except (ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
+    except (AttributeError, TypeError, ValueError, OSError, KeyError, StopIteration, json.JSONDecodeError) as exc:
         return {**base, "action": "notify", "state": "continue_not_authorized",
                 "reason": f"not authorized to continue by itself: {exc}"}
     # Team lead rule (16:58): only a PASS maintenance table starts the next segment by itself; HOLD, FAIL and an
