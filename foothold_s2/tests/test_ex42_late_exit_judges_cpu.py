@@ -132,8 +132,138 @@ def test_stage_identity_mismatch_is_refused(tmp_path, stand_in):
         late.MapOffTwoWindowJudge().judge(_ctx(tmp_path, "E6a"), {})
 
 
-def test_e6b_has_no_pass_without_the_common_kind_consumer(tmp_path, stand_in):
-    assert _run(_ctx(tmp_path, "E6b"), late.E6bKindTwoWindowJudge())["judgement"] == "HOLD"
+# ---- E6b: the D kinds through the common named-kind reader (real plan, stood-in raw readers) -----------------------
+PASS_CELL = {"eval_gt": {"judgement": "PASS"}, "eval_pred": {"judgement": "PASS"}}
+FAIL_CELL = {"eval_gt": {"judgement": "FAIL"}, "eval_pred": {"judgement": "PASS"}}
+D_CELLS = ("D/crawl/L0", "D/high_ledge/L0")
+
+
+def _real_plan():
+    import yaml
+    from foothold_s2.ex42_score import ROOT
+    return yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def e6b(tmp_path, monkeypatch, stand_in):
+    """Both windows on disk with a pinned mesh; per-window cells / exposure are set through the returned state."""
+    import foothold_s2.ex42_e3_judge as e3
+    import foothold_s2.ex42_learned_cells_evidence as evidence
+    from foothold_s2.eval import ex42_late_stage_kinds as kinds
+    ctx = _ctx(tmp_path, "E6b")
+    ctx.plan = _real_plan()
+    ctx.checkpoint = tmp_path / "run" / "model_500.pt"
+    state = {"m500": {"cells": {k: PASS_CELL for k in D_CELLS}, "opened": {"D/high_ledge": 0, "D/crawl": 0}, "mesh": "b" * 64},
+             "m250": {"cells": {k: PASS_CELL for k in D_CELLS}, "opened": {"D/high_ledge": 0, "D/crawl": 0}, "mesh": "b" * 64},
+             "seen": []}
+    for name in ("m500", "m250"):
+        (tmp_path / "run" / name).mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(e3, "_mesh", lambda score, folder: {"mesh_sha256": state[Path(folder).name]["mesh"],
+                                                           "column_family": ["D", "D"], "columns": ["high_ledge", "crawl"]})
+
+    def exposure(checkpoint, **k):
+        row = state["m" + Path(checkpoint).stem.split("_")[1]]
+        return None if row["opened"] is None else {"opened_kinds": dict(row["opened"], **{"A/gaps": 5, "B/stair_up": 3}),
+                                                    "mesh_sha256": row["mesh"], "receipts": []}
+    monkeypatch.setattr(evidence, "read_stage_exposure", exposure)
+
+    def reader(folder, **k):
+        state["seen"].append((Path(folder), k["stage_id"], sorted(c["family"] for c in k["inventory"]["opened_cells"])))
+        return dict(state[Path(folder).parent.name]["cells"])
+    monkeypatch.setattr(kinds, "read_e3_window", reader)
+    stand_in["prior"] = {"stage_id": "E6b", "checkpoint_sha256": SHA, "checkpoint": str(tmp_path / "run" / "model_250.pt"),
+                         "execution_plan_sha256": "c" * 64, "maintenance_source_sha256": "d" * 64,
+                         "conditions": {"eval_seed": 7}, "is_prior": True}
+    score = {"stage_id": "E6b", "checkpoint_sha256": SHA, "checkpoint": str(ctx.checkpoint),
+             "execution_plan_sha256": "c" * 64, "maintenance_source_sha256": "d" * 64, "conditions": {"eval_seed": 7}}
+    return ctx, score, state, stand_in
+
+
+def _e6b(fixture):
+    ctx, score, _, _ = fixture
+    return late.E6bKindTwoWindowJudge().judge(ctx, dict(score))["stage_exit"]
+
+
+def test_e6b_targets_are_the_plan_d_kinds_only_and_need_no_plan_entry():
+    from foothold_s2.eval import ex42_late_stage_kinds as kinds
+    plan = _real_plan()
+    assert "E6b" not in plan["evaluation"]["late_kind_exit"]           # the plan file (and its SHA) is untouched
+    assert kinds.level_targets(plan, "E6b") == {("D", "high_ledge"): 0, ("D", "crawl"): 0}
+    assert kinds.folder_name("E6b") == "kind_cells_e6b"
+
+
+def test_e6b_passes_when_both_windows_pass_every_d_cell(e6b):
+    exit_row = _e6b(e6b)
+    assert exit_row["judgement"] == "PASS" and exit_row["items"]["kind_current"]["cells"].keys() == set(D_CELLS)
+    stage_ids = {seen[1] for seen in e6b[2]["seen"]}
+    families = {f for seen in e6b[2]["seen"] for f in seen[2]}
+    assert stage_ids == {"E6b"} and families == {"D"}                     # earlier families are not asked for
+
+
+def test_e6b_a_failing_cell_in_either_window_fails_and_maintenance_is_not_bypassed(e6b):
+    state = e6b[2]
+    state["m500"]["cells"] = {"D/crawl/L0": PASS_CELL, "D/high_ledge/L0": FAIL_CELL}
+    assert _e6b(e6b)["judgement"] == "FAIL"
+    state["m500"]["cells"] = {k: PASS_CELL for k in D_CELLS}
+    state["m250"]["cells"] = {"D/crawl/L0": FAIL_CELL, "D/high_ledge/L0": PASS_CELL}
+    assert _e6b(e6b)["judgement"] == "FAIL"
+    state["m250"]["cells"] = {k: PASS_CELL for k in D_CELLS}
+    e6b[3]["maintenance"] = "HOLD"
+    assert _e6b(e6b)["judgement"] == "HOLD"
+
+
+def test_e6b_no_exposure_receipt_or_unopened_target_holds(e6b):
+    state = e6b[2]
+    state["m500"]["opened"] = {"D/high_ledge": 0}                         # crawl never opened
+    row = _e6b(e6b)
+    assert row["judgement"] == "HOLD" and row["items"]["kind_current"]["missing_targets"][0]["kind"] == "crawl"
+    state["m500"]["opened"] = None
+    row = _e6b(e6b)
+    assert row["judgement"] == "HOLD" and row["items"]["kind_current"]["exposure_found"] is False
+
+
+def test_e6b_a_missing_previous_window_or_changed_cells_or_mesh_is_hold(e6b):
+    ctx, score, state, stand_in = e6b
+    state["m250"]["cells"] = {"D/crawl/L0": PASS_CELL}
+    assert _e6b(e6b)["items"]["same_cells"]["judgement"] == "HOLD" and _e6b(e6b)["judgement"] == "HOLD"
+    state["m250"]["cells"] = {k: PASS_CELL for k in D_CELLS}
+    state["m250"]["mesh"] = "e" * 64
+    assert _e6b(e6b)["judgement"] == "HOLD"
+    state["m250"]["mesh"] = "b" * 64
+    stand_in["prior"] = None
+    row = _e6b(e6b)
+    assert row["judgement"] == "HOLD" and row["items"]["kind_previous"]["reason"] == "직전 창 없음"
+
+
+def test_e6b_a_broken_raw_window_is_hold_with_the_reason_never_pass(e6b, monkeypatch):
+    from foothold_s2.eval import ex42_late_stage_kinds as kinds
+    monkeypatch.setattr(kinds, "read_e3_window", lambda *a, **k: (_ for _ in ()).throw(ValueError("trace sha differs")))
+    row = _e6b(e6b)
+    assert row["judgement"] == "HOLD" and "trace sha differs" in row["items"]["kind_current"]["reason"]
+
+
+def test_e6b_a_score_of_another_stage_is_refused(e6b):
+    from foothold_s2.eval import ex42_late_stage_kinds as kinds
+    ctx, score, _, _ = e6b
+    with pytest.raises(ValueError):
+        kinds.recount(dict(score, stage_id="E5"), plan=ctx.plan, evaluation=ctx.evaluation, mesh={"mesh_sha256": "b" * 64},
+                      stage_id="E6b")
+
+
+def test_the_common_reader_now_sees_the_d_family_folder(tmp_path, monkeypatch):
+    from foothold_s2.eval import ex42_stage_kind_bundle as bundle
+    inventory = {"opened_cells": [{"family": "D", "kind": "crawl", "level": 0, "flag_source": bundle.KIND_FLAGS}]}
+    folder = tmp_path / "kind_cells_e6b"
+    folder.mkdir()
+    args = dict(inventory=inventory, plan={}, plan_sha256="x", mesh={}, checkpoint_sha256="y", seed=1, stage_id="E6b")
+    with pytest.raises(ValueError, match="coverage differs"):
+        bundle.read_e3_window(folder, **args)
+    (folder / "D" / "crawl" / "L0").mkdir(parents=True)
+    monkeypatch.setattr(bundle, "read_stage_kind_bundle", lambda *a, **k: {"seen": k["family"]})
+    assert bundle.read_e3_window(folder, **args) == {"D/crawl/L0": {"seen": "D"}}
+    (folder / "D" / "high_ledge" / "L0").mkdir(parents=True)              # a cell nobody asked for is still a mismatch
+    with pytest.raises(ValueError, match="coverage differs"):
+        bundle.read_e3_window(folder, **args)
 
 
 def test_the_three_adapters_are_registered_under_the_plan_names():

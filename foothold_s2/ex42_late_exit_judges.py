@@ -7,11 +7,10 @@ CURRICULUM-GATES v0.17c E.1 rows (read when this was written):
 
 The measured evidence (posture cells, map-off fixed-level cells, the E6b kind bundle) has no producer in this tree yet. A judge
 therefore reads a raw evidence file with a stated format, recomputes the verdict from its numbers (the file's own verdict is
-never trusted) and answers HOLD when the file or the common kind consumer is absent. Nothing here invents a measurement.
+never trusted) and answers HOLD when the file is absent. E6b reads the raw named-kind traces through the common kind reader. Nothing here invents a measurement.
 """
 from __future__ import annotations
 
-import importlib
 import json
 import re
 from pathlib import Path
@@ -175,20 +174,33 @@ class MapOffTwoWindowJudge(_LateJudge):
 
 
 class E6bKindTwoWindowJudge(_LateJudge):
-    """The three D kinds ride the common named-kind consumer; without it nothing passes (same port as E4/E5, #733)."""
+    """The D kinds the plan opens in E6b, recounted from raw NPZ by the common named-kind reader (E4/E5 port, #733).
+
+    Each window: exposure receipt found, every declared D kind opened at its level target, every representative cell
+    (L0, L5, current cap) passing eval_gt and eval_pred. Both windows must read the same cells of the same mesh."""
     name, stage_id, item = "kind_two_window_e6b", "E6b", "kind"
 
     def window_item(self, folder, ctx, score):
-        return hold("stage_common_kind_consumer_unavailable")
+        from foothold_s2.eval import ex42_late_stage_kinds as kinds
+        from foothold_s2.ex42_e3_judge import _mesh
+        mesh = _mesh(score, Path(folder))
+        now = kinds.recount(score, plan=ctx.plan, evaluation=Path(folder), mesh=mesh, stage_id=self.stage_id)
+        inventory = now.get("inventory") or {}
+        row = {"role": "judge", "judgement": now["judgement"], "mesh_sha256": now["mesh_sha256"],
+               "exposure_found": now["exposure_found"],
+               "missing_targets": inventory.get("missing_targets"),
+               "cells": {key: {mode: bundle[mode]["judgement"] for mode in ("eval_gt", "eval_pred")}
+                         for key, bundle in sorted((now.get("cells") or {}).items())}}
+        if now.get("reason"):
+            row["reason"] = now["reason"]
+        return row
 
-    def judge(self, ctx, score):
-        try:
-            reader = getattr(importlib.import_module("foothold_s2.ex42_e3_judge"), "read_stage_bundle", None)
-        except ModuleNotFoundError:
-            reader = None
-        if reader is not None:
-            raise NotImplementedError("common read_stage_bundle exists now: wire E6b to it (verify the three D kinds)")
-        return super().judge(ctx, score)
+    def extra_items(self, ctx, score, now, old):
+        """A window with no cells, or two windows over different cells or meshes, never makes one exit."""
+        same = (bool(now.get("cells")) and set(now["cells"]) == set(old.get("cells") or {})
+                and now.get("mesh_sha256") == old.get("mesh_sha256"))
+        return {"same_cells": {"role": "judge", "judgement": "PASS" if same else "HOLD",
+                               **({} if same else {"reason": "두 창의 종류 칸 또는 mesh 가 다름 · 칸 없음"})}}
 
 
 def m_return_decision(*, source_stage: str, m_updates: int, m_judgement: str, extension_used: bool) -> dict:
