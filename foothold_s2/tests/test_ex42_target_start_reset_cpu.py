@@ -147,3 +147,33 @@ def test_triangle_distance_and_foot_collision_guard_answer_known_inputs():
     bump[:, :, 2] = .20
     assert _default_go2_feet_clear(ground, np.zeros(2), 0.0)
     assert not _default_go2_feet_clear(bump, np.zeros(2), 0.0)
+
+
+def test_foot_sphere_overlap_guard_rejects_half_radius_threshold_mutant():
+    """A triangle 0.75 radii from a foot overlaps the full sphere, not half."""
+    from foothold_s2.terrains.jeplo_preset import (
+        _default_go2_feet_clear,
+        _point_triangle_distance,
+    )
+
+    ground = np.array([
+        [[-2., -2., 0.], [2., -2., 0.], [2., 2., 0.]],
+        [[-2., -2., 0.], [2., 2., 0.], [-2., 2., 0.]],
+    ])
+    center = np.r_[foot_centers()[0, :2],
+                   DEFAULT_ROOT_HEIGHT_M + foot_centers()[0, 2]]
+    # A vertical obstacle whose closest point is 0.75 * radius from the first
+    # foot center. It intersects that foot's collision sphere, but lies outside
+    # a shrunken 0.5 * radius guard.
+    x = center[0] + 0.75 * FOOT_RADIUS_M
+    obstacle = np.array([[
+        [x, center[1] - .1, center[2] - .1],
+        [x, center[1] + .1, center[2] - .1],
+        [x, center[1], center[2] + .1],
+    ]])
+    distance = float(_point_triangle_distance(center, obstacle)[0])
+    assert distance == pytest.approx(.75 * FOOT_RADIUS_M)
+    assert FOOT_RADIUS_M / 2 < distance < FOOT_RADIUS_M
+    assert _default_go2_feet_clear(ground, np.zeros(2), 0.0)
+    assert not _default_go2_feet_clear(
+        np.concatenate((ground, obstacle)), np.zeros(2), 0.0)
