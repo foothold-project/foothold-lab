@@ -28,6 +28,7 @@ class ValidRolloutStorage(RolloutStorage):
         # Two-GPU mirror update: every rank must make the same number of gradient exchanges, so an
         # empty slot is handed to the caller as None instead of being dropped.
         self.yield_skipped = False
+        self.kl_audit = None  # Optional observer. It never changes indices, masks or RNG.
 
     def clear(self) -> None:
         super().clear()
@@ -52,7 +53,7 @@ class ValidRolloutStorage(RolloutStorage):
         valid = self.valid.flatten()
         self.yielded_batches = 0
         self.skipped_batches = 0
-        for _ in range(num_epochs):
+        for epoch in range(num_epochs):
             for index in range(num_mini_batches):
                 start = index * mini_batch_size
                 batch_idx = indices[start:start + mini_batch_size]
@@ -60,12 +61,24 @@ class ValidRolloutStorage(RolloutStorage):
                 if batch_idx.numel() == 0:
                     self.skipped_batches += 1
                     if self.yield_skipped:
+                        if self.kl_audit is not None:
+                            self.kl_audit.observe("begin_minibatch", epoch, index, batch_idx,
+                                                  old_mu[batch_idx], old_sigma[batch_idx])
                         yield None
+                        if self.kl_audit is not None:
+                            self.kl_audit.observe("end_minibatch")
+                    elif self.kl_audit is not None:
+                        self.kl_audit.observe("skipped_minibatch", epoch, index)
                     continue
                 self.yielded_batches += 1
                 batch_advantage = advantages[batch_idx]
                 if self.normalize_per_batch_safely:
                     batch_advantage = safe_minibatch_advantage(batch_advantage)
+                if self.kl_audit is not None:
+                    self.kl_audit.observe("begin_minibatch", epoch, index, batch_idx,
+                                          old_mu[batch_idx], old_sigma[batch_idx])
                 yield (observations[batch_idx], actions[batch_idx], values[batch_idx], batch_advantage,
                        returns[batch_idx], old_log_prob[batch_idx], old_mu[batch_idx], old_sigma[batch_idx],
                        (None, None), None)
+                if self.kl_audit is not None:
+                    self.kl_audit.observe("end_minibatch")
