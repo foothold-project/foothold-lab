@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -689,7 +690,7 @@ class Ex42LiveBoardTests(unittest.TestCase):
         self.assertEqual(runtime["eval_root"], str(self.run / "eval/scores"))
         out = board.board(self.smi, self.procs, self.cfg, now=self.now, width=160, detail=True)
         self.assertIn("EX-42 학습 · E1 다시 (m13251~m15000)", out)
-        self.assertIn("m13460 · 210/250", out)
+        self.assertIn("m13460 · 210/1750", out)
         self.assertIn("다음 경계 250", out)
         self.assertIn("EX-42 250 경계 평가", out)
         self.assertIn("EX-42 1750 단계 끝 평가", out)
@@ -707,6 +708,41 @@ class Ex42LiveBoardTests(unittest.TestCase):
     def test_bad_run_identity_does_not_invent_ex42_stage(self):
         (self.run / "startup_receipt.json").write_text('{"experiment":"EX-42","parent":{}}', encoding="utf-8")
         self.assertNotIn("stage_id", board.training_config(self.cfg, board.current_training(self.cfg)))
+
+    def test_plan_interval_and_approved_extension_caps_drive_display(self):
+        plan = self.run / "plan.yaml"
+        plan.write_text("evaluation:\n  first_evaluation_update: 250\n  interval_updates: 125\nstages:\n"
+                        "- id: E1\n  maximum_updates: 1750\n"
+                        "  extension_updates: 500\n  extension_max_count: 2\n", encoding="utf-8")
+        manifest = json.loads((self.run / "manifest.json").read_text(encoding="utf-8"))
+        manifest["run"]["cli_args"].update(ex42_plan=str(plan), max_iterations=2250,
+                                            ex42_segment_end=250)
+        (self.run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        runtime = board.training_config(self.cfg, board.current_training(self.cfg))
+        self.assertEqual(runtime["boundary"], 125)
+        self.assertEqual(runtime["first_eval"], 250)
+        self.assertEqual(runtime["stage_end"], [1750, 2250])
+        pending = board.auto_items(runtime, {"iter": 1, "iter_s": 22}, self.now, [],
+                                   attempts=[], c_files=([], []))
+        self.assertFalse(any(item["title"].startswith("EX-42 125 경계") for item in pending))
+
+    def test_interrupted_eval_is_not_permanently_running(self):
+        folder = self.run / "eval/scores/m250"
+        folder.mkdir(parents=True)
+        (folder / "eval_receipt.json").write_text('{"state":"running"}', encoding="utf-8")
+        old = time.time() - 600
+        os.utime(folder, (old, old))
+        attempts = board.eval_attempts(str(folder.parent), procs=[], now=time.time())
+        self.assertEqual(attempts[0]["state"], "중단")
+        self.assertEqual(attempts[0]["end"], None)
+        items = board.auto_items(board.training_config(self.cfg, board.current_training(self.cfg)),
+                                 None, self.now, [], attempts=attempts, c_files=([], []))
+        self.assertEqual(items[0]["state"], "중단")
+        out = board.board(self.smi, self.procs, self.cfg, now=self.now, width=160, detail=True)
+        self.assertIn("EX-42 250 경계 평가 · 중단", out)
+        same_process = [{"pid": 1, "cmdline": f"python -m foothold_s2.ex42_eval_once --out {folder}"}]
+        self.assertEqual(board.eval_attempts(str(folder.parent), procs=same_process,
+                                             now=time.time())[0]["state"], "running")
 
 
 class DispatchTests(unittest.TestCase):
