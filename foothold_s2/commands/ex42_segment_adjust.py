@@ -13,7 +13,8 @@ same kind. An entry for a boundary the run has not reached is refused.
 
 * commands: only a stage whose plan row has `command_adjust_limits`, only at a boundary before its level cap first
   rises (E1: 1 and 2), every value inside those limits.
-* rewards: any stage, any boundary from 1 on, every value inside `curriculum/ex42-reward-adjust-limits.yaml` (outside
+* rewards: the stage's plan row may register the cells for the whole stage (`rewards`, from its first update); a file
+  entry changes them at any boundary from 1 on. Every value is inside `curriculum/ex42-reward-adjust-limits.yaml` (outside
   the plan so that a run already started can use it; its SHA is recorded). The weight cells go on the stage's reward
   table, the two tracking widths on the env config (`apply_reward_params`), and the live reward manager is read back
   (`reward_readback`).
@@ -107,12 +108,23 @@ def _rewards(cell, limits, label) -> dict:
     return {name: float(cell[name]) for name in REWARD_CELLS}
 
 
+def stage_rewards(plan, stage_id, limits=None) -> dict | None:
+    """The reward cells the stage's own plan row registers (`rewards`): in force from the first update of the stage,
+    inside the same limits as an adjustment. None when the row has no cell (the source stage's values stay)."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    cell = row.get("rewards")
+    if cell is None:
+        return None
+    return _rewards(cell, limits if limits is not None else reward_limits(), f"{stage_id} plan row")
+
+
 def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
     """What is in force in the segment that starts at `boundary_index`: {commands, commands_entry, rewards,
-    rewards_entry}. `commands` is None for a stage with no command profile, `rewards` None while no entry changed
-    them (the plan values stay); an entry number is None when the plan row holds."""
+    rewards_entry}. `commands` is None for a stage with no command profile, `rewards` None while neither the plan row
+    nor an entry names them (the source stage's values stay); an entry number is None when the plan row holds."""
     base = stage_commands(plan, stage_id)
-    out = {"commands": _plain(base), "commands_entry": None, "rewards": None, "rewards_entry": None}
+    out = {"commands": _plain(base), "commands_entry": None, "rewards": stage_rewards(plan, stage_id, limits),
+           "rewards_entry": None}
     if document is None:
         return out
     if (not isinstance(document, dict) or set(document) != {"schema", "stage_id", "plan_sha256", "segments"}
@@ -190,7 +202,7 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
     document, earlier = record.pop("_document"), receipts(log_dir, stage_id)
     for k in range(1, boundary_index):       # what this start says segment k ran with must be what segment k recorded
         said = resolve(plan, stage_id, _as_of(document, k), k, limits)
-        ran = earlier.get(k) or {"commands": resolve(plan, stage_id, None, k)["commands"]}
+        ran = earlier.get(k) or {"commands": resolve(plan, stage_id, None, k, limits)["commands"]}
         if said["commands"] != _plain(ran.get("commands")) or said["rewards"] != (ran.get("rewards") or {}).get("values"):
             raise ValueError(f"EX-42 {stage_id} segment adjustment differs from what segment {k} ran with")
     stage, commands, rewards = plan_view.stages[0], record["commands"], record["rewards"]["values"]

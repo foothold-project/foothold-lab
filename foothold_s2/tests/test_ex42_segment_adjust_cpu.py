@@ -22,7 +22,11 @@ PLAN = ROOT / "foothold_s2" / "curriculum" / "ex42-prep.yaml"
 
 @pytest.fixture(scope="module")
 def plan():
-    return EX42Plan.load(PLAN)
+    # Most tests here cover a stage row without its own `rewards` cell (the finished E1, every later stage): the cell
+    # of the shipped E1 row is taken off the loaded document. The row cell itself is tested at the end of the file.
+    loaded = EX42Plan.load(PLAN)
+    next(row for row in loaded.document["stages"] if row["id"] == "E1").pop("rewards", None)
+    return loaded
 
 
 @pytest.fixture(scope="module")
@@ -537,3 +541,82 @@ def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
     manager, _ = _manager(lin=0.35, ang=0.4, air=0.2, slip=-0.2, yaw=-0.5)           # the env was built with the plan weight
     with pytest.raises(ValueError, match="the live reward manager carries"):
         adj.reward_readback(types.SimpleNamespace(reward_manager=manager), asked)
+
+
+# ---- the stage row's own reward cells (E1 again from m13250, 2026-11-13): in force from the first update ----
+
+ROW_REWARDS = {"track_lin_vel_std": 0.4, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0}
+
+
+@pytest.fixture()
+def row_plan():
+    return EX42Plan.load(PLAN)                                   # the shipped plan, E1 row cell included
+
+
+def row_view(row_plan):
+    source = te.load_ex42_stage_zero_source(row_plan)
+    return te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=row_plan,
+                                             stage_id="E1")
+
+
+def test_the_shipped_e1_row_registers_its_reward_cells_inside_the_limits(row_plan):
+    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["rewards"] == ROW_REWARDS
+    assert adj.stage_rewards(row_plan, "E1") == ROW_REWARDS
+    assert adj.stage_rewards(row_plan, "E1F") is None and adj.stage_rewards(row_plan, "E0") is None
+    limits = adj.reward_limits()["cells"]
+    assert all(limits[name][0] <= value <= limits[name][1] for name, value in ROW_REWARDS.items())
+
+
+def test_the_row_cells_hold_from_the_first_update_and_reach_the_stage_the_env_config_and_the_readback(row_plan, tmp_path):
+    view = row_view(row_plan)
+    assert view.stages[0].rewards["zero_yaw"] == -0.5             # the source stage, before the row is applied
+    record = adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
+    assert record["rewards"] == {"source": "plan", "entry": None, "values": ROW_REWARDS, "decided_at": None, "reason": None,
+                                 "evidence": None, "limits_sha256": adj.reward_limits()["sha256"]}
+    assert view.stages[0].rewards["zero_yaw"] == -1.0 and view.stages[0].rewards["foot_slip"] == -0.15
+    assert not list(tmp_path.glob("segment_commands_b0*"))       # the first segment leaves no record file
+    _, terms = _manager()
+    env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=terms["track_lin_vel"],
+                                                                  track_ang_vel=terms["track_ang_vel"]))
+    assert adj.apply_reward_params(env_cfg, record)["track_lin_vel_std"] == {"before": 0.5, "after": 0.4}
+    manager, _ = _manager(lin=0.4, ang=0.5, air=0.0, slip=-0.15, yaw=-1.0)
+    assert adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)["live"] == ROW_REWARDS
+    manager, _ = _manager(lin=0.4, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5)      # the env was built on the source weight
+    with pytest.raises(ValueError, match="the live reward manager carries"):
+        adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
+
+
+def test_later_segments_keep_the_row_cells_until_an_entry_changes_them(row_plan, tmp_path):
+    view = row_view(row_plan)
+    first = adj.start_segment(view, row_plan, "E1", boundary_index=1, path=None, log_dir=str(tmp_path), write=True)
+    assert first["rewards"]["values"] == ROW_REWARDS
+    doc = {"schema": adj.SCHEMA, "stage_id": "E1", "plan_sha256": row_plan.sha256,
+           "segments": {"2": {"decided_at": "t", "reason": "r", "evidence": "e", "rewards": {**ROW_REWARDS, "zero_yaw": -1.5}}}}
+    path = tmp_path / "adjust.json"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    second = adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=2, path=str(path),
+                               log_dir=str(tmp_path), write=True)
+    assert second["rewards"]["source"] == "adjust_file" and second["rewards"]["values"]["zero_yaw"] == -1.5
+    # a start that claims segment 1 ran on other values is refused
+    doc["segments"]["1"] = {"decided_at": "t", "reason": "r", "evidence": "e", "rewards": {**ROW_REWARDS, "foot_slip": -0.2}}
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(ValueError, match="differs from what segment 1 ran with"):
+        adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=3, path=str(path), log_dir=str(tmp_path),
+                          write=False)
+
+
+@pytest.mark.parametrize("change, match", [
+    ({"zero_yaw": -2.5}, "leaves the approved limits"), ({"track_lin_vel_std": 0.2}, "leaves the approved limits"),
+    ({"extra": 1.0}, "rewards needs exactly"), ({"zero_yaw": "low"}, "rewards needs exactly"),
+])
+def test_a_row_cell_outside_the_limits_or_malformed_stops_the_start(row_plan, tmp_path, change, match):
+    row = next(r for r in row_plan.document["stages"] if r["id"] == "E1")
+    row["rewards"] = {**ROW_REWARDS, **change}
+    with pytest.raises(ValueError, match=match):
+        adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path),
+                          write=False)
+    row.pop("rewards")
+    with pytest.raises(ValueError, match="rewards needs exactly"):
+        row["rewards"] = {k: v for k, v in ROW_REWARDS.items() if k != "zero_yaw"}
+        adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path),
+                          write=False)

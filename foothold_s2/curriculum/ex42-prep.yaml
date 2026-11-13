@@ -332,6 +332,12 @@ stages:
     turn_overlay:              # reverse, side and diagonal commands: this share also turns
       fraction: 0.25
       wz_abs: [0.2, 0.6]
+  # Reward cells of the whole stage, from its first update (E1 again from m13250, draft of 2026-11-13). zero_yaw:
+  # the weight on the yaw rate while the turn command is zero, -0.5 -> -1.0 (decisions.tsv 2026-11-13 09:52, first
+  # value). track_lin_vel_std: 0.5 -> 0.4 for the slow forward commands (inside the limits of decisions.tsv
+  # 2026-11-12 20:37; reward rule table L1). The other three are the values the finished E1 ran with.
+  # DRAFT: both changed values are to be confirmed from the remedial segment results before any launch.
+  rewards: {track_lin_vel_std: 0.4, track_ang_vel_std: 0.5, feet_air_time: 0.0, foot_slip: -0.15, zero_yaw: -1.0}
   command_adjust_limits:       # decisions.tsv 2026-11-12 14:23: the lines a segment adjustment may not cross. The run
     ranges:                    # starts on `commands` above; a cell not named here is limited to its `commands` value.
       side_vy_abs: [0.1, 1.0]
