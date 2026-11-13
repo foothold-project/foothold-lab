@@ -308,9 +308,6 @@ stages:
       slow_track_speed_max: [0.3, 0.3]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
-  # Team lead decision bc66f6ee. The start adapter must consume both cells.
-  low_forward_fraction: 0.5
-  slow_track_heading: true
   authorization_contract:
     validator: legacy_e1
     source_stage_ids:
