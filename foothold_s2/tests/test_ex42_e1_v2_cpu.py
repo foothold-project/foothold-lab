@@ -107,6 +107,29 @@ def test_small_improvement_over_prior_failure_requires_three_seeds():
     assert row["judgement"] == "HOLD" and row["near_threshold"]
 
 
+def test_approved_threshold_mutations_change_only_the_target_cell():
+    """Known-answer probes catch relaxed success, survival, symmetry and yaw guards."""
+    cfg = PLAN["evaluation"]["e1_exit_v2"]
+    assert {key: cfg[key] for key in ("R_min", "R_max", "mae_fraction", "success_min",
+                                        "survival_min", "symmetry_min", "yaw_median_max_rad",
+                                        "yaw_p90_max_rad")} == {
+        "R_min": .8, "R_max": 1.2, "mae_fraction": .2, "success_min": 52,
+        "survival_min": 60, "symmetry_min": .8, "yaw_median_max_rad": .1,
+        "yaw_p90_max_rad": .2}
+    for change in ({"success": 51}, {"survival": 59, "success": 52}, {"R": .79}, {"R": 1.21},
+                   {"mae_mps": .021}):
+        cells = _pass_cells()
+        cells["low"]["L0"]["eval_gt"]["fwd0.1"].update(change)
+        assert judge_cells(cells, PLAN)["items"]["low/L0/eval_gt/fwd0.1"]["judgement"] == "FAIL"
+    cells = _pass_cells()
+    cells["low"]["L0"]["eval_gt"]["side+0.4"]["R"] = .8
+    cells["low"]["L0"]["eval_gt"]["side-0.4"]["R"] = 1.02
+    assert judge_cells(cells, PLAN)["items"]["symmetry/0/eval_gt/0.4"]["judgement"] == "FAIL"
+    cells = _pass_cells()
+    cells["yaw"]["eval_gt"]["fwd1.0"].update(median_abs_rad=.11, p90_abs_rad=.15)
+    assert judge_cells(cells, PLAN)["items"]["yaw/eval_gt/fwd1.0"]["judgement"] == "FAIL"
+
+
 def test_p1_low_children_use_actual_eval_map_modes_parser_options(tmp_path):
     from foothold_s2.ex42_score import config
     cfg, _ = config()
