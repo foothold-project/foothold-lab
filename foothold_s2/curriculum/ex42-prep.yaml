@@ -552,6 +552,12 @@ stages:
         kind: stepping_stones_low
         share: 0.05
         level_cap: 0
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -686,6 +692,12 @@ stages:
       - {family: A, kind: balance_beams, level_cap: 0}
       - {family: A, kind: stepping_beams, level_cap: 0}
       - {family: A, kind: gaps, level_cap: 0}
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -870,6 +882,27 @@ stages:
       - {family: E, kind: stairs_high_inv, level_cap: 0}
       - {family: E, kind: slope_steep, level_cap: 0}
       - {family: E, kind: slope_steep_inv, level_cap: 0}
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_stones_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        balance_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gaps: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      B:
+        stair_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stair_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        rough: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        boxes: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      C:
+        pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        inverted_pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_grid: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        flat: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1075,6 +1108,42 @@ stages:
         kind: stairs_high_inv
         share: 0.02
         level_cap: 3
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_stones_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        balance_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gaps: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      B:
+        stair_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stair_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        rough: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        boxes: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        pallets: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stones: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        beam: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        consecutive: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      C:
+        pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        inverted_pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_grid: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        flat: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        box: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      E:
+        slope_steep: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        slope_steep_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1265,6 +1334,42 @@ stages:
         kind: stairs_high_inv
         share: 0.02
         level_cap: 3
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_stones_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        balance_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gaps: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      B:
+        stair_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stair_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        rough: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        boxes: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        pallets: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stones: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        beam: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        consecutive: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      C:
+        pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        inverted_pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_grid: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        flat: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        box: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      E:
+        slope_steep: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        slope_steep_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1461,6 +1566,42 @@ stages:
         kind: stairs_high_inv
         share: 0.02
         level_cap: 3
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_stones_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        balance_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gaps: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      B:
+        stair_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stair_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        rough: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        boxes: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        pallets: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stones: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        beam: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        consecutive: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      C:
+        pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        inverted_pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_grid: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        flat: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        box: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      E:
+        slope_steep: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        slope_steep_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1673,6 +1814,44 @@ stages:
       kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
       order:
       - {family: D, kind: crawl, level_cap: 0}
+    # kind_task commands (CG E.3 kind_task row, planner design 2026-11-13): an env of a kind opened here (not a
+    # continuous column) draws forward 1.0 or the flag only; no reverse / side / spin / stand before E5. The 0.63 : 0.37
+    # split is the CG assumption (the parent forward and flag shares 0.17 : 0.10 renormalised). Read by commands/ex42_shares.
+    kind_task:
+      A:
+        stepping_stones_low: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_stones_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        balance_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stepping_beams: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gaps: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      B:
+        stair_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stair_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        rough: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        boxes: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_up: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        climb_down: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        pallets: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stones: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        beam: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        consecutive: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      C:
+        pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        inverted_pyramid_stairs: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_grid: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        flat: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        gap: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        box: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        discrete_obstacles: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      D:
+        high_ledge: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+      E:
+        slope_steep: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        slope_steep_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
+        stairs_high_inv: {command_set: [forward_1.0, flag], command_weights: {forward_1.0: 0.63, flag: 0.37}}
     floors:
       global_command_floor:
         reverse: 0.05
