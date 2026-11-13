@@ -28,6 +28,7 @@ cells:
   slow_track_speed_max: [0.3, 0.3]
 # Command distribution cells (outside the 13-slot profile). low_forward_fraction: the share of the forward commands
 # drawn below 0.3 m/s (source stage 0.20). decisions.tsv 2026-11-13 15:17 (team lead; ledger commit a00ab2a8, read
-# directly): 0.2 -> 0.4 approved. The fence is the source value and the approved value.
+# directly): 0.2 -> 0.4 approved. decisions.tsv 2026-11-14 00:28 (team lead, direct; ledger commit bc66f6ee): the upper
+# limit 0.4 -> 0.5. The fence is the source value and the approved value.
 command_cells:
-  low_forward_fraction: [0.2, 0.4]
+  low_forward_fraction: [0.2, 0.5]

@@ -166,6 +166,16 @@ def stage_rewards(plan, stage_id, limits=None) -> dict | None:
     return _rewards(cell, limits if limits is not None else reward_limits(), f"{stage_id} plan row")
 
 
+def stage_slow_track_heading(plan, stage_id) -> bool:
+    """The stage's own plan row cell `slow_track_heading` (decisions.tsv 2026-11-14 00:28): heading envs inside the slow
+    band count for ex42_slow_track. False when the row has no cell; anything but a bool is refused."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    value = row.get("slow_track_heading", False)
+    if type(value) is not bool:
+        raise ValueError(f"EX-42 {stage_id} plan row slow_track_heading must be true or false")
+    return value
+
+
 def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
     """What is in force in the segment that starts at `boundary_index`: {commands, commands_entry, rewards,
     rewards_entry}. `commands` is None for a stage with no command profile, `rewards` None while neither the plan row
@@ -228,6 +238,9 @@ def read(path, plan, stage_id, boundary_index, limits=None) -> dict:
         "entry": state["low_forward_fraction_entry"], "value": state["low_forward_fraction"],
         "decided_at": low_entry.get("decided_at"), "reason": low_entry.get("reason"),
         "evidence": low_entry.get("evidence"), "limits_sha256": limits["sha256"]}}
+    # same rule: only a plan row that turns it on records it
+    if stage_slow_track_heading(plan, stage_id):
+        low["slow_track_heading"] = True
     return {**low, "format": RECEIPT, "stage_id": stage_id, "plan_sha256": plan.sha256, "boundary_index": int(boundary_index),
             "source": "adjust_file" if adjusted else "plan", "entry": state["commands_entry"],
             "file_sha256": hashlib.sha256(raw).hexdigest() if path else None,
@@ -313,6 +326,11 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
         if values is not None:
             target.weight = float(values[cell])
         out[cell] = {"before": before, "after": float(target.weight)}
+    if (record or {}).get("slow_track_heading"):       # the plan row includes heading envs (2026-11-14 00:28)
+        params = getattr(env_cfg.rewards, "ex42_slow_track").params
+        before = bool(params.get("include_heading", False))
+        params["include_heading"] = True
+        out["slow_track_heading"] = {"before": before, "after": True}
     return out
 
 
@@ -329,7 +347,13 @@ def reward_readback(env, record) -> dict:
     asked = rewards.get("values")
     if asked is not None and any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):
         raise ValueError(f"EX-42 segment rewards: the live reward manager carries {live}, the adjustment asked for {asked}")
-    return {"source": rewards.get("source", "plan"), "entry": rewards.get("entry"), "asked": asked, "live": live}
+    out = {"source": rewards.get("source", "plan"), "entry": rewards.get("entry"), "asked": asked, "live": live}
+    if (record or {}).get("slow_track_heading"):       # outside `live`: the ten reward cells keep their shape
+        carried = bool(manager.get_term_cfg("ex42_slow_track").params.get("include_heading", False))
+        if not carried:
+            raise ValueError("EX-42 segment rewards: the plan row includes heading envs in slow_track, the live term does not")
+        out["slow_track_heading"] = carried
+    return out
 
 
 def write_reward_readback(env, record, run_dir) -> dict:

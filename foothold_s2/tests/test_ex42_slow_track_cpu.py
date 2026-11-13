@@ -276,3 +276,17 @@ def test_constants_that_do_not_make_a_band_are_refused_even_inside_opened_fences
     with pytest.raises(ValueError, match="slow_track needs 0 < speed_min < speed_max"):
         adj.start_segment(view(plan), plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=False,
                           limits_path=limits)
+
+
+def test_heading_envs_inside_the_band_count_when_the_plan_row_includes_them():
+    """decisions.tsv 2026-11-14 00:28: a heading env's turn command comes from its controller and no longer excludes
+    it; a free env with a turn command and a flag env stay excluded, and so does a heading env outside the band."""
+    command = torch.tensor([[0.2, 0.0, 0.4], [0.2, 0.0, 0.4], [0.2, 0.0, 0.0], [0.5, 0.0, 0.4], [0.2, 0.0, 0.0]])
+    velocity = torch.tensor([[0.2, 0.0]] * 5)
+    heading = torch.tensor([True, False, True, True, False])
+    flag = torch.tensor([False, False, True, False, False])
+    env = _env(command, velocity, heading, flag)
+    assert st.slow_track_term(env, "base_velocity", include_heading=True, **K).tolist() == [1.0, 0.0, 0.0, 0.0, 1.0]
+    assert st.slow_track_term(env, "base_velocity", **K).tolist() == [0.0, 0.0, 0.0, 0.0, 1.0]      # the old contract
+    slow = st.slow_track_term(_env(command, torch.zeros(5, 2), heading, flag), "base_velocity", include_heading=True, **K)
+    assert abs(slow[0].item() - math.exp(-1 / K["sigma"] ** 2)) < 1e-6          # standing still under a heading env

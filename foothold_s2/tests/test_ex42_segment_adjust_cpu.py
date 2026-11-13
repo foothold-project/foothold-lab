@@ -408,13 +408,14 @@ class _Term:
         self.params = {**({"std": std, "command_name": "base_velocity"} if std is not None else {}), **params}
 
 
-def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshold=None, sigma=0.5):
+def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshold=None, sigma=0.5, heading=True):
     """The live reward manager of an E stage: the EX-41 terms as w86 registers them (feet_air_time has no `threshold`
     parameter until a segment puts one there) and ex42_slow_track as `ex42_slow_track.register` adds it."""
     air_params = {"name": "feet_air_time", **({} if threshold is None else {"threshold": threshold})}
     terms = {"track_lin_vel": _Term(2.0, lin), "track_ang_vel": _Term(1.0, ang),
              "ex41_feet_air_time": _Term(air, **air_params), "ex41_foot_slip": _Term(slip), "ex41_zero_yaw": _Term(yaw),
-             "ex42_slow_track": _Term(slow, command_name="base_velocity", speed_min=0.1, speed_max=0.3, sigma=sigma)}
+             "ex42_slow_track": _Term(slow, command_name="base_velocity", speed_min=0.1, speed_max=0.3, sigma=sigma,
+                                      **({"include_heading": True} if heading else {}))}       # the shipped E1 row includes heading envs
     return types.SimpleNamespace(get_term_cfg=lambda name: terms[name]), terms
 
 
@@ -430,18 +431,21 @@ UNCHANGED_SLOW = {"feet_air_time_threshold": {"before": 0.5, "after": 0.5}, "slo
 
 
 def test_the_tracking_widths_go_on_the_env_config_only_when_an_entry_asks(plan, view, tmp_path):
-    _, terms = _manager()
+    _, terms = _manager(heading=False)
     env_cfg = _env_cfg(terms)
     plain = start(view, plan, tmp_path, 1)
     assert adj.apply_reward_params(env_cfg, plain) == {"track_lin_vel_std": {"before": 0.5, "after": 0.5},
-                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.5}, **UNCHANGED_SLOW}
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.5}, **UNCHANGED_SLOW,
+                                                      "slow_track_heading": {"before": False, "after": True}}
+    assert terms["ex42_slow_track"].params["include_heading"] is True          # decisions.tsv 2026-11-14 00:28
     assert terms["ex41_feet_air_time"].params == {"name": "feet_air_time"}          # no reward cells: nothing is written
     assert adj.apply_reward_params(env_cfg, None)["track_lin_vel_std"]["after"] == 0.5
     other = tmp_path / "adjusted"
     other.mkdir()
     asked = start(view, plan, other, 1, document(plan, b1=reward_entry()))
     assert adj.apply_reward_params(env_cfg, asked) == {"track_lin_vel_std": {"before": 0.5, "after": 0.35},
-                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.4}, **UNCHANGED_SLOW}
+                                                      "track_ang_vel_std": {"before": 0.5, "after": 0.4}, **UNCHANGED_SLOW,
+                                                      "slow_track_heading": {"before": True, "after": True}}
     assert terms["track_lin_vel"].params == {"std": 0.35, "command_name": "base_velocity"} and terms["track_lin_vel"].weight == 2.0
     assert terms["ex41_feet_air_time"].params == {"name": "feet_air_time", "threshold": 0.5}
 
@@ -686,8 +690,8 @@ def limits_without_command_cells(tmp_path):
 
 
 def test_the_shipped_limits_open_low_forward_fraction_between_the_source_and_the_approved_value():
-    """decisions.tsv 2026-11-13 15:17 (ledger commit a00ab2a8): 0.2 -> 0.4."""
-    assert adj.reward_limits()["command_cells"] == {"low_forward_fraction": (0.2, 0.4)}
+    """decisions.tsv 2026-11-13 15:17 (a00ab2a8): 0.2 -> 0.4; 2026-11-14 00:28 (bc66f6ee): the upper limit 0.5."""
+    assert adj.reward_limits()["command_cells"] == {"low_forward_fraction": (0.2, 0.5)}
 
 
 def test_without_the_command_cell_in_the_limits_file_an_entry_is_refused(plan, view, tmp_path):
@@ -765,8 +769,9 @@ def test_a_limits_file_with_a_bad_command_cell_is_refused(tmp_path):
 # ---- the stage row's own low_forward_fraction (decisions.tsv 2026-11-13 15:17): in force from the first update ----
 
 def test_the_shipped_e1_row_registers_low_forward_fraction_inside_the_limits(row_plan):
-    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["low_forward_fraction"] == 0.4
-    assert adj.stage_low_forward(row_plan, "E1") == 0.4
+    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["low_forward_fraction"] == 0.5       # 2026-11-14 00:28
+    assert adj.stage_low_forward(row_plan, "E1") == 0.5
+    assert adj.stage_slow_track_heading(row_plan, "E1") is True and adj.stage_slow_track_heading(row_plan, "E1F") is False
     assert adj.stage_low_forward(row_plan, "E1F") == 0.4                    # lead 2026-11-13 16:00: E1F keeps it
     assert all(adj.stage_low_forward(row_plan, stage_id) is None
                for stage_id in ("E0", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"))       # decided from E1's final evidence
@@ -776,11 +781,12 @@ def test_the_row_share_holds_from_the_first_update_and_reaches_the_sampler(row_p
     view = row_view(row_plan)
     assert view.stages[0].low_forward_fraction == 0.2                       # the source stage, before the row is applied
     record = adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
-    assert record["low_forward_fraction"] == {"source": "plan", "entry": None, "value": 0.4, "decided_at": None,
+    assert record["slow_track_heading"] is True
+    assert record["low_forward_fraction"] == {"source": "plan", "entry": None, "value": 0.5, "decided_at": None,
                                               "reason": None, "evidence": None,
                                               "limits_sha256": adj.reward_limits()["sha256"]}
     slow, forward, _ = slow_forward_share(view.stages[0])
-    assert view.stages[0].low_forward_fraction == 0.4 and abs(slow - 0.19 * 0.4) < 0.002 and abs(forward - 0.19) < 0.003
+    assert view.stages[0].low_forward_fraction == 0.5 and abs(slow - 0.19 * 0.5) < 0.002 and abs(forward - 0.19) < 0.003
     assert not list(tmp_path.glob("segment_commands_b0*"))                  # the first segment leaves no record file
 
 
@@ -788,7 +794,7 @@ def test_the_row_share_stays_in_later_segments_and_in_their_records(row_plan, tm
     for k in (1, 2, 3):
         view = row_view(row_plan)
         record = adj.start_segment(view, row_plan, "E1", boundary_index=k, path=None, log_dir=str(tmp_path), write=True)
-        assert view.stages[0].low_forward_fraction == 0.4 and record["low_forward_fraction"]["source"] == "plan"
+        assert view.stages[0].low_forward_fraction == 0.5 and record["low_forward_fraction"]["source"] == "plan"
         assert json.loads((tmp_path / f"segment_commands_b{k}.json").read_text(encoding="utf-8")) == record
 
 
@@ -796,7 +802,7 @@ def test_a_row_share_outside_the_limits_or_without_the_limits_cell_is_refused(ro
     import copy as _copy
     from dataclasses import replace
     broken = replace(row_plan, document=_copy.deepcopy(row_plan.document))
-    next(r for r in broken.document["stages"] if r["id"] == "E1")["low_forward_fraction"] = 0.5
+    next(r for r in broken.document["stages"] if r["id"] == "E1")["low_forward_fraction"] = 0.6
     with pytest.raises(ValueError, match="E1 plan row low_forward_fraction must be a number inside the approved limits"):
         adj.start_segment(row_view(row_plan), broken, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
     with pytest.raises(ValueError, match="no approved limits"):
@@ -811,7 +817,7 @@ def test_the_live_objects_keep_the_share(row_plan, tmp_path):
     from foothold_s2.commands import ex42_shares
     view = row_view(row_plan)
     adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
-    assert view.command_contract is None and view.stages[0].low_forward_fraction == 0.4
+    assert view.command_contract is None and view.stages[0].low_forward_fraction == 0.5
     source = te.load_ex42_stage_zero_source(row_plan)
     flagged = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=row_plan,
                                                 stage_id="E1F")
@@ -824,3 +830,31 @@ def test_the_live_objects_keep_the_share(row_plan, tmp_path):
     assert free.low_forward_fraction == 0.4 and forward > 0.15 and abs(slow - forward * 0.4) < 0.002
     without = ex42_shares.CommandShares(flagged.command_contract, replace(flagged.stages[0], low_forward_fraction=0.2)).free_stage
     assert abs(slow_forward_share(without)[0] - forward * 0.2) < 0.002          # the share E1F would fall back to
+
+
+# ---- heading envs inside the slow band (decisions.tsv 2026-11-14 00:28, ledger commit bc66f6ee) ----
+
+def test_the_readback_refuses_a_live_term_that_does_not_include_heading_envs(plan, view, tmp_path):
+    manager, _ = _manager(heading=False)
+    record = start(view, plan, tmp_path, 1)
+    assert record["slow_track_heading"] is True
+    with pytest.raises(ValueError, match="includes heading envs in slow_track, the live term does not"):
+        adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
+    carried, _ = _manager()
+    body = adj.reward_readback(types.SimpleNamespace(reward_manager=carried), record)
+    assert body["slow_track_heading"] is True and set(body["live"]) == set(adj.REWARD_CELLS)      # the ten cells keep their shape
+
+
+def test_a_row_without_the_cell_leaves_heading_envs_out_and_a_non_bool_is_refused(row_plan, tmp_path):
+    import copy as _copy
+    from dataclasses import replace
+    old = replace(row_plan, document=_copy.deepcopy(row_plan.document))
+    next(r for r in old.document["stages"] if r["id"] == "E1").pop("slow_track_heading")
+    record = adj.start_segment(row_view(row_plan), old, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
+    assert "slow_track_heading" not in record
+    _, terms = _manager(heading=False)
+    assert "slow_track_heading" not in adj.apply_reward_params(_env_cfg(terms), record)
+    assert "include_heading" not in terms["ex42_slow_track"].params
+    next(r for r in old.document["stages"] if r["id"] == "E1")["slow_track_heading"] = "yes"
+    with pytest.raises(ValueError, match="slow_track_heading must be true or false"):
+        adj.start_segment(row_view(row_plan), old, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)

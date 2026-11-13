@@ -17,6 +17,8 @@ Contract (lead 2026-11-13 15:41):
 * A heading env (the command term's `heading` mask: its turn command comes from the heading controller) and a flag env
   (`is_flag_env`: its command comes from the flag state machine) are excluded whatever their command is, and so is every
   env whose turn command is not zero.
+* `include_heading` (decisions.tsv 2026-11-14 00:28, plan row cell `slow_track_heading`): a heading env inside the band
+  is active whatever turn command its controller writes. Flag envs and free envs with a turn command stay excluded.
 
 Draft formula of planner-lx; the constants are reward cells (plan row and segment adjustment), to be set from
 analyst-lx's measurements. No Kit import at module level.
@@ -29,15 +31,19 @@ DEFAULTS = {"speed_min": 0.1, "speed_max": 0.3, "sigma": 0.5}
 TERM = "ex42_slow_track"
 
 
-def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, excluded=None):
+def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, excluded=None, turn_exempt=None):
     """(N,) value of the term from body-frame planar velocity (N, 2), planar command (N, 2), turn command (N,) and the
-    (N,) mask of the envs the contract leaves out (heading envs, flag envs)."""
+    (N,) mask of the envs the contract leaves out (heading envs, flag envs). `turn_exempt` is the (N,) mask of the envs
+    whose turn command does not count against them (heading envs when the plan row includes them)."""
     if not (0.0 < speed_min < speed_max and sigma > 0.0):
         raise ValueError("slow track needs 0 < speed_min < speed_max and sigma > 0")
     if not (torch.isfinite(cmd_xy).all() and torch.isfinite(cmd_wz).all()):
         raise ValueError("slow track: nonfinite command")
     speed = torch.linalg.vector_norm(cmd_xy, dim=-1)
-    active = (speed >= speed_min) & (speed < speed_max) & (cmd_wz.abs() < 1e-6)
+    straight = cmd_wz.abs() < 1e-6
+    if turn_exempt is not None:
+        straight = straight | turn_exempt.bool()
+    active = (speed >= speed_min) & (speed < speed_max) & straight
     if excluded is not None:
         active &= ~excluded.bool()
     if (active & ~torch.isfinite(vel_xy).all(-1)).any():
@@ -47,7 +53,7 @@ def slow_track_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, sigma, exc
     return torch.where(active, torch.exp(-(relative / sigma) ** 2), torch.zeros_like(speed))
 
 
-def slow_track_term(env, command_name, speed_min, speed_max, sigma):
+def slow_track_term(env, command_name, speed_min, speed_max, sigma, include_heading=False):
     """Reward manager term. The reward manager does not call it while its weight is 0."""
     command = env.command_manager.get_command(command_name)
     term = env.command_manager.get_term(command_name)
@@ -56,7 +62,9 @@ def slow_track_term(env, command_name, speed_min, speed_max, sigma):
         raise ValueError("slow track needs the command term's heading and is_flag_env masks")
     velocity = env.scene["robot"].data.root_lin_vel_b[:, :2]
     return slow_track_value(velocity, command[:, :2], command[:, 2], speed_min=float(speed_min),
-                            speed_max=float(speed_max), sigma=float(sigma), excluded=heading.bool() | flag.bool())
+                            speed_max=float(speed_max), sigma=float(sigma),
+                            excluded=flag.bool() if include_heading else heading.bool() | flag.bool(),
+                            turn_exempt=heading.bool() if include_heading else None)
 
 
 def register(env_cfg, term_cfg_class=None) -> bool:
