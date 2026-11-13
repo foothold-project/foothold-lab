@@ -120,7 +120,9 @@ def test_invalid_step_is_terminal_for_previous_gae():
     assert alg.storage.dones[1, 0] == 1
     alg.compute_returns(obs)
     assert alg.storage.returns[1, 0] == 0
-    assert alg.storage.returns[0, 0] == 1
+    # Analytic return is 1. Float32 GAE subtraction/addition can differ by one
+    # ULP (seed 3/7 also reproduce 0.9999999404 on the unchanged base PPO).
+    torch.testing.assert_close(alg.storage.returns[0, 0], torch.ones(1), rtol=0, atol=1e-7)
 
 
 def test_invalid_final_bootstrap_overflow_cannot_poison_valid_gae():
