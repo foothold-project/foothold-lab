@@ -1,6 +1,7 @@
 """E6a / E6b / M exit judges and the M return decision. Synthetic raw evidence in the stated formats; no Kit, no GPU."""
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,7 +19,8 @@ def _posture(folder, index, error, axis=None, sha=SHA):
     path.mkdir(parents=True, exist_ok=True)
     (path / "posture_cells.json").write_text(json.dumps({
         "format": late.POSTURE_FORMAT, "checkpoint_sha256": sha, "boundary_index": index,
-        "axis": axis or late.E6A_AXES[index], "tracking_error_median": error}))
+        "axis": axis or late.E6A_AXES[index], "range": late.E6A_RANGES[index],
+        "tracking_error_median": error}))
 
 
 def _mapoff(folder, gaps, sha=SHA, envs=64):
@@ -68,11 +70,11 @@ def test_mapoff_missing_level_or_wrong_env_count_is_refused(tmp_path):
     assert late.mapoff_window(None)["judgement"] == "HOLD"
 
 
-def _ctx(tmp_path, stage):
+def _ctx(tmp_path, stage, update=500):
     run = tmp_path / "run"
-    cur = run / "m500"
+    cur = run / f"m{update}"
     cur.mkdir(parents=True)
-    return SimpleNamespace(stage_id=stage, checkpoint=run / "model_500.pt", evaluation=cur, checkpoint_sha=SHA,
+    return SimpleNamespace(stage_id=stage, checkpoint=run / f"model_{update}.pt", evaluation=cur, checkpoint_sha=SHA,
                            root=tmp_path, cfg={"baseline": {"sha256": "b" * 64}}, digest=None,
                            plan={"evaluation": {"interval_updates": 250},
                                  "assumptions_pending_lead": {"q4_two_window_range": {"value": {"measured": {}}}}})
@@ -89,22 +91,151 @@ def stand_in(monkeypatch):
 
 
 def _run(ctx, judge):
-    return judge.judge(ctx, {"checkpoint_sha256": SHA})["stage_exit"]
+    return judge.judge(ctx, {"checkpoint_sha256": ctx.checkpoint_sha})["stage_exit"]
 
 
-def test_e6a_passes_only_with_both_windows_and_the_maintenance_table(tmp_path, stand_in):
-    ctx = _ctx(tmp_path, "E6a")
-    _posture(ctx.evaluation, 1, 0.01)
-    _posture(ctx.evaluation.parent / "m250", 1, 0.015)
+FULL = [(250, 0), (500, 0), (750, 1), (1000, 1), (1250, 2), (1500, 2)]       # two windows per boundary, in the fixed order
+
+
+def _sha(run, n):
+    return hashlib.sha256((run / f"model_{n}.pt").read_bytes()).hexdigest()
+
+
+def _history(tmp_path, stand_in, windows=FULL, error=0.01, at=None):
+    """A run folder with real checkpoint files and one posture window per (update, boundary) pair; ctx sits at `at`."""
+    at = at or windows[-1][0]
+    ctx = _ctx(tmp_path, "E6a", at)
+    run = ctx.evaluation.parent
+    for n, index in windows:
+        (run / f"model_{n}.pt").write_bytes(f"model-{n}".encode())
+        _posture(run / f"m{n}", index, error, sha=_sha(run, n))
+    (run / f"model_{at}.pt").write_bytes(f"model-{at}".encode())
+    ctx.checkpoint_sha = _sha(run, at)
+    stand_in["prior"] = {"checkpoint_sha256": _sha(run, at - 250), "is_prior": True} if (run / f"model_{at - 250}.pt").is_file() else None
+    return ctx
+
+
+def _progress(ctx):
+    return _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"]
+
+
+def test_e6a_first_height_axis_alone_never_graduates_the_stage(tmp_path, stand_in):
+    """The reviewed counterexample: boundary 0, height error 0.01, two windows, no roll window."""
+    ctx = _history(tmp_path, stand_in, FULL[:2])
+    exit_row = _run(ctx, late.E6aPostureTwoWindowJudge())
+    assert exit_row["items"]["posture_current"]["judgement"] == "PASS"
+    assert exit_row["items"]["posture_previous"]["judgement"] == "PASS"            # the axis itself passed ...
+    assert exit_row["judgement"] == "HOLD"                                         # ... the stage did not
+    row = exit_row["items"]["axis_progress"]
+    assert row["judgement"] == "HOLD" and row["completed_now"] is True
+    assert row["next_boundary_index"] == 1 and row["next_axis"] == "posture_height" and row["next_range"] == "full"
+    assert [c["boundary_index"] for c in row["completed"]] == [0]
+
+
+def test_e6a_passes_only_after_every_boundary_of_the_fixed_order(tmp_path, stand_in):
+    ctx = _history(tmp_path, stand_in)
     judge = late.E6aPostureTwoWindowJudge()
-    assert _run(ctx, judge)["judgement"] == "PASS"
+    exit_row = _run(ctx, judge)
+    assert exit_row["judgement"] == "PASS"
+    done = exit_row["items"]["axis_progress"]["completed"]
+    assert [(c["boundary_index"], c["axis"], c["range"]) for c in done] == [
+        (0, "posture_height", "narrow"), (1, "posture_height", "full"), (2, "posture_roll", "roll")]
+    assert all(len(set(c["posture_sha256"])) == 2 and len(c["checkpoint_sha256"]) == 2 for c in done)   # raw + checkpoint SHAs kept
     stand_in["maintenance"] = "HOLD"
     assert _run(ctx, judge)["judgement"] == "HOLD"                    # maintenance never bypassed
     stand_in["maintenance"], stand_in["prior_maintenance"] = "PASS", "HOLD"
     assert _run(ctx, judge)["judgement"] == "HOLD"                    # nor the previous window's table
     stand_in["prior_maintenance"] = "PASS"
-    _posture(ctx.evaluation.parent / "m250", 1, 0.5)
+    _posture(ctx.evaluation.parent / "m1250", 2, 0.5, sha=_sha(ctx.evaluation.parent, 1250))
     assert _run(ctx, judge)["judgement"] == "FAIL"                    # a failed prior window fails the exit
+
+
+def test_e6a_a_middle_axis_pass_only_advances_to_the_next_axis(tmp_path, stand_in):
+    ctx = _history(tmp_path, stand_in, FULL[:4])
+    exit_row = _run(ctx, late.E6aPostureTwoWindowJudge())
+    row = exit_row["items"]["axis_progress"]
+    assert exit_row["judgement"] == "HOLD" and row["judgement"] == "HOLD"
+    assert [c["boundary_index"] for c in row["completed"]] == [0, 1]
+    assert row["next_boundary_index"] == 2 and row["next_axis"] == "posture_roll" and row["completed_now"] is True
+
+
+def test_e6a_roll_windows_missing_or_incomplete_hold(tmp_path, stand_in):
+    ctx = _history(tmp_path, stand_in, FULL[:5], at=1250)             # roll has one window only
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == "HOLD"
+    ctx = _history(tmp_path / "b", stand_in, FULL[:4], at=1500)       # current window has no posture file at all
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == "HOLD"
+
+
+@pytest.mark.parametrize("windows", [
+    [(250, 1), (500, 1), (750, 0), (1000, 0), (1250, 2), (1500, 2)],        # boundary order exchanged
+    [(250, 0), (500, 0), (750, 2), (1000, 2), (1250, 2), (1500, 2)],        # the second height boundary skipped
+    [(250, 0), (500, 0), (750, 0), (1000, 0), (1250, 2), (1500, 2)]])       # a completed boundary repeated, never advancing twice
+def test_e6a_skipped_swapped_or_repeated_boundaries_never_pass(tmp_path, stand_in, windows):
+    ctx = _history(tmp_path, stand_in, windows)
+    exit_row = _run(ctx, late.E6aPostureTwoWindowJudge())
+    assert exit_row["judgement"] == "HOLD"
+    assert [c["boundary_index"] for c in exit_row["items"]["axis_progress"].get("completed", [])] in ([], [0])
+    if windows[2][1] > 1 or windows[0][1] == 1:                          # skipped or exchanged: refused with its reason, not ignored
+        assert "before boundary" in exit_row["items"]["axis_progress"]["reason"]
+
+
+@pytest.mark.parametrize("failed", [250, 500])
+def test_e6a_a_failed_window_breaks_the_pair(tmp_path, stand_in, failed):
+    ctx = _history(tmp_path, stand_in, FULL[:2])
+    _posture(ctx.evaluation.parent / f"m{failed}", 0, 0.5, sha=_sha(ctx.evaluation.parent, failed))
+    row = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"]
+    assert row["judgement"] == "HOLD" and row["completed"] == [] and row["next_boundary_index"] == 0
+
+
+def test_e6a_resume_reads_the_same_history_and_a_later_window_does_not_advance_twice(tmp_path, stand_in):
+    ctx = _history(tmp_path, stand_in, FULL[:4])
+    first = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"]
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"] == first          # re-reading is stable
+    ctx = _history(tmp_path, stand_in, FULL)
+    later = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"]
+    assert later["completed"][:2] == first["completed"]                                          # earlier boundaries unchanged
+    ctx2 = _history(tmp_path / "later", stand_in, FULL + [(1750, 2)])         # a window after the graduation repeats boundary 3
+    assert [c["boundary_index"] for c in _progress(ctx2)["completed"]] == [0, 1, 2]
+
+
+def test_e6a_windows_after_this_one_are_not_part_of_its_history(tmp_path, stand_in):
+    ctx = _history(tmp_path, stand_in, FULL, at=1000)                 # the later roll windows already exist on disk
+    row = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["axis_progress"]
+    assert row["judgement"] == "HOLD" and [c["boundary_index"] for c in row["completed"]] == [0, 1]
+
+
+@pytest.mark.parametrize("tamper", ["range", "sha", "checkpoint_missing", "axis_order"])
+def test_e6a_wrong_range_swapped_sha_old_checkpoint_or_plan_order_hold(tmp_path, stand_in, tamper):
+    ctx = _history(tmp_path, stand_in)
+    run = ctx.evaluation.parent
+    path = run / "m750" / "posture_cells" / "posture_cells.json"
+    if tamper == "range":
+        row = json.loads(path.read_text())
+        row["range"] = "narrow"                                       # the full-height boundary measured over the narrow range
+        path.write_text(json.dumps(row))
+    elif tamper == "sha":
+        _posture(run / "m750", 1, 0.01, sha=_sha(run, 250))           # another checkpoint's evidence in this window
+    elif tamper == "checkpoint_missing":
+        (run / "model_750.pt").unlink()                               # the old checkpoint is gone, identity cannot be shown
+    else:
+        ctx.plan["stages"] = [{"id": "E6a", "boundary": {"axis_order": ["posture_roll", "posture_height", "posture_height"]}}]
+    exit_row = _run(ctx, late.E6aPostureTwoWindowJudge())
+    assert exit_row["judgement"] == "HOLD" and exit_row["items"]["axis_progress"]["judgement"] == "HOLD"
+
+
+def test_e6a_the_real_plan_order_is_what_the_judge_reads(tmp_path, stand_in):
+    import yaml
+    plan = yaml.safe_load((Path(late.__file__).parent / "curriculum" / "ex42-prep.yaml").read_text(encoding="utf-8"))
+    row = next(r for r in plan["stages"] if r["id"] == "E6a")
+    assert tuple(row["boundary"]["axis_order"]) == late.E6A_AXES
+    ctx = _history(tmp_path, stand_in)
+    ctx.plan["stages"] = plan["stages"]
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == "PASS"
+
+
+def test_e6a_posture_evidence_without_its_range_is_refused():
+    with pytest.raises(ValueError, match="range"):
+        late.posture_window({"boundary_index": 1, "axis": "posture_height", "tracking_error_median": 0.01}, 1)
 
 
 def test_a_missing_prior_window_or_evidence_is_hold_never_pass(tmp_path, stand_in):
@@ -337,7 +468,7 @@ def test_e6a_two_windows_must_be_the_same_boundary_and_axis(tmp_path, stand_in, 
     ctx = _ctx(tmp_path, "E6a")
     _posture(ctx.evaluation, now[0], 0.01, axis=now[1])
     _posture(ctx.evaluation.parent / "m250", prior[0], 0.01, axis=prior[1])
-    assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == state
+    assert _run(ctx, late.E6aPostureTwoWindowJudge())["items"]["same_boundary"]["judgement"] == state
 
 
 def test_e6a_boundary_number_fixes_the_axis_and_limit(tmp_path, stand_in):
@@ -351,7 +482,7 @@ def test_e6a_boundary_number_fixes_the_axis_and_limit(tmp_path, stand_in):
     items = _run(ctx, late.E6aPostureTwoWindowJudge())["items"]
     assert items["posture_current"]["limit"] == 0.02 and items["posture_current"]["judgement"] == "FAIL"
     (ctx.evaluation / "posture_cells" / "posture_cells.json").write_text(json.dumps({
-        "format": late.POSTURE_FORMAT, "checkpoint_sha256": SHA, "boundary_index": 3, "axis": "posture_roll",
+        "format": late.POSTURE_FORMAT, "checkpoint_sha256": SHA, "boundary_index": 3, "axis": "posture_roll", "range": "roll",
         "tracking_error_median": 0.0}))
     assert _run(ctx, late.E6aPostureTwoWindowJudge())["judgement"] == "HOLD"     # a fourth boundary does not exist
 
