@@ -1225,6 +1225,32 @@ class EX42StageZeroRuntime:
         self.runner = runner
         runner.continuous_curriculum = self
         self._learned_cells_init()
+        config = getattr(self, "live_monitor_config", None)
+        if isinstance(config, dict) and config.get("enabled") is True:
+            from foothold_s2.ex42_live_metrics import LiveMetrics
+            alert_env = config.get("alert_run_env")
+            if alert_env != "EX42_ALERT_RUN_ID" or not os.environ.get(alert_env):
+                raise ValueError("EX-42 E1 live monitor needs EX42_ALERT_RUN_ID before launch")
+            slow_cfg = self.env.reward_manager.get_term_cfg("ex42_slow_track")
+            slow_params = slow_cfg.params
+            self.live_metrics = LiveMetrics(
+                self._record_dir(), rank=int(os.environ.get("RANK", "0")),
+                world_size=int(os.environ.get("WORLD_SIZE", "1")), stage_id=self.stage_id,
+                plan_sha256=self.plan_sha256,
+                slow_min=float(slow_params["speed_min"]), slow_max=float(slow_params["speed_max"]),
+                slow_sigma=float(slow_params["sigma"]), slow_weight=float(slow_cfg.weight),
+                moving_updates=config["moving_updates"], decline_from_peak=config["decline_from_peak"],
+                off_survival_updates=config["map_off_survival_updates"],
+                off_survival_drop=config["map_off_survival_drop_alert"], initial=config["initial"],
+                alert_run_id=os.environ[alert_env])
+            adjustment_config = getattr(self, "live_adjustment_config", None)
+            if not isinstance(adjustment_config, dict) or adjustment_config.get("file_env") != "EX42_UPDATE_ADJUST":
+                raise ValueError("EX-42 E1 live adjustment must be pinned in the plan")
+            from foothold_s2.ex42_live_adjust import LiveAdjustment
+            self.live_adjustment = LiveAdjustment(
+                self, adjustment_config, plan_sha256=self.plan_sha256,
+                path=os.environ.get("EX42_UPDATE_ADJUST"), log_dir=self._record_dir(),
+                rank=int(os.environ.get("RANK", "0")), world_size=int(os.environ.get("WORLD_SIZE", "1")))
 
     def on_reset(self, env_ids: Any) -> None:
         if self.command_allocation is not None:
@@ -1259,6 +1285,18 @@ class EX42StageZeroRuntime:
         if type(update) is not int or not 1 <= update <= self.maximum_updates:
             raise ValueError(f"EX-42 stage-zero update is outside its approved 1..{self.maximum_updates} range")
         self.iteration = update
+        if getattr(self, "live_adjustment", None) is not None:
+            receipt = self.live_adjustment.on_update_start(update)
+            if receipt is not None:
+                print("EX42_LIVE_ADJUST " + json.dumps(receipt, ensure_ascii=False, sort_keys=True), flush=True)
+        if getattr(self, "live_metrics", None) is not None:
+            slow_cfg = self.env.reward_manager.get_term_cfg("ex42_slow_track")
+            slow_params = slow_cfg.params
+            self.live_metrics.slow_min = float(slow_params["speed_min"])
+            self.live_metrics.slow_max = float(slow_params["speed_max"])
+            self.live_metrics.slow_sigma = float(slow_params["sigma"])
+            self.live_metrics.slow_weight = float(slow_cfg.weight)
+            self.live_metrics.begin(update, device=self.env.device)
         self._exposure_receipt(update - 1, "start")
         if update == 1 and self.env is not None:
             terrain = getattr(getattr(self.env, "scene", None), "terrain", None)
@@ -1324,6 +1362,13 @@ class EX42StageZeroRuntime:
             raise RuntimeError("EX-42 stage-zero pre-step was recorded twice")
         self._step_pending = True
         self.pre_step_count += 1
+        if getattr(self, "live_metrics", None) is not None:
+            term = self.env.command_manager.get_term("base_velocity")
+            pstate = self.runner.pstate
+            self._live_pre = (self.runner._consumed_command(self.iteration).detach().clone(),
+                              term.slot_current.detach().clone(), term.heading.detach().clone(),
+                              term.is_flag_env.detach().clone(), pstate.use_gt.detach().clone(),
+                              pstate.map_off.detach().clone())
         if self.command_allocation is not None:
             self.command_allocation.pre_step()
         if getattr(self, "learned_cells", None) is not None:
@@ -1348,6 +1393,11 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero done vector must match the environment batch")
         self._step_pending = False
         self.post_step_count += 1
+        if getattr(self, "live_metrics", None) is not None:
+            command, slot, heading, flag, gt, off = self._live_pre
+            velocity = self.env.scene["robot"].data.root_lin_vel_b.detach()
+            self.live_metrics.add(command, velocity, slot, heading, flag, gt, off, done)
+            self._live_pre = None
         if getattr(self, "learned_cells", None) is not None:
             try:
                 self.learned_cells.post_step(done, self.runner.pstate.map_off, self.iteration)

@@ -275,6 +275,31 @@ stages:
         side_right: 0.03
 - id: E1
   exit_judge: map39_e1_v2_two_window
+  # E1 redesign v3, decisions.tsv 2026-11-14 00:09 (48fd2c94). These
+  # records are training observations, not graduation thresholds. A changed
+  # plan needs a new SHA and separately pinned launch approval.
+  live_monitor:
+    enabled: true
+    moving_updates: 20
+    decline_from_peak: 0.05
+    map_off_survival_updates: 50
+    map_off_survival_drop_alert: 0.05
+    alert_run_env: EX42_ALERT_RUN_ID
+    initial: {slow_forward: learning, side_left: learning, side_right: learning}
+  live_adjustment:
+    file_env: EX42_UPDATE_ADJUST
+    segment_reward_limits_sha256: b73298a96c68798ff716fe56d88cce913800274d3130bba2845cd5db454c34f0
+    # Extra cells match the approved v25 limits (a00ab2a8, 73abb340).
+    # The four older reward cells stay in ex42-reward-adjust-limits.yaml.
+    extra_reward_limits:
+      zero_yaw: [-2.0, -0.5]
+      feet_air_time_threshold: [0.04, 0.5]
+      slow_track: [0.0, 0.3]
+      slow_track_sigma: [0.5, 0.5]
+      slow_track_speed_min: [0.1, 0.1]
+      slow_track_speed_max: [0.3, 0.3]
+    command_limits:
+      low_forward_fraction: [0.2, 0.4]
   authorization_contract:
     validator: legacy_e1
     source_stage_ids:
