@@ -1,14 +1,17 @@
 {
-  "created_at": "2026-11-13T19:33:06.772309+09:00",
-  "source_sha256": "e7102a7d885f6c66d6874c22482fa924a82ef201e0994e6b95d8a3a13c87a769",
-  "scope": "four requested mutations; CPU; isolated copies",
+  "created_at": "2026-11-13T19:41:36.932490+09:00",
+  "source_sha256": {
+    "boundary_rules.py": "e7102a7d885f6c66d6874c22482fa924a82ef201e0994e6b95d8a3a13c87a769",
+    "boundary_read.py": "7947311b4305958ed8d9689e06486f5bbc9b3e61992f863648ad8365a6eabf1c"
+  },
+  "scope": "four threshold, four GT/PRED review mutants, two consumer variants; CPU; isolated copies",
   "results": [
     {
       "name": "control",
       "returncode": 0,
       "verified": true,
       "failed_tests": [],
-      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check-pred-final/control.txt"
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/control.txt"
     },
     {
       "name": "r6_fwd02_060_to_050",
@@ -20,7 +23,7 @@
         "test_boundary_thresholds.py::test_r6_fwd02_threshold_is_060_not_050[0.55-R6-eval_pred-0]",
         "test_boundary_thresholds.py::test_r6_fwd02_threshold_is_060_not_050[0.55-R6-eval_pred-5]"
       ],
-      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check-pred-final/r6_fwd02_060_to_050.txt"
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/r6_fwd02_060_to_050.txt"
     },
     {
       "name": "r2_median_010_to_015",
@@ -30,7 +33,7 @@
         "test_boundary_thresholds.py::test_r2_median_threshold_is_010_not_015[0.13-R2-eval_gt]",
         "test_boundary_thresholds.py::test_r2_median_threshold_is_010_not_015[0.13-R2-eval_pred]"
       ],
-      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check-pred-final/r2_median_010_to_015.txt"
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/r2_median_010_to_015.txt"
     },
     {
       "name": "r5_500_to_250",
@@ -40,7 +43,7 @@
         "test_boundary_thresholds.py::test_r5_observation_requires_500_updates[250-False]",
         "test_boundary_thresholds.py::test_r5_observation_requires_500_updates[499-False]"
       ],
-      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check-pred-final/r5_500_to_250.txt"
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/r5_500_to_250.txt"
     },
     {
       "name": "stand_four_inclusive_to_exclusive",
@@ -48,9 +51,82 @@
       "verified": true,
       "failed_tests": [
         "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[eval_gt-60-ROLLBACK]",
-        "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[eval_pred-60-ROLLBACK]"
+        "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[eval_pred-60-ROLLBACK]",
+        "test_boundary_review_followup.py::test_rollback_default_includes_pred_and_excludes_off",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[stand/flat/eval_pred/stand/success-60-60]"
       ],
-      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-check-pred-final/stand_four_inclusive_to_exclusive.txt"
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/stand_four_inclusive_to_exclusive.txt"
+    },
+    {
+      "name": "rollback_default_gt_only",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_review_followup.py::test_rollback_default_includes_pred_and_excludes_off"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/rollback_default_gt_only.txt"
+    },
+    {
+      "name": "rollback_consumer_gt_only",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[eval_pred-60-ROLLBACK]",
+        "test_boundary_thresholds.py::test_stand_drop_includes_exactly_four_envs[eval_pred-59-ROLLBACK]",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[map/mixed012/eval_pred/spin+1.2/yaw_follow-0.8-0.82]",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[low/L5/eval_pred/side-0.4/R-0.8-0.82]",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[yaw/L2/eval_pred/fwd1.0/median_abs_rad-0.08-0.07]",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[stand/flat/eval_pred/stand/success-60-60]",
+        "test_boundary_review_followup.py::test_pred_regression_drives_actual_rollback[map/mixed012/eval_pred/stop/speed_median_mps-0.05-0.04]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/rollback_consumer_gt_only.txt"
+    },
+    {
+      "name": "previous_pred_validity_removed",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_supply_second_rollback_window[FAIL]",
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_supply_second_rollback_window[HOLD]",
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_supply_second_rollback_window[None]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/previous_pred_validity_removed.txt"
+    },
+    {
+      "name": "raise_previous_pred_guard_removed",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_allow_actual_raise[FAIL]",
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_allow_actual_raise[HOLD]",
+        "test_boundary_review_followup.py::test_prior_pred_nonpass_cannot_allow_actual_raise[None]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/raise_previous_pred_guard_removed.txt"
+    },
+    {
+      "name": "judged_mode_missing_guard_removed",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_review_followup.py::test_missing_judged_mode_verdict_cannot_become_a_treatment[missing0]",
+        "test_boundary_review_followup.py::test_missing_judged_mode_verdict_cannot_become_a_treatment[missing1]",
+        "test_boundary_review_followup.py::test_missing_judged_mode_verdict_cannot_become_a_treatment[missing2]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/judged_mode_missing_guard_removed.txt"
+    },
+    {
+      "name": "thirteen_names_guard_removed",
+      "returncode": 1,
+      "verified": true,
+      "failed_tests": [
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[rename-eval_gt]",
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[rename-eval_pred]",
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[rename-probe_prop_only]",
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[drop-eval_gt]",
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[drop-eval_pred]",
+        "test_boundary_review_followup.py::test_real_parent_requires_all_thirteen_named_commands[drop-probe_prop_only]"
+      ],
+      "log": "/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/mutation-followup-final/thirteen_names_guard_removed.txt"
     }
   ],
   "all_verified": true
