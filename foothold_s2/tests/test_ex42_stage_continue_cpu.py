@@ -95,7 +95,8 @@ def test_a_pass_before_the_last_planned_segment_continues_the_stage_and_never_st
 def test_the_stage_bound_extends_only_for_the_newly_authorized_hold(tmp_path, judgment):
     decision, _ = _decide(tmp_path, _e1_maximum(), judgment)
     if judgment == "HOLD":
-        assert decision["action"] == "continue" and decision["segment_end"] == _e1_maximum() + _interval()
+        assert decision["action"] == "notify" and decision["state"] == "extension_needs_lead_review"
+        assert "segment_end" not in decision
     else:
         assert decision["action"] == "notify" and decision["state"] == "stage_bound_reached_not_ready"
 
