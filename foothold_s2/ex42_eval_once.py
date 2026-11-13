@@ -548,8 +548,13 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
     other compute processes) runs first: boundary evaluations still queued or running must not share a GPU with it."""
     from foothold_s2.ex42_stage_handoff import decide_next_stage, materializer_from_env, start_launcher
     manifest = Path(checkpoint).parent / "manifest.json"
+    from foothold_s2.ex42_map_off_branch import CELLS_FILE, branch_from_env
+    cells = output / "map_off_cells" / CELLS_FILE            # the fixed-level cells of this boundary, when measured
+    out_root = os.environ.get("EX42_MATERIALIZE_OUT_ROOT")
     decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest,
-                                 materialize=materializer_from_env(os.environ))
+                                 materialize=materializer_from_env(os.environ), branch=branch_from_env(os.environ),
+                                 map_off_cells=cells if cells.is_file() else None,
+                                 out_root=Path(out_root) if out_root else None)
     if decision is None:
         return None
     notice = {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,

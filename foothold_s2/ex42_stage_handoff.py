@@ -103,8 +103,69 @@ def _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest
             "authorization": proof}
 
 
+def _boundary_changed_axes(plan, base, following):
+    """The axes this boundary changes: none when the stage goes on (not a PASS), else the next stage's registered axes.
+    A passing boundary therefore never enters M (CG E.1 M row: no other axis change at the entry boundary)."""
+    if base.get("judgment") != "PASS" or following is None:
+        return []
+    row = next(r for r in plan.document["stages"] if r["id"] == following)
+    return list(row.get("boundary_axes") or ["next_stage"])
+
+
+def _map_off_entry(plan, approvals_path, stage_id, iteration, base, p1_path, manifest_path, branch, cells_path,
+                   following):
+    """The M branch entry at an approved source stage's boundary (CG E.1 M row). None = no branch here: the normal chain
+    goes on (the reason is left in `base["map_off_entry"]`). Entering needs the whole chain: approved source, measured
+    cells of this checkpoint, no other axis change, the M approval cell and the EX-42 budget."""
+    from foothold_s2 import ex42_map_off_branch as mob
+    changed_axes = _boundary_changed_axes(plan, base, following)
+    try:
+        if stage_id not in mob.approved_sources(plan.document):
+            return None
+        decision = mob.entry_decision(plan.document, stage_id, cells_path, checkpoint_sha256=base["checkpoint_sha256"],
+                                      changed_axes=changed_axes, plan_sha256=plan.sha256)
+    except ValueError as exc:
+        base["map_off_entry"] = {"state": "refused", "reason": str(exc)}
+        return None
+    base["map_off_entry"] = {k: decision[k] for k in ("state", "reason") if k in decision}
+    if decision["action"] != "enter":
+        return None
+    try:
+        made = branch(plan_path=plan.path, approvals_path=approvals_path, source_stage_id=stage_id,
+                      cells_path=cells_path, checkpoint_sha256=base["checkpoint_sha256"], source_iteration=iteration,
+                      changed_axes=changed_axes, parent_manifest=manifest_path, gate_receipt=p1_path)
+    except (ValueError, OSError, KeyError, TypeError) as exc:      # FileExistsError: one entry per boundary
+        return {**base, "action": "notify", "state": "map_off_branch_not_authorized",
+                "reason": f"M entry condition is met but the branch did not start: {exc}"}
+    return {**base, "action": "launch", "state": "map_off_branch_authorized", "next_stage_id": "M", "target_stage": "M",
+            "plan": made["plan"], "approvals": made["approvals"],
+            "authorization": {"kind": "map_off_branch_entry", "source_stage_id": stage_id, **made["entry"]}}
+
+
+def _m_boundary(plan_path, approvals_path, iteration, base, p1_path, manifest_path, p1, out_root, notify):
+    """One boundary of the running M branch: continue, extend or return to the source stage (see the branch module)."""
+    from foothold_s2 import ex42_map_off_branch as mob
+    try:
+        checkpoint = Path(manifest_path).parent / f"model_{iteration}.pt"
+        if _sha256(checkpoint) != p1.get("checkpoint_sha256"):
+            raise ValueError("the boundary checkpoint is not the one that was scored")
+        if out_root is None:
+            raise ValueError("no output root for the return plan (EX42_MATERIALIZE_OUT_ROOT)")
+        gate = _sha256(p1_path)
+        made = mob.decide_m_boundary(Path(plan_path), p1_path, iteration, p1.get("judgment"), notify=notify,
+                                     return_out=Path(out_root) / f"M_return_{gate[:12]}")
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        return {**base, "action": "notify", "state": "m_decision_failed", "reason": f"M boundary not decided: {exc}"}
+    out = {**base, **made, "next_stage_id": made["return_to"]}
+    if made["action"] == "continue":
+        out.update(resume_checkpoint=str(checkpoint), segment_end=made["segment_end"])
+    out.setdefault("reason", f"M boundary {iteration}: {made['state']}")
+    return out
+
+
 def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, manifest_path,
-                      materialize=None) -> dict[str, Any] | None:
+                      materialize=None, *, branch=None, map_off_cells=None, out_root=None,
+                      notify=None) -> dict[str, Any] | None:
     """None when this update is not a boundary of the stage. Otherwise a decision for the boundary:
     launch (the gate passed at or after the stage minimum and the next stage has its approved cell), continue (the
     same stage goes on from this save), or notify (anything else, with the reason).
@@ -133,6 +194,13 @@ def decide_next_stage(plan_path, approvals_path, stage_id, iteration, p1_path, m
     base = {"stage_id": stage_id, "boundary_iteration": iteration, "judgment": p1.get("judgment"),
             "next_stage_id": following, "checkpoint_sha256": p1.get("checkpoint_sha256"),
             "gate_sha256": _sha256(p1_path)}
+    if stage_id == "M":      # the optional map-off branch: its own return contract, never the linear next stage
+        return _m_boundary(plan_path, approvals_path, iteration, base, p1_path, manifest_path, p1, out_root, notify)
+    if branch is not None and map_off_cells is not None:
+        entered = _map_off_entry(plan, approvals_path, stage_id, iteration, base, p1_path, manifest_path, branch,
+                                 map_off_cells, following)
+        if entered is not None:
+            return entered
     if not (p1.get("judgment") == "PASS" and iteration >= minimum and following is not None):
         if index > 0:      # not ready (or only a PASS before the stage minimum): the stage goes on from this save
             return _continue_decision(plan, approvals_path, stage_id, iteration, base, manifest_path, p1)
