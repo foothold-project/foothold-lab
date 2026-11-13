@@ -2,7 +2,7 @@
 > 작성: 오흥재(analyst-lx) · 2026-11-14
 > 근거: lead 00:25 의뢰 · 원장 915dce6e · 설치 isaac311 rsl_rl PPO
 > 요지: 실제 미니배치 KL과 학습률, 해당 표본의 수집 당시 조건을 양 rank에서 기록
-> 상태: CPU 검증 34 PASS · 4 SKIP · GPU 실측 및 운영 연결 미확인
+> 상태: 최종 CPU 36 PASS · 돌연변이 8/8 검출 · GPU 실측 및 운영 연결 미확인
 
 # PPO 미니배치 KL 기록 계약
 
@@ -22,13 +22,13 @@ analyst 소유는 `runners/ppo_kl_audit.py`, `ex41_valid_storage.py`, `ex41_crit
 | 시점 | 기존 scheduler 계산과 clipping 뒤, optimizer.step이 파라미터를 바꾸기 직전. 별도 정책 forward나 난수 추출 없음 |
 | 회차 · epoch · minibatch | runtime.iteration과 storage의 실제 shuffle index, epoch와 minibatch는 0부터 |
 | 학습률 | 미니배치 진입 전과 scheduler 적용 후 실제 alg.learning_rate, optimizer group 값 |
-| 양 rank 결합 | 별도 collective를 넣지 않고 사후 파일 결합. rank별 평균의 산술평균이 실제 scheduler 분모. 샘플 수 가중 평균 아님 |
+| 양 rank 결합 | 별도 collective를 넣지 않고 사후 파일 결합. rank별 평균을 원래 dtype으로 합산한 산술평균이 실제 scheduler 분모. 샘플 수 가중 평균 아님 |
 | 큰 KL 표본 | 미니배치별 상위 8개, 비유한 값은 별도 최대 8개. 명령값·슬롯·heading·깃발·지형 열/종류/레벨·GT/PRED/OFF·env·수집 step·reset 경과 step |
 | 큰 KL 전체 수 | `per_sample_KL > 2*desired_kl`의 수. 진단용 정의이며 새 학습 관문이 아님 |
 | reset | 첫 관측 행동 또는 직전 env.step의 done 뒤 첫 행동. episode_scatter가 있는 episode_length도 따로 보존 |
 | 지도 | OFF가 우선, 나머지 use_gt로 GT/PRED. env.step 뒤 재추출된 선택을 붙이지 않음 |
 | 유효 행 | 실제 PPO storage.valid로 걸러진 batch_idx만 기록. empty mirror-DDP 슬롯의 기존 KL 기여 0은 구별 기록 |
-| 완결성 | 설치 source 경로·SHA, run·plan 식별자, update_complete에 예상/기록 미니배치 수. 빠진 rank·중복 행·LR 불일치는 사후 결합에서 오류 |
+| 완결성 | 설치 source 경로·SHA, run·stage·plan·parent 식별자, update_start/complete에 예상/기록 미니배치 수. 빠진 rank·중복 행·LR 불일치는 사후 결합에서 오류 |
 | 실패 | observer 런타임 오류는 stderr 경보와 audit_error/incomplete. 학습을 중단하거나 설정을 바꾸지 않음. 기록 파일 쓰기 실패도 stderr로 드러냄 |
 
 사후 결합(CPU):
@@ -54,3 +54,21 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 /home/jay/mi
 ```
 
 원 로그 `/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/tests-regression.log`. 실제 GPU 성능 비용과 새 run의 기록 파일 생성은 후속 Kit 확인 대상이다.
+
+## 최종 검증과 소비 제한
+
+- 확인됨: 최종 **36 PASS**, 새 14 + 기존 유효 행/거울 22. `tests-final.log`, 22.87초. 위 첫 실행의 옛 고정 소비자 bridge 4개는 최종 범위에서 제외했다. 현재 실제 PPO 소비자와 두 rank gloo 시험은 포함했다.
+- 확인됨: 정상 대조 PASS 뒤 **8/8 돌연변이 검출**. epsilon 삭제 · optimizer 뒤 측정 · env 번호 한 칸 밀기 · 격리 행 포함 · rank 평균을 표본 수 가중으로 바꾸기 · 양 rank 공통 누락 은폐 · OFF보다 GT를 우선 · reset 표시 누락. import/문법 오류는 검출 수에 넣지 않는다.
+- 확인됨: runtime의 실제 식별자 자리 `plan_sha256`, `parent_sha256`를 사용한다. `runtime.plan`은 호환용 SimpleNamespace라 그 안에 SHA가 없다. 이 모양을 CPU 고정 입력으로 시험했다.
+- 확인됨: float32 경계 KL 0.005는 원래 tensor dtype에서 비교한다. Python float로만 문턱 비교하면 증가로 잘못 읽을 수 있는 반례를 시험했다.
+- 확인됨: 둘 다 잃어버린 미니배치도 update_start의 inventory에서 찾는다. 완료 영수증 없음 · 중복 rank · session 섞임은 incomplete다. `join_rank_records`는 없는 rank를 0으로 넣지 않는다.
+- 미측정: 실제 GPU 기록 시간과 파일 증가량. 상위 표본은 전부가 아니라 minibatch마다 8개다. 전체 큰 KL 수는 별도 수치로 남긴다. 이 자료만으로 특정 지형/명령이 원인이라고 단정하지 않는다.
+- 운영 연결은 scripter가 한다. recorder만 있으며 학습률/목표KL 조정이나 자동 중단/승급 로직은 없다.
+
+돌연변이 재현:
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 /home/jay/miniforge3/envs/isaac311/bin/python -B inbox/jay/20261114-analysis/kl_mutation_check.py --out /home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-replay
+```
+
+원자료 `/home/jay/mai/tmp/analyst/ppo-kl-audit-1114/mutations-final/results.json`. 각 변형의 출력과 정상 대조는 그 하위 pytest.log에 있다.

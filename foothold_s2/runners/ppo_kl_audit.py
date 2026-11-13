@@ -176,6 +176,8 @@ class PpoKLAudit:
         self.current = None
         self.batch_count = self.step_count = 0
         self.complete_metadata = len(self.seen) == self.alg.storage.num_transitions_per_env
+        self._emit("update_start", num_epochs=self.alg.num_learning_epochs,
+                   num_mini_batches=self.alg.num_mini_batches)
 
     def _begin_minibatch(self, epoch, index, batch_idx, old_mu, old_sigma):
         if not self.update_active:
@@ -215,6 +217,7 @@ class PpoKLAudit:
         if n:
             kl = scheduler_kl(c["old_mu"], c["old_sigma"],
                               self.alg.policy.action_mean, self.alg.policy.action_std)
+            kl_dtype = str(kl.dtype)
             mean = _finite(kl.mean().item())
             finite = torch.isfinite(kl)
             finite_values = kl[finite]
@@ -230,8 +233,10 @@ class PpoKLAudit:
         else:
             # Existing mirror-DDP empty slot contributes zero to its KL collective.
             mean, max_kl, high_count, nonfinite_count, samples, bad_samples = 0.0, None, 0, 0, [], []
+            kl_dtype = str(torch.get_default_dtype())
         self._emit("minibatch", epoch=c["epoch"], minibatch=c["minibatch"], status="optimizer_step",
                    valid_count=n, scheduler_kl_local_mean=mean, scheduler_kl_local_max=max_kl,
+                   kl_dtype=kl_dtype,
                    nonfinite_count=nonfinite_count, high_kl_count=high_count,
                    high_kl_definition="per-sample KL > 2 * desired_kl; diagnostic only",
                    metadata_status="complete" if self.complete_metadata else "incomplete",
@@ -296,6 +301,12 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
     columns = raw._ex42_column_table
     if not columns or any(not r.get("kind") for r in columns):
         raise ValueError("KL audit needs the EX42 named column table")
+    # EX42 runtime.plan is an EX41 compatibility SimpleNamespace, not EX42Plan.
+    # The actual pinned identifiers are direct runtime attributes.
+    for name in ("plan_sha256", "parent_sha256"):
+        value = getattr(runtime, name, None)
+        if not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            raise ValueError(f"KL audit needs runtime.{name} as the pinned SHA256")
 
     def provider():
         state = runner.pstate
@@ -307,41 +318,79 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
 
     return PpoKLAudit(runner.alg, provider, Path(runner.log_dir) / "ppo_kl_audit",
                       identity={"run": str(Path(runner.log_dir).resolve()),
-                                "plan_sha256": getattr(getattr(runtime, "plan", None), "sha256", None)},
+                                "plan_sha256": runtime.plan_sha256, "parent_sha256": runtime.parent_sha256,
+                                "stage_id": runtime.stage_id},
                       top_k=top_k, columns=columns, slots=EX39_SLOTS)
 
 
 def join_rank_records(records):
     """Join rank files offline. Duplicate/missing rank rows stay incomplete."""
-    grouped = {}
+    grouped, updates = {}, {}
     for r in records:
-        if r.get("event") != "minibatch":
+        if r.get("event") not in ("minibatch", "update_start", "update_complete"):
             continue
-        key = (json.dumps(r["identity"], sort_keys=True), r["iteration"], r["epoch"], r["minibatch"])
-        grouped.setdefault(key, []).append(r)
+        update_key = (json.dumps(r["identity"], sort_keys=True), r["iteration"])
+        update = updates.setdefault(update_key, {"start": [], "end": [], "identity": r["identity"]})
+        if r["event"] == "minibatch":
+            key = (*update_key, r["epoch"], r["minibatch"])
+            grouped.setdefault(key, []).append(r)
+        else:
+            update["start" if r["event"] == "update_start" else "end"].append(r)
+    for update_key, update in updates.items():
+        starts = update["start"]
+        if starts:
+            epochs, batches = starts[0]["num_epochs"], starts[0]["num_mini_batches"]
+            if type(epochs) is not int or type(batches) is not int or min(epochs, batches) < 1 or epochs * batches > 100_000:
+                raise ValueError("invalid minibatch inventory")
+            # Even if BOTH rank files lost a batch, the expected slot remains visible.
+            for epoch in range(epochs):
+                for batch in range(batches):
+                    grouped.setdefault((*update_key, epoch, batch), [])
     result = []
-    for (_, it, epoch, batch), rows in sorted(grouped.items()):
-        world = rows[0]["world_size"]
-        complete = (all(r["world_size"] == world for r in rows) and len(rows) == world
+    for (identity_key, it, epoch, batch), rows in sorted(grouped.items()):
+        update = updates[(identity_key, it)]
+        starts, ends = update["start"], update["end"]
+        world = (rows or starts)[0]["world_size"]
+        inventory_ok = (len(starts) == len(ends) == world
+                        and sorted(r["rank"] for r in starts) == sorted(r["rank"] for r in ends) == list(range(world))
+                        and len({(r["num_epochs"], r["num_mini_batches"]) for r in starts}) == 1)
+        if inventory_ok:
+            expected = starts[0]["num_epochs"] * starts[0]["num_mini_batches"]
+            sessions = {r["rank"]: r.get("session") for r in starts}
+            inventory_ok = (epoch < starts[0]["num_epochs"] and batch < starts[0]["num_mini_batches"]
+                            and min(epoch, batch) >= 0
+                            and all(r.get("session") == sessions.get(r["rank"]) for r in rows + ends)
+                            and all(r["status"] == "complete" and r["minibatches_observed"] == expected
+                                    and r["minibatches_expected"] == expected for r in ends))
+        complete = (inventory_ok and all(r["world_size"] == world for r in rows + starts + ends) and len(rows) == world
                     and sorted(r["rank"] for r in rows) == list(range(world))
                     and all(r.get("status") == "optimizer_step" and r.get("metadata_status") == "complete"
                             and r.get("scheduler_kl_local_mean") is not None for r in rows)
-                    and len({(r["desired_kl"], r["schedule"]) for r in rows}) == 1)
-        mean = sum(r["scheduler_kl_local_mean"] for r in rows) / world if complete else None
+                    and len({(r["desired_kl"], r["schedule"], r.get("kl_dtype")) for r in rows}) == 1
+                    and all(r.get("kl_dtype") in ("torch.float32", "torch.float64") for r in rows))
+        mean_tensor = None
+        if complete:
+            dtype = torch.float32 if rows[0]["kl_dtype"] == "torch.float32" else torch.float64
+            means = torch.tensor([r["scheduler_kl_local_mean"] for r in sorted(rows, key=lambda r: r["rank"])], dtype=dtype)
+            mean_tensor = means.sum() / world
+        mean = float(mean_tensor) if complete else None
         decision = "unavailable"
         if complete:
             desired = rows[0]["desired_kl"]
             decision = "unchanged"
             if desired is not None and rows[0]["schedule"] == "adaptive":
-                if mean > desired * 2: decision = "decrease"
-                elif 0 < mean < desired / 2: decision = "increase"
-        equal_lr = complete and len({r["lr_after"] for r in rows}) == 1
+                if mean_tensor > desired * 2: decision = "decrease"
+                elif 0 < mean_tensor < desired / 2: decision = "increase"
+        equal_lr = (complete and len({r["lr_after"] for r in rows}) == 1
+                    and len({r["lr_before"] for r in rows}) == 1
+                    and all(r.get("optimizer_group_lrs") and all(x == r["lr_after"] for x in r["optimizer_group_lrs"])
+                            for r in rows))
         if equal_lr:
             before, after = rows[0]["lr_before"], rows[0]["lr_after"]
             expected = (max(1e-5, before / 1.5) if decision == "decrease" else
                         min(1e-2, before * 1.5) if decision == "increase" else before)
             equal_lr = math.isclose(expected, after, rel_tol=2e-6, abs_tol=1e-10)
-        result.append({"identity": rows[0]["identity"], "iteration": it, "epoch": epoch, "minibatch": batch,
+        result.append({"identity": update["identity"], "iteration": it, "epoch": epoch, "minibatch": batch,
                        "status": "complete" if complete else "incomplete",
                        "scheduler_kl_rank_mean": mean, "scheduler_decision": decision,
                        "lr_consistent": bool(equal_lr), "ranks_present": [r["rank"] for r in rows]})
