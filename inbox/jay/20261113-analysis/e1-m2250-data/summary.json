@@ -1,0 +1,36 @@
+{
+  "2000": {
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "p1": "FAIL",
+    "maintenance": "PASS",
+    "maintenance_windows": {
+      "current": "PASS",
+      "previous": "PASS"
+    },
+    "d44_raw_recomputed_judge_counts": {
+      "turn_left_eval_gt": 64,
+      "turn_left_eval_pred": 64,
+      "turn_right_eval_gt": 64,
+      "turn_right_eval_pred": 64,
+      "stop_restart_eval_gt": 7,
+      "stop_restart_eval_pred": 7
+    }
+  },
+  "2250": {
+    "checkpoint_sha256": "d845f97974f42f306bcaef26941b3ccd9a82d9addb8360a8e34db13caa500309",
+    "p1": "FAIL",
+    "maintenance": "PASS",
+    "maintenance_windows": {
+      "current": "PASS",
+      "previous": "HOLD"
+    },
+    "d44_raw_recomputed_judge_counts": {
+      "turn_left_eval_gt": 64,
+      "turn_left_eval_pred": 64,
+      "turn_right_eval_gt": 64,
+      "turn_right_eval_pred": 64,
+      "stop_restart_eval_gt": 1,
+      "stop_restart_eval_pred": 2
+    }
+  }
+}
