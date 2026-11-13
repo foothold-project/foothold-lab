@@ -96,6 +96,14 @@ E1_V2_COMMANDS = {
     "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
     "side+0.4": (0.0, 0.4, 0.0), "side-0.4": (0.0, -0.4, 0.0),
 }
+GAIT_SPEED_COMMANDS = {
+    "fwd0.1": (0.1, 0.0, 0.0), "fwd0.2": (0.2, 0.0, 0.0),
+    "fwd0.3": (0.3, 0.0, 0.0), "fwd0.5": (0.5, 0.0, 0.0),
+    "fwd1.0": (1.0, 0.0, 0.0),
+    "side+0.1": (0.0, 0.1, 0.0), "side-0.1": (0.0, -0.1, 0.0),
+    "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
+    "back0.1": (-0.1, 0.0, 0.0), "back0.2": (-0.2, 0.0, 0.0),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -131,7 +139,9 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(HIPAN_G1B_COMMANDS)
     if suite == "e1_v2":
         return dict(E1_V2_COMMANDS)
-    raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
+    if suite == "gait_speeds":
+        return dict(GAIT_SPEED_COMMANDS)
+    raise ValueError("command suite must be core, extended, ex40_b3, n21, hipan_g1, or gait_speeds")
 
 
 def terrain_rows(levels, types, names: list[str]) -> list[dict]:
