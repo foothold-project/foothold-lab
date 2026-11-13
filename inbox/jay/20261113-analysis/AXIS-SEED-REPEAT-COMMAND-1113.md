@@ -31,3 +31,13 @@ Y1은 `yaw` NPZ의 env별 시작 방향 대비 끝 방향 변화로 다시 센�
 **미확인:** 새 GPU 실행 시간 · 결과. 기존 m2000의 cuda0 두 모드 axis-v2 자식은 287.676초였으나 GT+끔이었으므로 이번 GT+PRED 두 모드의 ETA로 확정하지 않는다. 근거는 `.../eval/scores/m2000/shards/cuda0/children/axis_v2/child.json`이다.
 
 S2는 별도 주의가 필요하다. 현재 G1b 반복은 옆 ±0.4 m/s, L0/L5다. planner S2의 ±0.5 m/s, L2 반복 폭으로 대신 쓰지 않는다. 같은 칸의 반복 자료가 오기 전 그 수치는 미측정이다. 세 시드의 최솟값~최댓값은 관측된 반복 범위이며 95% 신뢰구간이나 독립 학습 시드 성능은 아니다.
+
+## 추가: S2 ±0.5 두 칸 (lead 10:49 의뢰)
+
+axis-v2 반복이 끝난 뒤 다음 명령을 실행한다. 같은 저장본 · 코드 · E0 메시, L2, 64 env, 300 step, GT/PRED를 쓴다. seed7 cuda:0, seed13 cuda:1이며 두 옆 명령만 합계 8칸이다.
+
+```bash
+bash /home/jay/mai/wt/foothold-lab/analyst-lx-jeplo-c/inbox/jay/20261113-analysis/run_m2000_sides_seed_repeats.sh
+```
+
+출력은 `/home/jay/data/foothold/s2_lab/e1_sides_repeat_20261113/m2000_<실행 시각>/seed7,seed13`이다. `--command-suite extended --commands side+0.5,side-0.5`는 axis-v2 없는 일반 map64 경로에서 지원된다. 원 시드42 기준은 기존 m2000 `map64/map_modes.json`이다. 이 명령도 `--check-only` CPU 해시 검사와 `bash -n`을 통과했으며 analyst가 실행하지 않았다.
