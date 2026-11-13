@@ -20,9 +20,10 @@ kind until a later entry of the same kind. An entry for a boundary the run has n
   (`reward_readback`).
 
 * low_forward_fraction (2026-11-13): the share of the forward commands drawn from the slow end of the forward range
-  (`mixed_core.resample_stage`: below 0.3 m/s; the source stage has 0.20). A number, at the boundaries where commands
-  may change, inside `command_cells.low_forward_fraction` of the same limits file. While that file has no such cell
-  (not approved yet) an entry that names it is refused. The command ranges do not change, so the per-step command
+  (`mixed_core.resample_stage`: below 0.3 m/s; the source stage has 0.20). The stage's plan row may register it for
+  the whole stage (`low_forward_fraction`, from its first update); a file entry changes it at the boundaries where
+  commands may change. Every value is inside `command_cells.low_forward_fraction` of the same limits file; without
+  that cell a row or an entry that names it is refused. The command ranges do not change, so the per-step command
   check is untouched.
 
 Each started segment leaves `segment_commands_b<k>.json` in the run folder, in the shape of the input (a record's
@@ -130,6 +131,15 @@ def _low_forward(value, limits, label) -> float:
     return float(value)
 
 
+def stage_low_forward(plan, stage_id, limits=None) -> float | None:
+    """The slow-forward share the stage's own plan row registers (`low_forward_fraction`): in force from the first
+    update of the stage. None when the row has no cell (the source stage's 0.20 stays)."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    if "low_forward_fraction" not in row:
+        return None
+    return _low_forward(row["low_forward_fraction"], limits if limits is not None else reward_limits(), f"{stage_id} plan row")
+
+
 def stage_rewards(plan, stage_id, limits=None) -> dict | None:
     """The reward cells the stage's own plan row registers (`rewards`): in force from the first update of the stage,
     inside the same limits as an adjustment. None when the row has no cell (the source stage's values stay)."""
@@ -146,7 +156,8 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
     nor an entry names them (the source stage's values stay); an entry number is None when the plan row holds."""
     base = stage_commands(plan, stage_id)
     out = {"commands": _plain(base), "commands_entry": None, "rewards": stage_rewards(plan, stage_id, limits),
-           "rewards_entry": None, "low_forward_fraction": None, "low_forward_fraction_entry": None}
+           "rewards_entry": None, "low_forward_fraction": stage_low_forward(plan, stage_id, limits),
+           "low_forward_fraction_entry": None}
     if document is None:
         return out
     if (not isinstance(document, dict) or set(document) != {"schema", "stage_id", "plan_sha256", "segments"}
@@ -196,7 +207,8 @@ def read(path, plan, stage_id, boundary_index, limits=None) -> dict:
     low_entry = told(state["low_forward_fraction_entry"])
     adjusted = state["commands_entry"] is not None
     # only a run that uses the cell records it: the record of every other segment keeps the shape it had before
-    low = {} if state["low_forward_fraction_entry"] is None else {"low_forward_fraction": {
+    low = {} if state["low_forward_fraction"] is None else {"low_forward_fraction": {
+        "source": "plan" if state["low_forward_fraction_entry"] is None else "adjust_file",
         "entry": state["low_forward_fraction_entry"], "value": state["low_forward_fraction"],
         "decided_at": low_entry.get("decided_at"), "reason": low_entry.get("reason"),
         "evidence": low_entry.get("evidence"), "limits_sha256": limits["sha256"]}}

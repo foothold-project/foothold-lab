@@ -22,10 +22,13 @@ PLAN = ROOT / "foothold_s2" / "curriculum" / "ex42-prep.yaml"
 
 @pytest.fixture(scope="module")
 def plan():
-    # Most tests here cover a stage row without its own `rewards` cell (the finished E1, every later stage): the cell
-    # of the shipped E1 row is taken off the loaded document. The row cell itself is tested at the end of the file.
+    # Most tests here cover a stage row without its own `rewards` / `low_forward_fraction` cells (the finished E1,
+    # every later stage): the cells of the shipped E1 row are taken off the loaded document. The row cells themselves
+    # are tested at the end of the file.
     loaded = EX42Plan.load(PLAN)
-    next(row for row in loaded.document["stages"] if row["id"] == "E1").pop("rewards", None)
+    row = next(row for row in loaded.document["stages"] if row["id"] == "E1")
+    row.pop("rewards", None)
+    row.pop("low_forward_fraction", None)
     return loaded
 
 
@@ -650,13 +653,25 @@ def slow_forward_share(stage, n=400_000):
     return (float((forward & (out["cmd"][:, 0] < 0.3)).float().mean()), float(forward.float().mean()), out)
 
 
-def test_the_shipped_limits_do_not_open_low_forward_fraction_yet(plan, view, tmp_path):
-    """Not approved yet: the shipped limits file has no command cell, so an entry that names it is refused."""
-    assert adj.reward_limits()["command_cells"] == {}
+def limits_without_command_cells(tmp_path):
+    text = adj.REWARD_LIMITS.read_text(encoding="utf-8")
+    path = tmp_path / "limits_closed.yaml"
+    path.write_text(text[:text.index("command_cells:")], encoding="utf-8")
+    assert adj.reward_limits(path)["command_cells"] == {}
+    return path
+
+
+def test_the_shipped_limits_open_low_forward_fraction_between_the_source_and_the_approved_value():
+    """decisions.tsv 2026-11-13 15:17 (ledger commit a00ab2a8): 0.2 -> 0.4."""
+    assert adj.reward_limits()["command_cells"] == {"low_forward_fraction": (0.2, 0.4)}
+
+
+def test_without_the_command_cell_in_the_limits_file_an_entry_is_refused(plan, view, tmp_path):
     path = tmp_path / "adjust.json"
     path.write_text(json.dumps(document(plan, b1={**LOW_NOTE, "low_forward_fraction": 0.4})), encoding="utf-8")
     with pytest.raises(ValueError, match="no approved limits"):
-        adj.start_segment(view, plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+        adj.start_segment(view, plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True,
+                          limits_path=limits_without_command_cells(tmp_path))
     assert view.stages[0].low_forward_fraction == 0.2 and not list(tmp_path.glob("segment_commands_b*"))
 
 
@@ -721,3 +736,60 @@ def test_a_limits_file_with_a_bad_command_cell_is_refused(tmp_path):
     bad.write_text(adj.REWARD_LIMITS.read_text(encoding="utf-8") + "command_cells:\n  other_cell: [0.1, 0.2]\n", encoding="utf-8")
     with pytest.raises(ValueError, match="command_cells may hold"):
         adj.reward_limits(bad)
+
+
+# ---- the stage row's own low_forward_fraction (decisions.tsv 2026-11-13 15:17): in force from the first update ----
+
+def test_the_shipped_e1_row_registers_low_forward_fraction_inside_the_limits(row_plan):
+    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["low_forward_fraction"] == 0.4
+    assert adj.stage_low_forward(row_plan, "E1") == 0.4
+    assert adj.stage_low_forward(row_plan, "E1F") is None and adj.stage_low_forward(row_plan, "E0") is None
+
+
+def test_the_row_share_holds_from_the_first_update_and_reaches_the_sampler(row_plan, tmp_path):
+    view = row_view(row_plan)
+    assert view.stages[0].low_forward_fraction == 0.2                       # the source stage, before the row is applied
+    record = adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
+    assert record["low_forward_fraction"] == {"source": "plan", "entry": None, "value": 0.4, "decided_at": None,
+                                              "reason": None, "evidence": None,
+                                              "limits_sha256": adj.reward_limits()["sha256"]}
+    slow, forward, _ = slow_forward_share(view.stages[0])
+    assert view.stages[0].low_forward_fraction == 0.4 and abs(slow - 0.19 * 0.4) < 0.002 and abs(forward - 0.19) < 0.003
+    assert not list(tmp_path.glob("segment_commands_b0*"))                  # the first segment leaves no record file
+
+
+def test_the_row_share_stays_in_later_segments_and_in_their_records(row_plan, tmp_path):
+    for k in (1, 2, 3):
+        view = row_view(row_plan)
+        record = adj.start_segment(view, row_plan, "E1", boundary_index=k, path=None, log_dir=str(tmp_path), write=True)
+        assert view.stages[0].low_forward_fraction == 0.4 and record["low_forward_fraction"]["source"] == "plan"
+        assert json.loads((tmp_path / f"segment_commands_b{k}.json").read_text(encoding="utf-8")) == record
+
+
+def test_a_row_share_outside_the_limits_or_without_the_limits_cell_is_refused(row_plan, tmp_path):
+    import copy as _copy
+    from dataclasses import replace
+    broken = replace(row_plan, document=_copy.deepcopy(row_plan.document))
+    next(r for r in broken.document["stages"] if r["id"] == "E1")["low_forward_fraction"] = 0.5
+    with pytest.raises(ValueError, match="E1 plan row low_forward_fraction must be a number inside the approved limits"):
+        adj.start_segment(row_view(row_plan), broken, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
+    with pytest.raises(ValueError, match="no approved limits"):
+        adj.start_segment(row_view(row_plan), row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True,
+                          limits_path=limits_without_command_cells(tmp_path))
+
+
+def test_the_live_objects_keep_the_share(row_plan, tmp_path):
+    """E1 has no flag split, so the live sampler draws from the plan view's stage itself. A stage with a flag split
+    draws free commands from `CommandShares.free_stage`: the real object must carry the share over."""
+    from dataclasses import replace
+    from foothold_s2.commands import ex42_shares
+    view = row_view(row_plan)
+    adj.start_segment(view, row_plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
+    assert view.command_contract is None and view.stages[0].low_forward_fraction == 0.4
+    source = te.load_ex42_stage_zero_source(row_plan)
+    flagged = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=row_plan,
+                                                stage_id="E1F")
+    assert flagged.command_contract is not None and flagged.stages[0].low_forward_fraction == 0.2   # E1F row: no cell
+    free = ex42_shares.CommandShares(flagged.command_contract, replace(flagged.stages[0], low_forward_fraction=0.4)).free_stage
+    slow, forward, _ = slow_forward_share(free)
+    assert free.low_forward_fraction == 0.4 and abs(slow - forward * 0.4) < 0.002
