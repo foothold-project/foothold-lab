@@ -58,9 +58,20 @@ PARAM_CELLS = {**{cell: (term, "std", None) for cell, term in STD_CELLS.items()}
                "slow_track_sigma": ("ex42_slow_track", "sigma", None),
                "slow_track_speed_min": ("ex42_slow_track", "speed_min", None),
                "slow_track_speed_max": ("ex42_slow_track", "speed_max", None)}
-ENV_WEIGHT_CELLS = {"slow_track": "ex42_slow_track"}       # cell -> env reward term whose weight it is
+ENV_WEIGHT_CELLS = {"slow_track": "ex42_slow_track",       # cell -> env reward term whose weight it is
+                    "slow_progress": "ex42_slow_progress"}     # decisions.tsv 2026-11-14 01:21: registered at weight 0
 REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS, "feet_air_time_threshold", "slow_track", "slow_track_sigma",
-                "slow_track_speed_min", "slow_track_speed_max")
+                "slow_track_speed_min", "slow_track_speed_max", "slow_progress")
+# Cells added after plans and receipts already existed: a row, an entry, a limits file or a readback without them means
+# this value (the term is off), so the older ten-cell documents stay readable.
+OPTIONAL_CELLS = {"slow_progress": 0.0}
+
+
+def complete_cells(cell):
+    """The cells with the optional ones filled in. Anything that is not a dict is returned as it is (refused later)."""
+    if not isinstance(cell, dict):
+        return cell
+    return {**{name: default for name, default in OPTIONAL_CELLS.items() if name not in cell}, **cell}
 COMMAND_CELLS = ("low_forward_fraction",)          # command distribution cells outside the 13-slot profile
 
 
@@ -81,6 +92,8 @@ def reward_limits(path=REWARD_LIMITS) -> dict | None:
     raw = path.read_bytes()
     document = yaml.safe_load(raw.decode("utf-8"))
     cells = document.get("cells") if isinstance(document, dict) else None
+    if isinstance(cells, dict):      # a limits file older than an optional cell keeps that cell closed on its default
+        cells = {**{name: [default, default] for name, default in OPTIONAL_CELLS.items() if name not in cells}, **cells}
     number = lambda v: type(v) in (int, float) and math.isfinite(v)   # noqa: E731
     if (not isinstance(document, dict) or document.get("schema") != REWARD_LIMITS_SCHEMA or not isinstance(cells, dict)
             or set(cells) != set(REWARD_CELLS)
@@ -124,6 +137,7 @@ def _inside(plan, stage_id, profile, label) -> None:
 def _rewards(cell, limits, label) -> dict:
     if limits is None:
         raise ValueError(f"EX-42 {label} rewards: there is no reward adjust limits file")
+    cell = complete_cells(cell)
     if (not isinstance(cell, dict) or set(cell) != set(REWARD_CELLS)
             or any(type(v) not in (int, float) or not math.isfinite(v) for v in cell.values())):
         raise ValueError(f"EX-42 {label} rewards needs exactly {list(REWARD_CELLS)} as numbers")
@@ -308,10 +322,12 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
 def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     """Before the env is built: the cells that live on the env config. Registers `ex42_slow_track` at weight 0 when
     the config does not have it yet (every E stage carries the term), then puts the segment's parameter cells and the
-    slow_track weight on the config. {cell: {before, after}}; without reward cells nothing but the registration changes."""
-    from foothold_s2.rewards import ex42_slow_track
+    slow_track weight on the config. {cell: {before, after}}; without reward cells nothing but the registration changes.
+    `ex42_slow_progress` is registered the same way and follows the speed band of slow_track."""
+    from foothold_s2.rewards import ex42_slow_progress, ex42_slow_track
 
     ex42_slow_track.register(env_cfg, term_cfg_class)
+    ex42_slow_progress.register(env_cfg, term_cfg_class)
     values = ((record or {}).get("rewards") or {}).get("values")
     out = {}
     for cell, (term, param, default) in PARAM_CELLS.items():
@@ -326,6 +342,10 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
         if values is not None:
             target.weight = float(values[cell])
         out[cell] = {"before": before, "after": float(target.weight)}
+    band = getattr(env_cfg.rewards, "ex42_slow_track").params          # one band for both slow terms
+    progress = getattr(env_cfg.rewards, "ex42_slow_progress").params
+    progress["speed_min"], progress["speed_max"] = band["speed_min"], band["speed_max"]
+    progress["taper_from"] = min(max(progress.get("taper_from", band["speed_max"]), band["speed_min"]), band["speed_max"])
     if (record or {}).get("slow_track_heading"):       # the plan row includes heading envs (2026-11-14 00:28)
         params = getattr(env_cfg.rewards, "ex42_slow_track").params
         before = bool(params.get("include_heading", False))
@@ -342,9 +362,15 @@ def reward_readback(env, record) -> dict:
     for cell, (term, param, default) in PARAM_CELLS.items():
         params = manager.get_term_cfg(term).params
         live[cell] = float(params[param] if default is None else params.get(param, default))
-    live.update({cell: float(manager.get_term_cfg(term).weight) for cell, term in {**WEIGHT_CELLS, **ENV_WEIGHT_CELLS}.items()})
+    for cell, term in {**WEIGHT_CELLS, **ENV_WEIGHT_CELLS}.items():
+        try:
+            live[cell] = float(manager.get_term_cfg(term).weight)
+        except (KeyError, ValueError):
+            if cell not in OPTIONAL_CELLS:
+                raise
+            live[cell] = OPTIONAL_CELLS[cell]      # the term is not on this env: it is off (an asked weight above 0 fails below)
     rewards = (record or {}).get("rewards") or {}
-    asked = rewards.get("values")
+    asked = complete_cells(rewards.get("values"))
     if asked is not None and any(abs(live[name] - asked[name]) > TOL for name in REWARD_CELLS):
         raise ValueError(f"EX-42 segment rewards: the live reward manager carries {live}, the adjustment asked for {asked}")
     out = {"source": rewards.get("source", "plan"), "entry": rewards.get("entry"), "asked": asked, "live": live}

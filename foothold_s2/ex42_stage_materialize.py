@@ -236,7 +236,7 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
     segment (`ex42_resume_segments[*].local_update_origin`). A run that was never resumed ran its plan row throughout
     and leaves no readback file, so it inherits the row itself. A resumed segment must have left
     `segment_rewards_b<k>[_rank<r>].json`; a missing or differing file is refused, never replaced by defaults."""
-    from foothold_s2.commands.ex42_segment_adjust import REWARD_CELLS, TOL, reward_limits, stage_rewards
+    from foothold_s2.commands.ex42_segment_adjust import REWARD_CELLS, TOL, complete_cells, reward_limits, stage_rewards
     row = _row(source, stage)
     if row.get('rewards') is None:
         return None, {}
@@ -259,7 +259,7 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
         if not path.is_file():
             raise ValueError(f'{stage} last-segment reward readback is missing: {path.name}')
         body = _json(path)
-        live, asked = body.get('live'), body.get('asked')
+        live, asked = complete_cells(body.get('live')), complete_cells(body.get('asked'))      # receipts older than an optional cell
         if (body.get('format') != 'ex42-segment-rewards/1' or body.get('stage_id') != stage
                 or body.get('plan_sha256') != source.sha256 or body.get('boundary_index') != boundary
                 or not isinstance(live, dict) or set(live) != set(REWARD_CELLS)
