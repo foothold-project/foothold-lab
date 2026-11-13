@@ -146,6 +146,7 @@ def test_materialize_preserves_profile_and_records_file_refs(known, pinned):
     known['plan'].write_text(yaml.safe_dump(d))
     gate=json.loads(known['gate_receipt'].read_text());gate['plan_sha256']=sha(known['plan']);publication.dump(known['gate_receipt'],gate)
     ev=json.loads(known['evidence'].read_text());ev['source_plan_sha256']=sha(known['plan']);ev['gate_sha256']=sha(known['gate_receipt']);publication.dump(known['evidence'],ev)
+    publication.repin_last_segment(known)
     out = publication.run(known)
     transition=json.loads(Path(out['transition']).read_text())
     assert transition['training_mesh']['files']['terrain_mesh.npz']['sha256']==pinned['files']['terrain_mesh.npz']
