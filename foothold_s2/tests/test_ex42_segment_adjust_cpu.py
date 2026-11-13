@@ -576,8 +576,8 @@ def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
 
 # ---- the stage row's own reward cells (E1 again from m13250, 2026-11-13): in force from the first update ----
 
-ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0,
-               **SLOW, "slow_track": 0.2}          # decisions.tsv 2026-11-14 00:21: on from the first update
+ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.1, "foot_slip": -0.15, "zero_yaw": -1.0,
+               **SLOW, "slow_track": 0.2, "feet_air_time_threshold": 0.04}       # 2026-11-14 01:08 (a8830b47): air time 0.1 / 0.04 s          # decisions.tsv 2026-11-14 00:21: on from the first update
 
 
 @pytest.fixture()
@@ -610,9 +610,9 @@ def test_the_row_cells_hold_from_the_first_update_and_reach_the_stage_the_env_co
     _, terms = _manager()
     env_cfg = _env_cfg(terms)
     assert adj.apply_reward_params(env_cfg, record)["track_lin_vel_std"] == {"before": 0.5, "after": 0.35}
-    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-1.0, slow=0.2)
+    manager, _ = _manager(lin=0.35, ang=0.5, air=0.1, slip=-0.15, yaw=-1.0, slow=0.2, threshold=0.04)
     assert adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)["live"] == ROW_REWARDS
-    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5)      # the env was built on the source weight
+    manager, _ = _manager(lin=0.35, ang=0.5, air=0.1, slip=-0.15, yaw=-0.5, slow=0.2, threshold=0.04)      # the env was built on the source weight
     with pytest.raises(ValueError, match="the live reward manager carries"):
         adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
 
