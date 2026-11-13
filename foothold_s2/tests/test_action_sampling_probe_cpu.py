@@ -203,3 +203,25 @@ def test_prepared_commands_use_actual_parser_contract(monkeypatch):
         parsed=parser_prefix(args,monkeypatch)
         assert parsed.action_mode==mode and parsed.eval_seed==42
         assert parsed.envs==64 and parsed.steps==300
+
+
+def test_parent_checkpoint_with_current_evaluation_basis(tmp_path,monkeypatch):
+    import sys
+    parent=tmp_path/'parent'; parent.mkdir()
+    cp=parent/'model_250.pt';cp.write_bytes(b'known parent checkpoint')
+    (parent/'manifest.json').write_text(json.dumps({'checkpoints':{cp.name:prepare.sha(cp)}}))
+    basis_run=tmp_path/'current';basis=basis_run/'eval/scores/m250';(basis/'e1_v2/L0').mkdir(parents=True)
+    plan=tmp_path/'plan.yaml';plan.write_text('approved: true\n')
+    mesh=tmp_path/'mesh';mesh.mkdir();(mesh/'terrain_mesh.npz').write_bytes(b'known mesh bytes')
+    (basis/'p1_score.json').write_text(json.dumps({'evaluation_plan':{'path':str(plan),'sha256':prepare.sha(plan)}}))
+    (basis/'e1_v2/L0/map_modes.json').write_text(json.dumps({'ex42_mesh':{'mesh_npz':str(mesh/'terrain_mesh.npz'),'mesh_sha256':'a'*64}}))
+    monkeypatch.setattr(prepare,'mesh_preflight',lambda p:{'mesh_sha256':'a'*64})
+    out=tmp_path/'out'
+    monkeypatch.setattr(sys,'argv',['prepare','--run',str(parent),'--iteration','250',
+        '--basis-run',str(basis_run),'--out',str(out)])
+    prepare.main()
+    d=json.loads((out/'command_plan.json').read_text())
+    assert d['checkpoint']==str(cp) and d['checkpoint_sha256']==prepare.sha(cp)
+    assert d['evaluation_basis']==str(basis) and d['plan_sha256']==prepare.sha(plan)
+    assert '--basis-run '+str(basis_run) in (out/'run_pair.sh').read_text()
+    assert not (parent/'eval').exists()
