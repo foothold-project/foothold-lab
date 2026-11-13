@@ -49,7 +49,7 @@ def decision_rows():
         "09:52": ("zero_yaw", "−2.0", "−0.5"),
         "14:29": ("m13250", "zero_yaw", "track_lin_vel_std", "1,750"),
         "15:17": ("low_forward_fraction", "0.4", "E2", "20,000", "22,750", "연장은 무조건"),
-        "15:22": ("v18", "기동"),
+        "15:22": ("v18", "기동", "느린 전진", "다른 학습"),
     }
     for stamp, terms in required.items():
         row = next((line for line in rows if stamp in line.split("\t", 1)[0]), None)
@@ -144,7 +144,7 @@ def draw(path):
             "켜는 것은 E6b 뒤 결정", fontsize=11, color="#757575", va="top")
 
     # (b) E1 seven segments with real results
-    ax = fig.add_axes([0.04, 0.475, 0.92, 0.245])
+    ax = fig.add_axes([0.04, 0.52, 0.92, 0.20])
     ax.set_xlim(0, 7)
     ax.set_ylim(0, 1)
     ax.axis("off")
@@ -155,8 +155,9 @@ def draw(path):
            ("구간 2", 5, "그대로\n(규칙: 바꿀 것 없음)", 500, "끝 20:28"),
            ("구간 3", 5, "규칙 S1 (옆 점수 0.738 < 0.85)\n옆 몫 0.105 · 전진 0.16", 750, "끝 22:56"),
            ("구간 4", 6, "상한 6 · 명령 고정\n(11/12 19:31 결정)", 1000, "평가 끝"),
-           ("구간 5", 7, "상한 7", 1250, "평가 끝"), ("구간 6", 8, "상한 8", 1500, "평가 끝"),
-           ("구간 7", 9, "상한 9", 1750, "평가 끝")]
+           ("구간 5", 7, "지형 상한 6→7", 1250, "평가 끝"),
+           ("구간 6", 8, "지형 상한 7→8", 1500, "평가 끝"),
+           ("구간 7", 9, "지형 상한 8→9", 1750, "평가 끝")]
     for i, (name, cap, what, end, state) in enumerate(seg):
         done = end in res
         fc = "#c8e6c9" if done else "white"
@@ -173,7 +174,7 @@ def draw(path):
     assert all(res[e]["turn_ok"] for e in BOUNDS[1:])
 
     # (c) trend chart
-    ax = fig.add_axes([0.06, 0.255, 0.38, 0.17])
+    ax = fig.add_axes([0.06, 0.29, 0.38, 0.18])
     xs = BOUNDS
     lab = ["출발\nm13250"] + [f"m{b}" for b in BOUNDS[1:]]
     ax.plot(xs, [res[b]["S"] for b in xs], "o-", color="#1565c0", lw=2.2, label="옆걸음 점수 (기준 0.85)")
@@ -183,7 +184,8 @@ def draw(path):
     for b in xs:
         ax.annotate(f"{res[b]['S']:.2f}", (b, res[b]["S"]), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=10,
                     color="#1565c0")
-        ax.annotate(f"{res[b]['L0']['fwd0.2']:.2f}", (b, res[b]["L0"]["fwd0.2"]), textcoords="offset points", xytext=(0, -16),
+        ax.annotate(f"{res[b]['L0']['fwd0.2']:.2f}", (b, res[b]["L0"]["fwd0.2"]), textcoords="offset points",
+                    xytext=(0, 14 if b in (1500, 1750) else -16),
                     ha="center", fontsize=10, color="#e65100")
     ax.set_xticks(xs)
     ax.set_xticklabels(lab, fontsize=9)
@@ -191,7 +193,7 @@ def draw(path):
     ax.grid(alpha=0.3)
     ax.legend(loc="upper left", bbox_to_anchor=(0.0, 0.93), fontsize=9.5, ncol=3, frameon=False)
     ax.set_title("E1 1차 명령 반응 추이 · m2250 보완 A와 새 재시작판 제외", fontsize=13, loc="left")
-    ax2 = fig.add_axes([0.06, 0.174, 0.38, 0.044])
+    ax2 = fig.add_axes([0.06, 0.20, 0.38, 0.05])
     ax2.axis("off")
     d44 = [f"m{b} {res[b]['d44_gt']}/{res[b]['d44_pred']}" for b in BOUNDS[1:]]
     ax2.text(0, 1, "D44 정지→재출발 (정답/예측, 각 64 판): " + " · ".join(d44[:4]),
@@ -200,7 +202,7 @@ def draw(path):
              fontsize=9.5, va="top")
 
     # (d) stair heights (kept from v3) with E1 cap now
-    ax = fig.add_axes([0.06, 0.035, 0.38, 0.13])
+    ax = fig.add_axes([0.06, 0.05, 0.38, 0.14])
     ks = list(range(10))
     st = [lv[k][0] * 100 for k in ks]
     cols = ["#cfd8dc"] * 6 + ["#66bb6a"] * 4  # L6~L9 opened in the first run; not a mastery claim
@@ -215,7 +217,7 @@ def draw(path):
     ax.grid(axis="y", alpha=0.3)
 
     # (e) decided / how we judge / open
-    ax = fig.add_axes([0.50, 0.01, 0.46, 0.46])
+    ax = fig.add_axes([0.50, 0.01, 0.46, 0.50])
     ax.axis("off")
     blocks = [
         ("정한 것 (팀장 · 원장 decisions.tsv)", "#1b5e20", "■", [
@@ -225,6 +227,8 @@ def draw(path):
             "0 단계 1,000 회는 별도. 연장은 지표가 기준 쪽으로 움직일 때만",
             "보상 한계: 추종 폭 0.25~0.5 · 발 들기 0~0.5 · 미끄럼 −0.25~−0.05",
             "zero_yaw 조정 한계 −2.0~−0.5 · 첫 값 −1.0 (11/13 09:52)",
+            "경계 조정은 lead 가 승인 한계 안에서 · 팀장 11/13 15:22 앞 과정 승인",
+            "느린 전진은 필수 (Go2 순정 수준 목표) · 다른 학습 유지 (11/13 15:22)",
         ]),
         ("판단은 이렇게", "#0d47a1", "■", [
             "250 회마다 유지 판정 · D44 · 저속 명령 반응을 재고 다음 구간 판단",
@@ -232,7 +236,6 @@ def draw(path):
             "새 (가) 재시작의 학습 결과는 아직 미측정",
         ]),
         ("아직 정할 것 (팀장)", "#e65100", "□", [
-            "새 (가) 재시작의 첫 경계 실측과 조정",
             "E2 이후 성과 연장 · 재도전의 실제 소비량",
             "점프 단계 J0~J4 를 켤지 (E6b 뒤)",
         ]),
@@ -243,7 +246,7 @@ def draw(path):
         y -= 0.055
         for t in items:
             ax.text(0.01, y, f"{mark} {t}", fontsize=11.6, va="top")
-            y -= 0.043
+            y -= 0.040
         y -= 0.02
     ax.text(0, y, "낱말 풀이", fontsize=14, weight="bold", va="top")
     y -= 0.05
