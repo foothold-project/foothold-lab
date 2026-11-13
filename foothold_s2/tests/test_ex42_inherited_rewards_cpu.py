@@ -33,11 +33,11 @@ def _e1f(result):
 
 def test_e1f_row_gets_the_last_segment_live_values_including_an_adjustment(known):
     for path in _readbacks(known):
-        _rewrite(path, source='adjust_file', cells={'slow_track': 0.2})
+        _rewrite(path, source='adjust_file', cells={'slow_track': 0.3})
     result = run(known)
     plan, row = _e1f(result)
     source_row = next(x for x in yaml.safe_load(Path(known['source_plan']).read_text())['stages'] if x['id'] == 'E1')
-    assert row['rewards'] == {**source_row['rewards'], 'slow_track': 0.2}
+    assert row['rewards'] == {**source_row['rewards'], 'slow_track': 0.3}
     assert row['rewards']['zero_yaw'] == -1.0 and row['rewards']['track_lin_vel_std'] == 0.35
     transition = json.loads(Path(result['transition']).read_text())
     assert transition['inherited_rewards']['boundary_index'] == 6
@@ -70,7 +70,7 @@ def test_a_broken_last_segment_readback_is_refused_not_replaced_by_defaults(know
     if bad == 'missing':
         first.unlink(); second.unlink()
     elif bad == 'ranks_differ':
-        _rewrite(second, cells={'slow_track': 0.2})
+        _rewrite(second, cells={'slow_track': 0.1})
     elif bad == 'boundary':
         _rewrite(first, boundary_index=5)
     elif bad == 'stage':

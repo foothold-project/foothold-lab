@@ -177,11 +177,12 @@ def _row_doc(plan, row, **change):
             "segments": {"1": {"decided_at": "t", "reason": "r", "evidence": "e", "rewards": {**row, **change}}}}
 
 
-def test_the_shipped_row_starts_with_the_term_off_and_the_shipped_fences_are_the_ledger_row(plan, tmp_path):
+def test_the_shipped_row_starts_with_the_term_at_0_2_and_the_shipped_fences_are_the_ledger_row(plan, tmp_path):
     """decisions.tsv 2026-11-13 17:31 (73abb340): slow_track [0, 0.3], feet_air_time_threshold [0.04, 0.5]. The three
-    constants of the term stay closed on the value the stage starts with."""
+    constants of the term stay closed on the value the stage starts with. decisions.tsv 2026-11-14 00:21 (64de0cad): the
+    E1 restart from m13250 starts with slow_track 0.2."""
     row = adj.stage_rewards(plan, "E1")
-    assert (row["slow_track"], row["feet_air_time_threshold"], row["feet_air_time"]) == (0.0, 0.5, 0.0)
+    assert (row["slow_track"], row["feet_air_time_threshold"], row["feet_air_time"]) == (0.2, 0.5, 0.0)
     assert (row["slow_track_sigma"], row["slow_track_speed_min"], row["slow_track_speed_max"]) == (0.5, 0.1, 0.3)
     limits = adj.reward_limits()["cells"]
     assert limits["slow_track"] == (0.0, 0.3) and limits["feet_air_time_threshold"] == (0.04, 0.5)
@@ -210,7 +211,7 @@ def test_the_values_of_the_boundary_rules_pass_the_shipped_limits_and_reach_the_
     env_cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(**{k: live[k] for k in
                                                                     ("track_lin_vel", "track_ang_vel", "ex41_feet_air_time")}))
     adj.apply_reward_params(env_cfg, record, _Cfg)
-    assert env_cfg.rewards.ex42_slow_track.weight == change.get("slow_track", 0.0)
+    assert env_cfg.rewards.ex42_slow_track.weight == change.get("slow_track", 0.2)        # the row value unless changed
     assert live["ex41_feet_air_time"].params["threshold"] == change.get("feet_air_time_threshold", 0.5)
 
 
@@ -220,13 +221,13 @@ def test_the_first_segment_registers_the_term_and_changes_nothing_else(plan, tmp
                                                                     ("track_lin_vel", "track_ang_vel", "ex41_feet_air_time")}))
     record = adj.start_segment(view(plan), plan, "E1", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
     out = adj.apply_reward_params(env_cfg, record, _Cfg)
-    assert env_cfg.rewards.ex42_slow_track.weight == 0.0 and env_cfg.rewards.ex42_slow_track.func is st.slow_track_term
-    assert out["slow_track"] == {"before": 0.0, "after": 0.0} and out["feet_air_time_threshold"] == {"before": 0.5, "after": 0.5}
+    assert env_cfg.rewards.ex42_slow_track.weight == 0.2 and env_cfg.rewards.ex42_slow_track.func is st.slow_track_term
+    assert out["slow_track"] == {"before": 0.0, "after": 0.2} and out["feet_air_time_threshold"] == {"before": 0.5, "after": 0.5}
     assert out["track_lin_vel_std"] == {"before": 0.5, "after": 0.35}                   # the one reward change of the start
     live["ex42_slow_track"] = env_cfg.rewards.ex42_slow_track
     manager = types.SimpleNamespace(get_term_cfg=lambda name: live[name])
     body = adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
-    assert body["live"] == record["rewards"]["values"] and body["live"]["slow_track"] == 0.0
+    assert body["live"] == record["rewards"]["values"] and body["live"]["slow_track"] == 0.2
 
 
 def test_an_opened_fence_lets_a_boundary_switch_the_term_on_and_the_read_back_checks_it(plan, tmp_path):
