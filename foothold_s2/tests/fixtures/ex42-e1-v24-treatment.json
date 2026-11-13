@@ -1,0 +1,77 @@
+{
+  "source_commit": "a19cd6a24a6209e887bace25115d24568674991b",
+  "plan_sha256": "9087bf55ae913045a4e2c0268411b21aeed7351b6a871f59a0606160df55acf4",
+  "E1": {
+    "commands": {
+      "shares": {
+        "forward": 0.19,
+        "walk_left": 0.06,
+        "walk_right": 0.06,
+        "spin_left": 0.09,
+        "spin_right": 0.09,
+        "stand": 0.1,
+        "reverse": 0.14,
+        "side_left": 0.09,
+        "side_right": 0.09,
+        "diag_fwd_left": 0.02,
+        "diag_fwd_right": 0.02,
+        "diag_back_left": 0.025,
+        "diag_back_right": 0.025
+      },
+      "ranges": {
+        "forward_vx": [
+          0.1,
+          1.5
+        ],
+        "walk_vx": [
+          0.3,
+          1.2
+        ],
+        "walk_wz_abs": [
+          0.1,
+          1.0
+        ],
+        "spin_wz_abs": [
+          0.15,
+          1.5
+        ],
+        "reverse_vx": [
+          -1.3,
+          -0.2
+        ],
+        "side_vy_abs": [
+          0.1,
+          0.8
+        ],
+        "diag_vx_abs": [
+          0.3,
+          0.6
+        ],
+        "diag_vy_abs": [
+          0.2,
+          0.5
+        ]
+      },
+      "turn_overlay": {
+        "fraction": 0.25,
+        "wz_abs": [
+          0.2,
+          0.6
+        ]
+      }
+    },
+    "rewards": {
+      "track_lin_vel_std": 0.35,
+      "track_ang_vel_std": 0.5,
+      "feet_air_time": 0.0,
+      "foot_slip": -0.15,
+      "zero_yaw": -1.0,
+      "feet_air_time_threshold": 0.5,
+      "slow_track": 0.0,
+      "slow_track_sigma": 0.5,
+      "slow_track_speed_min": 0.1,
+      "slow_track_speed_max": 0.3
+    },
+    "low_forward_fraction": 0.4
+  }
+}
