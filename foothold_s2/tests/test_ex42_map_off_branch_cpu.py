@@ -136,8 +136,8 @@ def test_one_low_level_is_enough_and_missing_or_foreign_evidence_is_never_an_ent
     raw = _raw(64, 64)
     raw["L9"]["map_off"] = _records(50)
     path = _write(world.tmp / "c", _build(raw, stage="E1F"))
-    assert mob.entry_decision(world.doc, "E1F", path, checkpoint_sha256=SHA, changed_axes=[])["gaps_envs"] == \
-        {"L3": 0, "L6": 0, "L9": 14}
+    one = mob.entry_decision(world.doc, "E1F", path, checkpoint_sha256=SHA, changed_axes=[])
+    assert one["gaps_envs"] == {"L3": 0, "L6": 0, "L9": 14} and one["action"] == "enter"     # one level, not all three
     missing = mob.entry_decision(world.doc, "E4", world.tmp / "none.json", checkpoint_sha256=SHA, changed_axes=[])
     foreign = mob.entry_decision(world.doc, "E4", path, checkpoint_sha256="f" * 64, changed_axes=[])
     wrong_stage = mob.entry_decision(world.doc, "E1F", path, checkpoint_sha256=SHA, changed_axes=[], plan_sha256="1" * 64)
