@@ -243,13 +243,14 @@ def test_the_same_segment_started_again_must_carry_the_same_record(plan, view, t
 def test_a_stage_without_a_command_profile_takes_no_command_entry(plan, tmp_path):
     stage = object()
     holder = types.SimpleNamespace(stages=[stage])
-    record = adj.start_segment(holder, plan, "E1F", boundary_index=1, path=None, log_dir=str(tmp_path), write=True)
+    # J0 is a row with no `commands` cell (the rows E1F .. E6b carry E1's ranges: test_ex42_later_stage_commands_cpu.py)
+    record = adj.start_segment(holder, plan, "J0", boundary_index=1, path=None, log_dir=str(tmp_path), write=True)
     assert record["commands"] is None and record["rewards"]["values"] is None and holder.stages == [stage]
     path = tmp_path / "a.json"
-    doc = {**document(plan, b1=entry(plan, **NARROW)), "stage_id": "E1F"}
+    doc = {**document(plan, b1=entry(plan, **NARROW)), "stage_id": "J0"}
     path.write_text(json.dumps(doc), encoding="utf-8")
     with pytest.raises(ValueError, match=r"may only name boundaries \[\] for commands"):
-        adj.start_segment(holder, plan, "E1F", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
+        adj.start_segment(holder, plan, "J0", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
 
 
 # ---- reward cells (lead 2026-11-12 21:27): tracking widths and two weights, any boundary, limits outside the plan ----
@@ -371,14 +372,15 @@ def test_a_record_written_before_the_reward_cells_still_counts_and_a_record_can_
                      cpc.Sources("E1", run_dir=tmp_path))["rows"][0]["verdict"] == "PASS"   # both shapes are read
 
 
-def test_a_stage_with_no_command_profile_still_takes_rewards(plan, source, tmp_path):
+def test_a_stage_with_no_adjustable_commands_still_takes_rewards(plan, source, tmp_path):
     holder = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=plan, stage_id="E1F")
     doc = {"schema": adj.SCHEMA, "stage_id": "E1F", "plan_sha256": plan.sha256, "segments": {"1": reward_entry()}}
     path = tmp_path / "adjust.json"
     path.write_text(json.dumps(doc), encoding="utf-8")
     record = adj.start_segment(holder, plan, "E1F", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
-    assert record["commands"] is None and record["rewards"]["values"] == REWARDS
-    assert holder.stages[0].rewards["foot_slip"] == -0.2 and holder.stages[0].ranges["side_vy_abs"] == (0.2, 0.6)
+    # E1F keeps E1's command ranges (its row carries them) and has no limits cell: commands stay, rewards change
+    assert record["commands"]["ranges"]["side_vy_abs"] == [0.1, 0.8] and record["rewards"]["values"] == REWARDS
+    assert holder.stages[0].rewards["foot_slip"] == -0.2 and holder.stages[0].ranges["side_vy_abs"] == (0.1, 0.8)
 
 
 class _Term:
