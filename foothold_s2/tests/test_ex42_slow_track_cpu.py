@@ -26,15 +26,17 @@ def value(vel, cmd, wz=0.0, **k):
 
 def test_walking_as_told_is_one_and_standing_is_the_same_small_value_at_every_slow_speed():
     stand = math.exp(-1.0 / 0.25)                                              # relative error 1, sigma 0.5
-    for speed in (0.11, 0.15, 0.2, 0.29):
+    for speed in (0.1, 0.15, 0.2, 0.29):                                       # the lower edge is inside the band
         assert value([speed, 0.0], [speed, 0.0]) == pytest.approx(1.0)
         assert value([0.0, 0.0], [speed, 0.0]) == pytest.approx(stand, rel=1e-5)
     assert stand == pytest.approx(0.0183, abs=1e-4)
     assert value([0.1, 0.0], [0.2, 0.0]) == pytest.approx(math.exp(-0.25 / 0.25), rel=1e-5)      # half the speed
 
 
-def test_slow_side_and_diagonal_commands_count_as_well():
+def test_slow_side_back_and_diagonal_commands_count_as_well():
     assert value([0.0, 0.2], [0.0, 0.2]) == pytest.approx(1.0)
+    assert value([-0.2, 0.0], [-0.2, 0.0]) == pytest.approx(1.0)                # backwards
+    assert value([0.0, 0.1], [0.0, 0.1]) == pytest.approx(1.0) and value([-0.1, 0.0], [-0.1, 0.0]) == pytest.approx(1.0)
     assert value([0.0, -0.15], [0.0, -0.15]) == pytest.approx(1.0)
     assert value([0.0, 0.0], [0.0, 0.2]) == pytest.approx(math.exp(-4.0), rel=1e-5)
     assert value([0.14, 0.14], [0.14, 0.14]) == pytest.approx(1.0)              # |c| = 0.198
@@ -42,7 +44,7 @@ def test_slow_side_and_diagonal_commands_count_as_well():
 
 @pytest.mark.parametrize("cmd, wz", [
     ([0.0, 0.0], 0.0),            # stand
-    ([0.1, 0.0], 0.0),            # at the lower edge: not above it
+    ([0.0999, 0.0], 0.0),         # just below the lower edge
     ([0.05, 0.0], 0.0),
     ([0.3, 0.0], 0.0),            # at the upper edge: the ordinary tracking term takes over
     ([0.8, 0.0], 0.0),
@@ -73,13 +75,36 @@ def test_the_constants_are_cells(tmp_path):
     assert value([0.08, 0.0], [0.08, 0.0], speed_min=0.05) == pytest.approx(1.0) and value([0.08, 0.0], [0.08, 0.0]) == 0.0
 
 
+def _env(command, velocity, heading, flag):
+    term = types.SimpleNamespace(heading=heading, is_flag_env=flag)
+    manager = types.SimpleNamespace(get_command=lambda name: {"base_velocity": command}[name],
+                                    get_term=lambda name: {"base_velocity": term}[name])
+    return types.SimpleNamespace(command_manager=manager,
+                                 scene={"robot": types.SimpleNamespace(data=types.SimpleNamespace(root_lin_vel_b=velocity))})
+
+
 def test_the_term_reads_the_body_frame_planar_velocity_and_the_command():
     command = torch.tensor([[0.2, 0.0, 0.0], [0.0, 0.2, 0.0], [0.2, 0.0, 0.5]])
     velocity = torch.tensor([[0.2, 0.0, 9.0], [0.0, 0.0, 9.0], [0.2, 0.0, 9.0]])           # the third column is vz: unread
-    env = types.SimpleNamespace(command_manager=types.SimpleNamespace(get_command=lambda name: {"base_velocity": command}[name]),
-                                scene={"robot": types.SimpleNamespace(data=types.SimpleNamespace(root_lin_vel_b=velocity))})
-    out = st.slow_track_term(env, "base_velocity", **K)
+    off = torch.zeros(3, dtype=torch.bool)
+    out = st.slow_track_term(_env(command, velocity, off, off), "base_velocity", **K)
     assert out.tolist() == pytest.approx([1.0, math.exp(-4.0), 0.0], rel=1e-5)
+
+
+def test_heading_envs_and_flag_envs_are_left_out_whatever_their_command_is():
+    """Contract (lead 2026-11-13 15:41). Four envs walk a slow forward command exactly, with a zero turn command:
+    a free one, a heading env whose controller happens to ask for no turn, a flag env, and one that is both."""
+    command = torch.tensor([[0.2, 0.0, 0.0]] * 4)
+    velocity = torch.tensor([[0.2, 0.0, 0.0]] * 4)
+    heading = torch.tensor([False, True, False, True])
+    flag = torch.tensor([False, False, True, True])
+    assert st.slow_track_term(_env(command, velocity, heading, flag), "base_velocity", **K).tolist() == [1.0, 0.0, 0.0, 0.0]
+    for broken in (types.SimpleNamespace(heading=heading), types.SimpleNamespace(is_flag_env=flag)):
+        manager = types.SimpleNamespace(get_command=lambda name: command, get_term=lambda name, broken=broken: broken)
+        env = types.SimpleNamespace(command_manager=manager, scene={"robot": types.SimpleNamespace(
+            data=types.SimpleNamespace(root_lin_vel_b=velocity))})
+        with pytest.raises(ValueError, match="needs the command term's heading and is_flag_env masks"):
+            st.slow_track_term(env, "base_velocity", **K)
 
 
 class _Cfg:

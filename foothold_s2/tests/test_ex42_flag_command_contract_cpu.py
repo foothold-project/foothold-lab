@@ -290,3 +290,21 @@ def test_a_flag_env_never_follows_the_command_of_its_earlier_free_episode(monkey
         kinds["back"] += int(((speed > 0) & (speed < 0.3)).sum())
     assert kinds["walk"] > 0 and kinds["spin"] > 0 and kinds["zero"] > 0
     assert (kinds["back"] > 0) is bool(params)                   # backing off only when the term has it on
+
+
+def test_the_slow_track_term_reads_the_masks_of_the_real_command_term(monkeypatch):
+    """ex42_slow_track is registered at weight 0, so the reward manager does not call it until a boundary switches it
+    on. Its two mask names are checked here against the real command term (E1F row: free and flag envs)."""
+    from foothold_s2.rewards import ex42_slow_track as st
+    command, runtime, robot = e1f_term(monkeypatch, {})
+    command.reset()
+    command.reset()
+    assert command.heading.dtype == torch.bool and command.is_flag_env.dtype == torch.bool
+    command.vel_command_b[:] = torch.tensor([0.2, 0.0, 0.0])                     # every env: slow forward, no turn
+    robot.root_lin_vel_b[:] = torch.tensor([0.2, 0.0, 0.0])                      # and walks it exactly
+    manager = types.SimpleNamespace(get_command=lambda name: command.vel_command_b, get_term=lambda name: command)
+    env = types.SimpleNamespace(command_manager=manager, scene={"robot": types.SimpleNamespace(data=robot)})
+    value = st.slow_track_term(env, "base_velocity", **st.DEFAULTS)
+    left_out = command.heading | command.is_flag_env
+    assert int(command.is_flag_env.sum()) > 200 and int((~left_out).sum()) > 2000
+    assert bool((value[left_out] == 0).all()) and bool((value[~left_out] == 1).all())
