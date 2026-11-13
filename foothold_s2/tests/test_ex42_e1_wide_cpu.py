@@ -225,7 +225,9 @@ def test_c1_off_survival_two_boundaries_and_missing_valid_envs():
                 "map64": {"probe_prop_only": {case: {"alive_at_end": survived}
                                               for case in cfg["map64_commands"]}},
                 "e1_v2_cells": {"low": {f"L{level}": {"probe_prop_only": {
-                    case: {"envs": valid, "survival": survived} for case in cfg["low_forward_commands"]}}
+                    case: {"envs": valid, "survival": survived}
+                    for case in cfg["low_forward_commands"] +
+                    (cfg["low_l0_side_commands"] if level == 0 else [])}}
                                               for level in cfg["low_forward_levels"]}}}
 
     assert off_survival(score(64), plan, score(64))["judgement"] == "PASS"
@@ -234,6 +236,14 @@ def test_c1_off_survival_two_boundaries_and_missing_valid_envs():
     assert off_survival(score(59), plan, score(59))["judgement"] == "FAIL"
     assert off_survival(score(64, 63), plan, score(64))["judgement"] == "HOLD"
     assert off_survival(score(64), plan, None)["judgement"] == "HOLD"
+    complete = score(64)
+    assert len(off_survival(complete, plan, complete)["items"]) == 21
+    missing_side = score(64)
+    del missing_side["e1_v2_cells"]["low"]["L0"]["probe_prop_only"]["side+0.4"]
+    assert off_survival(missing_side, plan, complete)["items"]["low/L0/side+0.4"]["judgement"] == "HOLD"
+    assert off_survival(missing_side, plan, complete)["judgement"] == "HOLD"
+    # L5 lateral cases are record only and cannot silently enter this watch.
+    assert "low/L5/side+0.4" not in off_survival(complete, plan, complete)["items"]
 
 
 def test_c1_previous_window_needs_identical_evaluation_plan_sha():

@@ -12,6 +12,7 @@ import yaml
 from foothold_s2.curriculum.ex42_prep import EX42Plan
 from foothold_s2.eval.map_mode_cells import E1_WIDE_ENDPOINT_COMMANDS, E1_WIDE_FIXED_COMMANDS
 from foothold_s2.eval.map_mode_cells import commands as command_suite
+from foothold_s2.ex42_e1_v2 import LOW_CASES
 
 
 def widened_contract(source: dict) -> dict:
@@ -34,6 +35,7 @@ def widened_contract(source: dict) -> dict:
         "off_survival": {
             "role": "two_window_watch", "map64_commands": list(command_suite("extended")),
             "low_forward_levels": [0, 5], "low_forward_commands": ["fwd0.1", "fwd0.2"],
+            "low_l0_side_commands": list(LOW_CASES[2:]),
             "survival_min": evaluation["promotion"]["survival_min"],
             "valid_min": evaluation["promotion"]["window_episodes"],
         },

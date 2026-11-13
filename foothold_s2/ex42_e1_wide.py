@@ -23,6 +23,7 @@ def sha(path: Path) -> str:
 def contract(plan: dict) -> dict:
     cfg = plan["evaluation"]["e1_widened"]
     from foothold_s2.eval.map_mode_cells import commands as command_suite
+    from foothold_s2.ex42_e1_v2 import LOW_CASES
     off = cfg.get("off_survival") or {}
     if (cfg.get("format") != "foothold-ex42-e1-widened/2"
             or cfg.get("active") is not True
@@ -40,6 +41,7 @@ def contract(plan: dict) -> dict:
             or off.get("map64_commands") != list(command_suite("extended"))
             or off.get("low_forward_levels") != [0, 5]
             or off.get("low_forward_commands") != ["fwd0.1", "fwd0.2"]
+            or off.get("low_l0_side_commands") != list(LOW_CASES[2:])
             or off.get("survival_min") != plan["evaluation"]["promotion"]["survival_min"]
             or off.get("valid_min") != plan["evaluation"]["promotion"]["window_episodes"]):
         raise ValueError("E1 C1 widened evaluation plan contract differs")
@@ -346,7 +348,10 @@ def off_survival(score: dict, plan: dict, previous: dict | None) -> dict:
             result[f"map64/{case}"] = {"valid": value.get("conditions", {}).get("envs") if row else None,
                                        "survival": row.get("alive_at_end") if row else None}
         for level in cfg["low_forward_levels"]:
-            for case in cfg["low_forward_commands"]:
+            low_cases = list(cfg["low_forward_commands"])
+            if level == 0:
+                low_cases.extend(cfg["low_l0_side_commands"])
+            for case in low_cases:
                 row = (value.get("e1_v2_cells") or {}).get("low", {}).get(f"L{level}", {}).get(
                     "probe_prop_only", {}).get(case)
                 result[f"low/L{level}/{case}"] = {"valid": row.get("envs") if row else None,
