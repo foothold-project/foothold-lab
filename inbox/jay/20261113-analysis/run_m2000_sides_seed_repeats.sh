@@ -7,6 +7,7 @@ E1_AXIS_PY=/home/jay/miniforge3/envs/isaac311/bin/python
 E1_AXIS_CKPT=/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/model_2000.pt
 E1_AXIS_MESH=/home/jay/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333
 E1_AXIS_BASELINE=/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m2000/axis_v2/axis_v2.json
+E1_SIDES_BASELINE=/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m2000/map64/map_modes.json
 cd "$E1_AXIS_CODE"
 set -a
 . /home/jay/mai/foothold-linux.env
@@ -41,7 +42,7 @@ if [[ $# -ne 0 ]]; then
     echo 'Usage: bash run_m2000_sides_seed_repeats.sh [--check-only]' >&2
     exit 2
 fi
-E1_AXIS_OUTPUT=/home/jay/data/foothold/s2_lab/e1_sides_repeat_20261113/m2000_$(date +%Y%m%d_%H%M%S)
+E1_AXIS_OUTPUT=/home/jay/data/foothold/s2_lab/e1_sides_repeat_20261113/m2000_mixed012_$(date +%Y%m%d_%H%M%S)
 mkdir -p "$(dirname "$E1_AXIS_OUTPUT")"
 mkdir "$E1_AXIS_OUTPUT"
 printf '%s\n' "$E1_AXIS_OUTPUT" > "$E1_AXIS_OUTPUT/output_root.txt"
@@ -54,7 +55,7 @@ run_side_seed() {
         --ex42-evaluation-plan "$E1_AXIS_CODE/foothold_s2/curriculum/ex42-prep.yaml"
         --task FootholdS2-Go2-S2-SB-v0 --checkpoint "$E1_AXIS_CKPT"
         --envs 64 --steps 300 --modes eval_gt,eval_pred
-        --fixed-terrain --fixed-level 2 --terrain-set default --mesh-dir "$E1_AXIS_MESH"
+        --fixed-terrain --terrain-set default --mesh-dir "$E1_AXIS_MESH"
         --command-suite extended --commands side+0.5,side-0.5
         --eval-seed "$seed" --device "$device" --out "$out" --headless
         --kit_args=--/UJITSO/datastore/localCachePath=/home/jay/mai/cache/isaacsim-5.1/DerivedDataCache)
@@ -62,6 +63,30 @@ run_side_seed() {
     printf '\n' >> "$out/argv.sh"
     local rc=0
     "${cmd[@]}" </dev/null > "$out/stdout.log" 2> "$out/stderr.log" || rc=$?
+    # Kit can report rc=0 after a Python exception. Final JSON and all NPZs are required.
+    "$E1_AXIS_PY" -B - "$out" "$seed" "$E1_SIDES_BASELINE" <<'PY' || rc=2
+import json,sys
+from pathlib import Path
+import numpy as np
+p,seed,baseline=Path(sys.argv[1]),int(sys.argv[2]),Path(sys.argv[3])
+d=json.loads((p/'map_modes.json').read_text())
+b=json.loads(baseline.read_text())
+assert d['checkpoint_sha256']==b['checkpoint_sha256']
+assert d['eval_seed']==seed and (d['envs'],d['steps'])==(64,300)
+assert d['terrain_tiles']==b['terrain_tiles']
+assert d['fixed_terrain']['fixed_level'] is None
+assert d['ex42_mesh']['mesh_sha256']==b['ex42_mesh']['mesh_sha256']
+assert set(d['modes'])=={'eval_gt','eval_pred'}
+assert len(list(p.glob('env_arrays_*.npz')))==4
+for mode,rows in d['modes'].items():
+    assert set(rows)=={'side+0.5','side-0.5'}
+    for name,row in rows.items():
+        assert row['policy_steps_x_envs']==19200
+        with np.load(p/d['env_arrays'][mode+'/'+name],allow_pickle=False) as z:
+            assert z['vx'].shape==z['alive'].shape==(300,64)
+assert 'Traceback (most recent call last)' not in (p/'stderr.log').read_text()
+print('S2_COMPLETE: two modes x two side cells, mixed L0/L1/L2 assignment matches seed42')
+PY
     printf '%s\n' "$rc" > "$out/exit_code.txt"
     printf 'seed=%s device=%s rc=%s output=%s\n' "$seed" "$device" "$rc" "$out"
     return "$rc"
