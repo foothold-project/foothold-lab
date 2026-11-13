@@ -46,7 +46,9 @@ def _e1_gate_at(known, update):
     checkpoint = parent / f'model_{update}.pt'
     checkpoint.write_bytes(b'known E1 PASS at %d' % update)
     digest = sha(checkpoint)
-    dump(known['parent_manifest'], {'progress': {'completed_updates': update}, 'checkpoints': {checkpoint.name: digest}})
+    manifest = json.loads(known['parent_manifest'].read_text())
+    manifest.update(progress={'completed_updates': update}, checkpoints={checkpoint.name: digest})
+    dump(known['parent_manifest'], manifest)
     gate = json.loads(known['gate_receipt'].read_text())
     measure = Path(gate['measurement']); m = json.loads(measure.read_text()); m['checkpoint_sha256'] = digest
     dump(measure, m)
@@ -117,6 +119,8 @@ def test_corrected_template_governs_the_exit_timing_without_rewriting_frozen_sou
     known['source_plan'] = source
     gate = json.loads(known['gate_receipt'].read_text()); gate['plan_sha256'] = sha(source)
     dump(known['gate_receipt'], gate)
+    for readback in Path(known['parent_manifest']).parent.glob('segment_rewards_b6_rank*.json'):
+        dump(readback, dict(json.loads(readback.read_text()), plan_sha256=sha(source)))
     ev = json.loads(known['evidence'].read_text()); ev.update(source_plan_sha256=sha(source), gate_sha256=sha(known['gate_receipt']))
     dump(known['evidence'], ev)
     test_e1_pass_at_1750_materializes_e1f_with_base_750_scope(known)
