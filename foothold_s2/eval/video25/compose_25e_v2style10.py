@@ -42,7 +42,7 @@ from foothold_s2.eval.video25.push_event_overlay import (  # noqa: E402
 
 SEGMENTS = {"fwd": (0, 150), "spin_left": (150, 225), "spin_right": (225, 300), "seq": None}
 SPEEDS = {"025x": 0.25, "05x": 0.5, "1x": 1.0, "2x": 2.0}
-VIDEO_RULE_VERSION = "v3.4-D168"
+VIDEO_RULE_VERSION = "v3.5"
 FOOT = ("FL", "FR", "RL", "RR")
 FOOT_BGR = [(64, 64, 242), (26, 166, 255), (89, 217, 77), (242, 102, 191)]  # matches overlay_25e colors
 AIR_FOOT_EDGE_BGR = (105, 105, 105)
@@ -59,7 +59,7 @@ MAP_MIN_SPAN_M = 0.05
 ATTENTION_MAX = 0.30
 BOTTOM_GRAPH_X = 58
 BOTTOM_LABEL_RIGHT = 44
-FONT = Path("C:/Windows/Fonts/malgun.ttf")
+FONT = next((Path(c) for c in ("C:/Windows/Fonts/malgun.ttf", "/usr/share/fonts/truetype/nanum/NanumGothic.ttf") if Path(c).is_file()), Path("C:/Windows/Fonts/malgun.ttf"))
 SEG_NAMES = ("전진 0.5", "전진 1.0", "좌회전", "우회전")
 WALK_SEG_NAMES = ("걸으며 좌 0.5/0.35", "걸으며 우 0.5/-0.35", "걸으며 좌 0.8/0.5", "걸으며 우 0.8/-0.5")
 LEGEND = ("Right: top-down maps, up = forward, one colour scale, \"정책에는 0\" = not used by the policy   |   "
@@ -257,13 +257,13 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
                 cv2.circle(panel, q, 6, (255, 255, 255), 1, cv2.LINE_AA)
             else:
                 cv2.circle(panel, q, 6, AIR_FOOT_EDGE_BGR, 1, cv2.LINE_AA)
-    lab = [((24, 455), "Attention: 128 cells, fixed 0.00..0.30", (200, 200, 200)),
-           ((24, 530), f"Mean | Reconstructed - GT |  =  {float(err[row]) if err is not None else float('nan'):.1f} cm   (lower is better, 0 = perfect)", (200, 200, 200)),
-           ((24, 490), f"Map colour range: {c0 - common[1]:+.3f}..{c0 + common[1]:+.3f} m (centre {c0:+.3f}, span ±{common[1] * 100:.1f} cm)", (190, 190, 190))]
+    lab = [((24, 455), "입력 지도만 표시 · attention 은 영상에서 제외", (200, 200, 200)),
+           ((24, 530), f"복원 오차 평균 = {float(err[row]) if err is not None else float('nan'):.1f} cm  (작을수록 좋음)", (200, 200, 200)),
+           ((24, 490), f"색 범위 {c0 - common[1]:+.2f}..{c0 + common[1]:+.2f} m (중심 {c0:+.2f})", (190, 190, 190))]
     map_labels = (
         "정답 지도" if use_gt else "정답 지도 · 정책에는 0",
         "복원 지도 · 정책에는 0" if use_gt else "복원 지도",
-        "정책 입력 + attention",
+        "정책 입력 지도",
     )
     headings = [((x, 60), label,
                  (150, 150, 150) if "정책에는 0" in label else
@@ -275,9 +275,9 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
         panel[452:464, 442:602] = cv2.applyColorMap(ramp, cv2.COLORMAP_INFERNO)
         panel = text(panel, [((438, 467), "0.00", (190, 190, 190)),
                              ((560, 467), "0.30", (190, 190, 190))], 13)
-    panel = text(panel, lab, 17)
+    panel = text(panel, lab, 20)
     panel = text(panel, [((24, 16), "위에서 본 높이 지도 (위 = 앞)", (235, 235, 235))], 17)
-    panel = text(panel, headings, 17)
+    panel = text(panel, headings, 19)
     err_top = max(4.0, float(np.nanmax(err))) if err is not None else 4.0
     tick_right = MAP_GRAPH_X - 6
     panel = text_right(panel, [((tick_right, 556), f"{err_top:.0f}", (160, 160, 160)),
@@ -285,6 +285,43 @@ def draw_map_panel(z, meta, row: int, attn_row, err=None) -> np.ndarray:
                                ((tick_right, 662), "0", (160, 160, 160)),
                                ((MAP_GRAPH_X + MAP_GRAPH_WIDTH + 2, 676), "cm", (160, 160, 160))], 17)
     return panel
+
+
+def command_runs_from_trace(cmd, t) -> list[dict]:
+    """The command strip comes from the recorded per-step command (cmd_post, review_feet.npz "command"), never from the
+    evaluation phase list: one run per maximal stretch of identical commands. Any change in any component, even one
+    step long, starts a new run."""
+    cmd = np.asarray(cmd)
+    t = np.asarray(t, np.float64)
+    if cmd.ndim != 2 or cmd.shape[1] < 3 or len(cmd) != len(t) or len(cmd) < 2:
+        raise ValueError("command trace must be (steps, >=3) and match the time axis")
+    dt = float(t[1] - t[0])
+    cuts = [0, *(np.flatnonzero(np.any(cmd[1:] != cmd[:-1], axis=1)) + 1).tolist(), len(cmd)]
+    return [{"name": "command", "target": [float(v) for v in cmd[a, :3]], "start_s": a * dt,
+             "duration_s": (b - a) * dt, "rows": (a, b)} for a, b in zip(cuts[:-1], cuts[1:])]
+
+
+def assert_runs_match_trace(runs: list[dict], cmd) -> None:
+    """Expand the runs back to one command per step; a single differing step is an error."""
+    cmd = np.asarray(cmd)
+    if not runs or runs[0]["rows"][0] != 0 or runs[-1]["rows"][1] != len(cmd) or any(
+            a["rows"][1] != b["rows"][0] for a, b in zip(runs[:-1], runs[1:])):
+        raise ValueError("command strip runs do not tile the steps")
+    expanded = np.concatenate([np.tile(np.asarray(r["target"], cmd.dtype), (r["rows"][1] - r["rows"][0], 1)) for r in runs])
+    if not np.array_equal(expanded, cmd[:, :3]):
+        raise ValueError("command strip differs from the recorded command trace")
+
+
+def command_block_color(target, active: bool):
+    """Block colour from the real command value: stopped = grey, forward = blue, anything else = green (BGR)."""
+    vx, vy, wz = (float(v) for v in target[:3])
+    if max(abs(vx), abs(vy), abs(wz)) < 1e-9:
+        base = (84, 84, 84)
+    elif abs(vy) < 1e-9 and abs(wz) < 1e-9 and vx > 0:
+        base = (156, 115, 71)
+    else:
+        base = (96, 150, 96)
+    return tuple(min(255, int(v * 1.35)) for v in base) if active else tuple(int(v * 0.72) for v in base)
 
 
 def command_segment_label(command: dict) -> str:
@@ -318,18 +355,43 @@ def question_strip(scene: np.ndarray) -> np.ndarray:
     """v10 (팀장 10/29 D51): 「이 영상이 답할 물음」 은 왼쪽 3D 장면 안 하단에 한 줄, 반투명 바탕으로 얹는다. 글자 크기 10 그대로."""
     if not EXTRA_LINE["question"]:
         return scene
-    y0, y1 = 703, 719
+    y0, y1 = 672, 719
     roi = scene[y0:y1, 0:1080].astype(np.float32)
-    scene[y0:y1, 0:1080] = (roi * 0.45 + np.array((30, 35, 43), np.float32) * 0.55).astype(np.uint8)
-    line = "이 영상이 답할 물음  " + EXTRA_LINE["question"] + (("   |   " + EXTRA_LINE["text"]) if EXTRA_LINE["text"] else "")   # 물음 | 결과 순 (팀장 10/29 19:2x)
-    return text(scene, [((8, y0 + 1), line, (225, 225, 190))], 10, limit=1072)
+    scene[y0:y1, 0:1080] = (roi * 0.35 + np.array((30, 35, 43), np.float32) * 0.65).astype(np.uint8)
+    # v11 (lead 11/12): two larger lines, question then in-video result
+    scene = text(scene, [((10, y0 + 3), "이 영상이 답할 물음  " + EXTRA_LINE["question"], (235, 235, 200))], 18, limit=1064)
+    if EXTRA_LINE["text"]:
+        scene = text(scene, [((10, y0 + 26), EXTRA_LINE["text"], tuple(EXTRA_LINE["color"]))], 16, limit=1064)
+    return scene
+
+
+def command_band_receipt(capture: Path, z, command_runs: bool) -> dict:
+    """Receipt entry: where the strip came from (cmd trace sha256) and the runs drawn."""
+    if not command_runs:
+        return {"source": "phase_blocks"}
+    cmd = np.ascontiguousarray(np.asarray(z["command"]))
+    runs = command_runs_from_trace(cmd, z["t"])
+    assert_runs_match_trace(runs, cmd)
+    return {"source": "cmd trace (review_feet.npz command = cmd_post)",
+            "cmd_trace_sha256": hashlib.sha256(cmd.tobytes()).hexdigest(),
+            "review_feet_sha256": sha256(Path(capture) / "review_feet.npz"),
+            "runs": [{"target": r["target"], "start_step": r["rows"][0], "end_step": r["rows"][1]} for r in runs]}
 
 
 def draw_bottom(z, row: int, curves: dict, duration_s: float,
-                commands: list[dict] | None = None, lit_from: int | None = None) -> np.ndarray:
+                commands: list[dict] | None = None, lit_from: int | None = None,
+                command_runs: bool = True, phase_labels: dict | None = None) -> np.ndarray:
     band = np.full((360, 1920, 3), (18, 22, 27), np.uint8)
     L, R = BOTTOM_GRAPH_X, 1880
     W = R - L
+    phases = commands
+    runs = None
+    if command_runs:
+        # v12 (lead 11/12, team lead 13:22): default for every composite. The strip is the robot's real command per step;
+        # evaluation phase names (from the capture contract) go on a thin row beneath.
+        runs = command_runs_from_trace(z["command"], z["t"])
+        assert_runs_match_trace(runs, z["command"])
+        commands = runs
     commands = commands or [
         {"name": name, "start_s": i * duration_s / 4, "duration_s": duration_s / 4}
         for i, name in enumerate(WALK_SEG_NAMES if __import__("os").environ.get("COMPOSE_SEG_NAMES") == "walk" else SEG_NAMES)
@@ -340,8 +402,21 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
         x0 = L + int(np.clip(start_s / duration_s, 0.0, 1.0) * W)
         x1 = L + int(np.clip((start_s + segment_s) / duration_s, 0.0, 1.0) * W) - 4
         x1 = max(x0, x1)
-        active = int(z["seg"][row]) == i
-        cv2.rectangle(band, (x0, 14), (x1, 34), (156, 115, 71) if active else (70, 70, 70), -1)
+        if runs:
+            active = command["rows"][0] <= row < command["rows"][1]
+            cv2.rectangle(band, (x0, 10), (x1, 30), command_block_color(command["target"], active), -1)
+        else:
+            active = int(z["seg"][row]) == i
+            cv2.rectangle(band, (x0, 14), (x1, 34), (156, 115, 71) if active else (70, 70, 70), -1)
+    labels = phase_labels or {}
+    if runs and phases and (labels or any(ph.get("label") for ph in phases)):
+        items = []
+        for i, ph in enumerate(phases):
+            x0 = L + int(np.clip(float(ph["start_s"]) / duration_s, 0.0, 1.0) * W)
+            cv2.line(band, (x0, 33), (x0, 47), (110, 110, 110), 1)
+            items.append(((x0 + 4, 33), ph.get("label") or labels.get(ph["name"], ph["name"]),
+                          (235, 235, 200) if int(z["seg"][row]) == i else (150, 150, 150)))
+        band = text(band, items, 13)
     # vx and wz traces
     for top, key, lim in ((50, "vx", 1.6), (150, "wz", 1.6)):
         h = 86
@@ -399,11 +474,11 @@ def draw_bottom(z, row: int, curves: dict, duration_s: float,
 
 SCENE_KEY = (("dot", (77, 255, 51), "GT height map"), ("grid", (255, 153, 64), "Reconstructed map"),
              ("bar", (31, 31, 255), "Recon. error > 2 cm"), ("dot", (13, 230, 255), "Foot scan (20 cm)"),
-             ("dot", (0, 140, 255), "Attention 128 cells (0~0.30)"), ("arrow", (51, 230, 26), "Command"),
+             ("arrow", (51, 230, 26), "Command"),
              ("arrow", (255, 89, 38), "Actual"), ("line", (200, 200, 200), "Foot trail 1.5 s"))
 
 
-LEGEND_ROW, LEGEND_FONT = 17, 12  # v8: smaller legend so the gauge panel starts higher
+LEGEND_ROW, LEGEND_FONT = 17, 14  # v8: smaller legend so the gauge panel starts higher
 GAUGE_X0, GAUGE_X1 = 1280 - 196, 1280 - 8  # shared left edge and exclusive right edge of the terrain/speed column
 LEGEND_RECT = (GAUGE_X0, 34, GAUGE_X1 - GAUGE_X0, 14 + LEGEND_ROW * len(SCENE_KEY))
 GAUGE_Y0 = LEGEND_RECT[1] + LEGEND_RECT[3] + 8
@@ -874,6 +949,7 @@ def scene_legend(scene: np.ndarray, meta: dict | None = None) -> np.ndarray:
 
 
 def render(capture: Path, segment: str, speed: str, out: Path, *, question: str = "", extra_line: str = "", extra_color=(200, 235, 200), label: str | None = None,
+           command_runs: bool = True, phase_labels: dict | None = None,
            push_events: Path | None = None, push_rollout_key: str | None = None, push_env_id: int | None = None) -> dict:
     """question = 3D 장면 안 하단의 반투명 한 줄 「이 영상이 답할 물음」, extra_line = 물음 띠 안 물음 뒤에 붙는 짧은 영상 안 결과(아래 타임라인 쪽에는 그리지 않는다), label = 머리줄에 쓸 이름(없으면 영수증 label)."""
     meta = json.loads((capture / "review.json").read_text(encoding="utf-8-sig"))
@@ -965,7 +1041,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
             scene = draw_push_overlay(scene, push_overlay, now_s, legend_rect=LEGEND_RECT,
                                       geometry=arrow_geometry)
         top = np.concatenate((scene, draw_map_panel(z, meta, row, attn[row] if row < len(attn) else None, err)), 1)
-        wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from)), 0))
+        wr.write(np.concatenate((top, draw_bottom(z, row, curves, duration_s, contract.get("commands"), lit_from, command_runs, phase_labels)), 0))
     wr.release()
     cap.release()
     import subprocess
@@ -990,7 +1066,7 @@ def render(capture: Path, segment: str, speed: str, out: Path, *, question: str 
            "speed": speed, "duration_s": duration_s, "fps": fps,
            "capture_frames": expected_capture_frames, "capture": str(capture),
            "capture_receipt_sha256": sha256(capture / "review.done"),
-           "label": meta.get("label"), "style": meta.get("style"), "question": question, "checkpoint_sha256": meta.get("checkpoint_sha256"),
+           "label": meta.get("label"), "style": meta.get("style"), "question": question, "command_band": command_band_receipt(capture, z, command_runs), "checkpoint_sha256": meta.get("checkpoint_sha256"),
            "map_panel": {"min_color_span_cm": MAP_MIN_SPAN_M * 100,
                          "attention_tokens": 128, "attention_fixed_range": [0.0, ATTENTION_MAX],
                          "feet_markers": "airborne-hollow-black-gray-all-three-map-panels"},

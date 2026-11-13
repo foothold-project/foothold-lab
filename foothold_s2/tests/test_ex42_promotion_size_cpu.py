@@ -8,7 +8,7 @@ import pytest
 import torch
 
 from foothold_s2.curriculum import rules
-from foothold_s2.terrains.ex42_mesh_mount import column_tile_sizes
+from foothold_s2.terrains.ex42_mesh_mount import column_tile_sizes, single_tile_sizes
 
 
 def _terrain(tile_x_by_column=None, size=(8.0, 8.0), types_=(0, 1, 1)):
@@ -85,6 +85,16 @@ def test_tile_sizes_are_the_median_origin_spacing_and_irregular_columns_are_repo
     nan[2, 1, 0] = np.nan
     with pytest.raises(ValueError, match="finite"):
         column_tile_sizes(nan)
+
+
+def test_single_evaluation_tile_uses_its_pinned_manifest_size():
+    origin = np.asarray([[[4.0, 4.0, 1.44]]])
+    tile_x, tile_y, irregular = single_tile_sizes(origin, (8.0, 8.0))
+    assert tile_x.tolist() == [8.0] and tile_y == 8.0 and irregular == []
+    with pytest.raises(ValueError, match="single tile size"):
+        single_tile_sizes(origin, (0.0, 8.0))
+    with pytest.raises(ValueError, match="single tile size"):
+        single_tile_sizes(np.concatenate([origin, origin + [8, 0, 0]], axis=0), (8.0, 8.0))
 
 
 MESH_ROOT = "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111"

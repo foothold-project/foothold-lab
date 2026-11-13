@@ -152,7 +152,7 @@ def test_legend_fixed_bounds_in_all_map_modes(mode, scan_visible):
 def test_v34_receipt_accepts_current_composer_and_rejects_old_rule():
     source = Path(composer.__file__)
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    assert composer_version(source) == VIDEO_RULE_VERSION == "v3.4-D168"
+    assert composer_version(source) == VIDEO_RULE_VERSION == "v3.5"
     require_video_rule({"video_rule_version": VIDEO_RULE_VERSION,
                         "composer_sha256": digest}, composer_sha256=digest)
     with pytest.raises(ValueError, match="video_rule_hold"):

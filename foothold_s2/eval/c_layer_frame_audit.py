@@ -53,6 +53,7 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
     screen_boxes = []
     previous = None
     issues = []
+    expected_static_frames = 0
     if not isinstance(screen_evidence, list) or len(screen_evidence) != expected:
         issues.append("camera_screen_projection_missing_or_short")
     if robot_instance_evidence is not None and len(robot_instance_evidence) != expected:
@@ -68,6 +69,8 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
                 issues.append(f"frame_{count}_robot_instance_count")
         styled = width == 1920 and height == 1080
         camera = screen_evidence[count - 1] if isinstance(screen_evidence, list) and count <= len(screen_evidence) else None
+        expected_static = isinstance(camera, dict) and camera.get("expected_static") is True
+        expected_static_frames += int(expected_static)
         pixel = camera.get("root_center_px") if isinstance(camera, dict) else None
         if (not isinstance(pixel, list) or len(pixel) != 2
                 or not all(isinstance(value, (int, float)) and np.isfinite(value) for value in pixel)
@@ -136,7 +139,11 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
             max_same_run = max(max_same_run, same_run + 1)
         else:
             same_run = 0
-        if previous is not None and float((reduced.astype(np.int16) - previous.astype(np.int16)).std()) < .5:
+        if expected_static:
+            # A zero-velocity command is an intentional stationary portion of
+            # D44 stop/restart. Exact duplicate frames remain rejected below.
+            low_motion_run = 0
+        elif previous is not None and float((reduced.astype(np.int16) - previous.astype(np.int16)).std()) < .5:
             low_motion_run += 1
             max_low_motion_run = max(max_low_motion_run, low_motion_run + 1)
         else:
@@ -155,6 +162,7 @@ def inspect_frames(frames, *, expected: int, width: int, height: int,
             "min_center_white_fraction": min_center_white,
             "robot_screen_candidate_boxes_px": screen_boxes,
             "robot_screen_candidate_count": sum(box is not None for box in screen_boxes),
+            "expected_static_frames": expected_static_frames,
             "max_identical_run": max_same_run, "max_low_motion_run": max_low_motion_run,
             "issues": issues[:40],
             "issue_count": len(issues), "pass": not issues}
