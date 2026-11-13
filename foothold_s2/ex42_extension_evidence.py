@@ -147,5 +147,5 @@ def improvement_evidence(plan, stage: str, iteration: int, interval: int, p1_pat
             raise ValueError("a deficient metric moved away from its threshold")
         return {"state": "PASS", "evaluation_plan": policy_ref, "boundaries": pins, "metrics": rows,
                 "rule": "one failing gap decreases twice, no failing gap worsens at the latest boundary"}
-    except (KeyError, TypeError, OSError, ValueError, json.JSONDecodeError) as exc:
+    except (AttributeError, KeyError, TypeError, OSError, ValueError, json.JSONDecodeError) as exc:
         return {"state": "HOLD", "reason": str(exc)}
