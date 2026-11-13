@@ -274,6 +274,7 @@ stages:
         side_left: 0.03
         side_right: 0.03
 - id: E1
+  exit_judge: map39_e1_v2_two_window
   authorization_contract:
     validator: legacy_e1
     source_stage_ids:
@@ -2647,6 +2648,28 @@ evaluation:
     success_min: 52
     survival_min: 60
     hold_if_invalid: true
+  # Team lead 2026-11-13 11:50, issue #765. These are engineering assumptions,
+  # not a confidence interval. Raw GT/PRED cells are required; OFF is recorded.
+  e1_exit_v2:
+    R_min: 0.8
+    R_max: 1.2
+    mae_fraction: 0.2
+    success_min: 52
+    survival_min: 60
+    symmetry_min: 0.8
+    yaw_median_max_rad: 0.10
+    yaw_p90_max_rad: 0.20
+    levels: [0, 5]
+    modes_judge: [eval_gt, eval_pred]
+    modes_record: [probe_prop_only]
+    repeat_seeds: [42, 7, 13]
+    near_threshold:
+      R_0p1: 0.007
+      R_0p2: 0.026
+      S_0p4: 0.026
+      S_0p5: 0.009
+      yaw_median_rad: 0.020
+      yaw_p90_rad: 0.040
   directions:
   - forward
   - reverse

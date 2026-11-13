@@ -91,6 +91,11 @@ HIPAN_G1B_COMMANDS = {
     "fwd0.2": (0.2, 0.0, 0.0),
     "spin+0.3": (0.0, 0.0, 0.3),
 }
+E1_V2_COMMANDS = {
+    "fwd0.1": (0.1, 0.0, 0.0), "fwd0.2": (0.2, 0.0, 0.0),
+    "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
+    "side+0.4": (0.0, 0.4, 0.0), "side-0.4": (0.0, -0.4, 0.0),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -124,6 +129,8 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(HIPAN_G1_COMMANDS)
     if suite == "hipan_g1b":
         return dict(HIPAN_G1B_COMMANDS)
+    if suite == "e1_v2":
+        return dict(E1_V2_COMMANDS)
     raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
 
 
