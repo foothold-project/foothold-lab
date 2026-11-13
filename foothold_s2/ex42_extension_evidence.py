@@ -84,6 +84,41 @@ def _gaps(score: dict, plan: dict) -> dict[str, dict]:
                     "measured": value, "lower": low if math.isfinite(low) else None,
                     "upper": high if math.isfinite(high) else None,
                     "gap": max(low - value, value - high, 0.0)}
+        if plan.get("evaluation", {}).get("e1_widened", {}).get("active") is True:
+            from foothold_s2.ex42_e1_wide import contract, judge_cells as wide_judge
+            contract(plan)
+            wide = v2.get("wide_current")
+            if not isinstance(wide, dict) or type(wide.get("cap")) is not int:
+                raise ValueError("extension C1 widened judged cells missing")
+            rows = wide.get("items")
+            expected_rows = wide_judge({}, plan, wide["cap"])["items"]
+            if not isinstance(rows, dict) or set(rows) != set(expected_rows):
+                raise ValueError("extension C1 widened cell coverage differs")
+            fixed = plan["evaluation"]["promotion"]
+            linear = plan["evaluation"]["e1_exit_v2"]
+            for key, expected_row in expected_rows.items():
+                row = rows[key]
+                if not isinstance(row, dict) or row.get("role") != expected_row["role"]:
+                    raise ValueError(f"extension C1 widened cell role differs: {key}")
+                if expected_row["role"] != "judge":
+                    continue
+                if row.get("judgement") not in ("PASS", "FAIL", "HOLD"):
+                    raise ValueError(f"extension C1 widened judgment missing: {key}")
+                if key.startswith("symmetry/"):
+                    limits = {"S": (linear["symmetry_min"], math.inf)}
+                else:
+                    threshold = fixed if key.startswith("wide_L") else linear
+                    if (row.get("valid") != plan["evaluation"]["e1_widened"]["off_survival"]["valid_min"]
+                            or row.get("success_min") != threshold["success_min"]
+                            or row.get("survival_min") != threshold["survival_min"]):
+                        raise ValueError(f"extension C1 widened denominator or threshold differs: {key}")
+                    limits = {"success": (threshold["success_min"], math.inf),
+                              "survival": (threshold["survival_min"], math.inf)}
+                for metric, (low, high) in limits.items():
+                    value = _number(row[metric])
+                    result[f"wide/{key}/{metric}"] = {
+                        "measured": value, "lower": low, "upper": high if math.isfinite(high) else None,
+                        "gap": max(low - value, value - high, 0.0)}
     d44 = (score.get("e1_exit") or {}).get("d44") or {}
     if isinstance(v2, dict):
         specs = plan["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"]
@@ -111,8 +146,7 @@ def _gaps(score: dict, plan: dict) -> dict[str, dict]:
 def improvement_evidence(plan, stage: str, iteration: int, interval: int, p1_path: Path) -> dict:
     """Allow only a pinned two-step move toward the existing exit threshold.
 
-    At least one currently failing numeric metric must improve at both steps;
-    none of the currently failing metrics may worsen in the last step.  These
+    Every deficient numeric metric must improve at both steps. These
     comparisons add no new performance threshold to the approved plan.
     """
     try:
@@ -163,11 +197,11 @@ def improvement_evidence(plan, stage: str, iteration: int, interval: int, p1_pat
                          "current_measured": value["measured"],
                          "older_gap": gaps[0][key]["gap"],
                          "previous_gap": gaps[1][key]["gap"], "current_gap": value["gap"]})
-        if not any(r["older_gap"] > r["previous_gap"] > r["current_gap"] for r in rows):
-            raise ValueError("no deficient metric improved across both preceding boundaries")
         if any(r["current_gap"] > r["previous_gap"] for r in rows):
             raise ValueError("a deficient metric moved away from its threshold")
+        if not all(r["older_gap"] > r["previous_gap"] > r["current_gap"] for r in rows):
+            raise ValueError("not every deficient metric improved across both preceding boundaries")
         return {"state": "PASS", "evaluation_plan": policy_ref, "boundaries": pins, "metrics": rows,
-                "rule": "one failing gap decreases twice, no failing gap worsens at the latest boundary"}
+                "rule": "every deficient gap decreases across both preceding boundaries"}
     except (AttributeError, KeyError, TypeError, OSError, ValueError, json.JSONDecodeError) as exc:
         return {"state": "HOLD", "reason": str(exc)}

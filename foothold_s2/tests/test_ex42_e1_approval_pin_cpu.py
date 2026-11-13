@@ -20,8 +20,12 @@ def test_e1_record_is_1750_updates_from_e0_and_requires_rejudgment_pass():
     cell = doc['stage_e1_authorization']
     assert cell['approved'] is True
     assert cell['decision_source']['commit'] == '7ef023f58027f43c985c34a521d53a52252cabdf'
-    assert cell['scope_amendment']['decision_source']['commits'] == [          # team lead 2026-11-12 12:52 and 13:03
-        '3bb9b1e7bec3a24c46fa32a3b6f8c74477601523', 'c556f1b36e1018f92f1ab8f1f67adf1d099eea0f']
+    assert cell['scope_amendment']['decision_source']['commits'] == [
+        '3bb9b1e7bec3a24c46fa32a3b6f8c74477601523', 'c556f1b36e1018f92f1ab8f1f67adf1d099eea0f',
+        'dd3bbf88b2df7ee4e182ba230696013e80f7f233', '915dce6eede16255081577d4cfd29e57c0ed666e',
+        '64de0cad0ecab1fb9d58a38e869f83fd9b5e9c8d', 'bc66f6ee63f1aea0832520f72d127e5f8698969f',
+        '06d4a1aecc27885945b991e1556b9569a4c5b3e3', 'ca1844f593122a0f1d643fab6b3212ce064425dc',
+        'a76e783d7b0380115b1559aa49f6e1a6e656e955']
     assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1750,
                                  parent_sha256=E1_PARENT, later_stages_authorized=False)
     assert cell['extension_authorized'] is True

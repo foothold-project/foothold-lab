@@ -296,7 +296,7 @@ def test_stage_zero_reset_readback_uses_json_contract_not_w86_runtime(tmp_path, 
     assert decoded["lin_vel_z_weight"] == 0.0
 
 
-def test_stage_zero_runtime_records_real_runner_pre_and_post_step_contract():
+def test_stage_zero_runtime_records_real_runner_pre_and_post_step_contract(monkeypatch):
     import torch
 
     from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
@@ -310,8 +310,13 @@ def test_stage_zero_runtime_records_real_runner_pre_and_post_step_contract():
         stage_zero_plan=SimpleNamespace(stages=[SimpleNamespace(id="T0_prime")]),
         plan_sha256="a" * 64, approval_sha256="b" * 64,
         parent_sha256="c" * 64, push_vmax_mps=2.0)
+    audit_calls = []
+    monkeypatch.setattr("foothold_s2.runners.ppo_kl_audit.install_runner_kl_audit",
+                        lambda runner, *, runtime: audit_calls.append((runner, runtime)))
     runtime.attach_environment(env, SimpleNamespace())
-    runtime.attach_runner(SimpleNamespace(log_dir="run"))
+    fake_runner = SimpleNamespace(log_dir="run")
+    runtime.attach_runner(fake_runner)
+    assert audit_calls == [(fake_runner, runtime)]
     runtime.on_update_start(1)
     runtime.record_pre_step()
     with pytest.raises(RuntimeError, match="recorded twice"):

@@ -298,6 +298,38 @@ def judge_cells(cells: dict, plan: dict, *, repeats: dict[int, dict] | None = No
     return {"judgement": verdict, "items": rows}
 
 
+def _live_adjustments(root: Path, iteration: int, plan: dict, plan_sha: str) -> dict:
+    """Describe the actual adjustment schedule inside the completed 250-update window."""
+    from foothold_s2.ex42_live_adjust import RECEIPT, check_limited_values, limits_from_plan
+
+    row = next((stage for stage in plan["stages"] if stage["id"] == "E1"), None)
+    if not isinstance(row, dict):
+        raise ValueError("E1 v2 treatment plan row missing")
+    if row.get("live_adjustment") is None:
+        if list(root.glob("ex42_update_adjust_m*.json")):
+            raise ValueError("E1 v2 live adjustment receipts need a matching plan contract")
+        return {"start": None, "events": []}  # read-only pre-v27 runs had no live adjustment contract
+    limits = limits_from_plan(row["live_adjustment"])
+    start, events = None, []
+    for path in sorted(root.glob("ex42_update_adjust_m*.json"),
+                       key=lambda p: int(p.stem.rsplit("m", 1)[-1])):
+        number = int(path.stem.rsplit("m", 1)[-1])
+        if number > iteration:
+            continue
+        receipt = _json(path)
+        if (receipt.get("format") != RECEIPT or receipt.get("stage_id") != "E1"
+                or receipt.get("plan_sha256") != plan_sha or receipt.get("iteration") != number):
+            raise ValueError("E1 v2 live adjustment receipt identity differs")
+        after = receipt.get("after")
+        check_limited_values(after, limits)
+        proof = {"iteration": number, "values": after, "receipt_sha256": _sha(path)}
+        if number <= iteration - 250:
+            start = proof
+        else:
+            events.append(proof)
+    return {"start": start, "events": events}
+
+
 def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha256: str | None = None) -> dict:
     """Pin the segment that produced this boundary, never the segment started afterward."""
     if type(iteration) is not int or iteration <= 0 or iteration % 250:
@@ -308,14 +340,17 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
             or (expected_plan_sha256 is not None and plan_sha != expected_plan_sha256)):
         raise ValueError("E1 v2 execution plan identity differs from startup")
     boundary = iteration // 250 - 1
+    live_adjustments = _live_adjustments(root, iteration, plan, plan_sha)
     if boundary == 0:
         stage = next((row for row in plan["stages"] if row["id"] == "E1"), None)
         if not isinstance(stage, dict):
             raise ValueError("E1 v2 starting treatment plan row missing")
         actual = {"commands": stage["commands"], "rewards": stage["rewards"],
-                  "low_forward_fraction": stage.get("low_forward_fraction")}
+                  "low_forward_fraction": stage.get("low_forward_fraction"),
+                  "live_adjustments": live_adjustments}
         fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-        return {"state": "complete", "source": "plan", "boundary_index": 0, "sha256": fingerprint}
+        return {"state": "complete", "source": "plan", "boundary_index": 0, "sha256": fingerprint,
+                "live_adjustments": live_adjustments}
     commands_path = root / f"segment_commands_b{boundary}.json"
     rewards_path = root / f"segment_rewards_b{boundary}_rank0.json"
     rank1_path = root / f"segment_rewards_b{boundary}_rank1.json"
@@ -341,9 +376,10 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
             or not math.isfinite(low["value"])):
         raise ValueError("E1 v2 treatment slow-forward share missing")
     actual = {"commands": commands["commands"], "rewards": rewards["live"],
-              "low_forward_fraction": low["value"]}
+              "low_forward_fraction": low["value"], "live_adjustments": live_adjustments}
     fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {"state": "complete", "source": "segment_receipt", "boundary_index": boundary, "sha256": fingerprint,
+            "live_adjustments": live_adjustments,
             "commands_path": str(commands_path), "commands_sha256": _sha(commands_path),
             "rewards_path": str(rewards_path), "rewards_sha256": _sha(rewards_path),
             "rank1_path": str(rank1_path), "rank1_sha256": _sha(rank1_path)}

@@ -106,6 +106,14 @@ E1_WIDE_ENDPOINT_COMMANDS = {
     "walk0.3_wz+0.1": (0.3, 0.0, 0.1), "walk0.3_wz-0.1": (0.3, 0.0, -0.1),
     "spin+0.15": (0.0, 0.0, 0.15), "spin-0.15": (0.0, 0.0, -0.15),
 }
+GAIT_SPEED_COMMANDS = {
+    "fwd0.1": (0.1, 0.0, 0.0), "fwd0.2": (0.2, 0.0, 0.0),
+    "fwd0.3": (0.3, 0.0, 0.0), "fwd0.5": (0.5, 0.0, 0.0),
+    "fwd1.0": (1.0, 0.0, 0.0),
+    "side+0.1": (0.0, 0.1, 0.0), "side-0.1": (0.0, -0.1, 0.0),
+    "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
+    "back0.1": (-0.1, 0.0, 0.0), "back0.2": (-0.2, 0.0, 0.0),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -145,7 +153,9 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(E1_WIDE_FIXED_COMMANDS)
     if suite == "e1_wide_endpoint":
         return dict(E1_WIDE_ENDPOINT_COMMANDS)
-    raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
+    if suite == "gait_speeds":
+        return dict(GAIT_SPEED_COMMANDS)
+    raise ValueError("unknown command suite")
 
 
 def terrain_rows(levels, types, names: list[str]) -> list[dict]:

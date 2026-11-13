@@ -45,8 +45,20 @@ E1_EXTENSION_DECISION_ID = "teamlead-2026-11-11-1938-ex42-budget-m-floor-e1-exte
 E1_EXTENSION_DECISION_SHA = "7121e0188cf1cbe558704764227e306e6097149f"
 
 
+class _UniqueKeyLoader(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise ValueError(f"EX-42 duplicate YAML key {key!r} at line {key_node.start_mark.line + 1}")
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
 def _read_yaml(path: Path) -> dict[str, Any]:
-    value = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
+    value = yaml.load(path.read_text(encoding="utf-8-sig"), Loader=_UniqueKeyLoader)
     if not isinstance(value, dict):
         raise ValueError(f"EX-42 document must be a YAML mapping: {path}")
     return value
