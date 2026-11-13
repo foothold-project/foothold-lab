@@ -1,0 +1,8 @@
+{
+  "cases": 156,
+  "status": "PASS",
+  "device": "CPU",
+  "planner_source": "/home/jay/mai/wt/foothold-lab/planner-rank2/foothold_s2/rewards/ex42_slow_track.py",
+  "planner_source_sha256": "a561a255e82b8922aef91d8cc95955bd375f46ed9e37a9df9f89a22ce33c13ae",
+  "reference_source_sha256": "2759c26f44ffadcbe0f08686e64d1488c5bee9279a13a61a3a7497a5b2b3492b"
+}

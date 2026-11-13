@@ -1,0 +1,98 @@
+[
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/map_modes.json",
+    "sha256": "b0925141e958d39060d017a267b96ef6799ce44681018e9a1ceb78d245ab393c"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/map_modes.json",
+    "sha256": "e15718f785ba23d49b414e0cd4587ea779dc82ea46a06bec7ed2b090d2a024d3"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/gait_raw_fwd0.1.csv",
+    "sha256": "c2b2ec1d789ce9c28acfe493b41a6c95ab74751d2ea9a41adc3e61a1f7e1d759"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/env_arrays_eval_gt_fwd0.1.npz",
+    "sha256": "93462b422c3e4a36009c42fc0c2e785c5b5b116a7d199ea8fd1d089c89181097"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/gait_raw_fwd0.2.csv",
+    "sha256": "06b3e531b4cb8f5a734ca848ac5ccdafc4cc88166b162698d6817d1a9e8b1a82"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/env_arrays_eval_gt_fwd0.2.npz",
+    "sha256": "1a4072faf58e92d4bd81f830bf7cfccf9904b7990f57fa594f6e8adef2952a1b"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/gait_raw_fwd0.3.csv",
+    "sha256": "0204ffe66846db169be8f8c1c88322b4e8bc8713bd9823a21a815cd806374125"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/env_arrays_eval_gt_fwd0.3.npz",
+    "sha256": "686c0a269cce02a21e42b11cde8c9128eb0af7bbe8d61eed7962870cd0f09759"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/gait_raw_fwd0.5.csv",
+    "sha256": "aea4d0c12e9b671ef43af8a9a40bd1aeb5cd2fcd57e3a9a1acac3e06b78e715a"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/env_arrays_eval_gt_fwd0.5.npz",
+    "sha256": "10fddfca8983b9006aa847379a021579f1898bb3292f3eba5ea1e351455c6189"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/gait_raw_fwd1.0.csv",
+    "sha256": "106d062779e5c222295042150484a802d39ce7c038adc5080f9fb775e569ddc1"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_20261113_1536/env_arrays_eval_gt_fwd1.0.npz",
+    "sha256": "708156d6b58d941f5c0a5b57b63cdb355421914fbd5dcb9dd028c1b7bb561e13"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_side+0.1.csv",
+    "sha256": "51527f81f44137a5aaa5576f97abc1e88a3e2469aaad8fa6b75bafca6324bdf6"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_side+0.1.npz",
+    "sha256": "4ff858f34fe2a1c9a09a6548779800e66c3186c5a786d042f65546cddf5fddfa"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_side-0.1.csv",
+    "sha256": "95abb8746d1f0a6c967d5c5e13d998f8d8401ba7607299a0f4225af51e5390ac"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_side-0.1.npz",
+    "sha256": "0b37f19d9651c509f2735223400f7acbda2b25e079e8958b550a4c1b5a2df12c"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_side+0.2.csv",
+    "sha256": "f27d329ee1fdde701c9fd55d642f711615136d29c353c19862214a22b996e4dd"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_side+0.2.npz",
+    "sha256": "40b5c6de37293eead14e9d6fc07ff2be8b45a1bcc34527f71a8871bf497d9aa1"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_side-0.2.csv",
+    "sha256": "6ed604c5ee2726075bf5ddf0f85ea12cb44d09e593ce07a503b42a52979c838a"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_side-0.2.npz",
+    "sha256": "596f2dfcba61994519750902d671f8c3fc94834e6f51a5bfcdb859f96edb87fe"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_back0.1.csv",
+    "sha256": "63fd9bc25911e48f525222cda1d9eb729ab37b66f5a4cff3cdbeb73cc30225a2"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_back0.1.npz",
+    "sha256": "c862a2bec8d3bec78e4ed688254619bdfd045b08e328aca00f198bf41477354f"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/gait_raw_back0.2.csv",
+    "sha256": "9d4ab72f969b32fcc23220746d01d211fc93fef452796bc238d095cf3572f759"
+  },
+  {
+    "path": "/home/jay/data/foothold/s2_lab/gait_contact_m13250_side_back_20261113_1544/env_arrays_eval_gt_back0.2.npz",
+    "sha256": "a863604b21516deea0dbc9efaf2afa476fd66c9e8383744e3461af99e4be0e9a"
+  }
+]
