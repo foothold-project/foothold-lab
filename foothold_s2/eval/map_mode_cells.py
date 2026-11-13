@@ -96,6 +96,16 @@ E1_V2_COMMANDS = {
     "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
     "side+0.4": (0.0, 0.4, 0.0), "side-0.4": (0.0, -0.4, 0.0),
 }
+E1_WIDE_FIXED_COMMANDS = {
+    "fwd1.0": (1.0, 0.0, 0.0), "back0.5": (-0.5, 0.0, 0.0),
+    "side+0.5": (0.0, 0.5, 0.0), "side-0.5": (0.0, -0.5, 0.0),
+}
+E1_WIDE_ENDPOINT_COMMANDS = {
+    "side+0.8": (0.0, 0.8, 0.0), "side-0.8": (0.0, -0.8, 0.0),
+    "walk1.2_wz+1.0": (1.2, 0.0, 1.0), "walk1.2_wz-1.0": (1.2, 0.0, -1.0),
+    "walk0.3_wz+0.1": (0.3, 0.0, 0.1), "walk0.3_wz-0.1": (0.3, 0.0, -0.1),
+    "spin+0.15": (0.0, 0.0, 0.15), "spin-0.15": (0.0, 0.0, -0.15),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -131,6 +141,10 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return dict(HIPAN_G1B_COMMANDS)
     if suite == "e1_v2":
         return dict(E1_V2_COMMANDS)
+    if suite == "e1_wide_fixed":
+        return dict(E1_WIDE_FIXED_COMMANDS)
+    if suite == "e1_wide_endpoint":
+        return dict(E1_WIDE_ENDPOINT_COMMANDS)
     raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
 
 

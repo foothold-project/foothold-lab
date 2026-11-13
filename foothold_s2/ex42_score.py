@@ -105,6 +105,14 @@ def measure(checkpoint, evaluation, config_path=None, *, expected_seed=None,
             any(set(map_row["modes"][mode]) != set(commands) for mode in MODES)):
         raise ValueError("EX-42 map64 extended 13-command coverage incomplete")
     policy_path = Path(evaluation_plan_path).resolve(strict=True) if evaluation_plan_path else ROOT / cfg["maintenance_source"]
+    if evaluation_plan_path is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        from foothold_s2.ex42_e1_wide_plan import validate_evaluation_scope
+        policy_doc = EX42Plan.load(policy_path).document
+        if policy_doc.get("evaluation", {}).get("e1_widened", {}).get("active") is True:
+            if execution_plan_path is None:
+                raise ValueError("E1 C1 evaluation needs the pinned execution plan")
+            validate_evaluation_scope(Path(execution_plan_path), policy_path)
     out = {"format": "foothold-ex42-maintenance-score/1", "checkpoint": str(checkpoint),
            "checkpoint_sha256": checkpoint_sha, "score_config_sha256": digest(cfg_path),
            "maintenance_source_sha256": digest(policy_path),
