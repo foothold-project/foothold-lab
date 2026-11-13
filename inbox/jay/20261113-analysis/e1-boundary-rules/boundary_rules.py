@@ -1,4 +1,4 @@
-"""CPU-only EX-42 E1 rules. Ledger 73abb340 + lead 19:28 GT/PRED decision.
+"""CPU-only EX-42 E1 rules. Ledgers 73abb340, 04f50b4f, and 0a5c1629.
 
 This module has no training imports or write-to-run path. Decisions are drafts.
 R1 and old R5 are superseded, not fallback actions when evidence is absent.
@@ -68,7 +68,8 @@ def repeat_confirmed(now, keys, predicate, previous=None):
 
 def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
     out=dict(rule='KEEP',changes={},triggered=[],next_segment='UNCHANGED',
-             notes=[],apply_ready=False,rule_commit='04f50b4f',base_rule_commit='73abb340',
+             notes=[],apply_ready=False,rule_commit='0a5c1629',base_rule_commit='73abb340',
+             map_rule_commit='04f50b4f',
              r6_raise_contract='2026-11-13 lead 19:28 all_eight_gt_pred_nonincreasing',
              judge_modes=list(JUDGE_MODES),record_only_modes=list(MODES[2:]))
     def choose(rule, changes=None, note=None):
@@ -169,7 +170,7 @@ def decide(now, parent, previous=None, earlier=None, treatment=None, gait=None):
               latest_reg and not latest_reg['bad'] and not latest_reg['missing'] and prior_reg and
               not prior_reg['bad'] and not prior_reg['missing'] and
               r5_observation_complete(now['iteration'],t.get('r6_activated_at')) and
-              all(current[f'low/L{lev}/eval_gt/fwd0.2/R']>=.5 for lev in (0,5)))
+              all(current[f'low/L{lev}/{mode}/fwd0.2/R']>=.5 for mode in JUDGE_MODES for lev in (0,5)))
     if r5_ready:
         if not gait or not gait.get('valid') or not gait.get('valid_conditions') or gait.get('contact_definition')!='norm_Fxyz_gt_1N':
             out['r5_missing']=(gait or {}).get('issues',['동일 Fxyz 접촉 정의·발별 자료 없음'])
