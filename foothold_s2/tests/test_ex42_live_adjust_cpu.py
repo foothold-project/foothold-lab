@@ -158,6 +158,21 @@ def test_resume_rejects_out_of_limit_receipt_before_applying_it(tmp_path):
     assert runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight == 0
 
 
+def test_resume_readback_uses_last_receipt_and_catches_post_load_reset(tmp_path):
+    ctl, _, _ = _setup(tmp_path, iteration=305, rewards={"zero_yaw": -1.25})
+    ctl.on_update_start(305)
+    resumed, runtime, _ = _setup(tmp_path, iteration=305, rewards={"zero_yaw": -1.25})
+    proof = resumed.resume_readback()
+    assert proof["iteration"] == 305
+    assert proof["receipt_path"] == str(tmp_path / "ex42_update_adjust_m305.json")
+    assert proof["expected"]["rewards"]["zero_yaw"] == -1.25
+    assert proof["live"] == proof["expected"]
+    assert runtime.env.reward_manager.get_term_cfg("ex41_zero_yaw").weight == -1.25
+    runtime.env.reward_manager.get_term_cfg("ex41_zero_yaw").weight = -1.0
+    with pytest.raises(RuntimeError, match="post-load readback differs"):
+        resumed.resume_readback()
+
+
 def test_receipt_removed_stops_and_past_entry_cannot_be_rewritten(tmp_path):
     ctl, _, file = _setup(tmp_path, rewards={"slow_track": .2})
     ctl.on_update_start(2)

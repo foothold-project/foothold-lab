@@ -198,6 +198,22 @@ class LiveAdjustment:
             if live_values(self.runtime, self.expected["values"]) != self.expected["values"]:
                 raise RuntimeError("EX-42 live adjustment resume readback differs")
 
+    def resume_readback(self):
+        """Recheck the restored reward after the runner loads its checkpoint."""
+        if self.expected is None:
+            return None
+        iteration = self.expected["iteration"]
+        path = self.log_dir / f"ex42_update_adjust_m{iteration}.json"
+        raw = path.read_bytes()
+        receipt = json.loads(raw)
+        observed = live_values(self.runtime, self.expected["values"])
+        if (receipt.get("iteration") != iteration
+                or receipt.get("after") != self.expected["values"]
+                or observed != self.expected["values"]):
+            raise RuntimeError("EX-42 live adjustment post-load readback differs")
+        return {"iteration": iteration, "receipt_path": str(path), "receipt_sha256": _sha(raw),
+                "rank": self.rank, "expected": self.expected["values"], "live": observed}
+
     def _validate_past(self, raw, iteration):
         doc = json.loads(raw.decode("utf-8"))
         for key, entry in doc["changes"].items():

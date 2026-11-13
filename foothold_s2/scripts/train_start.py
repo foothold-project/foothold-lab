@@ -1218,7 +1218,8 @@ def main(env_cfg, agent_cfg):
             print("EX42_SELF_RESUME_TERRAIN_BEFORE_RESET "
                   + json.dumps(terrain_restore, sort_keys=True), flush=True)
         if EX42_SEGMENT_COMMANDS is not None:
-            # the live reward manager must carry what the segment asked for, before any rollout
+            # This is before LiveAdjustment._restore. A later resume readback records the
+            # effective reward after the m305-style receipt is applied and runner.load completes.
             from foothold_s2.commands.ex42_segment_adjust import write_reward_readback as _write_reward_readback
 
             print("EX42_SEGMENT_REWARDS_READBACK " + json.dumps(_write_reward_readback(
@@ -1326,6 +1327,12 @@ def main(env_cfg, agent_cfg):
                 runner.set_ex41_critic_mirror(True, approval=critic_mirror_proof(
                     EX42_STAGE_ZERO_PLAN, _pre_args.ex42_approvals, EX42_STAGE_ID))
             runner.load(EX42_STAGE_ZERO_RESUME, map_location="cpu")
+            adjustment = getattr(ex42_stage_zero_runtime, "live_adjustment", None)
+            if adjustment is not None:
+                restored_adjustment = adjustment.resume_readback()
+                if restored_adjustment is not None:
+                    print("EX42_LIVE_ADJUST_RESUME_READBACK " + json.dumps(
+                        restored_adjustment, sort_keys=True), flush=True)
             runner.ex42_parent_transfer = resume_saved["ex42_parent_transfer"]
             ex42_transfer = {
                 "state": "self_resume_restored",
