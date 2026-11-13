@@ -102,7 +102,8 @@ def read_e3_window(folder: Path, *, inventory: dict, plan: dict, plan_sha256: st
                 for cell in inventory["opened_cells"]}
     if not expected or not folder.is_dir():
         raise ValueError("EX-42 E3 named-kind raw window absent")
-    observed = {f"{family}/{kind}/L{level}" for family in ("A", "B", "C")
+    families = ("A", "B", "C", *sorted({cell["family"] for cell in expected.values()} - {"A", "B", "C"}))
+    observed = {f"{family}/{kind}/L{level}" for family in families
                 for kind_dir in (folder / family).glob("*") if kind_dir.is_dir()
                 for kind in (kind_dir.name,) for level_dir in kind_dir.glob("L*")
                 if level_dir.is_dir() for level in (level_dir.name[1:],)}

@@ -13,7 +13,10 @@ from pathlib import Path
 from foothold_s2.eval.ex42_stage_kind_bundle import GLOBAL_FLAGS, KIND_FLAGS, read_e3_window
 from foothold_s2.ex42_stage_judges import aggregate
 
-STAGES = ("E4", "E5")
+STAGES = ("E4", "E5", "E6b")
+# E6b judges only the kinds it opens itself (family D); its earlier families are the E4/E5 exits' business. The plan
+# declares the D kinds (positive rules and the K ladder), so a kind added there is required here without a code change.
+STAGE_FAMILIES = {"E6b": ("D",)}
 
 
 def _sha(path: Path) -> str:
@@ -22,7 +25,7 @@ def _sha(path: Path) -> str:
 
 def folder_name(stage_id: str) -> str:
     if stage_id not in STAGES:
-        raise ValueError("EX-42 late kind stage must be E4 or E5")
+        raise ValueError("EX-42 late kind stage must be E4, E5 or E6b")
     return f"kind_cells_{stage_id.lower()}"
 
 
@@ -32,14 +35,14 @@ def spec_for(plan: dict, stage_id: str) -> dict:
             spec.get("record_modes") != ["probe_prop_only"] or
             spec.get("representative_levels") != [0, 5, "current_cap"] or
             type(spec.get("learned_cells_min")) is not int or spec["learned_cells_min"] <= 0 or
-            stage_id not in spec or type(spec[stage_id].get("min_level")) is not int):
+            (stage_id not in STAGE_FAMILIES and (stage_id not in spec or type(spec[stage_id].get("min_level")) is not int))):
         raise ValueError("EX-42 late kind exit spec absent or differs")
     return spec
 
 
 def level_targets(plan: dict, stage_id: str) -> dict[tuple[str, str], int]:
     """Every kind the stage declares (positive rules and the K ladder) and the level it must reach before exit."""
-    spec = spec_for(plan, stage_id)[stage_id]
+    spec = spec_for(plan, stage_id).get(stage_id) or {"min_level": 0}
     stage = next(row for row in plan["stages"] if row["id"] == stage_id)
     terrain = stage["terrain"]
     exposure = terrain[f"exposure_at_{stage_id}"]
@@ -58,6 +61,9 @@ def level_targets(plan: dict, stage_id: str) -> dict[tuple[str, str], int]:
         family, kind = name.split("/", 1)
         if (family, kind) in targets:
             targets[(family, kind)] = max(targets[(family, kind)], level)
+    families = STAGE_FAMILIES.get(stage_id)
+    if families:
+        targets = {key: level for key, level in targets.items() if key[0] in families}
     if not targets:
         raise ValueError("EX-42 late stage declares no kinds")
     return targets
@@ -107,7 +113,10 @@ def recount(score: dict, *, plan: dict, evaluation: Path, mesh: dict, stage_id: 
                 "mesh_sha256": mesh["mesh_sha256"], "evaluation": str(folder)}
     if exposure["mesh_sha256"] != mesh["mesh_sha256"]:
         raise ValueError(f"EX-42 {stage_id} training and evaluation mesh differ")
-    inventory = target_inventory(plan, stage_id, exposure["opened_kinds"])
+    opened = exposure["opened_kinds"]
+    if stage_id in STAGE_FAMILIES:
+        opened = {name: cap for name, cap in opened.items() if name.split("/", 1)[0] in STAGE_FAMILIES[stage_id]}
+    inventory = target_inventory(plan, stage_id, opened)
     global_flags = Path(evaluation) / "flag_cells" / "flag_four"
     sources = sorted({cell["flag_source"] for cell in inventory["opened_cells"]})
     base = {"inventory": inventory, "stage_exposure": exposure["receipts"], "exposure_found": True,
