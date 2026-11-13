@@ -234,3 +234,14 @@ def test_c1_off_survival_two_boundaries_and_missing_valid_envs():
     assert off_survival(score(59), plan, score(59))["judgement"] == "FAIL"
     assert off_survival(score(64, 63), plan, score(64))["judgement"] == "HOLD"
     assert off_survival(score(64), plan, None)["judgement"] == "HOLD"
+
+
+def test_c1_previous_window_needs_identical_evaluation_plan_sha():
+    from foothold_s2.ex42_e1_v2 import c1_previous_window
+    plan = _plan()
+    current = {"execution_plan_sha256": "a" * 64, "maintenance_source_sha256": "b" * 64}
+    old_policy = {"maintenance_source_sha256": "a" * 64}
+    assert c1_previous_window(current, plan, old_policy) == (None, True)
+    same_policy = {"maintenance_source_sha256": "b" * 64}
+    assert c1_previous_window(current, plan, same_policy) == (same_policy, False)
+    assert c1_previous_window(current, plan, None) == (None, False)

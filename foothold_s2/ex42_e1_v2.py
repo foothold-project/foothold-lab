@@ -381,6 +381,13 @@ def _verified_cells(score: dict, evaluation: Path, seed: int) -> dict:
     return actual
 
 
+def c1_previous_window(score: dict, plan: dict, previous: dict | None) -> tuple[dict | None, bool]:
+    from foothold_s2.ex42_e1_wide import active as wide_active
+    mismatch = (wide_active(score, plan) and previous is not None and
+                previous.get("maintenance_source_sha256") != score.get("maintenance_source_sha256"))
+    return (None if mismatch else previous), mismatch
+
+
 def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                 *, previous: dict | None, checkpoint: Path, evaluation: Path, seed: int) -> dict:
     """Two consecutive, same-treatment windows. D44 stop/restart stays visible as record."""
@@ -389,11 +396,7 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     if seed != plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][0]:
         raise ValueError("EX-42 E1 v2 primary seed differs from approved plan")
     from foothold_s2.ex42_e1_wide import active as wide_active
-    previous_plan_mismatch = (wide_active(score, plan) and previous is not None and
-                              previous.get("maintenance_source_sha256") !=
-                              score.get("maintenance_source_sha256"))
-    if previous_plan_mismatch:
-        previous = None
+    previous, previous_plan_mismatch = c1_previous_window(score, plan, previous)
     if not isinstance(score.get("d44_cells"), dict):
         score = {**score, "d44_cells": {}}
     case_specs = plan["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"]
