@@ -12,3 +12,6 @@ cells:
   track_ang_vel_std: [0.25, 0.5]     # rewards.track_ang_vel.params.std (plan value 0.5)
   feet_air_time: [0.0, 0.5]          # weight of ex41_feet_air_time (plan value 0.0)
   foot_slip: [-0.25, -0.05]          # weight of ex41_foot_slip (plan value -0.15)
+  # zero_yaw: proposed limits [-2.0, -0.5] (planner draft EX42-E1-REMEDY-draft-1113, 2026-11-13). No ledger row yet,
+  # so until the team lead approves them the cell admits the plan value only: an adjustment cannot move it.
+  zero_yaw: [-0.5, -0.5]             # weight of ex41_zero_yaw (plan value -0.5) · ledger pending

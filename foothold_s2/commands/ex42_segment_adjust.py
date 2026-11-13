@@ -6,7 +6,7 @@ file outside both (EX42_SEGMENT_ADJUST):
     {"schema": "ex42-segment-adjust/1", "stage_id": "E1", "plan_sha256": "<the run's plan>",
      "segments": {"3": {"decided_at": "...", "reason": "...", "evidence": "...",
                         "commands": {"shares": {...}, "ranges": {...}, "turn_overlay": {"fraction": f, "wz_abs": [a, b]}},
-                        "rewards": {"track_lin_vel_std": s, "track_ang_vel_std": s, "feet_air_time": w, "foot_slip": w}}}}
+                        "rewards": {"track_lin_vel_std": s, "track_ang_vel_std": s, "feet_air_time": w, "foot_slip": w, "zero_yaw": w}}}}
 
 An entry carries `commands`, `rewards` or both and holds from its boundary on, each kind until a later entry of the
 same kind. An entry for a boundary the run has not reached is refused.
@@ -14,7 +14,7 @@ same kind. An entry for a boundary the run has not reached is refused.
 * commands: only a stage whose plan row has `command_adjust_limits`, only at a boundary before its level cap first
   rises (E1: 1 and 2), every value inside those limits.
 * rewards: any stage, any boundary from 1 on, every value inside `curriculum/ex42-reward-adjust-limits.yaml` (outside
-  the plan so that a run already started can use it; its SHA is recorded). The two weights go on the stage's reward
+  the plan so that a run already started can use it; its SHA is recorded). The weight cells go on the stage's reward
   table, the two tracking widths on the env config (`apply_reward_params`), and the live reward manager is read back
   (`reward_readback`).
 
@@ -37,7 +37,8 @@ RECEIPT = "ex42-segment-commands/1"
 TOL = 1e-9
 REWARD_LIMITS = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-reward-adjust-limits.yaml"
 REWARD_LIMITS_SCHEMA = "ex42-reward-adjust-limits/1"
-WEIGHT_CELLS = {"feet_air_time": "ex41_feet_air_time", "foot_slip": "ex41_foot_slip"}       # stage reward key -> live term
+WEIGHT_CELLS = {"feet_air_time": "ex41_feet_air_time", "foot_slip": "ex41_foot_slip",        # stage reward key -> live term
+                "zero_yaw": "ex41_zero_yaw"}       # yaw rate while the turn command is zero (heading drift, 2026-11-13)
 STD_CELLS = {"track_lin_vel_std": "track_lin_vel", "track_ang_vel_std": "track_ang_vel"}    # cell -> env reward term
 REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS)
 
@@ -181,7 +182,7 @@ def receipts(log_dir, stage_id) -> dict[int, dict]:
 
 
 def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, write, limits_path=REWARD_LIMITS) -> dict:
-    """Read, check against the earlier segments of the run folder, put the command profile and the two reward weights
+    """Read, check against the earlier segments of the run folder, put the command profile and the reward weight cells
     on the plan view's stage, and (a real start past the first segment, rank 0) leave the record. Raises ValueError
     before anything is applied. The tracking widths go on the env config later (`apply_reward_params`)."""
     limits = reward_limits(limits_path)
@@ -227,7 +228,7 @@ def apply_reward_params(env_cfg, record) -> dict:
 
 
 def reward_readback(env, record) -> dict:
-    """After the env is built: the four cells as the live reward manager carries them. An adjusted segment must show
+    """After the env is built: the cells as the live reward manager carries them. An adjusted segment must show
     exactly what its entry asked for; ValueError otherwise, before any rollout."""
     manager = getattr(env, "unwrapped", env).reward_manager
     live = {cell: float(manager.get_term_cfg(term).params["std"]) for cell, term in STD_CELLS.items()}
