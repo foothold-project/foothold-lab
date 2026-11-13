@@ -67,6 +67,7 @@ def test_materialize_preserves_selected_table_adapter(known):
     sha,dump=materialize_tests.sha,materialize_tests.dump
     gate=json.loads(known['gate_receipt'].read_text());gate['plan_sha256']=sha(known['plan']);dump(known['gate_receipt'],gate)
     ev=json.loads(known['evidence'].read_text());ev['source_plan_sha256']=sha(known['plan']);ev['gate_sha256']=sha(known['gate_receipt']);dump(known['evidence'],ev)
+    materialize_tests.repin_last_segment(known)
     result=materialize_tests.run(known)
     made=EX42Plan.load(result['plan']);cell=yaml.safe_load(Path(result['approvals']).read_text())['stage_e1f_authorization']
     assert next(r for r in made.document['stages'] if r['id']=='E1F')['authorization_contract']['entry_gate_adapter']=='map39_e1_two_window'

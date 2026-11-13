@@ -97,6 +97,12 @@ def known(tmp_path):
         budget_limit=20000,budget_used=2000,budget_basis='ex42_new_updates',out=tmp_path/'published')
 
 
+def repin_last_segment(known):
+    """A test that rewrites the source plan in place: the last segment's reward readbacks ran under that plan too."""
+    for readback in Path(known['parent_manifest']).parent.glob('segment_rewards_b6_rank*.json'):
+        dump(readback, dict(json.loads(readback.read_text()), plan_sha256=sha(known['source_plan'])))
+
+
 def run(known):
     from foothold_s2.ex42_stage_materialize import materialize
     return materialize(**known)
@@ -306,8 +312,7 @@ def test_registered_boolean_requires_real_boolean_evidence(known):
     a=yaml.safe_load(known['approvals'].read_text());a['stage_e1f_authorization']['budget']={'m_updates_count_toward_source_maximum':None}
     known['approvals'].write_text(yaml.safe_dump(a));d['stage_zero']['approval_sha256']=sha(known['approvals']);p.write_text(yaml.safe_dump(d))
     gp=known['gate_receipt'];g=json.loads(gp.read_text());g['plan_sha256']=sha(p);dump(gp,g)
-    for readback in gp.parent.glob('segment_rewards_b6_rank*.json'):      # the last segment ran under the rewritten plan too
-        dump(readback, dict(json.loads(readback.read_text()), plan_sha256=sha(p)))
+    repin_last_segment(known)
     e=json.loads(known['evidence'].read_text());e['source_plan_sha256']=sha(p);e['gate_sha256']=sha(gp)
     log=Path(e['exposure_receipt']['path']);lines=log.read_text().splitlines()
     for i in (0,1):
