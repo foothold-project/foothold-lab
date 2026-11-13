@@ -377,6 +377,12 @@ def bridge(request, binding, root, gate_path, *, guard, launch=True, launch_chec
     predecessor = next(r for r in source.document['stages'] if r['id'] == 'E1')
     origin = next(row for row in template.document['stages'] if row['id'] == 'E0')['parent']['cumulative_update']
     used = predecessor['parent']['cumulative_update'] + 1000 - origin
+    counted_from = template.document['training_budget'].get('count_from_stage')
+    if counted_from is not None:      # decisions.tsv 2026-11-13 15:17: the stages before it are outside the budget
+        stage_ids = [row['id'] for row in template.document['stages']]
+        if counted_from not in stage_ids or stage_ids.index('E1F') >= stage_ids.index(counted_from):
+            raise ValueError('EX-42 remeasure: E1F is not before training_budget.count_from_stage')
+        used = 0
     excluded = {'stage_zero_updates': origin - template.document['stage_zero']['parent']['cumulative_update'],
                 'discarded_first_e1_updates': 1000, 'discarded_run': request.get('old', {}).get('run')}
     made = materialize(plan=template.path, source_plan=source.path, approvals=approvals_path,

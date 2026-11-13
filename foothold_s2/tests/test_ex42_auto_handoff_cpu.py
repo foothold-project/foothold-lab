@@ -23,7 +23,8 @@ def test_launcher_own_p1_command_carries_complete_next_stage_chain(tmp_path):
 
 def test_budget_is_actual_parent_lineage_not_environment_or_plan_cap(known):
     row=handoff.measured_budget(known['plan'],known['source_plan'],known['parent_manifest'],known['gate_receipt'])
-    assert row['used']==2000  # E1 parent13250 + actual1750 - E0 parent13000; stage zero excluded
+    # decisions.tsv 2026-11-13 15:17: basic gait (E0, E1, E1F) is outside the budget, the count starts at E2
+    assert row['used']==0 and row['count_from_stage']=='E2'
     assert row['limit']==20000 and row['basis']=='ex42_new_updates'
     assert row['local_updates']==1750 and row['parent_cumulative_update']==13250
 
@@ -121,7 +122,7 @@ def test_e1f_pass_to_e2_real_materialize_then_cpu_launcher_cli(e1f_exit,tmp_path
     assert decision['action']=='launch',decision
     assert decision['target_stage']=='E2'
     plan=Path(decision['plan']);transition=json.loads((plan.parent/'transition.json').read_text())
-    assert transition['budget']['used']==2500  # E0 250 + adopted E1 1750 + E1F 500
+    assert transition['budget']['used']==0  # E2 starts the count: E0 250 + E1 1750 + E1F 500 are basic gait, outside it
     launch_env=dict(os.environ,**env,EX42_AUTO_ACTION='next_stage',EX42_AUTO_TARGET_STAGE='E2',
         EX42_AUTO_PLAN=str(plan),EX42_AUTO_APPROVALS=decision['approvals'],
         EX42_AUTO_PARENT_MANIFEST=str(manifest),EX42_AUTO_PARENT_CHECKPOINT=str(manifest.parent/'model_500.pt'),
@@ -285,20 +286,28 @@ def test_evidence_producer_refuses_a_predecessor_that_did_not_pass(e1f_exit, tmp
     assert not (tmp_path / 'no-publish').exists()
 
 
-def _template_with_limit(known, tmp_path, limit):
+def _template_with_limit(known, tmp_path, limit, count_from=None, plan_path=None):
+    """A copy of the template with another limit. count_from None: the cell is taken off (a plan from before
+    2026-11-13 15:17, every stage from E0 on is counted)."""
     import shutil
     import yaml
-    folder = tmp_path / 'budget-limit-template'
-    shutil.copytree(Path(known['plan']).parent, folder)
-    path = folder / Path(known['plan']).name
+    plan_path = Path(plan_path or known['plan'])
+    folder = tmp_path / f'budget-template-{limit}-{count_from}'
+    shutil.copytree(plan_path.parent, folder)
+    path = folder / plan_path.name
+    folder.chmod(0o755)
+    path.chmod(0o644)                              # a materialized plan folder is read-only
     plan = yaml.safe_load(path.read_text())
     plan['training_budget']['maximum_updates'] = limit
+    plan['training_budget'].pop('count_from_stage', None)
+    if count_from is not None:
+        plan['training_budget']['count_from_stage'] = count_from
     path.write_text(yaml.safe_dump(plan))
     return path
 
 
 def test_budget_over_the_approved_limit_is_refused(known, tmp_path):
-    template = _template_with_limit(known, tmp_path, 1999)          # the lineage already used 2000
+    template = _template_with_limit(known, tmp_path, 1999)          # no count_from_stage: the lineage already used 2000
     with pytest.raises(ValueError, match='budget exhausted'):
         handoff.measured_budget(template, known['source_plan'], known['parent_manifest'], known['gate_receipt'])
 
@@ -307,3 +316,46 @@ def test_budget_exactly_at_the_limit_is_allowed(known, tmp_path):
     template = _template_with_limit(known, tmp_path, 2000)
     assert handoff.measured_budget(template, known['source_plan'], known['parent_manifest'],
                                    known['gate_receipt'])['used'] == 2000
+
+
+def test_the_first_counted_stage_uses_its_own_updates_only(known, tmp_path):
+    """The gate of `known` is the E1 exit at 1750. Counting from E1: 1750, without the 250 of E0 before it."""
+    args = (known['source_plan'], known['parent_manifest'], known['gate_receipt'])
+    row = handoff.measured_budget(_template_with_limit(known, tmp_path, 1750, 'E1'), *args)
+    assert row['used'] == 1750 and row['count_from_stage'] == 'E1'
+    with pytest.raises(ValueError, match='budget exhausted'):
+        handoff.measured_budget(_template_with_limit(known, tmp_path, 1749, 'E1'), *args)
+
+
+@pytest.mark.parametrize('stage', ['E0', 'E9'])
+def test_counting_from_the_first_stage_or_an_unknown_one_is_refused(known, tmp_path, stage):
+    with pytest.raises(ValueError, match='counts from a stage it does not have'):
+        handoff.measured_budget(_template_with_limit(known, tmp_path, 20000, stage), known['source_plan'],
+                                known['parent_manifest'], known['gate_receipt'])
+
+
+def test_a_later_counted_stage_adds_to_what_its_materialization_recorded(known, e1f_exit, tmp_path):
+    """The E1F exit at 500 with a template that counts from E1: what the E1F materialization recorded as used before
+    E1F (its transition file, bound to the E1F plan by SHA) plus the 500 of E1F."""
+    import shutil
+    source, _, manifest, gate, _ = e1f_exit
+    before = json.loads((Path(source.path).parent / 'transition.json').read_text())['budget']['used']
+    template = _template_with_limit(known, tmp_path, 20000, 'E1', plan_path=source.path)
+    row = handoff.measured_budget(template, source.path, manifest, gate)
+    assert type(before) is int and row['used'] == before + 500 and row['local_updates'] == 500
+    with pytest.raises(ValueError, match='budget exhausted'):
+        handoff.measured_budget(_template_with_limit(known, tmp_path, before + 499, 'E1', plan_path=source.path),
+                                source.path, manifest, gate)
+    # the same plan next to a transition file that names another plan: the earlier use cannot be read from it
+    moved = tmp_path / 'moved'
+    shutil.copytree(Path(source.path).parent, moved)
+    moved.chmod(0o755)
+    (moved / 'transition.json').chmod(0o644)
+    record = json.loads((moved / 'transition.json').read_text())
+    record['new_plan_sha'] = '0' * 64
+    (moved / 'transition.json').write_text(json.dumps(record))
+    with pytest.raises(ValueError, match='does not belong to its plan'):
+        handoff.measured_budget(template, moved / Path(source.path).name, manifest, gate)
+    (moved / 'transition.json').unlink()
+    with pytest.raises(ValueError, match='has no materialization transition'):
+        handoff.measured_budget(template, moved / Path(source.path).name, manifest, gate)

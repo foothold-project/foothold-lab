@@ -191,8 +191,28 @@ def start_launcher(decision, launcher, output, *, parent_manifest, parent_checkp
     return record
 
 
+def _used_before(source, stage_id) -> int:
+    """What the counted stages before `stage_id` used: the `budget.used` its own materialization recorded, read from
+    the transition file next to the stage's plan and bound to that plan by its SHA."""
+    name = (source.document.get("materialization") or {}).get("transition_file")
+    path = Path(source.path).parent / name if isinstance(name, str) and name else None
+    if path is None or not path.is_file():
+        raise ValueError(f"budget: the plan of {stage_id} has no materialization transition to read the earlier use from")
+    transition = json.loads(path.read_text(encoding="utf-8-sig"))
+    used = (transition.get("budget") or {}).get("used")
+    if (transition.get("new_plan_sha") != source.sha256 or transition.get("target_stage") != stage_id
+            or type(used) is not int or used < 0):
+        raise ValueError(f"budget: the materialization transition of {stage_id} does not belong to its plan")
+    return used
+
+
 def measured_budget(template_path, source_path, manifest_path, gate_path):
-    """Active lineage only: origin checkpoint + this completed segment, not a fixed env counter."""
+    """Active lineage only: origin checkpoint + this completed segment, not a fixed env counter.
+
+    `training_budget.count_from_stage` (decisions.tsv 2026-11-13 15:17): the stages before it (basic gait: E0, E1, E1F)
+    are outside the budget, so a boundary of one of them has used 0. From that stage on the use is what the earlier
+    counted stages used (recorded by the stage's own materialization) plus this stage's completed updates. A plan
+    without the cell counts every stage from E0 on, as before."""
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.ex42_gate_checks import validate_score_pair
     template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
@@ -214,10 +234,19 @@ def measured_budget(template_path, source_path, manifest_path, gate_path):
     if (any(type(n) is not int for n in (cumulative, origin, limit)) or cumulative < origin
             or budget.get("basis") != "ex42_new_updates" or budget.get("count_m_updates") is not True):
         raise ValueError("budget plan has no valid EX42 cumulative origin or approved counter")
-    used = cumulative + iteration - origin
+    ids, first = [r["id"] for r in template.document["stages"]], budget.get("count_from_stage")
+    if first is None:
+        used = cumulative + iteration - origin
+    elif first not in ids or gate.get("stage_id") not in ids or ids.index(first) == 0:
+        raise ValueError("budget plan counts from a stage it does not have (or from its first stage)")
+    elif ids.index(gate["stage_id"]) < ids.index(first):
+        used = 0                                             # basic gait: outside the budget
+    else:
+        used = (0 if gate["stage_id"] == first else _used_before(source, gate["stage_id"])) + iteration
     if used > limit:
         raise ValueError("actual cumulative EX42 budget exhausted")
     return {"basis": budget["basis"], "limit": limit, "used": used, "local_updates": iteration,
+            **({"count_from_stage": first} if first is not None else {}),
             "parent_cumulative_update": cumulative, "origin_cumulative_update": origin,
             "stage": gate["stage_id"], "source_plan_sha256": source.sha256,
             "manifest_sha256": _sha256(manifest_path), "gate_sha256": _sha256(gate_path)}

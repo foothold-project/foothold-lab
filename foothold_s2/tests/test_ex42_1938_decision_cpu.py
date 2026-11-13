@@ -24,6 +24,10 @@ def test_decision_budget_caps_floor_and_approval_pin():
     assert budget['basis'] == 'ex42_new_updates' and budget['maximum_updates'] == 20000
     assert budget['count_m_updates'] is True and budget['extensions_within_remaining_budget'] is True
     assert budget['decision_source']['commit'] == DECISION
+    # decisions.tsv 2026-11-13 15:17 (ledger commit a00ab2a8): the 20,000 are counted from the terrain stages on
+    assert budget['count_from_stage'] == 'E2' and budget['count_from_decision_source']['commit'].startswith('a00ab2a8')
+    ids = [r['id'] for r in plan.document['stages']]
+    assert ids[:ids.index('E2')] == ['E0', 'E1', 'E1F']
     rows = {r['id']: r for r in plan.document['stages']}
     for stage, cap in [('E3',4000),('E4',3000),('E6b',3000)]:
         assert rows[stage]['minimum_updates'] == 250

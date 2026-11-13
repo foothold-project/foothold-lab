@@ -42,6 +42,13 @@ launch:
 training_budget:
   basis: ex42_new_updates
   maximum_updates: 20000
+  # decisions.tsv 2026-11-13 15:17 (ledger commit a00ab2a8): basic gait (stage zero, E0, E1, E1F) is outside the
+  # budget; the 20,000 updates are counted from the terrain stages on (E2 ...). Whole run at most 22,750 with the
+  # base caps of E0 250 + E1 1,750 + E1F 750.
+  count_from_stage: E2
+  count_from_decision_source:
+    commit: a00ab2a8df7bc9f6173fa697868c1e2971404ada
+    path: inbox/jay/20261104-ex41-restart/decisions.tsv
   count_m_updates: true
   extensions_within_remaining_budget: true
   decision_source:
