@@ -197,7 +197,7 @@ def main():
         if (i, TAGS['lr']) not in events:
             raise ValueError(f'Missing update {i}')
     with (out/'scalars.csv').open('w', encoding='utf-8', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=['iteration'] + all_tags); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(f, fieldnames=['iteration'] + all_tags, lineterminator='\n'); w.writeheader(); w.writerows(rows)
     windows = [window(rows, i, i + 49) for i in range(1, 751, 50)]
     segments = [window(rows, i, i + 249) for i in (1,251,501)]
     receipts = {}
@@ -225,7 +225,7 @@ def main():
                   **{f'{key}_{stat}':val for key in TAGS for stat,val in w[key].items()},
                   **{k:w[k] for k in ('lr_floor_n','ppo_kl_gt_002_n','reward_per_step_mean')}} for w in windows]
     with (out/'windows50.csv').open('w', encoding='utf-8', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(dict.fromkeys(k for r in flattened for k in r))); w.writeheader(); w.writerows(flattened)
+        w = csv.DictWriter(f, fieldnames=list(dict.fromkeys(k for r in flattened for k in r)), lineterminator='\n'); w.writeheader(); w.writerows(flattened)
     (out/'TABLES.md').write_text(tables(windows), encoding='utf-8')
     draw(rows, windows, out)
     print(json.dumps({'files':files,'duplicates':len(duplicates),'reward_delta':delta,'segments':segments}, ensure_ascii=False))
