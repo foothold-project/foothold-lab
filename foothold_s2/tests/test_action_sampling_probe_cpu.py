@@ -88,6 +88,10 @@ def test_private_rng_restored_on_policy_error():
 
 def test_std_reads_loaded_parameter_not_assumed_value():
     p,_=actual_s2_policy('sample')
+    # v27 checkpoints store scalar std, not log_std. Catch a hard-coded 0.47 receipt.
+    loaded=torch.linspace(.405,.614,12)
+    p.runner.alg.policy=SimpleNamespace(std=loaded)
+    assert probe.learned_std(p)==loaded.tolist()
     p.runner.alg.policy=SimpleNamespace(log_std=torch.full((12,),.3).log())
     assert probe.learned_std(p)==pytest.approx([.3]*12)
     p.runner.alg.policy.log_std[0]=float('nan')
