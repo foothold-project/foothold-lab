@@ -1,0 +1,7 @@
+mode,command,survival,signed_median_rad,abs_net_median_rad,abs_net_p90_rad,source
+eval_gt,fwd0.5,64,0.1412752941250801,0.1412752941250801,0.3540252991749931,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd0.5.npz
+eval_gt,fwd1.0,64,0.13316842913627625,0.13316842913627625,0.2514488711953164,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_gt_fwd1.0.npz
+probe_prop_only,fwd0.5,64,0.16711572011048403,0.16711572011048403,0.2792282283306122,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd0.5.npz
+probe_prop_only,fwd1.0,64,0.16979742050170898,0.16979742050170898,0.2742257624864579,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_probe_prop_only_fwd1.0.npz
+eval_pred,fwd0.5,64,0.14140820503234863,0.14140820503234863,0.42761511802673363,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd0.5.npz
+eval_pred,fwd1.0,64,0.14331942051649094,0.14331942051649094,0.25199127197265625,/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250/axis_v2/axis_v2_eval_pred_fwd1.0.npz
