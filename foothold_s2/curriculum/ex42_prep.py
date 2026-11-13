@@ -288,7 +288,7 @@ def entry_gate_adapter_ready(plan: "EX42Plan", row: dict[str, Any], contract: di
     # Preserve the already approved E1 -> E1F entry alias. New later entries name
     # the predecessor's exit judge literally and cannot substitute a weaker one.
     if row['id'] == 'E1F' and contract['source_stage_ids'] == ['E1'] and name == 'flag_two_window':
-        return name in ADAPTERS and judges[0].name == 'map39_e1_two_window'
+        return name in ADAPTERS and judges[0].name in ('map39_e1_two_window', 'map39_e1_v2_two_window')
     return name in ADAPTERS and all(judge.name == name for judge in judges)
 
 

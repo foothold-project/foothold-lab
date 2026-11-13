@@ -28,6 +28,15 @@ def known(tmp_path):
     from foothold_s2.eval.map_mode_cells import commands
     template = tmp_path / 'template'
     shutil.copytree(CURRICULUM, template, ignore=shutil.ignore_patterns('__pycache__'))
+    # This fixture supplies the pre-v2 E1 six-case PASS proof, so its copied
+    # evaluation policy must name the matching legacy adapter. A v2 policy
+    # must refuse this score because it has no S1/S2/Y1 raw evidence.
+    policy_file = template / 'ex42-prep.yaml'
+    policy_text = policy_file.read_text(encoding='utf-8')
+    old = '- id: E1\n  exit_judge: map39_e1_v2_two_window'
+    assert policy_text.count(old) == 1
+    policy_file.write_text(policy_text.replace(old, '- id: E1\n  exit_judge: map39_e1_two_window', 1),
+                           encoding='utf-8')
     plan = EX42Plan.load(template / 'ex42-prep.yaml')
     run = tmp_path / 'run'; run.mkdir()
     checkpoint = run / 'model_1750.pt'; checkpoint.write_bytes(b'known E1 complete checkpoint')
