@@ -64,6 +64,9 @@ def mapoff_window(row: dict | None) -> dict:
     """M: off survival >= gt survival - 6 envs at L3, L6 and L9 (all three, nothing skipped)."""
     if row is None:
         return hold("map_off fixed-level cells 없음")
+    if "raw" in row:                    # a producer file: the counts are recomputed from its per-env raw, never trusted
+        from foothold_s2.eval.ex42_map_off_cells import recount
+        recount(row)
     levels = row.get("levels") or {}
     if set(levels) != set(MAPOFF_LEVELS) or row.get("envs") != 64:
         raise ValueError("map-off evidence levels or env count differ")
@@ -92,6 +95,19 @@ class _LateJudge(StageJudge):
     def extra_items(self, ctx, score, now, old):            # evidence beyond maintenance + the two windows
         return {}
 
+    def _counts_after_return(self, ctx) -> bool:
+        """A stage row with `window_floor` (the plan an M return publishes) counts only windows whose P1 receipt names that
+        same plan (SHA-256). A prior window of the pre-M plan, or one whose receipt is unreadable, does not count."""
+        row = next((r for r in ctx.plan.get("stages", []) if r.get("id") == self.stage_id), {})
+        if "window_floor" not in row:
+            return True
+        folder = _prior_folder(ctx)
+        try:
+            receipt = json.loads((folder / "p1_score.json").read_text(encoding="utf-8-sig"))
+            return receipt.get("plan_sha256") == ctx.digest(ctx.plan_path)
+        except (AttributeError, OSError, TypeError, ValueError):
+            return False
+
     def judge(self, ctx, score):
         from foothold_s2.ex42_e0_judge import judge as maintenance, load_baseline
         if ctx.stage_id != self.stage_id:
@@ -101,6 +117,8 @@ class _LateJudge(StageJudge):
         measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         current = maintenance(score, baseline, measured)
         prior_score = previous_window(ctx)
+        if prior_score and not self._counts_after_return(ctx):
+            prior_score = None            # measured before an M return: the source's two windows start anew
         prior = maintenance(prior_score, baseline, measured) if prior_score else None
         try:
             now = self.window_item(Path(ctx.evaluation), ctx, score)
