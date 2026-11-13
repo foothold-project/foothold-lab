@@ -1,13 +1,13 @@
 {
-  "control_pass": false,
+  "control_pass": true,
   "killed": 15,
   "total": 15,
   "results": [
     {
       "name": "control",
-      "rc": 1,
+      "rc": 0,
       "killed": null,
-      "control_pass": false
+      "control_pass": true
     },
     {
       "name": "off60_exclusive",

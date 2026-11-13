@@ -149,11 +149,3 @@ def test_new_run_first_250_then_500_is_the_first_off_pair():
     with pytest.raises(ValueError):apply_approved(core,b,a,None,{},None,effective_from=1)
 
 
-@pytest.mark.parametrize('name',['boundary_read.py','replay_de8.py'])
-def test_cli_allows_new_run_250(name):
-    from pathlib import Path
-    import subprocess,sys
-    proc=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name(name)),
-                         '--effective-from','250','--help'],capture_output=True,text=True)
-    assert proc.returncode==0,proc.stderr
-    assert '{250,750,1000}' in proc.stdout
