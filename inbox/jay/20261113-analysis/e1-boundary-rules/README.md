@@ -4,8 +4,8 @@
 > 작성: analyst-lx · 2026-11-13
 > 근거: 이슈 #765 · 원장 73abb340 · 04f50b4f R6 정정 · 0a5c1629 R5 정정 · #779 985ce6ab §3~4
 > 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
-> 상태: CPU 118개 통과 · 기존 규칙 돌연변이 12개 검출 · m250 판독 완료 · R5 완전 원자료는 미측정
-> 판: v1.5
+> 상태: 새 승인표 CPU 구현 · m1000 적용 확정 · m250/m500 재계산 완료 · 새 C1 Kit 자료는 미측정
+> 판: v1.6
 
 **이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
 
@@ -14,7 +14,7 @@
 첫 경계 점수가 완성된 뒤 다음 한 줄을 실행한다. 이후에는 명령 안의 `m250` 두 곳을 같은 회차로 바꾼다. 직전 경계와 그 앞 경계가 같은 점수 폴더에 있으면 자동으로 읽는다. 따로 있는 경우 `--previous`·`--earlier`로 지정한다.
 
 ```bash
-CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/boundary_read.py --score /home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400/eval/scores/m250/ex42_score.json --out /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/m250
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/boundary_read.py --score /home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400/eval/scores/m250/ex42_score.json --out /home/jay/mai/tmp/analyst/e1-boundary-rules-1113/m250
 ```
 
 | 산출 | 내용 |
@@ -35,7 +35,7 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | 규칙 | 구현한 조건 | 제안 |
 |---|---|---|
 | R4 | `maintenance_judgement`가 FAIL/HOLD. 전체 졸업 `judgement`와 구별 | 다음 구간 미기동·lead 확인. 최근 보상 처방의 직전 값만 복원 초안 |
-| 두 경계 되돌림 | GT 또는 PRED의 **같은 모드·명령·레벨·성분**이 처방 직전 고정 기준보다 두 연속 유효 경계 악화 | 가장 최근 처방의 직전 값. checkpoint/optimizer를 되돌리지 않음. 지도 끔은 기록 |
+| 두 경계 되돌림 | GT 또는 PRED의 **같은 모드·명령·레벨·성분**이 처방 직전 고정 기준보다 두 연속 유효 경계 악화 | 가장 최근 처방의 직전 값. checkpoint/optimizer를 되돌리지 않음. 지도 끔 추종은 기록. 생존은 아래 de8 규칙 |
 | R6 첫 활성 | GT·PRED × L0/L5 × 전진0.1/0.2 여덟 칸 중 하나라도 R<0.3/0.6 | slow_track 0→0.2. 첫 경계부터 적용 가능 |
 | R6 증량 | 0.2 상태에서 여덟 칸 모두 직전보다 비증가. GT·PRED 어느 한 칸이라도 증가하면 그대로. 유지 회귀·결측이면 증량 보류 | 0.2→0.3 최대 한 번 |
 | R2 | GT/PRED 각각 전진1.0 Y1 중앙값>0.10 또는 p90>0.20 rad | zero_yaw −1→−1.25. 더 큰 벌점으로 반복 강화하지 않음 |
@@ -48,7 +48,7 @@ R1 폭 좁히기와 옛 R5는 73abb340으로 대체됐다. 결측 때 되살리�
 
 두 경계 되돌림은 회전 비율 감소>0.05, 옆 각 방향 R 감소>0.05, Y1 중앙값 증가>0.02 rad 또는 p90 증가>0.04 rad, stand 성공 감소≥4 env, stop 몸속도 증가>0.02 m/s 또는 각속도 크기 증가>0.05 rad/s를 그대로 읽는다. 대칭비만 좋아지거나 나빠진 것을 단독 처방 이유로 쓰지 않는다. 부족한 창은 회복이나 연속 악화로 세지 않는다.
 
-유지 점수는 GT 13칸·PRED 13칸의 명령 이름과 `judge` 역할을 각각 확인한다. 합계가 26이라는 이유만으로 GT·지도 끔을 잘못 받아들이지 않는다. PRED 유지 실패는 전체 요약이 PASS여도 R4이며, 직전 PRED 유지 실패를 증량 근거로 쓰지 않는다. 지도 끔의 수치와 기준 대비 악화는 `regression_record_only`에 남기되 처방을 발동시키지 않는다.
+유지 점수는 GT 13칸·PRED 13칸의 명령 이름과 `judge` 역할을 각각 확인한다. 합계가 26이라는 이유만으로 GT·지도 끔을 잘못 받아들이지 않는다. PRED 유지 실패는 전체 요약이 PASS여도 R4이며, 직전 PRED 유지 실패를 증량 근거로 쓰지 않는다. 지도 끔 추종의 기준 대비 악화는 `regression_record_only`에만 남긴다. 생존은 아래 de8 절의 별도 60/64 규칙을 적용한다.
 
 ## 수치·현재 설정의 출처
 
@@ -114,9 +114,9 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | v1.1 | 요청 문턱 네 곳을 겨냥한 24개 시험 추가, 네 돌연변이 실행 검증, R5 시간 조건만 같은 식으로 분리 |
 | v1.2 | 19:24 결정: GT·PRED 여덟 칸 R6, 두 지도 유지·되돌림, 지도 끔 기록, 나란한 표, PRED 없는 과거 재생 보류 |
 | v1.3 | 19:38 재검 지적 네 곳의 실패 시험, 실제 소비 경로 두 변형 추가. 판정 코드는 v1.2 그대로 |
-| v1.4 | 0a5c1629: R5 진입 전진0.2 바닥값도 GT·PRED 네 칸 모두 적용. 누락은 보류, 지도 끔은 기록 |
-
+| v1.4 | 0a5c1629: R5 진입 전진0.2 바닥값도 GT·PRED 네 칸 모두 적용. 누락은 보류, 지도 끔 추종은 기록. 생존은 아래 de8 규칙 |
 | v1.5 | H2: 임의 바이트 증거 거절, NPZ 접촉·발별 통계 재계산, 생성 체크포인트 대조 |
+| v1.6 | de8a3b7f · 5f2e7c3b · 7ba9f2be: 지도 끔 21칸 생존, GT/PRED 진단, 곡선, m1750 분기, C1 기록. m1000부터 적용 |
 
 ## H2 접촉 원자료 계약 보강 (2026-11-13)
 
@@ -138,3 +138,39 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 집계는 1≤t<6 s의 생존 표본이다. 접지→공중→접지로 양 끝이 관측된 공중 구간만 세며, 창 경계에 걸린 구간은 제외한다. 발별로 공중 구간 수, 기여 env 수, 1표본 구간 비율, 공중 발 높이 중앙값, 끌림 비율(접지·높이<0.02 m·수평 속력>0.05 m), 공중 시간<0.5 s 비율을 다시 센다. 기존 R5의 최소 20구간·16env·짧은 구간 과반 조건은 바꾸지 않았다.
 
 현재 runner m250 CSV는 원시 Fx/Fy/Fz와 접촉을 담지만 발 높이·속력은 없다. 따라서 위 NPZ를 이미 생산했다고 주장하지 않는다. 그 CSV로 요약의 높이·끌림을 채워 넣거나, 형식 이름만 바꿔 R5를 열 수 없다. 생산자 연결과 완전한 실측은 별도 필요하다.
+
+
+## 23:04 승인표 추가 (de8a3b7f)
+
+`boundary_approved.py`는 기존 R2/R4/R5/R6 결과 위에 읽기 전용 표를 얹는다. `original_rule_decision`은 기존 판독이고, 적용 전 경계의 `de8_counterfactual`은 새 규칙으로 보면 어떠한지를 기록한 것이다. 과거 결정을 바꾸지 않는다.
+
+- 지도 끔: 연속 지형의 시작 64개를 분모로 생존 ≥60. 같은 칸이 직전 250 경계에서도 <60이면 최근 처방 직전 값으로 되돌림 초안. 첫 미달은 기록. 추종 오차는 처방에 사용하지 않는다. 자료가 63개뿐인 경우와 64개 중 63개 생존을 혼동하지 않는다.
+- GT/PRED: 같은 과제의 GT 통과·PRED 미달은 지각 경로부터 점검, GT 미달은 정책·과제부터 점검. 원인을 확정한 인과 분석은 아니다.
+- 곡선: 마지막 250회와 직전 250회의 lr 바닥 비율·진단 KL >2×desired_kl 횟수·noise std·에피소드 길이·보상 항을 기록. 바닥은 코드의 1e-5, desired_kl은 실행 agent.yaml. 진단 KL은 scheduler 미니배치 KL이 아니며 임의의 std 붕괴 문턱을 만들지 않는다. 경고는 설정 변경이 아니다. 이어받기 직후 에피소드 버퍼 초기화도 별도로 고려한다.
+- m1750: m1500·m1750의 모든 판정 칸·지도 끔 생존과 같은 처방·평가 plan을 확인해 E1F 초안. 미달이면 `--extension-code-root <v26 고정 사본>`으로 실제 확장 증거를 읽은 뒤 미달 성분 **전부**가 두 번 기준 쪽인지 추가 검사한다. 기준까지 부족분(gap)이 줄어드는지를 쓰며, 다른 성분의 부족분이 새로 생기거나 커지면 거절한다. v26 자체는 한 성분만 개선돼도 통과할 수 있어 그대로 받아들이지 않는다. +250은 m1750에서 한 번만 가능하다. 근거 없으면 `HOLD_DIAGNOSE`, 걸음·곡선·시드 진단 목록을 남긴다. 이 도구는 진단 GPU도 띄우지 않는다.
+- L9: C1 소비자의 원자료 재계산값과 도달 레벨을 기록한다. L9 실패는 E1F를 막지 않는다. C1 필수 판정 칸이 없으면 PASS를 만들지 않는다.
+
+입력 P1 영수증의 evaluation plan 경로·SHA를 확인한다. C1은 그 plan이 있는 고정 사본의 `ex42_e1_wide.py`를 사용한다. 별도 사본은 `--c1-code-root`로 지정한다. 평가 plan이 사본 밖에 있을 때에는 이 옵션이 필요하다. C1 code SHA를 결과에 남긴다. 기본 source 검증기는 이 저장소 코드이므로 스크립트 몇 개를 scratch로 따로 복사해서 실행하지 말고 위 저장소 경로로 호출한다.
+
+**적용 경계 확정:** lead 답 `msg_cc11370b2af9`와 원장 `7ba9f2be`에 따라 기본값은 **m1000**이다. m750은 기존 경계 규칙, m250·m500·m750 새 표는 CPU 기록만이다. `--effective-from 750`은 이전 의뢰의 반사실 재생용이며 운영 적용값이 아니다. C1 평가가 없다는 이유로 원래 m750 결정을 소급 중단시키지 않는다.
+
+**지도 끔 범위 확정:** 원장 `5f2e7c3b`와 같은 lead 답에 따라 생존 판정은 정확히 **21칸**, 유지13 + L0 여섯 + L5 전진0.1·0.2 둘이다. L1~2는 유지 mixed012가 덮는다. L5 옆 네 칸·L2 yaw 둘·고정 L3/L6/L9·명령 끝점 OFF는 기록이며 되돌림·졸업에 쓰지 않는다. 먼저 27칸으로 센 중간 기록은 이 범위 정정 전이므로 최종판과 구분한다.
+
+`curve_snapshots/`에는 읽은 tfevents 바이트와 SHA가 남는다. 파일은 운영 run이 아닌 지정한 `--out` 아래에만 쓴다. L3/L6/끝점의 기존 m250·m500 원자료는 없으므로 C1은 미측정이다. 새 Kit를 실행한 것처럼 채우지 않는다.
+
+실제 m500에서 도구 기존 문턱은 KEEP이지만 lead는 23:07 원장의 큰 하락 대응으로 slow_track 0→0.2를 b2에 적용했다. 그 승인 예외를 이 재생 도구가 취소하지 않는다. 다음 경계의 실제 처방은 b2 영수증으로 읽는다.
+
+### 검증과 재현 (v1.6)
+
+[구현·검증 보고](REPORT-DE8-1113.md)와 [m250/m500 재계산](de8-replay/DE8-REPLAY.md)을 함께 읽는다.
+새 규칙의 첫 두 판정 창은 m1000·m1250이다. m750 기록을 m1000의 첫 연속 악화 창으로 세지 않는다.
+C1의 기록 전용 칸(L9·고정 지형 OFF 등)의 결측은 경고만 남긴다. 필요한 GT/PRED 판정 칸은 결측·기록 전용 강등·유효63이면 HOLD다.
+C1 문턱까지의 차이에는 옆0.8의 R·MAE·성공·생존을 모두 넣는다. 성공 수만 좋아져서 연장되는 길을 막는다.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B inbox/jay/20261113-analysis/e1-boundary-rules/replay_de8.py --out /home/jay/mai/tmp/analyst/de8-replay-user
+```
+
+m1750에서 연장 증거를 읽으려면 `boundary_read.py`에 `--extension-code-root /home/jay/mai/wt/foothold-lab/ex42-launch-e1-v26`을 준다.
+C1 자료가 생기면 `--c1-code-root`에는 **검토를 마친 실제 평가 코드의 고정 사본**을 준다. 이 옵션은 해당 폴더의 평가기를 CPU로 읽을 뿐 Kit을 기동하지 않는다.
+별도 평가 plan은 기존 P1 영수증에 고정된 파일을 읽는다. 경로 옵션으로 학습 plan이나 P1 영수증을 바꾸지 않는다.

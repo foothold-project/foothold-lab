@@ -13,6 +13,8 @@ import json
 import math
 from pathlib import Path
 import re
+import os
+import subprocess
 import sys
 from zipfile import BadZipFile
 from types import SimpleNamespace
@@ -352,7 +354,29 @@ def load_gait(path,checkpoint):
     except (OSError,KeyError,ValueError,TypeError,AttributeError,BadZipFile,EOFError) as exc:out['issues'].append(str(exc))
     return out
 
-def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier=None,legacy_low=None,gait=None,historical=False):
+def approved_audit(snapshot,c1_code_root=None,extension_code_root=None):
+    """Keep policy-reader imports separate from the execution plan's parser."""
+    if not snapshot or snapshot['iteration']==0:return None
+    cmd=[sys.executable,'-B',str(Path(__file__).with_name('approved_source.py')),'--score',snapshot['score_path']]
+    for flag,value in (('--c1-code-root',c1_code_root),('--extension-code-root',extension_code_root)):
+        if value:cmd += [flag,str(value)]
+    try:
+        proc=subprocess.run(cmd,capture_output=True,text=True,timeout=180,
+                            env={**os.environ,'CUDA_VISIBLE_DEVICES':'','PYTHONDONTWRITEBYTECODE':'1'})
+        if proc.returncode:raise ValueError('CPU source reader: '+proc.stderr[-1500:])
+        audit=json.loads(proc.stdout)
+        if audit['iteration']!=snapshot['iteration'] or audit.get('checkpoint_sha256')!=snapshot.get('checkpoint_sha256'):
+            audit['errors'].append('audit/snapshot identity differs')
+        audit['errors']+=snapshot['errors']
+        if audit['errors']:audit['required_complete']=False;audit['all_judge_pass']=False
+        return audit
+    except (OSError,ValueError,KeyError,subprocess.TimeoutExpired) as exc:
+        return dict(iteration=snapshot['iteration'],errors=[str(exc)],required_complete=False,
+                    all_judge_pass=False,cells={},off_cells={},gaps={})
+
+
+def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier=None,legacy_low=None,gait=None,historical=False,
+        c1_code_root=None,extension_code_root=None,effective_from=1000):
     out=Path(out).resolve();run_root=Path(run_root).resolve();score=Path(score);parent=Path(parent)
     # Deliberately stronger than rejecting only this run: no writes anywhere in s2_lab.
     if out.is_relative_to(run_root) or any(x in out.parts for x in ('s2_lab','ex42-launch-e1-v19')):
@@ -412,6 +436,16 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
         now['comparable']=True
         now['warnings'].append('Historical replay uses current initial treatment, not the treatment actually applied in cmd7seg.')
     decision=decide(now,base,prev,prior,t,load_gait(gait,now.get('checkpoint_sha256')))
+    original_decision=json.loads(json.dumps(decision))
+    approved={};curves={}
+    if n>0:
+        from boundary_approved import apply_approved
+        from curve_read import read_curves
+        for name,snap in (('current',now),('previous',prev),('earlier',prior)):
+            approved[name]=approved_audit(snap,c1_code_root,extension_code_root)
+        audit=approved['current']
+        decision=apply_approved(decision,audit,approved['previous'],approved['earlier'],t,audit.get('extension'),effective_from)
+        curves=read_curves(run_root,n,out)
     if n==0 and not now['errors']:
         decision.update(rule='BASELINE_ONLY',changes={},next_segment='NOT_A_BOUNDARY')
         decision['notes'].append('부모 자체 대조만. 실제 경계 처방이 아님.')
@@ -430,7 +464,8 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
                 iteration=n,current=now,parent=base,previous=prev,earlier=prior,treatment=t,
                 parent_condition_mismatches=mismatches,comparisons=comparisons,
                 mode_comparisons=mode_comparisons,
-                historical_counterfactual=historical,consumer_validation=validation)
+                historical_counterfactual=historical,consumer_validation=validation,
+                original_rule_decision=original_decision,approved_table=approved,curves=curves)
     out.mkdir(parents=True,exist_ok=True)
     write=lambda name,obj:(out/name).write_text(json.dumps(obj,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
     write('report.json',result)
@@ -450,17 +485,17 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
     changes=' · '.join(f'{k} {t["current"].get(k)}→{v}' for k,v in decision['changes'].items()) or '현재 값 유지'
     one=f'm{n}: {decision["rule"]} · {changes} · 다음 구간 {decision["next_segment"]} · 초안만'
     text=['# E1 경계 규칙 판독',f'> 분류: A/평가',f'> 작성: analyst-lx · {datetime.now():%Y-%m-%d %H:%M}',
-          '> 근거: 원장 73abb340 · 15:03 R2/R3/R4 · 04f50b4f R6 정정 · 0a5c1629 R5 GT·PRED 정정',
+          '> 근거: 원장 73abb340 · 04f50b4f · 0a5c1629 · de8a3b7f 23:04 승인표',
           '> 요지: '+one,'> 상태: CPU 원자료 재계산 · 실행 설정 미적용','',one,'',
           f'기존 유지: {now["maintenance"]}; 전체 졸업: {now["overall"]}. 둘은 별개다.',
-          f'지도별 유지: {now["maintenance_modes"]}. GT·PRED 판정, 지도 끔 기록 전용.',
+          f'지도별 유지: {now["maintenance_modes"]}. GT·PRED 판정, 지도 끔 생존 판정·추종 기록.',
           '되돌림은 처방 직전 고정 기준과 같은 칸 두 경계를 비교한다. parent_delta와 previous_delta는 참고 열이다.',
           f'현재 설정 근거: {t["readback"]}. 초기 manifest는 RewardManager 실시간 재측정이 아니다.',
           f'소비 형식 검사: {validation}. 역사 재생: {historical}.',
           'R1·옛 R5 폐기. R5는 동일 접촉 정의 자료 없으면 보류. 시드·모드·레벨은 합치지 않는다.','',
           '발동: '+', '.join(decision['triggered']),'',*decision['notes'],'',
           '각 지도 열: 현재; 부모(차이); 직전(차이). 없는 지도 값은 미확인으로 남긴다.',
-          '| 칸 | 단위 | GT 판정 | PRED 판정 | 지도 끔 기록 |',
+          '| 칸 | 단위 | GT 판정 | PRED 판정 | 지도 끔 생존 판정·추종 기록 |',
           '|---|---|---|---|---|']
     def mode_show(row):
         if row is None:return '미확인'
@@ -468,6 +503,31 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
                 f'직전 {show(row["previous"])} (Δ {show(row["previous_delta"])})')
     for group in mode_comparisons:
         text.append('| '+' | '.join([group['cell'],group['unit'],*(mode_show(group[m]) for m in MODES)])+' |')
+    if approved:
+        off=decision['map_off_survival'];audit=approved['current']
+        text += ['','## 23:04 승인표 재계산','',
+                 f'm{effective_from}부터 적용. 이전 경계는 기록용 재계산이다. 지각/정책 구분은 점검 순서이며 원인 확정이 아니다.','',
+                 f'지도 끔: {off["state"]}. 같은 칸 두 경계 미달: {off["rollback_cells"]}.',
+                 '| 지도 끔 칸 | 생존/유효 | 직전 생존 | 판정 |','|---|---|---|---|']
+        text += [f'| {r["cell"]} | {r["survival"]}/{r["valid"]} | {show(r["previous"])} | {r["judgement"]} |' for r in off['items']]
+        text += ['', '지도 끔 기록 전용 (이 생존은 처방·졸업에 쓰지 않음): '+json.dumps({k:{f:v.get(f) for f in ('survival','valid')}
+                 for k,v in audit.get('off_record_cells',{}).items()},ensure_ascii=False)]
+        text += ['','| 같은 과제 | GT | PRED | 점검 순서 |','|---|---|---|---|']
+        text += [f'| {r["cell"]} | {show(r["GT"])} | {show(r["PRED"])} | {r["interpretation"]} |' for r in decision['GT_PRED_diagnosis']]
+        wide=audit.get('wide',{})
+        text += ['', 'L9·도달 레벨(기록): '+json.dumps({k:wide.get(k) for k in ('reached_level','cap','record_warning')},ensure_ascii=False),
+                 'C1 결측: '+json.dumps(audit.get('wide_errors',[]),ensure_ascii=False),
+                 'm1750 분기: '+json.dumps(decision['departure'],ensure_ascii=False),'',
+                 '## 곡선','',
+                 '경계 이후 값 제외·중복 step은 마지막 wall_time. 진단 KL은 scheduler의 미니배치 KL과 다르다. 경고는 처방이 아니다.','',
+                 '| 항목 | 현재 창 | 직전 창 |','|---|---|---|']
+        for k in ('lr_floor_fraction','lr_floor_count','lr_n','kl_probe_spikes','kl_probe_n'):
+            text.append(f'| {k} | {show(curves.get("current",{}).get(k))} | {show((curves.get("previous") or {}).get(k))} |')
+        for tag,r in curves.get('current',{}).get('tags',{}).items():
+            prevtag=(curves.get('previous') or {}).get('tags',{}).get(tag,{})
+            text.append(f'| {tag} 평균 (n) | {show(r["mean"])} ({r["n"]}) | {show(prevtag.get("mean"))} ({show(prevtag.get("n"))}) |')
+        text += ['','곡선 경고: '+json.dumps(curves.get('warnings',[]),ensure_ascii=False),
+                 '새 판정 원자료 오류: '+json.dumps(audit.get('errors',[]),ensure_ascii=False)]
     text+=['','입력 오류: '+json.dumps(now['errors']+t['errors'],ensure_ascii=False),
            '주의: '+json.dumps(now['warnings'],ensure_ascii=False),'',
            '원자료별 SHA와 고정 기준의 경계별 악화 항목은 report.json에 있다. 조정 JSON의 payload는 초안이며 이 도구가 적용하지 않는다.']
@@ -504,8 +564,12 @@ def main():
     p.add_argument('--out',type=Path,required=True);p.add_argument('--iteration',type=int)
     p.add_argument('--previous',type=Path);p.add_argument('--earlier',type=Path)
     p.add_argument('--legacy-low',type=Path);p.add_argument('--gait',type=Path)
+    p.add_argument('--c1-code-root',type=Path,help='고정된 C1 코드 사본. 생략하면 P1 평가 plan의 사본을 사용')
+    p.add_argument('--extension-code-root',type=Path,help='v26 확장 증거 소비자 사본. m1750에서 없으면 연장 HOLD')
+    p.add_argument('--effective-from',type=int,choices=(750,1000),default=1000,help='새 표 적용 경계. 원장 7ba9f2be에 따라 기본1000, 750은 이전 지시 재생용')
     p.add_argument('--historical',action='store_true')
-    a=p.parse_args();result=run(a.score,a.parent,a.run_root,a.code_root,a.out,a.iteration,a.previous,a.earlier,a.legacy_low,a.gait,a.historical)
+    a=p.parse_args();result=run(a.score,a.parent,a.run_root,a.code_root,a.out,a.iteration,a.previous,a.earlier,a.legacy_low,a.gait,a.historical,
+                              a.c1_code_root,a.extension_code_root,a.effective_from)
     print((a.out/'next_segment.txt').read_text().strip())
     return 2 if result['decision']['rule']=='EVIDENCE_HOLD' else 0
 
