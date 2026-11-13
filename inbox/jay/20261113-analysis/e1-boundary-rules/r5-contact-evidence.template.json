@@ -1,0 +1,15 @@
+{
+  "format": "analyst-r5-contact-evidence/1",
+  "note": "Template only; missing measurements prohibit R5. Do not fill with guesses.",
+  "checkpoint_sha256": null,
+  "contact_definition": "norm_Fxyz_gt_1N",
+  "window_seconds": [1, 6],
+  "dt": 0.02,
+  "feet": {
+    "FL": {"complete_intervals": null, "contributing_envs": null, "single_sample_fraction": null, "height_median_m": null, "drag_fraction": null, "negative_fraction_at_0p5": null},
+    "FR": {"complete_intervals": null, "contributing_envs": null, "single_sample_fraction": null, "height_median_m": null, "drag_fraction": null, "negative_fraction_at_0p5": null},
+    "RL": {"complete_intervals": null, "contributing_envs": null, "single_sample_fraction": null, "height_median_m": null, "drag_fraction": null, "negative_fraction_at_0p5": null},
+    "RR": {"complete_intervals": null, "contributing_envs": null, "single_sample_fraction": null, "height_median_m": null, "drag_fraction": null, "negative_fraction_at_0p5": null}
+  },
+  "sources": []
+}
