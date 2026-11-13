@@ -2,10 +2,10 @@
 
 > 분류: A/평가
 > 작성: analyst-lx · 2026-11-13
-> 근거: 이슈 #765 · 원장 73abb340 · 04f50b4f의 19:24 GT·PRED 정정 · #779 985ce6ab §3~4
+> 근거: 이슈 #765 · 원장 73abb340 · 04f50b4f R6 정정 · 0a5c1629 R5 정정 · #779 985ce6ab §3~4
 > 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
-> 상태: CPU 답 아는 입력 97개 통과 · 요청·소비 경로 돌연변이 10개 검출 · m250 실제 경계는 결과 대기
-> 판: v1.3
+> 상태: CPU 답 아는 입력 106개 통과 · 요청·소비 경로 돌연변이 12개 검출 · m250 실제 경계는 결과 대기
+> 판: v1.4
 
 **이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
 
@@ -40,7 +40,7 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | R6 증량 | 0.2 상태에서 여덟 칸 모두 직전보다 비증가. GT·PRED 어느 한 칸이라도 증가하면 그대로. 유지 회귀·결측이면 증량 보류 | 0.2→0.3 최대 한 번 |
 | R2 | GT/PRED 각각 전진1.0 Y1 중앙값>0.10 또는 p90>0.20 rad | zero_yaw −1→−1.25. 더 큰 벌점으로 반복 강화하지 않음 |
 | R3 | R6와 R2가 겹침 | R6 묶음 하나만 |
-| 새 R5 | R6 이후 GT·PRED 두 경계 무회귀, 기존 GT 전진0.2 L0/L5 모두 R≥0.5, 같은 접촉 정의 발 자료 충족 | 공중 시간 기준 0.04초·가중 0.1 한 묶음. R5 진입 바닥값은 이번 R6 정정에서 바꾸지 않음 |
+| 새 R5 | R6 이후 GT·PRED 두 경계 무회귀, GT·PRED × 전진0.2 × L0/L5 네 칸 모두 R≥0.5, 같은 접촉 정의 발 자료 충족 | 공중 시간 기준 0.04초·가중 0.1 한 묶음. 지도 끔은 이 진입 조건에서도 기록만 |
 
 R1 폭 좁히기와 옛 R5는 73abb340으로 대체됐다. 결측 때 되살리지 않는다. R5보다 R2를 먼저 확인하며, 처방 변경 뒤 두 경계 관찰 중에는 다른 묶음을 추가하지 않는다. 원장의 명시적 예외인 R6의 다음 경계 증량은 따로 판독한다.
 
@@ -79,11 +79,11 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaac311/bin/python -B -m pytest /home/jay/mai/tmp/analyst/e1-boundary-rules-1113 -q -p no:cacheprovider --basetemp=/home/jay/mai/tmp/analyst/e1-boundary-rules-1113/pytest-recheck
 ```
 
-원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a), [19:24 정정 04f50b4f](https://github.com/foothold-project/foothold-lab/commit/04f50b4faca0b2b351d6bb089c868ddf3eae4cf7). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42의 GT 네 칸 결합은 19:24 원장 정정과 lead 19:28 지시로 GT·PRED 여덟 칸으로 대체됐다.
+원장 원문: [73abb340](https://github.com/foothold-project/foothold-lab/commit/73abb340a6175fc4316f08d87d66f8d51ee5bc5a), [19:24 정정 04f50b4f](https://github.com/foothold-project/foothold-lab/commit/04f50b4faca0b2b351d6bb089c868ddf3eae4cf7), [19:45 R5 정정 0a5c1629](https://github.com/foothold-project/foothold-lab/commit/0a5c1629). R5·되돌림 근거: [#779 문서 §3~4](https://github.com/foothold-project/foothold-lab/blob/985ce6ab/inbox/jay/20261113-analysis/DESIGN-SLOW-TRACK-R5-R6-1113.md). 18:42의 GT 네 칸 결합은 19:24 원장 정정과 lead 19:28 지시로 GT·PRED 여덟 칸으로 대체됐다. 19:45 결정은 R5의 전진0.2 바닥값에도 PRED를 포함했다.
 
 ## #784 문턱 시험 보강
 
-확인됨: 정상 코드 97개 통과. 아래 고침을 **각각 격리 사본**에 넣으면 해당 행의 시험이 실패한다. v1.3은 판정 코드·문턱을 바꾸지 않고 시험과 변형 검증만 보강했다. `mutation_validation.json`에 실패한 시험 이름과 로그 경로를 남겼다.
+확인됨: 정상 코드 106개 통과. 아래 고침을 **각각 격리 사본**에 넣으면 해당 행의 시험이 실패한다. v1.3은 시험 보강만, v1.4는 새 결정에 따라 R5의 전진0.2 바닥값을 GT·PRED 네 칸에 적용했다. `mutation_validation.json`에 실패한 시험 이름과 로그 경로를 남겼다.
 
 | 잘못 바꾼 값 | 답을 아는 입력과 정상 결과 | 검출 |
 |---|---|---|
@@ -97,6 +97,8 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | 증량 직전 PRED PASS 검사 삭제 | 여덟 칸이 모두 내려가도 직전 PRED FAIL/HOLD/누락이면 증량 초안 없음 | 3개 실패 |
 | 현재 GT·PRED 유지 판정 누락 검사 삭제 | 전체 PASS라도 GT·PRED 어느 판정이 없으면 `EVIDENCE_HOLD` | 3개 실패 |
 | 13칸 이름 대조 삭제 | 실제 부모 점수의 stop 이름만 바꿔 13칸을 유지하거나 한 칸 삭제하면 거절 | 6개 실패 |
+| R5 전진0.2 바닥값 GT·PRED → GT만 | PRED L0 또는 L5의 R=0.4999, 나머지는 양호해도 R5 비발동 | 2개 실패 |
+| R5 바닥값 0.5 이상 → 0.5 초과 | GT·PRED 각 L0/L5 한 칸이 정확히 0.5이고 나머지가 양호하면 R5 발동 | 4개 실패 |
 
 R5 시간 조건은 기존의 두 경계 확인 조건과 겹친다. 정상 250회 경계 이력에서는 시간 조건만 잘못 바꿔도 다른 조건이 조기 R5를 막으므로, 시간 조건을 실제 `decide()`가 호출하는 `r5_observation_complete()`로 분리했다. **시간 조건의 단위 시험**과 **+250회 비발동·+500회 발동의 전체 판정 시험**을 함께 둔다. 이 차이를 숨기거나 불가능한 처방 이력으로 전체 판정 반례를 만들지 않았다.
 
@@ -112,3 +114,4 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 | v1.1 | 요청 문턱 네 곳을 겨냥한 24개 시험 추가, 네 돌연변이 실행 검증, R5 시간 조건만 같은 식으로 분리 |
 | v1.2 | 19:24 결정: GT·PRED 여덟 칸 R6, 두 지도 유지·되돌림, 지도 끔 기록, 나란한 표, PRED 없는 과거 재생 보류 |
 | v1.3 | 19:38 재검 지적 네 곳의 실패 시험, 실제 소비 경로 두 변형 추가. 판정 코드는 v1.2 그대로 |
+| v1.4 | 0a5c1629: R5 진입 전진0.2 바닥값도 GT·PRED 네 칸 모두 적용. 누락은 보류, 지도 끔은 기록 |

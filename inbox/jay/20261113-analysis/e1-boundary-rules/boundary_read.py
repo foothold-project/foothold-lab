@@ -443,7 +443,7 @@ def run(score,parent,run_root,code_root,out,iteration=None,previous=None,earlier
     changes=' · '.join(f'{k} {t["current"].get(k)}→{v}' for k,v in decision['changes'].items()) or '현재 값 유지'
     one=f'm{n}: {decision["rule"]} · {changes} · 다음 구간 {decision["next_segment"]} · 초안만'
     text=['# E1 경계 규칙 판독',f'> 분류: A/평가',f'> 작성: analyst-lx · {datetime.now():%Y-%m-%d %H:%M}',
-          '> 근거: 원장 73abb340 · 15:03 R2/R3/R4 · 04f50b4f GT·PRED 여덟 칸 정정',
+          '> 근거: 원장 73abb340 · 15:03 R2/R3/R4 · 04f50b4f R6 정정 · 0a5c1629 R5 GT·PRED 정정',
           '> 요지: '+one,'> 상태: CPU 원자료 재계산 · 실행 설정 미적용','',one,'',
           f'기존 유지: {now["maintenance"]}; 전체 졸업: {now["overall"]}. 둘은 별개다.',
           f'지도별 유지: {now["maintenance_modes"]}. GT·PRED 판정, 지도 끔 기록 전용.',

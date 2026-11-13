@@ -45,6 +45,14 @@ MUTATIONS = (
     ('thirteen_names_guard_removed', 'boundary_read.py',
      "        if set(rows)!=set(MAINTENANCE_CASES):raise ValueError('maintenance command coverage differs: '+mode)",
      '        pass', 'test_real_parent_requires_all_thirteen_named_commands'),
+    ('r5_floor_gt_only', 'boundary_rules.py',
+     "all(current[f'low/L{lev}/{mode}/fwd0.2/R']>=.5 for mode in JUDGE_MODES for lev in (0,5))",
+     "all(current[f'low/L{lev}/{mode}/fwd0.2/R']>=.5 for mode in JUDGE_MODES[:1] for lev in (0,5))",
+     'test_r5_floor_requires_each_gt_pred_cell_at_least_half'),
+    ('r5_floor_half_exclusive', 'boundary_rules.py',
+     "all(current[f'low/L{lev}/{mode}/fwd0.2/R']>=.5 for mode in JUDGE_MODES for lev in (0,5))",
+     "all(current[f'low/L{lev}/{mode}/fwd0.2/R']>.5 for mode in JUDGE_MODES for lev in (0,5))",
+     'test_r5_floor_requires_each_gt_pred_cell_at_least_half'),
 )
 
 
@@ -61,7 +69,7 @@ def main():
                for name in ('boundary_rules.py', 'boundary_read.py')}
     evidence = dict(created_at=datetime.now().astimezone().isoformat(),
                     source_sha256={name: hashlib.sha256(src.encode()).hexdigest() for name,src in sources.items()},
-                    scope='four threshold, four GT/PRED review mutants, two consumer variants; CPU; isolated copies', results=[])
+                    scope='four threshold, four GT/PRED review, two consumer, two R5 floor mutants; CPU; isolated copies', results=[])
     with tempfile.TemporaryDirectory(prefix='rule-mutants-', dir=out) as tmp:
         for name, filename, old, new, expected_test in [('control', None, None, None, None), *MUTATIONS]:
             root = Path(tmp)/name
@@ -75,6 +83,7 @@ def main():
                 (root/filename).write_text(source.replace(old, new), encoding='utf-8')
             command = [sys.executable, '-B', '-m', 'pytest', 'test_boundary_thresholds.py',
                        'test_boundary_review_followup.py',
+                       'test_boundary_r5_pred.py',
                        '-q', '-p', 'no:cacheprovider', '--basetemp', str(root/'pytest-tmp')]
             env = {**os.environ, 'CUDA_VISIBLE_DEVICES': '', 'PYTHONDONTWRITEBYTECODE': '1'}
             result = subprocess.run(command, cwd=root, env=env, stdin=subprocess.DEVNULL,
