@@ -124,7 +124,7 @@ def summarize_samples(samples, fields, total_envs):
 def write_csv(path, rows):
     if not rows: raise ValueError(f"empty output: {path}")
     with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader(); writer.writerows(rows)
 
 
