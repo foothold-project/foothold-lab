@@ -1,0 +1,29 @@
+[
+  {
+    "suite": "map64",
+    "same_conditions": true,
+    "source_changes": [
+      "foothold_s2.runners.contracts",
+      "foothold_s2.runners.start_runner"
+    ],
+    "device": "cuda:1"
+  },
+  {
+    "suite": "axis",
+    "same_conditions": true,
+    "source_changes": [],
+    "device": "cuda:1"
+  },
+  {
+    "suite": "g1b0",
+    "same_conditions": true,
+    "source_changes": [],
+    "device": "cuda:0"
+  },
+  {
+    "suite": "g1b5",
+    "same_conditions": true,
+    "source_changes": [],
+    "device": "cuda:1"
+  }
+]

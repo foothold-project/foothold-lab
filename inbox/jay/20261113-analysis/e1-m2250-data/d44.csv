@@ -1,0 +1,19 @@
+iteration,case,valid,survival,success,stop_ok,reasons,approach_yaw_rad,stop_yaw_rad,restart_2s_yaw_rad,restart_2s_vx_mps,yaw_diagnostic_survivors
+2000,turn_left_eval_gt,64,64,64,,{'turn_pass': 64},,,,,
+2000,turn_left_eval_pred,64,64,64,,{'turn_pass': 64},,,,,
+2000,turn_right_eval_gt,64,64,64,,{'turn_pass': 64},,,,,
+2000,turn_right_eval_pred,64,64,64,,{'turn_pass': 64},,,,,
+2000,stop_restart_eval_gt,64,64,7,63,"{'no_top_latch': 51, 'foot_below_landing': 6, 'stop_restart_pass': 7}",0.19062185287475586,0.006194651126861572,0.21043074131011963,0.7624653577804565,64
+2000,stop_restart_eval_pred,64,64,7,64,"{'no_top_latch': 50, 'foot_below_landing': 7, 'stop_restart_pass': 7}",0.18745651841163635,0.00036272406578063965,0.21795277297496796,0.711084246635437,64
+2000,turn_left_probe_prop_only,64,64,64,,{'turn_pass': 64},,,,,
+2000,turn_right_probe_prop_only,64,64,64,,{'turn_pass': 64},,,,,
+2000,stop_restart_probe_prop_only,51,51,2,45,"{'no_top_latch': 46, 'approach_timeout': 13, 'foot_below_landing': 3, 'stop_restart_pass': 2}",0.2717282772064209,0.0009165555238723755,0.10140998661518097,0.7792013883590698,64
+2250,turn_left_eval_gt,64,64,64,,{'turn_pass': 64},,,,,
+2250,turn_left_eval_pred,64,64,64,,{'turn_pass': 64},,,,,
+2250,turn_right_eval_gt,64,64,64,,{'turn_pass': 64},,,,,
+2250,turn_right_eval_pred,64,64,64,,{'turn_pass': 64},,,,,
+2250,stop_restart_eval_gt,64,64,1,63,"{'no_top_latch': 59, 'foot_below_landing': 3, 'stop_restart_pass': 1, 'left_landing': 1}",0.1618516743183136,0.07680487632751465,0.23870131373405457,0.837621808052063,64
+2250,stop_restart_eval_pred,64,64,2,64,"{'no_top_latch': 54, 'foot_below_landing': 6, 'left_landing': 2, 'stop_restart_pass': 2}",0.11558914184570312,0.06929472833871841,0.25584399700164795,0.8425955772399902,64
+2250,turn_left_probe_prop_only,64,64,64,,{'turn_pass': 64},,,,,
+2250,turn_right_probe_prop_only,64,64,64,,{'turn_pass': 64},,,,,
+2250,stop_restart_probe_prop_only,64,64,55,64,"{'stop_restart_pass': 55, 'no_top_latch': 7, 'foot_below_landing': 2}",0.08991382271051407,-0.001903638243675232,0.17272156476974487,0.945826530456543,64
