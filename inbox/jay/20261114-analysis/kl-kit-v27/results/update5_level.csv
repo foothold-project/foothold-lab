@@ -1,0 +1,4 @@
+terrain_level,top_occurrences,unique_envs_observed,observed_env_pct_of_all,unique_env_steps_observed,max_kl
+5,219,27,0.439453125,75,387.4356689453125
+4,62,5,0.08138020833333333,17,200.9978790283203
+3,15,4,0.06510416666666667,6,23.048442840576172
