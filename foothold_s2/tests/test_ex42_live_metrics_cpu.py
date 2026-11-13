@@ -6,7 +6,16 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from foothold_s2.ex42_live_metrics import LiveMetrics, SLOT_INDEX, decline_signal, send_orca_alert
+from foothold_s2.ex42_live_metrics import (LiveMetrics, SLOT_INDEX, decline_signal,
+                                            narrow_support_mask, send_orca_alert)
+
+
+def test_narrow_support_uses_columns_not_whole_family():
+    table = [{"family": "A", "kind": "rough"}, {"family": "A", "kind": "stones"},
+             {"family": "B", "kind": "rough"}, {"family": "B", "kind": "gap"}]
+    assert narrow_support_mask(table, {"push_off_columns": [1, 3]}).tolist() == [False, True, False, True]
+    with pytest.raises(ValueError, match="columns invalid"):
+        narrow_support_mask(table, {"push_off_columns": [4]})
 
 
 def _step(monitor, *, ratio=1.0, done=False):

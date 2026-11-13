@@ -1235,19 +1235,15 @@ class EX42StageZeroRuntime:
         self._learned_cells_init()
         config = getattr(self, "live_monitor_config", None)
         if isinstance(config, dict) and config.get("enabled") is True:
-            import torch
-            from foothold_s2.ex42_live_metrics import LiveMetrics
+            from foothold_s2.ex42_live_metrics import LiveMetrics, narrow_support_mask
             alert_env = config.get("alert_run_env")
             if alert_env != "EX42_ALERT_RUN_ID" or not os.environ.get(alert_env):
                 raise ValueError("EX-42 E1 live monitor needs EX42_ALERT_RUN_ID before launch")
             slow_cfg = self.env.reward_manager.get_term_cfg("ex42_slow_track")
             slow_params = slow_cfg.params
             table = getattr(self.env, "_ex42_column_table", None)
-            if not isinstance(table, list) or not table:
-                raise ValueError("EX-42 live monitor needs the measured terrain column table")
-            self._live_sparse_by_col = torch.tensor(
-                [row["family"] not in ("A", "continuous") for row in table],
-                device=self.env.device, dtype=torch.bool)
+            contract = getattr(self.env, "_ex42_env_contract", None)
+            self._live_sparse_by_col = narrow_support_mask(table, contract, device=self.env.device)
             columns = self.env.scene.terrain.terrain_types
             if int(columns.min()) < 0 or int(columns.max()) >= len(table):
                 raise ValueError("EX-42 live monitor terrain column is outside the table")
