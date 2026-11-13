@@ -30,6 +30,18 @@ def _finite(values):
     return bool(torch.isfinite(values).all())
 
 
+def narrow_support_mask(table, contract, *, device="cpu"):
+    """Use the measured mesh contract's push-off kinds, not a whole family label."""
+    if not isinstance(table, list) or not table or not isinstance(contract, dict):
+        raise ValueError("EX-42 live monitor needs the measured column table and push gate")
+    columns = contract.get("push_off_columns")
+    if (not isinstance(columns, list) or any(type(c) is not int or not 0 <= c < len(table) for c in columns)
+            or len(set(columns)) != len(columns)):
+        raise ValueError("EX-42 live monitor narrow-support columns invalid")
+    selected = set(columns)
+    return torch.tensor([c in selected for c in range(len(table))], device=device, dtype=torch.bool)
+
+
 def decline_signal(peak, now, threshold):
     """A signal only when both map-on modes drop beyond the pinned amount."""
     return all(peak.get(mode) is not None and now.get(mode) is not None
