@@ -114,6 +114,19 @@ def test_treatment_uses_the_segment_that_made_each_boundary_not_the_next_one(tmp
         treatment(tmp_path / "model_1750.pt", 1750, PLAN)
 
 
+def test_treatment_fingerprint_includes_in_window_live_adjustment(tmp_path):
+    from foothold_s2.tests.test_ex42_live_adjust_cpu import _setup
+
+    (tmp_path / "startup_receipt.json").write_text(json.dumps({"plan_sha256": "a" * 64}))
+    before = treatment(tmp_path / "model_250.pt", 250, PLAN)
+    controller, _, _ = _setup(tmp_path, iteration=100, rewards={"slow_track": .3})
+    receipt = controller.on_update_start(100)
+    after = treatment(tmp_path / "model_250.pt", 250, PLAN)
+    assert receipt["after"]["rewards"]["slow_track"] == .3
+    assert after["sha256"] != before["sha256"]
+    assert after["live_adjustments"]["events"][0]["iteration"] == 100
+
+
 def test_failed_axis_is_not_hidden_by_near_threshold_or_repeat():
     cells = _pass_cells()
     cells["low"]["L0"]["eval_gt"]["fwd0.1"].update(R=.8, success=0)

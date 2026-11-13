@@ -201,6 +201,9 @@ def test_real_m250_measure_as_legacy_e1_keeps_maintenance_pass_and_d44_hold(tmp_
     _, _, _, legacy_plan = _inputs()
     policy = tmp_path / "legacy-e1-plan.yaml"
     policy.write_text(yaml.safe_dump(legacy_plan), encoding="utf-8")
+    source_dir = ROOT / "foothold_s2/curriculum"
+    for name in (legacy_plan["stage_zero"]["source"]["path"], legacy_plan["approval_file"]):
+        (tmp_path / name).symlink_to(source_dir / name)
     score = measure(Path(saved["checkpoint"]), original, stage_id="E1", evaluation_plan_path=policy)
     assert score["maintenance_judgement"] == "PASS"
     assert score["judgement"] == "HOLD"

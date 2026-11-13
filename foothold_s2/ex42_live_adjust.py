@@ -134,6 +134,20 @@ def live_values(runtime, changes):
     return values
 
 
+def check_limited_values(values, limits):
+    """Check recorded or live cells, including cells absent from the latest request."""
+    if not isinstance(values, dict):
+        raise ValueError("EX-42 live adjustment values missing")
+    for group in ("rewards", "commands"):
+        cells = values.get(group, {})
+        if not isinstance(cells, dict) or not set(cells) <= set(limits[group]):
+            raise ValueError(f"EX-42 live adjustment {group} cells unknown")
+        for name, value in cells.items():
+            low, high = limits[group][name]
+            if type(value) not in (int, float) or not math.isfinite(value) or not low <= value <= high:
+                raise ValueError(f"EX-42 live {group}.{name} outside approved limit [{low}, {high}]")
+
+
 def apply_values(runtime, changes):
     manager = runtime.env.reward_manager
     by_term = {}
@@ -174,6 +188,7 @@ class LiveAdjustment:
             last = json.loads(receipts[-1].read_text(encoding="utf-8"))
             if last.get("format") != RECEIPT or last.get("plan_sha256") != self.plan_sha256:
                 raise ValueError("EX-42 live adjustment previous receipt has another plan")
+            check_limited_values(last.get("after"), self.limits)
             self.expected = {"iteration": last["iteration"], "values": last["after"]}
             apply_values(self.runtime, self.expected["values"])
             if live_values(self.runtime, self.expected["values"]) != self.expected["values"]:
@@ -210,6 +225,12 @@ class LiveAdjustment:
         return result
 
     def on_update_start(self, iteration):
+        full_live = live_values(self.runtime, {"rewards": self.limits["rewards"],
+                                               "commands": self.limits["commands"]})
+        try:
+            check_limited_values(full_live, self.limits)
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
         if self.expected is not None:
             previous = self.log_dir / f"ex42_update_adjust_m{self.expected['iteration']}.json"
             if not previous.is_file() or live_values(self.runtime, self.expected["values"]) != self.expected["values"]:

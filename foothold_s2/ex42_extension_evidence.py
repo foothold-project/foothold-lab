@@ -111,8 +111,7 @@ def _gaps(score: dict, plan: dict) -> dict[str, dict]:
 def improvement_evidence(plan, stage: str, iteration: int, interval: int, p1_path: Path) -> dict:
     """Allow only a pinned two-step move toward the existing exit threshold.
 
-    At least one currently failing numeric metric must improve at both steps;
-    none of the currently failing metrics may worsen in the last step.  These
+    Every deficient numeric metric must improve at both steps. These
     comparisons add no new performance threshold to the approved plan.
     """
     try:
@@ -163,11 +162,11 @@ def improvement_evidence(plan, stage: str, iteration: int, interval: int, p1_pat
                          "current_measured": value["measured"],
                          "older_gap": gaps[0][key]["gap"],
                          "previous_gap": gaps[1][key]["gap"], "current_gap": value["gap"]})
-        if not any(r["older_gap"] > r["previous_gap"] > r["current_gap"] for r in rows):
-            raise ValueError("no deficient metric improved across both preceding boundaries")
         if any(r["current_gap"] > r["previous_gap"] for r in rows):
             raise ValueError("a deficient metric moved away from its threshold")
+        if not all(r["older_gap"] > r["previous_gap"] > r["current_gap"] for r in rows):
+            raise ValueError("not every deficient metric improved across both preceding boundaries")
         return {"state": "PASS", "evaluation_plan": policy_ref, "boundaries": pins, "metrics": rows,
-                "rule": "one failing gap decreases twice, no failing gap worsens at the latest boundary"}
+                "rule": "every deficient gap decreases across both preceding boundaries"}
     except (AttributeError, KeyError, TypeError, OSError, ValueError, json.JSONDecodeError) as exc:
         return {"state": "HOLD", "reason": str(exc)}

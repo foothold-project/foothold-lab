@@ -97,6 +97,18 @@ def test_verified_two_step_improvement_extends_and_carries_numbers(tmp_path):
 
 
 @needs_run
+def test_gt_improvement_cannot_hide_a_stagnant_pred_deficit(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    limit = EX42Plan.load(TABLE).document["evaluation"]["e1_exit_v2"]["yaw_median_max_rad"]
+    for folder in _folders(gate):
+        _edit_score(folder, lambda score: score["e1_exit_v2"]["current"]["items"]["yaw/eval_pred/fwd0.5"].update(
+            judgement="FAIL", median_abs_rad=limit + .3, p90_abs_rad=0, survival=64))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert "improved" in decision["reason"]
+
+
+@needs_run
 @pytest.mark.parametrize("missing", ["yaw/eval_pred/fwd0.5", "low/L5/eval_gt/fwd0.1",
                                      "side05/eval_pred/side-0.5", "symmetry/5/eval_gt/0.4"])
 def test_missing_graduation_cell_cannot_be_accepted_as_complete_evidence(tmp_path, missing):

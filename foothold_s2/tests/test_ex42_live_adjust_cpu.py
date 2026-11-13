@@ -128,6 +128,26 @@ def test_changed_value_without_receipt_stops_before_next_update(tmp_path):
         ctl.on_update_start(3)
 
 
+def test_unchanged_cell_outside_limit_stops_before_next_rollout(tmp_path):
+    ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2})
+    ctl.on_update_start(2)
+    runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight = .25
+    with pytest.raises(RuntimeError, match="slow_progress.*outside approved limit"):
+        ctl.on_update_start(3)
+
+
+def test_resume_rejects_out_of_limit_receipt_before_applying_it(tmp_path):
+    ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2})
+    ctl.on_update_start(2)
+    path = tmp_path / "ex42_update_adjust_m2.json"
+    receipt = json.loads(path.read_text())
+    receipt["after"]["rewards"]["slow_progress"] = .25
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match="slow_progress.*outside approved limit"):
+        ctl._restore()
+    assert runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight == 0
+
+
 def test_receipt_removed_stops_and_past_entry_cannot_be_rewritten(tmp_path):
     ctl, _, file = _setup(tmp_path, rewards={"slow_track": .2})
     ctl.on_update_start(2)
