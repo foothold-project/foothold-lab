@@ -1000,6 +1000,36 @@ def current_training(cfg=LIVE, alive=None) -> dict | None:
     return status
 
 
+def _board_plan_scalars(path: str, stage_id: str) -> tuple[dict, dict]:
+    """Read only the board's top-level integer cells without a PyYAML dependency.
+
+    mai-watch uses its own small Python environment. The full training parser owns
+    YAML validation; this observer accepts only plain decimal cells at exact depth.
+    """
+    section = None
+    current_stage = None
+    evaluation, stage = {}, {}
+    eval_keys = {"interval_updates", "first_evaluation_update"}
+    stage_keys = {"maximum_updates", "extension_updates", "extension_max_count"}
+    for raw in read_shared_text(path).splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line:
+            continue
+        if not line.startswith((" ", "-")) and line.endswith(":"):
+            section, current_stage = line[:-1], None
+        elif section == "stages" and line.startswith("- id: "):
+            current_stage = line[len("- id: "):].strip()
+        elif line.startswith("  ") and not line.startswith("   ") and ":" in line:
+            key, value = (part.strip() for part in line.split(":", 1))
+            if not value.isdecimal():
+                continue
+            if section == "evaluation" and key in eval_keys:
+                evaluation[key] = int(value)
+            elif section == "stages" and current_stage == stage_id and key in stage_keys:
+                stage[key] = int(value)
+    return evaluation, stage
+
+
 def training_config(cfg: dict, train: dict | None) -> dict:
     """Read the live run's identity instead of using an old experiment's display table."""
     result = dict(cfg)
@@ -1025,9 +1055,7 @@ def training_config(cfg: dict, train: dict | None) -> dict:
             return result
         plan_path = args.get("ex42_plan")
         if isinstance(plan_path, str) and Path(plan_path).is_file():
-            import yaml
-            plan = yaml.safe_load(read_shared_text(plan_path))
-            evaluation = plan.get("evaluation", {})
+            evaluation, row = _board_plan_scalars(plan_path, stage.upper())
             planned_interval = evaluation.get("interval_updates")
             if type(planned_interval) is int and planned_interval > 0:
                 interval = planned_interval
@@ -1035,7 +1063,6 @@ def training_config(cfg: dict, train: dict | None) -> dict:
             planned_first = evaluation.get("first_evaluation_update")
             if type(planned_first) is int and planned_first > 0:
                 first_eval = planned_first
-            row = next((row for row in plan.get("stages", []) if row.get("id") == stage.upper()), None)
             if row:
                 base = row.get("maximum_updates")
                 step = row.get("extension_updates", 0)
