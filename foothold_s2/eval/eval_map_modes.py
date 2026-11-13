@@ -25,6 +25,7 @@ from foothold_s2.eval import map_mode_cells as _command_cells
 from foothold_s2.eval import eval_dr_mode
 from foothold_s2.eval import n21_dr_record
 from foothold_s2.eval import ex42_gait_contact
+from foothold_s2.eval import action_sampling_probe
 
 from foothold_s2.eval import ex42_friction
 parser = argparse.ArgumentParser()
@@ -66,9 +67,15 @@ parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "
 parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
 parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
+parser.add_argument("--action-mode", choices=("mean", "sample"), default="mean")
+parser.add_argument("--action-sampling-probe", action="store_true", help="Record-only mean/sample diagnostic; separate output, never a formal score")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+try:
+    action_sampling_probe.validate(args)
+except ValueError as exc:
+    parser.error(str(exc))
 friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
@@ -370,6 +377,9 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.action_sampling_probe:
+    res["action_sampling_probe"] = action_sampling_probe.receipt(args)
+    res["run_identity"]["action_sampling_probe"] = res["action_sampling_probe"]
 r5_contact_sources = []
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
@@ -551,7 +561,10 @@ for mode in args.modes.split(","):
             term.heading.fill_(True)
         map_mode_cells.disable_heading_for_fixed_eval(term)
         counts["gt"] = counts["total"] = 0
-        policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
+        policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode=args.action_mode, map_mode=None if mode == "none" else mode)
+        policy = action_sampling_probe.wrap(policy, args, dev)
+        if args.action_sampling_probe:
+            res.setdefault("action_std_by_cell", {})[rollout_key] = action_sampling_probe.learned_std(policy)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
         if checkpoint_preparation["checkpoint_pose_commands"]:
             ex41_eval_loader.verify_ex41_pose_observation(obs)
@@ -825,7 +838,7 @@ if parser_gait and r5_contact_sources:
         ex42_gait_contact.write_r5_evidence_json(r5_path, r5_doc)
         res["r5_contact_evidence_path"] = r5_path
         res["r5_contact_evidence"] = r5_doc
-out_json = os.path.join(args.out, "map_modes.json")
+out_json = os.path.join(args.out, action_sampling_probe.output_name(args))
 if kind_cell:
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
     validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,

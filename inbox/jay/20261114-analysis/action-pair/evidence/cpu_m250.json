@@ -1,0 +1,30 @@
+{
+  "format": "foothold-action-pair-cpu-rehearsal/1",
+  "state": "PASS",
+  "checkpoint": "/home/jay/data/foothold/s2_lab/ex42_main_20261114_022748/main/EX-42-B-E1-v27_20261114_022748/model_250.pt",
+  "checkpoint_sha256": "b33b9f004f700f7b5b0311bbadb1dfe3ed8962f856805ef3439391ff88086b76",
+  "device": "cpu",
+  "actor_dim": 98,
+  "critic_dim": 666,
+  "num_actions": 12,
+  "std": [
+    0.437629759311676,
+    0.4251892566680908,
+    0.4059029519557953,
+    0.40517619252204895,
+    0.5568007826805115,
+    0.5634791254997253,
+    0.4650977551937103,
+    0.4768437147140503,
+    0.6142673492431641,
+    0.5633625984191895,
+    0.554405689239502,
+    0.5674945116043091
+  ],
+  "std_mean": 0.5029708072543144,
+  "strict_state_dict": true,
+  "same_seed_replay": true,
+  "global_rng_unchanged": true,
+  "sample_max_abs_error_from_expected_normal": 0.0,
+  "scope": "synthetic zero observation, CPU actor compatibility only; no Kit or locomotion result"
+}
