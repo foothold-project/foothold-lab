@@ -725,7 +725,10 @@ class StartRunner(OnPolicyRunner):
                         extras["ex41_ppo_valid"] = torch.ones(n, dtype=torch.bool, device=self.device)
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
                     if continuous is not None:
-                        continuous.record_post_step(dones)
+                        if getattr(continuous, "is_ex42_stage_zero", False):
+                            continuous.record_post_step(dones, extras.get("time_outs"))
+                        else:
+                            continuous.record_post_step(dones)
                     if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
                         lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
                         self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta, extras.get("time_outs"), self.pstate.use_gt)

@@ -39,7 +39,7 @@ def _setup(tmp_path, *, iteration=2, rewards=None, commands=None, monitor=None):
               "extra_reward_limits": {"zero_yaw": [-2, -.5], "feet_air_time_threshold": [.04, .5],
                                       "slow_track": [0, .3], "slow_track_sigma": [.5, .5],
                                       "slow_track_speed_min": [.1, .1], "slow_track_speed_max": [.3, .3]},
-              "command_limits": {"low_forward_fraction": [.2, .4]}}
+              "command_limits": {"low_forward_fraction": [.2, .5]}}
     entry = {"decided_by": "lead", "decided_at": "2026-11-14T00:09+09:00", "evidence": "m250/m500 sheet"}
     if rewards is not None:
         entry["rewards"] = rewards
@@ -62,13 +62,13 @@ def _setup(tmp_path, *, iteration=2, rewards=None, commands=None, monitor=None):
 
 def test_two_cells_apply_at_one_update_and_durable_receipt(tmp_path):
     ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2, "track_lin_vel_std": .35},
-                             commands={"low_forward_fraction": .4})
+                             commands={"low_forward_fraction": .5})
     assert ctl.on_update_start(1) is None
     record = ctl.on_update_start(2)
     assert record["before"]["rewards"]["slow_track"] == 0
     assert record["after"]["rewards"]["slow_track"] == .2
     assert runtime.env.reward_manager.get_term_cfg("track_lin_vel").params["std"] == .35
-    assert runtime.plan.stages[0].low_forward_fraction == .4
+    assert runtime.plan.stages[0].low_forward_fraction == .5
     assert (tmp_path / "ex42_update_adjust_m2.json").is_file()
     assert ctl.on_update_start(3) is None  # old request is linked to its receipt
 
@@ -79,6 +79,12 @@ def test_outside_limit_rejected_and_training_can_continue(tmp_path):
     assert result["kind"] == "rejected"
     assert runtime.env.reward_manager.get_term_cfg("ex42_slow_track").weight == 0
     assert (tmp_path / "ex42_update_adjust_rejected_m2.json").is_file()
+
+
+def test_new_forward_share_limit_is_exactly_point_five(tmp_path):
+    ctl, runtime, _ = _setup(tmp_path, commands={"low_forward_fraction": .50001})
+    assert ctl.on_update_start(2)["kind"] == "rejected"
+    assert runtime.plan.stages[0].low_forward_fraction == .2
 
 
 def test_one_rank_readback_mismatch_rejected_before_rollout(tmp_path, monkeypatch):

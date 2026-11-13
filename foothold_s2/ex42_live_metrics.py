@@ -62,16 +62,18 @@ class LiveMetrics:
     def __init__(self, log_dir, *, rank=0, world_size=1, stage_id="E1", slow_min=0.1, slow_max=0.3,
                  slow_sigma=0.5, slow_weight=0.0, stall_mps=0.05, moving_updates=20, decline_from_peak=0.05,
                  off_survival_updates=50, off_survival_drop=0.05, initial=None, alert_run_id=None,
-                 plan_sha256=None):
+                 plan_sha256=None, include_heading=False):
         if (type(moving_updates) is not int or moving_updates < 1
                 or type(off_survival_updates) is not int or off_survival_updates < 1
-                or not 0 < decline_from_peak < 1 or not 0 < off_survival_drop < 1):
+                or (decline_from_peak is not None and not 0 < decline_from_peak < 1)
+                or (off_survival_drop is not None and not 0 < off_survival_drop < 1)):
             raise ValueError("EX-42 live monitor plan thresholds invalid")
         self.log_dir = Path(log_dir)
         self.rank, self.world_size, self.stage_id = rank, world_size, stage_id
         self.plan_sha256 = plan_sha256
         self.slow_min, self.slow_max, self.slow_sigma = slow_min, slow_max, slow_sigma
         self.slow_weight = slow_weight
+        self.include_heading = bool(include_heading)
         self.stall_mps = stall_mps
         self.alert_run_id = alert_run_id
         self.moving_updates = moving_updates
@@ -82,6 +84,7 @@ class LiveMetrics:
         self.slow_history = deque(maxlen=moving_updates)
         self.off_block = []
         self.previous_off_block = None
+        self.last_failed_alert_iteration = None
         self.high = {skill: None for skill in SKILLS}
         self.stage = dict(initial or {"slow_forward": "learning", "side_left": "learning", "side_right": "learning"})
         if set(self.stage) != set(SKILLS) or not set(self.stage.values()) <= {"learning", "consolidating", "solid", "maintenance"}:
@@ -103,6 +106,9 @@ class LiveMetrics:
             self.slow_history.append(row["slow_track_slots"])
             self.high = row["monitor"]["high"]
             self.stage = row["monitor"]["stage"]
+            delivery = row["monitor"].get("delivery")
+            if isinstance(delivery, dict) and delivery.get("attempted") is True:
+                self.last_failed_alert_iteration = None if delivery.get("delivered") else row["iteration"]
             if row["iteration"] % self.off_survival_updates == 0:
                 self.previous_off_block = row.get("off_50_block")
                 self.off_block = []
@@ -114,11 +120,13 @@ class LiveMetrics:
             raise RuntimeError("EX-42 live metrics previous update was not completed")
         self.iteration = int(iteration)
         self.values = torch.zeros((3, 3, len(FIELDS)), dtype=torch.float64, device=device)
-        self.slow_slots = torch.zeros((3, len(EX39_SLOTS), 3), dtype=torch.float64, device=device)
-        self.survival = torch.zeros((3, 2), dtype=torch.float64, device=device)  # steps, resets
+        # total, active, value, heading total, heading active
+        self.slow_slots = torch.zeros((3, len(EX39_SLOTS), 5), dtype=torch.float64, device=device)
+        self.survival = torch.zeros((3, 3), dtype=torch.float64, device=device)  # steps, resets, falls
+        self.survival_family = torch.zeros((3, 2, 3), dtype=torch.float64, device=device)  # mode, continuous/sparse, same
         self.invalid = torch.zeros((), dtype=torch.float64, device=device)
 
-    def add(self, cmd, vel, slots, heading, flag, gt, off, done):
+    def add(self, cmd, vel, slots, heading, flag, gt, off, done, *, time_out=None, sparse=None):
         if self.iteration is None:
             raise RuntimeError("EX-42 live metrics update not started")
         cmd, vel = cmd.detach(), vel.detach()
@@ -128,6 +136,12 @@ class LiveMetrics:
         cmd = torch.where(finite[:, None], cmd, torch.zeros_like(cmd))
         vel = torch.where(finite[:, None], vel, torch.zeros_like(vel))
         done = done.bool()
+        time_out = torch.zeros_like(done) if time_out is None else time_out.bool()
+        sparse = torch.zeros_like(done) if sparse is None else sparse.bool()
+        if time_out.shape != done.shape or sparse.shape != done.shape:
+            raise ValueError("EX-42 live metric timeout or terrain family shape differs")
+        self.invalid += (time_out & ~done).sum()
+        falls = done & ~time_out
         self.invalid += (~finite & ~done).sum()
         mode = torch.where(off.bool(), 2, torch.where(gt.bool(), 0, 1))
         active = ~done & finite
@@ -136,23 +150,33 @@ class LiveMetrics:
         slot = slot.clamp(0, len(EX39_SLOTS) - 1)
         slot_index = mode * len(EX39_SLOTS) + slot
         speed = torch.linalg.vector_norm(cmd[:, :2], dim=-1)
-        slow = ((speed >= self.slow_min) & (speed < self.slow_max) & (cmd[:, 2].abs() < 1e-6)
-                & ~heading.bool() & valid_slot & finite)
+        straight = (cmd[:, 2].abs() < 1e-6) | (heading.bool() & self.include_heading)
+        slow = ((speed >= self.slow_min) & (speed < self.slow_max) & straight
+                & (~heading.bool() | self.include_heading) & valid_slot & finite)
         slow_error = torch.linalg.vector_norm(vel[:, :2] - cmd[:, :2], dim=-1)
         slow_value = torch.exp(-((slow_error / speed.clamp_min(self.slow_min)) / self.slow_sigma) ** 2)
         self.survival[:, 0] += torch.bincount(mode, minlength=3).to(torch.float64)
         self.survival[:, 1] += torch.bincount(mode[done], minlength=3).to(torch.float64)
+        self.survival[:, 2] += torch.bincount(mode[falls], minlength=3).to(torch.float64)
+        family_index = mode * 2 + sparse.long()
+        self.survival_family[:, :, 0] += torch.bincount(family_index, minlength=6).reshape(3, 2)
+        self.survival_family[:, :, 1] += torch.bincount(family_index[done], minlength=6).reshape(3, 2)
+        self.survival_family[:, :, 2] += torch.bincount(family_index[falls], minlength=6).reshape(3, 2)
         shape = (3, len(EX39_SLOTS))
         self.slow_slots[:, :, 0] += torch.bincount(slot_index[valid_slot], minlength=39).reshape(shape)
         self.slow_slots[:, :, 1] += torch.bincount(slot_index[slow], minlength=39).reshape(shape)
         self.slow_slots[:, :, 2] += torch.bincount(
             slot_index[slow & active], weights=slow_value[slow & active].double(), minlength=39).reshape(shape)
+        self.slow_slots[:, :, 3] += torch.bincount(
+            slot_index[valid_slot & heading.bool()], minlength=39).reshape(shape)
+        self.slow_slots[:, :, 4] += torch.bincount(
+            slot_index[slow & heading.bool()], minlength=39).reshape(shape)
         stall = torch.linalg.vector_norm(vel[:, :2], dim=-1) < self.stall_mps
         for k, name in enumerate(SKILLS):
             if name == "slow_forward":
                 chosen, target, actual = active & slow & (slot == SLOT_INDEX["forward"]), cmd[:, 0], vel[:, 0]
             else:
-                chosen = (active & valid_slot & ~heading.bool() & (slot == SLOT_INDEX[name])
+                chosen = (active & valid_slot & (~heading.bool() | self.include_heading) & (slot == SLOT_INDEX[name])
                           & (cmd[:, 1].abs() >= self.slow_min))
                 target, actual = cmd[:, 1], vel[:, 1]
             safe_target = torch.where(target.abs() >= self.slow_min, target, torch.ones_like(target))
@@ -172,17 +196,19 @@ class LiveMetrics:
             raise RuntimeError("EX-42 live metrics update not started")
         local_slots = self.slow_slots.detach().cpu().tolist()
         local_survival = self.survival.detach().cpu().tolist()
+        local_family = self.survival_family.detach().cpu().tolist()
         if self.world_size > 1:
             import torch.distributed as dist
             if not dist.is_initialized() or dist.get_world_size() != self.world_size:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
-            for tensor in (self.values, self.slow_slots, self.survival, self.invalid):
+            for tensor in (self.values, self.slow_slots, self.survival, self.survival_family, self.invalid):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
             dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_track_slots": local_slots,
-                                               "survival": local_survival})
+                                               "survival": local_survival, "survival_by_family": local_family})
         else:
-            rank_rows = [{"rank": self.rank, "slow_track_slots": local_slots, "survival": local_survival}]
+            rank_rows = [{"rank": self.rank, "slow_track_slots": local_slots, "survival": local_survival,
+                          "survival_by_family": local_family}]
         it = self.iteration
         self.iteration = None
         if float(self.invalid) != 0:
@@ -216,7 +242,8 @@ class LiveMetrics:
             if gt is None or pred is None:
                 continue
             peak = self.high.get(skill)
-            if peak is not None and decline_signal(peak, {"gt": gt, "pred": pred}, self.decline_from_peak):
+            if (self.decline_from_peak is not None and peak is not None
+                    and decline_signal(peak, {"gt": gt, "pred": pred}, self.decline_from_peak)):
                 if self.stage.get(skill) != "learning":
                     alerts.append({"skill": skill, "signal": "demote_to_learning", "peak": peak,
                                    "now": {"gt": gt, "pred": pred}})
@@ -227,9 +254,12 @@ class LiveMetrics:
         for m, mode in enumerate(MODES):
             slot_rows[mode] = {}
             for i, name in enumerate(EX39_SLOTS):
-                total, count, value = self.slow_slots[m, i].tolist()
+                total, count, value, heading_total, heading_count = self.slow_slots[m, i].tolist()
                 slot_rows[mode][name] = {"env_steps": int(total), "active_env_steps": int(count),
                                          "active_fraction": count / total if total else None,
+                                         "heading_env_steps": int(heading_total),
+                                         "heading_active_env_steps": int(heading_count),
+                                         "free_active_env_steps": int(count - heading_count),
                                          "active_value_mean": value / count if count else None,
                                          "weighted_reward_rate_mean": self.slow_weight * value / count if count else None}
         self.slow_history.append(slot_rows)
@@ -243,21 +273,37 @@ class LiveMetrics:
                                            "active_fraction": count / total if total else None}
         steps = self.survival.tolist()
         survival = {mode: {"env_steps": int(steps[m][0]), "resets": int(steps[m][1]),
-                           "survival_fraction": (1 - steps[m][1] / steps[m][0] if steps[m][0] else None)}
+                           "falls": int(steps[m][2]), "time_outs": int(steps[m][1] - steps[m][2]),
+                           "survival_fraction": (1 - steps[m][2] / steps[m][0] if steps[m][0] else None)}
                     for m, mode in enumerate(MODES)}
+        by_family = {}
+        family_values = self.survival_family.tolist()
+        for m, mode in enumerate(MODES):
+            by_family[mode] = {}
+            for f, family in enumerate(("continuous", "sparse")):
+                total, resets, falls = family_values[m][f]
+                by_family[mode][family] = {"env_steps": int(total), "resets": int(resets), "falls": int(falls),
+                                           "time_outs": int(resets - falls),
+                                           "survival_fraction": 1 - falls / total if total else None}
         self.off_block.append(survival["off"])
         off_signal = None
         off_block_fraction = None
         if it % self.off_survival_updates == 0:
             total = sum(item["env_steps"] for item in self.off_block)
-            resets = sum(item["resets"] for item in self.off_block)
-            current = 1 - resets / total if total else None
+            falls = sum(item["falls"] for item in self.off_block)
+            current = 1 - falls / total if total else None
             off_block_fraction = current
             if (current is not None and self.previous_off_block is not None
+                    and self.off_survival_drop is not None
                     and current < self.previous_off_block - self.off_survival_drop):
                 off_signal = {"signal": "map_off_survival_50_drop", "previous": self.previous_off_block,
                               "current": current, "threshold": self.off_survival_drop, "decision": "alert_only"}
                 alerts.append(off_signal)
+            elif (current is not None and self.previous_off_block is not None
+                  and self.off_survival_drop is None):
+                off_signal = {"signal": "map_off_survival_50_change", "previous": self.previous_off_block,
+                              "current": current, "delta": current - self.previous_off_block,
+                              "decision": "record_only_threshold_pending"}
             self.previous_off_block = current
             self.off_block = []
         row = {"format": "ex42-live-metrics/1", "stage_id": self.stage_id,
@@ -265,17 +311,27 @@ class LiveMetrics:
                "world_size": self.world_size, "skills": rows, "moving20": moving,
                "slow_track_weight": self.slow_weight,
                "slow_track_slots": slot_rows, "slow_track_moving20": slow_moving,
-               "rank_local": rank_rows, "survival": survival,
+               "rank_local": rank_rows, "survival": survival, "survival_by_family": by_family,
                "off_50_block": off_block_fraction,
-               "monitor": {"stage": self.stage.copy(), "high": self.high.copy(), "alerts": alerts}}
+               "monitor": {"stage": self.stage.copy(), "high": self.high.copy(), "alerts": alerts,
+                           "off_change": off_signal,
+                           "threshold_pending": self.decline_from_peak is None or self.off_survival_drop is None}}
         self.log_dir.mkdir(parents=True, exist_ok=True)
         if alerts and self.alert_run_id is not None:
-            row["monitor"]["delivery"] = send_orca_alert(
-                self.alert_run_id, it, alerts, self.log_dir / "ex42_live_metrics.jsonl")
+            last = self.last_failed_alert_iteration
+            if last is not None and it - last < self.off_survival_updates * 2:
+                row["monitor"]["delivery"] = {"attempted": False, "delivered": False,
+                                                  "reason": "send failure cooldown",
+                                                  "retry_after_iteration": last + self.off_survival_updates * 2}
+            else:
+                delivery = send_orca_alert(self.alert_run_id, it, alerts, self.log_dir / "ex42_live_metrics.jsonl")
+                row["monitor"]["delivery"] = {"attempted": True, **delivery}
+                self.last_failed_alert_iteration = None if delivery["delivered"] else it
         with (self.log_dir / "ex42_live_metrics.jsonl").open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(row, ensure_ascii=False, allow_nan=False, sort_keys=True) + "\n")
-        if alerts:
+        if alerts or off_signal is not None:
             with (self.log_dir / "alerts.jsonl").open("a", encoding="utf-8") as stream:
-                stream.write(json.dumps({"format": "ex42-live-alert/1", "iteration": it, "alerts": alerts},
+                stream.write(json.dumps({"format": "ex42-live-alert/1", "iteration": it,
+                                         "alerts": alerts, "off_change": off_signal},
                                         ensure_ascii=False, sort_keys=True) + "\n")
         return row

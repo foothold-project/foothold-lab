@@ -74,5 +74,22 @@ def register(env_cfg, term_cfg_class=None) -> bool:
     if term_cfg_class is None:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, TERM, term_cfg_class(func=slow_track_term, weight=0.0,
-                                                  params={"command_name": "base_velocity", **DEFAULTS}))
+                                                  params={"command_name": "base_velocity", **DEFAULTS,
+                                                          "include_heading": False}))
     return True
+
+
+def configure_from_plan(env_cfg, row, term_cfg_class=None) -> dict:
+    """Apply the approved E1 start cells before the environment is constructed."""
+    monitor = row.get("live_monitor", {})
+    if monitor.get("enabled") is not True:
+        raise ValueError("EX-42 slow_track start needs an enabled live monitor")
+    weight = monitor.get("initial_slow_track_weight")
+    heading = row.get("slow_track_heading")
+    if type(weight) not in (int, float) or not 0 <= weight <= 0.3 or type(heading) is not bool:
+        raise ValueError("EX-42 slow_track start needs approved weight and heading cells")
+    register(env_cfg, term_cfg_class)
+    term = getattr(env_cfg.rewards, TERM)
+    term.weight = float(weight)
+    term.params["include_heading"] = heading
+    return {"weight": float(term.weight), "include_heading": bool(term.params["include_heading"])}

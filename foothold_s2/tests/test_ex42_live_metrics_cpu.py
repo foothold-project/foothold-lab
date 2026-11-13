@@ -28,7 +28,8 @@ def test_three_map_modes_side_signs_and_off_reset(tmp_path):
     assert row["skills"]["pred"]["slow_forward"]["tracking_ratio"] == 1
     assert row["skills"]["gt"]["side_left"]["tracking_ratio"] == 1
     assert row["skills"]["gt"]["side_right"]["tracking_ratio"] == 1
-    assert row["survival"]["off"] == {"env_steps": 1, "resets": 1, "survival_fraction": 0}
+    assert row["survival"]["off"] == {"env_steps": 1, "resets": 1, "falls": 1,
+                                       "time_outs": 0, "survival_fraction": 0}
     assert row["slow_track_slots"]["off"]["forward"]["active_env_steps"] == 1
     assert row["slow_track_moving20"]["off"]["forward"]["active_fraction"] == 1
     assert row["rank_local"][0]["rank"] == 0
@@ -81,6 +82,72 @@ def test_map_off_fifty_update_reset_drop_alert(tmp_path):
     assert (tmp_path / "alerts.jsonl").is_file()
     restored = LiveMetrics(tmp_path)
     assert restored.previous_off_block == 0
+
+
+def test_timeout_is_not_a_fall_and_sparse_stays_separate(tmp_path):
+    m = LiveMetrics(tmp_path, off_survival_updates=1)
+    m.begin(1, device="cpu")
+    command = torch.tensor([[.2, 0, 0], [.2, 0, 0]])
+    m.add(command, command, torch.tensor([SLOT_INDEX["forward"]] * 2),
+          torch.zeros(2, dtype=torch.bool), torch.zeros(2, dtype=torch.bool),
+          torch.ones(2, dtype=torch.bool), torch.ones(2, dtype=torch.bool),
+          torch.ones(2, dtype=torch.bool), time_out=torch.tensor([True, False]),
+          sparse=torch.tensor([False, True]))
+    row = m.end()
+    assert row["survival"]["off"]["falls"] == 1
+    assert row["survival"]["off"]["time_outs"] == 1
+    assert row["survival_by_family"]["off"]["continuous"]["falls"] == 0
+    assert row["survival_by_family"]["off"]["sparse"]["falls"] == 1
+    assert row["off_50_block"] == .5
+
+
+def test_heading_slow_command_is_separately_counted(tmp_path):
+    m = LiveMetrics(tmp_path, include_heading=True)
+    m.begin(1, device="cpu")
+    cmd = torch.tensor([[.2, 0, 1.], [.2, 0, 0.]])
+    vel = torch.tensor([[.2, 0, 0.], [.2, 0, 0.]])
+    m.add(cmd, vel, torch.tensor([SLOT_INDEX["forward"]] * 2),
+          torch.tensor([True, False]), torch.zeros(2, dtype=torch.bool),
+          torch.ones(2, dtype=torch.bool), torch.zeros(2, dtype=torch.bool),
+          torch.zeros(2, dtype=torch.bool))
+    row = m.end()
+    forward = row["slow_track_slots"]["gt"]["forward"]
+    assert forward["active_env_steps"] == 2
+    assert forward["heading_active_env_steps"] == 1
+    assert forward["free_active_env_steps"] == 1
+    assert row["skills"]["gt"]["slow_forward"]["samples"] == 2
+
+
+def test_unmeasured_noise_has_no_automatic_demotion_or_send(tmp_path):
+    m = LiveMetrics(tmp_path, decline_from_peak=None, off_survival_updates=1,
+                    off_survival_drop=None, initial={"slow_forward": "solid",
+                                                      "side_left": "learning", "side_right": "learning"})
+    for it, ratio, fall in ((1, 1., False), (2, .2, True)):
+        m.begin(it, device="cpu")
+        _step(m, ratio=ratio, done=fall)
+        row = m.end()
+    assert row["monitor"]["stage"]["slow_forward"] == "solid"
+    assert row["monitor"]["threshold_pending"] is True
+    assert row["monitor"]["alerts"] == []
+    assert row["off_50_block"] == 0
+    assert row["monitor"]["off_change"]["decision"] == "record_only_threshold_pending"
+    assert json.loads((tmp_path / "alerts.jsonl").read_text())["off_change"]["delta"] == -1
+
+
+def test_failed_alert_send_waits_a_whole_window_before_retry(monkeypatch, tmp_path):
+    from foothold_s2 import ex42_live_metrics as lm
+    calls = []
+    monkeypatch.setattr(lm, "send_orca_alert", lambda *args: (calls.append(args) or {"delivered": False}))
+    m = LiveMetrics(tmp_path, off_survival_updates=1, alert_run_id="run_abc123")
+    for it, fall in ((1, False), (2, True), (3, True)):
+        if it == 3:
+            m.previous_off_block = 1.0  # a separate current block with a new drop
+        m.begin(it, device="cpu")
+        _step(m, done=fall)
+        row = m.end()
+    assert len(calls) == 1
+    assert row["monitor"]["delivery"]["reason"] == "send failure cooldown"
+    assert row["monitor"]["delivery"]["retry_after_iteration"] == 4
 
 
 def test_actual_e1_again_m250_to_m500_forward_point_one_decline_signal():
