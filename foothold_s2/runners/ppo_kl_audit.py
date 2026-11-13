@@ -293,7 +293,13 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
     existing = getattr(runner.alg, "kl_audit", None)
     if existing is not None:
         return existing
-    if runner.log_dir is None:
+    # Rank 1's runner.log_dir is deliberately a private scratch directory.
+    # train_start supplies the canonical shared record_dir before attach_runner.
+    record_dir = getattr(runtime, "record_dir", None)
+    if runner.alg.gpu_world_size > 1 and not record_dir:
+        raise ValueError("KL audit needs shared runtime.record_dir for distributed ranks")
+    record_dir = record_dir or runner.log_dir
+    if record_dir is None:
         raise ValueError("KL audit needs the run log directory on each rank")
     raw = getattr(runner.env, "unwrapped", runner.env)
     term = raw.command_manager.get_term("base_velocity")
@@ -307,6 +313,9 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
         value = getattr(runtime, name, None)
         if not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
             raise ValueError(f"KL audit needs runtime.{name} as the pinned SHA256")
+    plan_sha = getattr(getattr(runtime, "plan", None), "sha256", None)
+    if plan_sha is not None and plan_sha != runtime.plan_sha256:
+        raise ValueError("KL audit runtime plan SHA differs from its plan")
 
     def provider():
         state = runner.pstate
@@ -316,8 +325,8 @@ def install_runner_kl_audit(runner, *, runtime, top_k=8):
                 "terrain_level": terrain.terrain_levels, "heading": term.heading, "flag": term.is_flag_env,
                 "map_mode": mode, "episode_length": raw.episode_length_buf}
 
-    return PpoKLAudit(runner.alg, provider, Path(runner.log_dir) / "ppo_kl_audit",
-                      identity={"run": str(Path(runner.log_dir).resolve()),
+    return PpoKLAudit(runner.alg, provider, Path(record_dir) / "ppo_kl_audit",
+                      identity={"run": str(Path(record_dir).resolve()),
                                 "plan_sha256": runtime.plan_sha256, "parent_sha256": runtime.parent_sha256,
                                 "stage_id": runtime.stage_id},
                       top_k=top_k, columns=columns, slots=EX39_SLOTS)

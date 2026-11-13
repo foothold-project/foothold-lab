@@ -217,6 +217,54 @@ def test_installer_reads_actual_pre_action_map_flags_and_env(tmp_path):
     audit.close()
 
 
+def _shared_installer_inputs(alg, directory, rank):
+    from pathlib import Path
+    directory = Path(directory)
+    term = SimpleNamespace(command=torch.zeros(4, 3), slot_current=torch.arange(4),
+                           heading=torch.zeros(4, dtype=torch.bool), is_flag_env=torch.zeros(4, dtype=torch.bool))
+    terrain = SimpleNamespace(terrain_types=torch.zeros(4, dtype=torch.long),
+                              terrain_levels=torch.zeros(4, dtype=torch.long))
+    env = SimpleNamespace(command_manager=SimpleNamespace(get_term=lambda _: term),
+                          scene=SimpleNamespace(terrain=terrain), episode_length_buf=torch.arange(4),
+                          _ex42_column_table=[{"family": "A", "kind": "flat"}])
+    # The real EX42 runtime has an EX41 compatibility plan without a SHA.
+    runtime = SimpleNamespace(iteration=1, stage_id="E1", record_dir=str(directory / "run"),
+                              plan_sha256="a" * 64, parent_sha256="b" * 64,
+                              plan=SimpleNamespace(is_ex41=False, stages=[]))
+    runner = SimpleNamespace(alg=alg, env=SimpleNamespace(unwrapped=env),
+                             disable_logs=rank != 0, log_dir=str(directory / f"rank{rank}-private"),
+                             pstate=SimpleNamespace(use_gt=torch.tensor([True, False, True, False]),
+                                                   map_off=torch.tensor([False, False, True, True])))
+    return runner, runtime
+
+
+@pytest.mark.parametrize("rank", [0, 1])
+def test_installer_uses_shared_records_even_when_rank_logging_disabled(tmp_path, rank):
+    alg, _ = _alg(steps=1, multi={"global_rank": rank, "local_rank": rank, "world_size": 2})
+    runner, runtime = _shared_installer_inputs(alg, tmp_path, rank)
+    audit = install_runner_kl_audit(runner, runtime=runtime)
+    assert audit.path == tmp_path / "run" / "ppo_kl_audit" / f"ppo_kl_rank{rank}.jsonl"
+    assert not (tmp_path / f"rank{rank}-private").exists()
+    assert _rows(audit)[0]["identity"] == {"run": str((tmp_path / "run").resolve()),
+        "plan_sha256": "a" * 64, "parent_sha256": "b" * 64, "stage_id": "E1"}
+    audit.close()
+
+
+@pytest.mark.parametrize("invalid", ["shared_missing", "plan_null", "plan_bad", "parent_null", "plan_conflict"])
+def test_installer_rejects_unbound_or_conflicting_identity_before_writing(tmp_path, invalid):
+    alg, _ = _alg(steps=1, multi={"global_rank": 1, "local_rank": 1, "world_size": 2})
+    runner, runtime = _shared_installer_inputs(alg, tmp_path, 1)
+    if invalid == "shared_missing": runtime.record_dir = None
+    elif invalid == "plan_null": runtime.plan_sha256 = None
+    elif invalid == "plan_bad": runtime.plan_sha256 = "z" * 64
+    elif invalid == "parent_null": runtime.parent_sha256 = None
+    else: runtime.plan.sha256 = "c" * 64
+    with pytest.raises(ValueError, match="KL audit"):
+        install_runner_kl_audit(runner, runtime=runtime)
+    assert not list(tmp_path.rglob("*.jsonl"))
+    assert getattr(alg, "kl_audit", None) is None
+
+
 def test_observer_write_failure_is_loud_and_does_not_stop_training(tmp_path, capsys):
     alg, obs = _alg()
     audit = PpoKLAudit(alg, lambda: _metadata(alg), tmp_path, identity={"run": "known"})

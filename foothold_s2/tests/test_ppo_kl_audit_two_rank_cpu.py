@@ -9,8 +9,8 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from foothold_s2.runners.ppo_kl_audit import PpoKLAudit, join_rank_records
-from foothold_s2.tests.test_ppo_kl_audit_cpu import _alg, _metadata, _obs, _same_state
+from foothold_s2.runners.ppo_kl_audit import install_runner_kl_audit, join_rank_records
+from foothold_s2.tests.test_ppo_kl_audit_cpu import _alg, _obs, _same_state, _shared_installer_inputs
 
 
 def _worker(rank, store, directory, mirror, empty_second_rank):
@@ -35,8 +35,8 @@ def _worker(rank, store, directory, mirror, empty_second_rank):
 
             dist.all_reduce, dist.broadcast = reduce, broadcast
             alg, _ = _alg(mirror, multi={"global_rank": rank, "local_rank": rank, "world_size": 2})
-            audit = PpoKLAudit(alg, lambda: _metadata(alg), directory,
-                              identity={"run": "two_rank"}) if enabled else None
+            runner, runtime = _shared_installer_inputs(alg, directory, rank)
+            audit = install_runner_kl_audit(runner, runtime=runtime) if enabled else None
             torch.manual_seed(31 + rank)
             obs = _obs()
             obs["actor_in"] += rank * .3
@@ -70,7 +70,10 @@ def test_two_rank_observer_matches_actual_collective_kl_and_leaves_training_iden
     results = [torch.load(tmp_path / f"rank{rank}.pt", weights_only=False) for rank in range(2)]
     _same_state(results[0]["policy"], results[1]["policy"])
     rows = [json.loads(line) for rank in range(2)
-            for line in (tmp_path / f"ppo_kl_rank{rank}.jsonl").read_text().splitlines()]
+            for line in (tmp_path / "run" / "ppo_kl_audit" / f"ppo_kl_rank{rank}.jsonl").read_text().splitlines()]
+    assert len({json.dumps(r["identity"], sort_keys=True) for r in rows}) == 1
+    assert rows[0]["identity"]["plan_sha256"] == "a" * 64
+    assert not list(tmp_path.glob("rank*-private"))
     joined = join_rank_records(rows)
     assert len(joined) == 4
     for row, actual_global in zip(joined, results[0]["scheduler_means"], strict=True):
