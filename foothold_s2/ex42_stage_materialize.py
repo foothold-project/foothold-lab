@@ -13,6 +13,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 
@@ -242,18 +243,34 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
         return None, {}
     limits = reward_limits(limits_path)      # the target template's limits: the values must be startable there
     interval = source.document['evaluation']['interval_updates']
-    segments = _json(parent_manifest).get('ex42_resume_segments', [])
+    manifest = _json(parent_manifest)
+    segments = manifest.get('ex42_resume_segments', [])
     origins = [segment.get('local_update_origin') if isinstance(segment, dict) else None for segment in segments] \
         if isinstance(segments, list) else [None]
     if any(type(origin) is not int or origin <= 0 or origin % interval for origin in origins):
         raise ValueError(f'{stage} manifest resumed-segment record is invalid')
+    run = Path(parent_manifest).resolve().parent
+    # A readback file is proof that a segment was resumed there. A manifest without that resume record (a lost or
+    # rewritten history) must not be read as "never resumed": that would swap the live values for the plan row.
+    on_disk = {int(match.group(1)) for path in run.glob('segment_rewards_b*.json')
+               if (match := re.fullmatch(r'segment_rewards_b(\d+)(?:_rank\d+)?\.json', path.name))}
+    if on_disk - {origin // interval for origin in origins}:
+        raise ValueError(f'{stage} manifest resume history lacks segments whose reward readback exists: '
+                         f'{sorted(on_disk - {origin // interval for origin in origins})}')
     started = [origin for origin in origins if origin < iteration]
     boundary = max(started) // interval if started else 0
     if boundary < 1:
         values = stage_rewards(source, stage, limits)
         return {'source_stage': stage, 'boundary_index': 0, 'origin': 'source plan row', 'values': values}, {}
-    run = Path(parent_manifest).resolve().parent
-    paths = sorted(run.glob(f'segment_rewards_b{boundary}_rank*.json')) or [run / f'segment_rewards_b{boundary}.json']
+    # Every rank of the run must have left its own readback: two ranks when the run was distributed, else one file.
+    distributed = ((manifest.get('run') or {}).get('cli_args') or {}).get('distributed')
+    if type(distributed) is not bool:
+        raise ValueError(f'{stage} manifest does not record whether the run was distributed')
+    paths = ([run / f'segment_rewards_b{boundary}_rank{rank}.json' for rank in range(2)] if distributed
+             else [run / f'segment_rewards_b{boundary}.json'])
+    stray = {path.name for path in run.glob(f'segment_rewards_b{boundary}*.json')} - {path.name for path in paths}
+    if stray:
+        raise ValueError(f'{stage} last-segment reward readback has files outside the run layout: {sorted(stray)}')
     values, refs = None, {}
     for index, path in enumerate(paths):
         if not path.is_file():

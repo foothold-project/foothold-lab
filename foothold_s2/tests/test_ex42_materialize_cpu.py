@@ -43,7 +43,8 @@ def known(tmp_path):
     parent_sha = sha(checkpoint)
     manifest = run / 'manifest.json'
     dump(manifest, {'progress': {'completed_updates': 1750}, 'checkpoints': {checkpoint.name: parent_sha},
-                    'ex42_resume_segments': [{'local_update_origin': k * 250} for k in range(1, 7)]})
+                    'ex42_resume_segments': [{'local_update_origin': k * 250} for k in range(1, 7)],
+                    'run': {'cli_args': {'distributed': True}}})
     specs=plan.document['evaluation']['paper_cells']['stairs_landing']['case_specs']
     case_ids=plan.document['evaluation']['paper_cells']['stairs_landing']['judge_cases']
     cases={}

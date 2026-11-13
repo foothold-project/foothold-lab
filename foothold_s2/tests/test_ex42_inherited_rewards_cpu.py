@@ -161,3 +161,66 @@ def test_a_template_row_with_its_own_cells_is_not_overwritten(known):
     _, row = _e1f(result)
     assert row['rewards'] == own
     assert 'inherited_rewards' not in json.loads(Path(result['transition']).read_text())
+
+
+# ---- verifier-lx 11/14 hand-off audit L1: rank completeness and resume history -----------------------------------------
+def _inherit(known, iteration=1750):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_stage_materialize import inherited_rewards
+    return inherited_rewards(EX42Plan.load(known['source_plan']), 'E1', known['parent_manifest'], iteration,
+                             Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml')
+
+
+def test_l1_a_complete_two_rank_readback_still_inherits_the_live_value(known):
+    for path in _readbacks(known):
+        _rewrite(path, source='adjust_file', cells={'slow_track': 0.2})
+    row, refs = _inherit(known)
+    assert row['values']['slow_track'] == 0.2 and len(refs) == 2
+
+
+def test_l1_one_missing_rank_receipt_is_refused_not_inherited_from_the_other(known):
+    """Audit counterexample: rank1's readback deleted, rank0's kept; materialize used to publish with one artifact."""
+    first, second = _readbacks(known)
+    _rewrite(first, source='adjust_file', cells={'slow_track': 0.2})
+    second.unlink()
+    with pytest.raises(ValueError, match='readback is missing'):
+        _inherit(known)
+    with pytest.raises(ValueError):
+        run(known)
+    assert not Path(known['out']).exists()
+
+
+def test_l1_a_rank_file_beside_a_single_process_layout_is_refused(known):
+    body = json.loads(known['parent_manifest'].read_text())
+    body['run']['cli_args']['distributed'] = False
+    known['parent_manifest'].write_text(json.dumps(body))
+    with pytest.raises(ValueError, match='readback is missing|outside the run layout'):
+        _inherit(known)
+    first, second = _readbacks(known)
+    first.rename(first.with_name('segment_rewards_b6.json'))           # a real single-process run: one file, no rank files
+    with pytest.raises(ValueError, match='outside the run layout'):
+        _inherit(known)                                                 # ...but the old rank1 file is still there
+    second.unlink()
+    assert _inherit(known)[0]['boundary_index'] == 6
+
+
+@pytest.mark.parametrize('segments', [None, [], [{'local_update_origin': 250}]])
+def test_l1_missing_resume_history_with_live_readback_files_is_refused(known, segments):
+    """Audit counterexample: the manifest lost ex42_resume_segments while slow_track 0.2 readbacks sit in the run
+    folder; the old code read that as "never resumed" and published the plan row's slow_track 0.0."""
+    for path in _readbacks(known):
+        _rewrite(path, source='adjust_file', cells={'slow_track': 0.2})
+    _manifest(known, segments)
+    with pytest.raises(ValueError, match='resume history lacks segments'):
+        _inherit(known)
+    with pytest.raises(ValueError):
+        run(known)
+    assert not Path(known['out']).exists()
+
+
+def test_l1_a_manifest_that_does_not_say_whether_the_run_was_distributed_is_refused(known):
+    body = json.loads(known['parent_manifest'].read_text())
+    body.pop('run')
+    known['parent_manifest'].write_text(json.dumps(body))
+    with pytest.raises(ValueError, match='whether the run was distributed'):
+        _inherit(known)
