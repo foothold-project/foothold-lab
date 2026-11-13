@@ -176,8 +176,18 @@ def metrics(levels: dict, score: dict | None) -> dict:
     return out
 
 
+def body_forward_per_env(vx, alive, dt: float, command_speed: float):
+    """Signed body-forward R over the scheduled window, including time after a reset."""
+    vx, alive = np.asarray(vx, dtype=np.float64), np.asarray(alive, dtype=bool)
+    if (vx.ndim != 2 or vx.shape != alive.shape or not np.isfinite(vx).all()
+            or not np.isfinite(dt) or dt <= 0 or not np.isfinite(command_speed)
+            or command_speed <= 0 or vx.shape[0] == 0):
+        raise ValueError("body-forward ratio source shape or denominator differs")
+    return (vx * alive).sum(axis=0) * dt / (command_speed * vx.shape[0] * dt)
+
+
 def body_forward_ratios(levels: dict, checkpoint_sha256: str) -> tuple[dict, list[dict]]:
-    """Signed body-forward progress per alive time, median across 64 envs."""
+    """Signed body-forward progress per scheduled time, median across 64 envs."""
     values, sources = {}, []
     for level in LEVELS:
         block = levels[level]["blocks"].get("g1b")
@@ -210,7 +220,7 @@ def body_forward_ratios(levels: dict, checkpoint_sha256: str) -> tuple[dict, lis
                 integral = (vx * alive).sum(axis=0) * dt
                 if not np.allclose(integral, arrays["body_vx_integral_m"], rtol=0, atol=1e-5):
                     raise ValueError(f"{case} recorded body-vx integral differs: {path}")
-                ratio = float(np.median(integral / (command_speed * alive_count * dt)))
+                ratio = float(np.median(body_forward_per_env(vx, alive, dt, command_speed)))
                 values[f"body_forward_ratio/{level}/{case}"] = ratio
             sources.append({"path": str(path), "sha256": sha(path), "level": level, "case": case})
     return values, sources

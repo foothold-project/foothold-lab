@@ -25,6 +25,8 @@ def _inputs():
     baseline = load_baseline(ROOT, cfg, digest)
     baseline["_sha256"] = cfg["baseline"]["sha256"]
     plan = yaml.safe_load((ROOT / cfg["maintenance_source"]).read_text(encoding="utf-8-sig"))
+    # Keep the pre-v2 D44 six-case adapter under test after the live E1 plan selects v2.
+    next(row for row in plan["stages"] if row["id"] == "E1")["exit_judge"] = "map39_e1_two_window"
     measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
     score = json.loads(SAVED_E0.read_text(encoding="utf-8"))
     return score, baseline, measured, plan
@@ -189,14 +191,17 @@ def test_e1_rejects_changed_raw_bytes_with_same_counts(tmp_path):
         judge_e1(score, baseline, measured, plan, previous=score)
 
 
-def test_real_m250_measure_as_e1_keeps_maintenance_pass_and_d44_hold():
+def test_real_m250_measure_as_legacy_e1_keeps_maintenance_pass_and_d44_hold(tmp_path):
     if not SAVED_E0.is_file():
         pytest.skip("local m250 source is unavailable")
     saved = json.loads(SAVED_E0.read_text(encoding="utf-8"))
     original = Path("/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218/eval/scores/m250")
     if not original.is_dir():
         pytest.skip("local m250 raw evaluation is unavailable")
-    score = measure(Path(saved["checkpoint"]), original, stage_id="E1")
+    _, _, _, legacy_plan = _inputs()
+    policy = tmp_path / "legacy-e1-plan.yaml"
+    policy.write_text(yaml.safe_dump(legacy_plan), encoding="utf-8")
+    score = measure(Path(saved["checkpoint"]), original, stage_id="E1", evaluation_plan_path=policy)
     assert score["maintenance_judgement"] == "PASS"
     assert score["judgement"] == "HOLD"
     d44 = score["e1_exit"]["d44"]
@@ -296,9 +301,14 @@ def test_p1_bridge_rejects_inconsistent_e1_aggregate(tmp_path, monkeypatch):
                               stage_id="E1", output=output)
 
 
-def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path):
+def test_p1_bridge_records_known_e1_failure_even_with_missing_d44(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
     score, baseline, measured, plan = _inputs()
-    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    approvals = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-approvals.yaml").read_text(encoding="utf-8-sig"))
+    monkeypatch.setattr(EX42Plan, "load", lambda _: SimpleNamespace(
+        document=plan, runtime_stage_ids=tuple(approvals["domain_randomization"]["stage_scales"]),
+        sha256="a" * 64))
     score["map64"]["eval_gt"]["fwd0.5"]["alive_at_end"] = 0
     judged = judge_e1(score, baseline, measured, plan, previous=None)
     checkpoint = tmp_path / "model_250.pt"

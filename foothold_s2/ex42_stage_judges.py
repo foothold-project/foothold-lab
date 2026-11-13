@@ -171,8 +171,69 @@ class _E1(_E0):
         return {"e1_exit": score["e1_exit"]}
 
 
+class _E1V2(_E1):
+    """Approved E1 exit v2; the six-cell D44 raw remains intact for diagnosis."""
+    name = "map39_e1_v2_two_window"
+
+    def judge(self, ctx, score):
+        from foothold_s2.ex42_e0_judge import load_baseline
+        from foothold_s2.ex42_e1_judge import previous_e1_score
+        from foothold_s2.ex42_e1_v2 import judge_e1_v2, measure_cells
+        from foothold_s2.eval.ex42_d44_cells import read_evidence
+        baseline = load_baseline(ctx.root, ctx.cfg, ctx.digest)
+        baseline["_sha256"] = ctx.cfg["baseline"]["sha256"]
+        measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        if (ctx.evaluation / "d44" / "d44_cells.json").is_file():
+            score["d44_cells"] = read_evidence(
+                ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
+                checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
+        score["e1_v2_evaluation"] = str(ctx.evaluation)
+        score["e1_v2_cells"] = measure_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed)
+        prior = previous_e1_score(ctx.checkpoint, ctx.evaluation, ctx.plan["evaluation"]["interval_updates"],
+                                  ctx.digest(ctx.cfg_path))
+        return judge_e1_v2(score, baseline, measured, ctx.plan, previous=prior,
+                           checkpoint=ctx.checkpoint, evaluation=ctx.evaluation, seed=ctx.seed)
+
+    def verify(self, score, judgment, expected, plan=None):
+        from pathlib import Path
+        from foothold_s2.ex42_e0_judge import load_baseline
+        from foothold_s2.ex42_e1_judge import previous_e1_score
+        from foothold_s2.ex42_e1_v2 import judge_e1_v2, measure_cells
+        from foothold_s2.ex42_score import ROOT, config, digest
+        if plan is None or score.get("stage_id") != "E1":
+            raise ValueError("EX-42 P1 E1 v2 plan or stage missing")
+        if any(key not in score for key in ("checkpoint", "e1_v2_evaluation", "e1_v2_cells", "e1_exit_v2")):
+            raise ValueError("EX-42 P1 E1 v2 score evidence missing")
+        if _map39_cell_check(score, judgment, self.modes) != expected:
+            raise ValueError("EX-42 P1 E1 v2 maintenance cells differ")
+        cfg, cfg_path = config()
+        baseline = load_baseline(ROOT, cfg, digest)
+        baseline["_sha256"] = cfg["baseline"]["sha256"]
+        measured = plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
+        checkpoint, evaluation = Path(score["checkpoint"]), Path(score["e1_v2_evaluation"])
+        actual = measure_cells(evaluation, score["checkpoint_sha256"], score["conditions"]["eval_seed"])
+        if actual != score.get("e1_v2_cells"):
+            raise ValueError("EX-42 P1 E1 v2 raw cell evidence differs")
+        prior = previous_e1_score(checkpoint, evaluation, plan["evaluation"]["interval_updates"],
+                                  score["score_config_sha256"])
+        if prior is not None and "e1_v2_cells" in prior:
+            prior_raw = measure_cells(Path(prior["e1_v2_evaluation"]), prior["checkpoint_sha256"],
+                                      prior["conditions"]["eval_seed"])
+            if prior_raw != prior["e1_v2_cells"]:
+                raise ValueError("EX-42 P1 prior E1 v2 raw cell evidence differs")
+        recalculated = judge_e1_v2(score, baseline, measured, plan, previous=prior,
+                                   checkpoint=checkpoint, evaluation=evaluation,
+                                   seed=score["conditions"]["eval_seed"])
+        if (recalculated["judgement"] != judgment or
+                recalculated["e1_exit_v2"] != score.get("e1_exit_v2") or
+                recalculated["e1_exit"] != score.get("e1_exit")):
+            raise ValueError("EX-42 P1 E1 v2 two-window judgment differs")
+        return {"e1_exit": score["e1_exit"], "e1_exit_v2": score["e1_exit_v2"]}
+
+
 register(_E0())
 register(_E1())
+register(_E1V2())
 
 # E1F owns its policy and registers the adapter when the reviewed E0/E1 table
 # is ready. Importing only this registry must be sufficient for adapter_for().
