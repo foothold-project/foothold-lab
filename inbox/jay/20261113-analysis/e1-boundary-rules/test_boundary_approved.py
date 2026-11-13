@@ -147,5 +147,3 @@ def test_new_run_first_250_then_500_is_the_first_off_pair():
     d=apply_approved(core,b,a,None,{'last_change':None},None,effective_from=250)
     assert d['rule']=='OFF_SURVIVAL_ROLLBACK'
     with pytest.raises(ValueError):apply_approved(core,b,a,None,{},None,effective_from=1)
-
-
