@@ -49,6 +49,53 @@ N21_COMMANDS = {
     "side-0.5": (0.0, -0.5, 0.0),
     "stop": (0.0, 0.0, 0.0),
 }
+# HiPAN G1 (lead 11/12 · 팀장 12:25): 상위가 낼 수 있는데 EX-42 학습 13 슬롯 (ex42-prep.yaml shares · ranges)
+# 밖인 조합과 슬롯 안 기준 몇 개. 학습 아님 · 측정만.
+HIPAN_G1_COMMANDS = {
+    # 슬롯 안 기준
+    "ref_fwd0.5": (0.5, 0.0, 0.0),
+    "ref_walk0.5_wz0.5": (0.5, 0.0, 0.5),
+    "ref_side0.4": (0.0, 0.4, 0.0),
+    "ref_spin0.8": (0.0, 0.0, 0.8),
+    # 빠른 전진 + 회전 (walk_vx 상한 0.8 밖)
+    "fast1.0_wz+0.5": (1.0, 0.0, 0.5),
+    "fast1.0_wz-0.5": (1.0, 0.0, -0.5),
+    "fast1.2_wz+0.8": (1.2, 0.0, 0.8),
+    # 후진 + 회전
+    "back0.5_wz+0.5": (-0.5, 0.0, 0.5),
+    "back0.5_wz-0.5": (-0.5, 0.0, -0.5),
+    # 옆 · 대각 + 회전
+    "side+0.4_wz+0.5": (0.0, 0.4, 0.5),
+    "side-0.4_wz-0.5": (0.0, -0.4, -0.5),
+    "diag0.5+0.3_wz+0.5": (0.5, 0.3, 0.5),
+    "diag0.5-0.3_wz-0.5": (0.5, -0.3, -0.5),
+    # 세 축 동시
+    "tri0.8_0.3_0.3": (0.8, 0.3, 0.3),
+    # 느린 값 (슬롯 하한 밖)
+    "side+0.1": (0.0, 0.1, 0.0),
+    "walk0.5_wz+0.1": (0.5, 0.0, 0.1),
+    "spin+0.15": (0.0, 0.0, 0.15),
+    "creep0.05": (0.05, 0.0, 0.0),
+    # 범위 밖 크기
+    "side+0.8": (0.0, 0.8, 0.0),
+    "diag0.8+0.4": (0.8, 0.4, 0.0),
+}
+# G1 보강 (lead 11/12 13:0x): 배운 범위 안 순수 옆걸음과 느린 값 죽은 구간 기준선 (planner 12:56 제안)
+HIPAN_G1B_COMMANDS = {
+    "side+0.2": (0.0, 0.2, 0.0),
+    "side+0.3": (0.0, 0.3, 0.0),
+    "side+0.4": (0.0, 0.4, 0.0),
+    "side+0.6": (0.0, 0.6, 0.0),
+    "side-0.4": (0.0, -0.4, 0.0),
+    "fwd0.1": (0.1, 0.0, 0.0),
+    "fwd0.2": (0.2, 0.0, 0.0),
+    "spin+0.3": (0.0, 0.0, 0.3),
+}
+E1_V2_COMMANDS = {
+    "fwd0.1": (0.1, 0.0, 0.0), "fwd0.2": (0.2, 0.0, 0.0),
+    "side+0.2": (0.0, 0.2, 0.0), "side-0.2": (0.0, -0.2, 0.0),
+    "side+0.4": (0.0, 0.4, 0.0), "side-0.4": (0.0, -0.4, 0.0),
+}
 SEQUENCES = {
     "spin_left_to_right": ((0.0, 0.0, 1.2), (0.0, 0.0, -1.2)),
     "spin_right_to_left": ((0.0, 0.0, -1.2), (0.0, 0.0, 1.2)),
@@ -78,7 +125,13 @@ def commands(suite: str) -> dict[str, tuple[float, float, float]]:
         return {**CORE_COMMANDS, **EXTRA_COMMANDS, **EX40_B3_COMMANDS}
     if suite == "n21":
         return dict(N21_COMMANDS)
-    raise ValueError("command suite must be core, extended, ex40_b3, or n21")
+    if suite == "hipan_g1":
+        return dict(HIPAN_G1_COMMANDS)
+    if suite == "hipan_g1b":
+        return dict(HIPAN_G1B_COMMANDS)
+    if suite == "e1_v2":
+        return dict(E1_V2_COMMANDS)
+    raise ValueError("command suite must be core, extended, ex40_b3, n21, or hipan_g1")
 
 
 def terrain_rows(levels, types, names: list[str]) -> list[dict]:
