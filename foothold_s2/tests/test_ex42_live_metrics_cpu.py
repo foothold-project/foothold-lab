@@ -45,6 +45,26 @@ def test_three_map_modes_side_signs_and_off_reset(tmp_path):
     assert json.loads((tmp_path / "ex42_live_metrics.jsonl").read_text()) == row
 
 
+def test_slow_forward_speed_band_edges_and_missing_samples(tmp_path):
+    m = LiveMetrics(tmp_path)
+    m.begin(1, device="cpu")
+    speeds = torch.tensor([.1, .149, .15, .199, .2, .3], dtype=torch.float64)
+    cmd = torch.stack((speeds, torch.zeros_like(speeds), torch.zeros_like(speeds)), dim=1)
+    vel = cmd.clone()
+    vel[1, 0] = 0.0
+    vel[2, 0] = .075
+    vel[4, 0] = 0.0
+    m.add(cmd, vel, torch.full((6,), SLOT_INDEX["forward"]),
+          torch.zeros(6, dtype=torch.bool), torch.zeros(6, dtype=torch.bool),
+          torch.tensor([1, 1, 0, 0, 0, 0]), torch.tensor([0, 0, 0, 0, 1, 1]),
+          torch.zeros(6, dtype=torch.bool))
+    bands = m.end()["slow_forward_speed_bands"]
+    assert bands["gt"]["0.1-0.15"] == {"samples": 2, "tracking_ratio": .5, "stall_fraction": .5}
+    assert bands["pred"]["0.15-0.2"] == {"samples": 2, "tracking_ratio": .75, "stall_fraction": 0}
+    assert bands["off"]["0.2-0.3"] == {"samples": 1, "tracking_ratio": 0, "stall_fraction": 1}
+    assert bands["gt"]["0.2-0.3"] == {"samples": 0, "tracking_ratio": None, "stall_fraction": None}
+
+
 def test_twenty_update_weighted_mean_and_historical_drop(tmp_path):
     m = LiveMetrics(tmp_path)
     for it in range(1, 21):
