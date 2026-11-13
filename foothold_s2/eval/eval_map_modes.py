@@ -24,6 +24,7 @@ from isaaclab.app import AppLauncher
 from foothold_s2.eval import map_mode_cells as _command_cells
 from foothold_s2.eval import eval_dr_mode
 from foothold_s2.eval import n21_dr_record
+from foothold_s2.eval import ex42_gait_contact
 
 from foothold_s2.eval import ex42_friction
 parser = argparse.ArgumentParser()
@@ -33,7 +34,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
-parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21", "hipan_g1", "hipan_g1b", "e1_v2"), default="core")
+parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21", "hipan_g1", "hipan_g1b", "e1_v2", "gait_speeds"), default="core")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
@@ -49,6 +50,7 @@ parser.add_argument("--commands", default="all", help="명령 이름을 쉼표�
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
 parser.add_argument("--ex42-maintenance", action="store_true", help="W57 plus EX-42 foot-center XY speed for contact duty and drag recording")
+parser.add_argument("--gait-contact-sweep", action="store_true", help="Record-only flat L0 gait; report both force-norm and Fz contact thresholds")
 parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
 parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
 parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
@@ -79,6 +81,18 @@ if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
 parser_sparse = args.terrain_set == "sparse50"
 parser_n21 = bool(args.n21_record_only)
+parser_gait = bool(args.gait_contact_sweep)
+if parser_gait and (args.command_suite != "gait_speeds"
+                    or args.terrain_set != "n21-flat" or not args.fixed_terrain or args.fixed_level != 0
+                    or args.envs != 64 or args.steps != 300 or args.modes not in ("eval_gt", "eval_pred")
+                    or args.eval_seed != 42 or args.dr_mode != "off" or args.axis_v2 or args.ex42_maintenance
+                    or args.terrain_skill or args.terrain_skill_v2 or args.push_ladder):
+    parser.error("gait contact sweep requires gait_speeds/all, n21-flat fixed L0, 64 env, 300 steps, eval_gt or eval_pred, DR off, and no other suite")
+if parser_gait:
+    try:
+        ex42_gait_contact.validate_map_mode(args.modes)
+    except ValueError as exc:
+        parser.error(str(exc))
 if parser_n21:
     try:
         n21_dr_record.validate_entrypoint(args)
@@ -92,10 +106,11 @@ if parser_n21:
         parser.error(str(exc))
 else:
     n21_approval = None
-    try:
-        n21_dr_record.validate_entrypoint(args)
-    except ValueError as exc:
-        parser.error(str(exc))
+    if not parser_gait:
+        try:
+            n21_dr_record.validate_entrypoint(args)
+        except ValueError as exc:
+            parser.error(str(exc))
 dr_error = eval_dr_mode.validate_args(args)
 if dr_error:
     parser.error(dr_error)
@@ -174,7 +189,7 @@ agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
 env_cfg.scene.num_envs = args.envs
 env_cfg.sim.device = args.device
 agent_cfg.device = args.device
-if parser_n21:
+if parser_n21 or parser_gait:
     n21_dr_record.configure_terrain(env_cfg, args.terrain_set, args.eval_seed)
     env_cfg.seed = args.eval_seed
     agent_cfg.seed = args.eval_seed
@@ -257,6 +272,8 @@ if args.ex39_heading_smoke_guard:
     term.heading.fill_(True)
 map_mode_cells.disable_heading_for_fixed_eval(term)
 dt = raw.step_dt
+if parser_gait and abs(float(dt) - ex42_gait_contact.R5_DT_S) > 1e-9:
+    raise RuntimeError("R5 gait contact sweep requires policy dt=0.02 s")
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = map_mode_cells.commands(args.command_suite)
 S = args.steps
@@ -353,6 +370,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+r5_contact_sources = []
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
                        "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
@@ -370,6 +388,23 @@ terrain_gen = raw.scene.terrain.cfg.terrain_generator
 terrain_names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
                  columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
 res["terrain_columns"] = terrain_names
+gait_contact_foot_ids = None
+gait_contact_body_ids = None
+if parser_gait:
+    sensor = raw.scene.sensors["contact_forces"]
+    robot_feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    gait_feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    if (any(sensor.body_names.count(name) != 1 for name in gait_feet)
+            or any(robot.body_names.count(name) != 1 for name in robot_feet)):
+        raise RuntimeError("gait contact sweep needs exactly one robot and sensor body for each named foot")
+    gait_contact_foot_ids = [sensor.body_names.index(name) for name in gait_feet]
+    gait_contact_body_ids = [robot.body_names.index(name) for name in robot_feet]
+    res["gait_contact_sweep"] = {"terrain": "n21-flat", "fixed_level": 0, "seed": args.eval_seed,
+                                  "map_mode": args.modes,
+                                  "envs": args.envs, "steps": args.steps, "policy_dt_s": float(dt),
+                                  "foot_order": list(gait_feet),
+                                  "contact_thresholds": ["norm(net_forces_w) > 1 N", "net_forces_w[..., z] > 1 N"],
+                                  "commands": list(WANT_CMDS)}
 kind_foot_ids = None
 if kind_cell:
     feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
@@ -533,6 +568,10 @@ for mode in args.modes.split(","):
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
         FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
         FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
+        GAIT_FORCE_XYZ = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
+        GAIT_FOOT_POS_W = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
+        GAIT_FOOT_QUAT_W = torch.zeros(S, env.num_envs, 4, 4, device=dev) if parser_gait else None
+        GAIT_FOOT_SPEED_XY = torch.zeros(S, env.num_envs, 4, device=dev) if parser_gait else None
 
         START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
 
@@ -563,6 +602,11 @@ for mode in args.modes.split(","):
             q = robot.data.root_quat_w
             YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
             DN[k] = dones.bool()
+            if parser_gait:
+                GAIT_FORCE_XYZ[k] = sensor.data.net_forces_w[:, gait_contact_foot_ids, :]
+                GAIT_FOOT_POS_W[k] = robot.data.body_pos_w[:, gait_contact_body_ids, :]
+                GAIT_FOOT_QUAT_W[k] = robot.data.body_quat_w[:, gait_contact_body_ids, :]
+                GAIT_FOOT_SPEED_XY[k] = robot.data.body_lin_vel_w[:, gait_contact_body_ids, :2].norm(dim=-1)
             if kind_cell:
                 body_ids, sensor_ids = kind_foot_ids
                 FOOT_CONTACT[k] = sensor.data.net_forces_w[:, sensor_ids].norm(dim=-1) > 1.0
@@ -616,6 +660,40 @@ for mode in args.modes.split(","):
                                            alive.cpu().numpy(), dt,
                                            root_xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
                                            XY.cpu().numpy()))
+        if parser_gait:
+            from foothold_s2.eval import ex42_gait_contact
+
+            force_xyz = GAIT_FORCE_XYZ.cpu().numpy()
+            gait_metrics = ex42_gait_contact.summarize_both(force_xyz, al, vx, dt, body_vy=vy)
+            foot_height = ex42_gait_contact.foot_sole_height_m(
+                GAIT_FOOT_POS_W.cpu().numpy(), GAIT_FOOT_QUAT_W.cpu().numpy(),
+                raw.scene.env_origins[:, 2].cpu().numpy())
+            foot_speed_xy = GAIT_FOOT_SPEED_XY.cpu().numpy()
+            csv_path = os.path.join(args.out, "gait_raw_%s.csv" % cname)
+            ex42_gait_contact.write_csv(csv_path, [cname], [force_xyz], [al], [vx], dt,
+                                        body_vy=[VY.cpu().numpy()])
+            row["gait_contact"] = gait_metrics["fz_gt_1n"]
+            row["gait_contact"]["raw_csv"] = csv_path
+            row["gait_contact_norm_gt_1n"] = gait_metrics["force_norm_gt_1n"]
+            row["gait_contact_norm_gt_1n"]["raw_csv"] = csv_path
+            res["gait_contact_sweep"][cname] = gait_metrics
+            command_array = np.asarray(cmd, dtype=np.float64)
+            if (command_array[2] == 0 and 0.1 <= np.linalg.norm(command_array[:2]) <= 0.3):
+                run_identity = res["run_identity"]
+                raw_path = os.path.join(args.out, "r5_contact_raw_%s_%s.npz" % (mode, cname))
+                raw_path, raw_sha = ex42_gait_contact.write_r5_raw_npz(
+                    raw_path, force_xyz_n=force_xyz, foot_height_m=foot_height,
+                    foot_xy_speed_mps=foot_speed_xy, alive=al, command=command_array,
+                    checkpoint_sha256=sha, eval_seed=args.eval_seed, mode=mode,
+                    code_head=run_identity.get("code_head"), dt=dt)
+                raw_path = os.path.abspath(raw_path)
+                r5_contact_sources.append({
+                    "path": raw_path, "sha256": raw_sha,
+                })
+                row["r5_contact_source"] = {"path": raw_path, "sha256": raw_sha}
+            for criterion, gait in gait_metrics.items():
+                print("GAIT_CONTACT", cname, criterion,
+                      json.dumps(gait, ensure_ascii=False, allow_nan=False), flush=True)
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
@@ -731,6 +809,22 @@ for _m in list(sys.modules.values()):
     _key, _file = _module_key(_m), getattr(_m, "__file__", None)
     if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
         res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
+if parser_gait and r5_contact_sources:
+    try:
+        r5_doc = ex42_gait_contact.build_r5_contact_evidence(
+            r5_contact_sources, checkpoint_sha256=sha, dt=dt)
+    except ValueError as exc:
+        if "complete per-foot intervals or height samples absent" not in str(exc):
+            raise
+        res["r5_contact_evidence_status"] = {
+            "state": "incomplete_raw_recorded_not_R5_eligible",
+            "reason": str(exc), "sources": r5_contact_sources,
+        }
+    else:
+        r5_path = os.path.abspath(os.path.join(args.out, "r5_contact_evidence.json"))
+        ex42_gait_contact.write_r5_evidence_json(r5_path, r5_doc)
+        res["r5_contact_evidence_path"] = r5_path
+        res["r5_contact_evidence"] = r5_doc
 out_json = os.path.join(args.out, "map_modes.json")
 if kind_cell:
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
