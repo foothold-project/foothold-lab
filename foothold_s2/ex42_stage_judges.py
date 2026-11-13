@@ -184,8 +184,17 @@ class _E1V2(_E1):
         baseline["_sha256"] = ctx.cfg["baseline"]["sha256"]
         measured = ctx.plan["assumptions_pending_lead"]["q4_two_window_range"]["value"]["measured"]
         if (ctx.evaluation / "d44" / "d44_cells.json").is_file():
+            from foothold_s2.ex42_e1_wide import active as wide_active
+            receipt_sha = ctx.digest(ctx.plan_path)
+            if wide_active(score, ctx.plan):
+                import json
+                receipt = json.loads((ctx.evaluation / "d44" / "d44_cells.json").read_text(encoding="utf-8-sig"))
+                allowed = {receipt_sha, score["execution_plan_sha256"]}
+                receipt_sha = receipt.get("plan_sha256")
+                if receipt_sha not in allowed:
+                    raise ValueError("E1 C1 D44 Kit plan SHA is neither execution nor evaluation plan")
             score["d44_cells"] = read_evidence(
-                ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
+                ctx.evaluation / "d44", plan=ctx.plan, plan_sha256=receipt_sha,
                 checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
         score["e1_v2_evaluation"] = str(ctx.evaluation)
         score["e1_v2_cells"] = measure_cells(ctx.evaluation, ctx.checkpoint_sha, ctx.seed)

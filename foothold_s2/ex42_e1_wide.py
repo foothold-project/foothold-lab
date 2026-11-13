@@ -22,7 +22,9 @@ def sha(path: Path) -> str:
 
 def contract(plan: dict) -> dict:
     cfg = plan["evaluation"]["e1_widened"]
-    if (cfg.get("format") != "foothold-ex42-e1-widened/1"
+    from foothold_s2.eval.map_mode_cells import commands as command_suite
+    off = cfg.get("off_survival") or {}
+    if (cfg.get("format") != "foothold-ex42-e1-widened/2"
             or cfg.get("active") is not True
             or cfg.get("fixed_forward_levels") != plan["evaluation"]["fixed_levels"]
             or set(cfg.get("fixed_commands", ())) != set(E1_WIDE_FIXED_COMMANDS)
@@ -32,7 +34,14 @@ def contract(plan: dict) -> dict:
             or set(cfg.get("fixed_forward_roles", {})) != set(cfg["fixed_forward_levels"])
             or set(cfg.get("endpoint_roles", {})) != set(E1_WIDE_ENDPOINT_COMMANDS)
             or cfg.get("fixed_other_role") != "record_only"
-            or cfg.get("reached_level_success_min") != plan["evaluation"]["promotion"]["success_min"]):
+            or cfg.get("fixed_off_role") != "record_only"
+            or cfg.get("reached_level_success_min") != plan["evaluation"]["promotion"]["success_min"]
+            or off.get("role") != "two_window_watch"
+            or off.get("map64_commands") != list(command_suite("extended"))
+            or off.get("low_forward_levels") != [0, 5]
+            or off.get("low_forward_commands") != ["fwd0.1", "fwd0.2"]
+            or off.get("survival_min") != plan["evaluation"]["promotion"]["survival_min"]
+            or off.get("valid_min") != plan["evaluation"]["promotion"]["window_episodes"]):
         raise ValueError("E1 C1 widened evaluation plan contract differs")
     return cfg
 
@@ -258,7 +267,7 @@ def judge_cells(cells: dict, plan: dict, cap: int) -> dict:
             judge = judge_mode and role == "judge_if_exposed" and cap >= level
             row = cells.get("fixed", {}).get(f"L{level}", {}).get(mode, {}).get("fwd1.0")
             key = f"wide_L{level}_fwd1.0/{mode}"
-            state = ("HOLD" if row is None else
+            state = ("HOLD" if row is None or row.get("valid_count") != cfg["off_survival"]["valid_min"] else
                      "PASS" if row["success_count"] >= threshold["success_min"]
                      and row["survival_count"] >= threshold["survival_min"] else "FAIL")
             items[key] = {"role": "judge" if judge else "record_only",
@@ -274,7 +283,7 @@ def judge_cells(cells: dict, plan: dict, cap: int) -> dict:
             row = cells.get("endpoints", {}).get(mode, {}).get(case)
             key = f"{case}/{mode}"
             if judge:
-                if row is None:
+                if row is None or row.get("envs") != cfg["off_survival"]["valid_min"]:
                     state = "HOLD"
                 else:
                     from foothold_s2.ex42_e1_v2 import _finite
@@ -302,7 +311,9 @@ def judge_cells(cells: dict, plan: dict, cap: int) -> dict:
         key = f"symmetry/side0.8/{mode}"
         if judge_mode:
             symmetry = (min(left["R"], right["R"]) / max(left["R"], right["R"])
-                        if left and right and min(left["R"], right["R"]) > 0 else None)
+                        if left and right and left.get("envs") == cfg["off_survival"]["valid_min"]
+                        and right.get("envs") == cfg["off_survival"]["valid_min"]
+                        and min(left["R"], right["R"]) > 0 else None)
             state = ("HOLD" if symmetry is None else
                      "PASS" if symmetry >= linear["symmetry_min"] else "FAIL")
         else:
@@ -315,6 +326,53 @@ def judge_cells(cells: dict, plan: dict, cap: int) -> dict:
     for mode in MODES:
         passed = [level for level in cfg["fixed_forward_levels"]
                   if cells.get("fixed", {}).get(f"L{level}", {}).get(mode, {}).get("fwd1.0", {}).get(
-                      "success_count", -1) >= cfg["reached_level_success_min"]]
+                      "valid_count") == cfg["off_survival"]["valid_min"]
+                  and cells["fixed"][f"L{level}"][mode]["fwd1.0"]["success_count"] >=
+                  cfg["reached_level_success_min"]]
         reached[mode] = max(passed) if passed else None
     return {"judgement": verdict, "items": items, "reached_level": reached, "cap": cap}
+
+
+def off_survival(score: dict, plan: dict, previous: dict | None) -> dict:
+    """Two-window watch for OFF survival; fixed L3/L6/L9 OFF remains record only."""
+    cfg = contract(plan)["off_survival"]
+
+    def rows(value):
+        if not isinstance(value, dict):
+            return {}
+        result = {}
+        for case in cfg["map64_commands"]:
+            row = (value.get("map64") or {}).get("probe_prop_only", {}).get(case)
+            result[f"map64/{case}"] = {"valid": value.get("conditions", {}).get("envs") if row else None,
+                                       "survival": row.get("alive_at_end") if row else None}
+        for level in cfg["low_forward_levels"]:
+            for case in cfg["low_forward_commands"]:
+                row = (value.get("e1_v2_cells") or {}).get("low", {}).get(f"L{level}", {}).get(
+                    "probe_prop_only", {}).get(case)
+                result[f"low/L{level}/{case}"] = {"valid": row.get("envs") if row else None,
+                                                   "survival": row.get("survival") if row else None}
+        return result
+
+    current, prior = rows(score), rows(previous)
+    judged = {}
+    for key, now in current.items():
+        before = prior.get(key, {})
+
+        def status(value):
+            valid, survived = value.get("valid"), value.get("survival")
+            if valid != cfg["valid_min"] or type(survived) is not int or not 0 <= survived <= valid:
+                return "HOLD"
+            return "PASS" if survived >= cfg["survival_min"] else "BELOW"
+
+        current_state, previous_state = status(now), status(before)
+        # A single low boundary is recorded. Only two consecutive low
+        # boundaries trigger the approved rollback watch.
+        verdict = ("HOLD" if "HOLD" in (current_state, previous_state) else
+                   "FAIL" if current_state == previous_state == "BELOW" else "PASS")
+        judged[key] = {"role": "two_window_watch", "judgement": verdict,
+                       "current": {**now, "state": current_state},
+                       "previous": {**before, "state": previous_state},
+                       "survival_min": cfg["survival_min"], "valid_min": cfg["valid_min"]}
+    states = [row["judgement"] for row in judged.values()]
+    verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states else "PASS"
+    return {"judgement": verdict, "items": judged}

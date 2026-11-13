@@ -6,18 +6,22 @@ import pytest
 import yaml
 
 from foothold_s2.ex42_e1_wide import (_fixed_forward, _endpoint, contract, judge_cells,
-                                      kit_commands, CONTINUOUS)
+                                      kit_commands, off_survival, CONTINUOUS)
+from foothold_s2.ex42_e1_wide_plan import (widened_contract, write_evaluation_plan,
+                                            validate_evaluation_scope)
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def _plan():
-    return yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text())
+    plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text())
+    plan["evaluation"]["e1_widened"] = widened_contract(plan)
+    return plan
 
 
 def _side(success=64):
     values = [1.0] * success + [0.0] * (64 - success)
-    return {"R": float(np.median(values)), "mae_mps": 0.0, "survival": 64,
+    return {"R": float(np.median(values)), "mae_mps": 0.0, "survival": 64, "envs": 64,
             "per_env_R": values, "per_env_mae_mps": [0.0] * 64,
             "per_env_alive_end": [True] * 64}
 
@@ -52,6 +56,9 @@ def test_c1_missing_pred_or_endpoint_cannot_pass():
     cells = _cells()
     cells["endpoints"]["eval_pred"]["side-0.8"] = _side(0)
     assert judge_cells(cells, plan, cap=6)["judgement"] == "FAIL"
+    cells = _cells()
+    cells["fixed"]["L3"]["eval_gt"]["fwd1.0"]["valid_count"] = 63
+    assert judge_cells(cells, plan, cap=6)["judgement"] == "HOLD"
 
 
 def test_c1_fixed_forward_uses_each_kind_timing_and_footprint_line(tmp_path):
@@ -188,3 +195,42 @@ def test_c1_kit_commands_match_the_real_eval_parser_and_keep_mode_coverage(tmp_p
             "e1_wide_endpoint" if name == "wide_endpoints" else "e1_wide_fixed")
         assert argv[argv.index("--steps") + 1] == (
             "300" if name == "wide_endpoints" else "475")
+
+
+def test_c1_derived_evaluation_plan_keeps_training_bytes_and_rejects_other_changes(tmp_path):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    source = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
+    source_sha = EX42Plan.load(source).sha256
+    destination = tmp_path / "separate" / source.name
+    policy = write_evaluation_plan(source, destination, source_sha)
+    assert EX42Plan.load(source).sha256 == source_sha
+    assert policy.document["evaluation"]["e1_widened"]["off_survival"]["survival_min"] == 60
+    assert policy.sha256 != source_sha
+    with pytest.raises(ValueError, match="SHA or evaluation scope"):
+        write_evaluation_plan(source, tmp_path / "wrong" / source.name, "0" * 64)
+    with pytest.raises(ValueError, match="fresh output"):
+        write_evaluation_plan(source, destination, source_sha)
+    original = destination.read_text()
+    destination.write_text(original.replace("window_episodes: 64", "window_episodes: 63", 1))
+    with pytest.raises(ValueError, match="differs"):
+        validate_evaluation_scope(source, destination)
+
+
+def test_c1_off_survival_two_boundaries_and_missing_valid_envs():
+    plan = _plan()
+
+    def score(survived, valid=64):
+        cfg = plan["evaluation"]["e1_widened"]["off_survival"]
+        return {"conditions": {"envs": valid},
+                "map64": {"probe_prop_only": {case: {"alive_at_end": survived}
+                                              for case in cfg["map64_commands"]}},
+                "e1_v2_cells": {"low": {f"L{level}": {"probe_prop_only": {
+                    case: {"envs": valid, "survival": survived} for case in cfg["low_forward_commands"]}}
+                                              for level in cfg["low_forward_levels"]}}}
+
+    assert off_survival(score(64), plan, score(64))["judgement"] == "PASS"
+    assert off_survival(score(59), plan, score(64))["judgement"] == "PASS"
+    assert off_survival(score(64), plan, score(59))["judgement"] == "PASS"
+    assert off_survival(score(59), plan, score(59))["judgement"] == "FAIL"
+    assert off_survival(score(64, 63), plan, score(64))["judgement"] == "HOLD"
+    assert off_survival(score(64), plan, None)["judgement"] == "HOLD"

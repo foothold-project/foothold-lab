@@ -551,6 +551,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         policy = EX42Plan.load(policy_path)
         if p1_stage_id not in policy.runtime_stage_ids:
             raise ValueError("EX-42 evaluation policy lacks the running stage")
+        if evaluation_plan is not None and policy.document["evaluation"].get("e1_widened", {}).get("active") is True:
+            from foothold_s2.ex42_e1_wide_plan import validate_evaluation_scope
+            validate_evaluation_scope(Path(p1_plan), policy_path)
     if output.exists():
         raise ValueError("EX-42 evaluation requires fresh output directory")
     if Path(sys.executable).resolve() != machine_path("conda_python").resolve():
@@ -944,6 +947,9 @@ def main(argv=None):
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             policy_path = Path(args.evaluation_plan or args.p1_plan).resolve(strict=True)
             policy = EX42Plan.load(policy_path)
+            if args.evaluation_plan is not None and policy.document["evaluation"].get("e1_widened", {}).get("active") is True:
+                from foothold_s2.ex42_e1_wide_plan import validate_evaluation_scope
+                validate_evaluation_scope(args.p1_plan, policy_path)
             plan["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
         if args.split_device is None:
             plan["commands"] = commands(args.checkpoint, args.out, args.device,

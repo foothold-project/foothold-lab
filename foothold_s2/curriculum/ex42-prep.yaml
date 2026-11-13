@@ -2684,20 +2684,6 @@ evaluation:
       S_0p5: 0.009
       yaw_median_rad: 0.020
       yaw_p90_rad: 0.040
-  # C1: new measurements remain separate from the execution plan. L9 is
-  # record only until the team lead records a judgment-role decision.
-  e1_widened:
-    format: foothold-ex42-e1-widened/1
-    active: true
-    fixed_forward_levels: [3, 6, 9]
-    fixed_commands: [fwd1.0, back0.5, side+0.5, side-0.5]
-    endpoint_commands: [side+0.8, side-0.8, walk1.2_wz+1.0, walk1.2_wz-1.0, walk0.3_wz+0.1, walk0.3_wz-0.1, spin+0.15, spin-0.15]
-    judge_modes: [eval_gt, eval_pred]
-    record_modes: [probe_prop_only]
-    fixed_forward_roles: {3: judge_if_exposed, 6: judge_if_exposed, 9: record_only_pending_decision}
-    endpoint_roles: {side+0.8: judge, side-0.8: judge, walk1.2_wz+1.0: record_only, walk1.2_wz-1.0: record_only, walk0.3_wz+0.1: record_only, walk0.3_wz-0.1: record_only, spin+0.15: record_only, spin-0.15: record_only}
-    fixed_other_role: record_only
-    reached_level_success_min: 52
   directions:
   - forward
   - reverse
