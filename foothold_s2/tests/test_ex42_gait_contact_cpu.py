@@ -221,3 +221,72 @@ def test_foot_sole_height_uses_go2_sphere_offset_radius_and_flat_origin():
     result = foot_sole_height_m(pos, quat, np.array([0.0]))
     assert result.shape == (1, 1, 4)
     assert result[0, 0, 0] == pytest.approx(0.4 - 0.022)
+
+
+def test_foot_sole_height_sign_is_positive_above_flat_support():
+    pos = np.zeros((2, 1, 4, 3), dtype=float)
+    pos[0, ..., 2] = 0.022  # collision sphere bottom exactly touches z=0
+    pos[1, ..., 2] = 0.072  # sole is 5 cm above the same support plane
+    quat = np.zeros((2, 1, 4, 4), dtype=float)
+    quat[..., 0] = 1.0
+
+    result = foot_sole_height_m(pos, quat, np.array([0.0]))
+
+    assert result[0, 0, 0] == pytest.approx(0.0)
+    assert result[1, 0, 0] == pytest.approx(0.05)
+    assert result[1, 0, 0] > result[0, 0, 0]
+
+
+def test_r5_drag_height_threshold_is_strictly_below_two_centimeters(tmp_path):
+    force, height, speed, alive = _known_r5_arrays()
+    height[50:300] = 0.03
+    height[50] = 0.019
+    height[51] = 0.020
+    height[52] = 0.021
+    path, digest = write_r5_raw_npz(
+        tmp_path / "drag-boundary.npz", force_xyz_n=force, foot_height_m=height,
+        foot_xy_speed_mps=speed, alive=alive, command=(0.2, 0.0, 0.0),
+        checkpoint_sha256="b" * 64, eval_seed=42, mode="eval_gt",
+        code_head="c" * 40, dt=0.02,
+    )
+
+    result = build_r5_contact_evidence(
+        [{"path": path, "sha256": digest}], checkpoint_sha256="b" * 64, dt=0.02,
+    )
+
+    # Only the 1.9 cm samples count. The 2.0 cm boundary is excluded.
+    assert result["feet"]["FL"]["drag_fraction"] == pytest.approx(1 / 250)
+
+
+def test_r5_evidence_rejects_checkpoint_identity_mismatch(tmp_path):
+    force, height, speed, alive = _known_r5_arrays()
+    path, digest = write_r5_raw_npz(
+        tmp_path / "checkpoint-mismatch.npz", force_xyz_n=force, foot_height_m=height,
+        foot_xy_speed_mps=speed, alive=alive, command=(0.2, 0.0, 0.0),
+        checkpoint_sha256="b" * 64, eval_seed=42, mode="eval_gt",
+        code_head="c" * 40, dt=0.02,
+    )
+
+    with pytest.raises(ValueError, match="source checkpoint differs"):
+        build_r5_contact_evidence(
+            [{"path": path, "sha256": digest}], checkpoint_sha256="d" * 64, dt=0.02,
+        )
+
+
+def test_r5_evidence_rejects_stale_raw_sha_after_file_changes(tmp_path):
+    force, height, speed, alive = _known_r5_arrays()
+    path, original_digest = write_r5_raw_npz(
+        tmp_path / "stale-sha.npz", force_xyz_n=force, foot_height_m=height,
+        foot_xy_speed_mps=speed, alive=alive, command=(0.2, 0.0, 0.0),
+        checkpoint_sha256="b" * 64, eval_seed=42, mode="eval_gt",
+        code_head="c" * 40, dt=0.02,
+    )
+    with np.load(path, allow_pickle=False) as archive:
+        values = {key: archive[key] for key in archive.files}
+    values["foot_height_m"][50, 0, 0] += 0.001
+    np.savez_compressed(path, **values)
+
+    with pytest.raises(ValueError, match="SHA mismatch"):
+        build_r5_contact_evidence(
+            [{"path": path, "sha256": original_digest}], checkpoint_sha256="b" * 64, dt=0.02,
+        )
