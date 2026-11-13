@@ -1,15 +1,43 @@
-# E1 경계 R2·R3·R4·새 R5·R6 읽기 전용 판독기
+# E1 경계 최고값 대비 내림·기존 규칙 읽기 전용 판독기
 
 > 분류: A/평가
 > 작성: analyst-lx · 2026-11-13
-> 근거: 이슈 #765 · 원장 73abb340 · 04f50b4f R6 정정 · 0a5c1629 R5 정정 · #779 985ce6ab §3~4
+> 근거: 이슈 #555 · 원장 a76e783d · 이전 시험 구간 73abb340 · 04f50b4f · 0a5c1629
 > 요지: 실제 점수와 원자료를 읽어 비교표·발동 규칙·다음 구간 처방·조정 JSON 초안을 만든다.
-> 상태: 새 승인표 CPU 구현 · m1000 적용 확정 · m250/m500 재계산 완료 · 새 C1 Kit 자료는 미측정
-> 판: v1.6
+> 상태: 11/14 경계별 DEMOTE 판독 추가 · 학습 코드 미변경 · 이전 처방은 과거 시험 구간 재생용
+> 판: v1.7
 
 **이 도구는 학습을 시작·중단하거나 설정을 적용하지 않는다.** 입력은 읽기만 하며 결과는 요청한 `/home/jay/mai/tmp/analyst/e1-boundary-rules-1113` 아래에 쓴다. 기본 부모는 P1 예행 v16의 m13250이다. 자료가 없는 상태를 0이나 PASS로 채우지 않는다.
 
-## 실행
+## 11/14 재출발의 경계 내림 판독
+
+확인됨: [원장 a76e783d](https://github.com/foothold-project/foothold-lab/commit/a76e783d7b0380115b1559aa49f6e1a6e656e955)의 칸별 문턱을 `boundary_demote.py`에 고정했다. 이 경로는 조정 초안을 만들지 않는다. **R6 절대 문턱 처방은 11/14 00:32 원장에서 폐기됐으므로 새 재출발에는 아래 전용 명령을 사용한다.** `boundary_read.py`에도 같은 DEMOTE 표를 추가했지만 기존 처방 출력은 11/13 시험 구간의 재생용이다.
+
+| 칸 | 조건 | 내림 문턱 |
+|---|---|---|
+| 전진 0.1 | L0·L5, GT·PRED 각각 R | 0.10 |
+| 전진 0.2 | L0·L5, GT·PRED 각각 R | 0.02 |
+| 옆 ±0.2 | L0·L5, 방향 별도 | 0.03 |
+| 옆 ±0.4 | L0·L5, 방향 별도 | 0.04 |
+| 옆 ±0.5 | map64 mixed012, 방향 별도 | 0.02 |
+| 직진 0.5 yaw | L2, 순 yaw 절댓값 중앙값 / p90 | 0.02 / 0.05 rad |
+| 직진 1.0 yaw | L2, 순 yaw 절댓값 중앙값 / p90 | 0.03 / 0.06 rad |
+
+각 칸의 GT·PRED는 **각자 그때까지 최고 경계값**과 비교한다. R은 최댓값, yaw 오차는 최솟값이다. 한 지도 이상에서 불리한 변화가 문턱 이상이고 다른 지도도 같은 방향으로 악화하면 `DEMOTE`, 한 지도만 악화하면 `ONE_MODE_DROP` 기록이다. 문턱의 등호를 포함한다. 부동소수 뺄셈 허용오차 1e-12는 통계 문턱이 아니다. 실제 m250→m500 전진0.1은 GT 하락 0.134729, PRED 하락 0.073817여서 `DEMOTE`다. 두 지도 모두 0.10 이상이어야 한다고 읽으면 의뢰의 답 아는 예시를 놓친다.
+
+부모 m13250은 최고 경계 기록에 넣지 않는다. 첫 m250은 `BASELINE_ONLY`, 이후 동일 run의 m250부터 현재까지 **모든 경계**를 읽는다. 과거 최고 회차는 지도마다 다를 수 있다. R이 과속으로 높아진 경우도 최고값에 포함하며, 과속 허용 여부는 기존 유지·추종 판정에서 따로 본다. 학습 성취나 졸업을 이 줄 하나로 선언하지 않는다.
+
+지도 끔은 기존 연속21칸 생존60/64를 그대로 읽는다. 한 번 미달은 `SINGLE_FAIL_RECORD`, 같은 칸 두 경계 미달은 `ROLLBACK` 검토 표시이며 도구가 실제로 되돌리지 않는다. 지도 끔 추종과 L5 옆 네 칸·axis yaw 두 기록 칸은 새 내림 근거로 쓰지 않는다. GT·PRED 유지26칸·넓힌 범위의 기존 판정은 바꾸지 않는다.
+
+다음은 실제 시험 구간 m500 재생 명령이다. 새 실행에는 `--score`, `--run-root`, `--code-root`를 **그 실행의 고정 경로**로 함께 바꾼다. 출력만 임시 폴더로 지정한다. 경로 별칭은 realpath로 대조한다.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 /home/jay/miniforge3/envs/isaac311/bin/python -B /home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261113-analysis/e1-boundary-rules/boundary_demote.py --score /home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400/eval/scores/m500/ex42_score.json --run-root /home/jay/data/foothold/s2_lab/ex42_main_20261113_174400/main/EX-42-B-E1-again_20261113_174400 --code-root /home/jay/mai/wt/foothold-lab/ex42-launch-e1-v19 --out /home/jay/mai/tmp/analyst/e1-demote-1114/m500
+```
+
+산출은 `demote.txt` 한 줄, `DEMOTE.md`, `demote_cells.csv`, `demotion.json`이다. 각 지도 현재값·최고값·최고 회차·최고 대비 하락·직전 차이·문턱·발동 이유와 원자료 SHA를 남긴다. 모든 경계의 manifest checkpoint, startup plan, P1 영수증, 원자료·시드42·64 env·300 step·메시·지형 배치가 맞아야 한다. 경계 누락이나 불일치는 `HOLD`(rc2), 정상 계산은 rc0이며 rc0 자체가 PASS나 실행 승인은 아니다. C1 미측정은 이 18칸의 새 관문으로 만들지 않고 기존 졸업 판정에 남긴다.
+
+## 이전 시험 구간 판독 실행
 
 첫 경계 점수가 완성된 뒤 다음 한 줄을 실행한다. 이후에는 명령 안의 `m250` 두 곳을 같은 회차로 바꾼다. 직전 경계와 그 앞 경계가 같은 점수 폴더에 있으면 자동으로 읽는다. 따로 있는 경우 `--previous`·`--earlier`로 지정한다.
 
@@ -30,7 +58,7 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 
 초안 payload는 실제 `ex42_segment_adjust.resolve`로 형식을 검사한다. 기존 구간의 명령·보상·저속 표본 몫을 영수증에서 보존하며, 이번 경계에 바꿀 보상 묶음만 더한다. 기존 파일에 자동 덮어쓰기하거나 환경변수를 바꾸지 않는다. `DRAFT` 표식을 승인 문구로 바꾸는 일도 이 도구가 하지 않는다.
 
-## 고정 규칙
+## 이전 시험 구간의 고정 규칙 (11/13 재생용)
 
 | 규칙 | 구현한 조건 | 제안 |
 |---|---|---|

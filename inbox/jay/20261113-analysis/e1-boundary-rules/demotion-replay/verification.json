@@ -1,0 +1,145 @@
+{
+  "test_suite": "e1-boundary-rules",
+  "passed": 225,
+  "failed": 0,
+  "full_test_log": "/home/jay/mai/tmp/analyst/e1-demote-1114/pytest-all.log",
+  "output_guard_recheck_log": "/home/jay/mai/tmp/analyst/e1-demote-1114/pytest-write-guard.log",
+  "mutation_receipt": {
+    "source_sha256": "e7ad6b7f9cca4ec034b0e37d38e19f87859802a768c02241a2cd0bb4fba82d8f",
+    "all_detected": true,
+    "mutations": [
+      {
+        "name": "fwd01_threshold",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/fwd01_threshold/test_boundary_demote.py::test_all_past_boundaries_and_separate_best_iterations_not_previous_only",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/fwd01_threshold/test_boundary_demote.py::test_fixed_cell_coverage_and_thresholds"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/fwd01_threshold/result.log",
+        "detected": true
+      },
+      {
+        "name": "both_maps_must_cross",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-map/mixed012/side+0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-map/mixed012/side-0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L0/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-low/L5/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-map/mixed012/side+0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-map/mixed012/side-0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd1.0/p90_abs_rad]"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/both_maps_must_cross/result.log",
+        "detected": true
+      },
+      {
+        "name": "one_map_direction",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/one_map_direction/test_boundary_demote.py::test_one_mode_alone_without_same_direction_is_recorded_not_demoted[eval_gt]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/one_map_direction/test_boundary_demote.py::test_one_mode_alone_without_same_direction_is_recorded_not_demoted[eval_pred]"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/one_map_direction/result.log",
+        "detected": true
+      },
+      {
+        "name": "only_previous_best",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/only_previous_best/test_boundary_demote.py::test_all_past_boundaries_and_separate_best_iterations_not_previous_only",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/only_previous_best/test_boundary_demote.py::test_yaw_best_means_minimum_error_and_current_can_set_new_best"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/only_previous_best/result.log",
+        "detected": true
+      },
+      {
+        "name": "yaw_best_maximum",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[-1e-06-KEEP-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[-1e-06-KEEP-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[-1e-06-KEEP-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[-1e-06-KEEP-yaw/L2/fwd1.0/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_each_threshold_below_equal_above[1e-06-DEMOTE-yaw/L2/fwd1.0/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/test_boundary_demote.py::test_yaw_best_means_minimum_error_and_current_can_set_new_best"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/yaw_best_maximum/result.log",
+        "detected": true
+      },
+      {
+        "name": "exclusive_threshold",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L0/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/fwd0.1/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/fwd0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side+0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side-0.2/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side+0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-low/L5/side-0.4/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-map/mixed012/side+0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-map/mixed012/side-0.5/R]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd0.5/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/median_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_each_threshold_below_equal_above[0-DEMOTE-yaw/L2/fwd1.0/p90_abs_rad]",
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/test_boundary_demote.py::test_yaw_best_means_minimum_error_and_current_can_set_new_best"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/exclusive_threshold/result.log",
+        "detected": true
+      },
+      {
+        "name": "ignore_history_errors",
+        "returncode": 1,
+        "failed_tests": [
+          "FAILED ../../../tmp/analyst/e1-demote-1114/mutations-portable/ignore_history_errors/test_boundary_demote.py::test_missing_or_unverified_history_is_not_skipped[checkpoint]"
+        ],
+        "log": "/home/jay/mai/tmp/analyst/e1-demote-1114/mutations-portable/ignore_history_errors/result.log",
+        "detected": true
+      }
+    ]
+  },
+  "scope": "reporting tool only; no training code, GPU, live configuration, or live ledger writes"
+}

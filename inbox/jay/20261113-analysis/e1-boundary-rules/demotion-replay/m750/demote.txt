@@ -1,0 +1,1 @@
+m750: DEMOTE · DEMOTE 칸 low/L0/fwd0.1/R, low/L0/fwd0.2/R, low/L0/side-0.2/R, low/L0/side-0.4/R, low/L5/fwd0.1/R, low/L5/fwd0.2/R, low/L5/side-0.2/R, low/L5/side-0.4/R, map/mixed012/side-0.5/R · 지도 끔 PASS (생존 하한 60/64) · 판단용, 학습 설정 미적용
