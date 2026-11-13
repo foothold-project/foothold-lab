@@ -151,6 +151,18 @@ def test_required_d44_case_list_cannot_silently_drop_a_turn(tmp_path):
 
 
 @needs_run
+def test_unplanned_judged_cell_cannot_extend_even_with_all_required_cells(tmp_path):
+    gate, manifest = _receipts(tmp_path)
+    for folder in _folders(gate):
+        _edit_score(folder, lambda s: s["e1_exit_v2"]["current"]["items"].update({
+            "yaw/eval_gt/fwd0.9": {"judgement": "PASS", "median_abs_rad": 0,
+                                   "p90_abs_rad": 0, "survival": 64}}))
+    decision = handoff.decide_next_stage(TABLE, APPROVALS, "E1", _e1_maximum(), gate, manifest)
+    assert decision["action"] == "notify" and decision["judgment"] == "HOLD"
+    assert "fwd0.9" in decision["reason"]
+
+
+@needs_run
 @pytest.mark.parametrize("gaps", [(0.3, 0.3, 0.1), (0.3, 0.2, 0.2), (0.1, 0.2, 0.3)])
 def test_no_two_step_improvement_cannot_extend(tmp_path, gaps):
     gate, manifest = _receipts(tmp_path, gaps)
@@ -241,6 +253,7 @@ def test_v2_stop_restart_is_record_only_for_extension(tmp_path):
     gate, manifest = _receipts(tmp_path)
     for folder, success in zip(_folders(gate), (50, 40, 30)):
         def add(score):
+            score["e1_exit"]["d44"]["required_cases"].append("stop_restart_eval_gt")
             score["e1_exit"]["d44"]["cases"]["stop_restart_eval_gt"] = {"current": {
                 "case_id": "stop_restart_eval_gt", "success_count": success,
                 "success_min": 52, "survival_count": 64, "survival_min": 60}}
