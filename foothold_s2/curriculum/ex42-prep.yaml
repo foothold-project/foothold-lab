@@ -397,6 +397,10 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+  # The slow-forward share E1 trains with stays in force in E1F, so that what E1 learns under slow commands is kept
+  # (lead 2026-11-13 16:00; the value is inside the limits of decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8).
+  # The rows after E1F have no cell: they are decided from E1's final evidence.
+  low_forward_fraction: 0.4
   exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
