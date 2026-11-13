@@ -172,3 +172,121 @@ def test_the_runner_applies_the_flag_domain_right_after_the_slot_validator():
     slot_check = source.index("bad_now = command_bad(consumed, term.slot_current")
     flag_check = source.index("bad_now = flag_env_command_bad(term, consumed, bad_now)")
     assert 0 < flag_check - slot_check < 400 and source.count("flag_env_command_bad(") == 1
+
+
+# ---- the real command term through the start-up resets and a stretch of steps (kit short launch 11/13 08:26) ----
+# Only Isaac's CommandTerm base class is a double. The term, its sampler, the flag state machine, the E1F plan row,
+# the share contract and the stage runtime are the real ones.
+
+def e1f_term(monkeypatch, params, n=3072):
+    import importlib.util
+    import sys
+
+    class Base:
+        def __init__(self, cfg, env):
+            self.cfg, self._env = cfg, env
+            self.num_envs, self.device = env.num_envs, env.device
+            self.metrics = {}
+            self.time_left = torch.zeros(env.num_envs)
+
+        def reset(self, env_ids=None):
+            self._resample_command(torch.arange(self.num_envs) if env_ids is None else env_ids)
+            return {}
+
+    managers = types.ModuleType("isaaclab.managers")
+    managers.CommandTerm, managers.CommandTermCfg = Base, object
+    utils = types.ModuleType("isaaclab.utils")
+    utils.configclass = lambda c: c
+    monkeypatch.setitem(sys.modules, "isaaclab.managers", managers)
+    monkeypatch.setitem(sys.modules, "isaaclab.utils", utils)
+    spec = importlib.util.spec_from_file_location("_ex42_e1f_mixed", PLAN.parents[1] / "commands" / "mixed_command.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    plan = EX42Plan.load(PLAN)
+    for row in plan.document["stages"]:
+        if row["id"] == "E1F":                                  # the materialized plan carries the parent pin
+            row["parent"] = {"manifest_local_update": 1750, "cumulative_update": 15000, "checkpoint_key": "model_1750.pt"}
+    specs = te.e_stage_table(plan.document["stages"])
+    monkeypatch.setattr(te, "E_STAGE_SPECS", specs)
+    monkeypatch.setattr(te, "E_STAGES", {k: (v["updates"], v["parent_local"], v["parent_cumulative"])
+                                         for k, v in specs.items()})
+    contract = ex42_shares.read_contract(plan, "E1F")
+
+    class Scene:
+        def __getitem__(self, key):
+            return self.robot
+
+    scene = Scene()
+    scene.terrain = types.SimpleNamespace(terrain_types=torch.zeros(n, dtype=torch.long), env_origins=torch.zeros(n, 3))
+    scene.robot = types.SimpleNamespace(data=types.SimpleNamespace(
+        root_pos_w=torch.zeros(n, 3), heading_w=torch.zeros(n), root_lin_vel_b=torch.zeros(n, 3),
+        root_ang_vel_b=torch.zeros(n, 3)))
+    raw = types.SimpleNamespace(
+        num_envs=n, device="cpu", scene=scene, common_step_counter=0, step_dt=0.02,
+        _ex42_column_table=[{"family": contract["families"][0], "kind": list(contract["continuous_kinds"])[0]}])
+    cfg = types.SimpleNamespace(asset_name="robot", params={"curriculum_mode": True, **params}, seed=42, flag_stride=0,
+                                dynamic_flags=True, force_flag_provider=None, flag_provider=None, flag_count=4,
+                                fixed_cmd=None, clock_scatter=False, steps_per_iter=24,
+                                resampling_time_range=(4.0, 4.0))
+    command = module.MixedVelocityCommand(cfg, raw)
+    source = te.load_ex42_stage_zero_source(plan)
+    view = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "b" * 64}, ex42_plan=plan,
+                                             stage_id="E1F")
+    runtime = te.EX42StageZeroRuntime(stage_zero_plan=view, plan_sha256="a" * 64, approval_sha256="b" * 64,
+                                      parent_sha256="c" * 64, maximum_updates=750, push_vmax_mps=2., stage_id="E1F")
+    runtime.attach_environment(raw, command)
+    return command, runtime, scene.robot.data
+
+
+def consumed_bad(command, runtime):
+    """What start_runner computes before each env.step."""
+    consumed = command.vel_command_b.clone()
+    bad = continuous.command_bad(consumed, command.slot_current, command.heading, runtime.env_stage, runtime.plan)
+    return flag_env_command_bad(command, consumed, bad)
+
+
+@pytest.mark.parametrize("params", [{}, BACKOFF_PARAMS])
+def test_a_flag_env_never_follows_the_command_of_its_earlier_free_episode(monkeypatch, params):
+    command, runtime, robot = e1f_term(monkeypatch, params)
+    command.reset()                                              # the wrapper's first reset
+    first = command.is_flag_env.clone()
+    assert not bool(consumed_bad(command, runtime).any())
+    command.reset()                                              # the second start-up reset: flags are drawn again
+    switched = command.is_flag_env & ~first
+    assert int(switched.sum()) > 200 and int((command.is_flag_env & first).sum()) > 0
+    # no compute follows a reset outside env.step: this is the command of the first action
+    assert not bool(command.vel_command_b[command.is_flag_env].any())
+    assert bool(command.vel_command_b[~command.is_flag_env].any())
+    assert not bool(consumed_bad(command, runtime).any())
+
+    # a stretch of steps as Isaac drives the term: step, some resets, timed resamples, the per-step command
+    gen = torch.Generator().manual_seed(1)
+    kinds = {"walk": 0, "spin": 0, "zero": 0, "back": 0}
+    for _ in range(600):
+        cmd, yaw = command.vel_command_b, robot.heading_w
+        world = torch.stack([torch.cos(yaw) * cmd[:, 0] - torch.sin(yaw) * cmd[:, 1],
+                             torch.sin(yaw) * cmd[:, 0] + torch.cos(yaw) * cmd[:, 1]], dim=1)
+        robot.root_pos_w[:, :2] += world * 0.1                   # coarse motion so flags are reached and passed
+        robot.heading_w += cmd[:, 2] * 0.1
+        done = (torch.rand(command.num_envs, generator=gen) < 0.01).nonzero().flatten()
+        if len(done):
+            robot.root_pos_w[done] = 0.0
+            robot.heading_w[done] = 0.0
+            command.reset(done)
+        command._update_metrics()
+        command.time_left -= 0.02
+        due = (command.time_left <= 0).nonzero().flatten()
+        if len(due):
+            command.time_left[due] = 0.5                         # shortened period: many resamples in the stretch
+            command._resample_command(due)
+        command._update_command()
+        assert not bool(consumed_bad(command, runtime).any())
+        flag = command.vel_command_b[command.is_flag_env]
+        speed = torch.linalg.norm(flag[:, :2], dim=1)
+        kinds["walk"] += int(((speed >= 0.3) & (flag[:, 2] != 0)).sum())
+        kinds["spin"] += int(((speed == 0) & (flag[:, 2] != 0)).sum())
+        kinds["zero"] += int((flag == 0).all(dim=1).sum())
+        kinds["back"] += int(((speed > 0) & (speed < 0.3)).sum())
+    assert kinds["walk"] > 0 and kinds["spin"] > 0 and kinds["zero"] > 0
+    assert (kinds["back"] > 0) is bool(params)                   # backing off only when the term has it on
